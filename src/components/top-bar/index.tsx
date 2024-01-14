@@ -27,7 +27,7 @@ export const TopBar: FC<Props> = () => {
 		<S.Bar>
 			<S.LogoContainer>
 				<S.Logo>RP</S.Logo>
-				<S.LogoText>Novelists' Corner</S.LogoText>
+				<S.LogoText>Novelists&apos; Corner</S.LogoText>
 			</S.LogoContainer>
 			<S.ButtonsContainer>
 				<Button onClick={onLoginClick}>Log in</Button>

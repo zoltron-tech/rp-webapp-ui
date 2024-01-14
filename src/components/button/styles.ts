@@ -1,8 +1,9 @@
-import { PALLETE } from "@/theme";
+import { PALETTE } from "@/theme";
 import styled from "styled-components";
 
 export type ContainerProps = {
 	variant: "primary" | "secondary";
+	shape: "rounded" | "square";
 };
 
 export const Container = styled.div<ContainerProps>`
@@ -11,13 +12,13 @@ export const Container = styled.div<ContainerProps>`
 	align-items: center;
 	justify-content: center;
 	background-color: ${({ variant }) =>
-		variant === "primary" ? PALLETE.PRIMARY : PALLETE.SECONDARY};
+		variant === "primary" ? PALETTE.PRIMARY : PALETTE.SECONDARY};
 	border: ${({ variant }) =>
-		variant === "primary" ? "none" : `2px solid ${PALLETE.PRIMARY}`};
+		variant === "primary" ? "none" : `2px solid ${PALETTE.PRIMARY}`};
 	color: ${({ variant }) =>
-		variant === "primary" ? PALLETE.SECONDARY : PALLETE.TEXT};
+		variant === "primary" ? PALETTE.SECONDARY : PALETTE.TEXT};
 	font-weight: 600;
-	border-radius: 15px;
+	border-radius: ${({ shape }) => (shape === "rounded" ? "10px" : "0px")};
 	padding: ${({ variant }) =>
 		variant === "primary" ? "10px 20px" : "8px 18px"};
 	cursor: pointer;

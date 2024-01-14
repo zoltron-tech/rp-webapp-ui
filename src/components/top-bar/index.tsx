@@ -1,11 +1,9 @@
 "use client";
 
 import { FC, useState } from "react";
-import { Button, Modal, SignupModal } from "@/components";
+import { Button, SignupModal } from "@/components";
 
 import * as S from "./styles";
-import Image from "next/image";
-import { Logo } from "@/assets/logos";
 
 type Props = {};
 export const TopBar: FC<Props> = () => {

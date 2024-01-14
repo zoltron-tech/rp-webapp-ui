@@ -1,3 +1,1 @@
-import Logo from "./logo.svg";
-
-export { Logo };
+// Export Logos as React Components

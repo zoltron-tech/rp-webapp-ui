@@ -1,4 +1,6 @@
+import { TopBar } from "@/components";
 import StyledComponentsRegistry from "./registry";
+import "./globals.css";
 
 export default function RootLayout({
 	children,
@@ -8,7 +10,10 @@ export default function RootLayout({
 	return (
 		<html>
 			<body>
-				<StyledComponentsRegistry>{children}</StyledComponentsRegistry>
+				<StyledComponentsRegistry>
+					<TopBar />
+					<main>{children}</main>
+				</StyledComponentsRegistry>
 			</body>
 		</html>
 	);

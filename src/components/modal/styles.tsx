@@ -23,6 +23,7 @@ export const Container = styled.div<ContainerProps>`
 `;
 
 export const Content = styled.div`
+	z-index: 9999;
 	position: relative;
 	display: flex;
 	flex-direction: column;
@@ -38,6 +39,7 @@ export const Content = styled.div`
 `;
 
 export const CloseButton = styled.div`
+	z-index: 9999;
 	position: absolute;
 	top: 10px;
 	right: 10px;

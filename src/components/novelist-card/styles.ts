@@ -5,7 +5,6 @@ export const Card = styled.div`
 	width: 600px;
 	height: 800px;
 	background-color: ${PALETTE.WHIPPED_CREAM};
-	/* border: 2px solid ${PALETTE.PRIMARY}; */
 	border-radius: ${BORDER_RADIUS};
 	box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
 	display: flex;
@@ -13,6 +12,7 @@ export const Card = styled.div`
 	align-items: center;
 	justify-content: flex-start;
 	padding: 20px;
+	user-select: none;
 `;
 
 export const CardHeader = styled.div`
@@ -65,9 +65,18 @@ export const Email = styled.div`
 	color: ${PALETTE.TEXT};
 `;
 
+export const MuseListContainer = styled.div`
+	margin-top: 40px;
+	position: relative;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+`;
 export const MuseList = styled.div`
 	border-top: 1px solid ${PALETTE.PRIMARY};
-	margin-top: 20px;
+
 	width: 100%;
 	height: 500px;
 	overflow-y: scroll;
@@ -91,8 +100,24 @@ export const MuseList = styled.div`
 	}
 `;
 
+export const MuseListFade = styled.div`
+	height: 100%;
+	pointer-events: none;
+	background: linear-gradient(
+		to bottom,
+		${PALETTE.WHIPPED_CREAM} 0%,
+		rgba(255, 255, 255, 0) 10%,
+		rgba(255, 255, 255, 0) 80%,
+		${PALETTE.WHIPPED_CREAM} 100%
+	);
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+`;
+
 const MuseComponent = styled.div`
-	width: 100%;
+	width: 500px;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;

@@ -1,11 +1,11 @@
-import { TopBar } from "@/components";
-
-import "./globals.css";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-	return (
-		<div>
-			<TopBar />
-		</div>
-	);
+	const isLoggedIn = false;
+
+	if (!isLoggedIn) {
+		redirect("/novelists");
+	}
+
+	return <div>Home Page.</div>;
 }

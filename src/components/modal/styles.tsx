@@ -1,4 +1,4 @@
-import { PALETTE } from "@/theme";
+import { BORDER_RADIUS, PALETTE } from "@/theme";
 import styled from "styled-components";
 import { Button } from "@/components";
 
@@ -29,7 +29,7 @@ export const Content = styled.div`
 	justify-content: center;
 	align-items: center;
 	background-color: #fff;
-	border-radius: 8px;
+	border-radius: ${BORDER_RADIUS};
 	padding: 16px;
 	min-height: 200px;
 	min-width: 300px;

@@ -1,4 +1,4 @@
-import { PALETTE } from "@/theme";
+import { BORDER_RADIUS, PALETTE } from "@/theme";
 import styled from "styled-components";
 
 export type ContainerProps = {
@@ -16,9 +16,10 @@ export const Container = styled.div<ContainerProps>`
 	border: ${({ variant }) =>
 		variant === "primary" ? "none" : `2px solid ${PALETTE.PRIMARY}`};
 	color: ${({ variant }) =>
-		variant === "primary" ? PALETTE.SECONDARY : PALETTE.TEXT};
+		variant === "primary" ? PALETTE.TEXT : PALETTE.PRIMARY};
 	font-weight: 600;
-	border-radius: ${({ shape }) => (shape === "rounded" ? "10px" : "0px")};
+	border-radius: ${({ shape }) =>
+		shape === "rounded" ? BORDER_RADIUS : "0px"};
 	padding: ${({ variant }) =>
 		variant === "primary" ? "10px 20px" : "8px 18px"};
 	cursor: pointer;

@@ -4,6 +4,7 @@ import { FC, useState } from "react";
 import { Button, SignupModal } from "@/components";
 
 import * as S from "./styles";
+import { ThemeToggle } from "../theme-toggle";
 
 type Props = {};
 
@@ -30,12 +31,15 @@ export const TopBar: FC<Props> = () => {
 					<S.Logo>RP</S.Logo>
 					<S.LogoText>Novelists&apos; Corner</S.LogoText>
 				</S.LogoContainer>
-				<S.ButtonsContainer>
-					<Button onClick={onLoginClick}>Log in</Button>
-					<Button onClick={onSignupClick} variant="secondary">
-						Sign up
-					</Button>
-				</S.ButtonsContainer>
+				<S.ActionsContainer>
+					<ThemeToggle />
+					<S.ButtonsContainer>
+						<Button onClick={onLoginClick}>Log in</Button>
+						<Button onClick={onSignupClick} variant="secondary">
+							Sign up
+						</Button>
+					</S.ButtonsContainer>
+				</S.ActionsContainer>
 			</S.Bar>
 		</>
 	);

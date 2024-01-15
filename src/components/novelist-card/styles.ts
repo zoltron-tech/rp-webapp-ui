@@ -1,18 +1,53 @@
 import { BORDER_RADIUS, PALETTE } from "@/theme";
 import styled from "styled-components";
 
-export const Card = styled.div`
+export const CardWrapper = styled.div`
+	position: relative;
 	width: 600px;
-	height: 800px;
-	background-color: ${PALETTE.WHIPPED_CREAM};
+	height: calc(100vh - 80px - 40px - 40px);
+	max-height: 800px;
 	border-radius: ${BORDER_RADIUS};
 	box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
+	overflow: hidden;
+`;
+
+type CardProps = {
+	banner: string;
+};
+
+export const CardBackground = styled.div<CardProps>`
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background-position: center;
+	background-size: cover;
+	background-image: linear-gradient(
+			rgba(0, 0, 0, 0.339),
+			rgba(0, 0, 0, 0.301)
+		),
+		url(${(props): string => props.banner});
+
+	filter: blur(20px);
+	-webkit-filter: blur(20px);
+	-moz-filter: blur(20px);
+	-o-filter: blur(20px);
+	-ms-filter: blur(20px);
+`;
+
+export const Card = styled.div`
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: flex-start;
-	padding: 20px;
+	padding: 20px 20px 0px;
 	user-select: none;
+	position: relative;
+	height: 100%;
+	background: linear-gradient(
+		rgba(255, 255, 255, 0),
+		rgba(0, 0, 0, 0.8) 60%,
+		rgba(0, 0, 0, 1)
+	);
 `;
 
 export const CardHeader = styled.div`
@@ -69,51 +104,40 @@ export const MuseListContainer = styled.div`
 	margin-top: 40px;
 	position: relative;
 	width: 100%;
+	height: 100%;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
 `;
 export const MuseList = styled.div`
-	border-top: 1px solid ${PALETTE.PRIMARY};
-
+	border-top: 1px solid ${PALETTE.HOVER_GREY_ALPHA};
 	width: 100%;
-	height: 500px;
+	height: 100%;
+	min-height: 100px;
 	overflow-y: scroll;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: flex-start;
+	margin-top: 40px;
+	padding-bottom: 10px;
 
 	&::-webkit-scrollbar {
-		width: 10px; /* Mostly for vertical scrollbars */
-		height: 10px; /* Mostly for horizontal scrollbars */
+		width: 5px; /* Mostly for vertical scrollbars */
+		height: 5px; /* Mostly for horizontal scrollbars */
 	}
 	&::-webkit-scrollbar-thumb {
 		/* Foreground */
-		background: ${PALETTE.WHIPPED_CREAM};
-		border-radius: 10px;
+		background: ${PALETTE.HOVER_GREY_ALPHA};
+		border-radius: 50px;
 	}
 	&::-webkit-scrollbar-track {
 		/* Background */
+		max-width: 10px;
+		max-height: 10px;
 		background: transparent;
 	}
-`;
-
-export const MuseListFade = styled.div`
-	height: 100%;
-	pointer-events: none;
-	background: linear-gradient(
-		to bottom,
-		${PALETTE.WHIPPED_CREAM} 0%,
-		rgba(255, 255, 255, 0) 10%,
-		rgba(255, 255, 255, 0) 80%,
-		${PALETTE.WHIPPED_CREAM} 100%
-	);
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	right: 0;
 `;
 
 const MuseComponent = styled.div`
@@ -127,7 +151,7 @@ const MuseComponent = styled.div`
 
 	&:hover {
 		cursor: pointer;
-		background-color: ${PALETTE.HOVER_GREY};
+		background-color: ${PALETTE.HOVER_GREY_ALPHA};
 	}
 `;
 
@@ -136,7 +160,6 @@ const MuseAvatar = styled.div`
 	height: 70px;
 	border-radius: 50%;
 	box-shadow: 0px 0px 5px 3px rgba(0, 0, 0, 0.4);
-	/* border: 4px solid ${PALETTE.PRIMARY}; */
 
 	img {
 		width: 70px;

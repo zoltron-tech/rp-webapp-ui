@@ -1,5 +1,9 @@
+"use client";
+
 import { TopBar } from "@/components";
 import StyledComponentsRegistry from "./registry";
+import { ThemeProvider } from "@/context";
+
 import "./globals.css";
 
 export default function RootLayout({
@@ -11,8 +15,10 @@ export default function RootLayout({
 		<html>
 			<body>
 				<StyledComponentsRegistry>
-					<TopBar />
-					<main>{children}</main>
+					<ThemeProvider>
+						<TopBar />
+						<main>{children}</main>
+					</ThemeProvider>
 				</StyledComponentsRegistry>
 			</body>
 		</html>

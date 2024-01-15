@@ -44,6 +44,13 @@ export const LogoText = styled.div`
 	font-style: italic;
 `;
 
+export const ActionsContainer = styled.div`
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-right: 40px;
+`;
+
 export const ButtonsContainer = styled.div`
 	display: flex;
 	align-items: center;

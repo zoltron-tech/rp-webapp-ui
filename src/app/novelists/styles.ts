@@ -1,4 +1,4 @@
-import { BORDER_RADIUS } from "@/theme";
+import { BORDER_RADIUS, PALETTE } from "@/theme";
 import { styled } from "styled-components";
 
 export const CarouselContainer = styled.div`
@@ -11,11 +11,15 @@ export const CarouselContainer = styled.div`
 	}
 
 	& .swiper-slide {
-		/* Center slide text vertically */
 		display: flex;
 		justify-content: center;
 		align-items: center;
 		width: 600px;
 		border-radius: ${BORDER_RADIUS};
+	}
+
+	& .swiper-button-prev,
+	& .swiper-button-next {
+		color: rgba(255, 255, 255, 0.214);
 	}
 `;

@@ -11,15 +11,9 @@ import * as S from "./styles";
 import "swiper/css";
 import "swiper/css/effect-coverflow";
 import "swiper/css/navigation";
-import "swiper/css/pagination";
 import "./swiper.css";
 
-import {
-	EffectCoverflow,
-	Navigation,
-	Pagination,
-	Autoplay,
-} from "swiper/modules";
+import { EffectCoverflow, Navigation, Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
 export default function NovelistsPage() {
@@ -41,7 +35,6 @@ export default function NovelistsPage() {
 					effect={"coverflow"}
 					grabCursor={true}
 					navigation={true}
-					pagination={true}
 					loop={true}
 					centeredSlides={true}
 					slidesPerView={"auto"}
@@ -56,12 +49,7 @@ export default function NovelistsPage() {
 						modifier: 1,
 						scale: 0.4,
 					}}
-					modules={[
-						EffectCoverflow,
-						Navigation,
-						Pagination,
-						Autoplay,
-					]}
+					modules={[EffectCoverflow, Navigation, Autoplay]}
 				>
 					{novelists?.map((novelist, index) => (
 						<SwiperSlide key={`${novelist.userName}-${index}`}>

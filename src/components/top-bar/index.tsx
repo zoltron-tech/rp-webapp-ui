@@ -57,7 +57,10 @@ export const TopBar: FC<Props> = () => {
 				<S.NovelistCarouselContainer>
 					<S.NovelistCarousel>
 						{novelists?.map((novelist) => (
-							<NovelistCard novelist={novelist} />
+							<NovelistCard
+								key={`${novelist.userName}`}
+								novelist={novelist}
+							/>
 						))}
 					</S.NovelistCarousel>
 				</S.NovelistCarouselContainer>

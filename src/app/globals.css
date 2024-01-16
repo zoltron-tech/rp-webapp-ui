@@ -9,7 +9,7 @@ body {
   font-family: 'Montserrat', sans-serif;
   width: 100%;
   height: 100%;
-  color: #F5F4F6;
+  background-color: #313131;
   overflow-x: hidden;
   container-name: main-container;
   container-type: inline-size;
@@ -19,6 +19,7 @@ main {
   width: 100%;
   height: 100%;
   overflow-x: hidden;
+  background-color: #313131;
 }
 
 

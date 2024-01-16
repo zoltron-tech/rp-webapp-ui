@@ -8,7 +8,7 @@ import { ShouldRender } from "..";
 import classNames from "classnames";
 import { useSwiper, useSwiperSlide } from "swiper/react";
 import { MdOutlineExpandLess, MdOutlineExpandMore } from "react-icons/md";
-import { useUIContext } from "@/hooks";
+import { useThemeContext, useUIContext } from "@/hooks";
 type Props = {
 	novelist?: Novelist | null;
 };
@@ -36,10 +36,10 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
 		<S.CardWrapper
 			className={classNames({ expanded })}
 			onMouseEnter={() => {
-				autoplay.stop();
+				// autoplay.stop();
 			}}
 			onMouseLeave={() => {
-				autoplay.start();
+				// autoplay.start();
 			}}
 		>
 			<S.CardBackground banner={novelist.image} />

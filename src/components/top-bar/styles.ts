@@ -1,7 +1,11 @@
-import { PALETTE } from "@/theme";
+import { NO_USER_SELECT, PALETTE } from "@/theme";
 import styled from "styled-components";
 
-export const Bar = styled.div`
+type ThemeProp = {
+	theme: "light" | "dark";
+};
+
+export const Bar = styled.div<ThemeProp>`
 	height: 80px;
 	width: 100%;
 	background-color: ${PALETTE.NAVBAR};
@@ -25,7 +29,7 @@ export const Logo = styled.div`
 	color: ${PALETTE.SECONDARY};
 	background-color: ${PALETTE.PRIMARY};
 	box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.6);
-	user-select: none;
+	${NO_USER_SELECT}
 `;
 
 export const LogoContainer = styled.div`
@@ -40,8 +44,9 @@ export const LogoText = styled.div`
 	font-size: 28px;
 	font-weight: 500;
 	color: ${PALETTE.TEXT};
-	user-select: none;
 	font-style: italic;
+
+	${NO_USER_SELECT}
 `;
 
 export const ActionsContainer = styled.div`

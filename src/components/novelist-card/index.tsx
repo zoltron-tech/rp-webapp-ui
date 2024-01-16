@@ -1,18 +1,36 @@
 "use client";
 
 import { Novelist } from "@/types/novelist";
-import { FC } from "react";
+import { FC, useEffect, useState } from "react";
 
 import * as S from "./styles";
-
+import { BsArrowDown } from "react-icons/bs";
+import { ShouldRender } from "..";
+import classNames from "classnames";
+import { useSwiperSlide } from "swiper/react";
 type Props = {
 	novelist?: Novelist | null;
 };
 export const NovelistCard: FC<Props> = ({ novelist }) => {
+	const [expanded, setExpanded] = useState(false);
+	const { isActive } = useSwiperSlide();
+
+	useEffect(() => {
+		console.log("expanded: ", expanded);
+	}, [expanded]);
+
+	useEffect(() => {
+		if (!isActive) {
+			setTimeout(() => {
+				setExpanded(false);
+			}, 250);
+		}
+	}, [isActive]);
+
 	if (!novelist) return <></>;
 
 	return (
-		<S.CardWrapper>
+		<S.CardWrapper className={classNames({ expanded })}>
 			<S.CardBackground banner={novelist.image} />
 			<S.Card
 				onClick={() => {
@@ -24,11 +42,16 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
 				}}
 				className="novelist-card"
 			>
+				<S.ExpandButton
+					onClick={() => setExpanded((current) => !current)}
+					className={classNames({ expanded })}
+				>
+					<BsArrowDown />
+				</S.ExpandButton>
 				<S.CardHeader>
 					<S.Avatar>
 						<img src={novelist.image} />
 					</S.Avatar>
-
 					<S.NovelistInfo>
 						<S.Title>
 							{novelist.firstName} {novelist.lastName}
@@ -37,19 +60,21 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
 						<S.Email>{novelist.email}</S.Email>
 					</S.NovelistInfo>
 				</S.CardHeader>
-				<S.MuseList>
-					{novelist.muses.map((muse) => (
-						<S.Muse key={`${muse.firstName}-${muse.lastName}`}>
-							<S.Muse.Avatar>
-								<img src={muse.image} />
-							</S.Muse.Avatar>
+				<ShouldRender if={expanded}>
+					<S.MuseList>
+						{novelist.muses.map((muse) => (
+							<S.Muse key={`${muse.firstName}-${muse.lastName}`}>
+								<S.Muse.Avatar>
+									<img src={muse.image} />
+								</S.Muse.Avatar>
 
-							<S.Muse.Name>
-								{muse.firstName} {muse.lastName}
-							</S.Muse.Name>
-						</S.Muse>
-					))}
-				</S.MuseList>
+								<S.Muse.Name>
+									{muse.firstName} {muse.lastName}
+								</S.Muse.Name>
+							</S.Muse>
+						))}
+					</S.MuseList>
+				</ShouldRender>
 			</S.Card>
 		</S.CardWrapper>
 	);

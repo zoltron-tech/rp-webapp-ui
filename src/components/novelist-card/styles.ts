@@ -1,14 +1,18 @@
-import { BORDER_RADIUS, PALETTE } from "@/theme";
+import { BORDER_RADIUS, NO_USER_SELECT, PALETTE } from "@/theme";
 import styled from "styled-components";
 
 export const CardWrapper = styled.div`
 	position: relative;
 	width: 600px;
-	height: calc(100vh - 80px - 40px - 40px);
-	max-height: 800px;
+	height: 250px;
 	border-radius: ${BORDER_RADIUS};
-	box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
+	/* box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4); */
 	overflow: hidden;
+	transition: all 0.3s ease-in-out;
+
+	&.expanded {
+		height: 600px;
+	}
 `;
 
 type CardProps = {
@@ -40,7 +44,6 @@ export const Card = styled.div`
 	align-items: center;
 	justify-content: flex-start;
 	padding: 20px 20px 0px;
-	user-select: none;
 	position: relative;
 	height: 100%;
 	background: linear-gradient(
@@ -55,6 +58,39 @@ export const CardHeader = styled.div`
 	display: flex;
 	align-items: center;
 	justify-content: space-around;
+	position: relative;
+`;
+
+export const ExpandButton = styled.div`
+	position: absolute;
+	top: 200px;
+	right: 10px;
+	width: 40px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: ${PALETTE.HOVER_GREY_ALPHA};
+	border-radius: 50%;
+	box-shadow: 0px 0px 5px 2px rgba(0, 0, 0, 0.4);
+	z-index: 5;
+	transition: background-color 0.1s ease-in-out;
+
+	& svg {
+		width: 20px;
+		height: 20px;
+		fill: ${PALETTE.TEXT};
+		transition: transform 0.2s ease-in-out;
+	}
+
+	&.expanded svg {
+		transform: rotate(180deg);
+	}
+
+	&:hover {
+		cursor: pointer;
+		background-color: ${PALETTE.HOVER_GREY_DARKER};
+	}
 `;
 
 export const Title = styled.div`
@@ -124,8 +160,8 @@ export const MuseList = styled.div`
 	padding-bottom: 10px;
 
 	&::-webkit-scrollbar {
-		width: 5px; /* Mostly for vertical scrollbars */
-		height: 5px; /* Mostly for horizontal scrollbars */
+		width: 0px; /* Mostly for vertical scrollbars */
+		height: 0px; /* Mostly for horizontal scrollbars */
 	}
 	&::-webkit-scrollbar-thumb {
 		/* Foreground */
@@ -148,6 +184,7 @@ const MuseComponent = styled.div`
 	margin: 10px 0;
 	border-radius: ${BORDER_RADIUS};
 	padding: 12px 40px;
+	${NO_USER_SELECT}
 
 	&:hover {
 		cursor: pointer;

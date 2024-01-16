@@ -13,13 +13,12 @@ export const ThemeSwitcher = styled.div`
 	justify-content: space-between;
 	margin-right: 20px;
 	position: relative;
+	box-shadow: inset 0px 0px 1px 0px rgba(0, 0, 0, 0.4);
 `;
 
 export const ThemeSwitchInner = styled.div<{ theme: string }>`
 	width: 50%;
 	height: 100%;
-	background-color: ${({ theme }) =>
-		THEME_SWITCHER.FRONT[theme.toUpperCase() as "DARK" | "LIGHT"]};
 	border-radius: 50%;
 	position: absolute;
 	left: 0;
@@ -27,20 +26,23 @@ export const ThemeSwitchInner = styled.div<{ theme: string }>`
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	transition: transform 0.2s ease-in;
+	box-shadow: 1px 1px 2px 0px rgba(0, 0, 0, 0.4);
 
 	@keyframes lightModeToDarkMode {
 		0% {
 			width: 50%;
 			transform: translateX(0);
+			background-color: ${THEME_SWITCHER.FRONT.DAY};
 		}
 		50% {
 			width: 100%;
 			transform: translateX(0);
+			background-color: ${THEME_SWITCHER.FRONT.DAY};
 		}
 		100% {
 			width: 50%;
 			transform: translateX(100%);
+			background-color: ${THEME_SWITCHER.FRONT.NIGHT};
 		}
 	}
 
@@ -48,14 +50,17 @@ export const ThemeSwitchInner = styled.div<{ theme: string }>`
 		0% {
 			width: 50%;
 			transform: translateX(100%);
+			background-color: ${THEME_SWITCHER.FRONT.NIGHT};
 		}
 		50% {
 			width: 100%;
 			transform: translateX(0);
+			background-color: ${THEME_SWITCHER.FRONT.NIGHT};
 		}
 		100% {
 			width: 50%;
 			transform: translateX(0);
+			background-color: ${THEME_SWITCHER.FRONT.DAY};
 		}
 	}
 

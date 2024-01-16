@@ -2,6 +2,7 @@
 
 import { FC } from "react";
 import * as S from "./styles";
+import classNames from "classnames";
 
 export type ButtonProps = {
 	children?: React.ReactNode;
@@ -16,7 +17,12 @@ export const Button: FC<ButtonProps> = ({
 	onClick,
 }) => {
 	return (
-		<S.Container onClick={onClick} variant={variant} shape={shape}>
+		<S.Container
+			className={classNames(["button"])}
+			onClick={onClick}
+			variant={variant}
+			shape={shape}
+		>
 			{children}
 		</S.Container>
 	);

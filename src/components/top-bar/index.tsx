@@ -1,7 +1,7 @@
 "use client";
 
 import { FC, useContext, useState } from "react";
-import { Button, SignupModal } from "@/components";
+import { Button, ShouldRender, SignupModal } from "@/components";
 
 import * as S from "./styles";
 import { ThemeToggle } from "../theme-toggle";
@@ -35,12 +35,20 @@ export const TopBar: FC<Props> = () => {
 				</S.LogoContainer>
 				<S.ActionsContainer>
 					<ThemeToggle />
-					<S.ButtonsContainer>
+					<S.ButtonsContainerDesktop>
 						<Button onClick={onLoginClick}>Log in</Button>
 						<Button onClick={onSignupClick} variant="secondary">
 							Sign up
 						</Button>
-					</S.ButtonsContainer>
+					</S.ButtonsContainerDesktop>
+					<S.ButtonsContainerMobile>
+						<Button variant="link" onClick={onLoginClick}>
+							Log in
+						</Button>
+						<Button variant="link" onClick={onSignupClick}>
+							Sign up
+						</Button>
+					</S.ButtonsContainerMobile>
 				</S.ActionsContainer>
 			</S.Bar>
 		</>

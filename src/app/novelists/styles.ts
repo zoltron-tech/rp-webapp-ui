@@ -14,11 +14,9 @@ export const CarouselContainer = styled.div`
 	}
 
 	& .swiper-slide {
-		width: 600px;
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		width: fit-content;
 		overflow: hidden;
 		border-radius: ${BORDER_RADIUS};
 		-webkit-backface-visibility: hidden;
@@ -29,5 +27,17 @@ export const CarouselContainer = styled.div`
 	& .swiper-button-next {
 		color: rgba(255, 255, 255, 0.214);
 		top: 150px;
+
+		@container (max-width: 900px) {
+			& {
+				top: 100px;
+			}
+		}
+
+		@container (max-width: 800px) {
+			& {
+				display: none;
+			}
+		}
 	}
 `;

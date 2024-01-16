@@ -1,9 +1,6 @@
 import { NO_USER_SELECT, PALETTE } from "@/theme";
+import { ThemeProp } from "@/types";
 import styled from "styled-components";
-
-type ThemeProp = {
-	theme: "light" | "dark";
-};
 
 export const Bar = styled.div<ThemeProp>`
 	height: 80px;
@@ -15,9 +12,20 @@ export const Bar = styled.div<ThemeProp>`
 	padding: 0 40px;
 	box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
 	position: sticky;
-
 	container-name: top-bar;
 	container-type: inline-size;
+
+	@container (max-width: 800px) {
+		& {
+			padding: 0 20px;
+		}
+	}
+
+	@container (max-width: 650px) {
+		& {
+			padding: 0px;
+		}
+	}
 `;
 
 export const Logo = styled.div`
@@ -67,7 +75,6 @@ export const ActionsContainer = styled.div`
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	margin-right: 40px;
 `;
 
 export const ButtonsContainerDesktop = styled.div`

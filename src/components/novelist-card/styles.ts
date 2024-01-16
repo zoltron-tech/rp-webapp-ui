@@ -10,8 +10,33 @@ export const CardWrapper = styled.div`
 	overflow: hidden;
 	transition: all 0.3s ease-in-out;
 
+	container-name: novelist-card;
+	container-type: inline-size;
+
 	&.expanded {
 		height: 600px;
+	}
+
+	@container (max-width: 1200px) {
+		& {
+			width: 400px;
+			height: 225px;
+		}
+
+		&.expanded {
+			height: 500px;
+		}
+	}
+
+	@container (max-width: 900px) {
+		& {
+			height: 150px;
+			width: 300px;
+		}
+
+		&.expanded {
+			height: 300px;
+		}
 	}
 `;
 
@@ -51,6 +76,18 @@ export const Card = styled.div`
 		rgba(0, 0, 0, 0.8) 60%,
 		rgba(0, 0, 0, 1)
 	);
+
+	@container (max-width: 400px) {
+		& {
+			padding: 10px 10px 0px;
+		}
+	}
+
+	@container (max-width: 300px) {
+		& {
+			padding: 5px 5px 0px;
+		}
+	}
 `;
 
 export const CardHeader = styled.div`
@@ -83,36 +120,86 @@ export const ExpandButton = styled.div`
 		transition: transform 0.2s ease-in-out;
 	}
 
-	&.expanded svg {
-		transform: rotate(180deg);
-	}
-
 	&:hover {
 		cursor: pointer;
 		background-color: ${PALETTE.HOVER_GREY_DARKER};
 	}
+
+	@container (max-width: 400px) {
+		& {
+			top: 170px;
+		}
+	}
+
+	@container (max-width: 300px) {
+		& {
+			top: 130px;
+			right: 5px;
+			width: 20px;
+			height: 20px;
+			background-color: transparent;
+			box-shadow: none;
+
+			& svg {
+				width: 15px;
+				height: 15px;
+			}
+
+			&:hover {
+				background-color: transparent;
+			}
+		}
+	}
 `;
 
 export const Title = styled.div`
-	font-size: 24px;
+	font-size: 20px;
 	font-weight: 600;
 	color: ${PALETTE.TEXT};
+	text-align: center;
+
+	@container (max-width: 400px) {
+		& {
+			display: none;
+		}
+	}
 `;
 
 export const Avatar = styled.div`
 	width: 200px;
 	height: 200px;
 	border-radius: 50%;
-	background-color: #000;
 	box-shadow: 0px 0px 10px 4px rgba(0, 0, 0, 0.5);
-
-	/* border: 8px solid ${PALETTE.PRIMARY}; */
 
 	img {
 		width: 200px;
 		height: 200px;
 		object-fit: cover;
 		border-radius: 50%;
+	}
+
+	@container (max-width: 400px) {
+		& {
+			width: 150px;
+			height: 150px;
+		}
+
+		img {
+			width: 150px;
+			height: 150px;
+		}
+	}
+
+	@container (max-width: 300px) {
+		& {
+			width: 100px;
+			height: 100px;
+		}
+
+		img {
+			width: 100px;
+			height: 100px;
+		}
 	}
 `;
 
@@ -122,18 +209,67 @@ export const NovelistInfo = styled.div`
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
+	margin-left: 10px;
+	font-size: 14px;
+
+	@container (max-width: 400px) {
+		& {
+			margin-left: 0px;
+			position: absolute;
+			top: 140px;
+			padding: 20px;
+		}
+	}
+
+	@container (max-width: 300px) {
+		& {
+			top: 100px;
+			right: 0px;
+			padding: 10px;
+			font-size: 12px;
+		}
+	}
 `;
 
 export const Username = styled.div`
-	font-size: 18px;
+	font-size: 16px;
 	font-weight: 500;
 	color: ${PALETTE.TEXT};
+	&::before {
+		content: "@";
+		font-weight: 600;
+		margin-left: 5px;
+	}
+
+	@container (max-width: 400px) {
+		& {
+			font-size: 14px;
+		}
+	}
+
+	@container (max-width: 300px) {
+		& {
+			font-size: 12px;
+		}
+	}
 `;
 
 export const Email = styled.div`
-	font-size: 16px;
+	font-size: 12px;
 	font-weight: 400;
 	color: ${PALETTE.TEXT};
+
+	@container (max-width: 400px) {
+		& {
+			font-size: 10px;
+		}
+	}
+
+	@container (max-width: 300px) {
+		& {
+			display: none;
+		}
+	}
 `;
 
 export const MuseListContainer = styled.div`
@@ -159,6 +295,12 @@ export const MuseList = styled.div`
 	margin-top: 40px;
 	padding-bottom: 10px;
 
+	@container (max-width: 400px) {
+		& {
+			margin-top: 60px;
+		}
+	}
+
 	&::-webkit-scrollbar {
 		width: 0px; /* Mostly for vertical scrollbars */
 		height: 0px; /* Mostly for horizontal scrollbars */
@@ -177,14 +319,27 @@ export const MuseList = styled.div`
 `;
 
 const MuseComponent = styled.div`
-	width: 500px;
+	width: 100%;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	margin: 10px 0;
 	border-radius: ${BORDER_RADIUS};
-	padding: 12px 40px;
+	padding: 10px;
+	position: relative;
 	${NO_USER_SELECT}
+
+	@container (max-width: 400px) {
+		& {
+			padding: 5px;
+		}
+	}
+
+	@container (max-width: 300px) {
+		& {
+			padding: 2px 8px;
+		}
+	}
 
 	&:hover {
 		cursor: pointer;
@@ -198,11 +353,25 @@ const MuseAvatar = styled.div`
 	border-radius: 50%;
 	box-shadow: 0px 0px 5px 3px rgba(0, 0, 0, 0.4);
 
-	img {
-		width: 70px;
-		height: 70px;
+	& img {
+		width: 100%;
+		height: 100%;
 		object-fit: cover;
 		border-radius: 50%;
+	}
+
+	@container (max-width: 400px) {
+		& {
+			width: 50px;
+			height: 50px;
+		}
+	}
+
+	@container (max-width: 300px) {
+		& {
+			width: 30px;
+			height: 30px;
+		}
 	}
 `;
 
@@ -210,6 +379,28 @@ const MuseName = styled.div`
 	font-size: 18px;
 	font-weight: 500;
 	color: ${PALETTE.TEXT};
+
+	@container (max-width: 400px) {
+		& {
+			font-size: 14px;
+		}
+	}
+
+	@container (max-width: 300px) {
+		& {
+			font-size: 10px;
+			text-align: end;
+		}
+	}
+
+	@container (max-width: 200px) {
+		font-size: 8px;
+		text-align: center;
+		width: calc(100% - 30px);
+		& .muse-last-name {
+			display: none;
+		}
+	}
 `;
 
 export const Muse = Object.assign(MuseComponent, {

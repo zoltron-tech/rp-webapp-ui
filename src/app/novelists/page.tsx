@@ -20,6 +20,7 @@ export default function NovelistsPage() {
 		const novelists = await getNovelists();
 		setNovelistsState(novelists);
 	};
+	const [isMobile, setIsMobile] = useState(false);
 
 	useEffect(() => {
 		if (novelists?.length) return;
@@ -31,16 +32,15 @@ export default function NovelistsPage() {
 			<S.CarouselContainer>
 				<Swiper
 					effect={"coverflow"}
-					// grabCursor={true}
 					navigation={true}
 					loop={true}
 					centeredSlides={true}
 					slidesPerView={3}
 					speed={600}
-					autoplay={{
-						delay: 3500,
-						disableOnInteraction: false,
-					}}
+					// autoplay={{
+					// 	delay: 3500,
+					// 	disableOnInteraction: false,
+					// }}
 					coverflowEffect={{
 						rotate: 0,
 						depth: 0,

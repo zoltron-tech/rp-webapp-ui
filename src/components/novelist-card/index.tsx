@@ -4,10 +4,10 @@ import { Novelist } from "@/types/novelist";
 import { FC, useEffect, useState } from "react";
 
 import * as S from "./styles";
-import { BsArrowDown } from "react-icons/bs";
 import { ShouldRender } from "..";
 import classNames from "classnames";
 import { useSwiperSlide } from "swiper/react";
+import { MdOutlineExpandLess, MdOutlineExpandMore } from "react-icons/md";
 type Props = {
 	novelist?: Novelist | null;
 };
@@ -33,7 +33,12 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
 					onClick={() => setExpanded((current) => !current)}
 					className={classNames({ expanded })}
 				>
-					<BsArrowDown />
+					<ShouldRender if={!expanded}>
+						<MdOutlineExpandMore />
+					</ShouldRender>
+					<ShouldRender if={expanded}>
+						<MdOutlineExpandLess />
+					</ShouldRender>
 				</S.ExpandButton>
 				<S.CardHeader>
 					<S.Avatar>
@@ -56,7 +61,14 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
 								</S.Muse.Avatar>
 
 								<S.Muse.Name>
-									{muse.firstName} {muse.lastName}
+									{muse.firstName}{" "}
+									<span
+										className={classNames([
+											"muse-last-name",
+										])}
+									>
+										{muse.lastName}
+									</span>
 								</S.Muse.Name>
 							</S.Muse>
 						))}

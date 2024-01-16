@@ -36,6 +36,7 @@ export default function NovelistsPage() {
 					loop={true}
 					centeredSlides={true}
 					slidesPerView={3}
+					speed={600}
 					autoplay={{
 						delay: 3500,
 						disableOnInteraction: false,

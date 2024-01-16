@@ -15,6 +15,9 @@ export const Bar = styled.div<ThemeProp>`
 	padding: 0 40px;
 	box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
 	position: sticky;
+
+	container-name: top-bar;
+	container-type: inline-size;
 `;
 
 export const Logo = styled.div`
@@ -45,8 +48,19 @@ export const LogoText = styled.div`
 	font-weight: 500;
 	color: ${PALETTE.TEXT};
 	font-style: italic;
-
 	${NO_USER_SELECT}
+
+	@container (max-width: 800px) {
+		& {
+			font-size: 24px;
+		}
+	}
+
+	@container (max-width: 650px) {
+		& {
+			display: none;
+		}
+	}
 `;
 
 export const ActionsContainer = styled.div`
@@ -56,9 +70,33 @@ export const ActionsContainer = styled.div`
 	margin-right: 40px;
 `;
 
-export const ButtonsContainer = styled.div`
+export const ButtonsContainerDesktop = styled.div`
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	width: 200px;
+
+	@container (max-width: 800px) {
+		& {
+			display: none;
+		}
+	}
+`;
+
+export const ButtonsContainerMobile = styled.div`
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-direction: column;
+	width: 100px;
+
+	@container (min-width: 800px) {
+		& {
+			display: none;
+		}
+	}
+
+	& > .button:not(:last-child) {
+		border-bottom: 1px solid ${PALETTE.PRIMARY};
+	}
 `;

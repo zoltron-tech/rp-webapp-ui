@@ -3,8 +3,7 @@
 import { FC, useState } from "react";
 import * as S from "./styles";
 import { IoIosCloseCircle } from "react-icons/io";
-import { ShouldRender } from "../should-render";
-import { PALETTE } from "@/theme";
+import { useTheme } from "styled-components";
 
 type Props = {
 	children: React.ReactNode;
@@ -13,6 +12,7 @@ type Props = {
 };
 export const Modal: FC<Props> = ({ children, open, onClose }) => {
 	const [closeHover, setCloseHover] = useState(false);
+	const theme = useTheme();
 
 	const onCloseClick = () => {
 		onClose();
@@ -27,7 +27,7 @@ export const Modal: FC<Props> = ({ children, open, onClose }) => {
 					onClick={onCloseClick}
 				>
 					<IoIosCloseCircle
-						color={closeHover ? PALETTE.DANGER : PALETTE.PRIMARY}
+						color={closeHover ? theme.danger : theme.primary}
 					/>
 				</S.CloseButton>
 				{children}

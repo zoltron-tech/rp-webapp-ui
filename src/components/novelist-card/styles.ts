@@ -1,4 +1,4 @@
-import { BORDER_RADIUS, NO_USER_SELECT, PALETTE } from "@/theme";
+import { BORDER_RADIUS, NO_USER_SELECT } from "@/theme";
 import styled from "styled-components";
 
 export const CardWrapper = styled.div`
@@ -50,8 +50,8 @@ export const CardBackground = styled.div<CardProps>`
 	background-position: center;
 	background-size: cover;
 	background-image: linear-gradient(
-			rgba(0, 0, 0, 0.339),
-			rgba(0, 0, 0, 0.301)
+			${({ theme }) => theme.cardBackgroundTint},
+			${({ theme }) => theme.cardBackgroundTint}
 		),
 		url(${(props): string => props.banner});
 
@@ -71,9 +71,7 @@ export const Card = styled.div`
 	position: relative;
 	height: 100%;
 	background: linear-gradient(
-		rgba(255, 255, 255, 0),
-		rgba(0, 0, 0, 0.8) 60%,
-		rgba(0, 0, 0, 1)
+		${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
 	);
 
 	@container (max-width: 400px) {
@@ -106,7 +104,7 @@ export const ExpandButton = styled.div`
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background-color: ${PALETTE.HOVER_GREY_ALPHA};
+	background-color: ${({ theme }) => theme.hoverGreyAlpha};
 	border-radius: 50%;
 	box-shadow: 0px 0px 5px 2px rgba(0, 0, 0, 0.4);
 	z-index: 5;
@@ -115,13 +113,13 @@ export const ExpandButton = styled.div`
 	& svg {
 		width: 20px;
 		height: 20px;
-		fill: ${PALETTE.TEXT};
+		fill: ${({ theme }) => theme.text};
 		transition: transform 0.2s ease-in-out;
 	}
 
 	&:hover {
 		cursor: pointer;
-		background-color: ${PALETTE.HOVER_GREY_DARKER};
+		background-color: ${({ theme }) => theme.hoverGrey};
 	}
 
 	@container (max-width: 400px) {
@@ -147,7 +145,7 @@ export const ExpandButton = styled.div`
 export const Title = styled.div`
 	font-size: 20px;
 	font-weight: 600;
-	color: ${PALETTE.TEXT};
+	color: ${({ theme }) => theme.text};
 	text-align: center;
 
 	@container (max-width: 400px) {
@@ -226,7 +224,7 @@ export const NovelistInfo = styled.div`
 export const Username = styled.div`
 	font-size: 16px;
 	font-weight: 500;
-	color: ${PALETTE.TEXT};
+	color: ${({ theme }) => theme.text};
 	&::before {
 		content: "@";
 		font-weight: 600;
@@ -249,7 +247,7 @@ export const Username = styled.div`
 export const Email = styled.div`
 	font-size: 12px;
 	font-weight: 400;
-	color: ${PALETTE.TEXT};
+	color: ${({ theme }) => theme.text};
 	text-align: center;
 
 	&::before {
@@ -278,7 +276,7 @@ export const Email = styled.div`
 `;
 
 export const MuseList = styled.div`
-	border-top: 1px solid ${PALETTE.HOVER_GREY_ALPHA};
+	border-top: 1px solid ${({ theme }) => theme.hoverGreyAlpha};
 	width: 100%;
 	height: 100%;
 	min-height: 100px;
@@ -302,7 +300,7 @@ export const MuseList = styled.div`
 	}
 	&::-webkit-scrollbar-thumb {
 		/* Foreground */
-		background: ${PALETTE.HOVER_GREY_ALPHA};
+		background: ${({ theme }) => theme.hoverGreyAlpha};
 		border-radius: 50px;
 	}
 	&::-webkit-scrollbar-track {
@@ -338,7 +336,7 @@ const MuseComponent = styled.div`
 
 	&:hover {
 		cursor: pointer;
-		background-color: ${PALETTE.HOVER_GREY_ALPHA};
+		background-color: ${({ theme }) => theme.hoverGreyAlpha};
 	}
 `;
 
@@ -373,7 +371,7 @@ const MuseAvatar = styled.div`
 const MuseName = styled.div`
 	font-size: 18px;
 	font-weight: 500;
-	color: ${PALETTE.TEXT};
+	color: ${({ theme }) => theme.text};
 
 	@container (max-width: 400px) {
 		& {

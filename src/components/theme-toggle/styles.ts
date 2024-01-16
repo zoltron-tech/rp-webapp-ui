@@ -1,7 +1,15 @@
-import { PALETTE } from "@/theme";
 import styled from "styled-components";
 
-const { THEME_SWITCHER } = PALETTE;
+export const THEME_SWITCHER = {
+	BACKGROUND: "#6B728E",
+	FRONT: {
+		NIGHT: "#042b52",
+		DAY: "#72aae2",
+	},
+	MOON_COLOR: "#fcea4b",
+	SUN_COLOR: "#fbfd87",
+	OPTION_DISABLED: "#6B728E",
+};
 
 export const ThemeSwitcher = styled.div`
 	width: 60px;

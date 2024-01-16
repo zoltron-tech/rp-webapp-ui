@@ -1,4 +1,3 @@
-import { BORDER_RADIUS, PALETTE } from "@/theme";
 import styled from "styled-components";
 
 export type ContainerProps = {
@@ -17,18 +16,13 @@ export const Container = styled.div<ContainerProps>`
 	cursor: pointer;
 	white-space: nowrap;
 
-	background-color: ${({ variant }) =>
-		is(variant, "primary")
-			? PALETTE.PRIMARY
-			: is(variant, "secondary")
-			? PALETTE.SECONDARY
-			: "transparent"};
+	background-color: ${({ variant, theme }) =>
+		is(variant, "primary") ? theme.primary : "transparent"};
 
-	border: ${({ variant }) =>
-		is(variant, "secondary") ? `2px solid ${PALETTE.PRIMARY}` : "none"};
+	border: ${({ variant, theme }) =>
+		is(variant, "secondary") ? `2px solid ${theme.text}` : "none"};
 
-	color: ${({ variant }) =>
-		is(variant, "secondary") ? PALETTE.PRIMARY : PALETTE.TEXT};
+	color: ${({ theme }) => theme.text};
 
 	padding: ${({ variant }) =>
 		is(variant, "secondary") ? "8px 18px" : "10px 20px"};

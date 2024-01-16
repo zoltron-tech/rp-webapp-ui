@@ -1,4 +1,4 @@
-import { BORDER_RADIUS, PALETTE } from "@/theme";
+import { BORDER_RADIUS } from "@/theme";
 import styled from "styled-components";
 import { Button } from "@/components";
 
@@ -34,7 +34,7 @@ export const Content = styled.div`
 	padding: 16px;
 	min-height: 200px;
 	min-width: 300px;
-	border: 2px solid ${PALETTE.PRIMARY};
+	border: 2px solid ${({ theme }) => theme.primary};
 	box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
 `;
 

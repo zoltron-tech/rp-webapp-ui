@@ -1,11 +1,10 @@
-import { NO_USER_SELECT, PALETTE } from "@/theme";
-import { ThemeProp } from "@/types";
+import { NO_USER_SELECT } from "@/theme";
 import styled from "styled-components";
 
-export const Bar = styled.div<ThemeProp>`
+export const Bar = styled.div`
 	height: 80px;
 	width: 100%;
-	background-color: ${PALETTE.NAVBAR};
+	background-color: ${({ theme }) => theme.navbar};
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -27,6 +26,12 @@ export const Bar = styled.div<ThemeProp>`
 		}
 	}
 `;
+export const LogoContainer = styled.div`
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: ${({ theme }) => theme.text};
+`;
 
 export const Logo = styled.div`
 	height: 80px;
@@ -37,16 +42,10 @@ export const Logo = styled.div`
 	font-size: 36px;
 	font-weight: 300;
 	font-style: italic;
-	color: ${PALETTE.SECONDARY};
-	background-color: ${PALETTE.PRIMARY};
+	color: ${({ theme }) => theme.text};
+	background-color: ${({ theme }) => theme.primary};
 	box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.6);
 	${NO_USER_SELECT}
-`;
-
-export const LogoContainer = styled.div`
-	display: flex;
-	align-items: center;
-	justify-content: center;
 `;
 
 export const LogoText = styled.div`
@@ -54,7 +53,6 @@ export const LogoText = styled.div`
 	text-transform: uppercase;
 	font-size: 28px;
 	font-weight: 500;
-	color: ${PALETTE.TEXT};
 	font-style: italic;
 	${NO_USER_SELECT}
 
@@ -104,6 +102,6 @@ export const ButtonsContainerMobile = styled.div`
 	}
 
 	& > .button:not(:last-child) {
-		border-bottom: 1px solid ${PALETTE.PRIMARY};
+		border-bottom: 1px solid ${({ theme }) => theme.text};
 	}
 `;

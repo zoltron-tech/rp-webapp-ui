@@ -1,32 +1,22 @@
-import { ThemeContext } from "@/context";
-import { useContext, useEffect, useState } from "react";
+import { BsMoonFill, BsSunFill } from "react-icons/bs";
+import classNames from "classnames";
+import { FC } from "react";
 
 import * as S from "./styles";
-import { BsMoonFill, BsSunFill } from "react-icons/bs";
-import { PALETTE } from "@/theme";
-import classNames from "classnames";
+type Props = {
+	toggleTheme: () => void;
+	theme: "light" | "dark";
+};
 
-const { THEME_SWITCHER } = PALETTE;
-
-export const ThemeToggle = () => {
-	const { theme, toggleTheme } = useContext(ThemeContext);
-	const [isAnimating, setIsAnimating] = useState(false);
-
-	useEffect(() => {
-		setIsAnimating(true);
-		const timeout = setTimeout(() => {
-			setIsAnimating(false);
-		}, 400);
-	}, [theme]);
-
+export const ThemeToggle: FC<Props> = ({ theme, toggleTheme }) => {
 	return (
 		<S.ThemeSwitcher onClick={toggleTheme}>
 			<S.ThemeIconContainer>
 				<BsSunFill
 					color={
 						theme === "light"
-							? THEME_SWITCHER.SUN_COLOR
-							: THEME_SWITCHER.OPTION_DISABLED
+							? S.THEME_SWITCHER.SUN_COLOR
+							: S.THEME_SWITCHER.OPTION_DISABLED
 					}
 				/>
 			</S.ThemeIconContainer>
@@ -34,13 +24,12 @@ export const ThemeToggle = () => {
 				<BsMoonFill
 					color={
 						theme === "dark"
-							? THEME_SWITCHER.MOON_COLOR
-							: THEME_SWITCHER.OPTION_DISABLED
+							? S.THEME_SWITCHER.MOON_COLOR
+							: S.THEME_SWITCHER.OPTION_DISABLED
 					}
 				/>
 			</S.ThemeIconContainer>
 			<S.ThemeSwitchInner
-				theme={theme}
 				className={classNames({
 					light: theme === "light",
 					dark: theme === "dark",

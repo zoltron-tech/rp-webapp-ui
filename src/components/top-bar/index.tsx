@@ -1,17 +1,18 @@
 "use client";
 
-import { FC, useContext, useState } from "react";
-import { Button, ShouldRender, SignupModal } from "@/components";
+import { FC, useState } from "react";
+import { Button, SignupModal } from "@/components";
 
 import * as S from "./styles";
 import { ThemeToggle } from "../theme-toggle";
-import { ThemeContext } from "@/context";
 
-type Props = {};
+type Props = {
+	toggleTheme: () => void;
+	theme: "light" | "dark";
+};
 
-export const TopBar: FC<Props> = () => {
+export const TopBar: FC<Props> = ({ theme, toggleTheme }) => {
 	const [modalOpen, setModalOpen] = useState(false);
-	const { theme } = useContext(ThemeContext);
 
 	const onLoginClick = () => {
 		setModalOpen(true);
@@ -28,13 +29,13 @@ export const TopBar: FC<Props> = () => {
 	return (
 		<>
 			<SignupModal open={modalOpen} onClose={onModalClose} />
-			<S.Bar theme={theme}>
+			<S.Bar>
 				<S.LogoContainer>
 					<S.Logo>RP</S.Logo>
 					<S.LogoText>Novelists&apos; Corner</S.LogoText>
 				</S.LogoContainer>
 				<S.ActionsContainer>
-					<ThemeToggle />
+					<ThemeToggle theme={theme} toggleTheme={toggleTheme} />
 					<S.ButtonsContainerDesktop>
 						<Button onClick={onLoginClick}>Log in</Button>
 						<Button onClick={onSignupClick} variant="secondary">

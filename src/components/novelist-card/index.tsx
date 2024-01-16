@@ -16,10 +16,6 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
 	const { isActive } = useSwiperSlide();
 
 	useEffect(() => {
-		console.log("expanded: ", expanded);
-	}, [expanded]);
-
-	useEffect(() => {
 		if (!isActive) {
 			setTimeout(() => {
 				setExpanded(false);
@@ -32,16 +28,7 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
 	return (
 		<S.CardWrapper className={classNames({ expanded })}>
 			<S.CardBackground banner={novelist.image} />
-			<S.Card
-				onClick={() => {
-					console.log(
-						"clicked: ",
-						novelist.firstName,
-						novelist.lastName
-					);
-				}}
-				className="novelist-card"
-			>
+			<S.Card className="novelist-card">
 				<S.ExpandButton
 					onClick={() => setExpanded((current) => !current)}
 					className={classNames({ expanded })}

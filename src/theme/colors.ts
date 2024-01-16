@@ -9,6 +9,7 @@ export const PALETTE = {
 	BACKGROUND: "#2e2f3f",
 	GREY: "#413F42",
 	DANGER: "#d33b5c",
+	HOVER_GREY_DARKER: "#3A3D4D",
 	HOVER_GREY: "#50577A",
 	HOVER_GREY_ALPHA: "rgba(112, 95, 149, 0.231)",
 	WHIPPED_CREAM: "#6B728E",
@@ -16,11 +17,11 @@ export const PALETTE = {
 	THEME_SWITCHER: {
 		BACKGROUND: "#6B728E",
 		FRONT: {
-			DARK: "#222222",
-			LIGHT: "#F9FAFB",
+			NIGHT: "#042b52",
+			DAY: "#72aae2",
 		},
-		SUN_COLOR: "#F59E0B",
-		MOON_COLOR: "#F59E0B",
+		MOON_COLOR: "#fcea4b",
+		SUN_COLOR: "#fbfd87",
 		OPTION_DISABLED: "#6B728E",
 	},
 };

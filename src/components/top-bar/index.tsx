@@ -1,15 +1,17 @@
 "use client";
 
-import { FC, useState } from "react";
+import { FC, useContext, useState } from "react";
 import { Button, SignupModal } from "@/components";
 
 import * as S from "./styles";
 import { ThemeToggle } from "../theme-toggle";
+import { ThemeContext } from "@/context";
 
 type Props = {};
 
 export const TopBar: FC<Props> = () => {
 	const [modalOpen, setModalOpen] = useState(false);
+	const { theme } = useContext(ThemeContext);
 
 	const onLoginClick = () => {
 		setModalOpen(true);
@@ -26,7 +28,7 @@ export const TopBar: FC<Props> = () => {
 	return (
 		<>
 			<SignupModal open={modalOpen} onClose={onModalClose} />
-			<S.Bar>
+			<S.Bar theme={theme}>
 				<S.LogoContainer>
 					<S.Logo>RP</S.Logo>
 					<S.LogoText>Novelists&apos; Corner</S.LogoText>

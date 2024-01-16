@@ -4,6 +4,8 @@ import { NovelistCard, ShouldRender } from "@/components";
 import { useEffect, useState } from "react";
 import { Novelist } from "@/types";
 import { getNovelists } from "./actions";
+import { EffectCoverflow, Navigation, Autoplay } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
 
 import * as S from "./styles";
 
@@ -11,10 +13,6 @@ import * as S from "./styles";
 import "swiper/css";
 import "swiper/css/effect-coverflow";
 import "swiper/css/navigation";
-import "./swiper.css";
-
-import { EffectCoverflow, Navigation, Autoplay } from "swiper/modules";
-import { Swiper, SwiperSlide } from "swiper/react";
 
 export default function NovelistsPage() {
 	const [novelists, setNovelistsState] = useState<Novelist[]>([]);
@@ -33,21 +31,19 @@ export default function NovelistsPage() {
 			<S.CarouselContainer>
 				<Swiper
 					effect={"coverflow"}
-					grabCursor={true}
+					// grabCursor={true}
 					navigation={true}
 					loop={true}
 					centeredSlides={true}
-					slidesPerView={"auto"}
+					slidesPerView={3}
 					autoplay={{
-						delay: 2500,
+						delay: 3500,
 						disableOnInteraction: false,
 					}}
 					coverflowEffect={{
-						rotate: 60,
-						stretch: 1.2,
-						depth: 120,
-						modifier: 1,
-						scale: 0.4,
+						rotate: 0,
+						depth: 0,
+						scale: 0.6,
 					}}
 					modules={[EffectCoverflow, Navigation, Autoplay]}
 				>

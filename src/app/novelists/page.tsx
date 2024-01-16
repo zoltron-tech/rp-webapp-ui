@@ -37,10 +37,10 @@ export default function NovelistsPage() {
 					centeredSlides={true}
 					slidesPerView={3}
 					speed={600}
-					// autoplay={{
-					// 	delay: 3500,
-					// 	disableOnInteraction: false,
-					// }}
+					autoplay={{
+						delay: 3500,
+						disableOnInteraction: false,
+					}}
 					coverflowEffect={{
 						rotate: 0,
 						depth: 0,

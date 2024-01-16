@@ -6,14 +6,17 @@ import { FC, useEffect, useState } from "react";
 import * as S from "./styles";
 import { ShouldRender } from "..";
 import classNames from "classnames";
-import { useSwiperSlide } from "swiper/react";
+import { useSwiper, useSwiperSlide } from "swiper/react";
 import { MdOutlineExpandLess, MdOutlineExpandMore } from "react-icons/md";
+import { useUIContext } from "@/hooks";
 type Props = {
 	novelist?: Novelist | null;
 };
 export const NovelistCard: FC<Props> = ({ novelist }) => {
 	const [expanded, setExpanded] = useState(false);
+	const { setCardExpanded } = useUIContext();
 	const { isActive } = useSwiperSlide();
+	const { autoplay } = useSwiper();
 
 	useEffect(() => {
 		if (!isActive) {
@@ -23,10 +26,22 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
 		}
 	}, [isActive]);
 
+	useEffect(() => {
+		setCardExpanded(expanded);
+	}, [expanded]);
+
 	if (!novelist) return <></>;
 
 	return (
-		<S.CardWrapper className={classNames({ expanded })}>
+		<S.CardWrapper
+			className={classNames({ expanded })}
+			onMouseEnter={() => {
+				autoplay.stop();
+			}}
+			onMouseLeave={() => {
+				autoplay.start();
+			}}
+		>
 			<S.CardBackground banner={novelist.image} />
 			<S.Card className="novelist-card">
 				<S.ExpandButton

@@ -2,7 +2,7 @@
 
 import { ContentContainer, TopBar } from "@/components";
 import StyledComponentsRegistry from "./registry";
-import { ThemeProvider } from "@/context";
+import { ThemeProvider, UIContextProvider } from "@/context";
 
 import "./globals.css";
 
@@ -15,10 +15,12 @@ export default function RootLayout({
 		<html>
 			<body>
 				<StyledComponentsRegistry>
-					<ThemeProvider>
-						<TopBar />
-						<ContentContainer>{children}</ContentContainer>
-					</ThemeProvider>
+					<UIContextProvider>
+						<ThemeProvider>
+							<TopBar />
+							<ContentContainer>{children}</ContentContainer>
+						</ThemeProvider>
+					</UIContextProvider>
 				</StyledComponentsRegistry>
 			</body>
 		</html>

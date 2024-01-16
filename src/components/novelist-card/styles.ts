@@ -6,7 +6,6 @@ export const CardWrapper = styled.div`
 	width: 600px;
 	height: 250px;
 	border-radius: ${BORDER_RADIUS};
-	/* box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4); */
 	overflow: hidden;
 	transition: all 0.3s ease-in-out;
 
@@ -20,7 +19,7 @@ export const CardWrapper = styled.div`
 	@container (max-width: 1200px) {
 		& {
 			width: 400px;
-			height: 225px;
+			height: 230px;
 		}
 
 		&.expanded {
@@ -127,19 +126,12 @@ export const ExpandButton = styled.div`
 
 	@container (max-width: 400px) {
 		& {
-			top: 170px;
-		}
-	}
-
-	@container (max-width: 300px) {
-		& {
-			top: 130px;
-			right: 5px;
+			top: 10px;
+			right: 10px;
 			width: 20px;
 			height: 20px;
 			background-color: transparent;
 			box-shadow: none;
-
 			& svg {
 				width: 15px;
 				height: 15px;
@@ -258,6 +250,19 @@ export const Email = styled.div`
 	font-size: 12px;
 	font-weight: 400;
 	color: ${PALETTE.TEXT};
+	text-align: center;
+
+	&::before {
+		content: "“";
+		font-weight: 400;
+		font-size: 16px;
+	}
+
+	&::after {
+		content: "”";
+		font-weight: 400;
+		font-size: 16px;
+	}
 
 	@container (max-width: 400px) {
 		& {
@@ -272,16 +277,6 @@ export const Email = styled.div`
 	}
 `;
 
-export const MuseListContainer = styled.div`
-	margin-top: 40px;
-	position: relative;
-	width: 100%;
-	height: 100%;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-`;
 export const MuseList = styled.div`
 	border-top: 1px solid ${PALETTE.HOVER_GREY_ALPHA};
 	width: 100%;
@@ -297,7 +292,7 @@ export const MuseList = styled.div`
 
 	@container (max-width: 400px) {
 		& {
-			margin-top: 60px;
+			margin-top: 80px;
 		}
 	}
 

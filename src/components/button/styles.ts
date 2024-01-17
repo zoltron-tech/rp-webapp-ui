@@ -15,17 +15,70 @@ export const Container = styled.div<ContainerProps>`
 	border-radius: 2px;
 	cursor: pointer;
 	white-space: nowrap;
+	width: 100%;
 
-	background-color: ${({ variant, theme }) =>
-		is(variant, "primary") ? theme.primary : "transparent"};
+	&.primary {
+		background-color: ${({ theme }) => theme.primary};
+		border: none;
+		color: ${({ theme }) => theme.text};
+		padding: 10px 20px;
 
-	border: ${({ variant, theme }) =>
-		is(variant, "secondary") ? `2px solid ${theme.text}` : "none"};
+		&:hover {
+			background-color: ${({ theme }) => theme.primaryHover};
+		}
+	}
 
-	color: ${({ theme }) => theme.text};
+	&.secondary {
+		background-color: transparent;
+		border: 2px solid ${({ theme }) => theme.text};
+		color: ${({ theme }) => theme.text};
+		padding: 8px 18px;
 
-	padding: ${({ variant }) =>
-		is(variant, "secondary") ? "8px 18px" : "10px 20px"};
+		&:hover {
+			border-color: ${({ theme }) => theme.primaryHover};
+			color: ${({ theme }) => theme.primaryHover};
+		}
+	}
+
+	&.link {
+		background-color: transparent;
+		border: none;
+		color: ${({ theme }) => theme.text};
+		padding: 10px 20px;
+
+		&:hover {
+			color: ${({ theme }) => theme.primaryHover};
+		}
+	}
+
+	&.rounded {
+		border-radius: 20px;
+	}
+
+	&.square {
+		border-radius: 0px;
+	}
+
+	&.disabled {
+		pointer-events: none;
+		opacity: 0.5;
+	}
+
+	&.loading {
+		pointer-events: none;
+
+		&.primary {
+			background-color: ${({ theme }) => theme.primaryHover};
+		}
+
+		&.secondary {
+			border-color: ${({ theme }) => theme.primaryHover};
+		}
+
+		&.link {
+			color: ${({ theme }) => theme.primaryHover};
+		}
+	}
 
 	transition: background-color 0.1s ease-in-out;
 `;

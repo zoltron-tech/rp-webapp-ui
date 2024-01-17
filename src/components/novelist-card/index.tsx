@@ -36,10 +36,10 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
 		<S.CardWrapper
 			className={classNames({ expanded })}
 			onMouseEnter={() => {
-				// autoplay.stop();
+				autoplay.stop();
 			}}
 			onMouseLeave={() => {
-				// autoplay.start();
+				autoplay.start();
 			}}
 		>
 			<S.CardBackground banner={novelist.image} />
@@ -64,7 +64,7 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
 							{novelist.firstName} {novelist.lastName}
 						</S.Title>
 						<S.Username>{novelist.userName}</S.Username>
-						<S.Email>{novelist.email}</S.Email>
+						<S.Quote>{novelist.email}</S.Quote>
 					</S.NovelistInfo>
 				</S.CardHeader>
 				<ShouldRender if={expanded}>

@@ -244,9 +244,9 @@ export const Username = styled.div`
 	}
 `;
 
-export const Email = styled.div`
+export const Quote = styled.div`
 	font-size: 12px;
-	font-weight: 400;
+	font-weight: 500;
 	color: ${({ theme }) => theme.text};
 	text-align: center;
 

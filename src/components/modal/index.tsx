@@ -9,8 +9,16 @@ type Props = {
 	children: React.ReactNode;
 	open: boolean;
 	onClose: () => void;
+	width?: string;
+	height?: string;
 };
-export const Modal: FC<Props> = ({ children, open, onClose }) => {
+export const Modal: FC<Props> = ({
+	children,
+	open,
+	width,
+	height,
+	onClose,
+}) => {
 	const [closeHover, setCloseHover] = useState(false);
 	const theme = useTheme();
 
@@ -19,8 +27,8 @@ export const Modal: FC<Props> = ({ children, open, onClose }) => {
 	};
 
 	return (
-		<S.Container onClick={onCloseClick} open={open}>
-			<S.Content>
+		<S.Container open={open}>
+			<S.Content width={width} height={height}>
 				<S.CloseButton
 					onMouseEnter={() => setCloseHover(true)}
 					onMouseLeave={() => setCloseHover(false)}

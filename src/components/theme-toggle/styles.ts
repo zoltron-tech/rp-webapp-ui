@@ -11,6 +11,13 @@ export const THEME_SWITCHER = {
 	OPTION_DISABLED: "#6B728E",
 };
 
+export const Container = styled.div`
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	position: relative;
+`;
+
 export const ThemeSwitcher = styled.div`
 	width: 60px;
 	height: 30px;

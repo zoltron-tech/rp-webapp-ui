@@ -1,11 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    reactStrictMode: true,
     compiler: {
         styledComponents: true,
     },
 
     serverRuntimeConfig: {
-        NOVELIST_API: process.env.NOVELIST_API,
+        RP_SERVICE_URL: process.env.RP_SERVICE_URL,
+        RP_NOVELIST_PORT: process.env.RP_NOVELIST_PORT,
+        RP_USER_PORT: process.env.RP_USER_PORT,
     },
 
     webpack(config) {

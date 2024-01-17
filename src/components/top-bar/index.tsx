@@ -1,10 +1,13 @@
 "use client";
 
 import { FC, useState } from "react";
-import { Button, SignupModal } from "@/components";
+import { Button, LoginModal, ShouldRender } from "@/components";
 
 import * as S from "./styles";
 import { ThemeToggle } from "../theme-toggle";
+import { useAuth } from "@/hooks";
+import { logout } from "@/app/actions";
+import { redirect } from "next/navigation";
 
 type Props = {
 	toggleTheme: () => void;
@@ -13,6 +16,7 @@ type Props = {
 
 export const TopBar: FC<Props> = ({ theme, toggleTheme }) => {
 	const [modalOpen, setModalOpen] = useState(false);
+	const { isLoggedIn } = useAuth();
 
 	const onLoginClick = () => {
 		setModalOpen(true);
@@ -22,13 +26,17 @@ export const TopBar: FC<Props> = ({ theme, toggleTheme }) => {
 		setModalOpen(true);
 	};
 
+	const onLogoutClick = async () => {
+		await logout();
+	};
+
 	const onModalClose = () => {
 		setModalOpen(false);
 	};
 
 	return (
 		<>
-			<SignupModal open={modalOpen} onClose={onModalClose} />
+			<LoginModal open={modalOpen} onClose={onModalClose} />
 			<S.Bar>
 				<S.LogoContainer>
 					<S.Logo>RP</S.Logo>
@@ -36,20 +44,27 @@ export const TopBar: FC<Props> = ({ theme, toggleTheme }) => {
 				</S.LogoContainer>
 				<S.ActionsContainer>
 					<ThemeToggle theme={theme} toggleTheme={toggleTheme} />
-					<S.ButtonsContainerDesktop>
-						<Button onClick={onLoginClick}>Log in</Button>
-						<Button onClick={onSignupClick} variant="secondary">
-							Sign up
-						</Button>
-					</S.ButtonsContainerDesktop>
-					<S.ButtonsContainerMobile>
-						<Button variant="link" onClick={onLoginClick}>
-							Log in
-						</Button>
-						<Button variant="link" onClick={onSignupClick}>
-							Sign up
-						</Button>
-					</S.ButtonsContainerMobile>
+					<ShouldRender if={!isLoggedIn}>
+						<S.ButtonsContainerDesktop>
+							<Button onClick={onLoginClick}>Log in</Button>
+							<Button onClick={onSignupClick} variant="secondary">
+								Sign up
+							</Button>
+						</S.ButtonsContainerDesktop>
+						<S.ButtonsContainerMobile>
+							<Button variant="link" onClick={onLoginClick}>
+								Log in
+							</Button>
+							<Button variant="link" onClick={onSignupClick}>
+								Sign up
+							</Button>
+						</S.ButtonsContainerMobile>
+					</ShouldRender>
+					<ShouldRender if={isLoggedIn}>
+						<S.ButtonsContainerDesktop>
+							<Button onClick={onLogoutClick}>Log out</Button>
+						</S.ButtonsContainerDesktop>
+					</ShouldRender>
 				</S.ActionsContainer>
 			</S.Bar>
 		</>

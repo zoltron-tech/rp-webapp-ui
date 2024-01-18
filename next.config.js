@@ -6,9 +6,7 @@ const nextConfig = {
     },
 
     serverRuntimeConfig: {
-        RP_SERVICE_URL: process.env.RP_SERVICE_URL,
-        RP_NOVELIST_PORT: process.env.RP_NOVELIST_PORT,
-        RP_USER_PORT: process.env.RP_USER_PORT,
+        RP_SERVICE_URL: process.env.RP_SERVICE_URL
     },
 
     webpack(config) {

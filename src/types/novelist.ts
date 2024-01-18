@@ -13,7 +13,7 @@ export type Novelist = {
 	firstName: string;
 	lastName: string;
 	userName: string;
-	email: string;
+	note: string;
 	image: string;
 	muses: Muse[];
 };

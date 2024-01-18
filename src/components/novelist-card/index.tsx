@@ -64,7 +64,7 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
 							{novelist.firstName} {novelist.lastName}
 						</S.Title>
 						<S.Username>{novelist.userName}</S.Username>
-						<S.Quote>{novelist.email}</S.Quote>
+						<S.Quote>{novelist.note}</S.Quote>
 					</S.NovelistInfo>
 				</S.CardHeader>
 				<ShouldRender if={expanded}>

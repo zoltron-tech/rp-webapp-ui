@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 const { serverRuntimeConfig } = getConfig();
-const { RP_SERVICE_URL, RP_USER_PORT } = serverRuntimeConfig;
+const { RP_SERVICE_URL } = serverRuntimeConfig;
 const COOKIE_NAME = "rp_jwt";
 
 type LoginResponseServer = {
@@ -14,7 +14,7 @@ type LoginResponseServer = {
 	token: string;
 };
 export const login = async (payload: LoginPayload): Promise<LoginResponse> => {
-	const URL = `${RP_SERVICE_URL}:${RP_USER_PORT}/api/users/login`;
+	const URL = `${RP_SERVICE_URL}/rp/user/account/login`;
 
 	console.log("login payload", payload);
 	console.log("login URL", URL);

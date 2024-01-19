@@ -77,6 +77,7 @@ export const Input: FC<Props> = (props) => {
         <S.InputLabel>{label}</S.InputLabel>
         {isPassword && (
           <S.RightIconBox
+            className={classNames({ visible: !hidden })}
             onClick={(): void => {
               setHidden(!hidden);
               if (hidden) setPasswordType("text");

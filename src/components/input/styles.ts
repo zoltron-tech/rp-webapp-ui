@@ -53,8 +53,8 @@ export const Input = styled.input`
 
   &:focus ~ label,
   &:not(:placeholder-shown):not(:focus) ~ label {
-    top: -16px;
-    font-size: 16px;
+    top: -12px;
+    font-size: 12px;
     padding: 0px 5px;
     background-color: ${({ theme }) => theme.modalBackground};
   }
@@ -80,7 +80,6 @@ export const Message = styled.div`
   width: 100%;
   opacity: 0;
   transition: opacity 0.1s ease-in-out;
-  white-space: nowrap;
   margin-top: 2px;
 
   & svg {
@@ -156,11 +155,24 @@ export const RightIconBox = styled.div`
   right: 16px;
   height: 100%;
   top: 0px;
+  cursor: pointer;
 
   & svg {
+    transition: opacity 0.1s ease-in-out;
+    opacity: 0.5;
     fill: ${({ theme }) => theme.text};
     path {
       fill: ${({ theme }) => theme.text} !important;
+    }
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  &.visible {
+    & svg {
+      opacity: 1;
     }
   }
 `;

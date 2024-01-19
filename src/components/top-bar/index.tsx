@@ -1,13 +1,12 @@
 "use client";
 
-import { FC, useState } from "react";
-import { Button, LoginModal, ShouldRender } from "@/components";
+import { FC } from "react";
+import { Button, ShouldRender } from "@/components";
 
 import * as S from "./styles";
 import { ThemeToggle } from "../theme-toggle";
 import { useAuth, useUIContext } from "@/hooks";
 import { logout } from "@/app/actions";
-import { redirect } from "next/navigation";
 
 type Props = {
   toggleTheme: () => void;

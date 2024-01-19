@@ -11,6 +11,7 @@ export type Theme = {
   textLinkHover: string;
   primary: string;
   primaryHover: string;
+  primaryDisabled: string;
   navbar: string;
   cardBackgroundTint: string;
   cardBackgroundGradient: string[];
@@ -33,8 +34,9 @@ export const THEME_LIGHT: Theme = {
   textPrimary: "#dedede",
   textLink: accentColor,
   textLinkHover: pSBC(-0.3, accentColor) as string,
-  primary: pSBC(-0.2, accentColor) as string,
+  primary: pSBC(-0.15, accentColor) as string,
   primaryHover: pSBC(0.1, accentColor) as string,
+  primaryDisabled: "#a5a5a5",
   navbar: pSBC(0.6, accentColor) as string,
   cardBackgroundTint: "rgba(185, 182, 182, 0.003)",
   cardBackgroundGradient: [
@@ -61,6 +63,7 @@ export const THEME_DARK: Theme = {
   textLinkHover: pSBC(-0.3, accentColor) as string,
   primary: pSBC(-0.5, accentColor) as string,
   primaryHover: pSBC(-0.2, accentColor) as string,
+  primaryDisabled: "#585858",
   navbar: "#474646",
   cardBackgroundTint: "rgba(0, 0, 0, 0.339)",
   cardBackgroundGradient: [

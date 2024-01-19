@@ -99,8 +99,6 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
               type="text"
               onChange={(value) => setUsername(value || "")}
               value={username}
-              // message={error}
-              messageType="error"
             />
           </ShouldRender>
           <Input
@@ -108,16 +106,14 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
             type="text"
             onChange={(value) => setEmail(value || "")}
             value={email}
-            message={error}
-            messageType="processing"
           />
           <Input
             label="Password"
             type="password"
             onChange={(value) => setPassword(value || "")}
             value={password}
-            // message={error}
-            messageType="success"
+            message={error}
+            messageType="warning"
           />
           <S.Buttons>
             <Button

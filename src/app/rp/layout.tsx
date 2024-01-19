@@ -8,7 +8,6 @@ import { ThemeProvider } from "styled-components";
 import { useEffect, useState } from "react";
 import { useCookies } from "react-cookie";
 import { THEME_DARK, THEME_LIGHT } from "@/theme";
-import { useAuth, useUIContext } from "@/hooks";
 
 import * as S from "./styles";
 

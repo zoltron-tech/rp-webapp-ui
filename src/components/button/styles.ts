@@ -17,6 +17,7 @@ export const Container = styled.div<ContainerProps>`
   white-space: nowrap;
   width: 100%;
   position: relative;
+  transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
   ${SPIN}
 
   & span {
@@ -90,22 +91,25 @@ export const Container = styled.div<ContainerProps>`
 
   &.disabled {
     pointer-events: none;
-    opacity: 0.5;
+    background-color: ${({ theme }) => theme.primaryDisabled};
+    cursor: not-allowed;
   }
 
   &.loading {
     pointer-events: none;
+    cursor: wait;
 
     &.primary {
-      background-color: ${({ theme }) => theme.primaryHover};
+      background-color: ${({ theme }) => theme.primaryDisabled};
     }
 
     &.secondary {
-      border-color: ${({ theme }) => theme.primaryHover};
+      border-color: ${({ theme }) => theme.primaryDisabled};
+      color: ${({ theme }) => theme.primaryDisabled};
     }
 
     &.link {
-      color: ${({ theme }) => theme.primaryHover};
+      color: ${({ theme }) => theme.primaryDisabled};
     }
 
     & span {

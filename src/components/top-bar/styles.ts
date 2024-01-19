@@ -2,107 +2,107 @@ import { NO_USER_SELECT } from "@/theme";
 import styled from "styled-components";
 
 export const Bar = styled.div`
-	height: 80px;
-	width: 100%;
-	background-color: ${({ theme }) => theme.navbar};
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 0 40px;
-	box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
-	position: sticky;
-	container-name: top-bar;
-	container-type: inline-size;
+  height: 80px;
+  width: 100%;
+  background-color: ${({ theme }) => theme.navbar};
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
+  position: sticky;
+  container-name: top-bar;
+  container-type: inline-size;
 
-	@container (max-width: 800px) {
-		& {
-			padding: 0 20px;
-		}
-	}
+  @container (max-width: 800px) {
+    & {
+      padding: 0 20px;
+    }
+  }
 
-	@container (max-width: 650px) {
-		& {
-			padding: 0px;
-		}
-	}
+  @container (max-width: 650px) {
+    & {
+      padding: 0px;
+    }
+  }
 `;
 export const LogoContainer = styled.div`
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	color: ${({ theme }) => theme.text};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${({ theme }) => theme.text};
 `;
 
 export const Logo = styled.div`
-	height: 80px;
-	width: 80px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 36px;
-	font-weight: 300;
-	font-style: italic;
-	color: ${({ theme }) => theme.text};
-	background-color: ${({ theme }) => theme.primary};
-	box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.6);
-	${NO_USER_SELECT}
+  height: 80px;
+  width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  font-weight: 300;
+  font-style: italic;
+  color: ${({ theme }) => theme.textPrimary};
+  background-color: ${({ theme }) => theme.primary};
+  box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.6);
+  ${NO_USER_SELECT}
 `;
 
 export const LogoText = styled.div`
-	margin-left: 20px;
-	text-transform: uppercase;
-	font-size: 28px;
-	font-weight: 500;
-	font-style: italic;
-	${NO_USER_SELECT}
+  margin-left: 20px;
+  text-transform: uppercase;
+  font-size: 28px;
+  font-weight: 500;
+  font-style: italic;
+  ${NO_USER_SELECT}
 
-	@container (max-width: 800px) {
-		& {
-			font-size: 24px;
-		}
-	}
+  @container (max-width: 800px) {
+    & {
+      font-size: 24px;
+    }
+  }
 
-	@container (max-width: 650px) {
-		& {
-			display: none;
-		}
-	}
+  @container (max-width: 650px) {
+    & {
+      display: none;
+    }
+  }
 `;
 
 export const ActionsContainer = styled.div`
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 `;
 
 export const ButtonsContainerDesktop = styled.div`
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	width: 200px;
-	gap: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 200px;
+  gap: 10px;
 
-	@container (max-width: 800px) {
-		& {
-			display: none;
-		}
-	}
+  @container (max-width: 800px) {
+    & {
+      display: none;
+    }
+  }
 `;
 
 export const ButtonsContainerMobile = styled.div`
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	flex-direction: column;
-	width: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: column;
+  width: 100px;
 
-	@container (min-width: 800px) {
-		& {
-			display: none;
-		}
-	}
+  @container (min-width: 800px) {
+    & {
+      display: none;
+    }
+  }
 
-	& > .button:not(:last-child) {
-		border-bottom: 1px solid ${({ theme }) => theme.text};
-	}
+  & > .button:not(:last-child) {
+    border-bottom: 1px solid ${({ theme }) => theme.text};
+  }
 `;

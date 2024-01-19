@@ -28,21 +28,31 @@ export const ThemeSwitcher = styled.div`
   justify-content: space-between;
   margin-right: 20px;
   position: relative;
+  /* border: 1px solid ${THEME_SWITCHER.BACKGROUND}; */
   box-shadow: inset 0px 0px 1px 0px rgba(0, 0, 0, 0.4);
   cursor: pointer;
+  overflow: hidden;
 `;
 
 export const ThemeSwitchInner = styled.div<{ theme: string }>`
   width: 50%;
   height: 100%;
-  border-radius: 50%;
+  border-radius: 15px;
   position: absolute;
   left: 0;
   z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 1px 1px 2px 0px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+
+  & svg {
+    width: 18px;
+    height: 18px;
+    transition: all 0.2s ease-in;
+    z-index: 2;
+    opacity: 0;
+  }
 
   @keyframes lightModeToDarkMode {
     0% {
@@ -52,7 +62,7 @@ export const ThemeSwitchInner = styled.div<{ theme: string }>`
     }
     50% {
       width: 100%;
-      transform: translateX(0);
+      transform: translateX(0%);
       background-color: ${THEME_SWITCHER.FRONT.DAY};
     }
     100% {
@@ -70,34 +80,37 @@ export const ThemeSwitchInner = styled.div<{ theme: string }>`
     }
     50% {
       width: 100%;
-      transform: translateX(0);
+      transform: translateX(0%);
       background-color: ${THEME_SWITCHER.FRONT.NIGHT};
     }
     100% {
       width: 50%;
-      transform: translateX(0);
+      transform: translateX(0%);
       background-color: ${THEME_SWITCHER.FRONT.DAY};
     }
   }
 
   &.dark {
-    animation: lightModeToDarkMode 0.4s forwards;
+    animation: lightModeToDarkMode 0.3s ease-out forwards;
+
+    & .moon {
+      opacity: 1;
+    }
+
+    & .sun {
+      width: 0px;
+    }
   }
 
   &.light {
-    animation: darkModeToLightMode 0.4s forwards;
-  }
-`;
+    animation: darkModeToLightMode 0.3s ease-out forwards;
 
-export const ThemeIconContainer = styled.div`
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2;
+    & .sun {
+      opacity: 1;
+    }
 
-  & svg {
-    transition: all 0.1s ease-in;
+    & .moon {
+      width: 0px;
+    }
   }
 `;

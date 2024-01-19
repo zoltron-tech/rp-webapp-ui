@@ -3,15 +3,15 @@ import { NO_SCROLLBAR } from "@/theme";
 import styled from "styled-components";
 
 export const Container = styled.div`
-	width: 100%;
-	height: 100%;
-	min-height: calc(100vh - 80px);
-	position: relative;
-	background-color: ${({ theme }) => theme.background};
-	overflow: hidden;
+  width: 100%;
+  height: 100%;
+  min-height: calc(100vh - 80px);
+  position: relative;
+  background-color: ${({ theme }) => theme.background};
+  overflow: hidden;
 
-	container-name: content-container;
-	container-type: inline-size;
+  container-name: content-container;
+  container-type: inline-size;
 
-	${NO_SCROLLBAR}
+  ${NO_SCROLLBAR}
 `;

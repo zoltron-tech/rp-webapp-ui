@@ -1,18 +1,19 @@
 import StyledComponentsRegistry from "./registry";
-import { Toaster } from "react-hot-toast";
+
+import "toastify-js/src/toastify.css";
 
 import "./globals.css";
-export default function RootLayout({
-	children,
+
+export default async function RootLayout({
+  children,
 }: {
-	children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-	return (
-		<html>
-			<body>
-				<StyledComponentsRegistry>{children}</StyledComponentsRegistry>
-				<Toaster />
-			</body>
-		</html>
-	);
+  return (
+    <html>
+      <body>
+        <StyledComponentsRegistry>{children}</StyledComponentsRegistry>
+      </body>
+    </html>
+  );
 }

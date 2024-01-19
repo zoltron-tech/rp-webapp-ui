@@ -1,26 +1,66 @@
-import toast from "react-hot-toast";
-import { DefaultTheme } from "styled-components";
+import { BORDER_RADIUS } from "@/theme";
+import { DefaultTheme, css } from "styled-components";
+import toast from "toastify-js";
+
+enum ToastType {
+  success = "success",
+  error = "error",
+}
+
+const getToastStyle = (
+  theme: DefaultTheme,
+  type: ToastType
+): { [cssRule: string]: string } => {
+  const color = ((): string => {
+    switch (type) {
+      case ToastType.success:
+        return theme.success;
+      case ToastType.error:
+        return theme.error;
+    }
+  })();
+
+  return {
+    color,
+    fontSize: "20px",
+    fontWeight: "600",
+    background: theme.toastBackground,
+    padding: "20px 20px 20px 30px",
+    borderRadius: BORDER_RADIUS,
+  };
+};
+
+const DEFAULT_TOAST_OPTIONS: Partial<toast.Options> = {
+  position: "right",
+  gravity: "bottom",
+
+  className: "nw-toast",
+  stopOnFocus: true,
+  duration: 9999999,
+  close: true,
+};
 
 export const generateToastError = (
-	errorMsg: string,
-	theme: DefaultTheme,
-	id = ""
+  message: string,
+  theme: DefaultTheme,
+  id = ""
 ) => {
-	toast.error(errorMsg, {
-		position: "top-right",
-
-		style: { color: theme.danger },
-	});
+  toast({
+    ...DEFAULT_TOAST_OPTIONS,
+    text: message,
+    className: `nw-toast-${theme.name}`,
+    style: getToastStyle(theme, ToastType.error),
+  }).showToast();
 };
 
 export const generateToastSuccess = (
-	message: string,
-	theme: DefaultTheme,
-	id = ""
+  message: string,
+  theme: DefaultTheme,
+  id = ""
 ) => {
-	toast.success(message, {
-		position: "top-right",
-
-		style: { color: theme.success },
-	});
+  toast({
+    ...DEFAULT_TOAST_OPTIONS,
+    text: message,
+    style: getToastStyle(theme, ToastType.success),
+  }).showToast();
 };

@@ -1,20 +1,21 @@
+import { authenticate } from "@/app/actions";
 import { useEffect, useState } from "react";
 
 export const useAuth = () => {
-	const [isLoggedIn, setIsLoggedIn] = useState(false);
-	const cookies = document.cookie.split("; ");
-	const token = cookies.find((cookie) => cookie.startsWith("rp_jwt="));
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-	console.log(cookies);
+  const verify = async () => {
+    const isAuthenticated = await authenticate();
+    if (isLoggedIn !== isAuthenticated) setIsLoggedIn(isAuthenticated);
+    return isAuthenticated;
+  };
 
-	useEffect(() => {
-		const token = cookies.find((cookie) => cookie.startsWith("rp_jwt="));
-		if (token) {
-			setIsLoggedIn(true);
-		}
-	}, [token]);
+  useEffect(() => {
+    verify();
+  }, []);
 
-	return {
-		isLoggedIn,
-	};
+  return {
+    isLoggedIn,
+    verify,
+  };
 };

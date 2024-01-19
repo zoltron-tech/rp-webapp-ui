@@ -28,10 +28,6 @@ export default function NovelistsPage() {
 		setNovelists();
 	}, []);
 
-	useEffect(() => {
-		console.log("cardExpanded", cardExpanded);
-	}, [cardExpanded]);
-
 	return (
 		<ShouldRender if={!!novelists}>
 			<S.CarouselContainer>
@@ -43,13 +39,14 @@ export default function NovelistsPage() {
 					slidesPerView={3}
 					speed={1000}
 					autoplay={{
-						delay: 4000,
-						disableOnInteraction: false,
+					delay: 4000,
+					disableOnInteraction: false,
 					}}
 					coverflowEffect={{
 						rotate: 0,
 						depth: 0,
 						scale: 0.6,
+						slideShadows: false,
 					}}
 					modules={[EffectCoverflow, Navigation, Autoplay]}
 				>

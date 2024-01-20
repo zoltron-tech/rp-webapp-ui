@@ -1,19 +1,19 @@
 export type Muse = {
-	firstName: string;
-	lastName: string;
-	image: string;
-	dateOfBirth: {
-		year: number;
-		month: string;
-		day: number;
-	};
+  firstName: string;
+  lastName: string;
+  image: string;
+  dateOfBirth: {
+    year: number;
+    month: string;
+    day: number;
+  };
 };
 
 export type Novelist = {
-	firstName: string;
-	lastName: string;
-	userName: string;
-	note: string;
-	image: string;
-	muses: Muse[];
+  username: string;
+  firstName: string;
+  lastName: string;
+  note: string;
+  image: string;
+  muses: Muse[];
 };

@@ -33,10 +33,9 @@ const getToastStyle = (
 const DEFAULT_TOAST_OPTIONS: Partial<toast.Options> = {
   position: "right",
   gravity: "bottom",
-
   className: "nw-toast",
   stopOnFocus: true,
-  duration: 9999999,
+  duration: 5000,
   close: true,
 };
 

@@ -4,6 +4,7 @@
   margin: 0;
   box-sizing: border-box;
   transition: background-color 0.15s ease-in, color 0.15s ease-in;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -12,8 +13,11 @@ body {
   height: 100%;
   background-color: #313131;
   overflow-x: hidden;
-  container-name: main-container;
-  container-type: inline-size;
+
+  /* Scrollbar Styles */
+  scrollbar-width: thin;
+  scrollbar-color: #313131 #242424;
+
 }
 
 main {

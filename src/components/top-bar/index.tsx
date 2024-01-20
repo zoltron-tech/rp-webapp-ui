@@ -1,12 +1,12 @@
 "use client";
 
 import { FC } from "react";
-import { Button, ShouldRender } from "@/components";
-
-import * as S from "./styles";
-import { ThemeToggle } from "../theme-toggle";
+import { Button, ShouldRender } from "@/components/common";
+import { ThemeToggle } from "@/components";
 import { useAuth, useUIContext } from "@/hooks";
 import { logout } from "@/app/actions";
+
+import * as S from "./styles";
 
 type Props = {
   toggleTheme: () => void;
@@ -35,8 +35,10 @@ export const TopBar: FC<Props> = ({ theme, toggleTheme }) => {
     <>
       <S.Bar>
         <S.LogoContainer>
-          <S.Logo>RP</S.Logo>
-          <S.LogoText>Novelists&apos; Corner</S.LogoText>
+          <S.Logo>
+            <S.LogoInner>NW</S.LogoInner>
+          </S.Logo>
+          <S.LogoText>Novelist World</S.LogoText>
         </S.LogoContainer>
         <S.ActionsContainer>
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} />

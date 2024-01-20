@@ -41,7 +41,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <ThemeProvider theme={getTheme()}>
         <LoginModal />
         <TopBar theme={theme} toggleTheme={toggleTheme} />
-        <ContentContainer>{children}</ContentContainer>
+        <main>
+          <ContentContainer>{children}</ContentContainer>
+        </main>
       </ThemeProvider>
     </UIContextProvider>
   );

@@ -1,7 +1,9 @@
-import { NO_USER_SELECT } from "@/theme";
 import styled from "styled-components";
+import { NO_USER_SELECT } from "@/theme";
 
 export const Bar = styled.div`
+  position: fixed;
+  top: 0px;
   height: 80px;
   width: 100%;
   background-color: ${({ theme }) => theme.navbar};
@@ -10,19 +12,20 @@ export const Bar = styled.div`
   justify-content: space-between;
   padding: 0 40px;
   box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
-  position: sticky;
   container-name: top-bar;
-  container-type: inline-size;
+  container-type: size;
+  z-index: 5;
 
-  @container (max-width: 800px) {
+  @media (max-width: 800px) {
     & {
       padding: 0 20px;
     }
   }
 
-  @container (max-width: 650px) {
+  @media (max-width: 650px) {
     & {
       padding: 0px;
+      height: 60px;
     }
   }
 `;
@@ -34,18 +37,46 @@ export const LogoContainer = styled.div`
 `;
 
 export const Logo = styled.div`
-  height: 80px;
+  height: 100cqh;
   width: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 36px;
-  font-weight: 300;
-  font-style: italic;
+  /* box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.6); */
+  background-color: ${({ theme }) => theme.primary};
+  ${NO_USER_SELECT}
+
+  -moz-transform: skew(30deg, 0deg);
+  -webkit-transform: skew(30deg, 0deg);
+  -o-transform: skew(30deg, 0deg);
+  -ms-transform: skew(30deg, 0deg);
+  transform: skew(30deg, 0deg);
+
+  @container (max-width: 650px) {
+    & {
+      margin-left: 20px;
+    }
+  }
+`;
+
+export const LogoInner = styled.div`
+  height: 80cqh;
+  width: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  font-weight: 700;
   color: ${({ theme }) => theme.textPrimary};
   background-color: ${({ theme }) => theme.primary};
-  box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.6);
+  -webkit-text-stroke: 1px #66666689; /* width and color */
   ${NO_USER_SELECT}
+
+  -moz-transform: skew(-45deg, 0deg);
+  -webkit-transform: skew(-45deg, 0deg);
+  -o-transform: skew(-45deg, 0deg);
+  -ms-transform: skew(-45deg, 0deg);
+  transform: skew(-45deg, 0deg);
 `;
 
 export const LogoText = styled.div`

@@ -35,8 +35,10 @@
 		"@types/styled-components": "^5.1.34",
 		"@types/swiper": "^6.0.0",
 		"@types/toastify-js": "^1.12.3",
+		"@yarnpkg/pnpify": "^4.0.1",
 		"eslint": "^8",
 		"eslint-config-next": "14.0.4",
 		"typescript": "^5"
-	}
+	},
+	"packageManager": "yarn@4.0.2"
 }

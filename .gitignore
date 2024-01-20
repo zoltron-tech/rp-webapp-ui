@@ -6,6 +6,14 @@
 .pnp.js
 .yarn/install-state.gz
 
+# yarn 2
+.yarn/*
+!.yarn/cache/
+!.yarn/releases/
+!.yarn/plugins/
+!.yarn/versions/
+!.yarn/sdks/
+
 # testing
 /coverage
 
@@ -32,6 +40,7 @@ yarn-error.log*
 
 # vercel
 .vercel
+.turbo
 
 # typescript
 *.tsbuildinfo

@@ -1,5 +1,5 @@
-import { SPIN } from "@/theme";
 import styled from "styled-components";
+import { SPIN } from "@/theme";
 
 export const InputWrapper = styled.div`
   margin-bottom: 10px;
@@ -56,7 +56,7 @@ export const Input = styled.input`
     top: -12px;
     font-size: 12px;
     padding: 0px 5px;
-    background-color: ${({ theme }) => theme.modalBackground};
+    /* background-color: ${({ theme }) => theme.modalBackground}; */
   }
 
   &.left-icon {

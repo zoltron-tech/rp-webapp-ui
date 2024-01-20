@@ -1,17 +1,17 @@
 import classNames from "classnames";
 import { FC, ReactElement, useState } from "react";
-import * as S from "./styles";
 import { GoEye, GoEyeClosed } from "react-icons/go";
-import { MdErrorOutline, MdOutlineError } from "react-icons/md";
 import { VscError } from "react-icons/vsc";
-import { ShouldRender } from "..";
 import { FaRegCircleCheck } from "react-icons/fa6";
 import { PiWarning } from "react-icons/pi";
 import { ImSpinner } from "react-icons/im";
+import { ShouldRender } from "@/components/common";
+
+import * as S from "./styles";
 
 interface Props {
   label: string;
-  type: string;
+  type?: string;
   placeholder?: string;
   value?: string | boolean | number;
   defaultValue?: string | boolean | number;
@@ -26,25 +26,24 @@ interface Props {
   pattern?: string;
 }
 
-export const Input: FC<Props> = (props) => {
+export const Input: FC<Props> = ({
+  type = "text",
+  icon,
+  label,
+  defaultValue,
+  value,
+  readOnly,
+  inputProps,
+  placeholder,
+  message,
+  messageType,
+  minDate,
+  maxDate,
+  onChange,
+  ...rest
+}) => {
   const [hidden, setHidden] = useState(true);
   const [passwordType, setPasswordType] = useState("password");
-  const {
-    icon,
-    label,
-    defaultValue,
-    type,
-    value,
-    readOnly,
-    inputProps,
-    placeholder,
-    message,
-    messageType,
-    minDate,
-    maxDate,
-    onChange,
-    ...rest
-  } = props;
   const isPassword = type === "password";
   const error = messageType === "error" && message;
   const success = messageType === "success" && message;

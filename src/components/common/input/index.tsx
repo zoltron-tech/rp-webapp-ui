@@ -1,13 +1,13 @@
 import classNames from "classnames";
 import { FC, ReactElement, useState } from "react";
-import * as S from "./styles";
 import { GoEye, GoEyeClosed } from "react-icons/go";
-import { MdErrorOutline, MdOutlineError } from "react-icons/md";
 import { VscError } from "react-icons/vsc";
-import { ShouldRender } from "..";
 import { FaRegCircleCheck } from "react-icons/fa6";
 import { PiWarning } from "react-icons/pi";
 import { ImSpinner } from "react-icons/im";
+import { ShouldRender } from "@/components/common";
+
+import * as S from "./styles";
 
 interface Props {
   label: string;

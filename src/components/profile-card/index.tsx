@@ -1,13 +1,11 @@
 import { FC, useEffect, useState } from "react";
-import { Card } from "@/components/card";
-import type { Novelist, User } from "@/types";
 import Image from "next/image";
+import type { Novelist, User } from "@/types";
+import { Card, Input } from "@/components/common";
+import { getUserNovelist } from "@/app/rp/novelists/actions";
+import { getUser } from "@/app/actions";
 
 import * as S from "./styles";
-import { getNovelistMock } from "@/utils/mocks";
-import { getUser, logout } from "@/app/actions";
-import { Input } from "..";
-import { getUserNovelist } from "@/app/rp/novelists/actions";
 
 export type ProfileCardProps = {};
 

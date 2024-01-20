@@ -1,15 +1,15 @@
 "use client";
 
-import { Novelist } from "@/types/novelist";
 import { FC, useEffect, useState } from "react";
-
-import * as S from "./styles";
-import { ShouldRender } from "@/components";
+import Image from "next/image";
 import classNames from "classnames";
 import { useSwiper, useSwiperSlide } from "swiper/react";
 import { MdOutlineExpandLess, MdOutlineExpandMore } from "react-icons/md";
+import { Novelist } from "@/types/novelist";
+import { ShouldRender } from "@/components/common";
 import { useUIContext } from "@/hooks";
-import Image from "next/image";
+
+import * as S from "./styles";
 
 type Props = {
   novelist?: Novelist | null;

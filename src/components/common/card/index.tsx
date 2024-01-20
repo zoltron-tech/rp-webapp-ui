@@ -1,7 +1,7 @@
 import { FC } from "react";
+import classNames from "classnames";
 
 import * as S from "./styles";
-import classNames from "classnames";
 
 export type CardProps = {
   children?: React.ReactNode;

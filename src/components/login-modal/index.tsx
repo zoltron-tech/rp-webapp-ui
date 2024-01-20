@@ -1,13 +1,13 @@
 import { FC, useEffect, useState } from "react";
-import { Button, Input, Modal, ShouldRender } from "@/components";
-import { LoginPayload, LoginResponse } from "@/types";
-import { login, reroute } from "@/app/actions";
-
-import * as S from "./styles";
 import { useTheme } from "styled-components";
+import { LoginPayload, LoginResponse } from "@/types";
+import { Button, Input, Modal, ShouldRender } from "@/components/common";
+import { login, reroute } from "@/app/actions";
 import { generateToastError, generateToastSuccess } from "@/utils/helpers";
 import { useAuth, useUIContext } from "@/hooks";
 import { Logger } from "@/utils/services";
+
+import * as S from "./styles";
 
 export type LoginModalProps = {};
 export const LoginModal: FC<LoginModalProps> = ({}) => {

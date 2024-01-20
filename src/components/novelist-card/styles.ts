@@ -1,6 +1,5 @@
-import { BORDER_RADIUS, NO_USER_SELECT } from "@/theme";
 import styled from "styled-components";
-
+import { BORDER_RADIUS, NO_USER_SELECT } from "@/theme";
 import * as Common from "@/components/common";
 
 export const CardWrapper = styled.div`

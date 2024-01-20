@@ -1,5 +1,5 @@
-import { SPIN } from "@/theme";
 import styled from "styled-components";
+import { SPIN } from "@/theme";
 
 export const InputWrapper = styled.div`
   margin-bottom: 10px;

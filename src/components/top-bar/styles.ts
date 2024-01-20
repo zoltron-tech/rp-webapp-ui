@@ -1,5 +1,5 @@
-import { NO_USER_SELECT } from "@/theme";
 import styled from "styled-components";
+import { NO_USER_SELECT } from "@/theme";
 
 export const Bar = styled.div`
   position: fixed;

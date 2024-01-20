@@ -34,6 +34,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     setTheme(cookies.theme || "dark");
   }, [initialized]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    require("@/lib/scroll-timeline-polyfill");
+  }, []);
+
   if (!initialized) return <S.FallbackContainer></S.FallbackContainer>;
 
   return (
@@ -41,7 +47,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <ThemeProvider theme={getTheme()}>
         <LoginModal />
         <TopBar theme={theme} toggleTheme={toggleTheme} />
-        <ContentContainer>{children}</ContentContainer>
+        <main>
+          <ContentContainer>{children}</ContentContainer>
+        </main>
       </ThemeProvider>
     </UIContextProvider>
   );

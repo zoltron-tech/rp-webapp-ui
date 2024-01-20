@@ -1,6 +1,6 @@
 "use client";
 
-import { FC } from "react";
+import { FC, use, useEffect } from "react";
 import { Button, ShouldRender } from "@/components";
 
 import * as S from "./styles";
@@ -35,8 +35,10 @@ export const TopBar: FC<Props> = ({ theme, toggleTheme }) => {
     <>
       <S.Bar>
         <S.LogoContainer>
-          <S.Logo>RP</S.Logo>
-          <S.LogoText>Novelists&apos; Corner</S.LogoText>
+          <S.Logo>
+            <S.LogoInner>NW</S.LogoInner>
+          </S.Logo>
+          <S.LogoText>Novelist World</S.LogoText>
         </S.LogoContainer>
         <S.ActionsContainer>
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} />

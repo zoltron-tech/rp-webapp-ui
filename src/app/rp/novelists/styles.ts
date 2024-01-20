@@ -11,15 +11,14 @@ export const FallbackContainer = styled.div`
 `;
 
 export const CarouselContainer = styled.div`
-  overflow: hidden;
+  overflow: visible;
+  padding: 40px 0px;
   margin-top: 40px;
-  -webkit-backface-visibility: hidden;
 
   & .swiper {
-    overflow: hidden;
+    overflow: visible;
     width: 100%;
     height: 100%;
-    -webkit-backface-visibility: hidden;
   }
 
   & .swiper-slide {

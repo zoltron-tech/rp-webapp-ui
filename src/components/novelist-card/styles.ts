@@ -1,6 +1,8 @@
 import { BORDER_RADIUS, NO_USER_SELECT } from "@/theme";
 import styled from "styled-components";
 
+import * as Common from "@/components/common";
+
 export const CardWrapper = styled.div`
   position: relative;
   width: 600px;
@@ -47,13 +49,15 @@ export const CardBackground = styled.div<CardProps>`
   position: absolute;
   width: 100%;
   height: 100%;
-  background-position: center;
-  background-size: cover;
+
   background-image: linear-gradient(
       ${({ theme }) => theme.cardBackgroundTint},
       ${({ theme }) => theme.cardBackgroundTint}
     ),
     url(${(props): string => props.banner});
+
+  background-position: center;
+  background-size: cover;
 
   filter: blur(20px);
   -webkit-filter: blur(20px);
@@ -221,15 +225,8 @@ export const NovelistInfo = styled.div`
   }
 `;
 
-export const Username = styled.div`
+export const username = styled(Common.Username)`
   font-size: 16px;
-  font-weight: 500;
-  color: ${({ theme }) => theme.text};
-  &::before {
-    content: "@";
-    font-weight: 600;
-    margin-left: 5px;
-  }
 
   @container (max-width: 400px) {
     & {

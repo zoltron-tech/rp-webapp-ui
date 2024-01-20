@@ -1,7 +1,6 @@
 import StyledComponentsRegistry from "./registry";
 
 import "toastify-js/src/toastify.css";
-
 import "./globals.css";
 
 export default async function RootLayout({

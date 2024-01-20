@@ -11,7 +11,7 @@ import { ImSpinner } from "react-icons/im";
 
 interface Props {
   label: string;
-  type: string;
+  type?: string;
   placeholder?: string;
   value?: string | boolean | number;
   defaultValue?: string | boolean | number;
@@ -26,25 +26,24 @@ interface Props {
   pattern?: string;
 }
 
-export const Input: FC<Props> = (props) => {
+export const Input: FC<Props> = ({
+  type = "text",
+  icon,
+  label,
+  defaultValue,
+  value,
+  readOnly,
+  inputProps,
+  placeholder,
+  message,
+  messageType,
+  minDate,
+  maxDate,
+  onChange,
+  ...rest
+}) => {
   const [hidden, setHidden] = useState(true);
   const [passwordType, setPasswordType] = useState("password");
-  const {
-    icon,
-    label,
-    defaultValue,
-    type,
-    value,
-    readOnly,
-    inputProps,
-    placeholder,
-    message,
-    messageType,
-    minDate,
-    maxDate,
-    onChange,
-    ...rest
-  } = props;
   const isPassword = type === "password";
   const error = messageType === "error" && message;
   const success = messageType === "success" && message;

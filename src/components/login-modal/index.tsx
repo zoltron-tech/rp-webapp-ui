@@ -1,20 +1,20 @@
 import { FC, useEffect, useState } from "react";
 import { Button, Input, Modal, ShouldRender } from "@/components";
 import { LoginPayload, LoginResponse } from "@/types";
-import { login } from "@/app/actions";
+import { login, reroute } from "@/app/actions";
 
 import * as S from "./styles";
 import { useTheme } from "styled-components";
-import { generateToastError, generateToastSuccess } from "@/utils";
+import { generateToastError, generateToastSuccess } from "@/utils/helpers";
 import { useAuth, useUIContext } from "@/hooks";
-import classNames from "classnames";
+import { Logger } from "@/utils/services";
 
 export type LoginModalProps = {};
 export const LoginModal: FC<LoginModalProps> = ({}) => {
   const { signupModalOpen, signupModal, setSignupModal, setSignupModalOpen } =
     useUIContext();
   const [loading, setLoading] = useState<boolean>(false);
-  const [username, setUsername] = useState<string>("example");
+  const [username, setusername] = useState<string>("example");
   const [email, setEmail] = useState<string>("example@gmail.com");
   const [password, setPassword] = useState<string>("12345678");
   const [error, setError] = useState<string>("");
@@ -49,25 +49,25 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
   const handleLogin = async (payload: LoginPayload) => {
     setLoading(true);
 
-    setTimeout(() => {
-      setLoading(false);
-    }, 2000);
+    try {
+      const response: LoginResponse = await login(payload);
 
-    return;
+      Logger.log(response);
 
-    const response: LoginResponse = await login(payload);
-
-    console.log(response);
-
-    if (response.message === "Success.") {
-      const verified = await verify();
-      console.log("success", verified);
-      if (verified) {
-        generateToastSuccess("Logged in successfully", theme);
-      } else {
-        generateToastError("Something went wrong", theme);
+      if (response.message === "success") {
+        const verified = await verify();
+        Logger.log("success", verified);
+        if (verified) {
+          generateToastSuccess("Logged in successfully", theme);
+          reroute("/rp/profile");
+        } else {
+          generateToastError("Something went wrong", theme);
+        }
+        setSignupModalOpen(false);
       }
-      setSignupModalOpen(false);
+    } catch (e) {
+      Logger.log("error dekho bhai ->", e);
+      generateToastError("Something went wrong", theme);
     }
     setLoading(false);
   };
@@ -95,9 +95,9 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
         <S.Content>
           <ShouldRender if={signupModal}>
             <Input
-              label="Username"
+              label="username"
               type="text"
-              onChange={(value) => setUsername(value || "")}
+              onChange={(value) => setusername(value || "")}
               value={username}
             />
           </ShouldRender>

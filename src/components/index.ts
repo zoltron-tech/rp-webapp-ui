@@ -6,3 +6,5 @@ export * from "./novelist-card";
 export * from "./should-render";
 export * from "./content-container";
 export * from "./input";
+export * from "./card";
+export * from "./profile-card";

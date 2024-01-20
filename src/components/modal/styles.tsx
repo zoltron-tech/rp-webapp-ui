@@ -39,7 +39,7 @@ export const Content = styled.div<ContentProps>`
   padding: 16px;
   min-height: 200px;
   min-width: 300px;
-  box-shadow: 0px 5px 20px 10px rgb(0 0 0 / 60%);
+  box-shadow: 0px 5px 20px 10px ${({ theme }) => theme.cardBoxShadowColor};
 
   ${({ width }) => width && `width: ${width};`}
   ${({ height }) => height && `height: ${height};`}

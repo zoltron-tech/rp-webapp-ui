@@ -37,12 +37,12 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
   return (
     <S.CardWrapper
       className={classNames({ expanded })}
-      // onMouseEnter={() => {
-      //   autoplay.stop();
-      // }}
-      // onMouseLeave={() => {
-      //   autoplay.start();
-      // }}
+      onMouseEnter={() => {
+        autoplay.stop();
+      }}
+      onMouseLeave={() => {
+        autoplay.start();
+      }}
     >
       <S.CardBackground banner={novelist.image} />
       <S.Card className="novelist-card">

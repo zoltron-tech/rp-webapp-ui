@@ -34,12 +34,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     setTheme(cookies.theme || "dark");
   }, [initialized]);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    require("@/lib/scroll-timeline-polyfill");
-  }, []);
-
   if (!initialized) return <S.FallbackContainer></S.FallbackContainer>;
 
   return (

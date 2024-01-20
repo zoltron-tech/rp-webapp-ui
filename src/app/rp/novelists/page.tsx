@@ -1,12 +1,12 @@
 "use client";
 
-import { NovelistCard, ShouldRender } from "@/components";
 import { useEffect, useState } from "react";
+import { ShouldRender } from "@/components/common";
+import { NovelistCard } from "@/components";
 import { Novelist } from "@/types";
 import { getNovelists } from "./actions";
 import { EffectCoverflow, Navigation, Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { useUIContext } from "@/hooks";
 
 import "swiper/css";
 import "swiper/css/effect-coverflow";
@@ -37,10 +37,10 @@ export default function NovelistsPage() {
           centeredSlides={true}
           slidesPerView={3}
           speed={1000}
-          // autoplay={{
-          //   delay: 4000,
-          //   disableOnInteraction: false,
-          // }}
+          autoplay={{
+            delay: 4000,
+            disableOnInteraction: false,
+          }}
           coverflowEffect={{
             rotate: 0,
             depth: 0,

@@ -36,10 +36,13 @@ export const uploadAvatar = async (formData: FormData) => {
 export const deleteAvatar = async (filename: string) => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/s3/delete/${filename}`;
 
+  Logger.log("deleteAvatar", filename);
   const response = await fetch(URL, {
     method: "DELETE",
     cache: "no-store",
   });
+
+  Logger.log("deleteAvatar: response", response);
 
   if (response.status !== 200) {
     return { message: "Error deleting avatar" };

@@ -9,7 +9,11 @@ import { deleteAvatar, uploadAvatar } from "@/app/rp/profile/actions";
 import { getUser } from "@/app/actions";
 
 import * as S from "./styles";
-import { generateToastError, generateToastSuccess } from "@/utils/helpers";
+import {
+  generateToastError,
+  generateToastSuccess,
+  stripS3Url,
+} from "@/utils/helpers";
 import { useTheme } from "styled-components";
 import { Logger } from "@/utils/services";
 import { API_MESSAGE } from "@/utils/constants";
@@ -66,7 +70,7 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
     }
 
     if (novelist?.image) {
-      const response1 = await deleteAvatar(novelist.image);
+      const response1 = await deleteAvatar(stripS3Url(novelist.image));
       Logger.log("delete response 1: ", response1);
     }
 

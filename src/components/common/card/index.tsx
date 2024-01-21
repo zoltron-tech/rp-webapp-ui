@@ -1,5 +1,5 @@
-import { FC } from "react";
 import classNames from "classnames";
+import { FC } from "react";
 
 import * as S from "./styles";
 
@@ -7,11 +7,8 @@ export type CardProps = {
   children?: React.ReactNode;
   centered?: boolean;
   className?: string;
-  width?: string;
-  height?: string;
-  padding?: string;
-  margin?: string;
-} & Omit<React.HTMLAttributes<HTMLDivElement>, "children" | "className">;
+} & S.ContainerProps &
+  Omit<React.HTMLAttributes<HTMLDivElement>, "children" | "className">;
 
 export const Card: FC<CardProps> = ({
   children,

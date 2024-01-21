@@ -133,8 +133,11 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
         }
       />
       <Card
-        width="90cqw"
-        height="600px"
+        width="70cqw"
+        minWidth="300px"
+        maxWidth="90cqw"
+        minHeight="520px"
+        maxHeight="520px"
         padding="20px"
         margin="clamp(50px, 20cqw, 200px) auto 100px auto"
         centered
@@ -180,7 +183,7 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
                 Cancel
               </S.SaveButton>
               <S.SaveButton onClick={handleSave} loading={loading}>
-                Save Changes
+                Save <div className="sm-hide">Changes</div>
               </S.SaveButton>
             </S.ButtonGroup>
           </S.FormGroup>

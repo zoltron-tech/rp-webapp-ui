@@ -229,11 +229,12 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
 
   return (
     <Modal
-      width={"400px"}
+      width={"90cqw"}
+      maxWidth="500px"
+      minWidth="300px"
       open={signupModalOpen}
       onClose={() => setSignupModalOpen(false)}
       minHeight={signupModal ? "480px" : "380px"}
-      minWidth={"400px"}
     >
       <S.Container>
         <S.Header>

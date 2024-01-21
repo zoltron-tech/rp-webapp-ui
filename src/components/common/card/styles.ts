@@ -1,15 +1,23 @@
 import { styled } from "styled-components";
 
-type ContainerProps = {
+export type ContainerProps = {
   width?: string;
   height?: string;
+  minWidth?: string;
+  maxWidth?: string;
+  maxHeight?: string;
+  minHeight?: string;
   padding?: string;
   margin?: string;
 };
 
 export const Container = styled.div<ContainerProps>`
-  width: ${(props: ContainerProps) => props.width || "100%"};
-  height: ${(props: ContainerProps) => props.height || "100%"};
+  ${({ width }) => width && `width: ${width};`}
+  ${({ height }) => height && `height: ${height};`}
+  ${({ minWidth }) => minWidth && `min-width: ${minWidth};`}
+  ${({ minHeight }) => minHeight && `min-height: ${minHeight};`}
+  ${({ maxWidth }) => maxWidth && `max-width: ${maxWidth};`}
+  ${({ maxHeight }) => maxHeight && `max-height: ${maxHeight};`}
   padding: ${(props: ContainerProps) => props.padding || "10cqw"};
   margin: ${(props: ContainerProps) => props.margin || "0px"};
   background-color: ${({ theme }) => theme.cardBackgroundColor};

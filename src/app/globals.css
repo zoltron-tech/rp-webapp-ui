@@ -11,14 +11,29 @@ body {
   font-family: 'Montserrat', sans-serif;
   background-color: #313131;
   /* Scrollbar Styles */
-  scrollbar-width: thin;
-  scrollbar-color: #313131 #242424;
+  
+  scrollbar-width: none;
+}
 
+body::-webkit-scrollbar {
+  width: 0px;
+  /* remove scrollbar space */
+  background: transparent;
+  /* optional: just make scrollbar invisible */
 }
 
 main {
   background-color: #313131;
+  scrollbar-width: 0px;
 }
+
+main::-webkit-scrollbar {
+  width: 0px;
+  /* remove scrollbar space */
+  background: transparent;
+  /* optional: just make scrollbar invisible */
+}
+
 /* END: Remove base padding and styling */
 
 /* BEGIN: Global variables */

@@ -32,6 +32,8 @@ export type ContentProps = {
   height?: string;
   minHeight?: string;
   minWidth?: string;
+  maxWidth?: string;
+  maxHeight?: string;
 };
 
 export const Content = styled.div<ContentProps>`
@@ -55,6 +57,8 @@ export const Content = styled.div<ContentProps>`
   resize: both;
   ${({ minHeight }) => minHeight && `min-height: ${minHeight};`}
   ${({ minWidth }) => minWidth && `min-width: ${minWidth};`}
+  ${({ maxWidth }) => maxWidth && `max-width: ${maxWidth};`}
+  ${({ maxHeight }) => maxHeight && `max-height: ${maxHeight};`}
 `;
 
 export const CloseButton = styled.div`

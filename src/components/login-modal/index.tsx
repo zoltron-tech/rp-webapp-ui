@@ -240,7 +240,7 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
         <S.Content>
           <ShouldRender if={signupModal}>
             <Input
-              label="username"
+              label="Username"
               type="text"
               onChange={(value) => handleUsernameChange(value || "")}
               value={username}

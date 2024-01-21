@@ -1,6 +1,6 @@
-import styled from "styled-components";
 import { SPIN } from "@/theme";
 import { setOpacity } from "@/utils/helpers";
+import styled from "styled-components";
 
 export const InputWrapper = styled.div`
   margin-bottom: 10px;
@@ -28,7 +28,9 @@ export const InputLabel = styled.label`
   color: ${({ theme }) => theme.text};
   pointer-events: none;
   /* vertical-align: middle; */
-  transition: all 0.12s linear;
+  transition-property: transform, opacity, font-size;
+  transition-duration: 0.12s;
+  transition-timing-function: linear;
   z-index: 1;
 `;
 
@@ -57,7 +59,8 @@ export const Input = styled.input`
 
   &:focus ~ label,
   &:not(:placeholder-shown):not(:focus) ~ label {
-    transform: translate(0px, -12px);
+    transform: translate(0px, -14px);
+    opacity: 0.6;
     font-size: 11px;
     font-weight: 400;
     color: ${({ theme }) => theme.text};
@@ -65,11 +68,11 @@ export const Input = styled.input`
   }
 
   &.left-icon {
-    padding-left: 40px;
+    padding-left: 45px;
   }
 
   &.right-icon {
-    padding-right: 40px;
+    padding-right: 45px;
   }
 `;
 
@@ -168,21 +171,22 @@ export const RightIconBox = styled.div`
     opacity: 0.5;
     fill: ${({ theme }) => setOpacity(theme.primary, 0.6)};
     width: 100%;
-    height: 28px;
+    height: 22px;
+
     path {
       fill: ${({ theme }) => theme.text};
     }
+  }
 
-    &:hover,
-    &.visible {
-      opacity: 1;
+  &:hover svg,
+  &.visible svg {
+    opacity: 1;
+    fill: ${({ theme }) =>
+      theme.name === "light" ? theme.primary : theme.text};
+
+    path {
       fill: ${({ theme }) =>
         theme.name === "light" ? theme.primary : theme.text};
-
-      path {
-        fill: ${({ theme }) =>
-          theme.name === "light" ? theme.primary : theme.text};
-      }
     }
   }
 `;

@@ -13,14 +13,15 @@ export const Container = styled.div<ContainerProps>`
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background-color: rgba(0, 0, 0, 0.592);
+  background-color: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
 
   @supports (backdrop-filter: blur()) {
     backdrop-filter: blur(60px);
-    background-color: transparent;
+    background-color: ${({ theme }) =>
+      theme.name === "dark" ? "rgba(0, 0, 0, 0.6);" : "transparent"};
   }
 
   ${({ open }) => !open && "display: none;"}

@@ -1,17 +1,11 @@
-import classNames from "classnames";
-import {
-  FC,
-  HTMLInputTypeAttribute,
-  InputHTMLAttributes,
-  ReactElement,
-  useState,
-} from "react";
-import { GoEye, GoEyeClosed } from "react-icons/go";
-import { VscError } from "react-icons/vsc";
-import { FaRegCircleCheck } from "react-icons/fa6";
-import { PiWarning } from "react-icons/pi";
-import { ImSpinner } from "react-icons/im";
 import { ShouldRender } from "@/components/common";
+import classNames from "classnames";
+import { FC, InputHTMLAttributes, ReactElement, useState } from "react";
+import { FaRegCircleCheck } from "react-icons/fa6";
+import { GoEye, GoEyeClosed } from "react-icons/go";
+import { ImSpinner } from "react-icons/im";
+import { PiWarning } from "react-icons/pi";
+import { VscError } from "react-icons/vsc";
 
 import * as S from "./styles";
 
@@ -86,7 +80,7 @@ export const Input: FC<Props> = ({
           </S.RightIconBox>
         </ShouldRender>
 
-        {isPassword && (
+        <ShouldRender if={isPassword && !icon}>
           <S.RightIconBox
             className={classNames({ visible: !hidden })}
             onClick={(): void => {
@@ -97,7 +91,7 @@ export const Input: FC<Props> = ({
           >
             {hidden ? <GoEyeClosed /> : <GoEye />}
           </S.RightIconBox>
-        )}
+        </ShouldRender>
       </S.InputContainer>
       <S.Message
         className={classNames({

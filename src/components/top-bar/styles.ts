@@ -1,11 +1,13 @@
 import styled from "styled-components";
 import { NO_USER_SELECT } from "@/theme";
+import Link from "next/link";
 
 export const Bar = styled.div`
-  position: fixed;
+  position: sticky;
   top: 0px;
-  height: 80px;
   width: 100%;
+  height: 80px;
+  width: 100cqw;
   background-color: ${({ theme }) => theme.navbar};
   display: flex;
   align-items: center;
@@ -24,16 +26,17 @@ export const Bar = styled.div`
 
   @media (max-width: 650px) {
     & {
-      padding: 0px;
+      /* padding: 0px; */
       height: 60px;
     }
   }
 `;
-export const LogoContainer = styled.div`
+export const LogoContainer = styled(Link)`
   display: flex;
   align-items: center;
   justify-content: center;
   color: ${({ theme }) => theme.text};
+  text-decoration: none;
 `;
 
 export const Logo = styled.div`
@@ -115,6 +118,9 @@ export const ButtonsContainerDesktop = styled.div`
 
   @container (max-width: 800px) {
     & {
+      width: 100px;
+    }
+    & > div:nth-child(2) {
       display: none;
     }
   }

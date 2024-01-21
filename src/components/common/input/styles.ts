@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { SPIN } from "@/theme";
+import { setOpacity } from "@/utils/helpers";
 
 export const InputWrapper = styled.div`
   margin-bottom: 10px;
@@ -10,23 +11,25 @@ export const InputWrapper = styled.div`
   height: 100%;
   gap: 4px;
   margin-top: 10px;
+  font-style: italic;
 `;
 
 export const InputContainer = styled.div`
   position: relative;
   width: 100%;
-  height: 48px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 14px;
 `;
 
 export const InputLabel = styled.label`
-  position: absolute;
-  top: 10px;
-  left: 10px;
   color: ${({ theme }) => theme.text};
-  cursor: text;
   pointer-events: none;
-  transition: all 0.1s ease-in;
-  background-color: transparent;
+  /* vertical-align: middle; */
+  transition: all 0.12s linear;
+  z-index: 1;
 `;
 
 export const Input = styled.input`
@@ -35,28 +38,30 @@ export const Input = styled.input`
   left: 0px;
   width: 100%;
   height: 100%;
-  border: 2px solid ${({ theme }) => theme.primary};
+  border: 2px solid ${({ theme }) => setOpacity(theme.inputBackground, 0.4)};
   border-radius: 10px;
-  background: none;
-  outline: none;
-  padding: 10px;
   font-size: 16px;
-  color: ${({ theme }) => theme.text};
+  outline: none;
+  padding: 18px 10px 10px 15px;
+  color: ${({ theme }) => theme.textStark};
+  overflow: hidden;
+  background-color: ${({ theme }) => theme.inputBackground};
 
-  &:hover {
-    border-color: ${({ theme }) => theme.primaryHover};
+  &:not(:read-only):hover {
+    border-color: ${({ theme }) => setOpacity(theme.primary, 0.6)};
   }
 
-  &:focus {
-    border-color: ${({ theme }) => theme.primaryHover};
+  &:not(:read-only):focus {
+    border-color: ${({ theme }) => setOpacity(theme.primary, 0.6)};
   }
 
   &:focus ~ label,
   &:not(:placeholder-shown):not(:focus) ~ label {
-    top: -12px;
-    font-size: 12px;
-    padding: 0px 5px;
-    /* background-color: ${({ theme }) => theme.modalBackground}; */
+    transform: translate(0px, -12px);
+    font-size: 11px;
+    font-weight: 400;
+    color: ${({ theme }) => theme.text};
+    /* padding: 0px 5px; */
   }
 
   &.left-icon {
@@ -152,6 +157,7 @@ export const RightIconBox = styled.div`
   position: absolute;
   display: flex;
   align-items: center;
+  justify-content: center;
   right: 16px;
   height: 100%;
   top: 0px;
@@ -160,19 +166,23 @@ export const RightIconBox = styled.div`
   & svg {
     transition: opacity 0.1s ease-in-out;
     opacity: 0.5;
-    fill: ${({ theme }) => theme.text};
+    fill: ${({ theme }) => setOpacity(theme.primary, 0.6)};
+    width: 100%;
+    height: 28px;
     path {
-      fill: ${({ theme }) => theme.text} !important;
+      fill: ${({ theme }) => theme.text};
     }
 
-    &:hover {
+    &:hover,
+    &.visible {
       opacity: 1;
-    }
-  }
+      fill: ${({ theme }) =>
+        theme.name === "light" ? theme.primary : theme.text};
 
-  &.visible {
-    & svg {
-      opacity: 1;
+      path {
+        fill: ${({ theme }) =>
+          theme.name === "light" ? theme.primary : theme.text};
+      }
     }
   }
 `;

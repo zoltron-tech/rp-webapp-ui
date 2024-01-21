@@ -1,21 +1,17 @@
 import { SPIN } from "@/theme";
 import styled from "styled-components";
 
-export type ContainerProps = {
-  variant: "primary" | "secondary" | "link";
-  shape: "rounded" | "square" | "rounded-edge";
-};
-
-export const is = <T>(unionProp: T, prop: T): boolean => unionProp === prop;
-export const Container = styled.div<ContainerProps>`
+export const Container = styled.div`
+  width: 100%;
+  height: 46px;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 18px;
   font-weight: 600;
   border-radius: 2px;
   cursor: pointer;
   white-space: nowrap;
-  width: 100%;
   position: relative;
   transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
   ${SPIN}
@@ -39,6 +35,21 @@ export const Container = styled.div<ContainerProps>`
     fill: ${({ theme }) => theme.textPrimary};
   }
 
+  &.xs {
+    height: 26px;
+    font-size: 12px;
+  }
+
+  &.sm {
+    height: 36px;
+    font-size: 16px;
+  }
+
+  &.lg {
+    height: 56px;
+    font-size: 20px;
+  }
+
   &.primary {
     background-color: ${({ theme }) => theme.primary};
     border: none;
@@ -49,7 +60,7 @@ export const Container = styled.div<ContainerProps>`
       color: ${({ theme }) => theme.textPrimary};
     }
 
-    &:hover {
+    &:not(.loading):not(.disabled):hover {
       background-color: ${({ theme }) => theme.primaryHover};
     }
   }
@@ -60,7 +71,7 @@ export const Container = styled.div<ContainerProps>`
     color: ${({ theme }) => theme.text};
     padding: 8px 18px;
 
-    &:hover {
+    &:not(.loading):not(.disabled):hover {
       border-color: ${({ theme }) => theme.primaryHover};
       color: ${({ theme }) => theme.primaryHover};
     }
@@ -71,8 +82,9 @@ export const Container = styled.div<ContainerProps>`
     border: none;
     color: ${({ theme }) => theme.text};
     padding: 10px 20px;
+    border-radius: 0px;
 
-    &:hover {
+    &:not(.loading):not(.disabled):hover {
       color: ${({ theme }) => theme.primaryHover};
     }
   }
@@ -89,27 +101,21 @@ export const Container = styled.div<ContainerProps>`
     border-radius: 0px;
   }
 
-  &.disabled {
-    pointer-events: none;
-    background-color: ${({ theme }) => theme.primaryDisabled};
-    cursor: not-allowed;
-  }
-
   &.loading {
     pointer-events: none;
     cursor: wait;
 
     &.primary {
-      background-color: ${({ theme }) => theme.primaryDisabled};
+      background-color: ${({ theme }) => theme.primaryLoading};
     }
 
     &.secondary {
-      border-color: ${({ theme }) => theme.primaryDisabled};
-      color: ${({ theme }) => theme.primaryDisabled};
+      border-color: ${({ theme }) => theme.primaryLoading};
+      color: ${({ theme }) => theme.primaryLoading};
     }
 
     &.link {
-      color: ${({ theme }) => theme.primaryDisabled};
+      color: ${({ theme }) => theme.primaryLoading};
     }
 
     & span {
@@ -121,6 +127,12 @@ export const Container = styled.div<ContainerProps>`
       opacity: 1;
       animation: spin 1s infinite steps(8);
     }
+  }
+
+  &.disabled {
+    background-color: ${({ theme }) => theme.primaryDisabled};
+    cursor: not-allowed;
+    pointer-events: all !important;
   }
 
   transition: background-color 0.1s ease-in-out;

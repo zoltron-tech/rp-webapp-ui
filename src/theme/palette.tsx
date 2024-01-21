@@ -1,18 +1,23 @@
 import { pSBC } from "@/lib/pSBC";
+import { setOpacity } from "@/utils/helpers";
 
 export type Theme = {
   name: string;
   background: string;
+  primary: string;
+  primaryHover: string;
+  primaryDisabled: string;
+  primaryLoading: string;
+  primaryAlpha: string;
   modalBackground: string;
   toastBackground: string;
+  inputBackground: string;
   text: string;
   textPrimary: string;
   textLink: string;
   textLinkHover: string;
   textGray: string;
-  primary: string;
-  primaryHover: string;
-  primaryDisabled: string;
+  textStark: string;
   navbar: string;
   cardBackgroundTint: string;
   cardBackgroundGradient: string[];
@@ -26,21 +31,25 @@ export type Theme = {
   processing: string;
 };
 
-export const accentColor = "#ff1a40";
+export const accentColor = "#227cc5"; // "#8e5e9c"; //"#1ca0a0"; //"#227da1"; //;
 
 export const THEME_LIGHT: Theme = {
   name: "light",
   background: "#aeaeae",
+  primary: pSBC(-0.15, accentColor) as string,
+  primaryHover: pSBC(0.1, accentColor) as string,
+  primaryDisabled: pSBC(0.4, accentColor) as string,
+  primaryLoading: pSBC(-0.4, accentColor) as string,
+  primaryAlpha: setOpacity(accentColor, 0.4),
   modalBackground: "#fff",
   toastBackground: "#e7e7e7",
+  inputBackground: "#c5c5c5",
   text: "#242424",
   textPrimary: "#dedede",
   textLink: accentColor,
   textLinkHover: pSBC(-0.3, accentColor) as string,
   textGray: "#5f5f5f",
-  primary: pSBC(-0.15, accentColor) as string,
-  primaryHover: pSBC(0.1, accentColor) as string,
-  primaryDisabled: "#a5a5a5",
+  textStark: "#000",
   navbar: pSBC(0.6, accentColor) as string,
   cardBackgroundTint: "rgba(185, 182, 182, 0.003)",
   cardBackgroundGradient: [
@@ -61,16 +70,20 @@ export const THEME_LIGHT: Theme = {
 export const THEME_DARK: Theme = {
   name: "dark",
   background: "#232323",
+  primary: pSBC(-0.45, accentColor) as string,
+  primaryHover: pSBC(-0.6, accentColor) as string,
+  primaryDisabled: pSBC(-0.8, accentColor) as string,
+  primaryLoading: pSBC(-0.2, accentColor) as string,
+  primaryAlpha: setOpacity(accentColor, 0.4),
   modalBackground: "#292828",
   toastBackground: "#1b1b1b",
+  inputBackground: "#3a3a3a",
   text: "#dedede",
   textPrimary: "#dedede",
   textLink: accentColor,
   textLinkHover: pSBC(-0.3, accentColor) as string,
   textGray: "#727272",
-  primary: pSBC(-0.5, accentColor) as string,
-  primaryHover: pSBC(-0.2, accentColor) as string,
-  primaryDisabled: "#585858",
+  textStark: "#fff",
   navbar: "#474646",
   cardBackgroundTint: "rgba(0, 0, 0, 0.339)",
   cardBackgroundGradient: [

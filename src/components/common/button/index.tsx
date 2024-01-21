@@ -8,17 +8,20 @@ import * as S from "./styles";
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   children?: React.ReactNode;
-  variant?: S.ContainerProps["variant"];
-  shape?: S.ContainerProps["shape"];
   onClick?: () => void;
   loading?: boolean;
+  variant?: "primary" | "secondary" | "link";
+  shape?: "rounded" | "square" | "rounded-edge";
+  size?: "xs" | "sm" | "md" | "lg";
 };
+
 export const Button: FC<ButtonProps> = ({
   children,
   variant = "primary",
   shape = "rounded-edge",
   disabled,
   loading,
+  size = "md",
   onClick,
 }) => {
   return (
@@ -30,14 +33,20 @@ export const Button: FC<ButtonProps> = ({
           disabled,
           primary: variant === "primary",
           secondary: variant === "secondary",
+          link: variant === "link",
           square: shape === "square",
           rounded: shape === "rounded",
+          sm: size === "sm",
+          md: size === "md",
+          lg: size === "lg",
+          xs: size === "xs",
           ["rounded-edge"]: shape === "rounded-edge",
         },
       ])}
-      onClick={onClick}
-      variant={variant}
-      shape={shape}
+      onClick={() => {
+        if (disabled || loading) return;
+        onClick?.();
+      }}
     >
       <ImSpinner className={classNames(["loading-icon", { loading }])} />
       <span>{children}</span>

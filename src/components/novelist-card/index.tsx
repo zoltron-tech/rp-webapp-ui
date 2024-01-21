@@ -9,6 +9,7 @@ import { FC, useEffect, useState } from "react";
 import { MdOutlineExpandLess, MdOutlineExpandMore } from "react-icons/md";
 import { useSwiper, useSwiperSlide } from "swiper/react";
 
+import { Logger } from "@/utils/services";
 import * as S from "./styles";
 
 type Props = {
@@ -21,6 +22,7 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
   const { autoplay } = useSwiper();
 
   useEffect(() => {
+    if (!expanded) return;
     if (!isActive) {
       setTimeout(() => {
         setExpanded(false);
@@ -39,10 +41,18 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
       className={classNames({ expanded })}
       onMouseEnter={() => {
         if (process.env.DISABLE_AUTOSCROLL === "true") return;
+
+        if (!isActive) return;
+        Logger.log("onMouseEnter");
+
         autoplay.stop();
       }}
       onMouseLeave={() => {
         if (process.env.DISABLE_AUTOSCROLL === "true") return;
+
+        if (!isActive) return;
+        Logger.log("onMouseLeave");
+
         autoplay.start();
       }}
     >

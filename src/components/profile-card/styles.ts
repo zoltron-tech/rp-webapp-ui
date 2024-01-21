@@ -1,6 +1,7 @@
-import { css, styled } from "styled-components";
+import { styled } from "styled-components";
 
 import * as Common from "@/components/common";
+import { Z_INDEX } from "@/theme";
 
 export const Profile = styled.div`
   display: flex;
@@ -10,33 +11,6 @@ export const Profile = styled.div`
   width: 100cqw;
   height: 100cqh;
   padding: 20px;
-`;
-
-export const AvatarPositionStyle = css`
-  position: absolute;
-  top: 0;
-  left: 0px;
-  width: clamp(150px, 30cqw, 400px);
-  height: clamp(150px, 30cqw, 400px);
-  contain: paint;
-  border-radius: 50%;
-  scale: 0.6;
-  transform: translate(-20%, 0%);
-`;
-
-export const ProfileImage = styled.div`
-  ${AvatarPositionStyle}
-
-  background-color: ${({ theme }) => theme.cardBackgroundColor};
-  z-index: 1;
-  opacity: 1;
-  box-shadow: 0px 3px 10px 5px ${({ theme }) => theme.cardBoxShadowColor};
-
-  & > img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
 `;
 
 export const Title = styled.div`
@@ -104,11 +78,6 @@ export const Name = styled.div`
   }
 `;
 
-export const Note = styled.div`
-  /* width: 100%; */
-  /* color: ${({ theme }) => theme.textGray}; */
-`;
-
 export const ButtonGroup = styled.div`
   width: 100%;
   display: flex;
@@ -119,7 +88,6 @@ export const ButtonGroup = styled.div`
 `;
 
 export const SaveButton = styled(Common.Button)`
-  width: 100%;
   max-width: 300px;
   margin-top: 20px;
   margin-left: clamp(0px, calc(120px - 20cqw), 120px);
@@ -144,7 +112,7 @@ export const ProfileBackgroundBlurFilter = styled.div<ProfileBackgroundFilterPro
     url(${(props): string => props.banner});
   background-position: center;
   background-size: cover;
-  z-index: -1;
+  z-index: ${Z_INDEX.BACKGROUND};
 
   top: clamp(-300px, calc(-600px + 80cqw), 0px);
 

@@ -30,6 +30,7 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [buttonClicked, setButtonClicked] = useState<boolean>(false);
+  const [disabled, setDisabled] = useState<boolean>(false);
   const { verify } = useAuth();
   const usernameAvailableDebounceTimer = useRef<any>(null);
   const { successToast, errorToast } = useUIContext();
@@ -179,13 +180,10 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
       if (response.message === "success") {
         successToast("Registered successfully");
         setSignupModalOpen(false);
+        reroute("/rp/profile");
+      } else {
+        errorToast(response.message);
       }
-
-      if (response.message === "error") {
-        errorToast("Something went wrong");
-      }
-
-      setSignupModalOpen(false);
     } catch (e) {
       Logger.log("error dekho bhai ->", e);
       errorToast("Something went wrong");
@@ -195,6 +193,7 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
   };
 
   const handleSubmit = () => {
+    if (disabled) return;
     setButtonClicked(true);
     const isError = checkError(true);
     if (isError) return;
@@ -221,11 +220,20 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
     }
   }, [signupModalOpen]);
 
+  useEffect(() => {
+    setDisabled(
+      !!error ||
+        (signupModal && (verifyUsernameLoading || !isUsernameAvailable))
+    );
+  }, [error, verifyUsernameLoading, isUsernameAvailable, signupModal]);
+
   return (
     <Modal
       width={"400px"}
       open={signupModalOpen}
       onClose={() => setSignupModalOpen(false)}
+      minHeight={signupModal ? "480px" : "380px"}
+      minWidth={"400px"}
     >
       <S.Container>
         <S.Header>
@@ -247,6 +255,7 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
               message={getUsernameMessage()}
               messageType={getUsernameMessageType()}
               maxLength={30}
+              onEnter={handleSubmit}
             />
           </ShouldRender>
           <Input
@@ -258,6 +267,7 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
             }}
             value={email}
             maxLength={50}
+            onEnter={handleSubmit}
           />
           <Input
             label="Password"
@@ -270,21 +280,18 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
             message={error}
             messageType="warning"
             maxLength={50}
+            onEnter={handleSubmit}
           />
-          <S.Buttons>
-            <Button
-              onClick={handleSubmit}
-              variant="primary"
-              disabled={
-                !!error ||
-                (signupModal && (verifyUsernameLoading || !isUsernameAvailable))
-              }
-              loading={loading}
-              size="lg"
-            >
-              {signupModal ? "Register" : "Login"}
-            </Button>
-          </S.Buttons>
+
+          <Button
+            onClick={handleSubmit}
+            variant="primary"
+            disabled={disabled}
+            loading={loading}
+            size="lg"
+          >
+            {signupModal ? "Register" : "Login"}
+          </Button>
         </S.Content>
       </S.Container>
     </Modal>

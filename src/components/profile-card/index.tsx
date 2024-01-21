@@ -88,7 +88,10 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
 
     Logger.log("updatedAvatar: ", updatedAvatarUrl);
 
-    if (!novelist) return;
+    if (!novelist) {
+      setLoading(false);
+      return errorToast("First name is required.");
+    }
 
     const resonse = await updateUserNovelist({
       ...novelist,
@@ -153,17 +156,20 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
                 label="First Name"
                 value={novelist?.firstName}
                 onChange={(firstName) => updateNovelist({ firstName })}
+                onEnter={handleSave}
               />
               <Input
                 label="Last Name"
                 value={novelist?.lastName}
                 onChange={(lastName) => updateNovelist({ lastName })}
+                onEnter={handleSave}
               />
             </S.Name>
             <Input
               label="Note"
               value={novelist?.note}
               onChange={(note) => updateNovelist({ note })}
+              onEnter={handleSave}
             />
             <S.ButtonGroup>
               <S.SaveButton

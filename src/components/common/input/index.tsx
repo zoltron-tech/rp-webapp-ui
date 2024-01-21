@@ -7,6 +7,7 @@ import { ImSpinner } from "react-icons/im";
 import { PiWarning } from "react-icons/pi";
 import { VscError } from "react-icons/vsc";
 
+import { Logger } from "@/utils/services";
 import * as S from "./styles";
 
 type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "onChange"> & {
@@ -23,6 +24,7 @@ type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "onChange"> & {
   inputProps?: any;
   onChange?: (val?: string) => void;
   pattern?: string;
+  onEnter?: () => void;
 };
 
 export const Input: FC<Props> = ({
@@ -38,6 +40,7 @@ export const Input: FC<Props> = ({
   message,
   messageType,
   onChange,
+  onEnter,
   ...rest
 }) => {
   const [hidden, setHidden] = useState(true);
@@ -47,6 +50,11 @@ export const Input: FC<Props> = ({
   const success = messageType === "success" && message;
   const warning = messageType === "warning" && message;
   const processing = messageType === "processing" && message;
+
+  const handleChange = (val: string): void => {
+    Logger.log("handleChange", val);
+    if (onChange) onChange(val);
+  };
 
   return (
     <S.InputWrapper>
@@ -64,7 +72,17 @@ export const Input: FC<Props> = ({
           readOnly={readOnly}
           defaultValue={defaultValue}
           onChange={(val): void => {
+            Logger.log("onChange", val?.target?.value);
             if (onChange) onChange(val?.target?.value);
+          }}
+          onKeyDown={(e): void => {
+            if (e.key === "Enter" && onEnter) {
+              Logger.log("onEnter");
+              onEnter();
+            } else if (e.key === "Escape") {
+              Logger.log("onEscape");
+              e.currentTarget.blur();
+            }
           }}
           {...inputProps}
           {...rest}

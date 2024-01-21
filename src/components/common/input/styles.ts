@@ -1,4 +1,4 @@
-import { SPIN } from "@/theme";
+import { SPIN, Z_INDEX } from "@/theme";
 import { setOpacity } from "@/utils/helpers";
 import styled from "styled-components";
 
@@ -8,7 +8,6 @@ export const InputWrapper = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;
   gap: 4px;
   margin-top: 10px;
   font-style: italic;
@@ -16,7 +15,6 @@ export const InputWrapper = styled.div`
 
 export const InputContainer = styled.div`
   position: relative;
-  width: 100%;
   height: 56px;
   display: flex;
   align-items: center;
@@ -27,11 +25,10 @@ export const InputContainer = styled.div`
 export const InputLabel = styled.label`
   color: ${({ theme }) => theme.text};
   pointer-events: none;
-  /* vertical-align: middle; */
   transition-property: transform, opacity, font-size;
   transition-duration: 0.12s;
   transition-timing-function: linear;
-  z-index: 1;
+  z-index: ${Z_INDEX.DEFAULT};
 `;
 
 export const Input = styled.input`
@@ -85,7 +82,6 @@ export const Message = styled.div`
   align-items: center;
   justify-content: flex-start;
   gap: 4px;
-  width: 100%;
   opacity: 0;
   transition: opacity 0.1s ease-in-out;
   margin-top: 2px;

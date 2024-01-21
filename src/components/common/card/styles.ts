@@ -17,6 +17,9 @@ export const Container = styled.div<ContainerProps>`
   border-radius: 16px;
   box-shadow: 0px 5px 20px 10px ${({ theme }) => theme.cardBoxShadowColor};
 
+  overflow: auto;
+  resize: both;
+
   position: sticky;
   top: 0px;
 

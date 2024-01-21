@@ -1,3 +1,4 @@
+import { Z_INDEX } from "@/theme";
 import styled from "styled-components";
 
 export const THEME_SWITCHER = {
@@ -39,7 +40,7 @@ export const ThemeSwitchInner = styled.div<{ theme: string }>`
   border-radius: 15px;
   position: absolute;
   left: 0;
-  z-index: 1;
+  z-index: ${Z_INDEX.BACKGROUND};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -49,7 +50,7 @@ export const ThemeSwitchInner = styled.div<{ theme: string }>`
     width: 18px;
     height: 18px;
     transition: all 0.2s ease-in;
-    z-index: 2;
+    z-index: ${Z_INDEX.AVATAR};
     opacity: 0;
   }
 

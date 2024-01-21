@@ -1,9 +1,10 @@
 "use client";
 
-import { ButtonHTMLAttributes, FC } from "react";
 import classNames from "classnames";
+import { ButtonHTMLAttributes, FC } from "react";
 import { ImSpinner } from "react-icons/im";
 
+import { Logger } from "@/utils/services";
 import * as S from "./styles";
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -13,6 +14,7 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "secondary" | "link";
   shape?: "rounded" | "square" | "rounded-edge";
   size?: "xs" | "sm" | "md" | "lg";
+  onEnter?: () => void;
 };
 
 export const Button: FC<ButtonProps> = ({
@@ -26,6 +28,9 @@ export const Button: FC<ButtonProps> = ({
 }) => {
   return (
     <S.Container
+      onKeyDownCapture={(e) => {
+        Logger.log("onKeyDown:button", e.key);
+      }}
       className={classNames([
         "button",
         {

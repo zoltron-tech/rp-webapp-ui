@@ -11,10 +11,22 @@ export const NO_SCROLLBAR = css`
   &::-webkit-scrollbar {
     display: none;
   }
+  scrollbar-width: none;
 `;
 
 export const BORDER_TOP = css`
   border-top: 1px solid ${({ theme }) => theme.hoverGreyAlpha};
+`;
+
+export const AVATAR_IMAGE = css`
+  border-radius: 50%;
+  box-shadow: 0px 0px 10px 4px rgba(0, 0, 0, 0.5);
+
+  img {
+    object-fit: cover;
+    border-radius: 50%;
+    pointer-events: none;
+  }
 `;
 
 export const SPIN = css`

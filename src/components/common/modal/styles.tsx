@@ -1,4 +1,4 @@
-import { BORDER_RADIUS } from "@/theme";
+import { BORDER_RADIUS, Z_INDEX } from "@/theme";
 import styled from "styled-components";
 
 type ContainerProps = {
@@ -7,7 +7,7 @@ type ContainerProps = {
 
 export const Container = styled.div<ContainerProps>`
   position: fixed;
-  z-index: 9999;
+  z-index: ${Z_INDEX.MODAL};
   top: 0;
   left: 0;
   width: 100%;
@@ -27,13 +27,15 @@ export const Container = styled.div<ContainerProps>`
   ${({ open }) => !open && "display: none;"}
 `;
 
-type ContentProps = {
+export type ContentProps = {
   width?: string;
   height?: string;
+  minHeight?: string;
+  minWidth?: string;
 };
 
 export const Content = styled.div<ContentProps>`
-  z-index: 1000;
+  z-index: ${Z_INDEX.MODAL_CONTENT};
   position: relative;
   display: flex;
   flex-direction: column;
@@ -48,10 +50,15 @@ export const Content = styled.div<ContentProps>`
 
   ${({ width }) => width && `width: ${width};`}
   ${({ height }) => height && `height: ${height};`}
+
+  overflow: auto;
+  resize: both;
+  ${({ minHeight }) => minHeight && `min-height: ${minHeight};`}
+  ${({ minWidth }) => minWidth && `min-width: ${minWidth};`}
 `;
 
 export const CloseButton = styled.div`
-  z-index: 9999;
+  z-index: ${Z_INDEX.MODAL_CONTENT};
   position: absolute;
   top: 10px;
   right: 10px;

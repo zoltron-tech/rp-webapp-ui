@@ -1,6 +1,6 @@
-import styled from "styled-components";
-import { NO_USER_SELECT } from "@/theme";
+import { NO_USER_SELECT, Z_INDEX } from "@/theme";
 import Link from "next/link";
+import styled from "styled-components";
 
 export const Bar = styled.div`
   position: sticky;
@@ -16,7 +16,7 @@ export const Bar = styled.div`
   box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
   container-name: top-bar;
   container-type: size;
-  z-index: 5;
+  z-index: ${Z_INDEX.TOPBAR};
 
   @media (max-width: 800px) {
     & {

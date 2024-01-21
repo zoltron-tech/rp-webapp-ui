@@ -1,17 +1,24 @@
-import styled from "styled-components";
-import { BORDER_RADIUS, NO_USER_SELECT } from "@/theme";
 import * as Common from "@/components/common";
+import {
+  AVATAR_IMAGE,
+  BORDER_RADIUS,
+  BORDER_TOP,
+  NO_SCROLLBAR,
+  NO_USER_SELECT,
+  Z_INDEX,
+} from "@/theme";
+import styled from "styled-components";
 
 export const CardWrapper = styled.div`
   position: relative;
-  width: 600px;
   height: 250px;
   border-radius: ${BORDER_RADIUS};
-  overflow: hidden;
   transition: all 0.3s ease-in-out;
+  contain: paint;
+  z-index: ${Z_INDEX.CARD};
 
   container-name: novelist-card;
-  container-type: inline-size;
+  container-type: size;
 
   &.expanded {
     height: 600px;
@@ -19,7 +26,6 @@ export const CardWrapper = styled.div`
 
   @container (max-width: 1200px) {
     & {
-      width: 400px;
       height: 230px;
     }
 
@@ -31,7 +37,6 @@ export const CardWrapper = styled.div`
   @container (max-width: 900px) {
     & {
       height: 150px;
-      width: 300px;
     }
 
     &.expanded {
@@ -110,7 +115,7 @@ export const ExpandButton = styled.div`
   background-color: ${({ theme }) => theme.hoverGreyAlpha};
   border-radius: 50%;
   box-shadow: 0px 0px 5px 2px rgba(0, 0, 0, 0.4);
-  z-index: 5;
+  z-index: ${Z_INDEX.CARD_EXPAND};
   transition: background-color 0.1s ease-in-out;
 
   & svg {
@@ -150,6 +155,7 @@ export const Title = styled.div`
   font-weight: 600;
   color: ${({ theme }) => theme.text};
   text-align: center;
+  margin-bottom: 10px;
 
   @container (max-width: 400px) {
     & {
@@ -159,16 +165,13 @@ export const Title = styled.div`
 `;
 
 export const Avatar = styled.div`
+  ${AVATAR_IMAGE}
   width: 200px;
   height: 200px;
-  border-radius: 50%;
-  box-shadow: 0px 0px 10px 4px rgba(0, 0, 0, 0.5);
 
   img {
     width: 200px;
     height: 200px;
-    object-fit: cover;
-    border-radius: 50%;
   }
 
   @container (max-width: 400px) {
@@ -225,26 +228,27 @@ export const NovelistInfo = styled.div`
 `;
 
 export const username = styled(Common.Username)`
-  font-size: 16px;
+  font-size: 16px !important;
 
   @container (max-width: 400px) {
     & {
-      font-size: 14px;
+      font-size: 14px !important;
     }
   }
 
   @container (max-width: 300px) {
     & {
-      font-size: 12px;
+      font-size: 12px !important;
     }
   }
 `;
 
 export const Quote = styled.div`
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   color: ${({ theme }) => theme.text};
   text-align: center;
+  margin-top: 5px;
 
   &::before {
     content: "“";
@@ -272,9 +276,9 @@ export const Quote = styled.div`
 `;
 
 export const MuseList = styled.div`
-  border-top: 1px solid ${({ theme }) => theme.hoverGreyAlpha};
+  ${BORDER_TOP};
+
   width: 100%;
-  height: 100%;
   min-height: 100px;
   overflow-y: scroll;
   display: flex;
@@ -283,6 +287,7 @@ export const MuseList = styled.div`
   justify-content: flex-start;
   margin-top: 40px;
   padding-bottom: 10px;
+  scroll-snap-type: y mandatory;
 
   @container (max-width: 400px) {
     & {
@@ -290,21 +295,13 @@ export const MuseList = styled.div`
     }
   }
 
-  &::-webkit-scrollbar {
-    width: 0px; /* Mostly for vertical scrollbars */
-    height: 0px; /* Mostly for horizontal scrollbars */
+  @container (max-height: 400px) {
+    & {
+      margin-top: 40px;
+    }
   }
-  &::-webkit-scrollbar-thumb {
-    /* Foreground */
-    background: ${({ theme }) => theme.hoverGreyAlpha};
-    border-radius: 50px;
-  }
-  &::-webkit-scrollbar-track {
-    /* Background */
-    max-width: 10px;
-    max-height: 10px;
-    background: transparent;
-  }
+
+  ${NO_SCROLLBAR}
 `;
 
 const MuseComponent = styled.div`
@@ -317,6 +314,7 @@ const MuseComponent = styled.div`
   padding: 10px;
   position: relative;
   ${NO_USER_SELECT}
+  scroll-snap-align: center;
 
   @container (max-width: 400px) {
     & {
@@ -337,16 +335,14 @@ const MuseComponent = styled.div`
 `;
 
 const MuseAvatar = styled.div`
+  ${AVATAR_IMAGE}
+
   width: 70px;
   height: 70px;
-  border-radius: 50%;
-  box-shadow: 0px 0px 5px 3px rgba(0, 0, 0, 0.4);
 
   & img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
   }
 
   @container (max-width: 400px) {

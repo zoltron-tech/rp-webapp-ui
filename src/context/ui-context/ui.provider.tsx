@@ -1,6 +1,7 @@
+import { generateToastError, generateToastSuccess } from "@/utils/helpers";
 import { FC, useState } from "react";
+import { useTheme } from "styled-components";
 import { UIContext, UIContextType } from "./ui.context";
-import { useUIContext } from "@/hooks";
 
 type Props = {
   children: React.ReactNode;
@@ -11,14 +12,14 @@ export const UIContextProvider: FC<Props> = ({ children }) => {
     useState<UIContextType["cardExpanded"]>(false);
   const [signupModal, setSignupModal] = useState<boolean>(false);
   const [signupModalOpen, setSignupModalOpen] = useState<boolean>(false);
+  const theme = useTheme();
 
-  const { successToast } = useUIContext();
   const success: UIContextType["successToast"] = (message: string) => {
-    successToast(message);
+    generateToastSuccess(message, theme);
   };
 
   const error: UIContextType["errorToast"] = (message: string) => {
-    successToast(message);
+    generateToastError(message, theme);
   };
 
   const contextValue: UIContextType = {

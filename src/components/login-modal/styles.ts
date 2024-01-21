@@ -13,7 +13,6 @@ export const Header = styled.div`
   justify-content: flex-start;
   align-items: center;
   gap: 10px;
-  width: 100%;
   margin-bottom: 30px;
   padding-bottom: 10px;
   font-size: 22px;
@@ -41,19 +40,9 @@ export const Header = styled.div`
     }
   }
 `;
+
 export const Content = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
-`;
-
-export const Buttons = styled.div`
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  width: 100%;
-
-  &.button {
-    width: 100%;
-  }
 `;

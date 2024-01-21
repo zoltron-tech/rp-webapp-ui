@@ -1,20 +1,21 @@
-import { styled, css } from "styled-components";
+import { AVATAR_IMAGE, Z_INDEX } from "@/theme";
+import { css, styled } from "styled-components";
 export const AvatarPositionStyle = css`
   position: absolute;
   top: 0;
   left: 0px;
   width: clamp(150px, 30cqw, 400px);
   height: clamp(150px, 30cqw, 400px);
-  overflow: hidden;
-  border-radius: 50%;
+  contain: paint;
   scale: 0.6;
   transform: translate(-20%, 0%);
 `;
 
 export const FileInputHidden = styled.input`
   ${AvatarPositionStyle}
+  border-radius: 50%;
   opacity: 0;
-  z-index: 2;
+  z-index: ${Z_INDEX.AVATAR};
   cursor: pointer;
 
   &:hover ~ div.nw-upload-avatar {
@@ -32,8 +33,10 @@ export const FileInputHidden = styled.input`
 
 export const UploadAvatar = styled.div`
   ${AvatarPositionStyle}
+
+  ${AVATAR_IMAGE}
   background-color: ${({ theme }) => theme.cardBackgroundColor};
-  z-index: 1;
+  z-index: ${Z_INDEX.DEFAULT};
   opacity: 1;
   box-shadow: 0px 3px 10px 5px ${({ theme }) => theme.cardBoxShadowColor};
   transition: opacity 0.15s linear;
@@ -51,14 +54,11 @@ export const UploadAvatar = styled.div`
     stroke: ${({ theme }) => theme.primary};
     opacity: 0;
     transition: opacity 0.15s linear;
-    z-index: 2;
+    z-index: ${Z_INDEX.AVATAR};
   }
 
   & > img {
     opacity: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
     transition: opacity 0.15s linear;
   }
 

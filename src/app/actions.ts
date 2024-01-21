@@ -93,8 +93,9 @@ export const register = async (payload: SignUpPayload) => {
   Logger.log("register response", response);
 
   if (response.status < 200 || response.status > 300) {
-    Logger.log("error", response.status, response.statusText);
-    return { message: "Error registering" };
+    const result: WithMessage = await response.json();
+    Logger.log("register result", result.message);
+    return { message: result.message };
   }
 
   const result: WithToken<WithMessage> = await response.json();

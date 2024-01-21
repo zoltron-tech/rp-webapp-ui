@@ -37,14 +37,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   if (!initialized) return <S.FallbackContainer></S.FallbackContainer>;
 
   return (
-    <UIContextProvider>
-      <ThemeProvider theme={getTheme()}>
+    <ThemeProvider theme={getTheme()}>
+      <UIContextProvider>
         <LoginModal />
         <TopBar theme={theme} toggleTheme={toggleTheme} />
         <main>
           <ContentContainer>{children}</ContentContainer>
         </main>
-      </ThemeProvider>
-    </UIContextProvider>
+      </UIContextProvider>
+    </ThemeProvider>
   );
 }

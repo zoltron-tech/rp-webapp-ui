@@ -4,13 +4,13 @@ import {
   updateUserNovelist,
 } from "@/app/rp/novelists/actions";
 import { deleteAvatar, uploadAvatar } from "@/app/rp/profile/actions";
-import { Card, Input, UploadAvatar } from "@/components/common";
+import { Card, Input, UploadAvatar, Username } from "@/components/common";
 import { useUIContext } from "@/hooks";
 import type { Novelist, User } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { stripS3Url } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
-import { FC, useEffect, useRef, useState } from "react";
+import { FC, useEffect, useState } from "react";
 
 import * as S from "./styles";
 
@@ -22,7 +22,7 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
   const [avatarFile, setAvatarFile] = useState<FormData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [initialRender, setInitialRender] = useState(true);
-  const usernameRef = useRef<HTMLInputElement>(null);
+
   const { successToast, errorToast } = useUIContext();
 
   const fetchData = async () => {
@@ -79,6 +79,8 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
   const handleSave = async () => {
     Logger.log("handleSave");
 
+    setLoading(true);
+
     let updatedAvatarUrl = novelist?.image;
     if (avatarFile) {
       updatedAvatarUrl = (await updateUserAvatar()) || novelist?.image;
@@ -86,12 +88,17 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
 
     Logger.log("updatedAvatar: ", updatedAvatarUrl);
 
-    if (!novelist) return;
+    if (!novelist) {
+      setLoading(false);
+      return errorToast("First name is required.");
+    }
 
     const resonse = await updateUserNovelist({
       ...novelist,
       image: updatedAvatarUrl || "",
     });
+
+    setLoading(false);
 
     if ("message" in resonse) {
       return errorToast(API_MESSAGE.Error);
@@ -140,17 +147,8 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
           <S.Title>
             <span>Your</span> Profile
           </S.Title>
-          <S.UsernameContainer
-            ref={usernameRef}
-            onClick={() => {
-              const username = usernameRef.current?.innerText;
-              if (username) {
-                navigator.clipboard.writeText(username);
-                successToast("Username copied to clipboard");
-              }
-            }}
-          >
-            <S.Username>{user?.username}</S.Username>
+          <S.UsernameContainer>
+            <Username username={user?.username} primary />
           </S.UsernameContainer>
           <S.FormGroup>
             <S.Name>
@@ -158,26 +156,32 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
                 label="First Name"
                 value={novelist?.firstName}
                 onChange={(firstName) => updateNovelist({ firstName })}
+                onEnter={handleSave}
               />
               <Input
                 label="Last Name"
                 value={novelist?.lastName}
                 onChange={(lastName) => updateNovelist({ lastName })}
+                onEnter={handleSave}
               />
             </S.Name>
             <Input
               label="Note"
               value={novelist?.note}
               onChange={(note) => updateNovelist({ note })}
+              onEnter={handleSave}
             />
             <S.ButtonGroup>
               <S.SaveButton
                 variant="secondary"
-                onClick={() => Logger.log("save")}
+                onClick={() => Logger.log("cancel")}
+                loading={loading}
               >
                 Cancel
               </S.SaveButton>
-              <S.SaveButton onClick={handleSave}>Save Changes</S.SaveButton>
+              <S.SaveButton onClick={handleSave} loading={loading}>
+                Save Changes
+              </S.SaveButton>
             </S.ButtonGroup>
           </S.FormGroup>
         </S.Profile>

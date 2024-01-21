@@ -1,12 +1,11 @@
-import { FC, useState } from "react";
-import React from "react";
+import { Logger } from "@/utils/services";
 import classNames from "classnames";
 import Image from "next/image";
+import React, { FC, useState } from "react";
 import { TbCameraUp } from "react-icons/tb";
-import { Logger } from "@/utils/services";
 
-import * as S from "./styles";
 import { useUIContext } from "@/hooks";
+import * as S from "./styles";
 
 type UploadAvatarProps = {
   image?: string;

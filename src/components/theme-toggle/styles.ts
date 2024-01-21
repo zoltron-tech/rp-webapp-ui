@@ -1,3 +1,4 @@
+import { Z_INDEX } from "@/theme";
 import styled from "styled-components";
 
 export const THEME_SWITCHER = {
@@ -30,7 +31,7 @@ export const ThemeSwitcher = styled.div`
   position: relative;
   box-shadow: inset 0px 0px 1px 0px rgba(0, 0, 0, 0.4);
   cursor: pointer;
-  overflow: hidden;
+  contain: paint;
 `;
 
 export const ThemeSwitchInner = styled.div<{ theme: string }>`
@@ -39,17 +40,17 @@ export const ThemeSwitchInner = styled.div<{ theme: string }>`
   border-radius: 15px;
   position: absolute;
   left: 0;
-  z-index: 1;
+  z-index: ${Z_INDEX.BACKGROUND};
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  contain: paint;
 
   & svg {
     width: 18px;
     height: 18px;
     transition: all 0.2s ease-in;
-    z-index: 2;
+    z-index: ${Z_INDEX.AVATAR};
     opacity: 0;
   }
 

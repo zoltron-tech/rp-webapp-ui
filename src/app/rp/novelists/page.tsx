@@ -33,6 +33,8 @@ export default function NovelistsPage() {
     setNovelists();
   }, []);
 
+  console.log("DISABLING AUTOSCROLL", process.env.DISABLE_AUTOSCROLL);
+
   return (
     <ShouldRender if={!!novelists}>
       <S.CarouselContainer>
@@ -43,10 +45,14 @@ export default function NovelistsPage() {
           centeredSlides={true}
           slidesPerView={3}
           speed={1000}
-          autoplay={{
-            delay: 4000,
-            disableOnInteraction: false,
-          }}
+          autoplay={
+            process.env.DISABLE_AUTOSCROLL === "true"
+              ? false
+              : {
+                  delay: 4000,
+                  disableOnInteraction: false,
+                }
+          }
           coverflowEffect={{
             rotate: 0,
             depth: 0,

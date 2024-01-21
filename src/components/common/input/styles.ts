@@ -1,6 +1,6 @@
-import styled from "styled-components";
-import { SPIN } from "@/theme";
+import { SPIN, Z_INDEX } from "@/theme";
 import { setOpacity } from "@/utils/helpers";
+import styled from "styled-components";
 
 export const InputWrapper = styled.div`
   margin-bottom: 10px;
@@ -8,7 +8,6 @@ export const InputWrapper = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;
   gap: 4px;
   margin-top: 10px;
   font-style: italic;
@@ -16,7 +15,6 @@ export const InputWrapper = styled.div`
 
 export const InputContainer = styled.div`
   position: relative;
-  width: 100%;
   height: 56px;
   display: flex;
   align-items: center;
@@ -27,9 +25,10 @@ export const InputContainer = styled.div`
 export const InputLabel = styled.label`
   color: ${({ theme }) => theme.text};
   pointer-events: none;
-  /* vertical-align: middle; */
-  transition: all 0.12s linear;
-  z-index: 1;
+  transition-property: transform, opacity, font-size;
+  transition-duration: 0.12s;
+  transition-timing-function: linear;
+  z-index: ${Z_INDEX.DEFAULT};
 `;
 
 export const Input = styled.input`
@@ -44,7 +43,7 @@ export const Input = styled.input`
   outline: none;
   padding: 18px 10px 10px 15px;
   color: ${({ theme }) => theme.textStark};
-  overflow: hidden;
+  contain: paint;
   background-color: ${({ theme }) => theme.inputBackground};
 
   &:not(:read-only):hover {
@@ -57,7 +56,8 @@ export const Input = styled.input`
 
   &:focus ~ label,
   &:not(:placeholder-shown):not(:focus) ~ label {
-    transform: translate(0px, -12px);
+    transform: translate(0px, -14px);
+    opacity: 0.6;
     font-size: 11px;
     font-weight: 400;
     color: ${({ theme }) => theme.text};
@@ -65,11 +65,11 @@ export const Input = styled.input`
   }
 
   &.left-icon {
-    padding-left: 40px;
+    padding-left: 45px;
   }
 
   &.right-icon {
-    padding-right: 40px;
+    padding-right: 45px;
   }
 `;
 
@@ -82,7 +82,6 @@ export const Message = styled.div`
   align-items: center;
   justify-content: flex-start;
   gap: 4px;
-  width: 100%;
   opacity: 0;
   transition: opacity 0.1s ease-in-out;
   margin-top: 2px;
@@ -168,21 +167,22 @@ export const RightIconBox = styled.div`
     opacity: 0.5;
     fill: ${({ theme }) => setOpacity(theme.primary, 0.6)};
     width: 100%;
-    height: 28px;
+    height: 22px;
+
     path {
       fill: ${({ theme }) => theme.text};
     }
+  }
 
-    &:hover,
-    &.visible {
-      opacity: 1;
+  &:hover svg,
+  &.visible svg {
+    opacity: 1;
+    fill: ${({ theme }) =>
+      theme.name === "light" ? theme.primary : theme.text};
+
+    path {
       fill: ${({ theme }) =>
         theme.name === "light" ? theme.primary : theme.text};
-
-      path {
-        fill: ${({ theme }) =>
-          theme.name === "light" ? theme.primary : theme.text};
-      }
     }
   }
 `;

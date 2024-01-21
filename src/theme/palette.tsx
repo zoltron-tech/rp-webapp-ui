@@ -44,17 +44,17 @@ export const THEME_LIGHT: Theme = {
   modalBackground: "#fff",
   toastBackground: "#e7e7e7",
   inputBackground: "#c5c5c5",
-  text: "#242424",
+  text: "#111111",
   textPrimary: "#dedede",
   textLink: accentColor,
   textLinkHover: pSBC(-0.3, accentColor) as string,
   textGray: "#5f5f5f",
   textStark: "#000",
   navbar: pSBC(0.6, accentColor) as string,
-  cardBackgroundTint: "rgba(185, 182, 182, 0.003)",
+  cardBackgroundTint: "rgba(255, 255, 255, 0.339)",
   cardBackgroundGradient: [
     "rgba(0, 0, 0, 0)",
-    "rgba(208, 208, 208, 0.546) 40%",
+    "rgba(255, 255, 255, 0.546) 80%",
     "#dedede",
   ],
   cardBackgroundColor: "#e7e7e7",
@@ -69,7 +69,7 @@ export const THEME_LIGHT: Theme = {
 
 export const THEME_DARK: Theme = {
   name: "dark",
-  background: "#232323",
+  background: "#141414",
   primary: pSBC(-0.45, accentColor) as string,
   primaryHover: pSBC(-0.6, accentColor) as string,
   primaryDisabled: pSBC(-0.8, accentColor) as string,
@@ -88,7 +88,7 @@ export const THEME_DARK: Theme = {
   cardBackgroundTint: "rgba(0, 0, 0, 0.339)",
   cardBackgroundGradient: [
     "rgba(255, 255, 255, 0)",
-    "rgba(0, 0, 0, 0.8) 60%",
+    "rgba(0, 0, 0, 0.8) 80%",
     "rgba(0, 0, 0, 1)",
   ],
   cardBackgroundColor: "#1b1b1b",

@@ -1,35 +1,10 @@
-import { BORDER_RADIUS } from "@/theme";
 import { styled } from "styled-components";
 
-export const FallbackContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  width: 100%;
-  background-color: #868686;
-`;
-
 export const CarouselContainer = styled.div`
-  overflow: visible;
-  padding: 40px 0px;
-  margin-top: 40px;
-
-  & .swiper {
-    overflow: visible;
-    width: 100%;
-    height: 100%;
-  }
-
-  & .swiper-slide {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-    border-radius: ${BORDER_RADIUS};
-    -webkit-backface-visibility: hidden;
-    -webkit-transform: translate3d(0, 0, 0);
-  }
+  padding-top: 80px;
+  max-width: 2000px;
+  margin-inline: auto;
+  contain: paint;
 
   & .swiper-button-prev,
   & .swiper-button-next {
@@ -42,7 +17,11 @@ export const CarouselContainer = styled.div`
       }
     }
 
-    @container (max-width: 800px) {
+    &::after {
+      font-size: 2.5cqw;
+    }
+
+    @container (max-width: 500px) {
       & {
         display: none;
       }

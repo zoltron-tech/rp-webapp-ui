@@ -2,7 +2,9 @@
 
 import { authenticateAndGetJWT, logout } from "@/app/actions";
 import { Novelist } from "@/types";
-import { AUTH_HEADER_NAME } from "@/utils/constants";
+import { WithMessage } from "@/types/common";
+import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
+import { Logger } from "@/utils/services";
 import getConfig from "next/config";
 
 const { serverRuntimeConfig } = getConfig();
@@ -12,6 +14,13 @@ export const getNovelists = async () => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/all`;
 
   const response = await fetch(URL, { cache: "no-store" });
+
+  if (response.status === 404) {
+    return [];
+  } else if (response.status !== 200) {
+    return { message: API_MESSAGE.Error };
+  }
+
   const novelists: Novelist[] = await response.json();
 
   return novelists;
@@ -19,7 +28,7 @@ export const getNovelists = async () => {
 
 export const getUserNovelist = async () => {
   const jwt = authenticateAndGetJWT();
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/`;
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist`;
 
   const response = await fetch(URL, {
     headers: {
@@ -32,10 +41,45 @@ export const getUserNovelist = async () => {
   if (response.status === 404) {
     return null;
   } else if (response.status !== 200) {
+    Logger.log(API_MESSAGE.Error, response.status, response.statusText);
     logout();
   }
 
   const novelist: Novelist = await response.json();
+
+  return novelist;
+};
+
+export const updateUserNovelist = async (_novelist: Novelist) => {
+  const jwt = authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist`;
+
+  Logger.log("updateUserNovelist", _novelist);
+
+  const response = await fetch(URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    body: JSON.stringify(_novelist),
+    cache: "no-store",
+  });
+
+  if (response.status !== 200) {
+    Logger.log("error", response.status, response.statusText);
+    return { message: API_MESSAGE.Error };
+  }
+
+  const result: WithMessage<Novelist> = await response.json();
+
+  const novelist: Novelist = Object.assign(
+    {},
+    {
+      ...result,
+      message: undefined,
+    }
+  );
 
   return novelist;
 };

@@ -1,37 +1,61 @@
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import { useTheme } from "styled-components";
 import { LoginPayload, LoginResponse } from "@/types";
 import { Button, Input, Modal, ShouldRender } from "@/components/common";
-import { login, reroute } from "@/app/actions";
-import { generateToastError, generateToastSuccess } from "@/utils/helpers";
+import {
+  checkUsernameAvailability,
+  login,
+  register,
+  reroute,
+} from "@/app/actions";
+import {
+  generateToastError,
+  generateToastSuccess,
+  verifyEmailPattern,
+  verifyUsernamePattern,
+} from "@/utils/helpers";
 import { useAuth, useUIContext } from "@/hooks";
 import { Logger } from "@/utils/services";
 
 import * as S from "./styles";
+import { WithMessage } from "@/types/common";
+import { SignUpPayload } from "@/types/register";
 
 export type LoginModalProps = {};
+
 export const LoginModal: FC<LoginModalProps> = ({}) => {
   const { signupModalOpen, signupModal, setSignupModal, setSignupModalOpen } =
     useUIContext();
   const [loading, setLoading] = useState<boolean>(false);
-  const [username, setusername] = useState<string>("example");
-  const [email, setEmail] = useState<string>("example@gmail.com");
-  const [password, setPassword] = useState<string>("12345678");
+  const [verifyUsernameLoading, setVerifyUsernameLoading] =
+    useState<boolean>(false);
+  const [isUsernameAvailable, setIsUsernameAvailable] =
+    useState<boolean>(false);
+  const [username, setusername] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string>("");
+  const [buttonClicked, setButtonClicked] = useState<boolean>(false);
   const theme = useTheme();
   const { verify } = useAuth();
+  const usernameAvailableDebounceTimer = useRef<any>(null);
 
-  const checkError = () => {
-    if (!email || !password) {
-      setError("Please fill in all fields");
-      return;
+  const checkError = (force?: boolean): boolean => {
+    if (!force && !buttonClicked) {
+      Logger.log("check error: --");
+      return false;
     }
 
-    const validEmail = email.match(/^([\w.%+-]+)@([\w-]+\.)+([\w]{2,})$/i);
+    if (!email || !password || (signupModal && !username)) {
+      setError("Please fill in all fields");
+      return true;
+    }
+
+    const validEmail = verifyEmailPattern(email);
 
     if (!validEmail) {
       setError("Please enter a valid email");
-      return;
+      return true;
     }
 
     const validPassword = password.match(/^(?=.*\d).{8,}$/);
@@ -40,14 +64,83 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
       setError(
         "Password must be at least 8 characters long and contain at least one number"
       );
-      return;
+      return true;
+    }
+
+    if (signupModal && !verifyUsernamePattern(username)) {
+      setError(
+        "Username must be at least 3 characters long and contain only alphanumeric characters"
+      );
+      return true;
     }
 
     setError("");
+    return false;
   };
 
-  const handleLogin = async (payload: LoginPayload) => {
+  const clearError = () => {
+    setButtonClicked(false);
+    if (error) setTimeout(() => setError(""), 1000);
+  };
+
+  const handleUsernameChange = async (value: string) => {
+    setusername(value);
+    clearError();
+    if (!value) return;
+
+    const validUsername = verifyUsernamePattern(value);
+
+    if (!validUsername) {
+      return;
+    }
+
+    setVerifyUsernameLoading(true);
+    if (usernameAvailableDebounceTimer.current) {
+      clearTimeout(usernameAvailableDebounceTimer.current);
+    }
+    usernameAvailableDebounceTimer.current = setTimeout(async () => {
+      const response = await checkUsernameAvailability(value);
+      if (response === true) {
+        setIsUsernameAvailable(true);
+      } else {
+        setIsUsernameAvailable(false);
+      }
+      setVerifyUsernameLoading(false);
+    }, 500);
+  };
+
+  const getUsernameMessage = () => {
+    const validUsername = verifyUsernamePattern(username);
+    if (!validUsername) return "";
+
+    if (verifyUsernameLoading) {
+      return "Verifying username...";
+    }
+
+    return isUsernameAvailable ? "Username is available" : "Username is taken";
+  };
+
+  const getUsernameMessageType = ():
+    | "success"
+    | "error"
+    | "processing"
+    | undefined => {
+    if (!username) return;
+
+    if (verifyUsernameLoading) {
+      return "processing";
+    }
+
+    return isUsernameAvailable ? "success" : "error";
+  };
+
+  const handleLogin = async () => {
     setLoading(true);
+
+    const payload: LoginPayload = {
+      email,
+      password,
+    };
 
     try {
       const response: LoginResponse = await login(payload);
@@ -60,21 +153,77 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
         if (verified) {
           generateToastSuccess("Logged in successfully", theme);
           reroute("/rp/profile");
-        } else {
-          generateToastError("Something went wrong", theme);
+          setSignupModalOpen(false);
         }
+      } else {
+        generateToastError(response.message, theme);
+      }
+      setLoading(false);
+    } catch (e) {
+      Logger.log("error dekho bhai ->", e);
+      generateToastError("Something went wrong", theme);
+      setLoading(false);
+    }
+  };
+
+  const handleSignup = async () => {
+    setLoading(true);
+
+    const payload: SignUpPayload = {
+      username,
+      email,
+      password,
+    };
+
+    try {
+      const response: WithMessage = await register(payload);
+
+      Logger.log(response);
+
+      if (response.message === "success") {
+        generateToastSuccess("Registered successfully", theme);
         setSignupModalOpen(false);
       }
+
+      if (response.message === "error") {
+        generateToastError("Something went wrong", theme);
+      }
+
+      setSignupModalOpen(false);
     } catch (e) {
       Logger.log("error dekho bhai ->", e);
       generateToastError("Something went wrong", theme);
     }
+
     setLoading(false);
+  };
+
+  const handleSubmit = () => {
+    setButtonClicked(true);
+    const isError = checkError(true);
+    if (isError) return;
+
+    if (signupModal) {
+      handleSignup();
+    } else {
+      handleLogin();
+    }
   };
 
   useEffect(() => {
     checkError();
-  }, [email, password]);
+  }, [email, password, username]);
+
+  useEffect(() => {
+    if (!signupModalOpen) {
+      setButtonClicked(false);
+      setusername("");
+      setEmail("");
+      setPassword("");
+      setError("");
+      setLoading(false);
+    }
+  }, [signupModalOpen]);
 
   return (
     <Modal
@@ -97,30 +246,45 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
             <Input
               label="username"
               type="text"
-              onChange={(value) => setusername(value || "")}
+              onChange={(value) => handleUsernameChange(value || "")}
               value={username}
+              message={getUsernameMessage()}
+              messageType={getUsernameMessageType()}
+              maxLength={30}
             />
           </ShouldRender>
           <Input
             label="Email"
             type="text"
-            onChange={(value) => setEmail(value || "")}
+            onChange={(value) => {
+              clearError();
+              setEmail(value || "");
+            }}
             value={email}
+            maxLength={50}
           />
           <Input
             label="Password"
             type="password"
-            onChange={(value) => setPassword(value || "")}
+            onChange={(value) => {
+              clearError();
+              setPassword(value || "");
+            }}
             value={password}
             message={error}
             messageType="warning"
+            maxLength={50}
           />
           <S.Buttons>
             <Button
-              onClick={() => handleLogin({ email, password })}
+              onClick={handleSubmit}
               variant="primary"
-              disabled={!!error}
+              disabled={
+                !!error ||
+                (signupModal && (verifyUsernameLoading || !isUsernameAvailable))
+              }
               loading={loading}
+              size="lg"
             >
               {signupModal ? "Register" : "Login"}
             </Button>

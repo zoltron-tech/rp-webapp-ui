@@ -2,17 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks";
-
-import styles from "./page.module.css";
-import dynamic from "next/dynamic";
 import { Logger } from "@/utils/services";
-
-const DynamicProfileCard = dynamic(
-  () => import("../../../components/profile-card"),
-  {
-    loading: () => <p>Loading...</p>,
-  }
-);
+import { ProfileCard } from "@/components";
 
 export default function ProfilePage({}) {
   const { authWall } = useAuth();
@@ -32,8 +23,8 @@ export default function ProfilePage({}) {
   Logger.log("yaha pohanchay hain hum:");
 
   return (
-    <div className={styles.container}>
-      <DynamicProfileCard />
+    <div>
+      <ProfileCard />
     </div>
   );
 }

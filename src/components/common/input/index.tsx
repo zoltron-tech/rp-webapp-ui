@@ -1,5 +1,11 @@
 import classNames from "classnames";
-import { FC, ReactElement, useState } from "react";
+import {
+  FC,
+  HTMLInputTypeAttribute,
+  InputHTMLAttributes,
+  ReactElement,
+  useState,
+} from "react";
 import { GoEye, GoEyeClosed } from "react-icons/go";
 import { VscError } from "react-icons/vsc";
 import { FaRegCircleCheck } from "react-icons/fa6";
@@ -9,7 +15,7 @@ import { ShouldRender } from "@/components/common";
 
 import * as S from "./styles";
 
-interface Props {
+type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "onChange"> & {
   label: string;
   type?: string;
   placeholder?: string;
@@ -17,18 +23,18 @@ interface Props {
   defaultValue?: string | boolean | number;
   readOnly?: boolean;
   icon?: ReactElement;
+  iconColor?: string;
   message?: any;
   messageType?: "error" | "success" | "warning" | "processing";
-  minDate?: string;
-  maxDate?: string;
   inputProps?: any;
   onChange?: (val?: string) => void;
   pattern?: string;
-}
+};
 
 export const Input: FC<Props> = ({
   type = "text",
   icon,
+  iconColor,
   label,
   defaultValue,
   value,
@@ -37,8 +43,6 @@ export const Input: FC<Props> = ({
   placeholder,
   message,
   messageType,
-  minDate,
-  maxDate,
   onChange,
   ...rest
 }) => {
@@ -58,15 +62,13 @@ export const Input: FC<Props> = ({
           aria-label={label}
           className={classNames({
             "left-icon": icon,
-            "right-icon": isPassword,
+            "right-icon": isPassword || icon,
           })}
           type={isPassword ? passwordType : type}
           placeholder={placeholder || " "}
           value={value}
           readOnly={readOnly}
           defaultValue={defaultValue}
-          min={minDate}
-          max={maxDate}
           onChange={(val): void => {
             if (onChange) onChange(val?.target?.value);
           }}
@@ -74,6 +76,16 @@ export const Input: FC<Props> = ({
           {...rest}
         />
         <S.InputLabel>{label}</S.InputLabel>
+
+        <ShouldRender if={!!icon}>
+          <S.RightIconBox
+            color={iconColor}
+            className={classNames({ visible: true })}
+          >
+            {icon}
+          </S.RightIconBox>
+        </ShouldRender>
+
         {isPassword && (
           <S.RightIconBox
             className={classNames({ visible: !hidden })}

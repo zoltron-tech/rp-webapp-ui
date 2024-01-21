@@ -34,7 +34,7 @@ export const TopBar: FC<Props> = ({ theme, toggleTheme }) => {
   return (
     <>
       <S.Bar>
-        <S.LogoContainer>
+        <S.LogoContainer href={"/"}>
           <S.Logo>
             <S.LogoInner>NW</S.LogoInner>
           </S.Logo>
@@ -49,14 +49,24 @@ export const TopBar: FC<Props> = ({ theme, toggleTheme }) => {
                 Sign up
               </Button>
             </S.ButtonsContainerDesktop>
-            <S.ButtonsContainerMobile>
-              <Button variant="link" onClick={onLoginClick}>
+            {/* <S.ButtonsContainerMobile>
+              <Button
+                variant="link"
+                shape="square"
+                size="xs"
+                onClick={onLoginClick}
+              >
                 Log in
               </Button>
-              <Button variant="link" onClick={onSignupClick}>
+              <Button
+                variant="link"
+                shape="square"
+                size="xs"
+                onClick={onSignupClick}
+              >
                 Sign up
               </Button>
-            </S.ButtonsContainerMobile>
+            </S.ButtonsContainerMobile> */}
           </ShouldRender>
           <ShouldRender if={isLoggedIn}>
             <S.ButtonsContainerDesktop>

@@ -14,14 +14,11 @@ import {
   JWT_COOKIE_NAME,
   THEME_COOKIE_NAME,
 } from "@/utils/constants";
+import { WithMessage, WithToken } from "@/types/common";
+import { SignUpPayload } from "@/types/register";
 
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
-
-type LoginResponseServer = {
-  message: string;
-  token: string;
-};
 
 export const getThemeCookie = () => {
   Logger.log("getThemeCookie");
@@ -32,12 +29,12 @@ export const getThemeCookie = () => {
 
 export const getAuthCookie = () => {
   Logger.log("getAuthCookie");
-  const cookie = cookies().get(THEME_COOKIE_NAME);
+  const cookie = cookies().get(JWT_COOKIE_NAME);
   if (!cookie) return "";
   return cookie.value;
 };
 
-export const login = async (payload: LoginPayload): Promise<LoginResponse> => {
+export const login = async (payload: LoginPayload): Promise<WithMessage> => {
   const URL = `${RP_SERVICE_URL}/rp/user/account/login`;
 
   Logger.log("login payload", payload);
@@ -51,7 +48,18 @@ export const login = async (payload: LoginPayload): Promise<LoginResponse> => {
     body: JSON.stringify(payload),
     cache: "no-store",
   });
-  const result: LoginResponseServer = await response.json();
+
+  if (response.status === 404) {
+    return { message: "User not found" };
+  } else if (response.status === 401) {
+    return { message: "Email or password is incorrect" };
+  } else if (response.status === 403) {
+    return { message: "Account not verified" };
+  } else if (response.status !== 200) {
+    return { message: "Something went wrong, please contact support." };
+  }
+
+  const result: WithToken<WithMessage> = await response.json();
 
   Logger.log("login result", result);
 
@@ -62,7 +70,48 @@ export const login = async (payload: LoginPayload): Promise<LoginResponse> => {
     path: "/",
   });
 
-  const clientResponse: LoginResponse = {
+  const clientResponse: WithMessage = {
+    message: result.message,
+  };
+
+  return clientResponse;
+};
+
+export const register = async (payload: SignUpPayload) => {
+  const URL = `${RP_SERVICE_URL}/rp/user/account`;
+
+  Logger.log("register payload", payload);
+
+  const response = await fetch(URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+    cache: "no-store",
+  });
+
+  Logger.log("register response", response);
+
+  if (response.status < 200 || response.status > 300) {
+    Logger.log("error", response.status, response.statusText);
+    return { message: "Error registering" };
+  }
+
+  const result: WithToken<WithMessage> = await response.json();
+
+  Logger.log("register result", result.message);
+
+  if (!result.token) return { message: result.message };
+
+  cookies().set(JWT_COOKIE_NAME, result.token, {
+    httpOnly: false,
+    secure: false,
+    sameSite: "strict",
+    path: "/",
+  });
+
+  const clientResponse: WithMessage = {
     message: result.message,
   };
 
@@ -100,6 +149,24 @@ export const authenticateAndGetJWT = () => {
   if (!authenticate()) return logout();
   const cookie = getAuthCookie();
   return cookie;
+};
+
+export const checkUsernameAvailability = async (username: string) => {
+  const URL = `${RP_SERVICE_URL}/rp/user/account/username?username=${username}`;
+
+  const response = await fetch(URL, { cache: "no-store" });
+
+  Logger.log("checkUsernameAvailability", username, response);
+
+  if (response.status === 404) {
+    return true;
+  } else if (response.status === 200) {
+    return false;
+  }
+
+  const result: WithMessage = await response.json();
+
+  return result.message;
 };
 
 export const reroute = (path: string) => {

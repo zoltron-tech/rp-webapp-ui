@@ -7,6 +7,8 @@ import { Novelist } from "@/types";
 import { getNovelists } from "./actions";
 import { EffectCoverflow, Navigation, Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import { generateToastError } from "@/utils/helpers";
+import { useTheme } from "styled-components";
 
 import "swiper/css";
 import "swiper/css/effect-coverflow";
@@ -16,9 +18,14 @@ import * as S from "./styles";
 
 export default function NovelistsPage() {
   const [novelists, setNovelistsState] = useState<Novelist[]>([]);
+  const theme = useTheme();
 
   const setNovelists = async () => {
     const novelists = await getNovelists();
+    if ("message" in novelists) {
+      return generateToastError("Novelists could not be fetched!", theme);
+    }
+
     setNovelistsState(novelists);
   };
 
@@ -49,7 +56,7 @@ export default function NovelistsPage() {
           }}
           modules={[EffectCoverflow, Navigation, Autoplay]}
         >
-          {novelists?.map((novelist, index) => (
+          {[...novelists, ...novelists].map((novelist, index) => (
             <SwiperSlide key={`${novelist.username}-${index}`}>
               <NovelistCard novelist={novelist} />
             </SwiperSlide>

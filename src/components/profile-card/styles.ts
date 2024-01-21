@@ -1,9 +1,8 @@
-import { styled } from "styled-components";
+import { css, styled } from "styled-components";
 
 import * as Common from "@/components/common";
 
 export const Profile = styled.div`
-  position: static;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -13,7 +12,7 @@ export const Profile = styled.div`
   padding: 20px;
 `;
 
-export const ProfileImage = styled.div`
+export const AvatarPositionStyle = css`
   position: absolute;
   top: 0;
   left: 0px;
@@ -21,10 +20,15 @@ export const ProfileImage = styled.div`
   height: clamp(150px, 30cqw, 400px);
   overflow: hidden;
   border-radius: 50%;
-  background-color: ${({ theme }) => theme.cardBackgroundColor};
-  z-index: 2;
   scale: 0.6;
   transform: translate(-20%, 0%);
+`;
+
+export const ProfileImage = styled.div`
+  ${AvatarPositionStyle}
+
+  background-color: ${({ theme }) => theme.cardBackgroundColor};
+  z-index: 1;
   opacity: 1;
   box-shadow: 0px 3px 10px 5px ${({ theme }) => theme.cardBoxShadowColor};
 
@@ -53,15 +57,10 @@ export const UsernameContainer = styled.div`
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  font-size: clamp(18px, 4cqw, 32px);
+  font-size: clamp(24px, 4cqw, 32px);
   padding-left: clamp(0px, 20cqw, 400px);
   padding-top: 50px;
-
-  & > label {
-    margin-right: 5px;
-    font-size: clamp(14px, 3cqw, 28px);
-    color: ${({ theme }) => theme.textGray};
-  }
+  cursor: copy;
 
   @container (max-width: 350px) {
     padding-top: 70px;
@@ -74,19 +73,33 @@ export const Username = styled(Common.Username)`
   color: ${({ theme }) => theme.primary};
 `;
 
+export const FormGroup = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 20px;
+  padding-left: clamp(0px, 20cqw, 400px);
+  gap: 10px;
+
+  @container (max-width: 600px) {
+    & {
+      padding-left: 0px;
+    }
+  }
+`;
+
 export const Name = styled.div`
   width: 100%;
   display: flex;
   flex-direction: row;
-  gap: 10px;
   align-items: center;
   justify-content: center;
-  padding-left: clamp(0px, 20cqw, 400px);
-  padding-top: 20px;
+  gap: 10px;
 
   @container (max-width: 600px) {
     & {
-      padding-left: clamp(0px, 10cqw, 200px);
       flex-direction: column;
       justify-content: flex-start;
     }
@@ -94,12 +107,25 @@ export const Name = styled.div`
 `;
 
 export const Note = styled.div`
-  font-size: clamp(12px, 2cqw, 24px);
-  font-weight: 400;
+  /* width: 100%; */
+  /* color: ${({ theme }) => theme.textGray}; */
+`;
+
+export const ButtonGroup = styled.div`
   width: 100%;
-  font-style: italic;
-  color: ${({ theme }) => theme.textGray};
-  margin-top: 5px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+`;
+
+export const SaveButton = styled(Common.Button)`
+  width: 100%;
+  max-width: 300px;
+  margin-top: 20px;
+  margin-left: clamp(0px, calc(120px - 20cqw), 120px);
+  margin-bottom: 20px;
 `;
 
 type ProfileBackgroundFilterProps = {
@@ -120,6 +146,7 @@ export const ProfileBackgroundBlurFilter = styled.div<ProfileBackgroundFilterPro
     url(${(props): string => props.banner});
   background-position: center;
   background-size: cover;
+  z-index: -1;
 
   top: clamp(-300px, calc(-600px + 80cqw), 0px);
 

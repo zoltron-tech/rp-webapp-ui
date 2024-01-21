@@ -1,13 +1,12 @@
 import { FC, useState } from "react";
-
-import * as S from "./styles";
 import React from "react";
 import classNames from "classnames";
 import Image from "next/image";
-import { generateToastError } from "@/utils/helpers";
-import { useTheme } from "styled-components";
 import { TbCameraUp } from "react-icons/tb";
 import { Logger } from "@/utils/services";
+
+import * as S from "./styles";
+import { useUIContext } from "@/hooks";
 
 type UploadAvatarProps = {
   image?: string;
@@ -17,7 +16,7 @@ type UploadAvatarProps = {
 export const UploadAvatar: FC<UploadAvatarProps> = ({ image, onChange }) => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
-  const theme = useTheme();
+  const { errorToast } = useUIContext();
 
   const onUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     Logger.log("change", e.currentTarget.files?.[0]);
@@ -27,7 +26,7 @@ export const UploadAvatar: FC<UploadAvatarProps> = ({ image, onChange }) => {
     const isImage = file.type.includes("image");
 
     if (!isImage) {
-      return generateToastError("File type is not a valid image!", theme);
+      return errorToast("File type is not a valid image!");
     }
     setUploadedFile(file);
 

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { ProfileCard } from "@/components";
 import { useAuth } from "@/hooks";
 import { Logger } from "@/utils/services";
-import { ProfileCard } from "@/components";
+import { useEffect, useState } from "react";
 
 export default function ProfilePage({}) {
   const { authWall } = useAuth();

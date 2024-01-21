@@ -1,21 +1,20 @@
 "use server";
 
+import jwt from "jsonwebtoken";
 import getConfig from "next/config";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { RedirectType } from "next/navigation";
-import jwt from "jsonwebtoken";
+import { RedirectType, redirect } from "next/navigation";
 
 import { Logger } from "@/utils/services";
 
-import type { LoginPayload, LoginResponse, User } from "@/types";
+import type { LoginPayload, User } from "@/types";
+import { WithMessage, WithToken } from "@/types/common";
+import { SignUpPayload } from "@/types/register";
 import {
   AUTH_HEADER_NAME,
   JWT_COOKIE_NAME,
   THEME_COOKIE_NAME,
 } from "@/utils/constants";
-import { WithMessage, WithToken } from "@/types/common";
-import { SignUpPayload } from "@/types/register";
 
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;

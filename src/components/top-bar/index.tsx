@@ -1,10 +1,10 @@
 "use client";
 
-import { FC } from "react";
-import { Button, ShouldRender } from "@/components/common";
-import { ThemeToggle } from "@/components";
-import { useAuth, useUIContext } from "@/hooks";
 import { logout } from "@/app/actions";
+import { ThemeToggle } from "@/components";
+import { Button, ShouldRender } from "@/components/common";
+import { useAuth, useUIContext } from "@/hooks";
+import { FC } from "react";
 
 import * as S from "./styles";
 

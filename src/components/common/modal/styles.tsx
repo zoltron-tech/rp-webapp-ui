@@ -1,5 +1,5 @@
-import styled from "styled-components";
 import { BORDER_RADIUS } from "@/theme";
+import styled from "styled-components";
 
 type ContainerProps = {
   open: boolean;
@@ -17,6 +17,11 @@ export const Container = styled.div<ContainerProps>`
   display: flex;
   justify-content: center;
   align-items: center;
+
+  @supports (backdrop-filter: blur()) {
+    backdrop-filter: blur(60px);
+    background-color: transparent;
+  }
 
   ${({ open }) => !open && "display: none;"}
 `;

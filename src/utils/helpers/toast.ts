@@ -1,5 +1,5 @@
 import { BORDER_RADIUS } from "@/theme";
-import { DefaultTheme, css } from "styled-components";
+import { DefaultTheme } from "styled-components";
 import toast from "toastify-js";
 
 enum ToastType {

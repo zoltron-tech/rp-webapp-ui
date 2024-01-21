@@ -4,10 +4,10 @@ import React from "react";
 
 import { ContentContainer, LoginModal, TopBar } from "@/components";
 import { UIContextProvider } from "@/context";
-import { ThemeProvider } from "styled-components";
+import { THEME_DARK, THEME_LIGHT } from "@/theme";
 import { useEffect, useState } from "react";
 import { useCookies } from "react-cookie";
-import { THEME_DARK, THEME_LIGHT } from "@/theme";
+import { ThemeProvider } from "styled-components";
 
 import * as S from "./styles";
 

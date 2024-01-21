@@ -85,13 +85,29 @@ export const ButtonGroup = styled.div`
   align-items: center;
   justify-content: flex-start;
   gap: 10px;
+
+  & .sm-hide {
+    display: inline-block;
+  }
+
+  @container (max-width: 440px) {
+    & .sm-hide {
+      display: none;
+    }
+  }
 `;
 
 export const SaveButton = styled(Common.Button)`
-  max-width: 300px;
+  /* max-width: 300px;
   margin-top: 20px;
   margin-left: clamp(0px, calc(120px - 20cqw), 120px);
   margin-bottom: 20px;
+
+  @container (max-width: 440px) {
+    & .sm-hide {
+      display: none;
+    }
+  } */
 `;
 
 type ProfileBackgroundFilterProps = {
@@ -102,7 +118,7 @@ export const ProfileBackgroundBlurFilter = styled.div<ProfileBackgroundFilterPro
   position: absolute;
   top: 0;
   left: 0px;
-  width: 100vw;
+  width: 100cqw;
   height: 100%;
   max-height: 100vh;
   background-image: linear-gradient(

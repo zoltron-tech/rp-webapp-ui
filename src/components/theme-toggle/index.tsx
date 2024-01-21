@@ -1,6 +1,6 @@
+import classNames from "classnames";
 import { FC } from "react";
 import { BsMoonFill, BsSunFill } from "react-icons/bs";
-import classNames from "classnames";
 
 import * as S from "./styles";
 type Props = {

@@ -1,13 +1,13 @@
 "use client";
 
-import { FC, useEffect, useState } from "react";
-import Image from "next/image";
-import classNames from "classnames";
-import { useSwiper, useSwiperSlide } from "swiper/react";
-import { MdOutlineExpandLess, MdOutlineExpandMore } from "react-icons/md";
-import { Novelist } from "@/types/novelist";
 import { ShouldRender } from "@/components/common";
 import { useUIContext } from "@/hooks";
+import { Novelist } from "@/types/novelist";
+import classNames from "classnames";
+import Image from "next/image";
+import { FC, useEffect, useState } from "react";
+import { MdOutlineExpandLess, MdOutlineExpandMore } from "react-icons/md";
+import { useSwiper, useSwiperSlide } from "swiper/react";
 
 import * as S from "./styles";
 

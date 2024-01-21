@@ -1,22 +1,18 @@
-import { FC, useEffect, useRef, useState } from "react";
-import type { Novelist, User } from "@/types";
-import { Card, Input, UploadAvatar } from "@/components/common";
+import { getUser } from "@/app/actions";
 import {
   getUserNovelist,
   updateUserNovelist,
 } from "@/app/rp/novelists/actions";
 import { deleteAvatar, uploadAvatar } from "@/app/rp/profile/actions";
-import { getUser } from "@/app/actions";
+import { Card, Input, UploadAvatar } from "@/components/common";
+import { useUIContext } from "@/hooks";
+import type { Novelist, User } from "@/types";
+import { API_MESSAGE } from "@/utils/constants";
+import { stripS3Url } from "@/utils/helpers";
+import { Logger } from "@/utils/services";
+import { FC, useEffect, useRef, useState } from "react";
 
 import * as S from "./styles";
-import {
-  generateToastError,
-  generateToastSuccess,
-  stripS3Url,
-} from "@/utils/helpers";
-import { useTheme } from "styled-components";
-import { Logger } from "@/utils/services";
-import { API_MESSAGE } from "@/utils/constants";
 
 export type ProfileCardProps = {};
 
@@ -26,8 +22,8 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
   const [avatarFile, setAvatarFile] = useState<FormData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [initialRender, setInitialRender] = useState(true);
-  const theme = useTheme();
   const usernameRef = useRef<HTMLInputElement>(null);
+  const { successToast, errorToast } = useUIContext();
 
   const fetchData = async () => {
     setLoading(true);
@@ -66,7 +62,7 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
     const response = await uploadAvatar(avatarFile);
 
     if (typeof response !== "string") {
-      return generateToastError(response.message, theme);
+      return errorToast(response.message);
     }
 
     if (novelist?.image) {
@@ -98,12 +94,12 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
     });
 
     if ("message" in resonse) {
-      return generateToastError(API_MESSAGE.Error, theme);
+      return errorToast(API_MESSAGE.Error);
     }
 
     updateNovelist(resonse);
 
-    generateToastSuccess("Data updated successfully.", theme);
+    successToast("Data updated successfully.");
   };
 
   useEffect(() => {
@@ -150,7 +146,7 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
               const username = usernameRef.current?.innerText;
               if (username) {
                 navigator.clipboard.writeText(username);
-                generateToastSuccess("Username copied to clipboard", theme);
+                successToast("Username copied to clipboard");
               }
             }}
           >

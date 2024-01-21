@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ShouldRender } from "@/components/common";
 import { NovelistCard } from "@/components";
+import { ShouldRender } from "@/components/common";
+import { useUIContext } from "@/hooks";
 import { Novelist } from "@/types";
-import { getNovelists } from "./actions";
-import { EffectCoverflow, Navigation, Autoplay } from "swiper/modules";
+import { useEffect, useState } from "react";
+import { Autoplay, EffectCoverflow, Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { generateToastError } from "@/utils/helpers";
-import { useTheme } from "styled-components";
+import { getNovelists } from "./actions";
 
 import "swiper/css";
 import "swiper/css/effect-coverflow";
@@ -18,12 +17,12 @@ import * as S from "./styles";
 
 export default function NovelistsPage() {
   const [novelists, setNovelistsState] = useState<Novelist[]>([]);
-  const theme = useTheme();
+  const { errorToast: error } = useUIContext();
 
   const setNovelists = async () => {
     const novelists = await getNovelists();
     if ("message" in novelists) {
-      return generateToastError("Novelists could not be fetched!", theme);
+      return error("Novelists could not be fetched!");
     }
 
     setNovelistsState(novelists);

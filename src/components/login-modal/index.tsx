@@ -1,25 +1,19 @@
-import { FC, useEffect, useRef, useState } from "react";
-import { useTheme } from "styled-components";
-import { LoginPayload, LoginResponse } from "@/types";
-import { Button, Input, Modal, ShouldRender } from "@/components/common";
 import {
   checkUsernameAvailability,
   login,
   register,
   reroute,
 } from "@/app/actions";
-import {
-  generateToastError,
-  generateToastSuccess,
-  verifyEmailPattern,
-  verifyUsernamePattern,
-} from "@/utils/helpers";
+import { Button, Input, Modal, ShouldRender } from "@/components/common";
 import { useAuth, useUIContext } from "@/hooks";
-import { Logger } from "@/utils/services";
-
-import * as S from "./styles";
+import { LoginPayload, LoginResponse } from "@/types";
 import { WithMessage } from "@/types/common";
 import { SignUpPayload } from "@/types/register";
+import { verifyEmailPattern, verifyUsernamePattern } from "@/utils/helpers";
+import { Logger } from "@/utils/services";
+import { FC, useEffect, useRef, useState } from "react";
+
+import * as S from "./styles";
 
 export type LoginModalProps = {};
 
@@ -36,9 +30,9 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [buttonClicked, setButtonClicked] = useState<boolean>(false);
-  const theme = useTheme();
   const { verify } = useAuth();
   const usernameAvailableDebounceTimer = useRef<any>(null);
+  const { successToast, errorToast } = useUIContext();
 
   const checkError = (force?: boolean): boolean => {
     if (!force && !buttonClicked) {
@@ -58,20 +52,22 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
       return true;
     }
 
-    const validPassword = password.match(/^(?=.*\d).{8,}$/);
+    if (signupModal) {
+      const validPassword = password.match(/^(?=.*\d).{8,}$/);
 
-    if (!validPassword) {
-      setError(
-        "Password must be at least 8 characters long and contain at least one number"
-      );
-      return true;
-    }
+      if (!validPassword) {
+        setError(
+          "Password must be at least 8 characters long and contain at least one number"
+        );
+        return true;
+      }
 
-    if (signupModal && !verifyUsernamePattern(username)) {
-      setError(
-        "Username must be at least 3 characters long and contain only alphanumeric characters"
-      );
-      return true;
+      if (!verifyUsernamePattern(username)) {
+        setError(
+          "Username must be at least 3 characters long and contain only alphanumeric characters"
+        );
+        return true;
+      }
     }
 
     setError("");
@@ -151,17 +147,17 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
         const verified = await verify();
         Logger.log("success", verified);
         if (verified) {
-          generateToastSuccess("Logged in successfully", theme);
+          successToast("Logged in successfully");
           reroute("/rp/profile");
           setSignupModalOpen(false);
         }
       } else {
-        generateToastError(response.message, theme);
+        errorToast(response.message);
       }
       setLoading(false);
     } catch (e) {
       Logger.log("error dekho bhai ->", e);
-      generateToastError("Something went wrong", theme);
+      errorToast("Something went wrong");
       setLoading(false);
     }
   };
@@ -181,18 +177,18 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
       Logger.log(response);
 
       if (response.message === "success") {
-        generateToastSuccess("Registered successfully", theme);
+        successToast("Registered successfully");
         setSignupModalOpen(false);
       }
 
       if (response.message === "error") {
-        generateToastError("Something went wrong", theme);
+        errorToast("Something went wrong");
       }
 
       setSignupModalOpen(false);
     } catch (e) {
       Logger.log("error dekho bhai ->", e);
-      generateToastError("Something went wrong", theme);
+      errorToast("Something went wrong");
     }
 
     setLoading(false);

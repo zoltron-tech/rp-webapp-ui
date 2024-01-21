@@ -1,11 +1,18 @@
 import styled from "styled-components";
 
-export const Username = styled.div`
+export const Container = styled.div`
+  font-size: 16px;
   font-weight: 500;
+  cursor: copy;
+
   color: ${({ theme }) => theme.text};
+  &.primary {
+    color: ${({ theme }) => theme.primary};
+    font-style: italic;
+  }
+
   &::before {
     content: "@";
-    font-weight: 600;
     margin-left: 5px;
   }
 `;

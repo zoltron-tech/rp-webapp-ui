@@ -18,7 +18,7 @@ export const AvatarPositionStyle = css`
   left: 0px;
   width: clamp(150px, 30cqw, 400px);
   height: clamp(150px, 30cqw, 400px);
-  overflow: hidden;
+  contain: paint;
   border-radius: 50%;
   scale: 0.6;
   transform: translate(-20%, 0%);
@@ -57,20 +57,18 @@ export const UsernameContainer = styled.div`
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  font-size: clamp(24px, 4cqw, 32px);
+
   padding-left: clamp(0px, 20cqw, 400px);
   padding-top: 50px;
-  cursor: copy;
+
+  & > div {
+    font-weight: 400;
+    font-size: clamp(24px, 4cqw, 32px);
+  }
 
   @container (max-width: 350px) {
     padding-top: 70px;
   }
-`;
-
-export const Username = styled(Common.Username)`
-  font-weight: 400;
-  font-style: italic;
-  color: ${({ theme }) => theme.primary};
 `;
 
 export const FormGroup = styled.div`

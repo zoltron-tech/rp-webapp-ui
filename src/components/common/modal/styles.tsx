@@ -12,7 +12,7 @@ export const Container = styled.div<ContainerProps>`
   left: 0;
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  contain: paint;
   background-color: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;

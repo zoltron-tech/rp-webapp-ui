@@ -25,7 +25,7 @@ export const CarouselContainer = styled.div`
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow: hidden;
+    contain: paint;
     border-radius: ${BORDER_RADIUS};
     -webkit-backface-visibility: hidden;
     -webkit-transform: translate3d(0, 0, 0);

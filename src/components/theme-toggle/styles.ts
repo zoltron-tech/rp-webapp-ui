@@ -30,7 +30,7 @@ export const ThemeSwitcher = styled.div`
   position: relative;
   box-shadow: inset 0px 0px 1px 0px rgba(0, 0, 0, 0.4);
   cursor: pointer;
-  overflow: hidden;
+  contain: paint;
 `;
 
 export const ThemeSwitchInner = styled.div<{ theme: string }>`
@@ -43,7 +43,7 @@ export const ThemeSwitchInner = styled.div<{ theme: string }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  contain: paint;
 
   & svg {
     width: 18px;

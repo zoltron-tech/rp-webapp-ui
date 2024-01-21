@@ -1,14 +1,14 @@
-import styled from "styled-components";
-import { BORDER_RADIUS, NO_USER_SELECT } from "@/theme";
 import * as Common from "@/components/common";
+import { BORDER_RADIUS, BORDER_TOP, NO_USER_SELECT } from "@/theme";
+import styled from "styled-components";
 
 export const CardWrapper = styled.div`
   position: relative;
   width: 600px;
   height: 250px;
   border-radius: ${BORDER_RADIUS};
-  overflow: hidden;
   transition: all 0.3s ease-in-out;
+  contain: paint;
 
   container-name: novelist-card;
   container-type: inline-size;
@@ -150,6 +150,7 @@ export const Title = styled.div`
   font-weight: 600;
   color: ${({ theme }) => theme.text};
   text-align: center;
+  margin-bottom: 10px;
 
   @container (max-width: 400px) {
     & {
@@ -225,26 +226,27 @@ export const NovelistInfo = styled.div`
 `;
 
 export const username = styled(Common.Username)`
-  font-size: 16px;
+  font-size: 16px !important;
 
   @container (max-width: 400px) {
     & {
-      font-size: 14px;
+      font-size: 14px !important;
     }
   }
 
   @container (max-width: 300px) {
     & {
-      font-size: 12px;
+      font-size: 12px !important;
     }
   }
 `;
 
 export const Quote = styled.div`
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   color: ${({ theme }) => theme.text};
   text-align: center;
+  margin-top: 5px;
 
   &::before {
     content: "“";
@@ -272,7 +274,8 @@ export const Quote = styled.div`
 `;
 
 export const MuseList = styled.div`
-  border-top: 1px solid ${({ theme }) => theme.hoverGreyAlpha};
+  ${BORDER_TOP};
+
   width: 100%;
   height: 100%;
   min-height: 100px;

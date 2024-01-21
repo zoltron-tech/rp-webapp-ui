@@ -38,9 +38,11 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
     <S.CardWrapper
       className={classNames({ expanded })}
       onMouseEnter={() => {
+        if (process.env.DISABLE_AUTOSCROLL === "true") return;
         autoplay.stop();
       }}
       onMouseLeave={() => {
+        if (process.env.DISABLE_AUTOSCROLL === "true") return;
         autoplay.start();
       }}
     >
@@ -70,7 +72,7 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
             <S.Title>
               {novelist.firstName} {novelist.lastName}
             </S.Title>
-            <S.username>{novelist.username}</S.username>
+            <S.username username={novelist.username} />
             <S.Quote>{novelist.note}</S.Quote>
           </S.NovelistInfo>
         </S.CardHeader>

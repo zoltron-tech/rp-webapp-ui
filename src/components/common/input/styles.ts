@@ -46,7 +46,7 @@ export const Input = styled.input`
   outline: none;
   padding: 18px 10px 10px 15px;
   color: ${({ theme }) => theme.textStark};
-  overflow: hidden;
+  contain: paint;
   background-color: ${({ theme }) => theme.inputBackground};
 
   &:not(:read-only):hover {

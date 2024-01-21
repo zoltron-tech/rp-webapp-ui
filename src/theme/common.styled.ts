@@ -13,6 +13,10 @@ export const NO_SCROLLBAR = css`
   }
 `;
 
+export const BORDER_TOP = css`
+  border-top: 1px solid ${({ theme }) => theme.hoverGreyAlpha};
+`;
+
 export const SPIN = css`
   @keyframes spin {
     0% {

@@ -10,7 +10,6 @@
 body {
   font-family: 'Montserrat', sans-serif;
   background-color: #313131;
-  overflow-x: hidden;
 
   /* Scrollbar Styles */
   scrollbar-width: thin;
@@ -19,7 +18,6 @@ body {
 }
 
 main {
-  overflow-x: hidden;
   background-color: #313131;
 }
 /* END: Remove base padding and styling */

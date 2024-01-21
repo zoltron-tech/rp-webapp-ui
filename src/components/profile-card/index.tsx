@@ -4,13 +4,13 @@ import {
   updateUserNovelist,
 } from "@/app/rp/novelists/actions";
 import { deleteAvatar, uploadAvatar } from "@/app/rp/profile/actions";
-import { Card, Input, UploadAvatar } from "@/components/common";
+import { Card, Input, UploadAvatar, Username } from "@/components/common";
 import { useUIContext } from "@/hooks";
 import type { Novelist, User } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { stripS3Url } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
-import { FC, useEffect, useRef, useState } from "react";
+import { FC, useEffect, useState } from "react";
 
 import * as S from "./styles";
 
@@ -22,7 +22,7 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
   const [avatarFile, setAvatarFile] = useState<FormData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [initialRender, setInitialRender] = useState(true);
-  const usernameRef = useRef<HTMLInputElement>(null);
+
   const { successToast, errorToast } = useUIContext();
 
   const fetchData = async () => {
@@ -79,6 +79,8 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
   const handleSave = async () => {
     Logger.log("handleSave");
 
+    setLoading(true);
+
     let updatedAvatarUrl = novelist?.image;
     if (avatarFile) {
       updatedAvatarUrl = (await updateUserAvatar()) || novelist?.image;
@@ -92,6 +94,8 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
       ...novelist,
       image: updatedAvatarUrl || "",
     });
+
+    setLoading(false);
 
     if ("message" in resonse) {
       return errorToast(API_MESSAGE.Error);
@@ -140,17 +144,8 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
           <S.Title>
             <span>Your</span> Profile
           </S.Title>
-          <S.UsernameContainer
-            ref={usernameRef}
-            onClick={() => {
-              const username = usernameRef.current?.innerText;
-              if (username) {
-                navigator.clipboard.writeText(username);
-                successToast("Username copied to clipboard");
-              }
-            }}
-          >
-            <S.Username>{user?.username}</S.Username>
+          <S.UsernameContainer>
+            <Username username={user?.username} primary />
           </S.UsernameContainer>
           <S.FormGroup>
             <S.Name>
@@ -173,11 +168,14 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
             <S.ButtonGroup>
               <S.SaveButton
                 variant="secondary"
-                onClick={() => Logger.log("save")}
+                onClick={() => Logger.log("cancel")}
+                loading={loading}
               >
                 Cancel
               </S.SaveButton>
-              <S.SaveButton onClick={handleSave}>Save Changes</S.SaveButton>
+              <S.SaveButton onClick={handleSave} loading={loading}>
+                Save Changes
+              </S.SaveButton>
             </S.ButtonGroup>
           </S.FormGroup>
         </S.Profile>

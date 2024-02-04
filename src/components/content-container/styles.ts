@@ -9,6 +9,7 @@ export const Container = styled.div`
   background-color: ${({ theme }) => theme.background};
   container-name: content-container;
   container-type: inline-size;
+  overflow-y: auto;
 
   ${NO_SCROLLBAR}
 `;

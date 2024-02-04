@@ -27,7 +27,8 @@ export const ExpandedContentInner = styled.div`
   display: flex;
   flex-wrap: wrap;
   margin-inline: auto;
-  width: calc(100cqw - 30px - mod(100cqw - 40px, 120px));
+  justify-content: center;
+  width: 90cqw;
 
   ${DEV_MODE_BORDER("red")}
 `;

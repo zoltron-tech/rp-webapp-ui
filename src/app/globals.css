@@ -12,7 +12,7 @@ body {
   background-color: #313131;
   /* Scrollbar Styles */
   
-  scrollbar-width: none;
+  scrollbar-width: 0px;
 }
 
 body::-webkit-scrollbar {

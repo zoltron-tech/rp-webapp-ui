@@ -12,6 +12,7 @@ import * as S from "./styles";
 
 type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "onChange"> & {
   label: string;
+  name: string;
   type?: string;
   placeholder?: string;
   value?: string | boolean | number;
@@ -22,7 +23,7 @@ type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "onChange"> & {
   message?: any;
   messageType?: "error" | "success" | "warning" | "processing";
   inputProps?: any;
-  onChange?: (val?: string) => void;
+  onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
   pattern?: string;
   onEnter?: () => void;
 };
@@ -51,9 +52,10 @@ export const Input: FC<Props> = ({
   const warning = messageType === "warning" && message;
   const processing = messageType === "processing" && message;
 
-  const handleChange = (val: string): void => {
-    Logger.log("handleChange", val);
-    if (onChange) onChange(val);
+  const passwordClickHandler = (): void => {
+    setHidden(!hidden);
+    if (hidden) setPasswordType("text");
+    if (!hidden) setPasswordType("password");
   };
 
   return (
@@ -72,8 +74,8 @@ export const Input: FC<Props> = ({
           readOnly={readOnly}
           defaultValue={defaultValue}
           onChange={(val): void => {
-            Logger.log("onChange", val?.target?.value);
-            if (onChange) onChange(val?.target?.value);
+            Logger.log("onChange", val?.target?.value, val.target.name);
+            if (onChange) onChange(val);
           }}
           onKeyDown={(e): void => {
             if (e.key === "Enter" && onEnter) {
@@ -101,11 +103,7 @@ export const Input: FC<Props> = ({
         <ShouldRender if={isPassword && !icon}>
           <S.RightIconBox
             className={classNames({ visible: !hidden })}
-            onClick={(): void => {
-              setHidden(!hidden);
-              if (hidden) setPasswordType("text");
-              if (!hidden) setPasswordType("password");
-            }}
+            onClick={passwordClickHandler}
           >
             {hidden ? <GoEyeClosed /> : <GoEye />}
           </S.RightIconBox>

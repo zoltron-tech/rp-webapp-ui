@@ -1,10 +1,15 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { checkUsernameAvailability } from "@/app/actions";
 import { Button, Input, Modal, ShouldRender } from "@/components/common";
-import { useAuthContext, useUIContext } from "@/hooks";
+import { ErrorType, useAuthContext, useForm, useUIContext } from "@/hooks";
 import { LoginPayload, LoginResponse } from "@/types";
 import { WithMessage } from "@/types/common";
 import { SignUpPayload } from "@/types/register";
-import { verifyEmailPattern, verifyUsernamePattern } from "@/utils/helpers";
+import {
+  toggleState,
+  verifyEmailPattern,
+  verifyUsernamePattern,
+} from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import { FC, useEffect, useRef, useState } from "react";
 
@@ -13,6 +18,12 @@ import * as S from "./styles";
 
 export type LoginModalProps = {};
 
+type InputValues = {
+  username: string;
+  email: string;
+  password: string;
+};
+
 export const LoginModal: FC<LoginModalProps> = ({}) => {
   const { signupModalOpen, signupModal, setSignupModal, setSignupModalOpen } =
     useUIContext();
@@ -20,79 +31,59 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
     useState<boolean>(false);
   const [isUsernameAvailable, setIsUsernameAvailable] =
     useState<boolean>(false);
-  const [username, setusername] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [error, setError] = useState<string>("");
-  const [buttonClicked, setButtonClicked] = useState<boolean>(false);
   const [disabled, setDisabled] = useState<boolean>(false);
   const usernameAvailableDebounceTimer = useRef<any>(null);
   const { successToast, errorToast } = useUIContext();
   const { login, signup, loading } = useAuthContext();
   const { push } = useRouter();
+  const initialRender = useRef(true);
 
-  const checkError = (force?: boolean): boolean => {
-    if (!force && !buttonClicked) {
-      Logger.log("check error: --");
-      return false;
-    }
-
+  const checkError = ({
+    username,
+    email,
+    password,
+  }: InputValues): ErrorType<InputValues> => {
     if (!email || !password || (signupModal && !username)) {
-      setError("Please fill in all fields");
-      return true;
+      return { password: "Please fill in all fields" };
     }
-
     const validEmail = verifyEmailPattern(email);
-
     if (!validEmail) {
-      setError("Please enter a valid email");
-      return true;
+      return { password: "Please enter a valid email" };
     }
-
     if (signupModal) {
       const validPassword = password.match(/^(?=.*\d).{8,}$/);
-
       if (!validPassword) {
-        setError(
-          "Password must be at least 8 characters long and contain at least one number"
-        );
-        return true;
+        return {
+          password:
+            "Password must be at least 8 characters long and contain at least one number",
+        };
       }
-
       if (!verifyUsernamePattern(username)) {
-        setError(
-          "Username must be at least 3 characters long and contain only alphanumeric characters"
-        );
-        return true;
+        return {
+          password:
+            "Username must be at least 3 characters long and contain only alphanumeric characters",
+        };
       }
     }
-
-    setError("");
-    return false;
+    return null;
   };
 
-  const clearError = () => {
-    setButtonClicked(false);
-    if (error) setTimeout(() => setError(""), 1000);
-  };
-
-  const handleUsernameChange = async (value: string) => {
-    setusername(value);
-    clearError();
-    if (!value) return;
-
-    const validUsername = verifyUsernamePattern(value);
-
+  const beforeUpdate = (
+    values: InputValues,
+    name: keyof InputValues,
+    _prev: InputValues
+  ) => {
+    if (name !== "username") return values[name];
+    const validUsername = verifyUsernamePattern(values.username);
     if (!validUsername) {
-      return;
+      return values[name];
     }
-
     setVerifyUsernameLoading(true);
     if (usernameAvailableDebounceTimer.current) {
       clearTimeout(usernameAvailableDebounceTimer.current);
     }
     usernameAvailableDebounceTimer.current = setTimeout(async () => {
-      const response = await checkUsernameAvailability(value);
+      const response = await checkUsernameAvailability(values.username);
       if (response === true) {
         setIsUsernameAvailable(true);
       } else {
@@ -100,44 +91,18 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
       }
       setVerifyUsernameLoading(false);
     }, 500);
-  };
 
-  const getUsernameMessage = () => {
-    const validUsername = verifyUsernamePattern(username);
-    if (!validUsername) return "";
-
-    if (verifyUsernameLoading) {
-      return "Verifying username...";
-    }
-
-    return isUsernameAvailable ? "Username is available" : "Username is taken";
-  };
-
-  const getUsernameMessageType = ():
-    | "success"
-    | "error"
-    | "processing"
-    | undefined => {
-    if (!username) return;
-
-    if (verifyUsernameLoading) {
-      return "processing";
-    }
-
-    return isUsernameAvailable ? "success" : "error";
+    return values[name];
   };
 
   const handleLogin = async () => {
     const payload: LoginPayload = {
-      email,
-      password,
+      email: values.email,
+      password: values.password,
     };
-
     try {
       const response: LoginResponse = await login(payload);
-
       Logger.log(response);
-
       if (response.message === "success") {
         Logger.log("success");
         setSignupModalOpen(false);
@@ -154,16 +119,13 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
 
   const handleSignup = async () => {
     const payload: SignUpPayload = {
-      username,
-      email,
-      password,
+      username: values.username,
+      email: values.email,
+      password: values.password,
     };
-
     try {
       const response: WithMessage = await signup(payload);
-
       Logger.log(response);
-
       if (response.message === "success") {
         successToast("Registered successfully");
         setSignupModalOpen(false);
@@ -177,12 +139,8 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
     }
   };
 
-  const handleSubmit = () => {
+  const onSubmit = () => {
     if (disabled) return;
-    setButtonClicked(true);
-    const isError = checkError(true);
-    if (isError) return;
-
     if (signupModal) {
       handleSignup();
     } else {
@@ -190,26 +148,50 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
     }
   };
 
-  useEffect(() => {
-    checkError();
-  }, [email, password, username]);
+  const { values, submit, update, errors, clearValues } = useForm<InputValues>({
+    initialValues: { username: "", email: "", password: "" },
+    onSubmit,
+    beforeUpdate,
+    checkError,
+  });
 
-  useEffect(() => {
-    if (!signupModalOpen) {
-      setButtonClicked(false);
-      setusername("");
-      setEmail("");
-      setPassword("");
-      setError("");
+  const getUsernameMessage = () => {
+    const validUsername = verifyUsernamePattern(values.username);
+    if (!validUsername) return "";
+
+    if (verifyUsernameLoading) {
+      return "Verifying username...";
     }
-  }, [signupModalOpen]);
+
+    return isUsernameAvailable ? "Username is available" : "Username is taken";
+  };
+
+  const getUsernameMessageType = ():
+    | "success"
+    | "error"
+    | "processing"
+    | undefined => {
+    if (!values.username) return;
+
+    if (verifyUsernameLoading) {
+      return "processing";
+    }
+
+    return isUsernameAvailable ? "success" : "error";
+  };
 
   useEffect(() => {
+    if (initialRender.current) {
+      initialRender.current = false;
+      clearValues();
+      return;
+    }
+
     setDisabled(
-      !!error ||
+      !!errors ||
         (signupModal && (verifyUsernameLoading || !isUsernameAvailable))
     );
-  }, [error, verifyUsernameLoading, isUsernameAvailable, signupModal]);
+  }, [errors, verifyUsernameLoading, isUsernameAvailable, signupModal]);
 
   return (
     <Modal
@@ -223,10 +205,7 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
       <S.Container>
         <S.Header>
           {signupModal ? "Already a user?" : "New user?"}
-          <span
-            className="link"
-            onClick={() => setSignupModal((current) => !current)}
-          >
+          <span className="link" onClick={toggleState(setSignupModal)}>
             {signupModal ? "Login!" : "Sign up!"}
           </span>
         </S.Header>
@@ -234,42 +213,39 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
           <ShouldRender if={signupModal}>
             <Input
               label="Username"
+              name="username"
               type="text"
-              onChange={(value) => handleUsernameChange(value || "")}
-              value={username}
+              onChange={update}
+              value={values.username}
               message={getUsernameMessage()}
               messageType={getUsernameMessageType()}
               maxLength={30}
-              onEnter={handleSubmit}
+              onEnter={submit}
             />
           </ShouldRender>
           <Input
             label="Email"
+            name="email"
             type="text"
-            onChange={(value) => {
-              clearError();
-              setEmail(value || "");
-            }}
-            value={email}
+            onChange={update}
+            value={values.email}
             maxLength={50}
-            onEnter={handleSubmit}
+            onEnter={submit}
           />
           <Input
             label="Password"
+            name="password"
             type="password"
-            onChange={(value) => {
-              clearError();
-              setPassword(value || "");
-            }}
-            value={password}
-            message={error}
+            onChange={update}
+            value={values.password}
+            message={errors?.password}
             messageType="warning"
             maxLength={50}
-            onEnter={handleSubmit}
+            onEnter={submit}
           />
 
           <Button
-            onClick={handleSubmit}
+            onClick={submit}
             variant="primary"
             disabled={disabled}
             loading={loading}

@@ -9,6 +9,7 @@ import { FC, useEffect, useState } from "react";
 import { MdOutlineExpandLess, MdOutlineExpandMore } from "react-icons/md";
 import { useSwiper, useSwiperSlide } from "swiper/react";
 
+import { toggleState } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import { useRouter } from "next/navigation";
 import * as S from "./styles";
@@ -26,6 +27,23 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
   const onAvatarClick = () => {
     if (!novelist) return;
     push(`/rp/profile/${novelist.username}`);
+  };
+
+  const handleMouseEnter = () => {
+    if (process.env.DISABLE_AUTOSCROLL === "true") return;
+
+    if (!isActive) return;
+    Logger.log("onMouseEnter");
+
+    autoplay.stop();
+  };
+  const handleMouseLeave = () => {
+    if (process.env.DISABLE_AUTOSCROLL === "true") return;
+
+    if (!isActive) return;
+    Logger.log("onMouseLeave");
+
+    autoplay.start();
   };
 
   useEffect(() => {
@@ -46,27 +64,13 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
   return (
     <S.CardWrapper
       className={classNames({ expanded })}
-      onMouseEnter={() => {
-        if (process.env.DISABLE_AUTOSCROLL === "true") return;
-
-        if (!isActive) return;
-        Logger.log("onMouseEnter");
-
-        autoplay.stop();
-      }}
-      onMouseLeave={() => {
-        if (process.env.DISABLE_AUTOSCROLL === "true") return;
-
-        if (!isActive) return;
-        Logger.log("onMouseLeave");
-
-        autoplay.start();
-      }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <S.CardBackground banner={novelist.image} />
       <S.Card className="novelist-card">
         <S.ExpandButton
-          onClick={() => setExpanded((current) => !current)}
+          onClick={toggleState(setExpanded)}
           className={classNames({ expanded })}
         >
           <ShouldRender if={!expanded}>

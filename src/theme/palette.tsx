@@ -12,6 +12,7 @@ export type Theme = {
   modalBackground: string;
   toastBackground: string;
   inputBackground: string;
+  pillExpandedContentBackground: string;
   text: string;
   textPrimary: string;
   textLink: string;
@@ -44,6 +45,7 @@ export const THEME_LIGHT: Theme = {
   modalBackground: "#fff",
   toastBackground: "#e7e7e7",
   inputBackground: "#c5c5c5",
+  pillExpandedContentBackground: "#dcdbdb",
   text: "#111111",
   textPrimary: "#dedede",
   textLink: accentColor,
@@ -78,6 +80,7 @@ export const THEME_DARK: Theme = {
   modalBackground: "#292828",
   toastBackground: "#1b1b1b",
   inputBackground: "#3a3a3a",
+  pillExpandedContentBackground: "#333333",
   text: "#dedede",
   textPrimary: "#dedede",
   textLink: accentColor,

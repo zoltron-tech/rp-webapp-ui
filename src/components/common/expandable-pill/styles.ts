@@ -3,9 +3,6 @@ import { DEV_MODE_BORDER, NO_SCROLLBAR, PILL } from "@/theme";
 import { css, styled } from "styled-components";
 
 export const PillContinaer = styled(Pill)`
-  justify-content: flex-start;
-  padding: 0px 20px;
-  gap: 20px;
   max-width: min(800px, calc(100cqw - 40px));
   min-width: 300px;
   contain: paint;
@@ -28,7 +25,7 @@ export const PillContinaer = styled(Pill)`
   }
 
   container-name: muses-pill;
-  container-type: inline-size;
+  container-type: size;
   contain: paint;
 `;
 
@@ -39,7 +36,7 @@ export const ScrollableContentContainer = styled.div`
   padding: 0px 10px;
   position: absolute;
   left: 60px;
-  height: calc(100cqw - 200px);
+  height: calc(100cqw - 240px);
   transform: rotate(-90deg) translateY(calc(50%));
   scroll-snap-type: y mandatory;
   transition: opacity 0.1s ease-in-out;
@@ -48,10 +45,10 @@ export const ScrollableContentContainer = styled.div`
   ${NO_SCROLLBAR}
   ${DEV_MODE_BORDER("lime")}
     
-    @container content-container (max-width: 1024px) {
+    @container profile-content (max-width: 1024px) {
     & {
       left: -50px;
-      height: calc(100cqw - 80px);
+      height: calc(100cqw - 120px);
     }
   }
 
@@ -62,12 +59,12 @@ export const ScrollableContentContainer = styled.div`
 `;
 
 export const Searchbar = styled.div`
-  background-color: ${({ theme }) => theme.cardBackgroundColor};
+  background-color: ${({ theme }) => theme.pillExpandedContentBackground};
   height: 100px;
   border-radius: 50px;
   top: 10px;
   left: 120px;
-  width: calc(100cqw - 200px);
+  width: calc(100cqw - 240px);
   opacity: 0;
   pointer-events: none;
   position: absolute;
@@ -76,12 +73,13 @@ export const Searchbar = styled.div`
   &.expanded {
     opacity: 1;
     pointer-events: all;
+    cursor: text;
   }
 
-  @container content-container (max-width: 1024px) {
+  @container profile-content (max-width: 1024px) {
     & {
-      left: 10px;
-      width: calc(100cqw - 80px);
+      left: 20px;
+      width: calc(100cqw - 130px);
     }
   }
 `;
@@ -94,7 +92,6 @@ export const MagnifyingGlass = styled.div`
   width: 80px;
   opacity: 0;
   pointer-events: none;
-  cursor: pointer;
   transition: opacity 0.1s ease-in-out;
 
   & svg {
@@ -104,7 +101,6 @@ export const MagnifyingGlass = styled.div`
 
   &.expanded {
     opacity: 1;
-    pointer-events: all;
   }
 `;
 
@@ -156,7 +152,7 @@ export const TagInline = styled.div`
   justify-content: center;
   align-items: center;
 
-  @container content-container (max-width: 1024px) {
+  @container profile-content (max-width: 1024px) {
     & {
       display: none;
     }
@@ -170,9 +166,33 @@ export const TagTop = styled.div`
   margin-top: 40px;
   margin-bottom: 20px;
 
-  @container content-container (max-width: 1024px) {
+  @container profile-content (max-width: 1024px) {
     & {
       display: block;
     }
+  }
+`;
+
+export const ExpandedContent = styled.div`
+  ${PILL}
+  ${NO_SCROLLBAR}
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out;
+  background: ${({ theme }) => theme.pillExpandedContentBackground};
+  overflow-y: auto;
+
+  top: 120px;
+  left: 20px;
+  width: calc(100cqw - 40px);
+  height: calc(100cqh - 140px);
+
+  container-name: muses-pill-expanded-content;
+  container-type: size;
+
+  &.expanded {
+    opacity: 1;
+    pointer-events: all;
   }
 `;

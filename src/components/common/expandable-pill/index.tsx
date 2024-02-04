@@ -9,11 +9,13 @@ import * as S from "./styles";
 export interface ExpandablePillProps {
   tag: string;
   scrollableContent: ReactNode;
+  expandedContent: ReactNode;
 }
 
 export const ExpandablePill: FC<ExpandablePillProps> = ({
   tag,
   scrollableContent,
+  expandedContent,
 }) => {
   const [expanded, setExpanded] = useState(false);
 
@@ -36,6 +38,9 @@ export const ExpandablePill: FC<ExpandablePillProps> = ({
         >
           <CiCirclePlus />
         </S.ExpandIcon>
+        <S.ExpandedContent className={classNames({ expanded })}>
+          {expandedContent}
+        </S.ExpandedContent>
       </S.PillContinaer>
     </>
   );

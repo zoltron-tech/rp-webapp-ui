@@ -36,15 +36,30 @@ export const SolidBackground = styled.div`
   contain: paint;
 `;
 
+export const EditProfile = styled.div`
+  position: absolute;
+  top: 100px;
+  right: 30px;
+  z-index: ${Z_INDEX.AVATAR};
+
+  text-decoration: underline;
+  cursor: pointer;
+  color: ${({ theme }) => theme.textPrimary};
+  font-size: 24px;
+`;
+
 export const Content = styled.div`
+  max-width: 1400px;
+  margin-inline: auto;
   width: 100cqw;
   height: max(100cqh, 100%);
   display: flex;
   flex-direction: row;
-  gap: 20px;
-  /* padding: 20px; */
   position: relative;
   z-index: ${Z_INDEX.DEFAULT + 1};
+
+  container-name: profile-content;
+  container-type: inline-size;
 
   ${DEV_MODE_BORDER("green")}
 
@@ -55,19 +70,7 @@ export const Content = styled.div`
   }
 `;
 
-export const EditProfile = styled.div`
-  position: absolute;
-  top: 100px;
-  right: 30px;
-
-  text-decoration: underline;
-  cursor: pointer;
-  color: ${({ theme }) => theme.textPrimary};
-  font-size: 24px;
-`;
-
 export const ContentLeft = styled.div`
-  /* min-width: min(100cqw, 550px); */
   max-width: 650px;
 
   display: flex;
@@ -86,10 +89,16 @@ export const ContentLeft = styled.div`
 `;
 
 export const ContentRight = styled.div`
-  flex-grow: 2;
+  ${DEV_MODE_BORDER("blue")}
+
+  height: 100cqh;
+
+  flex-grow: 3;
   display: flex;
   flex-direction: column;
-  ${DEV_MODE_BORDER("blue")}
+
+  container-name: profile-content-right;
+  container-type: size;
 
   @container (max-width: 1024px) {
     max-width: 100%;
@@ -126,7 +135,7 @@ export const Name = styled.div`
   color: ${({ theme }) => theme.textPrimary};
   z-index: ${Z_INDEX.DEFAULT};
 
-  @container (max-width: 1024px) {
+  @container profile-content (max-width: 1024px) {
     display: none;
   }
 `;
@@ -170,5 +179,17 @@ export const NoteContainer = styled(Pill)`
 
   &::before {
     content: "Note";
+  }
+`;
+
+export const MusePillContiner = styled.div`
+  width: 100%;
+  margin-inline: auto;
+  margin-top: 250px;
+
+  @container profile-content (max-width: 1024px) {
+    & {
+      margin-top: 0px;
+    }
   }
 `;

@@ -2,6 +2,7 @@
 
 import { authenticateAndGetJWT } from "@/app/actions";
 import { WithMessage } from "@/types/common";
+import { API_MESSAGE } from "@/utils/constants";
 import { Logger } from "@/utils/services";
 import getConfig from "next/config";
 
@@ -25,7 +26,7 @@ export const uploadAvatar = async (formData: FormData) => {
 
   if (response.status !== 200) {
     Logger.log("error", response.status, response.statusText);
-    return { message: "Error uploading avatar" };
+    return API_MESSAGE.MediaError;
   }
 
   const result: WithMessage = await response.json();

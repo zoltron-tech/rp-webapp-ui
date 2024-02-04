@@ -4,9 +4,9 @@ import {
 } from "@/app/rp/novelists/actions";
 import { deleteAvatar, uploadAvatar } from "@/app/rp/profile/actions";
 import { Card, Input, UploadAvatar, Username } from "@/components/common";
-import { useAuthContext, useUIContext } from "@/hooks";
+import { useAuthContext, useForm, useUIContext } from "@/hooks";
 import type { Novelist } from "@/types";
-import { API_MESSAGE } from "@/utils/constants";
+import { API_MESSAGE, INITIAL_NOVELIST } from "@/utils/constants";
 import { stripS3Url } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import { FC, useEffect, useState } from "react";
@@ -18,63 +18,34 @@ export type EditProfileCardProps = {};
 
 export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
   const { user } = useAuthContext();
-  const [novelist, setNovelist] = useState<Novelist | null>(null);
   const [avatarFile, setAvatarFile] = useState<FormData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const { push } = useRouter();
 
   const { successToast, errorToast } = useUIContext();
 
-  const fetchData = async () => {
-    setLoading(true);
-    const novelist = await getUserNovelist();
-    setNovelist(novelist);
-    setLoading(false);
-  };
-
-  const updateNovelist = async (novelist: Partial<Novelist>) => {
-    Logger.log("updateNovelist", novelist);
-    setNovelist((current) => {
-      const polyfillNull = {
-        ...({
-          firstName: "",
-          lastName: "",
-          username: user?.username || "",
-          image: "",
-          muses: [],
-          note: "",
-        } as Novelist),
-        ...current,
-      };
-
-      return {
-        ...polyfillNull,
-        ...novelist,
-      };
-    });
-  };
-
   const updateUserAvatar = async () => {
     if (!avatarFile) return;
     Logger.log("avatarFile", avatarFile);
     const response = await uploadAvatar(avatarFile);
 
-    if (typeof response !== "string") {
-      return errorToast(response.message);
+    if (response === API_MESSAGE.MediaError) {
+      errorToast(response);
+      return response;
     }
 
-    if (novelist?.image) {
-      const response1 = await deleteAvatar(stripS3Url(novelist.image));
+    if (values?.image) {
+      const response1 = await deleteAvatar(stripS3Url(values.image));
       Logger.log("delete response 1: ", response1);
     }
 
-    updateNovelist({ image: response });
+    updateValues((prev) => ({ ...prev, image: response }));
     Logger.log("response", response);
 
     return response;
   };
 
-  const handleSave = async () => {
+  const beforeSubmit = async (novelist: Novelist) => {
     Logger.log("handleSave");
 
     setLoading(true);
@@ -86,25 +57,52 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
 
     Logger.log("updatedAvatar: ", updatedAvatarUrl);
 
-    if (!novelist) {
+    if (updatedAvatarUrl === API_MESSAGE.MediaError) {
       setLoading(false);
-      return errorToast("First name is required.");
+      return { ...novelist, abort: true };
     }
 
-    const resonse = await updateUserNovelist({
+    const _novelist = {
       ...novelist,
       image: updatedAvatarUrl || "",
-    });
+    };
+
+    return _novelist;
+  };
+
+  const onSubmit = async (novelist: Novelist) => {
+    if (!novelist) {
+      setLoading(false);
+      errorToast("First name is required.");
+      return novelist;
+    }
+
+    const resonse = await updateUserNovelist(novelist);
 
     setLoading(false);
+
+    Logger.log("resonse", resonse);
 
     if ("message" in resonse) {
       return errorToast(API_MESSAGE.Error);
     }
 
-    updateNovelist(resonse);
+    updateValues(novelist);
 
     successToast("Data updated successfully.");
+  };
+
+  const { values, update, updateValues, submit } = useForm<Novelist>({
+    initialValues: INITIAL_NOVELIST,
+    onSubmit,
+    beforeSubmit,
+  });
+
+  const fetchData = async () => {
+    setLoading(true);
+    const novelist = await getUserNovelist();
+    if (novelist) updateValues(novelist);
+    setLoading(false);
   };
 
   const handleCancel = () => {
@@ -123,7 +121,7 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
     <>
       <S.ProfileBackgroundBlurFilter
         banner={
-          novelist?.image ||
+          values?.image ||
           "https://i.etsystatic.com/44068041/r/il/3bab40/5467123737/il_300x300.5467123737_1kne.jpg"
         }
       />
@@ -138,7 +136,7 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
         centered
       >
         <UploadAvatar
-          image={novelist?.image}
+          image={values?.image}
           onChange={(image) => setAvatarFile(image)}
         />
         <S.Profile>
@@ -152,24 +150,27 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
             <S.Name>
               <Input
                 label="First Name"
-                value={novelist?.firstName}
-                onChange={(firstName) => updateNovelist({ firstName })}
-                onEnter={handleSave}
+                name="firstName"
+                value={values?.firstName}
+                onChange={update}
+                onEnter={submit}
                 maxLength={50}
               />
               <Input
                 label="Last Name"
-                value={novelist?.lastName}
-                onChange={(lastName) => updateNovelist({ lastName })}
-                onEnter={handleSave}
+                name="lastName"
+                value={values?.lastName}
+                onChange={update}
+                onEnter={submit}
                 maxLength={50}
               />
             </S.Name>
             <Input
               label="Note"
-              value={novelist?.note}
-              onChange={(note) => updateNovelist({ note })}
-              onEnter={handleSave}
+              name="note"
+              value={values?.note}
+              onChange={update}
+              onEnter={submit}
               maxLength={250}
             />
             <S.ButtonGroup>
@@ -180,7 +181,7 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
               >
                 Cancel
               </S.SaveButton>
-              <S.SaveButton onClick={handleSave} loading={loading}>
+              <S.SaveButton onClick={submit} loading={loading}>
                 Save <div className="sm-hide">Changes</div>
               </S.SaveButton>
             </S.ButtonGroup>

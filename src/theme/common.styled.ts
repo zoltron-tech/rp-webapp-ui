@@ -1,6 +1,7 @@
+import { __DEV__ } from "@/utils/constants";
 import { css } from "styled-components";
 
-const DEV_MODE = false;
+const DEV_MODE = __DEV__;
 
 export const NO_USER_SELECT = css`
   -webkit-user-select: none;

@@ -72,7 +72,6 @@ export const LogoInner = styled.div`
   font-weight: 700;
   color: ${({ theme }) => theme.textPrimary};
   background-color: ${({ theme }) => theme.primary};
-  -webkit-text-stroke: 1px #66666689; /* width and color */
   ${NO_USER_SELECT}
 
   -moz-transform: skew(-45deg, 0deg);

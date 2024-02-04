@@ -24,8 +24,15 @@ export default function UserProfilePage({}) {
     // fetch novelist by username
     setLoading(true);
     const _novelist = await getNovelistAction(username);
+    if (_novelist === null && isCurrentUser) {
+      push(`/rp/profile/edit`);
+      return;
+    }
+
     if (!_novelist || "message" in _novelist) {
       // handle error
+      setLoading(false);
+      push("/404");
       return;
     }
     setLoading(false);
@@ -47,12 +54,10 @@ export default function UserProfilePage({}) {
       <ShouldRender if={loading && !loadingAuth}>
         <PageLoader />
       </ShouldRender>
+
       <S.Banner src={novelist?.image || ""} />
       <S.SolidBackground></S.SolidBackground>
       <S.Content>
-        <ShouldRender if={isCurrentUser}>
-          <S.EditProfile onClick={toEditProfile}>Edit Profile</S.EditProfile>
-        </ShouldRender>
         <S.ContentLeft>
           <S.Avatar>
             <img src={novelist?.image || ""} alt={""} />
@@ -66,10 +71,15 @@ export default function UserProfilePage({}) {
           <S.NoteContainer>{novelist?.note}</S.NoteContainer>
         </S.ContentLeft>
         <S.ContentRight>
+          <ShouldRender if={isCurrentUser}>
+            <S.EditProfile onClick={toEditProfile}>Edit Profile</S.EditProfile>
+          </ShouldRender>
           <S.Name>
             {novelist?.firstName} {novelist?.lastName}
           </S.Name>
-          <MusesPill novelist={novelist} />
+          <S.MusePillContiner>
+            <MusesPill novelist={novelist} />
+          </S.MusePillContiner>
         </S.ContentRight>
       </S.Content>
     </>

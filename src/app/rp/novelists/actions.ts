@@ -1,5 +1,4 @@
 "use server";
-
 import { authenticateAndGetJWT, logoutAction } from "@/app/actions";
 import { Novelist } from "@/types";
 import { WithMessage } from "@/types/common";
@@ -91,6 +90,7 @@ export const updateUserNovelist = async (_novelist: Novelist) => {
   }
 
   const result: WithMessage<Novelist> = await response.json();
+  Logger.log("updateUserNovelist", result);
 
   const novelist: Novelist = Object.assign(
     {},

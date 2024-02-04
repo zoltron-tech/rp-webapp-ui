@@ -1,5 +1,6 @@
 export * from "./button";
 export * from "./card";
+export * from "./expandable-pill";
 export * from "./input";
 export * from "./modal";
 export * from "./pill";

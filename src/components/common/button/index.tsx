@@ -26,6 +26,11 @@ export const Button: FC<ButtonProps> = ({
   size = "md",
   onClick,
 }) => {
+  const clickHandler = () => {
+    if (disabled || loading) return;
+    onClick?.();
+  };
+
   return (
     <S.Container
       onKeyDownCapture={(e) => {
@@ -48,10 +53,7 @@ export const Button: FC<ButtonProps> = ({
           ["rounded-edge"]: shape === "rounded-edge",
         },
       ])}
-      onClick={() => {
-        if (disabled || loading) return;
-        onClick?.();
-      }}
+      onClick={clickHandler}
     >
       <ImSpinner className={classNames(["loading-icon", { loading }])} />
       <span>{children}</span>

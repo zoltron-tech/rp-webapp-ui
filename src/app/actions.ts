@@ -1,11 +1,8 @@
 "use server";
-
 import jwt from "jsonwebtoken";
 import getConfig from "next/config";
 import { cookies } from "next/headers";
 import { RedirectType, redirect } from "next/navigation";
-
-import { Logger } from "@/utils/services";
 
 import type { LoginPayload, User } from "@/types";
 import { WithMessage, WithToken } from "@/types/common";
@@ -15,29 +12,25 @@ import {
   JWT_COOKIE_NAME,
   THEME_COOKIE_NAME,
 } from "@/utils/constants";
+import { Logger } from "@/utils/services";
 
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
 
-export const getThemeCookie = () => {
-  Logger.log("getThemeCookie");
+export const getThemeCookie = async () => {
   const cookie = cookies().get(THEME_COOKIE_NAME);
-  if (!cookie) return "dark";
-  return cookie.value;
+  return cookie ? cookie.value : "dark";
 };
 
-export const getAuthCookie = () => {
-  Logger.log("getAuthCookie");
+export const getAuthCookie = async () => {
   const cookie = cookies().get(JWT_COOKIE_NAME);
-  if (!cookie) return "";
-  return cookie.value;
+  return cookie ? cookie.value : "";
 };
 
-export const login = async (payload: LoginPayload): Promise<WithMessage> => {
+export const loginAction = async (
+  payload: LoginPayload
+): Promise<WithMessage> => {
   const URL = `${RP_SERVICE_URL}/rp/user/account/login`;
-
-  Logger.log("login payload", payload);
-  Logger.log("login URL", URL);
 
   const response = await fetch(URL, {
     method: "POST",
@@ -60,10 +53,8 @@ export const login = async (payload: LoginPayload): Promise<WithMessage> => {
 
   const result: WithToken<WithMessage> = await response.json();
 
-  Logger.log("login result", result);
-
   cookies().set(JWT_COOKIE_NAME, result.token, {
-    httpOnly: false,
+    httpOnly: true,
     secure: false,
     sameSite: "strict",
     path: "/",
@@ -76,10 +67,8 @@ export const login = async (payload: LoginPayload): Promise<WithMessage> => {
   return clientResponse;
 };
 
-export const register = async (payload: SignUpPayload) => {
+export const signupAction = async (payload: SignUpPayload) => {
   const URL = `${RP_SERVICE_URL}/rp/user/account`;
-
-  Logger.log("register payload", payload);
 
   const response = await fetch(URL, {
     method: "POST",
@@ -90,22 +79,17 @@ export const register = async (payload: SignUpPayload) => {
     cache: "no-store",
   });
 
-  Logger.log("register response", response);
-
   if (response.status < 200 || response.status > 300) {
     const result: WithMessage = await response.json();
-    Logger.log("register result", result.message);
     return { message: result.message };
   }
 
   const result: WithToken<WithMessage> = await response.json();
 
-  Logger.log("register result", result.message);
-
   if (!result.token) return { message: result.message };
 
   cookies().set(JWT_COOKIE_NAME, result.token, {
-    httpOnly: false,
+    httpOnly: true,
     secure: false,
     sameSite: "strict",
     path: "/",
@@ -118,12 +102,12 @@ export const register = async (payload: SignUpPayload) => {
   return clientResponse;
 };
 
-export const logout = () => {
+export const logoutAction = async () => {
   cookies().delete(JWT_COOKIE_NAME);
   redirect("/rp/login", RedirectType.push);
 };
 
-export const authenticate = () => {
+export const authenticateAction = async () => {
   Logger.log("authenticate");
   const jwtCookie = cookies().get(JWT_COOKIE_NAME);
   if (!jwtCookie?.value) return false;
@@ -133,9 +117,6 @@ export const authenticate = () => {
     return false;
   }
   const isValid = decoded.payload.exp * 1000 > Date.now();
-  Logger.log("decoded cookie: ", decoded);
-  Logger.log("is valid: ", isValid);
-  Logger.log("Date.now(): ", Date.now());
 
   if (!isValid) {
     cookies().delete(JWT_COOKIE_NAME);
@@ -144,9 +125,9 @@ export const authenticate = () => {
   return true;
 };
 
-export const authenticateAndGetJWT = () => {
-  Logger.log("authenticateAndGetJWT");
-  if (!authenticate()) return logout();
+export const authenticateAndGetJWT = async () => {
+  const authenticated = await authenticateAction();
+  if (!authenticated) return logoutAction();
   const cookie = getAuthCookie();
   return cookie;
 };
@@ -155,8 +136,6 @@ export const checkUsernameAvailability = async (username: string) => {
   const URL = `${RP_SERVICE_URL}/rp/user/account/username?username=${username}`;
 
   const response = await fetch(URL, { cache: "no-store" });
-
-  Logger.log("checkUsernameAvailability", username, response);
 
   if (response.status === 404) {
     return true;
@@ -169,18 +148,11 @@ export const checkUsernameAvailability = async (username: string) => {
   return result.message;
 };
 
-export const reroute = (path: string) => {
-  redirect(path);
-};
-
 export const getUser = async () => {
   const URL = `${RP_SERVICE_URL}/rp/user/account/auth`;
   const jwtCookie = cookies().get(JWT_COOKIE_NAME);
 
   if (!jwtCookie) redirect("/", RedirectType.push);
-
-  Logger.log("cookie hai bhai -> :", jwtCookie);
-
   const response = await fetch(URL, {
     method: "GET",
     headers: {
@@ -190,9 +162,7 @@ export const getUser = async () => {
     cache: "no-store",
   });
 
-  Logger.log("response", response.status);
-
-  if (response.status !== 200) logout();
+  if (response.status !== 200) logoutAction();
 
   const user: User = await response.json();
   return user;

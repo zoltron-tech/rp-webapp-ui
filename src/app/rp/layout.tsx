@@ -1,20 +1,17 @@
 "use client";
-
-import React from "react";
+import React, { useRef } from "react";
 
 import { ContentContainer, LoginModal, TopBar } from "@/components";
-import { UIContextProvider } from "@/context";
+import { AuthProvider, UIContextProvider } from "@/context";
 import { THEME_DARK, THEME_LIGHT } from "@/theme";
 import { useEffect, useState } from "react";
 import { useCookies } from "react-cookie";
 import { ThemeProvider } from "styled-components";
 
-import * as S from "./styles";
-
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const initialRender = useRef(true);
   const [cookies, setCookie] = useCookies(["theme"]);
   const [theme, setTheme] = useState<"light" | "dark">("dark");
-  const [initialized, setInitialized] = useState(false);
 
   const toggleTheme = () => {
     setTheme((current) => {
@@ -29,22 +26,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    if (initialized) return;
-    setInitialized(true);
+    if (!initialRender.current) return;
+    initialRender.current = false;
     setTheme(cookies.theme || "dark");
-  }, [initialized]);
-
-  if (!initialized) return <S.FallbackContainer></S.FallbackContainer>;
+  }, []);
 
   return (
     <ThemeProvider theme={getTheme()}>
-      <UIContextProvider>
-        <LoginModal />
-        <TopBar theme={theme} toggleTheme={toggleTheme} />
-        <main>
-          <ContentContainer>{children}</ContentContainer>
-        </main>
-      </UIContextProvider>
+      <AuthProvider>
+        <UIContextProvider>
+          <LoginModal />
+          <TopBar theme={theme} toggleTheme={toggleTheme} />
+          <main>
+            <ContentContainer>{children}</ContentContainer>
+          </main>
+        </UIContextProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

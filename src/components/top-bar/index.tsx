@@ -1,11 +1,12 @@
 "use client";
 
-import { logout } from "@/app/actions";
+import { logoutAction } from "@/app/actions";
 import { ThemeToggle } from "@/components";
 import { Button, ShouldRender } from "@/components/common";
-import { useAuth, useUIContext } from "@/hooks";
+import { useAuthContext, useUIContext } from "@/hooks";
 import { FC } from "react";
 
+import { useRouter } from "next/navigation";
 import * as S from "./styles";
 
 type Props = {
@@ -15,7 +16,12 @@ type Props = {
 
 export const TopBar: FC<Props> = ({ theme, toggleTheme }) => {
   const { setSignupModalOpen, setSignupModal } = useUIContext();
-  const { isLoggedIn } = useAuth();
+  const { loggedIn } = useAuthContext();
+  const { push } = useRouter();
+
+  const onLogoClick = () => {
+    push("/rp/novelists");
+  };
 
   const onLoginClick = () => {
     setSignupModal(false);
@@ -28,13 +34,13 @@ export const TopBar: FC<Props> = ({ theme, toggleTheme }) => {
   };
 
   const onLogoutClick = async () => {
-    logout();
+    logoutAction();
   };
 
   return (
     <>
       <S.Bar>
-        <S.LogoContainer href={"/"}>
+        <S.LogoContainer onClick={onLogoClick}>
           <S.Logo>
             <S.LogoInner>NW</S.LogoInner>
           </S.Logo>
@@ -42,33 +48,15 @@ export const TopBar: FC<Props> = ({ theme, toggleTheme }) => {
         </S.LogoContainer>
         <S.ActionsContainer>
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
-          <ShouldRender if={!isLoggedIn}>
+          <ShouldRender if={!loggedIn}>
             <S.ButtonsContainerDesktop>
               <Button onClick={onLoginClick}>Log in</Button>
               <Button onClick={onSignupClick} variant="secondary">
                 Sign up
               </Button>
             </S.ButtonsContainerDesktop>
-            {/* <S.ButtonsContainerMobile>
-              <Button
-                variant="link"
-                shape="square"
-                size="xs"
-                onClick={onLoginClick}
-              >
-                Log in
-              </Button>
-              <Button
-                variant="link"
-                shape="square"
-                size="xs"
-                onClick={onSignupClick}
-              >
-                Sign up
-              </Button>
-            </S.ButtonsContainerMobile> */}
           </ShouldRender>
-          <ShouldRender if={isLoggedIn}>
+          <ShouldRender if={loggedIn}>
             <S.ButtonsContainerDesktop>
               <Button onClick={onLogoutClick}>Log out</Button>
             </S.ButtonsContainerDesktop>

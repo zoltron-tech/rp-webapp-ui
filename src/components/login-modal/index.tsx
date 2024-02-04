@@ -1,11 +1,6 @@
-import {
-  checkUsernameAvailability,
-  login,
-  register,
-  reroute,
-} from "@/app/actions";
+import { checkUsernameAvailability } from "@/app/actions";
 import { Button, Input, Modal, ShouldRender } from "@/components/common";
-import { useAuth, useUIContext } from "@/hooks";
+import { useAuthContext, useUIContext } from "@/hooks";
 import { LoginPayload, LoginResponse } from "@/types";
 import { WithMessage } from "@/types/common";
 import { SignUpPayload } from "@/types/register";
@@ -13,6 +8,7 @@ import { verifyEmailPattern, verifyUsernamePattern } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import { FC, useEffect, useRef, useState } from "react";
 
+import { useRouter } from "next/navigation";
 import * as S from "./styles";
 
 export type LoginModalProps = {};
@@ -20,7 +16,6 @@ export type LoginModalProps = {};
 export const LoginModal: FC<LoginModalProps> = ({}) => {
   const { signupModalOpen, signupModal, setSignupModal, setSignupModalOpen } =
     useUIContext();
-  const [loading, setLoading] = useState<boolean>(false);
   const [verifyUsernameLoading, setVerifyUsernameLoading] =
     useState<boolean>(false);
   const [isUsernameAvailable, setIsUsernameAvailable] =
@@ -31,9 +26,10 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
   const [error, setError] = useState<string>("");
   const [buttonClicked, setButtonClicked] = useState<boolean>(false);
   const [disabled, setDisabled] = useState<boolean>(false);
-  const { verify } = useAuth();
   const usernameAvailableDebounceTimer = useRef<any>(null);
   const { successToast, errorToast } = useUIContext();
+  const { login, signup, loading } = useAuthContext();
+  const { push } = useRouter();
 
   const checkError = (force?: boolean): boolean => {
     if (!force && !buttonClicked) {
@@ -132,8 +128,6 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
   };
 
   const handleLogin = async () => {
-    setLoading(true);
-
     const payload: LoginPayload = {
       email,
       password,
@@ -145,27 +139,20 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
       Logger.log(response);
 
       if (response.message === "success") {
-        const verified = await verify();
-        Logger.log("success", verified);
-        if (verified) {
-          successToast("Logged in successfully");
-          reroute("/rp/profile");
-          setSignupModalOpen(false);
-        }
+        Logger.log("success");
+        setSignupModalOpen(false);
+        successToast("Logged in successfully");
+        push("/rp/profile");
       } else {
         errorToast(response.message);
       }
-      setLoading(false);
     } catch (e) {
       Logger.log("error dekho bhai ->", e);
       errorToast("Something went wrong");
-      setLoading(false);
     }
   };
 
   const handleSignup = async () => {
-    setLoading(true);
-
     const payload: SignUpPayload = {
       username,
       email,
@@ -173,14 +160,14 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
     };
 
     try {
-      const response: WithMessage = await register(payload);
+      const response: WithMessage = await signup(payload);
 
       Logger.log(response);
 
       if (response.message === "success") {
         successToast("Registered successfully");
         setSignupModalOpen(false);
-        reroute("/rp/profile");
+        push("/rp/profile");
       } else {
         errorToast(response.message);
       }
@@ -188,8 +175,6 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
       Logger.log("error dekho bhai ->", e);
       errorToast("Something went wrong");
     }
-
-    setLoading(false);
   };
 
   const handleSubmit = () => {
@@ -216,7 +201,6 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
       setEmail("");
       setPassword("");
       setError("");
-      setLoading(false);
     }
   }, [signupModalOpen]);
 

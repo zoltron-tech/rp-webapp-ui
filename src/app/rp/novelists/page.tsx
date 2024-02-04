@@ -33,8 +33,6 @@ export default function NovelistsPage() {
     setNovelists();
   }, []);
 
-  console.log("DISABLING AUTOSCROLL", process.env.DISABLE_AUTOSCROLL);
-
   return (
     <ShouldRender if={!!novelists}>
       <S.CarouselContainer>

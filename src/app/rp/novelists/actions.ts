@@ -1,6 +1,6 @@
 "use server";
 
-import { authenticateAndGetJWT, logout } from "@/app/actions";
+import { authenticateAndGetJWT, logoutAction } from "@/app/actions";
 import { Novelist } from "@/types";
 import { WithMessage } from "@/types/common";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
@@ -14,6 +14,7 @@ export const getNovelists = async () => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/all`;
 
   const response = await fetch(URL, { cache: "no-store" });
+  Logger.log("getNovelists", response.status);
 
   if (response.status === 404) {
     return [];
@@ -26,8 +27,26 @@ export const getNovelists = async () => {
   return novelists;
 };
 
+export const getNovelistAction = async (username: string) => {
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/${username}`;
+
+  const response = await fetch(URL, { cache: "no-store" });
+
+  console.log("getNovelistAction", response.status);
+
+  if (response.status === 404) {
+    return null;
+  } else if (response.status !== 200) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const novelist: Novelist = await response.json();
+
+  return novelist;
+};
+
 export const getUserNovelist = async () => {
-  const jwt = authenticateAndGetJWT();
+  const jwt = await authenticateAndGetJWT();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist`;
 
   const response = await fetch(URL, {
@@ -42,7 +61,7 @@ export const getUserNovelist = async () => {
     return null;
   } else if (response.status !== 200) {
     Logger.log(API_MESSAGE.Error, response.status, response.statusText);
-    logout();
+    logoutAction();
   }
 
   const novelist: Novelist = await response.json();
@@ -51,7 +70,7 @@ export const getUserNovelist = async () => {
 };
 
 export const updateUserNovelist = async (_novelist: Novelist) => {
-  const jwt = authenticateAndGetJWT();
+  const jwt = await authenticateAndGetJWT();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist`;
 
   Logger.log("updateUserNovelist", _novelist);

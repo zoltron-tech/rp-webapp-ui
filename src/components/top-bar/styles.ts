@@ -1,5 +1,4 @@
 import { NO_USER_SELECT, Z_INDEX } from "@/theme";
-import Link from "next/link";
 import styled from "styled-components";
 
 export const Bar = styled.div`
@@ -31,12 +30,13 @@ export const Bar = styled.div`
     }
   }
 `;
-export const LogoContainer = styled(Link)`
+export const LogoContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
   color: ${({ theme }) => theme.text};
   text-decoration: none;
+  cursor: pointer;
 `;
 
 export const Logo = styled.div`

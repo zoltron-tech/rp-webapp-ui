@@ -117,6 +117,7 @@ export const ExpandButton = styled.div`
   box-shadow: 0px 0px 5px 2px rgba(0, 0, 0, 0.4);
   z-index: ${Z_INDEX.CARD_EXPAND};
   transition: background-color 0.1s ease-in-out;
+  cursor: pointer;
 
   & svg {
     width: 20px;
@@ -126,7 +127,6 @@ export const ExpandButton = styled.div`
   }
 
   &:hover {
-    cursor: pointer;
     background-color: ${({ theme }) => theme.hoverGrey};
   }
 
@@ -168,6 +168,7 @@ export const Avatar = styled.div`
   ${AVATAR_IMAGE}
   width: 200px;
   height: 200px;
+  cursor: pointer;
 
   img {
     width: 200px;
@@ -249,6 +250,7 @@ export const Quote = styled.div`
   color: ${({ theme }) => theme.text};
   text-align: center;
   margin-top: 5px;
+  word-break: break-all;
 
   &::before {
     content: "“";

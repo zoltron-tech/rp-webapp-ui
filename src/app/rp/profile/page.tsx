@@ -1,30 +1,25 @@
 "use client";
 
-import { ProfileCard } from "@/components";
-import { useAuth } from "@/hooks";
+import { useAuthContext } from "@/hooks";
 import { Logger } from "@/utils/services";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function ProfilePage({}) {
-  const { authWall } = useAuth();
-  const [initialRender, setInitialRender] = useState(true);
+  const { loggedIn, user, loading } = useAuthContext();
+  const { push } = useRouter();
 
   useEffect(() => {
-    if (initialRender) {
-      setInitialRender(false);
-      return;
+    Logger.log("ProfilePage");
+    Logger.log("Auth context: ", loading, loggedIn);
+
+    if (loading) return;
+
+    if (loggedIn) {
+      Logger.log("rerouteToProfilePage");
+      push(`/rp/profile/${user?.username}`);
+    } else {
+      push("/rp/novelists");
     }
-  }, [initialRender]);
-
-  useEffect(() => {
-    authWall();
-  }, []);
-
-  Logger.log("yaha pohanchay hain hum:");
-
-  return (
-    <div>
-      <ProfileCard />
-    </div>
-  );
+  }, [loggedIn, loading]);
 }

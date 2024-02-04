@@ -14,7 +14,7 @@ export const MusesPill: FC<Props> = ({ novelist }) => {
   return (
     <ExpandablePill
       tag="Muses"
-      scrollableContent={novelist?.muses?.slice(0, 4).map((muse) => (
+      scrollableContent={novelist?.muses?.slice(0, 8).map((muse) => (
         <S.Avatar key={muse.firstName} className={classNames(["rotate"])}>
           <Image
             alt={muse.firstName}

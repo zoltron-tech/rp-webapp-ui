@@ -1,10 +1,11 @@
-import MagnifyGlassIcon from "@/assets/images/magnifying-glass.png";
+// import MagnifyGlassIcon from "@/assets/images/magnifying-glass.png";
 import { Novelist } from "@/types";
 import Image from "next/image";
 import { FC, useState } from "react";
 
 import classNames from "classnames";
 import { CiCirclePlus } from "react-icons/ci";
+import { FcSearch } from "react-icons/fc";
 import * as S from "./styles";
 interface Props {
   novelist: Novelist | null;
@@ -34,12 +35,7 @@ export const MusesPill: FC<Props> = ({ novelist }) => {
         </S.ScrollableAvatarContainer>
         <S.Searchbar className={classNames({ expanded })}>
           <S.MagnifyingGlass className={classNames({ expanded })}>
-            <Image
-              src={MagnifyGlassIcon.src}
-              alt="search"
-              width={80}
-              height={80}
-            />
+            <FcSearch />
           </S.MagnifyingGlass>
         </S.Searchbar>
         <S.ExpandMuses

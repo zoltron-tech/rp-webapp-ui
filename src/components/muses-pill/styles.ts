@@ -116,7 +116,7 @@ export const MagnifyingGlass = styled.div`
   cursor: pointer;
   transition: opacity 0.1s ease-in-out;
 
-  & img {
+  & svg {
     height: 80px;
     width: 80px;
   }

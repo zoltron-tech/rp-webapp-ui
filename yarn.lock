@@ -5124,7 +5124,7 @@ __metadata:
       optional: true
   bin:
     next: dist/bin/next
-  checksum: e6c829fd473d8c3605b2b62d15e1bf41e9d90cf59a2c213b4adeadff2846999bc9a653ffef18f6aa13cc9f5d6de02469c222acf5a4184901a4690a4504bd468f
+  checksum: 4bf33bb248b4a4f1f76b2f6fbfbf7f043bd9e725e6ecf63c6f6433e7cd8468636a43401a2c044c8c7ada1f67e3cb845137c3e034ae0831e5b4c7a8c6e0eec964
   languageName: node
   linkType: hard
 

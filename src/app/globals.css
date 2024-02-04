@@ -41,6 +41,14 @@ main::-webkit-scrollbar {
 :root {
   --text-color-light: #242424;
   --text-color-dark: #ded9d9;
+
+  --profile-banner-height-min: 270px;
+  --profile-banner-height-max: 460px;
+  --profile-avatar-size: 340px;
+  --profile-small-avatar-size: 100px;
+
+  --profile-note-width: 460px;
+
 }
 
 /* END: Global variables */

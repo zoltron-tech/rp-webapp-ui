@@ -10,6 +10,7 @@ import { MdOutlineExpandLess, MdOutlineExpandMore } from "react-icons/md";
 import { useSwiper, useSwiperSlide } from "swiper/react";
 
 import { Logger } from "@/utils/services";
+import { useRouter } from "next/navigation";
 import * as S from "./styles";
 
 type Props = {
@@ -20,6 +21,12 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
   const { setCardExpanded } = useUIContext();
   const { isActive } = useSwiperSlide();
   const { autoplay } = useSwiper();
+  const { push } = useRouter();
+
+  const onAvatarClick = () => {
+    if (!novelist) return;
+    push(`/rp/profile/${novelist.username}`);
+  };
 
   useEffect(() => {
     if (!expanded) return;
@@ -70,7 +77,7 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
           </ShouldRender>
         </S.ExpandButton>
         <S.CardHeader>
-          <S.Avatar>
+          <S.Avatar onClick={onAvatarClick}>
             <Image
               src={novelist.image || ""}
               alt={""}

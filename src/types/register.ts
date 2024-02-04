@@ -1,5 +1,5 @@
-export type SignUpPayload = {
+export interface SignUpPayload {
   email: string;
   username: string;
   password: string;
-};
+}

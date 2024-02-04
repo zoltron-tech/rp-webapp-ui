@@ -8,5 +8,5 @@ export enum Z_INDEX {
   CARD_EXPAND = CARD + 1,
   AVATAR = 2,
   DEFAULT = 1,
-  BACKGROUND = 0,
+  BACKGROUND = -1,
 }

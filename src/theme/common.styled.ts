@@ -1,5 +1,7 @@
 import { css } from "styled-components";
 
+const DEV_MODE = false;
+
 export const NO_USER_SELECT = css`
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -38,4 +40,29 @@ export const SPIN = css`
       transform: rotate(360deg);
     }
   }
+`;
+
+export const CARD_BG_BLUR = css`
+  /* From https://css.glass */
+  /* background: ${({ theme }) => theme.modalBackground}; */
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(13px);
+  -webkit-backdrop-filter: blur(13px);
+`;
+
+export const BLUR_FILTER = css`
+  filter: blur(80px);
+  -webkit-filter: blur(80px);
+  -moz-filter: blur(80px);
+  -o-filter: blur(80px);
+  -ms-filter: blur(80px);
+`;
+
+export const PILL = css`
+  border-radius: 60px;
+`;
+
+export const DEV_MODE_BORDER = (color = "red") => css`
+  ${DEV_MODE && `border: 1px solid ${color}`};
 `;

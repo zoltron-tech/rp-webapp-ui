@@ -1,5 +1,3 @@
-import { NO_SCROLLBAR } from "@/theme";
-
 import styled from "styled-components";
 
 export const Container = styled.div`
@@ -9,7 +7,4 @@ export const Container = styled.div`
   background-color: ${({ theme }) => theme.background};
   container-name: content-container;
   container-type: inline-size;
-  overflow-y: auto;
-
-  ${NO_SCROLLBAR}
 `;

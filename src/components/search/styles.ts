@@ -10,7 +10,6 @@ export const Dropdown = styled.div`
   border-radius: 5px;
   box-shadow: none;
   z-index: 100;
-  overflow: hidden;
   max-height: 400px;
   transition: all 0.2s ease-in-out;
   border-radius: 30px;

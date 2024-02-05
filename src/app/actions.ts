@@ -44,7 +44,7 @@ export const loginAction = async (
   if (response.status === 404) {
     return { message: "User not found" };
   } else if (response.status === 401) {
-    return { message: "Email or password is incorrect" };
+    return { message: "Email, Username or password is incorrect" };
   } else if (response.status === 403) {
     return { message: "Account not verified" };
   } else if (response.status !== 200) {

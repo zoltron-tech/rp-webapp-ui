@@ -87,14 +87,6 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
             onClick={onAvatarClick}
             hoverable
           />
-          {/* <S.Avatar onClick={onAvatarClick}>
-            <Image
-              src={novelist.image || ""}
-              alt={""}
-              width={200}
-              height={200}
-            />
-          </S.Avatar> */}
           <S.NovelistInfo>
             <S.Title>
               {novelist.firstName} {novelist.lastName}

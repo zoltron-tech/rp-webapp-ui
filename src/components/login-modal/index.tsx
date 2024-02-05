@@ -46,9 +46,17 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
     if (!email || !password || (signupModal && !username)) {
       return { password: "Please fill in all fields" };
     }
-    const validEmail = verifyEmailPattern(email);
-    if (!validEmail) {
-      return { password: "Please enter a valid email" };
+    if (!signupModal) {
+      const validEmailOrUsername =
+        verifyEmailPattern(email) || verifyUsernamePattern(email);
+      if (!validEmailOrUsername) {
+        return { password: "Please enter a valid email or username" };
+      }
+    } else {
+      const validEmail = verifyEmailPattern(email);
+      if (!validEmail) {
+        return { password: "Please enter a valid email" };
+      }
     }
     if (signupModal) {
       const validPassword = password.match(/^(?=.*\d).{8,}$/);
@@ -101,6 +109,13 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
       password: values.password,
     };
     try {
+      const isUsername =
+        verifyUsernamePattern(values.email) &&
+        !verifyEmailPattern(values.email);
+      if (isUsername) {
+        payload.username = values.email;
+        delete payload.email;
+      }
       const response: LoginResponse = await login(payload);
       Logger.log(response);
       if (response.message === "success") {
@@ -224,7 +239,7 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
             />
           </ShouldRender>
           <Input
-            label="Email"
+            label={signupModal ? "Email" : "Email or Username"}
             name="email"
             type="text"
             onChange={update}

@@ -82,19 +82,11 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
           <S.Avatar
             src={novelist.image || ""}
             alt={""}
-            width={200}
-            height={200}
+            size={200}
             name={"stalk 👀"}
+            onClick={onAvatarClick}
             hoverable
           />
-          {/* <S.Avatar onClick={onAvatarClick}>
-            <Image
-              src={novelist.image || ""}
-              alt={""}
-              width={200}
-              height={200}
-            />
-          </S.Avatar> */}
           <S.NovelistInfo>
             <S.Title>
               {novelist.firstName} {novelist.lastName}
@@ -107,21 +99,7 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
           <S.MuseList>
             {novelist.muses.map((muse) => (
               <S.Muse key={`${muse.firstName}-${muse.lastName}`}>
-                {/* <S.Muse.Avatar>
-                  <Image
-                    src={muse.image || ""}
-                    alt={""}
-                    width={70}
-                    height={70}
-                  />
-                </S.Muse.Avatar> */}
-
-                <S.Muse.Avatar
-                  src={muse.image || ""}
-                  alt={""}
-                  width={70}
-                  height={70}
-                />
+                <S.Muse.Avatar src={muse.image || ""} alt={""} size={70} />
 
                 <S.Muse.Name>
                   {muse.firstName}{" "}

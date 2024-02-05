@@ -25,25 +25,24 @@ export const Name = styled.div`
 `;
 
 export const Avatar = styled.div<AvatarProps>`
+  --size: 100px;
+
   ${AVATAR_IMAGE}
   ${DEV_MODE_BORDER("red")}
-  width: var(--profile-small-avatar-size);
-  height: var(--profile-small-avatar-size);
-  ${(props) => props.width && `width: ${props.width}px;`}
-  ${(props) => props.height && `height: ${props.height}px;`}
+  width: var(--size);
+  height: var(--size);
   z-index: ${Z_INDEX.AVATAR};
   margin-block: 5px;
   scroll-snap-align: center;
   box-shadow: none;
   position: relative;
-
-  &.rotate {
-    transform: rotate(90deg);
-  }
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   & > img {
-    width: 100%;
-    height: 100%;
+    width: var(--size);
+    height: var(--size);
     object-fit: cover;
   }
 

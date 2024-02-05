@@ -17,8 +17,7 @@ export const MusesPill: FC<Props> = ({ novelist }) => {
         <S.Avatar
           src={muse.image}
           alt={muse.firstName}
-          width={100}
-          height={100}
+          size={100}
           key={muse.firstName}
           className={classNames(["rotate"])}
           name={muse.firstName}
@@ -32,9 +31,7 @@ export const MusesPill: FC<Props> = ({ novelist }) => {
               <S.Avatar
                 src={muse.image}
                 alt={muse.firstName}
-                width={100}
-                height={100}
-                key={muse.firstName}
+                size={100}
                 name={muse.firstName}
                 hoverable
               />

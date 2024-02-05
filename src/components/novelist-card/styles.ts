@@ -1,6 +1,5 @@
 import * as Common from "@/components/common";
 import {
-  AVATAR_IMAGE,
   BORDER_RADIUS,
   BORDER_TOP,
   NO_SCROLLBAR,
@@ -164,24 +163,9 @@ export const Title = styled.div`
   }
 `;
 
-export const Avatar = styled.div`
-  ${AVATAR_IMAGE}
-  width: 200px;
-  height: 200px;
-  cursor: pointer;
-
-  img {
-    width: 200px;
-    height: 200px;
-  }
-
+export const Avatar = styled(Common.Avatar)`
   @container (max-width: 400px) {
     & {
-      width: 150px;
-      height: 150px;
-    }
-
-    img {
       width: 150px;
       height: 150px;
     }
@@ -189,11 +173,6 @@ export const Avatar = styled.div`
 
   @container (max-width: 300px) {
     & {
-      width: 100px;
-      height: 100px;
-    }
-
-    img {
       width: 100px;
       height: 100px;
     }
@@ -336,17 +315,7 @@ const MuseComponent = styled.div`
   }
 `;
 
-const MuseAvatar = styled.div`
-  ${AVATAR_IMAGE}
-
-  width: 70px;
-  height: 70px;
-
-  & img {
-    width: 100%;
-    height: 100%;
-  }
-
+const MuseAvatar = styled(Common.Avatar)`
   @container (max-width: 400px) {
     & {
       width: 50px;

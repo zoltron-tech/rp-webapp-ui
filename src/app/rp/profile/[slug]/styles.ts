@@ -1,5 +1,5 @@
-import { Pill } from "@/components/common";
-import { AVATAR_IMAGE, BLUR_FILTER, DEV_MODE_BORDER, Z_INDEX } from "@/theme";
+import { Avatar as AvatarCommon, Pill } from "@/components/common";
+import { BLUR_FILTER, DEV_MODE_BORDER, Z_INDEX } from "@/theme";
 import styled, { css } from "styled-components";
 
 interface BannerProps {
@@ -104,18 +104,10 @@ export const ContentRight = styled.div`
   }
 `;
 
-export const Avatar = styled.div`
-  ${AVATAR_IMAGE}
+export const Avatar = styled(AvatarCommon)`
   width: var(--profile-avatar-size);
   height: var(--profile-avatar-size);
-  z-index: ${Z_INDEX.AVATAR};
   margin-top: 65px;
-
-  & > img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
 `;
 
 const NameFontStyles = css`

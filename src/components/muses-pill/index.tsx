@@ -1,5 +1,4 @@
 import { Novelist } from "@/types";
-import Image from "next/image";
 import { FC } from "react";
 import { ExpandablePill } from "../common";
 
@@ -15,27 +14,30 @@ export const MusesPill: FC<Props> = ({ novelist }) => {
     <ExpandablePill
       tag="Muses"
       scrollableContent={novelist?.muses?.slice(0, 8).map((muse) => (
-        <S.Avatar key={muse.firstName} className={classNames(["rotate"])}>
-          <Image
-            alt={muse.firstName}
-            src={muse.image}
-            width={100}
-            height={100}
-          />
-        </S.Avatar>
+        <S.Avatar
+          src={muse.image}
+          alt={muse.firstName}
+          width={100}
+          height={100}
+          key={muse.firstName}
+          className={classNames(["rotate"])}
+          name={muse.firstName}
+          hoverable
+        />
       ))}
       expandedContent={
         <S.ExpandedContentInner>
           {novelist?.muses?.map((muse) => (
             <S.ExpandedContentInnerItem key={muse.firstName}>
-              <S.Avatar key={muse.firstName}>
-                <Image
-                  alt={muse.firstName}
-                  src={muse.image}
-                  width={100}
-                  height={100}
-                />
-              </S.Avatar>
+              <S.Avatar
+                src={muse.image}
+                alt={muse.firstName}
+                width={100}
+                height={100}
+                key={muse.firstName}
+                name={muse.firstName}
+                hoverable
+              />
             </S.ExpandedContentInnerItem>
           ))}
         </S.ExpandedContentInner>

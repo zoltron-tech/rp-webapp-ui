@@ -27,7 +27,7 @@ export const ThemeSwitcher = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-right: 20px;
+  /* margin-right: 20px; */
   position: relative;
   box-shadow: inset 0px 0px 1px 0px rgba(0, 0, 0, 0.4);
   cursor: pointer;

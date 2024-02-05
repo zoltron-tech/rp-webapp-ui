@@ -164,17 +164,31 @@ export const Title = styled.div`
 `;
 
 export const Avatar = styled(Common.Avatar)`
+  --size: 200px;
   @container (max-width: 400px) {
     & {
-      width: 150px;
-      height: 150px;
+      --size: 150px;
     }
   }
 
   @container (max-width: 300px) {
     & {
-      width: 100px;
-      height: 100px;
+      --size: 100px;
+    }
+  }
+`;
+
+const MuseAvatar = styled(Common.Avatar)`
+  --size: 70px;
+  @container (max-width: 400px) {
+    & {
+      --size: 50px;
+    }
+  }
+
+  @container (max-width: 300px) {
+    & {
+      --size: 30px;
     }
   }
 `;
@@ -312,22 +326,6 @@ const MuseComponent = styled.div`
   &:hover {
     cursor: pointer;
     background-color: ${({ theme }) => theme.hoverGreyAlpha};
-  }
-`;
-
-const MuseAvatar = styled(Common.Avatar)`
-  @container (max-width: 400px) {
-    & {
-      width: 50px;
-      height: 50px;
-    }
-  }
-
-  @container (max-width: 300px) {
-    & {
-      width: 30px;
-      height: 30px;
-    }
   }
 `;
 

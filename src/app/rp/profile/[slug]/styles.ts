@@ -105,8 +105,7 @@ export const ContentRight = styled.div`
 `;
 
 export const Avatar = styled(AvatarCommon)`
-  width: var(--profile-avatar-size);
-  height: var(--profile-avatar-size);
+  --size: var(--profile-avatar-size);
   margin-top: 65px;
 `;
 

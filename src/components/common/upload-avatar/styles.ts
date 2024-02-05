@@ -1,5 +1,6 @@
 import { AVATAR_IMAGE, Z_INDEX } from "@/theme";
 import { css, styled } from "styled-components";
+
 export const AvatarPositionStyle = css`
   position: absolute;
   top: 0;

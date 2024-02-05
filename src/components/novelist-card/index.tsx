@@ -1,10 +1,8 @@
 "use client";
-
 import { ShouldRender } from "@/components/common";
 import { useUIContext } from "@/hooks";
 import { Novelist } from "@/types/novelist";
 import classNames from "classnames";
-import Image from "next/image";
 import { FC, useEffect, useState } from "react";
 import { MdOutlineExpandLess, MdOutlineExpandMore } from "react-icons/md";
 import { useSwiper, useSwiperSlide } from "swiper/react";
@@ -81,14 +79,22 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
           </ShouldRender>
         </S.ExpandButton>
         <S.CardHeader>
-          <S.Avatar onClick={onAvatarClick}>
+          <S.Avatar
+            src={novelist.image || ""}
+            alt={""}
+            width={200}
+            height={200}
+            name={"stalk 👀"}
+            hoverable
+          />
+          {/* <S.Avatar onClick={onAvatarClick}>
             <Image
               src={novelist.image || ""}
               alt={""}
               width={200}
               height={200}
             />
-          </S.Avatar>
+          </S.Avatar> */}
           <S.NovelistInfo>
             <S.Title>
               {novelist.firstName} {novelist.lastName}
@@ -101,14 +107,21 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
           <S.MuseList>
             {novelist.muses.map((muse) => (
               <S.Muse key={`${muse.firstName}-${muse.lastName}`}>
-                <S.Muse.Avatar>
+                {/* <S.Muse.Avatar>
                   <Image
                     src={muse.image || ""}
                     alt={""}
                     width={70}
                     height={70}
                   />
-                </S.Muse.Avatar>
+                </S.Muse.Avatar> */}
+
+                <S.Muse.Avatar
+                  src={muse.image || ""}
+                  alt={""}
+                  width={70}
+                  height={70}
+                />
 
                 <S.Muse.Name>
                   {muse.firstName}{" "}

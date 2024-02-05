@@ -59,9 +59,12 @@ export default function UserProfilePage({}) {
       <S.SolidBackground></S.SolidBackground>
       <S.Content>
         <S.ContentLeft>
-          <S.Avatar>
-            <img src={novelist?.image || ""} alt={""} />
-          </S.Avatar>
+          <S.Avatar
+            src={novelist?.image || ""}
+            alt="profile-picture"
+            width={340}
+            height={340}
+          />
           <S.NameMobile>
             {novelist?.firstName} {novelist?.lastName}
           </S.NameMobile>

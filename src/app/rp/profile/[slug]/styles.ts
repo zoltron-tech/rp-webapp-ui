@@ -90,15 +90,12 @@ export const ContentLeft = styled.div`
 
 export const ContentRight = styled.div`
   ${DEV_MODE_BORDER("blue")}
-
-  height: 100cqh;
-
   flex-grow: 3;
   display: flex;
   flex-direction: column;
 
   container-name: profile-content-right;
-  container-type: size;
+  container-type: inline-size;
 
   @container (max-width: 1024px) {
     max-width: 100%;

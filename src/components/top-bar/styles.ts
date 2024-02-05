@@ -1,18 +1,36 @@
-import { NO_USER_SELECT, Z_INDEX } from "@/theme";
+import { DEV_MODE_BORDER, NO_USER_SELECT, Z_INDEX } from "@/theme";
 import styled from "styled-components";
 
-export const Bar = styled.div`
+export const Container = styled.div`
   position: sticky;
-  top: 0px;
+  top: 0;
   width: 100%;
-  height: 80px;
-  width: 100cqw;
   background-color: ${({ theme }) => theme.navbar};
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 40px;
   box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
+  z-index: ${Z_INDEX.TOPBAR};
+
+  @media (max-width: 650px) {
+    & {
+      height: 60px;
+    }
+  }
+`;
+
+export const Bar = styled.div`
+  position: sticky;
+  top: 0px;
+  width: 100%;
+  max-width: 1400px;
+  margin-inline: auto;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
   container-name: top-bar;
   container-type: size;
   z-index: ${Z_INDEX.TOPBAR};
@@ -102,10 +120,37 @@ export const LogoText = styled.div`
   }
 `;
 
+export const SearchContainer = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  width: 400px;
+
+  ${DEV_MODE_BORDER("red")}
+
+  @container (max-width: 1100px) {
+    & {
+      width: 200px;
+    }
+  }
+
+  @container (max-width: 650px) {
+    & {
+      display: none;
+    }
+  }
+
+  /* @container (max-width: 650px) {
+    & {
+      display: none;
+    }
+  } */
+`;
+
 export const ActionsContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
 `;
 
 export const ButtonsContainerDesktop = styled.div`

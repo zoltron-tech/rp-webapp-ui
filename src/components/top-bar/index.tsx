@@ -1,7 +1,7 @@
 "use client";
 
 import { logoutAction } from "@/app/actions";
-import { ThemeToggle } from "@/components";
+import { Search, ThemeToggle } from "@/components";
 import { Button, ShouldRender } from "@/components/common";
 import { useAuthContext, useUIContext } from "@/hooks";
 import { FC } from "react";
@@ -38,7 +38,7 @@ export const TopBar: FC<Props> = ({ theme, toggleTheme }) => {
   };
 
   return (
-    <>
+    <S.Container>
       <S.Bar>
         <S.LogoContainer onClick={onLogoClick}>
           <S.Logo>
@@ -46,7 +46,11 @@ export const TopBar: FC<Props> = ({ theme, toggleTheme }) => {
           </S.Logo>
           <S.LogoText>Novelist World</S.LogoText>
         </S.LogoContainer>
+
         <S.ActionsContainer>
+          <S.SearchContainer>
+            <Search placeholder="Search" />
+          </S.SearchContainer>
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
           <ShouldRender if={!loggedIn}>
             <S.ButtonsContainerDesktop>
@@ -63,6 +67,6 @@ export const TopBar: FC<Props> = ({ theme, toggleTheme }) => {
           </ShouldRender>
         </S.ActionsContainer>
       </S.Bar>
-    </>
+    </S.Container>
   );
 };

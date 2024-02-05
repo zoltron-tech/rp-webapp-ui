@@ -5,5 +5,6 @@ export * from "./muses-pill";
 export * from "./novelist-card";
 export * from "./page-loader";
 export * from "./profile-card";
+export * from "./search";
 export * from "./theme-toggle";
 export * from "./top-bar";

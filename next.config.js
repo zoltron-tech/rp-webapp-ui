@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    serverActions: {
+      allowedOrigins: ["https://rf5frpnl-3000.euw.devtunnels.ms/", "localhost:3000"]
+    }
+  },
     reactStrictMode: true,
     compiler: {
         styledComponents: true,

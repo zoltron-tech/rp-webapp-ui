@@ -123,6 +123,7 @@ export const LogoText = styled.div`
 export const SearchContainer = styled.div`
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   width: 400px;
 
   ${DEV_MODE_BORDER("red")}

@@ -1,35 +1,52 @@
-import { FC, useRef, useState } from "react";
-
+"use client";
+import { searchAction } from "@/app/rp/novelists/actions";
 import { useForm } from "@/hooks";
+import { SearchResult } from "@/types/common";
 import { toggleState } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import classNames from "classnames";
+import { FC, useEffect, useRef, useState } from "react";
 import { BsSearch } from "react-icons/bs";
 import { CgSpinner } from "react-icons/cg";
 import { IoCloseOutline } from "react-icons/io5";
+import { PiSmileyThin } from "react-icons/pi";
 import { ShouldRender } from "../common";
 import * as S from "./styles";
 
 export interface SearchProps {
   placeholder?: string;
-  value?: string;
   className?: string;
   types?: string[];
+  renderDropdownItem: (result: SearchResult, close: () => void) => JSX.Element;
 }
 
 interface SearchInput {
   search: string;
 }
 
-export const Search: FC<SearchProps> = ({ placeholder, value, types = [] }) => {
+export const Search: FC<SearchProps> = ({
+  placeholder,
+  types = [],
+  renderDropdownItem,
+}) => {
   const [expanded, setExpanded] = useState(false);
   const [expandTag, setTagExpanded] = useState(false);
   const [selectedType, setSelectedType] = useState<string>(types?.[0] || "");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [noResults, setNoResults] = useState(false);
   const searchDebounce = 1000;
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const handleSearch = async ({ search }: SearchInput) => {
     if (!search?.trim()) return;
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    console.log("handleSearch", search, selectedType);
+    const results = await searchAction(search, selectedType);
+    Logger.log("Search results: ", results);
+    if (results && !("message" in results)) {
+      setSearchResults(results);
+      if (!results.length) setNoResults(true);
+      else setNoResults(false);
+    }
   };
 
   const { values, update, updateValues, loading, submit } = useForm({
@@ -44,19 +61,37 @@ export const Search: FC<SearchProps> = ({ placeholder, value, types = [] }) => {
       Logger.log("clearing search timeout");
       clearTimeout(searchTimeoutRef.current);
     }
+    if (!e.target.value?.trim()) {
+      setNoResults(false);
+    }
+
     if (loading || !e.target.value?.trim()) return;
     searchTimeoutRef.current = setTimeout(() => {
-      if (e.target.value?.trim()) (() => submit())();
+      if (e.target.value?.trim()) submit({ search: e.target.value?.trim() });
     }, searchDebounce);
   };
 
   const handleButtonClick = () => {
     Logger.log("Search handleButtonClick", expanded);
-    if (expanded) {
-      updateValues({ search: "" });
+
+    updateValues({ search: "" });
+    setNoResults(false);
+    if (expanded && searchResults.length) {
+      setSearchResults([]);
+    } else {
+      toggleState(setExpanded)();
     }
-    toggleState(setExpanded)();
   };
+
+  const handleTypeSelect = (type: string) => () => {
+    setSelectedType(type);
+  };
+
+  useEffect(() => {
+    if (values.search?.trim()) {
+      submit();
+    }
+  }, [selectedType]);
 
   return (
     <S.Wrapper>
@@ -72,12 +107,13 @@ export const Search: FC<SearchProps> = ({ placeholder, value, types = [] }) => {
             {selectedType}
 
             <S.TypeSelectOptions>
-              {[...types]
-                .sort((a, b) => (a === selectedType ? -1 : 1))
+              {[selectedType]
+                .concat(types.filter((type) => type !== selectedType))
+                .filter(Boolean)
                 .map((type) => (
                   <S.TypeSelectOption
                     key={type}
-                    onClick={() => setSelectedType(type)}
+                    onClick={handleTypeSelect(type)}
                   >
                     {type}
                   </S.TypeSelectOption>
@@ -92,7 +128,26 @@ export const Search: FC<SearchProps> = ({ placeholder, value, types = [] }) => {
           onChange={handleUpdate}
           value={values.search}
         />
-        <S.Dropdown />
+        <S.Dropdown
+          className={classNames({
+            empty: noResults,
+            ["has-result"]: searchResults?.length,
+          })}
+        >
+          <ShouldRender if={!noResults}>
+            {searchResults.map((result) => (
+              <S.DropdownItem key={result.id || result.username}>
+                {renderDropdownItem(result, handleButtonClick)}
+              </S.DropdownItem>
+            ))}
+          </ShouldRender>
+          <ShouldRender if={noResults}>
+            <S.EmptyDropdown>
+              No results found
+              <PiSmileyThin />
+            </S.EmptyDropdown>
+          </ShouldRender>
+        </S.Dropdown>
         <S.Button
           onClick={handleButtonClick}
           className={classNames({ loading })}

@@ -1,7 +1,7 @@
 "use server";
 import { authenticateAndGetJWT, logoutAction } from "@/app/actions";
 import { Novelist } from "@/types";
-import { WithMessage } from "@/types/common";
+import { SearchResult, WithMessage } from "@/types/common";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import { Logger } from "@/utils/services";
 import getConfig from "next/config";
@@ -101,4 +101,25 @@ export const updateUserNovelist = async (_novelist: Novelist) => {
   );
 
   return novelist;
+};
+
+export const searchAction = async (searchTerm: string, type = "novelist") => {
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/${type}/search?prefix=${searchTerm}`;
+
+  const response = await fetch(URL, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+    cache: "no-store",
+  });
+
+  Logger.log("searchAction", response.status);
+  if (response.status === 404) {
+    return [];
+  } else if (response.status !== 200) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const result = (await response.json()) as SearchResult[];
+  return result;
 };

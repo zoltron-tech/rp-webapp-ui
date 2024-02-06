@@ -28,7 +28,7 @@ export interface FormReturn<T> {
   errors: ErrorType<T>;
   loading: boolean;
   update: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  submit: () => MaybePromise<void>;
+  submit: (overrideValues?: T) => MaybePromise<void>;
   clearErrors: () => void;
   clearValues: () => void;
   updateValues: React.Dispatch<React.SetStateAction<T>>;
@@ -76,7 +76,7 @@ export const useForm = <T>({
     }
   };
 
-  const submit = async () => {
+  const submit = async (overridenValues = values) => {
     if (clearTimeoutRef.current) {
       clearTimeout(clearTimeoutRef.current);
     }
@@ -84,9 +84,9 @@ export const useForm = <T>({
     setLoading(true);
 
     try {
-      let _values: WithAbortSignal<T> = { ...values, abort: false };
+      let _values: WithAbortSignal<T> = { ...overridenValues, abort: false };
       if (beforeSubmit) {
-        _values = await beforeSubmit(values, errors);
+        _values = await beforeSubmit(overridenValues, errors);
       }
       if (_values.abort) {
         setLoading(false);

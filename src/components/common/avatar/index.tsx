@@ -11,12 +11,14 @@ export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   name?: React.ReactNode;
   className?: string;
   hoverable?: boolean;
+  quality?: number;
 }
 
 export const Avatar: FC<AvatarProps> = ({
   src,
   alt,
   size = 100,
+  quality = 100,
   name,
   className,
   hoverable = false,
@@ -24,7 +26,13 @@ export const Avatar: FC<AvatarProps> = ({
 }) => {
   return (
     <S.Avatar className={classNames([className, { hoverable }])} {...rest}>
-      <Image src={src || ""} alt={alt} width={size} height={size} />
+      <Image
+        src={src || ""}
+        alt={alt}
+        width={size}
+        height={size}
+        quality={quality}
+      />
       {name && hoverable && <S.Name>{name}</S.Name>}
     </S.Avatar>
   );

@@ -181,7 +181,7 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
               >
                 Cancel
               </S.SaveButton>
-              <S.SaveButton onClick={submit} loading={loading}>
+              <S.SaveButton onClick={() => submit()} loading={loading}>
                 Save <div className="sm-hide">Changes</div>
               </S.SaveButton>
             </S.ButtonGroup>

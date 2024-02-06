@@ -124,27 +124,15 @@ export const SearchContainer = styled.div`
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  width: 400px;
+  /* width: 100%; */
 
   ${DEV_MODE_BORDER("red")}
-
-  @container (max-width: 1100px) {
-    & {
-      width: 200px;
-    }
-  }
 
   @container (max-width: 650px) {
     & {
       display: none;
     }
   }
-
-  /* @container (max-width: 650px) {
-    & {
-      display: none;
-    }
-  } */
 `;
 
 export const ActionsContainer = styled.div`

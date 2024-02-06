@@ -12,7 +12,7 @@ type WithAbortSignal<T> = { abort?: boolean } & T;
 
 export interface FormProps<T> {
   initialValues: T;
-  onSubmit: (values: T) => void;
+  onSubmit: (values: T) => MaybePromise<void>;
   beforeSubmit?: (
     values: T,
     errors: ErrorType<T>
@@ -26,6 +26,7 @@ export interface FormProps<T> {
 export interface FormReturn<T> {
   values: T;
   errors: ErrorType<T>;
+  loading: boolean;
   update: (event: React.ChangeEvent<HTMLInputElement>) => void;
   submit: () => MaybePromise<void>;
   clearErrors: () => void;
@@ -44,6 +45,7 @@ export const useForm = <T>({
 }: FormProps<T>): FormReturn<T> => {
   const [values, setValues] = useState<T>(initialValues);
   const [errors, setErrors] = useState<ErrorType<T>>(null);
+  const [loading, setLoading] = useState(false);
   const clearTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const update = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,26 +81,34 @@ export const useForm = <T>({
       clearTimeout(clearTimeoutRef.current);
     }
 
-    let _values: WithAbortSignal<T> = { ...values, abort: false };
-    if (beforeSubmit) {
-      _values = await beforeSubmit(values, errors);
-    }
-    if (_values.abort) {
-      return;
-    }
+    setLoading(true);
 
-    const _errors =
-      checkError && checkErrorTriggers.includes("submit")
-        ? checkError(_values, errors)
-        : errors;
+    try {
+      let _values: WithAbortSignal<T> = { ...values, abort: false };
+      if (beforeSubmit) {
+        _values = await beforeSubmit(values, errors);
+      }
+      if (_values.abort) {
+        setLoading(false);
+        return;
+      }
 
-    Logger.log("submit", _values, _errors);
-    if (_errors && Object.values(_errors).some((error) => error !== "")) {
-      setErrors({ ...errors, ..._errors });
-    } else {
-      Logger.log("submitting...", _values);
-      onSubmit(_values);
+      const _errors =
+        checkError && checkErrorTriggers.includes("submit")
+          ? checkError(_values, errors)
+          : errors;
+
+      Logger.log("submit", _values, _errors);
+      if (_errors && Object.values(_errors).some((error) => error !== "")) {
+        setErrors({ ...errors, ..._errors });
+      } else {
+        Logger.log("submitting...", _values);
+        await onSubmit(_values);
+      }
+    } catch (error) {
+      Logger.log("submit error", error);
     }
+    setLoading(false);
   };
 
   const clearErrors = () => {
@@ -117,6 +127,7 @@ export const useForm = <T>({
   return {
     values,
     errors,
+    loading,
     update,
     submit,
     clearErrors,

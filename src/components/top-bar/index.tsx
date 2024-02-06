@@ -49,7 +49,10 @@ export const TopBar: FC<Props> = ({ theme, toggleTheme }) => {
 
         <S.ActionsContainer>
           <S.SearchContainer>
-            <Search placeholder="Search" />
+            <Search
+              placeholder="Search"
+              types={["muses", "novelists", "stories"]}
+            />
           </S.SearchContainer>
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
           <ShouldRender if={!loggedIn}>

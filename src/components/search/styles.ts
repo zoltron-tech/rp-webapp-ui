@@ -1,4 +1,4 @@
-import { SPIN, Z_INDEX } from "@/theme";
+import { DEV_MODE_BORDER, SPIN, Z_INDEX } from "@/theme";
 import { setOpacity } from "@/utils/helpers";
 import { css, styled } from "styled-components";
 
@@ -33,7 +33,7 @@ export const Dropdown = styled.div`
   box-shadow: none;
   z-index: 100;
   max-height: 400px;
-  transition-property: width, height, box-shadow;
+  transition-property: width, height, max-height, box-shadow;
   transition-duration: 0.2s;
   transition-timing-function: linear;
   border-radius: var(--border-radius);
@@ -41,7 +41,66 @@ export const Dropdown = styled.div`
   opacity: 1;
   z-index: ${Z_INDEX.DEFAULT - 1};
   pointer-events: none;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--type-select-gap);
   ${Background}
+
+  &.empty {
+    max-height: 200px;
+  }
+`;
+
+export const DropdownItem = styled.div`
+  padding: 10px;
+  min-height: var(--height);
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  color: ${({ theme }) => theme.text};
+
+  transition-property: color, background-color;
+
+  opacity: 0;
+  pointer-events: none;
+
+  &:first-child {
+    margin-top: calc(var(--height) + 10px);
+  }
+
+  &:last-child {
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+  }
+
+  &:hover {
+    background-color: ${({ theme }) => theme.primary};
+    color: ${({ theme }) => theme.textPrimary};
+  }
+`;
+
+export const EmptyDropdown = styled.div`
+  width: 100%;
+  height: 100%;
+  margin-top: var(--height);
+  margin-bottom: calc(var(--height) / 2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  color: ${({ theme }) => theme.text};
+  opacity: 0.5;
+
+  & > svg {
+    width: calc(var(--height) * 2);
+    height: calc(var(--height) * 2);
+  }
 `;
 
 export const Wrapper = styled.div`
@@ -112,6 +171,7 @@ export const TypeSelectOptions = styled.div`
 `;
 
 export const TypeSelect = styled.div`
+  ${DEV_MODE_BORDER("red")}
   height: var(--height);
   width: var(--type-select-width);
   border-radius: var(--border-radius) 0 0 var(--border-radius);
@@ -203,18 +263,22 @@ export const Container = styled.div`
       }
 
       & > ${Input} {
-        /* left: var(--type-select-width); */
         max-width: calc(100cqw - var(--type-select-width));
       }
     }
 
-    & > input:not(:placeholder-shown) + ${Dropdown} {
-      height: min(400px, calc(100vh - var(--border-radius)));
+    & > ${Dropdown}.has-result, & > ${Dropdown}.empty {
+      height: max(fit-content, calc(var(--height) * 2));
       ${BoxShadow}
       pointer-events: all;
+
+      & > ${DropdownItem} {
+        opacity: 1;
+        pointer-events: all;
+      }
     }
 
-    &:has(input:not(:placeholder-shown)) > ${TypeSelect} {
+    &:has(${Dropdown}.has-result, ${Dropdown}.empty) > ${TypeSelect} {
       border-radius: var(--border-radius) 0 0 0;
       transition-property: opacity;
     }

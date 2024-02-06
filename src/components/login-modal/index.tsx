@@ -260,7 +260,7 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
           />
 
           <Button
-            onClick={submit}
+            onClick={() => submit()}
             variant="primary"
             disabled={disabled}
             loading={loading}

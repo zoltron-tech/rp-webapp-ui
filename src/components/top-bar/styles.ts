@@ -1,5 +1,8 @@
+import { pSBC } from "@/lib/pSBC";
 import { DEV_MODE_BORDER, NO_USER_SELECT, Z_INDEX } from "@/theme";
+import { setOpacity } from "@/utils/helpers";
 import styled from "styled-components";
+import { Avatar } from "../common";
 
 export const Container = styled.div`
   position: sticky;
@@ -59,19 +62,9 @@ export const LogoContainer = styled.div`
 
 export const Logo = styled.div`
   height: 100cqh;
-  width: 80px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  /* box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.6); */
-  background-color: ${({ theme }) => theme.primary};
   ${NO_USER_SELECT}
-
-  -moz-transform: skew(30deg, 0deg);
-  -webkit-transform: skew(30deg, 0deg);
-  -o-transform: skew(30deg, 0deg);
-  -ms-transform: skew(30deg, 0deg);
-  transform: skew(30deg, 0deg);
 
   @container (max-width: 650px) {
     & {
@@ -82,21 +75,21 @@ export const Logo = styled.div`
 
 export const LogoInner = styled.div`
   height: 80cqh;
-  width: inherit;
+  width: 80cqh;
+  border-radius: 40cqh;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 30px;
-  font-weight: 700;
-  color: ${({ theme }) => theme.textPrimary};
-  background-color: ${({ theme }) => theme.primary};
+  background-color: ${({ theme }) =>
+    setOpacity(pSBC(-0.2, theme.primary) as string, 0.5)};
+  border: 2px solid ${({ theme }) => theme.primary};
   ${NO_USER_SELECT}
 
-  -moz-transform: skew(-45deg, 0deg);
-  -webkit-transform: skew(-45deg, 0deg);
-  -o-transform: skew(-45deg, 0deg);
-  -ms-transform: skew(-45deg, 0deg);
-  transform: skew(-45deg, 0deg);
+  & > svg {
+    height: 40cqh;
+    width: 40cqh;
+    fill: ${({ theme }) => theme.textPrimary};
+  }
 `;
 
 export const LogoText = styled.div`
@@ -133,6 +126,45 @@ export const SearchContainer = styled.div`
       display: none;
     }
   }
+`;
+
+export const SearchDropdownItem = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 40px;
+  padding: 10px 20px;
+  cursor: pointer;
+  ${NO_USER_SELECT}
+`;
+
+export const AvatarContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 20px;
+`;
+
+export const NameContainer = styled.div`
+  display: flex;
+  align-items: start;
+  justify-content: center;
+  gap: 5;
+  flex-direction: column;
+
+  & > div:nth-child(1) {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  & > div:nth-child(2) {
+    font-size: 12px;
+    font-weight: 300;
+  }
+`;
+
+export const SearchAvatar = styled(Avatar)`
+  --size: 35px;
 `;
 
 export const ActionsContainer = styled.div`

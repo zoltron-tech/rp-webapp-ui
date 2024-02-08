@@ -1,17 +1,11 @@
 import * as Common from "@/components/common";
-import {
-  BORDER_RADIUS,
-  BORDER_TOP,
-  NO_SCROLLBAR,
-  NO_USER_SELECT,
-  Z_INDEX,
-} from "@/theme";
+import { BORDER_TOP, NO_SCROLLBAR, NO_USER_SELECT, Z_INDEX } from "@/theme";
 import styled from "styled-components";
 
 export const CardWrapper = styled.div`
   position: relative;
   height: 250px;
-  border-radius: ${BORDER_RADIUS};
+  border-radius: var(--border-radius);
   transition: all 0.3s ease-in-out;
   contain: paint;
   z-index: ${Z_INDEX.CARD};
@@ -305,7 +299,7 @@ const MuseComponent = styled.div`
   align-items: center;
   justify-content: space-between;
   margin: 10px 0;
-  border-radius: ${BORDER_RADIUS};
+  border-radius: var(--border-radius);
   padding: 10px;
   position: relative;
   ${NO_USER_SELECT}

@@ -1,5 +1,5 @@
 import { generateToastError, generateToastSuccess } from "@/utils/helpers";
-import { FC, useState } from "react";
+import { FC } from "react";
 import { useTheme } from "styled-components";
 import { UIContext, UIContextType } from "./ui.context";
 
@@ -8,10 +8,6 @@ type Props = {
 };
 
 export const UIContextProvider: FC<Props> = ({ children }) => {
-  const [cardExpanded, setCardExpanded] =
-    useState<UIContextType["cardExpanded"]>(false);
-  const [signupModal, setSignupModal] = useState<boolean>(false);
-  const [signupModalOpen, setSignupModalOpen] = useState<boolean>(false);
   const theme = useTheme();
 
   const success: UIContextType["successToast"] = (message: string) => {
@@ -23,12 +19,6 @@ export const UIContextProvider: FC<Props> = ({ children }) => {
   };
 
   const contextValue: UIContextType = {
-    cardExpanded,
-    setCardExpanded,
-    signupModal,
-    setSignupModal,
-    signupModalOpen,
-    setSignupModalOpen,
     successToast: success,
     errorToast: error,
   };

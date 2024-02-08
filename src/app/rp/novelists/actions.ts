@@ -27,7 +27,7 @@ export const getNovelists = async () => {
 };
 
 export const getNovelistAction = async (username: string) => {
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/${username}`;
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/get?username=${username}`;
 
   const response = await fetch(URL, { cache: "no-store" });
 

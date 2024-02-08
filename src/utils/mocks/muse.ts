@@ -1,6 +1,7 @@
 import { Muse } from "@/types";
 
 const MOCK_MUSE: Muse = {
+  _tag: "Muse",
   firstName: "John",
   lastName: "Doe",
   image: "https://example.com/image.jpg",

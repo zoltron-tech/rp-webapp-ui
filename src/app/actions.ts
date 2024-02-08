@@ -5,13 +5,14 @@ import { cookies } from "next/headers";
 import { RedirectType, redirect } from "next/navigation";
 
 import type { LoginPayload, User } from "@/types";
-import { WithMessage, WithToken } from "@/types/common";
+import { With, WithMessage, WithToken } from "@/types/common";
 import { SignUpPayload } from "@/types/register";
 import {
   AUTH_HEADER_NAME,
   JWT_COOKIE_NAME,
   THEME_COOKIE_NAME,
 } from "@/utils/constants";
+import { isNone, validateUser } from "@/utils/helpers/type";
 import { Logger } from "@/utils/services";
 
 const { serverRuntimeConfig } = getConfig();
@@ -27,9 +28,7 @@ export const getAuthCookie = async () => {
   return cookie ? cookie.value : "";
 };
 
-export const loginAction = async (
-  payload: LoginPayload
-): Promise<WithMessage> => {
+export const loginAction = async (payload: LoginPayload) => {
   const URL = `${RP_SERVICE_URL}/rp/user/account/login`;
 
   const response = await fetch(URL, {
@@ -51,7 +50,11 @@ export const loginAction = async (
     return { message: "Something went wrong, please contact support." };
   }
 
-  const result: WithToken<WithMessage> = await response.json();
+  const result: WithToken<WithMessage<any>> = await response.json();
+  const _user = validateUser(result?.user);
+  if (isNone(_user)) {
+    return { message: "Something went wrong, please contact support." };
+  }
 
   cookies().set(JWT_COOKIE_NAME, result.token, {
     httpOnly: true,
@@ -60,8 +63,9 @@ export const loginAction = async (
     path: "/",
   });
 
-  const clientResponse: WithMessage = {
+  const clientResponse: With<"user", WithMessage, User> = {
     message: result.message,
+    user: _user,
   };
 
   return clientResponse;
@@ -84,9 +88,13 @@ export const signupAction = async (payload: SignUpPayload) => {
     return { message: result.message };
   }
 
-  const result: WithToken<WithMessage> = await response.json();
-
+  const result: WithToken<WithMessage<any>> = await response.json();
   if (!result.token) return { message: result.message };
+
+  const _user = validateUser(result?.user);
+  if (isNone(_user)) {
+    return { message: "Something went wrong, please contact support." };
+  }
 
   cookies().set(JWT_COOKIE_NAME, result.token, {
     httpOnly: true,
@@ -95,8 +103,9 @@ export const signupAction = async (payload: SignUpPayload) => {
     path: "/",
   });
 
-  const clientResponse: WithMessage = {
+  const clientResponse: With<"user", WithMessage, User> = {
     message: result.message,
+    user: _user,
   };
 
   return clientResponse;
@@ -104,7 +113,7 @@ export const signupAction = async (payload: SignUpPayload) => {
 
 export const logoutAction = async () => {
   cookies().delete(JWT_COOKIE_NAME);
-  redirect("/rp/login", RedirectType.push);
+  redirect("/rp/novelists", RedirectType.push);
 };
 
 export const authenticateAction = async () => {
@@ -164,6 +173,12 @@ export const getUser = async () => {
 
   if (response.status !== 200) logoutAction();
 
-  const user: User = await response.json();
+  const _user = await response.json();
+
+  const user = validateUser(_user);
+  if (isNone(user)) {
+    return logoutAction();
+  }
+
   return user;
 };

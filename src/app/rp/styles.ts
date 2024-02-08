@@ -1,6 +1,20 @@
+import { NO_SCROLLBAR, Z_INDEX } from "@/theme";
 import { styled } from "styled-components";
 
-export const FallbackContainer = styled.div`
-  height: 100vh;
-  background-color: #000;
+export const PageContainer = styled.main`
+  min-height: 100vh;
+  max-height: max-content;
+  width: 100vw;
+  position: relative;
+  contain: paint;
+  z-index: ${Z_INDEX.BACKGROUND};
+  background-color: ${({ theme }) => theme.background};
+
+  scroll-behavior: smooth;
+  overflow-y: auto;
+
+  container-name: page-container;
+  container-type: size;
+
+  ${NO_SCROLLBAR}
 `;

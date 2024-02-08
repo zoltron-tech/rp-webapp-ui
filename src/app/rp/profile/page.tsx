@@ -6,20 +6,18 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function ProfilePage({}) {
-  const { loggedIn, user, loading } = useAuthContext();
+  const { user, state } = useAuthContext();
   const { push } = useRouter();
 
   useEffect(() => {
     Logger.log("ProfilePage");
-    Logger.log("Auth context: ", loading, loggedIn);
+    Logger.log("Auth context: ", state);
 
-    if (loading) return;
-
-    if (loggedIn) {
+    if (state === "LOGGED_IN") {
       Logger.log("rerouteToProfilePage");
       push(`/rp/profile/${user?.username}`);
     } else {
       push("/rp/novelists");
     }
-  }, [loggedIn, loading]);
+  }, [state]);
 }

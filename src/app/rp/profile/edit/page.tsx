@@ -7,16 +7,16 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function EditProfilePage({}) {
-  const { loggedIn, loading } = useAuthContext();
+  const { state } = useAuthContext();
   const { push } = useRouter();
 
   useEffect(() => {
-    Logger.log("EditProfilePage", loading, loggedIn);
-    if (!loading && !loggedIn) {
+    Logger.log("EditProfilePage", state);
+    if (state === "LOGGED_OUT") {
       Logger.log("pushing to home");
       push("/rp/novelists");
     }
-  }, [loading]);
+  }, [state]);
 
   Logger.log("yaha pohanchay hain hum:");
 

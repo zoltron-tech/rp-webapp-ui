@@ -1,0 +1,50 @@
+import { BASE_TRANSITION, DEV_MODE_BORDER } from "@/theme";
+import styled from "styled-components";
+import { Avatar } from "../common";
+
+export const PositionContainer = styled.div`
+  ${DEV_MODE_BORDER("red")}
+  position: absolute;
+  right: 1rem;
+`;
+
+export const Menu = styled.div`
+  ${DEV_MODE_BORDER("yellow")}
+
+  position: absolute;
+  top: calc(var(--avatar-size) + 0.5rem);
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: ${({ theme }) => theme.modalBackground};
+
+  width: max-content;
+  height: max-content;
+  opacity: 0;
+  pointer-events: none;
+  transition-property: opacity, width, height;
+  ${BASE_TRANSITION}
+
+  border-radius: var(--border-radius);
+
+  &.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+`;
+
+export const ContentContainer = styled.div`
+  ${DEV_MODE_BORDER("blue")}
+
+  --avatar-size: 4rem;
+  position: relative;
+  width: max-content;
+  height: max-content;
+`;
+
+export const UserAvatar = styled(Avatar)`
+  ${DEV_MODE_BORDER("green")}
+  --size: var(--avatar-size);
+`;

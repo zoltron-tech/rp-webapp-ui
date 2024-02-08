@@ -1,8 +1,8 @@
 "use client";
 import { logoutAction } from "@/app/actions";
-import { Search, ThemeToggle } from "@/components";
+import { Search, ThemeToggle, UserMenu } from "@/components";
 import { Button, ShouldRender, Username } from "@/components/common";
-import { useAuthContext, useUIContext } from "@/hooks";
+import { useAuthContext, useVisibility } from "@/hooks";
 import { FC } from "react";
 
 import { useRouter } from "next/navigation";
@@ -16,8 +16,9 @@ type Props = {
 };
 
 export const TopBar: FC<Props> = ({ theme, toggleTheme }) => {
-  const { setSignupModalOpen, setSignupModal } = useUIContext();
-  const { loggedIn } = useAuthContext();
+  // const { setSignupModal } = useUIContext();
+  const { show } = useVisibility("login-modal");
+  const { state } = useAuthContext();
   const { push } = useRouter();
 
   const onSearchItemClick =
@@ -32,13 +33,13 @@ export const TopBar: FC<Props> = ({ theme, toggleTheme }) => {
   };
 
   const onLoginClick = () => {
-    setSignupModal(false);
-    setSignupModalOpen(true);
+    // setSignupModal(false);
+    show();
   };
 
   const onSignupClick = () => {
-    setSignupModal(true);
-    setSignupModalOpen(true);
+    // setSignupModal(true);
+    show();
   };
 
   const onLogoutClick = async () => {
@@ -87,7 +88,7 @@ export const TopBar: FC<Props> = ({ theme, toggleTheme }) => {
             />
           </S.SearchContainer>
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
-          <ShouldRender if={!loggedIn}>
+          <ShouldRender if={state === "LOGGED_OUT"}>
             <S.ButtonsContainerDesktop>
               <Button onClick={onLoginClick}>Log in</Button>
               <Button onClick={onSignupClick} variant="secondary">
@@ -95,9 +96,9 @@ export const TopBar: FC<Props> = ({ theme, toggleTheme }) => {
               </Button>
             </S.ButtonsContainerDesktop>
           </ShouldRender>
-          <ShouldRender if={loggedIn}>
+          <ShouldRender if={state === "LOGGED_IN"}>
             <S.ButtonsContainerDesktop>
-              <Button onClick={onLogoutClick}>Log out</Button>
+              <UserMenu />
             </S.ButtonsContainerDesktop>
           </ShouldRender>
         </S.ActionsContainer>

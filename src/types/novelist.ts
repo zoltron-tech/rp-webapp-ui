@@ -1,4 +1,7 @@
-export type Muse = {
+import { Tagged } from "./common";
+
+export interface Muse extends Tagged {
+  _tag: "Muse";
   firstName: string;
   lastName: string;
   image: string;
@@ -7,13 +10,14 @@ export type Muse = {
     month: string;
     day: number;
   };
-};
+}
 
-export type Novelist = {
+export interface Novelist extends Tagged {
+  _tag: "Novelist";
   username: string;
   firstName: string;
   lastName: string;
   note: string;
   image: string;
   muses: Muse[];
-};
+}

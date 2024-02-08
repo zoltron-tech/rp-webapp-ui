@@ -1,21 +1,23 @@
-import { LoginPayload, LoginResponse, User } from "@/types";
+import { LoginPayload, LoginResponse, Novelist, User } from "@/types";
 import { WithMessage } from "@/types/common";
 import { SignUpPayload } from "@/types/register";
-import { createContext } from "react";
+import { AuthState } from "@/types/state";
+import { Dispatch, SetStateAction, createContext } from "react";
 
 export interface AuthContextType {
-  loggedIn: boolean;
+  state: AuthState;
   user: User | null;
-  loading: boolean;
+  novelist: Novelist | null;
   login: (payload: LoginPayload) => Promise<LoginResponse>;
   signup: (payload: SignUpPayload) => Promise<WithMessage>;
   logout: () => Promise<void>;
+  updateNovelist: Dispatch<SetStateAction<Novelist | null>>;
 }
 
 export const AUTH_CONTEXT_INITIAL_STATE: AuthContextType = {
-  loggedIn: false,
+  state: "LOGGED_OUT",
   user: null,
-  loading: false,
+  novelist: null,
   login: async (): Promise<LoginResponse> => ({
     message: "Context not initialized!",
   }),
@@ -23,6 +25,7 @@ export const AUTH_CONTEXT_INITIAL_STATE: AuthContextType = {
     message: "Context not initialized!",
   }),
   logout: async (): Promise<void> => {},
+  updateNovelist: () => {},
 };
 
 export const AuthContext = createContext<AuthContextType>(

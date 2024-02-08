@@ -26,9 +26,9 @@ export const Banner = styled.div<BannerProps>`
 
 export const SolidBackground = styled.div`
   position: absolute;
-  margin-top: clamp(270px, 30cqw, 460px);
+  top: clamp(270px, 30cqw, 460px);
+  bottom: 0px;
   width: 100cqw;
-  height: 100%;
   background-color: ${({ theme }) => theme.cardBackgroundColor};
   z-index: ${Z_INDEX.DEFAULT};
   box-shadow: 0px -2px 4px 2px rgba(0, 0, 0, 0.498);
@@ -52,11 +52,11 @@ export const Content = styled.div`
   max-width: 1400px;
   margin-inline: auto;
   width: 100cqw;
-  height: max(100cqh, 100%);
+  height: max-content;
   display: flex;
   flex-direction: row;
   position: relative;
-  z-index: ${Z_INDEX.DEFAULT + 1};
+  z-index: ${Z_INDEX.DEFAULT};
 
   container-name: profile-content;
   container-type: inline-size;

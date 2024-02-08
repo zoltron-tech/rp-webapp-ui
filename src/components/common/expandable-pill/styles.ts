@@ -3,10 +3,14 @@ import { DEV_MODE_BORDER, NO_SCROLLBAR, PILL } from "@/theme";
 import { css, styled } from "styled-components";
 
 export const PillContinaer = styled(Pill)`
+  --expanded-height: 500px;
+
+  ${DEV_MODE_BORDER("green")}
+
+  max-height: var(--expanded-height);
   max-width: min(800px, calc(100cqw - 40px));
   min-width: 300px;
   contain: paint;
-  position: relative;
   margin-inline: auto;
 
   @container profile-content (max-width: 600px) {
@@ -22,6 +26,7 @@ export const PillContinaer = styled(Pill)`
 
   &.expanded {
     height: 500px;
+    margin-bottom: 20px;
   }
 
   container-name: muses-pill;

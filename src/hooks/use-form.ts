@@ -49,7 +49,7 @@ export const useForm = <T>({
   const clearTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const update = (event: React.ChangeEvent<HTMLInputElement>) => {
-    Logger.log("update", event.target.name, event.target.value);
+    Logger.debug("update", event.target.name, event.target.value);
     const { name, value } = event.target;
     const newValues = {
       ...values,
@@ -98,15 +98,15 @@ export const useForm = <T>({
           ? checkError(_values, errors)
           : errors;
 
-      Logger.log("submit", _values, _errors);
+      Logger.debug("submit", _values, _errors);
       if (_errors && Object.values(_errors).some((error) => error !== "")) {
         setErrors({ ...errors, ..._errors });
       } else {
-        Logger.log("submitting...", _values);
+        Logger.debug("submitting...", _values);
         await onSubmit(_values);
       }
     } catch (error) {
-      Logger.log("submit error", error);
+      Logger.debug("submit error", error);
     }
     setLoading(false);
   };

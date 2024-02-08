@@ -117,7 +117,7 @@ export const logoutAction = async () => {
 };
 
 export const authenticateAction = async () => {
-  Logger.log("authenticate");
+  Logger.debug("authenticate");
   const jwtCookie = cookies().get(JWT_COOKIE_NAME);
   if (!jwtCookie?.value) return false;
   const decoded = jwt.decode(jwtCookie.value, { complete: true });

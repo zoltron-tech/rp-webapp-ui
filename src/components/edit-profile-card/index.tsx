@@ -2,12 +2,11 @@ import {
   getUserNovelist,
   updateUserNovelist,
 } from "@/app/rp/novelists/actions";
-import { deleteAvatar, uploadAvatar } from "@/app/rp/profile/actions";
+import { uploadAvatar } from "@/app/rp/profile/actions";
 import { Card, Input, UploadAvatar, Username } from "@/components/common";
 import { useAuthContext, useForm, useUIContext } from "@/hooks";
 import type { Novelist } from "@/types";
 import { API_MESSAGE, INITIAL_NOVELIST } from "@/utils/constants";
-import { stripS3Url } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import { FC, useEffect, useState } from "react";
 
@@ -26,7 +25,7 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
 
   const updateUserAvatar = async () => {
     if (!avatarFile) return;
-    Logger.log("avatarFile", avatarFile);
+    Logger.debug("avatarFile", avatarFile);
     const response = await uploadAvatar(avatarFile);
 
     if (response === API_MESSAGE.MediaError) {
@@ -34,19 +33,14 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
       return response;
     }
 
-    if (values?.image) {
-      const response1 = await deleteAvatar(stripS3Url(values.image));
-      Logger.log("delete response 1: ", response1);
-    }
-
     updateValues((prev) => ({ ...prev, image: response }));
-    Logger.log("response", response);
+    Logger.debug("response", response);
 
     return response;
   };
 
   const beforeSubmit = async (novelist: Novelist) => {
-    Logger.log("handleSave");
+    Logger.debug("handleSave");
 
     setLoading(true);
 
@@ -55,7 +49,7 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
       updatedAvatarUrl = (await updateUserAvatar()) || novelist?.image;
     }
 
-    Logger.log("updatedAvatar: ", updatedAvatarUrl);
+    Logger.debug("updatedAvatar: ", updatedAvatarUrl);
 
     if (updatedAvatarUrl === API_MESSAGE.MediaError) {
       setLoading(false);
@@ -81,7 +75,7 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
 
     setLoading(false);
 
-    Logger.log("resonse", resonse);
+    Logger.debug("resonse", resonse);
 
     if ("message" in resonse) {
       return errorToast(API_MESSAGE.Error);
@@ -119,7 +113,7 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
   }, [state]);
 
   useEffect(() => {
-    Logger.log("avatarFile", avatarFile);
+    Logger.debug("avatarFile", avatarFile);
   }, [avatarFile]);
 
   return (

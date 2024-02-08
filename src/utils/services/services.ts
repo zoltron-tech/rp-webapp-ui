@@ -1,9 +1,24 @@
-import { __DEV__ } from "../constants";
+import { LOG_LEVEL, LOG_LEVELS, __DEV__ } from "../constants";
+
+const LOG_PREFIX = {
+  [LOG_LEVELS.DEBUG]: "DEBUG",
+  [LOG_LEVELS.LOG]: "LOG",
+  [LOG_LEVELS.INFO]: "INFO",
+  [LOG_LEVELS.WARN]: "WARN",
+  [LOG_LEVELS.ERROR]: "EROR",
+  [LOG_LEVELS.NONE]: "",
+};
+
+const logIfLevel = (level: LOG_LEVELS, ...args: any[]) => {
+  if (__DEV__ && !isNaN(Number(LOG_LEVEL)) && level <= Number(LOG_LEVEL)) {
+    console.log(`${LOG_PREFIX[level as LOG_LEVELS]}:- `, ...args);
+  }
+};
 
 export const Logger = {
-  log: (...args: any[]) => {
-    if (__DEV__) {
-      console.log(...args);
-    }
-  },
+  debug: (...args: any[]) => logIfLevel(LOG_LEVELS.DEBUG, ...args),
+  log: (...args: any[]) => logIfLevel(LOG_LEVELS.LOG, ...args),
+  info: (...args: any[]) => logIfLevel(LOG_LEVELS.INFO, ...args),
+  warn: (...args: any[]) => logIfLevel(LOG_LEVELS.WARN, ...args),
+  error: (...args: any[]) => logIfLevel(LOG_LEVELS.ERROR, ...args),
 };

@@ -134,16 +134,16 @@ export const LoginModal: FC<LoginModalProps> = ({ type = "LOGIN" }) => {
         delete payload.email;
       }
       const response = await login(payload);
-      Logger.log(response);
+      Logger.debug(response);
       if (response.message === "success") {
-        Logger.log("success");
+        Logger.debug("success");
         hide();
         successToast("Logged in successfully");
       } else {
         errorToast(response.message);
       }
     } catch (e) {
-      Logger.log("error dekho bhai ->", e);
+      Logger.debug("error dekho bhai ->", e);
       errorToast("Something went wrong");
     }
   };
@@ -156,7 +156,7 @@ export const LoginModal: FC<LoginModalProps> = ({ type = "LOGIN" }) => {
     };
     try {
       const response = await signup(payload);
-      Logger.log(response);
+      Logger.debug(response);
       if (response.message === "success") {
         successToast("Registered successfully");
         hide();
@@ -165,7 +165,7 @@ export const LoginModal: FC<LoginModalProps> = ({ type = "LOGIN" }) => {
         errorToast(response.message);
       }
     } catch (e) {
-      Logger.log("error dekho bhai ->", e);
+      Logger.debug("error dekho bhai ->", e);
       errorToast("Something went wrong");
     }
   };

@@ -116,7 +116,7 @@ export const AuthProvider: FC<Props> = ({ children }) => {
         transition("LOGGED_OUT");
       }
     } catch (e) {
-      Logger.log("Error in verifyInitialAuthState", e);
+      Logger.debug("Error in verifyInitialAuthState", e);
       transition("LOGGED_OUT");
     }
   };
@@ -131,7 +131,7 @@ export const AuthProvider: FC<Props> = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    Logger.log("auth state changed: ", state);
+    Logger.debug("auth state changed: ", state);
   }, [state]);
 
   useEffect(() => {

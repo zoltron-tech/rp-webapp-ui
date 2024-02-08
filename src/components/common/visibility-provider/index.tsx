@@ -27,17 +27,17 @@ export const VisibilityProvider: FC<VisibilityProviderProps> = ({
   });
 
   const onCloseEvent = () => {
-    Logger.log("onCloseEvent", name);
+    Logger.debug("onCloseEvent", name);
     transition("HIDDEN");
   };
 
   const onOpenEvent = () => {
-    Logger.log("onOpenEvent", name);
+    Logger.debug("onOpenEvent", name);
     transition("VISIBLE");
   };
 
   const onToggleEvent = () => {
-    Logger.log("onToggleEvent", name);
+    Logger.debug("onToggleEvent", name);
     toggleVisibility();
   };
 

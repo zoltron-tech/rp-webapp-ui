@@ -18,7 +18,7 @@ export const UploadAvatar: FC<UploadAvatarProps> = ({ image, onChange }) => {
   const { errorToast } = useUIContext();
 
   const onUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    Logger.log("change", e.currentTarget.files?.[0]);
+    Logger.debug("change", e.currentTarget.files?.[0]);
     const file = e.currentTarget.files?.[0];
     if (!file || !onChange) return;
 

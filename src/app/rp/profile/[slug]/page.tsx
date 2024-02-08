@@ -20,7 +20,7 @@ export default function UserProfilePage({}) {
   const username = params.slug as string;
   const isCurrentUser = username === user?.username;
   const { push } = useRouter();
-  Logger.log("params are:", params);
+  Logger.debug("params are:", params);
 
   const fetchNovelist = async (username: string) => {
     // fetch novelist by username

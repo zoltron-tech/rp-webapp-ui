@@ -11,14 +11,14 @@ export default function EditProfilePage({}) {
   const { push } = useRouter();
 
   useEffect(() => {
-    Logger.log("EditProfilePage", state);
+    Logger.debug("EditProfilePage", state);
     if (state === "LOGGED_OUT") {
-      Logger.log("pushing to home");
+      Logger.debug("pushing to home");
       push("/rp/novelists");
     }
   }, [state]);
 
-  Logger.log("yaha pohanchay hain hum:");
+  Logger.debug("yaha pohanchay hain hum:");
 
   return (
     <div>

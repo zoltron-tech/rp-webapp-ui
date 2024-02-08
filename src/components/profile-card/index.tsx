@@ -11,7 +11,7 @@ export type ProfileCardProps = {};
 export const ProfileCard: FC<ProfileCardProps> = ({}) => {
   const { push } = useRouter();
   const [novelist, setNovelist] = useState<Novelist>();
-  const { user, loading } = useAuthContext();
+  const { user, state } = useAuthContext();
 
   const fetchData = async () => {
     const fetchedNovelist = await getUserNovelist();
@@ -25,10 +25,10 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
   };
 
   useEffect(() => {
-    if (!loading && (!user || !novelist)) {
+    if (state !== "LOADING" && (!user || !novelist)) {
       fetchData();
     }
-  }, [loading]);
+  }, [state]);
 
   return <Card>Profile Card</Card>;
 };

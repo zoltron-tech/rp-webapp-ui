@@ -1,5 +1,4 @@
 "use client";
-
 import {
   authenticateAction,
   getUser,
@@ -7,11 +6,11 @@ import {
   logoutAction,
   signupAction,
 } from "@/app/actions";
-import { PageLoader } from "@/components";
-import { ShouldRender } from "@/components/common";
-import { LoginPayload, LoginResponse, User } from "@/types";
-import { WithMessage } from "@/types/common";
+import { getUserNovelist } from "@/app/rp/novelists/actions";
+import { useStateMachine } from "@/hooks";
+import { LoginPayload, Novelist, User } from "@/types";
 import { SignUpPayload } from "@/types/register";
+import { AuthState } from "@/types/state";
 import { Logger } from "@/utils/services";
 import { usePathname } from "next/navigation";
 import { FC, ReactNode, useEffect, useRef, useState } from "react";
@@ -24,97 +23,135 @@ interface Props {
 export const AuthProvider: FC<Props> = ({ children }) => {
   const initialRender = useRef(true);
   const pathname = usePathname();
-  const [loggedIn, setLoggedIn] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [novelist, setNovelist] = useState<Novelist | null>(null);
+
+  const { state, is, transition } = useStateMachine<AuthState>({
+    initial: "LOGGED_OUT",
+    transitions: {
+      LOGGED_IN: {
+        LOADING: true,
+        LOGGED_OUT: () => {
+          setUser(null);
+          setNovelist(null);
+        },
+      },
+      LOGGED_OUT: {
+        LOADING: true,
+        LOGGED_IN: true,
+      },
+      LOADING: {
+        LOGGED_IN: true,
+        LOGGED_OUT: () => {
+          setUser(null);
+          setNovelist(null);
+        },
+      },
+    },
+  });
+
+  const fetchProfile = async () => {
+    transition("LOADING");
+    try {
+      const _novelist = await getUserNovelist();
+
+      if (_novelist) {
+        setNovelist(_novelist);
+        transition("LOGGED_IN");
+      } else {
+        transition("LOGGED_OUT");
+      }
+    } catch (e) {
+      transition("LOGGED_OUT");
+    }
+  };
 
   const login = async (payload: LoginPayload) => {
-    setLoading(true);
-    const response: LoginResponse = await loginAction(payload);
-    if ("message" in response && response.message === "success") {
-      setLoggedIn(true);
-      const _user = await getUser();
-      setUser(_user);
+    transition("LOADING");
+    const response = await loginAction(payload);
+
+    if ("user" in response) {
+      setUser(response.user);
+      await fetchProfile();
+    } else {
+      transition("LOGGED_OUT");
     }
-    setLoading(false);
     return response;
   };
 
   const signup = async (payload: SignUpPayload) => {
-    setLoading(true);
-    const response: WithMessage = await signupAction(payload);
-    if (response.message === "success") {
-      setLoggedIn(true);
-      const _user = await getUser();
-      setUser(_user);
+    transition("LOADING");
+    const response = await signupAction(payload);
+    if ("user" in response) {
+      setUser(response.user);
+      transition("LOGGED_IN");
     }
-    setLoading(false);
     return response;
   };
 
   const logout = async () => {
-    setLoggedIn(false);
-    setUser(null);
     await logoutAction();
+    transition("LOGGED_OUT");
   };
 
   const refreshAuthState = async () => {
-    Logger.log("refreshAuthState");
     const verified = await authenticateAction();
+
     if (!verified) {
-      setLoggedIn(false);
-      setUser(null);
+      transition("LOGGED_OUT");
     }
   };
 
   const verifyInitialAuthState = async () => {
-    Logger.log("verifyInitialAuthSTate");
-    setLoading(true);
+    transition("LOADING");
 
     try {
       const authenticated = await authenticateAction();
+
       if (authenticated) {
-        setLoggedIn(true);
         const _user = await getUser();
         setUser(_user);
+        await fetchProfile();
+      } else {
+        transition("LOGGED_OUT");
       }
-
-      setLoading(false);
     } catch (e) {
       Logger.log("Error in verifyInitialAuthState", e);
-
-      setLoading(false);
+      transition("LOGGED_OUT");
     }
-
-    setLoading(false);
   };
 
   useEffect(() => {
     if (initialRender.current) {
       initialRender.current = false;
-      if (!loggedIn) {
+      if (is("LOGGED_OUT")) {
         verifyInitialAuthState();
       }
     }
   }, []);
 
   useEffect(() => {
-    Logger.log("auth state changed: ", loading, user, loggedIn);
-  }, [loading, user, loggedIn]);
+    Logger.log("auth state changed: ", state);
+  }, [state]);
 
   useEffect(() => {
-    if (loggedIn) {
+    if (is("LOGGED_IN")) {
       refreshAuthState();
     }
   }, [pathname]);
 
   return (
     <AuthContext.Provider
-      value={{ loggedIn, user, login, signup, logout, loading: !!loading }}
+      value={{
+        state,
+        user,
+        novelist,
+        login,
+        signup,
+        logout,
+        updateNovelist: setNovelist,
+      }}
     >
-      <ShouldRender if={!!loading}>
-        <PageLoader />
-      </ShouldRender>
       {children}
     </AuthContext.Provider>
   );

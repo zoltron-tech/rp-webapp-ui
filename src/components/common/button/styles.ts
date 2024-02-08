@@ -3,13 +3,12 @@ import styled from "styled-components";
 
 export const Container = styled.div`
   width: 100%;
-  height: 46px;
+  min-width: max-content;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
   font-weight: 600;
-  border-radius: 2px;
+  border-radius: var(--border-radius);
   cursor: pointer;
   white-space: nowrap;
   position: relative;

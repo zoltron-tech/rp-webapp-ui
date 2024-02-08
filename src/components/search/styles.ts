@@ -1,12 +1,7 @@
-import { DEV_MODE_BORDER, SPIN, Z_INDEX } from "@/theme";
-import { setOpacity } from "@/utils/helpers";
-import { css, styled } from "styled-components";
+"use client";
 
-const Background = css`
-  background-color: ${({ theme }) => setOpacity(theme.background, 0.5)};
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
-`;
+import { BACKGROUND_BLUR, DEV_MODE_BORDER, SPIN, Z_INDEX } from "@/theme";
+import { css, styled } from "styled-components";
 
 const TypeSelectTypography = css`
   font-size: 12px;
@@ -47,7 +42,7 @@ export const Dropdown = styled.div`
   align-items: center;
   justify-content: flex-start;
   gap: var(--type-select-gap);
-  ${Background}
+  ${BACKGROUND_BLUR}
 
   &.empty {
     max-height: 200px;

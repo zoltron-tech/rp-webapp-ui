@@ -128,6 +128,8 @@ export const Search: FC<SearchProps> = ({
           onChange={handleUpdate}
           value={values.search}
         />
+        {/* <VisibilityProvider name="search-dropdown">
+          <VisibilityContent> */}
         <S.Dropdown
           className={classNames({
             empty: noResults,
@@ -148,6 +150,8 @@ export const Search: FC<SearchProps> = ({
             </S.EmptyDropdown>
           </ShouldRender>
         </S.Dropdown>
+        {/* </VisibilityContent>
+        </VisibilityProvider> */}
         <S.Button
           onClick={handleButtonClick}
           className={classNames({ loading })}

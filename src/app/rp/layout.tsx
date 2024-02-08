@@ -1,12 +1,20 @@
 "use client";
+
 import React, { useRef } from "react";
 
-import { ContentContainer, LoginModal, TopBar } from "@/components";
+import {
+  ContentContainer,
+  Footer,
+  LoginModal,
+  TopBar,
+} from "@/components/layout";
 import { AuthProvider, UIContextProvider } from "@/context";
 import { THEME_DARK, THEME_LIGHT } from "@/theme";
 import { useEffect, useState } from "react";
 import { useCookies } from "react-cookie";
 import { ThemeProvider } from "styled-components";
+
+import * as S from "./styles";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const initialRender = useRef(true);
@@ -35,11 +43,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <ThemeProvider theme={getTheme()}>
       <AuthProvider>
         <UIContextProvider>
-          <LoginModal />
-          <TopBar theme={theme} toggleTheme={toggleTheme} />
-          <main>
+          <S.PageContainer>
+            <LoginModal />
+            <TopBar theme={theme} toggleTheme={toggleTheme} />
             <ContentContainer>{children}</ContentContainer>
-          </main>
+            <Footer />
+          </S.PageContainer>
         </UIContextProvider>
       </AuthProvider>
     </ThemeProvider>

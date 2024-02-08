@@ -1,4 +1,9 @@
-import { AVATAR_IMAGE, DEV_MODE_BORDER, Z_INDEX } from "@/theme";
+import {
+  AVATAR_IMAGE,
+  BASE_TRANSITION,
+  DEV_MODE_BORDER,
+  Z_INDEX,
+} from "@/theme";
 import { styled } from "styled-components";
 
 interface AvatarProps {
@@ -16,12 +21,14 @@ export const Name = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: transparent;
   opacity: 0;
-  transition: opacity 0.15s linear;
+  transition-property: opacity;
+  ${BASE_TRANSITION}
+
   border-radius: 50%;
   color: ${({ theme }) => theme.textPrimary};
-  font-size: 12px;
+  font-size: 0.75rem;
 `;
 
 export const Avatar = styled.div<AvatarProps>`
@@ -39,6 +46,9 @@ export const Avatar = styled.div<AvatarProps>`
   display: flex;
   align-items: center;
   justify-content: center;
+  transition-property: filter;
+
+  ${BASE_TRANSITION}
 
   & > img {
     width: var(--size);
@@ -48,6 +58,10 @@ export const Avatar = styled.div<AvatarProps>`
 
   &.hoverable {
     cursor: pointer;
+
+    &:hover {
+      filter: brightness(50%);
+    }
 
     &:hover > ${Name} {
       opacity: 1;

@@ -1,6 +1,5 @@
 "use client";
 import { ShouldRender } from "@/components/common";
-import { useUIContext } from "@/hooks";
 import { Novelist } from "@/types/novelist";
 import classNames from "classnames";
 import { FC, useEffect, useState } from "react";
@@ -17,7 +16,6 @@ type Props = {
 };
 export const NovelistCard: FC<Props> = ({ novelist }) => {
   const [expanded, setExpanded] = useState(false);
-  const { setCardExpanded } = useUIContext();
   const { isActive } = useSwiperSlide();
   const { autoplay } = useSwiper();
   const { push } = useRouter();
@@ -52,10 +50,6 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
       }, 250);
     }
   }, [isActive]);
-
-  useEffect(() => {
-    setCardExpanded(expanded);
-  }, [expanded]);
 
   if (!novelist) return <></>;
 

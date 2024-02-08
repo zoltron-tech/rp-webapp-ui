@@ -1,13 +1,13 @@
 "use client";
 
 import classNames from "classnames";
-import { ButtonHTMLAttributes, FC } from "react";
+import { ComponentPropsWithoutRef, FC } from "react";
 import { ImSpinner } from "react-icons/im";
 
 import { Logger } from "@/utils/services";
 import * as S from "./styles";
 
-export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+export interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
   children?: React.ReactNode;
   onClick?: () => void;
   loading?: boolean;
@@ -15,7 +15,7 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   shape?: "rounded" | "square" | "rounded-edge";
   size?: "xs" | "sm" | "md" | "lg";
   onEnter?: () => void;
-};
+}
 
 export const Button: FC<ButtonProps> = ({
   children,

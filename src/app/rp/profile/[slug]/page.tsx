@@ -1,10 +1,12 @@
 "use client";
+
 import { useAuthContext } from "@/hooks";
 import { Logger } from "@/utils/services";
 import { useParams, useRouter } from "next/navigation";
 
-import { MusesPill, PageLoader } from "@/components";
+import { MusesPill } from "@/components";
 import { ShouldRender, Username } from "@/components/common";
+import { PageLoader } from "@/components/layout";
 import { Novelist } from "@/types";
 import { useEffect, useState } from "react";
 import { getNovelistAction } from "../../novelists/actions";
@@ -12,7 +14,7 @@ import * as S from "./styles";
 
 export default function UserProfilePage({}) {
   const params = useParams();
-  const { loading: loadingAuth, user } = useAuthContext();
+  const { state, user, novelist: useNovelist } = useAuthContext();
   const [novelist, setNovelist] = useState<Novelist | null>(null);
   const [loading, setLoading] = useState(true);
   const username = params.slug as string;
@@ -44,14 +46,20 @@ export default function UserProfilePage({}) {
   };
 
   useEffect(() => {
-    if (!loadingAuth && !novelist) {
-      fetchNovelist(username);
+    if (state === "LOADING" || novelist) return;
+
+    if (isCurrentUser && useNovelist) {
+      setNovelist(useNovelist);
+      setLoading(false);
+      return;
     }
-  }, [loadingAuth]);
+
+    fetchNovelist(username);
+  }, [state]);
 
   return (
     <>
-      <ShouldRender if={loading && !loadingAuth}>
+      <ShouldRender if={loading && state !== "LOADING"}>
         <PageLoader />
       </ShouldRender>
 

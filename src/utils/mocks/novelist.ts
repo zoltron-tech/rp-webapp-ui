@@ -1,6 +1,7 @@
 import { Novelist } from "@/types";
 
 const NOVELIST_MOCK: Novelist = {
+  _tag: "Novelist",
   firstName: "John",
   lastName: "Doe",
   username: "johndoe",
@@ -8,6 +9,7 @@ const NOVELIST_MOCK: Novelist = {
   image: "",
   muses: [
     {
+      _tag: "Muse",
       firstName: "Jane",
       lastName: "Doe",
       image: "",

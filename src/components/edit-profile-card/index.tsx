@@ -17,7 +17,7 @@ import * as S from "./styles";
 export type EditProfileCardProps = {};
 
 export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
-  const { user } = useAuthContext();
+  const { user, novelist, state, updateNovelist } = useAuthContext();
   const [avatarFile, setAvatarFile] = useState<FormData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const { push } = useRouter();
@@ -88,6 +88,7 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
     }
 
     updateValues(novelist);
+    updateNovelist(novelist);
 
     successToast("Data updated successfully.");
   };
@@ -99,10 +100,13 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
   });
 
   const fetchData = async () => {
-    setLoading(true);
-    const novelist = await getUserNovelist();
-    if (novelist) updateValues(novelist);
-    setLoading(false);
+    let _novelist = novelist;
+    if (_novelist === null) {
+      setLoading(true);
+      _novelist = await getUserNovelist();
+      setLoading(false);
+    }
+    if (_novelist) updateValues(_novelist);
   };
 
   const handleCancel = () => {
@@ -110,8 +114,9 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
   };
 
   useEffect(() => {
+    if (state !== "LOGGED_IN") return;
     fetchData();
-  }, []);
+  }, [state]);
 
   useEffect(() => {
     Logger.log("avatarFile", avatarFile);

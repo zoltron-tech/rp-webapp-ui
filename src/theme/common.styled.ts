@@ -1,4 +1,5 @@
 import { __DEV__ } from "@/utils/constants";
+import { setOpacity } from "@/utils/helpers/theme";
 import { css } from "styled-components";
 
 const DEV_MODE = __DEV__;
@@ -66,4 +67,15 @@ export const PILL = css`
 
 export const DEV_MODE_BORDER = (color = "red") => css`
   ${DEV_MODE && `border: 1px solid ${color}`};
+`;
+
+export const BACKGROUND_BLUR = css`
+  background-color: ${({ theme }) => setOpacity(theme.background, 0.5)};
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+`;
+
+export const BASE_TRANSITION = css`
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in-out;
 `;

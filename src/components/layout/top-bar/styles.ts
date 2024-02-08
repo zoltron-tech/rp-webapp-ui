@@ -1,8 +1,14 @@
+import { Avatar } from "@/components/common";
 import { pSBC } from "@/lib/pSBC";
-import { DEV_MODE_BORDER, NO_USER_SELECT, Z_INDEX } from "@/theme";
+import {
+  BACKGROUND_BLUR,
+  BASE_TRANSITION,
+  DEV_MODE_BORDER,
+  NO_USER_SELECT,
+  Z_INDEX,
+} from "@/theme";
 import { setOpacity } from "@/utils/helpers";
 import styled from "styled-components";
-import { Avatar } from "../common";
 
 export const Container = styled.div`
   position: sticky;
@@ -12,13 +18,16 @@ export const Container = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 40px;
+  /* padding: 0 40px; */
   box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
   z-index: ${Z_INDEX.TOPBAR};
+  transition-property: background-color, backdrop-filter,
+    -webkit-backdrop-filter;
+  ${BASE_TRANSITION}
 
   @media (max-width: 650px) {
     & {
-      height: 60px;
+      ${BACKGROUND_BLUR}
     }
   }
 `;
@@ -37,19 +46,6 @@ export const Bar = styled.div`
   container-name: top-bar;
   container-type: size;
   z-index: ${Z_INDEX.TOPBAR};
-
-  @media (max-width: 800px) {
-    & {
-      padding: 0 20px;
-    }
-  }
-
-  @media (max-width: 650px) {
-    & {
-      /* padding: 0px; */
-      height: 60px;
-    }
-  }
 `;
 export const LogoContainer = styled.div`
   display: flex;
@@ -62,6 +58,7 @@ export const LogoContainer = styled.div`
 
 export const Logo = styled.div`
   height: 100cqh;
+  width: 80cqh;
   display: flex;
   align-items: center;
   ${NO_USER_SELECT}
@@ -74,8 +71,9 @@ export const Logo = styled.div`
 `;
 
 export const LogoInner = styled.div`
-  height: 80cqh;
-  width: 80cqh;
+  height: 70cqh;
+  width: 70cqh;
+  margin-inline: auto;
   border-radius: 40cqh;
   display: flex;
   align-items: center;
@@ -83,12 +81,19 @@ export const LogoInner = styled.div`
   background-color: ${({ theme }) =>
     setOpacity(pSBC(-0.2, theme.primary) as string, 0.5)};
   border: 2px solid ${({ theme }) => theme.primary};
+  transition-property: width, height, transform;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in-out;
   ${NO_USER_SELECT}
 
   & > svg {
     height: 40cqh;
     width: 40cqh;
     fill: ${({ theme }) => theme.textPrimary};
+  }
+
+  &:hover {
+    transform: translateY(-2px);
   }
 `;
 

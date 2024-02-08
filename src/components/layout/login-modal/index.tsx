@@ -1,22 +1,28 @@
-/* eslint-disable react-hooks/exhaustive-deps */
+"use client";
 import { checkUsernameAvailability } from "@/app/actions";
 import { Button, Input, Modal, ShouldRender } from "@/components/common";
-import { ErrorType, useAuthContext, useForm, useUIContext } from "@/hooks";
-import { LoginPayload, LoginResponse } from "@/types";
-import { WithMessage } from "@/types/common";
-import { SignUpPayload } from "@/types/register";
 import {
-  toggleState,
-  verifyEmailPattern,
-  verifyUsernamePattern,
-} from "@/utils/helpers";
+  ErrorType,
+  useAuthContext,
+  useForm,
+  useStateMachine,
+  useUIContext,
+  useVisibility,
+} from "@/hooks";
+import { LoginPayload } from "@/types";
+import { SignUpPayload } from "@/types/register";
+import { verifyEmailPattern, verifyUsernamePattern } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import { FC, useEffect, useRef, useState } from "react";
 
 import { useRouter } from "next/navigation";
 import * as S from "./styles";
 
-export type LoginModalProps = {};
+type ModalType = "LOGIN" | "SIGNUP";
+
+export interface LoginModalProps {
+  type?: ModalType;
+}
 
 type InputValues = {
   username: string;
@@ -24,9 +30,19 @@ type InputValues = {
   password: string;
 };
 
-export const LoginModal: FC<LoginModalProps> = ({}) => {
-  const { signupModalOpen, signupModal, setSignupModal, setSignupModalOpen } =
-    useUIContext();
+export const LoginModal: FC<LoginModalProps> = ({ type = "LOGIN" }) => {
+  const { hide } = useVisibility("login-modal");
+  const { state, is, transition } = useStateMachine<ModalType>({
+    initial: type,
+    transitions: {
+      LOGIN: {
+        SIGNUP: true,
+      },
+      SIGNUP: {
+        LOGIN: true,
+      },
+    },
+  });
   const [verifyUsernameLoading, setVerifyUsernameLoading] =
     useState<boolean>(false);
   const [isUsernameAvailable, setIsUsernameAvailable] =
@@ -34,7 +50,7 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
   const [disabled, setDisabled] = useState<boolean>(false);
   const usernameAvailableDebounceTimer = useRef<any>(null);
   const { successToast, errorToast } = useUIContext();
-  const { login, signup, loading } = useAuthContext();
+  const { login, signup, state: authState } = useAuthContext();
   const { push } = useRouter();
   const initialRender = useRef(true);
 
@@ -43,10 +59,11 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
     email,
     password,
   }: InputValues): ErrorType<InputValues> => {
-    if (!email || !password || (signupModal && !username)) {
+    const isSignup = is("SIGNUP");
+    if (!email || !password || (isSignup && !username)) {
       return { password: "Please fill in all fields" };
     }
-    if (!signupModal) {
+    if (!isSignup) {
       const validEmailOrUsername =
         verifyEmailPattern(email) || verifyUsernamePattern(email);
       if (!validEmailOrUsername) {
@@ -58,7 +75,7 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
         return { password: "Please enter a valid email" };
       }
     }
-    if (signupModal) {
+    if (isSignup) {
       const validPassword = password.match(/^(?=.*\d).{8,}$/);
       if (!validPassword) {
         return {
@@ -116,13 +133,12 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
         payload.username = values.email;
         delete payload.email;
       }
-      const response: LoginResponse = await login(payload);
+      const response = await login(payload);
       Logger.log(response);
       if (response.message === "success") {
         Logger.log("success");
-        setSignupModalOpen(false);
+        hide();
         successToast("Logged in successfully");
-        push("/rp/profile");
       } else {
         errorToast(response.message);
       }
@@ -139,12 +155,12 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
       password: values.password,
     };
     try {
-      const response: WithMessage = await signup(payload);
+      const response = await signup(payload);
       Logger.log(response);
       if (response.message === "success") {
         successToast("Registered successfully");
-        setSignupModalOpen(false);
-        push("/rp/profile");
+        hide();
+        push("/rp/profile/edit");
       } else {
         errorToast(response.message);
       }
@@ -156,7 +172,7 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
 
   const onSubmit = () => {
     if (disabled) return;
-    if (signupModal) {
+    if (is("SIGNUP")) {
       handleSignup();
     } else {
       handleLogin();
@@ -204,28 +220,30 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
 
     setDisabled(
       !!errors ||
-        (signupModal && (verifyUsernameLoading || !isUsernameAvailable))
+        (is("SIGNUP") && (verifyUsernameLoading || !isUsernameAvailable))
     );
-  }, [errors, verifyUsernameLoading, isUsernameAvailable, signupModal]);
+  }, [errors, verifyUsernameLoading, isUsernameAvailable, state]);
 
   return (
     <Modal
+      name="login-modal"
       width={"90cqw"}
       maxWidth="500px"
       minWidth="300px"
-      open={signupModalOpen}
-      onClose={() => setSignupModalOpen(false)}
-      minHeight={signupModal ? "480px" : "380px"}
+      minHeight={is("SIGNUP") ? "480px" : "380px"}
     >
       <S.Container>
         <S.Header>
-          {signupModal ? "Already a user?" : "New user?"}
-          <span className="link" onClick={toggleState(setSignupModal)}>
-            {signupModal ? "Login!" : "Sign up!"}
+          {is("SIGNUP") ? "Already a user?" : "New user?"}
+          <span
+            className="link"
+            onClick={() => transition(is("SIGNUP") ? "LOGIN" : "SIGNUP")}
+          >
+            {is("SIGNUP") ? "Login!" : "Sign up!"}
           </span>
         </S.Header>
         <S.Content>
-          <ShouldRender if={signupModal}>
+          <ShouldRender if={is("SIGNUP")}>
             <Input
               label="Username"
               name="username"
@@ -239,7 +257,7 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
             />
           </ShouldRender>
           <Input
-            label={signupModal ? "Email" : "Email or Username"}
+            label={is("SIGNUP") ? "Email" : "Email or Username"}
             name="email"
             type="text"
             onChange={update}
@@ -263,10 +281,9 @@ export const LoginModal: FC<LoginModalProps> = ({}) => {
             onClick={() => submit()}
             variant="primary"
             disabled={disabled}
-            loading={loading}
-            size="lg"
+            loading={authState === "LOADING"}
           >
-            {signupModal ? "Register" : "Login"}
+            {is("SIGNUP") ? "Register" : "Login"}
           </Button>
         </S.Content>
       </S.Container>

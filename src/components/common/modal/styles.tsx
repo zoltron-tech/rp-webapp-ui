@@ -1,11 +1,8 @@
 import { BORDER_RADIUS, Z_INDEX } from "@/theme";
 import styled from "styled-components";
+import { Hideable } from "../visibility-provider";
 
-type ContainerProps = {
-  open: boolean;
-};
-
-export const Container = styled.div<ContainerProps>`
+export const Container = styled.div<Partial<Hideable>>`
   position: fixed;
   z-index: ${Z_INDEX.MODAL};
   top: 0;
@@ -24,7 +21,7 @@ export const Container = styled.div<ContainerProps>`
       theme.name === "dark" ? "rgba(0, 0, 0, 0.6);" : "transparent"};
   }
 
-  ${({ open }) => !open && "display: none;"}
+  ${({ isVisible }) => !isVisible && "display: none;"}
 `;
 
 export type ContentProps = {
@@ -77,5 +74,10 @@ export const CloseButton = styled.div`
   & svg {
     width: 30px;
     height: 30px;
+    fill: ${({ theme }) => theme.primary};
+  }
+
+  &:hover svg {
+    fill: ${({ theme }) => theme.error};
   }
 `;

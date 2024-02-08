@@ -29,6 +29,7 @@ const RAW_RUNTIME_STATE =
           ["@svgr/webpack", "npm:8.1.0"],\
           ["@swc/plugin-styled-components", "npm:1.5.111"],\
           ["@types/jsonwebtoken", "npm:9.0.5"],\
+          ["@types/lodash", "npm:4.14.202"],\
           ["@types/node", "npm:20.11.5"],\
           ["@types/react", "npm:18.2.48"],\
           ["@types/react-dom", "npm:18.2.18"],\
@@ -40,6 +41,7 @@ const RAW_RUNTIME_STATE =
           ["eslint", "npm:8.56.0"],\
           ["eslint-config-next", "virtual:51ae5fc635ad31090023ae67e0bcc023824e516dce809b10e229aab23fb4d59f5888daab81264776b2768611576e89c056a67e60477c2e38dd7b9527993ebfad#npm:14.0.4"],\
           ["jsonwebtoken", "npm:9.0.2"],\
+          ["lodash", "npm:4.17.21"],\
           ["next", "virtual:51ae5fc635ad31090023ae67e0bcc023824e516dce809b10e229aab23fb4d59f5888daab81264776b2768611576e89c056a67e60477c2e38dd7b9527993ebfad#npm:14.0.4"],\
           ["react", "npm:18.2.0"],\
           ["react-colorful", "virtual:51ae5fc635ad31090023ae67e0bcc023824e516dce809b10e229aab23fb4d59f5888daab81264776b2768611576e89c056a67e60477c2e38dd7b9527993ebfad#npm:5.6.1"],\
@@ -3363,6 +3365,15 @@ const RAW_RUNTIME_STATE =
         "packageDependencies": [\
           ["@types/keyv", "npm:3.1.4"],\
           ["@types/node", "npm:20.11.5"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["@types/lodash", [\
+      ["npm:4.14.202", {\
+        "packageLocation": "../../../.yarn/berry/cache/@types-lodash-npm-4.14.202-76de3e302b-10c0.zip/node_modules/@types/lodash/",\
+        "packageDependencies": [\
+          ["@types/lodash", "npm:4.14.202"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -7901,6 +7912,7 @@ const RAW_RUNTIME_STATE =
           ["@svgr/webpack", "npm:8.1.0"],\
           ["@swc/plugin-styled-components", "npm:1.5.111"],\
           ["@types/jsonwebtoken", "npm:9.0.5"],\
+          ["@types/lodash", "npm:4.14.202"],\
           ["@types/node", "npm:20.11.5"],\
           ["@types/react", "npm:18.2.48"],\
           ["@types/react-dom", "npm:18.2.18"],\
@@ -7912,6 +7924,7 @@ const RAW_RUNTIME_STATE =
           ["eslint", "npm:8.56.0"],\
           ["eslint-config-next", "virtual:51ae5fc635ad31090023ae67e0bcc023824e516dce809b10e229aab23fb4d59f5888daab81264776b2768611576e89c056a67e60477c2e38dd7b9527993ebfad#npm:14.0.4"],\
           ["jsonwebtoken", "npm:9.0.2"],\
+          ["lodash", "npm:4.17.21"],\
           ["next", "virtual:51ae5fc635ad31090023ae67e0bcc023824e516dce809b10e229aab23fb4d59f5888daab81264776b2768611576e89c056a67e60477c2e38dd7b9527993ebfad#npm:14.0.4"],\
           ["react", "npm:18.2.0"],\
           ["react-colorful", "virtual:51ae5fc635ad31090023ae67e0bcc023824e516dce809b10e229aab23fb4d59f5888daab81264776b2768611576e89c056a67e60477c2e38dd7b9527993ebfad#npm:5.6.1"],\

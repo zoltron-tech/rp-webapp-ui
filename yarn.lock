@@ -1985,13 +1985,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/lodash@npm:^4.14.202":
-  version: 4.14.202
-  resolution: "@types/lodash@npm:4.14.202"
-  checksum: 6064d43c8f454170841bd67c8266cc9069d9e570a72ca63f06bceb484cb4a3ee60c9c1f305c1b9e3a87826049fd41124b8ef265c4dd08b00f6766609c7fe9973
-  languageName: node
-  linkType: hard
-
 "@types/node@npm:*, @types/node@npm:^20":
   version: 20.11.5
   resolution: "@types/node@npm:20.11.5"
@@ -4832,7 +4825,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash@npm:^4.17.15, lodash@npm:^4.17.21":
+"lodash@npm:^4.17.15":
   version: 4.17.21
   resolution: "lodash@npm:4.17.21"
   checksum: d8cbea072bb08655bb4c989da418994b073a608dffa608b09ac04b43a791b12aeae7cd7ad919aa4c925f33b48490b5cfe6c1f71d827956071dae2e7bb3a6b74c
@@ -5799,7 +5792,6 @@ __metadata:
     "@svgr/webpack": "npm:^8.1.0"
     "@swc/plugin-styled-components": "npm:^1.5.108"
     "@types/jsonwebtoken": "npm:^9.0.5"
-    "@types/lodash": "npm:^4.14.202"
     "@types/node": "npm:^20"
     "@types/react": "npm:^18"
     "@types/react-dom": "npm:^18"
@@ -5811,7 +5803,6 @@ __metadata:
     eslint: "npm:^8"
     eslint-config-next: "npm:14.0.4"
     jsonwebtoken: "npm:^9.0.2"
-    lodash: "npm:^4.17.21"
     next: "npm:14.0.4"
     react: "npm:^18"
     react-colorful: "npm:^5.6.1"

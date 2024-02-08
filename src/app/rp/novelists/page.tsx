@@ -1,10 +1,13 @@
 "use client";
-import { NovelistCarousel } from "@/components";
-import { Novelist } from "@/types";
+
+import { Logger } from "@/utils/services";
+import dynamic from "next/dynamic";
 import { useEffect, useRef } from "react";
 
-import { StoreProvider } from "@/context";
-import { Logger } from "@/utils/services";
+const NovelistCarouselDynamic = dynamic(
+  () => import("@/components/novelist-carousel"),
+  { ssr: false }
+);
 
 export default function NovelistsPage() {
   const initialRender = useRef(true);
@@ -21,8 +24,8 @@ export default function NovelistsPage() {
   });
 
   return (
-    <StoreProvider<{ novelists: Novelist[] }> initial={{ novelists: [] }}>
-      <NovelistCarousel />
-    </StoreProvider>
+    <>
+      <NovelistCarouselDynamic />
+    </>
   );
 }

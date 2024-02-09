@@ -16,7 +16,7 @@ export const uploadAvatar = async (formData: FormData) => {
 
   const file = formData.get("file");
 
-  Logger.log("file", file);
+  Logger.debug("file", file);
 
   const response = await fetch(URL, {
     method: "POST",
@@ -25,7 +25,7 @@ export const uploadAvatar = async (formData: FormData) => {
   });
 
   if (response.status !== 200) {
-    Logger.log("error", response.status, response.statusText);
+    Logger.debug("error", response.status, response.statusText);
     return API_MESSAGE.MediaError;
   }
 
@@ -37,13 +37,13 @@ export const uploadAvatar = async (formData: FormData) => {
 export const deleteAvatar = async (filename: string) => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/s3/delete/${filename}`;
 
-  Logger.log("deleteAvatar", filename);
+  Logger.debug("deleteAvatar", filename);
   const response = await fetch(URL, {
     method: "DELETE",
     cache: "no-store",
   });
 
-  Logger.log("deleteAvatar: response", response);
+  Logger.debug("deleteAvatar: response", response);
 
   if (response.status !== 200) {
     return { message: "Error deleting avatar" };

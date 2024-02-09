@@ -10,11 +10,11 @@ export default function ProfilePage({}) {
   const { push } = useRouter();
 
   useEffect(() => {
-    Logger.log("ProfilePage");
-    Logger.log("Auth context: ", state);
+    Logger.debug("ProfilePage");
+    Logger.debug("Auth context: ", state);
 
     if (state === "LOGGED_IN") {
-      Logger.log("rerouteToProfilePage");
+      Logger.debug("rerouteToProfilePage");
       push(`/rp/profile/${user?.username}`);
     } else {
       push("/rp/novelists");

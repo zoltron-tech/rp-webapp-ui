@@ -13,7 +13,7 @@ export const getNovelists = async () => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/all`;
 
   const response = await fetch(URL, { cache: "no-store" });
-  Logger.log("getNovelists", response.status);
+  Logger.debug("getNovelists", response.status);
 
   if (response.status === 404) {
     return [];
@@ -59,7 +59,7 @@ export const getUserNovelist = async () => {
   if (response.status === 404) {
     return null;
   } else if (response.status !== 200) {
-    Logger.log(API_MESSAGE.Error, response.status, response.statusText);
+    Logger.debug(API_MESSAGE.Error, response.status, response.statusText);
     logoutAction();
   }
 
@@ -72,7 +72,7 @@ export const updateUserNovelist = async (_novelist: Novelist) => {
   const jwt = await authenticateAndGetJWT();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist`;
 
-  Logger.log("updateUserNovelist", _novelist);
+  Logger.debug("updateUserNovelist", _novelist);
 
   const response = await fetch(URL, {
     method: "POST",
@@ -85,12 +85,12 @@ export const updateUserNovelist = async (_novelist: Novelist) => {
   });
 
   if (response.status !== 200) {
-    Logger.log("error", response.status, response.statusText);
+    Logger.debug("error", response.status, response.statusText);
     return { message: API_MESSAGE.Error };
   }
 
   const result: WithMessage<Novelist> = await response.json();
-  Logger.log("updateUserNovelist", result);
+  Logger.debug("updateUserNovelist", result);
 
   const novelist: Novelist = Object.assign(
     {},
@@ -113,7 +113,7 @@ export const searchAction = async (searchTerm: string, type = "novelist") => {
     cache: "no-store",
   });
 
-  Logger.log("searchAction", response.status);
+  Logger.debug("searchAction", response.status);
   if (response.status === 404) {
     return [];
   } else if (response.status !== 200) {

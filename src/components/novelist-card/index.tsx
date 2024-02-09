@@ -29,7 +29,7 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
     if (process.env.DISABLE_AUTOSCROLL === "true") return;
 
     if (!isActive) return;
-    Logger.log("onMouseEnter");
+    Logger.debug("onMouseEnter");
 
     autoplay.stop();
   };
@@ -37,7 +37,7 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
     if (process.env.DISABLE_AUTOSCROLL === "true") return;
 
     if (!isActive) return;
-    Logger.log("onMouseLeave");
+    Logger.debug("onMouseLeave");
 
     autoplay.start();
   };

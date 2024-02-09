@@ -74,15 +74,15 @@ export const Input: FC<Props> = ({
           readOnly={readOnly}
           defaultValue={defaultValue}
           onChange={(val): void => {
-            Logger.log("onChange", val?.target?.value, val.target.name);
+            Logger.debug("onChange", val?.target?.value, val.target.name);
             if (onChange) onChange(val);
           }}
           onKeyDown={(e): void => {
             if (e.key === "Enter" && onEnter) {
-              Logger.log("onEnter");
+              Logger.debug("onEnter");
               onEnter();
             } else if (e.key === "Escape") {
-              Logger.log("onEscape");
+              Logger.debug("onEscape");
               e.currentTarget.blur();
             }
           }}

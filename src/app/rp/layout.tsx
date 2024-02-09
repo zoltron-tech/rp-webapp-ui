@@ -8,12 +8,13 @@ import {
   LoginModal,
   TopBar,
 } from "@/components/layout";
-import { AuthProvider, UIContextProvider } from "@/context";
+import { AuthProvider, StoreProvider, UIContextProvider } from "@/context";
 import { THEME_DARK, THEME_LIGHT } from "@/theme";
 import { useEffect, useState } from "react";
 import { useCookies } from "react-cookie";
 import { ThemeProvider } from "styled-components";
 
+import { Novelist } from "@/types";
 import * as S from "./styles";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -41,16 +42,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <ThemeProvider theme={getTheme()}>
-      <AuthProvider>
-        <UIContextProvider>
-          <S.PageContainer>
-            <LoginModal />
-            <TopBar theme={theme} toggleTheme={toggleTheme} />
-            <ContentContainer>{children}</ContentContainer>
-            <Footer />
-          </S.PageContainer>
-        </UIContextProvider>
-      </AuthProvider>
+      <StoreProvider<{ novelists: Novelist[] }> initial={{ novelists: [] }}>
+        <AuthProvider>
+          <UIContextProvider>
+            <S.PageContainer>
+              <LoginModal />
+              <TopBar theme={theme} toggleTheme={toggleTheme} />
+              <ContentContainer>{children}</ContentContainer>
+              <Footer />
+            </S.PageContainer>
+          </UIContextProvider>
+        </AuthProvider>
+      </StoreProvider>
     </ThemeProvider>
   );
 }

@@ -12,7 +12,7 @@ export interface DropdownProps
 
 export const Dropdown: FC<DropdownProps> = ({ children, isVisible }) => {
   return (
-    <S.DropdownContainer className={classNames({ isVisible })}>
+    <S.DropdownContainer className={classNames({ show: isVisible })}>
       {children}
     </S.DropdownContainer>
   );

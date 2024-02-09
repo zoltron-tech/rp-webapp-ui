@@ -34,7 +34,7 @@ export const Button: FC<ButtonProps> = ({
   return (
     <S.Container
       onKeyDownCapture={(e) => {
-        Logger.log("onKeyDown:button", e.key);
+        Logger.debug("onKeyDown:button", e.key);
       }}
       className={classNames([
         "button",

@@ -41,7 +41,7 @@ export const Search: FC<SearchProps> = ({
     if (!search?.trim()) return;
     console.log("handleSearch", search, selectedType);
     const results = await searchAction(search, selectedType);
-    Logger.log("Search results: ", results);
+    Logger.debug("Search results: ", results);
     if (results && !("message" in results)) {
       setSearchResults(results);
       if (!results.length) setNoResults(true);
@@ -55,10 +55,10 @@ export const Search: FC<SearchProps> = ({
   });
 
   const handleUpdate = (e: React.ChangeEvent<HTMLInputElement>) => {
-    Logger.log("handle update: ", e.target.name, e.target.value);
+    Logger.debug("handle update: ", e.target.name, e.target.value);
     update(e);
     if (searchTimeoutRef.current) {
-      Logger.log("clearing search timeout");
+      Logger.debug("clearing search timeout");
       clearTimeout(searchTimeoutRef.current);
     }
     if (!e.target.value?.trim()) {
@@ -72,7 +72,7 @@ export const Search: FC<SearchProps> = ({
   };
 
   const handleButtonClick = () => {
-    Logger.log("Search handleButtonClick", expanded);
+    Logger.debug("Search handleButtonClick", expanded);
 
     updateValues({ search: "" });
     setNoResults(false);

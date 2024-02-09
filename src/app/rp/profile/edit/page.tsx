@@ -1,10 +1,14 @@
 "use client";
-
-import { EditProfileCard } from "@/components";
 import { useAuthContext } from "@/hooks";
 import { Logger } from "@/utils/services";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+
+const DynamicEditProfileCard = dynamic(
+  () => import("@/components/edit-profile-card"),
+  { ssr: false }
+);
 
 export default function EditProfilePage({}) {
   const { state } = useAuthContext();
@@ -22,7 +26,7 @@ export default function EditProfilePage({}) {
 
   return (
     <div>
-      <EditProfileCard />
+      <DynamicEditProfileCard />
     </div>
   );
 }

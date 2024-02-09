@@ -14,7 +14,7 @@ import { useEffect, useState } from "react";
 import { useCookies } from "react-cookie";
 import { ThemeProvider } from "styled-components";
 
-import { Novelist } from "@/types";
+import { StoreState } from "@/types/state";
 import * as S from "./styles";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -42,7 +42,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <ThemeProvider theme={getTheme()}>
-      <StoreProvider<{ novelists: Novelist[] }> initial={{ novelists: [] }}>
+      <StoreProvider<StoreState> initial={{ novelists: [] }}>
         <AuthProvider>
           <UIContextProvider>
             <S.PageContainer>

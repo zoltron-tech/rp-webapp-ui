@@ -4,12 +4,13 @@ import {
 } from "@/app/rp/novelists/actions";
 import { uploadAvatar } from "@/app/rp/profile/actions";
 import { Card, Input, UploadAvatar, Username } from "@/components/common";
-import { useAuthContext, useForm, useUIContext } from "@/hooks";
+import { useAuthContext, useForm, useStore, useUIContext } from "@/hooks";
 import type { Novelist } from "@/types";
 import { API_MESSAGE, INITIAL_NOVELIST } from "@/utils/constants";
 import { Logger } from "@/utils/services";
 import { FC, useEffect, useState } from "react";
 
+import { StoreState } from "@/types/state";
 import { useRouter } from "next/navigation";
 import * as S from "./styles";
 
@@ -19,6 +20,9 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
   const { user, novelist, state, updateNovelist } = useAuthContext();
   const [avatarFile, setAvatarFile] = useState<FormData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [novelists, set] = useStore<StoreState, "novelists">(
+    (store) => store.novelists
+  );
   const { push } = useRouter();
 
   const { successToast, errorToast } = useUIContext();
@@ -83,6 +87,16 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
 
     updateValues(novelist);
     updateNovelist(novelist);
+
+    if (
+      novelists.find((_novelist) => _novelist.username === novelist.username)
+    ) {
+      set({
+        novelists: novelists
+          .filter((n) => n.username !== novelist.username)
+          .concat(novelist),
+      });
+    }
 
     successToast("Data updated successfully.");
   };

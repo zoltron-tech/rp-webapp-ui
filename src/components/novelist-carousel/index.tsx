@@ -1,6 +1,5 @@
 import { getNovelists } from "@/app/rp/novelists/actions";
 import { useStore, useUIContext } from "@/hooks";
-import { Novelist } from "@/types";
 import { Logger } from "@/utils/services";
 import { FC, useCallback, useEffect } from "react";
 import { Autoplay, EffectCoverflow, Navigation } from "swiper/modules";
@@ -10,16 +9,15 @@ import "swiper/css";
 import "swiper/css/effect-coverflow";
 import "swiper/css/navigation";
 
+import { StoreState } from "@/types/state";
 import { NovelistCard } from "..";
 import { ShouldRender } from "../common";
 import { PageLoader } from "../layout";
 import * as S from "./styles";
 
-type NovelistsState = { novelists: Novelist[] };
-
 export const NovelistCarousel: FC = () => {
   const { errorToast: error } = useUIContext();
-  const [novelists, setStore] = useStore<NovelistsState, "novelists">(
+  const [novelists, setStore] = useStore<StoreState, "novelists">(
     (store) => store.novelists
   );
 

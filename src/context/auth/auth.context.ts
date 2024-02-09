@@ -2,7 +2,7 @@ import { LoginPayload, LoginResponse, Novelist, User } from "@/types";
 import { WithMessage } from "@/types/common";
 import { SignUpPayload } from "@/types/register";
 import { AuthState } from "@/types/state";
-import { Dispatch, SetStateAction, createContext } from "react";
+import { createContext } from "react";
 
 export interface AuthContextType {
   state: AuthState;
@@ -11,7 +11,7 @@ export interface AuthContextType {
   login: (payload: LoginPayload) => Promise<LoginResponse>;
   signup: (payload: SignUpPayload) => Promise<WithMessage>;
   logout: () => Promise<void>;
-  updateNovelist: Dispatch<SetStateAction<Novelist | null>>;
+  updateNovelist: (novelist: Novelist) => void;
 }
 
 export const AUTH_CONTEXT_INITIAL_STATE: AuthContextType = {

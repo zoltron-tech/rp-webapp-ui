@@ -27,6 +27,7 @@ export const AuthProvider: FC<Props> = ({ children }) => {
   const [novelist, setNovelist] = useState<Novelist | null>(null);
   const { push } = useRouter();
   const pushToCreateProfile = () => push("/rp/profile/edit");
+  const pushToProfile = () => push(`/rp/profile/${novelist?.username}`);
 
   const { state, is, transition } = useStateMachine<AuthState>({
     initial: "LOGGED_OUT",
@@ -130,6 +131,14 @@ export const AuthProvider: FC<Props> = ({ children }) => {
     }
   };
 
+  const updateNovelist = (novelist: Novelist) => {
+    setNovelist(novelist);
+    if (is("UNINITIALIZED")) {
+      transition("LOGGED_IN");
+      push(`/rp/profile/${novelist.username}`);
+    }
+  };
+
   useEffect(() => {
     if (initialRender.current) {
       initialRender.current = false;
@@ -162,7 +171,7 @@ export const AuthProvider: FC<Props> = ({ children }) => {
         login,
         signup,
         logout,
-        updateNovelist: setNovelist,
+        updateNovelist,
       }}
     >
       {children}

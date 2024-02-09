@@ -2,6 +2,7 @@ import classNames from "classnames";
 import { FC } from "react";
 import { BsMoonFill, BsSunFill } from "react-icons/bs";
 
+import { Logger } from "@/utils/services";
 import * as S from "./styles";
 type Props = {
   toggleTheme: () => void;
@@ -9,6 +10,7 @@ type Props = {
 };
 
 export const ThemeToggle: FC<Props> = ({ theme, toggleTheme }) => {
+  Logger.info("ThemeToggle rendered");
   return (
     <S.Container>
       <S.ThemeSwitcher onClick={toggleTheme}>

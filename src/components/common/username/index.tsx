@@ -1,6 +1,7 @@
 import { FC, useRef } from "react";
 
 import { useUIContext } from "@/hooks";
+import { Logger } from "@/utils/services";
 import classNames from "classnames";
 import * as S from "./styles";
 
@@ -20,6 +21,8 @@ export const Username: FC<Props> = ({ username, primary }) => {
       successToast("Username copied to clipboard");
     }
   };
+
+  Logger.info("Username rendered");
 
   return (
     <S.Container

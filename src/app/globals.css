@@ -26,6 +26,11 @@ body::-webkit-scrollbar {
   /* optional: just make scrollbar invisible */
 }
 
+input,
+textarea {
+  min-width: 0;
+}
+
 /* END: Remove base padding and styling */
 
 /* BEGIN: Global variables */

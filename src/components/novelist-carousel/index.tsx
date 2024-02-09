@@ -28,7 +28,6 @@ export const NovelistCarousel: FC = () => {
     if ("message" in _novelists) {
       return error("Novelists could not be fetched!");
     }
-
     setStore({ novelists: _novelists });
   }, []);
 
@@ -37,6 +36,8 @@ export const NovelistCarousel: FC = () => {
 
     setNovelists();
   }, []);
+
+  Logger.info("NovelistCarousel rendered");
 
   return (
     <>

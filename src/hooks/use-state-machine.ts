@@ -1,3 +1,4 @@
+import { Logger } from "@/utils/services";
 import { useState } from "react";
 
 type Transition = true | (() => void);
@@ -26,6 +27,7 @@ export const useStateMachine = <T extends string>({
 
   const transition = (_state: T) =>
     setState((prev) => {
+      Logger.info("useStateMachine transition", { prev, _state });
       const next = transitions[prev];
       if (!(_state in next)) return prev;
 
@@ -38,5 +40,8 @@ export const useStateMachine = <T extends string>({
       nextTransition?.();
       return _state;
     });
+
+  Logger.info("useStateMachine rendered");
+
   return { state, is, transition };
 };

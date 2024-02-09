@@ -1,13 +1,15 @@
 "use client";
 
-import { FC } from "react";
+import { FC, memo } from "react";
 
+import { Logger } from "@/utils/services";
 import { CgSpinner } from "react-icons/cg";
 import * as S from "./styles";
 
 interface Props {}
 
-export const PageLoader: FC<Props> = ({}) => {
+export const PageLoader: FC<Props> = memo(({}) => {
+  Logger.info("PageLoader rendered");
   return (
     <S.Background>
       <S.Spinner>
@@ -15,4 +17,4 @@ export const PageLoader: FC<Props> = ({}) => {
       </S.Spinner>
     </S.Background>
   );
-};
+});

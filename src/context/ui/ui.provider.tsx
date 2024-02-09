@@ -1,4 +1,5 @@
 import { generateToastError, generateToastSuccess } from "@/utils/helpers";
+import { Logger } from "@/utils/services";
 import { FC } from "react";
 import { useTheme } from "styled-components";
 import { UIContext, UIContextType } from "./ui.context";
@@ -22,6 +23,8 @@ export const UIContextProvider: FC<Props> = ({ children }) => {
     successToast: success,
     errorToast: error,
   };
+
+  Logger.info("UIContextProvider rendered");
 
   return (
     <UIContext.Provider value={contextValue}>{children}</UIContext.Provider>

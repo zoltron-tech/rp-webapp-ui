@@ -31,6 +31,8 @@ export const Button: FC<ButtonProps> = ({
     onClick?.();
   };
 
+  Logger.info("Button rendered");
+
   return (
     <S.Container
       onKeyDownCapture={(e) => {

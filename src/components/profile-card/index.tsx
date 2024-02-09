@@ -2,6 +2,7 @@
 import { getUserNovelist } from "@/app/rp/novelists/actions";
 import { useAuthContext } from "@/hooks";
 import { Novelist } from "@/types";
+import { Logger } from "@/utils/services";
 import { useRouter } from "next/navigation";
 import { FC, useEffect, useState } from "react";
 import { Card } from "../common";
@@ -29,6 +30,8 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
       fetchData();
     }
   }, [state]);
+
+  Logger.info("ProfileCard rendered");
 
   return <Card>Profile Card</Card>;
 };

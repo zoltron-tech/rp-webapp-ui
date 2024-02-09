@@ -33,6 +33,9 @@ export const UploadAvatar: FC<UploadAvatarProps> = ({ image, onChange }) => {
     formData.append("file", file);
     onChange(formData);
   };
+
+  Logger.info("UploadAvatar rendered");
+
   return (
     <>
       <S.FileInputHidden placeholder="" type="file" onChange={onUpload} />

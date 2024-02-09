@@ -1,3 +1,5 @@
+import { Logger } from "@/utils/services";
+
 export interface UseVisibilityReturnType {
   show: () => void;
   hide: () => void;
@@ -36,6 +38,8 @@ export const useVisibility = (name: string): UseVisibilityReturnType => {
   const show = () => stateEvent("visibility-provider")("open")(name)();
   const hide = () => stateEvent("visibility-provider")("close")(name)();
   const toggle = () => stateEvent("visibility-provider")("toggle")(name)();
+
+  Logger.info("useVisibility rendered");
 
   return { show, hide, toggle };
 };

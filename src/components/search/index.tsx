@@ -93,6 +93,8 @@ export const Search: FC<SearchProps> = ({
     }
   }, [selectedType]);
 
+  Logger.info("Search rendered");
+
   return (
     <S.Wrapper>
       <S.Container

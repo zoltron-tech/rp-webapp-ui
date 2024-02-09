@@ -1,3 +1,4 @@
+import { Logger } from "@/utils/services";
 import { useCallback, useRef } from "react";
 
 export const useStoreData = <StoreState = {}>(
@@ -29,6 +30,8 @@ export const useStoreData = <StoreState = {}>(
 
     return unsubscribe(callback);
   }, []);
+
+  Logger.info("useStoreData rendered");
 
   return {
     get,

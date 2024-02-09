@@ -42,6 +42,8 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
     autoplay.start();
   };
 
+  Logger.info("NovelistCard rendered");
+
   useEffect(() => {
     if (!expanded) return;
     if (!isActive) {

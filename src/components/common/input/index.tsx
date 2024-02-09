@@ -58,6 +58,8 @@ export const Input: FC<Props> = ({
     if (!hidden) setPasswordType("password");
   };
 
+  Logger.info("Input rendered");
+
   return (
     <S.InputWrapper>
       <S.InputContainer>

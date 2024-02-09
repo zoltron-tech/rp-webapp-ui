@@ -1,10 +1,10 @@
 "use client";
-import { logoutAction } from "@/app/actions";
 import { Search, ThemeToggle, UserMenu } from "@/components";
 import { Button, ShouldRender, Username } from "@/components/common";
 import { useAuthContext, useVisibility } from "@/hooks";
-import { FC } from "react";
+import { FC, memo } from "react";
 
+import { Logger } from "@/utils/services";
 import { useRouter } from "next/navigation";
 import { GoArrowRight } from "react-icons/go";
 import { SiBookstack } from "react-icons/si";
@@ -15,8 +15,7 @@ type Props = {
   theme: "light" | "dark";
 };
 
-export const TopBar: FC<Props> = ({ theme, toggleTheme }) => {
-  // const { setSignupModal } = useUIContext();
+export const TopBar: FC<Props> = memo(({ theme, toggleTheme }) => {
   const { show } = useVisibility("login-modal");
   const { state } = useAuthContext();
   const { push } = useRouter();
@@ -33,18 +32,14 @@ export const TopBar: FC<Props> = ({ theme, toggleTheme }) => {
   };
 
   const onLoginClick = () => {
-    // setSignupModal(false);
     show();
   };
 
   const onSignupClick = () => {
-    // setSignupModal(true);
     show();
   };
 
-  const onLogoutClick = async () => {
-    logoutAction();
-  };
+  Logger.info("TopBar rendered");
 
   return (
     <S.Container>
@@ -96,7 +91,7 @@ export const TopBar: FC<Props> = ({ theme, toggleTheme }) => {
               </Button>
             </S.ButtonsContainerDesktop>
           </ShouldRender>
-          <ShouldRender if={state === "LOGGED_IN"}>
+          <ShouldRender if={state === "LOGGED_IN" || state === "UNINITIALIZED"}>
             <S.ButtonsContainerDesktop>
               <UserMenu />
             </S.ButtonsContainerDesktop>
@@ -105,4 +100,4 @@ export const TopBar: FC<Props> = ({ theme, toggleTheme }) => {
       </S.Bar>
     </S.Container>
   );
-};
+});

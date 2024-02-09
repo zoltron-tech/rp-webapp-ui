@@ -12,7 +12,7 @@ import { LoginPayload, Novelist, User } from "@/types";
 import { SignUpPayload } from "@/types/register";
 import { AuthState } from "@/types/state";
 import { Logger } from "@/utils/services";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { FC, ReactNode, useEffect, useRef, useState } from "react";
 import { AuthContext } from "./auth.context";
 
@@ -25,6 +25,8 @@ export const AuthProvider: FC<Props> = ({ children }) => {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [novelist, setNovelist] = useState<Novelist | null>(null);
+  const { push } = useRouter();
+  const pushToCreateProfile = () => push("/rp/profile/edit");
 
   const { state, is, transition } = useStateMachine<AuthState>({
     initial: "LOGGED_OUT",
@@ -41,11 +43,17 @@ export const AuthProvider: FC<Props> = ({ children }) => {
         LOGGED_IN: true,
       },
       LOADING: {
+        UNINITIALIZED: pushToCreateProfile,
         LOGGED_IN: true,
         LOGGED_OUT: () => {
           setUser(null);
           setNovelist(null);
         },
+      },
+      UNINITIALIZED: {
+        LOADING: true,
+        LOGGED_IN: true,
+        LOGGED_OUT: true,
       },
     },
   });
@@ -59,7 +67,7 @@ export const AuthProvider: FC<Props> = ({ children }) => {
         setNovelist(_novelist);
         transition("LOGGED_IN");
       } else {
-        transition("LOGGED_OUT");
+        transition("UNINITIALIZED");
       }
     } catch (e) {
       transition("LOGGED_OUT");
@@ -84,7 +92,7 @@ export const AuthProvider: FC<Props> = ({ children }) => {
     const response = await signupAction(payload);
     if ("user" in response) {
       setUser(response.user);
-      transition("LOGGED_IN");
+      transition("UNINITIALIZED");
     }
     return response;
   };
@@ -110,6 +118,7 @@ export const AuthProvider: FC<Props> = ({ children }) => {
 
       if (authenticated) {
         const _user = await getUser();
+        Logger.info("User", _user);
         setUser(_user);
         await fetchProfile();
       } else {
@@ -137,8 +146,12 @@ export const AuthProvider: FC<Props> = ({ children }) => {
   useEffect(() => {
     if (is("LOGGED_IN")) {
       refreshAuthState();
+    } else if (is("UNINITIALIZED")) {
+      pushToCreateProfile();
     }
   }, [pathname]);
+
+  Logger.info("AuthProvider rendered");
 
   return (
     <AuthContext.Provider

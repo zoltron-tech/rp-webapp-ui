@@ -1,5 +1,6 @@
 import { FC } from "react";
 
+import { Logger } from "@/utils/services";
 import classNames from "classnames";
 import Image from "next/image";
 import * as S from "./styles";
@@ -24,6 +25,8 @@ export const Avatar: FC<AvatarProps> = ({
   hoverable = false,
   ...rest
 }) => {
+  Logger.info("Avatar rendered");
+
   return (
     <S.Avatar className={classNames([className, { hoverable }])} {...rest}>
       <Image

@@ -13,7 +13,7 @@ import { LoginPayload } from "@/types";
 import { SignUpPayload } from "@/types/register";
 import { verifyEmailPattern, verifyUsernamePattern } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
-import { FC, useEffect, useRef, useState } from "react";
+import { FC, memo, useEffect, useRef, useState } from "react";
 
 import { useRouter } from "next/navigation";
 import * as S from "./styles";
@@ -30,7 +30,7 @@ type InputValues = {
   password: string;
 };
 
-export const LoginModal: FC<LoginModalProps> = ({ type = "LOGIN" }) => {
+export const LoginModal: FC<LoginModalProps> = memo(({ type = "LOGIN" }) => {
   const { hide } = useVisibility("login-modal");
   const { state, is, transition } = useStateMachine<ModalType>({
     initial: type,
@@ -224,6 +224,8 @@ export const LoginModal: FC<LoginModalProps> = ({ type = "LOGIN" }) => {
     );
   }, [errors, verifyUsernameLoading, isUsernameAvailable, state]);
 
+  Logger.info("LoginModal rendered");
+
   return (
     <Modal
       name="login-modal"
@@ -289,4 +291,4 @@ export const LoginModal: FC<LoginModalProps> = ({ type = "LOGIN" }) => {
       </S.Container>
     </Modal>
   );
-};
+});

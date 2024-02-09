@@ -1,6 +1,7 @@
 import classNames from "classnames";
 import { FC } from "react";
 
+import { Logger } from "@/utils/services";
 import * as S from "./styles";
 
 export type CardProps = {
@@ -16,6 +17,8 @@ export const Card: FC<CardProps> = ({
   className,
   ...styles
 }) => {
+  Logger.info("Card rendered");
+
   return (
     <S.Container
       className={classNames([className || "", [{ centered }]])}

@@ -9,6 +9,7 @@ export const PageContainer = styled.main`
   contain: paint;
   z-index: ${Z_INDEX.BACKGROUND};
   background-color: ${({ theme }) => theme.background};
+  color: ${({ theme }) => theme.text};
 
   scroll-behavior: smooth;
   overflow-y: auto;

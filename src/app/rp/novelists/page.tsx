@@ -19,9 +19,7 @@ export default function NovelistsPage() {
     }
   }, []);
 
-  useEffect(() => {
-    Logger.info("NovelistsPage rendered");
-  });
+  Logger.info("NovelistsPage rendered");
 
   return (
     <>

@@ -130,6 +130,8 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
     Logger.debug("avatarFile", avatarFile);
   }, [avatarFile]);
 
+  Logger.info("EditProfileCard rendered");
+
   return (
     <>
       <S.ProfileBackgroundBlurFilter

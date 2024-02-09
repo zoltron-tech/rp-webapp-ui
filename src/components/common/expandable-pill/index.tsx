@@ -4,6 +4,7 @@ import { FC, ReactNode, useState } from "react";
 import { CiCirclePlus } from "react-icons/ci";
 import { FcSearch } from "react-icons/fc";
 
+import { Logger } from "@/utils/services";
 import * as S from "./styles";
 
 export interface ExpandablePillProps {
@@ -18,6 +19,8 @@ export const ExpandablePill: FC<ExpandablePillProps> = ({
   expandedContent,
 }) => {
   const [expanded, setExpanded] = useState(false);
+
+  Logger.info("ExpandablePill rendered");
 
   return (
     <>

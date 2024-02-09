@@ -2,6 +2,7 @@
 import { FC } from "react";
 import { IoIosCloseCircle } from "react-icons/io";
 
+import { Logger } from "@/utils/services";
 import {
   VisibilityContent,
   VisibilityProvider,
@@ -14,6 +15,7 @@ type Props = S.ContentProps & {
   name: string;
 };
 export const Modal: FC<Props> = ({ children, name, ...containerProps }) => {
+  Logger.info("Modal rendered");
   return (
     <VisibilityProvider name={name}>
       <VisibilityContent>

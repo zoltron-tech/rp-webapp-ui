@@ -119,6 +119,7 @@ export const logoutAction = async () => {
 export const authenticateAction = async () => {
   Logger.debug("authenticate");
   const jwtCookie = cookies().get(JWT_COOKIE_NAME);
+  Logger.info("jwtCookie", jwtCookie);
   if (!jwtCookie?.value) return false;
   const decoded = jwt.decode(jwtCookie.value, { complete: true });
   if (!decoded || typeof decoded.payload === "string" || !decoded.payload.exp) {
@@ -173,7 +174,7 @@ export const getUser = async () => {
 
   if (response.status !== 200) logoutAction();
 
-  const _user = await response.json();
+  const _user: WithMessage<any> = await response.json();
 
   const user = validateUser(_user);
   if (isNone(user)) {

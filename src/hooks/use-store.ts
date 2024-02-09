@@ -1,4 +1,5 @@
 import { Store, StoreContext } from "@/context";
+import { Logger } from "@/utils/services";
 import { useContext, useSyncExternalStore } from "react";
 
 export const useStore = <State, K extends keyof State>(
@@ -12,6 +13,8 @@ export const useStore = <State, K extends keyof State>(
   const state = useSyncExternalStore(store.subscribe, () =>
     selector(store.get())
   );
+
+  Logger.info("useStore rendered");
 
   return [state, store.set];
 };

@@ -1,4 +1,5 @@
 import { useVisibilityContext } from "@/context";
+import { Logger } from "@/utils/services";
 import { FC, ReactElement, cloneElement, isValidElement } from "react";
 
 export interface Hideable {
@@ -17,6 +18,8 @@ export const VisibilityContent: FC<VisibilityContentProps> = ({
   const clonned = isValidElement(children)
     ? cloneElement<Hideable>(children, { isVisible })
     : children;
+
+  Logger.info("VisibilityContent rendered");
 
   return <>{clonned}</>;
 };

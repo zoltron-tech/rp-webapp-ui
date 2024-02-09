@@ -2,6 +2,7 @@ import { Novelist } from "@/types";
 import { FC } from "react";
 import { ExpandablePill } from "../common";
 
+import { Logger } from "@/utils/services";
 import classNames from "classnames";
 import * as S from "./styles";
 
@@ -10,6 +11,8 @@ interface Props {
 }
 
 export const MusesPill: FC<Props> = ({ novelist }) => {
+  Logger.info("MusesPill rendered");
+
   return (
     <ExpandablePill
       tag="Muses"

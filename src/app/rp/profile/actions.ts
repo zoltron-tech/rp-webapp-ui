@@ -34,6 +34,31 @@ export const uploadAvatar = async (formData: FormData) => {
   return result.message;
 };
 
+export const enhanceAvatar = async (formData: FormData) => {
+  const _jwt = authenticateAndGetJWT();
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/s3/enhance`;
+
+  const file = formData.get("file");
+
+  Logger.debug("file", file);
+
+  const response = await fetch(URL, {
+    method: "POST",
+    body: formData,
+    cache: "no-store",
+  });
+
+  if (response.status !== 200) {
+    Logger.debug("error", response.status, response.statusText);
+    return API_MESSAGE.MediaError;
+  }
+
+  const result: string = await response.json();
+
+  return result;
+};
+
 export const deleteAvatar = async (filename: string) => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/s3/delete/${filename}`;
 

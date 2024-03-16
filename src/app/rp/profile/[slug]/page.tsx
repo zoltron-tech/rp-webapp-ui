@@ -41,10 +41,6 @@ export default function UserProfilePage({}) {
     setNovelist(_novelist);
   };
 
-  const toEditProfile = () => {
-    push(`/rp/profile/edit`);
-  };
-
   useEffect(() => {
     if (state === "LOADING" || novelist) return;
 
@@ -81,9 +77,6 @@ export default function UserProfilePage({}) {
           <S.NoteContainer>{novelist?.note}</S.NoteContainer>
         </S.ContentLeft>
         <S.ContentRight>
-          <ShouldRender if={isCurrentUser}>
-            <S.EditProfile onClick={toEditProfile}>Edit Profile</S.EditProfile>
-          </ShouldRender>
           <S.Name>
             {novelist?.firstName} {novelist?.lastName}
           </S.Name>

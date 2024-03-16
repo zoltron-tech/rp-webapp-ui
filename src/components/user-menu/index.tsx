@@ -4,6 +4,7 @@ import { FC, useState } from "react";
 
 import { useAuthContext } from "@/hooks";
 import { toggleState } from "@/utils/helpers";
+import { useRouter } from "next/navigation";
 import { Logger } from "@/utils/services";
 import classNames from "classnames";
 import { Button } from "../common";
@@ -14,10 +15,19 @@ interface UserMenuProps {}
 export const UserMenu: FC<UserMenuProps> = ({}) => {
   const { user, novelist, logout } = useAuthContext();
   const [open, setOpen] = useState(false);
+  const { push } = useRouter();
 
   const handleLogout = () => {
     logout();
     toggleState(setOpen)();
+  };
+
+  const toEditProfile = () => {
+    push(`/rp/profile/edit`);
+  };
+
+  const toUserProfile = () => {
+    push(`/rp/profile/${user?.username}`);
   };
 
   Logger.info("UserMenu rendered");
@@ -34,6 +44,8 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
           hoverable
         />
         <S.Menu className={classNames({ open })}>
+          <Button onClick={toUserProfile}>View Profile</Button>
+          <Button onClick={toEditProfile}>Edit Profile</Button>
           <Button onClick={handleLogout}>Logout</Button>
         </S.Menu>
       </S.ContentContainer>

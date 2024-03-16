@@ -13,6 +13,7 @@ export const Menu = styled.div`
 
   position: absolute;
   top: calc(var(--avatar-size) + 0.5rem);
+  right: 0px;
 
   display: flex;
   flex-direction: column;
@@ -20,7 +21,7 @@ export const Menu = styled.div`
   padding: 0.5rem;
   background-color: ${({ theme }) => theme.modalBackground};
 
-  width: max-content;
+  width: 10rem;
   height: max-content;
   opacity: 0;
   pointer-events: none;

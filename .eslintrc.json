@@ -4,7 +4,11 @@
     {
     "rules": {
       "react/display-name": "off"
-    }
+    },
+    "files": [
+      "**/*.ts",
+      "**/*.tsx"
+    ]
   }
-  ],
+  ]
 }

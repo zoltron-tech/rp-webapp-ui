@@ -20,4 +20,11 @@ export interface Novelist extends Tagged {
   note: string;
   image: string;
   muses: Muse[];
+  friends: Friend[];
+}
+
+export interface Friend extends Tagged {
+  _tag: "Friend";
+  username: string;
+  image: string;
 }

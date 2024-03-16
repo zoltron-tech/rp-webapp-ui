@@ -9,6 +9,7 @@ export const INITIAL_NOVELIST: Novelist = {
   note: "",
   image: "",
   muses: [],
+  friends: []
 };
 
 export const NONE: None = {

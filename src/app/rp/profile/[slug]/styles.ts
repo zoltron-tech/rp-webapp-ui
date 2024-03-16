@@ -162,6 +162,7 @@ export const NoteContainer = styled(Pill)`
   min-height: 200px;
   margin-top: 50px;
   word-break: break-all;
+  border-radius: 20px;
 
   padding: 40px 20px 20px;
 
@@ -174,6 +175,9 @@ export const MusePillContiner = styled.div`
   width: 100%;
   margin-inline: auto;
   margin-top: 250px;
+  display:flex;
+  flex-direction:column;
+  gap:2rem;
 
   @container profile-content (max-width: 1024px) {
     & {

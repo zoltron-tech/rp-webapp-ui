@@ -20,6 +20,13 @@ const NOVELIST_MOCK: Novelist = {
       },
     },
   ],
+  friends: [
+    {
+      _tag: "Friend",
+      username: "Jonah",
+      image: ""
+    }
+  ]
 };
 
 export const getNovelistMock = (partial?: Partial<Novelist>): Novelist => ({

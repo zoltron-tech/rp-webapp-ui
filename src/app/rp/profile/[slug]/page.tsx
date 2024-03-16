@@ -81,7 +81,8 @@ export default function UserProfilePage({}) {
             {novelist?.firstName} {novelist?.lastName}
           </S.Name>
           <S.MusePillContiner>
-            <MusesPill novelist={novelist} />
+            <MusesPill pillType="MUSES" novelist={novelist} />
+            <MusesPill pillType="FRIENDS" novelist={novelist} />
           </S.MusePillContiner>
         </S.ContentRight>
       </S.Content>

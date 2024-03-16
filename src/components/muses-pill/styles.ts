@@ -6,6 +6,12 @@ export const Avatar = styled(AvatarCommon)`
   &.rotate {
     transform: rotate(90deg);
   }
+  &.paddington {
+    margin: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 `;
 
 export const ExpandedContentInner = styled.div`
@@ -17,16 +23,4 @@ export const ExpandedContentInner = styled.div`
   width: 90cqw;
 
   ${DEV_MODE_BORDER("red")}
-`;
-
-export const ExpandedContentInnerItem = styled.div`
-  width: 100px;
-  height: 100px;
-  margin: 10px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-
-  ${DEV_MODE_BORDER("blue")}
 `;

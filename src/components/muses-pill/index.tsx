@@ -1,45 +1,64 @@
 import { Novelist } from "@/types";
+import { PillType } from "@/types/pill-type";
 import { FC } from "react";
 import { ExpandablePill } from "../common";
+import { useRouter } from "next/navigation";
 
 import { Logger } from "@/utils/services";
-import classNames from "classnames";
 import * as S from "./styles";
 
 interface Props {
   novelist: Novelist | null;
+  pillType: PillType;
 }
 
-export const MusesPill: FC<Props> = ({ novelist }) => {
+export const MusesPill: FC<Props> = ({ pillType, novelist }) => {
   Logger.info("MusesPill rendered");
+  const { push } = useRouter();
+
+  const onAvatarClick = (username:string) => {
+    push(`/rp/profile/${username}`);
+  };
+
+  const loadChildren = (slice=0, className="") => {
+    switch(pillType) {
+      case "MUSES":
+        return novelist?.muses?.slice(0, slice?slice:novelist?.muses.length).map((muse) => (
+          <S.Avatar
+            src={muse.image}
+            alt={muse.firstName}
+            size={100}
+            key={muse.firstName}
+            className={className}
+            name={muse.firstName}
+            hoverable
+          />
+        ))
+      case "FRIENDS":
+        return novelist?.friends?.slice(0, slice?slice:novelist?.friends.length).map((friend) => (
+          <S.Avatar
+            src={friend.image}
+            alt={friend.username}
+            size={100}
+            key={friend.username}
+            className={className}
+            name={friend.username}
+            onClick={()=>onAvatarClick(friend.username)}
+            hoverable
+          />
+        ))
+      default:
+        <></>
+    }
+  }
 
   return (
     <ExpandablePill
-      tag="Muses"
-      scrollableContent={novelist?.muses?.slice(0, 8).map((muse) => (
-        <S.Avatar
-          src={muse.image}
-          alt={muse.firstName}
-          size={100}
-          key={muse.firstName}
-          className={classNames(["rotate"])}
-          name={muse.firstName}
-          hoverable
-        />
-      ))}
+      tag={pillType}
+      scrollableContent={ loadChildren(8, "rotate") }
       expandedContent={
         <S.ExpandedContentInner>
-          {novelist?.muses?.map((muse) => (
-            <S.ExpandedContentInnerItem key={muse.firstName}>
-              <S.Avatar
-                src={muse.image}
-                alt={muse.firstName}
-                size={100}
-                name={muse.firstName}
-                hoverable
-              />
-            </S.ExpandedContentInnerItem>
-          ))}
+          { loadChildren(0, "paddington")}
         </S.ExpandedContentInner>
       }
     />

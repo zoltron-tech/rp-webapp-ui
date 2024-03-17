@@ -150,7 +150,7 @@ export const UsernameContainer = styled.div`
   }
 
   max-width: 100%;
-  margin-top: 75px;
+  margin-top: 60px;
 
   @container (max-width: 1024px) {
     margin-top: 10px;
@@ -160,7 +160,7 @@ export const UsernameContainer = styled.div`
 export const NoteContainer = styled(Pill)`
   max-width: 460px;
   min-height: 200px;
-  margin-top: 50px;
+  margin-top: 20px;
   word-break: break-all;
   border-radius: 20px;
 
@@ -174,10 +174,10 @@ export const NoteContainer = styled(Pill)`
 export const MusePillContiner = styled.div`
   width: 100%;
   margin-inline: auto;
-  margin-top: 250px;
+  margin-top: 290px;
   display:flex;
   flex-direction:column;
-  gap:2rem;
+  gap:1rem;
 
   @container profile-content (max-width: 1024px) {
     & {

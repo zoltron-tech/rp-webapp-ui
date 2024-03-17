@@ -12,16 +12,15 @@ export const Menu = styled.div`
   ${DEV_MODE_BORDER("yellow")}
 
   position: absolute;
-  top: calc(var(--avatar-size) + 0.5rem);
+  top: calc(var(--avatar-size) + 1.5rem);
   right: 0px;
 
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding: 0.5rem;
   background-color: ${({ theme }) => theme.modalBackground};
 
-  width: 10rem;
+  width: 15rem;
   height: max-content;
   opacity: 0;
   pointer-events: none;

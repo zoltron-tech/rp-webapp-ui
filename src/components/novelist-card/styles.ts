@@ -240,13 +240,13 @@ export const Quote = styled.div`
   word-break: break-all;
 
   &::before {
-    content: "“";
+    content: "❝ ";
     font-weight: 400;
     font-size: 16px;
   }
 
   &::after {
-    content: "”";
+    content: " ❞";
     font-weight: 400;
     font-size: 16px;
   }

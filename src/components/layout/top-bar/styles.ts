@@ -196,6 +196,16 @@ export const ButtonsContainerDesktop = styled.div`
   }
 `;
 
+export const ButtonsContainerLoggedInDesktop = styled(ButtonsContainerDesktop)`
+width: 50px;
+
+@container (max-width: 800px) {
+  & {
+    width: 50px;
+  }
+}
+`;
+
 export const ButtonsContainerMobile = styled.div`
   display: flex;
   align-items: center;

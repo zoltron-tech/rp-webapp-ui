@@ -8,14 +8,9 @@ const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
 
 export const getMuseAction = async (museId: string) => {
-  const jwt = await authenticateAndGetJWT();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}`;
 
   const response = await fetch(URL, {
-    headers: {
-      "Content-Type": "application/json",
-      [AUTH_HEADER_NAME]: jwt,
-    },
     cache: "no-store",
   });
 

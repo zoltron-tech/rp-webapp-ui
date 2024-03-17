@@ -81,6 +81,7 @@ export const ContentRight = styled.div`
   flex-grow: 3;
   display: flex;
   flex-direction: column;
+  align-items: center;
 
   container-name: profile-content-right;
   container-type: inline-size;
@@ -107,6 +108,7 @@ export const Name = styled.div`
   text-align: center;
   text-align: center;
   margin-top: 150px;
+  margin-bottom: 200px;
   font-size: clamp(36px, 5vw, 76px);
   color: ${({ theme }) => theme.textPrimary};
   z-index: ${Z_INDEX.DEFAULT};
@@ -134,10 +136,21 @@ export const NameMobile = styled.div`
 export const UsernameContainer = styled.div`
   & > div {
     text-align: center;
-    font-size: 36px;
+    font-size: 24px;
   }
 
   max-width: 100%;
+
+  & > span {
+    margin-left: 2rem;
+  }
+`;
+
+export const AuthorContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
   margin-top: 60px;
 
   @container (max-width: 1024px) {
@@ -157,4 +170,46 @@ export const NoteContainer = styled(Pill)`
   &::before {
     content: "Note";
   }
+`;
+
+export const InfoContainer = styled(Pill)`
+  display: flex;
+  flex-direction: column;
+  max-width: 800px;
+  min-height: 200px;
+  margin-top: 50px;
+  word-break: break-all;
+  border-radius: 20px;
+
+  padding: 40px 20px 20px;
+
+  &::before {
+    position: static;
+    content: "Information";
+    padding-bottom: 50px;
+  }
+`;
+
+export const InfoItem = styled.div`
+  margin-left: 20px;
+  margin-right: 20px;
+  display: flex;
+  flex-direction: row;
+  width: inherit;
+  min-height: 50px;
+`;
+
+export const InfoLabel = styled.span`
+  width: inherit;
+  margin-left: 50px;
+  font-weight: bold;
+  text-align: start;
+  vertical-align: middle;
+`;
+
+export const InfoValue = styled.span`
+  width: inherit;
+  margin-right: 50px;
+  text-align: end;
+  vertical-align: middle;
 `;

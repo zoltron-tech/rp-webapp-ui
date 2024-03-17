@@ -3,7 +3,7 @@
 import { useAuthContext } from "@/hooks";
 import { Logger } from "@/utils/services";
 import { useParams, useRouter } from "next/navigation";
-import { ShouldRender, Username } from "@/components/common";
+import { ShouldRender, Username, Avatar } from "@/components/common";
 import { PageLoader } from "@/components/layout";
 import { Muse } from "@/types";
 import { useEffect, useState } from "react";
@@ -19,6 +19,11 @@ export default function MuseProfilePage({}) {
   const username = params.slug as string;
   const { push } = useRouter();
   Logger.debug("params are:", params);
+
+  const onAuthorAvatarClick = () => {
+    const username = muse?.pennedBy?.username;
+    if (username) push(`/rp/profile/${username}`);
+  };
 
   const fetchMuse = async (museId: string) => {
     setLoading(true);
@@ -50,17 +55,23 @@ export default function MuseProfilePage({}) {
       <S.SolidBackground></S.SolidBackground>
       <S.Content>
         <S.ContentLeft>
-          <S.Avatar
-            src={muse?.image || ""}
-            alt="profile-picture"
-            size={340}
-          />
+          <S.Avatar src={muse?.image || ""} alt="profile-picture" size={340} />
           <S.NameMobile>
             {muse?.firstName} {muse?.lastName}
           </S.NameMobile>
-          <S.UsernameContainer>
-            PENNED BY: <Username username={muse?.pennedBy} primary />
-          </S.UsernameContainer>
+          <S.AuthorContainer>
+            <Avatar
+              src={muse?.pennedBy?.image || ""}
+              alt="profile-picture"
+              size={80}
+              hoverable
+              onClick={onAuthorAvatarClick}
+            />
+            <S.UsernameContainer>
+              <span>PENNED BY:</span>
+              <Username username={muse?.pennedBy?.username} primary />
+            </S.UsernameContainer>
+          </S.AuthorContainer>
           <S.NoteContainer>
             <Quote>{muse?.note}</Quote>
           </S.NoteContainer>
@@ -69,6 +80,39 @@ export default function MuseProfilePage({}) {
           <S.Name>
             {muse?.firstName} {muse?.lastName}
           </S.Name>
+          <S.InfoContainer>
+            <S.InfoItem>
+              <S.InfoLabel>First Name:</S.InfoLabel>
+              <S.InfoValue>{muse?.firstName}</S.InfoValue>
+            </S.InfoItem>
+            <S.InfoItem>
+              <S.InfoLabel>Last Name:</S.InfoLabel>
+              <S.InfoValue>{muse?.lastName}</S.InfoValue>
+            </S.InfoItem>
+            <S.InfoItem>
+              <S.InfoLabel>Fandom:</S.InfoLabel>
+              <S.InfoValue>{muse?.fandom}</S.InfoValue>
+            </S.InfoItem>
+            <S.InfoItem>
+              <S.InfoLabel>Date of Birth:</S.InfoLabel>
+              <S.InfoValue>
+                {muse?.dateOfBirth.year}-{muse?.dateOfBirth.month}-
+                {muse?.dateOfBirth.day}
+              </S.InfoValue>
+            </S.InfoItem>
+            <S.InfoItem>
+              <S.InfoLabel>Species:</S.InfoLabel>
+              <S.InfoValue>{muse?.species}</S.InfoValue>
+            </S.InfoItem>
+            <S.InfoItem>
+              <S.InfoLabel>Hometown:</S.InfoLabel>
+              <S.InfoValue>{muse?.hometown}</S.InfoValue>
+            </S.InfoItem>
+            <S.InfoItem>
+              <S.InfoLabel>Relationship Status:</S.InfoLabel>
+              <S.InfoValue>{muse?.relationshipStatus}</S.InfoValue>
+            </S.InfoItem>
+          </S.InfoContainer>
         </S.ContentRight>
       </S.Content>
     </>

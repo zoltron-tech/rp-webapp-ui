@@ -4,10 +4,14 @@ export interface Muse extends Tagged {
   _tag: "Muse";
   id: string;
   firstName: string;
-  pennedBy: string;
+  pennedBy: Novelist;
   lastName: string;
   note: string;
   image: string;
+  fandom: string;
+  relationshipStatus: string;
+  hometown: string;
+  species: string;
   dateOfBirth: {
     year: number;
     month: string;

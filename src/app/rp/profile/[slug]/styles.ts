@@ -171,7 +171,7 @@ export const NoteContainer = styled(Pill)`
   }
 `;
 
-export const MusePillContiner = styled.div`
+export const MusePillContainer = styled.div`
   width: 100%;
   margin-inline: auto;
   margin-top: 280px;

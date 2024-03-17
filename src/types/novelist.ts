@@ -1,4 +1,4 @@
-import { Tagged } from "./common";
+import { Tagged, SearchResult } from "./common";
 
 export interface Muse extends Tagged {
   _tag: "Muse";
@@ -17,6 +17,7 @@ export interface Muse extends Tagged {
     month: string;
     day: number;
   };
+  connections: SearchResult[];
 }
 
 export interface Novelist extends Tagged {

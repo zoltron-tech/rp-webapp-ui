@@ -66,6 +66,7 @@ export const ContentLeft = styled.div`
   justify-content: flex-start;
   align-items: center;
   flex-grow: 1;
+  padding: 25px;
 
   ${DEV_MODE_BORDER("red")}
 
@@ -212,4 +213,19 @@ export const InfoValue = styled.span`
   margin-right: 50px;
   text-align: end;
   vertical-align: middle;
+`;
+
+export const MusePillContainer = styled.div`
+  width: 100%;
+  margin-inline: auto;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  @container profile-content (max-width: 1024px) {
+    & {
+      margin-top: 0px;
+    }
+  }
 `;

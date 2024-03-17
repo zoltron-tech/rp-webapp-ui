@@ -21,10 +21,15 @@ export const TopBar: FC<Props> = memo(({ theme, toggleTheme }) => {
   const { push } = useRouter();
 
   const onSearchItemClick =
-    (username?: string) => (close: () => void) => () => {
+    (record: { id?: string; username?: string }) =>
+    (close: () => void) =>
+    () => {
       close();
-      if (!username) return;
-      push(`/rp/profile/${username}`);
+      if (record?.username) {
+        push(`/rp/profile/${record.username}`);
+      } else if (record?.id) {
+        push(`/rp/muse/${record.id}`);
+      }
     };
 
   const onLogoClick = () => {
@@ -60,7 +65,7 @@ export const TopBar: FC<Props> = memo(({ theme, toggleTheme }) => {
               types={["novelist", "muse"]}
               renderDropdownItem={(result, close) => (
                 <S.SearchDropdownItem
-                  onClick={onSearchItemClick(result.username)(close)}
+                  onClick={onSearchItemClick(result)(close)}
                 >
                   <S.AvatarContainer>
                     <S.SearchAvatar

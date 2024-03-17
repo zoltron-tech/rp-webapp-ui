@@ -1,10 +1,23 @@
-import { Muse } from "@/types";
+import { Muse, Novelist } from "@/types";
 
 const MOCK_MUSE: Muse = {
   _tag: "Muse",
   id: "uuid",
   firstName: "John",
-  pennedBy: "JaneDoe",
+  species: "human",
+  fandom: "GOT",
+  hometown: "lahore",
+  relationshipStatus: "single",
+  pennedBy: {
+    _tag: "Novelist",
+    firstName: "John",
+    lastName: "Doe",
+    username: "johndoe",
+    note: "This is a note",
+    image: "",
+    muses: [],
+    friends: [],
+  },
   lastName: "Doe",
   note: "Something",
   image: "https://example.com/image.jpg",

@@ -146,7 +146,7 @@ export const NameMobile = styled.div`
 export const UsernameContainer = styled.div`
   & > div {
     text-align: center;
-    font-size: 36px;
+    font-size: 30px;
   }
 
   max-width: 100%;
@@ -174,10 +174,10 @@ export const NoteContainer = styled(Pill)`
 export const MusePillContiner = styled.div`
   width: 100%;
   margin-inline: auto;
-  margin-top: 290px;
-  display:flex;
-  flex-direction:column;
-  gap:1rem;
+  margin-top: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 
   @container profile-content (max-width: 1024px) {
     & {

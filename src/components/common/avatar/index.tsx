@@ -28,7 +28,11 @@ export const Avatar: FC<AvatarProps> = ({
   Logger.info("Avatar rendered");
 
   return (
-    <S.Avatar className={classNames([className, { hoverable }])} {...rest}>
+    <S.Avatar
+      data-size={size}
+      className={classNames([className, { hoverable }])}
+      {...rest}
+    >
       <Image
         src={src || ""}
         alt={alt}

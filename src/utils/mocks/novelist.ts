@@ -12,7 +12,20 @@ const NOVELIST_MOCK: Novelist = {
       _tag: "Muse",
       id: "uuid",
       firstName: "Jane",
-      pennedBy: "johndoe",
+      species: "human",
+      fandom: "GOT",
+      hometown: "lahore",
+      relationshipStatus: "single",
+      pennedBy: {
+        _tag: "Novelist",
+        firstName: "John",
+        lastName: "Doe",
+        username: "johndoe",
+        note: "This is a note",
+        image: "",
+        muses: [],
+        friends: [],
+      },
       lastName: "Doe",
       image: "",
       note: "Something",
@@ -27,9 +40,9 @@ const NOVELIST_MOCK: Novelist = {
     {
       _tag: "Friend",
       username: "Jonah",
-      image: ""
-    }
-  ]
+      image: "",
+    },
+  ],
 };
 
 export const getNovelistMock = (partial?: Partial<Novelist>): Novelist => ({

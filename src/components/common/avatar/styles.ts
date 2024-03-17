@@ -9,6 +9,7 @@ import { styled } from "styled-components";
 interface AvatarProps {
   width?: number;
   height?: number;
+  "data-size"?: number;
 }
 
 export const Name = styled.div`
@@ -32,7 +33,7 @@ export const Name = styled.div`
 `;
 
 export const Avatar = styled.div<AvatarProps>`
-  --size: 100px;
+  --size: ${({ "data-size": size }) => `${size || 100}px`};
 
   ${AVATAR_IMAGE}
   ${DEV_MODE_BORDER("red")}

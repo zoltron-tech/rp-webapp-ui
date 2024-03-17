@@ -2,7 +2,7 @@ import { toggleState } from "@/utils/helpers";
 import classNames from "classnames";
 import { FC, ReactNode, useState } from "react";
 import { CiCirclePlus } from "react-icons/ci";
-import { FcSearch } from "react-icons/fc";
+import { BsSearch } from "react-icons/bs";
 
 import { Logger } from "@/utils/services";
 import * as S from "./styles";
@@ -32,7 +32,7 @@ export const ExpandablePill: FC<ExpandablePillProps> = ({
         </S.ScrollableContentContainer>
         <S.Searchbar className={classNames({ expanded })}>
           <S.MagnifyingGlass className={classNames({ expanded })}>
-            <FcSearch />
+            <BsSearch />
           </S.MagnifyingGlass>
         </S.Searchbar>
         <S.ExpandIcon

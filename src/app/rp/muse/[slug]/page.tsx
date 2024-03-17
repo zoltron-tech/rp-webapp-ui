@@ -2,6 +2,7 @@
 
 import { useAuthContext } from "@/hooks";
 import { Logger } from "@/utils/services";
+import { MusesPill } from "@/components";
 import { useParams, useRouter } from "next/navigation";
 import { ShouldRender, Username, Avatar } from "@/components/common";
 import { PageLoader } from "@/components/layout";
@@ -75,6 +76,9 @@ export default function MuseProfilePage({}) {
           <S.NoteContainer>
             <Quote>{muse?.note}</Quote>
           </S.NoteContainer>
+          <S.MusePillContainer>
+            <MusesPill pillType="CONTACTS" muse={muse} />
+          </S.MusePillContainer>
         </S.ContentLeft>
         <S.ContentRight>
           <S.Name>

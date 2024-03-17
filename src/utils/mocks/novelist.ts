@@ -34,6 +34,7 @@ const NOVELIST_MOCK: Novelist = {
         month: "January",
         day: 1,
       },
+      connections: [],
     },
   ],
   friends: [

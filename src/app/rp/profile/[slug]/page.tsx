@@ -77,16 +77,16 @@ export default function UserProfilePage({}) {
           </S.UsernameContainer>
           <S.NoteContainer>
             <Quote>{novelist?.note}</Quote>
-            </S.NoteContainer>
+          </S.NoteContainer>
         </S.ContentLeft>
         <S.ContentRight>
           <S.Name>
             {novelist?.firstName} {novelist?.lastName}
           </S.Name>
-          <S.MusePillContiner>
+          <S.MusePillContainer>
             <MusesPill pillType="MUSES" novelist={novelist} />
             <MusesPill pillType="FRIENDS" novelist={novelist} />
-          </S.MusePillContiner>
+          </S.MusePillContainer>
         </S.ContentRight>
       </S.Content>
     </>

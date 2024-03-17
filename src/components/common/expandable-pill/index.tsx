@@ -1,7 +1,8 @@
 import { toggleState } from "@/utils/helpers";
+import { ShouldRender } from "@/components/common";
 import classNames from "classnames";
 import { FC, ReactNode, useState } from "react";
-import { CiCirclePlus } from "react-icons/ci";
+import { MdOutlineExpandLess, MdOutlineExpandMore } from "react-icons/md";
 import { BsSearch } from "react-icons/bs";
 
 import { Logger } from "@/utils/services";
@@ -36,10 +37,15 @@ export const ExpandablePill: FC<ExpandablePillProps> = ({
           </S.MagnifyingGlass>
         </S.Searchbar>
         <S.ExpandIcon
-          className={classNames({ expanded })}
           onClick={toggleState(setExpanded)}
+          className={classNames({ expanded })}
         >
-          <CiCirclePlus />
+          <ShouldRender if={!expanded}>
+            <MdOutlineExpandMore />
+          </ShouldRender>
+          <ShouldRender if={expanded}>
+            <MdOutlineExpandLess />
+          </ShouldRender>
         </S.ExpandIcon>
         <S.ExpandedContent className={classNames({ expanded })}>
           {expandedContent}

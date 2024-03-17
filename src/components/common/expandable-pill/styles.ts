@@ -65,9 +65,9 @@ export const ScrollableContentContainer = styled.div`
 
 export const Searchbar = styled.div`
   background-color: ${({ theme }) => theme.pillExpandedContentBackground};
-  height: 100px;
+  height: 80px;
   border-radius: 50px;
-  top: 10px;
+  top: 20px;
   left: 120px;
   width: calc(100cqw - 240px);
   opacity: 0;
@@ -90,18 +90,18 @@ export const Searchbar = styled.div`
 `;
 
 export const MagnifyingGlass = styled.div`
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  height: 80px;
-  width: 80px;
+  position: relative;
+  top: 20px;
+  left: 20px;
+  height: 40px;
+  width: 40px;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.1s ease-in-out;
 
   & svg {
-    height: 80px;
-    width: 80px;
+    height: 40px;
+    width: 40px;
   }
 
   &.expanded {

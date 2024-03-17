@@ -12,7 +12,7 @@ export const Menu = styled.div`
   ${DEV_MODE_BORDER("yellow")}
 
   position: absolute;
-  top: calc(var(--avatar-size) + 1.5rem);
+  top: calc(var(--avatar-size) + 1rem);
   right: 0px;
 
   display: flex;

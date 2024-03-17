@@ -5,6 +5,7 @@ import { Avatar as AvatarCommon } from "../common";
 export const Avatar = styled(AvatarCommon)`
   &.rotate {
     transform: rotate(90deg);
+    --size: 80px;
   }
   &.paddington {
     margin: 10px;

@@ -64,7 +64,7 @@ export const TopBar: FC<Props> = memo(({ theme, toggleTheme }) => {
                 >
                   <S.AvatarContainer>
                     <S.SearchAvatar
-                      size={35}
+                      size={60}
                       src={result.image}
                       alt={result.firstName}
                     />

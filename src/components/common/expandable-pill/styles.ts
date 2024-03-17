@@ -21,7 +21,7 @@ export const PillContinaer = styled(Pill)`
     }
   }
 
-  height: 120px;
+  height: 100px;
   transition: height 0.2s ease-in-out;
 
   &.expanded {
@@ -36,12 +36,12 @@ export const PillContinaer = styled(Pill)`
 
 export const ScrollableContentContainer = styled.div`
   ${PILL}
-  width: 120px;
+  width: 100px;
   overflow-y: auto;
   padding: 0px 10px;
   position: absolute;
   left: 60px;
-  height: calc(100cqw - 240px);
+  height: calc(95cqw - 190px);
   transform: rotate(-90deg) translateY(calc(50%));
   scroll-snap-type: y mandatory;
   transition: opacity 0.1s ease-in-out;
@@ -65,7 +65,7 @@ export const ScrollableContentContainer = styled.div`
 
 export const Searchbar = styled.div`
   background-color: ${({ theme }) => theme.pillExpandedContentBackground};
-  height: 80px;
+  height: 60px;
   border-radius: 50px;
   top: 20px;
   left: 120px;
@@ -91,17 +91,17 @@ export const Searchbar = styled.div`
 
 export const MagnifyingGlass = styled.div`
   position: relative;
-  top: 20px;
+  top: 15px;
   left: 20px;
-  height: 40px;
-  width: 40px;
+  height: 30px;
+  width: 30px;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.1s ease-in-out;
 
   & svg {
-    height: 40px;
-    width: 40px;
+    height: 30px;
+    width: 30px;
   }
 
   &.expanded {
@@ -111,11 +111,11 @@ export const MagnifyingGlass = styled.div`
 
 export const ExpandIcon = styled.div`
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 15px;
+  right: 20px;
   border-radius: 50%;
-  height: 100px;
-  width: 100px;
+  height: 70px;
+  width: 70px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -124,8 +124,8 @@ export const ExpandIcon = styled.div`
   transition: background-color 0.2s ease-in-out;
 
   & svg {
-    height: 80px;
-    width: 80px;
+    height: 70px;
+    width: 70px;
     transition: transform 0.2s linear;
     transform: rotate(0deg);
     fill: ${({ theme }) => theme.text};
@@ -149,7 +149,7 @@ const TagTypography = css`
 export const TagInline = styled.div`
   ${TagTypography}
   width: 80px;
-  height: 120px;
+  height: 100px;
   position: absolute;
   top: 0px;
   left: 20px;
@@ -188,7 +188,7 @@ export const ExpandedContent = styled.div`
   background: ${({ theme }) => theme.pillExpandedContentBackground};
   overflow-y: auto;
 
-  top: 120px;
+  top: 100px;
   left: 20px;
   width: calc(100cqw - 40px);
   height: calc(100cqh - 140px);

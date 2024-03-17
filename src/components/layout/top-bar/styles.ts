@@ -169,7 +169,7 @@ export const NameContainer = styled.div`
 `;
 
 export const SearchAvatar = styled(Avatar)`
-  --size: 35px;
+  --size: 50px;
 `;
 
 export const ActionsContainer = styled.div`

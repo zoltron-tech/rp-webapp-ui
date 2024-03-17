@@ -41,7 +41,7 @@ export const ScrollableContentContainer = styled.div`
   padding: 0px 10px;
   position: absolute;
   left: 60px;
-  height: calc(95cqw - 190px);
+  height: calc(95cqw - 200px);
   transform: rotate(-90deg) translateY(calc(50%));
   scroll-snap-type: y mandatory;
   transition: opacity 0.1s ease-in-out;
@@ -111,28 +111,28 @@ export const MagnifyingGlass = styled.div`
 
 export const ExpandIcon = styled.div`
   position: absolute;
-  top: 15px;
+  top: 20px;
   right: 20px;
-  border-radius: 50%;
-  height: 70px;
-  width: 70px;
+  width: 60px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: ${({ theme }) => theme.hoverGreyAlpha};
+  border-radius: 50%;
+  box-shadow: 0px 0px 5px 2px rgba(0, 0, 0, 0.4);
+  transition: background-color 0.1s ease-in-out;
   cursor: pointer;
-  background-color: transparent;
-  transition: background-color 0.2s ease-in-out;
 
   & svg {
-    height: 70px;
-    width: 70px;
-    transition: transform 0.2s linear;
-    transform: rotate(0deg);
+    width: 30px;
+    height: 30px;
     fill: ${({ theme }) => theme.text};
+    transition: transform 0.2s ease-in-out;
   }
 
-  &.expanded svg {
-    transform: rotate(135deg);
+  &:hover {
+    background-color: ${({ theme }) => theme.hoverGrey};
   }
 `;
 

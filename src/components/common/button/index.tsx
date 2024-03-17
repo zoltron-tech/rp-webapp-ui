@@ -11,7 +11,7 @@ export interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
   children?: React.ReactNode;
   onClick?: () => void;
   loading?: boolean;
-  variant?: "primary" | "secondary" | "link";
+  variant?: "primary" | "secondary" | "link" | "menu-item";
   shape?: "rounded" | "square" | "rounded-edge";
   size?: "xs" | "sm" | "md" | "lg";
   onEnter?: () => void;
@@ -53,6 +53,7 @@ export const Button: FC<ButtonProps> = ({
           lg: size === "lg",
           xs: size === "xs",
           ["rounded-edge"]: shape === "rounded-edge",
+          ['menu-item']: variant === "menu-item",
         },
       ])}
       onClick={clickHandler}

@@ -44,9 +44,9 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
           hoverable
         />
         <S.Menu className={classNames({ open })}>
-          <Button onClick={toUserProfile}>View Profile</Button>
-          <Button onClick={toEditProfile}>Edit Profile</Button>
-          <Button onClick={handleLogout}>Logout</Button>
+          <Button variant="menu-item" onClick={toUserProfile}>View Profile</Button>
+          <Button variant="menu-item" onClick={toEditProfile}>Edit Profile</Button>
+          <Button variant="menu-item" onClick={handleLogout}>Logout</Button>
         </S.Menu>
       </S.ContentContainer>
     </S.PositionContainer>

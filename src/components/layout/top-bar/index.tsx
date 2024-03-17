@@ -92,9 +92,9 @@ export const TopBar: FC<Props> = memo(({ theme, toggleTheme }) => {
             </S.ButtonsContainerDesktop>
           </ShouldRender>
           <ShouldRender if={state === "LOGGED_IN" || state === "UNINITIALIZED"}>
-            <S.ButtonsContainerDesktop>
+            <S.ButtonsContainerLoggedInDesktop>
               <UserMenu />
-            </S.ButtonsContainerDesktop>
+            </S.ButtonsContainerLoggedInDesktop>
           </ShouldRender>
         </S.ActionsContainer>
       </S.Bar>

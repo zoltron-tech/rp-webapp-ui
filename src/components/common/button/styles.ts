@@ -92,6 +92,19 @@ export const Container = styled.div`
     border-radius: 20px;
   }
 
+  &.menu-item {
+    background-color: transparent;
+    padding: 10px 20px;
+
+    & span {
+      color: ${({ theme }) => theme.text};
+    }
+
+    &:not(.loading):not(.disabled):hover {
+      background-color: ${({ theme }) => theme.primaryHover};
+    }
+  }
+
   &.rounded-edge {
     border-radius: 5px;
   }

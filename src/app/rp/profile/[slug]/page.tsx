@@ -11,6 +11,7 @@ import { Novelist } from "@/types";
 import { useEffect, useState } from "react";
 import { getNovelistAction } from "../../novelists/actions";
 import * as S from "./styles";
+import { Quote } from "@/components/novelist-card/styles";
 
 export default function UserProfilePage({}) {
   const params = useParams();
@@ -74,7 +75,9 @@ export default function UserProfilePage({}) {
           <S.UsernameContainer>
             <Username username={username} primary />
           </S.UsernameContainer>
-          <S.NoteContainer>{novelist?.note}</S.NoteContainer>
+          <S.NoteContainer>
+            <Quote>{novelist?.note}</Quote>
+          </S.NoteContainer>
         </S.ContentLeft>
         <S.ContentRight>
           <S.Name>

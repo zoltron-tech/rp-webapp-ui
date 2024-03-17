@@ -20,6 +20,10 @@ export const MusesPill: FC<Props> = ({ pillType, novelist }) => {
     push(`/rp/profile/${username}`);
   };
 
+  const onMuseAvatarClick = (museId:string) => {
+    push(`/rp/muse/${museId}`);
+  };
+
   const loadChildren = (slice=0, className="") => {
     switch(pillType) {
       case "MUSES":
@@ -31,6 +35,7 @@ export const MusesPill: FC<Props> = ({ pillType, novelist }) => {
             key={muse.firstName}
             className={className}
             name={muse.firstName}
+            onClick={()=>onMuseAvatarClick(muse.id)}
             hoverable
           />
         ))

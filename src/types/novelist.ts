@@ -2,8 +2,11 @@ import { Tagged } from "./common";
 
 export interface Muse extends Tagged {
   _tag: "Muse";
+  id: string;
   firstName: string;
+  pennedBy: string;
   lastName: string;
+  note: string;
   image: string;
   dateOfBirth: {
     year: number;

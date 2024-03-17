@@ -10,9 +10,12 @@ const NOVELIST_MOCK: Novelist = {
   muses: [
     {
       _tag: "Muse",
+      id: "uuid",
       firstName: "Jane",
+      pennedBy: "johndoe",
       lastName: "Doe",
       image: "",
+      note: "Something",
       dateOfBirth: {
         year: 1980,
         month: "January",

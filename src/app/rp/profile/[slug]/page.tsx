@@ -77,7 +77,7 @@ export default function UserProfilePage({}) {
           </S.UsernameContainer>
           <S.NoteContainer>
             <Quote>{novelist?.note}</Quote>
-          </S.NoteContainer>
+            </S.NoteContainer>
         </S.ContentLeft>
         <S.ContentRight>
           <S.Name>

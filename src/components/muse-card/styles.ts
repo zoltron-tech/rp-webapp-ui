@@ -15,6 +15,12 @@ export const CardWrapper = styled.div`
 
   container-name: muse-card;
   container-type: size;
+
+  @container (max-width: 800px) {
+    & {
+      height: 150px;
+    }
+  }
 `;
 
 type CardProps = {
@@ -89,6 +95,20 @@ export const Button = styled.div`
   &:hover {
     background-color: ${({ theme }) => theme.hoverGrey};
   }
+
+  @container (max-height: 200px) {
+    & {
+      top: 5px;
+      right: 0px;
+      width: 30px;
+      height: 30px;
+    }
+
+    & svg {
+      width: 15px;
+      height: 15px;
+    }
+  }
 `;
 
 export const EditButton = styled(Button)`
@@ -118,6 +138,12 @@ export const Title = styled.div`
 
 export const Avatar = styled(Common.Avatar)`
   --size: 200px;
+
+  @container (max-height: 200px) {
+    & {
+      --size: 100px;
+    }
+  }
 `;
 
 export const MuseInfo = styled.div`
@@ -128,10 +154,6 @@ export const MuseInfo = styled.div`
   justify-content: center;
   margin-left: 10px;
   font-size: 14px;
-`;
-
-export const username = styled(Common.Username)`
-  font-size: 16px !important;
 `;
 
 export const Quote = styled.div`
@@ -152,5 +174,11 @@ export const Quote = styled.div`
     content: " ❞";
     font-weight: 400;
     font-size: 16px;
+  }
+
+  @container (max-height: 200px) {
+    & {
+      display: none;
+    }
   }
 `;

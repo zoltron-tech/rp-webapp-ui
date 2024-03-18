@@ -13,7 +13,7 @@ import * as S from "./styles";
 interface UserMenuProps {}
 
 export const UserMenu: FC<UserMenuProps> = ({}) => {
-  const { user, muse: novelist, logout } = useAuthContext();
+  const { user, novelist, logout } = useAuthContext();
   const [open, setOpen] = useState(false);
   const { push } = useRouter();
 

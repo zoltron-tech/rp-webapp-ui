@@ -50,7 +50,6 @@ export const MuseCard: FC<Props> = ({ muse }) => {
             <S.Title>
               {muse.firstName} {muse.lastName}
             </S.Title>
-            <S.username username={muse.pennedBy?.username} />
             <S.Quote>{muse.note}</S.Quote>
           </S.MuseInfo>
         </S.CardHeader>

@@ -237,7 +237,7 @@ export const Quote = styled.div`
   color: ${({ theme }) => theme.text};
   text-align: center;
   margin-top: 5px;
-  word-break: break-all;
+  word-break: break-word;
 
   &::before {
     content: "❝ ";
@@ -254,12 +254,6 @@ export const Quote = styled.div`
   @container (max-width: 400px) {
     & {
       font-size: 10px;
-    }
-  }
-
-  @container (max-width: 300px) {
-    & {
-      display: none;
     }
   }
 `;

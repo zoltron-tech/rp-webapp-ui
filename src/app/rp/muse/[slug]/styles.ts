@@ -1,5 +1,10 @@
 import { Avatar as AvatarCommon, Pill } from "@/components/common";
-import { BLUR_FILTER, DEV_MODE_BORDER, Z_INDEX } from "@/theme";
+import {
+  BACKGROUND_BLUR,
+  BLUR_FILTER,
+  DEV_MODE_BORDER,
+  Z_INDEX,
+} from "@/theme";
 import styled, { css } from "styled-components";
 
 interface BannerProps {
@@ -73,7 +78,7 @@ export const ContentLeft = styled.div`
   @container (max-width: 1024px) {
     max-width: 100%;
     width: 100%;
-    padding-inline: 40px;
+    padding-inline: 0px;
   }
 `;
 
@@ -83,6 +88,7 @@ export const ContentRight = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding-inline: 25px;
 
   container-name: profile-content-right;
   container-type: inline-size;
@@ -90,7 +96,6 @@ export const ContentRight = styled.div`
   @container (max-width: 1024px) {
     max-width: 100%;
     width: 100%;
-    padding-inline: 0px;
   }
 `;
 
@@ -109,7 +114,6 @@ export const Name = styled.div`
   text-align: center;
   text-align: center;
   margin-top: 150px;
-  margin-bottom: 200px;
   font-size: clamp(36px, 5vw, 76px);
   color: ${({ theme }) => theme.textPrimary};
   z-index: ${Z_INDEX.DEFAULT};
@@ -153,6 +157,7 @@ export const AuthorContainer = styled.div`
   align-items: center;
   gap: 10px;
   margin-top: 60px;
+  margin-bottom: 20px;
 
   @container (max-width: 1024px) {
     margin-top: 10px;
@@ -160,29 +165,47 @@ export const AuthorContainer = styled.div`
 `;
 
 export const NoteContainer = styled(Pill)`
-  max-width: 460px;
-  min-height: 200px;
+  max-width: 400px;
+  min-height: 20px;
+  display: flex;
+  margin-bottom: 120px;
   margin-top: 20px;
-  word-break: break-all;
-  border-radius: 20px;
+  align-items: center;
+  justify-content: center;
 
-  padding: 40px 20px 20px;
+  ${BACKGROUND_BLUR}
 
-  &::before {
-    content: "Note";
+  padding: 10px 20px 20px;
+  @container profile-content (max-width: 1024px) {
+    display: none;
+  }
+`;
+
+export const NoteMobile = styled(Pill)`
+  max-width: 400px;
+  display: none;
+  margin-top: 10px;
+  align-items: center;
+  justify-content: center;
+
+  padding: 10px 20px 20px;
+
+  @container (max-width: 1024px) {
+    display: flex;
   }
 `;
 
 export const InfoContainer = styled(Pill)`
   display: flex;
   flex-direction: column;
-  max-width: 800px;
+  max-width: 700px;
   min-height: 200px;
   margin-top: 50px;
-  word-break: break-all;
+  word-break: break-word;
   border-radius: 20px;
+  margin-bottom: 40px;
 
-  padding: 40px 20px 20px;
+  padding: 50px 20px 20px;
 
   &::before {
     position: static;

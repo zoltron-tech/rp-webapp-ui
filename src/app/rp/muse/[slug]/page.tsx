@@ -60,6 +60,9 @@ export default function MuseProfilePage({}) {
           <S.NameMobile>
             {muse?.firstName} {muse?.lastName}
           </S.NameMobile>
+          <S.NoteMobile>
+            <Quote>{muse?.note}</Quote>
+          </S.NoteMobile>
           <S.AuthorContainer>
             <Avatar
               src={muse?.pennedBy?.image || ""}
@@ -73,9 +76,6 @@ export default function MuseProfilePage({}) {
               <Username username={muse?.pennedBy?.username} primary />
             </S.UsernameContainer>
           </S.AuthorContainer>
-          <S.NoteContainer>
-            <Quote>{muse?.note}</Quote>
-          </S.NoteContainer>
           <S.MusePillContainer>
             <MusesPill pillType="CONTACTS" muse={muse} />
           </S.MusePillContainer>
@@ -84,6 +84,9 @@ export default function MuseProfilePage({}) {
           <S.Name>
             {muse?.firstName} {muse?.lastName}
           </S.Name>
+          <S.NoteContainer>
+            <Quote>{muse?.note}</Quote>
+          </S.NoteContainer>
           <S.InfoContainer>
             <S.InfoItem>
               <S.InfoLabel>First Name:</S.InfoLabel>

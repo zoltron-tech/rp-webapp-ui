@@ -1,4 +1,4 @@
-import { BASE_TRANSITION, DEV_MODE_BORDER } from "@/theme";
+import { BASE_TRANSITION, DEV_MODE_BORDER, BACKGROUND_BLUR } from "@/theme";
 import styled from "styled-components";
 import { Avatar } from "../common";
 
@@ -26,12 +26,18 @@ export const Menu = styled.div`
   pointer-events: none;
   transition-property: opacity, width, height;
   ${BASE_TRANSITION}
+  ${BACKGROUND_BLUR}
 
   border-radius: var(--border-radius);
 
   &.open {
     opacity: 1;
     pointer-events: all;
+  }
+
+  hr {
+    height: 1px;
+    opacity: 0.6;
   }
 `;
 

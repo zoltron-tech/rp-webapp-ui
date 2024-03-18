@@ -57,7 +57,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
           <Button variant="menu-item">Display & accessibility</Button>
           <hr></hr>
           <Button variant="menu-item" onClick={handleLogout}>
-            Exit
+            Log out
           </Button>
         </S.Menu>
       </S.ContentContainer>

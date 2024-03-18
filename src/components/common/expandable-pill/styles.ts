@@ -36,12 +36,14 @@ export const PillContinaer = styled(Pill)`
 
 export const ScrollableContentContainer = styled.div`
   ${PILL}
-  width: 100px;
+  width: 90px;
   overflow-y: auto;
-  padding: 0px 10px;
+  padding: 0px 5px;
+  margin: 0px 0px 0px 10px;
   position: absolute;
   left: 60px;
   height: calc(95cqw - 200px);
+  background-color: ${({ theme }) => theme.pillExpandedContentBackground};
   transform: rotate(-90deg) translateY(calc(50%));
   scroll-snap-type: y mandatory;
   transition: opacity 0.1s ease-in-out;

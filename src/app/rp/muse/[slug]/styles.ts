@@ -173,7 +173,7 @@ export const NoteContainer = styled(Pill)`
   align-items: center;
   justify-content: center;
 
-  ${BACKGROUND_BLUR}
+  ${BACKGROUND_BLUR()}
 
   padding: 10px 20px 20px;
   @container profile-content (max-width: 1024px) {
@@ -192,6 +192,12 @@ export const NoteMobile = styled(Pill)`
 
   @container (max-width: 1024px) {
     display: flex;
+  }
+
+  @container profile-content (max-width: 300px) {
+    & {
+      display: none;
+    }
   }
 `;
 
@@ -212,6 +218,18 @@ export const InfoContainer = styled(Pill)`
     content: "Information";
     padding-bottom: 50px;
   }
+
+  @container profile-content (max-width: 500px) {
+    & {
+      padding: 0px 0px 0px;
+    }
+
+    &::before {
+      position: static;
+      content: "Information";
+      padding-bottom: 20px;
+    }
+  }
 `;
 
 export const InfoItem = styled.div`
@@ -229,6 +247,12 @@ export const InfoLabel = styled.span`
   font-weight: bold;
   text-align: start;
   vertical-align: middle;
+
+  @container profile-content (max-width: 500px) {
+    & {
+      margin-left: 10px;
+    }
+  }
 `;
 
 export const InfoValue = styled.span`
@@ -236,6 +260,12 @@ export const InfoValue = styled.span`
   margin-right: 50px;
   text-align: end;
   vertical-align: middle;
+
+  @container profile-content (max-width: 500px) {
+    & {
+      margin-right: 10px;
+    }
+  }
 `;
 
 export const MusePillContainer = styled.div`

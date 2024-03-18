@@ -13,7 +13,7 @@ import * as S from "./styles";
 interface UserMenuProps {}
 
 export const UserMenu: FC<UserMenuProps> = ({}) => {
-  const { user, novelist, logout } = useAuthContext();
+  const { user, muse: novelist, logout } = useAuthContext();
   const [open, setOpen] = useState(false);
   const { push } = useRouter();
 
@@ -24,6 +24,10 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
 
   const toEditProfile = () => {
     push(`/rp/profile/edit`);
+  };
+
+  const toMusesProfile = () => {
+    push(`/rp/profile/muses`);
   };
 
   const toUserProfile = () => {
@@ -50,6 +54,9 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
           <hr></hr>
           <Button variant="menu-item" onClick={toEditProfile}>
             Edit profile
+          </Button>
+          <Button variant="menu-item" onClick={toMusesProfile}>
+            Your muses
           </Button>
           <hr></hr>
           <Button variant="menu-item">Settings & privacy</Button>

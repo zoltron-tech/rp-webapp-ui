@@ -2,7 +2,7 @@ import { Tagged, SearchResult } from "./common";
 
 export interface Muse extends Tagged {
   _tag: "Muse";
-  id: string;
+  id: string | null;
   firstName: string;
   pennedBy: Novelist;
   lastName: string;

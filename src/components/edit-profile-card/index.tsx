@@ -29,7 +29,7 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
 
   const updateUserAvatar = async () => {
     if (!avatarFile) return;
-    Logger.debug("avatarFile", avatarFile);
+    Logger.error("avatarFile is", avatarFile);
     const response = await uploadAvatar(avatarFile);
 
     if (response === API_MESSAGE.MediaError) {
@@ -53,7 +53,7 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
       updatedAvatarUrl = (await updateUserAvatar()) || novelist?.image;
     }
 
-    Logger.debug("updatedAvatar: ", updatedAvatarUrl);
+    Logger.error("updatedAvatar: ", updatedAvatarUrl);
 
     if (updatedAvatarUrl === API_MESSAGE.MediaError) {
       setLoading(false);
@@ -127,7 +127,7 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
   }, [state]);
 
   useEffect(() => {
-    Logger.debug("avatarFile", avatarFile);
+    Logger.error("avatarFile is ->", avatarFile);
   }, [avatarFile]);
 
   Logger.info("EditProfileCard rendered");

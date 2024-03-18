@@ -5,8 +5,11 @@ import { FC } from "react";
 import { Logger } from "@/utils/services";
 import { useRouter } from "next/navigation";
 import { GrEdit } from "react-icons/gr";
+
 import * as S from "./styles";
 import { FaRegTrashCan } from "react-icons/fa6";
+import { ShouldRender } from "../common";
+import { INITIAL_MUSE } from "@/utils/constants";
 
 type Props = {
   muse?: Muse | null;
@@ -17,6 +20,11 @@ export const MuseCard: FC<Props> = ({ muse }) => {
   const onAvatarClick = () => {
     if (!muse) return;
     push(`/rp/muse/${muse.id}`);
+  };
+
+  const onAddClick = () => {
+    if (!muse) return;
+    push(`/rp/profile/muses/create`);
   };
 
   const onEditClick = () => {
@@ -31,26 +39,44 @@ export const MuseCard: FC<Props> = ({ muse }) => {
     <S.CardWrapper>
       <S.CardBackground banner={muse.image} />
       <S.Card className="muse-card">
-        <S.EditButton onClick={onEditClick}>
-          <GrEdit />
-        </S.EditButton>
-        <S.DeleteButton>
-          <FaRegTrashCan />
-        </S.DeleteButton>
+        <ShouldRender if={muse != INITIAL_MUSE}>
+          <S.EditButton onClick={onEditClick}>
+            <GrEdit />
+          </S.EditButton>
+          <S.DeleteButton>
+            <FaRegTrashCan />
+          </S.DeleteButton>
+        </ShouldRender>
         <S.CardHeader>
-          <S.Avatar
-            src={muse.image || ""}
-            alt={""}
-            size={200}
-            name={"open"}
-            onClick={onAvatarClick}
-            hoverable
-          />
+          <ShouldRender if={muse != INITIAL_MUSE}>
+            <S.Avatar
+              src={muse.image || ""}
+              alt={""}
+              size={200}
+              name={"open"}
+              onClick={onAvatarClick}
+              hoverable
+            />
+          </ShouldRender>
+          <ShouldRender if={muse == INITIAL_MUSE}>
+            <S.Avatar
+              src={
+                "https://cdn.dribbble.com/users/4652895/screenshots/14493406/media/32e22691e52fd34a52337b5903c355ed.jpg"
+              }
+              alt={""}
+              size={200}
+              name={"open"}
+              onClick={onAddClick}
+              hoverable
+            />
+          </ShouldRender>
           <S.MuseInfo>
             <S.Title>
-              {muse.firstName} {muse.lastName}
+              {muse.firstName || "Add New"} {muse.lastName || ""}
             </S.Title>
-            <S.Quote>{muse.note}</S.Quote>
+            <ShouldRender if={muse != INITIAL_MUSE}>
+              <S.Quote>{muse.note}</S.Quote>
+            </ShouldRender>
           </S.MuseInfo>
         </S.CardHeader>
       </S.Card>

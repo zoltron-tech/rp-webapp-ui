@@ -7,6 +7,7 @@ import { Muse } from "@/types";
 import { getAllMusesAction } from "../../muse/actions";
 import { MuseCard } from "@/components/muse-card";
 import * as S from "./styles";
+import { INITIAL_MUSE } from "@/utils/constants";
 
 export default function MusesListPage({}) {
   const params = useParams();
@@ -43,6 +44,7 @@ export default function MusesListPage({}) {
 
   return (
     <S.MuseListContainer>
+      <MuseCard key={null} muse={INITIAL_MUSE}></MuseCard>
       {muses &&
         muses.map((muse) => <MuseCard key={muse?.id} muse={muse}></MuseCard>)}
     </S.MuseListContainer>

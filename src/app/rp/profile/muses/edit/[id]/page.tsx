@@ -10,13 +10,13 @@ const DynamicEditMuseCard = dynamic(
   { ssr: false }
 );
 
-export default function EditProfilePage({}) {
+export default function EditMusePage({}) {
   const id = useParams().id as string;
   const { state } = useAuthContext();
   const { push } = useRouter();
 
   useEffect(() => {
-    Logger.debug("EditProfilePage", state);
+    Logger.debug("EditMusePage", state);
     if (state === "LOGGED_OUT") {
       Logger.debug("pushing to home");
       push("/rp/novelists");

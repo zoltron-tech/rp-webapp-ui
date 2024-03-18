@@ -21,7 +21,7 @@ export const MusesPill: FC<Props> = ({ pillType, novelist, muse }) => {
     push(`/rp/profile/${username}`);
   };
 
-  const onMuseAvatarClick = (museId?: string) => {
+  const onMuseAvatarClick = (museId: string) => {
     if (museId) push(`/rp/muse/${museId}`);
   };
 
@@ -38,7 +38,7 @@ export const MusesPill: FC<Props> = ({ pillType, novelist, muse }) => {
               key={muse.firstName}
               className={className}
               name={muse.firstName}
-              onClick={() => onMuseAvatarClick(muse.id)}
+              onClick={() => onMuseAvatarClick(muse.id ? muse.id : "")}
               hoverable
             />
           ));
@@ -68,7 +68,9 @@ export const MusesPill: FC<Props> = ({ pillType, novelist, muse }) => {
               key={connection.firstName}
               className={className}
               name={connection.firstName}
-              onClick={() => onMuseAvatarClick(connection.id)}
+              onClick={() =>
+                onMuseAvatarClick(connection.id ? connection.id : "")
+              }
               hoverable
             />
           ));

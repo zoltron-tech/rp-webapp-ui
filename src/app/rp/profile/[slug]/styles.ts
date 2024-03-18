@@ -169,6 +169,26 @@ export const NoteContainer = styled(Pill)`
   &::before {
     content: "Note";
   }
+
+  @container profile-content (max-width: 400px) {
+    & {
+      margin-top: 0px;
+    }
+
+    &::before {
+      content: "";
+    }
+  }
+
+  @container profile-content (max-width: 200px) {
+    & {
+      display: none;
+    }
+
+    &::before {
+      content: "";
+    }
+  }
 `;
 
 export const MusePillContainer = styled.div`

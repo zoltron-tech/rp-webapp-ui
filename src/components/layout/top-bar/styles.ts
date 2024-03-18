@@ -1,7 +1,6 @@
 import { Avatar } from "@/components/common";
 import { pSBC } from "@/lib/pSBC";
 import {
-  BACKGROUND_BLUR,
   BASE_TRANSITION,
   DEV_MODE_BORDER,
   NO_USER_SELECT,
@@ -11,24 +10,26 @@ import { setOpacity } from "@/utils/helpers";
 import styled from "styled-components";
 
 export const Container = styled.div`
-  position: sticky;
-  top: 0;
-  width: 100%;
-  background-color: ${({ theme }) => theme.navbar};
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  /* padding: 0 40px; */
+  border: 1px solid ${({ theme }) => theme.background};
+  border-radius: 60px;
   box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
+  position: sticky;
+  align-items: center;
+  top: 0;
+  max-width: 1080px;
+  margin-inline: auto;
+  margin-top: 10px;
+  background-color: ${({ theme }) => setOpacity(theme.background, 0.95)};
+  display: flex;
+  justify-content: space-between;
   z-index: ${Z_INDEX.TOPBAR};
   transition-property: background-color, backdrop-filter,
     -webkit-backdrop-filter;
   ${BASE_TRANSITION}
 
-  @media (max-width: 650px) {
-    & {
-      ${BACKGROUND_BLUR}
-    }
+  @container (max-width: 1080px) {
+    border-radius: 0px;
+    margin-top: 0px;
   }
 `;
 
@@ -42,7 +43,7 @@ export const Bar = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 40px;
+  padding: 0 1rem;
   container-name: top-bar;
   container-type: size;
   z-index: ${Z_INDEX.TOPBAR};
@@ -122,7 +123,6 @@ export const SearchContainer = styled.div`
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  /* width: 100%; */
 
   ${DEV_MODE_BORDER("red")}
 
@@ -177,6 +177,7 @@ export const ActionsContainer = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  margin-right: 1rem;
 `;
 
 export const ButtonsContainerDesktop = styled.div`
@@ -197,13 +198,13 @@ export const ButtonsContainerDesktop = styled.div`
 `;
 
 export const ButtonsContainerLoggedInDesktop = styled(ButtonsContainerDesktop)`
-width: 50px;
+  width: 50px;
 
-@container (max-width: 800px) {
-  & {
-    width: 50px;
+  @container (max-width: 800px) {
+    & {
+      width: 50px;
+    }
   }
-}
 `;
 
 export const ButtonsContainerMobile = styled.div`

@@ -9,8 +9,7 @@ export const PositionContainer = styled.div`
 `;
 
 export const Menu = styled.div`
-  ${DEV_MODE_BORDER("yellow")}
-
+  box-shadow: 0px 0px 10px 4px rgba(0, 0, 0, 0.5);
   position: absolute;
   top: calc(var(--avatar-size) + 1rem);
   right: 0px;
@@ -26,7 +25,7 @@ export const Menu = styled.div`
   pointer-events: none;
   transition-property: opacity, width, height;
   ${BASE_TRANSITION}
-  ${BACKGROUND_BLUR}
+  ${BACKGROUND_BLUR()}
 
   border-radius: var(--border-radius);
 

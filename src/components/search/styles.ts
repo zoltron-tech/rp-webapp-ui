@@ -42,7 +42,7 @@ export const Dropdown = styled.div`
   align-items: center;
   justify-content: flex-start;
   gap: var(--type-select-gap);
-  ${BACKGROUND_BLUR}
+  ${BACKGROUND_BLUR("pillExpandedContentBackground")}
 
   &.empty {
     max-height: 200px;
@@ -100,15 +100,11 @@ export const EmptyDropdown = styled.div`
 
 export const Wrapper = styled.div`
   --height: 40px;
-  --max-width: 600px;
+  --max-width: 390px;
   --border-radius: calc(var(--height) / 2);
   --type-select-radius: calc(var(--border-radius) / 2);
   --type-select-width: calc(2 * var(--height));
   --type-select-gap: 2px;
-
-  @container (max-width: 1024px) {
-    --max-width: 60cqw;
-  }
 
   height: var(--height);
   width: var(--height);
@@ -316,7 +312,7 @@ export const Button = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: ${({ theme }) => theme.background};
+  background-color: ${({ theme }) => theme.pillExpandedContentBackground};
   cursor: pointer;
   transition: none;
 

@@ -80,7 +80,7 @@ export const THEME_DARK: Theme = {
   modalBackground: "#292828",
   toastBackground: "#1b1b1b",
   inputBackground: "#3a3a3a",
-  pillExpandedContentBackground: "#333333",
+  pillExpandedContentBackground: "#494949",
   text: "#dedede",
   textPrimary: "#dedede",
   textLink: accentColor,

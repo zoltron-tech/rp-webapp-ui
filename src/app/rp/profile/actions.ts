@@ -14,6 +14,8 @@ export const uploadAvatar = async (formData: FormData) => {
 
   const URL = `${RP_SERVICE_URL}/rp/portfolio/s3/upload`;
 
+  console.log(URL);
+
   const file = formData.get("file");
 
   Logger.debug("file", file);
@@ -21,7 +23,6 @@ export const uploadAvatar = async (formData: FormData) => {
   const response = await fetch(URL, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: jwt,
     },
     body: formData,

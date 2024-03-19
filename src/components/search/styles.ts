@@ -42,7 +42,7 @@ export const Dropdown = styled.div`
   align-items: center;
   justify-content: flex-start;
   gap: var(--type-select-gap);
-  ${BACKGROUND_BLUR("pillExpandedContentBackground")}
+  ${BACKGROUND_BLUR("searchBar")}
 
   &.empty {
     max-height: 200px;

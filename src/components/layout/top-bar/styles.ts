@@ -19,7 +19,7 @@ export const Container = styled.div`
   max-width: 1080px;
   margin-inline: auto;
   margin-top: 10px;
-  background-color: ${({ theme }) => setOpacity(theme.background, 0.95)};
+  background-color: ${({ theme }) => setOpacity(theme.navbar, 0.95)};
   display: flex;
   justify-content: space-between;
   z-index: ${Z_INDEX.TOPBAR};

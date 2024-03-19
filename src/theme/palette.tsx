@@ -13,6 +13,7 @@ export type Theme = {
   toastBackground: string;
   inputBackground: string;
   pillExpandedContentBackground: string;
+  searchBar: string;
   text: string;
   textPrimary: string;
   textLink: string;
@@ -36,7 +37,7 @@ export const accentColor = "#227cc5"; // "#8e5e9c"; //"#1ca0a0"; //"#227da1"; //
 
 export const THEME_LIGHT: Theme = {
   name: "light",
-  background: "#aeaeae",
+  background: "#f3f1f1",
   primary: pSBC(-0.15, accentColor) as string,
   primaryHover: pSBC(0.1, accentColor) as string,
   primaryDisabled: pSBC(0.4, accentColor) as string,
@@ -46,13 +47,14 @@ export const THEME_LIGHT: Theme = {
   toastBackground: "#e7e7e7",
   inputBackground: "#c5c5c5",
   pillExpandedContentBackground: "#dcdbdb",
+  searchBar: "#dfdede",
   text: "#111111",
   textPrimary: "#dedede",
   textLink: accentColor,
   textLinkHover: pSBC(-0.3, accentColor) as string,
-  textGray: "#5f5f5f",
+  textGray: "#8d8b8b",
   textStark: "#000",
-  navbar: pSBC(0.6, accentColor) as string,
+  navbar: "#c5c5c5", // pSBC(0.6, accentColor) as string,
   cardBackgroundTint: "rgba(255, 255, 255, 0.339)",
   cardBackgroundGradient: [
     "rgba(0, 0, 0, 0)",
@@ -71,7 +73,7 @@ export const THEME_LIGHT: Theme = {
 
 export const THEME_DARK: Theme = {
   name: "dark",
-  background: "#141414",
+  background: "#0e0e0e",
   primary: pSBC(-0.45, accentColor) as string,
   primaryHover: pSBC(-0.6, accentColor) as string,
   primaryDisabled: pSBC(-0.8, accentColor) as string,
@@ -81,13 +83,14 @@ export const THEME_DARK: Theme = {
   toastBackground: "#1b1b1b",
   inputBackground: "#3a3a3a",
   pillExpandedContentBackground: "#494949",
+  searchBar: "#6a6969",
   text: "#dedede",
   textPrimary: "#dedede",
   textLink: accentColor,
   textLinkHover: pSBC(-0.3, accentColor) as string,
   textGray: "#727272",
   textStark: "#fff",
-  navbar: "#474646",
+  navbar: "#3a3a3a",
   cardBackgroundTint: "rgba(0, 0, 0, 0.339)",
   cardBackgroundGradient: [
     "rgba(255, 255, 255, 0)",

@@ -127,8 +127,8 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
         width="80cqw"
         minWidth="100px"
         maxWidth="80cqw"
-        minHeight="1000px"
-        maxHeight="1000px"
+        minHeight="900px"
+        maxHeight="900px"
         padding="20px"
         margin="clamp(50px, 20cqw, 200px) auto 100px auto"
         centered

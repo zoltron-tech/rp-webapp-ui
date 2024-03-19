@@ -136,19 +136,21 @@ export const Search: FC<SearchProps> = ({
             ["has-result"]: searchResults?.length,
           })}
         >
-          <ShouldRender if={!noResults}>
-            {searchResults.map((result) => (
-              <S.DropdownItem key={result.id || result.username}>
-                {renderDropdownItem(result, handleButtonClick)}
-              </S.DropdownItem>
-            ))}
-          </ShouldRender>
-          <ShouldRender if={noResults}>
-            <S.EmptyDropdown>
-              No results found
-              <PiSmileyThin />
-            </S.EmptyDropdown>
-          </ShouldRender>
+          <S.DropdownArea>
+            <ShouldRender if={!noResults}>
+              {searchResults.map((result) => (
+                <S.DropdownItem key={result.id || result.username}>
+                  {renderDropdownItem(result, handleButtonClick)}
+                </S.DropdownItem>
+              ))}
+            </ShouldRender>
+            <ShouldRender if={noResults}>
+              <S.EmptyDropdown>
+                No results found
+                <PiSmileyThin />
+              </S.EmptyDropdown>
+            </ShouldRender>
+          </S.DropdownArea>
         </S.Dropdown>
         <S.Button
           onClick={handleButtonClick}

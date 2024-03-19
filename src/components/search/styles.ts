@@ -1,6 +1,12 @@
 "use client";
 
-import { BACKGROUND_BLUR, DEV_MODE_BORDER, SPIN, Z_INDEX } from "@/theme";
+import {
+  BACKGROUND_BLUR,
+  DEV_MODE_BORDER,
+  NO_SCROLLBAR,
+  SPIN,
+  Z_INDEX,
+} from "@/theme";
 import { css, styled } from "styled-components";
 
 const TypeSelectTypography = css`
@@ -36,6 +42,7 @@ export const Dropdown = styled.div`
   opacity: 1;
   z-index: ${Z_INDEX.DEFAULT - 1};
   pointer-events: none;
+  contain: paint;
 
   display: flex;
   flex-direction: column;
@@ -49,9 +56,17 @@ export const Dropdown = styled.div`
   }
 `;
 
+export const DropdownArea = styled.div`
+  overflow-y: scroll;
+  width: 100%;
+  margin-top: calc(var(--height));
+  height: 100%;
+  ${NO_SCROLLBAR}
+`;
+
 export const DropdownItem = styled.div`
   padding: 10px;
-  min-height: var(--height);
+  /* min-height: var(--height); */
   width: 100%;
   display: flex;
   align-items: center;
@@ -64,10 +79,6 @@ export const DropdownItem = styled.div`
 
   opacity: 0;
   pointer-events: none;
-
-  &:first-child {
-    margin-top: calc(var(--height) + 10px);
-  }
 
   &:last-child {
     border-radius: 0 0 var(--border-radius) var(--border-radius);
@@ -263,13 +274,13 @@ export const Container = styled.div`
       ${BoxShadow}
       pointer-events: all;
 
-      & > ${DropdownItem} {
+      & ${DropdownItem} {
         opacity: 1;
         pointer-events: all;
       }
     }
 
-    &:has(${Dropdown}.has-result, ${Dropdown}.empty) > ${TypeSelect} {
+    &:has(${Dropdown}.has-result, ${Dropdown}.empty) ${TypeSelect} {
       border-radius: var(--border-radius) 0 0 0;
       transition-property: opacity;
     }

@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { GoArrowRight } from "react-icons/go";
 import { SiBookstack } from "react-icons/si";
 import * as S from "./styles";
+import { NotificationsMenu } from "@/components/notifications-menu";
 
 type Props = {
   toggleTheme: () => void;
@@ -98,6 +99,7 @@ export const TopBar: FC<Props> = memo(({ theme, toggleTheme }) => {
           </ShouldRender>
           <ShouldRender if={state === "LOGGED_IN" || state === "UNINITIALIZED"}>
             <S.ButtonsContainerLoggedInDesktop>
+              <NotificationsMenu />
               <UserMenu />
             </S.ButtonsContainerLoggedInDesktop>
           </ShouldRender>

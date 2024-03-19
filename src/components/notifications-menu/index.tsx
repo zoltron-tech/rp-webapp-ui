@@ -1,0 +1,65 @@
+"use client";
+
+import { FC, useState, useEffect } from "react";
+
+import { useAuthContext } from "@/hooks";
+import { toggleState } from "@/utils/helpers";
+import { useRouter } from "next/navigation";
+import { Logger } from "@/utils/services";
+import classNames from "classnames";
+import { IoNotificationsCircle } from "react-icons/io5";
+import * as S from "./styles";
+import { getFriendRequests } from "@/app/rp/novelists/actions";
+import { Novelist } from "@/types";
+import { FriendRequestNotification } from "../friend-request-notification";
+
+interface NotificationsMenuProps {}
+
+export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
+  const { user, state } = useAuthContext();
+  const [friendRequests, setFriendRequests] = useState<Novelist[] | null>(null);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const { push } = useRouter();
+
+  const fetchNotifications = async () => {
+    setLoading(true);
+    const _friendRequests = await getFriendRequests();
+
+    if (!_friendRequests || "message" in _friendRequests) {
+      // handle error
+      setLoading(false);
+      push("/404");
+      return;
+    }
+    setLoading(false);
+    setFriendRequests(_friendRequests);
+  };
+
+  useEffect(() => {
+    if (state === "LOADING" || friendRequests) return;
+
+    fetchNotifications();
+  }, [state]);
+
+  Logger.info("NotificationsMenu rendered");
+
+  if (!user) return <></>;
+
+  return (
+    <S.PositionContainer>
+      <S.ContentContainer onClick={toggleState(setOpen)}>
+        <IoNotificationsCircle size={70} />
+        <S.Menu className={classNames({ open })}>
+          {friendRequests &&
+            friendRequests.map((request) => (
+              <FriendRequestNotification
+                key={request.username}
+                novelist={request}
+              ></FriendRequestNotification>
+            ))}
+        </S.Menu>
+      </S.ContentContainer>
+    </S.PositionContainer>
+  );
+};

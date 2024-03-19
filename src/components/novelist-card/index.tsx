@@ -25,6 +25,10 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
     push(`/rp/profile/${novelist.username}`);
   };
 
+  const onMuseAvatarClick = (museId: string) => {
+    if (museId) push(`/rp/muse/${museId}`);
+  };
+
   const handleMouseEnter = () => {
     if (process.env.DISABLE_AUTOSCROLL === "true") return;
 
@@ -94,7 +98,10 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
         <ShouldRender if={expanded}>
           <S.MuseList>
             {novelist.muses.map((muse) => (
-              <S.Muse key={`${muse.firstName}-${muse.lastName}`}>
+              <S.Muse
+                key={`${muse.firstName}-${muse.lastName}`}
+                onClick={() => onMuseAvatarClick(muse.id ? muse.id : "")}
+              >
                 <S.Muse.Avatar src={muse.image || ""} alt={""} size={70} />
 
                 <S.Muse.Name>

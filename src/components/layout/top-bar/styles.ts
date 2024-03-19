@@ -198,7 +198,7 @@ export const ButtonsContainerDesktop = styled.div`
 `;
 
 export const ButtonsContainerLoggedInDesktop = styled(ButtonsContainerDesktop)`
-  width: 50px;
+  width: 140px;
 
   @container (max-width: 800px) {
     & {

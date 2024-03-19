@@ -68,6 +68,30 @@ export const getUserNovelist = async () => {
   return novelist;
 };
 
+export const getFriendRequests = async () => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/requests`;
+
+  const response = await fetch(URL, {
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    cache: "no-store",
+  });
+
+  if (response.status === 404) {
+    return null;
+  } else if (response.status !== 200) {
+    Logger.debug(API_MESSAGE.Error, response.status, response.statusText);
+    logoutAction();
+  }
+
+  const novelists: Novelist[] = await response.json();
+
+  return novelists;
+};
+
 export const updateUserNovelist = async (_novelist: Novelist) => {
   const jwt = await authenticateAndGetJWT();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist`;

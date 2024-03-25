@@ -190,6 +190,15 @@ export const EditMuseCard: FC<CreateMuseCardProps> = () => {
               onEnter={submit}
               maxLength={50}
             />
+            <Input
+              label="Story"
+              name="story"
+              value={values?.story}
+              onChange={update}
+              onEnter={submit}
+              maxLength={20000}
+              height={500}
+            />
             <S.ButtonGroup>
               <S.SaveButton
                 variant="secondary"

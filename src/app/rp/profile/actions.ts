@@ -83,3 +83,131 @@ export const deleteAvatar = async (filename: string) => {
 
   return result;
 };
+
+export const sendFriendRequest = async (novelistId: string) => {
+  const jwt = await authenticateAndGetJWT();
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/connection/invoke`;
+  const body = {
+    targetId: novelistId,
+    connectionType: "PENDING_FRIEND_REQUEST",
+  };
+
+  console.log("sendFriendRequest", novelistId, body);
+
+  const response = await fetch(URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+
+  console.log("response is: ", response.status, response.statusText);
+
+  if (response.status !== 200) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const result = await response.json();
+
+  return result;
+};
+
+export const acceptFriendRequest = async (novelistId: string) => {
+  const jwt = await authenticateAndGetJWT();
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/connection/react`;
+  const body = {
+    sourceId: novelistId,
+    connectionType: "FRIEND",
+  };
+
+  console.log("acceptFriendRequest", novelistId, body);
+
+  const response = await fetch(URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+
+  console.log("response is: ", response.status, response.statusText);
+
+  if (response.status !== 200) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const result = await response.json();
+
+  return result;
+};
+
+export const deleteFriendRequest = async (novelistId: string) => {
+  const jwt = await authenticateAndGetJWT();
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/connection/delete`;
+  const body = {
+    sourceId: novelistId,
+    connectionType: "PENDING_FRIEND_REQUEST",
+  };
+
+  console.log("deleteFriendRequest", novelistId, body);
+
+  const response = await fetch(URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+
+  console.log("response is: ", response.status, response.statusText);
+
+  if (response.status !== 200) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const result = await response.json();
+
+  return result;
+};
+
+export const cancelFriendRequest = async (novelistId: string) => {
+  const jwt = await authenticateAndGetJWT();
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/connection/cancel`;
+  const body = {
+    targetId: novelistId,
+    connectionType: "PENDING_FRIEND_REQUEST",
+  };
+
+  console.log("cancelFriendRequest", novelistId, body);
+
+  const response = await fetch(URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+
+  console.log("response is: ", response.status, response.statusText);
+
+  if (response.status !== 200) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const result = await response.json();
+
+  return result;
+};

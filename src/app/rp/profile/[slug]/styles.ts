@@ -105,7 +105,6 @@ export const ContentRight = styled.div`
 `;
 
 export const Avatar = styled(AvatarCommon)`
-  --size: var(--profile-avatar-size);
   margin-top: 65px;
 `;
 
@@ -119,6 +118,7 @@ export const Name = styled.div`
   text-align: center;
   text-align: center;
   margin-top: 150px;
+  margin-bottom: 30px;
   font-size: clamp(36px, 5vw, 76px);
   color: ${({ theme }) => theme.textPrimary};
   z-index: ${Z_INDEX.DEFAULT};
@@ -158,7 +158,7 @@ export const UsernameContainer = styled.div`
 `;
 
 export const NoteContainer = styled(Pill)`
-  max-width: 460px;
+  width: 460px;
   min-height: 200px;
   margin-top: 20px;
   word-break: break-word;
@@ -168,6 +168,18 @@ export const NoteContainer = styled(Pill)`
 
   &::before {
     content: "Note";
+  }
+
+  @container profile-content (max-width: 1200px) {
+    & {
+      width: 360px;
+    }
+  }
+
+  @container profile-content (max-width: 1024px) {
+    & {
+      width: 460px;
+    }
   }
 
   @container profile-content (max-width: 400px) {
@@ -184,17 +196,13 @@ export const NoteContainer = styled(Pill)`
     & {
       display: none;
     }
-
-    &::before {
-      content: "";
-    }
   }
 `;
 
 export const MusePillContainer = styled.div`
   width: 100%;
   margin-inline: auto;
-  margin-top: 280px;
+  margin-top: 230px;
   margin-bottom: 20px;
   display: flex;
   flex-direction: column;

@@ -1,5 +1,7 @@
 import { SPIN } from "@/theme";
 import styled from "styled-components";
+import { pSBC } from "@/lib/pSBC";
+import { setOpacity } from "@/utils/helpers";
 
 export const Container = styled.div`
   width: 100%;
@@ -17,16 +19,14 @@ export const Container = styled.div`
 
   & span {
     display: inline-block;
-    position: absolute;
-    left: 50%;
-    top: 50%;
     opacity: 1;
-    transform: translate(-50%, -50%);
     transition: opacity 0.2s ease-in-out;
+    width: max-content;
+    min-width: 20px;
   }
 
   & svg.loading-icon {
-    display: block;
+    position: absolute;
     width: 20px;
     height: 20px;
     opacity: 0;
@@ -73,6 +73,54 @@ export const Container = styled.div`
     &:not(.loading):not(.disabled):hover {
       border-color: ${({ theme }) => theme.primaryHover};
       color: ${({ theme }) => theme.primaryHover};
+    }
+  }
+
+  &.positive {
+    background-color: ${({ theme }) =>
+      pSBC(-0.5, setOpacity(theme.success, 0.8))};
+    border: none;
+    color: ${({ theme }) => theme.text};
+    padding: 10px 20px;
+
+    & span {
+      color: ${({ theme }) => theme.textPrimary};
+    }
+
+    &:not(.loading):not(.disabled):hover {
+      background-color: ${({ theme }) => theme.primaryHover};
+    }
+  }
+
+  &.negative {
+    background-color: ${({ theme }) =>
+      pSBC(-0.5, setOpacity(theme.error, 0.8))};
+    border: none;
+    color: ${({ theme }) => theme.text};
+    padding: 10px 20px;
+
+    & span {
+      color: ${({ theme }) => theme.textPrimary};
+    }
+
+    &:not(.loading):not(.disabled):hover {
+      background-color: ${({ theme }) => theme.primaryHover};
+    }
+  }
+
+  &.action {
+    background-color: ${({ theme }) =>
+      pSBC(-0.5, setOpacity(theme.navbar, 0.8))};
+    border: none;
+    color: ${({ theme }) => theme.text};
+    padding: 10px 20px;
+
+    & span {
+      color: ${({ theme }) => theme.textPrimary};
+    }
+
+    &:not(.loading):not(.disabled):hover {
+      background-color: ${({ theme }) => theme.primaryHover};
     }
   }
 

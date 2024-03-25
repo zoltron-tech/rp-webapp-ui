@@ -142,6 +142,13 @@ export const authenticateAndGetJWT = async () => {
   return cookie;
 };
 
+export const authenticateAndGetJWTIfExists = async () => {
+  const authenticated = await authenticateAction();
+  if (!authenticated) return;
+  const cookie = getAuthCookie();
+  return cookie;
+};
+
 export const checkUsernameAvailability = async (username: string) => {
   const URL = `${RP_SERVICE_URL}/rp/user/account/username?username=${username}`;
 

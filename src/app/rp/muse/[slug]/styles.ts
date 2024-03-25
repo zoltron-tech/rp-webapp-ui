@@ -225,9 +225,53 @@ export const InfoContainer = styled(Pill)`
     }
 
     &::before {
-      position: static;
+      position: absolute;
       content: "Information";
       padding-bottom: 20px;
+    }
+  }
+`;
+
+export const StoryContainer = styled(Pill)`
+  display: flex;
+  flex-direction: column;
+  max-width: 700px;
+  min-height: 250px;
+  margin-top: 50px;
+  word-break: break-word;
+  border-radius: 20px;
+  margin-bottom: 40px;
+
+  padding: 100px 30px 30px 50px;
+
+  &::before {
+    position: absolute;
+    content: "Back Story";
+    padding-bottom: 50px;
+  }
+
+  @container profile-content (max-width: 500px) {
+    & {
+      padding: 0px 0px 0px;
+    }
+
+    &::before {
+      position: static;
+      content: "Back Story";
+      padding-bottom: 20px;
+    }
+  }
+`;
+
+export const StoryValue = styled.span`
+  width: inherit;
+  margin-right: 50px;
+  text-align: start;
+  vertical-align: middle;
+
+  @container profile-content (max-width: 500px) {
+    & {
+      margin-right: 10px;
     }
   }
 `;

@@ -1,8 +1,17 @@
 "use server";
-import { authenticateAndGetJWT, logoutAction } from "@/app/actions";
+import {
+  authenticateAndGetJWTIfExists,
+  authenticateAndGetJWT,
+  logoutAction,
+} from "@/app/actions";
 import { Novelist } from "@/types";
 import { SearchResult, WithMessage } from "@/types/common";
-import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
+import {
+  API_MESSAGE,
+  AUTH_HEADER_NAME,
+  MEDIA_JSON_HEADER_VALUE,
+  CONTENT_TYPE_HEADER_NAME,
+} from "@/utils/constants";
 import { Logger } from "@/utils/services";
 import getConfig from "next/config";
 
@@ -27,9 +36,21 @@ export const getNovelists = async () => {
 };
 
 export const getNovelistAction = async (username: string) => {
+  let headers: Record<string, string> = {
+    [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
+  };
+
+  const jwt = await authenticateAndGetJWTIfExists();
+  if (jwt) {
+    headers[AUTH_HEADER_NAME as string] = jwt;
+  }
+
   const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/get?username=${username}`;
 
-  const response = await fetch(URL, { cache: "no-store" });
+  const response = await fetch(URL, {
+    headers: headers,
+    cache: "no-store",
+  });
 
   console.log("getNovelistAction", response.status);
 
@@ -50,7 +71,7 @@ export const getUserNovelist = async () => {
 
   const response = await fetch(URL, {
     headers: {
-      "Content-Type": "application/json",
+      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
       [AUTH_HEADER_NAME]: jwt,
     },
     cache: "no-store",
@@ -74,7 +95,7 @@ export const getFriendRequests = async () => {
 
   const response = await fetch(URL, {
     headers: {
-      "Content-Type": "application/json",
+      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
       [AUTH_HEADER_NAME]: jwt,
     },
     cache: "no-store",
@@ -101,7 +122,7 @@ export const updateUserNovelist = async (_novelist: Novelist) => {
   const response = await fetch(URL, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
+      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
       [AUTH_HEADER_NAME]: jwt,
     },
     body: JSON.stringify(_novelist),
@@ -132,7 +153,7 @@ export const searchAction = async (searchTerm: string, type = "novelist") => {
 
   const response = await fetch(URL, {
     headers: {
-      "Content-Type": "application/json",
+      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
     },
     cache: "no-store",
   });

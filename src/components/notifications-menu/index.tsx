@@ -36,6 +36,18 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
     setFriendRequests(_friendRequests);
   };
 
+  const removeFriendRequestNotification = async (
+    novelistToRemove: Novelist
+  ) => {
+    if (!friendRequests) return;
+
+    const updatedFriendRequests = friendRequests.filter(
+      (novelist) => novelist.id !== novelistToRemove.id
+    );
+
+    setFriendRequests(updatedFriendRequests);
+  };
+
   useEffect(() => {
     if (state === "LOADING" || friendRequests) return;
 
@@ -56,6 +68,7 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
               <FriendRequestNotification
                 key={request.username}
                 novelist={request}
+                removeMethod={removeFriendRequestNotification}
               ></FriendRequestNotification>
             ))}
         </S.Menu>

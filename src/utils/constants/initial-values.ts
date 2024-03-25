@@ -3,6 +3,7 @@ import { None } from "@/types/common";
 
 export const INITIAL_NOVELIST: Novelist = {
   _tag: "Novelist",
+  id: "",
   username: "",
   firstName: "",
   lastName: "",
@@ -10,6 +11,7 @@ export const INITIAL_NOVELIST: Novelist = {
   image: "",
   muses: [],
   friends: [],
+  connection: "",
 };
 
 export const INITIAL_MUSE: Muse = {
@@ -19,6 +21,7 @@ export const INITIAL_MUSE: Muse = {
   firstName: "",
   lastName: "",
   note: "",
+  story: "",
   image: "",
   dateOfBirth: {
     year: 1970,

@@ -2,6 +2,7 @@ import { Novelist } from "@/types";
 
 const NOVELIST_MOCK: Novelist = {
   _tag: "Novelist",
+  id: "uuit-1",
   firstName: "John",
   lastName: "Doe",
   username: "johndoe",
@@ -18,6 +19,7 @@ const NOVELIST_MOCK: Novelist = {
       relationshipStatus: "single",
       pennedBy: {
         _tag: "Novelist",
+        id: "uuid",
         firstName: "John",
         lastName: "Doe",
         username: "johndoe",
@@ -30,6 +32,7 @@ const NOVELIST_MOCK: Novelist = {
       lastName: "Doe",
       image: "",
       note: "Something",
+      story: "some story",
       dateOfBirth: {
         year: 1980,
         month: "January",

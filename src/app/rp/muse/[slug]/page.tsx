@@ -79,14 +79,6 @@ export default function MuseProfilePage({}) {
           <S.MusePillContainer>
             <MusesPill pillType="CONTACTS" muse={muse} />
           </S.MusePillContainer>
-        </S.ContentLeft>
-        <S.ContentRight>
-          <S.Name>
-            {muse?.firstName} {muse?.lastName}
-          </S.Name>
-          <S.NoteContainer>
-            <Quote>{muse?.note}</Quote>
-          </S.NoteContainer>
           <S.InfoContainer>
             <S.InfoItem>
               <S.InfoLabel>First Name:</S.InfoLabel>
@@ -120,6 +112,19 @@ export default function MuseProfilePage({}) {
               <S.InfoValue>{muse?.relationshipStatus}</S.InfoValue>
             </S.InfoItem>
           </S.InfoContainer>
+        </S.ContentLeft>
+        <S.ContentRight>
+          <S.Name>
+            {muse?.firstName} {muse?.lastName}
+          </S.Name>
+          <S.NoteContainer>
+            <Quote>{muse?.note}</Quote>
+          </S.NoteContainer>
+          <S.StoryContainer>
+            <S.InfoItem>
+              <S.StoryValue>{muse?.story}</S.StoryValue>
+            </S.InfoItem>
+          </S.StoryContainer>
         </S.ContentRight>
       </S.Content>
     </>

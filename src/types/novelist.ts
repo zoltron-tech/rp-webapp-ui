@@ -7,6 +7,7 @@ export interface Muse extends Tagged {
   pennedBy: Novelist;
   lastName: string;
   note: string;
+  story: string;
   image: string;
   fandom: string;
   relationshipStatus: string;
@@ -22,6 +23,7 @@ export interface Muse extends Tagged {
 
 export interface Novelist extends Tagged {
   _tag: "Novelist";
+  id: string;
   username: string;
   firstName: string;
   lastName: string;
@@ -29,6 +31,7 @@ export interface Novelist extends Tagged {
   image: string;
   muses: Muse[];
   friends: Friend[];
+  connection: string | undefined;
 }
 
 export interface Friend extends Tagged {

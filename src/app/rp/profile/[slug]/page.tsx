@@ -10,8 +10,17 @@ import { PageLoader } from "@/components/layout";
 import { Novelist } from "@/types";
 import { useEffect, useState } from "react";
 import { getNovelistAction } from "../../novelists/actions";
-import * as S from "./styles";
 import { Quote } from "@/components/novelist-card/styles";
+import { ButtonGroup, ButtonInfo } from "@/components/button-group";
+
+import * as S from "./styles";
+import {
+  acceptFriendRequest,
+  cancelFriendRequest,
+  deleteFriendRequest,
+  sendFriendRequest,
+} from "../actions";
+import { API_MESSAGE } from "@/utils/constants";
 
 export default function UserProfilePage({}) {
   const params = useParams();
@@ -22,6 +31,140 @@ export default function UserProfilePage({}) {
   const isCurrentUser = username === user?.username;
   const { push } = useRouter();
   Logger.debug("params are:", params);
+
+  const handleButtonClick = () => {};
+
+  const handleSendFriendRequest = async () => {
+    if (!novelist?.id) return;
+
+    const response = await sendFriendRequest(novelist.id);
+
+    console.log("response", response);
+
+    if (response?.message === API_MESSAGE.Success) {
+      setNovelist((current) => {
+        if (!current) return current;
+        const copied = { ...current };
+
+        copied.connection = "FRIEND_REQUEST_SENT";
+
+        return copied;
+      });
+    }
+  };
+
+  const handleAcceptFriendRequest = async () => {
+    if (!novelist?.id) return;
+
+    const response = await acceptFriendRequest(novelist.id);
+
+    console.log("response", response);
+
+    if (response?.message === API_MESSAGE.Success) {
+      setNovelist((current) => {
+        if (!current) return current;
+        const copied = { ...current };
+
+        copied.connection = "FRIEND";
+
+        return copied;
+      });
+    }
+  };
+
+  const handleDeleteFriendRequest = async () => {
+    if (!novelist?.id) return;
+
+    const response = await deleteFriendRequest(novelist.id);
+
+    console.log("response", response);
+
+    if (response?.message === API_MESSAGE.Success) {
+      setNovelist((current) => {
+        if (!current) return current;
+        const copied = { ...current };
+
+        copied.connection = undefined;
+
+        return copied;
+      });
+    }
+  };
+
+  const handleCancelFriendRequest = async () => {
+    if (!novelist?.id) return;
+
+    const response = await cancelFriendRequest(novelist.id);
+
+    console.log("response", response);
+
+    if (response?.message === API_MESSAGE.Success) {
+      setNovelist((current) => {
+        if (!current) return current;
+        const copied = { ...current };
+
+        copied.connection = undefined;
+
+        return copied;
+      });
+    }
+  };
+
+  const IncomingRequestButtons: ButtonInfo[] = [
+    {
+      onClick: handleAcceptFriendRequest,
+      label: "Accept",
+      variant: "positive",
+    },
+    {
+      onClick: handleDeleteFriendRequest,
+      label: "Decline",
+      variant: "negative",
+    },
+    { onClick: handleButtonClick, label: "More", variant: "action" },
+  ];
+
+  const OutgoingRequestButtons: ButtonInfo[] = [
+    {
+      onClick: handleCancelFriendRequest,
+      label: "Friend request sent",
+      variant: "primary",
+    },
+    { onClick: handleButtonClick, label: "Message", variant: "action" },
+    { onClick: handleButtonClick, label: "More", variant: "action" },
+  ];
+
+  const FriendButtons: ButtonInfo[] = [
+    { onClick: handleButtonClick, label: "Friends", variant: "primary" },
+    { onClick: handleButtonClick, label: "Message", variant: "action" },
+    { onClick: handleButtonClick, label: "More", variant: "action" },
+  ];
+
+  const StrangerButtons: ButtonInfo[] = [
+    {
+      onClick: handleSendFriendRequest,
+      label: "Add friend",
+      variant: "primary",
+    },
+    { onClick: handleButtonClick, label: "Message", variant: "action" },
+    { onClick: handleButtonClick, label: "More", variant: "action" },
+  ];
+
+  const fetchAppropriateButtons = (connection: string | null | undefined) => {
+    console.log("connection", connection);
+    if (!connection) return StrangerButtons;
+
+    switch (connection) {
+      case "FRIEND":
+        return FriendButtons;
+      case "FRIEND_REQUEST_SENT":
+        return OutgoingRequestButtons;
+      case "FRIEND_REQUEST_RECEIVED":
+        return IncomingRequestButtons;
+      default:
+        return StrangerButtons;
+    }
+  };
 
   const fetchNovelist = async (username: string) => {
     // fetch novelist by username
@@ -54,6 +197,10 @@ export default function UserProfilePage({}) {
     fetchNovelist(username);
   }, [state]);
 
+  useEffect(() => {
+    console.log("novelist", novelist);
+  }, [novelist]);
+
   return (
     <>
       <ShouldRender if={loading && state !== "LOADING"}>
@@ -83,6 +230,14 @@ export default function UserProfilePage({}) {
           <S.Name>
             {novelist?.firstName} {novelist?.lastName}
           </S.Name>
+          <ShouldRender
+            if={state == "LOGGED_IN" && username !== user?.username}
+            preserveSpace
+          >
+            <ButtonGroup
+              buttons={fetchAppropriateButtons(novelist?.connection)}
+            />
+          </ShouldRender>
           <S.MusePillContainer>
             <MusesPill pillType="MUSES" novelist={novelist} />
             <MusesPill pillType="FRIENDS" novelist={novelist} />

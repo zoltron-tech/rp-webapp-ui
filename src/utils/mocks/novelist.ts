@@ -25,6 +25,7 @@ const NOVELIST_MOCK: Novelist = {
         image: "",
         muses: [],
         friends: [],
+        connection: "",
       },
       lastName: "Doe",
       image: "",
@@ -44,6 +45,7 @@ const NOVELIST_MOCK: Novelist = {
       image: "",
     },
   ],
+  connection: "",
 };
 
 export const getNovelistMock = (partial?: Partial<Novelist>): Novelist => ({

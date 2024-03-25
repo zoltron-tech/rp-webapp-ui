@@ -17,6 +17,7 @@ const MOCK_MUSE: Muse = {
     image: "",
     muses: [],
     friends: [],
+    connection: "",
   },
   lastName: "Doe",
   note: "Something",

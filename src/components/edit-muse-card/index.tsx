@@ -127,8 +127,8 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
         width="80cqw"
         minWidth="100px"
         maxWidth="80cqw"
-        minHeight="900px"
-        maxHeight="900px"
+        minHeight="1000px"
+        maxHeight="1000px"
         padding="20px"
         margin="clamp(50px, 20cqw, 200px) auto 100px auto"
         centered
@@ -182,7 +182,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
             />
             <Input
               label="Relationship Status"
-              name="relationship"
+              name="relationshipStatus"
               value={values?.relationshipStatus}
               onChange={update}
               onEnter={submit}
@@ -203,6 +203,15 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
               onChange={update}
               onEnter={submit}
               maxLength={50}
+            />
+            <Input
+              label="Story"
+              name="story"
+              value={values?.story}
+              onChange={update}
+              onEnter={submit}
+              maxLength={20000}
+              height={500}
             />
             <S.ButtonGroup>
               <S.SaveButton

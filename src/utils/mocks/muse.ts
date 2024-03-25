@@ -10,6 +10,7 @@ const MOCK_MUSE: Muse = {
   relationshipStatus: "single",
   pennedBy: {
     _tag: "Novelist",
+    id: "uuid",
     firstName: "John",
     lastName: "Doe",
     username: "johndoe",
@@ -21,6 +22,7 @@ const MOCK_MUSE: Muse = {
   },
   lastName: "Doe",
   note: "Something",
+  story: "some story",
   image: "https://example.com/image.jpg",
   dateOfBirth: {
     year: 1980,

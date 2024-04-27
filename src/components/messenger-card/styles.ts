@@ -10,7 +10,7 @@ export const ContentContainer = styled.div`
   justify-content: flex-start;
 
   margin-top: 10px;
-  height: min(calc(100cqh - 60px - 1rem), calc(100vh - 60px - 1rem));
+  height: calc(100vh - 60px - 1rem);
 
   background-color: ${({ theme }) => theme.modalBackground};
 `;

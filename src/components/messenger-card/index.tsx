@@ -1,10 +1,11 @@
+"use client";
+
 import {
   chatAction,
   sendMessageAction,
   updateMessagePollingAction,
 } from "@/app/rp/novelists/actions";
 import { Card, ChatBubble, ShouldRender } from "@/components/common";
-import { useSocket } from "@/context/socket";
 import { useAuthContext, useStore, useUIContext } from "@/hooks";
 import { Emoji, Friend, Message } from "@/types";
 import { StoreState } from "@/types/state";
@@ -29,7 +30,6 @@ export const MessengerCard: FC<MessengerCardProps> = ({}) => {
   const [openPicker, setOpenPicker] = useState(false);
   const [theme] = useStore<StoreState, "theme">((store) => store.theme);
   const { push } = useRouter();
-  const { connected: _connected } = useSocket();
   const [inputMessage, setInputMessage] = useState("");
   const { errorToast } = useUIContext();
   const chatBoxRef = useRef<HTMLDivElement>(null);

@@ -1,3 +1,5 @@
+"use client";
+
 import { Store, StoreContext } from "@/context";
 import { Logger } from "@/utils/services";
 import { useContext, useSyncExternalStore } from "react";

@@ -1,3 +1,5 @@
+"use client";
+
 import { Logger } from "@/utils/services";
 import { useCallback, useRef } from "react";
 

@@ -1,7 +1,5 @@
 "use client";
 
-import React from "react";
-
 import {
   ContentContainer,
   Footer,
@@ -10,10 +8,10 @@ import {
 } from "@/components/layout";
 import { AuthProvider, StoreProvider, UIContextProvider } from "@/context";
 import { THEME_DARK, THEME_LIGHT } from "@/theme";
+import React from "react";
 import { useCookies } from "react-cookie";
 import { ThemeProvider } from "styled-components";
 
-import { SocketProvider } from "@/context/socket";
 import { StoreState } from "@/types/state";
 import * as S from "./styles";
 
@@ -30,16 +28,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         initial={{ novelists: [], theme: cookies.theme || "light" }}
       >
         <AuthProvider>
-          <SocketProvider>
-            <UIContextProvider>
-              <S.PageContainer>
-                <LoginModal />
-                <TopBar />
-                <ContentContainer>{children}</ContentContainer>
-                <Footer />
-              </S.PageContainer>
-            </UIContextProvider>
-          </SocketProvider>
+          <UIContextProvider>
+            <S.PageContainer>
+              <LoginModal />
+              <TopBar />
+              <ContentContainer>{children}</ContentContainer>
+              <Footer />
+            </S.PageContainer>
+          </UIContextProvider>
         </AuthProvider>
       </StoreProvider>
     </ThemeProvider>

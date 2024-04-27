@@ -1,12 +1,15 @@
+"use client";
+
 import classNames from "classnames";
 import { FC, useEffect } from "react";
 import { BsMoonFill, BsSunFill } from "react-icons/bs";
 
-import { Logger } from "@/utils/services";
-import * as S from "./styles";
 import { useStore } from "@/hooks";
 import { StoreState } from "@/types/state";
+import { Logger } from "@/utils/services";
 import { useCookies } from "react-cookie";
+import * as S from "./styles";
+
 type Props = {};
 
 export const ThemeToggle: FC<Props> = ({}) => {
@@ -38,3 +41,5 @@ export const ThemeToggle: FC<Props> = ({}) => {
     </S.Container>
   );
 };
+
+export default ThemeToggle;

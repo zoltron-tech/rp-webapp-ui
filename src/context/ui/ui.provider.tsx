@@ -1,3 +1,5 @@
+"use client";
+
 import { generateToastError, generateToastSuccess } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import { FC } from "react";

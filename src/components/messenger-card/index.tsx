@@ -13,6 +13,7 @@ import { Logger } from "@/utils/services";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 import classNames from "classnames";
+import moment from "moment";
 import { useRouter } from "next/navigation";
 import { FC, useEffect, useRef, useState } from "react";
 import { BsEmojiSmile, BsSendArrowUp } from "react-icons/bs";
@@ -24,7 +25,7 @@ export const MessengerCard: FC<MessengerCardProps> = ({}) => {
   const { novelist } = useAuthContext();
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [loadedChat, setLoadedChat] = useState<Message[] | null>([]);
-  const lastMessageRef = useRef<Message | null>(null);
+  const lastMessageDate = useRef<string | null>(null);
   const messageIds = useRef<Set<string>>(new Set());
   const [_loading, setLoading] = useState(true);
   const [openPicker, setOpenPicker] = useState(false);
@@ -77,7 +78,12 @@ export const MessengerCard: FC<MessengerCardProps> = ({}) => {
     }
     setLoading(false);
     setLoadedChat(_messages);
-    lastMessageRef.current = _messages[_messages.length - 1];
+    lastMessageDate.current = _messages[_messages.length - 1]?.date;
+    if (!lastMessageDate.current) {
+      lastMessageDate.current = moment()
+        .utc()
+        .format("YYYY-MM-DD HH:mm:ss.SSSSSS");
+    }
     scrollChat();
     polling.current = setTimeout(() => {
       updateChat(targetUser);
@@ -87,7 +93,7 @@ export const MessengerCard: FC<MessengerCardProps> = ({}) => {
   const updateChat = async (targetUser: Friend) => {
     const _messages = await updateMessagePollingAction(
       targetUser?.username || null,
-      lastMessageRef.current?.date || ""
+      lastMessageDate.current || ""
     );
 
     if (_messages && !("message" in _messages) && _messages.length) {
@@ -99,7 +105,7 @@ export const MessengerCard: FC<MessengerCardProps> = ({}) => {
         }
       });
 
-      lastMessageRef.current = _messages[_messages.length - 1];
+      lastMessageDate.current = _messages[_messages.length - 1].date;
 
       setLoadedChat((prev) => {
         const newMessages = [...(prev || []), ...messagesToAdd].sort(

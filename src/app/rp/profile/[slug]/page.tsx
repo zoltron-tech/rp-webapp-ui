@@ -34,6 +34,10 @@ export default function UserProfilePage({}) {
 
   const handleButtonClick = () => {};
 
+  const handleMessageButton = () => {
+    push(`/rp/profile/messenger`);
+  };
+
   const handleSendFriendRequest = async () => {
     if (!novelist?.id) return;
 
@@ -121,6 +125,7 @@ export default function UserProfilePage({}) {
       label: "Decline",
       variant: "negative",
     },
+    { onClick: handleMessageButton, label: "Message", variant: "action" },
     { onClick: handleButtonClick, label: "More", variant: "action" },
   ];
 
@@ -130,13 +135,13 @@ export default function UserProfilePage({}) {
       label: "Friend request sent",
       variant: "primary",
     },
-    { onClick: handleButtonClick, label: "Message", variant: "action" },
+    { onClick: handleMessageButton, label: "Message", variant: "action" },
     { onClick: handleButtonClick, label: "More", variant: "action" },
   ];
 
   const FriendButtons: ButtonInfo[] = [
     { onClick: handleButtonClick, label: "Friends", variant: "primary" },
-    { onClick: handleButtonClick, label: "Message", variant: "action" },
+    { onClick: handleMessageButton, label: "Message", variant: "action" },
     { onClick: handleButtonClick, label: "More", variant: "action" },
   ];
 
@@ -146,7 +151,7 @@ export default function UserProfilePage({}) {
       label: "Add friend",
       variant: "primary",
     },
-    { onClick: handleButtonClick, label: "Message", variant: "action" },
+    { onClick: handleMessageButton, label: "Message", variant: "action" },
     { onClick: handleButtonClick, label: "More", variant: "action" },
   ];
 
@@ -214,7 +219,7 @@ export default function UserProfilePage({}) {
           <S.Avatar
             src={novelist?.image || ""}
             alt="profile-picture"
-            size={340}
+            size={250}
           />
           <S.NameMobile>
             {novelist?.firstName} {novelist?.lastName}

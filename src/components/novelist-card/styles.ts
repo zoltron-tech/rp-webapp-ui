@@ -4,7 +4,7 @@ import styled from "styled-components";
 
 export const CardWrapper = styled.div`
   position: relative;
-  height: 250px;
+  height: 220px;
   border-radius: var(--border-radius);
   transition: all 0.3s ease-in-out;
   contain: paint;
@@ -14,22 +14,22 @@ export const CardWrapper = styled.div`
   container-type: size;
 
   &.expanded {
-    height: 600px;
+    height: 500px;
   }
 
   @container (max-width: 1200px) {
     & {
-      height: 230px;
+      height: 200px;
     }
 
     &.expanded {
-      height: 500px;
+      height: 400px;
     }
   }
 
   @container (max-width: 900px) {
     & {
-      height: 150px;
+      height: 140px;
     }
 
     &.expanded {
@@ -68,7 +68,7 @@ export const Card = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 20px 20px 0px;
+  padding: 10px 10px 0px;
   position: relative;
   height: 100%;
   background: linear-gradient(
@@ -98,8 +98,8 @@ export const CardHeader = styled.div`
 
 export const ExpandButton = styled.div`
   position: absolute;
-  top: 200px;
-  right: 10px;
+  top: 160px;
+  right: 20px;
   width: 40px;
   height: 40px;
   display: flex;
@@ -158,7 +158,6 @@ export const Title = styled.div`
 `;
 
 export const Avatar = styled(Common.Avatar)`
-  --size: 200px;
   @container (max-width: 400px) {
     & {
       --size: 150px;
@@ -293,9 +292,8 @@ const MuseComponent = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 10px 0;
   border-radius: var(--border-radius);
-  padding: 10px;
+  padding-inline: 40px;
   position: relative;
   ${NO_USER_SELECT}
   scroll-snap-align: center;

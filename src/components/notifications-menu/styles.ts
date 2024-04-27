@@ -1,16 +1,22 @@
-import { BASE_TRANSITION, DEV_MODE_BORDER, BACKGROUND_BLUR } from "@/theme";
+import {
+  BASE_TRANSITION,
+  DEV_MODE_BORDER,
+  BACKGROUND_BLUR,
+  Z_INDEX,
+} from "@/theme";
 import styled from "styled-components";
 
 export const PositionContainer = styled.div`
   ${DEV_MODE_BORDER("red")}
   position: absolute;
-  right: 6rem;
+  margin-top: 8px;
+  right: 4.5rem;
 `;
 
 export const Menu = styled.div`
   box-shadow: 0px 0px 10px 4px rgba(0, 0, 0, 0.5);
   position: absolute;
-  top: 80px;
+  top: 60px;
   right: 0px;
 
   display: flex;
@@ -42,4 +48,63 @@ export const ContentContainer = styled.div`
   position: relative;
   width: max-content;
   height: max-content;
+`;
+
+export const Text = styled.div`
+  font-size: 14px;
+  color: ${({ theme }) => theme.text};
+`;
+
+export const NotificationBox = styled.div`
+  width: 100%;
+  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  justify-content: center;
+  margin-left: 10px;
+  font-size: 14px;
+`;
+
+export const CardWrapper = styled.div`
+  position: relative;
+  min-width: 250px;
+  width: max-content;
+  height: 60px;
+  border-radius: var(--border-radius);
+  transition: all 0.3s ease-in-out;
+  z-index: ${Z_INDEX.CARD};
+  padding: 5px;
+
+  container-name: muse-card;
+  container-type: size;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.primary};
+  }
+
+  &.end {
+    height: 40px;
+  }
+`;
+
+export const Card = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  position: relative;
+  height: 100%;
+
+  &.more-items-box {
+    justify-content: center;
+  }
+`;
+
+export const CardHeader = styled.div`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  position: relative;
 `;

@@ -18,36 +18,22 @@ import { StoreState } from "@/types/state";
 import * as S from "./styles";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const initialRender = useRef(true);
-  const [cookies, setCookie] = useCookies(["theme"]);
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
-
-  const toggleTheme = () => {
-    setTheme((current) => {
-      const newTheme = current === "light" ? "dark" : "light";
-      setCookie("theme", newTheme);
-      return newTheme;
-    });
-  };
+  const [cookies, _setCookie] = useCookies(["theme"]);
 
   const getTheme = () => {
-    return theme === "light" ? THEME_LIGHT : THEME_DARK;
+    return cookies.theme === "light" ? THEME_LIGHT : THEME_DARK;
   };
-
-  useEffect(() => {
-    if (!initialRender.current) return;
-    initialRender.current = false;
-    setTheme(cookies.theme || "dark");
-  }, []);
 
   return (
     <ThemeProvider theme={getTheme()}>
-      <StoreProvider<StoreState> initial={{ novelists: [] }}>
+      <StoreProvider<StoreState>
+        initial={{ novelists: [], theme: cookies.theme || "light" }}
+      >
         <AuthProvider>
           <UIContextProvider>
             <S.PageContainer>
               <LoginModal />
-              <TopBar theme={theme} toggleTheme={toggleTheme} />
+              <TopBar />
               <ContentContainer>{children}</ContentContainer>
               <Footer />
             </S.PageContainer>

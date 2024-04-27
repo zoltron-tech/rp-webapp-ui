@@ -39,7 +39,7 @@ export const Bar = styled.div`
   width: 100%;
   max-width: 1400px;
   margin-inline: auto;
-  height: 80px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -99,9 +99,9 @@ export const LogoInner = styled.div`
 `;
 
 export const LogoText = styled.div`
-  margin-left: 20px;
+  margin-left: 5px;
   text-transform: uppercase;
-  font-size: 28px;
+  font-size: 18px;
   font-weight: 500;
   font-style: italic;
   ${NO_USER_SELECT}

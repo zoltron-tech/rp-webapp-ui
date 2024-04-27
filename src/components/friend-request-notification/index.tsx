@@ -8,7 +8,7 @@ import { FaCheck } from "react-icons/fa6";
 
 import * as S from "./styles";
 import { RxCross2 } from "react-icons/rx";
-import { ShouldRender } from "../common";
+import { Avatar, ShouldRender } from "../common";
 import {
   acceptFriendRequest,
   deleteFriendRequest,
@@ -64,7 +64,7 @@ export const FriendRequestNotification: FC<Props> = ({
     <S.CardWrapper {...rest}>
       <S.Card className="muse-card">
         <S.CardHeader>
-          <S.Avatar
+          <Avatar
             src={novelist.image || ""}
             alt={""}
             size={40}

@@ -20,6 +20,10 @@ export const InputContainer = styled.div`
   align-items: center;
   justify-content: flex-start;
   padding: 14px;
+
+  &.textarea {
+    height: 100%;
+  }
 `;
 
 export const InputLabel = styled.label`

@@ -10,13 +10,11 @@ import { GoArrowRight } from "react-icons/go";
 import { SiBookstack } from "react-icons/si";
 import * as S from "./styles";
 import { NotificationsMenu } from "@/components/notifications-menu";
+import { ChatMenuModal } from "../../chat-menu-modal";
 
-type Props = {
-  toggleTheme: () => void;
-  theme: "light" | "dark";
-};
+type Props = {};
 
-export const TopBar: FC<Props> = memo(({ theme, toggleTheme }) => {
+export const TopBar: FC<Props> = memo(({}) => {
   const { show } = useVisibility("login-modal");
   const { state } = useAuthContext();
   const { push } = useRouter();
@@ -88,7 +86,7 @@ export const TopBar: FC<Props> = memo(({ theme, toggleTheme }) => {
               )}
             />
           </S.SearchContainer>
-          <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+          <ThemeToggle />
           <ShouldRender if={state === "LOGGED_OUT"}>
             <S.ButtonsContainerDesktop>
               <Button onClick={onLoginClick}>Log in</Button>
@@ -99,6 +97,7 @@ export const TopBar: FC<Props> = memo(({ theme, toggleTheme }) => {
           </ShouldRender>
           <ShouldRender if={state === "LOGGED_IN" || state === "UNINITIALIZED"}>
             <S.ButtonsContainerLoggedInDesktop>
+              <ChatMenuModal />
               <NotificationsMenu />
               <UserMenu />
             </S.ButtonsContainerLoggedInDesktop>

@@ -8,4 +8,5 @@ export type AuthState =
 
 export interface StoreState {
   novelists: Novelist[];
+  theme: "light" | "dark";
 }

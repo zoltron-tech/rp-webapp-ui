@@ -39,3 +39,11 @@ export interface Friend extends Tagged {
   username: string;
   image: string;
 }
+
+export interface Message extends Tagged {
+  _tag: "Friend";
+  sender: string;
+  receiver: string;
+  message: string;
+  createdAt: string;
+}

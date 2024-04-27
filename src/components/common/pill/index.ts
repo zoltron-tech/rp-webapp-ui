@@ -5,7 +5,7 @@ export const Pill = styled.div`
   ${PILL}
 
   width: 100%;
-  min-height: 100px;
+  min-height: 80px;
   background: ${({ theme }) => theme.inputBackground};
   position: relative;
   color: ${({ theme }) => theme.text};

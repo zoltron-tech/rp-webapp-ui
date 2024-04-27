@@ -147,7 +147,7 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
         minHeight="520px"
         maxHeight="520px"
         padding="20px"
-        margin="clamp(50px, 20cqw, 200px) auto 100px auto"
+        margin="clamp(50px, 20cqw, 50px) auto 100px auto"
         centered
       >
         <UploadAvatar

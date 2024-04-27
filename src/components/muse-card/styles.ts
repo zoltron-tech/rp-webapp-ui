@@ -6,8 +6,8 @@ import styled from "styled-components";
 
 export const CardWrapper = styled.div`
   position: relative;
-  width: 600px;
-  height: 250px;
+  width: 450px;
+  height: 200px;
   border-radius: var(--border-radius);
   transition: all 0.3s ease-in-out;
   contain: paint;
@@ -18,7 +18,7 @@ export const CardWrapper = styled.div`
 
   @container (max-width: 800px) {
     & {
-      height: 150px;
+      height: 100px;
     }
   }
 `;
@@ -53,7 +53,7 @@ export const Card = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 20px 20px 0px;
+  padding: 5px 10px 0px;
   position: relative;
   height: 100%;
   background: linear-gradient(
@@ -71,10 +71,10 @@ export const CardHeader = styled.div`
 
 export const Button = styled.div`
   position: absolute;
-  top: 20px;
+  top: 10px;
   right: 10px;
-  width: 40px;
-  height: 40px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -86,8 +86,8 @@ export const Button = styled.div`
   cursor: pointer;
 
   & svg {
-    width: 20px;
-    height: 20px;
+    width: 15px;
+    height: 15px;
     fill: ${({ theme }) => theme.text};
     transition: transform 0.2s ease-in-out;
   }
@@ -112,13 +112,13 @@ export const Button = styled.div`
 `;
 
 export const EditButton = styled(Button)`
-  top: 20px;
-  right: 70px;
+  top: 10px;
+  right: 50px;
 `;
 
 export const DeleteButton = styled(Button)`
-  top: 20px;
-  right: 20px;
+  top: 10px;
+  right: 10px;
 
   background-color: ${({ theme }) => setOpacity(theme.error, 0.5)};
 
@@ -133,15 +133,14 @@ export const Title = styled.div`
   font-weight: 600;
   color: ${({ theme }) => theme.text};
   text-align: center;
-  margin-bottom: 10px;
 `;
 
 export const Avatar = styled(Common.Avatar)`
-  --size: 200px;
+  --size: 160px;
 
-  @container (max-height: 200px) {
+  @container (max-height: 150px) {
     & {
-      --size: 100px;
+      --size: 80px;
     }
   }
 `;
@@ -157,7 +156,7 @@ export const MuseInfo = styled.div`
 `;
 
 export const Quote = styled.div`
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: ${({ theme }) => theme.text};
   text-align: center;
@@ -176,7 +175,7 @@ export const Quote = styled.div`
     font-size: 16px;
   }
 
-  @container (max-height: 200px) {
+  @container (max-height: 180px) {
     & {
       display: none;
     }

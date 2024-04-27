@@ -67,7 +67,7 @@ export default function MuseProfilePage({}) {
             <Avatar
               src={muse?.pennedBy?.image || ""}
               alt="profile-picture"
-              size={80}
+              size={60}
               hoverable
               onClick={onAuthorAvatarClick}
             />

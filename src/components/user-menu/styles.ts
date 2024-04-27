@@ -11,7 +11,7 @@ export const PositionContainer = styled.div`
 export const Menu = styled.div`
   box-shadow: 0px 0px 10px 4px rgba(0, 0, 0, 0.5);
   position: absolute;
-  top: calc(var(--avatar-size) + 1rem);
+  top: 60px;
   right: 0px;
 
   display: flex;

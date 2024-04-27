@@ -34,7 +34,7 @@ export const MusesPill: FC<Props> = ({ pillType, novelist, muse }) => {
             <S.Avatar
               src={muse.image}
               alt={muse.firstName}
-              size={100}
+              size={65}
               key={muse.firstName}
               className={className}
               name={muse.firstName}
@@ -49,7 +49,7 @@ export const MusesPill: FC<Props> = ({ pillType, novelist, muse }) => {
             <S.Avatar
               src={friend.image}
               alt={friend.username}
-              size={100}
+              size={65}
               key={friend.username}
               className={className}
               name={friend.username}
@@ -64,7 +64,7 @@ export const MusesPill: FC<Props> = ({ pillType, novelist, muse }) => {
             <S.Avatar
               src={connection.image}
               alt={connection.firstName}
-              size={100}
+              size={65}
               key={connection.firstName}
               className={className}
               name={connection.firstName}

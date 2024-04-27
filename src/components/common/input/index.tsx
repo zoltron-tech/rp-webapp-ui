@@ -61,14 +61,17 @@ export const Input: FC<Props> = ({
   Logger.info("Input rendered");
 
   return (
-    <S.InputWrapper>
-      <S.InputContainer>
+    <S.InputWrapper className={classNames({ textarea: type === "textarea" })}>
+      <S.InputContainer
+        className={classNames({ textarea: type === "textarea" })}
+      >
         <S.Input
           key={defaultValue}
           aria-label={label}
           className={classNames({
             "left-icon": icon,
             "right-icon": isPassword || icon,
+            textarea: type === "textarea",
           })}
           type={isPassword ? passwordType : type}
           placeholder={placeholder || " "}

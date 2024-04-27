@@ -4,7 +4,7 @@ import {
   authenticateAndGetJWT,
   logoutAction,
 } from "@/app/actions";
-import { Novelist } from "@/types";
+import { Message, Novelist } from "@/types";
 import { SearchResult, WithMessage } from "@/types/common";
 import {
   API_MESSAGE,
@@ -166,5 +166,29 @@ export const searchAction = async (searchTerm: string, type = "novelist") => {
   }
 
   const result = (await response.json()) as SearchResult[];
+  return result;
+};
+
+export const chatAction = async (targetUserName: string | null) => {
+  if (targetUserName === null) return;
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/getMessages/${targetUserName}`;
+
+  const response = await fetch(URL, {
+    headers: {
+      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    cache: "no-store",
+  });
+
+  Logger.debug("chatAction", response.status);
+  if (response.status === 404) {
+    return [];
+  } else if (response.status !== 200) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const result = (await response.json()) as Message[];
   return result;
 };

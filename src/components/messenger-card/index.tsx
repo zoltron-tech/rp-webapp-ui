@@ -1,69 +1,59 @@
-import { Card, ShouldRender } from "@/components/common";
-import { useAuthContext, useStore } from "@/hooks";
-import classNames from "classnames";
+import {
+  chatAction,
+  sendMessageAction,
+  updateMessagePollingAction,
+} from "@/app/rp/novelists/actions";
+import { Card, ChatBubble, ShouldRender } from "@/components/common";
+import { useSocket } from "@/context/socket";
+import { useAuthContext, useStore, useUIContext } from "@/hooks";
+import { Emoji, Friend, Message } from "@/types";
+import { StoreState } from "@/types/state";
 import { Logger } from "@/utils/services";
-import { FC, useState, useEffect, SetStateAction } from "react";
-import { useRouter } from "next/navigation";
-import * as S from "./styles";
-import { Avatar } from "../common";
-import { BsSendArrowUp, BsEmojiSmile } from "react-icons/bs";
-import { Friend, Message } from "@/types";
-import { chatAction } from "@/app/rp/novelists/actions";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
-import { StoreState } from "@/types/state";
-import useWebSocket from "react-use-websocket";
-import { Console } from "console";
-const SOCKET_URL = "ws://localhost:50200/ws/app/user";
-
+import classNames from "classnames";
+import { useRouter } from "next/navigation";
+import { FC, useEffect, useRef, useState } from "react";
+import { BsEmojiSmile, BsSendArrowUp } from "react-icons/bs";
+import { Avatar } from "../common";
+import * as S from "./styles";
 export type MessengerCardProps = {};
 
 export const MessengerCard: FC<MessengerCardProps> = ({}) => {
   const { novelist } = useAuthContext();
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [loadedChat, setLoadedChat] = useState<Message[] | null>([]);
+  const lastMessageRef = useRef<Message | null>(null);
+  const messageIds = useRef<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [openPicker, setOpenPicker] = useState(false);
   const [theme] = useStore<StoreState, "theme">((store) => store.theme);
   const { push } = useRouter();
-  const { sendMessage, lastMessage, readyState } = useWebSocket(SOCKET_URL);
-
-  const [inputMessage, setInputMessage] = useState("Hello");
-  const [channel, setChannel] = useState(selectedFriend?.username + "/private");
-
-  const [privateChats, setPrivateChats] = useState(new Map());
-  const [publicChats, setPublicChats] = useState([]);
-  const [userData, setUserData] = useState({
-    sender: novelist?.username,
-    receiver: "",
-    connected: false,
-  });
-
-  const handleSendMessage = () => {
-    console.log("Ham agaye!", inputMessage, SOCKET_URL, channel);
-    if (inputMessage.trim() !== "") {
-      sendMessage(
-        JSON.stringify({
-          type: "message",
-          channel: channel,
-          data: inputMessage,
-        })
-      );
-    }
-  };
-
-  const handleSubscribe = (newChannel: SetStateAction<string>) => {
-    setChannel(newChannel);
-  };
+  const { connected } = useSocket();
+  const [inputMessage, setInputMessage] = useState("");
+  const { errorToast } = useUIContext();
+  const chatBoxRef = useRef<HTMLDivElement>(null);
+  const polling = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    console.log(userData);
-  }, [userData]);
+    return () => {
+      polling.current && clearTimeout(polling.current);
+    };
+  }, []);
+
+  const scrollChat = () => {
+    setTimeout(() => {
+      chatBoxRef.current?.scrollTo({
+        top: chatBoxRef.current?.scrollHeight,
+        behavior: "instant",
+      });
+    }, 10);
+  };
 
   const onCardClick = (friend: Friend) => {
     setSelectedFriend(friend);
-    setChannel(friend.username + "/private");
     fetchChat(friend);
+    polling.current && clearTimeout(polling.current);
   };
 
   const onAvatarClick = (username: string) => {
@@ -87,6 +77,76 @@ export const MessengerCard: FC<MessengerCardProps> = ({}) => {
     }
     setLoading(false);
     setLoadedChat(_messages);
+    lastMessageRef.current = _messages[_messages.length - 1];
+    scrollChat();
+    polling.current = setTimeout(() => {
+      updateChat(targetUser);
+    }, 10000);
+  };
+
+  const updateChat = async (targetUser: Friend) => {
+    const _messages = await updateMessagePollingAction(
+      targetUser?.username || null,
+      lastMessageRef.current?.date || ""
+    );
+
+    if (_messages && !("message" in _messages) && _messages.length) {
+      const messagesToAdd: Message[] = [];
+      _messages.forEach((message) => {
+        if (!messageIds.current.has(message.id)) {
+          messagesToAdd.push(message);
+          messageIds.current.add(message.id);
+        }
+      });
+
+      lastMessageRef.current = _messages[_messages.length - 1];
+
+      setLoadedChat((prev) => {
+        const newMessages = [...(prev || []), ...messagesToAdd].sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
+        return newMessages;
+      });
+      scrollChat();
+    }
+
+    polling.current = setTimeout(() => {
+      updateChat(targetUser);
+    }, 10000);
+  };
+
+  const handleEmojiSelect = (emoji: Emoji) => {
+    setInputMessage((prev) => prev + emoji.native);
+  };
+
+  const handleSendMessage = async () => {
+    if (inputMessage === "" || !novelist?.username || !selectedFriend?.username)
+      return;
+
+    const message: Message = {
+      _tag: "Message",
+      id: "",
+      sender: novelist?.username,
+      receiver: selectedFriend?.username,
+      message: inputMessage.trim(),
+      date: new Date().toISOString(),
+    };
+
+    if (message.message !== "") {
+      const sent = await sendMessageAction(message);
+
+      if (!sent || !("sender" in sent)) {
+        errorToast("Failed to send message");
+        return;
+      }
+
+      setLoadedChat((prev) => [...(prev || []), sent]);
+      messageIds.current.add(sent.id);
+    }
+
+    setOpenPicker(false);
+    setInputMessage("");
+    scrollChat();
   };
 
   Logger.info("MessengerCard rendered");
@@ -110,7 +170,7 @@ export const MessengerCard: FC<MessengerCardProps> = ({}) => {
         <S.ContentContainer>
           <S.Contacts>
             <S.Title>
-              <span>Friends</span>
+              <span>Conversations</span>
             </S.Title>
             <S.Menu className={classNames({ open })}>
               {novelist?.friends &&
@@ -169,37 +229,38 @@ export const MessengerCard: FC<MessengerCardProps> = ({}) => {
                   </S.CardHeader>
                 </S.Card>
               </S.ChatTitleContainer>
-              <S.ChatBoxParent>
+              <S.ChatBoxParent ref={chatBoxRef}>
                 <S.ChatBox>
                   {loadedChat?.map((message) => (
                     <S.ChatRow
-                      key={message.createdAt}
+                      key={message.date}
                       className={
                         message.sender === novelist?.username
                           ? "sender"
                           : "receiver"
                       }
                     >
-                      <S.ChatBubble
-                        className={
-                          message.sender === novelist?.username
-                            ? "sender"
-                            : "receiver"
-                        }
-                      >
-                        {message.message}
-                      </S.ChatBubble>
+                      <ChatBubble
+                        message={message}
+                        currentUsername={novelist?.username || ""}
+                      />
                     </S.ChatRow>
                   ))}
                 </S.ChatBox>
               </S.ChatBoxParent>
               <S.ChatInput>
-                <S.MessageInput name="message" label="message"></S.MessageInput>
+                <S.MessageInput
+                  name="message"
+                  label="Message"
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  onEnter={handleSendMessage}
+                ></S.MessageInput>
                 <ShouldRender if={openPicker == true}>
                   <S.MenuContainer>
                     <Picker
                       data={data}
-                      onEmojiSelect={console.log}
+                      onEmojiSelect={handleEmojiSelect}
                       previewPosition={"none"}
                       navPosition={"bottom"}
                       searchPosition={"sticky"}
@@ -215,10 +276,7 @@ export const MessengerCard: FC<MessengerCardProps> = ({}) => {
                   />
                 </S.MenuItemBox>
                 <S.MenuItemBox>
-                  <BsSendArrowUp
-                    size={"30px"}
-                    onClick={() => handleSendMessage()}
-                  />
+                  <BsSendArrowUp size={"30px"} onClick={handleSendMessage} />
                 </S.MenuItemBox>
               </S.ChatInput>
             </ShouldRender>

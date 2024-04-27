@@ -6,14 +6,14 @@ import { Logger } from "@/utils/services";
 import { useRouter } from "next/navigation";
 import { FaCheck } from "react-icons/fa6";
 
-import * as S from "./styles";
-import { RxCross2 } from "react-icons/rx";
-import { Avatar, ShouldRender } from "../common";
 import {
   acceptFriendRequest,
   deleteFriendRequest,
 } from "@/app/rp/profile/actions";
 import { API_MESSAGE } from "@/utils/constants";
+import { RxCross2 } from "react-icons/rx";
+import { Avatar } from "../common";
+import * as S from "./styles";
 
 type Props = HTMLProps<HTMLDivElement> & {
   novelist?: Novelist | null;
@@ -32,8 +32,6 @@ export const FriendRequestNotification: FC<Props> = ({
 
     const response = await acceptFriendRequest(novelist.id);
 
-    console.log("response", response);
-
     if (response?.message === API_MESSAGE.Success) {
       removeMethod(novelist);
     }
@@ -43,8 +41,6 @@ export const FriendRequestNotification: FC<Props> = ({
     if (!novelist?.id) return;
 
     const response = await deleteFriendRequest(novelist.id);
-
-    console.log("response", response);
 
     if (response?.message === API_MESSAGE.Success) {
       removeMethod(novelist);

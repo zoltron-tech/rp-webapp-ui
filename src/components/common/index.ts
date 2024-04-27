@@ -1,6 +1,7 @@
 export * from "./avatar";
 export * from "./button";
 export * from "./card";
+export * from "./chat-bubble";
 export * from "./dropdown";
 export * from "./expandable-pill";
 export * from "./input";

@@ -3,7 +3,6 @@ import { styled } from "styled-components";
 import * as Common from "@/components/common";
 import { Z_INDEX } from "@/theme";
 import Input from "../common/input";
-import { Pill } from "@/components/common";
 
 export const ContentContainer = styled.div`
   display: flex;
@@ -171,6 +170,7 @@ export const ChatBox = styled.div`
   justify-content: flex-end;
   align-items: flex-end;
   gap: 1rem;
+  padding: 10px 0px;
   background-color: ${({ theme }) => theme.inputBackground};
 `;
 
@@ -178,38 +178,7 @@ export const ChatRow = styled.div`
   width: 100%;
   display: flex;
   gap: 1rem;
-  padding: 10px 30px 10px 30px;
-
-  &.sender {
-    justify-content: flex-end;
-    align-items: flex-end;
-  }
-
-  &.receiver {
-    justify-content: flex-start;
-    align-items: flex-start;
-  }
-`;
-
-export const ChatBubble = styled(Pill)`
-  width: fit-content;
-  font-size: 12px;
-  max-width: 300px;
-  min-height: 20px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 10px;
-  word-break: break-word;
-  border-radius: 20px;
-
-  &.sender {
-    background-color: ${({ theme }) => theme.primary};
-  }
-
-  &.receiver {
-    background-color: ${({ theme }) => theme.modalBackground};
-  }
+  padding-inline: 30px;
 `;
 
 export const ChatInput = styled.div`

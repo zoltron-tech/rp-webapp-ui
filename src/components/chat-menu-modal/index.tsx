@@ -1,13 +1,13 @@
 "use client";
 import { useAuthContext } from "@/hooks";
 import { toggleState } from "@/utils/helpers";
-import classNames from "classnames";
 import { Logger } from "@/utils/services";
+import classNames from "classnames";
+import { useRouter } from "next/navigation";
 import { FC, useState } from "react";
 import { PiChatsCircleDuotone } from "react-icons/pi";
-import { useRouter } from "next/navigation";
-import * as S from "./styles";
 import { Avatar } from "../common";
+import * as S from "./styles";
 
 interface ChatMenuProps {}
 
@@ -36,7 +36,10 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
         <S.Menu className={classNames({ open })}>
           {novelist?.friends &&
             novelist?.friends.map((friend) => (
-              <S.CardWrapper key={friend.username}>
+              <S.CardWrapper
+                onClick={onMoreMessagesClick}
+                key={friend.username}
+              >
                 <S.Card className="muse-card">
                   <S.CardHeader>
                     <Avatar

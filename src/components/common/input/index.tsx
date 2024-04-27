@@ -78,9 +78,9 @@ export const Input: FC<Props> = ({
           value={value}
           readOnly={readOnly}
           defaultValue={defaultValue}
-          onChange={(val): void => {
-            Logger.debug("onChange", val?.target?.value, val.target.name);
-            if (onChange) onChange(val);
+          onChange={(event): void => {
+            Logger.debug("onChange", event?.target?.value, event.target.name);
+            if (onChange) onChange(event);
           }}
           onKeyDown={(e): void => {
             if (e.key === "Enter" && onEnter) {

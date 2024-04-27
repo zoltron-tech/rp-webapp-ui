@@ -5,29 +5,29 @@ import { Logger } from "@/utils/services";
 import { useParams, useRouter } from "next/navigation";
 
 import { MusesPill } from "@/components";
+import { ButtonGroup, ButtonInfo } from "@/components/button-group";
 import { ShouldRender, Username } from "@/components/common";
 import { PageLoader } from "@/components/layout";
+import { Quote } from "@/components/novelist-card/styles";
 import { Novelist } from "@/types";
 import { useEffect, useState } from "react";
 import { getNovelistAction } from "../../novelists/actions";
-import { Quote } from "@/components/novelist-card/styles";
-import { ButtonGroup, ButtonInfo } from "@/components/button-group";
 
-import * as S from "./styles";
+import { API_MESSAGE } from "@/utils/constants";
 import {
   acceptFriendRequest,
   cancelFriendRequest,
   deleteFriendRequest,
   sendFriendRequest,
 } from "../actions";
-import { API_MESSAGE } from "@/utils/constants";
+import * as S from "./styles";
 
 export default function UserProfilePage({}) {
   const params = useParams();
   const { state, user, novelist: useNovelist } = useAuthContext();
   const [novelist, setNovelist] = useState<Novelist | null>(null);
   const [loading, setLoading] = useState(true);
-  const username = params.slug as string;
+  const username = params?.slug as string;
   const isCurrentUser = username === user?.username;
   const { push } = useRouter();
   Logger.debug("params are:", params);
@@ -42,8 +42,6 @@ export default function UserProfilePage({}) {
     if (!novelist?.id) return;
 
     const response = await sendFriendRequest(novelist.id);
-
-    console.log("response", response);
 
     if (response?.message === API_MESSAGE.Success) {
       setNovelist((current) => {
@@ -61,9 +59,6 @@ export default function UserProfilePage({}) {
     if (!novelist?.id) return;
 
     const response = await acceptFriendRequest(novelist.id);
-
-    console.log("response", response);
-
     if (response?.message === API_MESSAGE.Success) {
       setNovelist((current) => {
         if (!current) return current;
@@ -80,9 +75,6 @@ export default function UserProfilePage({}) {
     if (!novelist?.id) return;
 
     const response = await deleteFriendRequest(novelist.id);
-
-    console.log("response", response);
-
     if (response?.message === API_MESSAGE.Success) {
       setNovelist((current) => {
         if (!current) return current;
@@ -99,8 +91,6 @@ export default function UserProfilePage({}) {
     if (!novelist?.id) return;
 
     const response = await cancelFriendRequest(novelist.id);
-
-    console.log("response", response);
 
     if (response?.message === API_MESSAGE.Success) {
       setNovelist((current) => {
@@ -156,7 +146,6 @@ export default function UserProfilePage({}) {
   ];
 
   const fetchAppropriateButtons = (connection: string | null | undefined) => {
-    console.log("connection", connection);
     if (!connection) return StrangerButtons;
 
     switch (connection) {
@@ -201,10 +190,6 @@ export default function UserProfilePage({}) {
 
     fetchNovelist(username);
   }, [state]);
-
-  useEffect(() => {
-    console.log("novelist", novelist);
-  }, [novelist]);
 
   return (
     <>

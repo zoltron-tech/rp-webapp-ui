@@ -11,7 +11,7 @@ const DynamicCreateMuseCard = dynamic(
 );
 
 export default function CreateMusePage({}) {
-  const id = useParams().id as string;
+  const id = useParams()?.id as string;
   const { state } = useAuthContext();
   const { push } = useRouter();
 

@@ -16,7 +16,12 @@ import classNames from "classnames";
 import moment from "moment";
 import { useRouter } from "next/navigation";
 import { FC, useEffect, useRef, useState } from "react";
-import { BsEmojiSmile, BsSendArrowUp } from "react-icons/bs";
+import {
+  BsEmojiSmile,
+  BsFillArrowLeftCircleFill,
+  BsFillArrowRightCircleFill,
+  BsSendArrowUp,
+} from "react-icons/bs";
 import { Avatar } from "../common";
 import * as S from "./styles";
 export type MessengerCardProps = {};
@@ -28,6 +33,7 @@ export const MessengerCard: FC<MessengerCardProps> = ({}) => {
   const lastMessageDate = useRef<string | null>(null);
   const messageIds = useRef<Set<string>>(new Set());
   const [_loading, setLoading] = useState(true);
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [openPicker, setOpenPicker] = useState(false);
   const [theme] = useStore<StoreState, "theme">((store) => store.theme);
   const { push } = useRouter();
@@ -54,6 +60,7 @@ export const MessengerCard: FC<MessengerCardProps> = ({}) => {
   const onCardClick = (friend: Friend) => {
     setSelectedFriend(friend);
     fetchChat(friend);
+    setSidebarExpanded(false);
     polling.current && clearTimeout(polling.current);
   };
 
@@ -159,18 +166,38 @@ export const MessengerCard: FC<MessengerCardProps> = ({}) => {
 
   return (
     <S.ContentContainer>
-      <S.Contacts>
-        <S.Title>
+      <S.Contacts
+        className={classNames({
+          expanded: sidebarExpanded,
+          collapsed: !sidebarExpanded,
+        })}
+      >
+        <S.Title
+          className={classNames({
+            expanded: sidebarExpanded,
+            collapsed: !sidebarExpanded,
+          })}
+        >
           <span>Conversations</span>
+          <BsFillArrowRightCircleFill
+            className="expand"
+            onClick={() => setSidebarExpanded(true)}
+          />
+          <BsFillArrowLeftCircleFill
+            className="collapse"
+            onClick={() => setSidebarExpanded(false)}
+          />
         </S.Title>
         <S.Menu className={classNames({ open })}>
           {novelist?.friends &&
             novelist?.friends.map((friend) => (
               <S.CardWrapper
                 key={friend.username}
-                className={
-                  selectedFriend?.username === friend.username ? "selected" : ""
-                }
+                className={classNames({
+                  selected: selectedFriend?.username === friend.username,
+                  expanded: sidebarExpanded,
+                  collapsed: !sidebarExpanded,
+                })}
                 onClick={() => onCardClick(friend)}
               >
                 <S.Card className="muse-card">
@@ -181,7 +208,6 @@ export const MessengerCard: FC<MessengerCardProps> = ({}) => {
                       size={30}
                       key={friend.username}
                       name={""}
-                      onClick={() => onAvatarClick(friend.username)}
                       hoverable
                     />
                     <S.NotificationBox>{friend.username}</S.NotificationBox>
@@ -252,7 +278,6 @@ export const MessengerCard: FC<MessengerCardProps> = ({}) => {
                   navPosition={"bottom"}
                   searchPosition={"sticky"}
                   perLine={7}
-                  set={"google"}
                   theme={theme}
                   onClickOutside={() => setOpenPicker(false)}
                 />

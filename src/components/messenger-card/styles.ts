@@ -8,6 +8,7 @@ export const ContentContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-start;
+  position: relative;
 
   margin-top: 10px;
   height: calc(100vh - 60px - 1rem);
@@ -20,16 +21,40 @@ export const username = styled(Common.Username)`
 `;
 
 export const Title = styled.div`
-  font-size: clamp(10px, 2cqw, 18px);
-  margin-left: clamp(0px, calc(120px - 20cqw), 120px);
+  font-size: 16px;
   text-transform: uppercase;
   white-space: nowrap;
   padding-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: 20px;
+  width: 100%;
+
+  & > svg {
+    width: 25px;
+    height: 25px;
+  }
+
+  &.expanded {
+    & .expand {
+      display: none;
+    }
+  }
+
+  &.collapsed {
+    justify-content: center;
+    & > span {
+      display: none;
+    }
+    & .collapse {
+      display: none;
+    }
+  }
 `;
 
 export const Contacts = styled.div`
   width: 20%;
-  min-width: 250px;
   height: 100%;
   min-height: 550px;
   display: flex;
@@ -37,6 +62,19 @@ export const Contacts = styled.div`
   align-items: center;
   justify-content: flex-start;
   background-color: ${({ theme }) => theme.modalBackground};
+
+  transition-property: width;
+  transition-duration: 0.1s;
+  transition-timing-function: ease-in-out;
+
+  &.expanded {
+    min-width: 250px;
+    width: 20%;
+  }
+
+  &.collapsed {
+    width: 70px;
+  }
 `;
 
 export const Menu = styled.div`
@@ -97,9 +135,21 @@ export const TitleBox = styled.div`
   font-size: 20px;
 `;
 
+export const Card = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  position: relative;
+  height: 100%;
+
+  &.more-items-box {
+    justify-content: center;
+  }
+`;
+
 export const CardWrapper = styled.div`
   position: relative;
-  min-width: 250px;
   width: 100%;
   height: 50px;
   transition: all 0.3s ease-in-out;
@@ -114,6 +164,17 @@ export const CardWrapper = styled.div`
   &.selected {
     background-color: ${({ theme }) => theme.primary};
   }
+
+  &.collapsed {
+    padding: 5px;
+    & ${NotificationBox} {
+      display: none;
+    }
+
+    & ${Card} {
+      justify-content: center;
+    }
+  }
 `;
 
 export const ChatTitleContainer = styled.div`
@@ -126,19 +187,6 @@ export const ChatTitleContainer = styled.div`
   padding: 5px 5px 5px 20px;
 `;
 
-export const Card = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  position: relative;
-  height: 100%;
-
-  &.more-items-box {
-    justify-content: center;
-  }
-`;
-
 export const CardHeader = styled.div`
   width: 100%;
   display: flex;
@@ -148,10 +196,10 @@ export const CardHeader = styled.div`
 `;
 
 export const ChatContainer = styled.div`
-  width: 80%;
+  width: 100%;
   min-width: 250px;
   height: 100%;
-  min-height: 550px;
+  /* min-height: 550px; */
   display: flex;
   flex-direction: column;
   justify-content: flex-start;

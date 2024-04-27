@@ -252,7 +252,9 @@ export const MessengerCard: FC<MessengerCardProps> = ({}) => {
                   navPosition={"bottom"}
                   searchPosition={"sticky"}
                   perLine={7}
+                  set={"google"}
                   theme={theme}
+                  onClickOutside={() => setOpenPicker(false)}
                 />
               </S.MenuContainer>
             </ShouldRender>

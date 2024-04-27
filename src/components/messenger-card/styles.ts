@@ -8,6 +8,11 @@ export const ContentContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-start;
+
+  margin-top: 10px;
+  height: min(calc(100cqh - 60px - 1rem), calc(100vh - 60px - 1rem));
+
+  background-color: ${({ theme }) => theme.modalBackground};
 `;
 
 export const username = styled(Common.Username)`
@@ -27,7 +32,6 @@ export const Contacts = styled.div`
   min-width: 250px;
   height: 100%;
   min-height: 550px;
-  max-height: 550px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -148,7 +152,6 @@ export const ChatContainer = styled.div`
   min-width: 250px;
   height: 100%;
   min-height: 550px;
-  max-height: 550px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -157,7 +160,7 @@ export const ChatContainer = styled.div`
 
 export const ChatBoxParent = styled.div`
   width: 100%;
-  height: 500px;
+  height: 100%;
   overflow-y: scroll;
   background-color: ${({ theme }) => theme.inputBackground};
 `;
@@ -165,6 +168,7 @@ export const ChatBoxParent = styled.div`
 export const ChatBox = styled.div`
   width: 100%;
   height: max-content;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -199,28 +203,3 @@ export const MessageInput = styled(Input)`
 type ProfileBackgroundFilterProps = {
   banner: string;
 };
-
-export const ProfileBackgroundBlurFilter = styled.div<ProfileBackgroundFilterProps>`
-  position: absolute;
-  top: 0;
-  left: 0px;
-  width: 100cqw;
-  height: 100%;
-  max-height: 100vh;
-  background-image: linear-gradient(
-      ${({ theme }) => theme.cardBackgroundTint},
-      ${({ theme }) => theme.cardBackgroundTint}
-    ),
-    url(${(props): string => props.banner});
-  background-position: center;
-  background-size: cover;
-  z-index: ${Z_INDEX.BACKGROUND};
-
-  top: clamp(-300px, calc(-600px + 80cqw), 0px);
-
-  filter: blur(80px);
-  -webkit-filter: blur(80px);
-  -moz-filter: blur(80px);
-  -o-filter: blur(80px);
-  -ms-filter: blur(80px);
-`;

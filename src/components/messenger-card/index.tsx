@@ -5,7 +5,7 @@ import {
   sendMessageAction,
   updateMessagePollingAction,
 } from "@/app/rp/novelists/actions";
-import { Card, ChatBubble, ShouldRender } from "@/components/common";
+import { ChatBubble, ShouldRender } from "@/components/common";
 import { useAuthContext, useStore, useUIContext } from "@/hooks";
 import { Emoji, Friend, Message } from "@/types";
 import { StoreState } from "@/types/state";
@@ -158,138 +158,114 @@ export const MessengerCard: FC<MessengerCardProps> = ({}) => {
   Logger.info("MessengerCard rendered");
 
   return (
-    <>
-      <S.ProfileBackgroundBlurFilter
-        banner={
-          "https://i.etsystatic.com/44068041/r/il/3bab40/5467123737/il_300x300.5467123737_1kne.jpg"
-        }
-      />
-      <Card
-        width="100%"
-        maxWidth="90cqw"
-        minHeight="550px"
-        maxHeight="550px"
-        padding="0px"
-        margin="clamp(50px, 20cqw, 50px) auto 100px auto"
-        centered
-      >
-        <S.ContentContainer>
-          <S.Contacts>
-            <S.Title>
-              <span>Conversations</span>
-            </S.Title>
-            <S.Menu className={classNames({ open })}>
-              {novelist?.friends &&
-                novelist?.friends.map((friend) => (
-                  <S.CardWrapper
-                    key={friend.username}
-                    className={
-                      selectedFriend?.username === friend.username
-                        ? "selected"
-                        : ""
-                    }
-                    onClick={() => onCardClick(friend)}
-                  >
-                    <S.Card className="muse-card">
-                      <S.CardHeader>
-                        <Avatar
-                          src={friend.image}
-                          alt={friend.username}
-                          size={30}
-                          key={friend.username}
-                          name={""}
-                          onClick={() => onAvatarClick(friend.username)}
-                          hoverable
-                        />
-                        <S.NotificationBox>{friend.username}</S.NotificationBox>
-                      </S.CardHeader>
-                    </S.Card>
-                  </S.CardWrapper>
-                ))}
-            </S.Menu>
-          </S.Contacts>
-          <S.ChatContainer>
-            <ShouldRender if={selectedFriend != null}>
-              <S.ChatTitleContainer
-                key={selectedFriend?.username}
-                className="non-hoverable"
+    <S.ContentContainer>
+      <S.Contacts>
+        <S.Title>
+          <span>Conversations</span>
+        </S.Title>
+        <S.Menu className={classNames({ open })}>
+          {novelist?.friends &&
+            novelist?.friends.map((friend) => (
+              <S.CardWrapper
+                key={friend.username}
+                className={
+                  selectedFriend?.username === friend.username ? "selected" : ""
+                }
+                onClick={() => onCardClick(friend)}
               >
                 <S.Card className="muse-card">
                   <S.CardHeader>
                     <Avatar
-                      src={selectedFriend?.image || ""}
-                      alt={selectedFriend?.username || ""}
-                      size={40}
-                      key={selectedFriend?.username}
-                      onClick={() =>
-                        onAvatarClick(selectedFriend?.username || "")
-                      }
-                      name={"open"}
+                      src={friend.image}
+                      alt={friend.username}
+                      size={30}
+                      key={friend.username}
+                      name={""}
+                      onClick={() => onAvatarClick(friend.username)}
                       hoverable
                     />
-                    <S.TitleBox>
-                      <S.username
-                        username={selectedFriend?.username || ""}
-                      ></S.username>
-                    </S.TitleBox>
+                    <S.NotificationBox>{friend.username}</S.NotificationBox>
                   </S.CardHeader>
                 </S.Card>
-              </S.ChatTitleContainer>
-              <S.ChatBoxParent ref={chatBoxRef}>
-                <S.ChatBox>
-                  {loadedChat?.map((message) => (
-                    <S.ChatRow
-                      key={message.date}
-                      className={
-                        message.sender === novelist?.username
-                          ? "sender"
-                          : "receiver"
-                      }
-                    >
-                      <ChatBubble
-                        message={message}
-                        currentUsername={novelist?.username || ""}
-                      />
-                    </S.ChatRow>
-                  ))}
-                </S.ChatBox>
-              </S.ChatBoxParent>
-              <S.ChatInput>
-                <S.MessageInput
-                  name="message"
-                  label="Message"
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  onEnter={handleSendMessage}
-                ></S.MessageInput>
-                <ShouldRender if={openPicker == true}>
-                  <S.MenuContainer>
-                    <Picker
-                      data={data}
-                      onEmojiSelect={handleEmojiSelect}
-                      previewPosition={"none"}
-                      navPosition={"bottom"}
-                      searchPosition={"sticky"}
-                      perLine={7}
-                      theme={theme}
-                    />
-                  </S.MenuContainer>
-                </ShouldRender>
-                <S.MenuItemBox>
-                  <BsEmojiSmile
-                    onClick={() => onEmojiIconClick()}
-                    size={"30px"}
+              </S.CardWrapper>
+            ))}
+        </S.Menu>
+      </S.Contacts>
+      <S.ChatContainer>
+        <ShouldRender if={selectedFriend != null}>
+          <S.ChatTitleContainer
+            key={selectedFriend?.username}
+            className="non-hoverable"
+          >
+            <S.Card className="muse-card">
+              <S.CardHeader>
+                <Avatar
+                  src={selectedFriend?.image || ""}
+                  alt={selectedFriend?.username || ""}
+                  size={40}
+                  key={selectedFriend?.username}
+                  onClick={() => onAvatarClick(selectedFriend?.username || "")}
+                  name={"open"}
+                  hoverable
+                />
+                <S.TitleBox>
+                  <S.username
+                    username={selectedFriend?.username || ""}
+                  ></S.username>
+                </S.TitleBox>
+              </S.CardHeader>
+            </S.Card>
+          </S.ChatTitleContainer>
+          <S.ChatBoxParent ref={chatBoxRef}>
+            <S.ChatBox>
+              {loadedChat?.map((message) => (
+                <S.ChatRow
+                  key={message.date}
+                  className={
+                    message.sender === novelist?.username
+                      ? "sender"
+                      : "receiver"
+                  }
+                >
+                  <ChatBubble
+                    message={message}
+                    currentUsername={novelist?.username || ""}
                   />
-                </S.MenuItemBox>
-                <S.MenuItemBox>
-                  <BsSendArrowUp size={"30px"} onClick={handleSendMessage} />
-                </S.MenuItemBox>
-              </S.ChatInput>
+                </S.ChatRow>
+              ))}
+            </S.ChatBox>
+          </S.ChatBoxParent>
+          <S.ChatInput>
+            <S.MessageInput
+              name="message"
+              label="Message"
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onEnter={handleSendMessage}
+            ></S.MessageInput>
+            <ShouldRender if={openPicker == true}>
+              <S.MenuContainer>
+                <Picker
+                  data={data}
+                  onEmojiSelect={handleEmojiSelect}
+                  previewPosition={"none"}
+                  navPosition={"bottom"}
+                  searchPosition={"sticky"}
+                  perLine={7}
+                  theme={theme}
+                />
+              </S.MenuContainer>
             </ShouldRender>
-          </S.ChatContainer>
-        </S.ContentContainer>
-      </Card>
-    </>
+            <S.MenuItemBox>
+              <BsEmojiSmile onClick={() => onEmojiIconClick()} size={"30px"} />
+            </S.MenuItemBox>
+            <S.MenuItemBox>
+              <BsSendArrowUp size={"30px"} onClick={handleSendMessage} />
+            </S.MenuItemBox>
+          </S.ChatInput>
+        </ShouldRender>
+      </S.ChatContainer>
+    </S.ContentContainer>
   );
 };
 

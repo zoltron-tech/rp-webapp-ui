@@ -25,11 +25,11 @@ export const MessengerCard: FC<MessengerCardProps> = ({}) => {
   const [loadedChat, setLoadedChat] = useState<Message[] | null>([]);
   const lastMessageRef = useRef<Message | null>(null);
   const messageIds = useRef<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [openPicker, setOpenPicker] = useState(false);
   const [theme] = useStore<StoreState, "theme">((store) => store.theme);
   const { push } = useRouter();
-  const { connected } = useSocket();
+  const { connected: _connected } = useSocket();
   const [inputMessage, setInputMessage] = useState("");
   const { errorToast } = useUIContext();
   const chatBoxRef = useRef<HTMLDivElement>(null);

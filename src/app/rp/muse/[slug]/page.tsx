@@ -1,23 +1,23 @@
 "use client";
 
-import { useAuthContext } from "@/hooks";
-import { Logger } from "@/utils/services";
 import { MusesPill } from "@/components";
-import { useParams, useRouter } from "next/navigation";
-import { ShouldRender, Username, Avatar } from "@/components/common";
+import { Avatar, ShouldRender, Username } from "@/components/common";
 import { PageLoader } from "@/components/layout";
+import { Quote } from "@/components/novelist-card/styles";
+import { useAuthContext } from "@/hooks";
 import { Muse } from "@/types";
+import { Logger } from "@/utils/services";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getMuseAction } from "../../muse/actions";
 import * as S from "./styles";
-import { Quote } from "@/components/novelist-card/styles";
 
 export default function MuseProfilePage({}) {
   const params = useParams();
   const { state } = useAuthContext();
   const [muse, setMuse] = useState<Muse | null>(null);
   const [loading, setLoading] = useState(true);
-  const username = params.slug as string;
+  const username = params?.slug as string;
   const { push } = useRouter();
   Logger.debug("params are:", params);
 

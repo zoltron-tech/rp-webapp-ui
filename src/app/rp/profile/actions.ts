@@ -13,9 +13,6 @@ export const uploadAvatar = async (formData: FormData) => {
   const jwt = await authenticateAndGetJWT();
 
   const URL = `${RP_SERVICE_URL}/rp/portfolio/s3/upload`;
-
-  console.log(URL);
-
   const file = formData.get("file");
 
   Logger.debug("file", file);
@@ -93,8 +90,6 @@ export const sendFriendRequest = async (novelistId: string) => {
     connectionType: "PENDING_FRIEND_REQUEST",
   };
 
-  console.log("sendFriendRequest", novelistId, body);
-
   const response = await fetch(URL, {
     method: "POST",
     headers: {
@@ -104,8 +99,6 @@ export const sendFriendRequest = async (novelistId: string) => {
     body: JSON.stringify(body),
     cache: "no-store",
   });
-
-  console.log("response is: ", response.status, response.statusText);
 
   if (response.status !== 200) {
     return { message: API_MESSAGE.Error };
@@ -125,8 +118,6 @@ export const acceptFriendRequest = async (novelistId: string) => {
     connectionType: "FRIEND",
   };
 
-  console.log("acceptFriendRequest", novelistId, body);
-
   const response = await fetch(URL, {
     method: "POST",
     headers: {
@@ -136,8 +127,6 @@ export const acceptFriendRequest = async (novelistId: string) => {
     body: JSON.stringify(body),
     cache: "no-store",
   });
-
-  console.log("response is: ", response.status, response.statusText);
 
   if (response.status !== 200) {
     return { message: API_MESSAGE.Error };
@@ -156,9 +145,6 @@ export const deleteFriendRequest = async (novelistId: string) => {
     sourceId: novelistId,
     connectionType: "PENDING_FRIEND_REQUEST",
   };
-
-  console.log("deleteFriendRequest", novelistId, body);
-
   const response = await fetch(URL, {
     method: "POST",
     headers: {
@@ -168,8 +154,6 @@ export const deleteFriendRequest = async (novelistId: string) => {
     body: JSON.stringify(body),
     cache: "no-store",
   });
-
-  console.log("response is: ", response.status, response.statusText);
 
   if (response.status !== 200) {
     return { message: API_MESSAGE.Error };
@@ -189,8 +173,6 @@ export const cancelFriendRequest = async (novelistId: string) => {
     connectionType: "PENDING_FRIEND_REQUEST",
   };
 
-  console.log("cancelFriendRequest", novelistId, body);
-
   const response = await fetch(URL, {
     method: "POST",
     headers: {
@@ -200,8 +182,6 @@ export const cancelFriendRequest = async (novelistId: string) => {
     body: JSON.stringify(body),
     cache: "no-store",
   });
-
-  console.log("response is: ", response.status, response.statusText);
 
   if (response.status !== 200) {
     return { message: API_MESSAGE.Error };

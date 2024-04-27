@@ -52,7 +52,6 @@ export const MuseCard: FC<Props> = ({ muse }) => {
             <S.Avatar
               src={muse.image || ""}
               alt={""}
-              size={200}
               name={"open"}
               onClick={onAvatarClick}
               hoverable
@@ -64,7 +63,6 @@ export const MuseCard: FC<Props> = ({ muse }) => {
                 "https://cdn.dribbble.com/users/4652895/screenshots/14493406/media/32e22691e52fd34a52337b5903c355ed.jpg"
               }
               alt={""}
-              size={200}
               name={"open"}
               onClick={onAddClick}
               hoverable

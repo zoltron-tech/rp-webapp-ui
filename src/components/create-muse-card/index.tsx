@@ -1,12 +1,14 @@
+"use client";
+
 import { updateMuseAction } from "@/app/rp/muse/actions";
 import { uploadAvatar } from "@/app/rp/profile/actions";
 import { Card, Input, UploadAvatar, Username } from "@/components/common";
-import { useAuthContext, useForm, useStore, useUIContext } from "@/hooks";
+import { useAuthContext, useForm, useUIContext } from "@/hooks";
 import type { Muse } from "@/types";
 import { API_MESSAGE, INITIAL_MUSE } from "@/utils/constants";
 import { Logger } from "@/utils/services";
-import { FC, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { FC, useEffect, useState } from "react";
 import * as S from "./styles";
 
 export type CreateMuseCardProps = {};

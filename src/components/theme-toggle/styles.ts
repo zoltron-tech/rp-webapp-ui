@@ -20,10 +20,10 @@ export const Container = styled.div`
 `;
 
 export const ThemeSwitcher = styled.div`
-  width: 60px;
-  height: 30px;
+  width: 50px;
+  height: 25px;
   background-color: ${THEME_SWITCHER.BACKGROUND};
-  border-radius: 20px;
+  border-radius: 15px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -37,7 +37,7 @@ export const ThemeSwitcher = styled.div`
 export const ThemeSwitchInner = styled.div<{ theme: string }>`
   width: 50%;
   height: 100%;
-  border-radius: 15px;
+  border-radius: 20px;
   position: absolute;
   left: 0;
   z-index: ${Z_INDEX.BACKGROUND};
@@ -47,8 +47,8 @@ export const ThemeSwitchInner = styled.div<{ theme: string }>`
   contain: paint;
 
   & svg {
-    width: 18px;
-    height: 18px;
+    width: 12px;
+    height: 12px;
     transition: all 0.2s ease-in;
     z-index: ${Z_INDEX.AVATAR};
     opacity: 0;

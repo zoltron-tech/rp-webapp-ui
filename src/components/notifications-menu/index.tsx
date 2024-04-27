@@ -22,6 +22,10 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
   const [loading, setLoading] = useState(true);
   const { push } = useRouter();
 
+  const onMoreNotificationsClick = () => {
+    push(`/rp/profile/messenger`);
+  };
+
   const fetchNotifications = async () => {
     setLoading(true);
     const _friendRequests = await getFriendRequests();
@@ -61,7 +65,7 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
   return (
     <S.PositionContainer>
       <S.ContentContainer onClick={toggleState(setOpen)}>
-        <IoNotificationsCircle size={70} />
+        <IoNotificationsCircle size={50} />
         <S.Menu className={classNames({ open })}>
           {friendRequests &&
             friendRequests.map((request) => (
@@ -71,6 +75,16 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
                 removeMethod={removeFriendRequestNotification}
               ></FriendRequestNotification>
             ))}
+          <S.CardWrapper key={"end"} className="end">
+            <S.Card
+              className="more-items-box"
+              onClick={() => onMoreNotificationsClick()}
+            >
+              <S.CardHeader>
+                <S.Text>See all notifications</S.Text>
+              </S.CardHeader>
+            </S.Card>
+          </S.CardWrapper>
         </S.Menu>
       </S.ContentContainer>
     </S.PositionContainer>

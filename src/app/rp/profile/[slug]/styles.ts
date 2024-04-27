@@ -26,7 +26,7 @@ export const Banner = styled.div<BannerProps>`
 
 export const SolidBackground = styled.div`
   position: absolute;
-  top: clamp(270px, 30cqw, 460px);
+  top: clamp(270px, 30cqw, 300px);
   bottom: 0px;
   width: 100cqw;
   background-color: ${({ theme }) => theme.cardBackgroundColor};
@@ -105,7 +105,7 @@ export const ContentRight = styled.div`
 `;
 
 export const Avatar = styled(AvatarCommon)`
-  margin-top: 65px;
+  margin-top: 30px;
 `;
 
 const NameFontStyles = css`
@@ -117,9 +117,9 @@ export const Name = styled.div`
   width: 100%;
   text-align: center;
   text-align: center;
-  margin-top: 150px;
-  margin-bottom: 30px;
-  font-size: clamp(36px, 5vw, 76px);
+  margin-top: 100px;
+  margin-bottom: 10px;
+  font-size: clamp(36px, 5vw, 52px);
   color: ${({ theme }) => theme.textPrimary};
   z-index: ${Z_INDEX.DEFAULT};
 
@@ -146,11 +146,11 @@ export const NameMobile = styled.div`
 export const UsernameContainer = styled.div`
   & > div {
     text-align: center;
-    font-size: 30px;
+    font-size: 24px;
   }
 
   max-width: 100%;
-  margin-top: 60px;
+  margin-top: 20px;
 
   @container (max-width: 1024px) {
     margin-top: 10px;
@@ -160,7 +160,7 @@ export const UsernameContainer = styled.div`
 export const NoteContainer = styled(Pill)`
   width: 460px;
   min-height: 200px;
-  margin-top: 20px;
+  margin-top: 12px;
   word-break: break-word;
   border-radius: 20px;
 
@@ -202,7 +202,7 @@ export const NoteContainer = styled(Pill)`
 export const MusePillContainer = styled.div`
   width: 100%;
   margin-inline: auto;
-  margin-top: 230px;
+  margin-top: 130px;
   margin-bottom: 20px;
   display: flex;
   flex-direction: column;

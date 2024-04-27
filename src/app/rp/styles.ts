@@ -6,9 +6,9 @@ export const PageContainer = styled.main`
   max-height: max-content;
   width: 100vw;
   position: relative;
-  contain: paint;
   z-index: ${Z_INDEX.BACKGROUND};
   background-color: ${({ theme }) => theme.background};
+  background-image: url(https://cli.github.com/assets/images/light-glow.svg);
   color: ${({ theme }) => theme.text};
 
   scroll-behavior: smooth;

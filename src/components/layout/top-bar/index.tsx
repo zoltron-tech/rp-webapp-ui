@@ -1,22 +1,26 @@
 "use client";
-import { Search, ThemeToggle, UserMenu } from "@/components";
+
+import { Search, UserMenu } from "@/components";
 import { Button, ShouldRender, Username } from "@/components/common";
 import { useAuthContext, useVisibility } from "@/hooks";
 import { FC, memo } from "react";
 
+import { NotificationsMenu } from "@/components/notifications-menu";
 import { Logger } from "@/utils/services";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { GoArrowRight } from "react-icons/go";
 import { SiBookstack } from "react-icons/si";
+import { ChatMenuModal } from "../../chat-menu-modal";
 import * as S from "./styles";
-import { NotificationsMenu } from "@/components/notifications-menu";
 
-type Props = {
-  toggleTheme: () => void;
-  theme: "light" | "dark";
-};
+const DynamicThemeToggle = dynamic(() => import("@/components/theme-toggle"), {
+  ssr: false,
+});
 
-export const TopBar: FC<Props> = memo(({ theme, toggleTheme }) => {
+type Props = {};
+
+export const TopBar: FC<Props> = memo(({}) => {
   const { show } = useVisibility("login-modal");
   const { state } = useAuthContext();
   const { push } = useRouter();
@@ -88,7 +92,7 @@ export const TopBar: FC<Props> = memo(({ theme, toggleTheme }) => {
               )}
             />
           </S.SearchContainer>
-          <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+          <DynamicThemeToggle />
           <ShouldRender if={state === "LOGGED_OUT"}>
             <S.ButtonsContainerDesktop>
               <Button onClick={onLoginClick}>Log in</Button>
@@ -99,6 +103,7 @@ export const TopBar: FC<Props> = memo(({ theme, toggleTheme }) => {
           </ShouldRender>
           <ShouldRender if={state === "LOGGED_IN" || state === "UNINITIALIZED"}>
             <S.ButtonsContainerLoggedInDesktop>
+              <ChatMenuModal />
               <NotificationsMenu />
               <UserMenu />
             </S.ButtonsContainerLoggedInDesktop>

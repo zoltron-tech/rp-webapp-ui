@@ -1,16 +1,16 @@
 "use server";
 import {
-  authenticateAndGetJWTIfExists,
   authenticateAndGetJWT,
+  authenticateAndGetJWTIfExists,
   logoutAction,
 } from "@/app/actions";
-import { Novelist } from "@/types";
+import { Message, Novelist } from "@/types";
 import { SearchResult, WithMessage } from "@/types/common";
 import {
   API_MESSAGE,
   AUTH_HEADER_NAME,
-  MEDIA_JSON_HEADER_VALUE,
   CONTENT_TYPE_HEADER_NAME,
+  MEDIA_JSON_HEADER_VALUE,
 } from "@/utils/constants";
 import { Logger } from "@/utils/services";
 import getConfig from "next/config";
@@ -51,8 +51,6 @@ export const getNovelistAction = async (username: string) => {
     headers: headers,
     cache: "no-store",
   });
-
-  console.log("getNovelistAction", response.status);
 
   if (response.status === 404) {
     return null;
@@ -166,5 +164,94 @@ export const searchAction = async (searchTerm: string, type = "novelist") => {
   }
 
   const result = (await response.json()) as SearchResult[];
+  return result;
+};
+
+export const chatAction = async (targetUserName: string | null) => {
+  if (targetUserName === null) return;
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/getMessages/${targetUserName}`;
+
+  const response = await fetch(URL, {
+    headers: {
+      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    cache: "no-store",
+  });
+
+  Logger.debug("chatAction", response.status);
+  if (response.status === 404) {
+    return [];
+  } else if (response.status !== 200) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const result = (await response.json()) as Message[];
+  return result;
+};
+
+export const updateMessagePollingAction = async (
+  targetUserName: string | null,
+  lastTimestamp: string
+) => {
+  if (targetUserName === null) return;
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/updateChat/${targetUserName}`;
+
+  const response = await fetch(URL, {
+    method: "POST",
+    headers: {
+      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    body: JSON.stringify({ date: lastTimestamp }),
+    cache: "no-store",
+  });
+  if (response.status === 404) {
+    return [];
+  } else if (response.status !== 200) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const result = (await response.json()) as Message[];
+  const filteredResult = result.filter(
+    (message) => message.date !== lastTimestamp
+  );
+  return filteredResult;
+};
+
+export const sendMessageAction = async (message: Message) => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/send`;
+
+  Logger.warn("sendMessageAction", message);
+
+  const body: Omit<Message, "_tag" | "id"> = {
+    sender: message.sender,
+    receiver: message.receiver,
+    message: message.message,
+    date: message.date,
+  };
+
+  const response = await fetch(URL, {
+    method: "POST",
+    headers: {
+      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+
+  Logger.warn("sendMessageAction", response.status);
+
+  if (response.status === 404) {
+    return null;
+  } else if (response.status !== 200) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const result = (await response.json()) as Message;
   return result;
 };

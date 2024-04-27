@@ -31,7 +31,7 @@ export const Banner = styled.div<BannerProps>`
 
 export const SolidBackground = styled.div`
   position: absolute;
-  top: clamp(270px, 30cqw, 460px);
+  top: clamp(270px, 30cqw, 360px);
   bottom: 0px;
   width: 100cqw;
   background-color: ${({ theme }) => theme.cardBackgroundColor};
@@ -100,8 +100,8 @@ export const ContentRight = styled.div`
 `;
 
 export const Avatar = styled(AvatarCommon)`
-  --size: var(--profile-avatar-size);
-  margin-top: 65px;
+  size: var(--profile-avatar-size);
+  margin-top: 50px;
 `;
 
 const NameFontStyles = css`
@@ -113,8 +113,8 @@ export const Name = styled.div`
   width: 100%;
   text-align: center;
   text-align: center;
-  margin-top: 150px;
-  font-size: clamp(36px, 5vw, 76px);
+  margin-top: 140px;
+  font-size: clamp(36px, 5vw, 64px);
   color: ${({ theme }) => theme.textPrimary};
   z-index: ${Z_INDEX.DEFAULT};
 
@@ -141,13 +141,14 @@ export const NameMobile = styled.div`
 export const UsernameContainer = styled.div`
   & > div {
     text-align: center;
-    font-size: 24px;
+    font-size: 20px;
   }
 
   max-width: 100%;
 
   & > span {
-    margin-left: 2rem;
+    font-size: 14px;
+    margin-left: 1rem;
   }
 `;
 
@@ -155,9 +156,7 @@ export const AuthorContainer = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 10px;
-  margin-top: 60px;
-  margin-bottom: 20px;
+  gap: 5px;
 
   @container (max-width: 1024px) {
     margin-top: 10px;
@@ -166,10 +165,10 @@ export const AuthorContainer = styled.div`
 
 export const NoteContainer = styled(Pill)`
   max-width: 400px;
-  min-height: 20px;
+  min-height: 100px;
   display: flex;
-  margin-bottom: 120px;
-  margin-top: 20px;
+  margin-bottom: 10px;
+  margin-top: 10px;
   align-items: center;
   justify-content: center;
 

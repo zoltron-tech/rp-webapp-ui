@@ -1,3 +1,5 @@
+"use client";
+
 import { useStoreData } from "@/hooks/use-store-data";
 import { Logger } from "@/utils/services";
 import { createContext } from "react";

@@ -1,4 +1,4 @@
-import { Tagged, SearchResult } from "./common";
+import { SearchResult, Tagged } from "./common";
 
 export interface Muse extends Tagged {
   _tag: "Muse";
@@ -39,3 +39,22 @@ export interface Friend extends Tagged {
   username: string;
   image: string;
 }
+
+export interface Message extends Tagged {
+  _tag: "Message";
+  sender: string;
+  receiver: string;
+  message: string;
+  date: string;
+  id: string;
+}
+
+export type Emoji = {
+  id: string;
+  name: string;
+  native: string;
+  unified: string;
+  keywords: string[];
+  shortcodes: string;
+  emoticons: string[];
+};

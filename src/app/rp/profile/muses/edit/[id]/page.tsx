@@ -1,4 +1,5 @@
 "use client";
+
 import { useAuthContext } from "@/hooks";
 import { Logger } from "@/utils/services";
 import dynamic from "next/dynamic";
@@ -11,7 +12,7 @@ const DynamicEditMuseCard = dynamic(
 );
 
 export default function EditMusePage({}) {
-  const id = useParams().id as string;
+  const id = useParams()?.id as string;
   const { state } = useAuthContext();
   const { push } = useRouter();
 

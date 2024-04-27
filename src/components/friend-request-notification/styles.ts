@@ -92,8 +92,6 @@ export const Subtext = styled.div`
   color: ${({ theme }) => theme.text};
 `;
 
-export const Avatar = styled(Common.Avatar)``;
-
 export const NotificationBox = styled.div`
   width: 100%;
   white-space: nowrap;

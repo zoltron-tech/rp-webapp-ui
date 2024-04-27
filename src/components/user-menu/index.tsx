@@ -7,7 +7,7 @@ import { toggleState } from "@/utils/helpers";
 import { useRouter } from "next/navigation";
 import { Logger } from "@/utils/services";
 import classNames from "classnames";
-import { Button } from "../common";
+import { Avatar, Button } from "../common";
 import * as S from "./styles";
 
 interface UserMenuProps {}
@@ -41,10 +41,10 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
   return (
     <S.PositionContainer>
       <S.ContentContainer onClick={toggleState(setOpen)}>
-        <S.UserAvatar
+        <Avatar
           src={novelist?.image || ""}
           alt="profile-menu"
-          size={200}
+          size={50}
           hoverable
         />
         <S.Menu className={classNames({ open })}>

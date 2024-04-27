@@ -1,12 +1,14 @@
+"use client";
+
 import { getMuseAction, updateMuseAction } from "@/app/rp/muse/actions";
 import { uploadAvatar } from "@/app/rp/profile/actions";
 import { Card, Input, UploadAvatar, Username } from "@/components/common";
-import { useAuthContext, useForm, useStore, useUIContext } from "@/hooks";
+import { useAuthContext, useForm, useUIContext } from "@/hooks";
 import type { Muse } from "@/types";
 import { API_MESSAGE, INITIAL_MUSE } from "@/utils/constants";
 import { Logger } from "@/utils/services";
-import { FC, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { FC, useEffect, useState } from "react";
 import * as S from "./styles";
 
 export type EditMuseCardProps = {
@@ -130,7 +132,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
         minHeight="1000px"
         maxHeight="1000px"
         padding="20px"
-        margin="clamp(50px, 20cqw, 200px) auto 100px auto"
+        margin="clamp(50px, 20cqw, 50px) auto 100px auto"
         centered
       >
         <UploadAvatar
@@ -207,6 +209,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
             <Input
               label="Story"
               name="story"
+              type="textarea"
               value={values?.story}
               onChange={update}
               onEnter={submit}

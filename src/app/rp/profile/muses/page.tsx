@@ -1,13 +1,14 @@
 "use client";
+
+import { MuseCard } from "@/components/muse-card";
 import { useAuthContext } from "@/hooks";
+import { Muse } from "@/types";
+import { INITIAL_MUSE } from "@/utils/constants";
 import { Logger } from "@/utils/services";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Muse } from "@/types";
 import { getAllMusesAction } from "../../muse/actions";
-import { MuseCard } from "@/components/muse-card";
 import * as S from "./styles";
-import { INITIAL_MUSE } from "@/utils/constants";
 
 export default function MusesListPage({}) {
   const params = useParams();

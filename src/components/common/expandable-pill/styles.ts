@@ -8,7 +8,7 @@ export const PillContinaer = styled(Pill)`
   ${DEV_MODE_BORDER("green")}
 
   max-height: var(--expanded-height);
-  max-width: min(800px, calc(100cqw - 40px));
+  max-width: min(800px, calc(90cqw - 40px));
   min-width: 300px;
   contain: paint;
   margin-inline: auto;
@@ -21,7 +21,7 @@ export const PillContinaer = styled(Pill)`
     }
   }
 
-  height: 100px;
+  height: 80px;
   transition: height 0.2s ease-in-out;
 
   &.expanded {
@@ -36,13 +36,13 @@ export const PillContinaer = styled(Pill)`
 
 export const ScrollableContentContainer = styled.div`
   ${PILL}
-  width: 90px;
+  width: 70px;
   overflow-y: auto;
-  padding: 0px 5px;
+  padding: 0px 2px;
   margin: 0px 0px 0px 10px;
   position: absolute;
   left: 60px;
-  height: calc(95cqw - 200px);
+  height: calc(100cqw - 180px);
   background-color: ${({ theme }) => theme.pillExpandedContentBackground};
   transform: rotate(-90deg) translateY(calc(50%));
   scroll-snap-type: y mandatory;
@@ -115,8 +115,8 @@ export const ExpandIcon = styled.div`
   position: absolute;
   top: 20px;
   right: 20px;
-  width: 60px;
-  height: 60px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -127,8 +127,8 @@ export const ExpandIcon = styled.div`
   cursor: pointer;
 
   & svg {
-    width: 30px;
-    height: 30px;
+    width: 20px;
+    height: 15px;
     fill: ${({ theme }) => theme.text};
     transition: transform 0.2s ease-in-out;
   }
@@ -151,7 +151,7 @@ const TagTypography = css`
 export const TagInline = styled.div`
   ${TagTypography}
   width: 80px;
-  height: 100px;
+  height: 80px;
   position: absolute;
   top: 0px;
   left: 20px;

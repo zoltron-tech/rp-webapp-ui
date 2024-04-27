@@ -61,23 +61,26 @@ export const Input: FC<Props> = ({
   Logger.info("Input rendered");
 
   return (
-    <S.InputWrapper>
-      <S.InputContainer>
+    <S.InputWrapper className={classNames({ textarea: type === "textarea" })}>
+      <S.InputContainer
+        className={classNames({ textarea: type === "textarea" })}
+      >
         <S.Input
           key={defaultValue}
           aria-label={label}
           className={classNames({
             "left-icon": icon,
             "right-icon": isPassword || icon,
+            textarea: type === "textarea",
           })}
           type={isPassword ? passwordType : type}
           placeholder={placeholder || " "}
           value={value}
           readOnly={readOnly}
           defaultValue={defaultValue}
-          onChange={(val): void => {
-            Logger.debug("onChange", val?.target?.value, val.target.name);
-            if (onChange) onChange(val);
+          onChange={(event): void => {
+            Logger.debug("onChange", event?.target?.value, event.target.name);
+            if (onChange) onChange(event);
           }}
           onKeyDown={(e): void => {
             if (e.key === "Enter" && onEnter) {

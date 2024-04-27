@@ -1,3 +1,5 @@
+"use client";
+
 import { getNovelists } from "@/app/rp/novelists/actions";
 import { useStore, useUIContext } from "@/hooks";
 import { Logger } from "@/utils/services";

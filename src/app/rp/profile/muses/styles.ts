@@ -9,11 +9,11 @@ export const MuseListContainer = styled.div`
   flex-wrap: wrap;
   margin-inline: auto;
   justify-content: center;
-  gap: 1rem;
+  gap: 0.5rem;
 
   @container (max-width: 800px) {
     & {
-      gap: 0.5rem;
+      gap: 0rem;
     }
   }
 `;

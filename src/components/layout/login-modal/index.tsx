@@ -18,7 +18,7 @@ import { FC, memo, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import * as S from "./styles";
 
-type ModalType = "LOGIN" | "SIGNUP";
+type ModalType = "LOGIN" | "SIGNUP" | "FORGOTPASS";
 
 export interface LoginModalProps {
   type?: ModalType;
@@ -37,8 +37,14 @@ export const LoginModal: FC<LoginModalProps> = memo(({ type = "LOGIN" }) => {
     transitions: {
       LOGIN: {
         SIGNUP: true,
+        FORGOTPASS: true,
       },
       SIGNUP: {
+        LOGIN: true,
+        FORGOTPASS: true,
+      },
+      FORGOTPASS: {
+        SIGNUP: true,
         LOGIN: true,
       },
     },
@@ -50,7 +56,7 @@ export const LoginModal: FC<LoginModalProps> = memo(({ type = "LOGIN" }) => {
   const [disabled, setDisabled] = useState<boolean>(false);
   const usernameAvailableDebounceTimer = useRef<any>(null);
   const { successToast, errorToast } = useUIContext();
-  const { login, signup, state: authState } = useAuthContext();
+  const { login, signup, forgotPassword, state: authState } = useAuthContext();
   const { push } = useRouter();
   const initialRender = useRef(true);
 
@@ -59,6 +65,8 @@ export const LoginModal: FC<LoginModalProps> = memo(({ type = "LOGIN" }) => {
     email,
     password,
   }: InputValues): ErrorType<InputValues> => {
+    if (is("FORGOTPASS")) return null;
+
     const isSignup = is("SIGNUP");
     if (!email || !password || (isSignup && !username)) {
       return { password: "Please fill in all fields" };
@@ -98,6 +106,8 @@ export const LoginModal: FC<LoginModalProps> = memo(({ type = "LOGIN" }) => {
     name: keyof InputValues,
     _prev: InputValues
   ) => {
+    if (is("FORGOTPASS")) return values[name];
+
     if (name !== "username") return values[name];
     const validUsername = verifyUsernamePattern(values.username);
     if (!validUsername) {
@@ -118,6 +128,26 @@ export const LoginModal: FC<LoginModalProps> = memo(({ type = "LOGIN" }) => {
     }, 500);
 
     return values[name];
+  };
+
+  const handleForgotPassword = async () => {
+    const email = values.email;
+    try {
+      const response = await forgotPassword(email);
+      Logger.debug(response);
+      if (response.message === "success") {
+        Logger.debug("success");
+        hide();
+        transition("LOGIN");
+        clearValues();
+        successToast("email sent successfully");
+      } else {
+        errorToast(response.message);
+      }
+    } catch (e) {
+      Logger.debug("error dekho bhai ->", e);
+      errorToast("Something went wrong");
+    }
   };
 
   const handleLogin = async () => {
@@ -174,8 +204,50 @@ export const LoginModal: FC<LoginModalProps> = memo(({ type = "LOGIN" }) => {
     if (disabled) return;
     if (is("SIGNUP")) {
       handleSignup();
-    } else {
+    } else if (is("LOGIN")) {
       handleLogin();
+    } else {
+      handleForgotPassword();
+    }
+  };
+
+  const getModelHeight = () => {
+    if (is("SIGNUP")) {
+      return "480px";
+    } else if (is("LOGIN")) {
+      return "380px";
+    } else {
+      return "280px";
+    }
+  };
+
+  const getHeaderPreText = () => {
+    if (is("SIGNUP")) {
+      return "Already a user?";
+    } else if (is("LOGIN")) {
+      return "New user?";
+    } else {
+      return "";
+    }
+  };
+
+  const getHeaderLink = () => {
+    if (is("SIGNUP")) {
+      return "Login!";
+    } else if (is("LOGIN")) {
+      return "Sign Up!";
+    } else {
+      return "Back";
+    }
+  };
+
+  const getButtonText = () => {
+    if (is("SIGNUP")) {
+      return "Register";
+    } else if (is("LOGIN")) {
+      return "Login";
+    } else {
+      return "Request Reset Link";
     }
   };
 
@@ -232,16 +304,16 @@ export const LoginModal: FC<LoginModalProps> = memo(({ type = "LOGIN" }) => {
       width={"90cqw"}
       maxWidth="500px"
       minWidth="300px"
-      minHeight={is("SIGNUP") ? "480px" : "380px"}
+      minHeight={getModelHeight()}
     >
       <S.Container>
         <S.Header>
-          {is("SIGNUP") ? "Already a user?" : "New user?"}
+          {getHeaderPreText()}
           <span
             className="link"
-            onClick={() => transition(is("SIGNUP") ? "LOGIN" : "SIGNUP")}
+            onClick={() => transition(is("LOGIN") ? "SIGNUP" : "LOGIN")}
           >
-            {is("SIGNUP") ? "Login!" : "Sign up!"}
+            {getHeaderLink()}
           </span>
         </S.Header>
         <S.Content>
@@ -259,7 +331,7 @@ export const LoginModal: FC<LoginModalProps> = memo(({ type = "LOGIN" }) => {
             />
           </ShouldRender>
           <Input
-            label={is("SIGNUP") ? "Email" : "Email or Username"}
+            label={is("LOGIN") ? "Email or Username" : "Email"}
             name="email"
             type="text"
             onChange={update}
@@ -267,25 +339,36 @@ export const LoginModal: FC<LoginModalProps> = memo(({ type = "LOGIN" }) => {
             maxLength={50}
             onEnter={submit}
           />
-          <Input
-            label="Password"
-            name="password"
-            type="password"
-            onChange={update}
-            value={values.password}
-            message={errors?.password}
-            messageType="warning"
-            maxLength={50}
-            onEnter={submit}
-          />
-
+          <ShouldRender if={is("LOGIN", "SIGNUP")}>
+            <Input
+              label="Password"
+              name="password"
+              type="password"
+              onChange={update}
+              value={values.password}
+              message={errors?.password}
+              messageType="warning"
+              maxLength={50}
+              onEnter={submit}
+            />
+          </ShouldRender>
+          <ShouldRender if={is("LOGIN")}>
+            <S.Hyperlink
+              onClick={() => {
+                transition("FORGOTPASS");
+                console.log(transition);
+              }}
+            >
+              Forgot password?
+            </S.Hyperlink>
+          </ShouldRender>
           <Button
             onClick={() => submit()}
             variant="primary"
             disabled={disabled}
             loading={authState === "LOADING"}
           >
-            {is("SIGNUP") ? "Register" : "Login"}
+            {getButtonText()}
           </Button>
         </S.Content>
       </S.Container>

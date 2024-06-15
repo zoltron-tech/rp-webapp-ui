@@ -34,6 +34,10 @@ export default function UserProfilePage({}) {
 
   const handleButtonClick = () => {};
 
+  const toMusesPage = () => {
+    push(`/rp/profile/${username}/muses`);
+  };
+
   const handleMessageButton = () => {
     push(`/rp/profile/messenger`);
   };
@@ -116,7 +120,7 @@ export default function UserProfilePage({}) {
       variant: "negative",
     },
     { onClick: handleMessageButton, label: "Message", variant: "action" },
-    { onClick: handleButtonClick, label: "More", variant: "action" },
+    { onClick: toMusesPage, label: "Muses", variant: "action" },
   ];
 
   const OutgoingRequestButtons: ButtonInfo[] = [
@@ -126,13 +130,13 @@ export default function UserProfilePage({}) {
       variant: "primary",
     },
     { onClick: handleMessageButton, label: "Message", variant: "action" },
-    { onClick: handleButtonClick, label: "More", variant: "action" },
+    { onClick: toMusesPage, label: "Muses", variant: "action" },
   ];
 
   const FriendButtons: ButtonInfo[] = [
     { onClick: handleButtonClick, label: "Friends", variant: "primary" },
     { onClick: handleMessageButton, label: "Message", variant: "action" },
-    { onClick: handleButtonClick, label: "More", variant: "action" },
+    { onClick: toMusesPage, label: "Muses", variant: "action" },
   ];
 
   const StrangerButtons: ButtonInfo[] = [
@@ -142,7 +146,7 @@ export default function UserProfilePage({}) {
       variant: "primary",
     },
     { onClick: handleMessageButton, label: "Message", variant: "action" },
-    { onClick: handleButtonClick, label: "More", variant: "action" },
+    { onClick: toMusesPage, label: "Muses", variant: "action" },
   ];
 
   const fetchAppropriateButtons = (connection: string | null | undefined) => {

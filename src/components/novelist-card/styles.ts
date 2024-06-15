@@ -250,7 +250,7 @@ export const Quote = styled.div`
     font-size: 16px;
   }
 
-  @container (max-width: 400px) {
+  @container (max-width: 200px) {
     & {
       display: none;
       font-size: 10px;

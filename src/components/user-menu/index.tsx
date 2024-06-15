@@ -26,8 +26,8 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
     push(`/rp/profile/edit`);
   };
 
-  const toMusesProfile = () => {
-    push(`/rp/profile/muses`);
+  const toMusesPage = () => {
+    push(`/rp/profile/${user?.username}/muses`);
   };
 
   const toUserProfile = () => {
@@ -55,7 +55,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
           <Button variant="menu-item" onClick={toEditProfile}>
             Edit profile
           </Button>
-          <Button variant="menu-item" onClick={toMusesProfile}>
+          <Button variant="menu-item" onClick={toMusesPage}>
             Your muses
           </Button>
           <hr></hr>

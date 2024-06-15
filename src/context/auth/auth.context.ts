@@ -10,6 +10,8 @@ export interface AuthContextType {
   novelist: Novelist | null;
   login: (payload: LoginPayload) => Promise<LoginResponse>;
   signup: (payload: SignUpPayload) => Promise<WithMessage>;
+  forgotPassword: (email: string) => Promise<WithMessage>;
+  resetPassword: (payload: LoginPayload, jwt: string) => Promise<WithMessage>;
   logout: () => Promise<void>;
   updateNovelist: (novelist: Novelist) => void;
 }
@@ -22,6 +24,12 @@ export const AUTH_CONTEXT_INITIAL_STATE: AuthContextType = {
     message: "Context not initialized!",
   }),
   signup: async (): Promise<WithMessage> => ({
+    message: "Context not initialized!",
+  }),
+  forgotPassword: async (): Promise<WithMessage> => ({
+    message: "Context not initialized!",
+  }),
+  resetPassword: async (): Promise<WithMessage> => ({
     message: "Context not initialized!",
   }),
   logout: async (): Promise<void> => {},

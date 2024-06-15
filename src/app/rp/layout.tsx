@@ -14,9 +14,15 @@ import { ThemeProvider } from "styled-components";
 
 import { StoreState } from "@/types/state";
 import * as S from "./styles";
+import { usePathname } from "next/navigation";
+import { ShouldRender } from "@/components/common";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [cookies, _setCookie] = useCookies(["theme"]);
+
+  const pathname = usePathname();
+
+  console.log("path is", pathname);
 
   const getTheme = () => {
     return cookies.theme === "light" ? THEME_LIGHT : THEME_DARK;
@@ -30,8 +36,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <AuthProvider>
           <UIContextProvider>
             <S.PageContainer>
-              <LoginModal />
-              <TopBar />
+              <ShouldRender if={pathname !== "/rp/reset-password"}>
+                <LoginModal />
+                <TopBar />
+              </ShouldRender>
               <ContentContainer>{children}</ContentContainer>
               <Footer />
             </S.PageContainer>

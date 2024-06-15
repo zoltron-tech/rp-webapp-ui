@@ -12,7 +12,7 @@ export interface StateMachine<T extends string> {
   context?: string;
   state: T;
   transition: (state: T) => void;
-  is: (state: T) => boolean;
+  is: (...states: T[]) => boolean;
 }
 
 export const useStateMachine = <T extends string>({
@@ -21,8 +21,8 @@ export const useStateMachine = <T extends string>({
 }: StateMachineProps<T>): StateMachine<T> => {
   const [state, setState] = useState<T>(initial);
 
-  const is = (_state: T) => {
-    return state === _state;
+  const is = (..._states: T[]) => {
+    return _states.some((s) => s === state);
   };
 
   const transition = (_state: T) =>

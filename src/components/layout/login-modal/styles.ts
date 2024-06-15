@@ -46,3 +46,18 @@ export const Content = styled.div`
   flex-direction: column;
   gap: 10px;
 `;
+
+export const Hyperlink = styled.div`
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  align-self: flex-end;
+
+  color: ${({ theme }) => theme.textLink};
+  cursor: pointer;
+  font-weight: 600;
+
+  &:hover {
+    color: ${({ theme }) => theme.textLinkHover};
+  }
+`;

@@ -28,6 +28,53 @@ export const getAuthCookie = async () => {
   return cookie ? cookie.value : "";
 };
 
+export const forgotPasswordAction = async (email: string) => {
+  const URL = `${RP_SERVICE_URL}/rp/user/account/forgotPassword?email=${email}`;
+
+  const response = await fetch(URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    cache: "no-store",
+  });
+
+  if (response.status !== 200) {
+    return {
+      message: "Something went wrong, please try again or contact support.",
+    };
+  }
+
+  const result: WithMessage = await response.json();
+  return result;
+};
+
+export const resetPasswordAction = async (
+  payload: LoginPayload,
+  jwt: string
+) => {
+  const URL = `${RP_SERVICE_URL}/rp/user/account/resetPassword`;
+
+  const response = await fetch(URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    cache: "no-store",
+    body: JSON.stringify(payload),
+  });
+
+  if (response.status !== 200) {
+    return {
+      message: "Something went wrong, please try again or contact support.",
+    };
+  }
+
+  const result: WithMessage = await response.json();
+  return result;
+};
+
 export const loginAction = async (payload: LoginPayload) => {
   const URL = `${RP_SERVICE_URL}/rp/user/account/login`;
 

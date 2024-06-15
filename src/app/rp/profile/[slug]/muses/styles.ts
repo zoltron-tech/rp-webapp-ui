@@ -13,7 +13,9 @@ export const MuseListContainer = styled.div`
 
   @container (max-width: 800px) {
     & {
-      gap: 0rem;
+      padding-top: 10px;
+      padding-inline: 10px;
+      gap: 0.2rem;
     }
   }
 `;

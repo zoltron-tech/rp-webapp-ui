@@ -230,7 +230,7 @@ export const getUser = async () => {
 
   const _user: WithMessage<any> = await response.json();
 
-  const user = validateUser(_user);
+  const user = validateUser(_user.user);
   if (isNone(user)) {
     return logoutAction();
   }

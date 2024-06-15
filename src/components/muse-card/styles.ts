@@ -1,14 +1,28 @@
-import * as Common from "@/components/common";
 import { pSBC } from "@/lib/pSBC";
-import { Z_INDEX } from "@/theme";
+import { BORDER_RADIUS, Z_INDEX } from "@/theme";
 import { setOpacity } from "@/utils/helpers";
 import styled from "styled-components";
 
+export const CardBackground = styled.div<CardProps>`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+
+  border-radius: ${BORDER_RADIUS};
+  background-image: url(${(props): string => props.banner});
+  background-position: -50px;
+  background-size: cover;
+  transition-timing-function: ease-out;
+  transition-duration: 300ms;
+  transition-property: scale;
+`;
+
 export const CardWrapper = styled.div`
   position: relative;
-  width: 450px;
-  height: 200px;
+  width: 200px;
+  height: 300px;
   border-radius: var(--border-radius);
+
   transition: all 0.3s ease-in-out;
   contain: paint;
   z-index: ${Z_INDEX.CARD};
@@ -18,7 +32,18 @@ export const CardWrapper = styled.div`
 
   @container (max-width: 800px) {
     & {
-      height: 100px;
+      width: 120px;
+      height: 200px;
+    }
+  }
+
+  &.new {
+    border: solid silver 1px;
+  }
+
+  &:hover {
+    & ${CardBackground} {
+      scale: 1.03;
     }
   }
 `;
@@ -27,46 +52,17 @@ type CardProps = {
   banner: string;
 };
 
-export const CardBackground = styled.div<CardProps>`
-  position: absolute;
-  width: 100%;
-  height: 100%;
-
-  background-image: linear-gradient(
-      ${({ theme }) => theme.cardBackgroundTint},
-      ${({ theme }) => theme.cardBackgroundTint}
-    ),
-    url(${(props): string => props.banner});
-
-  background-position: center;
-  background-size: cover;
-
-  filter: blur(20px);
-  -webkit-filter: blur(20px);
-  -moz-filter: blur(20px);
-  -o-filter: blur(20px);
-  -ms-filter: blur(20px);
-`;
-
-export const Card = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 5px 10px 0px;
-  position: relative;
-  height: 100%;
-  background: linear-gradient(
-    ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
-  );
-`;
-
-export const CardHeader = styled.div`
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  position: relative;
+export const Title = styled.div`
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  font-size: 20px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
+  text-align: end;
+  opacity: 0;
+  transform: translateY(100px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
 `;
 
 export const Button = styled.div`
@@ -81,8 +77,10 @@ export const Button = styled.div`
   background-color: ${({ theme }) => theme.hoverGreyAlpha};
   border-radius: 50%;
   box-shadow: 0px 0px 5px 2px rgba(0, 0, 0, 0.4);
-  z-index: ${Z_INDEX.CARD_EXPAND};
+  z-index: ${Z_INDEX.MODAL};
   transition: background-color 0.1s ease-in-out;
+  opacity: 0;
+  transition: opacity 0.5s ease;
   cursor: pointer;
 
   & svg {
@@ -90,6 +88,8 @@ export const Button = styled.div`
     height: 15px;
     fill: ${({ theme }) => theme.text};
     transition: transform 0.2s ease-in-out;
+
+    pointer-events: none;
   }
 
   &:hover {
@@ -114,6 +114,8 @@ export const Button = styled.div`
 export const EditButton = styled(Button)`
   top: 10px;
   right: 50px;
+
+
 `;
 
 export const DeleteButton = styled(Button)`
@@ -128,56 +130,47 @@ export const DeleteButton = styled(Button)`
   }
 `;
 
-export const Title = styled.div`
-  font-size: 20px;
-  font-weight: 600;
-  color: ${({ theme }) => theme.text};
-  text-align: center;
+export const Card = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 5px 10px 0px;
+  position: relative;
+  height: 100%;
+  contain: paint;
+
+ 
+
+  &:hover {
+    background: linear-gradient(
+      ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
+    );
+
+    & ${Title} {
+      transform: translateY(0);
+    }
+
+    & ${Title}, ${Button} {
+      opacity: 1;
+    }
+    cursor: pointer;
+  }
 `;
 
-export const Avatar = styled(Common.Avatar)`
-  --size: 160px;
-
-  @container (max-height: 150px) {
-    & {
-      --size: 80px;
-    }
-  }
+export const CardHeader = styled.div`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  position: relative;
 `;
 
 export const MuseInfo = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin-left: 10px;
+  align-items: flex-end;
+  justify-content: end;
   font-size: 14px;
-`;
-
-export const Quote = styled.div`
-  font-size: 13px;
-  font-weight: 500;
-  color: ${({ theme }) => theme.text};
-  text-align: center;
-  margin-top: 5px;
-  word-break: break-word;
-
-  &::before {
-    content: "❝ ";
-    font-weight: 400;
-    font-size: 16px;
-  }
-
-  &::after {
-    content: " ❞";
-    font-weight: 400;
-    font-size: 16px;
-  }
-
-  @container (max-height: 180px) {
-    & {
-      display: none;
-    }
-  }
 `;

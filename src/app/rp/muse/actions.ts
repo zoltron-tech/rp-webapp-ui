@@ -1,5 +1,8 @@
 "use server";
-import { authenticateAndGetJWT } from "@/app/actions";
+import {
+  authenticateAndGetJWT,
+  authenticateAndGetJWTIfExists,
+} from "@/app/actions";
 import { Muse } from "@/types";
 import { WithMessage } from "@/types/common";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
@@ -25,6 +28,31 @@ export const getMuseAction = async (museId: string) => {
   }
 
   const muse: Muse = await response.json();
+
+  return muse;
+};
+
+export const getAllMusesByUsernameAction = async (username: string) => {
+  let headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/by/${username}`;
+
+  const response = await fetch(URL, {
+    headers: headers,
+    cache: "no-store",
+  });
+
+  Logger.debug("getAllMusesByUsernameAction", response.status);
+
+  if (response.status === 404) {
+    return null;
+  } else if (response.status !== 200) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const muse: Muse[] = await response.json();
 
   return muse;
 };

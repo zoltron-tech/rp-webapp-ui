@@ -5,7 +5,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 // Initialize the cors middleware
 const cors = Cors({
   methods: ["GET", "HEAD", "POST", "OPTIONS"],
-  origin: "*", // Allow only this origin
+  origin: "http://localhost:4200", // Allow only this origin
   credentials: true,
 });
 

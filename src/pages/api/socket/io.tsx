@@ -16,11 +16,7 @@ export const config = {
   },
 };
 
-
 const ioHandler = async (req: NextApiRequest, res: NextApiResponseServerIO) => {
-  // Run the middleware
-  await runMiddleware(req, res, cors);
-
   if (!res.socket.server.io) {
     const path = "/api/socket/io";
     const httpServer: NetServer = res.socket.server as any;
@@ -28,7 +24,7 @@ const ioHandler = async (req: NextApiRequest, res: NextApiResponseServerIO) => {
       path: path,
       addTrailingSlash: false,
       cors: {
-        origin: "http://localhost:4200", // Allow only this origin
+        origin: "*", // Allow only this origin
         methods: ["GET", "POST"],
         credentials: true,
       },
@@ -65,16 +61,22 @@ const ioHandler = async (req: NextApiRequest, res: NextApiResponseServerIO) => {
           message: message.message,
           date: new Date().toISOString(),
           _tag: "Message",
-          id: ""
+          id: "",
         };
 
-        const serverResponse = await sendMessageAPI(sender.data.jwt)(messageObject);
+        const serverResponse = await sendMessageAPI(sender.data.jwt)(
+          messageObject
+        );
         if (serverResponse?.message === API_MESSAGE.Error) {
           socket.emit("error", { message: "Internal Error" });
         } else {
           socket.emit("message", serverResponse);
-          const receivers = connections.filter((c) => c.data.username === message.receiver);
-          receivers.forEach((receiver) => receiver.emit("message", serverResponse))
+          const receivers = connections.filter(
+            (c) => c.data.username === message.receiver
+          );
+          receivers.forEach((receiver) =>
+            receiver.emit("message", serverResponse)
+          );
         }
       });
       socket.on("disconnect", () => {

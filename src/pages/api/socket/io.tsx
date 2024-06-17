@@ -24,7 +24,7 @@ const ioHandler = async (req: NextApiRequest, res: NextApiResponseServerIO) => {
       path: path,
       addTrailingSlash: false,
       cors: {
-        origin: "*", // Allow only this origin
+        origin: "http://localhost:4200", // Allow only this origin
         methods: ["GET", "POST"],
         credentials: true,
       },

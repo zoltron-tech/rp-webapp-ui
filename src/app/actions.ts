@@ -1,5 +1,5 @@
 "use server";
-import jwt from "jsonwebtoken";
+import JWT from "jsonwebtoken";
 import getConfig from "next/config";
 import { cookies } from "next/headers";
 import { RedirectType, redirect } from "next/navigation";
@@ -163,23 +163,29 @@ export const logoutAction = async () => {
   redirect("/rp/novelists", RedirectType.push);
 };
 
-export const authenticateAction = async () => {
-  Logger.debug("authenticate");
-  const jwtCookie = cookies().get(JWT_COOKIE_NAME);
-  Logger.info("jwtCookie", jwtCookie);
-  if (!jwtCookie?.value) return false;
-  const decoded = jwt.decode(jwtCookie.value, { complete: true });
+export const authenticateJWT = (useCookies?: boolean) => (jwt: string) => {
+  const decoded = JWT.decode(jwt, { complete: true });
   if (!decoded || typeof decoded.payload === "string" || !decoded.payload.exp) {
-    cookies().delete(JWT_COOKIE_NAME);
+    if (useCookies) cookies().delete(JWT_COOKIE_NAME);
     return false;
   }
   const isValid = decoded.payload.exp * 1000 > Date.now();
 
   if (!isValid) {
-    cookies().delete(JWT_COOKIE_NAME);
+    if (useCookies) cookies().delete(JWT_COOKIE_NAME);
     return false;
   }
   return true;
+}
+
+export const authenticateAction = async () => {
+  Logger.debug("authenticate");
+  const jwtCookie = cookies().get(JWT_COOKIE_NAME);
+  Logger.info("jwtCookie", jwtCookie);
+  if (!jwtCookie?.value) return false;
+
+  const isValid = authenticateJWT(true)(jwtCookie.value);
+  return isValid;
 };
 
 export const authenticateAndGetJWT = async () => {

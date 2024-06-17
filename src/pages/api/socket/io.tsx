@@ -3,7 +3,6 @@ import { Server as NetServer } from "http";
 import { NextApiRequest, NextApiResponse } from "next";
 import { Server as ServerIO } from "socket.io";
 import { NextApiResponseServerIO } from "../../../types/socket";
-import { cors, runMiddleware } from "../middleware/cors";
 import { ConnectionsService } from "../../../utils/services/connections-service";
 import { authenticateJWT } from "@/app/actions";
 import { Message } from "@/types";

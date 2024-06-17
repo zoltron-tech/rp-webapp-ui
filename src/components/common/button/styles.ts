@@ -6,6 +6,7 @@ import { setOpacity } from "@/utils/helpers";
 export const Container = styled.div`
   width: 100%;
   min-width: max-content;
+  max-width: 100px;
   display: flex;
   align-items: center;
   justify-content: center;

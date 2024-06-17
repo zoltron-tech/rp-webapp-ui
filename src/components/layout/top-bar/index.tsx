@@ -95,10 +95,7 @@ export const TopBar: FC<Props> = memo(({}) => {
           <DynamicThemeToggle />
           <ShouldRender if={state === "LOGGED_OUT"}>
             <S.ButtonsContainerDesktop>
-              <Button onClick={onLoginClick}>Log in</Button>
-              <Button onClick={onSignupClick} variant="secondary">
-                Sign up
-              </Button>
+              <Button onClick={onLoginClick}>Log In</Button>
             </S.ButtonsContainerDesktop>
           </ShouldRender>
           <ShouldRender if={state === "LOGGED_IN" || state === "UNINITIALIZED"}>

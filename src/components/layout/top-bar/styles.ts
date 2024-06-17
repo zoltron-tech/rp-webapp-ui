@@ -184,7 +184,7 @@ export const ButtonsContainerDesktop = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 200px;
+  width: 100px;
   gap: 10px;
 
   @container (max-width: 800px) {

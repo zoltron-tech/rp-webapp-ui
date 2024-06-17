@@ -21,9 +21,9 @@ export default function MuseProfilePage({}) {
   const [loading, setLoading] = useState(true);
   const username = params?.slug as string;
   const { push } = useRouter();
-  const { state, transition, is} = useStateMachine<CARD_STATE>({
+  const { state, transition, is } = useStateMachine<CARD_STATE>({
     initial: "MAIN",
-    transitions:{
+    transitions: {
       MAIN: {
         MUSE_INFO: true,
       },
@@ -36,7 +36,7 @@ export default function MuseProfilePage({}) {
       BACK_STORY: {
         MAIN: true,
       },
-    }
+    },
   });
   Logger.debug("params are:", params);
 
@@ -88,110 +88,109 @@ export default function MuseProfilePage({}) {
 
   return (
     <S.MuseContainer>
+      <S.Banner src={muse?.image || ""} />
       <ShouldRender if={is("MAIN")}>
-      <S.CardWrapper onClick={() => transition('MUSE_INFO')}>
-        <S.CardBackground banner={muse?.image || ""} />
-        <S.Card className="muse-card">
-          <S.CardHeader>
-            <S.MuseInfo>
-              <S.MuseName>
-                {muse?.firstName} {muse?.lastName}
-              </S.MuseName>
-              <S.AuthorContainer>
-                <Avatar
-                  src={muse?.pennedBy?.image || ""}
-                  alt="profile-picture"
-                  size={60}
-                  hoverable
-                  onClick={onAuthorAvatarClick}
-                />
-                <S.UsernameContainer>
-                  <span>PENNED BY:</span>
-                  <Username username={muse?.pennedBy?.username} primary />
-                </S.UsernameContainer>
-              </S.AuthorContainer>
-            </S.MuseInfo>
-          </S.CardHeader>
-        </S.Card>
-      </S.CardWrapper>
+        <S.CardWrapper onClick={() => transition("MUSE_INFO")}>
+          <S.CardBackground banner={muse?.image || ""} />
+          <S.Card className="muse-card">
+            <S.CardHeader>
+              <S.MuseInfo>
+                <S.MuseName>
+                  {muse?.firstName} {muse?.lastName}
+                </S.MuseName>
+                <S.AuthorContainer>
+                  <Avatar
+                    src={muse?.pennedBy?.image || ""}
+                    alt="profile-picture"
+                    size={60}
+                    hoverable
+                    onClick={onAuthorAvatarClick}
+                  />
+                  <S.UsernameContainer>
+                    <span>PENNED BY:</span>
+                    <Username username={muse?.pennedBy?.username} primary />
+                  </S.UsernameContainer>
+                </S.AuthorContainer>
+              </S.MuseInfo>
+            </S.CardHeader>
+          </S.Card>
+        </S.CardWrapper>
       </ShouldRender>
       <ShouldRender if={is("MUSE_INFO")}>
-      <S.CardWrapper onClick={() => transition('CONNECTIONS')}>
-        <S.CardBackground banner={muse?.image || ""} />
-        <S.CardBack className="muse-card">
-        
-          <S.InfoCardContent>
-            <S.Title>Muse Information</S.Title>
-            <S.InfoContainer>
-              <S.InfoItem>
-                <S.InfoLabel>First Name:</S.InfoLabel>
-                <S.InfoValue>{muse?.firstName}</S.InfoValue>
-              </S.InfoItem>
-              <S.InfoItem>
-                <S.InfoLabel>Last Name:</S.InfoLabel>
-                <S.InfoValue>{muse?.lastName}</S.InfoValue>
-              </S.InfoItem>
-              <S.InfoItem>
-                <S.InfoLabel>Fandom:</S.InfoLabel>
-                <S.InfoValue>{muse?.fandom}</S.InfoValue>
-              </S.InfoItem>
-              <S.InfoItem>
-                <S.InfoLabel>Date of Birth:</S.InfoLabel>
-                <S.InfoValue>
-                  {muse?.dateOfBirth.year}-{muse?.dateOfBirth.month}-
-                  {muse?.dateOfBirth.day}
-                </S.InfoValue>
-              </S.InfoItem>
-              <S.InfoItem>
-                <S.InfoLabel>Species:</S.InfoLabel>
-                <S.InfoValue>{muse?.species}</S.InfoValue>
-              </S.InfoItem>
-              <S.InfoItem>
-                <S.InfoLabel>Hometown:</S.InfoLabel>
-                <S.InfoValue>{muse?.hometown}</S.InfoValue>
-              </S.InfoItem>
-              <S.InfoItem>
-                <S.InfoLabel>Relationship Status:</S.InfoLabel>
-                <S.InfoValue>{muse?.relationshipStatus}</S.InfoValue>
-              </S.InfoItem>
-            </S.InfoContainer>
-          </S.InfoCardContent>
-     
-        </S.CardBack>
-      </S.CardWrapper>
+        <S.CardWrapper onClick={() => transition("CONNECTIONS")}>
+          <S.CardBackground banner={muse?.image || ""} />
+          <S.CardBack className="muse-card">
+            <S.InfoCardContent>
+              <S.Title>Muse Information</S.Title>
+              <S.InfoContainer>
+                <S.InfoItem>
+                  <S.InfoLabel>First Name:</S.InfoLabel>
+                  <S.InfoValue>{muse?.firstName}</S.InfoValue>
+                </S.InfoItem>
+                <S.InfoItem>
+                  <S.InfoLabel>Last Name:</S.InfoLabel>
+                  <S.InfoValue>{muse?.lastName}</S.InfoValue>
+                </S.InfoItem>
+                <S.InfoItem>
+                  <S.InfoLabel>Fandom:</S.InfoLabel>
+                  <S.InfoValue>{muse?.fandom}</S.InfoValue>
+                </S.InfoItem>
+                <S.InfoItem>
+                  <S.InfoLabel>Date of Birth:</S.InfoLabel>
+                  <S.InfoValue>
+                    {muse?.dateOfBirth.year}-{muse?.dateOfBirth.month}-
+                    {muse?.dateOfBirth.day}
+                  </S.InfoValue>
+                </S.InfoItem>
+                <S.InfoItem>
+                  <S.InfoLabel>Species:</S.InfoLabel>
+                  <S.InfoValue>{muse?.species}</S.InfoValue>
+                </S.InfoItem>
+                <S.InfoItem>
+                  <S.InfoLabel>Hometown:</S.InfoLabel>
+                  <S.InfoValue>{muse?.hometown}</S.InfoValue>
+                </S.InfoItem>
+                <S.InfoItem>
+                  <S.InfoLabel>Relationship Status:</S.InfoLabel>
+                  <S.InfoValue>{muse?.relationshipStatus}</S.InfoValue>
+                </S.InfoItem>
+              </S.InfoContainer>
+            </S.InfoCardContent>
+          </S.CardBack>
+        </S.CardWrapper>
       </ShouldRender>
       <ShouldRender if={is("CONNECTIONS")}>
-      <S.CardWrapper onClick={() => transition('BACK_STORY')}>
-        <S.CardBackground banner={muse?.image || ""} />
-        <S.CardBack className="muse-card">
-          <S.InfoCardContent>
-            <S.Title>Connections</S.Title>
-            <S.ConnectionsContainer>
-              <S.ScrollableContent>
-              <S.ExpandedContentInner>
-                {loadChildren(0, "paddington")}
-              </S.ExpandedContentInner>
-              </S.ScrollableContent>
-            </S.ConnectionsContainer>
-          </S.InfoCardContent>
-        </S.CardBack>
-      </S.CardWrapper>
+        <S.CardWrapper onClick={() => transition("BACK_STORY")}>
+          <S.CardBackground banner={muse?.image || ""} />
+          <S.CardBack className="muse-card">
+            <S.InfoCardContent>
+              <S.Title>Connections</S.Title>
+              <S.ConnectionsContainer>
+                <S.ScrollableContent>
+                  <S.ExpandedContentInner>
+                    {loadChildren(0, "paddington")}
+                  </S.ExpandedContentInner>
+                </S.ScrollableContent>
+              </S.ConnectionsContainer>
+            </S.InfoCardContent>
+          </S.CardBack>
+        </S.CardWrapper>
       </ShouldRender>
       <ShouldRender if={is("BACK_STORY")}>
-      <S.CardWrapper onClick={() => transition('MAIN')}>
-        <S.CardBackground banner={muse?.image || ""} />
-        <S.CardBack className="muse-card">
-          <S.InfoCardContent>
-            <S.Title>Back Story</S.Title>
-            <S.ScrollableContent>
-              <S.NoteContainer>
-                <Quote>{muse?.note}</Quote>
-              </S.NoteContainer>
-              <S.Text>{muse?.story}</S.Text>
-            </S.ScrollableContent>
-          </S.InfoCardContent>
-        </S.CardBack>
-      </S.CardWrapper>
+        <S.CardWrapper onClick={() => transition("MAIN")}>
+          <S.CardBackground banner={muse?.image || ""} />
+          <S.CardBack className="muse-card">
+            <S.InfoCardContent>
+              <S.Title>Back Story</S.Title>
+              <S.ScrollableContent>
+                <S.NoteContainer>
+                  <Quote>{muse?.note}</Quote>
+                </S.NoteContainer>
+                <S.Text>{muse?.story}</S.Text>
+              </S.ScrollableContent>
+            </S.InfoCardContent>
+          </S.CardBack>
+        </S.CardWrapper>
       </ShouldRender>
     </S.MuseContainer>
   );

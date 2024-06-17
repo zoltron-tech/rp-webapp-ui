@@ -221,8 +221,7 @@ export const updateMessagePollingAction = async (
   return filteredResult;
 };
 
-export const sendMessageAction = async (message: Message) => {
-  const jwt = await authenticateAndGetJWT();
+export const sendMessageAPI = (jwt: string) => async (message: Message) => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/send`;
 
   Logger.warn("sendMessageAction", message);
@@ -254,4 +253,10 @@ export const sendMessageAction = async (message: Message) => {
 
   const result = (await response.json()) as Message;
   return result;
+}
+
+export const sendMessageAction = async (message: Message) => {
+  const jwt = await authenticateAndGetJWT();
+
+  return sendMessageAPI(jwt)(message);
 };

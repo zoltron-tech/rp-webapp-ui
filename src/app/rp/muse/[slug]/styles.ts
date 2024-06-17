@@ -1,8 +1,29 @@
-import { Pill, Avatar as AvatarCommon } from "@/components/common";
-import { pSBC } from "@/lib/pSBC";
-import { BACKGROUND_BLUR, BORDER_RADIUS, Z_INDEX } from "@/theme";
+import { Avatar as AvatarCommon } from "@/components/common";
+import { BACKGROUND_BLUR, BLUR_FILTER, BORDER_RADIUS, Z_INDEX } from "@/theme";
 import { setOpacity } from "@/utils/helpers";
 import styled from "styled-components";
+
+interface BannerProps {
+  src: string;
+}
+
+export const Banner = styled.div<BannerProps>`
+  width: 100cqw;
+  height: clamp(
+    var(--profile-banner-height-min),
+    30cqw,
+    var(--profile-banner-height-max)
+  );
+  z-index: ${Z_INDEX.BACKGROUND};
+  position: absolute;
+
+  background-image: url(${({ src }) => src});
+  background-repeat: no-repeat;
+  background-size: cover;
+  contain: paint;
+
+  ${BLUR_FILTER}
+`;
 
 export const MuseContainer = styled.div`
   padding-top: 20px;
@@ -28,7 +49,6 @@ export const CardBackground = styled.div<CardProps>`
 
   border-radius: ${BORDER_RADIUS};
   background-image: url(${(props): string => props.banner});
-  background-position: -50px;
   background-size: cover;
   transition-timing-function: ease-out;
   transition-duration: 300ms;
@@ -39,7 +59,7 @@ export const CardWrapper = styled.div`
   position: relative;
   width: 350px;
   height: 580px;
-
+  border: 1px solid gray;
   border-radius: var(--border-radius);
 
   cursor: pointer;
@@ -52,28 +72,22 @@ export const CardWrapper = styled.div`
   container-type: size;
 
   @container (min-width: 2559px) {
-
     margin-top: 40px;
-      width: 700px;
-      height: 1160px;
-
+    width: 700px;
+    height: 1160px;
   }
 
   @container (min-width: 2047px) and (max-width: 2559px) {
-   
     margin-top: 40px;
 
-      width: 525px;
-      height: 870px;
-    
+    width: 525px;
+    height: 870px;
   }
 
   @container (min-width: 1023px) and (max-width: 2047px) {
-    
     margin-top: 20px;
-      width: 437.5px;
-      height: 725px;
-    
+    width: 437.5px;
+    height: 725px;
   }
 
   &:hover {
@@ -97,7 +111,6 @@ export const Title = styled.div`
   color: ${({ theme }) => theme.text};
   text-align: center;
 `;
-
 
 export const NoteContainer = styled.div`
   display: flex;
@@ -123,7 +136,6 @@ export const ConnectionsContainer = styled.div`
 
   padding: 10px 20px 20px;
 `;
-
 
 export const Text = styled.div`
   font-size: 12px;
@@ -185,7 +197,6 @@ export const CardBack = styled.div`
     ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
   );
 
-
   & {
     ${BACKGROUND_BLUR()}
   }
@@ -200,8 +211,6 @@ export const Card = styled.div`
   position: relative;
   height: 100%;
   contain: paint;
-
-
 
   &:hover {
     background: linear-gradient(

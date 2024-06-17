@@ -5,6 +5,7 @@ const nextConfig = {
       allowedOrigins: [
         "https://rf5frpnl-3000.euw.devtunnels.ms/",
         "localhost:3000",
+        "localhost:4200",
       ],
     },
   },

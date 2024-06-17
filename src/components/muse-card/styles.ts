@@ -10,7 +10,6 @@ export const CardBackground = styled.div<CardProps>`
 
   border-radius: ${BORDER_RADIUS};
   background-image: url(${(props): string => props.banner});
-  background-position: -50px;
   background-size: cover;
   transition-timing-function: ease-out;
   transition-duration: 300ms;
@@ -114,8 +113,6 @@ export const Button = styled.div`
 export const EditButton = styled(Button)`
   top: 10px;
   right: 50px;
-
-
 `;
 
 export const DeleteButton = styled(Button)`
@@ -139,8 +136,6 @@ export const Card = styled.div`
   position: relative;
   height: 100%;
   contain: paint;
-
- 
 
   &:hover {
     background: linear-gradient(

@@ -90,7 +90,7 @@ export const THEME_DARK: Theme = {
   textLinkHover: pSBC(-0.3, accentColor) as string,
   textGray: "#727272",
   textStark: "#fff",
-  navbar: "#3a3a3a",
+  navbar: "#1f1b1b",
   cardBackgroundTint: "rgba(0, 0, 0, 0.339)",
   cardBackgroundGradient: [
     "rgba(255, 255, 255, 0)",

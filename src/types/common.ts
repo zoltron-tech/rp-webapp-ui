@@ -12,6 +12,8 @@ export interface Tagged {
   readonly _tag: string;
 }
 
+export type Untagged<T> = Omit<T, "_tag">;
+
 export interface SearchResult extends Tagged {
   _tag: "SearchResult";
   username?: string;

@@ -33,7 +33,7 @@ export default function ResetPassword() {
     return cookies.theme === "light" ? THEME_LIGHT : THEME_DARK;
   };
   const searchParams = useSearchParams();
-  const jwt = searchParams.get("token") || "";
+  const jwt = searchParams?.get("token") || "";
   const [disabled, setDisabled] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const { resetPassword, state: authState } = useAuthContext();

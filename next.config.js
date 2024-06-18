@@ -18,6 +18,7 @@ const nextConfig = {
     NOVE_ENV: process.env.NODE_ENV,
     DISABLE_AUTOSCROLL: process.env.DISABLE_AUTOSCROLL,
     LOG_LEVEL: process.env.LOG_LEVEL,
+    RP_CHAT_URL: process.env.RP_CHAT_URL,
   },
 
   serverRuntimeConfig: {

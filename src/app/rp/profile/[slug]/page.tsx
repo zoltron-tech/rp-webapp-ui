@@ -39,7 +39,7 @@ export default function UserProfilePage({}) {
   };
 
   const handleMessageButton = () => {
-    push(`/rp/profile/messenger`);
+    window.location.replace(`${process.env.RP_CHAT_URL}`);
   };
 
   const handleSendFriendRequest = async () => {

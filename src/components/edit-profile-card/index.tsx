@@ -5,7 +5,13 @@ import {
   updateUserNovelist,
 } from "@/app/rp/novelists/actions";
 import { uploadAvatar } from "@/app/rp/profile/actions";
-import { Card, Input, UploadAvatar, Username } from "@/components/common";
+import {
+  Card,
+  Input,
+  ShouldRender,
+  UploadAvatar,
+  Username,
+} from "@/components/common";
 import { useAuthContext, useForm, useStore, useUIContext } from "@/hooks";
 import type { Novelist } from "@/types";
 import { API_MESSAGE, INITIAL_NOVELIST } from "@/utils/constants";
@@ -191,13 +197,20 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
               maxLength={250}
             />
             <S.ButtonGroup>
-              <S.SaveButton
-                variant="secondary"
-                onClick={handleCancel}
-                loading={loading}
+              <ShouldRender
+                if={
+                  novelist?.username !== undefined &&
+                  novelist?.firstName !== undefined
+                }
               >
-                Cancel
-              </S.SaveButton>
+                <S.SaveButton
+                  variant="secondary"
+                  onClick={handleCancel}
+                  loading={loading}
+                >
+                  Cancel
+                </S.SaveButton>
+              </ShouldRender>
               <S.SaveButton onClick={() => submit()} loading={loading}>
                 Save <div className="sm-hide">Changes</div>
               </S.SaveButton>

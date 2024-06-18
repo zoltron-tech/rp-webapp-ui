@@ -45,12 +45,6 @@ export const TopBar: FC<Props> = memo(({}) => {
     show();
   };
 
-  const onSignupClick = () => {
-    show();
-  };
-
-  Logger.info("TopBar rendered");
-
   return (
     <S.Container>
       <S.Bar>

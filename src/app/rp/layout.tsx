@@ -36,7 +36,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <AuthProvider>
           <UIContextProvider>
             <S.PageContainer>
-              <ShouldRender if={pathname !== "/rp/reset-password"}>
+              <ShouldRender
+                if={
+                  pathname !== "/rp/reset-password" &&
+                  pathname !== "/rp/verify-email"
+                }
+              >
                 <LoginModal />
                 <TopBar />
               </ShouldRender>

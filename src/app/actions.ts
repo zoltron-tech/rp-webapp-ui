@@ -49,6 +49,30 @@ export const forgotPasswordAction = async (email: string) => {
   return result;
 };
 
+export const verifyAccountAction = async (jwt: string) => {
+  const URL = `${RP_SERVICE_URL}/rp/user/account/verifyAccount`;
+
+  const response = await fetch(URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    cache: "no-store",
+  });
+
+  console.log(response);
+
+  if (response.status !== 200) {
+    return {
+      message: "Something went wrong, please try again or contact support.",
+    };
+  }
+
+  const result: WithMessage = await response.json();
+  return result;
+};
+
 export const resetPasswordAction = async (
   payload: LoginPayload,
   jwt: string
@@ -176,7 +200,7 @@ export const authenticateJWT = (useCookies?: boolean) => (jwt: string) => {
     return false;
   }
   return true;
-}
+};
 
 export const authenticateAction = async () => {
   Logger.debug("authenticate");

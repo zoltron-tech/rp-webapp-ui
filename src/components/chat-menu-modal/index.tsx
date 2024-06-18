@@ -23,10 +23,8 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
   };
 
   const onMoreMessagesClick = () => {
-    push(`/rp/profile/messenger`);
+    window.location.replace(`${process.env.RP_CHAT_URL}`);
   };
-
-  Logger.info("ChatMenuModal rendered");
 
   if (!user) return <></>;
 

@@ -7,6 +7,7 @@ import {
   loginAction,
   logoutAction,
   resetPasswordAction,
+  verifyAccountAction,
   signupAction,
 } from "@/app/actions";
 import { getUserNovelist } from "@/app/rp/novelists/actions";
@@ -115,6 +116,13 @@ export const AuthProvider: FC<Props> = ({ children }) => {
     return response;
   };
 
+  const verifyAccount = async (jwt: string) => {
+    transition("LOADING");
+    const response = await verifyAccountAction(jwt);
+    transition("LOGGED_OUT");
+    return response;
+  };
+
   const logout = async () => {
     await logoutAction();
     transition("LOGGED_OUT");
@@ -190,6 +198,7 @@ export const AuthProvider: FC<Props> = ({ children }) => {
         logout,
         forgotPassword,
         resetPassword,
+        verifyAccount,
         updateNovelist,
       }}
     >

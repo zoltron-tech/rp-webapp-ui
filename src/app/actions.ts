@@ -16,7 +16,7 @@ import { isNone, validateUser } from "@/utils/helpers/type";
 import { Logger } from "@/utils/services";
 
 const { serverRuntimeConfig } = getConfig();
-const { RP_SERVICE_URL } = serverRuntimeConfig;
+const { RP_SERVICE_URL, USE_LOCAL_DOMAIN } = serverRuntimeConfig;
 
 export const getThemeCookie = async () => {
   const cookie = cookies().get(THEME_COOKIE_NAME);
@@ -27,6 +27,16 @@ export const getAuthCookie = async () => {
   const cookie = cookies().get(JWT_COOKIE_NAME);
   return cookie ? cookie.value : "";
 };
+
+export const setAuthCookie = async (jwt: string) => {
+  cookies().set(JWT_COOKIE_NAME, jwt, {
+    httpOnly: true,
+    secure: false,
+    sameSite: "strict",
+    domain: USE_LOCAL_DOMAIN ? "localhost" : "novelist.world",
+    path: "/",
+  });
+}
 
 export const forgotPasswordAction = async (email: string) => {
   const URL = `${RP_SERVICE_URL}/rp/user/account/forgotPassword?email=${email}`;
@@ -127,12 +137,7 @@ export const loginAction = async (payload: LoginPayload) => {
     return { message: "Something went wrong, please contact support." };
   }
 
-  cookies().set(JWT_COOKIE_NAME, result.token, {
-    httpOnly: true,
-    secure: false,
-    sameSite: "strict",
-    path: "/",
-  });
+  setAuthCookie(result.token);
 
   const clientResponse: With<"user", WithMessage, User> = {
     message: result.message,
@@ -167,12 +172,7 @@ export const signupAction = async (payload: SignUpPayload) => {
     return { message: "Something went wrong, please contact support." };
   }
 
-  cookies().set(JWT_COOKIE_NAME, result.token, {
-    httpOnly: true,
-    secure: false,
-    sameSite: "strict",
-    path: "/",
-  });
+  setAuthCookie(result.token);
 
   const clientResponse: With<"user", WithMessage, User> = {
     message: result.message,

@@ -12,7 +12,7 @@ import * as S from "./styles";
 
 type Props = {};
 
-export const ThemeToggle: FC<Props> = ({}) => {
+export const ThemeToggle: FC<Props> = ({ }) => {
   const [theme, set] = useStore<StoreState, "theme">((store) => store.theme);
   const [, setCookie] = useCookies(["theme"]);
 
@@ -21,7 +21,7 @@ export const ThemeToggle: FC<Props> = ({}) => {
   };
 
   useEffect(() => {
-    setCookie("theme", theme);
+    setCookie("theme", theme, { path: "/" });
   }, [theme]);
 
   Logger.info("ThemeToggle rendered");

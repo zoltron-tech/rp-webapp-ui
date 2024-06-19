@@ -23,6 +23,7 @@ const nextConfig = {
 
   serverRuntimeConfig: {
     RP_SERVICE_URL: process.env.RP_SERVICE_URL,
+    USE_LOCAL_DOMAIN: process.env.USE_LOCAL_DOMAIN,
   },
 
   images: {

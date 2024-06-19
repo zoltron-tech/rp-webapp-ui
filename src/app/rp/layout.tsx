@@ -1,5 +1,6 @@
 "use client";
 
+import { THEME_DARK, THEME_LIGHT } from "@/theme";
 import {
   ContentContainer,
   Footer,
@@ -7,8 +8,7 @@ import {
   TopBar,
 } from "@/components/layout";
 import { AuthProvider, StoreProvider, UIContextProvider } from "@/context";
-import { THEME_DARK, THEME_LIGHT } from "@/theme";
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import { useCookies } from "react-cookie";
 import { ThemeProvider } from "styled-components";
 
@@ -19,17 +19,18 @@ import { ShouldRender } from "@/components/common";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [cookies, _setCookie] = useCookies(["theme"]);
+  const theme = useMemo(() => {
+    console.log("cookies.theme", cookies.theme);
+    return cookies.theme === "light" ? THEME_LIGHT : THEME_DARK;
+  }, [cookies.theme]);
 
   const pathname = usePathname();
 
+  console.log("theme is", theme)
   console.log("path is", pathname);
 
-  const getTheme = () => {
-    return cookies.theme === "light" ? THEME_LIGHT : THEME_DARK;
-  };
-
   return (
-    <ThemeProvider theme={getTheme()}>
+    <ThemeProvider theme={theme}>
       <StoreProvider<StoreState>
         initial={{ novelists: [], theme: cookies.theme || "light" }}
       >

@@ -1,4 +1,5 @@
 "use server";
+
 import JWT from "jsonwebtoken";
 import getConfig from "next/config";
 import { cookies } from "next/headers";
@@ -36,7 +37,19 @@ export const setAuthCookie = async (jwt: string) => {
     domain: USE_LOCAL_DOMAIN ? "localhost" : "novelist.world",
     path: "/",
   });
-}
+};
+
+export const removeAuthCookie = async (jwt: string) => {
+  const pastDate = new Date(0);
+  cookies().set(JWT_COOKIE_NAME, jwt, {
+    httpOnly: false,
+    secure: false,
+    sameSite: "strict",
+    domain: USE_LOCAL_DOMAIN ? "localhost" : "novelist.world",
+    path: "/",
+    expires: pastDate,
+  });
+};
 
 export const forgotPasswordAction = async (email: string) => {
   const URL = `${RP_SERVICE_URL}/rp/user/account/forgotPassword?email=${email}`;
@@ -183,7 +196,7 @@ export const signupAction = async (payload: SignUpPayload) => {
 };
 
 export const logoutAction = async () => {
-  cookies().delete(JWT_COOKIE_NAME);
+  removeAuthCookie(JWT_COOKIE_NAME);
   redirect("/rp/novelists", RedirectType.push);
 };
 

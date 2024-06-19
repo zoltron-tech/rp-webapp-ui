@@ -30,9 +30,9 @@ export const getAuthCookie = async () => {
 
 export const setAuthCookie = async (jwt: string) => {
   cookies().set(JWT_COOKIE_NAME, jwt, {
-    httpOnly: false,
-    secure: false,
-    sameSite: "strict",
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
     domain: USE_LOCAL_DOMAIN ? "localhost" : "novelist.world",
     path: "/",
   });

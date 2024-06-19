@@ -23,10 +23,7 @@ const ioHandler = async (req: NextApiRequest, res: NextApiResponseServerIO) => {
       path: path,
       addTrailingSlash: false,
       cors: {
-        origin: [
-          "http://localhost:4200",
-          "http://chat.novelist.world.s3-website.eu-central-1.amazonaws.com",
-        ],
+        origin: ["http://localhost:4200", "http://www.chat.novelist.world"],
         methods: ["GET", "POST"],
         credentials: true,
       },

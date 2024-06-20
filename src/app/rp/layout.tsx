@@ -26,7 +26,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const pathname = usePathname();
 
-  console.log("theme is", theme)
+  console.log("theme is", theme);
   console.log("path is", pathname);
 
   return (
@@ -47,7 +47,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <TopBar />
               </ShouldRender>
               <ContentContainer>{children}</ContentContainer>
-              <Footer />
             </S.PageContainer>
           </UIContextProvider>
         </AuthProvider>

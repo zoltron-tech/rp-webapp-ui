@@ -13,7 +13,6 @@ export const Container = styled.div`
   border: 1px solid ${({ theme }) => theme.background};
   border-radius: 60px;
   box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
-  position: sticky;
   align-items: center;
   top: 0;
   max-width: 1080px;
@@ -34,7 +33,6 @@ export const Container = styled.div`
 `;
 
 export const Bar = styled.div`
-  position: sticky;
   top: 0px;
   width: 100%;
   max-width: 1400px;

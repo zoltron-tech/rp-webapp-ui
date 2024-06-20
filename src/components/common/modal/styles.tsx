@@ -50,7 +50,6 @@ export const Content = styled.div<ContentProps>`
   ${({ width }) => width && `width: ${width};`}
   ${({ height }) => height && `height: ${height};`}
 
-  overflow: auto;
   resize: both;
   ${({ minHeight }) => minHeight && `min-height: ${minHeight};`}
   ${({ minWidth }) => minWidth && `min-width: ${minWidth};`}

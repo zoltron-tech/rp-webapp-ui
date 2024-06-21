@@ -149,11 +149,10 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
         }
       />
       <Card
-        width="70cqw"
+        width="50cqw"
         minWidth="300px"
-        maxWidth="90cqw"
-        minHeight="520px"
-        maxHeight="520px"
+        minHeight="450px"
+        maxHeight="800px"
         padding="20px"
         margin="clamp(50px, 20cqw, 50px) auto 100px auto"
         centered
@@ -163,9 +162,7 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
           onChange={(image) => setAvatarFile(image)}
         />
         <S.Profile>
-          <S.Title>
-            <span>Your</span> Profile
-          </S.Title>
+          <S.Title>Edit Your Profile</S.Title>
           <S.UsernameContainer>
             <Username username={user?.username} primary />
           </S.UsernameContainer>

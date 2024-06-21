@@ -4,7 +4,6 @@ import { FC } from "react";
 import { Logger } from "@/utils/services";
 import { Button, ButtonProps } from "../common";
 import * as S from "./styles";
-import classNames from "classnames";
 
 export interface ButtonInfo {
   onClick: () => void;

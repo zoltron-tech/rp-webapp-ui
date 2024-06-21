@@ -9,7 +9,7 @@ export const Footer: FC<Props> = memo(({}) => {
   Logger.info("Footer rendered");
   return (
     <S.FooterContainer>
-      <span>Copyright © 2024, Zoltron Tech. All Rights Reserved.</span>
+      <span>© 2024, Zoltron Tech.</span>
     </S.FooterContainer>
   );
 });

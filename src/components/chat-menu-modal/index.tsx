@@ -6,7 +6,7 @@ import { Logger } from "@/utils/services";
 import classNames from "classnames";
 import { useRouter } from "next/navigation";
 import { FC, useState } from "react";
-import { PiChatsCircleDuotone } from "react-icons/pi";
+import { IoChatbubblesSharp } from "react-icons/io5";
 import { Avatar } from "../common";
 import * as S from "./styles";
 
@@ -31,7 +31,7 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
   return (
     <S.PositionContainer>
       <S.ContentContainer onClick={toggleState(setOpen)}>
-        <PiChatsCircleDuotone size={45} />
+        <IoChatbubblesSharp size={40} />
         <S.Menu className={classNames({ open })}>
           {novelist?.friends &&
             novelist?.friends.map((friend) => (

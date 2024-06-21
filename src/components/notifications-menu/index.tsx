@@ -65,7 +65,7 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
   return (
     <S.PositionContainer>
       <S.ContentContainer onClick={toggleState(setOpen)}>
-        <IoNotificationsCircle size={50} />
+        <IoNotificationsCircle size={48} />
         <S.Menu className={classNames({ open })}>
           {friendRequests &&
             friendRequests.map((request) => (

@@ -106,13 +106,13 @@ export const LogoText = styled.div`
   font-style: italic;
   ${NO_USER_SELECT}
 
-  @container (max-width: 800px) {
+  @container (max-width: 1000px) {
     & {
-      font-size: 24px;
+      font-size: 20px;
     }
   }
 
-  @container (max-width: 650px) {
+  @container (max-width: 800px) {
     & {
       display: none;
     }
@@ -191,20 +191,11 @@ export const ButtonsContainerDesktop = styled.div`
     & {
       width: 100px;
     }
-    & > div:nth-child(2) {
-      display: none;
-    }
   }
 `;
 
 export const ButtonsContainerLoggedInDesktop = styled(ButtonsContainerDesktop)`
-  width: 140px;
-
-  @container (max-width: 800px) {
-    & {
-      width: 50px;
-    }
-  }
+  width: 130px;
 `;
 
 export const ButtonsContainerMobile = styled.div`

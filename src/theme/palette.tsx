@@ -33,7 +33,7 @@ export type Theme = {
   processing: string;
 };
 
-export const accentColor = "#227cc5"; // "#8e5e9c"; //"#1ca0a0"; //"#227da1"; //;
+export const accentColor = "#227da1"; //"#018786"; //"#8e5e9c"; //"#1ca0a0"; // "#227cc5";;
 
 export const THEME_LIGHT: Theme = {
   name: "light",
@@ -97,7 +97,7 @@ export const THEME_DARK: Theme = {
     "rgba(0, 0, 0, 0.8) 80%",
     "rgba(0, 0, 0, 1)",
   ],
-  cardBackgroundColor: "#1b1b1b",
+  cardBackgroundColor: "#1e1e1eb8",
   cardBoxShadowColor: "rgba(0, 0, 0, 0.6)",
   hoverGrey: "#333333",
   hoverGreyAlpha: "rgba(51, 51, 51, 0.5)",

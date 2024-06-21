@@ -68,10 +68,10 @@ export const ScrollableContentContainer = styled.div`
 export const Searchbar = styled.div`
   background-color: ${({ theme }) => theme.pillExpandedContentBackground};
   height: 60px;
-  border-radius: 50px;
-  top: 20px;
-  left: 120px;
-  width: calc(100cqw - 240px);
+  border-radius: 30px;
+  top: 10px;
+  left: 110px;
+  width: calc(100cqw - 185px);
   opacity: 0;
   pointer-events: none;
   position: absolute;
@@ -94,7 +94,7 @@ export const Searchbar = styled.div`
 export const MagnifyingGlass = styled.div`
   position: relative;
   top: 15px;
-  left: 20px;
+  left: 10px;
   height: 30px;
   width: 30px;
   opacity: 0;
@@ -190,10 +190,10 @@ export const ExpandedContent = styled.div`
   background: ${({ theme }) => theme.pillExpandedContentBackground};
   overflow-y: auto;
 
-  top: 100px;
-  left: 20px;
-  width: calc(100cqw - 40px);
-  height: calc(100cqh - 140px);
+  top: 80px;
+  left: 10px;
+  width: calc(100cqw - 20px);
+  height: calc(100cqh - 90px);
 
   container-name: muses-pill-expanded-content;
   container-type: size;

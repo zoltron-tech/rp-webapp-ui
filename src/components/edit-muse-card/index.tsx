@@ -126,11 +126,8 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
         }
       />
       <Card
-        width="80cqw"
-        minWidth="100px"
-        maxWidth="80cqw"
-        minHeight="1000px"
-        maxHeight="1000px"
+        width="60cqw"
+        height="950px"
         padding="20px"
         margin="clamp(50px, 20cqw, 50px) auto 100px auto"
         centered
@@ -140,9 +137,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
           onChange={(image) => setAvatarFile(image)}
         />
         <S.Profile>
-          <S.Title>
-            <span>Your</span> Muse
-          </S.Title>
+          <S.Title>Edit Muse</S.Title>
           <S.UsernameContainer>
             <span>PENNED BY: </span>
             <Username username={user?.username} primary />

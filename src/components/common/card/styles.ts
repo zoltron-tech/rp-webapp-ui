@@ -21,12 +21,11 @@ export const Container = styled.div<ContainerProps>`
   padding: ${(props: ContainerProps) => props.padding || "10cqw"};
   margin: ${(props: ContainerProps) => props.margin || "0px"};
   background-color: ${({ theme }) => theme.cardBackgroundColor};
+  border: 1px solid slategray;
   color: ${({ theme }) => theme.text};
   border-radius: 16px;
-  box-shadow: 0px 5px 20px 10px ${({ theme }) => theme.cardBoxShadowColor};
 
   overflow: auto;
-  resize: both;
 
   position: sticky;
   top: 0px;

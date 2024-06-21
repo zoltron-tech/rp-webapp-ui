@@ -1,6 +1,5 @@
 "use client";
 
-import { MusesPill } from "@/components";
 import { Avatar, ShouldRender, Username } from "@/components/common";
 import { PageLoader } from "@/components/layout";
 import { Quote } from "@/components/novelist-card/styles";
@@ -88,6 +87,9 @@ export default function MuseProfilePage({}) {
 
   return (
     <S.MuseContainer>
+      <ShouldRender if={loading}>
+        <PageLoader />
+      </ShouldRender>
       <S.Banner src={muse?.image || ""} />
       <ShouldRender if={is("MAIN")}>
         <S.CardWrapper onClick={() => transition("MUSE_INFO")}>

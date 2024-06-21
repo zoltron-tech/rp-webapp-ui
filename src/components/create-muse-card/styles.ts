@@ -15,6 +15,7 @@ export const Profile = styled.div`
 
 export const Title = styled.div`
   font-size: clamp(20px, 4cqw, 36px);
+  font-weight: 200;
   margin-left: clamp(0px, calc(120px - 20cqw), 120px);
   text-transform: uppercase;
   white-space: nowrap;
@@ -91,7 +92,7 @@ export const ButtonGroup = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-evenly;
   gap: 10px;
 
   & .sm-hide {

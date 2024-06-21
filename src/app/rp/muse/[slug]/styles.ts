@@ -47,7 +47,6 @@ export const CardBackground = styled.div<CardProps>`
   width: 100%;
   height: 100%;
 
-  border-radius: ${BORDER_RADIUS};
   background-image: url(${(props): string => props.banner});
   background-size: cover;
   transition-timing-function: ease-out;

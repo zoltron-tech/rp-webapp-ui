@@ -20,7 +20,6 @@ export const ExpandedContentInner = styled.div`
   flex-wrap: wrap;
   margin-inline: auto;
   justify-content: center;
-  width: 90cqw;
 
   ${DEV_MODE_BORDER("red")}
 `;

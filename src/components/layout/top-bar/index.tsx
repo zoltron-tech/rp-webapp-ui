@@ -86,7 +86,6 @@ export const TopBar: FC<Props> = memo(({}) => {
               )}
             />
           </S.SearchContainer>
-          <DynamicThemeToggle />
           <ShouldRender if={state === "LOGGED_OUT"}>
             <S.ButtonsContainerDesktop>
               <Button onClick={onLoginClick}>Log In</Button>

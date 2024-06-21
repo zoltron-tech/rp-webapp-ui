@@ -2,8 +2,9 @@ import { setOpacity } from "@/utils/helpers";
 import { styled } from "styled-components";
 
 export const FooterContainer = styled.footer`
-  --footer-height: 2.5rem;
+  --footer-height: 2rem;
 
+  font-size: 14px;
   bottom: 0;
   width: 100%;
   display: flex;
@@ -18,4 +19,25 @@ export const FooterContainer = styled.footer`
 
   container-name: footer;
   container-type: size;
+
+  @container (max-width: 800px) {
+    & {
+      font-size: 6px;
+      --footer-height: 1.5rem;
+    }
+  }
+
+  @container (max-width: 600px) {
+    & {
+      font-size: 5px;
+      --footer-height: 1rem;
+    }
+  }
+
+  @container (max-width: 400px) {
+    & {
+      font-size: 4px;
+      --footer-height: 0.5rem;
+    }
+  }
 `;

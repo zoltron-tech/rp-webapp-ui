@@ -201,7 +201,13 @@ export default function UserProfilePage({}) {
         <PageLoader />
       </ShouldRender>
 
-      <S.Banner src={novelist?.image || ""} />
+      <S.Banner
+        src={
+          novelist?.image && !novelist.image.endsWith(".gif")
+            ? novelist.image
+            : ""
+        }
+      />
       <S.SolidBackground></S.SolidBackground>
       <S.Content>
         <S.ContentLeft>

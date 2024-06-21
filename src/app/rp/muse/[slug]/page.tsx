@@ -90,7 +90,9 @@ export default function MuseProfilePage({}) {
       <ShouldRender if={loading}>
         <PageLoader />
       </ShouldRender>
-      <S.Banner src={muse?.image || ""} />
+      <S.Banner
+        src={muse?.image && !muse.image.endsWith(".gif") ? muse.image : ""}
+      />
       <ShouldRender if={is("MAIN")}>
         <S.CardWrapper onClick={() => transition("MUSE_INFO")}>
           <S.CardBackground banner={muse?.image || ""} />

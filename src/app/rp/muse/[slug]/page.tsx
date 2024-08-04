@@ -10,6 +10,12 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getMuseAction } from "../../muse/actions";
 import * as S from "./styles";
+import { BsFillPeopleFill } from "react-icons/bs";
+import { TiInfoLarge } from "react-icons/ti";
+import { GiBookCover } from "react-icons/gi";
+import { FiMoreVertical } from "react-icons/fi";
+import { MdClose } from "react-icons/md";
+import classNames from "classnames";
 
 type CARD_STATE = "MAIN" | "MUSE_INFO" | "CONNECTIONS" | "BACK_STORY";
 
@@ -25,15 +31,23 @@ export default function MuseProfilePage({}) {
     transitions: {
       MAIN: {
         MUSE_INFO: true,
-      },
-      MUSE_INFO: {
         CONNECTIONS: true,
-      },
-      CONNECTIONS: {
         BACK_STORY: true,
       },
-      BACK_STORY: {
+      MUSE_INFO: {
         MAIN: true,
+        CONNECTIONS: true,
+        BACK_STORY: true,
+      },
+      CONNECTIONS: {
+        MAIN: true,
+        BACK_STORY: true,
+        MUSE_INFO: true,
+      },
+      BACK_STORY: {
+        CONNECTIONS: true,
+        MAIN: true,
+        MUSE_INFO: true,
       },
     },
   });
@@ -93,36 +107,36 @@ export default function MuseProfilePage({}) {
       <S.Banner
         src={muse?.image && !muse.image.endsWith(".gif") ? muse.image : ""}
       />
-      <ShouldRender if={is("MAIN")}>
-        <S.CardWrapper onClick={() => transition("MUSE_INFO")}>
-          <S.CardBackground banner={muse?.image || ""} />
-          <S.Card className="muse-card">
-            <S.CardHeader>
-              <S.MuseInfo>
-                <S.MuseName>
-                  {muse?.firstName} {muse?.lastName}
-                </S.MuseName>
-                <S.AuthorContainer>
-                  <Avatar
-                    src={muse?.pennedBy?.image || ""}
-                    alt="profile-picture"
-                    size={60}
-                    hoverable
-                    onClick={onAuthorAvatarClick}
-                  />
-                  <S.UsernameContainer>
-                    <span>PENNED BY:</span>
-                    <Username username={muse?.pennedBy?.username} primary />
-                  </S.UsernameContainer>
-                </S.AuthorContainer>
-              </S.MuseInfo>
-            </S.CardHeader>
-          </S.Card>
-        </S.CardWrapper>
-      </ShouldRender>
+      <S.CardWrapper
+        className={classNames({ closed: is("MAIN") })}
+        onClick={() => transition("MUSE_INFO")}
+      >
+        <S.CardBackground banner={muse?.image || ""} />
+        <S.Card className="muse-card">
+          <S.CardHeader>
+            <S.MuseInfo>
+              <S.MuseName>
+                {muse?.firstName} {muse?.lastName}
+              </S.MuseName>
+              <S.AuthorContainer>
+                <Avatar
+                  src={muse?.pennedBy?.image || ""}
+                  alt="profile-picture"
+                  size={60}
+                  hoverable
+                  onClick={onAuthorAvatarClick}
+                />
+                <S.UsernameContainer>
+                  <span>PENNED BY:</span>
+                  <Username username={muse?.pennedBy?.username} primary />
+                </S.UsernameContainer>
+              </S.AuthorContainer>
+            </S.MuseInfo>
+          </S.CardHeader>
+        </S.Card>
+      </S.CardWrapper>
       <ShouldRender if={is("MUSE_INFO")}>
-        <S.CardWrapper onClick={() => transition("CONNECTIONS")}>
-          <S.CardBackground banner={muse?.image || ""} />
+        <S.CardExpandedWrapper onClick={() => transition("CONNECTIONS")}>
           <S.CardBack className="muse-card">
             <S.InfoCardContent>
               <S.Title>Muse Information</S.Title>
@@ -161,11 +175,10 @@ export default function MuseProfilePage({}) {
               </S.InfoContainer>
             </S.InfoCardContent>
           </S.CardBack>
-        </S.CardWrapper>
+        </S.CardExpandedWrapper>
       </ShouldRender>
       <ShouldRender if={is("CONNECTIONS")}>
-        <S.CardWrapper onClick={() => transition("BACK_STORY")}>
-          <S.CardBackground banner={muse?.image || ""} />
+        <S.CardExpandedWrapper onClick={() => transition("BACK_STORY")}>
           <S.CardBack className="muse-card">
             <S.InfoCardContent>
               <S.Title>Connections</S.Title>
@@ -178,11 +191,10 @@ export default function MuseProfilePage({}) {
               </S.ConnectionsContainer>
             </S.InfoCardContent>
           </S.CardBack>
-        </S.CardWrapper>
+        </S.CardExpandedWrapper>
       </ShouldRender>
       <ShouldRender if={is("BACK_STORY")}>
-        <S.CardWrapper onClick={() => transition("MAIN")}>
-          <S.CardBackground banner={muse?.image || ""} />
+        <S.CardExpandedWrapper onClick={() => transition("MAIN")}>
           <S.CardBack className="muse-card">
             <S.InfoCardContent>
               <S.Title>Back Story</S.Title>
@@ -194,8 +206,40 @@ export default function MuseProfilePage({}) {
               </S.ScrollableContent>
             </S.InfoCardContent>
           </S.CardBack>
-        </S.CardWrapper>
+        </S.CardExpandedWrapper>
       </ShouldRender>
+      <S.SideMenu>
+        <ShouldRender if={!is("MAIN")}>
+          <S.MenuButton className="stick-top">
+            <S.MenuButtonIcon onClick={() => transition("MAIN")}>
+              <MdClose size={"20px"} />
+            </S.MenuButtonIcon>
+          </S.MenuButton>
+        </ShouldRender>
+        <S.MenuButton>
+          <S.MenuButtonIcon onClick={() => transition("BACK_STORY")}>
+            <GiBookCover size={"30px"} />
+          </S.MenuButtonIcon>
+          STORY
+        </S.MenuButton>
+        <S.MenuButton>
+          <S.MenuButtonIcon onClick={() => transition("MUSE_INFO")}>
+            <TiInfoLarge size={"30px"} />
+          </S.MenuButtonIcon>
+          INFO
+        </S.MenuButton>
+        <S.MenuButton>
+          <S.MenuButtonIcon onClick={() => transition("CONNECTIONS")}>
+            <BsFillPeopleFill size={"30px"} />
+          </S.MenuButtonIcon>
+          CONTACTS
+        </S.MenuButton>
+        <S.MenuButton>
+          <S.MenuButtonIcon>
+            <FiMoreVertical size={"20px"} />
+          </S.MenuButtonIcon>
+        </S.MenuButton>
+      </S.SideMenu>
     </S.MuseContainer>
   );
 }

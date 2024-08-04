@@ -42,7 +42,7 @@ export const TopBar: FC<Props> = memo(({}) => {
   };
 
   const onLoginClick = () => {
-    show();
+    window.location.replace(`${process.env.RP_LOGIN_URL}`);
   };
 
   return (

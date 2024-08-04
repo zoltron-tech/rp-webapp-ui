@@ -21,6 +21,7 @@ import { FC, useEffect, useState } from "react";
 import { StoreState } from "@/types/state";
 import { useRouter } from "next/navigation";
 import * as S from "./styles";
+import { Container } from "@novelist-world/ui";
 
 export type EditProfileCardProps = {};
 

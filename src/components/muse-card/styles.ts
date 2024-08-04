@@ -14,6 +14,8 @@ export const CardBackground = styled.div<CardProps>`
   transition-timing-function: ease-out;
   transition-duration: 300ms;
   transition-property: scale;
+  background-repeat: no-repeat;
+  background-position: center center;
 `;
 
 export const CardWrapper = styled.div`

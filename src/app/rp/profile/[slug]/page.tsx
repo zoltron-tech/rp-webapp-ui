@@ -149,6 +149,10 @@ export default function UserProfilePage({}) {
     { onClick: toMusesPage, label: "Muses", variant: "action" },
   ];
 
+  const NotLoggedInButtons: ButtonInfo[] = [
+    { onClick: toMusesPage, label: "Muses", variant: "action" },
+  ];
+
   const fetchAppropriateButtons = (connection: string | null | undefined) => {
     if (!connection) return StrangerButtons;
 
@@ -230,14 +234,13 @@ export default function UserProfilePage({}) {
           <S.Name>
             {novelist?.firstName} {novelist?.lastName}
           </S.Name>
-          <ShouldRender
-            if={state == "LOGGED_IN" && username !== user?.username}
-            preserveSpace
-          >
-            <ButtonGroup
-              buttons={fetchAppropriateButtons(novelist?.connection)}
-            />
-          </ShouldRender>
+          <ButtonGroup
+            buttons={
+              state == "LOGGED_IN" && username !== user?.username
+                ? fetchAppropriateButtons(novelist?.connection)
+                : NotLoggedInButtons
+            }
+          />
           <S.MusePillContainer>
             <MusesPill pillType="MUSES" novelist={novelist} />
             <MusesPill pillType="FRIENDS" novelist={novelist} />

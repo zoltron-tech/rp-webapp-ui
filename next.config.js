@@ -19,6 +19,7 @@ const nextConfig = {
     DISABLE_AUTOSCROLL: process.env.DISABLE_AUTOSCROLL,
     LOG_LEVEL: process.env.LOG_LEVEL,
     RP_CHAT_URL: process.env.RP_CHAT_URL,
+    RP_LOGIN_URL: process.env.RP_LOGIN_URL,
   },
 
   serverRuntimeConfig: {

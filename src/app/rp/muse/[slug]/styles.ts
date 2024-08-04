@@ -31,7 +31,6 @@ export const MuseContainer = styled.div`
   flex-wrap: wrap;
   margin-inline: auto;
   justify-content: center;
-  gap: 0.5rem;
 
   @container (max-width: 800px) {
     & {
@@ -52,14 +51,65 @@ export const CardBackground = styled.div<CardProps>`
   transition-timing-function: ease-out;
   transition-duration: 300ms;
   transition-property: scale;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
 `;
 
 export const CardWrapper = styled.div`
   position: relative;
   width: 350px;
   height: 580px;
-  border: 1px solid gray;
-  border-radius: var(--border-radius);
+  border: 1px solid dimgray;
+  border-top-left-radius: var(--border-radius);
+  border-bottom-left-radius: var(--border-radius);
+
+  cursor: pointer;
+
+  transition: all 0.3s ease-in-out;
+  contain: paint;
+  z-index: ${Z_INDEX.CARD};
+
+  container-name: muse-card;
+  container-type: size;
+
+  @container (min-width: 2559px) {
+    margin-top: 40px;
+    width: 700px;
+    height: 1160px;
+  }
+
+  @container (min-width: 2047px) and (max-width: 2559px) {
+    margin-top: 40px;
+
+    width: 525px;
+    height: 870px;
+  }
+
+  @container (min-width: 1023px) and (max-width: 2047px) {
+    margin-top: 20px;
+    width: 437.5px;
+    height: 725px;
+  }
+
+  &:hover {
+    & ${CardBackground} {
+      scale: 1.03;
+    }
+  }
+
+  &.closed {
+    border-radius: var(--border-radius);
+  }
+`;
+
+export const CardExpandedWrapper = styled.div`
+  position: relative;
+  width: 350px;
+  height: 580px;
+  border: 1px solid dimgray;
+  border-top-right-radius: var(--border-radius);
+  border-bottom-right-radius: var(--border-radius);
 
   cursor: pointer;
 
@@ -122,6 +172,82 @@ export const NoteContainer = styled.div`
   ${BACKGROUND_BLUR()}
 
   padding: 10px 20px 20px;
+`;
+
+export const SideMenu = styled.div`
+  position: relative;
+  width: 100px;
+  height: 580px;
+  border-radius: var(--border-radius);
+  transition: all 0.3s ease-in-out;
+  contain: paint;
+  z-index: ${Z_INDEX.CARD};
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.8rem;
+
+  container-name: muse-card;
+  container-type: size;
+
+  @container (min-width: 2559px) {
+    margin-top: 40px;
+    width: 150px;
+    height: 1160px;
+  }
+
+  @container (min-width: 2047px) and (max-width: 2559px) {
+    margin-top: 40px;
+
+    width: 140px;
+    height: 870px;
+  }
+
+  @container (min-width: 1023px) and (max-width: 2047px) {
+    margin-top: 20px;
+    width: 100px;
+    height: 725px;
+  }
+`;
+
+export const MenuButton = styled.div`
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 80px;
+  height: 90px;
+  transition: all 0.3s ease-in-out;
+  z-index: ${Z_INDEX.CARD};
+  justify-content: center;
+  align-items: center;
+  gap: 0.2rem;
+
+  &.stick-top {
+    position: absolute;
+    top: 0px;
+  }
+`;
+
+export const MenuButtonIcon = styled.div`
+  position: relative;
+  display: flex;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 1px solid dimgray;
+  transition: all 0.3s ease-in-out;
+  contain: paint;
+  z-index: ${Z_INDEX.CARD};
+  background-color: ${({ theme }) => theme.modalBackground};
+  cursor: pointer;
+  justify-content: center;
+  align-items: center;
+
+  &:hover {
+    scale: 1.1;
+    background-color: ${({ theme }) => theme.primary};
+  }
 `;
 
 export const ConnectionsContainer = styled.div`
@@ -281,6 +407,7 @@ export const InfoContainer = styled.div`
   flex-direction: column;
   word-break: break-word;
   margin-top: 20px;
+  gap: 0.5rem;
 `;
 
 export const InfoItem = styled.div`

@@ -23,6 +23,8 @@ export const INITIAL_MUSE: Muse = {
   note: "",
   story: "",
   image: "",
+  video: "",
+  song: "",
   dateOfBirth: {
     year: 1970,
     month: "JANUARY",

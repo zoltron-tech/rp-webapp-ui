@@ -15,9 +15,10 @@ import { TiInfoLarge } from "react-icons/ti";
 import { GiBookCover } from "react-icons/gi";
 import { FiMoreVertical } from "react-icons/fi";
 import { MdClose } from "react-icons/md";
+import { MdOutlineSlowMotionVideo } from "react-icons/md";
 import classNames from "classnames";
 
-type CARD_STATE = "MAIN" | "MUSE_INFO" | "CONNECTIONS" | "BACK_STORY";
+type CARD_STATE = "MAIN" | "VIDEO" | "MUSE_INFO" | "CONNECTIONS" | "BACK_STORY";
 
 export default function MuseProfilePage({}) {
   const params = useParams();
@@ -33,21 +34,31 @@ export default function MuseProfilePage({}) {
         MUSE_INFO: true,
         CONNECTIONS: true,
         BACK_STORY: true,
+        VIDEO: true,
+      },
+      VIDEO: {
+        MAIN: true,
+        MUSE_INFO: true,
+        CONNECTIONS: true,
+        BACK_STORY: true,
       },
       MUSE_INFO: {
         MAIN: true,
         CONNECTIONS: true,
         BACK_STORY: true,
+        VIDEO: true,
       },
       CONNECTIONS: {
         MAIN: true,
         BACK_STORY: true,
         MUSE_INFO: true,
+        VIDEO: true,
       },
       BACK_STORY: {
         CONNECTIONS: true,
         MAIN: true,
         MUSE_INFO: true,
+        VIDEO: true,
       },
     },
   });
@@ -108,8 +119,7 @@ export default function MuseProfilePage({}) {
         src={muse?.image && !muse.image.endsWith(".gif") ? muse.image : ""}
       />
       <S.CardWrapper
-        className={classNames({ closed: is("MAIN") })}
-        onClick={() => transition("MUSE_INFO")}
+        className={classNames({ closed: is("MAIN"), open: !is("MAIN") })}
       >
         <S.CardBackground banner={muse?.image || ""} />
         <S.Card className="muse-card">
@@ -136,7 +146,7 @@ export default function MuseProfilePage({}) {
         </S.Card>
       </S.CardWrapper>
       <ShouldRender if={is("MUSE_INFO")}>
-        <S.CardExpandedWrapper onClick={() => transition("CONNECTIONS")}>
+        <S.CardExpandedWrapper>
           <S.CardBack className="muse-card">
             <S.InfoCardContent>
               <S.Title>Muse Information</S.Title>
@@ -178,7 +188,7 @@ export default function MuseProfilePage({}) {
         </S.CardExpandedWrapper>
       </ShouldRender>
       <ShouldRender if={is("CONNECTIONS")}>
-        <S.CardExpandedWrapper onClick={() => transition("BACK_STORY")}>
+        <S.CardExpandedWrapper>
           <S.CardBack className="muse-card">
             <S.InfoCardContent>
               <S.Title>Connections</S.Title>
@@ -194,7 +204,7 @@ export default function MuseProfilePage({}) {
         </S.CardExpandedWrapper>
       </ShouldRender>
       <ShouldRender if={is("BACK_STORY")}>
-        <S.CardExpandedWrapper onClick={() => transition("MAIN")}>
+        <S.CardExpandedWrapper>
           <S.CardBack className="muse-card">
             <S.InfoCardContent>
               <S.Title>Back Story</S.Title>
@@ -208,37 +218,74 @@ export default function MuseProfilePage({}) {
           </S.CardBack>
         </S.CardExpandedWrapper>
       </ShouldRender>
+      <ShouldRender if={is("VIDEO")}>
+        <S.CardExpandedWrapper>
+          <ShouldRender if={muse?.video !== null}>
+            <S.VideoCardContent>
+              <S.Video controls width="100%" height="100%">
+                <source src={muse?.video} type="video/mp4" />
+                Your browser does not support the video tag.
+              </S.Video>
+            </S.VideoCardContent>
+          </ShouldRender>
+        </S.CardExpandedWrapper>
+      </ShouldRender>
       <S.SideMenu>
-        <ShouldRender if={!is("MAIN")}>
-          <S.MenuButton className="stick-top">
-            <S.MenuButtonIcon onClick={() => transition("MAIN")}>
-              <MdClose size={"20px"} />
+        <ShouldRender if={muse?.video != null}>
+          <S.MenuButton>
+            <S.MenuButtonIcon
+              onClick={() => transition("VIDEO")}
+              className={classNames({ selected: is("VIDEO") })}
+            >
+              <MdOutlineSlowMotionVideo size={"45%"} />
             </S.MenuButtonIcon>
+            <S.MenuText>VIDEO</S.MenuText>
           </S.MenuButton>
         </ShouldRender>
         <S.MenuButton>
-          <S.MenuButtonIcon onClick={() => transition("BACK_STORY")}>
-            <GiBookCover size={"30px"} />
+          <S.MenuButtonIcon
+            onClick={() => transition("BACK_STORY")}
+            className={classNames({ selected: is("BACK_STORY") })}
+          >
+            <GiBookCover size={"45%"} />
           </S.MenuButtonIcon>
-          STORY
+          <S.MenuText>STORY</S.MenuText>
         </S.MenuButton>
         <S.MenuButton>
-          <S.MenuButtonIcon onClick={() => transition("MUSE_INFO")}>
-            <TiInfoLarge size={"30px"} />
+          <S.MenuButtonIcon
+            onClick={() => transition("MUSE_INFO")}
+            className={classNames({ selected: is("MUSE_INFO") })}
+          >
+            <TiInfoLarge size={"45%"} />
           </S.MenuButtonIcon>
-          INFO
+          <S.MenuText>INFO</S.MenuText>
         </S.MenuButton>
         <S.MenuButton>
-          <S.MenuButtonIcon onClick={() => transition("CONNECTIONS")}>
-            <BsFillPeopleFill size={"30px"} />
+          <S.MenuButtonIcon
+            onClick={() => transition("CONNECTIONS")}
+            className={classNames({ selected: is("CONNECTIONS") })}
+          >
+            <BsFillPeopleFill size={"45%"} />
           </S.MenuButtonIcon>
-          CONTACTS
+          <S.MenuText>CONTACTS</S.MenuText>
         </S.MenuButton>
         <S.MenuButton>
           <S.MenuButtonIcon>
-            <FiMoreVertical size={"20px"} />
+            <FiMoreVertical size={"45%"} />
           </S.MenuButtonIcon>
         </S.MenuButton>
+        <ShouldRender if={!is("MAIN")}>
+          <S.MenuButton className="stick-top">
+            <S.MenuButtonIcon
+              onClick={() => {
+                console.log(muse);
+                transition("MAIN");
+              }}
+            >
+              <MdClose />
+            </S.MenuButtonIcon>
+          </S.MenuButton>
+        </ShouldRender>
       </S.SideMenu>
     </S.MuseContainer>
   );

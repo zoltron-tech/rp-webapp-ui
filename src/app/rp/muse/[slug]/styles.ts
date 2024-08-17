@@ -32,10 +32,10 @@ export const MuseContainer = styled.div`
   margin-inline: auto;
   justify-content: center;
 
-  @container (max-width: 800px) {
+  @container (max-width: 500px) {
     & {
-      padding-top: 10px;
-      padding-inline: 10px;
+      padding-top: 0px;
+      padding-inline: 0px;
       gap: 0.2rem;
     }
   }
@@ -64,8 +64,6 @@ export const CardWrapper = styled.div`
   border-top-left-radius: var(--border-radius);
   border-bottom-left-radius: var(--border-radius);
 
-  cursor: pointer;
-
   transition: all 0.3s ease-in-out;
   contain: paint;
   z-index: ${Z_INDEX.CARD};
@@ -77,6 +75,12 @@ export const CardWrapper = styled.div`
     margin-top: 40px;
     width: 700px;
     height: 1160px;
+
+    &:hover {
+      & ${CardBackground} {
+        scale: 1.03;
+      }
+    }
   }
 
   @container (min-width: 2047px) and (max-width: 2559px) {
@@ -84,22 +88,39 @@ export const CardWrapper = styled.div`
 
     width: 525px;
     height: 870px;
+
+    &:hover {
+      & ${CardBackground} {
+        scale: 1.03;
+      }
+    }
   }
 
-  @container (min-width: 1023px) and (max-width: 2047px) {
+  @container (min-width: 700px) and (max-width: 2047px) {
     margin-top: 20px;
-    width: 437.5px;
-    height: 725px;
+    width: 420px;
+    height: 750px;
+
+    &:hover {
+      & ${CardBackground} {
+        scale: 1.03;
+      }
+    }
   }
 
-  &:hover {
-    & ${CardBackground} {
-      scale: 1.03;
+  @container (max-width: 700px) {
+    margin-top: 0px;
+    width: 100%;
+    height: 80vh;
+
+    &.open {
+      border-radius: 0px;
+      display: none;
     }
   }
 
   &.closed {
-    border-radius: var(--border-radius);
+    border-radius: 0px;
   }
 `;
 
@@ -111,8 +132,6 @@ export const CardExpandedWrapper = styled.div`
   border-top-right-radius: var(--border-radius);
   border-bottom-right-radius: var(--border-radius);
 
-  cursor: pointer;
-
   transition: all 0.3s ease-in-out;
   contain: paint;
   z-index: ${Z_INDEX.CARD};
@@ -124,6 +143,12 @@ export const CardExpandedWrapper = styled.div`
     margin-top: 40px;
     width: 700px;
     height: 1160px;
+
+    &:hover {
+      & ${CardBackground} {
+        scale: 1.03;
+      }
+    }
   }
 
   @container (min-width: 2047px) and (max-width: 2559px) {
@@ -131,18 +156,31 @@ export const CardExpandedWrapper = styled.div`
 
     width: 525px;
     height: 870px;
-  }
 
-  @container (min-width: 1023px) and (max-width: 2047px) {
-    margin-top: 20px;
-    width: 437.5px;
-    height: 725px;
-  }
-
-  &:hover {
-    & ${CardBackground} {
-      scale: 1.03;
+    &:hover {
+      & ${CardBackground} {
+        scale: 1.03;
+      }
     }
+  }
+
+  @container (min-width: 600px) and (max-width: 2047px) {
+    margin-top: 20px;
+    width: 420px;
+    height: 750px;
+
+    &:hover {
+      & ${CardBackground} {
+        scale: 1.03;
+      }
+    }
+  }
+
+  @container (max-width: 600px) {
+    margin-top: 0px;
+    width: 100%;
+    height: 80vh;
+    border-radius: 0px;
   }
 `;
 
@@ -172,6 +210,16 @@ export const NoteContainer = styled.div`
   ${BACKGROUND_BLUR()}
 
   padding: 10px 20px 20px;
+`;
+
+export const MenuText = styled.div`
+  opacity: 1;
+  margin-top: 5px;
+  font-size: 12px;
+
+  @container (max-height: 100px) {
+    opacity: 0;
+  }
 `;
 
 export const SideMenu = styled.div`
@@ -204,10 +252,19 @@ export const SideMenu = styled.div`
     height: 870px;
   }
 
-  @container (min-width: 1023px) and (max-width: 2047px) {
+  @container (min-width: 880px) and (max-width: 2047px) {
     margin-top: 20px;
     width: 100px;
     height: 725px;
+  }
+
+  @container (max-width: 880px) {
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+    flex-direction: row;
+    width: 400px;
+    height: 50px;
   }
 `;
 
@@ -215,25 +272,35 @@ export const MenuButton = styled.div`
   position: relative;
   display: flex;
   flex-direction: column;
-  width: 80px;
-  height: 90px;
+  width: 50px;
+  height: 70px;
   transition: all 0.3s ease-in-out;
   z-index: ${Z_INDEX.CARD};
   justify-content: center;
   align-items: center;
-  gap: 0.2rem;
 
   &.stick-top {
     position: absolute;
     top: 0px;
+  }
+
+  @container (max-width: 400px) and (max-height: 100px) {
+    margin-top: 10px;
+    justify-content: normal;
+    width: 60px;
+    height: 60px;
+
+    &.stick-top {
+      position: relative;
+    }
   }
 `;
 
 export const MenuButtonIcon = styled.div`
   position: relative;
   display: flex;
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   border: 1px solid dimgray;
   transition: all 0.3s ease-in-out;
@@ -244,7 +311,19 @@ export const MenuButtonIcon = styled.div`
   justify-content: center;
   align-items: center;
 
-  &:hover {
+  @container (min-height: 100px) {
+    &:hover {
+      scale: 1.1;
+      background-color: ${({ theme }) => theme.primary};
+    }
+  }
+
+  @container (max-width: 400px) and (max-height: 100px) {
+    width: 30px;
+    height: 30px;
+  }
+
+  &.selected {
     scale: 1.1;
     background-color: ${({ theme }) => theme.primary};
   }
@@ -336,8 +415,7 @@ export const Card = styled.div`
   position: relative;
   height: 100%;
   contain: paint;
-
-  &:hover {
+  @container (max-width: 500px) {
     background: linear-gradient(
       ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
     );
@@ -352,6 +430,34 @@ export const Card = styled.div`
       opacity: 1;
     }
   }
+
+  @container (min-width: 500px) {
+    &:hover {
+      background: linear-gradient(
+        ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
+      );
+
+      & ${MuseName} {
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      & ${AuthorContainer} {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+  }
+`;
+
+export const Video = styled.video`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* This makes the video fill the container */
+  transform: translate(-50%, -50%); /* This centers the video */
 `;
 
 export const InfoCardContent = styled.div`
@@ -361,6 +467,15 @@ export const InfoCardContent = styled.div`
   align-items: center;
   justify-content: flex-start;
   padding-top: 20px;
+  height: 100%;
+`;
+
+export const VideoCardContent = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
   height: 100%;
 `;
 

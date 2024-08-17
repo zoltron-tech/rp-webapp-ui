@@ -10,6 +10,8 @@ import { Logger } from "@/utils/services";
 import { useRouter } from "next/navigation";
 import { FC, useEffect, useState } from "react";
 import * as S from "./styles";
+import { ThemeProvider } from "styled-components";
+import { DefaultTheme } from "@novelist-world/ui";
 
 export type EditMuseCardProps = {
   id?: string;
@@ -125,107 +127,103 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
           "https://i.etsystatic.com/44068041/r/il/3bab40/5467123737/il_300x300.5467123737_1kne.jpg"
         }
       />
-      <Card
-        width="60cqw"
-        height="950px"
-        padding="20px"
-        margin="clamp(50px, 20cqw, 50px) auto 100px auto"
-        centered
-      >
-        <UploadAvatar
-          image={values?.image}
-          onChange={(image) => setAvatarFile(image)}
-        />
-        <S.Profile>
-          <S.Title>Edit Muse</S.Title>
-          <S.UsernameContainer>
-            <span>PENNED BY: </span>
-            <Username username={user?.username} primary />
-          </S.UsernameContainer>
-          <S.FormGroup>
-            <S.Name>
+      <ThemeProvider theme={DefaultTheme}>
+        <S.LocalContainer className="card">
+          <UploadAvatar
+            image={values?.image}
+            onChange={(image) => setAvatarFile(image)}
+          />
+          <S.Profile>
+            <S.Title>Edit Muse</S.Title>
+            <S.UsernameContainer>
+              <span>PENNED BY: </span>
+              <Username username={user?.username} primary />
+            </S.UsernameContainer>
+            <S.FormGroup>
+              <S.Name>
+                <Input
+                  label="First Name"
+                  name="firstName"
+                  value={values?.firstName}
+                  onChange={update}
+                  onEnter={submit}
+                  maxLength={50}
+                />
+                <Input
+                  label="Last Name"
+                  name="lastName"
+                  value={values?.lastName}
+                  onChange={update}
+                  onEnter={submit}
+                  maxLength={50}
+                />
+              </S.Name>
               <Input
-                label="First Name"
-                name="firstName"
-                value={values?.firstName}
+                label="Note"
+                name="note"
+                value={values?.note}
+                onChange={update}
+                onEnter={submit}
+                maxLength={250}
+              />
+              <Input
+                label="Species"
+                name="species"
+                value={values?.species}
                 onChange={update}
                 onEnter={submit}
                 maxLength={50}
               />
               <Input
-                label="Last Name"
-                name="lastName"
-                value={values?.lastName}
+                label="Relationship Status"
+                name="relationshipStatus"
+                value={values?.relationshipStatus}
                 onChange={update}
                 onEnter={submit}
                 maxLength={50}
               />
-            </S.Name>
-            <Input
-              label="Note"
-              name="note"
-              value={values?.note}
-              onChange={update}
-              onEnter={submit}
-              maxLength={250}
-            />
-            <Input
-              label="Species"
-              name="species"
-              value={values?.species}
-              onChange={update}
-              onEnter={submit}
-              maxLength={50}
-            />
-            <Input
-              label="Relationship Status"
-              name="relationshipStatus"
-              value={values?.relationshipStatus}
-              onChange={update}
-              onEnter={submit}
-              maxLength={50}
-            />
-            <Input
-              label="Fandom"
-              name="fandom"
-              value={values?.fandom}
-              onChange={update}
-              onEnter={submit}
-              maxLength={50}
-            />
-            <Input
-              label="Hometome"
-              name="hometown"
-              value={values?.hometown}
-              onChange={update}
-              onEnter={submit}
-              maxLength={50}
-            />
-            <Input
-              label="Story"
-              name="story"
-              type="textarea"
-              value={values?.story}
-              onChange={update}
-              onEnter={submit}
-              maxLength={20000}
-              height={500}
-            />
-            <S.ButtonGroup>
-              <S.SaveButton
-                variant="secondary"
-                onClick={handleCancel}
-                loading={loading}
-              >
-                Cancel
-              </S.SaveButton>
-              <S.SaveButton onClick={() => submit()} loading={loading}>
-                Save <div className="sm-hide">Changes</div>
-              </S.SaveButton>
-            </S.ButtonGroup>
-          </S.FormGroup>
-        </S.Profile>
-      </Card>
+              <Input
+                label="Fandom"
+                name="fandom"
+                value={values?.fandom}
+                onChange={update}
+                onEnter={submit}
+                maxLength={50}
+              />
+              <Input
+                label="Hometome"
+                name="hometown"
+                value={values?.hometown}
+                onChange={update}
+                onEnter={submit}
+                maxLength={50}
+              />
+              <Input
+                label="Story"
+                name="story"
+                type="textarea"
+                value={values?.story}
+                onChange={update}
+                onEnter={submit}
+                maxLength={20000}
+                height={500}
+              />
+              <S.ButtonGroup>
+                <S.SaveButton
+                  variant="secondary"
+                  onClick={handleCancel}
+                  loading={loading}
+                >
+                  Cancel
+                </S.SaveButton>
+                <S.SaveButton onClick={() => submit()} loading={loading}>
+                  Save <div className="sm-hide">Changes</div>
+                </S.SaveButton>
+              </S.ButtonGroup>
+            </S.FormGroup>
+          </S.Profile>
+        </S.LocalContainer>
+      </ThemeProvider>
     </>
   );
 };

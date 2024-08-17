@@ -21,7 +21,8 @@ import { FC, useEffect, useState } from "react";
 import { StoreState } from "@/types/state";
 import { useRouter } from "next/navigation";
 import * as S from "./styles";
-import { Container } from "@novelist-world/ui";
+import { Container, DefaultTheme } from "@novelist-world/ui";
+import { ThemeProvider } from "styled-components";
 
 export type EditProfileCardProps = {};
 
@@ -149,73 +150,67 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
           "https://i.etsystatic.com/44068041/r/il/3bab40/5467123737/il_300x300.5467123737_1kne.jpg"
         }
       />
-      <Card
-        width="50cqw"
-        minWidth="300px"
-        minHeight="450px"
-        maxHeight="800px"
-        padding="20px"
-        margin="clamp(50px, 20cqw, 50px) auto 100px auto"
-        centered
-      >
-        <UploadAvatar
-          image={values?.image}
-          onChange={(image) => setAvatarFile(image)}
-        />
-        <S.Profile>
-          <S.Title>Edit Your Profile</S.Title>
-          <S.UsernameContainer>
-            <Username username={user?.username} primary />
-          </S.UsernameContainer>
-          <S.FormGroup>
-            <S.Name>
+      <ThemeProvider theme={DefaultTheme}>
+        <S.LocalContainer className="card">
+          <UploadAvatar
+            image={values?.image}
+            onChange={(image) => setAvatarFile(image)}
+          />
+          <S.Profile>
+            <S.Title>Edit Your Profile</S.Title>
+            <S.UsernameContainer>
+              <Username username={user?.username} primary />
+            </S.UsernameContainer>
+            <S.FormGroup>
+              <S.Name>
+                <Input
+                  label="First Name"
+                  name="firstName"
+                  value={values?.firstName}
+                  onChange={update}
+                  onEnter={submit}
+                  maxLength={50}
+                />
+                <Input
+                  label="Last Name"
+                  name="lastName"
+                  value={values?.lastName}
+                  onChange={update}
+                  onEnter={submit}
+                  maxLength={50}
+                />
+              </S.Name>
               <Input
-                label="First Name"
-                name="firstName"
-                value={values?.firstName}
+                label="Note"
+                name="note"
+                value={values?.note}
                 onChange={update}
                 onEnter={submit}
-                maxLength={50}
+                maxLength={250}
               />
-              <Input
-                label="Last Name"
-                name="lastName"
-                value={values?.lastName}
-                onChange={update}
-                onEnter={submit}
-                maxLength={50}
-              />
-            </S.Name>
-            <Input
-              label="Note"
-              name="note"
-              value={values?.note}
-              onChange={update}
-              onEnter={submit}
-              maxLength={250}
-            />
-            <S.ButtonGroup>
-              <ShouldRender
-                if={
-                  novelist?.username !== undefined &&
-                  novelist?.firstName !== undefined
-                }
-              >
-                <S.SaveButton
-                  variant="secondary"
-                  onClick={handleCancel}
-                  loading={loading}
+              <S.ButtonGroup>
+                <ShouldRender
+                  if={
+                    novelist?.username !== undefined &&
+                    novelist?.firstName !== undefined
+                  }
                 >
-                  Cancel
+                  <S.SaveButton
+                    variant="secondary"
+                    onClick={handleCancel}
+                    loading={loading}
+                  >
+                    Cancel
+                  </S.SaveButton>
+                </ShouldRender>
+                <S.SaveButton onClick={() => submit()} loading={loading}>
+                  Save <div className="sm-hide">Changes</div>
                 </S.SaveButton>
-              </ShouldRender>
-              <S.SaveButton onClick={() => submit()} loading={loading}>
-                Save <div className="sm-hide">Changes</div>
-              </S.SaveButton>
-            </S.ButtonGroup>
-          </S.FormGroup>
-        </S.Profile>
-      </Card>
+              </S.ButtonGroup>
+            </S.FormGroup>
+          </S.Profile>
+        </S.LocalContainer>
+      </ThemeProvider>
     </>
   );
 };

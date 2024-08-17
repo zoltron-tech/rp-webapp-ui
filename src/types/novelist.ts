@@ -9,6 +9,8 @@ export interface Muse extends Tagged {
   note: string;
   story: string;
   image: string;
+  video: string;
+  song: string;
   fandom: string;
   relationshipStatus: string;
   hometown: string;

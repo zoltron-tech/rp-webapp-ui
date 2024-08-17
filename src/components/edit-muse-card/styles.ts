@@ -2,6 +2,38 @@ import { styled } from "styled-components";
 
 import * as Common from "@/components/common";
 import { Z_INDEX } from "@/theme";
+import { Container } from "@novelist-world/ui";
+
+export const LocalContainer = styled(Container)`
+  border: 1px solid slategray;
+  background-color: ${({ theme }) => theme.colors.background};
+  color: ${({ theme }) => theme.text};
+  border-radius: 16px;
+
+  @container (min-width: 700px) {
+    &.card {
+      width: 60%;
+      min-width: 700px;
+      height: 950px;
+      padding: 20px;
+      margin: clamp(50px, 20cqw, 50px) auto 100px auto;
+    }
+  }
+
+  @container (max-width: 700px) {
+    &.card {
+      width: 100%;
+      height: 1000px;
+      padding: 20px;
+      margin: 0px;
+      border-radius: 0px;
+      border: none;
+    }
+  }
+
+  container-name: card;
+  container-type: inline-size;
+`;
 
 export const Profile = styled.div`
   display: flex;

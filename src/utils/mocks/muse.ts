@@ -24,6 +24,8 @@ const MOCK_MUSE: Muse = {
   note: "Something",
   story: "some story",
   image: "https://example.com/image.jpg",
+  video: "",
+  song: "",
   dateOfBirth: {
     year: 1980,
     month: "January",

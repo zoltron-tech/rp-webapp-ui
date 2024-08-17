@@ -31,6 +31,8 @@ const NOVELIST_MOCK: Novelist = {
       },
       lastName: "Doe",
       image: "",
+      video: "",
+      song: "",
       note: "Something",
       story: "some story",
       dateOfBirth: {

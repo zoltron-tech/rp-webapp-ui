@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "push": "rm -rf .next && yarn build && git add . && git commit -m \"$@\" && git fetch origin && git rebase origin/main && git push -f origin expanded-content "
+    "push": "rm -rf .next && yarn build && git add . && git commit -m \"$@\" && git fetch origin && git rebase origin/main && git push -f origin expanded-content",
+    "update-local": "rm -rf node_modules/@novelist-world/ui/dist && cd ../novelist-world-ui && yarn build && cp -r dist ../rp-webapp-ui/node_modules/@novelist-world/ui/dist && cd ../rp-webapp-ui"
   },
   "engines": {
     "node": ">=18.16.0"
@@ -15,7 +16,7 @@
   "dependencies": {
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
-    "@novelist-world/ui": "1.0.0-beta-test-6",
+    "@novelist-world/ui": "1.0.1-alpha-3",
     "@trpc/client": "^10.45.2",
     "@trpc/server": "^10.45.2",
     "classnames": "^2.5.1",

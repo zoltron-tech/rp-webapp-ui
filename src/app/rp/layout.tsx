@@ -32,7 +32,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider theme={theme}>
       <StoreProvider<StoreState>
-        initial={{ novelists: [], theme: cookies.theme || "light" }}
+        initial={{ novelists: [], theme: cookies.theme || "light", muses: [] }}
       >
         <AuthProvider>
           <UIContextProvider>

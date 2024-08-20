@@ -17,6 +17,24 @@ export const CardBackground = styled.div<CardProps>`
   background-position: center center;
 `;
 
+export const Title = styled.div`
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  font-size: 20px;
+  font-weight: 600;
+  word-wrap: break-word;
+  white-space: wrap;
+  max-width: 80%;
+  color: ${({ theme }) => theme.text};
+  text-align: end;
+  opacity: 0;
+  transform: translateY(100px);
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease;
+`;
+
 export const CardWrapper = styled.div`
   position: relative;
   width: 200px;
@@ -31,10 +49,30 @@ export const CardWrapper = styled.div`
   container-name: muse-card;
   container-type: size;
 
-  @container (max-width: 800px) {
+  &.hero {
+    height: 200px;
+    width: 134px;
+  }
+
+  &.hero ${Title} {
+    font-size: 12px;
+    right: 5px;
+    bottom: 5px;
+  }
+
+  @container content-container (max-width: 800px) {
     & {
-      width: 120px;
+      width: 134px;
       height: 200px;
+    }
+
+    &.hero {
+      height: 120px;
+      width: 80px;
+    }
+
+    &.hero ${Title} {
+      font-size: 8px;
     }
   }
 
@@ -52,19 +90,6 @@ export const CardWrapper = styled.div`
 type CardProps = {
   banner: string;
 };
-
-export const Title = styled.div`
-  position: fixed;
-  bottom: 10px;
-  right: 10px;
-  font-size: 20px;
-  font-weight: 600;
-  color: ${({ theme }) => theme.text};
-  text-align: end;
-  opacity: 0;
-  transform: translateY(100px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-`;
 
 export const Button = styled.div`
   position: absolute;

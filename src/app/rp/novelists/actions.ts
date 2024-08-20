@@ -253,7 +253,7 @@ export const sendMessageAPI = (jwt: string) => async (message: Message) => {
 
   const result = (await response.json()) as Message;
   return result;
-}
+};
 
 export const sendMessageAction = async (message: Message) => {
   const jwt = await authenticateAndGetJWT();

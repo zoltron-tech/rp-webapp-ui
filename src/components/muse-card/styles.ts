@@ -1,5 +1,5 @@
 import { pSBC } from "@/lib/pSBC";
-import { BORDER_RADIUS, Z_INDEX } from "@/theme";
+import { BORDER_RADIUS, Z_INDEX, CARD_BORDER } from "@/theme";
 import { setOpacity } from "@/utils/helpers";
 import styled from "styled-components";
 
@@ -8,7 +8,6 @@ export const CardBackground = styled.div<CardProps>`
   width: 100%;
   height: 100%;
 
-  border-radius: ${BORDER_RADIUS};
   background-image: url(${(props): string => props.banner});
   background-size: cover;
   transition-timing-function: ease-out;
@@ -23,6 +22,7 @@ export const CardWrapper = styled.div`
   width: 200px;
   height: 300px;
   border-radius: var(--border-radius);
+  ${CARD_BORDER};
 
   transition: all 0.3s ease-in-out;
   contain: paint;

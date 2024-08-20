@@ -1,5 +1,11 @@
 import { Avatar as AvatarCommon } from "@/components/common";
-import { BACKGROUND_BLUR, BLUR_FILTER, BORDER_RADIUS, Z_INDEX } from "@/theme";
+import {
+  BACKGROUND_BLUR,
+  BLUR_FILTER,
+  BORDER_RADIUS,
+  CARD_BORDER,
+  Z_INDEX,
+} from "@/theme";
 import { setOpacity } from "@/utils/helpers";
 import styled from "styled-components";
 
@@ -31,12 +37,14 @@ export const MuseContainer = styled.div`
   flex-wrap: wrap;
   margin-inline: auto;
   justify-content: center;
+  margin-bottom: 50px;
 
   @container (max-width: 500px) {
     & {
       padding-top: 0px;
       padding-inline: 0px;
       gap: 0.2rem;
+      margin-bottom: 0px;
     }
   }
 `;
@@ -60,9 +68,18 @@ export const CardWrapper = styled.div`
   position: relative;
   width: 350px;
   height: 580px;
-  border: 1px solid dimgray;
-  border-top-left-radius: var(--border-radius);
-  border-bottom-left-radius: var(--border-radius);
+  ${CARD_BORDER};
+
+  &.open {
+    border-top-left-radius: var(--border-radius);
+    border-bottom-left-radius: var(--border-radius);
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+  }
+
+  &.closed {
+    border-radius: var(--border-radius);
+  }
 
   transition: all 0.3s ease-in-out;
   contain: paint;
@@ -117,10 +134,10 @@ export const CardWrapper = styled.div`
       border-radius: 0px;
       display: none;
     }
-  }
 
-  &.closed {
-    border-radius: 0px;
+    &.closed {
+      border-radius: 0px;
+    }
   }
 `;
 
@@ -128,9 +145,9 @@ export const CardExpandedWrapper = styled.div`
   position: relative;
   width: 350px;
   height: 580px;
-  border: 1px solid dimgray;
   border-top-right-radius: var(--border-radius);
   border-bottom-right-radius: var(--border-radius);
+  ${CARD_BORDER};
 
   transition: all 0.3s ease-in-out;
   contain: paint;
@@ -302,7 +319,6 @@ export const MenuButtonIcon = styled.div`
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  border: 1px solid dimgray;
   transition: all 0.3s ease-in-out;
   contain: paint;
   z-index: ${Z_INDEX.CARD};
@@ -310,6 +326,8 @@ export const MenuButtonIcon = styled.div`
   cursor: pointer;
   justify-content: center;
   align-items: center;
+
+  ${CARD_BORDER};
 
   @container (min-height: 100px) {
     &:hover {

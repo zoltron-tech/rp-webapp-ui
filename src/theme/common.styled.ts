@@ -84,3 +84,7 @@ export const BASE_TRANSITION = css`
   transition-duration: 0.2s;
   transition-timing-function: ease-in-out;
 `;
+
+export const CARD_BORDER = css`
+  border: 1px solid dimgray;
+`;

@@ -9,7 +9,7 @@ export const MuseListContainer = styled.div`
   flex-wrap: wrap;
   margin-inline: auto;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 1rem;
 
   @container (max-width: 800px) {
     & {

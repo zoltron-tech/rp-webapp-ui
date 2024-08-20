@@ -72,7 +72,7 @@ export const Container = styled.div`
 
     &:not(.loading):not(.disabled):hover {
       border-color: ${({ theme }) => theme.primaryHover};
-      color: ${({ theme }) => theme.primaryHover};
+      background-color: ${({ theme }) => theme.primaryHover};
     }
   }
 

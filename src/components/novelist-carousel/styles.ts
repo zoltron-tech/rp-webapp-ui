@@ -1,9 +1,10 @@
 import { styled } from "styled-components";
 
 export const CarouselContainer = styled.div`
-  padding-top: 80px;
+  padding-block: 30px;
   max-width: 2000px;
   margin-inline: auto;
+  margin-bottom: 50px;
   contain: paint;
 
   & .swiper-button-prev,

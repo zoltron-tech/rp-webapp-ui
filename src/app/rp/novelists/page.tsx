@@ -2,14 +2,14 @@
 
 import { Logger } from "@/utils/services";
 import dynamic from "next/dynamic";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/common";
-import { MuseCard } from "@/components/muse-card";
 import * as S from "./styles";
 import { Carousel } from "@novelist-world/ui";
+import { MuseCard } from "@/components/muse-card";
 import { useStore } from "@/hooks";
-import { StoreState } from "@/types/state";
 import { getHeroPageMusesAction } from "../muse/actions";
+import { Muse } from "@/types";
 
 const NovelistCarouselDynamic = dynamic(
   () => import("@/components/novelist-carousel"),
@@ -18,15 +18,15 @@ const NovelistCarouselDynamic = dynamic(
 
 export default function NovelistsPage() {
   const initialRender = useRef(true);
-  const [muses, set] = useStore<StoreState, "muses">((store) => store.muses);
+  const [muses, set] = useState<Muse[]>([]);
 
-  const updateMuses = async () => {
+  const updateMuses = useCallback(async () => {
     const response = await getHeroPageMusesAction();
     console.log("response", response);
     if (response && !("message" in response)) {
-      set({ muses: response });
+      set(response);
     }
-  };
+  }, [set]);
 
   useEffect(() => {
     if (initialRender.current) {
@@ -34,7 +34,7 @@ export default function NovelistsPage() {
       updateMuses();
       return;
     }
-  }, []);
+  }, [updateMuses]);
 
   Logger.info("NovelistsPage rendered");
 
@@ -68,34 +68,30 @@ export default function NovelistsPage() {
       <NovelistCarouselDynamic />
       <S.MainSubtext>Interact with Muses</S.MainSubtext>
       <S.MuseCarouselContainer>
-        {muses && (
-          <>
-            <Carousel>
-              {muses &&
-                muses
-                  .slice(0, Math.floor(muses.length / 2))
-                  .map((muse) => (
-                    <MuseCard
-                      key={muse?.id}
-                      className="hero"
-                      muse={muse}
-                    ></MuseCard>
-                  ))}
-            </Carousel>
-            <Carousel direction="to-right">
-              {muses &&
-                muses
-                  .slice(Math.floor(muses.length / 2))
-                  .map((muse) => (
-                    <MuseCard
-                      key={muse?.id}
-                      className="hero"
-                      muse={muse}
-                    ></MuseCard>
-                  ))}
-            </Carousel>
-          </>
-        )}
+        <Carousel>
+          {muses.length &&
+            muses
+              .slice(0, Math.floor(muses.length / 2))
+              .map((muse) => (
+                <MuseCard
+                  key={muse?.id}
+                  className="hero"
+                  muse={muse}
+                ></MuseCard>
+              ))}
+        </Carousel>
+        <Carousel direction="to-right">
+          {muses.length &&
+            muses
+              .slice(Math.floor(muses.length / 2))
+              .map((muse) => (
+                <MuseCard
+                  key={muse?.id}
+                  className="hero"
+                  muse={muse}
+                ></MuseCard>
+              ))}
+        </Carousel>
       </S.MuseCarouselContainer>
 
       <S.CardsContainer>

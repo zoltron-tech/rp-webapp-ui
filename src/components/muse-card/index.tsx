@@ -80,3 +80,5 @@ export const MuseCard: FC<Props> = ({ muse, className, ...rest }) => {
     </S.CardWrapper>
   );
 };
+
+export default MuseCard;

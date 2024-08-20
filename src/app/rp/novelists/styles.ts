@@ -1,7 +1,6 @@
 import styled from "styled-components";
 import { setOpacity } from "@/utils/helpers";
 import { CARD_BORDER } from "@/theme";
-import { Carousel } from "@novelist-world/ui";
 
 export const PageContainer = styled.div`
   display: flex;

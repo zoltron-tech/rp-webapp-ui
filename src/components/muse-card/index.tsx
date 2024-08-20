@@ -11,24 +11,25 @@ import { FaRegTrashCan } from "react-icons/fa6";
 import { ShouldRender } from "../common";
 import { INITIAL_MUSE } from "@/utils/constants";
 import { useAuthContext } from "@/hooks";
+import classNames from "classnames";
 
-type Props = {
+type Props = React.HTMLProps<HTMLDivElement> & {
   muse?: Muse | null;
 };
-export const MuseCard: FC<Props> = ({ muse }) => {
+export const MuseCard: FC<Props> = ({ muse, className, ...rest }) => {
   const { push } = useRouter();
   const params = useParams();
   console.log("params", params);
   const { user } = useAuthContext();
   const username = params?.slug as string;
-  const isCurrentUser = user?.username === username;
+  const isCurrentUser = user?.username && user.username === username;
 
   const handleCardClick = (e: React.MouseEvent<HTMLDivElement>, muse: Muse) => {
     const target = e.target as HTMLDivElement;
     if (target.classList.contains("button")) return;
 
     !muse.firstName ? onAddClick() : onAvatarClick();
-  }
+  };
 
   const onAvatarClick = () => {
     if (!muse) return;
@@ -49,16 +50,21 @@ export const MuseCard: FC<Props> = ({ muse }) => {
   if (!muse) return <></>;
 
   return (
-    <S.CardWrapper className={!muse.firstName ? "new" : ""}>
+    <S.CardWrapper
+      className={classNames([
+        className,
+        {
+          new: !muse.firstName,
+        },
+      ])}
+      {...rest}
+    >
       <S.CardBackground banner={muse.image} />
-      <S.Card
-        className="muse-card"
-        onClick={(e) => handleCardClick(e, muse)}
-      >
-        <ShouldRender if={muse !== INITIAL_MUSE && isCurrentUser}>
+      <S.Card className="muse-card" onClick={(e) => handleCardClick(e, muse)}>
+        <ShouldRender if={muse !== INITIAL_MUSE && !!isCurrentUser}>
           <S.EditButton className="button" onClick={onEditClick}>
             <GrEdit />
-          </S.EditButton >
+          </S.EditButton>
           <S.DeleteButton className="button">
             <FaRegTrashCan />
           </S.DeleteButton>

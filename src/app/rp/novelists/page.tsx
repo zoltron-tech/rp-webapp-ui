@@ -3,20 +3,35 @@
 import { Logger } from "@/utils/services";
 import dynamic from "next/dynamic";
 import { useEffect, useRef } from "react";
-import { Button, ShouldRender } from "@/components/common";
+import { Button } from "@/components/common";
+import { MuseCard } from "@/components/muse-card";
 import * as S from "./styles";
+import { Carousel } from "@novelist-world/ui";
+import { useStore } from "@/hooks";
+import { StoreState } from "@/types/state";
+import { getHeroPageMusesAction } from "../muse/actions";
 
 const NovelistCarouselDynamic = dynamic(
   () => import("@/components/novelist-carousel"),
-  { ssr: false }
+  { ssr: false },
 );
 
 export default function NovelistsPage() {
   const initialRender = useRef(true);
+  const [muses, set] = useStore<StoreState, "muses">((store) => store.muses);
+
+  const updateMuses = async () => {
+    const response = await getHeroPageMusesAction();
+    console.log("response", response);
+    if (response && !("message" in response)) {
+      set({ muses: response });
+    }
+  };
 
   useEffect(() => {
     if (initialRender.current) {
       initialRender.current = false;
+      updateMuses();
       return;
     }
   }, []);
@@ -48,9 +63,41 @@ export default function NovelistsPage() {
         </S.ButtonsGroupContainer>
       </S.PageContainer>
       <S.TabContainer>
-        <S.MainSubtext>Meet some of the Novelists</S.MainSubtext>
+        <S.MainSubtext>Colaborate with fellow Novelists</S.MainSubtext>
       </S.TabContainer>
       <NovelistCarouselDynamic />
+      <S.MainSubtext>Interact with Muses</S.MainSubtext>
+      <S.MuseCarouselContainer>
+        {muses && (
+          <>
+            <Carousel>
+              {muses &&
+                muses
+                  .slice(0, Math.floor(muses.length / 2))
+                  .map((muse) => (
+                    <MuseCard
+                      key={muse?.id}
+                      className="hero"
+                      muse={muse}
+                    ></MuseCard>
+                  ))}
+            </Carousel>
+            <Carousel direction="to-right">
+              {muses &&
+                muses
+                  .slice(Math.floor(muses.length / 2))
+                  .map((muse) => (
+                    <MuseCard
+                      key={muse?.id}
+                      className="hero"
+                      muse={muse}
+                    ></MuseCard>
+                  ))}
+            </Carousel>
+          </>
+        )}
+      </S.MuseCarouselContainer>
+
       <S.CardsContainer>
         <S.InfoCard>
           <S.MainSubtext>Create Your Own Realm</S.MainSubtext>

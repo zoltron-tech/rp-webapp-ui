@@ -82,6 +82,29 @@ export const getAllMusesAction = async () => {
   return muse;
 };
 
+export const getHeroPageMusesAction = async () => {
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/random`;
+
+  const response = await fetch(URL, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+    cache: "no-store",
+  });
+
+  Logger.debug("getHeroPageMusesAction", response.status);
+
+  if (response.status === 404) {
+    return null;
+  } else if (response.status !== 200) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const muse: Muse[] = await response.json();
+
+  return muse;
+};
+
 export const updateMuseAction = async (_muse: Muse) => {
   const jwt = await authenticateAndGetJWT();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse`;
@@ -111,7 +134,7 @@ export const updateMuseAction = async (_muse: Muse) => {
     {
       ...result,
       message: undefined,
-    }
+    },
   );
 
   return novelist;

@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { setOpacity } from "@/utils/helpers";
 import { CARD_BORDER } from "@/theme";
+import { Carousel } from "@novelist-world/ui";
 
 export const PageContainer = styled.div`
   display: flex;
@@ -118,6 +119,7 @@ export const MainSubtext = styled.div`
   font-weight: 600;
   font-style: italic;
   margin-bottom: 30px;
+  text-align: center;
 
   @container (max-width: 1000px) {
     & {
@@ -130,6 +132,14 @@ export const MainSubtext = styled.div`
       font-size: 18px;
     }
   }
+`;
+
+export const MuseCarouselContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  overflow: hidden;
 `;
 
 export const Story = styled.div`

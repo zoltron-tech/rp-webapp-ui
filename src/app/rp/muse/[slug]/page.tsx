@@ -161,26 +161,51 @@ export default function MuseProfilePage({}) {
                 </S.InfoItem>
                 <S.InfoItem>
                   <S.InfoLabel>Fandom:</S.InfoLabel>
-                  <S.InfoValue>{muse?.fandom}</S.InfoValue>
+                  <ShouldRender if={muse?.fandom !== null}>
+                    <S.InfoValue>{muse?.fandom}</S.InfoValue>
+                  </ShouldRender>
+                  <ShouldRender if={muse?.species === null}>
+                    <S.InfoValue>NOT SPECIFIED</S.InfoValue>
+                  </ShouldRender>
                 </S.InfoItem>
                 <S.InfoItem>
                   <S.InfoLabel>Date of Birth:</S.InfoLabel>
-                  <S.InfoValue>
-                    {muse?.dateOfBirth.year}-{muse?.dateOfBirth.month}-
-                    {muse?.dateOfBirth.day}
-                  </S.InfoValue>
+                  <ShouldRender if={muse?.dateOfBirth !== null}>
+                    <S.InfoValue>
+                      {muse?.dateOfBirth?.year}-{muse?.dateOfBirth?.month}-
+                      {muse?.dateOfBirth?.day}
+                    </S.InfoValue>
+                  </ShouldRender>
+                  <ShouldRender if={muse?.dateOfBirth === null}>
+                    <S.InfoValue>NOT SPECIFIED</S.InfoValue>
+                  </ShouldRender>
                 </S.InfoItem>
                 <S.InfoItem>
                   <S.InfoLabel>Species:</S.InfoLabel>
-                  <S.InfoValue>{muse?.species}</S.InfoValue>
+                  <ShouldRender if={muse?.species !== null}>
+                    <S.InfoValue>{muse?.species}</S.InfoValue>
+                  </ShouldRender>
+                  <ShouldRender if={muse?.species === null}>
+                    <S.InfoValue>NOT SPECIFIED</S.InfoValue>
+                  </ShouldRender>
                 </S.InfoItem>
                 <S.InfoItem>
                   <S.InfoLabel>Hometown:</S.InfoLabel>
-                  <S.InfoValue>{muse?.hometown}</S.InfoValue>
+                  <ShouldRender if={muse?.hometown !== null}>
+                    <S.InfoValue>{muse?.hometown}</S.InfoValue>
+                  </ShouldRender>
+                  <ShouldRender if={muse?.hometown === null}>
+                    <S.InfoValue>NOT SPECIFIED</S.InfoValue>
+                  </ShouldRender>
                 </S.InfoItem>
                 <S.InfoItem>
                   <S.InfoLabel>Relationship Status:</S.InfoLabel>
-                  <S.InfoValue>{muse?.relationshipStatus}</S.InfoValue>
+                  <ShouldRender if={muse?.relationshipStatus !== null}>
+                    <S.InfoValue>{muse?.relationshipStatus}</S.InfoValue>
+                  </ShouldRender>
+                  <ShouldRender if={muse?.relationshipStatus === null}>
+                    <S.InfoValue>NOT SPECIFIED</S.InfoValue>
+                  </ShouldRender>
                 </S.InfoItem>
               </S.InfoContainer>
             </S.InfoCardContent>

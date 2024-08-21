@@ -9,13 +9,13 @@ export interface Muse extends Tagged {
   note: string;
   story: string;
   image: string;
-  video: string;
-  song: string;
-  fandom: string;
-  relationshipStatus: string;
-  hometown: string;
-  species: string;
-  dateOfBirth: {
+  video?: string;
+  song?: string;
+  fandom?: string;
+  relationshipStatus?: string;
+  hometown?: string;
+  species?: string;
+  dateOfBirth?: {
     year: number;
     month: string;
     day: number;
@@ -33,7 +33,7 @@ export interface Novelist extends Tagged {
   image: string;
   muses: Muse[];
   friends: Friend[];
-  connection: string | undefined;
+  connection?: string;
 }
 
 export interface Friend extends Tagged {

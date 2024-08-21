@@ -128,7 +128,13 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
         }
       />
       <ThemeProvider theme={DefaultTheme}>
-        <S.LocalContainer className="card">
+        <Card
+          width="60cqw"
+          height="950px"
+          padding="20px"
+          margin="clamp(50px, 20cqw, 50px) auto 100px auto"
+          centered
+        >
           <UploadAvatar
             image={values?.image}
             onChange={(image) => setAvatarFile(image)}
@@ -222,7 +228,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
               </S.ButtonGroup>
             </S.FormGroup>
           </S.Profile>
-        </S.LocalContainer>
+        </Card>
       </ThemeProvider>
     </>
   );

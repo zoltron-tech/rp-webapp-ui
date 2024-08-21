@@ -11,7 +11,6 @@ export const INITIAL_NOVELIST: Novelist = {
   image: "",
   muses: [],
   friends: [],
-  connection: "",
 };
 
 export const INITIAL_MUSE: Muse = {
@@ -23,17 +22,6 @@ export const INITIAL_MUSE: Muse = {
   note: "",
   story: "",
   image: "",
-  video: "",
-  song: "",
-  dateOfBirth: {
-    year: 1970,
-    month: "JANUARY",
-    day: 1,
-  },
-  relationshipStatus: "",
-  fandom: "",
-  species: "",
-  hometown: "",
   connections: [],
 };
 

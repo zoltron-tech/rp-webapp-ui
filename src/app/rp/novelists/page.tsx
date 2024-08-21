@@ -13,7 +13,7 @@ import { Muse } from "@/types";
 
 const NovelistCarouselDynamic = dynamic(
   () => import("@/components/novelist-carousel"),
-  { ssr: false },
+  { ssr: false }
 );
 
 export default function NovelistsPage() {
@@ -63,7 +63,7 @@ export default function NovelistsPage() {
         </S.ButtonsGroupContainer>
       </S.PageContainer>
       <S.TabContainer>
-        <S.MainSubtext>Colaborate with fellow Novelists</S.MainSubtext>
+        <S.MainSubtext>Collaborate with fellow Novelists</S.MainSubtext>
       </S.TabContainer>
       <NovelistCarouselDynamic />
       <S.MainSubtext>Interact with Muses</S.MainSubtext>

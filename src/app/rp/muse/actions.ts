@@ -107,7 +107,7 @@ export const getHeroPageMusesAction = async () => {
 
 export const updateMuseAction = async (_muse: Muse) => {
   const jwt = await authenticateAndGetJWT();
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse`;
+  const URL = `http://localhost:50200/rp/portfolio/muse`; //`${RP_SERVICE_URL}/rp/portfolio/muse`;
 
   Logger.debug("updateMuse", _muse);
 
@@ -134,7 +134,7 @@ export const updateMuseAction = async (_muse: Muse) => {
     {
       ...result,
       message: undefined,
-    },
+    }
   );
 
   return novelist;

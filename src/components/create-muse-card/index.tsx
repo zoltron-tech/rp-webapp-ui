@@ -90,7 +90,7 @@ export const EditMuseCard: FC<CreateMuseCardProps> = () => {
   });
 
   const handleCancel = () => {
-    push(`/rp/profile/muses`);
+    push(`/rp/profile/${user?.username}/muses`);
   };
 
   useEffect(() => {

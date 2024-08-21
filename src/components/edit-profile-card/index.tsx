@@ -21,7 +21,7 @@ import { FC, useEffect, useState } from "react";
 import { StoreState } from "@/types/state";
 import { useRouter } from "next/navigation";
 import * as S from "./styles";
-import { Container, DefaultTheme } from "@novelist-world/ui";
+import { DefaultTheme } from "@novelist-world/ui";
 import { ThemeProvider } from "styled-components";
 
 export type EditProfileCardProps = {};
@@ -151,7 +151,13 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
         }
       />
       <ThemeProvider theme={DefaultTheme}>
-        <S.LocalContainer className="card">
+        <Card
+          width="60cqw"
+          height="600px"
+          padding="20px"
+          margin="clamp(50px, 20cqw, 50px) auto 100px auto"
+          centered
+        >
           <UploadAvatar
             image={values?.image}
             onChange={(image) => setAvatarFile(image)}
@@ -209,7 +215,7 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
               </S.ButtonGroup>
             </S.FormGroup>
           </S.Profile>
-        </S.LocalContainer>
+        </Card>
       </ThemeProvider>
     </>
   );

@@ -9,6 +9,8 @@ export const PageContainer = styled.div`
   align-items: center;
   padding-inline: 100px;
   margin-top: 30px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid dimgray;
 `;
 
 export const InfoCard = styled.div`
@@ -63,8 +65,6 @@ export const TabContainer = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin-top: 30px;
-  border-top: 1px solid dimgray;
   padding-top: 20px;
 `;
 
@@ -139,6 +139,7 @@ export const MuseCarouselContainer = styled.div`
   gap: 1rem;
   width: 100%;
   overflow: hidden;
+  margin-bottom: 50px;
 `;
 
 export const Story = styled.div`

@@ -1,0 +1,188 @@
+"use client";
+
+import { uploadAvatar } from "@/app/rp/profile/actions";
+import {
+  Card,
+  Input,
+  ShouldRender,
+  UploadAvatar,
+  Username,
+} from "@/components/common";
+import { useAuthContext, useForm, useUIContext } from "@/hooks";
+import type { StoryBoard } from "@/types";
+import { API_MESSAGE, INITIAL_STORY_BOARD } from "@/utils/constants";
+import { Logger } from "@/utils/services";
+import { useRouter } from "next/navigation";
+import { FC, useEffect, useState } from "react";
+import * as S from "./styles";
+import {
+  getAllStoryboardsByUsernameAction,
+  getStoryboardAction,
+  updateStoryBoardAction,
+} from "@/app/rp/story/actions";
+
+export type CreateStoryBoardCardProps = {
+  id?: string;
+};
+
+export const CreateStoryBoardCard: FC<CreateStoryBoardCardProps> = ({ id }) => {
+  const { user, state } = useAuthContext();
+  const [storyBoard, setStoryBoard] = useState<StoryBoard>();
+  const [avatarFile, setAvatarFile] = useState<FormData | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const { push } = useRouter();
+
+  const { successToast, errorToast } = useUIContext();
+
+  const updateStoryBoardAvatar = async () => {
+    if (!avatarFile) return;
+    Logger.error("avatarFile", avatarFile);
+    const response = await uploadAvatar(avatarFile);
+
+    if (response === API_MESSAGE.MediaError) {
+      errorToast(response);
+      return response;
+    }
+
+    updateValues((prev) => ({ ...prev, image: response }));
+    Logger.debug("response", response);
+
+    return response;
+  };
+
+  const beforeSubmit = async (sotryboard: StoryBoard) => {
+    Logger.debug("handleSave");
+
+    setLoading(true);
+
+    let updatedAvatarUrl = sotryboard?.image;
+    if (avatarFile) {
+      updatedAvatarUrl = (await updateStoryBoardAvatar()) || sotryboard?.image;
+    }
+
+    Logger.debug("updatedAvatar: ", updatedAvatarUrl);
+
+    if (updatedAvatarUrl === API_MESSAGE.MediaError) {
+      setLoading(false);
+      return { ...sotryboard, abort: true };
+    }
+
+    const _sotryboard = {
+      ...sotryboard,
+      image: updatedAvatarUrl || "",
+    };
+
+    return _sotryboard;
+  };
+
+  const onSubmit = async (storyboard: StoryBoard) => {
+    if (!storyboard) {
+      setLoading(false);
+      errorToast("Name is required.");
+      return storyboard;
+    }
+
+    const resonse = await updateStoryBoardAction(storyboard);
+
+    setLoading(false);
+
+    Logger.debug("resonse", resonse);
+
+    if ("message" in resonse) {
+      return errorToast(API_MESSAGE.Error);
+    }
+
+    updateValues(storyboard);
+    successToast("Data updated successfully.");
+  };
+
+  const fetchData = async () => {
+    if (!id) return;
+
+    const response = await getStoryboardAction(id);
+    console.log(response);
+    if (response && !("message" in response)) {
+      setStoryBoard(response);
+      updateValues(response);
+    }
+  };
+
+  const { values, update, updateValues, submit } = useForm<StoryBoard>({
+    initialValues: INITIAL_STORY_BOARD,
+    onSubmit,
+    beforeSubmit,
+  });
+
+  const handleCancel = () => {
+    push(`/rp/profile/${user?.username}/storyboards`);
+  };
+
+  useEffect(() => {
+    if (state !== "LOGGED_IN") return;
+    fetchData();
+  }, [state]);
+
+  useEffect(() => {
+    Logger.debug("avatarFile", avatarFile);
+  }, [avatarFile]);
+
+  Logger.info("CreateStoryBoardCard rendered");
+
+  return (
+    <>
+      <S.ProfileBackgroundBlurFilter
+        banner={
+          values?.image ||
+          "https://i.etsystatic.com/44068041/r/il/3bab40/5467123737/il_300x300.5467123737_1kne.jpg"
+        }
+      />
+      <Card
+        width="60cqw"
+        height={id ? "400px" : "350px"}
+        padding="20px"
+        margin="clamp(50px, 20cqw, 50px) auto 100px auto"
+        centered
+      >
+        <UploadAvatar
+          image={values?.image || ""}
+          onChange={(image) => setAvatarFile(image)}
+        />
+        <S.Profile>
+          <S.Title>{id ? "EDIT" : "Create"} Story Board</S.Title>
+          <ShouldRender if={id != undefined}>
+            <S.UsernameContainer>
+              <span>Author: </span>
+              <Username username={user?.username} primary />
+            </S.UsernameContainer>
+          </ShouldRender>
+          <S.FormGroup>
+            <S.Name>
+              <Input
+                label="Name"
+                name="name"
+                value={values?.name}
+                onChange={update}
+                onEnter={submit}
+                maxLength={50}
+              />
+            </S.Name>
+            <S.ButtonGroup>
+              <S.SaveButton
+                variant="secondary"
+                onClick={handleCancel}
+                loading={loading}
+              >
+                Cancel
+              </S.SaveButton>
+              <S.SaveButton onClick={() => submit()} loading={loading}>
+                Save <div className="sm-hide">Changes</div>
+              </S.SaveButton>
+            </S.ButtonGroup>
+          </S.FormGroup>
+        </S.Profile>
+      </Card>
+    </>
+  );
+};
+
+export default CreateStoryBoardCard;

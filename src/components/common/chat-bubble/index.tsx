@@ -2,10 +2,10 @@
 
 import { FC } from "react";
 
-import { Message } from "@/types";
 import classNames from "classnames";
 import moment from "moment";
 import * as S from "./styles";
+import { Message } from "@/types/conversation";
 
 type Props = {
   message: Message;

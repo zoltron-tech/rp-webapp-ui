@@ -23,21 +23,42 @@ export const Title = styled.div`
   right: 10px;
   font-size: 20px;
   font-weight: 600;
-  word-wrap: break-word;
-  white-space: wrap;
   max-width: 80%;
   color: ${({ theme }) => theme.text};
   text-align: end;
   opacity: 0;
   transform: translateY(100px);
-  transition:
-    opacity 0.5s ease,
-    transform 0.5s ease;
+  transition: opacity 0.5s ease, transform 0.5s ease, scale 0.5s ease;
+
+  &:not(.new) {
+    word-wrap: break-word;
+    white-space: wrap;
+  }
+
+  @container content-container (max-width: 800px) {
+    font-size: 14px;
+  }
+
+  &.new {
+    bottom: 140px;
+    right: 0px;
+    text-align: center;
+    opacity: 1;
+    transform: translateY(0);
+    width: 100%;
+    max-width: 100%;
+
+    @container content-container (max-width: 800px) {
+      bottom: 85px;
+    }
+  }
 `;
 
 export const CardWrapper = styled.div`
   position: relative;
   width: 200px;
+  min-width: 200px;
+  min-height: 300px;
   height: 300px;
   border-radius: var(--border-radius);
   ${CARD_BORDER};
@@ -52,6 +73,8 @@ export const CardWrapper = styled.div`
   &.hero {
     height: 200px;
     width: 134px;
+    min-width: 200px;
+    min-height: 134px;
   }
 
   &.hero ${Title} {
@@ -64,6 +87,8 @@ export const CardWrapper = styled.div`
     & {
       width: 134px;
       height: 200px;
+      min-width: 134px;
+      min-height: 200px;
     }
 
     &.hero {
@@ -77,7 +102,7 @@ export const CardWrapper = styled.div`
   }
 
   &.new {
-    border: solid silver 1px;
+    border: solid silver 2px;
   }
 
   &:hover {
@@ -164,12 +189,22 @@ export const Card = styled.div`
   height: 100%;
   contain: paint;
 
+  &.new {
+    background: linear-gradient(
+      ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
+    );
+
+    &:hover ${Title} {
+      scale: 1.1;
+    }
+  }
+
   &:hover {
     background: linear-gradient(
       ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
     );
 
-    & ${Title} {
+    &:not(.new) ${Title} {
       transform: translateY(0);
     }
 

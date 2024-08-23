@@ -30,12 +30,15 @@ export default function UserProfilePage({}) {
   const username = params?.slug as string;
   const isCurrentUser = username === user?.username;
   const { push } = useRouter();
-  Logger.debug("params are:", params);
 
   const handleButtonClick = () => {};
 
   const toMusesPage = () => {
     push(`/rp/profile/${username}/muses`);
+  };
+
+  const toStoryBoardsPage = () => {
+    push(`/rp/profile/${username}/storyboards`);
   };
 
   const handleMessageButton = () => {
@@ -121,6 +124,7 @@ export default function UserProfilePage({}) {
     },
     { onClick: handleMessageButton, label: "Message", variant: "action" },
     { onClick: toMusesPage, label: "Muses", variant: "action" },
+    { onClick: toStoryBoardsPage, label: "Story Boards", variant: "action" },
   ];
 
   const OutgoingRequestButtons: ButtonInfo[] = [
@@ -131,12 +135,14 @@ export default function UserProfilePage({}) {
     },
     { onClick: handleMessageButton, label: "Message", variant: "action" },
     { onClick: toMusesPage, label: "Muses", variant: "action" },
+    { onClick: toStoryBoardsPage, label: "Story Boards", variant: "action" },
   ];
 
   const FriendButtons: ButtonInfo[] = [
     { onClick: handleButtonClick, label: "Friends", variant: "primary" },
     { onClick: handleMessageButton, label: "Message", variant: "action" },
     { onClick: toMusesPage, label: "Muses", variant: "action" },
+    { onClick: toStoryBoardsPage, label: "Story Boards", variant: "action" },
   ];
 
   const StrangerButtons: ButtonInfo[] = [
@@ -147,10 +153,12 @@ export default function UserProfilePage({}) {
     },
     { onClick: handleMessageButton, label: "Message", variant: "action" },
     { onClick: toMusesPage, label: "Muses", variant: "action" },
+    { onClick: toStoryBoardsPage, label: "Story Boards", variant: "action" },
   ];
 
-  const NotLoggedInButtons: ButtonInfo[] = [
+  const LoggedInSelfButtons: ButtonInfo[] = [
     { onClick: toMusesPage, label: "Muses", variant: "action" },
+    { onClick: toStoryBoardsPage, label: "Story Boards", variant: "action" },
   ];
 
   const fetchAppropriateButtons = (connection: string | null | undefined) => {
@@ -238,12 +246,12 @@ export default function UserProfilePage({}) {
             buttons={
               state == "LOGGED_IN" && username !== user?.username
                 ? fetchAppropriateButtons(novelist?.connection)
-                : NotLoggedInButtons
+                : LoggedInSelfButtons
             }
           />
           <S.MusePillContainer>
-            <MusesPill pillType="MUSES" novelist={novelist} />
-            <MusesPill pillType="FRIENDS" novelist={novelist} />
+            <MusesPill title="MUSES" pillType="MUSES" novelist={novelist} />
+            <MusesPill title="FRIENDS" pillType="FRIENDS" novelist={novelist} />
           </S.MusePillContainer>
         </S.ContentRight>
       </S.Content>

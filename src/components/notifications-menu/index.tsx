@@ -23,7 +23,7 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
   const { push } = useRouter();
 
   const onMoreNotificationsClick = () => {
-    push(`/rp/profile/messenger`);
+    push(`/rp/novelists`);
   };
 
   const fetchNotifications = async () => {

@@ -13,7 +13,6 @@ import { ShouldRender } from "@/components/common";
 
 export default function MusesListPage({}) {
   const params = useParams();
-  console.log("params", params);
   const [muses, setMuses] = useState<Muse[] | null>(null);
   const { state, user } = useAuthContext();
   const username = params?.slug as string;
@@ -43,12 +42,17 @@ export default function MusesListPage({}) {
   }, [state]);
 
   return (
-    <S.MuseListContainer>
-      <ShouldRender if={isCurrentUser}>
-        <MuseCard key={null} muse={INITIAL_MUSE}></MuseCard>
-      </ShouldRender>
-      {muses &&
-        muses.map((muse) => <MuseCard key={muse?.id} muse={muse}></MuseCard>)}
-    </S.MuseListContainer>
+    <S.Container>
+      <S.MainSubtext>
+        {isCurrentUser ? "Your" : username + "'s"} Muses
+      </S.MainSubtext>
+      <S.MuseListContainer>
+        <ShouldRender if={isCurrentUser}>
+          <MuseCard key={null} muse={INITIAL_MUSE}></MuseCard>
+        </ShouldRender>
+        {muses &&
+          muses.map((muse) => <MuseCard key={muse?.id} muse={muse}></MuseCard>)}
+      </S.MuseListContainer>
+    </S.Container>
   );
 }

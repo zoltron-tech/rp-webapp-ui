@@ -26,19 +26,21 @@ export const TopBar: FC<Props> = memo(({}) => {
   const { push } = useRouter();
 
   const onSearchItemClick =
-    (record: { id?: string; username?: string }) =>
+    (record: { id?: string; username?: string; name?: string }) =>
     (close: () => void) =>
     () => {
       close();
       if (record?.username) {
         push(`/rp/profile/${record.username}`);
+      } else if (record?.name) {
+        push(`/rp/story/${record.id}`);
       } else if (record?.id) {
         push(`/rp/muse/${record.id}`);
       }
     };
 
   const onLogoClick = () => {
-    push("/rp/novelists");
+    push(state === "LOGGED_IN" ? `/rp/home` : `/rp/novelists`);
   };
 
   const onLoginClick = () => {
@@ -61,7 +63,7 @@ export const TopBar: FC<Props> = memo(({}) => {
           <S.SearchContainer>
             <Search
               placeholder="Search"
-              types={["novelist", "muse"]}
+              types={["novelist", "muse", "story"]}
               renderDropdownItem={(result, close) => (
                 <S.SearchDropdownItem
                   onClick={onSearchItemClick(result)(close)}
@@ -73,9 +75,12 @@ export const TopBar: FC<Props> = memo(({}) => {
                       alt={result.firstName}
                     />
                     <S.NameContainer>
-                      <div>
-                        {result.firstName} {result.lastName}
-                      </div>
+                      {result.firstName && (
+                        <div>
+                          {result.firstName} {result.lastName}
+                        </div>
+                      )}
+                      {result.name && <div>{result.name}</div>}
                       {result.username && (
                         <Username username={result.username} />
                       )}

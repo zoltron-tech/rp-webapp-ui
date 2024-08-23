@@ -57,8 +57,12 @@ export const username = styled(Common.Username)`
 `;
 
 export const Text = styled.div`
-  font-size: 14px;
+  font-size: 10px;
   color: ${({ theme }) => theme.text};
+`;
+export const Date = styled.div`
+  font-size: 8px;
+  align-self: flex-end;
 `;
 
 export const NotificationBox = styled.div`

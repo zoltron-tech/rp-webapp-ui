@@ -26,9 +26,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const pathname = usePathname();
 
-  console.log("theme is", theme);
-  console.log("path is", pathname);
-
   return (
     <ThemeProvider theme={theme}>
       <StoreProvider<StoreState>

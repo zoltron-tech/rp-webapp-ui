@@ -2,7 +2,13 @@
 
 import { getMuseAction, updateMuseAction } from "@/app/rp/muse/actions";
 import { uploadAvatar } from "@/app/rp/profile/actions";
-import { Card, Input, UploadAvatar, Username } from "@/components/common";
+import {
+  Card,
+  Input,
+  ShouldRender,
+  UploadAvatar,
+  Username,
+} from "@/components/common";
 import { useAuthContext, useForm, useUIContext } from "@/hooks";
 import type { Muse } from "@/types";
 import { API_MESSAGE, INITIAL_MUSE } from "@/utils/constants";
@@ -109,6 +115,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
   };
 
   useEffect(() => {
+    console.log(id);
     if (state !== "LOGGED_IN") return;
     fetchData();
   }, [state]);
@@ -130,7 +137,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
       <ThemeProvider theme={DefaultTheme}>
         <Card
           width="60cqw"
-          height="950px"
+          height={id ? "950px" : "850px"}
           padding="20px"
           margin="clamp(50px, 20cqw, 50px) auto 100px auto"
           centered
@@ -140,11 +147,13 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
             onChange={(image) => setAvatarFile(image)}
           />
           <S.Profile>
-            <S.Title>Edit Muse</S.Title>
-            <S.UsernameContainer>
-              <span>PENNED BY: </span>
-              <Username username={user?.username} primary />
-            </S.UsernameContainer>
+            <S.Title>{id ? "EDIT" : "Create"} Muse</S.Title>
+            <ShouldRender if={id != undefined}>
+              <S.UsernameContainer>
+                <span>PENNED BY: </span>
+                <Username username={user?.username} primary />
+              </S.UsernameContainer>
+            </ShouldRender>
             <S.FormGroup>
               <S.Name>
                 <Input
@@ -153,7 +162,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
                   value={values?.firstName}
                   onChange={update}
                   onEnter={submit}
-                  maxLength={50}
+                  maxLength={25}
                 />
                 <Input
                   label="Last Name"
@@ -161,7 +170,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
                   value={values?.lastName}
                   onChange={update}
                   onEnter={submit}
-                  maxLength={50}
+                  maxLength={25}
                 />
               </S.Name>
               <Input

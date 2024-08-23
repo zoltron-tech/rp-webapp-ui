@@ -30,6 +30,10 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
     push(`/rp/profile/${user?.username}/muses`);
   };
 
+  const toStoryBoardsPage = () => {
+    push(`/rp/profile/${user?.username}/storyboards`);
+  };
+
   const toUserProfile = () => {
     push(`/rp/profile/${user?.username}`);
   };
@@ -51,12 +55,15 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
           <Button variant="menu-item" onClick={toUserProfile}>
             Your profile
           </Button>
+          <Button variant="menu-item" onClick={toMusesPage}>
+            Your muses
+          </Button>
+          <Button variant="menu-item" onClick={toStoryBoardsPage}>
+            Your Stories
+          </Button>
           <hr></hr>
           <Button variant="menu-item" onClick={toEditProfile}>
             Edit profile
-          </Button>
-          <Button variant="menu-item" onClick={toMusesPage}>
-            Your muses
           </Button>
           <hr></hr>
           <Button variant="menu-item">Settings & privacy</Button>

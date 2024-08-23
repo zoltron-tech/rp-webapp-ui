@@ -4,8 +4,9 @@ import {
   authenticateAndGetJWTIfExists,
   logoutAction,
 } from "@/app/actions";
-import { Message, Novelist } from "@/types";
+import { Novelist } from "@/types";
 import { SearchResult, WithMessage } from "@/types/common";
+import { Conversation, Message } from "@/types/conversation";
 import {
   API_MESSAGE,
   AUTH_HEADER_NAME,
@@ -188,6 +189,29 @@ export const chatAction = async (targetUserName: string | null) => {
   }
 
   const result = (await response.json()) as Message[];
+  return result;
+};
+
+export const getConversationsAction = async () => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/conversationsList`;
+
+  const response = await fetch(URL, {
+    headers: {
+      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    cache: "no-store",
+  });
+
+  Logger.debug("getConversationsAction", response.status);
+  if (response.status === 404) {
+    return [];
+  } else if (response.status !== 200) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const result = (await response.json()) as Conversation[];
   return result;
 };
 

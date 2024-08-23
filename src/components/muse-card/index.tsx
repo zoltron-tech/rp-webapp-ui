@@ -19,7 +19,6 @@ type Props = React.HTMLProps<HTMLDivElement> & {
 export const MuseCard: FC<Props> = ({ muse, className, ...rest }) => {
   const { push } = useRouter();
   const params = useParams();
-  console.log("params", params);
   const { user } = useAuthContext();
   const username = params?.slug as string;
   const isCurrentUser = user?.username && user.username === username;
@@ -60,7 +59,15 @@ export const MuseCard: FC<Props> = ({ muse, className, ...rest }) => {
       {...rest}
     >
       <S.CardBackground banner={muse.image} />
-      <S.Card className="muse-card" onClick={(e) => handleCardClick(e, muse)}>
+      <S.Card
+        className={classNames([
+          "muse-card",
+          {
+            new: !muse.firstName,
+          },
+        ])}
+        onClick={(e) => handleCardClick(e, muse)}
+      >
         <ShouldRender if={muse !== INITIAL_MUSE && !!isCurrentUser}>
           <S.EditButton className="button" onClick={onEditClick}>
             <GrEdit />
@@ -71,7 +78,13 @@ export const MuseCard: FC<Props> = ({ muse, className, ...rest }) => {
         </ShouldRender>
         <S.CardHeader>
           <S.MuseInfo>
-            <S.Title>
+            <S.Title
+              className={classNames([
+                {
+                  new: !muse.firstName,
+                },
+              ])}
+            >
               {muse.firstName || "Add New"} {muse.lastName || ""}
             </S.Title>
           </S.MuseInfo>

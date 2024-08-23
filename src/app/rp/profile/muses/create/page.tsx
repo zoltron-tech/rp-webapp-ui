@@ -6,8 +6,8 @@ import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-const DynamicCreateMuseCard = dynamic(
-  () => import("@/components/create-muse-card"),
+const DynamicEditMuseCard = dynamic(
+  () => import("@/components/edit-muse-card"),
   { ssr: false }
 );
 
@@ -26,7 +26,7 @@ export default function CreateMusePage({}) {
 
   return (
     <div>
-      <DynamicCreateMuseCard />
+      <DynamicEditMuseCard />
     </div>
   );
 }

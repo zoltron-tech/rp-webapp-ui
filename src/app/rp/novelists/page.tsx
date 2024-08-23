@@ -3,13 +3,13 @@
 import { Logger } from "@/utils/services";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Button } from "@/components/common";
+import { Button, ShouldRender } from "@/components/common";
 import * as S from "./styles";
 import { Carousel } from "@novelist-world/ui";
 import { MuseCard } from "@/components/muse-card";
-import { useStore } from "@/hooks";
 import { getHeroPageMusesAction } from "../muse/actions";
 import { Muse } from "@/types";
+import { useAuthContext } from "@/hooks";
 
 const NovelistCarouselDynamic = dynamic(
   () => import("@/components/novelist-carousel"),
@@ -68,7 +68,7 @@ export default function NovelistsPage() {
         <S.MainSubtext>Collaborate with fellow Novelists</S.MainSubtext>
       </S.TabContainer>
       <NovelistCarouselDynamic />
-      <S.MainSubtext>Interact with Muses</S.MainSubtext>
+      <S.MainSubtext>Interact with Characters</S.MainSubtext>
       <S.MuseCarouselContainer>
         <Carousel>
           {muses.length &&

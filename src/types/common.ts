@@ -18,6 +18,7 @@ export interface SearchResult extends Tagged {
   _tag: "SearchResult";
   username?: string;
   id?: string;
+  name?: string;
   firstName: string;
   lastName: string;
   image: string;

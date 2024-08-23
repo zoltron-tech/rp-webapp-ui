@@ -101,6 +101,7 @@ export const ContentRight = styled.div`
     max-width: 100%;
     width: 100%;
     padding-inline: 0px;
+    margin-top: 30px;
   }
 `;
 

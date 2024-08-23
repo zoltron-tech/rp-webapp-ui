@@ -1,4 +1,4 @@
-import { Novelist, Muse } from "@/types";
+import { Novelist, Muse, StoryBoard } from "@/types";
 import { PillType } from "@/types/pill-type";
 import { FC } from "react";
 import { ExpandablePill } from "../common";
@@ -8,12 +8,20 @@ import { Logger } from "@/utils/services";
 import * as S from "./styles";
 
 interface Props {
+  title: string;
   novelist?: Novelist | null;
   muse?: Muse | null;
+  storyboard?: StoryBoard | null;
   pillType: PillType;
 }
 
-export const MusesPill: FC<Props> = ({ pillType, novelist, muse }) => {
+export const MusesPill: FC<Props> = ({
+  title,
+  pillType,
+  novelist,
+  muse,
+  storyboard,
+}) => {
   Logger.info("MusesPill rendered");
   const { push } = useRouter();
 
@@ -74,6 +82,21 @@ export const MusesPill: FC<Props> = ({ pillType, novelist, muse }) => {
               hoverable
             />
           ));
+      case "MEMBERS":
+        return storyboard?.members
+          ?.slice(0, slice ? slice : storyboard?.members.length)
+          .map((member) => (
+            <S.Avatar
+              src={member.image}
+              alt={member.username}
+              size={65}
+              key={member.username}
+              className={className}
+              name={member.username}
+              onClick={() => onAvatarClick(member.username)}
+              hoverable
+            />
+          ));
       default:
         <></>;
     }
@@ -81,7 +104,7 @@ export const MusesPill: FC<Props> = ({ pillType, novelist, muse }) => {
 
   return (
     <ExpandablePill
-      tag={pillType}
+      tag={title}
       scrollableContent={loadChildren(8, "rotate")}
       expandedContent={
         <S.ExpandedContentInner>

@@ -1,1 +1,1 @@
-export type PillType = "MUSES" | "FRIENDS" | "CONTACTS";
+export type PillType = "MUSES" | "FRIENDS" | "CONTACTS" | "MEMBERS";

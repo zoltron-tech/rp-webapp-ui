@@ -20,7 +20,9 @@ export const Title = styled.div`
   text-transform: uppercase;
   white-space: nowrap;
 
-  @container (max-width: 300px) {
+  @container (max-width: 800px) {
+    margin-bottom: 40px;
+
     & > span {
       display: none;
     }

@@ -5,9 +5,9 @@ import { Server as ServerIO } from "socket.io";
 import { NextApiResponseServerIO } from "../../../types/socket";
 import { ConnectionsService } from "../../../utils/services/connections-service";
 import { authenticateJWT } from "@/app/actions";
-import { Message } from "@/types";
 import { sendMessageAPI } from "@/app/rp/novelists/actions";
 import { API_MESSAGE } from "@/utils/constants";
+import { Message } from "@/types/conversation";
 
 export const config = {
   api: {

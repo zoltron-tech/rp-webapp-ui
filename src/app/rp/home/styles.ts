@@ -33,7 +33,7 @@ export const LeftWrapperContainer = styled.div`
 `;
 
 export const ListContainer = styled.div`
-  height: 720px;
+  height: 80dvh;
   width: 100%;
   min-width: 70px;
   display: flex;

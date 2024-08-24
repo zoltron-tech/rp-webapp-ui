@@ -1,20 +1,23 @@
 "use client";
 
 import { Button, ShouldRender } from "@/components/common";
-import { PageLoader } from "@/components/layout";
-import { useAuthContext } from "@/hooks";
 import { useRouter } from "next/navigation";
-import { FC, useState } from "react";
+import { FC } from "react";
 import * as S from "./styles";
 import { Novelist } from "@/types";
 import classNames from "classnames";
-import { sendFriendRequest } from "@/app/rp/profile/actions";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   novelist?: Novelist | null;
+  isRequest?: boolean;
 };
 
-export const StrangerCard: FC<Props> = ({ novelist, className, ...rest }) => {
+export const StrangerCard: FC<Props> = ({
+  novelist,
+  isRequest,
+  className,
+  ...rest
+}) => {
   const { push } = useRouter();
 
   const onAvatarClick = () => {
@@ -40,7 +43,6 @@ export const StrangerCard: FC<Props> = ({ novelist, className, ...rest }) => {
             new: !novelist?.username,
           },
         ])}
-        onClick={() => onAvatarClick()}
       >
         <S.Avatar
           src={novelist?.image || ""}
@@ -54,7 +56,13 @@ export const StrangerCard: FC<Props> = ({ novelist, className, ...rest }) => {
           <S.username username={novelist?.username} />
         </S.Info>
         <S.ButtonContainer>
-          <Button variant="secondary">Add Friend</Button>
+          <ShouldRender if={isRequest !== true}>
+            <Button variant="primary">Add Friend</Button>
+          </ShouldRender>
+          <ShouldRender if={isRequest === true}>
+            <Button variant="positive">Accept</Button>
+            <Button variant="negative">Decline</Button>
+          </ShouldRender>
         </S.ButtonContainer>
       </S.Card>
     </S.CardWrapper>

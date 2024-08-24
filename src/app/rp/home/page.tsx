@@ -15,10 +15,13 @@ import {
 } from "./actions";
 import MuseCard from "@/components/muse-card";
 import StoryCard from "@/components/story-card";
+import { getFriendRequests } from "../novelists/actions";
+import { FriendListItem } from "@/components/friend-list-item/page";
 
 export default function HomePage() {
-  const { state, user, novelist: useNovelist } = useAuthContext();
+  const { state, user, novelist } = useAuthContext();
   const [strangers, setStrangers] = useState<Novelist[]>();
+  const [friendRequests, setFriendRequests] = useState<Novelist[] | null>(null);
   const [storyboards, setStoryboards] = useState<StoryBoard[]>();
   const [unknownMuses, setUnknownMuses] = useState<Muse[]>();
   const [friendsMuses, setFriendsMuses] = useState<Muse[]>();
@@ -81,12 +84,27 @@ export default function HomePage() {
     setFriendsMuses(_muses);
   };
 
+  const fetchNotifications = async () => {
+    setLoading(true);
+    const _friendRequests = await getFriendRequests();
+
+    if (!_friendRequests || "message" in _friendRequests) {
+      // handle error
+      setLoading(false);
+      push("/404");
+      return;
+    }
+    setLoading(false);
+    setFriendRequests(_friendRequests);
+  };
+
   useEffect(() => {
     if (state === "LOADING") return;
     fetchStrangers();
     fetchStrangerMuses();
     fetchFriendsMuses();
     fetchRandomStories();
+    fetchNotifications();
   }, [state]);
 
   return (
@@ -94,51 +112,76 @@ export default function HomePage() {
       <ShouldRender if={loading && state !== "LOADING"}>
         <PageLoader />
       </ShouldRender>
-      <S.HeaderContainer>
-        <S.ContentHeader>Dashboard</S.ContentHeader>
-      </S.HeaderContainer>
-      <S.HeaderContainer>
-        <S.SubText>Read Stories</S.SubText>
-        <S.PartitionContainer>
-          {storyboards &&
-            storyboards.map((storyBoard) => (
-              <StoryCard
-                key={storyBoard?.id}
-                storyBoard={storyBoard}
-              ></StoryCard>
-            ))}
-        </S.PartitionContainer>
-      </S.HeaderContainer>
-      <S.HeaderContainer>
-        <S.SubText>Muses by your friends</S.SubText>
-        <S.PartitionContainer>
-          {friendsMuses &&
-            friendsMuses.map((unknownMuse) => (
-              <MuseCard key={unknownMuse?.id} muse={unknownMuse}></MuseCard>
-            ))}
-        </S.PartitionContainer>
-      </S.HeaderContainer>
-      <S.HeaderContainer>
-        <S.SubText>Add new novelists</S.SubText>
-        <S.PartitionContainer>
-          {strangers &&
-            strangers.map((stranger) => (
-              <StrangerCard
-                key={stranger?.username}
-                novelist={stranger}
-              ></StrangerCard>
-            ))}
-        </S.PartitionContainer>
-      </S.HeaderContainer>
-      <S.HeaderContainer>
-        <S.SubText>Interact with new muses</S.SubText>
-        <S.PartitionContainer>
-          {unknownMuses &&
-            unknownMuses.map((unknownMuse) => (
-              <MuseCard key={unknownMuse?.id} muse={unknownMuse}></MuseCard>
-            ))}
-        </S.PartitionContainer>
-      </S.HeaderContainer>
+      <S.ParentWrapperContainer>
+        <S.LeftWrapperContainer>
+          <S.ContentContainer>
+            <S.SubText>Friends</S.SubText>
+            <S.ListContainer>
+              {novelist &&
+                novelist.friends.map((friend) => (
+                  <FriendListItem
+                    key={friend?.username}
+                    novelist={friend}
+                    isRequest={false}
+                  ></FriendListItem>
+                ))}
+            </S.ListContainer>
+          </S.ContentContainer>
+        </S.LeftWrapperContainer>
+        <S.RightWrapperContainer>
+          <S.ContentContainer>
+            <S.SubText>Read Stories</S.SubText>
+            <S.PartitionContainer>
+              {storyboards &&
+                storyboards.map((storyBoard) => (
+                  <StoryCard
+                    key={storyBoard?.id}
+                    storyBoard={storyBoard}
+                  ></StoryCard>
+                ))}
+            </S.PartitionContainer>
+          </S.ContentContainer>
+          <S.ContentContainer>
+            <S.SubText>Muses by your friends</S.SubText>
+            <S.PartitionContainer>
+              {friendsMuses &&
+                friendsMuses.map((unknownMuse) => (
+                  <MuseCard key={unknownMuse?.id} muse={unknownMuse}></MuseCard>
+                ))}
+            </S.PartitionContainer>
+          </S.ContentContainer>
+          <S.ContentContainer>
+            <S.SubText>Friend Requests & Suggestions</S.SubText>
+            <S.PartitionContainer>
+              {friendRequests &&
+                friendRequests.map((request) => (
+                  <StrangerCard
+                    key={request?.username}
+                    novelist={request}
+                    isRequest={true}
+                  ></StrangerCard>
+                ))}
+              {strangers &&
+                strangers.map((stranger) => (
+                  <StrangerCard
+                    key={stranger?.username}
+                    novelist={stranger}
+                    isRequest={false}
+                  ></StrangerCard>
+                ))}
+            </S.PartitionContainer>
+          </S.ContentContainer>
+          <S.ContentContainer>
+            <S.SubText>Interact with new muses</S.SubText>
+            <S.PartitionContainer>
+              {unknownMuses &&
+                unknownMuses.map((unknownMuse) => (
+                  <MuseCard key={unknownMuse?.id} muse={unknownMuse}></MuseCard>
+                ))}
+            </S.PartitionContainer>
+          </S.ContentContainer>
+        </S.RightWrapperContainer>
+      </S.ParentWrapperContainer>
     </>
   );
 }

@@ -49,13 +49,13 @@ export const MuseContainer = styled.div`
     }
   }
 
-  @container (max-width: 500px) {
+  @container (max-width: 600px) {
     & {
       padding-top: 0px;
       padding-bottom: 10px;
       padding-inline: 0px;
       gap: 0.2rem;
-      margin-bottom: 30px;
+      margin-bottom: 45px;
     }
   }
 
@@ -65,7 +65,7 @@ export const MuseContainer = styled.div`
       padding-bottom: 10px;
       padding-inline: 0px;
       gap: 0.2rem;
-      margin-bottom: 0px;
+      margin-bottom: 5px;
     }
   }
 `;
@@ -146,6 +146,13 @@ export const CardWrapper = styled.div`
     }
   }
 
+  @container (min-width: 700px) and (max-width: 950px) {
+    &.open {
+      border-radius: 0px;
+      display: none;
+    }
+  }
+
   @container (max-width: 700px) {
     margin-top: 0px;
     width: 100%;
@@ -202,7 +209,7 @@ export const CardExpandedWrapper = styled.div`
     }
   }
 
-  @container (min-width: 600px) and (max-width: 2047px) {
+  @container (min-width: 700px) and (max-width: 2047px) {
     margin-top: 20px;
     width: 420px;
     height: 750px;
@@ -214,7 +221,7 @@ export const CardExpandedWrapper = styled.div`
     }
   }
 
-  @container (max-width: 600px) {
+  @container (max-width: 700px) {
     margin-top: 0px;
     width: 100%;
     height: 70vh;

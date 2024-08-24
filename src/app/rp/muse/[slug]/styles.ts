@@ -39,7 +39,27 @@ export const MuseContainer = styled.div`
   justify-content: center;
   margin-bottom: 50px;
 
+  @container (max-width: 700px) {
+    & {
+      padding-top: 0px;
+      padding-bottom: 10px;
+      padding-inline: 0px;
+      gap: 0.2rem;
+      margin-bottom: 90px;
+    }
+  }
+
   @container (max-width: 500px) {
+    & {
+      padding-top: 0px;
+      padding-bottom: 10px;
+      padding-inline: 0px;
+      gap: 0.2rem;
+      margin-bottom: 30px;
+    }
+  }
+
+  @container (max-width: 380px) {
     & {
       padding-top: 0px;
       padding-bottom: 10px;
@@ -303,7 +323,7 @@ export const MenuButton = styled.div`
     top: 0px;
   }
 
-  @container (max-width: 400px) {
+  @container (max-width: 400px) and (max-height: 100px) {
     justify-content: normal;
     width: 50px;
     height: 30px;
@@ -337,7 +357,7 @@ export const MenuButtonIcon = styled.div`
     }
   }
 
-  @container (max-width: 400px) {
+  @container (max-width: 400px) and (max-height: 100px) {
     width: 30px;
     height: 30px;
   }

@@ -117,6 +117,13 @@ export default function HomePage() {
           <S.ContentContainer>
             <S.SubText>Friends</S.SubText>
             <S.ListContainer>
+              <ShouldRender
+                if={friendsMuses === undefined || friendsMuses.length == 0}
+              >
+                <S.SubText></S.SubText>
+                <S.SubText></S.SubText>
+                <S.SubText>No friends yet</S.SubText>
+              </ShouldRender>
               {novelist &&
                 novelist.friends.map((friend) => (
                   <FriendListItem
@@ -130,7 +137,7 @@ export default function HomePage() {
         </S.LeftWrapperContainer>
         <S.RightWrapperContainer>
           <S.ContentContainer>
-            <S.SubText>Read Stories</S.SubText>
+            <S.SubText>Dive into the Stories</S.SubText>
             <S.PartitionContainer>
               {storyboards &&
                 storyboards.map((storyBoard) => (
@@ -141,15 +148,22 @@ export default function HomePage() {
                 ))}
             </S.PartitionContainer>
           </S.ContentContainer>
-          <S.ContentContainer>
-            <S.SubText>Muses by your friends</S.SubText>
-            <S.PartitionContainer>
-              {friendsMuses &&
-                friendsMuses.map((unknownMuse) => (
-                  <MuseCard key={unknownMuse?.id} muse={unknownMuse}></MuseCard>
-                ))}
-            </S.PartitionContainer>
-          </S.ContentContainer>
+          <ShouldRender
+            if={friendsMuses !== undefined && friendsMuses.length > 0}
+          >
+            <S.ContentContainer>
+              <S.SubText>characters by your friends</S.SubText>
+              <S.PartitionContainer>
+                {friendsMuses &&
+                  friendsMuses.map((unknownMuse) => (
+                    <MuseCard
+                      key={unknownMuse?.id}
+                      muse={unknownMuse}
+                    ></MuseCard>
+                  ))}
+              </S.PartitionContainer>
+            </S.ContentContainer>
+          </ShouldRender>
           <S.ContentContainer>
             <S.SubText>Friend Requests & Suggestions</S.SubText>
             <S.PartitionContainer>
@@ -172,7 +186,7 @@ export default function HomePage() {
             </S.PartitionContainer>
           </S.ContentContainer>
           <S.ContentContainer>
-            <S.SubText>Interact with new muses</S.SubText>
+            <S.SubText>Meet New Characters</S.SubText>
             <S.PartitionContainer>
               {unknownMuses &&
                 unknownMuses.map((unknownMuse) => (

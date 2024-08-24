@@ -5,7 +5,6 @@ export const FooterContainer = styled.footer`
   --footer-height: 2rem;
 
   font-size: 14px;
-  bottom: 0;
   width: 100%;
   display: flex;
   align-items: center;
@@ -27,14 +26,14 @@ export const FooterContainer = styled.footer`
     }
   }
 
-  @container (max-width: 600px) {
+  @container (max-width: 500px) {
     & {
       font-size: 5px;
       --footer-height: 1rem;
     }
   }
 
-  @container (max-width: 400px) {
+  @container (max-width: 380px) {
     & {
       font-size: 4px;
       --footer-height: 0.5rem;

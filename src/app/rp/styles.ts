@@ -21,7 +21,7 @@ export const PageContainer = styled.main`
 
   @media (max-width: 700px) {
     & {
-      min-height: calc(100vh - 13px);
+      min-height: calc(100vh - 130px);
     }
   }
 `;

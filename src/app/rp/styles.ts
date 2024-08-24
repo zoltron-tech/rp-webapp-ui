@@ -2,7 +2,7 @@ import { NO_SCROLLBAR, Z_INDEX } from "@/theme";
 import { styled } from "styled-components";
 
 export const PageContainer = styled.main`
-  min-height: 100vh;
+  min-height: calc(100vh - 135px);
   max-height: max-content;
   width: 100vw;
   position: relative;

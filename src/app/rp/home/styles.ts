@@ -16,7 +16,7 @@ export const ParentWrapperContainer = styled.div`
 
   @container (max-width: 600px) {
     & {
-      height: 86dvh;
+      height: 88dvh;
     }
   }
 `;

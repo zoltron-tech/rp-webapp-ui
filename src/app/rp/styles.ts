@@ -24,10 +24,4 @@ export const PageContainer = styled.main`
       min-height: calc(100vh - 50px);
     }
   }
-
-  @media (max-width: 380px) {
-    & {
-      min-height: calc(100vh - 100px);
-    }
-  }
 `;

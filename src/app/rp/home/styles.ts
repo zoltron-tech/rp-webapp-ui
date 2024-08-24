@@ -7,6 +7,12 @@ export const ParentWrapperContainer = styled.div`
   height: 800px;
   justify-content: start;
   align-items: flex-start;
+
+  @container (max-width: 800px) {
+    & {
+      height: 85dvh;
+    }
+  }
 `;
 
 export const LeftWrapperContainer = styled.div`
@@ -40,6 +46,7 @@ export const ListContainer = styled.div`
   @container left_wrapper (max-width: 200px) {
     & {
       width: 70px;
+      height: 75dvh;
       font-size: 18px;
     }
   }
@@ -53,6 +60,12 @@ export const RightWrapperContainer = styled.div`
   height: 100%;
   overflow-y: auto;
   align-items: flex-start;
+
+  @container (max-width: 800px) {
+    & {
+      height: 80dvh;
+    }
+  }
 `;
 
 export const HeaderContainer = styled.div`

@@ -19,15 +19,15 @@ export const PageContainer = styled.main`
 
   ${NO_SCROLLBAR}
 
-  @media (max-width: 430px) {
+  @media (max-width: 420px) {
     & {
-      min-height: calc(100vh - 120px);
+      min-height: calc(100vh - 100px);
     }
   }
 
   @media (max-width: 380px) {
     & {
-      min-height: calc(100vh - 50px);
+      min-height: calc(100vh - 30px);
     }
   }
 `;

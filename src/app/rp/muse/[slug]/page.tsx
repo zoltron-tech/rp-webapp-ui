@@ -164,7 +164,7 @@ export default function MuseProfilePage({}) {
                   <ShouldRender if={muse?.fandom !== null}>
                     <S.InfoValue>{muse?.fandom}</S.InfoValue>
                   </ShouldRender>
-                  <ShouldRender if={muse?.species === null}>
+                  <ShouldRender if={muse?.fandom === null}>
                     <S.InfoValue>NOT SPECIFIED</S.InfoValue>
                   </ShouldRender>
                 </S.InfoItem>

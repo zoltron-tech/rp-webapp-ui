@@ -39,7 +39,7 @@ export const MuseContainer = styled.div`
   justify-content: center;
   margin-bottom: 50px;
 
-  @container (max-width: 500px) {
+  @container (max-width: 700px) {
     & {
       padding-top: 0px;
       padding-inline: 0px;
@@ -128,7 +128,7 @@ export const CardWrapper = styled.div`
   @container (max-width: 700px) {
     margin-top: 0px;
     width: 100%;
-    height: 80vh;
+    height: 70vh;
 
     &.open {
       border-radius: 0px;
@@ -196,7 +196,7 @@ export const CardExpandedWrapper = styled.div`
   @container (max-width: 600px) {
     margin-top: 0px;
     width: 100%;
-    height: 80vh;
+    height: 70vh;
     border-radius: 0px;
   }
 `;

@@ -62,7 +62,7 @@ textarea {
 
   ::-webkit-scrollbar-thumb {
     border-radius: 100vw;
-    background: #0d313fcc;
+    background: linear-gradient(180deg, rgb(21, 74, 117), rgb(17, 46, 71));
     border: 0.01em solid #2424249c;
   }
 }

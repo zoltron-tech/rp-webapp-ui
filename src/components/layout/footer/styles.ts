@@ -26,7 +26,7 @@ export const FooterContainer = styled.footer`
     }
   }
 
-  @container (max-width: 500px) {
+  @container (max-width: 600px) {
     & {
       font-size: 5px;
       --footer-height: 1rem;

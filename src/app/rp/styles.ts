@@ -19,9 +19,9 @@ export const PageContainer = styled.main`
 
   ${NO_SCROLLBAR}
 
-  @media (max-width: 500px) {
+  @media (max-width: 600px) {
     & {
-      min-height: calc(100vh - 70px);
+      min-height: calc(100vh - 50px);
     }
   }
 

@@ -47,6 +47,24 @@ textarea {
   --profile-note-width: 460px;
 
   --border-radius: 0.5rem;
+
+  ::-webkit-scrollbar {
+    width: 0.7em;
+    height: 0.7em;
+  }
+
+  ::-webkit-scrollbar-track {
+    border-radius: 100vw;
+    background: #2424249c;
+    margin-block: 1em;
+    margin-inline: 1em;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border-radius: 100vw;
+    background: #0d313fcc;
+    border: 0.01em solid #2424249c;
+  }
 }
 
 /* END: Global variables */

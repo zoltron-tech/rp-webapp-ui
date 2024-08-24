@@ -131,7 +131,8 @@ export const username = styled(Common.Username)`
 export const ButtonContainer = styled.div`
   display: flex;
   align-items: center;
-  flex-direction: column;
+  flex-direction: row;
+  gap: 1em;
 
   @container (max-width: 400px) {
     & {

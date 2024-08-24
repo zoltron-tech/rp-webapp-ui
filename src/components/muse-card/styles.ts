@@ -73,8 +73,8 @@ export const CardWrapper = styled.div`
   &.hero {
     height: 200px;
     width: 134px;
-    min-width: 200px;
-    min-height: 134px;
+    min-width: 134px;
+    min-height: 200px;
   }
 
   &.hero ${Title} {
@@ -94,6 +94,8 @@ export const CardWrapper = styled.div`
     &.hero {
       height: 120px;
       width: 80px;
+      min-height: 120px;
+      min-width: 80px;
     }
 
     &.hero ${Title} {

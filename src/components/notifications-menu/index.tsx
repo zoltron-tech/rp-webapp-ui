@@ -23,7 +23,7 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
   const { push } = useRouter();
 
   const onMoreNotificationsClick = () => {
-    push(`/rp/novelists`);
+    push(state === "LOGGED_IN" ? `/rp/home` : `/rp/novelists`);
   };
 
   const fetchNotifications = async () => {

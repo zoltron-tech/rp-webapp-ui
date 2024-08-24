@@ -21,13 +21,13 @@ export const PageContainer = styled.main`
 
   @media (max-width: 420px) {
     & {
-      min-height: calc(100vh - 100px);
+      min-height: calc(100vh - 115px);
     }
   }
 
   @media (max-width: 380px) {
     & {
-      min-height: calc(100vh - 30px);
+      min-height: calc(100vh - 50px);
     }
   }
 `;

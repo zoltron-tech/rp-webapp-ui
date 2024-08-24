@@ -8,7 +8,7 @@ export const ParentWrapperContainer = styled.div`
   justify-content: start;
   align-items: flex-start;
 
-    @container (max-width: 800px) {
+  @container (max-width: 800px) {
     & {
       height: 90dvh;
     }
@@ -16,7 +16,7 @@ export const ParentWrapperContainer = styled.div`
 
   @container (max-width: 600px) {
     & {
-      height: 85dvh;
+      height: 86dvh;
     }
   }
 `;

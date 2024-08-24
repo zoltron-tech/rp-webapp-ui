@@ -13,12 +13,6 @@ export const ParentWrapperContainer = styled.div`
       height: 90dvh;
     }
   }
-
-  @container (max-width: 600px) {
-    & {
-      height: 88dvh;
-    }
-  }
 `;
 
 export const LeftWrapperContainer = styled.div`
@@ -69,7 +63,7 @@ export const RightWrapperContainer = styled.div`
 
   @container (max-width: 800px) {
     & {
-      height: 80dvh;
+      height: 84dvh;
     }
   }
 `;

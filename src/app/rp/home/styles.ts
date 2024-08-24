@@ -4,7 +4,7 @@ import { styled } from "styled-components";
 export const ParentWrapperContainer = styled.div`
   display: flex;
   flex-direction: row;
-  height: 800px;
+  height: 90dvh;
   justify-content: start;
   align-items: flex-start;
 

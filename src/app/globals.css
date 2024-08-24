@@ -49,8 +49,8 @@ textarea {
   --border-radius: 0.5rem;
 
   ::-webkit-scrollbar {
-    width: 0.7em;
-    height: 0.7em;
+    width: 0.5em;
+    height: 0.5em;
   }
 
   ::-webkit-scrollbar-track {

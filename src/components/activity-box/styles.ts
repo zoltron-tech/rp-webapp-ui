@@ -19,7 +19,6 @@ export const ParentContainer = styled.div`
     padding-inline: 10px;
     margin-block: 0px;
     width: 100%;
-    margin-block: 0px;
     border-radius: 0px;
     border: none;
   }
@@ -32,11 +31,12 @@ export const HeaderContainer = styled.div`
   align-items: center;
   background-color: ${({ theme }) => theme.background};
   width: 100%;
-  margin-bottom: 20px;
+  margin-block: 20px;
   padding-inline: 10px;
   // border-radius: ${BORDER_RADIUS};
   // ${CARD_BORDER};
   border-bottom: 1px solid slategray;
+  gap: 0.5em;
 
   @container content-container (max-width: 1000px) {
     margin-bottom: 10px;
@@ -69,19 +69,25 @@ export const ActivityText = styled.div`
 
   @container (max-width: 1000px) {
     & {
-      font-size: 16px;
+      font-size: 14px;
     }
   }
 
   @container (max-width: 800px) {
     & {
-      font-size: 14px;
+      font-size: 12px;
     }
   }
 
-  @container (max-width: 600px) {
+  @container (max-width: 700px) {
     & {
-      font-size: 12px;
+      font-size: 10px;
+    }
+  }
+
+  @container (max-width: 500px) {
+    & {
+      font-size: 8px;
     }
   }
 `;
@@ -129,7 +135,7 @@ export const Title = styled.div`
   word-wrap: break-word;
   white-space: wrap;
   max-width: 80%;
-  color: ${({ theme }) => theme.text};
+  color: white;
   text-align: center;
 
   @container content-container (max-width: 800px) {
@@ -224,11 +230,6 @@ export const CardWrapper = styled.div`
       min-height: 200px;
       margin-bottom: 0px;
     }
-  }
-
-  &.new {
-    border: solid silver 2px;
-    border-radius: 60%;
   }
 
   &:hover {

@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { Logger } from "@/utils/services";
 import classNames from "classnames";
 import { IoNotificationsCircle } from "react-icons/io5";
+import { IoPeopleCircle } from "react-icons/io5";
 import * as S from "./styles";
 import { getFriendRequests } from "@/app/rp/novelists/actions";
 import { Novelist } from "@/types";
@@ -65,7 +66,7 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
   return (
     <S.PositionContainer>
       <S.ContentContainer onClick={toggleState(setOpen)}>
-        <IoNotificationsCircle size={48} />
+        <IoPeopleCircle size={45} />
         <S.Menu className={classNames({ open })}>
           {friendRequests &&
             friendRequests.map((request) => (
@@ -81,7 +82,7 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
               onClick={() => onMoreNotificationsClick()}
             >
               <S.CardHeader>
-                <S.Text>See all notifications</S.Text>
+                <S.Text>See all friend requests</S.Text>
               </S.CardHeader>
             </S.Card>
           </S.CardWrapper>

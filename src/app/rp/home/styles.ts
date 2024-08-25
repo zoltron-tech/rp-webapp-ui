@@ -84,6 +84,12 @@ export const ContentContainer = styled.div`
   align-items: center;
   padding-inline: 10px;
   margin-top: 30px;
+
+  @container (max-width: 600px) {
+    & {
+      padding-inline: 0px;
+    }
+  }
 `;
 
 export const SubText = styled.div`
@@ -114,7 +120,7 @@ export const SubText = styled.div`
 `;
 
 export const PartitionContainer = styled.div`
-  width: 80cqw;
+  width: 81cqw;
   display: flex;
   flex-direction: row;
   justify-content: start;
@@ -124,42 +130,70 @@ export const PartitionContainer = styled.div`
 
   @container (max-width: 1200px) {
     & {
-      width: 90cqw;
+      width: 92cqw;
       font-size: 18px;
     }
   }
 
   @container (max-width: 1000px) {
     & {
-      width: 87cqw;
+      width: 90cqw;
       font-size: 18px;
     }
   }
 
-  @container (max-width: 800px) {
+  @container (max-width: 700px) {
     & {
       width: 85cqw;
       font-size: 18px;
     }
   }
 
-  @container (max-width: 500px) {
+  @container (max-width: 600px) {
     & {
-      width: 80cqw;
+      width: 86cqw;
+      font-size: 18px;
+    }
+  }
+
+  @container (max-width: 550px) {
+    & {
+      width: 85.5cqw;
+      font-size: 18px;
+    }
+  }
+
+  @container (max-width: 460px) {
+    & {
+      width: 82cqw;
+      font-size: 18px;
+    }
+  }
+
+  @container (max-width: 430px) {
+    & {
+      width: 82cqw;
+      font-size: 18px;
+    }
+  }
+
+  @container (max-width: 415px) {
+    & {
+      width: 81cqw;
       font-size: 18px;
     }
   }
 
   @container (max-width: 400px) {
     & {
-      width: 75cqw;
+      width: 80cqw;
       font-size: 18px;
     }
   }
 
-  @container (max-width: 300px) {
+  @container (max-width: 360px) {
     & {
-      width: 65cqw;
+      width: 78cqw;
       font-size: 18px;
     }
   }

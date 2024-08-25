@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import * as S from "./styles";
 import { StrangerCard } from "@/components/stranger-card/page";
 import {
+  getFriendActivities,
   getMusesAction,
   getRandomStories,
   getStrangerNovelistsAction,
@@ -17,6 +18,8 @@ import MuseCard from "@/components/muse-card";
 import StoryCard from "@/components/story-card";
 import { getFriendRequests } from "../novelists/actions";
 import { FriendListItem } from "@/components/friend-list-item/page";
+import { Activity } from "@/types/activity";
+import { ActivityBox } from "@/components/activity-box";
 
 export default function HomePage() {
   const { state, user, novelist } = useAuthContext();
@@ -25,6 +28,7 @@ export default function HomePage() {
   const [storyboards, setStoryboards] = useState<StoryBoard[]>();
   const [unknownMuses, setUnknownMuses] = useState<Muse[]>();
   const [friendsMuses, setFriendsMuses] = useState<Muse[]>();
+  const [activities, setActivities] = useState<Activity[]>();
   const [loading, setLoading] = useState(false);
   const { push } = useRouter();
 
@@ -84,6 +88,20 @@ export default function HomePage() {
     setFriendsMuses(_muses);
   };
 
+  const fetchFriendsActivities = async () => {
+    setLoading(true);
+    const _activities = await getFriendActivities(1, 10, "friends");
+
+    if (!_activities || "message" in _activities) {
+      // handle error
+      setLoading(false);
+      push("/404");
+      return;
+    }
+    setLoading(false);
+    setActivities(_activities);
+  };
+
   const fetchNotifications = async () => {
     setLoading(true);
     const _friendRequests = await getFriendRequests();
@@ -105,6 +123,7 @@ export default function HomePage() {
     fetchFriendsMuses();
     fetchRandomStories();
     fetchNotifications();
+    fetchFriendsActivities();
   }, [state]);
 
   return (
@@ -193,6 +212,16 @@ export default function HomePage() {
                   <MuseCard key={unknownMuse?.id} muse={unknownMuse}></MuseCard>
                 ))}
             </S.PartitionContainer>
+          </S.ContentContainer>
+          <S.ContentContainer>
+            <S.SubText>Updates from your friends</S.SubText>
+            {activities &&
+              activities.map((activity) => (
+                <ActivityBox
+                  key={activity?.id}
+                  activity={activity}
+                ></ActivityBox>
+              ))}
           </S.ContentContainer>
         </S.RightWrapperContainer>
       </S.ParentWrapperContainer>

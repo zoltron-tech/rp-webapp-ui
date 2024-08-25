@@ -17,11 +17,17 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
 
   const handleCardClick = (
     e: React.MouseEvent<HTMLDivElement>,
-    activityTarget: ActivityTarget
+    activity: Activity
   ) => {
     const target = e.target as HTMLDivElement;
     if (target.classList.contains("button")) return;
-    push(`/rp/muse/${activityTarget.id}`);
+
+    if (activity?.target.activityTargetType === "MUSE")
+      push(`/rp/muse/${activity.target.id}`);
+    else if (activity?.target.activityTargetType === "STORY_BOARD")
+      push(`/rp/story/${activity.target.id}`);
+    else if (activity?.target.activityTargetType === "PROFILE")
+      push(`/rp/profile/${activity.novelist.username}`);
   };
 
   const onAvatarClick = () => {
@@ -31,18 +37,18 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
 
   const toFormattedDate = (unixTime: number): string => {
     const date = moment.unix(unixTime);
-    const today = moment();
+    const now = moment();
 
-    if (date.isSame(today, "day")) {
-      // Return only the time if the date is today
-      return date.format("LT"); // 'LT' is locale-specific time format (e.g., 12:30 PM)
-    } else if (date.isSame(today, "year")) {
-      // Return only the month and day if it's the same year
-      return date.format("MMMM D"); // e.g., 'August 23'
-    } else {
-      // Return the full date if it's not the same year
-      return date.format("LL"); // 'LL' is locale-specific date format (e.g., August 23, 2024)
-    }
+    const units = [
+      { name: "y", value: now.diff(date, "years") },
+      { name: "mon", value: now.diff(date, "months") },
+      { name: "d", value: now.diff(date, "days") },
+      { name: "h", value: now.diff(date, "hours") },
+      { name: "m", value: now.diff(date, "minutes") },
+    ];
+
+    const unit = units.find((u) => u.value > 0);
+    return unit ? `${unit.value}${unit.name} ago` : "just now";
   };
 
   Logger.info("activity rendered");
@@ -73,7 +79,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
               new: !activity.target.title,
             },
           ])}
-          onClick={(e) => handleCardClick(e, activity.target)}
+          onClick={(e) => handleCardClick(e, activity)}
         >
           <S.CardHeader>
             <S.ActivityInfo>

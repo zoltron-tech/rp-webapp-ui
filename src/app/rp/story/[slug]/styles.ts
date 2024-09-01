@@ -30,7 +30,6 @@ export const Banner = styled.div<BannerProps>`
 
 export const Avatar = styled(AvatarCommon)`
   margin-top: 30px;
-  border: ${CARD_BORDER};
 `;
 
 export const Name = styled.div`
@@ -40,7 +39,7 @@ export const Name = styled.div`
   text-align: center;
   margin-top: 50px;
   margin-bottom: 10px;
-  font-size: clamp(36px, 5vw, 52px);
+  font-size: clamp(18px, 5vw, 34px);
   color: ${({ theme }) => theme.textPrimary};
   z-index: ${Z_INDEX.DEFAULT};
 `;

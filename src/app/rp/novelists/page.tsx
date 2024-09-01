@@ -3,13 +3,14 @@
 import { Logger } from "@/utils/services";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Button, ShouldRender } from "@/components/common";
+import { Button } from "@/components/common";
 import * as S from "./styles";
 import { Carousel } from "@novelist-world/ui";
 import { MuseCard } from "@/components/muse-card";
 import { getHeroPageMusesAction } from "../muse/actions";
 import { Muse } from "@/types";
 import { useAuthContext } from "@/hooks";
+import { useRouter } from "next/navigation";
 
 const NovelistCarouselDynamic = dynamic(
   () => import("@/components/novelist-carousel"),
@@ -19,6 +20,8 @@ const NovelistCarouselDynamic = dynamic(
 export default function NovelistsPage() {
   const initialRender = useRef(true);
   const [muses, set] = useState<Muse[]>([]);
+  const { state } = useAuthContext();
+  const { push } = useRouter();
 
   const updateMuses = useCallback(async () => {
     const response = await getHeroPageMusesAction();
@@ -39,7 +42,11 @@ export default function NovelistsPage() {
   Logger.info("NovelistsPage rendered");
 
   const onLoginClick = () => {
-    window.location.replace(`${process.env.RP_LOGIN_URL}`);
+    window.location.replace(`${process.env.RP_LOGIN_URL}?modal=SIGNUP`);
+  };
+
+  const toHomePage = () => {
+    push(`/rp/home/`);
   };
 
   return (
@@ -58,8 +65,11 @@ export default function NovelistsPage() {
         </S.Story>
         <S.ButtonsGroupContainer>
           <S.ButtonContainer>
-            <Button variant="secondary" onClick={onLoginClick}>
-              Get Started
+            <Button
+              variant={state == "LOGGED_IN" ? "primary" : "secondary"}
+              onClick={state == "LOGGED_IN" ? toHomePage : onLoginClick}
+            >
+              {state == "LOGGED_IN" ? "My Dashboard" : "Get Started"}
             </Button>
           </S.ButtonContainer>
         </S.ButtonsGroupContainer>

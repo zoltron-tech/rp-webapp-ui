@@ -12,6 +12,8 @@ export const PillContinaer = styled(Pill)`
   min-width: 300px;
   contain: paint;
   margin-inline: auto;
+  border-bottom: 1px solid dimgray;
+  border-right: 1px solid dimgray;
 
   @container profile-content (max-width: 600px) {
     & {

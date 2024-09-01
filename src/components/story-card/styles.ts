@@ -64,6 +64,13 @@ export const CardWrapper = styled.div`
   container-name: muse-card;
   container-type: size;
 
+  &.profile {
+    width: 180px;
+    height: 180px;
+    min-width: 180px;
+    min-height: 180px;
+  }
+
   @container content-container (max-width: 800px) {
     & {
       width: 200px;

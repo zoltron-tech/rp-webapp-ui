@@ -3,6 +3,7 @@ import { Z_INDEX, CARD_BORDER, BORDER_RADIUS } from "@/theme";
 import styled from "styled-components";
 
 export const ParentContainer = styled.div`
+  border: 1px solid orange;
   display: flex;
   flex-direction: column;
   justify-content: center;

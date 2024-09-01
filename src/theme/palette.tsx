@@ -73,7 +73,7 @@ export const THEME_LIGHT: Theme = {
 
 export const THEME_DARK: Theme = {
   name: "dark",
-  background: "#0e0e0e",
+  background: "#1d1c1c",
   primary: pSBC(-0.45, accentColor) as string,
   primaryHover: pSBC(-0.6, accentColor) as string,
   primaryDisabled: pSBC(-0.8, accentColor) as string,

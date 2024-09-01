@@ -46,6 +46,10 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
     window.location.replace(`${process.env.RP_CHAT_URL}`);
   };
 
+  const onOpenMessagesClick = (username: string) => {
+    window.location.replace(`${process.env.RP_CHAT_URL}?username=${username}`);
+  };
+
   const fetchConversations = async () => {
     setLoading(true);
     const _muse = await getConversationsAction();
@@ -76,7 +80,7 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
           {conversations &&
             conversations.slice(0, 5).map((conversation) => (
               <S.CardWrapper
-                onClick={onMoreMessagesClick}
+                onClick={() => onOpenMessagesClick(conversation.username)}
                 key={conversation.username}
               >
                 <S.Card className="muse-card">

@@ -7,7 +7,6 @@ import { toggleState } from "@/utils/helpers";
 import { useRouter } from "next/navigation";
 import { Logger } from "@/utils/services";
 import classNames from "classnames";
-import { IoNotificationsCircle } from "react-icons/io5";
 import { IoPeopleCircle } from "react-icons/io5";
 import * as S from "./styles";
 import { getFriendRequests } from "@/app/rp/novelists/actions";
@@ -22,10 +21,6 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const { push } = useRouter();
-
-  const onMoreNotificationsClick = () => {
-    push(state === "LOGGED_IN" ? `/rp/home` : `/rp/novelists`);
-  };
 
   const fetchNotifications = async () => {
     setLoading(true);
@@ -77,10 +72,7 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
               ></FriendRequestNotification>
             ))}
           <S.CardWrapper key={"end"} className="end">
-            <S.Card
-              className="more-items-box"
-              onClick={() => onMoreNotificationsClick()}
-            >
+            <S.Card className="more-items-box">
               <S.CardHeader>
                 <S.Text>See all friend requests</S.Text>
               </S.CardHeader>

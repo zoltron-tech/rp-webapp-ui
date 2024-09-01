@@ -1,7 +1,6 @@
 "use client";
 
 import { useAuthContext } from "@/hooks";
-import { Logger } from "@/utils/services";
 import { useParams, useRouter } from "next/navigation";
 
 import { MusesPill } from "@/components";
@@ -9,7 +8,7 @@ import { ButtonGroup, ButtonInfo } from "@/components/button-group";
 import { ShouldRender, Username } from "@/components/common";
 import { PageLoader } from "@/components/layout";
 import { Quote } from "@/components/novelist-card/styles";
-import { Novelist } from "@/types";
+import { Novelist, StoryBoard } from "@/types";
 import { useEffect, useState } from "react";
 import { getNovelistAction } from "../../novelists/actions";
 
@@ -21,6 +20,11 @@ import {
   sendFriendRequest,
 } from "../actions";
 import * as S from "./styles";
+import { Activity } from "@/types/activity";
+import { getUserActivities } from "../../home/actions";
+import ActivityBox from "@/components/activity-box";
+import { getAllStoryboardsByUsernameAction } from "../../story/actions";
+import StoryCard from "@/components/story-card";
 
 export default function UserProfilePage({}) {
   const params = useParams();
@@ -29,6 +33,8 @@ export default function UserProfilePage({}) {
   const [loading, setLoading] = useState(true);
   const username = params?.slug as string;
   const isCurrentUser = username === user?.username;
+  const [activities, setActivities] = useState<Activity[]>();
+  const [storyBoards, setStories] = useState<StoryBoard[] | null>(null);
   const { push } = useRouter();
 
   const handleButtonClick = () => {};
@@ -41,8 +47,8 @@ export default function UserProfilePage({}) {
     push(`/rp/profile/${username}/storyboards`);
   };
 
-  const handleMessageButton = () => {
-    window.location.replace(`${process.env.RP_CHAT_URL}`);
+  const toMessagePage = () => {
+    window.location.replace(`${process.env.RP_CHAT_URL}?username=${username}`);
   };
 
   const handleSendFriendRequest = async () => {
@@ -111,6 +117,34 @@ export default function UserProfilePage({}) {
     }
   };
 
+  const fetchUserActivities = async () => {
+    setLoading(true);
+    const _activities = await getUserActivities(username, 1, 10);
+
+    if (!_activities || "message" in _activities) {
+      // handle error
+      setLoading(false);
+      push("/404");
+      return;
+    }
+    setLoading(false);
+    setActivities(_activities);
+  };
+
+  const fetchStoryboards = async () => {
+    setLoading(true);
+    const _muses = await getAllStoryboardsByUsernameAction(username);
+
+    if (!_muses || "message" in _muses) {
+      // handle error
+      setLoading(false);
+      push("/404");
+      return;
+    }
+    setLoading(false);
+    setStories(_muses);
+  };
+
   const IncomingRequestButtons: ButtonInfo[] = [
     {
       onClick: handleAcceptFriendRequest,
@@ -122,7 +156,7 @@ export default function UserProfilePage({}) {
       label: "Decline",
       variant: "negative",
     },
-    { onClick: handleMessageButton, label: "Message", variant: "action" },
+    { onClick: toMessagePage, label: "Message", variant: "action" },
     { onClick: toMusesPage, label: "Muses", variant: "action" },
     { onClick: toStoryBoardsPage, label: "Story Boards", variant: "action" },
   ];
@@ -133,14 +167,14 @@ export default function UserProfilePage({}) {
       label: "Friend request sent",
       variant: "primary",
     },
-    { onClick: handleMessageButton, label: "Message", variant: "action" },
+    { onClick: toMessagePage, label: "Message", variant: "action" },
     { onClick: toMusesPage, label: "Muses", variant: "action" },
     { onClick: toStoryBoardsPage, label: "Story Boards", variant: "action" },
   ];
 
   const FriendButtons: ButtonInfo[] = [
     { onClick: handleButtonClick, label: "Friends", variant: "primary" },
-    { onClick: handleMessageButton, label: "Message", variant: "action" },
+    { onClick: toMessagePage, label: "Message", variant: "action" },
     { onClick: toMusesPage, label: "Muses", variant: "action" },
     { onClick: toStoryBoardsPage, label: "Story Boards", variant: "action" },
   ];
@@ -151,7 +185,6 @@ export default function UserProfilePage({}) {
       label: "Add friend",
       variant: "primary",
     },
-    { onClick: handleMessageButton, label: "Message", variant: "action" },
     { onClick: toMusesPage, label: "Muses", variant: "action" },
     { onClick: toStoryBoardsPage, label: "Story Boards", variant: "action" },
   ];
@@ -200,11 +233,15 @@ export default function UserProfilePage({}) {
 
     if (isCurrentUser && useNovelist) {
       setNovelist(useNovelist);
+      fetchUserActivities();
+      fetchStoryboards();
       setLoading(false);
       return;
     }
 
     fetchNovelist(username);
+    fetchUserActivities();
+    fetchStoryboards();
   }, [state]);
 
   return (
@@ -237,6 +274,27 @@ export default function UserProfilePage({}) {
           <S.NoteContainer>
             <Quote>{novelist?.note}</Quote>
           </S.NoteContainer>
+          <S.ContentContainer>
+            <S.SubText>
+              {activities?.length === 0
+                ? "No Storyboards"
+                : "Storyboards by " + username}
+            </S.SubText>
+            <S.PartitionContainer>
+              {storyBoards &&
+                storyBoards.map((storyBoard) => (
+                  <StoryCard
+                    className="profile"
+                    key={storyBoard?.id}
+                    storyBoard={storyBoard}
+                  ></StoryCard>
+                ))}
+            </S.PartitionContainer>
+          </S.ContentContainer>
+          <S.MusePillContainer>
+            <MusesPill title="MUSES" pillType="MUSES" novelist={novelist} />
+            <MusesPill title="FRIENDS" pillType="FRIENDS" novelist={novelist} />
+          </S.MusePillContainer>
         </S.ContentLeft>
         <S.ContentRight>
           <S.Name>
@@ -249,10 +307,20 @@ export default function UserProfilePage({}) {
                 : LoggedInSelfButtons
             }
           />
-          <S.MusePillContainer>
-            <MusesPill title="MUSES" pillType="MUSES" novelist={novelist} />
-            <MusesPill title="FRIENDS" pillType="FRIENDS" novelist={novelist} />
-          </S.MusePillContainer>
+          <S.ContentContainer>
+            <S.SubText>
+              {activities?.length === 0
+                ? "No Updates"
+                : "Updates by " + username}
+            </S.SubText>
+            {activities &&
+              activities.map((activity) => (
+                <ActivityBox
+                  key={activity?.id}
+                  activity={activity}
+                ></ActivityBox>
+              ))}
+          </S.ContentContainer>
         </S.ContentRight>
       </S.Content>
     </>

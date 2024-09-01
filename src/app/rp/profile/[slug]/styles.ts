@@ -72,7 +72,6 @@ export const Content = styled.div`
 
 export const ContentLeft = styled.div`
   max-width: 650px;
-
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -84,7 +83,6 @@ export const ContentLeft = styled.div`
   @container (max-width: 1024px) {
     max-width: 100%;
     width: 100%;
-    padding-inline: 40px;
   }
 `;
 
@@ -94,14 +92,133 @@ export const ContentRight = styled.div`
   display: flex;
   flex-direction: column;
 
-  container-name: profile-content-right;
-  container-type: inline-size;
-
   @container (max-width: 1024px) {
     max-width: 100%;
     width: 100%;
     padding-inline: 0px;
     margin-top: 30px;
+  }
+`;
+
+export const PartitionContainer = styled.div`
+  width: 40cqw;
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+  align-items: flex-start;
+  gap: 1rem;
+  overflow-x: auto;
+
+  @container (max-width: 1200px) {
+    & {
+      width: 92cqw;
+      font-size: 18px;
+    }
+  }
+
+  @container (max-width: 1000px) {
+    & {
+      width: 90cqw;
+      font-size: 18px;
+    }
+  }
+
+  @container (max-width: 700px) {
+    & {
+      width: 85cqw;
+      font-size: 18px;
+    }
+  }
+
+  @container (max-width: 600px) {
+    & {
+      width: 86cqw;
+      font-size: 18px;
+    }
+  }
+
+  @container (max-width: 550px) {
+    & {
+      width: 85.5cqw;
+      font-size: 18px;
+    }
+  }
+
+  @container (max-width: 460px) {
+    & {
+      width: 82cqw;
+      font-size: 18px;
+    }
+  }
+
+  @container (max-width: 430px) {
+    & {
+      width: 82cqw;
+      font-size: 18px;
+    }
+  }
+
+  @container (max-width: 415px) {
+    & {
+      width: 81cqw;
+      font-size: 18px;
+    }
+  }
+
+  @container (max-width: 400px) {
+    & {
+      width: 80cqw;
+      font-size: 18px;
+    }
+  }
+
+  @container (max-width: 360px) {
+    & {
+      width: 78cqw;
+      font-size: 18px;
+    }
+  }
+`;
+
+export const ContentContainer = styled.div`
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding-inline: 10px;
+
+  @container profile-content-right (max-width: 600px) {
+    & {
+      padding-inline: 0px;
+    }
+  }
+`;
+
+export const SubText = styled.div`
+  text-transform: uppercase;
+  font-size: 20px;
+  font-weight: 300;
+  margin-block: 20px;
+  font-style: italic;
+  text-align: center;
+
+  @container (max-width: 1000px) {
+    & {
+      font-size: 18px;
+    }
+  }
+
+  @container (max-width: 600px) {
+    & {
+      font-size: 16px;
+    }
+  }
+
+  @container (max-width: 300px) {
+    & {
+      font-size: 12px;
+    }
   }
 `;
 
@@ -123,6 +240,7 @@ export const Name = styled.div`
   font-size: clamp(36px, 5vw, 52px);
   color: ${({ theme }) => theme.textPrimary};
   z-index: ${Z_INDEX.DEFAULT};
+  margin-bottom: 25px;
 
   @container profile-content (max-width: 1024px) {
     display: none;
@@ -161,9 +279,11 @@ export const UsernameContainer = styled.div`
 export const NoteContainer = styled(Pill)`
   width: 460px;
   min-height: 200px;
-  margin-top: 12px;
+  margin-top: 20px;
   word-break: break-word;
   border-radius: 20px;
+  border-bottom: 1px solid dimgray;
+  border-right: 1px solid dimgray;
 
   padding: 40px 20px 20px;
 
@@ -203,7 +323,7 @@ export const NoteContainer = styled(Pill)`
 export const MusePillContainer = styled.div`
   width: 100%;
   margin-inline: auto;
-  margin-top: 130px;
+  margin-top: 30px;
   margin-bottom: 20px;
   display: flex;
   flex-direction: column;

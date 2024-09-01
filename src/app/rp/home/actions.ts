@@ -71,17 +71,9 @@ export const getUserActivities = async (
   pageNumber: number,
   pageSize: number
 ) => {
-  const jwt = await authenticateAndGetJWT();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/activity/${username}?pageNumber=${pageNumber}&pageSize=${pageSize}`;
 
-  const response = await fetch(URL, {
-    headers: {
-      "Content-Type": "application/json",
-      [AUTH_HEADER_NAME]: jwt,
-    },
-    cache: "no-store",
-  });
-
+  const response = await fetch(URL, { cache: "no-store" });
   Logger.debug("getUserActivities", response.status);
 
   if (response.status === 404) {

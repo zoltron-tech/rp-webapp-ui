@@ -50,7 +50,6 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
       return response;
     }
 
-    updateValues((prev) => ({ ...prev, image: response }));
     Logger.debug("response", response);
 
     return response;

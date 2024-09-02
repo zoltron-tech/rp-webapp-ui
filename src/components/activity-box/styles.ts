@@ -26,12 +26,9 @@ export const HeaderContainer = styled.div`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  background-color: ${({ theme }) => theme.background};
   width: 100%;
   margin-block: 20px;
   padding-inline: 10px;
-  // border-radius: ${BORDER_RADIUS};
-  // ${CARD_BORDER};
   border-bottom: 1px solid slategray;
   gap: 0.5em;
 

@@ -269,3 +269,19 @@ export const ActivityInfo = styled.div`
   justify-content: center;
   font-size: 14px;
 `;
+
+export const Video = styled.video`
+  width: 100%;
+  height: 100%;
+  border-radius: ${BORDER_RADIUS};
+  object-fit: contain;
+  background-color: black;
+`;
+
+export const Audio = styled.audio`
+  width: 100%;
+  height: 100%;
+  border-radius: ${BORDER_RADIUS};
+  object-fit: contain;
+  background-color: black;
+`;

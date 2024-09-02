@@ -23,7 +23,7 @@ export const LeftWrapperContainer = styled.div`
   width: 18cqw;
 
   container-name: left_wrapper;
-  container-type: size;
+  container-type: inline-size;
 
   @container (max-width: 1200px) {
     & {

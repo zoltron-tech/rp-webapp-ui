@@ -4,7 +4,7 @@ import {
   getUserNovelist,
   updateUserNovelist,
 } from "@/app/rp/novelists/actions";
-import { uploadAvatar } from "@/app/rp/profile/actions";
+import { uploadMedia } from "@/app/rp/profile/actions";
 import {
   Card,
   Input,
@@ -40,7 +40,7 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
   const updateUserAvatar = async () => {
     if (!avatarFile) return;
     Logger.error("avatarFile is", avatarFile);
-    const response = await uploadAvatar(avatarFile);
+    const response = await uploadMedia(avatarFile);
 
     if (response === API_MESSAGE.MediaError) {
       errorToast(response);

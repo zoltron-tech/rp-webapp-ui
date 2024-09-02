@@ -1,10 +1,9 @@
 "use client";
 
 import { getMuseAction, updateMuseAction } from "@/app/rp/muse/actions";
-import { uploadAvatar } from "@/app/rp/profile/actions";
+import { uploadMedia } from "@/app/rp/profile/actions";
 import {
   Card,
-  Input,
   ShouldRender,
   UploadAvatar,
   Username,
@@ -14,28 +13,37 @@ import type { Muse } from "@/types";
 import { API_MESSAGE, INITIAL_MUSE } from "@/utils/constants";
 import { Logger } from "@/utils/services";
 import { useRouter } from "next/navigation";
-import { FC, useEffect, useState } from "react";
+import { FC, ReactNode, useEffect, useState } from "react";
 import * as S from "./styles";
 import { ThemeProvider } from "styled-components";
-import { DefaultTheme } from "@novelist-world/ui";
+import { DefaultTheme, Input, Text } from "@novelist-world/ui";
 
 export type EditMuseCardProps = {
   id?: string;
+};
+
+const Flex = ({ children }: { children?: ReactNode }) => {
+  return (
+    <S.Flex direction="column" align="flex-start">
+      {children}
+    </S.Flex>
+  );
 };
 
 export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
   const { user, state } = useAuthContext();
   const [muse, setMuse] = useState<Muse>();
   const [avatarFile, setAvatarFile] = useState<FormData | null>(null);
+  const [videoFile, setVideoFile] = useState<FormData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const { push } = useRouter();
 
   const { successToast, errorToast } = useUIContext();
 
-  const updateMuseAvatar = async () => {
-    if (!avatarFile) return;
-    Logger.error("avatarFile", avatarFile);
-    const response = await uploadAvatar(avatarFile);
+  const updateMuseMedia = async (media: FormData | null) => {
+    if (!media) return;
+    Logger.error("avatarFile", media);
+    const response = await uploadMedia(media);
 
     if (response === API_MESSAGE.MediaError) {
       errorToast(response);
@@ -48,19 +56,43 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
     return response;
   };
 
+  const uploadVideo = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.currentTarget.files?.[0];
+    if (!file) return;
+
+    const isVideo = file.type.includes("video");
+
+    if (!isVideo) {
+      return errorToast("File type is not a valid video!");
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+    setVideoFile(formData);
+  };
+
   const beforeSubmit = async (muse: Muse) => {
     Logger.debug("handleSave");
 
     setLoading(true);
 
     let updatedAvatarUrl = muse?.image;
+    let updatedVideoUrl = muse?.video;
+
     if (avatarFile) {
-      updatedAvatarUrl = (await updateMuseAvatar()) || muse?.image;
+      updatedAvatarUrl = (await updateMuseMedia(avatarFile)) || muse?.image;
+    }
+
+    if (videoFile) {
+      updatedVideoUrl = (await updateMuseMedia(videoFile)) || muse?.video;
     }
 
     Logger.debug("updatedAvatar: ", updatedAvatarUrl);
 
-    if (updatedAvatarUrl === API_MESSAGE.MediaError) {
+    if (
+      updatedAvatarUrl === API_MESSAGE.MediaError ||
+      updatedVideoUrl === API_MESSAGE.MediaError
+    ) {
       setLoading(false);
       return { ...muse, abort: true };
     }
@@ -68,6 +100,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
     const _muse = {
       ...muse,
       image: updatedAvatarUrl || "",
+      video: updatedVideoUrl || "",
     };
 
     return _muse;
@@ -154,74 +187,96 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
               </S.UsernameContainer>
             </ShouldRender>
             <S.FormGroup>
-              <S.Name>
-                <Input
-                  label="First Name"
-                  name="firstName"
-                  value={values?.firstName}
-                  onChange={update}
-                  onEnter={submit}
-                  maxLength={25}
-                />
-                <Input
-                  label="Last Name"
-                  name="lastName"
-                  value={values?.lastName}
-                  onChange={update}
-                  onEnter={submit}
-                  maxLength={25}
-                />
-              </S.Name>
-              <Input
-                label="Note"
-                name="note"
-                value={values?.note}
-                onChange={update}
-                onEnter={submit}
-                maxLength={250}
-              />
-              <Input
-                label="Species"
-                name="species"
-                value={values?.species}
-                onChange={update}
-                onEnter={submit}
-                maxLength={50}
-              />
-              <Input
-                label="Relationship Status"
-                name="relationshipStatus"
-                value={values?.relationshipStatus}
-                onChange={update}
-                onEnter={submit}
-                maxLength={50}
-              />
-              <Input
-                label="Fandom"
-                name="fandom"
-                value={values?.fandom}
-                onChange={update}
-                onEnter={submit}
-                maxLength={50}
-              />
-              <Input
-                label="Hometome"
-                name="hometown"
-                value={values?.hometown}
-                onChange={update}
-                onEnter={submit}
-                maxLength={50}
-              />
-              <Input
-                label="Story"
-                name="story"
-                type="textarea"
-                value={values?.story}
-                onChange={update}
-                onEnter={submit}
-                maxLength={20000}
-                height={500}
-              />
+              <Flex>
+                <Flex>
+                  <S.Label htmlFor="firstName">Name</S.Label>
+                  <S.Name>
+                    <Input
+                      name="firstName"
+                      value={values?.firstName}
+                      onChange={update}
+                      maxLength={25}
+                    />
+                    <Input
+                      name="lastName"
+                      value={values?.lastName}
+                      onChange={update}
+                      maxLength={25}
+                    />
+                  </S.Name>
+                </Flex>
+
+                <Flex>
+                  <S.Label htmlFor="note">Note</S.Label>
+                  <Input
+                    name="note"
+                    value={values?.note}
+                    onChange={update}
+                    maxLength={250}
+                  />
+                </Flex>
+
+                <Flex>
+                  <S.Label htmlFor="species">Species</S.Label>
+                  <Input
+                    name="species"
+                    value={values?.species}
+                    onChange={update}
+                    maxLength={50}
+                  />
+                </Flex>
+
+                <Flex>
+                  <S.Label htmlFor="relationshipStatus">
+                    Relationship status
+                  </S.Label>
+
+                  <Input
+                    name="relationshipStatus"
+                    value={values?.relationshipStatus}
+                    onChange={update}
+                    maxLength={50}
+                  />
+                </Flex>
+
+                <Flex>
+                  <S.Label htmlFor="fandom">Fandom</S.Label>
+
+                  <Input
+                    name="fandom"
+                    value={values?.fandom}
+                    onChange={update}
+                    maxLength={50}
+                  />
+                </Flex>
+
+                <Flex>
+                  <S.Label htmlFor="hometown">Home town</S.Label>
+                  <Input
+                    name="hometown"
+                    value={values?.hometown}
+                    onChange={update}
+                    maxLength={50}
+                  />
+                </Flex>
+
+                <Flex>
+                  <S.Label htmlFor="story">Story</S.Label>
+                  <Input
+                    name="story"
+                    type="textarea"
+                    value={values?.story}
+                    onChange={update}
+                    maxLength={20000}
+                    height={500}
+                  />
+                </Flex>
+                <Flex>
+                  <S.Label htmlFor="video">Video</S.Label>
+                  <Input name="video" type="file" onChange={uploadVideo} />
+                </Flex>
+              </Flex>
+
               <S.ButtonGroup>
                 <S.SaveButton
                   variant="secondary"
@@ -243,3 +298,51 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
 };
 
 export default EditMuseCard;
+
+/**
+ * 
+export const UploadAvatar: FC<UploadAvatarProps> = ({ image, onChange }) => {
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+
+  const { errorToast } = useUIContext();
+
+  const onUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    Logger.debug("change", e.currentTarget.files?.[0]);
+    const file = e.currentTarget.files?.[0];
+    if (!file || !onChange) return;
+
+    const isImage = file.type.includes("image");
+
+    if (!isImage) {
+      return errorToast("File type is not a valid image!");
+    }
+    setUploadedFile(file);
+
+    const formData = new FormData();
+    formData.append("file", file);
+    onChange(formData);
+  };
+
+  Logger.info("UploadAvatar rendered");
+
+  return (
+    <>
+      <S.FileInputHidden placeholder="" type="file" onChange={onUpload} />
+      <S.UploadAvatar
+        className={classNames([
+          "nw-upload-avatar",
+          { added: !!image || !!uploadedFile },
+        ])}
+      >
+        <Image
+          src={uploadedFile ? URL.createObjectURL(uploadedFile) : image || ""}
+          layout="fill"
+          alt={"avatar"}
+        />
+        <TbCameraUp />
+      </S.UploadAvatar>
+    </>
+  );
+};
+
+ */

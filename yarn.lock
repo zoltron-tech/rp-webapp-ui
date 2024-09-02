@@ -1733,9 +1733,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@novelist-world/ui@npm:1.0.1-alpha-test-6":
-  version: 1.0.1-alpha-test-6
-  resolution: "@novelist-world/ui@npm:1.0.1-alpha-test-6"
+"@novelist-world/ui@npm:1.0.1-alpha-test-9":
+  version: 1.0.1-alpha-test-9
+  resolution: "@novelist-world/ui@npm:1.0.1-alpha-test-9"
   dependencies:
     classnames: "npm:^2.5.1"
     prosemirror-commands: "npm:^1.6.0"
@@ -1752,7 +1752,7 @@ __metadata:
   peerDependencies:
     react: ^18.3.1
     styled-components: ^6.1.11
-  checksum: 3dd57d04d356dba0496e6a96464599c97e41cb267e1fbe407e3805e0976f9737fb494cae6a30c5fe6b0248094ed3dd1ade961afc7045f622b4ccb7cecf597029
+  checksum: 3d5a411c09666924442e3ce57a8fed1ec4b04cf4979cb53a6af9bf3191883a9dad5477e5e76b77f19ee7857349935bf45fc73a8119663fc653d6b671927e4417
   languageName: node
   linkType: hard
 
@@ -6850,7 +6850,7 @@ __metadata:
   dependencies:
     "@emoji-mart/data": "npm:^1.2.1"
     "@emoji-mart/react": "npm:^1.1.1"
-    "@novelist-world/ui": "npm:1.0.1-alpha-test-6"
+    "@novelist-world/ui": "npm:1.0.1-alpha-test-9"
     "@svgr/webpack": "npm:^8.1.0"
     "@swc/plugin-styled-components": "npm:^1.5.108"
     "@trpc/client": "npm:^10.45.2"

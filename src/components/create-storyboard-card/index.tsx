@@ -1,6 +1,6 @@
 "use client";
 
-import { uploadAvatar } from "@/app/rp/profile/actions";
+import { uploadMedia } from "@/app/rp/profile/actions";
 import {
   Card,
   Input,
@@ -37,7 +37,7 @@ export const CreateStoryBoardCard: FC<CreateStoryBoardCardProps> = ({ id }) => {
   const updateStoryBoardAvatar = async () => {
     if (!avatarFile) return;
     Logger.error("avatarFile", avatarFile);
-    const response = await uploadAvatar(avatarFile);
+    const response = await uploadMedia(avatarFile);
 
     if (response === API_MESSAGE.MediaError) {
       errorToast(response);

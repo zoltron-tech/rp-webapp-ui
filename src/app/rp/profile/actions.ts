@@ -9,12 +9,11 @@ import getConfig from "next/config";
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
 
-export const uploadAvatar = async (formData: FormData) => {
+export const uploadMedia = async (formData: FormData) => {
   const jwt = await authenticateAndGetJWT();
 
   const URL = `${RP_SERVICE_URL}/rp/portfolio/s3/upload`;
   const file = formData.get("file");
-
   Logger.debug("file", file);
 
   const response = await fetch(URL, {

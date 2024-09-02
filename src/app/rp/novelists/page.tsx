@@ -3,9 +3,8 @@
 import { Logger } from "@/utils/services";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Button } from "@/components/common";
 import * as S from "./styles";
-import { Carousel } from "@novelist-world/ui";
+import { Button, Carousel } from "@novelist-world/ui";
 import { MuseCard } from "@/components/muse-card";
 import { getHeroPageMusesAction } from "../muse/actions";
 import { Muse } from "@/types";
@@ -63,14 +62,13 @@ export default function NovelistsPage() {
           share ideas, inspire each other, and build entire worlds together.
         </S.Story>
         <S.ButtonsGroupContainer>
-          <S.ButtonContainer>
-            <Button
-              variant={state == "LOGGED_IN" ? "primary" : "secondary"}
-              onClick={state == "LOGGED_IN" ? toHomePage : onLoginClick}
-            >
-              {state == "LOGGED_IN" ? "My Dashboard" : "Get Started"}
-            </Button>
-          </S.ButtonContainer>
+          <Button
+            primary={state === "LOGGED_IN"}
+            secondary={state !== "LOGGED_IN"}
+            onClick={state == "LOGGED_IN" ? toHomePage : onLoginClick}
+          >
+            {state == "LOGGED_IN" ? "My Dashboard" : "Get Started"}
+          </Button>
         </S.ButtonsGroupContainer>
       </S.PageContainer>
       <S.TabContainer>

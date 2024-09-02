@@ -2,7 +2,7 @@ import { styled } from "styled-components";
 
 import * as Common from "@/components/common";
 import { Z_INDEX } from "@/theme";
-import { Container } from "@novelist-world/ui";
+import { Container, Flex as NWFlex } from "@novelist-world/ui";
 
 export const LocalContainer = styled(Container)`
   border: 1px solid slategray;
@@ -178,4 +178,13 @@ export const ProfileBackgroundBlurFilter = styled.div<ProfileBackgroundFilterPro
   -moz-filter: blur(80px);
   -o-filter: blur(80px);
   -ms-filter: blur(80px);
+`;
+
+export const Label = styled.label`
+  font-size: 0.75em;
+  margin-top: 0.5em;
+`;
+
+export const Flex = styled(NWFlex)`
+  width: 100%;
 `;

@@ -1,19 +1,37 @@
 "use client";
 
-import { FC } from "react";
+import { FC, useMemo } from "react";
 import { Logger } from "@/utils/services";
 import { useRouter } from "next/navigation";
 import * as S from "./styles";
 import classNames from "classnames";
 import { Activity, ActivityTarget } from "@/types/activity";
 import moment from "moment";
+import { ShouldRender } from "../common";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   activity?: Activity | null;
 };
 
+const videoExtensions = ["mp4"];
+const imageExtensions = ["jpg", "jpeg", "png", "gif"];
+const audioExtensions = ["mp3", "mpeg", "wav"];
+
+const getMediaTypeFromUrl = (url: string) => {
+  const extension = url.split(".").pop() || "";
+  if (videoExtensions.includes(extension)) return "video";
+  if (imageExtensions.includes(extension)) return "image";
+  if (audioExtensions.includes(extension)) return "audio";
+  return "image";
+};
+
 export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
   const { push } = useRouter();
+  const mediaType = useMemo(
+    () =>
+      activity?.target.url ? getMediaTypeFromUrl(activity.target.url) : "",
+    [activity]
+  );
 
   const handleCardClick = (
     e: React.MouseEvent<HTMLDivElement>,
@@ -71,7 +89,26 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
         <S.Date>{toFormattedDate(activity.date)}</S.Date>
       </S.HeaderContainer>
       <S.CardWrapper>
-        <S.CardBackground banner={activity.target.url || ""} />
+        <ShouldRender if={mediaType === "image" || !mediaType}>
+          <S.CardBackground
+            banner={activity.target.url || ""}
+            className="image"
+          />
+        </ShouldRender>
+        <ShouldRender if={mediaType === "video"}>
+          <S.Video
+            className="video"
+            src={activity.target.url}
+            controls
+          ></S.Video>
+        </ShouldRender>
+        <ShouldRender if={mediaType === "audio"}>
+          <S.Audio
+            className="audio"
+            src={activity.target.url}
+            controls
+          ></S.Audio>
+        </ShouldRender>
         <S.Card
           className={classNames([
             "muse-card",

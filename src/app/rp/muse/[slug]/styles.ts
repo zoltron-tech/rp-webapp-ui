@@ -89,6 +89,7 @@ export const CardBackground = styled.div<CardProps>`
 export const CardWrapper = styled(Container)`
   width: 350px;
   height: 580px;
+  padding: 0px !important;
   &.open {
     border-top-left-radius: var(--border-radius);
     border-bottom-left-radius: var(--border-radius);

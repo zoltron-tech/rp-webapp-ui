@@ -20,6 +20,7 @@ export const InfoCard = styled(Container)`
   align-items: center;
   box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
   background-color: ${({ theme }) => setOpacity(theme.navbar, 0.3)} !important;
+  cursor: default !important;
 
   @-moz-document url-prefix() {
     backdrop-filter: none !important;

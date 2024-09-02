@@ -48,10 +48,8 @@ export default function ResetPassword() {
   );
 
   const getVerificationStatus = useCallback(async () => {
-    console.log(jwt);
     setLoading(true);
     const response = await verifyAccount(jwt);
-    console.log("yahan hain but " + response);
     if (response.message === "success") {
       setVerificationStatus(true);
     } else {

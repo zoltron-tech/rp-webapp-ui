@@ -7,6 +7,7 @@ import {
   Z_INDEX,
 } from "@/theme";
 import { setOpacity } from "@/utils/helpers";
+import { Container } from "@novelist-world/ui";
 import styled from "styled-components";
 
 interface BannerProps {
@@ -85,12 +86,9 @@ export const CardBackground = styled.div<CardProps>`
   background-position: center center;
 `;
 
-export const CardWrapper = styled.div`
-  position: relative;
+export const CardWrapper = styled(Container)`
   width: 350px;
   height: 580px;
-  ${CARD_BORDER};
-
   &.open {
     border-top-left-radius: var(--border-radius);
     border-bottom-left-radius: var(--border-radius);
@@ -103,7 +101,6 @@ export const CardWrapper = styled.div`
   }
 
   transition: all 0.3s ease-in-out;
-  contain: paint;
   z-index: ${Z_INDEX.CARD};
 
   container-name: muse-card;

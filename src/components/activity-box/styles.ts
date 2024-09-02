@@ -1,9 +1,9 @@
 import * as Common from "@/components/common";
 import { Z_INDEX, CARD_BORDER, BORDER_RADIUS } from "@/theme";
+import { Container } from "@novelist-world/ui";
 import styled from "styled-components";
 
-export const ParentContainer = styled.div`
-  border: 1px solid orange;
+export const ParentContainer = styled(Container)`
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -11,10 +11,6 @@ export const ParentContainer = styled.div`
   padding-inline: 60px;
   margin-block: 5px;
   padding-top: 10px;
-  background-color: ${({ theme }) => theme.background};
-
-  border-radius: ${BORDER_RADIUS};
-  ${CARD_BORDER};
 
   @container content-container (max-width: 600px) {
     padding-inline: 10px;

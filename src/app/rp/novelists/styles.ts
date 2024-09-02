@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { setOpacity } from "@/utils/helpers";
-import { CARD_BORDER } from "@/theme";
+import { Container } from "@novelist-world/ui";
 
 export const PageContainer = styled.div`
   display: flex;
@@ -13,19 +13,20 @@ export const PageContainer = styled.div`
   border-bottom: 1px solid dimgray;
 `;
 
-export const InfoCard = styled.div`
+export const InfoCard = styled(Container)`
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
-  background-color: ${({ theme }) => setOpacity(theme.navbar, 0.3)};
-  border-radius: 10px;
-  padding: 20px;
+  background-color: ${({ theme }) => setOpacity(theme.navbar, 0.3)} !important;
+
+  @-moz-document url-prefix() {
+    backdrop-filter: none !important;
+  }
+
   width: 400px;
   height: 400px;
-
-  ${CARD_BORDER};
 
   @container (max-width: 1000px) {
     & {

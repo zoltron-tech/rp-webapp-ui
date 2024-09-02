@@ -100,7 +100,7 @@ export const CreateStoryBoardCard: FC<CreateStoryBoardCardProps> = ({ id }) => {
     if (!id) return;
 
     const response = await getStoryboardAction(id);
-    console.log(response);
+
     if (response && !("message" in response)) {
       setStoryBoard(response);
       updateValues(response);

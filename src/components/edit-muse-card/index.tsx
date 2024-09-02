@@ -115,7 +115,6 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
   };
 
   useEffect(() => {
-    console.log(id);
     if (state !== "LOGGED_IN") return;
     fetchData();
   }, [state]);

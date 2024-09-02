@@ -46,9 +46,7 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
       setConnected(false);
     });
 
-    socketInstance.on("message", (data: any) => {
-      console.log("message", data);
-    });
+    socketInstance.on("message", (data: any) => {});
 
     setSocket(socketInstance);
 

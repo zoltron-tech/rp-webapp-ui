@@ -67,10 +67,10 @@ export default function ResetPassword() {
     };
     try {
       setLoading(true);
-      console.log("on submit", payload);
+
       const response = await resetPassword(payload, jwt);
       Logger.debug(response);
-      console.log("response is", response);
+
       if (response.message === "success") {
         Logger.debug("success");
         clearValues();

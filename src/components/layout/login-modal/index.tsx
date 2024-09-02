@@ -356,7 +356,6 @@ export const LoginModal: FC<LoginModalProps> = memo(({ type = "LOGIN" }) => {
             <S.Hyperlink
               onClick={() => {
                 transition("FORGOTPASS");
-                console.log(transition);
               }}
             >
               Forgot password?

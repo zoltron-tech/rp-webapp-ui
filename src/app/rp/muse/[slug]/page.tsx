@@ -119,6 +119,7 @@ export default function MuseProfilePage({}) {
         src={muse?.image && !muse.image.endsWith(".gif") ? muse.image : ""}
       />
       <S.CardWrapper
+        hoverable={is("MAIN")}
         className={classNames({ closed: is("MAIN"), open: !is("MAIN") })}
       >
         <S.CardBackground banner={muse?.image || ""} />
@@ -303,7 +304,6 @@ export default function MuseProfilePage({}) {
           <S.MenuButton className="stick-top">
             <S.MenuButtonIcon
               onClick={() => {
-                console.log(muse);
                 transition("MAIN");
               }}
             >

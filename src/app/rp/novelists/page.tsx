@@ -25,7 +25,6 @@ export default function NovelistsPage() {
 
   const updateMuses = useCallback(async () => {
     const response = await getHeroPageMusesAction();
-    console.log("response", response);
     if (response && !("message" in response)) {
       set(response);
     }
@@ -107,7 +106,7 @@ export default function NovelistsPage() {
       </S.MuseCarouselContainer>
 
       <S.CardsContainer>
-        <S.InfoCard>
+        <S.InfoCard tiltOnHover effectStrength={15}>
           <S.MainSubtext>Create Your Own Realm</S.MainSubtext>
           <S.Story>
             Create and customize realms, populate them with unique characters,
@@ -115,14 +114,14 @@ export default function NovelistsPage() {
             limit.
           </S.Story>
         </S.InfoCard>
-        <S.InfoCard>
+        <S.InfoCard tiltOnHover effectStrength={15}>
           <S.MainSubtext>Collaborate and Connect</S.MainSubtext>
           <S.Story>
             Work with fellow writers to expand your stories. Share ideas,
             develop plots, and create something extraordinary together.
           </S.Story>
         </S.InfoCard>
-        <S.InfoCard>
+        <S.InfoCard tiltOnHover effectStrength={15}>
           <S.MainSubtext>Join a Thriving Community</S.MainSubtext>
           <S.Story>
             Whether you are a seasoned writer or just starting, you will find

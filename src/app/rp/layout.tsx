@@ -16,18 +16,18 @@ import { StoreState } from "@/types/state";
 import * as S from "./styles";
 import { usePathname } from "next/navigation";
 import { ShouldRender } from "@/components/common";
+import { DefaultTheme } from "@novelist-world/ui";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [cookies, _setCookie] = useCookies(["theme"]);
   const theme = useMemo(() => {
-    console.log("cookies.theme", cookies.theme);
     return cookies.theme === "light" ? THEME_LIGHT : THEME_DARK;
   }, [cookies.theme]);
 
   const pathname = usePathname();
 
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={{ ...theme, ...DefaultTheme }}>
       <StoreProvider<StoreState>
         initial={{ novelists: [], theme: cookies.theme || "light", muses: [] }}
       >

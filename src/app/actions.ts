@@ -84,8 +84,6 @@ export const verifyAccountAction = async (jwt: string) => {
     cache: "no-store",
   });
 
-  console.log(response);
-
   if (response.status !== 200) {
     return {
       message: "Something went wrong, please try again or contact support.",

@@ -98,7 +98,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
         <ShouldRender if={mediaType === "video"}>
           <S.Video
             className="video"
-            src={activity.target.url  + "#t=0.1"}
+            src={activity.target.url  + "#t=0.3"}
             controls
           ></S.Video>
         </ShouldRender>

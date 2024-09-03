@@ -50,6 +50,18 @@ export const ListContainer = styled.div`
       font-size: 18px;
     }
   }
+
+  &::-webkit-scrollbar-track,
+  &::-webkit-scrollbar-thumb {
+    visibility: hidden;
+  }
+
+  &:hover {
+    &::-webkit-scrollbar-track,
+    &::-webkit-scrollbar-thumb {
+      visibility: visible;
+    }
+  }
 `;
 
 export const RightWrapperContainer = styled.div`
@@ -127,6 +139,18 @@ export const PartitionContainer = styled.div`
   align-items: flex-start;
   gap: 1rem;
   overflow-x: auto;
+
+  &::-webkit-scrollbar-track,
+  &::-webkit-scrollbar-thumb {
+    visibility: hidden;
+  }
+
+  &:hover {
+    &::-webkit-scrollbar-track,
+    &::-webkit-scrollbar-thumb {
+      visibility: visible;
+    }
+  }
 
   @container (max-width: 1200px) {
     & {

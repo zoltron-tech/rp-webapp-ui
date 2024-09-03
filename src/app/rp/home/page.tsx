@@ -11,6 +11,7 @@ import { StrangerCard } from "@/components/stranger-card/page";
 import {
   getFriendActivities,
   getMusesAction,
+  getMusesWithVideosAction,
   getRandomStories,
   getStrangerNovelistsAction,
 } from "./actions";
@@ -20,6 +21,7 @@ import { getFriendRequests } from "../novelists/actions";
 import { FriendListItem } from "@/components/friend-list-item/page";
 import { Activity } from "@/types/activity";
 import { ActivityBox } from "@/components/activity-box";
+import VideoCard from "@/components/video-card";
 
 export default function HomePage() {
   const { state, user, novelist } = useAuthContext();
@@ -28,6 +30,8 @@ export default function HomePage() {
   const [storyboards, setStoryboards] = useState<StoryBoard[]>();
   const [unknownMuses, setUnknownMuses] = useState<Muse[]>();
   const [friendsMuses, setFriendsMuses] = useState<Muse[]>();
+  const [friendsMusesWithVideos, setFriendsMusesWithVideos] =
+    useState<Muse[]>();
   const [activities, setActivities] = useState<Activity[]>();
   const [loading, setLoading] = useState(false);
   const { push } = useRouter();
@@ -88,6 +92,20 @@ export default function HomePage() {
     setFriendsMuses(_muses);
   };
 
+  const fetchFriendsMusesWithVideos = async () => {
+    setLoading(true);
+    const _muses = await getMusesWithVideosAction(1, 20, "friends");
+
+    if (!_muses || "message" in _muses) {
+      // handle error
+      setLoading(false);
+      push("/404");
+      return;
+    }
+    setLoading(false);
+    setFriendsMusesWithVideos(_muses);
+  };
+
   const fetchFriendsActivities = async () => {
     setLoading(true);
     const _activities = await getFriendActivities(1, 10, "friends");
@@ -121,6 +139,7 @@ export default function HomePage() {
     fetchStrangers();
     fetchStrangerMuses();
     fetchFriendsMuses();
+    fetchFriendsMusesWithVideos();
     fetchRandomStories();
     fetchNotifications();
     fetchFriendsActivities();
@@ -156,6 +175,18 @@ export default function HomePage() {
         </S.LeftWrapperContainer>
         <S.RightWrapperContainer>
           <S.ContentContainer>
+            <S.SubText>Vidoes by your friends</S.SubText>
+            <S.PartitionContainer>
+              {friendsMusesWithVideos &&
+                friendsMusesWithVideos.map((friendMuseWithVideo) => (
+                  <VideoCard
+                    key={friendMuseWithVideo?.id}
+                    muse={friendMuseWithVideo}
+                  ></VideoCard>
+                ))}
+            </S.PartitionContainer>
+          </S.ContentContainer>
+          <S.ContentContainer>
             <S.SubText>Dive into the Stories</S.SubText>
             <S.PartitionContainer>
               {storyboards &&
@@ -174,11 +205,8 @@ export default function HomePage() {
               <S.SubText>characters by your friends</S.SubText>
               <S.PartitionContainer>
                 {friendsMuses &&
-                  friendsMuses.map((unknownMuse) => (
-                    <MuseCard
-                      key={unknownMuse?.id}
-                      muse={unknownMuse}
-                    ></MuseCard>
+                  friendsMuses.map((knownMuse) => (
+                    <MuseCard key={knownMuse?.id} muse={knownMuse}></MuseCard>
                   ))}
               </S.PartitionContainer>
             </S.ContentContainer>

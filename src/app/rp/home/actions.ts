@@ -66,6 +66,35 @@ export const getMusesAction = async (
   return muses;
 };
 
+export const getMusesWithVideosAction = async (
+  pageNumber: number,
+  pageSize: number,
+  type: "friends" | "unknown"
+) => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${type}/videos?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+
+  const response = await fetch(URL, {
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    cache: "no-store",
+  });
+
+  Logger.debug("getMusesAction", response.status);
+
+  if (response.status === 404) {
+    return null;
+  } else if (response.status !== 200) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const muses: Muse[] = await response.json();
+
+  return muses;
+};
+
 export const getUserActivities = async (
   username: string,
   pageNumber: number,

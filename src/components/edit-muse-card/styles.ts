@@ -2,7 +2,7 @@ import { styled } from "styled-components";
 
 import * as Common from "@/components/common";
 import { Z_INDEX } from "@/theme";
-import { Container, Flex as NWFlex } from "@novelist-world/ui";
+import { Container, Flex as NWFlex, TextArea } from "@novelist-world/ui";
 
 export const LocalContainer = styled(Container)`
   border: 1px solid slategray;
@@ -11,24 +11,20 @@ export const LocalContainer = styled(Container)`
   border-radius: 16px;
 
   @container (min-width: 700px) {
-    &.card {
-      width: 60%;
-      min-width: 700px;
-      height: 950px;
-      padding: 20px;
-      margin: clamp(50px, 20cqw, 50px) auto 100px auto;
-    }
+    width: 60%;
+    min-width: 700px;
+    height: 1000px;
+    padding: 20px;
+    margin: clamp(50px, 20cqw, 50px) auto 100px auto;
   }
 
   @container (max-width: 700px) {
-    &.card {
-      width: 100%;
-      height: 1000px;
-      padding: 20px;
-      margin: 0px;
-      border-radius: 0px;
-      border: none;
-    }
+    width: 100%;
+    height: 1000px;
+    padding: 20px;
+    margin: 0px;
+    border-radius: 0px;
+    border: none;
   }
 
   container-name: card;
@@ -53,9 +49,7 @@ export const Title = styled.div`
   white-space: nowrap;
 
   @container (max-width: 300px) {
-    & > span {
-      display: none;
-    }
+    font-size: 14px;
   }
 `;
 
@@ -80,8 +74,12 @@ export const UsernameContainer = styled.div`
     font-size: clamp(24px, 4cqw, 32px);
   }
 
-  @container (max-width: 350px) {
-    padding-top: 70px;
+  @container (max-width: 400px) {
+    & > span,
+    div {
+      font-size: 11px;
+    }
+    padding-top: 30px;
   }
 `;
 
@@ -136,6 +134,13 @@ export const ButtonGroup = styled.div`
       display: none;
     }
   }
+`;
+
+export const StoryTextArea = styled(TextArea)`
+  height: 100px;
+  max-height: 200px;
+  max-width: 100%;
+  min-width: 100%;
 `;
 
 export const SaveButton = styled(Common.Button)`

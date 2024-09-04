@@ -169,14 +169,14 @@ export default function UserProfilePage({}) {
     },
     { onClick: toMessagePage, label: "Message", variant: "action" },
     { onClick: toMusesPage, label: "Muses", variant: "action" },
-    { onClick: toStoryBoardsPage, label: "Story Boards", variant: "action" },
+    { onClick: toStoryBoardsPage, label: "Stories", variant: "action" },
   ];
 
   const FriendButtons: ButtonInfo[] = [
     { onClick: handleButtonClick, label: "Friends", variant: "primary" },
     { onClick: toMessagePage, label: "Message", variant: "action" },
     { onClick: toMusesPage, label: "Muses", variant: "action" },
-    { onClick: toStoryBoardsPage, label: "Story Boards", variant: "action" },
+    { onClick: toStoryBoardsPage, label: "Stories", variant: "action" },
   ];
 
   const StrangerButtons: ButtonInfo[] = [
@@ -186,12 +186,12 @@ export default function UserProfilePage({}) {
       variant: "primary",
     },
     { onClick: toMusesPage, label: "Muses", variant: "action" },
-    { onClick: toStoryBoardsPage, label: "Story Boards", variant: "action" },
+    { onClick: toStoryBoardsPage, label: "Stories", variant: "action" },
   ];
 
   const LoggedInSelfButtons: ButtonInfo[] = [
     { onClick: toMusesPage, label: "Muses", variant: "action" },
-    { onClick: toStoryBoardsPage, label: "Story Boards", variant: "action" },
+    { onClick: toStoryBoardsPage, label: "Stories", variant: "action" },
   ];
 
   const fetchAppropriateButtons = (connection: string | null | undefined) => {

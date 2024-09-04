@@ -23,11 +23,13 @@ export interface FormProps<T> {
   checkErrorTriggers?: errorTrigger[];
 }
 
+type ValidInputElement = HTMLInputElement | HTMLTextAreaElement;
+
 export interface FormReturn<T> {
   values: T;
   errors: ErrorType<T>;
   loading: boolean;
-  update: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  update: (event: React.ChangeEvent<ValidInputElement>) => void;
   submit: (overrideValues?: T) => MaybePromise<void>;
   clearErrors: () => void;
   clearValues: () => void;
@@ -48,7 +50,7 @@ export const useForm = <T>({
   const [loading, setLoading] = useState(false);
   const clearTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const update = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const update = (event: React.ChangeEvent<ValidInputElement>) => {
     Logger.debug("update", event.target.name, event.target.value);
     const { name, value } = event.target;
     const newValues = {

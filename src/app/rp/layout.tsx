@@ -1,21 +1,15 @@
 "use client";
 
 import { THEME_DARK, THEME_LIGHT } from "@/theme";
-import {
-  ContentContainer,
-  Footer,
-  LoginModal,
-  TopBar,
-} from "@/components/layout";
+import { ContentContainer, Footer, TopBar } from "@/components/layout";
 import { AuthProvider, StoreProvider, UIContextProvider } from "@/context";
-import React, { useCallback, useMemo } from "react";
+import React, { useMemo } from "react";
 import { useCookies } from "react-cookie";
 import { ThemeProvider } from "styled-components";
 
 import { StoreState } from "@/types/state";
 import * as S from "./styles";
 import { usePathname } from "next/navigation";
-import { ShouldRender } from "@/components/common";
 import { DefaultTheme } from "@novelist-world/ui";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -34,15 +28,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <AuthProvider>
           <UIContextProvider>
             <S.PageContainer>
-              <ShouldRender
-                if={
-                  pathname !== "/rp/reset-password" &&
-                  pathname !== "/rp/verify-email"
-                }
-              >
-                <LoginModal />
-                <TopBar />
-              </ShouldRender>
+              <TopBar />
               <ContentContainer>{children}</ContentContainer>
               <Footer />
             </S.PageContainer>

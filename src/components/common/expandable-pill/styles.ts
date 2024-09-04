@@ -41,10 +41,10 @@ export const ScrollableContentContainer = styled.div`
   width: 70px;
   overflow-y: auto;
   padding: 0px 2px;
-  margin: 0px 0px 0px 10px;
+  margin: 0px 0px 0px 20px;
   position: absolute;
   left: 60px;
-  height: calc(100cqw - 180px);
+  height: calc(100cqw - 185px);
   background-color: ${({ theme }) => theme.pillExpandedContentBackground};
   transform: rotate(-90deg) translateY(calc(50%));
   scroll-snap-type: y mandatory;
@@ -57,7 +57,7 @@ export const ScrollableContentContainer = styled.div`
     @container profile-content (max-width: 1024px) {
     & {
       left: -50px;
-      height: calc(100cqw - 120px);
+      height: calc(100cqw - 80px);
     }
   }
 
@@ -69,9 +69,9 @@ export const ScrollableContentContainer = styled.div`
 
 export const Searchbar = styled.div`
   background-color: ${({ theme }) => theme.pillExpandedContentBackground};
-  height: 60px;
+  height: 50px;
   border-radius: 30px;
-  top: 10px;
+  top: 15px;
   left: 110px;
   width: calc(100cqw - 185px);
   opacity: 0;
@@ -88,15 +88,15 @@ export const Searchbar = styled.div`
   @container profile-content (max-width: 1024px) {
     & {
       left: 20px;
-      width: calc(100cqw - 130px);
+      width: calc(100cqw - 90px);
     }
   }
 `;
 
 export const MagnifyingGlass = styled.div`
   position: relative;
-  top: 15px;
-  left: 10px;
+  top: 10px;
+  left: 15px;
   height: 30px;
   width: 30px;
   opacity: 0;

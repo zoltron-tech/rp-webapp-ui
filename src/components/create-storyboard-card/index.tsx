@@ -136,13 +136,7 @@ export const CreateStoryBoardCard: FC<CreateStoryBoardCardProps> = ({ id }) => {
           "https://i.etsystatic.com/44068041/r/il/3bab40/5467123737/il_300x300.5467123737_1kne.jpg"
         }
       />
-      <Card
-        width="60cqw"
-        height={id ? "400px" : "350px"}
-        padding="20px"
-        margin="clamp(50px, 20cqw, 50px) auto 100px auto"
-        centered
-      >
+      <S.LocalContainer>
         <UploadAvatar
           image={values?.image || ""}
           onChange={(image) => setAvatarFile(image)}
@@ -180,7 +174,7 @@ export const CreateStoryBoardCard: FC<CreateStoryBoardCardProps> = ({ id }) => {
             </S.ButtonGroup>
           </S.FormGroup>
         </S.Profile>
-      </Card>
+      </S.LocalContainer>
     </>
   );
 };

@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import { FC, ReactNode, useEffect, useState } from "react";
 import * as S from "./styles";
 import { ThemeProvider } from "styled-components";
-import { DefaultTheme, Input, Text } from "@novelist-world/ui";
+import { DefaultTheme, Input, Text, TextArea } from "@novelist-world/ui";
 
 export type EditMuseCardProps = {
   id?: string;
@@ -166,20 +166,14 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
         }
       />
       <ThemeProvider theme={DefaultTheme}>
-        <Card
-          width="60cqw"
-          height={id ? "950px" : "850px"}
-          padding="20px"
-          margin="clamp(50px, 20cqw, 50px) auto 100px auto"
-          centered
-        >
+        <S.LocalContainer>
           <UploadAvatar
             image={values?.image}
             onChange={(image) => setAvatarFile(image)}
           />
           <S.Profile>
             <S.Title>{id ? "EDIT" : "Create"} Muse</S.Title>
-            <ShouldRender if={id != undefined}>
+            <ShouldRender preserveSpace if={id != undefined}>
               <S.UsernameContainer>
                 <span>PENNED BY: </span>
                 <Username username={user?.username} primary />
@@ -260,19 +254,19 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
                 </Flex>
 
                 <Flex>
+                  <S.Label htmlFor="video">Video</S.Label>
+                  <Input name="video" type="file" onChange={uploadVideo} />
+                </Flex>
+
+                <Flex>
                   <S.Label htmlFor="story">Story</S.Label>
-                  <Input
+                  <S.StoryTextArea
                     name="story"
                     type="textarea"
                     value={values?.story}
                     onChange={update}
                     maxLength={20000}
-                    height={500}
                   />
-                </Flex>
-                <Flex>
-                  <S.Label htmlFor="video">Video</S.Label>
-                  <Input name="video" type="file" onChange={uploadVideo} />
                 </Flex>
               </Flex>
 
@@ -290,7 +284,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
               </S.ButtonGroup>
             </S.FormGroup>
           </S.Profile>
-        </Card>
+        </S.LocalContainer>
       </ThemeProvider>
     </>
   );

@@ -151,13 +151,7 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
         }
       />
       <ThemeProvider theme={DefaultTheme}>
-        <Card
-          width="60cqw"
-          height="600px"
-          padding="20px"
-          margin="clamp(50px, 20cqw, 50px) auto 100px auto"
-          centered
-        >
+        <S.LocalContainer>
           <UploadAvatar
             image={values?.image}
             onChange={(image) => setAvatarFile(image)}
@@ -215,7 +209,7 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
               </S.ButtonGroup>
             </S.FormGroup>
           </S.Profile>
-        </Card>
+        </S.LocalContainer>
       </ThemeProvider>
     </>
   );

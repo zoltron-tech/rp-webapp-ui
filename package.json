@@ -16,7 +16,7 @@
   "dependencies": {
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
-    "@novelist-world/ui": "1.0.1-alpha-test-9",
+    "@novelist-world/ui": "1.0.1-alpha-test-11",
     "@trpc/client": "^10.45.2",
     "@trpc/server": "^10.45.2",
     "classnames": "^2.5.1",

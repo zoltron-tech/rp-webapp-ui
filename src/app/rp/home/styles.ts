@@ -48,7 +48,7 @@ export const ListContainer = styled.div`
   &::-webkit-scrollbar-thumb,
   &::-webkit-scrollbar {
     visibility: hidden;
-    width: 0.3em;
+    width: 0.35em;
   }
 
   &:hover {

@@ -11,22 +11,18 @@ export const LocalContainer = styled(Container)`
   border-radius: 16px;
 
   @container (min-width: 700px) {
-    &.card {
-      width: 50%;
-      min-width: 600px;
-      padding: 20px;
-      margin: clamp(50px, 20cqw, 50px) auto 100px auto;
-    }
+    width: 50%;
+    min-width: 600px;
+    padding: 20px;
+    margin: clamp(50px, 20cqw, 50px) auto 100px auto;
   }
 
   @container (max-width: 700px) {
-    &.card {
-      width: 100%;
-      padding: 20px;
-      margin: 0px;
-      border-radius: 0px;
-      border: none;
-    }
+    width: 100%;
+    padding: 20px;
+    margin: 0px;
+    border-radius: 0px;
+    border: none;
   }
 
   container-name: card;
@@ -50,10 +46,8 @@ export const Title = styled.div`
   text-transform: uppercase;
   white-space: nowrap;
 
-  @container (max-width: 300px) {
-    & > span {
-      display: none;
-    }
+  @container (max-width: 400px) {
+    font-size: 14px;
   }
 `;
 

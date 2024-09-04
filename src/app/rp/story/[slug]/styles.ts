@@ -37,7 +37,7 @@ export const Name = styled.div`
   width: 100%;
   text-align: center;
   text-align: center;
-  margin-top: 50px;
+  margin-top: 30px;
   margin-bottom: 10px;
   font-size: clamp(18px, 5vw, 34px);
   color: ${({ theme }) => theme.textPrimary};
@@ -76,10 +76,6 @@ export const StoryContainer = styled.div`
 
 export const PillContainer = styled.div`
   width: 100%;
-  margin-inline: auto;
-  margin-top: 20px;
-  margin-bottom: 20px;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
 `;

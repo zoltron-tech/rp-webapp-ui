@@ -23,7 +23,7 @@ export interface FormProps<T> {
   checkErrorTriggers?: errorTrigger[];
 }
 
-type ValidInputElement = HTMLInputElement & HTMLTextAreaElement;
+type ValidInputElement = HTMLInputElement | HTMLTextAreaElement;
 
 export interface FormReturn<T> {
   values: T;

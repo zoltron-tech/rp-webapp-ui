@@ -6,7 +6,6 @@ import {
 } from "@/app/rp/novelists/actions";
 import { uploadMedia } from "@/app/rp/profile/actions";
 import {
-  Card,
   Input,
   ShouldRender,
   UploadAvatar,

@@ -1,6 +1,12 @@
 import { ShouldRender } from "@/components/common";
 import classNames from "classnames";
-import { FC, InputHTMLAttributes, ReactElement, useState } from "react";
+import {
+  ChangeEventHandler,
+  FC,
+  InputHTMLAttributes,
+  ReactElement,
+  useState,
+} from "react";
 import { FaRegCircleCheck } from "react-icons/fa6";
 import { GoEye, GoEyeClosed } from "react-icons/go";
 import { ImSpinner } from "react-icons/im";
@@ -23,7 +29,7 @@ type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "onChange"> & {
   message?: any;
   messageType?: "error" | "success" | "warning" | "processing";
   inputProps?: any;
-  onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange?: ChangeEventHandler<HTMLInputElement>;
   pattern?: string;
   onEnter?: () => void;
 };

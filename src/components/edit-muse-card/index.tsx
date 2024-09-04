@@ -2,12 +2,7 @@
 
 import { getMuseAction, updateMuseAction } from "@/app/rp/muse/actions";
 import { uploadMedia } from "@/app/rp/profile/actions";
-import {
-  Card,
-  ShouldRender,
-  UploadAvatar,
-  Username,
-} from "@/components/common";
+import { ShouldRender, UploadAvatar, Username } from "@/components/common";
 import { useAuthContext, useForm, useUIContext } from "@/hooks";
 import type { Muse } from "@/types";
 import { API_MESSAGE, INITIAL_MUSE } from "@/utils/constants";
@@ -16,7 +11,7 @@ import { useRouter } from "next/navigation";
 import { FC, ReactNode, useEffect, useState } from "react";
 import * as S from "./styles";
 import { ThemeProvider } from "styled-components";
-import { DefaultTheme, Input, Text, TextArea } from "@novelist-world/ui";
+import { DefaultTheme, Input } from "@novelist-world/ui";
 
 export type EditMuseCardProps = {
   id?: string;

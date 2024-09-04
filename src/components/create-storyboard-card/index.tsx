@@ -2,7 +2,6 @@
 
 import { uploadMedia } from "@/app/rp/profile/actions";
 import {
-  Card,
   Input,
   ShouldRender,
   UploadAvatar,
@@ -16,7 +15,6 @@ import { useRouter } from "next/navigation";
 import { FC, useEffect, useState } from "react";
 import * as S from "./styles";
 import {
-  getAllStoryboardsByUsernameAction,
   getStoryboardAction,
   updateStoryBoardAction,
 } from "@/app/rp/story/actions";

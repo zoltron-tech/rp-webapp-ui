@@ -7,12 +7,7 @@ export const ParentWrapperContainer = styled.div`
   height: 90dvh;
   justify-content: start;
   align-items: flex-start;
-
-  @container (max-width: 800px) {
-    & {
-      height: 90dvh;
-    }
-  }
+  gap: 0.3em;
 `;
 
 export const LeftWrapperContainer = styled.div`
@@ -27,38 +22,39 @@ export const LeftWrapperContainer = styled.div`
 
   @container (max-width: 1200px) {
     & {
-      width: 70px;
+      width: 60px;
     }
   }
 `;
 
 export const ListContainer = styled.div`
-  height: 80dvh;
+  height: 78dvh;
   width: 100%;
-  min-width: 70px;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  overflow-x: hidden;
   background-color: ${({ theme }) => theme.background};
-  border-radius: ${BORDER_RADIUS};
+  border-radius: 10px;
   ${CARD_BORDER}
 
   @container left_wrapper (max-width: 200px) {
     & {
-      width: 70px;
-      height: 75dvh;
-      font-size: 18px;
+      width: 60px;
     }
   }
 
   &::-webkit-scrollbar-track,
-  &::-webkit-scrollbar-thumb {
+  &::-webkit-scrollbar-thumb,
+  &::-webkit-scrollbar {
     visibility: hidden;
+    width: 0.3em;
   }
 
   &:hover {
     &::-webkit-scrollbar-track,
-    &::-webkit-scrollbar-thumb {
+    &::-webkit-scrollbar-thumb,
+    &::-webkit-scrollbar {
       visibility: visible;
     }
   }
@@ -71,13 +67,8 @@ export const RightWrapperContainer = styled.div`
   align-items: flex-start;
   height: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
   align-items: flex-start;
-
-  @container (max-width: 800px) {
-    & {
-      height: 84dvh;
-    }
-  }
 `;
 
 export const HeaderContainer = styled.div`
@@ -137,7 +128,7 @@ export const PartitionContainer = styled.div`
   flex-direction: row;
   justify-content: start;
   align-items: flex-start;
-  gap: 1rem;
+  gap: 0.3rem;
   overflow-x: auto;
 
   &::-webkit-scrollbar-track,
@@ -161,35 +152,28 @@ export const PartitionContainer = styled.div`
 
   @container (max-width: 1000px) {
     & {
-      width: 90cqw;
+      width: 88cqw;
       font-size: 18px;
     }
   }
 
   @container (max-width: 700px) {
     & {
-      width: 85cqw;
+      width: 88cqw;
       font-size: 18px;
     }
   }
 
   @container (max-width: 600px) {
     & {
-      width: 86cqw;
+      width: 88cqw;
       font-size: 18px;
     }
   }
 
   @container (max-width: 550px) {
     & {
-      width: 85.5cqw;
-      font-size: 18px;
-    }
-  }
-
-  @container (max-width: 460px) {
-    & {
-      width: 82cqw;
+      width: 85cqw;
       font-size: 18px;
     }
   }
@@ -201,23 +185,9 @@ export const PartitionContainer = styled.div`
     }
   }
 
-  @container (max-width: 415px) {
-    & {
-      width: 81cqw;
-      font-size: 18px;
-    }
-  }
-
-  @container (max-width: 400px) {
-    & {
-      width: 80cqw;
-      font-size: 18px;
-    }
-  }
-
   @container (max-width: 360px) {
     & {
-      width: 78cqw;
+      width: 75cqw;
       font-size: 18px;
     }
   }

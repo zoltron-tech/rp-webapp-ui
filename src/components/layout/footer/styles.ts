@@ -29,6 +29,7 @@ export const FooterContainer = styled.footer`
   @container (max-width: 600px) {
     & {
       font-size: 5px;
+      opacity: 0;
       --footer-height: 1rem;
     }
   }
@@ -36,6 +37,7 @@ export const FooterContainer = styled.footer`
   @container (max-width: 380px) {
     & {
       font-size: 4px;
+      opacity: 0;
       --footer-height: 0.5rem;
     }
   }

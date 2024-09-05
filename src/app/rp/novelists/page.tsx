@@ -62,13 +62,13 @@ export default function NovelistsPage() {
           share ideas, inspire each other, and build entire worlds together.
         </S.Story>
         <S.ButtonsGroupContainer>
-          <Button
+          <S.MainButton
             primary={state === "LOGGED_IN"}
             secondary={state !== "LOGGED_IN"}
             onClick={state == "LOGGED_IN" ? toHomePage : onLoginClick}
           >
             {state == "LOGGED_IN" ? "My Dashboard" : "Get Started"}
-          </Button>
+          </S.MainButton>
         </S.ButtonsGroupContainer>
       </S.PageContainer>
       <S.TabContainer>

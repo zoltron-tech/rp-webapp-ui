@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { setOpacity } from "@/utils/helpers";
-import { Container } from "@novelist-world/ui";
+import { Button, Container } from "@novelist-world/ui";
 
 export const PageContainer = styled.div`
   display: flex;
@@ -11,6 +11,13 @@ export const PageContainer = styled.div`
   margin-top: 30px;
   padding-bottom: 30px;
   border-bottom: 1px solid dimgray;
+`;
+
+export const MainButton = styled(Button)`
+  height: 50px;
+  width: 15cqw;
+  min-width: 150px;
+  border-radius: 5px;
 `;
 
 export const InfoCard = styled(Container)`

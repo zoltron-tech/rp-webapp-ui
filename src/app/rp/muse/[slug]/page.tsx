@@ -238,7 +238,9 @@ export default function MuseProfilePage({}) {
                 <S.NoteContainer>
                   <Quote>{muse?.note}</Quote>
                 </S.NoteContainer>
-                <S.Text>{muse?.story}</S.Text>
+                <ShouldRender if={Boolean(muse?.story)}>
+                  <S.RichText content={JSON.parse(muse?.story || "{}")} />
+                </ShouldRender>
               </S.ScrollableContent>
             </S.InfoCardContent>
           </S.CardBack>

@@ -17,6 +17,7 @@ import { FiMoreVertical } from "react-icons/fi";
 import { MdClose } from "react-icons/md";
 import { MdOutlineSlowMotionVideo } from "react-icons/md";
 import classNames from "classnames";
+import { RichText } from "@novelist-world/ui";
 
 type CARD_STATE = "MAIN" | "VIDEO" | "MUSE_INFO" | "CONNECTIONS" | "BACK_STORY";
 
@@ -239,7 +240,7 @@ export default function MuseProfilePage({}) {
                   <Quote>{muse?.note}</Quote>
                 </S.NoteContainer>
                 <ShouldRender if={Boolean(muse?.story)}>
-                  <S.RichText content={JSON.parse(muse?.story || "{}")} />
+                  <RichText content={JSON.parse(muse?.story || "{}")} />
                 </ShouldRender>
               </S.ScrollableContent>
             </S.InfoCardContent>

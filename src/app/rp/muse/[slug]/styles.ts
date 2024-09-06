@@ -14,14 +14,6 @@ interface BannerProps {
   src: string;
 }
 
-export const RichText = styled(NWRichText)`
-  & > .pm-container {
-    & > .ProseMirror {
-      background-color: ${({ theme }) => theme.colors.inputBackground};
-    }
-  }
-`;
-
 export const Banner = styled.div<BannerProps>`
   width: 100cqw;
   height: clamp(

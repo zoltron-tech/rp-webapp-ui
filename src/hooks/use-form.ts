@@ -15,7 +15,7 @@ export interface FormProps<T> {
   onSubmit: (values: T) => MaybePromise<void>;
   beforeSubmit?: (
     values: T,
-    errors: ErrorType<T>
+    errors: ErrorType<T>,
   ) => MaybePromise<WithAbortSignal<T>>;
   beforeUpdate?: <K extends keyof T>(values: T, name: K, prev: T) => T[K];
   checkError?: (values: T, prevErrors: ErrorType<T>) => ErrorType<T>;
@@ -59,7 +59,7 @@ export const useForm = <T>({
         ? beforeUpdate(
             { ...values, [name]: value } as T,
             name as keyof T,
-            values
+            values,
           )
         : value,
     };
@@ -86,7 +86,10 @@ export const useForm = <T>({
     setLoading(true);
 
     try {
-      let _values: WithAbortSignal<T> = { ...overridenValues, abort: false };
+      let _values: WithAbortSignal<T> = {
+        ...overridenValues,
+        abort: false,
+      };
       if (beforeSubmit) {
         _values = await beforeSubmit(overridenValues, errors);
       }

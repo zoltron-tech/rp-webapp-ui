@@ -7,12 +7,20 @@ import {
   Z_INDEX,
 } from "@/theme";
 import { setOpacity } from "@/utils/helpers";
-import { Container } from "@novelist-world/ui";
+import { Container, RichText as NWRichText } from "@novelist-world/ui";
 import styled from "styled-components";
 
 interface BannerProps {
   src: string;
 }
+
+export const RichText = styled(NWRichText)`
+  & > .pm-container {
+    & > .ProseMirror {
+      background-color: ${({ theme }) => theme.colors.inputBackground};
+    }
+  }
+`;
 
 export const Banner = styled.div<BannerProps>`
   width: 100cqw;
@@ -404,7 +412,9 @@ export const MuseName = styled.div`
   text-align: end;
   opacity: 0;
   transform: translateY(100px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease;
 `;
 
 export const AuthorContainer = styled.div`
@@ -415,7 +425,9 @@ export const AuthorContainer = styled.div`
 
   opacity: 0;
   transform: translateY(100px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease;
 `;
 
 export const UsernameContainer = styled.div`

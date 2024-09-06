@@ -2,7 +2,20 @@ import { styled } from "styled-components";
 
 import * as Common from "@/components/common";
 import { Z_INDEX } from "@/theme";
-import { Container, Flex as NWFlex, TextArea } from "@novelist-world/ui";
+import {
+  Container,
+  Flex as NWFlex,
+  RichText as NWRichText,
+  TextArea,
+} from "@novelist-world/ui";
+
+export const RichText = styled(NWRichText)`
+  & > .pm-container {
+    & > .ProseMirror {
+      background-color: ${({ theme }) => theme.colors.inputBackground};
+    }
+  }
+`;
 
 export const LocalContainer = styled(Container)`
   border: 1px solid slategray;

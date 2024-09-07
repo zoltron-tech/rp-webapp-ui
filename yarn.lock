@@ -1733,13 +1733,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@novelist-world/ui@npm:1.0.2-alpha-1":
-  version: 1.0.2-alpha-1
-  resolution: "@novelist-world/ui@npm:1.0.2-alpha-1"
+"@novelist-world/ui@npm:1.0.2-alpha-2":
+  version: 1.0.2-alpha-2
+  resolution: "@novelist-world/ui@npm:1.0.2-alpha-2"
   peerDependencies:
     react: ^18.3.1
     styled-components: "*"
-  checksum: 0f7e0ea8f8726a4fe202b61c3ced25c0858e9edcd98d0040824f8526821023c8e734af1313d0fab61b10658502dc9d301f3709330057e0be0a4f1657d4a70296
+  checksum: 8c3dc80da315feda60b801c6fa196938a50bdde9d6cbdce6197731c4c1c12e4721c6ca621e27746dfd7a25b1bde231a0a1e56e94d5f8438f4964797da95df584
   languageName: node
   linkType: hard
 
@@ -6707,7 +6707,7 @@ __metadata:
   dependencies:
     "@emoji-mart/data": "npm:^1.2.1"
     "@emoji-mart/react": "npm:^1.1.1"
-    "@novelist-world/ui": "npm:1.0.2-alpha-1"
+    "@novelist-world/ui": "npm:1.0.2-alpha-2"
     "@svgr/webpack": "npm:^8.1.0"
     "@swc/plugin-styled-components": "npm:^1.5.108"
     "@trpc/client": "npm:^10.45.2"

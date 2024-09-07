@@ -278,6 +278,8 @@ export default function UserProfilePage({}) {
             <S.SubText>
               {activities?.length === 0
                 ? "No Storyboards"
+                : state == "LOGGED_IN" && username === user?.username
+                ? "Your Storyboards"
                 : "Storyboards by " + username}
             </S.SubText>
             <S.PartitionContainer>
@@ -292,8 +294,18 @@ export default function UserProfilePage({}) {
             </S.PartitionContainer>
           </S.ContentContainer>
           <S.MusePillContainer>
-            <MusesPill title="MUSES" pillType="MUSES" novelist={novelist} />
-            <MusesPill title="FRIENDS" pillType="FRIENDS" novelist={novelist} />
+            <MusesPill
+              title="MUSES"
+              pillType="MUSES"
+              novelist={novelist}
+              expandable={true}
+            />
+            <MusesPill
+              title="FRIENDS"
+              pillType="FRIENDS"
+              novelist={novelist}
+              expandable={true}
+            />
           </S.MusePillContainer>
         </S.ContentLeft>
         <S.ContentRight>
@@ -311,6 +323,8 @@ export default function UserProfilePage({}) {
             <S.SubText>
               {activities?.length === 0
                 ? "No Updates"
+                : state == "LOGGED_IN" && username === user?.username
+                ? "Your Updates"
                 : "Updates by " + username}
             </S.SubText>
             {activities &&

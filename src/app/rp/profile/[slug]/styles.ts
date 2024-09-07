@@ -199,7 +199,8 @@ export const SubText = styled.div`
   text-transform: uppercase;
   font-size: 20px;
   font-weight: 300;
-  margin-block: 20px;
+  margin-top: 30px;
+  margin-bottom: 10px;
   font-style: italic;
   text-align: center;
 

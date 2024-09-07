@@ -12,14 +12,17 @@ export interface ExpandablePillProps {
   tag: string;
   scrollableContent: ReactNode;
   expandedContent: ReactNode;
+  expandable: Boolean;
 }
 
 export const ExpandablePill: FC<ExpandablePillProps> = ({
   tag,
   scrollableContent,
   expandedContent,
+  expandable,
 }) => {
   const [expanded, setExpanded] = useState(false);
+  const [nonExpandable, setNonexpandable] = useState(!expandable);
 
   Logger.info("ExpandablePill rendered");
 
@@ -28,28 +31,32 @@ export const ExpandablePill: FC<ExpandablePillProps> = ({
       <S.TagTop>{tag}</S.TagTop>
       <S.PillContinaer className={classNames({ expanded })}>
         <S.TagInline className={classNames({ expanded })}>{tag}</S.TagInline>
-        <S.ScrollableContentContainer className={classNames({ expanded })}>
+        <S.ScrollableContentContainer
+          className={classNames({ expanded, nonExpandable })}
+        >
           {scrollableContent}
         </S.ScrollableContentContainer>
-        <S.Searchbar className={classNames({ expanded })}>
-          <S.MagnifyingGlass className={classNames({ expanded })}>
-            <BsSearch />
-          </S.MagnifyingGlass>
-        </S.Searchbar>
-        <S.ExpandIcon
-          onClick={toggleState(setExpanded)}
-          className={classNames({ expanded })}
-        >
-          <ShouldRender if={!expanded}>
-            <MdOutlineExpandMore />
-          </ShouldRender>
-          <ShouldRender if={expanded}>
-            <MdOutlineExpandLess />
-          </ShouldRender>
-        </S.ExpandIcon>
-        <S.ExpandedContent className={classNames({ expanded })}>
-          {expandedContent}
-        </S.ExpandedContent>
+        <ShouldRender if={expandable === true}>
+          <S.Searchbar className={classNames({ expanded })}>
+            <S.MagnifyingGlass className={classNames({ expanded })}>
+              <BsSearch />
+            </S.MagnifyingGlass>
+          </S.Searchbar>
+          <S.ExpandIcon
+            onClick={toggleState(setExpanded)}
+            className={classNames({ expanded })}
+          >
+            <ShouldRender if={!expanded}>
+              <MdOutlineExpandMore />
+            </ShouldRender>
+            <ShouldRender if={expanded}>
+              <MdOutlineExpandLess />
+            </ShouldRender>
+          </S.ExpandIcon>
+          <S.ExpandedContent className={classNames({ expanded })}>
+            {expandedContent}
+          </S.ExpandedContent>
+        </ShouldRender>
       </S.PillContinaer>
     </>
   );

@@ -21,7 +21,7 @@ export const INITIAL_MUSE: Muse = {
   firstName: "",
   lastName: "",
   note: "",
-  story: "",
+  story: '{"type":"doc","content":[{"type":"paragraph"}]}',
   image: "",
   connections: [],
 };

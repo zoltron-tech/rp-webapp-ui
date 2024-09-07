@@ -18,6 +18,9 @@ import {
   getStoryboardAction,
   updateStoryBoardAction,
 } from "@/app/rp/story/actions";
+import { MusesPill } from "../muses-pill";
+import { GrEdit } from "react-icons/gr";
+import { Flex } from "@novelist-world/ui";
 
 export type CreateStoryBoardCardProps = {
   id?: string;
@@ -31,6 +34,11 @@ export const CreateStoryBoardCard: FC<CreateStoryBoardCardProps> = ({ id }) => {
   const { push } = useRouter();
 
   const { successToast, errorToast } = useUIContext();
+
+  const onEditMembersClick = () => {
+    if (!storyBoard) return;
+    push(`/rp/profile/story/edit/${storyBoard.id}/members`);
+  };
 
   const updateStoryBoardAvatar = async () => {
     if (!avatarFile) return;
@@ -134,7 +142,7 @@ export const CreateStoryBoardCard: FC<CreateStoryBoardCardProps> = ({ id }) => {
           "https://i.etsystatic.com/44068041/r/il/3bab40/5467123737/il_300x300.5467123737_1kne.jpg"
         }
       />
-      <S.LocalContainer>
+      <S.LocalContainer className={id == null ? "new" : ""}>
         <UploadAvatar
           image={values?.image || ""}
           onChange={(image) => setAvatarFile(image)}
@@ -147,7 +155,7 @@ export const CreateStoryBoardCard: FC<CreateStoryBoardCardProps> = ({ id }) => {
               <Username username={user?.username} primary />
             </S.UsernameContainer>
           </ShouldRender>
-          <S.FormGroup>
+          <S.FormGroup className={id == null ? "new" : ""}>
             <S.Name>
               <Input
                 label="Name"
@@ -158,6 +166,32 @@ export const CreateStoryBoardCard: FC<CreateStoryBoardCardProps> = ({ id }) => {
                 maxLength={50}
               />
             </S.Name>
+            <ShouldRender if={id != null}>
+              <Flex
+                style={{ width: "100%", paddingInline: "20px" }}
+                direction="row"
+                justify="space-between"
+              >
+                <span>Members: </span>
+                <Flex
+                  style={{ width: "20%" }}
+                  direction="row"
+                  justify="flex-end"
+                >
+                  <S.Button className="button" onClick={onEditMembersClick}>
+                    <GrEdit />
+                  </S.Button>
+                </Flex>
+              </Flex>
+              <S.PillContainer>
+                <MusesPill
+                  title="WRITERS"
+                  pillType="MEMBERS"
+                  storyboard={storyBoard}
+                  expandable={false}
+                />
+              </S.PillContainer>
+            </ShouldRender>
             <S.ButtonGroup>
               <S.SaveButton
                 variant="secondary"

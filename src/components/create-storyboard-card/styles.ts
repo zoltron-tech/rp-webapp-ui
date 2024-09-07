@@ -13,18 +13,28 @@ export const LocalContainer = styled(Container)`
   @container (min-width: 700px) {
     width: 60%;
     min-width: 700px;
-    height: 450px;
+    height: 550px;
     padding: 20px;
     margin: clamp(50px, 20cqw, 50px) auto 100px auto;
   }
 
   @container (max-width: 700px) {
     width: 100%;
-    height: 450px;
+    height: 500px;
     padding: 20px;
     margin: 0px;
     border-radius: 0px;
     border: none;
+  }
+
+  /* Apply different height based on the presence of a specific class */
+  &.new {
+    @container (min-width: 700px) {
+      height: 300px;
+    }
+    @container (max-width: 700px) {
+      height: 350px;
+    }
   }
 
   container-name: card;
@@ -98,6 +108,12 @@ export const FormGroup = styled.div`
       padding-left: 0px;
     }
   }
+
+  &.new {
+    @container (max-width: 600px) {
+      margin-top: 60px;
+    }
+  }
 `;
 
 export const Name = styled.div`
@@ -112,6 +128,48 @@ export const Name = styled.div`
     & {
       flex-direction: column;
       justify-content: flex-start;
+    }
+  }
+`;
+
+export const PillContainer = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+`;
+
+export const Button = styled.div`
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: ${({ theme }) => theme.hoverGreyAlpha};
+  border-radius: 50%;
+  box-shadow: 0px 0px 5px 2px rgba(0, 0, 0, 0.4);
+  z-index: ${Z_INDEX.MODAL};
+  cursor: pointer;
+
+  & svg {
+    width: 15px;
+    height: 15px;
+    fill: ${({ theme }) => theme.text};
+    transition: transform 0.2s ease-in-out;
+
+    pointer-events: none;
+  }
+
+  &:hover {
+    background-color: ${({ theme }) => theme.hoverGrey};
+  }
+
+  @container (max-width: 500px) {
+    width: 20px;
+    height: 20px;
+
+    & svg {
+      width: 10px;
+      height: 10px;
     }
   }
 `;

@@ -53,8 +53,8 @@ export const ScrollableContentContainer = styled.div`
 
   ${NO_SCROLLBAR}
   ${DEV_MODE_BORDER("lime")}
-    
-    @container profile-content (max-width: 1024px) {
+
+  @container profile-content (max-width: 1024px) {
     & {
       left: -50px;
       height: calc(100cqw - 80px);
@@ -64,6 +64,11 @@ export const ScrollableContentContainer = styled.div`
   &.expanded {
     opacity: 0;
     pointer-events: none;
+  }
+
+  &.nonExpandable {
+    left: -50px;
+    height: calc(100cqw - 10px);
   }
 `;
 

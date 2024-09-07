@@ -66,6 +66,7 @@ export default function UserProfilePage({}) {
             title="WRITERS"
             pillType="MEMBERS"
             storyboard={storyboard}
+            expandable={true}
           />
         </S.PillContainer>
       </S.StoryContainer>

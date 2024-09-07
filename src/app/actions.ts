@@ -96,7 +96,7 @@ export const verifyAccountAction = async (jwt: string) => {
 
 export const resetPasswordAction = async (
   payload: LoginPayload,
-  jwt: string,
+  jwt: string
 ) => {
   const URL = `${RP_SERVICE_URL}/rp/user/account/resetPassword`;
 

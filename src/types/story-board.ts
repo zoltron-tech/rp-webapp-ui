@@ -11,6 +11,7 @@ export interface StoryBoard extends Tagged {
 export interface StoryBoardMember extends Tagged {
   _tag: "StoryBoardMember";
   username: string;
+  storyBoardId: string;
   image: string;
   isAdmin: boolean;
 }

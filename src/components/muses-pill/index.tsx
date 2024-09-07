@@ -13,6 +13,7 @@ interface Props {
   muse?: Muse | null;
   storyboard?: StoryBoard | null;
   pillType: PillType;
+  expandable: Boolean;
 }
 
 export const MusesPill: FC<Props> = ({
@@ -21,6 +22,7 @@ export const MusesPill: FC<Props> = ({
   novelist,
   muse,
   storyboard,
+  expandable,
 }) => {
   Logger.info("MusesPill rendered");
   const { push } = useRouter();
@@ -106,6 +108,7 @@ export const MusesPill: FC<Props> = ({
     <ExpandablePill
       tag={title}
       scrollableContent={loadChildren(8, "rotate")}
+      expandable={expandable}
       expandedContent={
         <S.ExpandedContentInner>
           {loadChildren(0, "paddington")}

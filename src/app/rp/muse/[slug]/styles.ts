@@ -331,7 +331,7 @@ export const MenuButton = styled.div`
   @container (max-width: 400px) and (max-height: 100px) {
     justify-content: normal;
     width: 50px;
-    height: 30px;
+    height: 50px;
 
     &.stick-top {
       position: relative;
@@ -363,8 +363,8 @@ export const MenuButtonIcon = styled.div`
   }
 
   @container (max-width: 400px) and (max-height: 100px) {
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
   }
 
   &.selected {
@@ -404,9 +404,13 @@ export const MuseName = styled.div`
   text-align: end;
   opacity: 0;
   transform: translateY(100px);
-  transition:
-    opacity 0.5s ease,
-    transform 0.5s ease;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+
+  @container (max-width: 500px) {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 `;
 
 export const AuthorContainer = styled.div`
@@ -417,9 +421,13 @@ export const AuthorContainer = styled.div`
 
   opacity: 0;
   transform: translateY(100px);
-  transition:
-    opacity 0.5s ease,
-    transform 0.5s ease;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+
+  @container (max-width: 500px) {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 `;
 
 export const UsernameContainer = styled.div`
@@ -463,20 +471,11 @@ export const Card = styled.div`
   position: relative;
   height: 100%;
   contain: paint;
+
   @container (max-width: 500px) {
     background: linear-gradient(
       ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
     );
-
-    & ${MuseName} {
-      transform: translateY(0);
-      opacity: 1;
-    }
-
-    & ${AuthorContainer} {
-      transform: translateY(0);
-      opacity: 1;
-    }
   }
 
   @container (min-width: 500px) {

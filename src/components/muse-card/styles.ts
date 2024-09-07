@@ -37,6 +37,9 @@ export const Title = styled.div`
 
   @container content-container (max-width: 800px) {
     font-size: 14px;
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 
   &.new {
@@ -149,12 +152,18 @@ export const Button = styled.div`
     background-color: ${({ theme }) => theme.hoverGrey};
   }
 
+  @container content-container (max-width: 800px) {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
   @container (max-height: 200px) {
     & {
       top: 5px;
       right: 0px;
-      width: 30px;
-      height: 30px;
+      width: 25px;
+      height: 25px;
     }
 
     & svg {
@@ -167,6 +176,17 @@ export const Button = styled.div`
 export const EditButton = styled(Button)`
   top: 10px;
   right: 50px;
+
+  @container content-container (max-width: 800px) {
+    right: 35px;
+    background-color: ${({ theme }) =>
+      pSBC(-0.5, setOpacity(theme.processing, 0.8))};
+  }
+
+  &:hover {
+    background-color: ${({ theme }) =>
+      pSBC(-0.5, setOpacity(theme.processing, 0.8))};
+  }
 `;
 
 export const DeleteButton = styled(Button)`
@@ -174,6 +194,12 @@ export const DeleteButton = styled(Button)`
   right: 10px;
 
   background-color: ${({ theme }) => setOpacity(theme.error, 0.5)};
+
+  @container content-container (max-width: 800px) {
+    right: 5px;
+    background-color: ${({ theme }) =>
+      pSBC(-0.5, setOpacity(theme.error, 0.8))};
+  }
 
   &:hover {
     background-color: ${({ theme }) =>
@@ -201,19 +227,27 @@ export const Card = styled.div`
     }
   }
 
-  &:hover {
+  @container content-container (max-width: 800px) {
     background: linear-gradient(
       ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
     );
+  }
 
-    &:not(.new) ${Title} {
-      transform: translateY(0);
-    }
+  @container content-container (min-width: 800px) {
+    &:hover {
+      background: linear-gradient(
+        ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
+      );
 
-    & ${Title}, ${Button} {
-      opacity: 1;
+      &:not(.new) ${Title} {
+        transform: translateY(0);
+      }
+
+      & ${Title}, ${Button} {
+        opacity: 1;
+      }
+      cursor: pointer;
     }
-    cursor: pointer;
   }
 `;
 

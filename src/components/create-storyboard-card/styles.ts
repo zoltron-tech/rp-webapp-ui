@@ -164,12 +164,12 @@ export const Button = styled.div`
   }
 
   @container (max-width: 500px) {
-    width: 20px;
-    height: 20px;
+    width: 30px;
+    height: 30px;
 
     & svg {
-      width: 10px;
-      height: 10px;
+      width: 15px;
+      height: 15px;
     }
   }
 `;

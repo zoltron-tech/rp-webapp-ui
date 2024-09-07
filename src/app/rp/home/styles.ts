@@ -65,7 +65,7 @@ export const RightWrapperContainer = styled.div`
   flex-direction: column;
   justify-content: start;
   align-items: flex-start;
-  height: 100%;
+  height: 88dvh;
   overflow-y: auto;
   overflow-x: hidden;
   align-items: flex-start;

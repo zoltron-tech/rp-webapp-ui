@@ -12,8 +12,20 @@ export const LocalContainer = styled(Container)`
   border: none;
 `;
 
+export const HeaderFlex = styled(Flex)`
+  margin-bottom: 20px;
+  padding-left: 30px;
+
+  @container page-container (max-width: 600px) {
+    & {
+      padding-left: 10px;
+      margin-bottom: 10px;
+    }
+  }
+`;
+
 export const ListContainer = styled.div`
-  height: 75dvh;
+  height: 77dvh;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -131,22 +143,23 @@ export const Button = styled.div`
   &:hover {
     background-color: ${({ theme }) => theme.hoverGrey};
   }
-
-  @container (max-width: 500px) {
-    width: 20px;
-    height: 20px;
-
-    & svg {
-      width: 10px;
-      height: 10px;
-    }
-  }
 `;
 
 export const MakeAdminButton = styled(Button)`
   &:hover {
     background-color: ${({ theme }) =>
-      pSBC(-0.5, setOpacity(theme.warning, 0.8))};
+      pSBC(-0.5, setOpacity(theme.success, 0.8))};
+  }
+  @container (max-width: 600px) {
+    background-color: ${({ theme }) =>
+      pSBC(-0.5, setOpacity(theme.success, 0.8))};
+    width: 30px;
+    height: 30px;
+
+    & svg {
+      width: 15px;
+      height: 15px;
+    }
   }
 `;
 
@@ -155,11 +168,53 @@ export const RemoveMemberButton = styled(Button)`
     background-color: ${({ theme }) =>
       pSBC(-0.5, setOpacity(theme.error, 0.8))};
   }
+  @container (max-width: 600px) {
+    background-color: ${({ theme }) =>
+      pSBC(-0.5, setOpacity(theme.error, 0.8))};
+    width: 30px;
+    height: 30px;
+
+    & svg {
+      width: 15px;
+      height: 15px;
+    }
+  }
+`;
+
+export const RemoveAdminButton = styled(Button)`
+  &:hover {
+    background-color: ${({ theme }) =>
+      pSBC(-0.5, setOpacity(theme.warning, 0.8))};
+  }
+  @container (max-width: 600px) {
+    background-color: ${({ theme }) =>
+      pSBC(-0.5, setOpacity(theme.warning, 0.8))};
+
+    width: 30px;
+    height: 30px;
+
+    & svg {
+      width: 15px;
+      height: 15px;
+    }
+  }
 `;
 
 export const AddMemberButton = styled(Button)`
   &:hover {
     background-color: ${({ theme }) =>
       pSBC(-0.5, setOpacity(theme.success, 0.8))};
+  }
+  @container (max-width: 500px) {
+    background-color: ${({ theme }) =>
+      pSBC(-0.5, setOpacity(theme.success, 0.8))};
+
+    width: 30px;
+    height: 30px;
+
+    & svg {
+      width: 15px;
+      height: 15px;
+    }
   }
 `;

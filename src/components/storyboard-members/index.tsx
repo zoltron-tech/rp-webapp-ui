@@ -96,9 +96,9 @@ export const StoryBoardMemberListItem: FC<ListItemProps> = ({
         </S.Info>
         <Flex style={{ paddingRight: "20px" }} direction="row">
           <ShouldRender if={isAdmin == true}>
-            <S.RemoveMemberButton onClick={handleRemoveAdmin}>
+            <S.RemoveAdminButton onClick={handleRemoveAdmin}>
               <TbStarFilled />
-            </S.RemoveMemberButton>
+            </S.RemoveAdminButton>
           </ShouldRender>
           <ShouldRender if={isAdmin == false}>
             <S.MakeAdminButton onClick={handleMakeAdmin}>
@@ -261,15 +261,11 @@ export const StoryBoardMembersList: FC<{ id?: string }> = ({ id }) => {
 
   return (
     <S.LocalContainer>
-      <Flex
-        style={{ marginBottom: "20px", paddingInline: "30px" }}
-        direction="row"
-        justify="space-between"
-      >
+      <S.HeaderFlex justify="flex-start">
         <S.Button className="button" onClick={onBackClick}>
           <IoMdArrowRoundBack />
         </S.Button>
-      </Flex>
+      </S.HeaderFlex>
       <Flex
         style={{ width: "100%", borderTop: "1px solid dimgray" }}
         direction="column"

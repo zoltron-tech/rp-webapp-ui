@@ -48,7 +48,7 @@ export default function TiersCatalog() {
             <S.Badge tier="silver">
               <GiSparkles />
             </S.Badge>
-            <S.MainSubtext>Silveer</S.MainSubtext>
+            <S.MainSubtext>Silver</S.MainSubtext>
           </Flex>
           <S.InfoContainer>
             <S.InfoItem>

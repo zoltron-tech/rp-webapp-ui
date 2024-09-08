@@ -14,7 +14,7 @@ import { ShouldRender } from "@/components/common";
 export default function MusesListPage({}) {
   const params = useParams();
   const [muses, setMuses] = useState<Muse[] | null>(null);
-  const { state, user } = useAuthContext();
+  const { state, user, novelist } = useAuthContext();
   const username = params?.slug as string;
   const isCurrentUser = user?.username === username;
   const [loading, setLoading] = useState(true);
@@ -45,6 +45,9 @@ export default function MusesListPage({}) {
     <S.Container>
       <S.MainSubtext>
         {isCurrentUser ? "Your" : username + "'s"} Muses
+      </S.MainSubtext>
+      <S.MainSubtext>
+        {isCurrentUser ? muses?.length + "/" + novelist?.tier.museLimit : ""}
       </S.MainSubtext>
       <S.MuseListContainer>
         <ShouldRender if={isCurrentUser}>

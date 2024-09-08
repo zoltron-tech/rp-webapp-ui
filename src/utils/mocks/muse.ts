@@ -1,4 +1,5 @@
-import { Muse, Novelist } from "@/types";
+import { Muse } from "@/types";
+import { STANDARD_TIER } from "../constants";
 
 const MOCK_MUSE: Muse = {
   _tag: "Muse",
@@ -11,6 +12,7 @@ const MOCK_MUSE: Muse = {
   pennedBy: {
     _tag: "Novelist",
     id: "uuid",
+    tier: STANDARD_TIER,
     firstName: "John",
     lastName: "Doe",
     username: "johndoe",

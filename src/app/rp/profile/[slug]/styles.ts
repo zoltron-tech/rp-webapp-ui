@@ -1,6 +1,7 @@
 import { Avatar as AvatarCommon, Pill } from "@/components/common";
 import { BLUR_FILTER, DEV_MODE_BORDER, Z_INDEX } from "@/theme";
 import styled, { css } from "styled-components";
+import { Badge } from "../../tiers/styles";
 
 interface BannerProps {
   src: string;
@@ -225,6 +226,11 @@ export const SubText = styled.div`
 
 export const Avatar = styled(AvatarCommon)`
   margin-top: 30px;
+`;
+
+export const ExtendedBadge = styled(Badge)`
+  position: relative;
+  left: -80px;
 `;
 
 const NameFontStyles = css`

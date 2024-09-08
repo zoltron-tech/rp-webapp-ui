@@ -1,8 +1,10 @@
 import { Novelist } from "@/types";
+import { STANDARD_TIER } from "../constants/initial-values";
 
 const NOVELIST_MOCK: Novelist = {
   _tag: "Novelist",
   id: "uuit-1",
+  tier: STANDARD_TIER,
   firstName: "John",
   lastName: "Doe",
   username: "johndoe",
@@ -23,6 +25,7 @@ const NOVELIST_MOCK: Novelist = {
         firstName: "John",
         lastName: "Doe",
         username: "johndoe",
+        tier: STANDARD_TIER,
         note: "This is a note",
         image: "",
         muses: [],

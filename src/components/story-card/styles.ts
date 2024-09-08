@@ -37,6 +37,11 @@ export const Title = styled.div`
     right: 90px;
   }
 
+  &.profile {
+    bottom: -160px;
+    right: -10;
+  }
+  
   @container content-container (max-width: 1000px) {
     &.new {
       bottom: -100px;

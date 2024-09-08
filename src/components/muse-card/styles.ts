@@ -35,13 +35,6 @@ export const Title = styled.div`
     white-space: wrap;
   }
 
-  @container content-container (max-width: 800px) {
-    font-size: 14px;
-    opacity: 1;
-    transform: none;
-    transition: none;
-  }
-
   &.new {
     bottom: 140px;
     right: 0px;
@@ -50,8 +43,14 @@ export const Title = styled.div`
     transform: translateY(0);
     width: 100%;
     max-width: 100%;
+  }
 
-    @container content-container (max-width: 800px) {
+  @container muse-card (max-width: 135px) {
+    font-size: 14px;
+    opacity: 1;
+    transform: none;
+    transition: none;
+    &.new {
       bottom: 85px;
     }
   }
@@ -152,7 +151,7 @@ export const Button = styled.div`
     background-color: ${({ theme }) => theme.hoverGrey};
   }
 
-  @container content-container (max-width: 800px) {
+  @container muse-card (max-width: 135px) {
     opacity: 1;
     transform: none;
     transition: none;
@@ -177,7 +176,7 @@ export const EditButton = styled(Button)`
   top: 10px;
   right: 50px;
 
-  @container content-container (max-width: 800px) {
+  @container muse-card (max-width: 135px) {
     right: 35px;
     background-color: ${({ theme }) =>
       pSBC(-0.5, setOpacity(theme.processing, 0.8))};
@@ -195,7 +194,7 @@ export const DeleteButton = styled(Button)`
 
   background-color: ${({ theme }) => setOpacity(theme.error, 0.5)};
 
-  @container content-container (max-width: 800px) {
+  @container muse-card (max-width: 135px) {
     right: 5px;
     background-color: ${({ theme }) =>
       pSBC(-0.5, setOpacity(theme.error, 0.8))};
@@ -227,13 +226,13 @@ export const Card = styled.div`
     }
   }
 
-  @container content-container (max-width: 800px) {
+  @container muse-card (max-width: 135px) {
     background: linear-gradient(
       ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
     );
   }
 
-  @container content-container (min-width: 800px) {
+  @container muse-card (min-width: 135px) {
     &:hover {
       background: linear-gradient(
         ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}

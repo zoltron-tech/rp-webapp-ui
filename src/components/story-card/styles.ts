@@ -37,7 +37,7 @@ export const Title = styled.div`
     right: 100px;
   }
 
-  @container content-container (max-width: 800px) {
+  @container story-card (max-width: 200px) {
     &.new {
       bottom: 85px;
       right: 60px;
@@ -64,7 +64,7 @@ export const CardWrapper = styled.div`
   contain: paint;
   z-index: ${Z_INDEX.CARD};
 
-  container-name: muse-card;
+  container-name: story-card;
   container-type: size;
 
   &.profile {
@@ -130,7 +130,7 @@ export const Button = styled.div`
     background-color: ${({ theme }) => theme.hoverGrey};
   }
 
-  @container content-container (max-width: 800px) {
+  @container story-card (max-width: 200px) {
     opacity: 1;
     transform: none;
     transition: none;
@@ -209,23 +209,25 @@ export const Card = styled.div`
     }
   }
 
-  @container content-container (max-width: 800px) {
+  @container story-card (max-width: 200px) {
     background: linear-gradient(
       ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
     );
   }
 
-  @container content-container (min-width: 800px) {
-    background: linear-gradient(
-      ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
-    );
+  @container story-card (min-width: 200px) {
+    &:hover {
+      background: linear-gradient(
+        ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
+      );
 
-    & ${Title} {
-      transform: translateY(0);
-    }
+      & ${Title} {
+        transform: translateY(0);
+      }
 
-    & ${Title}, ${Button} {
-      opacity: 1;
+      & ${Title}, ${Button} {
+        opacity: 1;
+      }
     }
     cursor: pointer;
   }

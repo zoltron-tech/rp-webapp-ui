@@ -10,6 +10,7 @@ import { getHeroPageMusesAction } from "../muse/actions";
 import { Muse } from "@/types";
 import { useAuthContext } from "@/hooks";
 import { useRouter } from "next/navigation";
+import TiersCatalog from "../tiers/page";
 
 const NovelistCarouselDynamic = dynamic(
   () => import("@/components/novelist-carousel"),
@@ -127,6 +128,8 @@ export default function NovelistsPage() {
           </S.Story>
         </S.InfoCard>
       </S.CardsContainer>
+
+      <TiersCatalog></TiersCatalog>
     </>
   );
 }

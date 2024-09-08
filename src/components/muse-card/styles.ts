@@ -79,8 +79,8 @@ export const CardWrapper = styled.div`
 
   &.hero ${Title} {
     font-size: 12px;
-    right: 5px;
-    bottom: 5px;
+      right: -5px;
+    bottom: -190px;
   }
 
   @container content-container (max-width: 1000px) {
@@ -100,6 +100,7 @@ export const CardWrapper = styled.div`
 
     &.hero ${Title} {
       font-size: 8px;
+      bottom: -110px;
     }
   }
 

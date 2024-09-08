@@ -395,8 +395,8 @@ export const Text = styled.div`
 `;
 
 export const MuseName = styled.div`
-  position: fixed;
-  bottom: 100px;
+  position: absolute;
+  bottom: 70px;
   right: 10px;
   font-size: 30px;
   font-weight: 600;
@@ -406,7 +406,7 @@ export const MuseName = styled.div`
   transform: translateY(100px);
   transition: opacity 0.5s ease, transform 0.5s ease;
 
-  @media (max-width: 1000px) {
+  @container content-container (max-width: 1000px) {
     opacity: 1;
     transform: none;
     transition: none;
@@ -423,7 +423,7 @@ export const AuthorContainer = styled.div`
   transform: translateY(100px);
   transition: opacity 0.5s ease, transform 0.5s ease;
 
-  @media (max-width: 1000px) {
+  @container content-container (max-width: 1000px) {
     opacity: 1;
     transform: none;
     transition: none;
@@ -472,13 +472,13 @@ export const Card = styled.div`
   height: 100%;
   contain: paint;
 
-  @media (max-width: 1000px) {
+  @container content-container (max-width: 1000px) {
     background: linear-gradient(
       ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
     );
   }
 
-  @media (min-width: 1000px) {
+  @container content-container (min-width: 1000px) {
     &:hover {
       background: linear-gradient(
         ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}

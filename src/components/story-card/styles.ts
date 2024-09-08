@@ -18,8 +18,8 @@ export const CardBackground = styled.div<CardProps>`
 `;
 
 export const Title = styled.div`
-  position: fixed;
-  bottom: 10px;
+  position: absolute;
+  bottom: -280px;
   right: 10px;
   font-size: 20px;
   font-weight: 600;
@@ -33,21 +33,20 @@ export const Title = styled.div`
   transition: opacity 0.5s ease, transform 0.5s ease, scale 0.5s ease;
 
   &.new {
-    bottom: 140px;
-    right: 100px;
+    bottom: -160px;
+    right: 90px;
   }
 
-  @container story-card (max-width: 200px) {
+  @container content-container (max-width: 1000px) {
     &.new {
-      bottom: 85px;
-      right: 60px;
+      bottom: -100px;
+      right: 50px;
       font-size: 16px;
     }
-
+    bottom: -180px;
     font-size: 12px;
     opacity: 1;
     transform: none;
-    transition: none;
   }
 `;
 
@@ -74,7 +73,7 @@ export const CardWrapper = styled.div`
     min-height: 180px;
   }
 
-  @container content-container (max-width: 800px) {
+  @container content-container (max-width: 1000px) {
     & {
       width: 200px;
       height: 200px;
@@ -130,7 +129,7 @@ export const Button = styled.div`
     background-color: ${({ theme }) => theme.hoverGrey};
   }
 
-  @container story-card (max-width: 200px) {
+  @container content-container (max-width: 1000px) {
     opacity: 1;
     transform: none;
     transition: none;
@@ -155,7 +154,7 @@ export const EditButton = styled(Button)`
   top: 10px;
   right: 50px;
 
-  @container content-container (max-width: 800px) {
+  @container content-container (max-width: 1000px) {
     right: 35px;
     background-color: ${({ theme }) =>
       pSBC(-0.5, setOpacity(theme.processing, 0.8))};
@@ -173,7 +172,7 @@ export const DeleteButton = styled(Button)`
 
   background-color: ${({ theme }) => setOpacity(theme.error, 0.5)};
 
-  @container content-container (max-width: 800px) {
+  @container content-container (max-width: 1000px) {
     right: 5px;
     background-color: ${({ theme }) =>
       pSBC(-0.5, setOpacity(theme.error, 0.8))};
@@ -209,13 +208,13 @@ export const Card = styled.div`
     }
   }
 
-  @container story-card (max-width: 200px) {
+  @container content-container (max-width: 1000px) {
     background: linear-gradient(
       ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
     );
   }
 
-  @container story-card (min-width: 200px) {
+  @container content-container (min-width: 1000px) {
     &:hover {
       background: linear-gradient(
         ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}

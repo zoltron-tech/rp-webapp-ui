@@ -18,9 +18,8 @@ export const CardBackground = styled.div<CardProps>`
 `;
 
 export const Title = styled.div`
-  position: fixed;
-  bottom: 10px;
-  right: 10px;
+  position: absolute;
+  bottom: -280px;
   font-size: 20px;
   font-weight: 600;
   max-width: 80%;
@@ -36,8 +35,7 @@ export const Title = styled.div`
   }
 
   &.new {
-    bottom: 140px;
-    right: 0px;
+    bottom: -150px;
     text-align: center;
     opacity: 1;
     transform: translateY(0);
@@ -45,13 +43,13 @@ export const Title = styled.div`
     max-width: 100%;
   }
 
-  @container muse-card (max-width: 135px) {
+  @container content-container (max-width: 1000px) {
+    bottom: -180px;
     font-size: 14px;
     opacity: 1;
     transform: none;
-    transition: none;
     &.new {
-      bottom: 85px;
+      bottom: -100px;
     }
   }
 `;
@@ -85,7 +83,7 @@ export const CardWrapper = styled.div`
     bottom: 5px;
   }
 
-  @container content-container (max-width: 800px) {
+  @container content-container (max-width: 1000px) {
     & {
       width: 134px;
       height: 200px;
@@ -151,7 +149,7 @@ export const Button = styled.div`
     background-color: ${({ theme }) => theme.hoverGrey};
   }
 
-  @container muse-card (max-width: 135px) {
+  @container content-container (max-width: 1000px) {
     opacity: 1;
     transform: none;
     transition: none;
@@ -176,7 +174,7 @@ export const EditButton = styled(Button)`
   top: 10px;
   right: 50px;
 
-  @container muse-card (max-width: 135px) {
+  @container content-container (max-width: 1000px) {
     right: 35px;
     background-color: ${({ theme }) =>
       pSBC(-0.5, setOpacity(theme.processing, 0.8))};
@@ -194,7 +192,7 @@ export const DeleteButton = styled(Button)`
 
   background-color: ${({ theme }) => setOpacity(theme.error, 0.5)};
 
-  @container muse-card (max-width: 135px) {
+  @container content-container (max-width: 1000px) {
     right: 5px;
     background-color: ${({ theme }) =>
       pSBC(-0.5, setOpacity(theme.error, 0.8))};
@@ -226,13 +224,13 @@ export const Card = styled.div`
     }
   }
 
-  @container muse-card (max-width: 135px) {
+  @container content-container (max-width: 1000px) {
     background: linear-gradient(
       ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
     );
   }
 
-  @container muse-card (min-width: 135px) {
+  @container content-container (min-width: 1000px) {
     &:hover {
       background: linear-gradient(
         ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}

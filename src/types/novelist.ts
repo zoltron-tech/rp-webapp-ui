@@ -23,10 +23,19 @@ export interface Muse extends Tagged {
   connections: SearchResult[];
 }
 
+export interface NovelistTier {
+  name: string;
+  museLimit: number;
+  storyBoardLimit: number;
+  eventLimit: number;
+  mediaLimit: number;
+}
+
 export interface Novelist extends Tagged {
   _tag: "Novelist";
   id: string;
   username: string;
+  tier: NovelistTier;
   firstName: string;
   lastName: string;
   note: string;

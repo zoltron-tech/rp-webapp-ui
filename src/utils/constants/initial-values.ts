@@ -1,11 +1,20 @@
-import { Novelist, Muse } from "@/types";
+import { Novelist, Muse, NovelistTier } from "@/types";
 import { None } from "@/types/common";
 import { StoryBoard } from "@/types/story-board";
+
+export const STANDARD_TIER: NovelistTier = {
+  name: "STANDARD",
+  museLimit: 20,
+  storyBoardLimit: 10,
+  eventLimit: 20,
+  mediaLimit: 500,
+};
 
 export const INITIAL_NOVELIST: Novelist = {
   _tag: "Novelist",
   id: "",
   username: "",
+  tier: STANDARD_TIER,
   firstName: "",
   lastName: "",
   note: "",

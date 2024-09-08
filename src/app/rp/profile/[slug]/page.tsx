@@ -25,6 +25,12 @@ import { getUserActivities } from "../../home/actions";
 import ActivityBox from "@/components/activity-box";
 import { getAllStoryboardsByUsernameAction } from "../../story/actions";
 import StoryCard from "@/components/story-card";
+import { MdPentagon } from "react-icons/md";
+import { GiSparkles } from "react-icons/gi";
+import { GiGoldShell } from "react-icons/gi";
+import { GiAbstract047 } from "react-icons/gi";
+
+import { Flex } from "@novelist-world/ui";
 
 export default function UserProfilePage({}) {
   const params = useParams();
@@ -38,6 +44,10 @@ export default function UserProfilePage({}) {
   const { push } = useRouter();
 
   const handleButtonClick = () => {};
+
+  const toTiersPage = () => {
+    push(`/rp/tiers`);
+  };
 
   const toMusesPage = () => {
     push(`/rp/profile/${username}/muses`);
@@ -260,11 +270,23 @@ export default function UserProfilePage({}) {
       <S.SolidBackground></S.SolidBackground>
       <S.Content>
         <S.ContentLeft>
-          <S.Avatar
-            src={novelist?.image || ""}
-            alt="profile-picture"
-            size={250}
-          />
+          <Flex direction="row" justify="center">
+            <S.Avatar
+              src={novelist?.image || ""}
+              alt="profile-picture"
+              size={250}
+            />
+            <S.ExtendedBadge
+              tier={novelist?.tier.name || "standard"}
+              className={`badge-${novelist?.tier.name?.toLowerCase()}`}
+              onClick={toTiersPage}
+            >
+              {novelist?.tier.name == "STANDARD" && <MdPentagon />}
+              {novelist?.tier.name == "SILVER" && <GiSparkles />}
+              {novelist?.tier.name == "GOLD" && <GiGoldShell />}
+              {novelist?.tier.name == "PREMIUM" && <GiAbstract047 />}
+            </S.ExtendedBadge>
+          </Flex>
           <S.NameMobile>
             {novelist?.firstName} {novelist?.lastName}
           </S.NameMobile>

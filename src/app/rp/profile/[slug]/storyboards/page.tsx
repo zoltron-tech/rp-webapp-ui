@@ -14,7 +14,7 @@ import { getAllStoryboardsByUsernameAction } from "@/app/rp/story/actions";
 export default function MusesListPage({}) {
   const params = useParams();
   const [storyBoards, setMuses] = useState<StoryBoard[] | null>(null);
-  const { state, user } = useAuthContext();
+  const { state, user, novelist } = useAuthContext();
   const username = params?.slug as string;
   const isCurrentUser = user?.username === username;
   const [loading, setLoading] = useState(true);
@@ -45,6 +45,11 @@ export default function MusesListPage({}) {
     <S.Container>
       <S.MainSubtext>
         {isCurrentUser ? "Your" : username + "'s"} Stories
+      </S.MainSubtext>
+      <S.MainSubtext>
+        {isCurrentUser
+          ? storyBoards?.length + "/" + novelist?.tier.storyBoardLimit
+          : ""}
       </S.MainSubtext>
       <S.MuseListContainer>
         <ShouldRender if={isCurrentUser}>

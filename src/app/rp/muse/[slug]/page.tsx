@@ -260,7 +260,7 @@ export default function MuseProfilePage({}) {
         </S.CardExpandedWrapper>
       </ShouldRender>
       <S.SideMenu>
-        <ShouldRender if={muse?.video != null}>
+        <ShouldRender if={muse?.video != null && muse?.video !== ""}>
           <S.MenuButton>
             <S.MenuButtonIcon
               onClick={() => transition("VIDEO")}

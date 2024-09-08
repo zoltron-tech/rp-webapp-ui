@@ -280,7 +280,7 @@ export const SideMenu = styled.div`
   align-items: center;
   gap: 0.8rem;
 
-  container-name: muse-card;
+  container-name: side-menu;
   container-type: size;
 
   @container (min-width: 2559px) {
@@ -331,7 +331,7 @@ export const MenuButton = styled.div`
   @container (max-width: 400px) and (max-height: 100px) {
     justify-content: normal;
     width: 50px;
-    height: 50px;
+    height: 40px;
 
     &.stick-top {
       position: relative;
@@ -406,7 +406,7 @@ export const MuseName = styled.div`
   transform: translateY(100px);
   transition: opacity 0.5s ease, transform 0.5s ease;
 
-  @container (max-width: 500px) {
+  @media (max-width: 1000px) {
     opacity: 1;
     transform: none;
     transition: none;
@@ -423,7 +423,7 @@ export const AuthorContainer = styled.div`
   transform: translateY(100px);
   transition: opacity 0.5s ease, transform 0.5s ease;
 
-  @container (max-width: 500px) {
+  @media (max-width: 1000px) {
     opacity: 1;
     transform: none;
     transition: none;
@@ -472,13 +472,13 @@ export const Card = styled.div`
   height: 100%;
   contain: paint;
 
-  @container (max-width: 500px) {
+  @media (max-width: 1000px) {
     background: linear-gradient(
       ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
     );
   }
 
-  @container (min-width: 500px) {
+  @media (min-width: 1000px) {
     &:hover {
       background: linear-gradient(
         ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}

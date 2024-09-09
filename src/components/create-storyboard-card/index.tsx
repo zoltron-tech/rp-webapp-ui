@@ -152,7 +152,7 @@ export const CreateStoryBoardCard: FC<CreateStoryBoardCardProps> = ({ id }) => {
           <ShouldRender if={id != undefined}>
             <S.UsernameContainer>
               <span>Author: </span>
-              <Username username={user?.username} primary />
+              <Username username={storyBoard?.createdBy.username} primary />
             </S.UsernameContainer>
           </ShouldRender>
           <S.FormGroup className={id == null ? "new" : ""}>

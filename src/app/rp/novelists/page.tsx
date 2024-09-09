@@ -4,7 +4,7 @@ import { Logger } from "@/utils/services";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as S from "./styles";
-import { Button, Carousel } from "@novelist-world/ui";
+import { Carousel } from "@novelist-world/ui";
 import { MuseCard } from "@/components/muse-card";
 import { getHeroPageMusesAction } from "../muse/actions";
 import { Muse } from "@/types";

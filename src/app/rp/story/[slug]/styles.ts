@@ -49,7 +49,7 @@ export const SolidBackground = styled.div`
   top: clamp(270px, 30cqw, 330px);
   bottom: 0px;
   width: 100cqw;
-  background-color: ${({ theme }) => theme.cardBackgroundColor};
+  background-color: ${({ theme }) => theme.navbar};
   z-index: ${Z_INDEX.BACKGROUND};
   box-shadow: 0px -2px 4px 2px rgba(0, 0, 0, 0.498);
   padding: 40px;
@@ -75,6 +75,7 @@ export const StoryContainer = styled.div`
 `;
 
 export const PillContainer = styled.div`
+  margin-top: 20px;
   width: 100%;
   display: flex;
   flex-direction: column;

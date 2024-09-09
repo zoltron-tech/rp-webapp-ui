@@ -6,11 +6,10 @@ import { useAuthContext, useVisibility } from "@/hooks";
 import { FC, memo } from "react";
 
 import { NotificationsMenu } from "@/components/notifications-menu";
-import { Logger } from "@/utils/services";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { GoArrowRight } from "react-icons/go";
-import { SiBookstack } from "react-icons/si";
+import { GiQuillInk } from "react-icons/gi";
 import { ChatMenuModal } from "../../chat-menu-modal";
 import * as S from "./styles";
 
@@ -53,7 +52,7 @@ export const TopBar: FC<Props> = memo(({}) => {
         <S.LogoContainer onClick={onLogoClick}>
           <S.Logo>
             <S.LogoInner>
-              <SiBookstack />
+              <GiQuillInk />
             </S.LogoInner>
           </S.Logo>
           <S.LogoText>Novelist World</S.LogoText>

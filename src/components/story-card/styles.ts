@@ -41,7 +41,7 @@ export const Title = styled.div`
     bottom: -160px;
     right: -10;
   }
-  
+
   @container content-container (max-width: 1000px) {
     &.new {
       bottom: -100px;
@@ -63,6 +63,10 @@ export const CardWrapper = styled.div`
   min-height: 300px;
   border-radius: var(--border-radius);
   ${CARD_BORDER};
+
+  &.own {
+    border: 3px solid ${({ theme }) => theme.primary};
+  }
 
   transition: all 0.3s ease-in-out;
   contain: paint;

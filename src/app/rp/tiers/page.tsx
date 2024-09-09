@@ -1,10 +1,15 @@
 "use client";
 
 import * as S from "./styles";
-import { MdPentagon } from "react-icons/md";
-import { GiSparkles } from "react-icons/gi";
+import { TbSquareRoundedLetterSFilled } from "react-icons/tb";
+import {
+  TbCircleLetterS,
+  TbCircleLetterG,
+  TbCircleLetterP,
+} from "react-icons/tb";
+import { GiCircleClaws } from "react-icons/gi";
 import { GiGoldShell } from "react-icons/gi";
-import { GiAbstract047 } from "react-icons/gi";
+import { GiStarSwirl } from "react-icons/gi";
 import { Flex } from "@novelist-world/ui";
 
 export default function TiersCatalog() {
@@ -17,14 +22,14 @@ export default function TiersCatalog() {
             <S.InfoCard>
               <Flex direction="row" justify="center" align="center">
                 <S.Badge tier="standard">
-                  <MdPentagon />
+                  <TbSquareRoundedLetterSFilled />
                 </S.Badge>
                 <S.MainSubtext>Standard</S.MainSubtext>
               </Flex>
               <S.InfoContainer>
                 <S.InfoItem>
                   <S.InfoLabel>Muses:</S.InfoLabel>
-                  <S.InfoValue>20</S.InfoValue>
+                  <S.InfoValue>10</S.InfoValue>
                 </S.InfoItem>
                 <S.InfoItem>
                   <S.InfoLabel>Storyboards:</S.InfoLabel>
@@ -35,8 +40,16 @@ export default function TiersCatalog() {
                   <S.InfoValue>20</S.InfoValue>
                 </S.InfoItem>
                 <S.InfoItem>
-                  <S.InfoLabel>media storage:</S.InfoLabel>
+                  <S.InfoLabel>Media storage:</S.InfoLabel>
                   <S.InfoValue>1 GB</S.InfoValue>
+                </S.InfoItem>
+                <S.InfoItem>
+                  <S.InfoLabel>GIF-Enabled avatars:</S.InfoLabel>
+                  <S.NegtiveInfoValue>No</S.NegtiveInfoValue>
+                </S.InfoItem>
+                <S.InfoItem>
+                  <S.InfoLabel>Custom banner:</S.InfoLabel>
+                  <S.NegtiveInfoValue>No</S.NegtiveInfoValue>
                 </S.InfoItem>
                 <S.Divider />
                 <S.InfoItem>
@@ -51,7 +64,8 @@ export default function TiersCatalog() {
             <S.InfoCard>
               <Flex direction="row" justify="center" align="center">
                 <S.Badge tier="silver">
-                  <GiSparkles />
+                  <GiCircleClaws />
+                  <TbCircleLetterS className="letter" />
                 </S.Badge>
                 <S.MainSubtext>Silver</S.MainSubtext>
               </Flex>
@@ -69,8 +83,16 @@ export default function TiersCatalog() {
                   <S.InfoValue>25</S.InfoValue>
                 </S.InfoItem>
                 <S.InfoItem>
-                  <S.InfoLabel>media storage:</S.InfoLabel>
+                  <S.InfoLabel>Media storage:</S.InfoLabel>
                   <S.InfoValue>3 GB</S.InfoValue>
+                </S.InfoItem>
+                <S.InfoItem>
+                  <S.InfoLabel>GIF-Enabled avatars:</S.InfoLabel>
+                  <S.PositiveInfoValue>Yes</S.PositiveInfoValue>
+                </S.InfoItem>
+                <S.InfoItem>
+                  <S.InfoLabel>Custom banner:</S.InfoLabel>
+                  <S.NegtiveInfoValue>No</S.NegtiveInfoValue>
                 </S.InfoItem>
                 <S.Divider />
                 <S.InfoItem>
@@ -86,6 +108,7 @@ export default function TiersCatalog() {
               <Flex direction="row" justify="center" align="center">
                 <S.Badge tier="gold">
                   <GiGoldShell />
+                  <TbCircleLetterG className="letter" />
                 </S.Badge>
                 <S.MainSubtext>Gold</S.MainSubtext>
               </Flex>
@@ -99,12 +122,20 @@ export default function TiersCatalog() {
                   <S.InfoValue>20</S.InfoValue>
                 </S.InfoItem>
                 <S.InfoItem>
-                  <S.InfoLabel>Events / storyboards:</S.InfoLabel>
+                  <S.InfoLabel>Events per storyboards:</S.InfoLabel>
                   <S.InfoValue>30</S.InfoValue>
                 </S.InfoItem>
                 <S.InfoItem>
-                  <S.InfoLabel>media storage:</S.InfoLabel>
+                  <S.InfoLabel>Media storage:</S.InfoLabel>
                   <S.InfoValue>10 GB</S.InfoValue>
+                </S.InfoItem>
+                <S.InfoItem>
+                  <S.InfoLabel>GIF-Enabled avatars:</S.InfoLabel>
+                  <S.PositiveInfoValue>Yes</S.PositiveInfoValue>
+                </S.InfoItem>
+                <S.InfoItem>
+                  <S.InfoLabel>Custom banner:</S.InfoLabel>
+                  <S.PositiveInfoValue>Yes</S.PositiveInfoValue>
                 </S.InfoItem>
                 <S.Divider />
                 <S.InfoItem>
@@ -119,7 +150,8 @@ export default function TiersCatalog() {
             <S.InfoCard>
               <Flex direction="row" justify="center" align="center">
                 <S.Badge tier="premium">
-                  <GiAbstract047 />
+                  <GiStarSwirl />
+                  <TbCircleLetterP className="letter" />
                 </S.Badge>
                 <S.MainSubtext>Premium</S.MainSubtext>
               </Flex>
@@ -137,13 +169,21 @@ export default function TiersCatalog() {
                   <S.InfoValue>50</S.InfoValue>
                 </S.InfoItem>
                 <S.InfoItem>
-                  <S.InfoLabel>media storage:</S.InfoLabel>
-                  <S.InfoValue>25 GB</S.InfoValue>
+                  <S.InfoLabel>Media storage:</S.InfoLabel>
+                  <S.InfoValue>30 GB</S.InfoValue>
+                </S.InfoItem>
+                <S.InfoItem>
+                  <S.InfoLabel>GIF-Enabled avatars:</S.InfoLabel>
+                  <S.PositiveInfoValue>Yes</S.PositiveInfoValue>
+                </S.InfoItem>
+                <S.InfoItem>
+                  <S.InfoLabel>Custom banner:</S.InfoLabel>
+                  <S.PositiveInfoValue>Yes</S.PositiveInfoValue>
                 </S.InfoItem>
                 <S.Divider />
                 <S.InfoItem>
                   <S.InfoLabel>Monthly price</S.InfoLabel>
-                  <S.InfoValue>$7.99</S.InfoValue>
+                  <S.InfoValue>$6.99</S.InfoValue>
                 </S.InfoItem>
                 <S.FormButton secondary>Subscribe</S.FormButton>
               </S.InfoContainer>

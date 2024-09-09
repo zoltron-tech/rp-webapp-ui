@@ -43,15 +43,20 @@ export default function MusesListPage({}) {
 
   return (
     <S.Container>
-      <S.MainSubtext>
-        {isCurrentUser ? "Your" : username + "'s"} Muses
-      </S.MainSubtext>
-      <S.MainSubtext>
+      <S.Maintext>{isCurrentUser ? "Your" : username + "'s"} Muses</S.Maintext>
+      <S.Subtext>
         {isCurrentUser ? muses?.length + "/" + novelist?.tier.museLimit : ""}
-      </S.MainSubtext>
+      </S.Subtext>
       <S.MuseListContainer>
-        <ShouldRender if={isCurrentUser}>
-          <MuseCard key={null} muse={INITIAL_MUSE}></MuseCard>
+        <ShouldRender
+          if={
+            isCurrentUser &&
+            muses != null &&
+            novelist != null &&
+            muses.length < novelist?.tier.museLimit
+          }
+        >
+          <MuseCard disabled key={null} muse={INITIAL_MUSE}></MuseCard>
         </ShouldRender>
         {muses &&
           muses.map((muse) => <MuseCard key={muse?.id} muse={muse}></MuseCard>)}

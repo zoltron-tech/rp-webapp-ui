@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getStoryboardAction } from "../actions";
 import * as S from "./styles";
-import { ShouldRender } from "@/components/common";
+import { ShouldRender, Username } from "@/components/common";
 import { PageLoader } from "@/components/layout";
 import { MusesPill } from "@/components/muses-pill";
 
@@ -61,6 +61,8 @@ export default function UserProfilePage({}) {
           size={250}
         />
         <S.Name>{storyboard?.name}</S.Name>
+        <span>Author:</span>{" "}
+        <Username primary username={storyboard?.createdBy.username} />
         <S.PillContainer>
           <MusesPill
             title="WRITERS"

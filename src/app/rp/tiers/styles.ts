@@ -22,13 +22,12 @@ export const CardsContainer = styled.div`
 
 export const Badge = styled.div<{ tier: string }>`
   position: relative;
-  left: 0px;
   display: flex;
   justify-content: center;
   align-items: center;
   align-self: flex-end;
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
   background-image: ${({ tier }) => {
     switch (tier.toLowerCase()) {
       case "silver":
@@ -43,18 +42,26 @@ export const Badge = styled.div<{ tier: string }>`
   }};
 
   border-radius: 60%;
-  cursor: pointer;
   z-index: ${Z_INDEX.MODAL};
 
-  &:hover {
-    & svg {
-      transform: scale(1.2);
-    }
-  }
-
   & svg {
-    width: 30px;
-    height: 30px;
+    &.letter {
+      color: ${({ tier }) => {
+        switch (tier.toLowerCase()) {
+          case "silver":
+            return "#3a3f37"; // silver color for Silver
+          case "gold":
+            return "#4a3500"; // gold color for Gold
+          case "premium":
+            return "#002d1a"; // indigo for Premium
+          default:
+            return "#000"; // default black
+        }
+      }};
+    }
+    position: absolute;
+    width: 40px;
+    height: 40px;
     transition: transform 0.2s ease;
     color: ${({ tier }) => {
       switch (tier.toLowerCase()) {
@@ -65,7 +72,7 @@ export const Badge = styled.div<{ tier: string }>`
         case "gold":
           return "#dea702"; // gold color for Gold
         case "premium":
-          return "#000"; // indigo for Premium
+          return "#7fffd4"; // indigo for Premium
         default:
           return "#000"; // default black
       }
@@ -123,7 +130,7 @@ export const InfoCard = styled(Container)`
   @container (max-width: 600px) {
     & {
       width: 350px;
-      height: 400px;
+      height: 450px;
     }
   }
 `;
@@ -180,6 +187,18 @@ export const InfoValue = styled.span`
   width: 30%;
   text-align: end;
   vertical-align: middle;
+`;
+
+export const PositiveInfoValue = styled(InfoValue)`
+  width: 30%;
+  font-weight: 800;
+  color: green;
+`;
+
+export const NegtiveInfoValue = styled(InfoValue)`
+  width: 30%;
+  font-weight: 800;
+  color: ${({ theme }) => theme.error};
 `;
 
 export const FormButton = styled(Button)`

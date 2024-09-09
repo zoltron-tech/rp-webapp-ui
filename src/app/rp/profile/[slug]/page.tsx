@@ -25,10 +25,15 @@ import { getUserActivities } from "../../home/actions";
 import ActivityBox from "@/components/activity-box";
 import { getAllStoryboardsByUsernameAction } from "../../story/actions";
 import StoryCard from "@/components/story-card";
-import { MdPentagon } from "react-icons/md";
-import { GiSparkles } from "react-icons/gi";
+import { TbSquareRoundedLetterSFilled } from "react-icons/tb";
+import {
+  TbCircleLetterS,
+  TbCircleLetterG,
+  TbCircleLetterP,
+} from "react-icons/tb";
+import { GiCircleClaws } from "react-icons/gi";
 import { GiGoldShell } from "react-icons/gi";
-import { GiAbstract047 } from "react-icons/gi";
+import { GiStarSwirl } from "react-icons/gi";
 
 import { Flex } from "@novelist-world/ui";
 
@@ -281,10 +286,21 @@ export default function UserProfilePage({}) {
               className={`badge-${novelist?.tier.name?.toLowerCase()}`}
               onClick={toTiersPage}
             >
-              {novelist?.tier.name == "STANDARD" && <MdPentagon />}
-              {novelist?.tier.name == "SILVER" && <GiSparkles />}
+              {novelist?.tier.name == "STANDARD" && (
+                <TbSquareRoundedLetterSFilled />
+              )}
+              {novelist?.tier.name == "SILVER" && <GiCircleClaws />}
+              {novelist?.tier.name == "SILVER" && (
+                <TbCircleLetterS className="letter" />
+              )}
               {novelist?.tier.name == "GOLD" && <GiGoldShell />}
-              {novelist?.tier.name == "PREMIUM" && <GiAbstract047 />}
+              {novelist?.tier.name == "GOLD" && (
+                <TbCircleLetterG className="letter" />
+              )}
+              {novelist?.tier.name == "PREMIUM" && <GiStarSwirl />}
+              {novelist?.tier.name == "PREMIUM" && (
+                <TbCircleLetterP className="letter" />
+              )}
             </S.ExtendedBadge>
           </Flex>
           <S.NameMobile>

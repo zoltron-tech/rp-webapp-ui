@@ -27,7 +27,7 @@ export const MuseListContainer = styled.div`
   }
 `;
 
-export const MainSubtext = styled.div`
+export const Maintext = styled.div`
   margin-left: 5px;
   text-transform: uppercase;
   font-size: 28px;
@@ -44,6 +44,27 @@ export const MainSubtext = styled.div`
   @container (max-width: 600px) {
     & {
       font-size: 18px;
+    }
+  }
+`;
+
+export const Subtext = styled.div`
+  margin-left: 5px;
+  text-transform: uppercase;
+  font-size: 22px;
+  font-weight: 300;
+  font-style: italic;
+  text-align: center;
+
+  @container (max-width: 1000px) {
+    & {
+      font-size: 18px;
+    }
+  }
+
+  @container (max-width: 600px) {
+    & {
+      font-size: 16px;
     }
   }
 `;

@@ -72,16 +72,16 @@ export const Logo = styled.div`
 `;
 
 export const LogoInner = styled.div`
-  height: 70cqh;
-  width: 70cqh;
+  height: 75cqh;
+  width: 75cqh;
   margin-inline: auto;
   border-radius: 40cqh;
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: ${({ theme }) =>
-    setOpacity(pSBC(-0.2, theme.primary) as string, 0.5)};
-  border: 2px solid ${({ theme }) => theme.primary};
+    setOpacity(pSBC(-0.8, theme.primary) as string, 0.5)};
+  border: 1px solid ${({ theme }) => theme.primary};
   transition-property: width, height, transform;
   transition-duration: 0.2s;
   transition-timing-function: ease-in-out;

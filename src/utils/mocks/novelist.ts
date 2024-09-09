@@ -49,6 +49,7 @@ const NOVELIST_MOCK: Novelist = {
   friends: [
     {
       _tag: "Friend",
+      id: "",
       username: "Jonah",
       image: "",
     },

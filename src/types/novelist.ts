@@ -47,6 +47,7 @@ export interface Novelist extends Tagged {
 
 export interface Friend extends Tagged {
   _tag: "Friend";
+  id: string;
   username: string;
   image: string;
 }

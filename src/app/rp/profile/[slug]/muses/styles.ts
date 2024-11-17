@@ -12,12 +12,12 @@ export const Container = styled.div`
 export const MuseListContainer = styled.div`
   ${DEV_MODE_BORDER("red")}
   padding-top: 10px;
-  padding-inline: 40px;
+  padding-inline: 60px;
   display: flex;
   flex-wrap: wrap;
   margin-inline: auto;
   justify-content: center;
-  gap: 1rem;
+  gap: 0.3rem;
 
   @container (max-width: 800px) {
     & {

@@ -13,6 +13,10 @@ import { GiStarSwirl } from "react-icons/gi";
 import { Flex } from "@novelist-world/ui";
 
 export default function TiersCatalog() {
+  const onLoginClick = () => {
+    window.location.replace(`${process.env.RP_LOGIN_URL}?modal=SIGNUP`);
+  };
+
   return (
     <>
       <Flex style={{ marginTop: "40px" }} direction="column">
@@ -56,7 +60,7 @@ export default function TiersCatalog() {
                   <S.InfoLabel>Monthly price</S.InfoLabel>
                   <S.InfoValue>FREE</S.InfoValue>
                 </S.InfoItem>
-                <S.FormButton>Join</S.FormButton>
+                <S.FormButton onClick={onLoginClick}>Join</S.FormButton>
               </S.InfoContainer>
             </S.InfoCard>
           </S.StandardInfoCardBorder>
@@ -97,9 +101,9 @@ export default function TiersCatalog() {
                 <S.Divider />
                 <S.InfoItem>
                   <S.InfoLabel>Monthly price</S.InfoLabel>
-                  <S.InfoValue>$0.99</S.InfoValue>
+                  <S.InfoValue>--</S.InfoValue>
                 </S.InfoItem>
-                <S.FormButton secondary>Subscribe</S.FormButton>
+                <S.FormButton secondary>Coming Soon</S.FormButton>
               </S.InfoContainer>
             </S.InfoCard>
           </S.SilverInfoCardBorder>
@@ -140,9 +144,9 @@ export default function TiersCatalog() {
                 <S.Divider />
                 <S.InfoItem>
                   <S.InfoLabel>Monthly price</S.InfoLabel>
-                  <S.InfoValue>$3.99</S.InfoValue>
+                  <S.InfoValue>--</S.InfoValue>
                 </S.InfoItem>
-                <S.FormButton secondary>Subscribe</S.FormButton>
+                <S.FormButton secondary>Coming Soon</S.FormButton>
               </S.InfoContainer>
             </S.InfoCard>
           </S.GoldInfoCardBorder>
@@ -183,9 +187,9 @@ export default function TiersCatalog() {
                 <S.Divider />
                 <S.InfoItem>
                   <S.InfoLabel>Monthly price</S.InfoLabel>
-                  <S.InfoValue>$6.99</S.InfoValue>
+                  <S.InfoValue>--</S.InfoValue>
                 </S.InfoItem>
-                <S.FormButton secondary>Subscribe</S.FormButton>
+                <S.FormButton secondary>Coming Soon</S.FormButton>
               </S.InfoContainer>
             </S.InfoCard>
           </S.PremiumInfoCardBorder>

@@ -98,16 +98,25 @@ export default function MuseProfilePage({}) {
     return muse?.connections
       ?.slice(0, slice ? slice : muse?.connections.length)
       .map((connection) => (
-        <S.Avatar
-          src={connection.image}
-          alt={connection.firstName}
-          size={65}
-          key={connection.firstName}
-          className={className}
-          name={connection.firstName}
-          onClick={() => onMuseAvatarClick(connection.id ? connection.id : "")}
-          hoverable
-        />
+        <>
+          <S.ConnectionItem
+            onClick={() =>
+              onMuseAvatarClick(connection.id ? connection.id : "")
+            }
+          >
+            <S.Avatar
+              src={connection.image}
+              alt={connection.firstName}
+              size={65}
+              key={connection.firstName}
+              className={className}
+              name={connection.firstName}
+            />
+            <S.ConnectionLabel>
+              {connection.firstName} {connection.lastName}
+            </S.ConnectionLabel>
+          </S.ConnectionItem>
+        </>
       ));
   };
 

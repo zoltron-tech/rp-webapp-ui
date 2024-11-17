@@ -1,4 +1,4 @@
-export const BORDER_RADIUS = "16px";
+export const BORDER_RADIUS = "12px";
 
 export enum Z_INDEX {
   MODAL = 100,

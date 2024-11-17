@@ -56,7 +56,7 @@ export default function MusesListPage({}) {
             novelist?.tier.storyBoardLimit
           : ""}
       </S.Subtext>
-      <S.MuseListContainer>
+      <S.StoryListContainer>
         <ShouldRender if={isCurrentUser}>
           <StoryCard key={null} storyBoard={INITIAL_STORY_BOARD}></StoryCard>
         </ShouldRender>
@@ -74,7 +74,7 @@ export default function MusesListPage({}) {
               />
             );
           })}
-      </S.MuseListContainer>
+      </S.StoryListContainer>
     </S.Container>
   );
 }

@@ -9,15 +9,15 @@ export const Container = styled.div`
   gap: 1rem;
 `;
 
-export const MuseListContainer = styled.div`
+export const StoryListContainer = styled.div`
   ${DEV_MODE_BORDER("red")}
   padding-top: 20px;
-  padding-inline: 10px;
+  padding-inline: 30px;
   display: flex;
   flex-wrap: wrap;
   margin-inline: auto;
   justify-content: center;
-  gap: 1rem;
+  gap: 0.3rem;
 
   @container (max-width: 800px) {
     & {

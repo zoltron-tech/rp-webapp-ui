@@ -526,6 +526,28 @@ export const VideoCardContent = styled.div`
   height: 100%;
 `;
 
+export const ConnectionItem = styled.div`
+  justify-content: space-between;
+  display: flex;
+  flex-direction: row;
+  width: inherit;
+  font-size: 12px;
+  padding-inline: 20px;
+  border-radius: ${BORDER_RADIUS};
+
+  &:hover {
+    cursor: pointer;
+    background-color: ${({ theme }) => theme.hoverGreyAlpha};
+  }
+`;
+
+export const ConnectionLabel = styled.span`
+  font-weight: bold;
+  text-align: start;
+  align-self: center;
+  vertical-align: middle;
+`;
+
 export const ScrollableContent = styled.div`
   margin-bottom: 20px;
   overflow-y: auto;
@@ -596,6 +618,7 @@ export const InfoValue = styled.span`
 
 export const ExpandedContentInner = styled.div`
   display: flex;
+  direction: column;
   flex-wrap: wrap;
   margin-inline: auto;
   justify-content: center;

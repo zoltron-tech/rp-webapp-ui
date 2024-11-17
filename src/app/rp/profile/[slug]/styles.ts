@@ -107,7 +107,7 @@ export const PartitionContainer = styled.div`
   flex-direction: row;
   justify-content: start;
   align-items: flex-start;
-  gap: 1rem;
+  gap: 0.3rem;
   overflow-x: auto;
 
   @container (max-width: 1200px) {

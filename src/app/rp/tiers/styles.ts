@@ -118,7 +118,6 @@ export const InfoCard = styled(Container)`
   background-color: ${({ theme }) => setOpacity(theme.navbar, 0.95)} !important;
   padding: 30px;
   cursor: default !important;
-  border: 1px solid dimgray;
 
   @-moz-document url-prefix() {
     backdrop-filter: none !important;

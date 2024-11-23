@@ -135,16 +135,10 @@ export const SourceName = styled.div`
 
 export const ActivityText = styled.div`
   text-transform: uppercase;
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 200;
   font-style: italic;
   text-align: center;
-
-  @container (max-width: 1000px) {
-    & {
-      font-size: 14px;
-    }
-  }
 
   @container (max-width: 800px) {
     & {
@@ -165,64 +159,24 @@ export const ActivityText = styled.div`
   }
 `;
 
-export const ViewMoreText = styled.div`
-  font-size: 14px;
+export const ViewMoreText = styled(ActivityText)`
   font-weight: 500;
-  font-style: italic;
-  text-align: center;
   cursor: pointer;
-
-  @container (max-width: 800px) {
-    & {
-      font-size: 12px;
-    }
-  }
-
-  @container (max-width: 700px) {
-    & {
-      font-size: 10px;
-    }
-  }
-
-  @container (max-width: 500px) {
-    & {
-      font-size: 8px;
-    }
-  }
 `;
 
-export const PromptText = styled.div`
-  font-size: 14px;
-  font-weight: 200;
+export const PromptText = styled(ActivityText)`
+  text-transform: unset;
+  font-style: unset;
+  text-align: unset;
   max-width: 60%;
-  font-style: italic;
   margin-top: 30px;
   white-space: pre-wrap;
-
-  @container (max-width: 800px) {
-    & {
-      font-size: 12px;
-    }
-  }
-
-  @container (max-width: 700px) {
-    & {
-      font-size: 10px;
-    }
-  }
-
-  @container (max-width: 500px) {
-    & {
-      font-size: 8px;
-    }
-  }
 `;
 
 export const PromptFooterText = styled.div`
   text-transform: uppercase;
   font-size: 14px;
-  font-weight: 200;
-  max-width: 80%;
+  font-weight: 400;
   font-style: italic;
   text-align: center;
   margin-block: 20px;
@@ -314,8 +268,6 @@ export const CardWrapper = styled.div`
   position: relative;
   width: 500px;
   height: 500px;
-  min-width: 500px;
-  min-height: 500px;
   margin-inline: 100px;
   border-radius: 5%;
   margin-block: 20px;
@@ -328,18 +280,10 @@ export const CardWrapper = styled.div`
   container-name: muse-card;
   container-type: size;
 
-  @container content-container (max-width: 1000px) {
-    & {
-      margin-inline: 40px;
-    }
-  }
-
   @container content-container (max-width: 800px) {
     & {
       width: 400px;
       height: 400px;
-      min-width: 400px;
-      min-height: 400px;
       margin-inline: 20px;
       margin-bottom: 30px;
     }
@@ -349,8 +293,6 @@ export const CardWrapper = styled.div`
     & {
       width: 350px;
       height: 350px;
-      min-width: 350px;
-      min-height: 350px;
       margin-inline: 10px;
       margin-bottom: 20px;
     }
@@ -360,9 +302,7 @@ export const CardWrapper = styled.div`
     & {
       width: 300px;
       height: 300px;
-      min-width: 300px;
-      min-height: 300px;
-      margin-inline: 0px;
+      margin-inline: unset;
       margin-bottom: 10px;
     }
   }
@@ -371,8 +311,7 @@ export const CardWrapper = styled.div`
     & {
       width: 250px;
       height: 250px;
-      min-width: 250px;
-      min-height: 250px;
+      margin-inline: 0px;
       margin-bottom: 10px;
     }
   }
@@ -381,8 +320,7 @@ export const CardWrapper = styled.div`
     & {
       width: 200px;
       height: 200px;
-      min-width: 200px;
-      min-height: 200px;
+      margin-inline: 0px;
       margin-bottom: 0px;
     }
   }

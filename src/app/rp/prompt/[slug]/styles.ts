@@ -23,11 +23,11 @@ export const ParentContainer = styled(Container)`
 `;
 
 export const RepliesContainer = styled(Container)`
-  margin-bottom: 15px;
-  margin-left: 80px;
-  margin-right: 0px;
+  margin-bottom: 80px;
+  margin-left: 150px;
 
   @container content-container (max-width: 600px) {
+    margin-bottom: 50px;
     margin-left: 40px;
   }
 `;
@@ -36,6 +36,7 @@ export const CommentsHeader = styled.div`
   font-size: 18px;
   font-weight: 500;
   margin-block: 10px;
+  margin-left: 100px;
   text-align: left;
   width: 100%;
 
@@ -91,7 +92,14 @@ export const HeaderContainer = styled.div`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+  padding-left: 20px;
   width: 100%;
+
+  @container (max-width: 800px) {
+    & {
+      padding-left: unset;
+    }
+  }
 `;
 
 export const Avatar = styled(Common.Avatar)`
@@ -167,23 +175,27 @@ export const PromptText = styled.div`
   font-size: 14px;
   font-weight: 200;
   max-width: 60%;
+  padding-left: 25px;
   font-style: italic;
   white-space: pre-wrap;
 
   @container (max-width: 800px) {
     & {
+      padding-left: unset;
       font-size: 12px;
     }
   }
 
   @container (max-width: 700px) {
     & {
+      padding-left: unset;
       font-size: 10px;
     }
   }
 
   @container (max-width: 500px) {
     & {
+      padding-left: unset;
       font-size: 8px;
     }
   }
@@ -192,7 +204,6 @@ export const PromptText = styled.div`
 export const Date = styled.div`
   font-size: 12px;
   font-weight: 200;
-  margin-bottom: 40px;
 
   @container (max-width: 1400px) {
     & {

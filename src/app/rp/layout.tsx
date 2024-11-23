@@ -1,7 +1,7 @@
 "use client";
 
 import { THEME_DARK, THEME_LIGHT } from "@/theme";
-import { ContentContainer, Footer, TopBar } from "@/components/layout";
+import { ContentContainer, TopBar } from "@/components/layout";
 import { AuthProvider, StoreProvider, UIContextProvider } from "@/context";
 import React, { useMemo } from "react";
 import { useCookies } from "react-cookie";
@@ -30,7 +30,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <S.PageContainer>
               <TopBar />
               <ContentContainer>{children}</ContentContainer>
-              <Footer />
             </S.PageContainer>
           </UIContextProvider>
         </AuthProvider>

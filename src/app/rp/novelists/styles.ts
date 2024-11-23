@@ -11,6 +11,7 @@ export const PageContainer = styled.div`
   margin-top: 30px;
   padding-bottom: 30px;
   border-bottom: 1px solid dimgray;
+  background-image: url(https://cli.github.com/assets/images/light-glow.svg);
 `;
 
 export const MainButton = styled(Button)`

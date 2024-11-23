@@ -1,10 +1,9 @@
 import { Tagged } from "./common";
-import { Novelist } from "./novelist";
 
 export interface Activity extends Tagged {
   _tag: "Activity";
   id: string;
-  novelist: Novelist;
+  source: ActivitySource;
   target: ActivityTarget;
   activityText: string;
   date: number;
@@ -16,4 +15,13 @@ export interface ActivityTarget extends Tagged {
   title: string;
   activityTargetType: string;
   url: string;
+}
+
+export interface ActivitySource extends Tagged {
+  _tag: "ActivitySource";
+  id: string;
+  title: string;
+  activitySourceType: string;
+  image: string;
+  urlProp: string;
 }

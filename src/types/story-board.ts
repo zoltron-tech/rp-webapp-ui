@@ -7,6 +7,7 @@ export interface StoryBoard extends Tagged {
   name: string;
   image: string | null;
   members: StoryBoardMember[];
+  events: StoryBoardEvent[];
   createdBy: Friend;
 }
 
@@ -16,4 +17,16 @@ export interface StoryBoardMember extends Tagged {
   storyBoardId: string;
   image: string;
   isAdmin: boolean;
+}
+
+export interface StoryBoardEvent extends Tagged {
+  _tag: "StoryBoardEvent";
+  id: string | null;
+  storyBoardId: string;
+  name: string;
+  description: string;
+  image: string | null;
+  location: string | null;
+  eventTime: string | null;
+  createdAt: string | null;
 }

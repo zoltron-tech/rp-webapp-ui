@@ -8,6 +8,8 @@ import classNames from "classnames";
 import { Activity, ActivityTarget } from "@/types/activity";
 import moment from "moment";
 import { ShouldRender } from "../common";
+import { FaComments } from "react-icons/fa6";
+import { Flex } from "@novelist-world/ui";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   activity?: Activity | null;
@@ -42,15 +44,25 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
 
     if (activity?.target.activityTargetType === "MUSE")
       push(`/rp/muse/${activity.target.id}`);
+    else if (activity?.target.activityTargetType === "PROMPT")
+      push(`/rp/prompt/${activity.target.id}`);
     else if (activity?.target.activityTargetType === "STORY_BOARD")
       push(`/rp/story/${activity.target.id}`);
     else if (activity?.target.activityTargetType === "PROFILE")
-      push(`/rp/profile/${activity.novelist.username}`);
+      push(`/rp/profile/${activity.source.urlProp}`);
   };
 
-  const onAvatarClick = () => {
-    if (!activity) return;
-    push(`/rp/profile/${activity.novelist.username}`);
+  const onAvatarClick = (
+    e: React.MouseEvent<HTMLDivElement>,
+    activity: Activity
+  ) => {
+    const target = e.target as HTMLDivElement;
+    if (target.classList.contains("button")) return;
+
+    if (activity?.source.activitySourceType === "MUSE")
+      push(`/rp/muse/${activity.source.id}`);
+    else if (activity?.source.activitySourceType === "NOVELIST")
+      push(`/rp/profile/${activity.source.urlProp}`);
   };
 
   const toFormattedDate = (unixTime: number): string => {
@@ -76,65 +88,94 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
   return (
     <S.ParentContainer>
       <S.HeaderContainer>
-        <S.Avatar
-          src={activity.novelist?.image || ""}
-          alt={""}
-          size={50}
-          onClick={onAvatarClick}
-          hoverable
-        />
-        <S.ActivityText>
-          {activity.novelist.firstName} {activity.activityText}
-        </S.ActivityText>
+        <Flex>
+          <S.Avatar
+            src={activity.source?.image || ""}
+            alt={""}
+            size={50}
+            onClick={(e) => onAvatarClick(e, activity)}
+            hoverable
+          />
+
+          <S.SourceName onClick={(e) => onAvatarClick(e, activity)}>
+            {" "}
+            {activity.source.title}
+          </S.SourceName>
+          <S.ActivityText>{activity.activityText}</S.ActivityText>
+        </Flex>
         <S.Date>{toFormattedDate(activity.date)}</S.Date>
       </S.HeaderContainer>
-      <S.CardWrapper>
-        <ShouldRender if={mediaType === "image" || !mediaType}>
-          <S.CardBackground
-            banner={activity.target.url || ""}
-            className="image"
-          />
+      <Flex direction="column" align="flex-start">
+        <ShouldRender if={activity.target.activityTargetType === "PROMPT"}>
+          <S.PromptText>
+            {activity.target.title.length > 80
+              ? `${activity.target.title.slice(0, 80)} ...`
+              : activity.target.title}
+          </S.PromptText>
+          <ShouldRender if={activity.target.title.length > 80}>
+            <S.ViewMoreText onClick={(e) => handleCardClick(e, activity)}>
+              Read more...
+            </S.ViewMoreText>
+          </ShouldRender>
         </ShouldRender>
-        <ShouldRender if={mediaType === "video"}>
-          <S.Video
-            className="video"
-            src={activity.target.url  + "#t=0.3"}
-            controls
-          ></S.Video>
-        </ShouldRender>
-        <ShouldRender if={mediaType === "audio"}>
-          <S.Audio
-            className="audio"
-            src={activity.target.url}
-            controls
-          ></S.Audio>
-        </ShouldRender>
-        <S.Card
-          className={classNames([
-            "muse-card",
-            {
-              new: !activity.target.title,
-            },
-          ])}
-          onClick={(e) => handleCardClick(e, activity)}
-        >
-          <S.CardHeader>
-            <S.ActivityInfo>
-              <S.Title
-                className={classNames([
-                  className,
-                  {
-                    new: !activity.target.title,
-                  },
-                ])}
-                {...rest}
-              >
-                {activity.target.title}
-              </S.Title>
-            </S.ActivityInfo>
-          </S.CardHeader>
-        </S.Card>
-      </S.CardWrapper>
+        <S.CardWrapper>
+          <ShouldRender if={mediaType === "image" || !mediaType}>
+            <S.CardBackground
+              banner={activity.target.url || ""}
+              className="image"
+            />
+          </ShouldRender>
+          <ShouldRender if={mediaType === "video"}>
+            <S.Video
+              className="video"
+              src={activity.target.url + "#t=0.3"}
+              controls
+            ></S.Video>
+          </ShouldRender>
+          <ShouldRender if={mediaType === "audio"}>
+            <S.Audio
+              className="audio"
+              src={activity.target.url}
+              controls
+            ></S.Audio>
+          </ShouldRender>
+          <S.Card
+            className={classNames([
+              "muse-card",
+              {
+                new: !activity.target.title,
+              },
+            ])}
+            onClick={(e) => handleCardClick(e, activity)}
+          >
+            <ShouldRender if={activity.target.activityTargetType !== "PROMPT"}>
+              <S.CardHeader>
+                <S.ActivityInfo>
+                  <S.Title
+                    className={classNames([
+                      className,
+                      {
+                        new: !activity.target.title,
+                      },
+                    ])}
+                    {...rest}
+                  >
+                    {activity.target.title}
+                  </S.Title>
+                </S.ActivityInfo>
+              </S.CardHeader>
+            </ShouldRender>
+          </S.Card>
+        </S.CardWrapper>
+      </Flex>
+      <ShouldRender if={activity.target.activityTargetType === "PROMPT"}>
+        <S.FooterContainer>
+          <FaComments />{" "}
+          <S.PromptFooterText onClick={(e) => handleCardClick(e, activity)}>
+            View Comments & Replies.
+          </S.PromptFooterText>
+        </S.FooterContainer>
+      </ShouldRender>
     </S.ParentContainer>
   );
 };

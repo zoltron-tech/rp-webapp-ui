@@ -11,6 +11,8 @@ import { Muse } from "@/types";
 import { useAuthContext } from "@/hooks";
 import { useRouter } from "next/navigation";
 import TiersCatalog from "../tiers/page";
+import { PageContainer } from "../styles";
+import { Footer } from "@/components/layout";
 
 const NovelistCarouselDynamic = dynamic(
   () => import("@/components/novelist-carousel"),
@@ -104,32 +106,35 @@ export default function NovelistsPage() {
         </Carousel>
       </S.MuseCarouselContainer>
 
-      <S.CardsContainer>
-        <S.InfoCard tiltOnHover effectStrength={15}>
-          <S.MainSubtext>Create Your Own Realm</S.MainSubtext>
-          <S.Story>
-            Create and customize realms, populate them with unique characters,
-            and fill them with magical objects. Your imagination is the only
-            limit.
-          </S.Story>
-        </S.InfoCard>
-        <S.InfoCard tiltOnHover effectStrength={15}>
-          <S.MainSubtext>Collaborate and Connect</S.MainSubtext>
-          <S.Story>
-            Work with fellow writers to expand your stories. Share ideas,
-            develop plots, and create something extraordinary together.
-          </S.Story>
-        </S.InfoCard>
-        <S.InfoCard tiltOnHover effectStrength={15}>
-          <S.MainSubtext>Join a Thriving Community</S.MainSubtext>
-          <S.Story>
-            Whether you are a seasoned writer or just starting, you will find
-            inspiration and support in our diverse and welcoming community.
-          </S.Story>
-        </S.InfoCard>
-      </S.CardsContainer>
+      <S.PageContainer>
+        <S.CardsContainer>
+          <S.InfoCard tiltOnHover effectStrength={15}>
+            <S.MainSubtext>Create Your Own Realm</S.MainSubtext>
+            <S.Story>
+              Create and customize realms, populate them with unique characters,
+              and fill them with magical objects. Your imagination is the only
+              limit.
+            </S.Story>
+          </S.InfoCard>
+          <S.InfoCard tiltOnHover effectStrength={15}>
+            <S.MainSubtext>Collaborate and Connect</S.MainSubtext>
+            <S.Story>
+              Work with fellow writers to expand your stories. Share ideas,
+              develop plots, and create something extraordinary together.
+            </S.Story>
+          </S.InfoCard>
+          <S.InfoCard tiltOnHover effectStrength={15}>
+            <S.MainSubtext>Join a Thriving Community</S.MainSubtext>
+            <S.Story>
+              Whether you are a seasoned writer or just starting, you will find
+              inspiration and support in our diverse and welcoming community.
+            </S.Story>
+          </S.InfoCard>
+        </S.CardsContainer>
 
-      <TiersCatalog></TiersCatalog>
+        <TiersCatalog></TiersCatalog>
+      </S.PageContainer>
+      <Footer />
     </>
   );
 }

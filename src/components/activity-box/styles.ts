@@ -8,9 +8,19 @@ export const ParentContainer = styled(Container)`
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  width: 800px;
   padding-inline: 60px;
   margin-block: 5px;
   padding-top: 10px;
+
+  @container content-container (max-width: 800px) {
+    padding-inline: 10px;
+    margin-block: 0px;
+    width: 100%;
+    border-radius: 0px;
+    border: none;
+    width: 600px;
+  }
 
   @container content-container (max-width: 600px) {
     padding-inline: 10px;
@@ -18,6 +28,25 @@ export const ParentContainer = styled(Container)`
     width: 100%;
     border-radius: 0px;
     border: none;
+    width: 500px;
+  }
+
+  @container content-container (max-width: 500px) {
+    padding-inline: 10px;
+    margin-block: 0px;
+    width: 100%;
+    border-radius: 0px;
+    border: none;
+    width: 400px;
+  }
+
+  @container content-container (max-width: 400px) {
+    padding-inline: 10px;
+    margin-block: 0px;
+    width: 100%;
+    border-radius: 0px;
+    border: none;
+    width: 300px;
   }
 `;
 
@@ -27,7 +56,6 @@ export const HeaderContainer = styled.div`
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  margin-block: 20px;
   padding-inline: 10px;
   border-bottom: 1px solid slategray;
   gap: 0.5em;
@@ -53,11 +81,62 @@ export const Avatar = styled(Common.Avatar)`
   }
 `;
 
+export const FooterContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+  border-top: 1px solid slategray;
+  gap: 0.5em;
+
+  @container content-container (max-width: 1000px) {
+    margin-bottom: 10px;
+  }
+
+  @container content-container (max-width: 600px) {
+    padding-inline: 5px;
+    margin-bottom: 5px;
+  }
+`;
+
+export const SourceName = styled.div`
+  text-transform: uppercase;
+  font-size: 18px;
+  font-weight: 500;
+  font-style: italic;
+  text-align: center;
+  cursor: pointer;
+
+  @container (max-width: 1000px) {
+    & {
+      font-size: 14px;
+    }
+  }
+
+  @container (max-width: 800px) {
+    & {
+      font-size: 12px;
+    }
+  }
+
+  @container (max-width: 700px) {
+    & {
+      font-size: 10px;
+    }
+  }
+
+  @container (max-width: 500px) {
+    & {
+      font-size: 8px;
+    }
+  }
+`;
+
 export const ActivityText = styled.div`
   text-transform: uppercase;
   font-size: 18px;
-  font-weight: 300;
-  margin-left: 20px;
+  font-weight: 200;
   font-style: italic;
   text-align: center;
 
@@ -82,6 +161,88 @@ export const ActivityText = styled.div`
   @container (max-width: 500px) {
     & {
       font-size: 8px;
+    }
+  }
+`;
+
+export const ViewMoreText = styled.div`
+  font-size: 14px;
+  font-weight: 500;
+  font-style: italic;
+  text-align: center;
+  cursor: pointer;
+
+  @container (max-width: 800px) {
+    & {
+      font-size: 12px;
+    }
+  }
+
+  @container (max-width: 700px) {
+    & {
+      font-size: 10px;
+    }
+  }
+
+  @container (max-width: 500px) {
+    & {
+      font-size: 8px;
+    }
+  }
+`;
+
+export const PromptText = styled.div`
+  font-size: 14px;
+  font-weight: 200;
+  max-width: 60%;
+  font-style: italic;
+  margin-top: 30px;
+  white-space: pre-wrap;
+
+  @container (max-width: 800px) {
+    & {
+      font-size: 12px;
+    }
+  }
+
+  @container (max-width: 700px) {
+    & {
+      font-size: 10px;
+    }
+  }
+
+  @container (max-width: 500px) {
+    & {
+      font-size: 8px;
+    }
+  }
+`;
+
+export const PromptFooterText = styled.div`
+  text-transform: uppercase;
+  font-size: 14px;
+  font-weight: 200;
+  max-width: 80%;
+  font-style: italic;
+  text-align: center;
+  margin-block: 20px;
+  cursor: pointer;
+
+  @container (max-width: 800px) {
+    & {
+      font-size: 10px;
+    }
+  }
+
+  @container (max-width: 700px) {
+    & {
+      font-size: 8px;
+    }
+  }
+
+  @container (max-width: 500px) {
+    & {
+      font-size: 6px;
     }
   }
 `;
@@ -157,7 +318,7 @@ export const CardWrapper = styled.div`
   min-height: 500px;
   margin-inline: 100px;
   border-radius: 5%;
-  margin-bottom: 50px;
+  margin-block: 20px;
   ${CARD_BORDER};
 
   transition: all 0.3s ease-in-out;

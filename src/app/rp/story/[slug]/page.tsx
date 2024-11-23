@@ -9,6 +9,8 @@ import * as S from "./styles";
 import { ShouldRender, Username } from "@/components/common";
 import { PageLoader } from "@/components/layout";
 import { MusesPill } from "@/components/muses-pill";
+import StoryCardEvent from "@/components/story-event-card";
+import { Container, Flex } from "@novelist-world/ui";
 
 export default function UserProfilePage({}) {
   const params = useParams();
@@ -61,16 +63,41 @@ export default function UserProfilePage({}) {
           size={250}
         />
         <S.Name>{storyboard?.name}</S.Name>
-        <span>Author:</span>{" "}
+        <span>Created by:</span>{" "}
         <Username primary username={storyboard?.createdBy.username} />
         <S.PillContainer>
           <MusesPill
-            title="WRITERS"
+            title="Novelists"
             pillType="MEMBERS"
             storyboard={storyboard}
             expandable={true}
           />
         </S.PillContainer>
+        <S.SectionName>
+          <ShouldRender
+            if={storyboard != null && storyboard?.events.length <= 0}
+          >
+            NO{" "}
+          </ShouldRender>
+          EVENTS
+        </S.SectionName>
+        <Flex
+          direction="row"
+          gap={"1rem"}
+          style={{
+            marginTop: "30px",
+            flexWrap: "wrap",
+          }}
+        >
+          {storyboard?.events &&
+            storyboard?.events.map((event) => {
+              return (
+                <StoryCardEvent key={event.id} event={event}>
+                  {event.name}
+                </StoryCardEvent>
+              );
+            })}
+        </Flex>
       </S.StoryContainer>
     </>
   );

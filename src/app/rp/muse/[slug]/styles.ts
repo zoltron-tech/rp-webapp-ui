@@ -636,3 +636,109 @@ export const Avatar = styled(AvatarCommon)`
     align-items: center;
   }
 `;
+
+export const PromptText = styled.div`
+  font-size: 12px;
+  font-weight: 200;
+  max-width: 60%;
+  font-style: italic;
+  white-space: pre-wrap;
+  margin-top: 20px;
+
+  @container (max-width: 500px) {
+    & {
+      font-size: 10px;
+    }
+  }
+`;
+
+export const Date = styled.div`
+  font-size: 12px;
+  font-weight: 200;
+
+  @container (max-width: 800px) {
+    & {
+      font-size: 10px;
+    }
+  }
+`;
+
+export const PromptMedia = styled.div`
+  position: relative;
+  width: 300px;
+  height: 300px;
+  border-radius: 3%;
+  ${CARD_BORDER};
+
+  transition: all 0.3s ease-in-out;
+  contain: paint;
+  z-index: ${Z_INDEX.CARD};
+
+  container-name: card;
+  container-type: size;
+
+  @container (max-width: 400px) {
+    & {
+      width: 200px;
+      height: 200px;
+    }
+  }
+
+  &:hover {
+    & ${CardBackground} {
+      scale: 1.03;
+    }
+  }
+`;
+
+export const FooterContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  border-bottom: 1px solid slategray;
+  gap: 0.5em;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+  padding-inline: 20px;
+
+  @container content-container (max-width: 1000px) {
+    margin-bottom: 10px;
+  }
+
+  @container content-container (max-width: 600px) {
+    padding-inline: 5px;
+    margin-bottom: 5px;
+  }
+`;
+
+export const PromptFooterText = styled.div`
+  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: 400;
+  max-width: 80%;
+  font-style: italic;
+  text-align: center;
+  cursor: pointer;
+
+  @container (max-width: 400px) {
+    & {
+      font-size: 7px;
+    }
+  }
+`;
+
+export const ViewMoreText = styled.div`
+  font-size: 12px;
+  font-weight: 500;
+  font-style: italic;
+  text-align: center;
+  cursor: pointer;
+
+  @container (max-width: 400px) {
+    & {
+      font-size: 8px;
+    }
+  }
+`;

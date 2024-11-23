@@ -23,6 +23,7 @@ export type Theme = {
   navbar: string;
   cardBackgroundTint: string;
   cardBackgroundGradient: string[];
+  cardDarkerBackgroundGradient: string[];
   cardBackgroundColor: string;
   cardBoxShadowColor: string;
   hoverGrey: string;
@@ -61,6 +62,11 @@ export const THEME_LIGHT: Theme = {
     "rgba(255, 255, 255, 0.546) 80%",
     "#dedede",
   ],
+  cardDarkerBackgroundGradient: [
+    "rgba(0, 0, 0, 0)",
+    "rgba(255, 255, 255, 0.546) 80%",
+    "#dedede",
+  ],
   cardBackgroundColor: "#e7e7e7",
   cardBoxShadowColor: "rgba(0, 0, 0, 0.3)",
   hoverGrey: "#e6e6e6",
@@ -95,6 +101,11 @@ export const THEME_DARK: Theme = {
   cardBackgroundGradient: [
     "rgba(255, 255, 255, 0)",
     "rgba(0, 0, 0, 0.8) 80%",
+    "rgba(0, 0, 0, 1)",
+  ],
+  cardDarkerBackgroundGradient: [
+    "rgba(0, 0, 0, 0.671) 20%",
+    "rgba(0, 0, 0, 0.877) 80%",
     "rgba(0, 0, 0, 1)",
   ],
   cardBackgroundColor: "#1e1e1eb8",

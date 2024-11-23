@@ -4,7 +4,7 @@ import { Avatar, ShouldRender, Username } from "@/components/common";
 import { PageLoader } from "@/components/layout";
 import { Quote } from "@/components/novelist-card/styles";
 import { useAuthContext, useStateMachine } from "@/hooks";
-import { Muse } from "@/types";
+import { Muse, Prompt } from "@/types";
 import { Logger } from "@/utils/services";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -16,15 +16,26 @@ import { GiBookCover } from "react-icons/gi";
 import { FiMoreVertical } from "react-icons/fi";
 import { MdClose } from "react-icons/md";
 import { MdOutlineSlowMotionVideo } from "react-icons/md";
+import { BiSolidMessageEdit } from "react-icons/bi";
+import { FaComments } from "react-icons/fa6";
 import classNames from "classnames";
-import { RichText } from "@novelist-world/ui";
+import { Flex, RichText } from "@novelist-world/ui";
+import { getPromptsByMuseAction } from "../../prompt/actions";
+import moment from "moment";
 
-type CARD_STATE = "MAIN" | "VIDEO" | "MUSE_INFO" | "CONNECTIONS" | "BACK_STORY";
+type CARD_STATE =
+  | "MAIN"
+  | "VIDEO"
+  | "MUSE_INFO"
+  | "CONNECTIONS"
+  | "BACK_STORY"
+  | "PROMPTS";
 
 export default function MuseProfilePage({}) {
   const params = useParams();
   const { state: authState } = useAuthContext();
   const [muse, setMuse] = useState<Muse | null>(null);
+  const [prompts, setPrompts] = useState<Prompt[] | null>(null);
   const [loading, setLoading] = useState(true);
   const username = params?.slug as string;
   const { push } = useRouter();
@@ -36,30 +47,42 @@ export default function MuseProfilePage({}) {
         CONNECTIONS: true,
         BACK_STORY: true,
         VIDEO: true,
+        PROMPTS: true,
       },
       VIDEO: {
         MAIN: true,
         MUSE_INFO: true,
         CONNECTIONS: true,
         BACK_STORY: true,
+        PROMPTS: true,
       },
       MUSE_INFO: {
         MAIN: true,
         CONNECTIONS: true,
         BACK_STORY: true,
         VIDEO: true,
+        PROMPTS: true,
       },
       CONNECTIONS: {
         MAIN: true,
         BACK_STORY: true,
         MUSE_INFO: true,
         VIDEO: true,
+        PROMPTS: true,
       },
       BACK_STORY: {
         CONNECTIONS: true,
         MAIN: true,
         MUSE_INFO: true,
         VIDEO: true,
+        PROMPTS: true,
+      },
+      PROMPTS: {
+        CONNECTIONS: true,
+        MAIN: true,
+        MUSE_INFO: true,
+        VIDEO: true,
+        BACK_STORY: true,
       },
     },
   });
@@ -72,6 +95,27 @@ export default function MuseProfilePage({}) {
 
   const onMuseAvatarClick = (museId: string) => {
     if (museId) push(`/rp/muse/${museId}`);
+  };
+
+  const onPromptClick = (promptId: string) => {
+    if (promptId) push(`/rp/prompt/${promptId}`);
+  };
+
+  const toFormattedDate = (unixTime: number | undefined): string => {
+    if (!unixTime) return "unknown";
+    const date = moment.unix(unixTime);
+    const now = moment();
+
+    const units = [
+      { name: "y", value: now.diff(date, "years") },
+      { name: "mon", value: now.diff(date, "months") },
+      { name: "d", value: now.diff(date, "days") },
+      { name: "h", value: now.diff(date, "hours") },
+      { name: "m", value: now.diff(date, "minutes") },
+    ];
+
+    const unit = units.find((u) => u.value > 0);
+    return unit ? `${unit.value}${unit.name} ago` : "just now";
   };
 
   const fetchMuse = async (museId: string) => {
@@ -88,10 +132,25 @@ export default function MuseProfilePage({}) {
     setMuse(_muse);
   };
 
+  const fetchPrompts = async (museId: string) => {
+    setLoading(true);
+    const _prompts = await getPromptsByMuseAction(museId);
+
+    if (!_prompts || "message" in _prompts) {
+      setLoading(false);
+      push("/404");
+      return;
+    }
+    console.log(_prompts);
+    setLoading(false);
+    setPrompts(_prompts);
+  };
+
   useEffect(() => {
     if (authState === "LOADING" || muse) return;
 
     fetchMuse(username);
+    fetchPrompts(username);
   }, [authState]);
 
   const loadChildren = (slice = 0, className = "") => {
@@ -118,6 +177,46 @@ export default function MuseProfilePage({}) {
           </S.ConnectionItem>
         </>
       ));
+  };
+
+  const loadPrompts = () => {
+    return prompts?.map((prompt) => (
+      <>
+        <Flex direction="column">
+          <S.PromptText>
+            {prompt.text.length > 200
+              ? `${prompt.text.slice(0, 200)} ...`
+              : prompt.text}
+          </S.PromptText>
+          <ShouldRender if={prompt.text.length > 80}>
+            <S.ViewMoreText
+              onClick={() => onPromptClick(prompt.id ? prompt.id : "")}
+            >
+              Read more...
+            </S.ViewMoreText>
+          </ShouldRender>
+          {prompt?.media && (
+            <S.PromptMedia>
+              <S.CardBackground
+                banner={prompt?.media || ""}
+                className="image"
+              />
+            </S.PromptMedia>
+          )}
+          <S.FooterContainer>
+            <Flex justify="flex-start" style={{ width: "80%" }}>
+              <FaComments />{" "}
+              <S.PromptFooterText
+                onClick={() => onPromptClick(prompt.id ? prompt.id : "")}
+              >
+                View Comments & Replies.
+              </S.PromptFooterText>
+            </Flex>
+            <S.Date>{toFormattedDate(prompt?.createdOn)}</S.Date>
+          </S.FooterContainer>
+        </Flex>
+      </>
+    ));
   };
 
   return (
@@ -268,6 +367,16 @@ export default function MuseProfilePage({}) {
           </ShouldRender>
         </S.CardExpandedWrapper>
       </ShouldRender>
+      <ShouldRender if={is("PROMPTS")}>
+        <S.CardExpandedWrapper>
+          <S.CardBack className="muse-card">
+            <S.InfoCardContent>
+              <S.Title>Prompts</S.Title>
+              <S.ScrollableContent>{loadPrompts()}</S.ScrollableContent>
+            </S.InfoCardContent>
+          </S.CardBack>
+        </S.CardExpandedWrapper>
+      </ShouldRender>
       <S.SideMenu>
         <ShouldRender if={muse?.video != null && muse?.video !== ""}>
           <S.MenuButton>
@@ -280,6 +389,15 @@ export default function MuseProfilePage({}) {
             <S.MenuText>VIDEO</S.MenuText>
           </S.MenuButton>
         </ShouldRender>
+        <S.MenuButton>
+          <S.MenuButtonIcon
+            onClick={() => transition("PROMPTS")}
+            className={classNames({ selected: is("PROMPTS") })}
+          >
+            <BiSolidMessageEdit size={"45%"} />
+          </S.MenuButtonIcon>
+          <S.MenuText>PROMPTS</S.MenuText>
+        </S.MenuButton>
         <S.MenuButton>
           <S.MenuButtonIcon
             onClick={() => transition("BACK_STORY")}
@@ -307,11 +425,6 @@ export default function MuseProfilePage({}) {
           </S.MenuButtonIcon>
           <S.MenuText>CONTACTS</S.MenuText>
         </S.MenuButton>
-        <S.MenuButton>
-          <S.MenuButtonIcon>
-            <FiMoreVertical size={"45%"} />
-          </S.MenuButtonIcon>
-        </S.MenuButton>
         <ShouldRender if={!is("MAIN")}>
           <S.MenuButton className="stick-top">
             <S.MenuButtonIcon
@@ -320,6 +433,17 @@ export default function MuseProfilePage({}) {
               }}
             >
               <MdClose />
+            </S.MenuButtonIcon>
+          </S.MenuButton>
+        </ShouldRender>
+        <ShouldRender if={is("MAIN")}>
+          <S.MenuButton className="stick-top">
+            <S.MenuButtonIcon
+              onClick={() => {
+                transition("MAIN");
+              }}
+            >
+              <FiMoreVertical size={"45%"} />
             </S.MenuButtonIcon>
           </S.MenuButton>
         </ShouldRender>

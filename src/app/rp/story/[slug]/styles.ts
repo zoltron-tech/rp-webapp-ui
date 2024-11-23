@@ -38,8 +38,19 @@ export const Name = styled.div`
   text-align: center;
   text-align: center;
   margin-top: 30px;
-  margin-bottom: 10px;
-  font-size: clamp(18px, 5vw, 34px);
+  font-size: clamp(18px, 5vw, 42px);
+  font-weight: 600;
+  color: ${({ theme }) => theme.textPrimary};
+  z-index: ${Z_INDEX.DEFAULT};
+`;
+
+export const SectionName = styled.div`
+  ${NameFontStyles}
+  width: 100%;
+  text-align: center;
+  text-align: center;
+  margin-top: 30px;
+  font-size: clamp(18px, 5vw, 24px);
   color: ${({ theme }) => theme.textPrimary};
   z-index: ${Z_INDEX.DEFAULT};
 `;

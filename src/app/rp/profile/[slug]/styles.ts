@@ -64,7 +64,7 @@ export const Content = styled.div`
 
   ${DEV_MODE_BORDER("green")}
 
-  @container (max-width: 1024px) {
+  @container (max-width: 1300px) {
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
@@ -187,7 +187,6 @@ export const ContentContainer = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding-inline: 10px;
 
   @container profile-content-right (max-width: 600px) {
     & {

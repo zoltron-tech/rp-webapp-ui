@@ -1,6 +1,6 @@
 import { Novelist, Muse, NovelistTier, Friend } from "@/types";
 import { None } from "@/types/common";
-import { StoryBoard } from "@/types/story-board";
+import { StoryBoard, StoryBoardEvent } from "@/types/story-board";
 
 export const STANDARD_TIER: NovelistTier = {
   name: "STANDARD",
@@ -48,7 +48,20 @@ export const INITIAL_STORY_BOARD: StoryBoard = {
   name: "",
   image: null,
   members: [],
+  events: [],
   createdBy: EMPTY_FRIEND,
+};
+
+export const INITIAL_STORY_BOARD_EVENT: StoryBoardEvent = {
+  _tag: "StoryBoardEvent",
+  id: null,
+  storyBoardId: "",
+  name: "",
+  description: "",
+  image: null,
+  location: null,
+  eventTime: null,
+  createdAt: null,
 };
 
 export const NONE: None = {

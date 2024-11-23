@@ -44,7 +44,11 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
 
     if (activity?.target.activityTargetType === "MUSE")
       push(`/rp/muse/${activity.target.id}`);
-    else if (activity?.target.activityTargetType === "PROMPT")
+    else if (
+      ["PROMPT", "COMMENT", "REPLY"].includes(
+        activity.target.activityTargetType
+      )
+    )
       push(`/rp/prompt/${activity.target.id}`);
     else if (activity?.target.activityTargetType === "STORY_BOARD")
       push(`/rp/story/${activity.target.id}`);
@@ -105,8 +109,12 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
         </Flex>
         <S.Date>{toFormattedDate(activity.date)}</S.Date>
       </S.HeaderContainer>
-      <Flex direction="column" align="flex-start">
-        <ShouldRender if={activity.target.activityTargetType === "PROMPT"}>
+      <Flex direction="column" align="center">
+        <ShouldRender
+          if={["PROMPT", "COMMENT", "REPLY"].includes(
+            activity.target.activityTargetType
+          )}
+        >
           <S.PromptText>
             {activity.target.title.length > 80
               ? `${activity.target.title.slice(0, 80)} ...`
@@ -148,7 +156,13 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
             ])}
             onClick={(e) => handleCardClick(e, activity)}
           >
-            <ShouldRender if={activity.target.activityTargetType !== "PROMPT"}>
+            <ShouldRender
+              if={
+                !["PROMPT", "COMMENT", "REPLY"].includes(
+                  activity.target.activityTargetType
+                )
+              }
+            >
               <S.CardHeader>
                 <S.ActivityInfo>
                   <S.Title
@@ -168,7 +182,11 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
           </S.Card>
         </S.CardWrapper>
       </Flex>
-      <ShouldRender if={activity.target.activityTargetType === "PROMPT"}>
+      <ShouldRender
+        if={["PROMPT", "COMMENT", "REPLY"].includes(
+          activity.target.activityTargetType
+        )}
+      >
         <S.FooterContainer>
           <FaComments />{" "}
           <S.PromptFooterText onClick={(e) => handleCardClick(e, activity)}>

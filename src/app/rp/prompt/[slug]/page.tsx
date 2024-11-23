@@ -177,7 +177,12 @@ export default function PromptPage({}) {
       <S.CommentsContainer>
         <S.CommentsHeader>Comments</S.CommentsHeader>
         <S.ScrollableContent>
-          <Container>{loadComments()}</Container>
+          <ShouldRender
+            preserveSpace
+            if={prompt?.comments.length != null && prompt?.comments.length > 0}
+          >
+            <Container>{loadComments()}</Container>
+          </ShouldRender>
         </S.ScrollableContent>
       </S.CommentsContainer>
     </S.ParentContainer>

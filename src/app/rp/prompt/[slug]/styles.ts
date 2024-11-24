@@ -12,6 +12,7 @@ export const ParentContainer = styled(Container)`
   padding: 0px;
   border-radius: 0px;
   border: none;
+  z-index: ${Z_INDEX.CARD};
 
   @container content-container (max-width: 1400px) {
     flex-direction: column;
@@ -25,6 +26,9 @@ export const ParentContainer = styled(Container)`
 export const RepliesContainer = styled(Container)`
   margin-bottom: 80px;
   margin-left: 150px;
+  width: 100%;
+  contain: unset;
+  z-index: ${Z_INDEX.CARD_EXPAND};
 
   @container content-container (max-width: 600px) {
     margin-bottom: 50px;
@@ -61,18 +65,21 @@ export const CommentsContainer = styled(Container)`
   flex: 1;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
   border-radius: 0px;
   border: none;
   height: 92vh;
+  width: 100%;
 
   @container content-container (max-width: 1400px) {
     height: max-content;
+    border-radius: 0px;
+    border: none;
   }
 `;
 
 export const ScrollableContent = styled.div`
   overflow-y: auto;
+  overflow-x: hidden;
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
   height: inherit;
@@ -128,7 +135,7 @@ export const SourceName = styled.div`
 
   @container (max-width: 1000px) {
     & {
-      font-size: 14px;
+      font-size: 16px;
     }
 
     &.reply {
@@ -139,7 +146,7 @@ export const SourceName = styled.div`
 
   @container (max-width: 800px) {
     & {
-      font-size: 12px;
+      font-size: 14px;
     }
 
     &.reply {
@@ -150,53 +157,41 @@ export const SourceName = styled.div`
 
   @container (max-width: 700px) {
     & {
-      font-size: 10px;
+      font-size: 12px;
     }
 
     &.reply {
       font-size: 10px;
-      font-weight: 400;
-    }
-  }
-
-  @container (max-width: 500px) {
-    & {
-      font-size: 8px;
-    }
-
-    &.reply {
-      font-size: 8px;
       font-weight: 400;
     }
   }
 `;
 
 export const PromptText = styled.div`
-  font-size: 14px;
-  font-weight: 200;
+  font-size: 16px;
+  font-weight: 300;
   max-width: 60%;
   padding-left: 25px;
-  font-style: italic;
   white-space: pre-wrap;
 
   @container (max-width: 800px) {
     & {
       padding-left: unset;
-      font-size: 12px;
+      font-size: 14px;
     }
   }
 
   @container (max-width: 700px) {
     & {
       padding-left: unset;
-      font-size: 10px;
+      font-size: 12px;
     }
   }
 
   @container (max-width: 500px) {
     & {
       padding-left: unset;
-      font-size: 8px;
+      font-size: 10px;
     }
   }
 `;
@@ -286,39 +281,26 @@ export const CardWrapper = styled.div`
 
   @container (max-width: 500px) {
     & {
-      width: 300px;
-      height: 300px;
+      width: 250px;
+      height: 250px;
     }
 
     &.reply {
-      width: 250px;
-      height: 250px;
+      width: 200px;
+      height: 200px;
       margin-inline: unset;
     }
   }
 
   @container (max-width: 400px) {
     & {
-      width: 250px;
-      height: 250px;
-    }
-
-    &.reply {
-      width: 200px;
-      height: 200px;
-      margin-inline: unset;
-    }
-  }
-
-  @container (max-width: 350px) {
-    & {
       width: 200px;
       height: 200px;
     }
 
     &.reply {
-      width: 150px;
-      height: 150px;
+      width: 170px;
+      height: 170px;
       margin-inline: unset;
     }
   }

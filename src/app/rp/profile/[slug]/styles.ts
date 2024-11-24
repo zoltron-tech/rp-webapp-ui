@@ -2,6 +2,7 @@ import { Avatar as AvatarCommon, Pill } from "@/components/common";
 import { BLUR_FILTER, DEV_MODE_BORDER, Z_INDEX } from "@/theme";
 import styled, { css } from "styled-components";
 import { Badge } from "../../tiers/styles";
+import { Container } from "@novelist-world/ui";
 
 interface BannerProps {
   src: string;
@@ -97,7 +98,7 @@ export const ContentRight = styled.div`
     max-width: 100%;
     width: 100%;
     padding-inline: 0px;
-    margin-top: 30px;
+    margin-top: 10px;
   }
 `;
 
@@ -261,7 +262,7 @@ export const Name = styled.div`
   z-index: ${Z_INDEX.DEFAULT};
   margin-bottom: 25px;
 
-  @container profile-content (max-width: 1024px) {
+  @container profile-content (max-width: 1300px) {
     display: none;
   }
 `;
@@ -276,7 +277,7 @@ export const NameMobile = styled.div`
   width: 100%;
   text-align: center;
 
-  @container (max-width: 1024px) {
+  @container (max-width: 1300px) {
     display: block;
   }
 `;
@@ -351,6 +352,8 @@ export const MusePillContainer = styled.div`
   @container profile-content (max-width: 1024px) {
     & {
       margin-top: 0px;
+      margin-bottom: 0px;
+      gap: 0rem;
     }
   }
 `;

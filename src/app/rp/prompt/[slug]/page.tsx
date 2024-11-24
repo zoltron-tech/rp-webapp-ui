@@ -11,10 +11,11 @@ import { Container, Flex } from "@novelist-world/ui";
 import { getPromptAction } from "../actions";
 import moment from "moment";
 import classNames from "classnames";
+import PromptInput from "@/components/prompt-input";
 
 export default function PromptPage({}) {
   const params = useParams();
-  const { state: authState } = useAuthContext();
+  const { state: authState, user, novelist, state } = useAuthContext();
   const [prompt, setPrompt] = useState<Prompt | null>(null);
   const [loading, setLoading] = useState(true);
   const promptId = params?.slug as string;
@@ -128,11 +129,16 @@ export default function PromptPage({}) {
           </S.CardWrapper>
         )}
         <S.CommentsHeader>Replies</S.CommentsHeader>
-        <ShouldRender preserveSpace if={comment.replies.length > 0}>
-          <Flex justify="flex-end">
-            <S.RepliesContainer>{loadReplies(comment)}</S.RepliesContainer>
-          </Flex>
-        </ShouldRender>
+        <Flex justify="flex-end">
+          <S.RepliesContainer>
+            <ShouldRender preserveSpace if={comment.replies.length > 0}>
+              {loadReplies(comment)}
+            </ShouldRender>
+            {state == "LOGGED_IN" && (
+              <PromptInput muses={novelist?.muses || []} />
+            )}
+          </S.RepliesContainer>
+        </Flex>
       </>
     ));
   };
@@ -181,8 +187,20 @@ export default function PromptPage({}) {
             preserveSpace
             if={prompt?.comments.length != null && prompt?.comments.length > 0}
           >
-            <Container>{loadComments()}</Container>
+            {loadComments()}
           </ShouldRender>
+          {state == "LOGGED_IN" && (
+            <Container style={{ contain: "unset", width: "100%" }}>
+              <PromptInput
+                className={
+                  prompt?.comments.length != null && prompt?.comments.length > 0
+                    ? "upward"
+                    : ""
+                }
+                muses={novelist?.muses || []}
+              />
+            </Container>
+          )}
         </S.ScrollableContent>
       </S.CommentsContainer>
     </S.ParentContainer>

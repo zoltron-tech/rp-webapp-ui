@@ -35,7 +35,9 @@ import { GiCircleClaws } from "react-icons/gi";
 import { GiGoldShell } from "react-icons/gi";
 import { GiStarSwirl } from "react-icons/gi";
 
-import { Flex } from "@novelist-world/ui";
+import { Container, Flex } from "@novelist-world/ui";
+import PromptInput from "@/components/prompt-input";
+import { Z_INDEX } from "@/theme/geometry";
 
 export default function UserProfilePage({}) {
   const params = useParams();
@@ -365,6 +367,13 @@ export default function UserProfilePage({}) {
                 ? "Your Updates"
                 : "Updates by " + username}
             </S.SubText>
+            {state == "LOGGED_IN" && username === user?.username && (
+              <Container
+                style={{ width: "96%", contain: "unset", zIndex: Z_INDEX.CARD }}
+              >
+                <PromptInput muses={novelist?.muses || []} />
+              </Container>
+            )}
             {activities &&
               activities.map((activity) => (
                 <ActivityBox

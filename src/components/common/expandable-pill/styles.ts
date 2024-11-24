@@ -177,8 +177,7 @@ export const TagTop = styled.div`
   ${TagTypography}
   width: 100%;
   display: none;
-  margin-top: 40px;
-  margin-bottom: 20px;
+  margin-block: 10px;
 
   @container profile-content (max-width: 1024px) {
     & {

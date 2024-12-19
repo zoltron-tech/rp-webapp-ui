@@ -18,6 +18,10 @@ export const ContentContainer = styled.div`
   margin-inline: auto;
   margin-block: 30px;
 
+  @container (max-width: 1300px) {
+    margin-block: 10px;
+  }
+
   & > div:first-child {
     border-top-left-radius: var(--border-radius);
     border-bottom-left-radius: var(--border-radius);

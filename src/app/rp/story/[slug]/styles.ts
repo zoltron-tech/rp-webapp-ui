@@ -29,7 +29,7 @@ export const Banner = styled.div<BannerProps>`
 `;
 
 export const Avatar = styled(AvatarCommon)`
-  margin-top: 30px;
+  margin-top: 10px;
 `;
 
 export const Name = styled.div`
@@ -37,7 +37,7 @@ export const Name = styled.div`
   width: 100%;
   text-align: center;
   text-align: center;
-  margin-top: 30px;
+  margin-top: 10px;
   font-size: clamp(18px, 5vw, 42px);
   font-weight: 600;
   color: ${({ theme }) => theme.textPrimary};
@@ -49,7 +49,7 @@ export const SectionName = styled.div`
   width: 100%;
   text-align: center;
   text-align: center;
-  margin-top: 30px;
+  margin-top: 20px;
   font-size: clamp(18px, 5vw, 24px);
   color: ${({ theme }) => theme.textPrimary};
   z-index: ${Z_INDEX.DEFAULT};
@@ -57,7 +57,7 @@ export const SectionName = styled.div`
 
 export const SolidBackground = styled.div`
   position: absolute;
-  top: clamp(270px, 30cqw, 330px);
+  top: clamp(270px, 30cqw, 290px);
   bottom: 0px;
   width: 100cqw;
   background-color: ${({ theme }) => theme.navbar};

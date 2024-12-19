@@ -11,6 +11,7 @@ import * as S from "./styles";
 import { Conversation } from "@/types/conversation";
 import { getConversationsAction } from "@/app/rp/novelists/actions";
 import moment from "moment";
+import { FaPeopleGroup } from "react-icons/fa6";
 
 interface ChatMenuProps {}
 
@@ -26,33 +27,29 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
     push(`/rp/profile/${username}`);
   };
 
-  const toFormattedDate = (unixTime: number): string => {
-    const date = moment.unix(unixTime);
-    const today = moment();
+  const toFormattedDate = (stringdate: string): string => {
+    const today = moment().format("YYYY-MM-DD");
+    const messageDate = moment.utc(stringdate).local();
 
-    if (date.isSame(today, "day")) {
-      // Return only the time if the date is today
-      return date.format("LT"); // 'LT' is locale-specific time format (e.g., 12:30 PM)
-    } else if (date.isSame(today, "year")) {
-      // Return only the month and day if it's the same year
-      return date.format("MMMM D"); // e.g., 'August 23'
-    } else {
-      // Return the full date if it's not the same year
-      return date.format("LL"); // 'LL' is locale-specific date format (e.g., August 23, 2024)
-    }
+    const isToday = messageDate.isSame(today, "day");
+    const formattedDate = isToday
+      ? messageDate.format("h:mm A")
+      : messageDate.format("MMM D, h:mm A");
+
+    return formattedDate;
   };
 
   const onMoreMessagesClick = () => {
     window.location.replace(`${process.env.RP_CHAT_URL}`);
   };
 
-  const onOpenMessagesClick = (username: string) => {
-    window.location.replace(`${process.env.RP_CHAT_URL}?username=${username}`);
+  const onOpenMessagesClick = (conversationId: string) => {
+    window.location.replace(`${process.env.RP_CHAT_URL}?id=${conversationId}`);
   };
 
   const fetchConversations = async () => {
     setLoading(true);
-    const _muse = await getConversationsAction();
+    const _muse = await getConversationsAction(1, 5);
 
     if (!_muse || "message" in _muse) {
       // handle error
@@ -80,29 +77,38 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
           {conversations &&
             conversations.slice(0, 5).map((conversation) => (
               <S.CardWrapper
-                onClick={() => onOpenMessagesClick(conversation.username)}
-                key={conversation.username}
+                onClick={() => onOpenMessagesClick(conversation.id)}
+                key={conversation.id}
               >
                 <S.Card className="muse-card">
                   <S.CardHeader>
-                    <Avatar
-                      src={conversation.image}
-                      alt={conversation.username}
-                      size={40}
-                      key={conversation.username}
-                      name={"open"}
-                      onClick={() => onAvatarClick(conversation.username)}
-                      hoverable
-                    />
+                    {!conversation.isGroup && (
+                      <Avatar
+                        src={conversation.image}
+                        alt={conversation.id}
+                        size={40}
+                        key={conversation.id}
+                        name={"open"}
+                        onClick={() =>
+                          onAvatarClick(conversation.lastMessage.senderUsername)
+                        }
+                        hoverable
+                      />
+                    )}
+                    {conversation.isGroup && <FaPeopleGroup size={40} />}
+
                     <S.NotificationBox>
-                      <S.username username={conversation.username}></S.username>
+                      <S.Heading>{conversation.name}</S.Heading>
                       <S.Text>
-                        {conversation.username === conversation.senderUsername
-                          ? ""
-                          : "You: "}
-                        {conversation.message}
+                        {conversation.lastMessage.senderUsername ===
+                        novelist?.username
+                          ? "You: "
+                          : ""}
+                        {conversation.lastMessage.message}
                       </S.Text>
-                      <S.Date>{toFormattedDate(conversation.createdAt)}</S.Date>
+                      <S.Date>
+                        {toFormattedDate(conversation.lastMessage.createdAt)}
+                      </S.Date>
                     </S.NotificationBox>
                   </S.CardHeader>
                 </S.Card>

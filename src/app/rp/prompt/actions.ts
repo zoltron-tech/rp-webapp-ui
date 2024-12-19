@@ -1,8 +1,9 @@
 "use server";
 import { Prompt } from "@/types";
-import { API_MESSAGE } from "@/utils/constants";
+import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import getConfig from "next/config";
 import { Logger } from "@/utils/services";
+import { authenticateAndGetJWT } from "@/app/actions";
 
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
@@ -43,6 +44,39 @@ export const getPromptsByMuseAction = async (museId: string) => {
   }
 
   const prompt: Prompt[] = await response.json();
+
+  return prompt;
+};
+
+export const updatePromptAction = async (_prompt: Prompt) => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt`;
+
+  const response = await fetch(URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    body: JSON.stringify(_prompt),
+    cache: "no-store",
+  });
+
+  if (response.status !== 200) {
+    Logger.debug("error", response.status, response.statusText);
+    return { message: API_MESSAGE.Error };
+  }
+
+  const result: Prompt = await response.json();
+  Logger.debug("updateStoryBoard", result);
+
+  const prompt: Prompt = Object.assign(
+    {},
+    {
+      ...result,
+      message: undefined,
+    }
+  );
 
   return prompt;
 };

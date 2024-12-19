@@ -85,7 +85,7 @@ export default function UserProfilePage({}) {
           direction="row"
           gap={"1rem"}
           style={{
-            marginTop: "30px",
+            marginTop: "25px",
             flexWrap: "wrap",
           }}
         >

@@ -160,7 +160,11 @@ export default function MuseProfilePage({}) {
         <>
           <S.ConnectionItem
             onClick={() =>
-              onMuseAvatarClick(connection.id ? connection.id : "")
+              onMuseAvatarClick(
+                connection.sourceMuseId === muse.id
+                  ? connection.targetMuseId
+                  : connection.sourceMuseId
+              )
             }
           >
             <S.Avatar
@@ -357,10 +361,12 @@ export default function MuseProfilePage({}) {
       </ShouldRender>
       <ShouldRender if={is("VIDEO")}>
         <S.CardExpandedWrapper>
-          <ShouldRender if={muse?.video !== null}>
+          <ShouldRender
+            if={muse?.video !== null && muse?.video.endsWith(".mp4") === true}
+          >
             <S.VideoCardContent>
               <S.Video controls width="100%" height="100%">
-                <source src={muse?.video} type="video/mp4" />
+                <source src={muse?.video || ""} type="video/mp4" />
                 Your browser does not support the video tag.
               </S.Video>
             </S.VideoCardContent>

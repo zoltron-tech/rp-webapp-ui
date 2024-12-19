@@ -11,6 +11,8 @@ export const ParentContainer = styled(Container)`
   border: none;
   z-index: ${Z_INDEX.CARD};
   background-color: transparent;
+  border-radius: unset;
+  border: none;
 
   @container content-container (max-width: 1400px) {
     flex-direction: column;
@@ -33,11 +35,13 @@ export const RepliesContainer = styled(Container)`
   z-index: ${Z_INDEX.CARD_EXPAND};
   border: none;
   background-color: transparent;
+  border-radius: unset;
+  border: none;
 
   @container content-container (max-width: 600px) {
     max-width: 100%;
     margin-bottom: 50px;
-    margin-left: 40px;
+    margin-left: unset;
   }
 `;
 
@@ -72,12 +76,6 @@ export const HeaderContainer = styled.div`
   align-items: center;
   padding-left: 20px;
   width: 100%;
-
-  @container (max-width: 800px) {
-    & {
-      padding-left: unset;
-    }
-  }
 `;
 
 export const Avatar = styled(Common.Avatar)`

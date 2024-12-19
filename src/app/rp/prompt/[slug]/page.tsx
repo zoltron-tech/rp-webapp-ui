@@ -94,10 +94,7 @@ export default function PromptPage({}) {
           className="reply action"
           onClick={() => onThreadClick(comment.id)}
         >
-          {" "}
-          {comment?.replyCount === 0
-            ? "No"
-            : comment?.replyCount + " more"}{" "}
+          {comment?.replyCount === 0 ? "No" : comment?.replyCount + " more"}{" "}
           replies...
         </S.SourceName>
       </S.ThreadBox>
@@ -143,7 +140,8 @@ export default function PromptPage({}) {
           className="reply action"
           onClick={() => onThreadClick(comment.id)}
         >
-          Read More...
+          {comment?.replyCount === 0 ? "No" : comment?.replyCount + " more"}{" "}
+          replies...
         </S.SourceName>
       </S.ThreadBox>
     ));
@@ -194,7 +192,7 @@ export default function PromptPage({}) {
           <S.StyledPromptInput
             className={
               prompt?.comments.length != null && prompt?.comments.length > 0
-                ? "visible"
+                ? "visible upward"
                 : ""
             }
             muses={novelist?.muses || []}
@@ -202,7 +200,9 @@ export default function PromptPage({}) {
         )}
         <S.ThreadsContainerMobile>
           <S.CommentsHeader className="mobile">
-            {prompt?.comments.length === 0 ? "No threads yet" : "Threads"}
+            {prompt?.comments.length === 0
+              ? "No threads yet"
+              : "Existing threads"}
           </S.CommentsHeader>
           <S.ScrollableContentHorzontal>
             <ShouldRender
@@ -218,7 +218,9 @@ export default function PromptPage({}) {
       </S.PromptContainer>
       <S.ThreadsContainer>
         <S.CommentsHeader>
-          {prompt?.comments.length === 0 ? "No threads yet" : "Threads"}
+          {prompt?.comments.length === 0
+            ? "No threads yet"
+            : "Existing threads"}
         </S.CommentsHeader>
         <S.ScrollableContent>
           <ShouldRender

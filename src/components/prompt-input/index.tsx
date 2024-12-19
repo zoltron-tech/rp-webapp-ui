@@ -1,16 +1,10 @@
 "use client";
 
-import { FC, useMemo } from "react";
-import { Logger } from "@/utils/services";
+import { FC } from "react";
 import { useRouter } from "next/navigation";
 import * as S from "./styles";
-import classNames from "classnames";
-import moment from "moment";
-import { Dropdown, ShouldRender } from "../common";
-import { FaComments } from "react-icons/fa6";
-import { Button, Flex, Input } from "@novelist-world/ui";
-import { IoMdPhotos } from "react-icons/io";
-import { Muse, Prompt } from "@/types";
+import { Button, Flex } from "@novelist-world/ui";
+import { Muse } from "@/types";
 import MuseSelectionDropdown from "../muse-selection-dropdown";
 
 type Props = React.HTMLProps<HTMLDivElement> & {

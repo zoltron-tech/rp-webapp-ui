@@ -5,13 +5,15 @@ import styled from "styled-components";
 
 export const PromptInputContainer = styled(Container)`
   width: 100%;
-  margin-bottom: 10px;
+  margin-bottom: 0px;
+  padding-block: 10px;
   height: max-content;
   overflow: visible;
   contain: none;
   border: none;
   border-radius: unset;
   z-index: ${Z_INDEX.CARD};
+  background-color: transparent;
 
   @container (max-width: 1300px) {
     border: none;

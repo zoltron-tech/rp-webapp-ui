@@ -13,6 +13,7 @@ import classNames from "classnames";
 import PromptInput from "@/components/prompt-input";
 import { toFormattedDate } from "@/utils/helpers";
 import { IoArrowBackOutline } from "react-icons/io5";
+import { Z_INDEX } from "@/theme";
 
 export default function ThreadPage({}) {
   const params = useParams();
@@ -170,14 +171,16 @@ export default function ThreadPage({}) {
         </Flex>
         {loadReplies(comment)}
         {state === "LOGGED_IN" && (
-          <PromptInput
-            className={
-              comment?.replies.length != null && comment?.replies.length > 0
-                ? "upward"
-                : ""
-            }
-            muses={novelist?.muses || []}
-          />
+          <Flex style={{ borderTop: "1px solid gray" }}>
+            <PromptInput
+              className={
+                comment?.replies.length != null && comment?.replies.length > 0
+                  ? "upward"
+                  : ""
+              }
+              muses={novelist?.muses || []}
+            />
+          </Flex>
         )}
       </S.RepliesContainer>
     </S.ParentContainer>

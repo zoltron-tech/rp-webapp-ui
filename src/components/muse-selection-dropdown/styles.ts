@@ -8,7 +8,7 @@ export const DropdownContainer = styled(Container)`
   position: absolute;
   width: 250px;
   height: 200px;
-  top: 10px;
+  top: 50px;
   left: 58px;
   justify-content: flex-start;
   align-items: flex-start;
@@ -21,19 +21,19 @@ export const DropdownContainer = styled(Container)`
 
   // Open state
   &.open {
-    visibility: visible;
+    display: block;
     opacity: 1;
   }
 
   // Closed state
   &.closed {
-    visibility: hidden;
+    display: none;
     opacity: 0;
   }
 
   // Open state
   &.upward {
-    top: -60px;
+    top: -100px;
     left: 55px;
   }
 

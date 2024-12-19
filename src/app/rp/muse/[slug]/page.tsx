@@ -22,6 +22,7 @@ import classNames from "classnames";
 import { Flex, RichText } from "@novelist-world/ui";
 import { getPromptsByMuseAction } from "../../prompt/actions";
 import moment from "moment";
+import { toFormattedDate } from "@/utils/helpers";
 
 type CARD_STATE =
   | "MAIN"
@@ -99,23 +100,6 @@ export default function MuseProfilePage({}) {
 
   const onPromptClick = (promptId: string) => {
     if (promptId) push(`/rp/prompt/${promptId}`);
-  };
-
-  const toFormattedDate = (unixTime: number | undefined): string => {
-    if (!unixTime) return "unknown";
-    const date = moment.unix(unixTime);
-    const now = moment();
-
-    const units = [
-      { name: "y", value: now.diff(date, "years") },
-      { name: "mon", value: now.diff(date, "months") },
-      { name: "d", value: now.diff(date, "days") },
-      { name: "h", value: now.diff(date, "hours") },
-      { name: "m", value: now.diff(date, "minutes") },
-    ];
-
-    const unit = units.find((u) => u.value > 0);
-    return unit ? `${unit.value}${unit.name} ago` : "just now";
   };
 
   const fetchMuse = async (museId: string) => {

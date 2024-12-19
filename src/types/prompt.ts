@@ -7,18 +7,20 @@ export interface Prompt extends Tagged {
   text: string;
   media: string;
   comments: Comment[];
-  createdOn: number;
+  createdOn: string;
 }
 
 export interface Comment extends Tagged {
   _tag: "Comment";
   id: string;
+  prompt: Prompt | null;
   promptId: string;
   source: PromptSource;
   text: string;
   media: string;
   replies: Reply[];
-  createdOn: number;
+  replyCount: number;
+  createdOn: string;
 }
 
 export interface Reply extends Tagged {
@@ -28,7 +30,7 @@ export interface Reply extends Tagged {
   source: PromptSource;
   text: string;
   media: string;
-  createdOn: number;
+  createdOn: string;
 }
 
 export interface PromptSource extends Tagged {

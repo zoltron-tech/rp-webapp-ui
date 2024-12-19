@@ -64,8 +64,9 @@ export default function UserProfilePage({}) {
     push(`/rp/profile/${username}/storyboards`);
   };
 
+  // TODO: GetConversationId from username and if not exists then open a dialogue to send a message which should create a new conversation in the backend.
   const toMessagePage = () => {
-    window.location.replace(`${process.env.RP_CHAT_URL}?username=${username}`);
+    //window.location.replace(`${process.env.RP_CHAT_URL}?id=${username}`);
   };
 
   const handleSendFriendRequest = async () => {

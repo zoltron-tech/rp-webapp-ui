@@ -1,5 +1,6 @@
 import * as Common from "@/components/common";
-import { Z_INDEX, CARD_BORDER, BORDER_RADIUS } from "@/theme";
+import PromptInput from "@/components/prompt-input";
+import { Z_INDEX, CARD_BORDER } from "@/theme";
 import { setOpacity } from "@/utils/helpers";
 import { Container } from "@novelist-world/ui";
 import styled from "styled-components";
@@ -15,7 +16,6 @@ export const ParentContainer = styled(Container)`
   z-index: ${Z_INDEX.CARD};
 
   @container content-container (max-width: 1400px) {
-    flex-direction: column;
     justify-content: center;
     border-radius: 0px;
     padding: 0px;
@@ -23,26 +23,21 @@ export const ParentContainer = styled(Container)`
   }
 `;
 
-export const RepliesContainer = styled(Container)`
-  margin-bottom: 80px;
-  margin-left: 150px;
-  width: 100%;
-  contain: unset;
-  z-index: ${Z_INDEX.CARD_EXPAND};
-
-  @container content-container (max-width: 600px) {
-    margin-bottom: 50px;
-    margin-left: 40px;
-  }
-`;
-
 export const CommentsHeader = styled.div`
-  font-size: 18px;
-  font-weight: 500;
-  margin-block: 10px;
-  margin-left: 100px;
+  margin-bottom: 10px;
+  margin-left: 40px;
   text-align: left;
   width: 100%;
+  text-transform: uppercase;
+  font-size: 18px;
+  font-weight: 500;
+  font-style: italic;
+
+  &.mobile {
+    margin-block: unset;
+    font-size: 14px;
+    font-weight: 400;
+  }
 
   @container content-container (max-width: 1400px) {
     font-size: 16px;
@@ -60,21 +55,61 @@ export const CommentsHeader = styled.div`
   }
 `;
 
-export const CommentsContainer = styled(Container)`
+export const PromptContainer = styled(Container)`
   display: flex;
-  flex: 1;
   flex-direction: column;
   justify-content: center;
   border-radius: 0px;
   border: none;
-  height: 92vh;
+  height: 96vh;
   width: 100%;
+`;
 
-  @container content-container (max-width: 1400px) {
-    height: max-content;
-    border-radius: 0px;
-    border: none;
+export const ThreadsContainer = styled(Container)`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-radius: 0px;
+  border: none;
+  margin-top: 20px;
+  height: 90vh;
+  width: 20%;
+  border-left: 1px solid dimgray;
+
+  @container content-container (max-width: 800px) {
+    display: none;
   }
+`;
+
+export const ThreadsContainerMobile = styled(Container)`
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: flex-start;
+  gap: 0.3rem;
+  border-radius: 0px;
+  border: none;
+  border-radius: 5%;
+  padding: unset;
+  margin: unset;
+
+  @container content-container (min-width: 800px) {
+    display: none;
+  }
+`;
+
+export const ScrollableContentHorzontal = styled(Container)`
+  width: 100vw;
+  display: flex;
+  justify-content: start;
+  align-items: flex-start;
+  gap: 0.3rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-radius: 0px;
+  border: none;
+  margin: unset;
+  padding-block: unset;
 `;
 
 export const ScrollableContent = styled.div`
@@ -91,6 +126,50 @@ export const ScrollableContent = styled.div`
   &:hover {
     scrollbar-color: ${({ theme }) => setOpacity(theme.primary, 0.5)}
       transparent;
+  }
+`;
+
+export const ThreadBox = styled.div`
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid dimgray;
+  padding-bottom: 20px;
+
+  &.mobile {
+    display: flex;
+    border-top: 1px solid dimgray;
+    padding-bottom: 5px;
+    border-bottom-left-radius: 20%;
+    min-width: 150px;
+    margin-top: unset;
+  }
+`;
+
+export const ToggleThread = styled.div`
+  display: flex;
+  padding: 1rem;
+  text-align: center;
+  background-color: transparent;
+  margin-bottom: 10px;
+  border-top: 1px solid dimgray;
+
+  &.expanded {
+    margin-bottom: unset;
+    padding: 5px;
+  }
+`;
+
+export const StyledPromptInput = styled(PromptInput)`
+  transform: translateY(100%);
+  opacity: 0;
+  visibility: hidden;
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+
+  &.upward {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
   }
 `;
 
@@ -115,7 +194,7 @@ export const Avatar = styled(Common.Avatar)`
   @container (max-width: 500px) {
     & {
       margin-top: 10px;
-      --size: 30px;
+      --size: 20px;
     }
   }
 `;
@@ -125,12 +204,18 @@ export const SourceName = styled.div`
   font-size: 18px;
   font-weight: 500;
   font-style: italic;
-  text-align: center;
+  text-align: right;
   cursor: pointer;
 
   &.reply {
-    font-size: 16px;
-    font-weight: 400;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  &.action {
+    &:hover {
+      color: ${({ theme }) => theme.primary};
+    }
   }
 
   @container (max-width: 1000px) {
@@ -139,7 +224,7 @@ export const SourceName = styled.div`
     }
 
     &.reply {
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 400;
     }
   }
@@ -150,19 +235,8 @@ export const SourceName = styled.div`
     }
 
     &.reply {
-      font-size: 12px;
-      font-weight: 400;
-    }
-  }
-
-  @container (max-width: 700px) {
-    & {
-      font-size: 12px;
-    }
-
-    &.reply {
-      font-size: 10px;
-      font-weight: 400;
+      font-size: 8px;
+      font-weight: 300;
     }
   }
 `;
@@ -171,9 +245,12 @@ export const PromptText = styled.div`
   font-size: 16px;
   font-weight: 300;
   max-width: 60%;
-  padding-left: 25px;
+  padding: 10px 0px 0px 0px;
   white-space: pre-wrap;
 
+  &.mobile {
+    padding: unset;
+  }
   @container (max-width: 800px) {
     & {
       padding-left: unset;
@@ -197,8 +274,16 @@ export const PromptText = styled.div`
 `;
 
 export const Date = styled.div`
-  font-size: 12px;
+  font-size: 1px;
   font-weight: 200;
+
+  &.reply {
+    font-size: 10px;
+  }
+
+  &.mobile {
+    font-size: 8px;
+  }
 
   @container (max-width: 1400px) {
     & {
@@ -248,9 +333,18 @@ export const CardWrapper = styled.div`
   container-type: size;
 
   &.reply {
-    width: 400px;
-    height: 400px;
+    width: 200px;
+    height: 200px;
     margin-inline: 20px;
+    border-radius: 30%;
+  }
+
+  &.mobile {
+    width: 100px;
+    height: 100px;
+    margin-inline: 20px;
+    border-radius: 30%;
+    margin-block: 5px;
   }
 
   @container (max-width: 800px) {
@@ -260,8 +354,8 @@ export const CardWrapper = styled.div`
     }
 
     &.reply {
-      width: 300px;
-      height: 300px;
+      width: 180px;
+      height: 180px;
       margin-inline: unset;
     }
   }
@@ -273,8 +367,8 @@ export const CardWrapper = styled.div`
     }
 
     &.reply {
-      width: 280px;
-      height: 280px;
+      width: 130px;
+      height: 130px;
       margin-inline: unset;
     }
   }
@@ -286,21 +380,8 @@ export const CardWrapper = styled.div`
     }
 
     &.reply {
-      width: 200px;
-      height: 200px;
-      margin-inline: unset;
-    }
-  }
-
-  @container (max-width: 400px) {
-    & {
-      width: 200px;
-      height: 200px;
-    }
-
-    &.reply {
-      width: 170px;
-      height: 170px;
+      width: 50px;
+      height: 50px;
       margin-inline: unset;
     }
   }

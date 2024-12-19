@@ -3,20 +3,20 @@
 import { ShouldRender } from "@/components/common";
 import { PageLoader } from "@/components/layout";
 import { useAuthContext } from "@/hooks";
-import { Comment, Prompt } from "@/types";
+import { Prompt } from "@/types";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import * as S from "./styles";
 import { Container, Flex } from "@novelist-world/ui";
 import { getPromptAction } from "../actions";
-import moment from "moment";
-import classNames from "classnames";
 import PromptInput from "@/components/prompt-input";
+import { toFormattedDate } from "@/utils/helpers";
 
 export default function PromptPage({}) {
   const params = useParams();
   const { state: authState, user, novelist, state } = useAuthContext();
   const [prompt, setPrompt] = useState<Prompt | null>(null);
+  const [showPromptInput, setShowPromptInput] = useState(false); // Toggle state for PromptInput
   const [loading, setLoading] = useState(true);
   const promptId = params?.slug as string;
   const { push } = useRouter();
@@ -26,21 +26,9 @@ export default function PromptPage({}) {
     push(`/rp/muse/${sourceId}`);
   };
 
-  const toFormattedDate = (unixTime: number | undefined): string => {
-    if (!unixTime) return "unknown";
-    const date = moment.unix(unixTime);
-    const now = moment();
-
-    const units = [
-      { name: "y", value: now.diff(date, "years") },
-      { name: "mon", value: now.diff(date, "months") },
-      { name: "d", value: now.diff(date, "days") },
-      { name: "h", value: now.diff(date, "hours") },
-      { name: "m", value: now.diff(date, "minutes") },
-    ];
-
-    const unit = units.find((u) => u.value > 0);
-    return unit ? `${unit.value}${unit.name} ago` : "just now";
+  const onThreadClick = (commentId: string | undefined) => {
+    if (!commentId) return;
+    push(`/rp/thread/${commentId}`);
   };
 
   const fetchPrompt = async (museId: string) => {
@@ -57,89 +45,107 @@ export default function PromptPage({}) {
     setPrompt(_prompt);
   };
 
+  const togglePromptInput = () => {
+    setShowPromptInput((prev) => !prev);
+  };
+
   useEffect(() => {
     if (authState === "LOADING" || prompt) return;
 
     fetchPrompt(promptId);
   }, [authState]);
 
-  const loadReplies = (comment: Comment) => {
-    return comment.replies.map((reply) => (
-      <>
-        <Flex direction="column" gap={0}>
-          <Flex>
-            <S.Avatar
-              src={reply.source?.image || ""}
-              alt={""}
-              size={30}
-              onClick={() => onAvatarClick(reply.source.sourceId)}
-              hoverable
-            />
-            <S.SourceName
-              className={classNames("reply")}
-              onClick={() => onAvatarClick(reply.source.sourceId)}
-            >
-              {reply.source.name}
-            </S.SourceName>
-          </Flex>
-
-          <S.PromptText>{reply.text}</S.PromptText>
-          {reply.media && (
-            <S.CardWrapper className={classNames("reply")}>
-              <S.CardBackground banner={reply.media || ""} className="image" />
-            </S.CardWrapper>
-          )}
-          <Flex
-            direction="row"
-            justify="space-between"
-            style={{ width: "70%" }}
-          >
-            <div></div>
-            <S.Date>{toFormattedDate(reply.createdOn)}</S.Date>
-          </Flex>
-        </Flex>
-      </>
-    ));
-  };
-
-  const loadComments = () => {
+  const loadThreads = () => {
     return prompt?.comments.map((comment) => (
-      <>
+      <S.ThreadBox key={comment.id}>
         <S.HeaderContainer>
           <Flex>
             <S.Avatar
               src={comment.source?.image || ""}
               alt={""}
-              size={45}
+              size={30}
               onClick={() => onAvatarClick(comment.source.sourceId)}
               hoverable
             />
-            <S.SourceName
-              onClick={() => onAvatarClick(comment.source.sourceId)}
-            >
-              {comment.source.name}
-            </S.SourceName>
+            <Flex direction="column" gap={0.2} align="flex-start">
+              <S.SourceName
+                className="reply"
+                onClick={() => onAvatarClick(comment.source.sourceId)}
+              >
+                {comment.source.name}
+              </S.SourceName>
+              <S.Date className="reply">
+                {toFormattedDate(comment.createdOn)}
+              </S.Date>
+            </Flex>
           </Flex>
-          <S.Date>{toFormattedDate(comment.createdOn)}</S.Date>
         </S.HeaderContainer>
-        <S.PromptText>{comment.text}</S.PromptText>
+        <S.PromptText>
+          {comment.text.length > 30
+            ? `${comment.text.slice(0, 30)} ...`
+            : comment.text}
+        </S.PromptText>
         {comment.media && (
-          <S.CardWrapper>
+          <S.CardWrapper className="reply">
             <S.CardBackground banner={comment.media || ""} className="image" />
           </S.CardWrapper>
         )}
-        <S.CommentsHeader>Replies</S.CommentsHeader>
-        <Flex justify="flex-end">
-          <S.RepliesContainer>
-            <ShouldRender preserveSpace if={comment.replies.length > 0}>
-              {loadReplies(comment)}
-            </ShouldRender>
-            {state == "LOGGED_IN" && (
-              <PromptInput muses={novelist?.muses || []} />
-            )}
-          </S.RepliesContainer>
-        </Flex>
-      </>
+        <S.SourceName
+          className="reply action"
+          onClick={() => onThreadClick(comment.id)}
+        >
+          {" "}
+          {comment?.replyCount === 0
+            ? "No"
+            : comment?.replyCount + " more"}{" "}
+          replies...
+        </S.SourceName>
+      </S.ThreadBox>
+    ));
+  };
+
+  const loadThreadsMobile = () => {
+    return prompt?.comments.map((comment) => (
+      <S.ThreadBox className="mobile" key={comment.id}>
+        <S.HeaderContainer>
+          <Flex>
+            <S.Avatar
+              src={comment.source?.image || ""}
+              alt={""}
+              size={20}
+              onClick={() => onAvatarClick(comment.source.sourceId)}
+              hoverable
+            />
+            <Flex direction="column" gap={0.2} align="flex-start">
+              <S.SourceName
+                className="reply"
+                onClick={() => onAvatarClick(comment.source.sourceId)}
+              >
+                {comment.source.name}
+              </S.SourceName>
+              <S.Date className="mobile">
+                {toFormattedDate(comment.createdOn)}
+              </S.Date>
+            </Flex>
+          </Flex>
+        </S.HeaderContainer>
+        <S.PromptText className="mobile">
+          {comment.text.length > 30
+            ? `${comment.text.slice(0, 30)} ...`
+            : comment.text}
+        </S.PromptText>
+        {comment.media && (
+          <S.CardWrapper className="mobile">
+            <S.CardBackground banner={comment.media || ""} className="image" />
+          </S.CardWrapper>
+        )}
+        <S.SourceName
+          className="reply action"
+          onClick={() => onThreadClick(comment.id)}
+        >
+          Read More...
+        </S.SourceName>
+      </S.ThreadBox>
     ));
   };
 
@@ -148,7 +154,7 @@ export default function PromptPage({}) {
       <ShouldRender if={loading}>
         <PageLoader />
       </ShouldRender>
-      <S.CommentsContainer>
+      <S.PromptContainer>
         <S.HeaderContainer>
           <Flex>
             <S.Avatar
@@ -179,30 +185,50 @@ export default function PromptPage({}) {
             )}
           </Flex>
         </S.ScrollableContent>
-      </S.CommentsContainer>
-      <S.CommentsContainer>
-        <S.CommentsHeader>Comments</S.CommentsHeader>
+        <S.ToggleThread className={showPromptInput ? "expanded" : ""}>
+          <S.SourceName className="action" onClick={togglePromptInput}>
+            {showPromptInput ? "Hide" : "Start a new thread"}
+          </S.SourceName>
+        </S.ToggleThread>
+        {state === "LOGGED_IN" && showPromptInput && (
+          <S.StyledPromptInput
+            className={
+              prompt?.comments.length != null && prompt?.comments.length > 0
+                ? "upward"
+                : ""
+            }
+            muses={novelist?.muses || []}
+          />
+        )}
+        <S.ThreadsContainerMobile>
+          <S.CommentsHeader className="mobile">
+            {prompt?.comments.length === 0 ? "No threads yet" : "Threads"}
+          </S.CommentsHeader>
+          <S.ScrollableContentHorzontal>
+            <ShouldRender
+              preserveSpace
+              if={
+                prompt?.comments.length != null && prompt?.comments.length > 0
+              }
+            >
+              {loadThreadsMobile()}
+            </ShouldRender>
+          </S.ScrollableContentHorzontal>
+        </S.ThreadsContainerMobile>
+      </S.PromptContainer>
+      <S.ThreadsContainer>
+        <S.CommentsHeader>
+          {prompt?.comments.length === 0 ? "No threads yet" : "Threads"}
+        </S.CommentsHeader>
         <S.ScrollableContent>
           <ShouldRender
             preserveSpace
             if={prompt?.comments.length != null && prompt?.comments.length > 0}
           >
-            {loadComments()}
+            {loadThreads()}
           </ShouldRender>
-          {state == "LOGGED_IN" && (
-            <Container style={{ contain: "unset", width: "100%" }}>
-              <PromptInput
-                className={
-                  prompt?.comments.length != null && prompt?.comments.length > 0
-                    ? "upward"
-                    : ""
-                }
-                muses={novelist?.muses || []}
-              />
-            </Container>
-          )}
         </S.ScrollableContent>
-      </S.CommentsContainer>
+      </S.ThreadsContainer>
     </S.ParentContainer>
   );
 }

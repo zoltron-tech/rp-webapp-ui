@@ -1,3 +1,4 @@
+import moment from "moment";
 import { ESCAPE_SEQUENCES } from "../constants/mapping";
 
 export const stripS3Url = (url: string) => {
@@ -24,4 +25,22 @@ export const verifyEmailPattern = (email: string) => {
 export const verifyUsernamePattern = (username: string) => {
   const usernameRegex = new RegExp("^[a-zA-Z0-9_.-]+$");
   return usernameRegex.test(username);
+};
+
+export const toFormattedDate = (dateTimeString: string | undefined): string => {
+  if (!dateTimeString) return "unknown";
+
+  const date = moment(dateTimeString, "YYYY-MM-DD HH:mm:ss.SSSSSS");
+  const now = moment();
+
+  const units = [
+    { name: "y", value: now.diff(date, "years") },
+    { name: "mon", value: now.diff(date, "months") },
+    { name: "d", value: now.diff(date, "days") },
+    { name: "h", value: now.diff(date, "hours") },
+    { name: "m", value: now.diff(date, "minutes") },
+  ];
+
+  const unit = units.find((u) => u.value > 0);
+  return unit ? `${unit.value}${unit.name} ago` : "just now";
 };

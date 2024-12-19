@@ -194,7 +194,7 @@ export default function PromptPage({}) {
           <S.StyledPromptInput
             className={
               prompt?.comments.length != null && prompt?.comments.length > 0
-                ? "upward"
+                ? "visible"
                 : ""
             }
             muses={novelist?.muses || []}

@@ -192,9 +192,12 @@ export const chatAction = async (targetUserName: string | null) => {
   return result;
 };
 
-export const getConversationsAction = async () => {
+export const getConversationsAction = async (
+  pageNumber: number,
+  pageSize: number
+) => {
   const jwt = await authenticateAndGetJWT();
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/conversationsList`;
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/conversations?pageNumber=${pageNumber}&pageSize=${pageSize}`;
 
   const response = await fetch(URL, {
     headers: {
@@ -213,74 +216,4 @@ export const getConversationsAction = async () => {
 
   const result = (await response.json()) as Conversation[];
   return result;
-};
-
-export const updateMessagePollingAction = async (
-  targetUserName: string | null,
-  lastTimestamp: string
-) => {
-  if (targetUserName === null) return;
-  const jwt = await authenticateAndGetJWT();
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/updateChat/${targetUserName}`;
-
-  const response = await fetch(URL, {
-    method: "POST",
-    headers: {
-      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
-      [AUTH_HEADER_NAME]: jwt,
-    },
-    body: JSON.stringify({ date: lastTimestamp }),
-    cache: "no-store",
-  });
-  if (response.status === 404) {
-    return [];
-  } else if (response.status !== 200) {
-    return { message: API_MESSAGE.Error };
-  }
-
-  const result = (await response.json()) as Message[];
-  const filteredResult = result.filter(
-    (message) => message.date !== lastTimestamp
-  );
-  return filteredResult;
-};
-
-export const sendMessageAPI = (jwt: string) => async (message: Message) => {
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/send`;
-
-  Logger.warn("sendMessageAction", message);
-
-  const body: Omit<Message, "_tag" | "id"> = {
-    sender: message.sender,
-    receiver: message.receiver,
-    message: message.message,
-    date: message.date,
-  };
-
-  const response = await fetch(URL, {
-    method: "POST",
-    headers: {
-      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
-      [AUTH_HEADER_NAME]: jwt,
-    },
-    body: JSON.stringify(body),
-    cache: "no-store",
-  });
-
-  Logger.warn("sendMessageAction", response.status);
-
-  if (response.status === 404) {
-    return null;
-  } else if (response.status !== 200) {
-    return { message: API_MESSAGE.Error };
-  }
-
-  const result = (await response.json()) as Message;
-  return result;
-};
-
-export const sendMessageAction = async (message: Message) => {
-  const jwt = await authenticateAndGetJWT();
-
-  return sendMessageAPI(jwt)(message);
 };

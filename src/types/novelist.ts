@@ -8,19 +8,32 @@ export interface Muse extends Tagged {
   lastName: string;
   note: string;
   story: string;
-  image: string;
-  video?: string;
-  song?: string;
-  fandom?: string;
-  relationshipStatus?: string;
-  hometown?: string;
-  species?: string;
-  dateOfBirth?: {
+  image: string | null;
+  video: string | null;
+  song: string | null;
+  fandom: string | null;
+  relationshipStatus: string | null;
+  hometown: string | null;
+  species: string | null;
+  dateOfBirth: {
     year: number;
     month: string;
     day: number;
-  };
-  connections: SearchResult[];
+  } | null;
+  connections: MuseConnection[];
+}
+
+export interface MuseConnection extends Tagged {
+  _tag: "MuseConnection";
+  id: string;
+  firstName: string;
+  lastName: string;
+  image: string;
+  sourceMuseId: string;
+  targetMuseId: string;
+  connection: string;
+  verified: boolean;
+  createdAt: number;
 }
 
 export interface NovelistTier {
@@ -42,7 +55,7 @@ export interface Novelist extends Tagged {
   image: string;
   muses: Muse[];
   friends: Friend[];
-  connection?: string;
+  connection: string | null;
 }
 
 export interface Friend extends Tagged {

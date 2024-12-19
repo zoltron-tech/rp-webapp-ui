@@ -110,7 +110,7 @@ export default function UserProfilePage({}) {
         if (!current) return current;
         const copied = { ...current };
 
-        copied.connection = undefined;
+        copied.connection = null;
 
         return copied;
       });
@@ -127,7 +127,7 @@ export default function UserProfilePage({}) {
         if (!current) return current;
         const copied = { ...current };
 
-        copied.connection = undefined;
+        copied.connection = null;
 
         return copied;
       });

@@ -58,7 +58,7 @@ export const MuseCard: FC<Props> = ({ muse, className, ...rest }) => {
       ])}
       {...rest}
     >
-      <S.CardBackground banner={muse.image} />
+      <S.CardBackground banner={muse.image || ""} />
       <S.Card
         className={classNames([
           "muse-card",

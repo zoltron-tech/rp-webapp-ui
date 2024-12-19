@@ -14,7 +14,7 @@ type Props = {
 
 export const ChatBubble: FC<Props> = ({ message, currentUsername }) => {
   const today = moment().format("YYYY-MM-DD");
-  const messageDate = moment.utc(message.date).local();
+  const messageDate = moment.utc(message.createdAt).local();
 
   const isToday = messageDate.isSame(today, "day");
   const formattedDate = isToday
@@ -23,8 +23,8 @@ export const ChatBubble: FC<Props> = ({ message, currentUsername }) => {
   return (
     <S.ChatBubbleContainer
       className={classNames({
-        sender: message.sender === currentUsername,
-        receiver: message.receiver === currentUsername,
+        sender: message.senderUsername === currentUsername,
+        receiver: message.senderUsername !== currentUsername,
       })}
     >
       <S.ChatBubble>{message.message}</S.ChatBubble>

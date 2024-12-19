@@ -163,7 +163,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
       <ThemeProvider theme={DefaultTheme}>
         <S.LocalContainer>
           <UploadAvatar
-            image={values?.image}
+            image={values?.image || ""}
             onChange={(image) => setAvatarFile(image)}
           />
           <S.Profile>
@@ -208,7 +208,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
                   <S.Label htmlFor="species">Species</S.Label>
                   <Input
                     name="species"
-                    value={values?.species}
+                    value={values?.species || ""}
                     onChange={update}
                     maxLength={50}
                   />
@@ -221,7 +221,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
 
                   <Input
                     name="relationshipStatus"
-                    value={values?.relationshipStatus}
+                    value={values?.relationshipStatus || ""}
                     onChange={update}
                     maxLength={50}
                   />
@@ -232,7 +232,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
 
                   <Input
                     name="fandom"
-                    value={values?.fandom}
+                    value={values?.fandom || ""}
                     onChange={update}
                     maxLength={50}
                   />
@@ -242,7 +242,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
                   <S.Label htmlFor="hometown">Home town</S.Label>
                   <Input
                     name="hometown"
-                    value={values?.hometown}
+                    value={values?.hometown || ""}
                     onChange={update}
                     maxLength={50}
                   />

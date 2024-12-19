@@ -52,14 +52,17 @@ export const ContentContainer = styled.div`
   height: max-content;
 `;
 
-export const username = styled(Common.Username)`
-  font-size: 13px;
+export const Heading = styled.div`
+  font-size: 12px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
 `;
 
 export const Text = styled.div`
   font-size: 10px;
   color: ${({ theme }) => theme.text};
 `;
+
 export const Date = styled.div`
   font-size: 8px;
   align-self: flex-end;

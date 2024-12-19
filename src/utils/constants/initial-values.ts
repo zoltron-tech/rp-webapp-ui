@@ -28,6 +28,7 @@ export const INITIAL_NOVELIST: Novelist = {
   image: "",
   muses: [],
   friends: [],
+  connection: null,
 };
 
 export const INITIAL_MUSE: Muse = {
@@ -38,7 +39,14 @@ export const INITIAL_MUSE: Muse = {
   lastName: "",
   note: "",
   story: '{"type":"doc","content":[{"type":"paragraph"}]}',
-  image: "",
+  image: null,
+  video: null,
+  song: null,
+  fandom: null,
+  hometown: null,
+  species: null,
+  dateOfBirth: null,
+  relationshipStatus: null,
   connections: [],
 };
 

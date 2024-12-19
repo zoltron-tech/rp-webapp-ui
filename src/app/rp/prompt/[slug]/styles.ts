@@ -170,7 +170,7 @@ export const StyledPromptInput = styled(PromptInput)`
   visibility: hidden;
   transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
 
-  &.upward {
+  &.visible {
     transform: translateY(0);
     opacity: 1;
     visibility: visible;

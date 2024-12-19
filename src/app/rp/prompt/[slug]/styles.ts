@@ -61,8 +61,12 @@ export const PromptContainer = styled(Container)`
   justify-content: center;
   border-radius: 0px;
   border: none;
-  height: 96vh;
+  height: 93vh;
   width: 100%;
+
+  @container content-container (max-width: 800px) {
+    height: 87vh;
+  }
 `;
 
 export const ThreadsContainer = styled(Container)`

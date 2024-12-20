@@ -11,8 +11,8 @@ export const ParentContainer = styled(Container)`
   border: none;
   z-index: ${Z_INDEX.CARD};
   background-color: transparent;
-  border-radius: unset;
-  border: none;
+  border-radius: unset !important;
+  border: none !important;
 
   @container content-container (max-width: 1400px) {
     flex-direction: column;
@@ -34,12 +34,12 @@ export const RepliesContainer = styled(Container)`
   z-index: ${Z_INDEX.CARD_EXPAND};
   background-color: transparent;
 
-  @container content-container (max-width: 600px) {
+  @container content-container (max-width: 800px) {
     max-width: 100%;
     margin-bottom: 50px;
-    margin-left: unset !important;
-    border: none !important;
-    border-radius: unset !important;
+    margin-left: unset;
+    border: none;
+    border-radius: unset;
   }
 `;
 

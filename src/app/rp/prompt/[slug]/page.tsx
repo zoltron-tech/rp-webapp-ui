@@ -80,16 +80,25 @@ export default function PromptPage({}) {
             </Flex>
           </Flex>
         </S.HeaderContainer>
-        <S.PromptText>
-          {comment.text.length > 30
-            ? `${comment.text.slice(0, 30)} ...`
-            : comment.text}
-        </S.PromptText>
-        {comment.media && (
-          <S.CardWrapper className="reply">
-            <S.CardBackground banner={comment.media || ""} className="image" />
-          </S.CardWrapper>
-        )}
+        <Flex
+          direction="column"
+          justify="center"
+          style={{ minHeight: "170px" }}
+        >
+          <S.PromptText>
+            {comment.text.length > 30
+              ? `${comment.text.slice(0, 30)} ...`
+              : comment.text}
+          </S.PromptText>
+          {comment.media && (
+            <S.CardWrapper className="reply">
+              <S.CardBackground
+                banner={comment.media || ""}
+                className="image"
+              />
+            </S.CardWrapper>
+          )}
+        </Flex>
         <S.SourceName
           className="reply action"
           onClick={() => onThreadClick(comment.id)}
@@ -126,16 +135,25 @@ export default function PromptPage({}) {
             </Flex>
           </Flex>
         </S.HeaderContainer>
-        <S.PromptText className="mobile">
-          {comment.text.length > 30
-            ? `${comment.text.slice(0, 30)} ...`
-            : comment.text}
-        </S.PromptText>
-        {comment.media && (
-          <S.CardWrapper className="mobile">
-            <S.CardBackground banner={comment.media || ""} className="image" />
-          </S.CardWrapper>
-        )}
+        <Flex
+          direction="column"
+          justify="center"
+          style={{ minHeight: "163px" }}
+        >
+          <S.PromptText className="mobile">
+            {comment.text.length > 30
+              ? `${comment.text.slice(0, 30)} ...`
+              : comment.text}
+          </S.PromptText>
+          {comment.media && (
+            <S.CardWrapper className="mobile">
+              <S.CardBackground
+                banner={comment.media || ""}
+                className="image"
+              />
+            </S.CardWrapper>
+          )}
+        </Flex>
         <S.SourceName
           className="reply action"
           onClick={() => onThreadClick(comment.id)}
@@ -143,6 +161,7 @@ export default function PromptPage({}) {
           {comment?.replyCount === 0 ? "No" : comment?.replyCount + " more"}{" "}
           replies...
         </S.SourceName>
+        <div></div>
       </S.ThreadBox>
     ));
   };
@@ -183,16 +202,24 @@ export default function PromptPage({}) {
             )}
           </Flex>
         </S.ScrollableContent>
-        <S.ToggleThread className={showPromptInput ? "expanded" : ""}>
-          <S.SourceName className="action" onClick={togglePromptInput}>
-            {showPromptInput ? "Hide" : "Start a new thread"}
-          </S.SourceName>
-        </S.ToggleThread>
-        {state === "LOGGED_IN" && showPromptInput && (
-          <S.StyledPromptInput
-            className="visible upward"
-            muses={novelist?.muses || []}
-          />
+        {state === "LOGGED_IN" && (
+          <div>
+            <S.ToggleThread className={showPromptInput ? "expanded" : ""}>
+              <S.SourceName className="action" onClick={togglePromptInput}>
+                {showPromptInput ? "Hide" : "Start a new thread"}
+              </S.SourceName>
+            </S.ToggleThread>
+            {showPromptInput && (
+              <S.StyledPromptInput
+                className={
+                  prompt?.comments.length != null && prompt?.comments.length > 0
+                    ? "visible upward"
+                    : ""
+                }
+                muses={novelist?.muses || []}
+              />
+            )}
+          </div>
         )}
         <S.ThreadsContainerMobile>
           <S.CommentsHeader className="mobile">

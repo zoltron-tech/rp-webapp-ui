@@ -31,17 +31,15 @@ export const RepliesContainer = styled(Container)`
   contain: unset;
   margin: 0px;
   padding: 0px;
-  border-radius: 0px;
   z-index: ${Z_INDEX.CARD_EXPAND};
-  border: none;
   background-color: transparent;
-  border-radius: unset;
-  border: none;
 
   @container content-container (max-width: 600px) {
     max-width: 100%;
     margin-bottom: 50px;
     margin-left: unset;
+    border: none;
+    border-radius: unset;
   }
 `;
 
@@ -55,16 +53,6 @@ export const CommentsHeader = styled.div`
 
   @container content-container (max-width: 1400px) {
     font-size: 16px;
-    font-weight: 400;
-  }
-
-  @container content-container (max-width: 800px) {
-    font-size: 14px;
-    font-weight: 400;
-  }
-
-  @container content-container (max-width: 400px) {
-    font-size: 12px;
     font-weight: 400;
   }
 `;
@@ -102,18 +90,6 @@ export const SourceName = styled.div`
       font-size: 16px;
     }
   }
-
-  @container (max-width: 800px) {
-    & {
-      font-size: 14px;
-    }
-  }
-
-  @container (max-width: 700px) {
-    & {
-      font-size: 12px;
-    }
-  }
 `;
 
 export const PromptText = styled.div`
@@ -123,24 +99,11 @@ export const PromptText = styled.div`
   padding-left: 25px;
   white-space: pre-wrap;
 
-  @container (max-width: 800px) {
-    & {
-      padding-left: unset;
-      font-size: 14px;
-    }
-  }
-
   @container (max-width: 700px) {
     & {
       padding-left: unset;
       font-size: 12px;
-    }
-  }
-
-  @container (max-width: 500px) {
-    & {
-      padding-left: unset;
-      font-size: 10px;
+      font-weight: 400;
     }
   }
 `;
@@ -152,12 +115,7 @@ export const Date = styled.div`
   @container (max-width: 1400px) {
     & {
       font-size: 10px;
-    }
-  }
-
-  @container (max-width: 800px) {
-    & {
-      font-size: 8px;
+      font-weight: 300;
     }
   }
 `;

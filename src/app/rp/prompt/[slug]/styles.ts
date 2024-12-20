@@ -11,8 +11,8 @@ export const ParentContainer = styled(Container)`
   justify-content: center;
   margin: 0px;
   padding: 0px;
-  border-radius: 0px;
-  border: none;
+  border-radius: 0px !important;
+  border: none !important;
   z-index: ${Z_INDEX.CARD};
 
   @container content-container (max-width: 1400px) {
@@ -49,8 +49,8 @@ export const PromptContainer = styled(Container)`
   display: flex;
   flex-direction: column;
   justify-content: center;
-  border-radius: 0px;
-  border: none;
+  border-radius: 0px !important;
+  border: none !important;
   height: 93vh;
   width: 100%;
 
@@ -63,8 +63,8 @@ export const ThreadsContainer = styled(Container)`
   display: flex;
   flex-direction: column;
   justify-content: center;
-  border-radius: 0px;
-  border: none;
+  border-radius: 0px !important;
+  border: none !important;
   margin-top: 20px;
   height: 90vh;
   border-left: 1px solid dimgray;

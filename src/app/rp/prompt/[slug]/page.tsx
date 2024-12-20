@@ -16,7 +16,8 @@ export default function PromptPage({}) {
   const params = useParams();
   const { state: authState, user, novelist, state } = useAuthContext();
   const [prompt, setPrompt] = useState<Prompt | null>(null);
-  const [showPromptInput, setShowPromptInput] = useState(false); // Toggle state for PromptInput
+  const [showPromptInput, setShowPromptInput] = useState(false);
+  const [showMobileThreads, setShowMobileThreads] = useState(false);
   const [loading, setLoading] = useState(true);
   const promptId = params?.slug as string;
   const { push } = useRouter();
@@ -47,6 +48,10 @@ export default function PromptPage({}) {
 
   const togglePromptInput = () => {
     setShowPromptInput((prev) => !prev);
+  };
+
+  const toggleMobileThreads = () => {
+    setShowMobileThreads((prev) => !prev);
   };
 
   useEffect(() => {
@@ -171,7 +176,7 @@ export default function PromptPage({}) {
       <ShouldRender if={loading}>
         <PageLoader />
       </ShouldRender>
-      <S.PromptContainer>
+      <S.PromptContainer className={showMobileThreads ? "smaller" : ""}>
         <S.HeaderContainer>
           <Flex>
             <S.Avatar
@@ -221,13 +226,19 @@ export default function PromptPage({}) {
             )}
           </div>
         )}
-        <S.ThreadsContainerMobile>
-          <S.CommentsHeader className="mobile">
-            {prompt?.comments.length === 0
-              ? "No threads yet"
-              : "Existing threads"}
-          </S.CommentsHeader>
-          <S.ScrollableContentHorzontal>
+        <S.ThreadsContainerMobile
+          className={showMobileThreads ? "expanded" : ""}
+        >
+          <S.ToggleThread className={showPromptInput ? "expanded" : ""}>
+            <S.SourceName className="action" onClick={toggleMobileThreads}>
+              {showMobileThreads
+                ? "Hide existing threads"
+                : "Show sexiting threads"}
+            </S.SourceName>
+          </S.ToggleThread>
+          <S.ScrollableContentHorzontal
+            className={showMobileThreads ? "visible" : ""}
+          >
             <ShouldRender
               preserveSpace
               if={

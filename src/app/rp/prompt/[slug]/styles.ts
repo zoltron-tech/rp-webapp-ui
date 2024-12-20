@@ -55,7 +55,7 @@ export const PromptContainer = styled(Container)`
   width: 100%;
 
   @container content-container (max-width: 800px) {
-    height: 87vh;
+    height: 85vh;
   }
 `;
 
@@ -82,14 +82,21 @@ export const ThreadsContainerMobile = styled.div`
   justify-content: start;
   align-items: flex-start;
   gap: 0.3rem;
+  height: 15px;
   margin-inline: -20px;
+  transition: height 0.3s ease-in-out;
+
+  &.expanded {
+    height: 300px;
+  }
 
   @container content-container (min-width: 800px) {
     display: none;
   }
 `;
 
-export const ScrollableContentHorzontal = styled(Container)`
+export const ScrollableContentHorzontal = styled.div`
+  transform: translateY(100%);
   width: 100vw;
   display: flex;
   justify-content: start;
@@ -101,6 +108,15 @@ export const ScrollableContentHorzontal = styled(Container)`
   border: none;
   margin: unset;
   padding-block: unset;
+
+  visibility: hidden;
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+
+  &.visible {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+  }
 `;
 
 export const ScrollableContent = styled.div`
@@ -139,14 +155,13 @@ export const ThreadBox = styled(Container)`
 
 export const ToggleThread = styled.div`
   display: flex;
-  padding: 1rem;
+  padding: 0.3em;
   text-align: center;
   background-color: transparent;
-  border-top: 1px solid dimgray;
+  border-bottom: 1px solid dimgray;
 
   &.expanded {
     margin-bottom: unset;
-    padding: 5px;
   }
 `;
 
@@ -203,6 +218,8 @@ export const SourceName = styled.div`
   }
 
   &.action {
+    font-weight: 600;
+    margin-left: 20px;
     &:hover {
       color: ${({ theme }) => theme.primary};
     }
@@ -221,6 +238,12 @@ export const SourceName = styled.div`
   @container (max-width: 800px) {
     & {
       font-size: 14px;
+    }
+
+    &.action {
+      font-weight: 600;
+      margin-left: 20px;
+      color: ${({ theme }) => theme.primary};
     }
 
     &.reply {

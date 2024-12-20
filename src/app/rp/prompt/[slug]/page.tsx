@@ -233,7 +233,7 @@ export default function PromptPage({}) {
             <S.SourceName className="action" onClick={toggleMobileThreads}>
               {showMobileThreads
                 ? "Hide existing threads"
-                : "Show sexiting threads"}
+                : "Show existing threads"}
             </S.SourceName>
           </S.ToggleThread>
           <S.ScrollableContentHorzontal

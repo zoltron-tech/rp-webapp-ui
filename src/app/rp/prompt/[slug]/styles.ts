@@ -69,6 +69,7 @@ export const ThreadsContainer = styled(Container)`
   height: 90vh;
   border-left: 1px solid dimgray;
   padding-inline-end: 20px;
+  margin-right: 20px;
 
   @container content-container (max-width: 800px) {
     display: none;
@@ -124,20 +125,17 @@ export const ScrollableContent = styled.div`
   }
 `;
 
-export const ThreadBox = styled.div`
-  margin-top: 20px;
+export const ThreadBox = styled(Container)`
+  margin-block: 20px;
   display: flex;
   flex-direction: column;
-  border-bottom: 1px solid dimgray;
   padding-bottom: 20px;
   min-width: 300px;
   min-height: 200px;
 
   &.mobile {
     display: flex;
-    border-top: 1px solid dimgray;
     padding-bottom: 5px;
-    border-bottom-left-radius: 20%;
     min-width: 170px;
     min-height: 170px;
     margin-top: unset;

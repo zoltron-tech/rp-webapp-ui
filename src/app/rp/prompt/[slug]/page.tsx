@@ -190,11 +190,7 @@ export default function PromptPage({}) {
         </S.ToggleThread>
         {state === "LOGGED_IN" && showPromptInput && (
           <S.StyledPromptInput
-            className={
-              prompt?.comments.length != null && prompt?.comments.length > 0
-                ? "visible upward"
-                : ""
-            }
+            className="visible upward"
             muses={novelist?.muses || []}
           />
         )}

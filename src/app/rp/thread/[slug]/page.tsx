@@ -62,7 +62,7 @@ export default function ThreadPage({}) {
             <S.Avatar
               src={reply.source?.image || ""}
               alt={""}
-              size={30}
+              size={50}
               onClick={() => onAvatarClick(reply.source.sourceId)}
               hoverable
             />
@@ -141,7 +141,7 @@ export default function ThreadPage({}) {
             <S.Avatar
               src={comment?.source?.image || ""}
               alt={""}
-              size={45}
+              size={50}
               onClick={() => onAvatarClick(comment?.source.sourceId)}
               hoverable
             />

@@ -24,7 +24,7 @@ export const ParentContainer = styled(Container)`
 `;
 
 export const CommentsHeader = styled.div`
-  margin-bottom: 10px;
+  margin-block: 10px;
   margin-left: 40px;
   text-align: left;
   width: 100%;
@@ -34,23 +34,13 @@ export const CommentsHeader = styled.div`
   font-style: italic;
 
   &.mobile {
-    margin-block: unset;
+    margin-block: 5px;
     font-size: 14px;
-    font-weight: 400;
+    font-weight: 500;
   }
 
   @container content-container (max-width: 1400px) {
     font-size: 16px;
-    font-weight: 400;
-  }
-
-  @container content-container (max-width: 800px) {
-    font-size: 14px;
-    font-weight: 400;
-  }
-
-  @container content-container (max-width: 400px) {
-    font-size: 12px;
     font-weight: 400;
   }
 `;
@@ -77,8 +67,8 @@ export const ThreadsContainer = styled(Container)`
   border: none;
   margin-top: 20px;
   height: 90vh;
-  width: 20%;
   border-left: 1px solid dimgray;
+  padding-inline-end: 20px;
 
   @container content-container (max-width: 800px) {
     display: none;
@@ -96,6 +86,7 @@ export const ThreadsContainerMobile = styled(Container)`
   border-radius: 5%;
   padding: unset;
   margin: unset;
+  margin-inline: -20px;
 
   @container content-container (min-width: 800px) {
     display: none;
@@ -139,13 +130,16 @@ export const ThreadBox = styled.div`
   flex-direction: column;
   border-bottom: 1px solid dimgray;
   padding-bottom: 20px;
+  min-width: 300px;
+  min-height: 200px;
 
   &.mobile {
     display: flex;
     border-top: 1px solid dimgray;
     padding-bottom: 5px;
     border-bottom-left-radius: 20%;
-    min-width: 150px;
+    min-width: 170px;
+    min-height: 170px;
     margin-top: unset;
   }
 `;
@@ -155,7 +149,6 @@ export const ToggleThread = styled.div`
   padding: 1rem;
   text-align: center;
   background-color: transparent;
-  margin-bottom: 10px;
   border-top: 1px solid dimgray;
 
   &.expanded {
@@ -182,7 +175,7 @@ export const HeaderContainer = styled.div`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  padding-left: 20px;
+  padding-inline: 20px;
   width: 100%;
 
   @container (max-width: 800px) {
@@ -229,7 +222,6 @@ export const SourceName = styled.div`
 
     &.reply {
       font-size: 12px;
-      font-weight: 400;
     }
   }
 
@@ -239,8 +231,7 @@ export const SourceName = styled.div`
     }
 
     &.reply {
-      font-size: 8px;
-      font-weight: 300;
+      font-size: 10px;
     }
   }
 `;
@@ -262,17 +253,11 @@ export const PromptText = styled.div`
     }
   }
 
-  @container (max-width: 700px) {
-    & {
-      padding-left: unset;
-      font-size: 12px;
-    }
-  }
-
   @container (max-width: 500px) {
     & {
       padding-left: unset;
-      font-size: 10px;
+      font-size: 12px;
+      font-weight: 400;
     }
   }
 `;
@@ -286,18 +271,13 @@ export const Date = styled.div`
   }
 
   &.mobile {
-    font-size: 8px;
+    font-size: 10px;
+    font-weight: 300;
   }
 
   @container (max-width: 1400px) {
     & {
       font-size: 10px;
-    }
-  }
-
-  @container (max-width: 800px) {
-    & {
-      font-size: 8px;
     }
   }
 `;

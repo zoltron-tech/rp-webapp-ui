@@ -206,7 +206,7 @@ export const Avatar = styled(Common.Avatar)`
   }
 `;
 
-export const SourceName = styled.div`
+export const Name = styled.div`
   text-transform: uppercase;
   font-size: 18px;
   font-weight: 500;
@@ -249,7 +249,7 @@ export const SourceName = styled.div`
     }
 
     &.reply {
-      font-size: 10px;
+      font-size: 8px;
     }
   }
 `;
@@ -274,7 +274,7 @@ export const PromptText = styled.div`
   @container (max-width: 500px) {
     & {
       padding-left: unset;
-      font-size: 12px;
+      font-size: 9px;
       font-weight: 400;
     }
   }
@@ -289,7 +289,7 @@ export const Date = styled.div`
   }
 
   &.mobile {
-    font-size: 10px;
+    font-size: 8px;
     font-weight: 300;
   }
 `;

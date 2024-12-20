@@ -82,11 +82,10 @@ export const ThreadsContainerMobile = styled(Container)`
   justify-content: start;
   align-items: flex-start;
   gap: 0.3rem;
-  border-radius: 0px;
-  border: none;
-  border-radius: 5%;
-  padding: unset;
-  margin: unset;
+  border-radius: 0px !important;
+  border: none !important;
+  padding: unset !important;
+  margin: unset !important;
   margin-inline: -20px;
 
   @container content-container (min-width: 800px) {

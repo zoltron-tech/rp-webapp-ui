@@ -8,7 +8,7 @@ export const DropdownContainer = styled(Container)`
   position: absolute;
   width: 250px;
   height: 200px;
-  top: 50px;
+  top: 15px;
   left: 58px;
   justify-content: flex-start;
   align-items: flex-start;

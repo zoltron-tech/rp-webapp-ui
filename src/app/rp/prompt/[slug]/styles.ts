@@ -76,16 +76,12 @@ export const ThreadsContainer = styled(Container)`
   }
 `;
 
-export const ThreadsContainerMobile = styled(Container)`
+export const ThreadsContainerMobile = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: start;
   align-items: flex-start;
   gap: 0.3rem;
-  border-radius: 0px !important;
-  border: none !important;
-  padding: unset !important;
-  margin: unset !important;
   margin-inline: -20px;
 
   @container content-container (min-width: 800px) {

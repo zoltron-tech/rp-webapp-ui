@@ -55,7 +55,7 @@ export const PromptContainer = styled(Container)`
   width: 100%;
 
   @container content-container (max-width: 800px) {
-    height: 85vh;
+    height: 80vh;
   }
 `;
 

@@ -6,7 +6,7 @@ import styled from "styled-components";
 
 export const DropdownContainer = styled(Container)`
   position: absolute;
-  width: 250px;
+  width: 300px;
   height: 200px;
   top: 15px;
   left: 58px;
@@ -33,21 +33,14 @@ export const DropdownContainer = styled(Container)`
 
   // Open state
   &.upward {
-    top: -100px;
-    left: 55px;
+    top: -90px;
+    left: 58px;
   }
 
   @container (max-width: 500px) {
     & {
-      top: 7px;
-      left: 35px;
-      width: 200px;
-      height: 120px;
-    }
-
-    &.upward {
-      top: -30px;
-      left: 35px;
+      top: 10px;
+      left: 47px;
     }
   }
 `;
@@ -89,10 +82,9 @@ export const ScrollableContent = styled.div`
 export const Avatar = styled(Common.Avatar)`
   margin-block: 10px;
 
-  @container (max-width: 500px) {
+  @container (max-width: 800px) {
     & {
-      margin-top: 10px;
-      --size: 30px;
+      margin-block: 5px;
     }
   }
 `;
@@ -108,18 +100,6 @@ export const SourceName = styled.div`
   @container (max-width: 800px) {
     & {
       font-size: 12px;
-    }
-  }
-
-  @container (max-width: 700px) {
-    & {
-      font-size: 10px;
-    }
-  }
-
-  @container (max-width: 500px) {
-    & {
-      font-size: 8px;
     }
   }
 `;

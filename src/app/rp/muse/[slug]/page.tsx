@@ -21,8 +21,10 @@ import { FaComments } from "react-icons/fa6";
 import classNames from "classnames";
 import { Flex, RichText } from "@novelist-world/ui";
 import { getPromptsByMuseAction } from "../../prompt/actions";
-import moment from "moment";
 import { toFormattedDate } from "@/utils/helpers";
+import { VscVerifiedFilled } from "react-icons/vsc";
+import { VscUnverified } from "react-icons/vsc";
+import { IoHeart } from "react-icons/io5";
 
 type CARD_STATE =
   | "MAIN"
@@ -137,7 +139,7 @@ export default function MuseProfilePage({}) {
     fetchPrompts(username);
   }, [authState]);
 
-  const loadChildren = (slice = 0, className = "") => {
+  const loadChonnections = (slice = 0, className = "") => {
     return muse?.connections
       ?.slice(0, slice ? slice : muse?.connections.length)
       .map((connection) => (
@@ -159,9 +161,25 @@ export default function MuseProfilePage({}) {
               className={className}
               name={connection.firstName}
             />
-            <S.ConnectionLabel>
-              {connection.firstName} {connection.lastName}
-            </S.ConnectionLabel>
+            <Flex direction="column" align="flex-start">
+              <S.ConnectionLabel>
+                {connection.firstName} {connection.lastName}
+              </S.ConnectionLabel>
+              <Flex>
+                <S.ConnectionType>{connection.connection}</S.ConnectionType>
+                {connection.verified &&
+                  connection.connection !== "RELATIONSHIP" && (
+                    <VscVerifiedFilled size={20} color="rgb(21, 74, 117)" />
+                  )}
+                {connection.connection === "RELATIONSHIP" &&
+                  connection.verified && (
+                    <IoHeart size={20} color="rgb(151, 42, 42)" />
+                  )}
+                {!connection.verified && (
+                  <VscUnverified size={20} color="rgb(184, 184, 184)" />
+                )}
+              </Flex>
+            </Flex>
           </S.ConnectionItem>
         </>
       ));
@@ -318,7 +336,7 @@ export default function MuseProfilePage({}) {
               <S.ConnectionsContainer>
                 <S.ScrollableContent>
                   <S.ExpandedContentInner>
-                    {loadChildren(0, "paddington")}
+                    {loadChonnections(0, "paddington")}
                   </S.ExpandedContentInner>
                 </S.ScrollableContent>
               </S.ConnectionsContainer>

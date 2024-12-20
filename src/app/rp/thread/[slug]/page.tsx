@@ -173,11 +173,7 @@ export default function ThreadPage({}) {
         {state === "LOGGED_IN" && (
           <Flex style={{ borderTop: "1px solid gray" }}>
             <PromptInput
-              className={
-                comment?.replies.length != null && comment?.replies.length > 0
-                  ? "upward"
-                  : ""
-              }
+              className="upward"
               muses={novelist?.muses || []}
             />
           </Flex>

@@ -7,9 +7,8 @@ import { Prompt } from "@/types";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import * as S from "./styles";
-import { Container, Flex } from "@novelist-world/ui";
+import { Flex } from "@novelist-world/ui";
 import { getPromptAction } from "../actions";
-import PromptInput from "@/components/prompt-input";
 import { toFormattedDate } from "@/utils/helpers";
 
 export default function PromptPage({}) {
@@ -226,45 +225,47 @@ export default function PromptPage({}) {
             )}
           </div>
         )}
-        <S.ThreadsContainerMobile
-          className={showMobileThreads ? "expanded" : ""}
-        >
-          <S.ToggleThread className={showPromptInput ? "expanded" : ""}>
-            <S.SourceName className="action" onClick={toggleMobileThreads}>
-              {showMobileThreads
-                ? "Hide existing threads"
-                : "Show existing threads"}
-            </S.SourceName>
-          </S.ToggleThread>
-          <S.ScrollableContentHorzontal
-            className={showMobileThreads ? "visible" : ""}
+        {prompt?.comments.length != null && prompt?.comments.length > 0 && (
+          <S.ThreadsContainerMobile
+            className={showMobileThreads ? "expanded" : ""}
           >
+            <S.ToggleThread className={showMobileThreads ? "expanded" : ""}>
+              <S.SourceName className="action" onClick={toggleMobileThreads}>
+                {showMobileThreads
+                  ? "Hide existing threads"
+                  : "Show existing threads"}
+              </S.SourceName>
+            </S.ToggleThread>
+            <S.ScrollableContentHorzontal
+              className={showMobileThreads ? "visible" : ""}
+            >
+              <ShouldRender
+                preserveSpace
+                if={
+                  prompt?.comments.length != null && prompt?.comments.length > 0
+                }
+              >
+                {loadThreadsMobile()}
+              </ShouldRender>
+            </S.ScrollableContentHorzontal>
+          </S.ThreadsContainerMobile>
+        )}
+      </S.PromptContainer>
+      {prompt?.comments.length != null && prompt?.comments.length > 0 && (
+        <S.ThreadsContainer>
+          <S.CommentsHeader> Existing threads</S.CommentsHeader>
+          <S.ScrollableContent>
             <ShouldRender
               preserveSpace
               if={
                 prompt?.comments.length != null && prompt?.comments.length > 0
               }
             >
-              {loadThreadsMobile()}
+              {loadThreads()}
             </ShouldRender>
-          </S.ScrollableContentHorzontal>
-        </S.ThreadsContainerMobile>
-      </S.PromptContainer>
-      <S.ThreadsContainer>
-        <S.CommentsHeader>
-          {prompt?.comments.length === 0
-            ? "No threads yet"
-            : "Existing threads"}
-        </S.CommentsHeader>
-        <S.ScrollableContent>
-          <ShouldRender
-            preserveSpace
-            if={prompt?.comments.length != null && prompt?.comments.length > 0}
-          >
-            {loadThreads()}
-          </ShouldRender>
-        </S.ScrollableContent>
-      </S.ThreadsContainer>
+          </S.ScrollableContent>
+        </S.ThreadsContainer>
+      )}
     </S.ParentContainer>
   );
 }

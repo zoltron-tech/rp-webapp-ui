@@ -2,10 +2,10 @@ import * as Common from "@/components/common";
 import PromptInput from "@/components/prompt-input";
 import { Z_INDEX, CARD_BORDER } from "@/theme";
 import { setOpacity } from "@/utils/helpers";
-import { Container } from "@novelist-world/ui";
+import { Container, Flex } from "@novelist-world/ui";
 import styled from "styled-components";
 
-export const ParentContainer = styled(Container)`
+export const ParentContainer = styled(Flex)`
   display: flex;
   flex-direction: row;
   justify-content: center;
@@ -51,6 +51,7 @@ export const PromptContainer = styled(Container)`
   justify-content: center;
   border-radius: 0px !important;
   border: none !important;
+  background-color: transparent;
   height: 93vh;
   width: 100%;
 
@@ -65,6 +66,7 @@ export const ThreadsContainer = styled(Container)`
   justify-content: center;
   border-radius: 0px !important;
   border: none !important;
+  background-color: transparent;
   margin-top: 20px;
   height: 90vh;
   border-left: 1px solid dimgray;
@@ -279,7 +281,7 @@ export const PromptText = styled.div`
 `;
 
 export const Date = styled.div`
-  font-size: 1px;
+  font-size: 14px;
   font-weight: 200;
 
   &.reply {
@@ -289,12 +291,6 @@ export const Date = styled.div`
   &.mobile {
     font-size: 10px;
     font-weight: 300;
-  }
-
-  @container (max-width: 1400px) {
-    & {
-      font-size: 10px;
-    }
   }
 `;
 

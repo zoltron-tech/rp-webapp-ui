@@ -372,7 +372,7 @@ export default function UserProfilePage({}) {
               <Container
                 style={{ width: "96%", contain: "unset", zIndex: Z_INDEX.CARD }}
               >
-                <PromptInput muses={novelist?.muses || []} />
+                <PromptInput className="upward" muses={novelist?.muses || []} />
               </Container>
             )}
             {activities &&

@@ -92,7 +92,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
   return (
     <S.ParentContainer>
       <S.HeaderContainer>
-        <Flex>
+        <Flex style={{ gap: "0.2em" }}>
           <S.Avatar
             src={activity.source?.image || ""}
             alt={""}
@@ -190,7 +190,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
         <S.FooterContainer>
           <FaComments />{" "}
           <S.PromptFooterText onClick={(e) => handleCardClick(e, activity)}>
-            View Comments & Replies.
+            View Threads & Replies.
           </S.PromptFooterText>
         </S.FooterContainer>
       </ShouldRender>

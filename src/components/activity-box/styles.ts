@@ -58,13 +58,14 @@ export const HeaderContainer = styled.div`
   width: 100%;
   padding-inline: 10px;
   border-bottom: 1px solid slategray;
-  gap: 0.5em;
+  gap: 0.3em;
 
   @container content-container (max-width: 1000px) {
     margin-bottom: 10px;
   }
 
   @container content-container (max-width: 600px) {
+    width: 90%;
     padding-inline: 5px;
     margin-bottom: 5px;
   }
@@ -75,8 +76,8 @@ export const Avatar = styled(Common.Avatar)`
 
   @container (max-width: 500px) {
     & {
-      margin-top: 10px;
-      --size: 30px;
+      margin-inline: unset;
+      --size: 40px;
     }
   }
 `;
@@ -95,6 +96,7 @@ export const FooterContainer = styled.div`
   }
 
   @container content-container (max-width: 600px) {
+    width: 90%;
     padding-inline: 5px;
     margin-bottom: 5px;
   }
@@ -119,42 +121,18 @@ export const SourceName = styled.div`
       font-size: 12px;
     }
   }
-
-  @container (max-width: 700px) {
-    & {
-      font-size: 10px;
-    }
-  }
-
-  @container (max-width: 500px) {
-    & {
-      font-size: 8px;
-    }
-  }
 `;
 
 export const ActivityText = styled.div`
-  text-transform: uppercase;
   font-size: 14px;
   font-weight: 200;
   font-style: italic;
-  text-align: center;
+  text-align: left;
 
   @container (max-width: 800px) {
     & {
-      font-size: 12px;
-    }
-  }
-
-  @container (max-width: 700px) {
-    & {
-      font-size: 10px;
-    }
-  }
-
-  @container (max-width: 500px) {
-    & {
-      font-size: 8px;
+      font-size: 11px;
+      font-weight: 400;
     }
   }
 `;
@@ -187,18 +165,6 @@ export const PromptFooterText = styled.div`
       font-size: 10px;
     }
   }
-
-  @container (max-width: 700px) {
-    & {
-      font-size: 8px;
-    }
-  }
-
-  @container (max-width: 500px) {
-    & {
-      font-size: 6px;
-    }
-  }
 `;
 
 export const Date = styled.div`
@@ -213,13 +179,8 @@ export const Date = styled.div`
 
   @container (max-width: 800px) {
     & {
-      font-size: 12px;
-    }
-  }
-
-  @container (max-width: 600px) {
-    & {
-      font-size: 8px;
+      font-weight: 300;
+      font-size: 10px;
     }
   }
 `;

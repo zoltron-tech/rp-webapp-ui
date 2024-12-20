@@ -381,8 +381,6 @@ export const ConnectionsContainer = styled.div`
   justify-content: center;
   border-radius: ${BORDER_RADIUS};
   height: 100%;
-
-  padding: 10px 20px 20px;
 `;
 
 export const Text = styled.div`
@@ -527,7 +525,7 @@ export const VideoCardContent = styled.div`
 `;
 
 export const ConnectionItem = styled.div`
-  justify-content: space-between;
+  justify-content: flex-start;
   display: flex;
   flex-direction: row;
   width: inherit;
@@ -542,10 +540,14 @@ export const ConnectionItem = styled.div`
 `;
 
 export const ConnectionLabel = styled.span`
+  font-size: 16;
   font-weight: bold;
-  text-align: start;
-  align-self: center;
-  vertical-align: middle;
+`;
+
+export const ConnectionType = styled.span`
+  text-transform: uppercase;
+  font-size: 14px;
+  font-style: italic;
 `;
 
 export const ScrollableContent = styled.div`
@@ -638,7 +640,7 @@ export const Avatar = styled(AvatarCommon)`
 `;
 
 export const PromptText = styled.div`
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 200;
   max-width: 60%;
   font-style: italic;
@@ -647,20 +649,14 @@ export const PromptText = styled.div`
 
   @container (max-width: 500px) {
     & {
-      font-size: 10px;
+      font-weight: 300;
     }
   }
 `;
 
 export const Date = styled.div`
-  font-size: 12px;
-  font-weight: 200;
-
-  @container (max-width: 800px) {
-    & {
-      font-size: 10px;
-    }
-  }
+  font-size: 10px;
+  font-weight: 300;
 `;
 
 export const PromptMedia = styled.div`
@@ -698,7 +694,7 @@ export const FooterContainer = styled.div`
   align-items: center;
   width: 100%;
   border-bottom: 1px solid slategray;
-  gap: 0.5em;
+  gap: 0.2em;
   padding-bottom: 10px;
   margin-bottom: 20px;
   padding-inline: 20px;
@@ -721,12 +717,6 @@ export const PromptFooterText = styled.div`
   font-style: italic;
   text-align: center;
   cursor: pointer;
-
-  @container (max-width: 400px) {
-    & {
-      font-size: 7px;
-    }
-  }
 `;
 
 export const ViewMoreText = styled.div`
@@ -735,10 +725,4 @@ export const ViewMoreText = styled.div`
   font-style: italic;
   text-align: center;
   cursor: pointer;
-
-  @container (max-width: 400px) {
-    & {
-      font-size: 8px;
-    }
-  }
 `;

@@ -206,7 +206,7 @@ export const Avatar = styled(Common.Avatar)`
   }
 `;
 
-export const Name = styled.div`
+export const SourceName = styled.div`
   text-transform: uppercase;
   font-size: 18px;
   font-weight: 500;

@@ -37,9 +37,9 @@ export const RepliesContainer = styled(Container)`
   @container content-container (max-width: 600px) {
     max-width: 100%;
     margin-bottom: 50px;
-    margin-left: unset;
-    border: none;
-    border-radius: unset;
+    margin-left: unset !important;
+    border: none !important;
+    border-radius: unset !important;
   }
 `;
 

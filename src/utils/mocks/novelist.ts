@@ -10,6 +10,7 @@ const NOVELIST_MOCK: Novelist = {
   username: "johndoe",
   note: "This is a note",
   image: "",
+  museCount: 1,
   muses: [
     {
       _tag: "Muse",
@@ -28,9 +29,12 @@ const NOVELIST_MOCK: Novelist = {
         tier: STANDARD_TIER,
         note: "This is a note",
         image: "",
+        museCount: 0,
         muses: [],
         friends: [],
+        friendsCount: 0,
         connection: "",
+        createdAt: "",
       },
       lastName: "Doe",
       image: "",
@@ -46,6 +50,7 @@ const NOVELIST_MOCK: Novelist = {
       connections: [],
     },
   ],
+  friendsCount: 1,
   friends: [
     {
       _tag: "Friend",
@@ -55,6 +60,7 @@ const NOVELIST_MOCK: Novelist = {
     },
   ],
   connection: "",
+  createdAt: "",
 };
 
 export const getNovelistMock = (partial?: Partial<Novelist>): Novelist => ({

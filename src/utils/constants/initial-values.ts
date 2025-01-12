@@ -26,9 +26,12 @@ export const INITIAL_NOVELIST: Novelist = {
   lastName: "",
   note: "",
   image: "",
+  museCount: 0,
   muses: [],
   friends: [],
+  friendsCount: 0,
   connection: null,
+  createdAt: "",
 };
 
 export const INITIAL_MUSE: Muse = {
@@ -66,6 +69,7 @@ export const INITIAL_STORY_BOARD_EVENT: StoryBoardEvent = {
   storyBoardId: "",
   name: "",
   description: "",
+  ordinal: 1,
   image: null,
   location: null,
   eventTime: null,

@@ -1,6 +1,6 @@
 "use server";
 import { authenticateAndGetJWT } from "@/app/actions";
-import { StoryBoard } from "@/types";
+import { StoryBoard, StoryBoardEvent, StoryBoardEventThread } from "@/types";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import getConfig from "next/config";
 import { Logger } from "@/utils/services";
@@ -111,4 +111,48 @@ export const updateStoryBoardAction = async (_storyboard: StoryBoard) => {
   );
 
   return storyboard;
+};
+
+export const getStoryboardEventAction = async (storyboardEventId: string) => {
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/story/event/${storyboardEventId}`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+  });
+
+  Logger.debug("getStoryboardEventAction", response.status);
+
+  if (response.status === 404) {
+    return null;
+  } else if (response.status !== 200) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  console.log(response);
+
+  const storyBoardEvent: StoryBoardEvent = await response.json();
+
+  return storyBoardEvent;
+};
+
+export const getStoryboardEventThreadsAction = async (
+  storyboardEventId: string
+) => {
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/story/event/${storyboardEventId}/threads`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+  });
+
+  Logger.debug("getStoryboardEventThreadsAction", response.status);
+
+  if (response.status === 404) {
+    return null;
+  } else if (response.status !== 200) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const storyBoardEventThreads: StoryBoardEventThread[] = await response.json();
+
+  return storyBoardEventThreads;
 };

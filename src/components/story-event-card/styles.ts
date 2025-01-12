@@ -236,6 +236,7 @@ export const CardFooter = styled.div`
   align-items: flex-end;
   justify-content: end;
   font-size: 14px;
+  font-weight: 600;
   padding: 20px;
   gap: 0.3rem;
   opacity: 0;

@@ -15,14 +15,14 @@ export const LeftWrapperContainer = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 18cqw;
+  width: 20cqw;
 
   container-name: left_wrapper;
   container-type: inline-size;
 
   @container (max-width: 1200px) {
     & {
-      width: 60px;
+      width: 75px;
     }
   }
 `;
@@ -35,7 +35,8 @@ export const ListContainer = styled.div`
   overflow-y: auto;
   overflow-x: hidden;
   background-color: ${({ theme }) => theme.background};
-  border-radius: 10px;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
   ${CARD_BORDER}
 
   @container left_wrapper (max-width: 200px) {
@@ -115,9 +116,10 @@ export const SubText = styled.div`
     }
   }
 
-  @container (max-width: 300px) {
+  @container (max-width: 200px) {
     & {
-      font-size: 12px;
+      font-size: 10px;
+      font-weight: 600;
     }
   }
 `;

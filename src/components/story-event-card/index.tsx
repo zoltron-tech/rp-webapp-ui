@@ -25,6 +25,10 @@ export const StoryCardEvent: FC<Props> = ({ event, className, ...rest }) => {
   const username = params?.slug as string;
   const isCurrentUser = user?.username && user.username === username;
 
+  const onEventClick = (eventId: string) => {
+    push(`/rp/story/event/${eventId}`);
+  };
+
   const handleCardClick = (
     e: React.MouseEvent<HTMLDivElement>,
     event: StoryBoardEvent
@@ -71,7 +75,7 @@ export const StoryCardEvent: FC<Props> = ({ event, className, ...rest }) => {
             new: !event.name,
           },
         ])}
-        onClick={(e) => handleCardClick(e, event)}
+        // onClick={(e) => handleCardClick(e, event)}
       >
         <ShouldRender
           if={event !== INITIAL_STORY_BOARD_EVENT && !!isCurrentUser}
@@ -103,7 +107,7 @@ export const StoryCardEvent: FC<Props> = ({ event, className, ...rest }) => {
             </S.Description>
           </S.MuseInfo>
         </S.CardHeader>
-        <S.CardFooter>
+        <S.CardFooter onClick={() => onEventClick(event.id || "")}>
           Read more...
           <FaArrowRight />
         </S.CardFooter>

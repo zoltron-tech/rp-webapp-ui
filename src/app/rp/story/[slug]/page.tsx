@@ -20,7 +20,7 @@ export default function UserProfilePage({}) {
   const storyboardId = params?.slug as string;
   const { push } = useRouter();
 
-  const fetchStoryboard = async (museId: string) => {
+  const fetchStoryboard = async () => {
     setLoading(true);
     const _storyboard = await getStoryboardAction(storyboardId);
 
@@ -37,7 +37,7 @@ export default function UserProfilePage({}) {
   useEffect(() => {
     if (authState === "LOADING" || storyboard) return;
 
-    fetchStoryboard(storyboardId);
+    fetchStoryboard();
   }, [authState]);
 
   return (

@@ -7,7 +7,7 @@ export const PageContainer = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding-inline: 100px;
+  padding-inline: 50px;
   margin-top: 30px;
   padding-bottom: 30px;
   border-bottom: 1px solid dimgray;

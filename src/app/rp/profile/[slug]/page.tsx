@@ -26,6 +26,7 @@ import ActivityBox from "@/components/activity-box";
 import { getAllStoryboardsByUsernameAction } from "../../story/actions";
 import StoryCard from "@/components/story-card";
 import { TbSquareRoundedLetterSFilled } from "react-icons/tb";
+import { FcCalendar } from "react-icons/fc";
 import {
   TbCircleLetterS,
   TbCircleLetterG,
@@ -38,6 +39,7 @@ import { GiStarSwirl } from "react-icons/gi";
 import { Container, Flex } from "@novelist-world/ui";
 import PromptInput from "@/components/prompt-input";
 import { Z_INDEX } from "@/theme/geometry";
+import { toFormattedDate } from "@/utils/helpers";
 
 export default function UserProfilePage({}) {
   const params = useParams();
@@ -312,6 +314,16 @@ export default function UserProfilePage({}) {
           <S.UsernameContainer>
             <Username username={username} primary />
           </S.UsernameContainer>
+          <Flex>
+            <S.InfoTextBold>{novelist?.friendsCount}</S.InfoTextBold>{" "}
+            <S.InfoText> Friends </S.InfoText>
+            <S.InfoTextBold>{novelist?.museCount}</S.InfoTextBold>{" "}
+            <S.InfoText> Muses </S.InfoText>
+            <FcCalendar />
+            <S.InfoText>
+              Joined {toFormattedDate(novelist?.createdAt)}
+            </S.InfoText>
+          </Flex>
           <S.NoteContainer>
             <Quote>{novelist?.note}</Quote>
           </S.NoteContainer>

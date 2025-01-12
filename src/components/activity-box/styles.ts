@@ -19,34 +19,14 @@ export const ParentContainer = styled(Container)`
     width: 100%;
     border-radius: 0px;
     border: none;
-    width: 600px;
-  }
-
-  @container content-container (max-width: 600px) {
-    padding-inline: 10px;
-    margin-block: 0px;
-    width: 100%;
-    border-radius: 0px;
-    border: none;
-    width: 500px;
   }
 
   @container content-container (max-width: 500px) {
-    padding-inline: 10px;
+    padding-inline: 0px;
     margin-block: 0px;
     width: 100%;
     border-radius: 0px;
     border: none;
-    width: 400px;
-  }
-
-  @container content-container (max-width: 400px) {
-    padding-inline: 10px;
-    margin-block: 0px;
-    width: 100%;
-    border-radius: 0px;
-    border: none;
-    width: 300px;
   }
 `;
 
@@ -108,6 +88,7 @@ export const SourceName = styled.div`
   font-weight: 500;
   font-style: italic;
   text-align: center;
+  margin-left: 3px;
   cursor: pointer;
 
   @container (max-width: 1000px) {
@@ -128,6 +109,7 @@ export const ActivityText = styled.div`
   font-weight: 200;
   font-style: italic;
   text-align: left;
+  margin-left: 3px;
 
   @container (max-width: 800px) {
     & {
@@ -270,19 +252,10 @@ export const CardWrapper = styled.div`
 
   @container content-container (max-width: 400px) {
     & {
-      width: 250px;
-      height: 250px;
-      margin-inline: 0px;
-      margin-bottom: 10px;
-    }
-  }
-
-  @container content-container (max-width: 350px) {
-    & {
       width: 200px;
       height: 200px;
       margin-inline: 0px;
-      margin-bottom: 0px;
+      margin-bottom: 10px;
     }
   }
 

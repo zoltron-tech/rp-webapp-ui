@@ -59,10 +59,12 @@ export default function NovelistsPage() {
         </S.MainSubtext>
         <S.Story>
           Collaborate with friends and fellow novelists to bring your
-          imagination to life. Work together to craft intricate realms, develop
-          compelling characters, and weave stories that reflect your collective
-          creativity. Join a community of like-minded writers where you can
-          share ideas, inspire each other, and build entire worlds together.
+          imagination to life. <br />
+          Work together to craft intricate realms, develop compelling
+          characters, and weave stories that reflect your collective creativity.{" "}
+          <br />
+          Join a community of like-minded writers where you can share ideas,
+          inspire each other, and build entire worlds together.
         </S.Story>
         <S.ButtonsGroupContainer>
           <S.MainButton

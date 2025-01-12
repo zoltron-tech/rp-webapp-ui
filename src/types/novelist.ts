@@ -53,9 +53,12 @@ export interface Novelist extends Tagged {
   lastName: string;
   note: string;
   image: string;
+  museCount: number;
   muses: Muse[];
+  friendsCount: number;
   friends: Friend[];
   connection: string | null;
+  createdAt: string;
 }
 
 export interface Friend extends Tagged {

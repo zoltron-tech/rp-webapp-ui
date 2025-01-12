@@ -224,6 +224,32 @@ export const SubText = styled.div`
   }
 `;
 
+export const InfoTextBold = styled.div`
+  font-size: 14px;
+  font-weight: 600;
+  font-style: italic;
+  text-align: center;
+
+  @container (max-width: 300px) {
+    & {
+      font-size: 12px;
+    }
+  }
+`;
+
+export const InfoText = styled.div`
+  font-size: 14px;
+  font-weight: 300;
+  font-style: italic;
+  text-align: center;
+
+  @container (max-width: 300px) {
+    & {
+      font-size: 12px;
+    }
+  }
+`;
+
 export const Avatar = styled(AvatarCommon)`
   margin-top: 30px;
 `;
@@ -283,6 +309,7 @@ export const NameMobile = styled.div`
 `;
 
 export const UsernameContainer = styled.div`
+  margin-block: 10px;
   & > div {
     text-align: center;
     font-size: 24px;
@@ -298,40 +325,12 @@ export const UsernameContainer = styled.div`
 
 export const NoteContainer = styled(Pill)`
   width: 460px;
-  min-height: 200px;
-  margin-top: 20px;
+  margin-top: 15px;
   word-break: break-word;
-  border-radius: 20px;
+  border-radius: 15px;
   border-bottom: 1px solid dimgray;
   border-right: 1px solid dimgray;
-
-  padding: 40px 20px 20px;
-
-  &::before {
-    content: "Note";
-  }
-
-  @container profile-content (max-width: 1200px) {
-    & {
-      width: 360px;
-    }
-  }
-
-  @container profile-content (max-width: 1024px) {
-    & {
-      width: 460px;
-    }
-  }
-
-  @container profile-content (max-width: 400px) {
-    & {
-      margin-top: 0px;
-    }
-
-    &::before {
-      content: "";
-    }
-  }
+  padding: 10px 30px 10px;
 
   @container profile-content (max-width: 200px) {
     & {

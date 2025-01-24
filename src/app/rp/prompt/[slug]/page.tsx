@@ -215,6 +215,8 @@ export default function PromptPage({}) {
             </S.ToggleThread>
             {showPromptInput && (
               <S.StyledPromptInput
+                type="comment"
+                parentId={prompt?.id}
                 className={
                   prompt?.comments.length != null && prompt?.comments.length > 0
                     ? "visible upward"

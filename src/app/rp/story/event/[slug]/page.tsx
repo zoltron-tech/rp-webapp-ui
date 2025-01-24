@@ -73,9 +73,8 @@ export default function StoryboardEventPage({}) {
   const fetchStoryboardEventThreads = async () => {
     setLoading(true);
     console.log("going to fetch event threads");
-    const _storyboardEventThreads = await getStoryboardEventThreadsAction(
-      storyboardEventId
-    );
+    const _storyboardEventThreads =
+      await getStoryboardEventThreadsAction(storyboardEventId);
 
     if (!_storyboardEventThreads || "message" in _storyboardEventThreads) {
       // handle error
@@ -204,11 +203,11 @@ export default function StoryboardEventPage({}) {
           </Flex>
         </Flex>
         {loadThreads()}
-        {state === "LOGGED_IN" && (
+        {/* {state === "LOGGED_IN" && (
           <Flex style={{ borderTop: "1px solid gray" }}>
             <PromptInput className="upward" muses={novelist?.muses || []} />
           </Flex>
-        )}
+        )} */}
       </S.RepliesContainer>
     </S.ParentContainer>
   );

@@ -39,3 +39,13 @@ export interface PromptSource extends Tagged {
   name: string;
   image: string;
 }
+
+export type SubmitPromptInput = {
+  source: PromptSource;
+  text: string;
+  media: string;
+  promptId?: string;
+  commentId?: string;
+};
+
+export type SubmitPromptType = "prompt" | "comment" | "reply";

@@ -175,6 +175,8 @@ export default function ThreadPage({}) {
             <PromptInput
               className="upward"
               muses={novelist?.muses || []}
+              parentId={commentId}
+              type="reply"
             />
           </Flex>
         )}

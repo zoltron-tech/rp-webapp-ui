@@ -1,6 +1,7 @@
 "use server";
 
 import { authenticateAndGetJWT } from "@/app/actions";
+import { SubmitPromptInput, SubmitPromptType } from "@/types";
 import { WithMessage } from "@/types/common";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import { Logger } from "@/utils/services";
@@ -179,6 +180,39 @@ export const cancelFriendRequest = async (novelistId: string) => {
       [AUTH_HEADER_NAME]: jwt,
     },
     body: JSON.stringify(body),
+    cache: "no-store",
+  });
+
+  if (response.status !== 200) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const result = await response.json();
+
+  return result;
+};
+
+export const submitPrompt = async (
+  prompt: SubmitPromptInput,
+  type: SubmitPromptType = "prompt",
+) => {
+  const jwt = await authenticateAndGetJWT();
+
+  const promptWithoutTag = { ...prompt };
+
+  let URL = `${RP_SERVICE_URL}/rp/portfolio/prompt`;
+
+  if (type !== "prompt") {
+    URL += `/${type}`;
+  }
+
+  const response = await fetch(URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    body: JSON.stringify(promptWithoutTag),
     cache: "no-store",
   });
 

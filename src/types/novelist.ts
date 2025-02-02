@@ -4,6 +4,7 @@ export interface Muse extends Tagged {
   _tag: "Muse";
   id: string | null;
   firstName: string;
+  fandom: Fandom;
   pennedBy: Novelist;
   lastName: string;
   note: string;
@@ -11,10 +12,8 @@ export interface Muse extends Tagged {
   image: string | null;
   video: string | null;
   song: string | null;
-  fandom: string | null;
-  relationshipStatus: string | null;
-  hometown: string | null;
-  species: string | null;
+  nicknames: string[] | null;
+  extraAttributes: Map<string, string> | null;
   dateOfBirth: {
     year: number;
     month: string;
@@ -66,4 +65,11 @@ export interface Friend extends Tagged {
   id: string;
   username: string;
   image: string;
+}
+
+export interface Fandom {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
 }

@@ -38,7 +38,7 @@ export const Title = styled.div`
   }
 
   &.profile {
-    bottom: -160px;
+    bottom: -180px;
     right: -10;
   }
 
@@ -57,10 +57,10 @@ export const Title = styled.div`
 
 export const CardWrapper = styled.div`
   position: relative;
-  width: 300px;
-  height: 300px;
-  min-width: 300px;
+  width: 250px;
+  min-width: 250px;
   min-height: 300px;
+  height: 300px;
   border-radius: var(--border-radius);
   ${CARD_BORDER};
 
@@ -76,17 +76,17 @@ export const CardWrapper = styled.div`
   container-type: size;
 
   &.profile {
-    width: 180px;
-    height: 180px;
-    min-width: 180px;
-    min-height: 180px;
+    height: 200px;
+    width: 170px;
+    min-width: 170px;
+    min-height: 200px;
   }
 
   @container content-container (max-width: 1000px) {
     & {
-      width: 200px;
+      width: 170px;
       height: 200px;
-      min-width: 200px;
+      min-width: 170px;
       min-height: 200px;
     }
   }

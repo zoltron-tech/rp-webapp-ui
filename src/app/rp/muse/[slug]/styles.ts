@@ -606,10 +606,25 @@ export const InfoItem = styled.div`
 `;
 
 export const InfoLabel = styled.span`
-  width: inherit;
+  width: 40%;
   font-weight: bold;
   text-align: start;
   vertical-align: middle;
+`;
+
+export const FandomValue = styled.span<{ color: string }>`
+  font-weight: 600;
+  width: fit-content;
+  text-align: end;
+  vertical-align: middle;
+  background-color: ${(props) => props.color};
+  border-radius: 30px;
+  padding-inline: 10px;
+  padding-block: 3px;
+  cursor: pointer;
+
+  /* Add a black shadow for contrast */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 `;
 
 export const InfoValue = styled.span`

@@ -275,10 +275,27 @@ export default function MuseProfilePage({}) {
                   <S.InfoLabel>Last Name:</S.InfoLabel>
                   <S.InfoValue>{muse?.lastName}</S.InfoValue>
                 </S.InfoItem>
+                <ShouldRender
+                  if={
+                    muse?.nicknames?.length !== undefined &&
+                    muse?.nicknames?.length > 0
+                  }
+                >
+                  <S.InfoItem>
+                    <S.InfoLabel>Nicknames:</S.InfoLabel>
+                    <Flex direction="column">
+                      {muse?.nicknames?.map((nickname) => (
+                        <S.InfoValue key={nickname}>{nickname}</S.InfoValue>
+                      ))}
+                    </Flex>
+                  </S.InfoItem>
+                </ShouldRender>
                 <S.InfoItem>
                   <S.InfoLabel>Fandom:</S.InfoLabel>
                   <ShouldRender if={muse?.fandom !== null}>
-                    <S.InfoValue>{muse?.fandom}</S.InfoValue>
+                    <S.FandomValue color={muse?.fandom.color || "red"}>
+                      {muse?.fandom.id}
+                    </S.FandomValue>
                   </ShouldRender>
                   <ShouldRender if={muse?.fandom === null}>
                     <S.InfoValue>NOT SPECIFIED</S.InfoValue>
@@ -296,33 +313,13 @@ export default function MuseProfilePage({}) {
                     <S.InfoValue>NOT SPECIFIED</S.InfoValue>
                   </ShouldRender>
                 </S.InfoItem>
-                <S.InfoItem>
-                  <S.InfoLabel>Species:</S.InfoLabel>
-                  <ShouldRender if={muse?.species !== null}>
-                    <S.InfoValue>{muse?.species}</S.InfoValue>
-                  </ShouldRender>
-                  <ShouldRender if={muse?.species === null}>
-                    <S.InfoValue>NOT SPECIFIED</S.InfoValue>
-                  </ShouldRender>
-                </S.InfoItem>
-                <S.InfoItem>
-                  <S.InfoLabel>Hometown:</S.InfoLabel>
-                  <ShouldRender if={muse?.hometown !== null}>
-                    <S.InfoValue>{muse?.hometown}</S.InfoValue>
-                  </ShouldRender>
-                  <ShouldRender if={muse?.hometown === null}>
-                    <S.InfoValue>NOT SPECIFIED</S.InfoValue>
-                  </ShouldRender>
-                </S.InfoItem>
-                <S.InfoItem>
-                  <S.InfoLabel>Relationship Status:</S.InfoLabel>
-                  <ShouldRender if={muse?.relationshipStatus !== null}>
-                    <S.InfoValue>{muse?.relationshipStatus}</S.InfoValue>
-                  </ShouldRender>
-                  <ShouldRender if={muse?.relationshipStatus === null}>
-                    <S.InfoValue>NOT SPECIFIED</S.InfoValue>
-                  </ShouldRender>
-                </S.InfoItem>
+                {muse?.extraAttributes &&
+                  Object.entries(muse.extraAttributes).map(([key, value]) => (
+                    <S.InfoItem key={key}>
+                      <S.InfoLabel>{key}:</S.InfoLabel>
+                      <S.InfoValue>{value}</S.InfoValue>
+                    </S.InfoItem>
+                  ))}
               </S.InfoContainer>
             </S.InfoCardContent>
           </S.CardBack>

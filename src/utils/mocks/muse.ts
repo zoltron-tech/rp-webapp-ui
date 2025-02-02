@@ -5,10 +5,14 @@ const MOCK_MUSE: Muse = {
   _tag: "Muse",
   id: "uuid",
   firstName: "John",
-  species: "human",
-  fandom: "GOT",
-  hometown: "lahore",
-  relationshipStatus: "single",
+  nicknames: null,
+  fandom: {
+    id: "GOT",
+    name: "Game of Thrones",
+    description: "something",
+    color: "#111",
+  },
+  extraAttributes: null,
   pennedBy: {
     _tag: "Novelist",
     id: "uuid",

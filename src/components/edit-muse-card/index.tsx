@@ -205,44 +205,11 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
                 </Flex>
 
                 <Flex>
-                  <S.Label htmlFor="species">Species</S.Label>
-                  <Input
-                    name="species"
-                    value={values?.species || ""}
-                    onChange={update}
-                    maxLength={50}
-                  />
-                </Flex>
-
-                <Flex>
-                  <S.Label htmlFor="relationshipStatus">
-                    Relationship status
-                  </S.Label>
-
-                  <Input
-                    name="relationshipStatus"
-                    value={values?.relationshipStatus || ""}
-                    onChange={update}
-                    maxLength={50}
-                  />
-                </Flex>
-
-                <Flex>
                   <S.Label htmlFor="fandom">Fandom</S.Label>
 
                   <Input
                     name="fandom"
-                    value={values?.fandom || ""}
-                    onChange={update}
-                    maxLength={50}
-                  />
-                </Flex>
-
-                <Flex>
-                  <S.Label htmlFor="hometown">Home town</S.Label>
-                  <Input
-                    name="hometown"
-                    value={values?.hometown || ""}
+                    value={values?.fandom.id || ""}
                     onChange={update}
                     maxLength={50}
                   />

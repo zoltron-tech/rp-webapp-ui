@@ -16,10 +16,14 @@ const NOVELIST_MOCK: Novelist = {
       _tag: "Muse",
       id: "uuid",
       firstName: "Jane",
-      species: "human",
-      fandom: "GOT",
-      hometown: "lahore",
-      relationshipStatus: "single",
+      nicknames: null,
+      fandom: {
+        id: "GOT",
+        name: "Game of Thrones",
+        description: "",
+        color: "111",
+      },
+      extraAttributes: null,
       pennedBy: {
         _tag: "Novelist",
         id: "uuid",

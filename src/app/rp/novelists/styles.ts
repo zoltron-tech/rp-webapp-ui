@@ -15,10 +15,32 @@ export const PageContainer = styled.div`
 `;
 
 export const MainButton = styled(Button)`
-  height: 50px;
-  width: 15cqw;
-  min-width: 150px;
-  border-radius: 5px;
+  padding: 17px 40px;
+  border-radius: 50px;
+  cursor: pointer;
+  border: 0;
+  background-color: white;
+  box-shadow: rgb(0 0 0 / 5%) 0 0 8px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-size: 15px;
+  transition: all 0.5s ease;
+
+  &:hover {
+    letter-spacing: 3px;
+    background-color: ${({ theme }) => setOpacity(theme.navbar, 0.3)};
+    color: hsl(0, 0%, 100%);
+    box-shadow: rgba(24, 93, 120, 0.8) 0px 10px 20px 0px;
+  }
+
+  &:active {
+    letter-spacing: 3px;
+    background-color: ${({ theme }) => setOpacity(theme.navbar, 0.3)};
+    color: hsl(0, 0%, 100%);
+    box-shadow: rgba(24, 93, 220, 0.8) 0px 0px 0px 0px;
+    transform: translateY(10px);
+    transition: 100ms;
+  }
 `;
 
 export const InfoCard = styled(Container)`

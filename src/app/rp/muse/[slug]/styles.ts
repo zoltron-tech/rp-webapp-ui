@@ -638,33 +638,6 @@ export const FandomValue = styled.span<{ color: string }>`
   }
 `;
 
-export const TagValue = styled.span<{ color: string }>`
-  display: inline-flex;
-  align-items: center;
-  font-weight: 900;
-  text-align: center;
-  vertical-align: middle;
-  background-color: rgba(30, 29, 31, 0.8); /* Slight transparency for depth */
-  border: 1.5px solid ${(props) => props.color};
-  color: ${(props) => props.color};
-  border-radius: 8px;
-  padding: 4px 12px;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  white-space: nowrap; /* Prevents breaking in smaller areas */
-
-  &::before {
-    content: "#";
-    margin-right: 2px;
-    font-weight: 900;
-  }
-
-  &:hover {
-    background-color: ${(props) => props.color};
-    color: #fff;
-  }
-`;
-
 export const InfoValue = styled.span`
   width: inherit;
   text-align: end;

@@ -613,18 +613,56 @@ export const InfoLabel = styled.span`
 `;
 
 export const FandomValue = styled.span<{ color: string }>`
-  font-weight: 600;
-  width: fit-content;
-  text-align: end;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  text-align: center;
+  text-transform: uppercase; /* Title Vibe */
   vertical-align: middle;
   background-color: ${(props) => props.color};
-  border-radius: 30px;
-  padding-inline: 10px;
-  padding-block: 3px;
+  color: #fff; /* Ensures text stands out */
+  border-radius: 999px; /* Fully rounded pill shape */
+  padding: 6px 16px; /* Better padding for a sleek look */
   cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  white-space: nowrap;
 
-  /* Add a black shadow for contrast */
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  /* Elegant text glow for depth */
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+
+  /* Smooth hover effect */
+  &:hover {
+    filter: brightness(1.2); /* Slight brightening effect */
+    transform: translateY(-1px); /* Subtle hover lift */
+  }
+`;
+
+export const TagValue = styled.span<{ color: string }>`
+  display: inline-flex;
+  align-items: center;
+  font-weight: 900;
+  text-align: center;
+  vertical-align: middle;
+  background-color: rgba(30, 29, 31, 0.8); /* Slight transparency for depth */
+  border: 1.5px solid ${(props) => props.color};
+  color: ${(props) => props.color};
+  border-radius: 8px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  white-space: nowrap; /* Prevents breaking in smaller areas */
+
+  &::before {
+    content: "#";
+    margin-right: 2px;
+    font-weight: 900;
+  }
+
+  &:hover {
+    background-color: ${(props) => props.color};
+    color: #fff;
+  }
 `;
 
 export const InfoValue = styled.span`

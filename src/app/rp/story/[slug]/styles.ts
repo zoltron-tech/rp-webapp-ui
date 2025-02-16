@@ -47,6 +47,7 @@ export const Name = styled.div`
 export const SectionName = styled.div`
   ${NameFontStyles}
   width: 100%;
+  text-transform: uppercase;
   text-align: center;
   text-align: center;
   margin-top: 20px;

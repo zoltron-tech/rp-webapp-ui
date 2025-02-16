@@ -11,6 +11,7 @@ import { PageLoader } from "@/components/layout";
 import { MusesPill } from "@/components/muses-pill";
 import StoryCardEvent from "@/components/story-event-card";
 import { Container, Flex } from "@novelist-world/ui";
+import { TagsContainer } from "@/components/tags-container";
 
 export default function UserProfilePage({}) {
   const params = useParams();
@@ -73,6 +74,15 @@ export default function UserProfilePage({}) {
             expandable={true}
           />
         </S.PillContainer>
+        <S.SectionName>
+          <ShouldRender
+            if={storyboard != null && storyboard?.events.length <= 0}
+          >
+            NO{" "}
+          </ShouldRender>
+          TAGS
+        </S.SectionName>
+        <TagsContainer tags={storyboard?.tags} />
         <S.SectionName>
           <ShouldRender
             if={storyboard != null && storyboard?.events.length <= 0}

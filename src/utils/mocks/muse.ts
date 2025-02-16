@@ -41,6 +41,7 @@ const MOCK_MUSE: Muse = {
     day: 1,
   },
   connections: [],
+  tags: [],
 };
 
 export const getMuseMock = (partial?: Partial<Muse>): Muse => ({

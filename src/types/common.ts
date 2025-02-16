@@ -24,6 +24,12 @@ export interface SearchResult extends Tagged {
   image: string;
 }
 
+export interface Tag {
+  id: string;
+  label: string;
+  color: string;
+}
+
 export interface None extends Tagged {
   _tag: "None";
 }

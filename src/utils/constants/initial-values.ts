@@ -55,6 +55,7 @@ export const INITIAL_MUSE: Muse = {
   dateOfBirth: null,
   extraAttributes: null,
   connections: [],
+  tags: [],
 };
 
 export const INITIAL_STORY_BOARD: StoryBoard = {
@@ -64,6 +65,7 @@ export const INITIAL_STORY_BOARD: StoryBoard = {
   image: null,
   members: [],
   events: [],
+  tags: [],
   createdBy: EMPTY_FRIEND,
 };
 

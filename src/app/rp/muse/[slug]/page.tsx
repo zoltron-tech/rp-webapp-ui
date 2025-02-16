@@ -25,6 +25,7 @@ import { toFormattedDate } from "@/utils/helpers";
 import { VscVerifiedFilled } from "react-icons/vsc";
 import { VscUnverified } from "react-icons/vsc";
 import { IoHeart } from "react-icons/io5";
+import { TagsContainer } from "@/components/tags-container";
 
 type CARD_STATE =
   | "MAIN"
@@ -305,8 +306,8 @@ export default function MuseProfilePage({}) {
                   <S.InfoLabel>Date of Birth:</S.InfoLabel>
                   <ShouldRender if={muse?.dateOfBirth !== null}>
                     <S.InfoValue>
-                      {muse?.dateOfBirth?.year}-{muse?.dateOfBirth?.month}-
-                      {muse?.dateOfBirth?.day}
+                      {muse?.dateOfBirth?.day} - {muse?.dateOfBirth?.month} -{" "}
+                      {muse?.dateOfBirth?.year}
                     </S.InfoValue>
                   </ShouldRender>
                   <ShouldRender if={muse?.dateOfBirth === null}>
@@ -320,6 +321,16 @@ export default function MuseProfilePage({}) {
                       <S.InfoValue>{value}</S.InfoValue>
                     </S.InfoItem>
                   ))}
+                <ShouldRender
+                  if={
+                    muse?.tags?.length !== undefined && muse?.tags?.length > 0
+                  }
+                >
+                  <S.InfoItem>
+                    <S.InfoLabel>Tags:</S.InfoLabel>
+                    <TagsContainer tags={muse?.tags} />
+                  </S.InfoItem>
+                </ShouldRender>
               </S.InfoContainer>
             </S.InfoCardContent>
           </S.CardBack>

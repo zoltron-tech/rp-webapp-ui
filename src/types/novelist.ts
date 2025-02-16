@@ -1,4 +1,4 @@
-import { SearchResult, Tagged } from "./common";
+import { SearchResult, Tag, Tagged } from "./common";
 
 export interface Muse extends Tagged {
   _tag: "Muse";
@@ -20,6 +20,7 @@ export interface Muse extends Tagged {
     day: number;
   } | null;
   connections: MuseConnection[];
+  tags: Tag[];
 }
 
 export interface MuseConnection extends Tagged {

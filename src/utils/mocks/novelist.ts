@@ -52,6 +52,7 @@ const NOVELIST_MOCK: Novelist = {
         day: 1,
       },
       connections: [],
+      tags: [],
     },
   ],
   friendsCount: 1,

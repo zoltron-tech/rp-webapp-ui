@@ -1,4 +1,4 @@
-import { Tagged } from "./common";
+import { Tag, Tagged } from "./common";
 import { Friend } from "./novelist";
 
 export interface StoryBoard extends Tagged {
@@ -8,6 +8,7 @@ export interface StoryBoard extends Tagged {
   image: string | null;
   members: StoryBoardMember[];
   events: StoryBoardEvent[];
+  tags: Tag[];
   createdBy: Friend;
 }
 

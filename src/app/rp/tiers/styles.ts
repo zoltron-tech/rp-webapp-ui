@@ -3,6 +3,11 @@ import { setOpacity } from "@/utils/helpers";
 import { Button, Container } from "@novelist-world/ui";
 import { styled } from "styled-components";
 
+export const MainContainer = styled.div`
+  max-width: 100vw;
+  overflow-x: auto;
+`; 
+
 export const CardsContainer = styled.div`
   display: flex;
   flex-direction: row;

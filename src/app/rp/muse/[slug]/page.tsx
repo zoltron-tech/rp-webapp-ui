@@ -4,7 +4,7 @@ import { Avatar, ShouldRender, Username } from "@/components/common";
 import { PageLoader } from "@/components/layout";
 import { Quote } from "@/components/novelist-card/styles";
 import { useAuthContext, useStateMachine } from "@/hooks";
-import { Muse, Prompt } from "@/types";
+import { Fandom, Muse, Prompt } from "@/types";
 import { Logger } from "@/utils/services";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";

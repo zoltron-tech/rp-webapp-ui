@@ -26,14 +26,14 @@ export const LocalContainer = styled(Container)`
   @container (min-width: 700px) {
     width: 60%;
     min-width: 700px;
-    height: 1000px;
+    height: 1200px;
     padding: 20px;
     margin: clamp(50px, 20cqw, 50px) auto 100px auto;
   }
 
   @container (max-width: 700px) {
     width: 100%;
-    height: 1000px;
+    height: 1050px;
     padding: 20px;
     margin: 0px;
     border-radius: 0px;
@@ -93,6 +93,106 @@ export const UsernameContainer = styled.div`
       font-size: 11px;
     }
     padding-top: 30px;
+  }
+`;
+
+export const FandomWrapper = styled.div`
+  position: relative;
+  display: flex;
+  gap: 10px;
+  width: 100%;
+`;
+
+export const FandomDropdown = styled.ul`
+  position: absolute;
+  width: 100%;
+  margin-top: 0.25rem;
+  border: 1px solid #ccc;
+  border-radius: 0.5rem;
+  background-color: ${({ theme }) => theme.colors.background};
+  list-style: none;
+  padding: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+`;
+
+export const FandomOption = styled.li`
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.primary};
+  }
+`;
+
+export const SelectedFandom = styled.div`
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #444;
+`;
+
+export const NicknamesWrapper = styled.div`
+  max-height: 80px;
+  min-height: 80px;
+  overflow-y: auto;
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  box-sizing: border-box;
+  background-color: ${({ theme }) => theme.colors.inputBackground};
+  color: ${({ theme }) => theme.textSecondary || "#666"};
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+`;
+
+export const ExtraAttributesWrapper = styled.div`
+  max-height: 100px;
+  min-height: 100px;
+  overflow-y: auto;
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  box-sizing: border-box;
+  background-color: ${({ theme }) => theme.colors.inputBackground};
+  color: ${({ theme }) => theme.textSecondary || "#666"};
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+`;
+
+export const ExtraAttributesList = styled.ul`
+  margin: 0;
+  padding-left: 0;
+  width: 100%;
+  list-style: none;
+  color: ${({ theme }) => theme.text};
+`;
+
+export const ExtraAttributeItem = styled.li`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5em;
+  border-radius: 6px;
+  padding: 6px 12px;
+  color: ${({ theme }) => theme.text};
+`;
+
+export const RemoveButton = styled.button`
+  background: transparent;
+  border: none;
+  color: red;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1.1em;
+  padding: 0;
+  line-height: 1;
+
+  &:hover {
+    color: darkred;
   }
 `;
 

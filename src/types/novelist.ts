@@ -13,7 +13,7 @@ export interface Muse extends Tagged {
   video: string | null;
   song: string | null;
   nicknames: string[] | null;
-  extraAttributes: Map<string, string> | null;
+  extraAttributes: Record<string, string> | null;
   dateOfBirth: {
     year: number;
     month: string;

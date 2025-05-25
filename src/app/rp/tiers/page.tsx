@@ -19,6 +19,7 @@ export default function TiersCatalog() {
 
   return (
     <>
+      <S.MainContainer>
       <Flex style={{ marginTop: "40px" }} direction="column">
         <S.MainSubtext>Packages</S.MainSubtext>
         <S.CardsContainer>
@@ -195,6 +196,7 @@ export default function TiersCatalog() {
           </S.PremiumInfoCardBorder>
         </S.CardsContainer>
       </Flex>
+        </S.MainContainer>
     </>
   );
 }

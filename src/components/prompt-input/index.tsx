@@ -3,7 +3,7 @@
 import { FC, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import * as S from "./styles";
-import { Button, Flex } from "@novelist-world/ui";
+import { Button, Flex, TextArea } from "@novelist-world/ui";
 import {
   Comment,
   Muse,
@@ -14,11 +14,12 @@ import {
   SubmitPromptType,
 } from "@/types";
 import { StoreProvider } from "@/context";
-import { ShouldRender } from "../common";
+import { Input, ShouldRender } from "../common";
 import classNames from "classnames";
 import { useAuthContext, useStore } from "@/hooks";
 import { submitPrompt, uploadMedia } from "@/app/rp/profile/actions";
 import { StoreState } from "@/types/state";
+import { text } from "stream/consumers";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   muses: Muse[];
@@ -63,7 +64,7 @@ const getMediaTypeFromUrl = (url: string) => {
 
 const AddMediaButton = () => {
   const [media, set] = useStore<PromptInputState, "media">(
-    (state) => state.media,
+    (state) => state.media
   );
 
   const handleClick = () => {
@@ -82,7 +83,7 @@ const AddMediaButton = () => {
     <Button
       secondary
       onClick={handleClick}
-      style={{ borderRadius: "5px", width: 100, marginTop: "45px" }}
+      style={{ borderRadius: "5px", width: 100 }}
     >
       Add Media
     </Button>
@@ -94,11 +95,12 @@ const SubmitButton = () => {
   const [text] = useStore<PromptInputState, "text">((state) => state.text);
   const [muse] = useStore<PromptInputState, "muse">((state) => state.muse);
   const [parentId] = useStore<PromptInputState, "parentId">(
-    (state) => state.parentId,
+    (state) => state.parentId
   );
   const [type] = useStore<PromptInputState, "type">((state) => state.type);
 
   const handleClick = async () => {
+    console.log(text);
     if (!media || !muse || !text) return;
     const source = museToSource(muse);
 
@@ -234,6 +236,13 @@ export const PromptInput: FC<Props> = ({
 }) => {
   const { push } = useRouter();
   const { novelist } = useAuthContext();
+  const [text, set] = useStore<PromptInputState, "text">((state) => state.text);
+
+  const handleChange = (content: any) => {
+    console.log(content);
+    set({ text: content.target.value });
+    console.log(text);
+  };
 
   return (
     <StoreProvider<PromptInputState>
@@ -245,7 +254,11 @@ export const PromptInput: FC<Props> = ({
             className={className}
             muses={novelist?.muses || []}
           ></MuseSelectionDropdown>
-          <PromptRichText />
+          <TextArea
+            value={text}
+            onChange={handleChange}
+            style={{ height: "80px", resize: "unset" }}
+          />
           <Flex direction="column">
             {/* <IoMdPhotos size={50} style={{ marginTop: "30px" }} /> */}
             <AddMediaButton />

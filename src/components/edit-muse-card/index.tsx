@@ -214,7 +214,6 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
   };
 
   const fetchFandoms = async (prefix: string) => {
-    if (!id) return;
 
     const response = await searchFandomsAction(prefix);
     if (response && !("message" in response)) {

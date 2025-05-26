@@ -35,11 +35,7 @@ const MOCK_MUSE: Muse = {
   image: "https://example.com/image.jpg",
   video: "",
   song: "",
-  dateOfBirth: {
-    year: 1980,
-    month: "January",
-    day: 1,
-  },
+  privacy: "PUBLIC",
   connections: [],
   tags: [],
 };

@@ -46,11 +46,7 @@ const NOVELIST_MOCK: Novelist = {
       song: "",
       note: "Something",
       story: "some story",
-      dateOfBirth: {
-        year: 1980,
-        month: "January",
-        day: 1,
-      },
+      privacy: "PUBLIC",
       connections: [],
       tags: [],
     },

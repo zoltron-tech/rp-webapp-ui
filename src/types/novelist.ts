@@ -14,13 +14,9 @@ export interface Muse extends Tagged {
   song: string | null;
   nicknames: string[] | null;
   extraAttributes: Record<string, string> | null;
-  dateOfBirth: {
-    year: number;
-    month: string;
-    day: number;
-  } | null;
   connections: MuseConnection[];
   tags: Tag[];
+  privacy: string;
 }
 
 export interface MuseConnection extends Tagged {

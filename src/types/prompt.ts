@@ -7,6 +7,7 @@ export interface Prompt extends Tagged {
   text: string;
   media: string;
   comments: Comment[];
+  privacy: string;
   createdOn: string;
 }
 

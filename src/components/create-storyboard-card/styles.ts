@@ -30,15 +30,85 @@ export const LocalContainer = styled(Container)`
   /* Apply different height based on the presence of a specific class */
   &.new {
     @container (min-width: 700px) {
-      height: 300px;
+      height: 400px;
     }
     @container (max-width: 700px) {
-      height: 350px;
+      height: 450px;
     }
   }
 
   container-name: card;
   container-type: inline-size;
+`;
+
+export const DropDownButton = styled.button`
+  background-color: ${({ theme }) => theme.colors.primary};
+  color: #212121;
+  padding: 10px 15px;
+  font-size: 15px;
+  font-weight: bold;
+  border: 2px solid transparent;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: border-radius 0.2s ease;
+
+  &.open {
+    border-radius: 15px 15px 0 0;
+  }
+`;
+
+export const DropdownContent = styled.div`
+  display: none;
+  font-size: 13px;
+  position: absolute;
+  z-index: 100;
+  min-width: 200px;
+  background-color: #212121;
+  border: 2px solid ${({ theme }) => theme.colors.primary};
+  border-radius: 0px 15px 15px 15px;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+
+  & > button {
+    width: 100%;
+    background: none;
+    border: none;
+    color: ${({ theme }) => theme.colors.primary};
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: 0.1s;
+
+    &:hover {
+      background-color: ${({ theme }) => theme.colors.primary};
+      color: #212121;
+    }
+
+    &:focus {
+      outline: none;
+      background-color: #212121;
+      color: ${({ theme }) => theme.colors.primary};
+    }
+
+    &:first-child:hover {
+      border-radius: 0px 13px 0px 0px;
+    }
+
+    &:last-child:hover {
+      border-radius: 0px 0px 13px 13px;
+    }
+  }
+`;
+
+export const PasteButton = styled.div`
+  position: relative;
+  display: block;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+
+  &:hover ${DropdownContent} {
+    display: block;
+  }
 `;
 
 export const Profile = styled.div`
@@ -97,7 +167,6 @@ export const FormGroup = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: flex-start;
   padding-top: 20px;
   padding-left: clamp(0px, 20cqw, 400px);

@@ -269,6 +269,10 @@ export default function MuseProfilePage({}) {
               <S.Title>Muse Information</S.Title>
               <S.InfoContainer>
                 <S.InfoItem>
+                  <S.InfoLabel>Visibility:</S.InfoLabel>
+                  <S.InfoValue>{muse?.privacy}</S.InfoValue>
+                </S.InfoItem>
+                <S.InfoItem>
                   <S.InfoLabel>First Name:</S.InfoLabel>
                   <S.InfoValue>{muse?.firstName}</S.InfoValue>
                 </S.InfoItem>
@@ -299,18 +303,6 @@ export default function MuseProfilePage({}) {
                     </S.FandomValue>
                   </ShouldRender>
                   <ShouldRender if={muse?.fandom === null}>
-                    <S.InfoValue>NOT SPECIFIED</S.InfoValue>
-                  </ShouldRender>
-                </S.InfoItem>
-                <S.InfoItem>
-                  <S.InfoLabel>Date of Birth:</S.InfoLabel>
-                  <ShouldRender if={muse?.dateOfBirth !== null}>
-                    <S.InfoValue>
-                      {muse?.dateOfBirth?.day} - {muse?.dateOfBirth?.month} -{" "}
-                      {muse?.dateOfBirth?.year}
-                    </S.InfoValue>
-                  </ShouldRender>
-                  <ShouldRender if={muse?.dateOfBirth === null}>
                     <S.InfoValue>NOT SPECIFIED</S.InfoValue>
                   </ShouldRender>
                 </S.InfoItem>

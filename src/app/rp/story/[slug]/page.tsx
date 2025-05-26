@@ -12,6 +12,8 @@ import { MusesPill } from "@/components/muses-pill";
 import StoryCardEvent from "@/components/story-event-card";
 import { Container, Flex } from "@novelist-world/ui";
 import { TagsContainer } from "@/components/tags-container";
+import { FaLock } from "react-icons/fa6";
+import { FaGlobeAmericas, FaUserFriends } from "react-icons/fa";
 
 export default function UserProfilePage({}) {
   const params = useParams();
@@ -41,6 +43,31 @@ export default function UserProfilePage({}) {
     fetchStoryboard();
   }, [authState]);
 
+  const renderPrivacyIcon = (privacy: string | undefined) => {
+    switch (privacy) {
+      case "ONLY_ME":
+        return (
+          <S.IconWrapper title="Only Me">
+            <FaLock />
+          </S.IconWrapper>
+        );
+      case "FRIENDS":
+        return (
+          <S.IconWrapper title="Friends Only">
+            <FaUserFriends />
+          </S.IconWrapper>
+        );
+      case "PUBLIC":
+        return (
+          <S.IconWrapper title="Public">
+            <FaGlobeAmericas />
+          </S.IconWrapper>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <>
       <ShouldRender if={loading}>
@@ -66,6 +93,10 @@ export default function UserProfilePage({}) {
         <S.Name>{storyboard?.name}</S.Name>
         <span>Created by:</span>{" "}
         <Username primary username={storyboard?.createdBy.username} />
+        <S.VisibilityText>
+          <span>{storyboard?.privacy}</span>
+          {renderPrivacyIcon(storyboard?.privacy)}
+        </S.VisibilityText>
         <S.PillContainer>
           <MusesPill
             title="Novelists"

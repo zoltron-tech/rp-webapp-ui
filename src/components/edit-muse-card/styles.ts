@@ -17,6 +17,76 @@ export const RichText = styled(NWRichText)`
   }
 `;
 
+export const DropDownButton = styled.button`
+  background-color: ${({ theme }) => theme.colors.primary};
+  color: #212121;
+  padding: 10px 15px;
+  font-size: 15px;
+  font-weight: bold;
+  border: 2px solid transparent;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: border-radius 0.2s ease;
+
+  &.open {
+    border-radius: 15px 15px 0 0;
+  }
+`;
+
+export const DropdownContent = styled.div`
+  display: none;
+  font-size: 13px;
+  position: absolute;
+  z-index: 100;
+  min-width: 200px;
+  background-color: #212121;
+  border: 2px solid ${({ theme }) => theme.colors.primary};
+  border-radius: 0px 15px 15px 15px;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+
+  & > button {
+    width: 100%;
+    background: none;
+    border: none;
+    color: ${({ theme }) => theme.colors.primary};
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: 0.1s;
+
+    &:hover {
+      background-color: ${({ theme }) => theme.colors.primary};
+      color: #212121;
+    }
+
+    &:focus {
+      outline: none;
+      background-color: #212121;
+      color: ${({ theme }) => theme.colors.primary};
+    }
+
+    &:first-child:hover {
+      border-radius: 0px 13px 0px 0px;
+    }
+
+    &:last-child:hover {
+      border-radius: 0px 0px 13px 13px;
+    }
+  }
+`;
+
+export const PasteButton = styled.div`
+  position: relative;
+  display: block;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+
+  &:hover ${DropdownContent} {
+    display: block;
+  }
+`;
+
 export const LocalContainer = styled(Container)`
   border: 1px solid slategray;
   background-color: ${({ theme }) => theme.colors.background};
@@ -26,14 +96,14 @@ export const LocalContainer = styled(Container)`
   @container (min-width: 700px) {
     width: 60%;
     min-width: 700px;
-    height: 1200px;
+    height: 1300px;
     padding: 20px;
     margin: clamp(50px, 20cqw, 50px) auto 100px auto;
   }
 
   @container (max-width: 700px) {
     width: 100%;
-    height: 1050px;
+    height: 1400px;
     padding: 20px;
     margin: 0px;
     border-radius: 0px;
@@ -107,11 +177,10 @@ export const FandomDropdown = styled.ul`
   position: absolute;
   width: 100%;
   margin-top: 0.25rem;
-  border: 1px solid #ccc;
-  border-radius: 0.5rem;
-  background-color: ${({ theme }) => theme.colors.background};
-  list-style: none;
-  padding: 0;
+  background-color: #212121;
+  border: 2px solid ${({ theme }) => theme.colors.primary};
+  border-radius: 15px;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
   max-height: 200px;
   overflow-y: auto;
   z-index: 1000;

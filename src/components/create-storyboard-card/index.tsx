@@ -29,6 +29,7 @@ export type CreateStoryBoardCardProps = {
 export const CreateStoryBoardCard: FC<CreateStoryBoardCardProps> = ({ id }) => {
   const { user, state } = useAuthContext();
   const [storyBoard, setStoryBoard] = useState<StoryBoard>();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [avatarFile, setAvatarFile] = useState<FormData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const { push } = useRouter();
@@ -38,6 +39,15 @@ export const CreateStoryBoardCard: FC<CreateStoryBoardCardProps> = ({ id }) => {
   const onEditMembersClick = () => {
     if (!storyBoard) return;
     push(`/rp/profile/story/edit/${storyBoard.id}/members`);
+  };
+
+  const handlePrivacySelect = (privacyValue: string) => {
+    update({
+      target: {
+        name: "privacy",
+        value: privacyValue,
+      },
+    } as unknown as React.ChangeEvent<HTMLInputElement>);
   };
 
   const updateStoryBoardAvatar = async () => {
@@ -156,6 +166,44 @@ export const CreateStoryBoardCard: FC<CreateStoryBoardCardProps> = ({ id }) => {
             </S.UsernameContainer>
           </ShouldRender>
           <S.FormGroup className={id == null ? "new" : ""}>
+            <S.PasteButton onClick={() => setIsDropdownOpen((prev) => !prev)}>
+              <S.DropDownButton className={isDropdownOpen ? "open" : ""}>
+                {values.privacy.replaceAll("_", " ")} &nbsp; ▼
+              </S.DropDownButton>
+
+              {isDropdownOpen && (
+                <S.DropdownContent>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handlePrivacySelect("ONLY_ME");
+                      setIsDropdownOpen(false);
+                    }}
+                  >
+                    ONLY ME
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handlePrivacySelect("FRIENDS");
+                      setIsDropdownOpen(false);
+                    }}
+                  >
+                    FRIENDS
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handlePrivacySelect("PUBLIC");
+                      setIsDropdownOpen(false);
+                    }}
+                  >
+                    PUBLIC
+                  </button>
+                </S.DropdownContent>
+              )}
+            </S.PasteButton>
+
             <S.Name>
               <Input
                 label="Name"

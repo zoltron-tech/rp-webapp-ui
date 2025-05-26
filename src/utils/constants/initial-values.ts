@@ -47,12 +47,12 @@ export const INITIAL_MUSE: Muse = {
   video: null,
   song: null,
   fandom: {
-    id: "STUB",
-    name: "stub",
-    description: "something",
-    color: "#fff",
+    id: "FANDOMLESS",
+    name: "Fandomless Original Characters",
+    description: "rgb(51, 102, 153)",
+    color: "rgb(51, 102, 153)",
   },
-  dateOfBirth: null,
+  privacy: "PUBLIC",
   extraAttributes: null,
   connections: [],
   tags: [],
@@ -66,6 +66,7 @@ export const INITIAL_STORY_BOARD: StoryBoard = {
   members: [],
   events: [],
   tags: [],
+  privacy: "PUBLIC",
   createdBy: EMPTY_FRIEND,
 };
 

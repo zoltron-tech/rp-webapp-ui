@@ -56,6 +56,18 @@ export const SectionName = styled.div`
   z-index: ${Z_INDEX.DEFAULT};
 `;
 
+export const VisibilityText = styled.div`
+  ${NameFontStyles}
+  width: 100%;
+  text-transform: uppercase;
+  text-align: center;
+  text-align: center;
+  margin-top: 20px;
+  font-size: clamp(18px, 5vw, 24px);
+  color: ${({ theme }) => theme.textPrimary};
+  z-index: ${Z_INDEX.DEFAULT};
+`;
+
 export const SolidBackground = styled.div`
   position: absolute;
   top: clamp(270px, 30cqw, 290px);
@@ -91,4 +103,15 @@ export const PillContainer = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
+`;
+
+export const IconWrapper = styled.span`
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  cursor: default;
+
+  svg {
+    vertical-align: middle;
+  }
 `;

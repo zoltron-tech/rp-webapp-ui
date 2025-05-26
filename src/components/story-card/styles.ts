@@ -34,7 +34,7 @@ export const Title = styled.div`
 
   &.new {
     bottom: -160px;
-    right: 90px;
+    right: 60px;
   }
 
   &.profile {
@@ -45,7 +45,7 @@ export const Title = styled.div`
   @container content-container (max-width: 1000px) {
     &.new {
       bottom: -100px;
-      right: 50px;
+      right: 30px;
       font-size: 16px;
     }
     bottom: -180px;
@@ -93,7 +93,6 @@ export const CardWrapper = styled.div`
 
   &.new {
     border: solid silver 2px;
-    border-radius: 60%;
   }
 
   &:hover {

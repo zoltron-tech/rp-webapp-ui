@@ -8,6 +8,7 @@ export interface StoryBoard extends Tagged {
   image: string | null;
   members: StoryBoardMember[];
   events: StoryBoardEvent[];
+  privacy: string;
   tags: Tag[];
   createdBy: Friend;
 }

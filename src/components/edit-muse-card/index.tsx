@@ -42,6 +42,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
   const [extraKey, setExtraKey] = useState("");
   const [extraValue, setExtraValue] = useState("");
   const [nicknameInput, setNicknameInput] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const { successToast, errorToast } = useUIContext();
 
@@ -140,6 +141,15 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
     beforeSubmit,
   });
 
+  const handlePrivacySelect = (privacyValue: string) => {
+    update({
+      target: {
+        name: "privacy",
+        value: privacyValue,
+      },
+    } as unknown as React.ChangeEvent<HTMLInputElement>);
+  };
+
   const addExtraAttribute = () => {
     if (!extraKey || !extraValue) return;
 
@@ -214,7 +224,6 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
   };
 
   const fetchFandoms = async (prefix: string) => {
-
     const response = await searchFandomsAction(prefix);
     if (response && !("message" in response)) {
       setFandoms(response);
@@ -260,6 +269,46 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
             </ShouldRender>
             <S.FormGroup>
               <Flex>
+                <S.Label htmlFor="firstName">Visibility</S.Label>
+                <S.PasteButton
+                  onClick={() => setIsDropdownOpen((prev) => !prev)}
+                >
+                  <S.DropDownButton className={isDropdownOpen ? "open" : ""}>
+                    {values.privacy.replaceAll("_", " ")} &nbsp; ▼
+                  </S.DropDownButton>
+
+                  {isDropdownOpen && (
+                    <S.DropdownContent>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handlePrivacySelect("ONLY_ME");
+                          setIsDropdownOpen(false);
+                        }}
+                      >
+                        ONLY ME
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handlePrivacySelect("FRIENDS");
+                          setIsDropdownOpen(false);
+                        }}
+                      >
+                        FRIENDS
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handlePrivacySelect("PUBLIC");
+                          setIsDropdownOpen(false);
+                        }}
+                      >
+                        PUBLIC
+                      </button>
+                    </S.DropdownContent>
+                  )}
+                </S.PasteButton>
                 <Flex>
                   <S.Label htmlFor="firstName">Name</S.Label>
                   <S.Name>
@@ -397,32 +446,31 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
                     Add Attribute
                   </S.SaveButton>
 
-                  {values.extraAttributes && (
-                    <S.ExtraAttributesWrapper>
-                      {JSON.stringify(values.extraAttributes) === "{}" ? (
-                        <div>No Extra Attributes</div>
-                      ) : (
-                        <S.ExtraAttributesList>
-                          {Object.entries(values.extraAttributes).map(
-                            ([key, value]) => (
-                              <S.ExtraAttributeItem key={key}>
-                                <span>
-                                  <strong>{key}:</strong> {value}
-                                </span>
-                                <S.RemoveButton
-                                  type="button"
-                                  onClick={() => removeExtraAttribute(key)}
-                                  aria-label={`Remove attribute ${key}`}
-                                >
-                                  &times;
-                                </S.RemoveButton>
-                              </S.ExtraAttributeItem>
-                            )
-                          )}
-                        </S.ExtraAttributesList>
-                      )}
-                    </S.ExtraAttributesWrapper>
-                  )}
+                  <S.ExtraAttributesWrapper>
+                    {!values.extraAttributes ||
+                    Object.keys(values.extraAttributes).length === 0 ? (
+                      <div>No Extra Attributes</div>
+                    ) : (
+                      <S.ExtraAttributesList>
+                        {Object.entries(values.extraAttributes).map(
+                          ([key, value]) => (
+                            <S.ExtraAttributeItem key={key}>
+                              <span>
+                                <strong>{key}:</strong> {value}
+                              </span>
+                              <S.RemoveButton
+                                type="button"
+                                onClick={() => removeExtraAttribute(key)}
+                                aria-label={`Remove attribute ${key}`}
+                              >
+                                &times;
+                              </S.RemoveButton>
+                            </S.ExtraAttributeItem>
+                          )
+                        )}
+                      </S.ExtraAttributesList>
+                    )}
+                  </S.ExtraAttributesWrapper>
                 </Flex>
 
                 <Flex>

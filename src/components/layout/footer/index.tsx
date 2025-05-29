@@ -9,7 +9,7 @@ export const Footer: FC<Props> = memo(({}) => {
   Logger.info("Footer rendered");
   return (
     <S.FooterContainer>
-      <span>© 2024, Zoltron Tech.</span>
+      <span>© 2025, Zoltron Tech.</span>
     </S.FooterContainer>
   );
 });

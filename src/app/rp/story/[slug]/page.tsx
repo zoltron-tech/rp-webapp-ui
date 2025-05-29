@@ -45,22 +45,16 @@ export default function UserProfilePage({}) {
 
   const renderPrivacyIcon = (privacy: string | undefined) => {
     switch (privacy) {
-      case "ONLY_ME":
-        return (
-          <S.IconWrapper title="Only Me">
-            <FaLock />
-          </S.IconWrapper>
-        );
-      case "FRIENDS":
+      case "MEMBERS":
         return (
           <S.IconWrapper title="Friends Only">
-            <FaUserFriends />
+            <FaUserFriends size={20} />
           </S.IconWrapper>
         );
       case "PUBLIC":
         return (
           <S.IconWrapper title="Public">
-            <FaGlobeAmericas />
+            <FaGlobeAmericas size={20} />
           </S.IconWrapper>
         );
       default:
@@ -90,13 +84,14 @@ export default function UserProfilePage({}) {
           alt="profile-picture"
           size={250}
         />
-        <S.Name>{storyboard?.name}</S.Name>
+        <S.Name>
+          {storyboard?.name}{" "}
+          <S.VisibilityIcon>
+            {renderPrivacyIcon(storyboard?.privacy)}
+          </S.VisibilityIcon>
+        </S.Name>
         <span>Created by:</span>{" "}
         <Username primary username={storyboard?.createdBy.username} />
-        <S.VisibilityText>
-          <span>{storyboard?.privacy}</span>
-          {renderPrivacyIcon(storyboard?.privacy)}
-        </S.VisibilityText>
         <S.PillContainer>
           <MusesPill
             title="Novelists"

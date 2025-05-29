@@ -34,9 +34,11 @@ export const Avatar = styled(AvatarCommon)`
 
 export const Name = styled.div`
   ${NameFontStyles}
+  display: flex;
   width: 100%;
   text-align: center;
   text-align: center;
+  justify-content: center;
   margin-top: 10px;
   font-size: clamp(18px, 5vw, 42px);
   font-weight: 600;
@@ -56,16 +58,12 @@ export const SectionName = styled.div`
   z-index: ${Z_INDEX.DEFAULT};
 `;
 
-export const VisibilityText = styled.div`
-  ${NameFontStyles}
-  width: 100%;
-  text-transform: uppercase;
-  text-align: center;
-  text-align: center;
-  margin-top: 20px;
-  font-size: clamp(18px, 5vw, 24px);
-  color: ${({ theme }) => theme.textPrimary};
-  z-index: ${Z_INDEX.DEFAULT};
+export const VisibilityIcon = styled.div`
+  position: relative;
+  padding-inline: 20px;
+  bottom: 20px;
+  right: 20px;
+  z-index: ${Z_INDEX.AVATAR};
 `;
 
 export const SolidBackground = styled.div`

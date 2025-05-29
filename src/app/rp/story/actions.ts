@@ -1,5 +1,8 @@
 "use server";
-import { authenticateAndGetJWT } from "@/app/actions";
+import {
+  authenticateAndGetJWT,
+  authenticateAndGetJWTIfExists,
+} from "@/app/actions";
 import { StoryBoard, StoryBoardEvent, StoryBoardEventThread } from "@/types";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import getConfig from "next/config";
@@ -9,9 +12,14 @@ const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
 
 export const getAllStoryboardsByUsernameAction = async (username: string) => {
-  let headers: Record<string, string> = {
+  const jwt = await authenticateAndGetJWTIfExists();
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
+
+  if (jwt) {
+    headers[AUTH_HEADER_NAME] = jwt;
+  }
 
   const URL = `${RP_SERVICE_URL}/rp/portfolio/story/by/${username}`;
 
@@ -34,9 +42,19 @@ export const getAllStoryboardsByUsernameAction = async (username: string) => {
 };
 
 export const getStoryboardAction = async (storyboardId: string) => {
+  const jwt = await authenticateAndGetJWTIfExists();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (jwt) {
+    headers[AUTH_HEADER_NAME] = jwt;
+  }
+
   const URL = `${RP_SERVICE_URL}/rp/portfolio/story/${storyboardId}`;
 
   const response = await fetch(URL, {
+    headers: headers,
     cache: "no-store",
   });
 
@@ -114,9 +132,19 @@ export const updateStoryBoardAction = async (_storyboard: StoryBoard) => {
 };
 
 export const getStoryboardEventAction = async (storyboardEventId: string) => {
+  const jwt = await authenticateAndGetJWTIfExists();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (jwt) {
+    headers[AUTH_HEADER_NAME] = jwt;
+  }
+
   const URL = `${RP_SERVICE_URL}/rp/portfolio/story/event/${storyboardEventId}`;
 
   const response = await fetch(URL, {
+    headers: headers,
     cache: "no-store",
   });
 
@@ -138,9 +166,19 @@ export const getStoryboardEventAction = async (storyboardEventId: string) => {
 export const getStoryboardEventThreadsAction = async (
   storyboardEventId: string
 ) => {
+  const jwt = await authenticateAndGetJWTIfExists();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (jwt) {
+    headers[AUTH_HEADER_NAME] = jwt;
+  }
+
   const URL = `${RP_SERVICE_URL}/rp/portfolio/story/event/${storyboardEventId}/threads`;
 
   const response = await fetch(URL, {
+    headers: headers,
     cache: "no-store",
   });
 

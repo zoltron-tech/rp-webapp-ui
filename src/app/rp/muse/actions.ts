@@ -13,9 +13,19 @@ const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
 
 export const getMuseAction = async (museId: string) => {
+  const jwt = await authenticateAndGetJWTIfExists();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}`;
 
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (jwt) {
+    headers[AUTH_HEADER_NAME] = jwt;
+  }
+
   const response = await fetch(URL, {
+    headers,
     cache: "no-store",
   });
 
@@ -33,9 +43,14 @@ export const getMuseAction = async (museId: string) => {
 };
 
 export const getAllMusesByUsernameAction = async (username: string) => {
+  const jwt = await authenticateAndGetJWTIfExists();
   let headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
+
+  if (jwt) {
+    headers[AUTH_HEADER_NAME] = jwt;
+  }
 
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/by/${username}`;
 

@@ -148,12 +148,19 @@ export const updateUserNovelist = async (_novelist: Novelist) => {
 };
 
 export const searchAction = async (searchTerm: string, type = "novelist") => {
+  const jwt = await authenticateAndGetJWTIfExists();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/${type}/search?prefix=${searchTerm}`;
 
+  const headers: Record<string, string> = {
+    [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
+  };
+
+  if (jwt) {
+    headers[AUTH_HEADER_NAME] = jwt;
+  }
+
   const response = await fetch(URL, {
-    headers: {
-      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
-    },
+    headers: headers,
     cache: "no-store",
   });
 

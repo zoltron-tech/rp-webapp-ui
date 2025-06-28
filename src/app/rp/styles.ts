@@ -18,10 +18,4 @@ export const PageContainer = styled.main`
   container-type: size;
 
   ${NO_SCROLLBAR}
-
-  @media (max-width: 600px) {
-    & {
-      min-height: calc(100vh - 50px);
-    }
-  }
 `;

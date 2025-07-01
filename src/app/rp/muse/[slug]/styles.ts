@@ -726,7 +726,7 @@ export const FooterContainer = styled.div`
     margin-bottom: 10px;
   }
 
-  @container content-container (max-width: 600px) {
+  @container content-container (max-width: 400px) {
     padding-inline: 5px;
     margin-bottom: 5px;
   }

@@ -324,10 +324,10 @@ export const UsernameContainer = styled.div`
 `;
 
 export const NoteContainer = styled(Pill)`
-  width: 460px;
+  width: 80%;
   margin-top: 15px;
   word-break: break-word;
-  border-radius: 15px;
+  border-radius: 20px;
   border-bottom: 1px solid dimgray;
   border-right: 1px solid dimgray;
   padding: 10px 30px 10px;

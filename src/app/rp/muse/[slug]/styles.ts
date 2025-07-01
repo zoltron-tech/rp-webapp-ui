@@ -31,6 +31,7 @@ export const Banner = styled.div<BannerProps>`
 
   @container (max-width: 950px) {
     & {
+      top: 0px;
       height: 88vh;
     }
   }

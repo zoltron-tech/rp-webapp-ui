@@ -52,7 +52,7 @@ export const PromptContainer = styled(Container)`
   border-radius: 0px !important;
   border: none !important;
   background-color: transparent;
-  height: 93vh;
+  height: 90vh;
   width: 100%;
 `;
 

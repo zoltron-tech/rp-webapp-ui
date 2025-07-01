@@ -29,6 +29,12 @@ export const Banner = styled.div<BannerProps>`
   background-size: cover;
   contain: paint;
 
+  @container (max-width: 950px) {
+    & {
+      height: 100vh;
+    }
+  }
+
   ${BLUR_FILTER}
 `;
 
@@ -38,7 +44,6 @@ export const MuseContainer = styled.div`
   flex-wrap: wrap;
   margin-inline: auto;
   justify-content: center;
-  margin-bottom: 50px;
 
   @container (max-width: 400px) {
     & {
@@ -46,7 +51,6 @@ export const MuseContainer = styled.div`
       padding-bottom: 10px;
       padding-inline: 0px;
       gap: 0.2rem;
-      margin-bottom: 45px;
     }
   }
 
@@ -56,7 +60,6 @@ export const MuseContainer = styled.div`
       padding-bottom: 10px;
       padding-inline: 0px;
       gap: 0.2rem;
-      margin-bottom: 5px;
     }
   }
 `;

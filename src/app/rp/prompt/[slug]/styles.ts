@@ -54,10 +54,6 @@ export const PromptContainer = styled(Container)`
   background-color: transparent;
   height: 93vh;
   width: 100%;
-
-  @container content-container (max-width: 800px) {
-    height: 80vh;
-  }
 `;
 
 export const ThreadsContainer = styled(Container)`

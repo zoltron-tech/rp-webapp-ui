@@ -18,7 +18,6 @@ export const PillContinaer = styled(Pill)`
   @container profile-content (max-width: 600px) {
     & {
       max-width: 100%;
-      border-radius: 0px;
       width: 100cqw;
     }
   }

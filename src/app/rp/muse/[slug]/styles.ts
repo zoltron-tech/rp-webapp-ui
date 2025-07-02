@@ -40,17 +40,7 @@ export const MuseContainer = styled.div`
   justify-content: center;
   margin-bottom: 50px;
 
-  @container (max-width: 700px) {
-    & {
-      padding-top: 0px;
-      padding-bottom: 10px;
-      padding-inline: 0px;
-      gap: 0.2rem;
-      margin-bottom: 90px;
-    }
-  }
-
-  @container (max-width: 600px) {
+  @container (max-width: 500px) {
     & {
       padding-top: 0px;
       padding-bottom: 10px;
@@ -132,7 +122,7 @@ export const CardWrapper = styled(Container)`
     }
   }
 
-  @container (min-width: 700px) and (max-width: 2047px) {
+  @container (min-width: 950px) and (max-width: 2047px) {
     margin-top: 20px;
     width: 420px;
     height: 750px;
@@ -144,14 +134,14 @@ export const CardWrapper = styled(Container)`
     }
   }
 
-  @container (min-width: 700px) and (max-width: 950px) {
+  @container (min-width: 500px) and (max-width: 950px) {
     &.open {
       border-radius: 0px;
       display: none;
     }
   }
 
-  @container (max-width: 700px) {
+  @container (max-width: 500px) {
     margin-top: 0px;
     width: 100%;
     height: 70vh;
@@ -207,7 +197,7 @@ export const CardExpandedWrapper = styled.div`
     }
   }
 
-  @container (min-width: 700px) and (max-width: 2047px) {
+  @container (min-width: 950px) and (max-width: 2047px) {
     margin-top: 20px;
     width: 420px;
     height: 750px;
@@ -219,7 +209,14 @@ export const CardExpandedWrapper = styled.div`
     }
   }
 
-  @container (max-width: 700px) {
+  @container (min-width: 500px) and (max-width: 950px) {
+    &.open {
+      border-radius: 0px;
+      display: none;
+    }
+  }
+
+  @container (max-width: 500px) {
     margin-top: 0px;
     width: 100%;
     height: 70vh;

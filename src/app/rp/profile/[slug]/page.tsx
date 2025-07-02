@@ -40,6 +40,7 @@ import { Container, Flex } from "@novelist-world/ui";
 import PromptInput from "@/components/prompt-input";
 import { Z_INDEX } from "@/theme/geometry";
 import { toFormattedDate } from "@/utils/helpers";
+import MuseListItem from "@/components/muse-list-item/intex";
 
 export default function UserProfilePage({}) {
   const params = useParams();
@@ -277,14 +278,22 @@ export default function UserProfilePage({}) {
             : ""
         }
       />
-      <S.SolidBackground></S.SolidBackground>
       <S.Content>
-        <S.ContentLeft>
-          <Flex direction="row" justify="center">
+        <S.ContentRight>
+          <Flex
+            direction="row"
+            justify="flex-start"
+            style={{ marginBottom: "-70px", width: "90%" }}
+          >
             <S.Avatar
               src={novelist?.image || ""}
               alt="profile-picture"
               size={250}
+            />
+            <S.AvatarMobile
+              src={novelist?.image || ""}
+              alt="profile-picture"
+              size={130}
             />
             <S.ExtendedBadge
               tier={novelist?.tier.name || "standard"}
@@ -308,71 +317,83 @@ export default function UserProfilePage({}) {
               )}
             </S.ExtendedBadge>
           </Flex>
-          <S.NameMobile>
-            {novelist?.firstName} {novelist?.lastName}
-          </S.NameMobile>
-          <S.UsernameContainer>
-            <Username username={username} primary />
-          </S.UsernameContainer>
-          <Flex>
-            <S.InfoTextBold>{novelist?.friendsCount}</S.InfoTextBold>{" "}
-            <S.InfoText> Friends </S.InfoText>
-            <S.InfoTextBold>{novelist?.museCount}</S.InfoTextBold>{" "}
-            <S.InfoText> Muses </S.InfoText>
-            <FcCalendar />
-            <S.InfoText>
-              Joined {toFormattedDate(novelist?.createdAt)}
-            </S.InfoText>
-          </Flex>
-          <S.NoteContainer>
-            <Quote>{novelist?.note}</Quote>
-          </S.NoteContainer>
-          <S.ContentContainer>
+          <S.ContentInner>
+            <S.NameMobile>
+              {novelist?.firstName} {novelist?.lastName}
+            </S.NameMobile>
+            <S.UsernameContainer>
+              <Username username={username} primary />
+            </S.UsernameContainer>
+            <Flex>
+              <S.InfoTextBold>{novelist?.friendsCount}</S.InfoTextBold>{" "}
+              <S.InfoText> Friends </S.InfoText>
+              <S.InfoTextBold>{novelist?.museCount}</S.InfoTextBold>{" "}
+              <S.InfoText> Muses </S.InfoText>
+              <FcCalendar />
+              <S.InfoText>
+                Joined {toFormattedDate(novelist?.createdAt)}
+              </S.InfoText>
+            </Flex>
+            <S.NoteContainer>
+              <Quote>{novelist?.note}</Quote>
+            </S.NoteContainer>
+            {/* <ButtonGroup
+              buttons={
+                state == "LOGGED_IN" && username !== user?.username
+                  ? fetchAppropriateButtons(novelist?.connection)
+                  : LoggedInSelfButtons
+              }
+            /> TODO: ADD WHEN CHAT IS*/}
             <S.SubText>
-              {activities?.length === 0
+              {storyBoards?.length === 0
                 ? "No Storyboards"
-                : state == "LOGGED_IN" && username === user?.username
-                ? "Your Storyboards"
-                : "Storyboards by " + username}
+                : "Storyboards (" + storyBoards?.length + ")"}
             </S.SubText>
-            <S.PartitionContainer>
-              {storyBoards &&
-                storyBoards.map((storyBoard) => (
-                  <StoryCard
-                    className="profile"
-                    key={storyBoard?.id}
-                    storyBoard={storyBoard}
-                  ></StoryCard>
-                ))}
-            </S.PartitionContainer>
-          </S.ContentContainer>
-          <S.MusePillContainer>
-            <MusesPill
-              title="MUSES"
-              pillType="MUSES"
-              novelist={novelist}
-              expandable={true}
-            />
-            <MusesPill
-              title="FRIENDS"
-              pillType="FRIENDS"
-              novelist={novelist}
-              expandable={true}
-            />
-          </S.MusePillContainer>
-        </S.ContentLeft>
-        <S.ContentRight>
-          <S.Name>
-            {novelist?.firstName} {novelist?.lastName}
-          </S.Name>
-          <ButtonGroup
-            buttons={
-              state == "LOGGED_IN" && username !== user?.username
-                ? fetchAppropriateButtons(novelist?.connection)
-                : LoggedInSelfButtons
-            }
-          />
-          <S.ContentContainer>
+            <ShouldRender
+              if={storyBoards && storyBoards?.length > 0 ? true : false}
+            >
+              <S.ContentContainer>
+                <S.PartitionContainer>
+                  {storyBoards &&
+                    storyBoards.map((storyBoard) => (
+                      <StoryCard
+                        className="profile"
+                        key={storyBoard?.id}
+                        storyBoard={storyBoard}
+                      ></StoryCard>
+                    ))}
+                </S.PartitionContainer>
+              </S.ContentContainer>
+              <S.SeeMoreLink onClick={toStoryBoardsPage}>
+                see all...
+              </S.SeeMoreLink>
+            </ShouldRender>
+            <S.SubText>
+              {novelist?.museCount === 0
+                ? "No Muses"
+                : "Muses (" + novelist?.museCount + ")"}
+            </S.SubText>
+            <ShouldRender
+              if={novelist?.museCount && novelist.museCount > 0 ? true : false}
+            >
+              <S.MuseList>
+                {novelist &&
+                  novelist.muses
+                    .slice(0, 3)
+                    .map((muse) => (
+                      <MuseListItem key={muse.id} muse={muse}></MuseListItem>
+                    ))}
+              </S.MuseList>
+              <S.SeeMoreLink onClick={toMusesPage}>see all...</S.SeeMoreLink>
+            </ShouldRender>
+            <S.MusePillContainer>
+              <MusesPill
+                title="FRIENDS"
+                pillType="FRIENDS"
+                novelist={novelist}
+                expandable={true}
+              />
+            </S.MusePillContainer>
             <S.SubText>
               {activities?.length === 0
                 ? "No Updates"
@@ -380,21 +401,30 @@ export default function UserProfilePage({}) {
                 ? "Your Updates"
                 : "Updates by " + username}
             </S.SubText>
-            {state == "LOGGED_IN" && username === user?.username && (
-              <Container
-                style={{ width: "96%", contain: "unset", zIndex: Z_INDEX.CARD }}
-              >
-                <PromptInput className="upward" muses={novelist?.muses || []} />
-              </Container>
-            )}
-            {activities &&
-              activities.map((activity) => (
-                <ActivityBox
-                  key={activity?.id}
-                  activity={activity}
-                ></ActivityBox>
-              ))}
-          </S.ContentContainer>
+            <S.ContentContainer>
+              {state == "LOGGED_IN" && username === user?.username && (
+                <Container
+                  style={{
+                    width: "96%",
+                    contain: "unset",
+                    zIndex: Z_INDEX.CARD,
+                  }}
+                >
+                  <PromptInput
+                    className="upward"
+                    muses={novelist?.muses || []}
+                  />
+                </Container>
+              )}
+              {activities &&
+                activities.map((activity) => (
+                  <ActivityBox
+                    key={activity?.id}
+                    activity={activity}
+                  ></ActivityBox>
+                ))}
+            </S.ContentContainer>
+          </S.ContentInner>
         </S.ContentRight>
       </S.Content>
     </>

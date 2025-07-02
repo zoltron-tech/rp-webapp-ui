@@ -88,7 +88,7 @@ export const THEME_DARK: Theme = {
   modalBackground: "#292828",
   toastBackground: "#1b1b1b",
   inputBackground: "#3a3a3a",
-  pillExpandedContentBackground: "#494949",
+  pillExpandedContentBackground: "#3d3c3c",
   searchBar: "#6a6969",
   text: "#dedede",
   textPrimary: "#dedede",

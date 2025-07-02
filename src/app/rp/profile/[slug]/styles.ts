@@ -1,5 +1,11 @@
 import { Avatar as AvatarCommon, Pill } from "@/components/common";
-import { BLUR_FILTER, DEV_MODE_BORDER, Z_INDEX } from "@/theme";
+import {
+  BLUR_FILTER,
+  BORDER_TOP,
+  DEV_MODE_BORDER,
+  NO_SCROLLBAR,
+  Z_INDEX,
+} from "@/theme";
 import styled, { css } from "styled-components";
 import { Badge } from "../../tiers/styles";
 import { Container } from "@novelist-world/ui";
@@ -26,18 +32,6 @@ export const Banner = styled.div<BannerProps>`
   ${BLUR_FILTER}
 `;
 
-export const SolidBackground = styled.div`
-  position: absolute;
-  top: clamp(270px, 30cqw, 300px);
-  bottom: 0px;
-  width: 100cqw;
-  background-color: ${({ theme }) => theme.navbar};
-  z-index: ${Z_INDEX.DEFAULT};
-  box-shadow: 0px -2px 4px 2px rgba(0, 0, 0, 0.498);
-  padding: 40px;
-  contain: paint;
-`;
-
 export const EditProfile = styled.div`
   position: absolute;
   top: 100px;
@@ -51,12 +45,14 @@ export const EditProfile = styled.div`
 `;
 
 export const Content = styled.div`
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
   max-width: 1400px;
   margin-inline: auto;
   width: 100cqw;
   height: max-content;
   display: flex;
-  flex-direction: row;
   position: relative;
   z-index: ${Z_INDEX.DEFAULT};
 
@@ -64,35 +60,13 @@ export const Content = styled.div`
   container-type: inline-size;
 
   ${DEV_MODE_BORDER("green")}
-
-  @container (max-width: 1300px) {
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-  }
-`;
-
-export const ContentLeft = styled.div`
-  max-width: 650px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  flex-grow: 1;
-
-  ${DEV_MODE_BORDER("red")}
-
-  @container (max-width: 1024px) {
-    max-width: 100%;
-    width: 100%;
-  }
 `;
 
 export const ContentRight = styled.div`
   ${DEV_MODE_BORDER("blue")}
-  flex-grow: 3;
   display: flex;
   flex-direction: column;
+  align-items: center;
 
   @container (max-width: 1024px) {
     max-width: 100%;
@@ -102,21 +76,30 @@ export const ContentRight = styled.div`
   }
 `;
 
+export const ContentInner = styled(Container)`
+  ${DEV_MODE_BORDER("blue")}
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  @container (max-width: 1024px) {
+    max-width: 100%;
+    width: 100%;
+    padding-inline: 0px;
+    margin-top: 10px;
+    border-radius: 0px;
+  }
+`;
+
 export const PartitionContainer = styled.div`
-  width: 40cqw;
+  width: 50cqw;
   display: flex;
   flex-direction: row;
   justify-content: start;
   align-items: flex-start;
   gap: 0.3rem;
   overflow-x: auto;
-
-  @container (max-width: 1200px) {
-    & {
-      width: 92cqw;
-      font-size: 18px;
-    }
-  }
+  padding-bottom: 10px;
 
   @container (max-width: 1000px) {
     & {
@@ -182,28 +165,23 @@ export const PartitionContainer = styled.div`
   }
 `;
 
-export const ContentContainer = styled.div`
+export const ContentContainer = styled(Container)`
+  width: 95%;
   display: flex;
-  width: 100%;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-
-  @container profile-content-right (max-width: 600px) {
-    & {
-      padding-inline: 0px;
-    }
-  }
+  padding-bottom: 5px;
 `;
 
 export const SubText = styled.div`
+  width: 80%;
   text-transform: uppercase;
   font-size: 20px;
   font-weight: 300;
   margin-top: 30px;
   margin-bottom: 10px;
   font-style: italic;
-  text-align: center;
 
   @container (max-width: 1000px) {
     & {
@@ -220,6 +198,26 @@ export const SubText = styled.div`
   @container (max-width: 300px) {
     & {
       font-size: 12px;
+    }
+  }
+`;
+
+export const SeeMoreLink = styled.div`
+  font-size: 20px;
+  font-weight: 300;
+  margin-block: 10px;
+  font-style: italic;
+  font-weight: 700;
+  color: ${({ theme }) => theme.primary};
+
+  &:hover {
+    cursor: pointer;
+    color: ${({ theme }) => theme.primaryHover};
+  }
+
+  @container (max-width: 600px) {
+    & {
+      font-size: 16px;
     }
   }
 `;
@@ -252,13 +250,30 @@ export const InfoText = styled.div`
 
 export const Avatar = styled(AvatarCommon)`
   margin-top: 30px;
+
+  @container profile-content (max-width: 800px) {
+    & {
+      display: none;
+    }
+  }
+`;
+
+export const AvatarMobile = styled(AvatarCommon)`
+  margin-top: 30px;
+  display: none;
+
+  @container profile-content (max-width: 800px) {
+    & {
+      display: block;
+    }
+  }
 `;
 
 export const ExtendedBadge = styled(Badge)`
   width: 30px;
   height: 30px;
   position: relative;
-  left: -80px;
+  left: -90px;
   cursor: pointer;
 
   & svg {
@@ -270,56 +285,46 @@ export const ExtendedBadge = styled(Badge)`
       transform: scale(1.1);
     }
   }
+
+  @container profile-content (max-width: 800px) {
+    & {
+      left: -50px;
+    }
+  }
 `;
 
 const NameFontStyles = css`
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.498);
 `;
 
-export const Name = styled.div`
-  ${NameFontStyles}
-  width: 100%;
-  text-align: center;
-  text-align: center;
-  margin-top: 100px;
-  margin-bottom: 10px;
-  font-size: clamp(36px, 5vw, 52px);
-  color: ${({ theme }) => theme.textPrimary};
-  z-index: ${Z_INDEX.DEFAULT};
-  margin-bottom: 25px;
-
-  @container profile-content (max-width: 1300px) {
-    display: none;
-  }
-`;
-
 export const NameMobile = styled.div`
   ${NameFontStyles};
 
   color: ${({ theme }) => theme.text};
-  display: none;
-  margin-top: 40px;
+  margin-top: 50px;
   font-size: 36px;
   width: 100%;
   text-align: center;
 
-  @container (max-width: 1300px) {
-    display: block;
+  @container profile-content (max-width: 800px) {
+    & {
+      font-size: 24px;
+    }
   }
 `;
 
 export const UsernameContainer = styled.div`
-  margin-block: 10px;
+  margin-block: 5px;
   & > div {
     text-align: center;
     font-size: 24px;
   }
-
   max-width: 100%;
-  margin-top: 20px;
 
-  @container (max-width: 1024px) {
-    margin-top: 10px;
+  @container profile-content (max-width: 800px) {
+    & > div {
+      font-size: 20px;
+    }
   }
 `;
 
@@ -355,4 +360,14 @@ export const MusePillContainer = styled.div`
       gap: 0rem;
     }
   }
+`;
+
+export const MuseList = styled.div`
+  width: 100%;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
 `;

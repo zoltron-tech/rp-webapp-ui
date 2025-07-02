@@ -16,7 +16,7 @@ export const ContentContainer = styled.div`
   width: max-content;
   height: max-content;
   margin-inline: auto;
-  margin-block: 30px;
+  margin-block: 20px;
 
   @container (max-width: 1300px) {
     margin-block: 10px;

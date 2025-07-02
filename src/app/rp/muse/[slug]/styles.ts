@@ -46,6 +46,7 @@ export const MuseContainer = styled.div`
   margin-inline: auto;
   justify-content: center;
 
+
   @container (max-width: 400px) {
     & {
       padding-top: 0px;

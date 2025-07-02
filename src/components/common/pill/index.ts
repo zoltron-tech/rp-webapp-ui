@@ -6,7 +6,7 @@ export const Pill = styled.div`
 
   width: 100%;
   min-height: 80px;
-  background: ${({ theme }) => theme.inputBackground};
+  background: ${({ theme }) => theme.hoverGrey};
   position: relative;
   color: ${({ theme }) => theme.text};
   display: flex;

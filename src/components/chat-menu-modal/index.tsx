@@ -100,14 +100,19 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
                     <S.NotificationBox>
                       <S.Heading>{conversation.name}</S.Heading>
                       <S.Text>
-                        {conversation.lastMessage.senderUsername ===
-                        novelist?.username
-                          ? "You: "
-                          : ""}
-                        {conversation.lastMessage.message}
+                        {conversation.lastMessage?.message
+                          ? `${
+                              conversation.lastMessage.senderUsername ===
+                              novelist?.username
+                                ? "You: "
+                                : ""
+                            }${conversation.lastMessage.message}`
+                          : "You can now message " + conversation.name}
                       </S.Text>
                       <S.Date>
-                        {toFormattedDate(conversation.lastMessage.createdAt)}
+                        {conversation.lastMessage?.createdAt
+                          ? toFormattedDate(conversation.lastMessage.createdAt)
+                          : ""}
                       </S.Date>
                     </S.NotificationBox>
                   </S.CardHeader>

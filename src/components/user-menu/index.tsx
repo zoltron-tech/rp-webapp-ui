@@ -9,6 +9,10 @@ import { Logger } from "@/utils/services";
 import classNames from "classnames";
 import { Avatar, Button } from "../common";
 import * as S from "./styles";
+import { TbUserEdit } from "react-icons/tb";
+import { LuUser } from "react-icons/lu";
+import { IoIosPeople } from "react-icons/io";
+import { PiBookOpenUserDuotone } from "react-icons/pi";
 
 interface UserMenuProps {}
 
@@ -38,6 +42,10 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
     push(`/rp/profile/${user?.username}`);
   };
 
+  const toHome = () => {
+    push(`/rp/home`);
+  };
+
   Logger.info("UserMenu rendered");
 
   if (!user) return <></>;
@@ -52,27 +60,37 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
           hoverable
         />
         <S.Menu className={classNames({ open })}>
-          <Button variant="menu-item" onClick={toUserProfile}>
-            Your profile
-          </Button>
-          <Button variant="menu-item" onClick={toMusesPage}>
-            Your muses
-          </Button>
-          <Button variant="menu-item" onClick={toStoryBoardsPage}>
-            Your Stories
-          </Button>
-          <hr></hr>
-          <Button variant="menu-item" onClick={toEditProfile}>
-            Edit profile
-          </Button>
-          <hr></hr>
-          <Button variant="menu-item">Settings & privacy</Button>
-          <Button variant="menu-item">Help & support</Button>
-          <Button variant="menu-item">Display & accessibility</Button>
-          <hr></hr>
-          <Button variant="menu-item" onClick={handleLogout}>
-            Log out
-          </Button>
+          <S.List>
+            <S.Element onClick={toUserProfile}>
+              <LuUser />
+              Your profile
+            </S.Element>
+            <S.Element onClick={toMusesPage}>
+              <IoIosPeople />
+              Your muses
+            </S.Element>
+            <S.Element onClick={toStoryBoardsPage}>
+              <PiBookOpenUserDuotone />
+              Your stories
+            </S.Element>
+          </S.List>
+          <S.Separator />
+          <S.List>
+            <S.Element onClick={toEditProfile}>
+              <TbUserEdit />
+              Edit profile
+            </S.Element>
+          </S.List>
+          <S.Separator />
+          <S.List>
+            <S.DisabledElement>Settings & privacy</S.DisabledElement>
+            <S.DisabledElement>Help & support</S.DisabledElement>
+            <S.DisabledElement>Display & accessibility</S.DisabledElement>
+          </S.List>
+          <S.Separator />
+          <S.List>
+            <S.DeleteElement onClick={handleLogout}>Log out</S.DeleteElement>
+          </S.List>
         </S.Menu>
       </S.ContentContainer>
     </S.PositionContainer>

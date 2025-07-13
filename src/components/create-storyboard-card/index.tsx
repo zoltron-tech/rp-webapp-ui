@@ -158,7 +158,7 @@ export const CreateStoryBoardCard: FC<CreateStoryBoardCardProps> = ({ id }) => {
           onChange={(image) => setAvatarFile(image)}
         />
         <S.Profile>
-          <S.Title>{id ? "EDIT" : "Create"} Story Board</S.Title>
+          <S.Title>{id ? "EDIT" : "Create"} Story</S.Title>
           <ShouldRender if={id != undefined}>
             <S.UsernameContainer>
               <span>Author: </span>

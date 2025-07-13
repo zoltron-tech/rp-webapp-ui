@@ -34,7 +34,7 @@ export const AuthProvider: FC<Props> = ({ children }) => {
   const pushToProfile = () => push(`/rp/profile/${novelist?.username}`);
 
   const { state, is, transition } = useStateMachine<AuthState>({
-    initial: "LOGGED_OUT",
+    initial: "LOADING",
     transitions: {
       LOGGED_IN: {
         LOADING: true,
@@ -167,9 +167,7 @@ export const AuthProvider: FC<Props> = ({ children }) => {
   useEffect(() => {
     if (initialRender.current) {
       initialRender.current = false;
-      if (is("LOGGED_OUT")) {
-        verifyInitialAuthState();
-      }
+      verifyInitialAuthState();
     }
   }, []);
 

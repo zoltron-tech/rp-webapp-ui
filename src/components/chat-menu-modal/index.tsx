@@ -11,7 +11,7 @@ import * as S from "./styles";
 import { Conversation } from "@/types/conversation";
 import { getConversationsAction } from "@/app/rp/novelists/actions";
 import moment from "moment";
-import { FaPeopleGroup } from "react-icons/fa6";
+import { TiGroup } from "react-icons/ti";
 
 interface ChatMenuProps {}
 
@@ -37,6 +37,47 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
       : messageDate.format("MMM D, h:mm A");
 
     return formattedDate;
+  };
+
+  const getConversationPreviewText = (
+    conversation: Conversation,
+    currentUsername?: string
+  ): string => {
+    const lastMsg = conversation.lastMessage;
+
+    if (lastMsg?.message) {
+      const prefix =
+        lastMsg.sender.username === currentUsername
+          ? "You:"
+          : `${lastMsg.sender.username}:`;
+      return `${prefix} ${lastMsg.message}`;
+    }
+
+    if (lastMsg?.attachments && lastMsg.attachments.length > 0) {
+      const url = lastMsg.attachments[0]?.url.toLowerCase();
+
+      if (!url) return `${lastMsg.sender.username} sent an attachment`;
+
+      if (
+        url.endsWith(".png") ||
+        url.endsWith(".jpg") ||
+        url.endsWith(".jpeg")
+      ) {
+        return `${lastMsg.sender.username} sent an image`;
+      }
+
+      if (url.endsWith(".mp4")) {
+        return `${lastMsg.sender.username} sent a video`;
+      }
+
+      if (url.endsWith(".mp3")) {
+        return `${lastMsg.sender.username} sent an audio`;
+      }
+
+      return `${lastMsg.sender.username} sent a file`;
+    }
+
+    return `You can now message ${conversation.name}`;
   };
 
   const onMoreMessagesClick = () => {
@@ -90,24 +131,22 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
                         key={conversation.id}
                         name={"open"}
                         onClick={() =>
-                          onAvatarClick(conversation.lastMessage.senderUsername)
+                          onAvatarClick(
+                            conversation.lastMessage.sender.username
+                          )
                         }
                         hoverable
                       />
                     )}
-                    {conversation.isGroup && <FaPeopleGroup size={40} />}
+                    {conversation.isGroup && <TiGroup size={40} />}
 
                     <S.NotificationBox>
                       <S.Heading>{conversation.name}</S.Heading>
                       <S.Text>
-                        {conversation.lastMessage?.message
-                          ? `${
-                              conversation.lastMessage.senderUsername ===
-                              novelist?.username
-                                ? "You: "
-                                : ""
-                            }${conversation.lastMessage.message}`
-                          : "You can now message " + conversation.name}
+                        {getConversationPreviewText(
+                          conversation,
+                          novelist?.username
+                        )}
                       </S.Text>
                       <S.Date>
                         {conversation.lastMessage?.createdAt

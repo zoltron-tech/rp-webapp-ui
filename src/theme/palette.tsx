@@ -84,7 +84,7 @@ export const THEME_DARK: Theme = {
   primaryHover: pSBC(-0.6, accentColor) as string,
   primaryDisabled: pSBC(-0.8, accentColor) as string,
   primaryLoading: pSBC(-0.2, accentColor) as string,
-  primaryAlpha: setOpacity(accentColor, 0.4),
+  primaryAlpha: setOpacity(accentColor, 0.2),
   modalBackground: "#292828",
   toastBackground: "#1b1b1b",
   inputBackground: "#3a3a3a",

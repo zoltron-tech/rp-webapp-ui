@@ -17,8 +17,9 @@ export const PositionContainer = styled.div`
 export const Menu = styled.div`
   box-shadow: 0px 0px 10px 4px rgba(0, 0, 0, 0.5);
   position: absolute;
-  top: 55px;
-  right: 0px;
+  top: 60px;
+  right: -10px;
+  padding: 5px;
 
   display: flex;
   flex-direction: column;
@@ -59,7 +60,8 @@ export const Heading = styled.div`
 `;
 
 export const Text = styled.div`
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 400;
   color: ${({ theme }) => theme.text};
 `;
 
@@ -76,7 +78,7 @@ export const NotificationBox = styled.div`
   align-items: start;
   justify-content: center;
   margin-left: 10px;
-  font-size: 14px;
+  font-size: 18px;
 `;
 
 export const CardWrapper = styled.div`

@@ -1,8 +1,7 @@
 import { Tag, Tagged } from "./common";
 import { Friend } from "./novelist";
 
-export interface StoryBoard extends Tagged {
-  _tag: "StoryBoard";
+export interface StoryBoard {
   id: string | null;
   name: string;
   image: string | null;
@@ -13,16 +12,14 @@ export interface StoryBoard extends Tagged {
   createdBy: Friend;
 }
 
-export interface StoryBoardMember extends Tagged {
-  _tag: "StoryBoardMember";
+export interface StoryBoardMember {
   username: string;
   storyBoardId: string;
   image: string;
   isAdmin: boolean;
 }
 
-export interface StoryBoardEvent extends Tagged {
-  _tag: "StoryBoardEvent";
+export interface StoryBoardEvent {
   id: string | null;
   storyBoardId: string;
   ordinal: number;

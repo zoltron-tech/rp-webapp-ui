@@ -131,6 +131,47 @@ export const updateStoryBoardAction = async (_storyboard: StoryBoard) => {
   return storyboard;
 };
 
+export const updateStoryBoardEventAction = async (
+  _storyboardEvent: StoryBoardEvent
+) => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/story/event`;
+
+  console.log(_storyboardEvent);
+
+  Logger.debug("updateStoryBoardEvent", _storyboardEvent);
+
+  const response = await fetch(URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    body: JSON.stringify(_storyboardEvent),
+    cache: "no-store",
+  });
+
+  console.log(response);
+
+  if (response.status !== 200) {
+    Logger.debug("error", response.status, response.statusText);
+    return { message: API_MESSAGE.Error };
+  }
+
+  const result: StoryBoardEvent = await response.json();
+  Logger.debug("updateStoryBoard", result);
+
+  const storyboardEvent: StoryBoardEvent = Object.assign(
+    {},
+    {
+      ...result,
+      message: undefined,
+    }
+  );
+
+  return storyboardEvent;
+};
+
 export const getStoryboardEventAction = async (storyboardEventId: string) => {
   const jwt = await authenticateAndGetJWTIfExists();
   const headers: Record<string, string> = {

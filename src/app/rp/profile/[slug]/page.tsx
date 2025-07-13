@@ -346,8 +346,8 @@ export default function UserProfilePage({}) {
             /> TODO: ADD WHEN CHAT IS*/}
             <S.SubText>
               {storyBoards?.length === 0
-                ? "No Storyboards"
-                : "Storyboards (" + storyBoards?.length + ")"}
+                ? "No Stories"
+                : "Stories (" + storyBoards?.length + ")"}
             </S.SubText>
             <ShouldRender
               if={storyBoards && storyBoards?.length > 0 ? true : false}

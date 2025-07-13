@@ -136,7 +136,6 @@ export const StoryBoardNewMemberListItem: FC<NewMembersListItemProps> = ({
     if (!novelist) return;
 
     const payload: StoryBoardMember = {
-      _tag: "StoryBoardMember",
       username: novelist.username,
       storyBoardId: storyBoardId,
       image: novelist.image,
@@ -234,7 +233,6 @@ export const StoryBoardMembersList: FC<{ id?: string }> = ({ id }) => {
       if (!prev) return prev;
 
       const newMember: StoryBoardMember = {
-        _tag: "StoryBoardMember",
         username: friendToAdd.username,
         image: friendToAdd.image,
         isAdmin: false,

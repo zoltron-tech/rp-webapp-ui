@@ -59,7 +59,6 @@ export const INITIAL_MUSE: Muse = {
 };
 
 export const INITIAL_STORY_BOARD: StoryBoard = {
-  _tag: "StoryBoard",
   id: null,
   name: "",
   image: null,
@@ -71,7 +70,6 @@ export const INITIAL_STORY_BOARD: StoryBoard = {
 };
 
 export const INITIAL_STORY_BOARD_EVENT: StoryBoardEvent = {
-  _tag: "StoryBoardEvent",
   id: null,
   storyBoardId: "",
   name: "",

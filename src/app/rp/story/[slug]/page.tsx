@@ -10,18 +10,27 @@ import { ShouldRender, Username } from "@/components/common";
 import { PageLoader } from "@/components/layout";
 import { MusesPill } from "@/components/muses-pill";
 import StoryCardEvent from "@/components/story-event-card";
-import { Container, Flex } from "@novelist-world/ui";
+import { Flex } from "@novelist-world/ui";
 import { TagsContainer } from "@/components/tags-container";
-import { FaLock } from "react-icons/fa6";
 import { FaGlobeAmericas, FaUserFriends } from "react-icons/fa";
+import { INITIAL_STORY_BOARD_EVENT } from "@/utils/constants";
 
 export default function UserProfilePage({}) {
   const params = useParams();
   const { state: authState } = useAuthContext();
+  const { user, novelist } = useAuthContext();
   const [storyboard, setStoryBoard] = useState<StoryBoard | null>(null);
   const [loading, setLoading] = useState(true);
   const storyboardId = params?.slug as string;
   const { push } = useRouter();
+
+  const isAdmin = () => {
+    if (!storyboard || !user?.username) return false;
+
+    return storyboard.members.some(
+      (member) => member.username === user.username && member.isAdmin === true
+    );
+  };
 
   const fetchStoryboard = async () => {
     setLoading(true);
@@ -115,7 +124,7 @@ export default function UserProfilePage({}) {
           >
             NO{" "}
           </ShouldRender>
-          EVENTS
+          CHAPTERS
         </S.SectionName>
         <Flex
           direction="row"
@@ -125,10 +134,29 @@ export default function UserProfilePage({}) {
             flexWrap: "wrap",
           }}
         >
+          <ShouldRender
+            if={
+              isAdmin() &&
+              novelist != null &&
+              storyboard != null &&
+              storyboard?.events.length < novelist?.tier.eventLimit
+            }
+          >
+            <StoryCardEvent
+              event={INITIAL_STORY_BOARD_EVENT}
+              storyboardId={storyboardId}
+              isCurrentUser={isAdmin()}
+            ></StoryCardEvent>
+          </ShouldRender>
           {storyboard?.events &&
             storyboard?.events.map((event) => {
               return (
-                <StoryCardEvent key={event.id} event={event}>
+                <StoryCardEvent
+                  key={event.id}
+                  event={event}
+                  storyboardId={storyboardId}
+                  isCurrentUser={isAdmin()}
+                >
                   {event.name}
                 </StoryCardEvent>
               );

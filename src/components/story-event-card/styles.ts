@@ -16,8 +16,8 @@ export const CardBackground = styled.div<CardProps>`
 
 export const Title = styled.div`
   position: relative;
-  bottom: -15px;
-  font-size: 20px;
+  bottom: -40px;
+  font-size: 18px;
   font-weight: 600;
   word-wrap: break-word;
   white-space: wrap;
@@ -28,8 +28,8 @@ export const Title = styled.div`
   transition: opacity 0.5s ease, transform 0.5s ease, scale 0.5s ease;
 
   &.new {
-    bottom: -160px;
-    right: 90px;
+    bottom: -110px;
+    right: 70px;
   }
 
   &.profile {
@@ -39,7 +39,7 @@ export const Title = styled.div`
 
   @container content-container (max-width: 1000px) {
     &.new {
-      bottom: -10px;
+      bottom: -80px;
       right: 50px;
       font-size: 16px;
     }
@@ -50,7 +50,7 @@ export const Title = styled.div`
 
 export const Description = styled.div`
   position: relative;
-  bottom: -30px;
+  bottom: -50px;
   right: 10px;
   font-size: 16px;
   font-weight: 300;
@@ -127,11 +127,6 @@ export const CardWrapper = styled.div`
       z-index: ${Z_INDEX.MODAL};
       transform: scale(1.2);
     }
-  }
-
-  &.new {
-    border: solid silver 2px;
-    border-radius: 60%;
   }
 `;
 
@@ -244,7 +239,6 @@ export const CardFooter = styled.div`
   background: linear-gradient(
     ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
   );
-  cursor: pointer;
 
   @container content-container (max-width: 1000px) {
     & {
@@ -268,6 +262,7 @@ export const Card = styled.div`
   background: linear-gradient(
     ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
   );
+  cursor: pointer;
 
   &.new {
     background: linear-gradient(
@@ -296,7 +291,7 @@ export const Card = styled.div`
         transform: translateY(0);
       }
 
-      & ${Description}, ${CardFooter} {
+      & ${Description}, ${CardFooter}, ${Button} {
         opacity: 1;
       }
     }

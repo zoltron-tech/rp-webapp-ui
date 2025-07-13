@@ -24,18 +24,25 @@ export interface ConversationParticipant extends Tagged {
   modifiedAt: string;
 }
 
-export interface Message extends Tagged {
-  _tag: "Message";
+export interface Message {
   id: string;
   senderId: string;
   conversationId: string;
-  senderUsername: string;
+  sender: MessageSender;
   type: string;
   image: string;
   message: string;
   isRead: string;
   attachments: Attachment[];
   createdAt: string;
+}
+
+export interface MessageSender {
+  id: string;
+  username: string;
+  name: string;
+  image: string;
+  messageSourceType: string;
 }
 
 export interface Attachment extends Tagged {

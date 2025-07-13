@@ -18,7 +18,7 @@ export interface AuthContextType {
 }
 
 export const AUTH_CONTEXT_INITIAL_STATE: AuthContextType = {
-  state: "LOGGED_OUT",
+  state: "LOADING",
   user: null,
   novelist: null,
   login: async (): Promise<LoginResponse> => ({

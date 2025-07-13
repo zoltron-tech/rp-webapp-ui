@@ -2,28 +2,31 @@
 import { FC } from "react";
 
 import { Logger } from "@/utils/services";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { GrEdit } from "react-icons/gr";
 
 import * as S from "./styles";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { ShouldRender } from "../common";
 import { INITIAL_STORY_BOARD_EVENT } from "@/utils/constants";
-import { useAuthContext } from "@/hooks";
 import classNames from "classnames";
 import { StoryBoardEvent } from "@/types/story-board";
 import { FaArrowRight } from "react-icons/fa";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   event?: StoryBoardEvent | null;
+  storyboardId: string;
+  isCurrentUser?: Boolean;
 };
 
-export const StoryCardEvent: FC<Props> = ({ event, className, ...rest }) => {
+export const StoryCardEvent: FC<Props> = ({
+  event,
+  storyboardId,
+  isCurrentUser,
+  className,
+  ...rest
+}) => {
   const { push } = useRouter();
-  const params = useParams();
-  const { user } = useAuthContext();
-  const username = params?.slug as string;
-  const isCurrentUser = user?.username && user.username === username;
 
   const onEventClick = (eventId: string) => {
     push(`/rp/story/event/${eventId}`);
@@ -36,21 +39,17 @@ export const StoryCardEvent: FC<Props> = ({ event, className, ...rest }) => {
     const target = e.target as HTMLDivElement;
     if (target.classList.contains("button")) return;
 
-    !event.name ? onAddClick() : onAvatarClick();
-  };
-
-  const onAvatarClick = () => {
-    if (!event) return;
-    push(`/rp/story/${event.storyBoardId}`);
+    !event.name ? onAddClick() : onEventClick(event?.id || "");
   };
 
   const onAddClick = () => {
     if (!event) return;
-    push(`/rp/profile/story/create`);
+    push(`/rp/profile/story/edit/${storyboardId}/event/create`);
   };
 
-  const onEditClick = () => {
-    push(`/rp/profile/story/edit/${event?.storyBoardId}`);
+  const onEditClick = (eventId: string | null) => {
+    if (eventId === null) return;
+    push(`/rp/profile/story/edit/${storyboardId}/event/edit/${eventId}`);
   };
 
   Logger.info("StoryCard rendered");
@@ -75,12 +74,15 @@ export const StoryCardEvent: FC<Props> = ({ event, className, ...rest }) => {
             new: !event.name,
           },
         ])}
-        // onClick={(e) => handleCardClick(e, event)}
+        onClick={(e) => handleCardClick(e, event)}
       >
         <ShouldRender
           if={event !== INITIAL_STORY_BOARD_EVENT && !!isCurrentUser}
         >
-          <S.EditButton className="button" onClick={onEditClick}>
+          <S.EditButton
+            className="button"
+            onClick={() => onEditClick(event?.id)}
+          >
             <GrEdit />
           </S.EditButton>
           <S.DeleteButton className="button">
@@ -107,10 +109,14 @@ export const StoryCardEvent: FC<Props> = ({ event, className, ...rest }) => {
             </S.Description>
           </S.MuseInfo>
         </S.CardHeader>
-        <S.CardFooter onClick={() => onEventClick(event.id || "")}>
-          Read more...
-          <FaArrowRight />
-        </S.CardFooter>
+        <ShouldRender
+          if={event !== INITIAL_STORY_BOARD_EVENT && !!isCurrentUser}
+        >
+          <S.CardFooter>
+            Read more...
+            <FaArrowRight />
+          </S.CardFooter>
+        </ShouldRender>
       </S.Card>
     </S.CardWrapper>
   );

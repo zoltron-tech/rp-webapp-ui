@@ -63,9 +63,9 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
     const target = e.target as HTMLDivElement;
     if (target.classList.contains("button")) return;
 
-    if (activity?.source.activitySourceType === "MUSE")
+    if (activity?.source.sourceType === "MUSE")
       push(`/rp/muse/${activity.source.id}`);
-    else if (activity?.source.activitySourceType === "NOVELIST")
+    else if (activity?.source.sourceType === "NOVELIST")
       push(`/rp/profile/${activity.source.urlProp}`);
   };
 

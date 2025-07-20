@@ -1,4 +1,4 @@
-import { Avatar as AvatarCommon, Pill } from "@/components/common";
+import { Avatar as AvatarCommon, Button, Pill } from "@/components/common";
 import {
   BLUR_FILTER,
   BORDER_TOP,
@@ -88,6 +88,30 @@ export const ContentInner = styled(Container)`
     padding-inline: 0px;
     margin-top: 10px;
     border-radius: 0px;
+  }
+`;
+
+export const ButtonsContainer = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  border-radius: var(--border-radius);
+  transform: translate(200px, 30px);
+
+  @container (max-width: 800px) {
+    & {
+      transform: translate(200px, -10px);
+      font-size: 12px;
+    }
+  }
+
+  @container (max-width: 600px) {
+    & {
+      transform: translate(40px, -10px);
+      font-size: 12px;
+    }
   }
 `;
 

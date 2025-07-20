@@ -39,6 +39,17 @@ export const CardHeader = styled.div`
   position: relative;
 `;
 
+export const unReadBadge = styled.div`
+  background-color: ${({ theme }) => theme.unreadMark};
+  border-radius: 100%;
+  min-width: 10px;
+  height: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+`;
+
 export const Button = styled.div`
   width: 25px;
   height: 25px;
@@ -76,10 +87,6 @@ export const RemoveButton = styled(Button)`
     background-color: ${({ theme }) =>
       pSBC(-0.5, setOpacity(theme.error, 0.8))};
   }
-`;
-
-export const username = styled(Common.Username)`
-  font-size: 13px;
 `;
 
 export const Title = styled.div`

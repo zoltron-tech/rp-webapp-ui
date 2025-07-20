@@ -10,7 +10,7 @@ export const PositionContainer = styled.div`
   ${DEV_MODE_BORDER("red")}
   position: absolute;
   margin-top: 8px;
-  right: 4.5rem;
+  right: 4.7rem;
 `;
 
 export const Menu = styled.div`
@@ -43,11 +43,31 @@ export const Menu = styled.div`
   }
 `;
 
+export const NotificationBadge = styled.div`
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(10%, -10%);
+  background-color: ${({ theme }) => theme.unreadBadge};
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 100%;
+  padding: 6px;
+  min-width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+`;
+
 export const ContentContainer = styled.div`
   ${DEV_MODE_BORDER("blue")}
   position: relative;
   width: max-content;
   height: max-content;
+  cursor: pointer;
 `;
 
 export const Text = styled.div`

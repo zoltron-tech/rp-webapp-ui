@@ -3,7 +3,7 @@
 import { ShouldRender } from "@/components/common";
 import { PageLoader } from "@/components/layout";
 import { useAuthContext } from "@/hooks";
-import { Muse, Novelist, StoryBoard } from "@/types";
+import { Muse, Novelist, NovelistWorldNotification, StoryBoard } from "@/types";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import * as S from "./styles";
@@ -17,7 +17,7 @@ import {
 } from "./actions";
 import MuseCard from "@/components/muse-card";
 import StoryCard from "@/components/story-card";
-import { getFriendRequests } from "../novelists/actions";
+import { getNotifications } from "../novelists/actions";
 import { FriendListItem } from "@/components/friend-list-item/page";
 import { Activity } from "@/types/activity";
 import { ActivityBox } from "@/components/activity-box";
@@ -26,7 +26,9 @@ import VideoCard from "@/components/video-card";
 export default function HomePage() {
   const { state, user, novelist } = useAuthContext();
   const [strangers, setStrangers] = useState<Novelist[]>();
-  const [friendRequests, setFriendRequests] = useState<Novelist[] | null>(null);
+  const [friendRequests, setFriendRequests] = useState<
+    NovelistWorldNotification[] | null
+  >(null);
   const [storyboards, setStoryboards] = useState<StoryBoard[]>();
   const [unknownMuses, setUnknownMuses] = useState<Muse[]>();
   const [friendsMuses, setFriendsMuses] = useState<Muse[]>();
@@ -122,16 +124,16 @@ export default function HomePage() {
 
   const fetchNotifications = async () => {
     setLoading(true);
-    const _friendRequests = await getFriendRequests();
+    const _notification = await getNotifications();
 
-    if (!_friendRequests || "message" in _friendRequests) {
+    if (!_notification || "message" in _notification) {
       // handle error
       setLoading(false);
       push("/404");
       return;
     }
     setLoading(false);
-    setFriendRequests(_friendRequests);
+    setFriendRequests(_notification);
   };
 
   useEffect(() => {
@@ -214,14 +216,6 @@ export default function HomePage() {
           <S.ContentContainer>
             <S.SubText>Friend Requests & Suggestions</S.SubText>
             <S.PartitionContainer>
-              {friendRequests &&
-                friendRequests.map((request) => (
-                  <StrangerCard
-                    key={request?.username}
-                    novelist={request}
-                    isRequest={true}
-                  ></StrangerCard>
-                ))}
               {strangers &&
                 strangers.map((stranger) => (
                   <StrangerCard

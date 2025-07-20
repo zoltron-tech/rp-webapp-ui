@@ -32,6 +32,8 @@ export type Theme = {
   success: string;
   warning: string;
   processing: string;
+  unreadMark: string;
+  unreadBadge: string;
 };
 
 export const accentColor = "#227da1"; //"#018786"; //"#8e5e9c"; //"#1ca0a0"; // "#227cc5";;
@@ -75,6 +77,8 @@ export const THEME_LIGHT: Theme = {
   success: pSBC(-0.1, "#58d158") as string,
   warning: pSBC(-0.1, "#d1a000") as string,
   processing: pSBC(-0.1, "#5c5c5c") as string,
+  unreadMark: "#1599eb",
+  unreadBadge: "#b32c2c",
 };
 
 export const THEME_DARK: Theme = {
@@ -117,4 +121,6 @@ export const THEME_DARK: Theme = {
   success: pSBC(0.1, "#58d158") as string,
   warning: pSBC(0.1, "#d1a000") as string,
   processing: pSBC(0.1, "#5c5c5c") as string,
+  unreadMark: "#1599eb",
+  unreadBadge: "#b32c2c",
 };

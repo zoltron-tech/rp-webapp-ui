@@ -14,54 +14,55 @@ import { API_MESSAGE } from "@/utils/constants";
 import { RxCross2 } from "react-icons/rx";
 import { Avatar } from "../common";
 import * as S from "./styles";
+import { NovelistWorldNotification } from "@/types";
 
 type Props = HTMLProps<HTMLDivElement> & {
-  novelist?: Novelist | null;
-  removeMethod: (novelist: Novelist) => void;
+  notification?: NovelistWorldNotification | null;
+  removeMethod: (notification: NovelistWorldNotification) => void;
 };
 
 export const FriendRequestNotification: FC<Props> = ({
-  novelist,
+  notification,
   removeMethod,
   ...rest
 }) => {
   const { push } = useRouter();
 
   const handleAcceptFriendRequest = async () => {
-    if (!novelist?.id) return;
+    if (!notification?.id) return;
 
-    const response = await acceptFriendRequest(novelist.id);
+    const response = await acceptFriendRequest(notification.id);
 
     if (response?.message === API_MESSAGE.Success) {
-      removeMethod(novelist);
+      removeMethod(notification);
     }
   };
 
   const handleDeleteFriendRequest = async () => {
-    if (!novelist?.id) return;
+    if (!notification?.id) return;
 
-    const response = await deleteFriendRequest(novelist.id);
+    const response = await deleteFriendRequest(notification.id);
 
     if (response?.message === API_MESSAGE.Success) {
-      removeMethod(novelist);
+      removeMethod(notification);
     }
   };
 
   const onAvatarClick = () => {
-    if (!novelist) return;
-    push(`/rp/profile/${novelist.username}`);
+    if (!notification) return;
+    push(`/rp/profile/${notification.source.urlProp}`);
   };
 
   Logger.info("FriendRequestNotification rendered");
 
-  if (!novelist) return <></>;
+  if (!notification) return <></>;
 
   return (
     <S.CardWrapper {...rest}>
       <S.Card className="muse-card">
         <S.CardHeader>
           <Avatar
-            src={novelist.image || ""}
+            src={notification.source.image || ""}
             alt={""}
             size={40}
             name={"open"}
@@ -69,17 +70,17 @@ export const FriendRequestNotification: FC<Props> = ({
             hoverable
           />
           <S.NotificationBox>
-            <S.Title>{novelist.firstName}</S.Title>
-            <S.username username={novelist.username}></S.username>
-            <S.Subtext>Sent you a request</S.Subtext>
+            <S.Title>{notification.source.title}</S.Title>
+            <S.Subtext>{notification.notificationText}</S.Subtext>
           </S.NotificationBox>
           <S.NotificationActions>
-            <S.AcceptButton onClick={handleAcceptFriendRequest}>
+            {/* <S.AcceptButton onClick={handleAcceptFriendRequest}>
               <FaCheck />
             </S.AcceptButton>
             <S.RemoveButton onClick={handleDeleteFriendRequest}>
               <RxCross2 />
-            </S.RemoveButton>
+            </S.RemoveButton> */}
+            <S.unReadBadge />
           </S.NotificationActions>
         </S.CardHeader>
       </S.Card>

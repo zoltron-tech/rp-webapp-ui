@@ -4,3 +4,4 @@ export * from "./style";
 export * from "./user";
 export * from "./story-board";
 export * from "./prompt";
+export * from "./notification";

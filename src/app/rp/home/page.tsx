@@ -122,20 +122,6 @@ export default function HomePage() {
     setActivities(_activities);
   };
 
-  const fetchNotifications = async () => {
-    setLoading(true);
-    const _notification = await getNotifications();
-
-    if (!_notification || "message" in _notification) {
-      // handle error
-      setLoading(false);
-      push("/404");
-      return;
-    }
-    setLoading(false);
-    setFriendRequests(_notification);
-  };
-
   useEffect(() => {
     if (state === "LOADING") return;
     fetchStrangers();
@@ -143,7 +129,6 @@ export default function HomePage() {
     fetchFriendsMuses();
     fetchFriendsMusesWithVideos();
     fetchRandomStories();
-    fetchNotifications();
     fetchFriendsActivities();
   }, [state]);
 

@@ -1,7 +1,4 @@
-import { Tagged } from "./common";
-
-export interface Activity extends Tagged {
-  _tag: "Activity";
+export interface Activity {
   id: string;
   source: ActivitySource;
   target: ActivityTarget;
@@ -9,19 +6,17 @@ export interface Activity extends Tagged {
   date: number;
 }
 
-export interface ActivityTarget extends Tagged {
-  _tag: "ActivityTarget";
+export interface ActivityTarget {
   id: string;
   title: string;
   activityTargetType: string;
   url: string;
 }
 
-export interface ActivitySource extends Tagged {
-  _tag: "ActivitySource";
+export interface ActivitySource {
   id: string;
   title: string;
-  activitySourceType: string;
+  sourceType: string;
   image: string;
   urlProp: string;
 }

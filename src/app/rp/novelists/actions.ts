@@ -4,7 +4,7 @@ import {
   authenticateAndGetJWTIfExists,
   logoutAction,
 } from "@/app/actions";
-import { Novelist } from "@/types";
+import { Novelist, NovelistWorldNotification } from "@/types";
 import { SearchResult, WithMessage } from "@/types/common";
 import { Conversation, Message } from "@/types/conversation";
 import {
@@ -88,9 +88,9 @@ export const getUserNovelist = async () => {
   return novelist;
 };
 
-export const getFriendRequests = async () => {
+export const getNotifications = async () => {
   const jwt = await authenticateAndGetJWT();
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/requests`;
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/notification`;
 
   const response = await fetch(URL, {
     headers: {
@@ -107,9 +107,9 @@ export const getFriendRequests = async () => {
     logoutAction();
   }
 
-  const novelists: Novelist[] = await response.json();
+  const notifications: NovelistWorldNotification[] = await response.json();
 
-  return novelists;
+  return notifications;
 };
 
 export const updateUserNovelist = async (_novelist: Novelist) => {

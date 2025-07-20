@@ -12,6 +12,7 @@ import { Conversation } from "@/types/conversation";
 import { getConversationsAction } from "@/app/rp/novelists/actions";
 import moment from "moment";
 import { TiGroup } from "react-icons/ti";
+import { Flex } from "@novelist-world/ui";
 
 interface ChatMenuProps {}
 
@@ -110,9 +111,15 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
 
   if (!user) return <></>;
 
+  const unreadCount =
+    conversations?.filter((n) => n.lastMessage && !n.lastMessage.isRead)
+      .length || 0;
+
   return (
     <S.PositionContainer>
       <S.ContentContainer onClick={toggleState(setOpen)}>
+        {unreadCount > 0 && <S.UnreadBadge>{unreadCount}</S.UnreadBadge>}
+
         <IoChatbubblesSharp size={40} />
         <S.Menu className={classNames({ open })}>
           {conversations &&
@@ -141,13 +148,27 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
                     {conversation.isGroup && <TiGroup size={40} />}
 
                     <S.NotificationBox>
-                      <S.Heading>{conversation.name}</S.Heading>
-                      <S.Text>
-                        {getConversationPreviewText(
-                          conversation,
-                          novelist?.username
-                        )}
-                      </S.Text>
+                      <Flex
+                        style={{
+                          justifyContent: "space-between",
+                          width: "95%",
+                        }}
+                      >
+                        <Flex direction="column" align="flex-start" gap={"0px"}>
+                          <S.Heading>{conversation.name}</S.Heading>
+                          <S.Text>
+                            {getConversationPreviewText(
+                              conversation,
+                              novelist?.username
+                            )}
+                          </S.Text>
+                        </Flex>
+                        {conversation.lastMessage &&
+                          !conversation.lastMessage.isRead && (
+                            <S.UnreadMessageIcon />
+                          )}
+                      </Flex>
+
                       <S.Date>
                         {conversation.lastMessage?.createdAt
                           ? toFormattedDate(conversation.lastMessage.createdAt)

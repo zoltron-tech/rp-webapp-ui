@@ -4,52 +4,46 @@ import { FC, useState, useEffect } from "react";
 
 import { useAuthContext } from "@/hooks";
 import { toggleState } from "@/utils/helpers";
-import { useRouter } from "next/navigation";
 import { Logger } from "@/utils/services";
 import classNames from "classnames";
-import { IoPeopleCircle } from "react-icons/io5";
+import { IoMdNotifications } from "react-icons/io";
+
 import * as S from "./styles";
-import { getFriendRequests } from "@/app/rp/novelists/actions";
-import { Novelist } from "@/types";
+import { getNotifications } from "@/app/rp/novelists/actions";
+import { NovelistWorldNotification } from "@/types";
 import { FriendRequestNotification } from "../friend-request-notification";
 
 interface NotificationsMenuProps {}
 
 export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
   const { user, state } = useAuthContext();
-  const [friendRequests, setFriendRequests] = useState<Novelist[] | null>(null);
+  const [notifications, setNotifications] = useState<
+    NovelistWorldNotification[] | null
+  >(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const { push } = useRouter();
 
   const fetchNotifications = async () => {
     setLoading(true);
-    const _friendRequests = await getFriendRequests();
-
-    if (!_friendRequests || "message" in _friendRequests) {
-      // handle error
-      setLoading(false);
-      push("/404");
-      return;
-    }
+    const _notifications = await getNotifications();
     setLoading(false);
-    setFriendRequests(_friendRequests);
+    setNotifications(_notifications);
   };
 
   const removeFriendRequestNotification = async (
-    novelistToRemove: Novelist
+    novelistToRemove: NovelistWorldNotification
   ) => {
-    if (!friendRequests) return;
+    if (!notifications) return;
 
-    const updatedFriendRequests = friendRequests.filter(
-      (novelist) => novelist.id !== novelistToRemove.id
+    const updatedFriendRequests = notifications.filter(
+      (notification) => notification.id !== novelistToRemove.id
     );
 
-    setFriendRequests(updatedFriendRequests);
+    setNotifications(updatedFriendRequests);
   };
 
   useEffect(() => {
-    if (state === "LOADING" || friendRequests) return;
+    if (state === "LOADING" || notifications) return;
 
     fetchNotifications();
   }, [state]);
@@ -58,16 +52,21 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
 
   if (!user) return <></>;
 
+  const unreadCount = notifications?.filter((n) => !n.isRead).length || 0;
+
   return (
     <S.PositionContainer>
       <S.ContentContainer onClick={toggleState(setOpen)}>
-        <IoPeopleCircle size={45} />
+        {unreadCount > 0 && (
+          <S.NotificationBadge>{unreadCount}</S.NotificationBadge>
+        )}
+        <IoMdNotifications size={45} />
         <S.Menu className={classNames({ open })}>
-          {friendRequests &&
-            friendRequests.map((request) => (
+          {notifications &&
+            notifications.map((request) => (
               <FriendRequestNotification
-                key={request.username}
-                novelist={request}
+                key={request.source.title}
+                notification={request}
                 removeMethod={removeFriendRequestNotification}
               ></FriendRequestNotification>
             ))}

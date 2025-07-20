@@ -46,11 +46,42 @@ export const Menu = styled.div`
   }
 `;
 
+export const UnreadBadge = styled.div`
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(10%, -10%);
+  background-color: ${({ theme }) => theme.unreadBadge};
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 100%;
+  padding: 6px;
+  min-width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+`;
+
+export const UnreadMessageIcon = styled.div`
+  background-color: ${({ theme }) => theme.unreadMark};
+  border-radius: 100%;
+  min-width: 10px;
+  height: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+`;
+
 export const ContentContainer = styled.div`
   ${DEV_MODE_BORDER("blue")}
   position: relative;
   width: max-content;
   height: max-content;
+  cursor: pointer;
 `;
 
 export const Heading = styled.div`

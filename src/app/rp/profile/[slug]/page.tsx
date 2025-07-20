@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 
 import { MusesPill } from "@/components";
 import { ButtonGroup, ButtonInfo } from "@/components/button-group";
-import { ShouldRender, Username } from "@/components/common";
+import { Button, ShouldRender, Username } from "@/components/common";
 import { PageLoader } from "@/components/layout";
 import { Quote } from "@/components/novelist-card/styles";
 import { Novelist, StoryBoard } from "@/types";
@@ -35,6 +35,7 @@ import {
 import { GiCircleClaws } from "react-icons/gi";
 import { GiGoldShell } from "react-icons/gi";
 import { GiStarSwirl } from "react-icons/gi";
+import { RiUserAddLine } from "react-icons/ri";
 
 import { Container, Flex } from "@novelist-world/ui";
 import PromptInput from "@/components/prompt-input";
@@ -177,9 +178,9 @@ export default function UserProfilePage({}) {
       label: "Decline",
       variant: "negative",
     },
-    { onClick: toMessagePage, label: "Message", variant: "action" },
-    { onClick: toMusesPage, label: "Muses", variant: "action" },
-    { onClick: toStoryBoardsPage, label: "Story Boards", variant: "action" },
+    // { onClick: toMessagePage, label: "Message", variant: "action" },
+    // { onClick: toMusesPage, label: "Muses", variant: "action" },
+    // { onClick: toStoryBoardsPage, label: "Story Boards", variant: "action" },
   ];
 
   const OutgoingRequestButtons: ButtonInfo[] = [
@@ -188,16 +189,16 @@ export default function UserProfilePage({}) {
       label: "Friend request sent",
       variant: "primary",
     },
-    { onClick: toMessagePage, label: "Message", variant: "action" },
-    { onClick: toMusesPage, label: "Muses", variant: "action" },
-    { onClick: toStoryBoardsPage, label: "Stories", variant: "action" },
+    // { onClick: toMessagePage, label: "Message", variant: "action" },
+    // { onClick: toMusesPage, label: "Muses", variant: "action" },
+    // { onClick: toStoryBoardsPage, label: "Stories", variant: "action" },
   ];
 
   const FriendButtons: ButtonInfo[] = [
     { onClick: handleButtonClick, label: "Friends", variant: "primary" },
     { onClick: toMessagePage, label: "Message", variant: "action" },
-    { onClick: toMusesPage, label: "Muses", variant: "action" },
-    { onClick: toStoryBoardsPage, label: "Stories", variant: "action" },
+    // { onClick: toMusesPage, label: "Muses", variant: "action" },
+    // { onClick: toStoryBoardsPage, label: "Stories", variant: "action" },
   ];
 
   const StrangerButtons: ButtonInfo[] = [
@@ -206,13 +207,13 @@ export default function UserProfilePage({}) {
       label: "Add friend",
       variant: "primary",
     },
-    { onClick: toMusesPage, label: "Muses", variant: "action" },
-    { onClick: toStoryBoardsPage, label: "Stories", variant: "action" },
+    // { onClick: toMusesPage, label: "Muses", variant: "action" },
+    // { onClick: toStoryBoardsPage, label: "Stories", variant: "action" },
   ];
 
   const LoggedInSelfButtons: ButtonInfo[] = [
-    { onClick: toMusesPage, label: "Muses", variant: "action" },
-    { onClick: toStoryBoardsPage, label: "Stories", variant: "action" },
+    // { onClick: toMusesPage, label: "Muses", variant: "action" },
+    // { onClick: toStoryBoardsPage, label: "Stories", variant: "action" },
   ];
 
   const fetchAppropriateButtons = (connection: string | null | undefined) => {
@@ -316,6 +317,15 @@ export default function UserProfilePage({}) {
                 <TbCircleLetterP className="letter" />
               )}
             </S.ExtendedBadge>
+            <S.ButtonsContainer>
+              <ButtonGroup
+                buttons={
+                  state == "LOGGED_IN" && username !== user?.username
+                    ? fetchAppropriateButtons(novelist?.connection)
+                    : LoggedInSelfButtons
+                }
+              />
+            </S.ButtonsContainer>
           </Flex>
           <S.ContentInner>
             <S.NameMobile>
@@ -337,13 +347,6 @@ export default function UserProfilePage({}) {
             <S.NoteContainer>
               <Quote>{novelist?.note}</Quote>
             </S.NoteContainer>
-            {/* <ButtonGroup
-              buttons={
-                state == "LOGGED_IN" && username !== user?.username
-                  ? fetchAppropriateButtons(novelist?.connection)
-                  : LoggedInSelfButtons
-              }
-            /> TODO: ADD WHEN CHAT IS*/}
             <S.SubText>
               {storyBoards?.length === 0
                 ? "No Stories"

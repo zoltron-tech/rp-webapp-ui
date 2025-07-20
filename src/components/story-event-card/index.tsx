@@ -109,9 +109,7 @@ export const StoryCardEvent: FC<Props> = ({
             </S.Description>
           </S.MuseInfo>
         </S.CardHeader>
-        <ShouldRender
-          if={event !== INITIAL_STORY_BOARD_EVENT && !!isCurrentUser}
-        >
+        <ShouldRender if={event !== INITIAL_STORY_BOARD_EVENT}>
           <S.CardFooter>
             Read more...
             <FaArrowRight />

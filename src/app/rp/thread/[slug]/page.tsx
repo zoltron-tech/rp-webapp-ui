@@ -171,14 +171,11 @@ export default function ThreadPage({}) {
         </Flex>
         {loadReplies(comment)}
         {state === "LOGGED_IN" && (
-          <Flex style={{ borderTop: "1px solid gray" }}>
-            <PromptInput
-              className="upward"
-              muses={novelist?.muses || []}
-              parentId={commentId}
-              type="reply"
-            />
-          </Flex>
+          <PromptInput
+            muses={novelist?.muses || []}
+            parentId={commentId}
+            type="reply"
+          />
         )}
       </S.RepliesContainer>
     </S.ParentContainer>

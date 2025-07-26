@@ -10,12 +10,12 @@ import * as S from "./styles";
 import { Flex } from "@novelist-world/ui";
 import { getPromptAction } from "../actions";
 import { toFormattedDate } from "@/utils/helpers";
+import PromptInput from "@/components/prompt-input";
 
 export default function PromptPage({}) {
   const params = useParams();
   const { state: authState, user, novelist, state } = useAuthContext();
   const [prompt, setPrompt] = useState<Prompt | null>(null);
-  const [showPromptInput, setShowPromptInput] = useState(false);
   const [showMobileThreads, setShowMobileThreads] = useState(false);
   const [loading, setLoading] = useState(true);
   const promptId = params?.slug as string;
@@ -43,10 +43,6 @@ export default function PromptPage({}) {
     console.log(_prompt);
     setLoading(false);
     setPrompt(_prompt);
-  };
-
-  const togglePromptInput = () => {
-    setShowPromptInput((prev) => !prev);
   };
 
   const toggleMobileThreads = () => {
@@ -208,23 +204,16 @@ export default function PromptPage({}) {
         </S.ScrollableContent>
         {state === "LOGGED_IN" && (
           <div>
-            <S.ToggleThread className={showPromptInput ? "expanded" : ""}>
-              <S.SourceName className="action" onClick={togglePromptInput}>
-                {showPromptInput ? "Hide" : "Start a new thread"}
-              </S.SourceName>
-            </S.ToggleThread>
-            {showPromptInput && (
-              <S.StyledPromptInput
-                type="comment"
-                parentId={prompt?.id}
-                className={
-                  prompt?.comments.length != null && prompt?.comments.length > 0
-                    ? "visible upward"
-                    : ""
-                }
-                muses={novelist?.muses || []}
-              />
-            )}
+            <PromptInput
+              type="comment"
+              parentId={prompt?.id}
+              className={
+                prompt?.comments.length != null && prompt?.comments.length > 0
+                  ? "visible upward"
+                  : ""
+              }
+              muses={novelist?.muses || []}
+            />
           </div>
         )}
         {prompt?.comments.length != null && prompt?.comments.length > 0 && (

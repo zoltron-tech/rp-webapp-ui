@@ -70,8 +70,8 @@ export const FooterContainer = styled.div`
   justify-content: flex-start;
   align-items: center;
   width: 100%;
-  border-top: 1px solid slategray;
   gap: 0.5em;
+  margin-top: 10px;
 
   @container content-container (max-width: 1000px) {
     margin-bottom: 10px;

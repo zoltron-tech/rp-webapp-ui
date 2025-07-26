@@ -22,9 +22,9 @@ export const getCommentAction = async (commentId: string) => {
     return { message: API_MESSAGE.Error };
   }
 
-  const prompt: Comment = await response.json();
+  const comment: Comment = await response.json();
 
-  return prompt;
+  return comment;
 };
 
 export const getCommentsByPromptAction = async (promptId: string) => {
@@ -42,7 +42,7 @@ export const getCommentsByPromptAction = async (promptId: string) => {
     return { message: API_MESSAGE.Error };
   }
 
-  const prompt: Comment[] = await response.json();
+  const comments: Comment[] = await response.json();
 
-  return prompt;
+  return comments;
 };

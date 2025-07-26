@@ -1,273 +1,147 @@
 "use client";
 
-import { FC, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import * as S from "./styles";
-import { Button, Flex, TextArea } from "@novelist-world/ui";
 import {
-  Comment,
-  Muse,
-  Prompt,
-  PromptSource,
-  Reply,
-  SubmitPromptInput,
-  SubmitPromptType,
-} from "@/types";
-import { StoreProvider } from "@/context";
-import { Input, ShouldRender } from "../common";
+  FC,
+  FormEventHandler,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { Muse, SubmitPromptInput, SubmitPromptType } from "@/types";
+import { useAuthContext } from "@/hooks";
+import { StoreProvider } from "@/context/store/context";
+
+import { Collapsible, Form } from "radix-ui";
+import * as S from "./styles";
+import { PromptTextField } from "./prompt-text-field";
+import { SendButton } from "./sent-button";
+import { PromptMuseSelect } from "./prompt-muse-select";
+import { PromptMediaInput } from "./prompt-media-input";
+import {
+  apiMessageToInfoMessage,
+  getParentIdKeyFromPromptType,
+  museToSource,
+  typeToTriggerButtonText,
+} from "./helpers";
+import { submitPrompt } from "@/app/rp/profile/actions";
+import { PromptPrivacySelect } from "./privacy-select";
+import { API_MESSAGE } from "@/utils/constants";
+import { InfoBox } from "../info-box";
 import classNames from "classnames";
-import { useAuthContext, useStore } from "@/hooks";
-import { submitPrompt, uploadMedia } from "@/app/rp/profile/actions";
-import { StoreState } from "@/types/state";
-import { text } from "stream/consumers";
+import { BsArrowBarDown, BsArrowsCollapse } from "react-icons/bs";
+import { IoIosArrowDown, IoIosArrowDropdown } from "react-icons/io";
+import { MdKeyboardArrowDown } from "react-icons/md";
+import { INITIAL_STATE, PromptInputState } from "./prompt-input.store";
+import { PromptMediaPreview } from "./prompt-media-preview";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   muses: Muse[];
-  type?: SubmitPromptType;
-  parentId?: string;
-};
-
-type PromptInputState = {
-  media: File | null;
-  text: string;
-  muse: Muse | null;
-  parentId?: string;
   type: SubmitPromptType;
+  parentId?: string;
 };
 
-const INITIAL_STATE: PromptInputState = {
-  media: null,
-  text: "",
-  muse: null,
-  parentId: "",
-  type: "prompt",
-};
+export const PromptInput: FC<Props> = forwardRef(
+  ({ type = "prompt", parentId = "", ...rest }, forwardedRef) => {
+    const { novelist } = useAuthContext();
+    const muses = useMemo(() => {
+      return novelist?.muses ?? [];
+    }, [novelist]);
+    const [open, setOpen] = useState(false);
+    const [sending, setSending] = useState(false);
+    const [error, setError] = useState<API_MESSAGE | null>(null);
 
-const museToSource = (muse: Muse): PromptSource => ({
-  _tag: "PromptSource",
-  sourceId: muse.id || "",
-  name: (muse.firstName + " " + muse.lastName).trim(),
-  image: muse.image || "",
-});
+    const handleInfoBoxClose = useCallback(() => {
+      setError(null);
+    }, []);
 
-const videoExtensions = ["mp4"];
-const imageExtensions = ["jpg", "jpeg", "png", "gif"];
-const audioExtensions = ["mp3", "mpeg", "wav"];
+    const handleSend: FormEventHandler<HTMLFormElement> = useCallback(
+      async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        const formFields = {
+          text: String(formData.get("promptText")),
+          museId: String(formData.get("muse")),
+          media: String(formData.get("mediaUrl")),
+          privacy: formData.get("privacy") as "PUBLIC" | "FRIENDS" | "ONLY_ME",
+        };
+        const selectedMuse = muses.find((m) => m.id === formFields.museId);
+        if (!selectedMuse) return;
 
-const getMediaTypeFromUrl = (url: string) => {
-  const extension = url.split(".").pop() || "";
-  if (videoExtensions.includes(extension)) return "video";
-  if (imageExtensions.includes(extension)) return "image";
-  if (audioExtensions.includes(extension)) return "audio";
-  return "image";
-};
+        const payload: SubmitPromptInput = {
+          text: formFields.text,
+          source: museToSource(selectedMuse),
+          media: formFields.media,
+        };
 
-const AddMediaButton = () => {
-  const [media, set] = useStore<PromptInputState, "media">(
-    (state) => state.media
-  );
+        if (type === "prompt") {
+          payload.privacy = formFields.privacy;
+        } else {
+          payload[getParentIdKeyFromPromptType(type)] = parentId;
+        }
 
-  const handleClick = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*, video/*, audio/*";
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-      set({ media: file });
-    };
-    input.click();
-  };
+        console.log(payload);
+        setSending(true);
+        const response = await submitPrompt(payload, type);
+        console.log(response);
+        if (response.message !== API_MESSAGE.Success) {
+          setError(response.message);
+          setSending(false);
+          return;
+        }
 
-  return (
-    <Button
-      secondary
-      onClick={handleClick}
-      style={{ borderRadius: "5px", width: 100 }}
-    >
-      Add Media
-    </Button>
-  );
-};
-
-const SubmitButton = () => {
-  const [media] = useStore<PromptInputState, "media">((state) => state.media);
-  const [text] = useStore<PromptInputState, "text">((state) => state.text);
-  const [muse] = useStore<PromptInputState, "muse">((state) => state.muse);
-  const [parentId] = useStore<PromptInputState, "parentId">(
-    (state) => state.parentId
-  );
-  const [type] = useStore<PromptInputState, "type">((state) => state.type);
-
-  const handleClick = async () => {
-    console.log(text);
-    if (!media || !muse || !text) return;
-    const source = museToSource(muse);
-
-    const formData = new FormData();
-    formData.append("file", media);
-
-    const uploaded = await uploadMedia(formData);
-
-    if (uploaded === "error") {
-      console.error("Error uploading media");
-      return;
-    }
-
-    const data: SubmitPromptInput = {
-      source,
-      text,
-      media: uploaded,
-    };
-
-    if (type === "comment") {
-      data["promptId"] = parentId || "";
-    } else if (type === "reply") {
-      data["commentId"] = parentId || "";
-    }
-
-    // Perform the submit action
-    //
-    const response = await submitPrompt(data, type);
-
-    if (response === "error") {
-      console.error("Error submitting prompt");
-      return;
-    }
-
-    console.log("response:", response);
-  };
-
-  return (
-    <Button
-      primary
-      style={{ borderRadius: "5px", width: 100 }}
-      onClick={handleClick}
-    >
-      Share
-    </Button>
-  );
-};
-
-export const MuseSelectionDropdown: FC<Props> = ({
-  muses,
-  className,
-  ...rest
-}) => {
-  const [muse, set] = useStore<PromptInputState, "muse">((state) => state.muse);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-  useEffect(() => {
-    if (muses?.length > 0) {
-      set({ muse: muses[0] }); // Set the first muse as selected if available
-    }
-  }, [muses, set]);
-
-  const handleDropdownOptionClick = (muse: Muse) => {
-    set({ muse }); // Update selectedMuse on option click
-    setIsDropdownOpen(false); // Close the dropdown
-  };
-
-  const toggleDropdown = () => {
-    setIsDropdownOpen((prev) => !prev); // Toggle dropdown visibility
-  };
-
-  const loadDropdownOptions = () => {
-    return (
-      muses &&
-      muses.map((muse) => (
-        <S.DropdownOption
-          key={muse.id}
-          onClick={() => handleDropdownOptionClick(muse)} // Set muse and close dropdown
-        >
-          <S.Avatar
-            src={muse.image || ""}
-            alt={muse.firstName}
-            size={50}
-            hoverable
-          />
-          <S.SourceName>{muse.firstName}</S.SourceName>
-        </S.DropdownOption>
-      ))
+        setSending(false);
+        setError(null);
+      },
+      [muses, parentId, type]
     );
-  };
 
-  return (
-    <ShouldRender if={muse !== null}>
-      <Flex style={{ position: "relative" }}>
-        {/* Display the selected muse */}
-        <S.Avatar
-          src={muse?.image || ""}
-          alt={muse?.firstName || ""}
-          size={50}
-          hoverable
-          onClick={toggleDropdown} // Toggle dropdown on avatar click
+    return (
+      <>
+        <InfoBox
+          open={Boolean(error)}
+          type="error"
+          description={apiMessageToInfoMessage(error)}
+          onClose={handleInfoBoxClose}
         />
-        <S.DropdownContainer
-          className={classNames([
-            className,
-            isDropdownOpen ? "open" : "closed",
-          ])}
-        >
-          <S.ScrollableContent>{loadDropdownOptions()}</S.ScrollableContent>
-        </S.DropdownContainer>
-      </Flex>
-    </ShouldRender>
-  );
-};
-
-const PromptRichText = () => {
-  const [text, set] = useStore<PromptInputState, "text">((state) => state.text);
-
-  const handleChange = (content: any) => {
-    set({ text: JSON.stringify(content) });
-  };
-
-  useEffect(() => {}, [text]);
-
-  return <S.RichText height={130} onChange={handleChange} editable />;
-};
-
-export const PromptInput: FC<Props> = ({
-  className,
-  type = "prompt",
-  parentId,
-  ...rest
-}) => {
-  const { push } = useRouter();
-  const { novelist } = useAuthContext();
-  const [text, set] = useStore<PromptInputState, "text">((state) => state.text);
-
-  const handleChange = (content: any) => {
-    console.log(content);
-    set({ text: content.target.value });
-    console.log(text);
-  };
-
-  return (
-    <StoreProvider<PromptInputState>
-      initial={{ ...INITIAL_STATE, parentId, type }}
-    >
-      <S.PromptInputContainer>
-        <Flex style={{ alignItems: "center" }}>
-          <MuseSelectionDropdown
-            className={className}
-            muses={novelist?.muses || []}
-          ></MuseSelectionDropdown>
-          <TextArea
-            value={text}
-            onChange={handleChange}
-            style={{ height: "80px", resize: "unset" }}
-          />
-          <Flex direction="column">
-            {/* <IoMdPhotos size={50} style={{ marginTop: "30px" }} /> */}
-            <AddMediaButton />
-            <SubmitButton />
-          </Flex>
-        </Flex>
-      </S.PromptInputContainer>
-    </StoreProvider>
-  );
-};
+        <Collapsible.Root open={open} onOpenChange={setOpen} asChild>
+          <S.PromptInputRoot
+            {...rest}
+            ref={forwardedRef as React.Ref<HTMLDivElement>}
+          >
+            <StoreProvider<PromptInputState>
+              storeId="prompt-input"
+              initial={{ ...INITIAL_STATE, parentId, type }}
+            >
+              <S.PromptInputContainer className={classNames([{ open }])}>
+                <Collapsible.Trigger asChild>
+                  <S.PromptTrigger className={classNames([{ open }])}>
+                    {open ? (
+                      <BsArrowsCollapse />
+                    ) : (
+                      typeToTriggerButtonText(type)
+                    )}
+                  </S.PromptTrigger>
+                </Collapsible.Trigger>
+                <Collapsible.Content>
+                  <Form.Root className="form-content" onSubmit={handleSend}>
+                    <PromptMuseSelect muses={muses} />
+                    {type === "prompt" && <PromptPrivacySelect />}
+                    <PromptTextField />
+                    <PromptMediaInput />
+                    <PromptMediaPreview />
+                    <SendButton />
+                  </Form.Root>
+                  {sending ? "Sending..." : null}
+                </Collapsible.Content>
+              </S.PromptInputContainer>
+            </StoreProvider>
+          </S.PromptInputRoot>
+        </Collapsible.Root>
+      </>
+    );
+  }
+);
 
 export default PromptInput;

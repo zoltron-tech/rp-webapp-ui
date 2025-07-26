@@ -1,0 +1,64 @@
+import { Muse, PromptSource, SubmitPromptType } from "@/types";
+import { API_MESSAGE } from "@/utils/constants";
+
+export const museToSource = (muse: Muse): PromptSource => ({
+  _tag: "PromptSource",
+  sourceId: muse.id || "",
+  name: (muse.firstName + " " + muse.lastName).trim(),
+  image: muse.image || "",
+});
+
+const videoExtensions = ["mp4"];
+const imageExtensions = ["jpg", "jpeg", "png", "gif"];
+const audioExtensions = ["mp3", "mpeg", "wav"];
+
+export const getMediaTypeFromUrl = (url: string) => {
+  const extension = url.split(".").pop() || "";
+  if (videoExtensions.includes(extension)) return "video";
+  if (imageExtensions.includes(extension)) return "image";
+  if (audioExtensions.includes(extension)) return "audio";
+  return "image";
+};
+
+type PromptIdKey = "promptId" | "commentId";
+
+export const getParentIdKeyFromPromptType = (
+  type: Exclude<SubmitPromptType, "prompt">
+): PromptIdKey => {
+  switch (type) {
+    case "comment":
+      return "promptId";
+    case "reply":
+    default:
+      return "commentId";
+  }
+};
+
+export const apiMessageToInfoMessage = (
+  message: API_MESSAGE | null
+): string => {
+  switch (message) {
+    case API_MESSAGE.Success:
+      return "Operation completed successfully.";
+    case API_MESSAGE.Error:
+      return "An error occurred. Please try again.";
+    case API_MESSAGE.BadPayload:
+      return "Invalid input provided. Please check your data.";
+    case API_MESSAGE.AccessDenied:
+      return "You do not have permission to perform this action.";
+    default:
+      return "An unexpected error occurred.";
+  }
+};
+
+export const typeToTriggerButtonText = (type: SubmitPromptType): string => {
+  switch (type) {
+    case "comment":
+      return "Add Comment";
+    case "reply":
+      return "Reply";
+    default:
+    case "prompt":
+      return "Create Prompt";
+  }
+};

@@ -47,6 +47,7 @@ export type SubmitPromptInput = {
   media: string;
   promptId?: string;
   commentId?: string;
+  privacy?: "PUBLIC" | "FRIENDS" | "ONLY_ME";
 };
 
 export type SubmitPromptType = "prompt" | "comment" | "reply";

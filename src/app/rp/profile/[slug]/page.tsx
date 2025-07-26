@@ -406,18 +406,7 @@ export default function UserProfilePage({}) {
             </S.SubText>
             <S.ContentContainer>
               {state == "LOGGED_IN" && username === user?.username && (
-                <Container
-                  style={{
-                    width: "96%",
-                    contain: "unset",
-                    zIndex: Z_INDEX.CARD,
-                  }}
-                >
-                  <PromptInput
-                    className="upward"
-                    muses={novelist?.muses || []}
-                  />
-                </Container>
+                <PromptInput type={"prompt"} muses={novelist?.muses || []} />
               )}
               {activities &&
                 activities.map((activity) => (

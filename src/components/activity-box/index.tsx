@@ -24,7 +24,7 @@ const getMediaTypeFromUrl = (url: string) => {
   if (videoExtensions.includes(extension)) return "video";
   if (imageExtensions.includes(extension)) return "image";
   if (audioExtensions.includes(extension)) return "audio";
-  return "image";
+  return null;
 };
 
 export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
@@ -126,61 +126,63 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
             </S.ViewMoreText>
           </ShouldRender>
         </ShouldRender>
-        <S.CardWrapper>
-          <ShouldRender if={mediaType === "image" || !mediaType}>
-            <S.CardBackground
-              banner={activity.target.url || ""}
-              className="image"
-            />
-          </ShouldRender>
-          <ShouldRender if={mediaType === "video"}>
-            <S.Video
-              className="video"
-              src={activity.target.url + "#t=0.3"}
-              controls
-            ></S.Video>
-          </ShouldRender>
-          <ShouldRender if={mediaType === "audio"}>
-            <S.Audio
-              className="audio"
-              src={activity.target.url}
-              controls
-            ></S.Audio>
-          </ShouldRender>
-          <S.Card
-            className={classNames([
-              "muse-card",
-              {
-                new: !activity.target.title,
-              },
-            ])}
-            onClick={(e) => handleCardClick(e, activity)}
-          >
-            <ShouldRender
-              if={
-                !["PROMPT", "COMMENT", "REPLY"].includes(
-                  activity.target.activityTargetType
-                )
-              }
-            >
-              <S.CardHeader>
-                <S.ActivityInfo>
-                  <S.Title
-                    className={classNames([
-                      className,
-                      {
-                        new: !activity.target.title,
-                      },
-                    ])}
-                    {...rest}
-                  >
-                    {activity.target.title}
-                  </S.Title>
-                </S.ActivityInfo>
-              </S.CardHeader>
+        <ShouldRender if={Boolean(mediaType)}>
+          <S.CardWrapper>
+            <ShouldRender if={mediaType === "image"}>
+              <S.CardBackground
+                banner={activity.target.url || ""}
+                className="image"
+              />
             </ShouldRender>
-          </S.Card>
-        </S.CardWrapper>
+            <ShouldRender if={mediaType === "video"}>
+              <S.Video
+                className="video"
+                src={activity.target.url + "#t=0.3"}
+                controls
+              ></S.Video>
+            </ShouldRender>
+            <ShouldRender if={mediaType === "audio"}>
+              <S.Audio
+                className="audio"
+                src={activity.target.url}
+                controls
+              ></S.Audio>
+            </ShouldRender>
+            <S.Card
+              className={classNames([
+                "muse-card",
+                {
+                  new: !activity.target.title,
+                },
+              ])}
+              onClick={(e) => handleCardClick(e, activity)}
+            >
+              <ShouldRender
+                if={
+                  !["PROMPT", "COMMENT", "REPLY"].includes(
+                    activity.target.activityTargetType
+                  )
+                }
+              >
+                <S.CardHeader>
+                  <S.ActivityInfo>
+                    <S.Title
+                      className={classNames([
+                        className,
+                        {
+                          new: !activity.target.title,
+                        },
+                      ])}
+                      {...rest}
+                    >
+                      {activity.target.title}
+                    </S.Title>
+                  </S.ActivityInfo>
+                </S.CardHeader>
+              </ShouldRender>
+            </S.Card>
+          </S.CardWrapper>
+        </ShouldRender>
       </Flex>
       <ShouldRender
         if={["PROMPT", "COMMENT", "REPLY"].includes(
@@ -188,7 +190,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
         )}
       >
         <S.FooterContainer>
-          <FaComments />{" "}
+          <FaComments />
           <S.PromptFooterText onClick={(e) => handleCardClick(e, activity)}>
             View Threads & Replies.
           </S.PromptFooterText>

@@ -11,17 +11,16 @@ import {
   UploadAvatar,
   Username,
 } from "@/components/common";
-import { useAuthContext, useForm, useStore, useUIContext } from "@/hooks";
+import { useAuthContext, useForm, useUIContext } from "@/hooks";
 import type { Novelist } from "@/types";
 import { API_MESSAGE, INITIAL_NOVELIST } from "@/utils/constants";
 import { Logger } from "@/utils/services";
 import { FC, useEffect, useState } from "react";
-
-import { StoreState } from "@/types/state";
 import { useRouter } from "next/navigation";
 import * as S from "./styles";
 import { DefaultTheme } from "@novelist-world/ui";
 import { ThemeProvider } from "styled-components";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 
 export type EditProfileCardProps = {};
 
@@ -29,9 +28,8 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
   const { user, novelist, state, updateNovelist } = useAuthContext();
   const [avatarFile, setAvatarFile] = useState<FormData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [novelists, set] = useStore<StoreState, "novelists">(
-    (store) => store.novelists
-  );
+  const novelists = useGlobalState("novelists");
+  const set = useGlobalStoreSet();
   const { push } = useRouter();
 
   const { successToast, errorToast } = useUIContext();

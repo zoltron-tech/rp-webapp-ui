@@ -36,10 +36,10 @@ export const UploadAvatar = styled.div`
   ${AvatarPositionStyle}
 
   ${AVATAR_IMAGE}
-  background-color: ${({ theme }) => theme.cardBackgroundColor};
+  background-color: ${({ theme }: any) => theme.cardBackgroundColor};
   z-index: ${Z_INDEX.DEFAULT};
   opacity: 1;
-  box-shadow: 0px 3px 10px 5px ${({ theme }) => theme.cardBoxShadowColor};
+  box-shadow: 0px 3px 10px 5px ${({ theme }: any) => theme.cardBoxShadowColor};
   transition: opacity 0.15s linear;
   color: transparent;
   padding: 0;
@@ -52,7 +52,7 @@ export const UploadAvatar = styled.div`
   & > svg {
     width: 50%;
     height: 50%;
-    stroke: ${({ theme }) => theme.primary};
+    stroke: ${({ theme }: any) => theme.primary};
     opacity: 0;
     transition: opacity 0.15s linear;
     z-index: ${Z_INDEX.AVATAR};

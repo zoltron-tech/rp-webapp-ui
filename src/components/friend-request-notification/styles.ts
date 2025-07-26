@@ -18,7 +18,7 @@ export const CardWrapper = styled.div`
   container-type: size;
 
   &:hover {
-    background-color: ${({ theme }) => theme.primary};
+    background-color: ${({ theme }: any) => theme.primary};
   }
 `;
 
@@ -40,7 +40,7 @@ export const CardHeader = styled.div`
 `;
 
 export const unReadBadge = styled.div`
-  background-color: ${({ theme }) => theme.unreadMark};
+  background-color: ${({ theme }: any) => theme.unreadMark};
   border-radius: 100%;
   min-width: 10px;
   height: 10px;
@@ -56,7 +56,7 @@ export const Button = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: ${({ theme }) => theme.hoverGreyAlpha};
+  background-color: ${({ theme }: any) => theme.hoverGreyAlpha};
   border-radius: 50%;
   box-shadow: 0px 0px 5px 2px rgba(0, 0, 0, 0.4);
   z-index: ${Z_INDEX.CARD_EXPAND};
@@ -66,37 +66,37 @@ export const Button = styled.div`
   & svg {
     width: 15px;
     height: 15px;
-    fill: ${({ theme }) => theme.text};
+    fill: ${({ theme }: any) => theme.text};
     transition: transform 0.2s ease-in-out;
   }
 
   &:hover {
-    background-color: ${({ theme }) => theme.hoverGrey};
+    background-color: ${({ theme }: any) => theme.hoverGrey};
   }
 `;
 
 export const AcceptButton = styled(Button)`
   &:hover {
-    background-color: ${({ theme }) =>
+    background-color: ${({ theme }: any) =>
       pSBC(-0.5, setOpacity(theme.success, 0.8))};
   }
 `;
 
 export const RemoveButton = styled(Button)`
   &:hover {
-    background-color: ${({ theme }) =>
+    background-color: ${({ theme }: any) =>
       pSBC(-0.5, setOpacity(theme.error, 0.8))};
   }
 `;
 
 export const Title = styled.div`
   font-size: 13px;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
 `;
 
 export const Subtext = styled.div`
   font-size: 10px;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
 `;
 
 export const NotificationBox = styled.div`

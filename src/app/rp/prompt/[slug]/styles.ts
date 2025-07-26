@@ -51,6 +51,7 @@ export const PromptContainer = styled(Container)`
   justify-content: center;
   border-radius: 0px !important;
   border: none !important;
+  padding: 0px;
   background-color: transparent;
   height: 90vh;
   width: 100%;
@@ -129,7 +130,7 @@ export const ScrollableContent = styled.div`
   transition-duration: 200ms;
 
   &:hover {
-    scrollbar-color: ${({ theme }) => setOpacity(theme.primary, 0.5)}
+    scrollbar-color: ${({ theme }: any) => setOpacity(theme.primary, 0.5)}
       transparent;
   }
 `;
@@ -141,6 +142,7 @@ export const ThreadBox = styled(Container)`
   padding-bottom: 20px;
   min-width: 300px;
   min-height: 200px;
+  border-radius: 0;
 
   &.mobile {
     display: flex;
@@ -160,19 +162,6 @@ export const ToggleThread = styled.div`
 
   &.expanded {
     margin-bottom: unset;
-  }
-`;
-
-export const StyledPromptInput = styled(PromptInput)`
-  transform: translateY(100%);
-  opacity: 0;
-  visibility: hidden;
-  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out smooth;
-
-  &.visible {
-    transform: translateY(0);
-    opacity: 1;
-    visibility: visible;
   }
 `;
 
@@ -219,7 +208,7 @@ export const SourceName = styled.div`
     font-weight: 600;
     margin-left: 20px;
     &:hover {
-      color: ${({ theme }) => theme.primary};
+      color: ${({ theme }: any) => theme.primary};
     }
   }
 
@@ -241,7 +230,7 @@ export const SourceName = styled.div`
     &.action {
       font-weight: 600;
       margin-left: 20px;
-      color: ${({ theme }) => theme.primary};
+      color: ${({ theme }: any) => theme.primary};
     }
 
     &.reply {

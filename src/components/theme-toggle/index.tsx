@@ -4,16 +4,16 @@ import classNames from "classnames";
 import { FC, useEffect } from "react";
 import { BsMoonFill, BsSunFill } from "react-icons/bs";
 
-import { useStore } from "@/hooks";
-import { StoreState } from "@/types/state";
 import { Logger } from "@/utils/services";
 import { useCookies } from "react-cookie";
 import * as S from "./styles";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 
 type Props = {};
 
-export const ThemeToggle: FC<Props> = ({ }) => {
-  const [theme, set] = useStore<StoreState, "theme">((store) => store.theme);
+export const ThemeToggle: FC<Props> = ({}) => {
+  const theme = useGlobalState("theme");
+  const set = useGlobalStoreSet();
   const [, setCookie] = useCookies(["theme"]);
 
   const toggleTheme = () => {

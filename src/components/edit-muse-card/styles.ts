@@ -12,13 +12,13 @@ import {
 export const RichText = styled(NWRichText)`
   & > .pm-container {
     & > .ProseMirror {
-      background-color: ${({ theme }) => theme.colors.inputBackground};
+      background-color: ${({ theme }: any) => theme.colors.inputBackground};
     }
   }
 `;
 
 export const DropDownButton = styled.button`
-  background-color: ${({ theme }) => theme.colors.primary};
+  background-color: ${({ theme }: any) => theme.colors.primary};
   color: #212121;
   padding: 10px 15px;
   font-size: 15px;
@@ -40,7 +40,7 @@ export const DropdownContent = styled.div`
   z-index: 100;
   min-width: 200px;
   background-color: #212121;
-  border: 2px solid ${({ theme }) => theme.colors.primary};
+  border: 2px solid ${({ theme }: any) => theme.colors.primary};
   border-radius: 0px 15px 15px 15px;
   box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
 
@@ -48,7 +48,7 @@ export const DropdownContent = styled.div`
     width: 100%;
     background: none;
     border: none;
-    color: ${({ theme }) => theme.colors.primary};
+    color: ${({ theme }: any) => theme.colors.primary};
     padding: 8px 10px;
     text-align: left;
     font-size: 13px;
@@ -57,14 +57,14 @@ export const DropdownContent = styled.div`
     transition: 0.1s;
 
     &:hover {
-      background-color: ${({ theme }) => theme.colors.primary};
+      background-color: ${({ theme }: any) => theme.colors.primary};
       color: #212121;
     }
 
     &:focus {
       outline: none;
       background-color: #212121;
-      color: ${({ theme }) => theme.colors.primary};
+      color: ${({ theme }: any) => theme.colors.primary};
     }
 
     &:first-child:hover {
@@ -89,8 +89,8 @@ export const PasteButton = styled.div`
 
 export const LocalContainer = styled(Container)`
   border: 1px solid slategray;
-  background-color: ${({ theme }) => theme.colors.background};
-  color: ${({ theme }) => theme.text};
+  background-color: ${({ theme }: any) => theme.colors.background};
+  color: ${({ theme }: any) => theme.text};
   border-radius: 16px;
 
   @container (min-width: 700px) {
@@ -178,7 +178,7 @@ export const FandomDropdown = styled.ul`
   width: 100%;
   margin-top: 0.25rem;
   background-color: #212121;
-  border: 2px solid ${({ theme }) => theme.colors.primary};
+  border: 2px solid ${({ theme }: any) => theme.colors.primary};
   border-radius: 15px;
   box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
   max-height: 200px;
@@ -190,7 +190,7 @@ export const FandomOption = styled.li`
   padding: 0.5rem 1rem;
   cursor: pointer;
   &:hover {
-    background-color: ${({ theme }) => theme.colors.primary};
+    background-color: ${({ theme }: any) => theme.colors.primary};
   }
 `;
 
@@ -208,8 +208,8 @@ export const NicknamesWrapper = styled.div`
   padding: 8px;
   border-radius: 6px;
   box-sizing: border-box;
-  background-color: ${({ theme }) => theme.colors.inputBackground};
-  color: ${({ theme }) => theme.textSecondary || "#666"};
+  background-color: ${({ theme }: any) => theme.colors.inputBackground};
+  color: ${({ theme }: any) => theme.textSecondary || "#666"};
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -224,8 +224,8 @@ export const ExtraAttributesWrapper = styled.div`
   padding: 8px;
   border-radius: 6px;
   box-sizing: border-box;
-  background-color: ${({ theme }) => theme.colors.inputBackground};
-  color: ${({ theme }) => theme.textSecondary || "#666"};
+  background-color: ${({ theme }: any) => theme.colors.inputBackground};
+  color: ${({ theme }: any) => theme.textSecondary || "#666"};
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -237,7 +237,7 @@ export const ExtraAttributesList = styled.ul`
   padding-left: 0;
   width: 100%;
   list-style: none;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
 `;
 
 export const ExtraAttributeItem = styled.li`
@@ -247,7 +247,7 @@ export const ExtraAttributeItem = styled.li`
   margin-bottom: 0.5em;
   border-radius: 6px;
   padding: 6px 12px;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
 `;
 
 export const RemoveButton = styled.button`
@@ -350,8 +350,8 @@ export const ProfileBackgroundBlurFilter = styled.div<ProfileBackgroundFilterPro
   height: 100%;
   max-height: 100vh;
   background-image: linear-gradient(
-      ${({ theme }) => theme.cardBackgroundTint},
-      ${({ theme }) => theme.cardBackgroundTint}
+      ${({ theme }: any) => theme.cardBackgroundTint},
+      ${({ theme }: any) => theme.cardBackgroundTint}
     ),
     url(${(props): string => props.banner});
   background-position: center;

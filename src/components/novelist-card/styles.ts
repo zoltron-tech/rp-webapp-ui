@@ -48,8 +48,8 @@ export const CardBackground = styled.div<CardProps>`
   height: 100%;
 
   background-image: linear-gradient(
-      ${({ theme }) => theme.cardBackgroundTint},
-      ${({ theme }) => theme.cardBackgroundTint}
+      ${({ theme }: any) => theme.cardBackgroundTint},
+      ${({ theme }: any) => theme.cardBackgroundTint}
     ),
     url(${(props): string => props.banner});
 
@@ -72,7 +72,7 @@ export const Card = styled.div`
   position: relative;
   height: 100%;
   background: linear-gradient(
-    ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
+    ${({ theme }: any): string => theme.cardBackgroundGradient.join(", ")}
   );
 
   @container (max-width: 400px) {
@@ -105,7 +105,7 @@ export const ExpandButton = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: ${({ theme }) => theme.hoverGreyAlpha};
+  background-color: ${({ theme }: any) => theme.hoverGreyAlpha};
   border-radius: 50%;
   box-shadow: 0px 0px 5px 2px rgba(0, 0, 0, 0.4);
   z-index: ${Z_INDEX.CARD_EXPAND};
@@ -115,12 +115,12 @@ export const ExpandButton = styled.div`
   & svg {
     width: 20px;
     height: 20px;
-    fill: ${({ theme }) => theme.text};
+    fill: ${({ theme }: any) => theme.text};
     transition: transform 0.2s ease-in-out;
   }
 
   &:hover {
-    background-color: ${({ theme }) => theme.hoverGrey};
+    background-color: ${({ theme }: any) => theme.hoverGrey};
   }
 
   @container (max-width: 400px) {
@@ -146,7 +146,7 @@ export const ExpandButton = styled.div`
 export const Title = styled.div`
   font-size: 20px;
   font-weight: 600;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
   text-align: center;
   margin-bottom: 10px;
 
@@ -233,7 +233,7 @@ export const username = styled(Common.Username)`
 export const Quote = styled.div`
   font-size: 14px;
   font-weight: 500;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
   text-align: center;
   margin-top: 5px;
   word-break: break-word;
@@ -312,14 +312,14 @@ const MuseComponent = styled.div`
 
   &:hover {
     cursor: pointer;
-    background-color: ${({ theme }) => theme.hoverGreyAlpha};
+    background-color: ${({ theme }: any) => theme.hoverGreyAlpha};
   }
 `;
 
 const MuseName = styled.div`
   font-size: 18px;
   font-weight: 500;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
 
   @container (max-width: 400px) {
     & {

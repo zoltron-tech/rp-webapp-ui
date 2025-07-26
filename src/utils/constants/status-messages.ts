@@ -1,6 +1,10 @@
 export enum API_MESSAGE {
   Success = "success",
   Error = "error",
+  UncategorizedError = "uncatogorized_error",
   Unauthorized = "unauthorized",
-  MediaError = "media type is not supported",
+  AccessDenied = "access_denied",
+  MediaError = "media_error",
+  BadPayload = "bad_payload",
+  ServerError = "server_error",
 }

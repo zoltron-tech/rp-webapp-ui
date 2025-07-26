@@ -1,7 +1,7 @@
 "use client";
 
 import { getNovelists } from "@/app/rp/novelists/actions";
-import { useStore, useUIContext } from "@/hooks";
+import { useUIContext } from "@/hooks";
 import { Logger } from "@/utils/services";
 import { FC, useCallback, useEffect } from "react";
 import { Autoplay, EffectCoverflow, Navigation } from "swiper/modules";
@@ -11,17 +11,16 @@ import "swiper/css";
 import "swiper/css/effect-coverflow";
 import "swiper/css/navigation";
 
-import { StoreState } from "@/types/state";
 import { NovelistCard } from "..";
 import { ShouldRender } from "../common";
 import { PageLoader } from "../layout";
 import * as S from "./styles";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 
 export const NovelistCarousel: FC = () => {
   const { errorToast: error } = useUIContext();
-  const [novelists, setStore] = useStore<StoreState, "novelists">(
-    (store) => store.novelists
-  );
+  const novelists = useGlobalState("novelists");
+  const setStore = useGlobalStoreSet();
 
   const setNovelists = useCallback(async () => {
     Logger.info("setNovelists called:", novelists);

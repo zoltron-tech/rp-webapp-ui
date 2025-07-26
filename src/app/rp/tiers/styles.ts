@@ -6,7 +6,7 @@ import { styled } from "styled-components";
 export const MainContainer = styled.div`
   max-width: 100vw;
   overflow-x: auto;
-`; 
+`;
 
 export const CardsContainer = styled.div`
   display: flex;
@@ -120,7 +120,8 @@ export const InfoCard = styled(Container)`
   justify-content: center;
   align-items: center;
   box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
-  background-color: ${({ theme }) => setOpacity(theme.navbar, 0.95)} !important;
+  background-color: ${({ theme }: any) =>
+    setOpacity(theme.navbar, 0.95)} !important;
   padding: 30px;
   cursor: default !important;
   border: none;
@@ -203,7 +204,7 @@ export const PositiveInfoValue = styled(InfoValue)`
 export const NegtiveInfoValue = styled(InfoValue)`
   width: 30%;
   font-weight: 800;
-  color: ${({ theme }) => theme.error};
+  color: ${({ theme }: any) => theme.error};
 `;
 
 export const FormButton = styled(Button)`

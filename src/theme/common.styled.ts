@@ -20,7 +20,7 @@ export const NO_SCROLLBAR = css`
 `;
 
 export const BORDER_TOP = css`
-  border-top: 1px solid ${({ theme }) => theme.hoverGreyAlpha};
+  border-top: 1px solid ${({ theme }: any) => theme.hoverGreyAlpha};
 `;
 
 export const AVATAR_IMAGE = css`
@@ -47,7 +47,7 @@ export const SPIN = css`
 
 export const CARD_BG_BLUR = css`
   /* From https://css.glass */
-  /* background: ${({ theme }) => theme.modalBackground}; */
+  /* background: ${({ theme }: any) => theme.modalBackground}; */
   border-radius: 16px;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(13px);
@@ -71,7 +71,7 @@ export const DEV_MODE_BORDER = (color = "red") => css`
 `;
 
 export const BACKGROUND_FADE = (color: keyof Theme = "background") => css`
-  background-color: ${({ theme }) => setOpacity(theme[color], 0.5)};
+  background-color: ${({ theme }: any) => setOpacity(theme[color], 0.5)};
 `;
 
 export const BACKGROUND_BLUR = (color: keyof Theme = "background") => css`

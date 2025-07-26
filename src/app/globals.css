@@ -48,6 +48,51 @@ textarea {
 
   --border-radius: 0.5rem;
 
+  --font-size-field-error: 12px;
+
+  --font: Montserrat, sans-serif;
+  --font-size: 14px;
+  --font-size-large: 16px;
+  --font-size-small: 12px;
+  --font-weight-bold: 700;
+  --font-weight-semi-bold: 600;
+  --font-weight-medium: 500;
+  --font-weight-regular: 400;
+
+
+  --bg-1: #111210;
+  --bg-2: #181917;
+  --bg-3: #212220;
+  --bg-4: #282A27;
+  --bg-5: #31312E;
+  --bg-6: #383A36;
+  --bg-7: #454843;
+  --bg-8: #5C625B;
+  --bg-9: #687066;
+  --accent-8: #11809C;
+  --accent-8-e: #11CFFF95;
+  --accent-7: #12677E;
+  --accent-7-e: #14CDFF75;
+  --accent-6:#045468;
+  --accent-6-e: #00C7FD5E;
+  --accent-5: #004558;
+  --accent-5-e: #00BEFD4D;
+  --accent-4: #003848;
+  --accent-4-e: #00BAFF3B;
+  --accent: var(--accent-6);
+  --accent-hover: var(--accent-7);
+  --accent-active: var(--accent-5);
+
+  --error-9: #E54D2E;
+  --error-9-e: #FE5431E4;
+  --error-8: #AC4D39;
+  --error-8-e: #FE6D4EA7;
+  --error-7: #853A2D;
+  --error-6: #6E2920;
+  --error-5: #5E1C16;
+  --error-4: #4E1511;
+  --error-3: #391714;
+
   ::-webkit-scrollbar {
     width: 0.5em;
     height: 0.5em;

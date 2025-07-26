@@ -40,7 +40,7 @@ export const EditProfile = styled.div`
 
   text-decoration: underline;
   cursor: pointer;
-  color: ${({ theme }) => theme.textPrimary};
+  color: ${({ theme }: any) => theme.textPrimary};
   font-size: 24px;
 `;
 
@@ -232,11 +232,11 @@ export const SeeMoreLink = styled.div`
   margin-block: 10px;
   font-style: italic;
   font-weight: 700;
-  color: ${({ theme }) => theme.primary};
+  color: ${({ theme }: any) => theme.primary};
 
   &:hover {
     cursor: pointer;
-    color: ${({ theme }) => theme.primaryHover};
+    color: ${({ theme }: any) => theme.primaryHover};
   }
 
   @container (max-width: 600px) {
@@ -324,7 +324,7 @@ const NameFontStyles = css`
 export const NameMobile = styled.div`
   ${NameFontStyles};
 
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
   margin-top: 50px;
   font-size: 36px;
   width: 100%;

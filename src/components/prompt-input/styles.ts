@@ -1,136 +1,419 @@
-import * as Common from "@/components/common";
-import { BORDER_RADIUS, Z_INDEX } from "@/theme/geometry";
-import { setOpacity } from "@/utils/helpers";
-import { Container, RichText as NWRichText } from "@novelist-world/ui";
+import { Avatar, Form, Select } from "radix-ui";
 import styled from "styled-components";
 
-export const PromptInputContainer = styled(Container)`
-  width: 100%;
-  margin-bottom: 0px;
-  padding-block: 10px;
-  height: max-content;
-  overflow: visible;
-  contain: none;
-  border: none;
-  border-radius: unset;
-  z-index: ${Z_INDEX.CARD};
-  background-color: transparent;
+export const PromptTrigger = styled.button`
+  all: unset;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: var(--font-size-large);
+  font-weight: var(--font-weight-bold);
+  display: flex;
+  align-items: center;
+  justify-content: start;
 
-  @container (max-width: 1300px) {
-    border: none;
-    border-radius: unset;
-    margin-top: 0px;
-  }
-`;
-
-export const RichText = styled(NWRichText)`
-  & > .pm-container {
-    min-width: unset;
-    & > .ProseMirror {
-      min-width: 20px;
-      background-color: ${({ theme }) => theme.colors.inputBackground};
+  &:not(.open) {
+    width: 100%;
+    &:hover,
+    &:focus {
+      color: var(--accent-hover);
     }
   }
-`;
 
-export const DropdownContainer = styled(Container)`
-  position: absolute;
-  width: 300px;
-  height: 200px;
-  top: 15px;
-  left: 58px;
-  justify-content: flex-start;
-  align-items: flex-start;
-  padding-inline: 5px 0px;
-  z-index: ${Z_INDEX.CARD_EXPAND};
-  background-color: ${({ theme }) => theme.background};
-  padding-top: 0px;
-
-  transition:
-    opacity 0.3s ease,
-    visibility 0.3s ease;
-
-  // Open state
   &.open {
-    display: block;
-    opacity: 1;
-  }
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    margin-top: 8px;
+    padding: 6px;
+    background-color: #000;
+    color: var(--text-color-dark);
+    /* border: 1px solid var(--accent); */
+    svg {
+      transform: rotate(180deg);
+      width: 20px;
+      height: 20px;
+    }
 
-  // Closed state
-  &.closed {
-    display: none;
-    opacity: 0;
-  }
+    &:hover {
+      background-color: var(--accent-hover);
+    }
 
-  // Open state
-  &.upward {
-    top: -90px;
-    left: 58px;
-  }
-
-  @container (max-width: 500px) {
-    & {
-      top: 10px;
-      left: 47px;
+    &:focus {
+      outline: 1px solid var(--accent);
     }
   }
 `;
 
-export const DropdownOption = styled.div`
+export const PromptInputRoot = styled.div`
+  width: 100%;
+  position: relative;
+  padding: 8px;
+
+  * {
+    font-family: var(--font);
+  }
+`;
+
+export const PromptInputContainer = styled.div`
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 8px;
+
+  transition-property: padding-top;
+  transition-duration: 0.25s;
+  transition-timing-function: ease-in-out;
+  background-color: var(--bg-2);
+  border: 0.85px solid #333;
+  box-shadow: 0 10px 38px -10px rgba(0, 0, 0, 0.25);
+  position: relative;
+
+  &.open {
+    padding-top: 28px;
+    padding-bottom: 45px;
+    padding-inline: 16px;
+  }
+
+  .form-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .form-label {
+    font-size: var(--font-size);
+    font-family: var(--font);
+    color: var(--text-color-dark);
+  }
+`;
+
+export const TextInputContainer = styled(Form.Field)`
+  display: flex;
+  flex-direction: column;
+
+  margin-top: 8px;
+
+  textarea {
+    background-color: var(--bg-3);
+    padding: 8px;
+    border-radius: 4px;
+    border: none;
+    color: var(--text-color-dark);
+    font-size: var(--font-size);
+    font-family: var(--font);
+    resize: none;
+    min-height: 100px;
+
+    &:focus {
+      outline: 1px solid var(--accent);
+    }
+
+    &[data-invalid="true"] {
+      outline: 1px solid var(--error-9-e);
+    }
+  }
+
+  .form-message {
+    margin-top: 4px;
+    font-size: var(--font-size-small);
+    font-family: var(--font);
+  }
+`;
+
+const SelectBase = styled(Form.Field)`
+  button {
+    all: unset;
+  }
+
   display: flex;
   flex-direction: row;
-  justify-content: flex-start;
   align-items: center;
-  width: 100%;
-  gap: 0.5rem;
-  padding-inline: 5px 0px;
-  border-radius: ${BORDER_RADIUS};
 
-  &:hover {
+  .form-label {
+    margin-right: 8px;
+  }
+
+  .select-trigger {
+    min-width: 180px;
+    background-color: var(--bg-3);
+    border: 0.85px solid var(--bg-6);
+    padding: 6px 8px;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
     cursor: pointer;
-    background-color: ${({ theme }) => theme.hoverGreyAlpha};
-  }
-`;
+    color: var(--text-color-dark);
+    font-size: var(--font-size);
+    font-family: var(--font);
+    user-select: none;
 
-export const ScrollableContent = styled.div`
-  margin-bottom: 20px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: transparent transparent;
-  height: inherit;
-  padding-bottom: 20px;
+    &:focus {
+      outline: 1px solid var(--accent);
+    }
 
-  transition-property: scrollbar-color;
-  transition-timing-function: ease-in-out;
-  transition-duration: 200ms;
+    .select-value {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-grow: 1;
+      color: var(--text-color-dark);
+      font-size: var(--font-size);
+      font-family: var(--font);
+    }
 
-  &:hover {
-    scrollbar-color: ${({ theme }) => setOpacity(theme.primary, 0.5)}
-      transparent;
-  }
-`;
-
-export const Avatar = styled(Common.Avatar)`
-  margin-block: 10px;
-
-  @container (max-width: 800px) {
-    & {
-      margin-block: 5px;
+    .select-icon {
+      width: 16px;
+      height: 16px;
+      color: var(--text-color-dark);
     }
   }
 `;
 
-export const SourceName = styled.div`
-  text-transform: uppercase;
-  font-size: 14px;
-  font-weight: 500;
-  font-style: italic;
-  text-align: center;
+const SelectPortalBase = styled(Select.Portal)`
+  max-height: 200px;
+  min-width: 220px;
+  scroll-behavior: smooth;
+  overflow: hidden;
+  background-color: var(--bg-3);
+  border: 0.85px solid var(--bg-6);
+  border-radius: 2px;
+  padding: 4px 8px;
+
+  .select-viewport {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .select-item {
+    scroll-snap-align: start;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 4px 8px;
+    position: relative;
+    user-select: none;
+    cursor: pointer;
+    position: relative;
+    color: var(--text-color-dark);
+    font-size: var(--font-size);
+    font-family: var(--font);
+    border-top: 0.85px solid transparent;
+
+    &:hover {
+      background-color: var(--bg-5);
+      border-radius: 4px;
+
+      & + .select-item {
+        border-top: 0.85px solid transparent !important;
+      }
+    }
+
+    &:focus {
+      outline: none;
+    }
+
+    &[data-state="unchecked"] {
+      padding-left: 30px;
+    }
+
+    &:not(:first-child):not(:hover) {
+      border-top: 0.85px solid var(--bg-5);
+    }
+
+    .select-item-indicator {
+      width: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: start;
+
+      svg {
+        width: 10px;
+        height: 10px;
+        color: var(--accent-8);
+      }
+    }
+  }
+`;
+
+export const PrivacySelect = styled(SelectBase)`
+  position: absolute;
+  top: 20px;
+  right: 16px;
+  .select-trigger {
+    min-width: 34px;
+    background-color: transparent;
+    border: none;
+
+    &:hover {
+      background-color: var(--bg-3);
+    }
+  }
+`;
+
+export const MuseSelect = styled(SelectBase)`
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+
+  .form-label {
+    margin-bottom: 4px;
+  }
+`;
+
+export const MuseSelectPortal = styled(SelectPortalBase)``;
+
+export const PrivacySelectPortal = styled(SelectPortalBase)`
+  min-width: 120px;
+`;
+
+export const MuseAvatarRoot = styled(Avatar.Root)`
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  user-select: none;
+
+  .avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .avatar-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-2);
+    color: var(--text-color-dark);
+    font-size: var(--font-size-small);
+  }
+`;
+
+export const MediaSelect = styled(Form.Field)`
+  display: flex;
+  flex-direction: column;
+  margin-top: 4px;
+
+  .media-input {
+    display: none;
+  }
+
+  .form-label {
+    width: fit-content;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--font-size);
+    padding: 4px 8px;
+    border-radius: 2px;
+    background-color: var(--accent);
+
+    &:hover {
+      background-color: var(--accent-hover);
+    }
+
+    &:active {
+      background-color: var(--accent-active);
+    }
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+`;
+
+export const MediaPreviewRoot = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  position: relative;
+
+  height: 150px;
+  width: 150px;
+
+  .media-preview-image {
+    object-fit: cover;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    &.uploading {
+      filter: grayscale(60%);
+    }
+  }
+
+  .remove-media-button {
+    all: unset;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    color: var(--text-color-dark);
+    font-size: var(--font-size-small);
+    background-color: var(--bg-4);
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: var(--error-5);
+    }
+
+    &:active {
+      background-color: var(--error-6);
+    }
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+`;
+
+export const SubmitButton = styled.button`
+  all: unset;
+  position: absolute;
+  bottom: 20px;
+  right: 16px;
   cursor: pointer;
+  padding: 4px 12px;
+  border-radius: 2px;
+  background-color: var(--accent);
+  color: var(--text-color-dark);
+  font-family: var(--font);
+  font-size: var(--font-size-button);
+  margin-right: auto;
 
-  @container (max-width: 800px) {
-    & {
-      font-size: 12px;
+  &:not(:disabled) {
+    &:hover {
+      background-color: var(--accent-hover);
     }
+
+    &:active {
+      background-color: var(--accent-active);
+    }
+  }
+
+  &:focus {
+    outline: 1.5px solid #fff;
+    outline-offset: 1.5px;
+  }
+
+  &:disabled {
+    background-color: #555;
+    cursor: not-allowed;
   }
 `;

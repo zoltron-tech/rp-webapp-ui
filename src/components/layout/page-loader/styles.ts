@@ -21,11 +21,11 @@ export const Spinner = styled.div`
   & svg {
     width: clamp(50px, 10cqw, 100px);
     height: auto;
-    fill: ${({ theme }) => theme.processing};
+    fill: ${({ theme }: any) => theme.processing};
     animation: spin 0.8s infinite linear;
 
     path {
-      fill: ${({ theme }) => theme.processing} !important;
+      fill: ${({ theme }: any) => theme.processing} !important;
     }
   }
 `;

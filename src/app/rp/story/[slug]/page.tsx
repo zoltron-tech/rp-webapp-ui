@@ -15,6 +15,25 @@ import { TagsContainer } from "@/components/tags-container";
 import { FaGlobeAmericas, FaUserFriends } from "react-icons/fa";
 import { INITIAL_STORY_BOARD_EVENT } from "@/utils/constants";
 
+const renderPrivacyIcon = (privacy: string | undefined) => {
+  switch (privacy) {
+    case "MEMBERS":
+      return (
+        <S.IconWrapper title="Friends Only">
+          <FaUserFriends size={20} />
+        </S.IconWrapper>
+      );
+    case "PUBLIC":
+      return (
+        <S.IconWrapper title="Public">
+          <FaGlobeAmericas size={20} />
+        </S.IconWrapper>
+      );
+    default:
+      return null;
+  }
+};
+
 export default function UserProfilePage({}) {
   const params = useParams();
   const { state: authState } = useAuthContext();
@@ -51,25 +70,6 @@ export default function UserProfilePage({}) {
 
     fetchStoryboard();
   }, [authState]);
-
-  const renderPrivacyIcon = (privacy: string | undefined) => {
-    switch (privacy) {
-      case "MEMBERS":
-        return (
-          <S.IconWrapper title="Friends Only">
-            <FaUserFriends size={20} />
-          </S.IconWrapper>
-        );
-      case "PUBLIC":
-        return (
-          <S.IconWrapper title="Public">
-            <FaGlobeAmericas size={20} />
-          </S.IconWrapper>
-        );
-      default:
-        return null;
-    }
-  };
 
   return (
     <>

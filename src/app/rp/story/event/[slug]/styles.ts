@@ -128,7 +128,7 @@ export const DialoguetText = styled.div`
   padding: 10px;
   margin-bottom: 20px;
   white-space: pre-wrap;
-  background-color: ${({ theme }) => theme.cardBackgroundTint};
+  background-color: ${({ theme }: any) => theme.cardBackgroundTint};
   ${CARD_BORDER}
   border-radius: ${BORDER_RADIUS};
 

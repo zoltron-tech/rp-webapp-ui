@@ -6,7 +6,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { StoryBoard, StoryBoardEvent, StoryBoardEventThread } from "@/types";
 import { PageLoader } from "@/components/layout";
-import PromptInput from "@/components/prompt-input";
 import { toFormattedDate } from "@/utils/helpers";
 import { ShouldRender, Flex } from "@novelist-world/ui";
 import { IoArrowBackOutline } from "react-icons/io5";
@@ -73,8 +72,9 @@ export default function StoryboardEventPage({}) {
   const fetchStoryboardEventThreads = async () => {
     setLoading(true);
     console.log("going to fetch event threads");
-    const _storyboardEventThreads =
-      await getStoryboardEventThreadsAction(storyboardEventId);
+    const _storyboardEventThreads = await getStoryboardEventThreadsAction(
+      storyboardEventId
+    );
 
     if (!_storyboardEventThreads || "message" in _storyboardEventThreads) {
       // handle error

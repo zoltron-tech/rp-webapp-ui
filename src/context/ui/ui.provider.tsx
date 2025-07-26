@@ -5,13 +5,14 @@ import { Logger } from "@/utils/services";
 import { FC } from "react";
 import { useTheme } from "styled-components";
 import { UIContext, UIContextType } from "./ui.context";
+import { Theme } from "@/theme";
 
 type Props = {
   children: React.ReactNode;
 };
 
 export const UIContextProvider: FC<Props> = ({ children }) => {
-  const theme = useTheme();
+  const theme = useTheme() as Theme;
 
   const success: UIContextType["successToast"] = (message: string) => {
     generateToastSuccess(message, theme);

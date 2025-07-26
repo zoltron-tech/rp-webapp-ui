@@ -21,24 +21,24 @@ export const Header = styled.div`
   font-size: 22px;
   font-weight: 500;
   position: relative;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
 
   &::after {
     content: "";
     position: absolute;
     height: 1px;
-    background-color: ${({ theme }) => theme.primary};
+    background-color: ${({ theme }: any) => theme.primary};
     width: 100%;
     bottom: -4px;
   }
 
   & .link {
-    color: ${({ theme }) => theme.textLink};
+    color: ${({ theme }: any) => theme.textLink};
     cursor: pointer;
     font-weight: 600;
 
     &:hover {
-      color: ${({ theme }) => theme.textLinkHover};
+      color: ${({ theme }: any) => theme.textLinkHover};
     }
   }
 `;
@@ -51,7 +51,7 @@ export const Content = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background-color: ${({ theme }) => theme.modalBackground};
+  background-color: ${({ theme }: any) => theme.modalBackground};
   border-radius: ${BORDER_RADIUS};
 `;
 

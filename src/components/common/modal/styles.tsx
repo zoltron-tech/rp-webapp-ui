@@ -17,7 +17,7 @@ export const Container = styled.div<Partial<Hideable>>`
 
   @supports (backdrop-filter: blur()) {
     backdrop-filter: blur(60px);
-    background-color: ${({ theme }) =>
+    background-color: ${({ theme }: any) =>
       theme.name === "dark" ? "rgba(0, 0, 0, 0.6);" : "transparent"};
   }
 
@@ -40,12 +40,12 @@ export const Content = styled.div<ContentProps>`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background-color: ${({ theme }) => theme.modalBackground};
+  background-color: ${({ theme }: any) => theme.modalBackground};
   border-radius: ${BORDER_RADIUS};
   padding: 16px;
   min-height: 200px;
   min-width: 300px;
-  box-shadow: 0px 5px 20px 10px ${({ theme }) => theme.cardBoxShadowColor};
+  box-shadow: 0px 5px 20px 10px ${({ theme }: any) => theme.cardBoxShadowColor};
 
   ${({ width }) => width && `width: ${width};`}
   ${({ height }) => height && `height: ${height};`}
@@ -74,10 +74,10 @@ export const CloseButton = styled.div`
   & svg {
     width: 30px;
     height: 30px;
-    fill: ${({ theme }) => theme.primary};
+    fill: ${({ theme }: any) => theme.primary};
   }
 
   &:hover svg {
-    fill: ${({ theme }) => theme.error};
+    fill: ${({ theme }: any) => theme.error};
   }
 `;

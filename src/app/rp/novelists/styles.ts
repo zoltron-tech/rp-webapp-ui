@@ -28,14 +28,14 @@ export const MainButton = styled(Button)`
 
   &:hover {
     letter-spacing: 3px;
-    background-color: ${({ theme }) => setOpacity(theme.navbar, 0.3)};
+    background-color: ${({ theme }: any) => setOpacity(theme.navbar, 0.3)};
     color: hsl(0, 0%, 100%);
     box-shadow: rgba(24, 93, 120, 0.8) 0px 10px 20px 0px;
   }
 
   &:active {
     letter-spacing: 3px;
-    background-color: ${({ theme }) => setOpacity(theme.navbar, 0.3)};
+    background-color: ${({ theme }: any) => setOpacity(theme.navbar, 0.3)};
     color: hsl(0, 0%, 100%);
     box-shadow: rgba(24, 93, 220, 0.8) 0px 0px 0px 0px;
     transform: translateY(10px);
@@ -49,7 +49,8 @@ export const InfoCard = styled(Container)`
   justify-content: center;
   align-items: center;
   box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
-  background-color: ${({ theme }) => setOpacity(theme.navbar, 0.3)} !important;
+  background-color: ${({ theme }: any) =>
+    setOpacity(theme.navbar, 0.3)} !important;
   cursor: default !important;
 
   @-moz-document url-prefix() {
@@ -113,7 +114,7 @@ export const ButtonContainer = styled.div`
   align-items: center;
   flex-direction: column;
   box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
-  background-color: ${({ theme }) => setOpacity(theme.navbar, 0.6)};
+  background-color: ${({ theme }: any) => setOpacity(theme.navbar, 0.6)};
   width: 250px;
 
   @container (max-width: 800px) {

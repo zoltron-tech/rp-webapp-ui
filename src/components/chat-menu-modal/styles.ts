@@ -23,7 +23,7 @@ export const Menu = styled.div`
 
   display: flex;
   flex-direction: column;
-  background-color: ${({ theme }) => theme.modalBackground};
+  background-color: ${({ theme }: any) => theme.modalBackground};
 
   width: max-content;
   height: max-content;
@@ -51,7 +51,7 @@ export const UnreadBadge = styled.div`
   top: 0;
   right: 0;
   transform: translate(10%, -10%);
-  background-color: ${({ theme }) => theme.unreadBadge};
+  background-color: ${({ theme }: any) => theme.unreadBadge};
   color: white;
   font-size: 12px;
   font-weight: bold;
@@ -66,7 +66,7 @@ export const UnreadBadge = styled.div`
 `;
 
 export const UnreadMessageIcon = styled.div`
-  background-color: ${({ theme }) => theme.unreadMark};
+  background-color: ${({ theme }: any) => theme.unreadMark};
   border-radius: 100%;
   min-width: 10px;
   height: 10px;
@@ -87,13 +87,13 @@ export const ContentContainer = styled.div`
 export const Heading = styled.div`
   font-size: 12px;
   font-weight: 600;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
 `;
 
 export const Text = styled.div`
   font-size: 11px;
   font-weight: 400;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
 `;
 
 export const Date = styled.div`
@@ -126,7 +126,7 @@ export const CardWrapper = styled.div`
   container-type: size;
 
   &:hover {
-    background-color: ${({ theme }) => theme.primary};
+    background-color: ${({ theme }: any) => theme.primary};
   }
 
   &.end {

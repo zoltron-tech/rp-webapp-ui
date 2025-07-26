@@ -20,9 +20,9 @@ export const Container = styled.div<ContainerProps>`
   ${({ maxHeight }) => maxHeight && `max-height: ${maxHeight};`}
   padding: ${(props: ContainerProps) => props.padding || "10cqw"};
   margin: ${(props: ContainerProps) => props.margin || "0px"};
-  background-color: ${({ theme }) => theme.cardBackgroundColor};
+  background-color: ${({ theme }: any) => theme.cardBackgroundColor};
   border: 1px solid slategray;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
   border-radius: 16px;
 
   overflow: auto;

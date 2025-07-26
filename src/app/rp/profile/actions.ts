@@ -192,10 +192,14 @@ export const cancelFriendRequest = async (novelistId: string) => {
   return result;
 };
 
+type PromptResponse = {
+  message: API_MESSAGE;
+};
+
 export const submitPrompt = async (
   prompt: SubmitPromptInput,
-  type: SubmitPromptType = "prompt",
-) => {
+  type: SubmitPromptType = "prompt"
+): Promise<PromptResponse> => {
   const jwt = await authenticateAndGetJWT();
 
   const promptWithoutTag = { ...prompt };
@@ -216,8 +220,26 @@ export const submitPrompt = async (
     cache: "no-store",
   });
 
+  switch (response.status) {
+    case 400:
+      return { message: API_MESSAGE.BadPayload };
+    case 401:
+      return { message: API_MESSAGE.Unauthorized };
+    case 403:
+      return { message: API_MESSAGE.AccessDenied };
+    case 500:
+      return { message: API_MESSAGE.ServerError };
+  }
+
   if (response.status !== 200) {
-    return { message: API_MESSAGE.Error };
+    console.log(
+      "error",
+      promptWithoutTag,
+      URL,
+      response.status,
+      response.statusText
+    );
+    return { message: API_MESSAGE.UncategorizedError };
   }
 
   const result = await response.json();

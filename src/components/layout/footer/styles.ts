@@ -13,7 +13,7 @@ export const FooterContainer = styled.footer`
   box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
   height: var(--footer-height);
 
-  background-color: ${({ theme }) =>
+  background-color: ${({ theme }: any) =>
     setOpacity(theme.pillExpandedContentBackground, 0.5)};
 
   container-name: footer;

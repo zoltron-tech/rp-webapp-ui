@@ -6,8 +6,8 @@ import { Container } from "@novelist-world/ui";
 
 export const LocalContainer = styled(Container)`
   border: 1px solid slategray;
-  background-color: ${({ theme }) => theme.colors.background};
-  color: ${({ theme }) => theme.text};
+  background-color: ${({ theme }: any) => theme.colors.background};
+  color: ${({ theme }: any) => theme.text};
   border-radius: 16px;
 
   @container (min-width: 700px) {
@@ -42,7 +42,7 @@ export const LocalContainer = styled(Container)`
 `;
 
 export const DropDownButton = styled.button`
-  background-color: ${({ theme }) => theme.colors.primary};
+  background-color: ${({ theme }: any) => theme.colors.primary};
   color: #212121;
   padding: 10px 15px;
   font-size: 15px;
@@ -64,7 +64,7 @@ export const DropdownContent = styled.div`
   z-index: 100;
   min-width: 200px;
   background-color: #212121;
-  border: 2px solid ${({ theme }) => theme.colors.primary};
+  border: 2px solid ${({ theme }: any) => theme.colors.primary};
   border-radius: 0px 15px 15px 15px;
   box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
 
@@ -72,7 +72,7 @@ export const DropdownContent = styled.div`
     width: 100%;
     background: none;
     border: none;
-    color: ${({ theme }) => theme.colors.primary};
+    color: ${({ theme }: any) => theme.colors.primary};
     padding: 8px 10px;
     text-align: left;
     font-size: 13px;
@@ -81,14 +81,14 @@ export const DropdownContent = styled.div`
     transition: 0.1s;
 
     &:hover {
-      background-color: ${({ theme }) => theme.colors.primary};
+      background-color: ${({ theme }: any) => theme.colors.primary};
       color: #212121;
     }
 
     &:focus {
       outline: none;
       background-color: #212121;
-      color: ${({ theme }) => theme.colors.primary};
+      color: ${({ theme }: any) => theme.colors.primary};
     }
 
     &:first-child:hover {
@@ -213,7 +213,7 @@ export const Button = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: ${({ theme }) => theme.hoverGreyAlpha};
+  background-color: ${({ theme }: any) => theme.hoverGreyAlpha};
   border-radius: 50%;
   box-shadow: 0px 0px 5px 2px rgba(0, 0, 0, 0.4);
   z-index: ${Z_INDEX.MODAL};
@@ -222,14 +222,14 @@ export const Button = styled.div`
   & svg {
     width: 15px;
     height: 15px;
-    fill: ${({ theme }) => theme.text};
+    fill: ${({ theme }: any) => theme.text};
     transition: transform 0.2s ease-in-out;
 
     pointer-events: none;
   }
 
   &:hover {
-    background-color: ${({ theme }) => theme.hoverGrey};
+    background-color: ${({ theme }: any) => theme.hoverGrey};
   }
 
   @container (max-width: 500px) {
@@ -288,8 +288,8 @@ export const ProfileBackgroundBlurFilter = styled.div<ProfileBackgroundFilterPro
   height: 100%;
   max-height: 100vh;
   background-image: linear-gradient(
-      ${({ theme }) => theme.cardBackgroundTint},
-      ${({ theme }) => theme.cardBackgroundTint}
+      ${({ theme }: any) => theme.cardBackgroundTint},
+      ${({ theme }: any) => theme.cardBackgroundTint}
     ),
     url(${(props): string => props.banner});
   background-position: center;

@@ -44,7 +44,7 @@ export const ScrollableContentContainer = styled.div`
   position: absolute;
   left: 60px;
   height: calc(100cqw - 185px);
-  background-color: ${({ theme }) => theme.pillExpandedContentBackground};
+  background-color: ${({ theme }: any) => theme.pillExpandedContentBackground};
   transform: rotate(-90deg) translateY(calc(50%));
   scroll-snap-type: y mandatory;
   transition: opacity 0.1s ease-in-out;
@@ -72,7 +72,7 @@ export const ScrollableContentContainer = styled.div`
 `;
 
 export const Searchbar = styled.div`
-  background-color: ${({ theme }) => theme.pillExpandedContentBackground};
+  background-color: ${({ theme }: any) => theme.pillExpandedContentBackground};
   height: 50px;
   border-radius: 30px;
   top: 15px;
@@ -126,7 +126,7 @@ export const ExpandIcon = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: ${({ theme }) => theme.hoverGreyAlpha};
+  background-color: ${({ theme }: any) => theme.hoverGreyAlpha};
   border-radius: 50%;
   box-shadow: 0px 0px 5px 2px rgba(0, 0, 0, 0.4);
   transition: background-color 0.1s ease-in-out;
@@ -135,12 +135,12 @@ export const ExpandIcon = styled.div`
   & svg {
     width: 20px;
     height: 15px;
-    fill: ${({ theme }) => theme.text};
+    fill: ${({ theme }: any) => theme.text};
     transition: transform 0.2s ease-in-out;
   }
 
   &:hover {
-    background-color: ${({ theme }) => theme.hoverGrey};
+    background-color: ${({ theme }: any) => theme.hoverGrey};
   }
 `;
 
@@ -151,7 +151,7 @@ const TagTypography = css`
   font-weight: 300;
   line-height: 24px;
 
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
 `;
 
 export const TagInline = styled.div`
@@ -192,7 +192,7 @@ export const ExpandedContent = styled.div`
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease-in-out;
-  background: ${({ theme }) => theme.pillExpandedContentBackground};
+  background: ${({ theme }: any) => theme.pillExpandedContentBackground};
   overflow-y: auto;
 
   top: 80px;

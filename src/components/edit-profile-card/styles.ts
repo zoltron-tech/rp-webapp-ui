@@ -6,8 +6,8 @@ import { Container } from "@novelist-world/ui";
 
 export const LocalContainer = styled(Container)`
   border: 1px solid slategray;
-  background-color: ${({ theme }) => theme.colors.background};
-  color: ${({ theme }) => theme.text};
+  background-color: ${({ theme }: any) => theme.colors.background};
+  color: ${({ theme }: any) => theme.text};
   border-radius: 16px;
 
   @container (min-width: 700px) {
@@ -147,8 +147,8 @@ export const ProfileBackgroundBlurFilter = styled.div<ProfileBackgroundFilterPro
   height: 100%;
   max-height: 100vh;
   background-image: linear-gradient(
-      ${({ theme }) => theme.cardBackgroundTint},
-      ${({ theme }) => theme.cardBackgroundTint}
+      ${({ theme }: any) => theme.cardBackgroundTint},
+      ${({ theme }: any) => theme.cardBackgroundTint}
     ),
     url(${(props): string => props.banner});
   background-position: center;

@@ -12,7 +12,7 @@ import { css, styled } from "styled-components";
 const TypeSelectTypography = css`
   font-size: 12px;
   font-weight: 400;
-  color: ${({ theme }) => theme.textPrimary};
+  color: ${({ theme }: any) => theme.textPrimary};
   padding: 2px 5px;
   user-select: none;
 `;
@@ -73,7 +73,7 @@ export const DropdownItem = styled.div`
   justify-content: center;
   gap: 10px;
   cursor: pointer;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
 
   transition-property: color, background-color;
 
@@ -85,8 +85,8 @@ export const DropdownItem = styled.div`
   }
 
   &:hover {
-    background-color: ${({ theme }) => theme.primary};
-    color: ${({ theme }) => theme.textPrimary};
+    background-color: ${({ theme }: any) => theme.primary};
+    color: ${({ theme }: any) => theme.textPrimary};
   }
 `;
 
@@ -100,7 +100,7 @@ export const EmptyDropdown = styled.div`
   align-items: center;
   justify-content: center;
   gap: 20px;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
   opacity: 0.5;
 
   & > svg {
@@ -141,9 +141,9 @@ export const TypeSelectOption = styled.div`
 
   ${TypeSelectTypography}
 
-  background-color: ${({ theme }) => theme.primary};
+  background-color: ${({ theme }: any) => theme.primary};
   &:hover {
-    background-color: ${({ theme }) => theme.primaryHover};
+    background-color: ${({ theme }: any) => theme.primaryHover};
   }
   cursor: pointer;
 `;
@@ -155,7 +155,7 @@ export const TypeSelectOptions = styled.div`
   width: var(--type-select-width);
   border-radius: var(--border-radius);
   height: max-content;
-  background-color: ${({ theme }) => theme.primary};
+  background-color: ${({ theme }: any) => theme.primary};
 
   display: flex;
   flex-direction: column;
@@ -181,7 +181,7 @@ export const TypeSelect = styled.div`
   top: 50%;
   transform: translateY(-51%);
   left: 0px;
-  color: ${({ theme }) => theme.textPrimary};
+  color: ${({ theme }: any) => theme.textPrimary};
   z-index: ${Z_INDEX.AVATAR};
 
   transition-property: opacity, border-radius;
@@ -197,9 +197,9 @@ export const TypeSelect = styled.div`
 
   ${TypeSelectTypography}
 
-  background-color: ${({ theme }) => theme.primary};
+  background-color: ${({ theme }: any) => theme.primary};
   &:not(.expanded):hover {
-    background-color: ${({ theme }) => theme.primaryHover};
+    background-color: ${({ theme }: any) => theme.primaryHover};
   }
 
   &:hover {
@@ -220,7 +220,7 @@ export const TypeSelect = styled.div`
 export const Input = styled.input`
   border-radius: var(--border-radius);
   font-size: 16px;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
   background-color: transparent;
   border: none;
   transition: width 0.2s ease-in-out, height 0.2s ease-in-out,
@@ -292,18 +292,18 @@ export const Container = styled.div`
     }
 
     & > button {
-      background-color: ${({ theme }) => theme.primary};
+      background-color: ${({ theme }: any) => theme.primary};
       width: calc(var(--height) - 10px);
       height: calc(var(--height) - 10px);
       right: 5px;
       transition: background-color 0.2s ease-in-out;
 
       & > svg {
-        color: ${({ theme }) => theme.textPrimary};
+        color: ${({ theme }: any) => theme.textPrimary};
       }
 
       &:hover {
-        background-color: ${({ theme }) => theme.error};
+        background-color: ${({ theme }: any) => theme.error};
       }
     }
   }
@@ -318,12 +318,12 @@ export const Button = styled.button`
   width: var(--height);
   height: var(--height);
   right: 0px;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
   z-index: ${Z_INDEX.DEFAULT + 1};
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: ${({ theme }) => theme.pillExpandedContentBackground};
+  background-color: ${({ theme }: any) => theme.pillExpandedContentBackground};
   cursor: pointer;
   transition: none;
 
@@ -337,7 +337,7 @@ export const Button = styled.button`
   &.loading {
     pointer-events: none;
     cursor: wait;
-    background-color: ${({ theme }) => theme.primaryLoading};
+    background-color: ${({ theme }: any) => theme.primaryLoading};
 
     & svg.loading-icon {
       display: inline-block;

@@ -10,13 +10,13 @@ import { setOpacity } from "@/utils/helpers";
 import styled from "styled-components";
 
 export const Container = styled.div`
-  border: 1px solid ${({ theme }) => theme.background};
+  border: 1px solid ${({ theme }: any) => theme.background};
   box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
   position: sticky;
   align-items: center;
   top: 0;
   margin-inline: auto;
-  background-color: ${({ theme }) => setOpacity(theme.navbar, 0.95)};
+  background-color: ${({ theme }: any) => setOpacity(theme.navbar, 0.95)};
   display: flex;
   justify-content: space-between;
   z-index: ${Z_INDEX.TOPBAR};
@@ -44,7 +44,7 @@ export const LogoContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
   text-decoration: none;
   cursor: pointer;
 `;
@@ -71,9 +71,9 @@ export const LogoInner = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: ${({ theme }) =>
+  background-color: ${({ theme }: any) =>
     setOpacity(pSBC(-0.8, theme.primary) as string, 0.5)};
-  border: 1px solid ${({ theme }) => theme.primary};
+  border: 1px solid ${({ theme }: any) => theme.primary};
   transition-property: width, height, transform;
   transition-duration: 0.2s;
   transition-timing-function: ease-in-out;
@@ -82,7 +82,7 @@ export const LogoInner = styled.div`
   & > svg {
     height: 40cqh;
     width: 40cqh;
-    fill: ${({ theme }) => theme.textPrimary};
+    fill: ${({ theme }: any) => theme.textPrimary};
   }
 
   &:hover {
@@ -204,6 +204,6 @@ export const ButtonsContainerMobile = styled.div`
   }
 
   & > .button:not(:last-child) {
-    border-bottom: 1px solid ${({ theme }) => theme.text};
+    border-bottom: 1px solid ${({ theme }: any) => theme.text};
   }
 `;

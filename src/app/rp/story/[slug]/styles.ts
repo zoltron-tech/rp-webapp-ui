@@ -42,7 +42,7 @@ export const Name = styled.div`
   margin-top: 10px;
   font-size: clamp(18px, 5vw, 42px);
   font-weight: 600;
-  color: ${({ theme }) => theme.textPrimary};
+  color: ${({ theme }: any) => theme.textPrimary};
   z-index: ${Z_INDEX.DEFAULT};
 `;
 
@@ -54,7 +54,7 @@ export const SectionName = styled.div`
   text-align: center;
   margin-top: 20px;
   font-size: clamp(18px, 5vw, 24px);
-  color: ${({ theme }) => theme.textPrimary};
+  color: ${({ theme }: any) => theme.textPrimary};
   z-index: ${Z_INDEX.DEFAULT};
 `;
 
@@ -71,7 +71,7 @@ export const SolidBackground = styled.div`
   top: clamp(270px, 30cqw, 290px);
   bottom: 0px;
   width: 100cqw;
-  background-color: ${({ theme }) => theme.navbar};
+  background-color: ${({ theme }: any) => theme.navbar};
   z-index: ${Z_INDEX.BACKGROUND};
   box-shadow: 0px -2px 4px 2px rgba(0, 0, 0, 0.498);
   padding: 40px;

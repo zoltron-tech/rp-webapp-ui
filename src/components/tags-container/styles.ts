@@ -13,7 +13,7 @@ export const SectionName = styled.div`
   text-align: center;
   margin-top: 20px;
   font-size: clamp(18px, 5vw, 24px);
-  color: ${({ theme }) => theme.textPrimary};
+  color: ${({ theme }: any) => theme.textPrimary};
   z-index: ${Z_INDEX.DEFAULT};
 `;
 
@@ -26,7 +26,7 @@ export const TagContainer = styled.div`
   gap: 8px;
   overflow-y: auto;
   padding: 12px;
-  background-color: ${({ theme }) => theme.inputBackground};
+  background-color: ${({ theme }: any) => theme.inputBackground};
   border-radius: 8px;
 `;
 
@@ -36,7 +36,7 @@ export const TagValue = styled.span<{ color: string }>`
   font-weight: 900;
   text-align: center;
   vertical-align: middle;
-  background-color: ${({ theme }) => theme.cardBackgroundTint};
+  background-color: ${({ theme }: any) => theme.cardBackgroundTint};
   border: 2px solid ${(props) => props.color};
   color: ${(props) => props.color};
   border-radius: 8px;

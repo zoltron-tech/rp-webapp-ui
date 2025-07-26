@@ -6,9 +6,9 @@ export const Pill = styled.div`
 
   width: 100%;
   min-height: 80px;
-  background: ${({ theme }) => theme.hoverGrey};
+  background: ${({ theme }: any) => theme.hoverGrey};
   position: relative;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
   display: flex;
   justify-content: center;
   align-items: center;
@@ -25,6 +25,6 @@ export const Pill = styled.div`
     font-weight: 300;
     line-height: 24px;
 
-    color: ${({ theme }) => theme.text};
+    color: ${({ theme }: any) => theme.text};
   }
 `;

@@ -25,7 +25,7 @@ export const ChatBubbleContainer = styled.div`
     align-items: end;
 
     & > ${ChatBubble} {
-      background-color: ${({ theme }) => theme.primary};
+      background-color: ${({ theme }: any) => theme.primary};
     }
   }
 
@@ -33,7 +33,7 @@ export const ChatBubbleContainer = styled.div`
     align-items: start;
 
     & > ${ChatBubble} {
-      background-color: ${({ theme }) => theme.modalBackground};
+      background-color: ${({ theme }: any) => theme.modalBackground};
     }
   }
 `;
@@ -42,5 +42,5 @@ export const TimeStamp = styled.span`
   font-size: 10px;
   opacity: 0.7;
   margin-bottom: 5px;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
 `;

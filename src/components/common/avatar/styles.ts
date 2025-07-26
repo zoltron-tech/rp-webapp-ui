@@ -28,7 +28,7 @@ export const Name = styled.div`
   ${BASE_TRANSITION}
 
   border-radius: 50%;
-  color: ${({ theme }) => theme.textPrimary};
+  color: ${({ theme }: any) => theme.textPrimary};
   font-size: 0.75rem;
 `;
 

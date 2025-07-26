@@ -124,7 +124,7 @@ export const Button = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: ${({ theme }) => theme.hoverGreyAlpha};
+  background-color: ${({ theme }: any) => theme.hoverGreyAlpha};
   border-radius: 50%;
   box-shadow: 0px 0px 5px 2px rgba(0, 0, 0, 0.4);
   margin-top: 15px;
@@ -134,24 +134,24 @@ export const Button = styled.div`
   & svg {
     width: 20px;
     height: 20px;
-    fill: ${({ theme }) => theme.text};
+    fill: ${({ theme }: any) => theme.text};
     transition: transform 0.2s ease-in-out;
 
     pointer-events: none;
   }
 
   &:hover {
-    background-color: ${({ theme }) => theme.hoverGrey};
+    background-color: ${({ theme }: any) => theme.hoverGrey};
   }
 `;
 
 export const MakeAdminButton = styled(Button)`
   &:hover {
-    background-color: ${({ theme }) =>
+    background-color: ${({ theme }: any) =>
       pSBC(-0.5, setOpacity(theme.success, 0.8))};
   }
   @container (max-width: 600px) {
-    background-color: ${({ theme }) =>
+    background-color: ${({ theme }: any) =>
       pSBC(-0.5, setOpacity(theme.success, 0.8))};
     width: 30px;
     height: 30px;
@@ -165,11 +165,11 @@ export const MakeAdminButton = styled(Button)`
 
 export const RemoveMemberButton = styled(Button)`
   &:hover {
-    background-color: ${({ theme }) =>
+    background-color: ${({ theme }: any) =>
       pSBC(-0.5, setOpacity(theme.error, 0.8))};
   }
   @container (max-width: 600px) {
-    background-color: ${({ theme }) =>
+    background-color: ${({ theme }: any) =>
       pSBC(-0.5, setOpacity(theme.error, 0.8))};
     width: 30px;
     height: 30px;
@@ -183,11 +183,11 @@ export const RemoveMemberButton = styled(Button)`
 
 export const RemoveAdminButton = styled(Button)`
   &:hover {
-    background-color: ${({ theme }) =>
+    background-color: ${({ theme }: any) =>
       pSBC(-0.5, setOpacity(theme.warning, 0.8))};
   }
   @container (max-width: 600px) {
-    background-color: ${({ theme }) =>
+    background-color: ${({ theme }: any) =>
       pSBC(-0.5, setOpacity(theme.warning, 0.8))};
 
     width: 30px;
@@ -202,11 +202,11 @@ export const RemoveAdminButton = styled(Button)`
 
 export const AddMemberButton = styled(Button)`
   &:hover {
-    background-color: ${({ theme }) =>
+    background-color: ${({ theme }: any) =>
       pSBC(-0.5, setOpacity(theme.success, 0.8))};
   }
   @container (max-width: 500px) {
-    background-color: ${({ theme }) =>
+    background-color: ${({ theme }: any) =>
       pSBC(-0.5, setOpacity(theme.success, 0.8))};
 
     width: 30px;

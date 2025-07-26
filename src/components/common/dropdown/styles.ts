@@ -6,7 +6,7 @@ export const DropdownContainer = styled.div`
   top: 0px;
   left: 0px;
   border-radius: var(--border-radius);
-  background-color: ${({ theme }) => theme.modalBackground};
+  background-color: ${({ theme }: any) => theme.modalBackground};
   opacity: 0;
   pointer-events: none;
   height: 0px;

@@ -1,4 +1,4 @@
-import { BORDER_RADIUS } from "@/theme";
+import { BORDER_RADIUS, Theme } from "@/theme";
 import { DefaultTheme } from "styled-components";
 import toast from "toastify-js";
 
@@ -8,7 +8,7 @@ enum ToastType {
 }
 
 const getToastStyle = (
-  theme: DefaultTheme,
+  theme: DefaultTheme & Theme,
   type: ToastType
 ): { [cssRule: string]: string } => {
   const color = ((): string => {
@@ -41,7 +41,7 @@ const DEFAULT_TOAST_OPTIONS: Partial<toast.Options> = {
 
 export const generateToastError = (
   message: string,
-  theme: DefaultTheme,
+  theme: DefaultTheme & Theme,
   id = ""
 ) => {
   toast({
@@ -54,7 +54,7 @@ export const generateToastError = (
 
 export const generateToastSuccess = (
   message: string,
-  theme: DefaultTheme,
+  theme: DefaultTheme & Theme,
   id = ""
 ) => {
   toast({

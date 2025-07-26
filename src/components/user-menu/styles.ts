@@ -18,7 +18,7 @@ export const Menu = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  background-color: ${({ theme }) => theme.modalBackground};
+  background-color: ${({ theme }: any) => theme.modalBackground};
 
   width: 15rem;
   height: max-content;
@@ -86,7 +86,7 @@ export const Element = styled.li`
   }
 
   &:hover {
-    background-color: ${({ theme }) => theme.primary};
+    background-color: ${({ theme }: any) => theme.primary};
     color: #ffffff;
 
     svg {
@@ -113,14 +113,14 @@ export const DisabledElement = styled.li`
 `;
 
 export const LastSectionElement = styled(Element)`
-  color: ${({ theme }) => theme.primaryLoading};
+  color: ${({ theme }: any) => theme.primaryLoading};
 
   svg {
     stroke: #bd89ff;
   }
 
   &:hover {
-    background-color: ${({ theme }) => theme.primaryAlpha};
+    background-color: ${({ theme }: any) => theme.primaryAlpha};
 
     svg {
       stroke: #bd89ff;

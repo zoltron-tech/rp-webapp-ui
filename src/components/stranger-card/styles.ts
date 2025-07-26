@@ -12,11 +12,11 @@ export const CardBackground = styled.div<CardProps>`
   position: absolute;
   width: 100%;
   height: 100%;
-  background-color: ${({ theme }) => theme.background};
+  background-color: ${({ theme }: any) => theme.background};
 
   /*background-image: linear-gradient(
-      ${({ theme }) => theme.cardBackgroundTint},
-      ${({ theme }) => theme.cardBackgroundTint}
+      ${({ theme }: any) => theme.cardBackgroundTint},
+      ${({ theme }: any) => theme.cardBackgroundTint}
     ),
     url(${(props): string => props.banner});
     */
@@ -100,7 +100,7 @@ export const Info = styled.div`
 export const Title = styled.div`
   font-size: 18px;
   font-weight: 400;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
   text-align: center;
   margin-bottom: 10px;
 

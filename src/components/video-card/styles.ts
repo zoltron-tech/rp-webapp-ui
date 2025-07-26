@@ -34,7 +34,7 @@ export const CardWrapper = styled.div`
   height: 350px;
   border-radius: var(--border-radius);
   ${CARD_BORDER};
-  background-color: ${({ theme }) => theme.background};
+  background-color: ${({ theme }: any) => theme.background};
   transition: all 0.3s ease-in-out;
   contain: paint;
   z-index: ${Z_INDEX.CARD};

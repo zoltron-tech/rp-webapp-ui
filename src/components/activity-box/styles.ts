@@ -282,7 +282,7 @@ export const Card = styled.div`
   height: 100%;
   contain: paint;
   background: linear-gradient(
-    ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
+    ${({ theme }: any): string => theme.cardBackgroundGradient.join(", ")}
   );
   cursor: pointer;
 `;

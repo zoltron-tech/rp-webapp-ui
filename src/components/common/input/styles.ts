@@ -27,7 +27,7 @@ export const InputContainer = styled.div`
 `;
 
 export const InputLabel = styled.label`
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
   pointer-events: none;
   transition-property: transform, opacity, font-size;
   transition-duration: 0.12s;
@@ -41,21 +41,22 @@ export const Input = styled.input`
   left: 0px;
   width: 100%;
   height: 100%;
-  border: 2px solid ${({ theme }) => setOpacity(theme.inputBackground, 0.4)};
+  border: 2px solid
+    ${({ theme }: any) => setOpacity(theme.inputBackground, 0.4)};
   border-radius: 10px;
   font-size: 16px;
   outline: none;
   padding: 18px 10px 10px 15px;
-  color: ${({ theme }) => theme.textStark};
+  color: ${({ theme }: any) => theme.textStark};
   contain: paint;
-  background-color: ${({ theme }) => theme.inputBackground};
+  background-color: ${({ theme }: any) => theme.inputBackground};
 
   &:not(:read-only):hover {
-    border-color: ${({ theme }) => setOpacity(theme.primary, 0.6)};
+    border-color: ${({ theme }: any) => setOpacity(theme.primary, 0.6)};
   }
 
   &:not(:read-only):focus {
-    border-color: ${({ theme }) => setOpacity(theme.primary, 0.6)};
+    border-color: ${({ theme }: any) => setOpacity(theme.primary, 0.6)};
   }
 
   &:focus ~ label,
@@ -64,7 +65,7 @@ export const Input = styled.input`
     opacity: 0.6;
     font-size: 11px;
     font-weight: 400;
-    color: ${({ theme }) => theme.text};
+    color: ${({ theme }: any) => theme.text};
     /* padding: 0px 5px; */
   }
 
@@ -103,49 +104,49 @@ export const Message = styled.div`
     opacity: 1;
 
     &.error {
-      color: ${({ theme }) => theme.error};
+      color: ${({ theme }: any) => theme.error};
 
       & svg {
-        fill: ${({ theme }) => theme.error};
+        fill: ${({ theme }: any) => theme.error};
         path {
-          fill: ${({ theme }) => theme.error} !important;
+          fill: ${({ theme }: any) => theme.error} !important;
         }
       }
     }
 
     &.success {
-      color: ${({ theme }) => theme.success};
+      color: ${({ theme }: any) => theme.success};
 
       & svg {
-        fill: ${({ theme }) => theme.success};
+        fill: ${({ theme }: any) => theme.success};
         path {
-          fill: ${({ theme }) => theme.success} !important;
+          fill: ${({ theme }: any) => theme.success} !important;
         }
       }
     }
 
     &.warning {
-      color: ${({ theme }) => theme.warning};
+      color: ${({ theme }: any) => theme.warning};
 
       & svg {
-        fill: ${({ theme }) => theme.warning};
+        fill: ${({ theme }: any) => theme.warning};
         path {
-          fill: ${({ theme }) => theme.warning} !important;
+          fill: ${({ theme }: any) => theme.warning} !important;
         }
       }
     }
 
     &.processing {
-      color: ${({ theme }) => theme.processing};
+      color: ${({ theme }: any) => theme.processing};
 
       ${SPIN}
 
       & svg {
-        fill: ${({ theme }) => theme.processing};
+        fill: ${({ theme }: any) => theme.processing};
         animation: spin 1s infinite steps(8);
 
         path {
-          fill: ${({ theme }) => theme.processing} !important;
+          fill: ${({ theme }: any) => theme.processing} !important;
         }
       }
     }
@@ -169,23 +170,23 @@ export const RightIconBox = styled.div`
   & svg {
     transition: opacity 0.1s ease-in-out;
     opacity: 0.5;
-    fill: ${({ theme }) => setOpacity(theme.primary, 0.6)};
+    fill: ${({ theme }: any) => setOpacity(theme.primary, 0.6)};
     width: 100%;
     height: 22px;
 
     path {
-      fill: ${({ theme }) => theme.text};
+      fill: ${({ theme }: any) => theme.text};
     }
   }
 
   &:hover svg,
   &.visible svg {
     opacity: 1;
-    fill: ${({ theme }) =>
+    fill: ${({ theme }: any) =>
       theme.name === "light" ? theme.primary : theme.text};
 
     path {
-      fill: ${({ theme }) =>
+      fill: ${({ theme }: any) =>
         theme.name === "light" ? theme.primary : theme.text};
     }
   }

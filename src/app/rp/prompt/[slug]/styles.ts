@@ -130,7 +130,7 @@ export const ScrollableContent = styled.div`
   transition-duration: 200ms;
 
   &:hover {
-    scrollbar-color: ${({ theme }) => setOpacity(theme.primary, 0.5)}
+    scrollbar-color: ${({ theme }: any) => setOpacity(theme.primary, 0.5)}
       transparent;
   }
 `;
@@ -208,7 +208,7 @@ export const SourceName = styled.div`
     font-weight: 600;
     margin-left: 20px;
     &:hover {
-      color: ${({ theme }) => theme.primary};
+      color: ${({ theme }: any) => theme.primary};
     }
   }
 
@@ -230,7 +230,7 @@ export const SourceName = styled.div`
     &.action {
       font-weight: 600;
       margin-left: 20px;
-      color: ${({ theme }) => theme.primary};
+      color: ${({ theme }: any) => theme.primary};
     }
 
     &.reply {

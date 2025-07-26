@@ -21,7 +21,7 @@ export const Menu = styled.div`
 
   display: flex;
   flex-direction: column;
-  background-color: ${({ theme }) => theme.modalBackground};
+  background-color: ${({ theme }: any) => theme.modalBackground};
   width: max-content;
   height: max-content;
   opacity: 0;
@@ -48,7 +48,7 @@ export const NotificationBadge = styled.div`
   top: 0;
   right: 0;
   transform: translate(10%, -10%);
-  background-color: ${({ theme }) => theme.unreadBadge};
+  background-color: ${({ theme }: any) => theme.unreadBadge};
   color: white;
   font-size: 12px;
   font-weight: bold;
@@ -72,7 +72,7 @@ export const ContentContainer = styled.div`
 
 export const Text = styled.div`
   font-size: 14px;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
 `;
 
 export const NotificationBox = styled.div`
@@ -100,7 +100,7 @@ export const CardWrapper = styled.div`
   container-type: size;
 
   &:hover {
-    background-color: ${({ theme }) => theme.primary};
+    background-color: ${({ theme }: any) => theme.primary};
   }
 
   &.end {

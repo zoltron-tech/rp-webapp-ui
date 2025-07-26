@@ -23,7 +23,7 @@ export const Title = styled.div`
   font-size: 20px;
   font-weight: 600;
   max-width: 80%;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
   text-align: end;
   opacity: 0;
   transform: translateY(100px);
@@ -79,7 +79,7 @@ export const CardWrapper = styled.div`
 
   &.hero ${Title} {
     font-size: 12px;
-      right: -5px;
+    right: -5px;
     bottom: -190px;
   }
 
@@ -128,7 +128,7 @@ export const Button = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: ${({ theme }) => theme.hoverGreyAlpha};
+  background-color: ${({ theme }: any) => theme.hoverGreyAlpha};
   border-radius: 50%;
   box-shadow: 0px 0px 5px 2px rgba(0, 0, 0, 0.4);
   z-index: ${Z_INDEX.MODAL};
@@ -140,14 +140,14 @@ export const Button = styled.div`
   & svg {
     width: 15px;
     height: 15px;
-    fill: ${({ theme }) => theme.text};
+    fill: ${({ theme }: any) => theme.text};
     transition: transform 0.2s ease-in-out;
 
     pointer-events: none;
   }
 
   &:hover {
-    background-color: ${({ theme }) => theme.hoverGrey};
+    background-color: ${({ theme }: any) => theme.hoverGrey};
   }
 
   @container content-container (max-width: 1000px) {
@@ -177,12 +177,12 @@ export const EditButton = styled(Button)`
 
   @container content-container (max-width: 1000px) {
     right: 35px;
-    background-color: ${({ theme }) =>
+    background-color: ${({ theme }: any) =>
       pSBC(-0.5, setOpacity(theme.processing, 0.8))};
   }
 
   &:hover {
-    background-color: ${({ theme }) =>
+    background-color: ${({ theme }: any) =>
       pSBC(-0.5, setOpacity(theme.processing, 0.8))};
   }
 `;
@@ -191,16 +191,16 @@ export const DeleteButton = styled(Button)`
   top: 10px;
   right: 10px;
 
-  background-color: ${({ theme }) => setOpacity(theme.error, 0.5)};
+  background-color: ${({ theme }: any) => setOpacity(theme.error, 0.5)};
 
   @container content-container (max-width: 1000px) {
     right: 5px;
-    background-color: ${({ theme }) =>
+    background-color: ${({ theme }: any) =>
       pSBC(-0.5, setOpacity(theme.error, 0.8))};
   }
 
   &:hover {
-    background-color: ${({ theme }) =>
+    background-color: ${({ theme }: any) =>
       pSBC(-0.5, setOpacity(theme.error, 0.8))};
   }
 `;
@@ -217,7 +217,7 @@ export const Card = styled.div`
 
   &.new {
     background: linear-gradient(
-      ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
+      ${({ theme }: any): string => theme.cardBackgroundGradient.join(", ")}
     );
 
     &:hover ${Title} {
@@ -227,14 +227,14 @@ export const Card = styled.div`
 
   @container content-container (max-width: 1000px) {
     background: linear-gradient(
-      ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
+      ${({ theme }: any): string => theme.cardBackgroundGradient.join(", ")}
     );
   }
 
   @container content-container (min-width: 1000px) {
     &:hover {
       background: linear-gradient(
-        ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
+        ${({ theme }: any): string => theme.cardBackgroundGradient.join(", ")}
       );
 
       &:not(.new) ${Title} {

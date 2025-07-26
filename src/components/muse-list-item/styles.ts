@@ -10,7 +10,7 @@ export const MuseContainer = styled(Container)`
 
   &:hover {
     cursor: pointer;
-    background-color: ${({ theme }) => theme.hoverGreyAlpha};
+    background-color: ${({ theme }: any) => theme.hoverGreyAlpha};
   }
 `;
 
@@ -22,7 +22,7 @@ export const MuseFlex = styled(Flex)`
 export const MuseName = styled.div`
   font-size: 18px;
   font-weight: 500;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
 
   @container (max-width: 400px) {
     & {

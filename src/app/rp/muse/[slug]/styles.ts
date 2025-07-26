@@ -46,7 +46,6 @@ export const MuseContainer = styled.div`
   margin-inline: auto;
   justify-content: center;
 
-
   @container (max-width: 400px) {
     & {
       padding-top: 0px;
@@ -240,7 +239,7 @@ export const Title = styled.div`
   justify-content: center;
   font-size: 20px;
   font-weight: 200;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
   text-align: center;
 `;
 
@@ -350,7 +349,7 @@ export const MenuButtonIcon = styled.div`
   transition: all 0.3s ease-in-out;
   contain: paint;
   z-index: ${Z_INDEX.CARD};
-  background-color: ${({ theme }) => theme.modalBackground};
+  background-color: ${({ theme }: any) => theme.modalBackground};
   cursor: pointer;
   justify-content: center;
   align-items: center;
@@ -360,7 +359,7 @@ export const MenuButtonIcon = styled.div`
   @container (min-height: 100px) {
     &:hover {
       scale: 1.1;
-      background-color: ${({ theme }) => theme.primary};
+      background-color: ${({ theme }: any) => theme.primary};
     }
   }
 
@@ -371,7 +370,7 @@ export const MenuButtonIcon = styled.div`
 
   &.selected {
     scale: 1.1;
-    background-color: ${({ theme }) => theme.primary};
+    background-color: ${({ theme }: any) => theme.primary};
   }
 `;
 
@@ -389,7 +388,7 @@ export const Text = styled.div`
   font-size: 12px;
   font-weight: 200;
   padding-inline: 20px;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
   text-align: center;
   height: max-content;
 `;
@@ -400,7 +399,7 @@ export const MuseName = styled.div`
   right: 10px;
   font-size: 30px;
   font-weight: 600;
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
   text-align: end;
   opacity: 0;
   transform: translateY(100px);
@@ -454,7 +453,7 @@ export const CardBack = styled.div`
   height: 100%;
   contain: paint;
   background: linear-gradient(
-    ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
+    ${({ theme }: any): string => theme.cardBackgroundGradient.join(", ")}
   );
 
   & {
@@ -474,14 +473,14 @@ export const Card = styled.div`
 
   @container content-container (max-width: 1000px) {
     background: linear-gradient(
-      ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
+      ${({ theme }: any): string => theme.cardBackgroundGradient.join(", ")}
     );
   }
 
   @container content-container (min-width: 1000px) {
     &:hover {
       background: linear-gradient(
-        ${({ theme }): string => theme.cardBackgroundGradient.join(", ")}
+        ${({ theme }: any): string => theme.cardBackgroundGradient.join(", ")}
       );
 
       & ${MuseName} {
@@ -537,7 +536,7 @@ export const ConnectionItem = styled.div`
 
   &:hover {
     cursor: pointer;
-    background-color: ${({ theme }) => theme.hoverGreyAlpha};
+    background-color: ${({ theme }: any) => theme.hoverGreyAlpha};
   }
 `;
 
@@ -565,7 +564,7 @@ export const ScrollableContent = styled.div`
   transition-duration: 200ms;
 
   &:hover {
-    scrollbar-color: ${({ theme }) => setOpacity(theme.primary, 0.5)}
+    scrollbar-color: ${({ theme }: any) => setOpacity(theme.primary, 0.5)}
       transparent;
   }
 `;

@@ -15,7 +15,7 @@ import { TagsContainer } from "@/components/tags-container";
 import { FaGlobeAmericas, FaUserFriends } from "react-icons/fa";
 import { INITIAL_STORY_BOARD_EVENT } from "@/utils/constants";
 
-export const renderPrivacyIcon = (privacy: string | undefined) => {
+const renderPrivacyIcon = (privacy: string | undefined) => {
   switch (privacy) {
     case "MEMBERS":
       return (

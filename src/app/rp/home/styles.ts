@@ -34,7 +34,7 @@ export const ListContainer = styled.div`
   flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
-  background-color: ${({ theme }) => theme.background};
+  background-color: ${({ theme }: any) => theme.background};
   border-top-right-radius: 10px;
   border-bottom-right-radius: 10px;
   ${CARD_BORDER}

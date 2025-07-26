@@ -5,9 +5,9 @@ export const Container = styled.div`
   font-weight: 600;
   cursor: copy;
 
-  color: ${({ theme }) => theme.text};
+  color: ${({ theme }: any) => theme.text};
   &.primary {
-    color: ${({ theme }) => theme.primary};
+    color: ${({ theme }: any) => theme.primary};
     font-style: italic;
   }
 

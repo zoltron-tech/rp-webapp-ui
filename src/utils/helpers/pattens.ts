@@ -42,5 +42,28 @@ export const toFormattedDate = (dateTimeString: string | undefined): string => {
   ];
 
   const unit = units.find((u) => u.value > 0);
-  return unit ? `${unit.value}${unit.name} ago` : "just now";
+  return unit ? `${unit.value}${unit.name}` : "just now";
+};
+
+export const toFormattedDateFromUnix = (
+  timestamp: number | undefined
+): string => {
+  if (!timestamp) return "unknown";
+
+  // Normalize to milliseconds (check if timestamp is in seconds)
+  const normalizedTimestamp = timestamp < 1e12 ? timestamp * 1000 : timestamp;
+
+  const date = moment(normalizedTimestamp);
+  const now = moment();
+
+  const units = [
+    { name: "y", value: now.diff(date, "years") },
+    { name: "mon", value: now.diff(date, "months") },
+    { name: "d", value: now.diff(date, "days") },
+    { name: "h", value: now.diff(date, "hours") },
+    { name: "m", value: now.diff(date, "minutes") },
+  ];
+
+  const unit = units.find((u) => u.value > 0);
+  return unit ? `${unit.value}${unit.name}` : "just now";
 };

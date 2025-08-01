@@ -13,7 +13,7 @@ export const ParentContainer = styled(Container)`
   margin-block: 5px;
   padding-top: 10px;
   border: none;
-  background-color: rgba(33, 32, 32, 1);
+  background-color: transparent;
 
   @container content-container (max-width: 800px) {
     padding-inline: 10px;

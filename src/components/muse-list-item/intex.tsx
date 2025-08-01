@@ -23,7 +23,7 @@ export const MuseListItem: FC<Props> = ({ muse, className, ...rest }) => {
 
   return (
     <S.MuseContainer onClick={onAvatarClick}>
-      <S.MuseFlex justify="flex-start">
+      <Flex justify="flex-start">
         <Avatar
           src={muse?.image || ""}
           alt=""
@@ -38,7 +38,7 @@ export const MuseListItem: FC<Props> = ({ muse, className, ...rest }) => {
             {muse.lastName}
           </span>
         </S.MuseName>
-      </S.MuseFlex>
+      </Flex>
     </S.MuseContainer>
   );
 };

@@ -7,16 +7,12 @@ export const MuseContainer = styled(Container)`
   width: 95%;
   align-items: flex-start;
   padding-block: 5px;
+  background-color: var(--bg-3);
 
   &:hover {
     cursor: pointer;
     background-color: ${({ theme }: any) => theme.hoverGreyAlpha};
   }
-`;
-
-export const MuseFlex = styled(Flex)`
-  ${DEV_MODE_BORDER("red")}
-  padding-inline: 20px;
 `;
 
 export const MuseName = styled.div`

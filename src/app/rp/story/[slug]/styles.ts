@@ -71,7 +71,7 @@ export const SolidBackground = styled.div`
   top: clamp(270px, 30cqw, 290px);
   bottom: 0px;
   width: 100cqw;
-  background-color: ${({ theme }: any) => theme.navbar};
+  background-color: var(--bg-1);
   z-index: ${Z_INDEX.BACKGROUND};
   box-shadow: 0px -2px 4px 2px rgba(0, 0, 0, 0.498);
   padding: 40px;

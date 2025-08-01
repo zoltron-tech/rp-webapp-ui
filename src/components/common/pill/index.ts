@@ -6,7 +6,7 @@ export const Pill = styled.div`
 
   width: 100%;
   min-height: 80px;
-  background: ${({ theme }: any) => theme.hoverGrey};
+  background-color: var(--bg-4);
   position: relative;
   color: ${({ theme }: any) => theme.text};
   display: flex;

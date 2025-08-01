@@ -146,7 +146,7 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
                           <S.Heading>{conversation.name}</S.Heading>
                           <S.Text
                             className={
-                              conversation.lastMessage.isRead ? "" : "unread"
+                              conversation.lastMessage?.isRead ? "" : "unread"
                             }
                           >
                             {getConversationPreviewText(

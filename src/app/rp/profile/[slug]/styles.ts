@@ -1,11 +1,5 @@
-import { Avatar as AvatarCommon, Button, Pill } from "@/components/common";
-import {
-  BLUR_FILTER,
-  BORDER_TOP,
-  DEV_MODE_BORDER,
-  NO_SCROLLBAR,
-  Z_INDEX,
-} from "@/theme";
+import { Avatar as AvatarCommon, Pill } from "@/components/common";
+import { BLUR_FILTER, DEV_MODE_BORDER, Z_INDEX } from "@/theme";
 import styled, { css } from "styled-components";
 import { Badge } from "../../tiers/styles";
 import { Container } from "@novelist-world/ui";
@@ -81,6 +75,7 @@ export const ContentInner = styled(Container)`
   display: flex;
   flex-direction: column;
   align-items: center;
+  background-color: var(--bg-2);
 
   @container (max-width: 1024px) {
     max-width: 100%;
@@ -92,24 +87,22 @@ export const ContentInner = styled(Container)`
 `;
 
 export const ButtonsContainer = styled.div`
-  position: relative;
+  right: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
   border-radius: var(--border-radius);
-  transform: translate(200px, 30px);
+  margin-top: 10px;
 
   @container (max-width: 800px) {
     & {
-      transform: translate(200px, -10px);
       font-size: 12px;
     }
   }
 
   @container (max-width: 600px) {
     & {
-      transform: translate(40px, -10px);
       font-size: 12px;
     }
   }
@@ -195,7 +188,9 @@ export const ContentContainer = styled(Container)`
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  padding-inline: unset;
   padding-bottom: 5px;
+  background-color: var(--bg-3);
 `;
 
 export const SubText = styled.div`
@@ -203,7 +198,7 @@ export const SubText = styled.div`
   text-transform: uppercase;
   font-size: 20px;
   font-weight: 300;
-  margin-top: 30px;
+  margin-top: 10px;
   margin-bottom: 10px;
   font-style: italic;
 
@@ -273,7 +268,7 @@ export const InfoText = styled.div`
 `;
 
 export const Avatar = styled(AvatarCommon)`
-  margin-top: 30px;
+  margin-top: 100px;
 
   @container profile-content (max-width: 800px) {
     & {
@@ -283,7 +278,7 @@ export const Avatar = styled(AvatarCommon)`
 `;
 
 export const AvatarMobile = styled(AvatarCommon)`
-  margin-top: 30px;
+  margin-top: 80px;
   display: none;
 
   @container profile-content (max-width: 800px) {
@@ -296,8 +291,7 @@ export const AvatarMobile = styled(AvatarCommon)`
 export const ExtendedBadge = styled(Badge)`
   width: 30px;
   height: 30px;
-  position: relative;
-  left: -90px;
+  margin-bottom: 10px;
   cursor: pointer;
 
   & svg {
@@ -307,12 +301,6 @@ export const ExtendedBadge = styled(Badge)`
   &:hover {
     & svg {
       transform: scale(1.1);
-    }
-  }
-
-  @container profile-content (max-width: 800px) {
-    & {
-      left: -50px;
     }
   }
 `;
@@ -325,7 +313,7 @@ export const NameMobile = styled.div`
   ${NameFontStyles};
 
   color: ${({ theme }: any) => theme.text};
-  margin-top: 50px;
+  margin-top: 40px;
   font-size: 36px;
   width: 100%;
   text-align: center;
@@ -353,15 +341,26 @@ export const UsernameContainer = styled.div`
 `;
 
 export const NoteContainer = styled(Pill)`
-  width: 80%;
-  margin-top: 15px;
+  position: relative;
+  width: 40%;
+  left: -150px;
+  top: -100px;
   word-break: break-word;
   border-radius: 20px;
   border-bottom: 1px solid dimgray;
   border-right: 1px solid dimgray;
-  padding: 10px 30px 10px;
+  padding: 10px;
+  z-index: 100;
 
-  @container profile-content (max-width: 200px) {
+  @container profile-content (max-width: 500px) {
+    & {
+      width: unset;
+      left: -120px;
+      top: -60px;
+    }
+  }
+
+  @container profile-content (max-width: 300px) {
     & {
       display: none;
     }
@@ -371,7 +370,7 @@ export const NoteContainer = styled(Pill)`
 export const MusePillContainer = styled.div`
   width: 100%;
   margin-inline: auto;
-  margin-top: 30px;
+  margin-top: 10px;
   margin-bottom: 20px;
   display: flex;
   flex-direction: column;
@@ -379,8 +378,6 @@ export const MusePillContainer = styled.div`
 
   @container profile-content (max-width: 1024px) {
     & {
-      margin-top: 0px;
-      margin-bottom: 0px;
       gap: 0rem;
     }
   }

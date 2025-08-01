@@ -68,8 +68,8 @@ export const UnreadBadge = styled.div`
 export const UnreadMessageIcon = styled.div`
   background-color: ${({ theme }: any) => theme.unreadMark};
   border-radius: 100%;
-  min-width: 10px;
-  height: 10px;
+  min-width: 8px;
+  height: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -92,8 +92,12 @@ export const Heading = styled.div`
 
 export const Text = styled.div`
   font-size: 11px;
-  font-weight: 400;
+  font-weight: 300;
   color: ${({ theme }: any) => theme.text};
+
+  &.unread {
+    font-weight: 700;
+  }
 `;
 
 export const Date = styled.div`
@@ -109,6 +113,7 @@ export const NotificationBox = styled.div`
   align-items: start;
   justify-content: center;
   margin-left: 10px;
+  margin-top: 10px;
   font-size: 18px;
 `;
 
@@ -116,7 +121,7 @@ export const CardWrapper = styled.div`
   position: relative;
   min-width: 250px;
   width: max-content;
-  height: 60px;
+  height: 55px;
   border-radius: var(--border-radius);
   transition: all 0.3s ease-in-out;
   z-index: ${Z_INDEX.CARD};

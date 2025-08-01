@@ -121,6 +121,6 @@ export const THEME_DARK: Theme = {
   success: pSBC(0.1, "#58d158") as string,
   warning: pSBC(0.1, "#d1a000") as string,
   processing: pSBC(0.1, "#5c5c5c") as string,
-  unreadMark: "#1599eb",
+  unreadMark: "#9b55d4",
   unreadBadge: "#b32c2c",
 };

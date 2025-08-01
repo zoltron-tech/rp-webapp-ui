@@ -223,7 +223,6 @@ export const authenticateJWT = (useCookies?: boolean) => (jwt: string) => {
 
 export const authenticateAction = async () => {
   Logger.debug("authenticate");
-  // await setAuthCookie(ADD_TOKEN_HERE);
   const jwtCookie = cookies().get(JWT_COOKIE_NAME);
   Logger.info("jwtCookie", jwtCookie);
   if (!jwtCookie?.value) return false;

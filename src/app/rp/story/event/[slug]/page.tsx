@@ -121,14 +121,16 @@ export default function StoryboardEventPage({}) {
                     />
                   </S.CardWrapper>
                 ))}
-                <Flex justify="center" gap={10}>
+                <Flex justify="center" align="flex-start" gap={10}>
                   <S.Avatar
                     src={thread.sender?.image || ""}
                     alt={""}
-                    size={40}
+                    size={50}
                   />
-                  {/* <S.MuseName>{thread.sender.name}</S.MuseName> */}
-                  <S.DialoguetText>❝ {thread.message} ❞</S.DialoguetText>
+                  <Flex direction="column">
+                    <S.DialoguetText>❝ {thread.message} ❞</S.DialoguetText>
+                    <S.MuseName>{thread.sender.name}</S.MuseName>
+                  </Flex>
                 </Flex>
               </Flex>
             </Flex>
@@ -162,7 +164,7 @@ export default function StoryboardEventPage({}) {
         <S.HeaderContainer>
           <Flex style={{ width: "100%" }}>
             <IoArrowBackOutline
-              size={15}
+              size={30}
               onClick={() => onBackClick()}
               style={{ cursor: "pointer" }}
             />

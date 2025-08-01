@@ -342,7 +342,10 @@ export const MediaPreviewRoot = styled.div`
   width: 150px;
 
   .media-preview-image {
-    object-fit: cover;
+    object-fit: contain;
+    background-color: #000;
+    width: 100%;
+    height: 100%;
     border-radius: 4px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
@@ -357,8 +360,8 @@ export const MediaPreviewRoot = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     color: var(--text-color-dark);
     font-size: var(--font-size-small);
@@ -366,10 +369,14 @@ export const MediaPreviewRoot = styled.div`
     position: absolute;
     top: -10px;
     right: -10px;
-    transition: background-color 0.2s ease;
+    z-index: 1;
 
-    &:hover {
+    &:hover,
+    &:focus {
       background-color: var(--error-5);
+      & + .media-preview-image {
+        outline: 1px solid var(--error-8);
+      }
     }
 
     &:active {
@@ -396,6 +403,10 @@ export const SubmitButton = styled.button`
   font-family: var(--font);
   font-size: var(--font-size-button);
   margin-right: auto;
+  min-width: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &:not(:disabled) {
     &:hover {

@@ -1,6 +1,6 @@
 "use client";
 
-import { uploadMedia } from "@/app/rp/profile/actions";
+import { deleteMedia, uploadMedia } from "@/app/rp/profile/actions";
 import { Form } from "radix-ui";
 import {
   ChangeEventHandler,
@@ -17,18 +17,36 @@ import {
   usePromptInputState,
   usePromptInputStoreSet,
 } from "./prompt-input.store";
+import { PromptEvent, useRunOn } from "./helpers";
 
 export const PromptMediaInput: FC = () => {
-  const urlInputRef = useRef<HTMLInputElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaUploadError = usePromptInputState("mediaUploadError");
   const media = usePromptInputState("media");
   const mediaUploading = usePromptInputState("mediaUploading");
+  const set = usePromptInputStoreSet();
+
+  const urlInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const showUploadButton = useMemo(() => {
     return !media && !mediaUploading;
   }, [media, mediaUploading]);
-  const set = usePromptInputStoreSet();
+
+  const handleClear = useCallback(() => {
+    if (urlInputRef.current) urlInputRef.current.value = "";
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    set({ media: null, mediaUploading: false, mediaUploadError: null });
+  }, [set]);
+
+  const handleRemoveMedia = useCallback(() => {
+    if (!urlInputRef.current || !fileInputRef.current) return;
+    const url = urlInputRef.current.value;
+    deleteMedia(url);
+    handleClear();
+  }, [handleClear]);
+
+  useRunOn([PromptEvent.Sent], handleClear);
+  useRunOn([PromptEvent.MediaDeleted], handleRemoveMedia);
 
   const handleFileUpload: ChangeEventHandler<HTMLInputElement> = useCallback(
     async (e) => {
@@ -40,8 +58,6 @@ export const PromptMediaInput: FC = () => {
         return;
       }
       set({ mediaUploading: true, media: file });
-
-      await new Promise((resolve) => setTimeout(resolve, 10000));
 
       const formData = new FormData();
       formData.append("file", file);

@@ -6,3 +6,4 @@ export * from "./use-theme-context";
 export * from "./use-ui-context";
 export * from "./use-visibility";
 export * from "./use-window-dimentions";
+export * from "./use-custom-events";

@@ -1,5 +1,5 @@
 "use server";
-import { Comment } from "@/types";
+import { Comment, Reply } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import getConfig from "next/config";
 import { Logger } from "@/utils/services";
@@ -25,6 +25,23 @@ export const getCommentAction = async (commentId: string) => {
   const comment: Comment = await response.json();
 
   return comment;
+};
+
+export const getRepliesAction = async (commentId: string) => {
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/comment/${commentId}/replies`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+  });
+
+  if (response.status === 404) {
+    return null;
+  } else if (response.status !== 200) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const replies: Reply[] = await response.json();
+  return replies;
 };
 
 export const getCommentsByPromptAction = async (promptId: string) => {

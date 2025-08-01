@@ -1,5 +1,5 @@
 "use server";
-import { Prompt } from "@/types";
+import { Comment, Prompt } from "@/types";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import getConfig from "next/config";
 import { Logger } from "@/utils/services";
@@ -26,6 +26,22 @@ export const getPromptAction = async (promptId: string) => {
   const prompt: Prompt = await response.json();
 
   return prompt;
+};
+
+export const getPropmptCommentsAction = async (promptId: string) => {
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/${promptId}/comments`;
+  const response = await fetch(URL, {
+    cache: "no-store",
+  });
+
+  if (response.status === 404) {
+    return null;
+  } else if (response.status !== 200) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const comments: Comment[] = await response.json();
+  return comments;
 };
 
 export const getPromptsByMuseAction = async (museId: string) => {

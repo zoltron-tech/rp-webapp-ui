@@ -1,5 +1,14 @@
+import { useCustomEvents } from "@/hooks";
 import { Muse, PromptSource, SubmitPromptType } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
+import { useEffect } from "react";
+import { usePromptInputState } from "./prompt-input.store";
+
+export enum PromptEvent {
+  Sent = "sent",
+  Error = "error",
+  MediaDeleted = "media-deleted",
+}
 
 export const museToSource = (muse: Muse): PromptSource => ({
   _tag: "PromptSource",
@@ -61,4 +70,18 @@ export const typeToTriggerButtonText = (type: SubmitPromptType): string => {
     case "prompt":
       return "Create Prompt";
   }
+};
+
+export const usePromptEvents = () =>
+  useCustomEvents("prompt-input", usePromptInputState("parentId"));
+
+export const useRunOn = (events: PromptEvent[], callback: () => void) => {
+  const { on, off } = usePromptEvents();
+
+  useEffect(() => {
+    events.forEach((event) => on(event, callback));
+    return () => {
+      events.forEach((event) => off(event, callback));
+    };
+  }, [on, off, events, callback]);
 };

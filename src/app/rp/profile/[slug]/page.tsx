@@ -9,7 +9,7 @@ import { Button, ShouldRender, Username } from "@/components/common";
 import { PageLoader } from "@/components/layout";
 import { Quote } from "@/components/novelist-card/styles";
 import { Novelist, StoryBoard } from "@/types";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getNovelistAction } from "../../novelists/actions";
 
 import { API_MESSAGE } from "@/utils/constants";
@@ -43,6 +43,31 @@ import { Z_INDEX } from "@/theme/geometry";
 import { toFormattedDate } from "@/utils/helpers";
 import MuseListItem from "@/components/muse-list-item/intex";
 
+const useGetActivities = (username: string) => {
+  const [activities, setActivities] = useState<Activity[]>();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<boolean>(false);
+
+  const fetchActivities = useCallback(async () => {
+    setLoading(true);
+    const _activities = (await getUserActivities(username, 1, 10)) ?? [];
+
+    if (_activities && "message" in _activities) {
+      setLoading(false);
+      setError(true);
+      return;
+    }
+    setLoading(false);
+    setActivities(_activities);
+  }, [username]);
+
+  useEffect(() => {
+    fetchActivities();
+  }, [fetchActivities]);
+
+  return { activities, loading, error, refetch: fetchActivities };
+};
+
 export default function UserProfilePage({}) {
   const params = useParams();
   const { state, user, novelist: useNovelist } = useAuthContext();
@@ -50,7 +75,8 @@ export default function UserProfilePage({}) {
   const [loading, setLoading] = useState(true);
   const username = params?.slug as string;
   const isCurrentUser = username === user?.username;
-  const [activities, setActivities] = useState<Activity[]>();
+  const { activities, refetch: refetchAcitivities } =
+    useGetActivities(username);
   const [storyBoards, setStories] = useState<StoryBoard[] | null>(null);
   const { push } = useRouter();
 
@@ -137,20 +163,6 @@ export default function UserProfilePage({}) {
         return copied;
       });
     }
-  };
-
-  const fetchUserActivities = async () => {
-    setLoading(true);
-    const _activities = await getUserActivities(username, 1, 10);
-
-    if (!_activities || "message" in _activities) {
-      // handle error
-      setLoading(false);
-      push("/404");
-      return;
-    }
-    setLoading(false);
-    setActivities(_activities);
   };
 
   const fetchStoryboards = async () => {
@@ -255,14 +267,12 @@ export default function UserProfilePage({}) {
 
     if (isCurrentUser && useNovelist) {
       setNovelist(useNovelist);
-      fetchUserActivities();
       fetchStoryboards();
       setLoading(false);
       return;
     }
 
     fetchNovelist(username);
-    fetchUserActivities();
     fetchStoryboards();
   }, [state]);
 
@@ -406,7 +416,11 @@ export default function UserProfilePage({}) {
             </S.SubText>
             <S.ContentContainer>
               {state == "LOGGED_IN" && username === user?.username && (
-                <PromptInput type={"prompt"} muses={novelist?.muses || []} />
+                <PromptInput
+                  type={"prompt"}
+                  muses={novelist?.muses || []}
+                  onSend={refetchAcitivities}
+                />
               )}
               {activities &&
                 activities.map((activity) => (

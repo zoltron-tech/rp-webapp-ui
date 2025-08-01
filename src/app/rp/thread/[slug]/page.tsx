@@ -3,24 +3,74 @@
 import { ShouldRender } from "@/components/common";
 import { PageLoader } from "@/components/layout";
 import { useAuthContext } from "@/hooks";
-import { Comment } from "@/types";
+import { Comment, Reply } from "@/types";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import * as S from "./styles";
 import { Container, Flex } from "@novelist-world/ui";
-import { getCommentAction } from "../actions";
+import { getCommentAction, getRepliesAction } from "../actions";
 import classNames from "classnames";
 import PromptInput from "@/components/prompt-input";
 import { toFormattedDate } from "@/utils/helpers";
 import { IoArrowBackOutline } from "react-icons/io5";
 import { Z_INDEX } from "@/theme";
 
+const useGetComment = (commentId: string) => {
+  const [comment, setComment] = useState<Comment | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchComment = useCallback(async () => {
+    setLoading(true);
+    const _comment = await getCommentAction(commentId);
+
+    if (!_comment || "message" in _comment) {
+      setLoading(false);
+      return;
+    }
+    setComment(_comment);
+    setLoading(false);
+  }, [commentId]);
+
+  useEffect(() => {
+    fetchComment();
+  }, [fetchComment]);
+
+  return { comment, loading, refetch: fetchComment };
+};
+
+const useGetReplies = (commentId: string) => {
+  const [replies, setReplies] = useState<Reply[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchReplies = useCallback(async () => {
+    setLoading(true);
+    const _replies = await getRepliesAction(commentId);
+
+    if (!_replies || "message" in _replies) {
+      setLoading(false);
+      return;
+    }
+    setReplies(_replies);
+    setLoading(false);
+  }, [commentId]);
+
+  useEffect(() => {
+    fetchReplies();
+  }, [fetchReplies]);
+
+  return { replies, loading, refetch: fetchReplies };
+};
+
 export default function ThreadPage({}) {
   const params = useParams();
   const { state: authState, user, novelist, state } = useAuthContext();
-  const [comment, setComment] = useState<Comment | null>(null);
-  const [loading, setLoading] = useState(true);
   const commentId = params?.slug as string;
+  const { comment, loading } = useGetComment(commentId);
+  const {
+    replies,
+    loading: repliesLoading,
+    refetch: refetchReplies,
+  } = useGetReplies(commentId);
   const { push } = useRouter();
 
   const onAvatarClick = (sourceId: string | undefined) => {
@@ -33,29 +83,8 @@ export default function ThreadPage({}) {
     push(`/rp/prompt/${comment?.prompt?.id}`);
   };
 
-  const fetchThread = async (museId: string) => {
-    setLoading(true);
-    const _comment = await getCommentAction(museId);
-
-    if (!_comment || "message" in _comment) {
-      setLoading(false);
-      push("/404");
-      return;
-    }
-    console.log(_comment);
-    setLoading(false);
-    setComment(_comment);
-  };
-
-  useEffect(() => {
-    if (authState === "LOADING" || comment) return;
-
-    fetchThread(commentId);
-  }, [authState]);
-
-  const loadReplies = (comment: Comment | null) => {
-    if (comment === null) return <></>;
-    return comment.replies.map((reply) => (
+  const loadReplies = () => {
+    return [...replies].reverse().map((reply) => (
       <>
         <Flex direction="column" gap={0} style={{ marginBottom: "10px" }}>
           <Flex>
@@ -169,12 +198,13 @@ export default function ThreadPage({}) {
             <S.Date>{toFormattedDate(comment?.createdOn)}</S.Date>
           </Flex>
         </Flex>
-        {loadReplies(comment)}
+        {loadReplies()}
         {state === "LOGGED_IN" && (
           <PromptInput
             muses={novelist?.muses || []}
             parentId={commentId}
             type="reply"
+            onSend={refetchReplies}
           />
         )}
       </S.RepliesContainer>

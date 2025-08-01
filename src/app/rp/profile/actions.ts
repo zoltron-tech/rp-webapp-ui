@@ -61,24 +61,16 @@ export const enhanceAvatar = async (formData: FormData) => {
   return result;
 };
 
-export const deleteAvatar = async (filename: string) => {
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/s3/delete/${filename}`;
+export const deleteMedia = async (filename: string) => {
+  const parsedFilename = filename.replace("/", "-slash-");
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/s3/delete/${parsedFilename}`;
 
-  Logger.debug("deleteAvatar", filename);
-  const response = await fetch(URL, {
+  console.log("removing media", URL);
+
+  await fetch(URL, {
     method: "DELETE",
     cache: "no-store",
   });
-
-  Logger.debug("deleteAvatar: response", response);
-
-  if (response.status !== 200) {
-    return { message: "Error deleting avatar" };
-  }
-
-  const result = await response.json();
-
-  return result;
 };
 
 export const sendFriendRequest = async (novelistId: string) => {

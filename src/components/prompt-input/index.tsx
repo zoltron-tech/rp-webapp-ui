@@ -5,16 +5,13 @@ import {
   FormEventHandler,
   forwardRef,
   useCallback,
-  useEffect,
   useMemo,
   useState,
 } from "react";
 import { Muse, SubmitPromptInput, SubmitPromptType } from "@/types";
 import { useAuthContext } from "@/hooks";
 import { StoreProvider } from "@/context/store/context";
-
 import { Collapsible, Form } from "radix-ui";
-import * as S from "./styles";
 import { PromptTextField } from "./prompt-text-field";
 import { SendButton } from "./sent-button";
 import { PromptMuseSelect } from "./prompt-muse-select";
@@ -23,27 +20,29 @@ import {
   apiMessageToInfoMessage,
   getParentIdKeyFromPromptType,
   museToSource,
+  PromptEvent,
   typeToTriggerButtonText,
+  usePromptEvents,
 } from "./helpers";
 import { submitPrompt } from "@/app/rp/profile/actions";
 import { PromptPrivacySelect } from "./privacy-select";
 import { API_MESSAGE } from "@/utils/constants";
 import { InfoBox } from "../info-box";
 import classNames from "classnames";
-import { BsArrowBarDown, BsArrowsCollapse } from "react-icons/bs";
-import { IoIosArrowDown, IoIosArrowDropdown } from "react-icons/io";
-import { MdKeyboardArrowDown } from "react-icons/md";
+import { BsArrowsCollapse } from "react-icons/bs";
 import { INITIAL_STATE, PromptInputState } from "./prompt-input.store";
 import { PromptMediaPreview } from "./prompt-media-preview";
+import * as S from "./styles";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   muses: Muse[];
   type: SubmitPromptType;
   parentId?: string;
+  onSend?: () => void;
 };
 
 export const PromptInput: FC<Props> = forwardRef(
-  ({ type = "prompt", parentId = "", ...rest }, forwardedRef) => {
+  ({ type = "prompt", parentId = "", onSend, ...rest }, forwardedRef) => {
     const { novelist } = useAuthContext();
     const muses = useMemo(() => {
       return novelist?.muses ?? [];
@@ -51,7 +50,7 @@ export const PromptInput: FC<Props> = forwardRef(
     const [open, setOpen] = useState(false);
     const [sending, setSending] = useState(false);
     const [error, setError] = useState<API_MESSAGE | null>(null);
-
+    const { emit } = usePromptEvents();
     const handleInfoBoxClose = useCallback(() => {
       setError(null);
     }, []);
@@ -81,20 +80,28 @@ export const PromptInput: FC<Props> = forwardRef(
           payload[getParentIdKeyFromPromptType(type)] = parentId;
         }
 
-        console.log(payload);
         setSending(true);
         const response = await submitPrompt(payload, type);
-        console.log(response);
+
         if (response.message !== API_MESSAGE.Success) {
           setError(response.message);
           setSending(false);
+          emit(PromptEvent.Error, response.message);
           return;
         }
 
+        emit(PromptEvent.Sent, {
+          type,
+          payload,
+          muse: selectedMuse,
+        });
+
         setSending(false);
         setError(null);
+        setOpen(false);
+        onSend?.();
       },
-      [muses, parentId, type]
+      [muses, parentId, type, emit, onSend]
     );
 
     return (
@@ -131,9 +138,8 @@ export const PromptInput: FC<Props> = forwardRef(
                     <PromptTextField />
                     <PromptMediaInput />
                     <PromptMediaPreview />
-                    <SendButton />
+                    <SendButton loading={sending} />
                   </Form.Root>
-                  {sending ? "Sending..." : null}
                 </Collapsible.Content>
               </S.PromptInputContainer>
             </StoreProvider>

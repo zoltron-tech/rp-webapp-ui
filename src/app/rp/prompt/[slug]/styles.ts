@@ -317,7 +317,6 @@ export const CardWrapper = styled.div`
     width: 200px;
     height: 200px;
     margin-inline: 20px;
-    border-radius: 30%;
   }
 
   &.mobile {

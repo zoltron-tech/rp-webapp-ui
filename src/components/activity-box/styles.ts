@@ -1,9 +1,8 @@
 import * as Common from "@/components/common";
 import { Z_INDEX, CARD_BORDER, BORDER_RADIUS } from "@/theme";
-import { Container } from "@novelist-world/ui";
 import styled from "styled-components";
 
-export const ParentContainer = styled(Container)`
+export const ParentContainer = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -12,23 +11,17 @@ export const ParentContainer = styled(Container)`
   padding-inline: 60px;
   margin-block: 5px;
   padding-top: 10px;
-  border: none;
-  background-color: transparent;
 
   @container content-container (max-width: 800px) {
     padding-inline: 10px;
     margin-block: 0px;
     width: 100%;
-    border-radius: 0px;
-    border: none;
   }
 
   @container content-container (max-width: 500px) {
     padding-inline: 0px;
     margin-block: 0px;
     width: 100%;
-    border-radius: 0px;
-    border: none;
   }
 `;
 
@@ -39,7 +32,7 @@ export const HeaderContainer = styled.div`
   align-items: center;
   width: 100%;
   padding-inline: 10px;
-  border-bottom: 1px solid slategray;
+  border-bottom: 1px solid var(--bg-6);
   gap: 0.3em;
 
   @container content-container (max-width: 1000px) {
@@ -72,6 +65,7 @@ export const FooterContainer = styled.div`
   width: 100%;
   gap: 0.5em;
   margin-top: 10px;
+  border-top: 1px solid var(--bg-6);
 
   @container content-container (max-width: 1000px) {
     margin-bottom: 10px;
@@ -214,7 +208,7 @@ export const CardWrapper = styled.div`
   width: 500px;
   height: 500px;
   margin-inline: 100px;
-  border-radius: 5%;
+  border-radius: 10px;
   margin-block: 20px;
   ${CARD_BORDER};
 

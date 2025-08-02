@@ -52,7 +52,7 @@ export const Card = styled.div`
   height: 100%;
   contain: paint;
   gap: 1em;
-  border-bottom: 1px solid dimgray;
+  border-bottom: 1px solid var(--bg-6);
 `;
 
 export const Avatar = styled(Common.Avatar)`

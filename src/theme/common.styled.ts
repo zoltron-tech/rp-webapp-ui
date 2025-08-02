@@ -86,5 +86,5 @@ export const BASE_TRANSITION = css`
 `;
 
 export const CARD_BORDER = css`
-  border: 1px solid dimgray;
+  border: 1px solid var(--bg-6);
 `;

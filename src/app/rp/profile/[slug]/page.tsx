@@ -306,9 +306,7 @@ export default function UserProfilePage({}) {
               alt="profile-picture"
               size={130}
             />
-            <S.NoteContainer>
-              <Quote>{novelist?.note}</Quote>
-            </S.NoteContainer>
+            <S.NoteContainer>{novelist?.note}</S.NoteContainer>
           </Flex>
           <S.ContentInner>
             <Flex>

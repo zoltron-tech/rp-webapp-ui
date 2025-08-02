@@ -46,9 +46,23 @@ export const FriendRequestNotification: FC<Props> = ({
     }
   };
 
-  const onAvatarClick = () => {
-    if (!notification) return;
-    push(`/rp/profile/${notification.source.urlProp}`);
+  const handleCardClick = (
+    e: React.MouseEvent<HTMLDivElement>,
+    notification: NovelistWorldNotification
+  ) => {
+    const target = e.target as HTMLDivElement;
+    if (target.classList.contains("button")) return;
+
+    if (notification.type === "MUSE_CONNECTION_REQUEST")
+      push(`/rp/muse/${notification.target.urlProp}`);
+    else if (
+      ["PROMPT_COMMENT", "PROMPT_COMMENT_REPLY", "REPLY"].includes(
+        notification.type
+      )
+    )
+      push(`/rp/thread/${notification.target.urlProp}`);
+    else if (notification.type === "FRIEND_REQUEST")
+      push(`/rp/profile/${notification.source.urlProp}`);
   };
 
   Logger.info("FriendRequestNotification rendered");
@@ -57,14 +71,16 @@ export const FriendRequestNotification: FC<Props> = ({
 
   return (
     <S.CardWrapper {...rest}>
-      <S.Card className="muse-card">
+      <S.Card
+        className="muse-card"
+        onClick={(e) => handleCardClick(e, notification)}
+      >
         <S.CardHeader>
           <Avatar
             src={notification.source.image || ""}
             alt={""}
             size={40}
             name={"open"}
-            onClick={onAvatarClick}
             hoverable
           />
           <S.NotificationBox>

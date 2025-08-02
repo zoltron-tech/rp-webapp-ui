@@ -3,18 +3,16 @@ import { Z_INDEX, CARD_BORDER, BORDER_RADIUS } from "@/theme";
 import { Container, Flex } from "@novelist-world/ui";
 import styled from "styled-components";
 
-export const ParentContainer = styled(Container)`
+export const ParentContainer = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  border: none;
   z-index: ${Z_INDEX.CARD};
   background-color: var(--bg-1);
-  border-radius: unset !important;
-  border: none !important;
+  padding-block: 20px;
 
-  @container content-container (max-width: 1400px) {
+  @container content-container (max-width: 800px) {
     flex-direction: column;
     justify-content: center;
     border-radius: 0px;
@@ -30,6 +28,7 @@ export const RepliesContainer = styled(Container)`
   contain: unset;
   z-index: ${Z_INDEX.CARD_EXPAND};
   background-color: var(--bg-3);
+  padding-top: unset;
 
   @container content-container (max-width: 800px) {
     max-width: 100%;
@@ -58,9 +57,8 @@ export const HeaderContainer = styled.div`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 10px;
   width: 100%;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
   border-bottom: 1px solid dimgray;
 `;
 

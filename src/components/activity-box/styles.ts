@@ -11,23 +11,17 @@ export const ParentContainer = styled.div`
   padding-inline: 60px;
   margin-block: 5px;
   padding-top: 10px;
-  border: none;
-  background-color: transparent;
 
   @container content-container (max-width: 800px) {
     padding-inline: 10px;
     margin-block: 0px;
     width: 100%;
-    border-radius: 0px;
-    border: none;
   }
 
   @container content-container (max-width: 500px) {
     padding-inline: 0px;
     margin-block: 0px;
     width: 100%;
-    border-radius: 0px;
-    border: none;
   }
 `;
 

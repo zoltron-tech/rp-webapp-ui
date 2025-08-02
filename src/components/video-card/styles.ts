@@ -33,7 +33,7 @@ export const CardWrapper = styled.div`
   min-height: 350px;
   height: 350px;
   border-radius: var(--border-radius);
-  border: 1px solid var(--bg-6);
+  ${CARD_BORDER};
   background-color: ${({ theme }: any) => theme.background};
   transition: all 0.3s ease-in-out;
   contain: paint;

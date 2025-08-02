@@ -5,7 +5,6 @@ import {
   Z_INDEX,
 } from "@/theme";
 import styled from "styled-components";
-import * as Common from "@/components/common";
 
 export const PositionContainer = styled.div`
   ${DEV_MODE_BORDER("red")}
@@ -19,7 +18,7 @@ export const Menu = styled.div`
   position: absolute;
   top: 60px;
   right: -10px;
-  padding: 5px;
+  padding-inline: 5px;
 
   display: flex;
   flex-direction: column;
@@ -91,12 +90,13 @@ export const Heading = styled.div`
 `;
 
 export const Text = styled.div`
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 300;
   color: ${({ theme }: any) => theme.text};
 
   &.unread {
-    font-weight: 700;
+    font-size: 10px;
+    font-weight: 600;
   }
 `;
 

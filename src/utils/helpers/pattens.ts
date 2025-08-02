@@ -35,7 +35,7 @@ export const toFormattedDate = (dateTimeString: string | undefined): string => {
 
   const units = [
     { name: "y", value: now.diff(date, "years") },
-    { name: "mon", value: now.diff(date, "months") },
+    { name: " mon", value: now.diff(date, "months") },
     { name: "d", value: now.diff(date, "days") },
     { name: "h", value: now.diff(date, "hours") },
     { name: "m", value: now.diff(date, "minutes") },
@@ -57,8 +57,8 @@ export const toFormattedDateFromUnix = (
   const now = moment();
 
   const units = [
-    { name: "y", value: now.diff(date, "years") },
-    { name: "mon", value: now.diff(date, "months") },
+    { name: " y", value: now.diff(date, "years") },
+    { name: " mon", value: now.diff(date, "months") },
     { name: "d", value: now.diff(date, "days") },
     { name: "h", value: now.diff(date, "hours") },
     { name: "m", value: now.diff(date, "minutes") },

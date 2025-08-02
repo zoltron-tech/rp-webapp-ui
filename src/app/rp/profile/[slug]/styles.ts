@@ -2,7 +2,6 @@ import { Avatar as AvatarCommon, Pill } from "@/components/common";
 import { BLUR_FILTER, DEV_MODE_BORDER, Z_INDEX } from "@/theme";
 import styled, { css } from "styled-components";
 import { Badge } from "../../tiers/styles";
-import { Container } from "@novelist-world/ui";
 
 interface BannerProps {
   src: string;
@@ -70,19 +69,25 @@ export const ContentRight = styled.div`
   }
 `;
 
-export const ContentInner = styled(Container)`
+export const ContentInner = styled.div`
   ${DEV_MODE_BORDER("blue")}
   display: flex;
   flex-direction: column;
+  padding-block: 10px;
+  border-radius: 20px;
+  border: 1px solid var(--bg-4);
   align-items: center;
   background-color: var(--bg-2);
+  width: 850px;
 
   @container (max-width: 1024px) {
-    max-width: 100%;
     width: 100%;
     padding-inline: 0px;
     margin-top: 10px;
     border-radius: 0px;
+    border-right: unset;
+    border-left: unset;
+    border-bottom: unset;
   }
 `;
 
@@ -93,7 +98,6 @@ export const ButtonsContainer = styled.div`
   justify-content: center;
   font-weight: 600;
   border-radius: var(--border-radius);
-  margin-top: 10px;
 
   @container (max-width: 800px) {
     & {
@@ -182,14 +186,15 @@ export const PartitionContainer = styled.div`
   }
 `;
 
-export const ContentContainer = styled(Container)`
+export const ContentContainer = styled.div`
   width: 95%;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   padding-inline: unset;
-  padding-bottom: 5px;
+  padding: 10px 0 5px;
+  border-radius: 10px;
   background-color: var(--bg-3);
 `;
 
@@ -291,7 +296,7 @@ export const AvatarMobile = styled(AvatarCommon)`
 export const ExtendedBadge = styled(Badge)`
   width: 30px;
   height: 30px;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
   cursor: pointer;
 
   & svg {
@@ -343,20 +348,20 @@ export const UsernameContainer = styled.div`
 export const NoteContainer = styled(Pill)`
   position: relative;
   width: 40%;
-  left: -150px;
-  top: -100px;
+  right: 170px;
+  bottom: 100px;
   word-break: break-word;
   border-radius: 20px;
   border-bottom: 1px solid dimgray;
   border-right: 1px solid dimgray;
-  padding: 10px;
+  padding-inline: 20px;
   z-index: 100;
 
-  @container profile-content (max-width: 500px) {
+  @container profile-content (max-width: 800px) {
     & {
       width: unset;
-      left: -120px;
-      top: -60px;
+      right: 120px;
+      bottom: 60px;
     }
   }
 
@@ -368,7 +373,7 @@ export const NoteContainer = styled(Pill)`
 `;
 
 export const MusePillContainer = styled.div`
-  width: 100%;
+  width: 95%;
   margin-inline: auto;
   margin-top: 10px;
   margin-bottom: 20px;

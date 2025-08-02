@@ -8,8 +8,11 @@ import classNames from "classnames";
 import { Activity, ActivityTarget } from "@/types/activity";
 import moment from "moment";
 import { ShouldRender } from "../common";
-import { FaComments } from "react-icons/fa6";
+import { FaComments, FaStreetView, FaUser } from "react-icons/fa6";
 import { Flex } from "@novelist-world/ui";
+import { toFormattedDateFromUnix } from "@/utils/helpers";
+import { IoIosPeople } from "react-icons/io";
+import { PiBookOpenUserDuotone } from "react-icons/pi";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   activity?: Activity | null;
@@ -69,22 +72,6 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
       push(`/rp/profile/${activity.source.urlProp}`);
   };
 
-  const toFormattedDate = (unixTime: number): string => {
-    const date = moment.unix(unixTime);
-    const now = moment();
-
-    const units = [
-      { name: "y", value: now.diff(date, "years") },
-      { name: "mon", value: now.diff(date, "months") },
-      { name: "d", value: now.diff(date, "days") },
-      { name: "h", value: now.diff(date, "hours") },
-      { name: "m", value: now.diff(date, "minutes") },
-    ];
-
-    const unit = units.find((u) => u.value > 0);
-    return unit ? `${unit.value}${unit.name} ago` : "just now";
-  };
-
   Logger.info("activity rendered");
 
   if (!activity) return <></>;
@@ -107,7 +94,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
           </S.SourceName>
           <S.ActivityText>{activity.activityText}</S.ActivityText>
         </Flex>
-        <S.Date>{toFormattedDate(activity.date)}</S.Date>
+        <S.Date>{toFormattedDateFromUnix(activity.date)}</S.Date>
       </S.HeaderContainer>
       <Flex direction="column" align="center">
         <ShouldRender
@@ -193,6 +180,36 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
           <FaComments />
           <S.PromptFooterText onClick={(e) => handleCardClick(e, activity)}>
             View Threads & Replies.
+          </S.PromptFooterText>
+        </S.FooterContainer>
+      </ShouldRender>
+      <ShouldRender if={["MUSE"].includes(activity.target.activityTargetType)}>
+        <S.FooterContainer>
+          <FaStreetView />
+          <S.PromptFooterText onClick={(e) => handleCardClick(e, activity)}>
+            View Muse.
+          </S.PromptFooterText>
+        </S.FooterContainer>
+      </ShouldRender>
+      <ShouldRender
+        if={["STORY_BOARD", "STORY_BOARD_EVENT"].includes(
+          activity.target.activityTargetType
+        )}
+      >
+        <S.FooterContainer>
+          <PiBookOpenUserDuotone />
+          <S.PromptFooterText onClick={(e) => handleCardClick(e, activity)}>
+            View Story.
+          </S.PromptFooterText>
+        </S.FooterContainer>
+      </ShouldRender>
+      <ShouldRender
+        if={["PROFILE"].includes(activity.target.activityTargetType)}
+      >
+        <S.FooterContainer>
+          <FaUser />
+          <S.PromptFooterText onClick={(e) => handleCardClick(e, activity)}>
+            View Profile.
           </S.PromptFooterText>
         </S.FooterContainer>
       </ShouldRender>

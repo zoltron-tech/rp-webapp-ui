@@ -3,7 +3,7 @@ import { Z_INDEX, CARD_BORDER } from "@/theme";
 import { Container, Flex } from "@novelist-world/ui";
 import styled from "styled-components";
 
-export const VideoContainer = styled(Container)`
+export const VideoContainer = styled.div`
   padding: 0px;
   border-radius: 0px;
 `;
@@ -33,7 +33,7 @@ export const CardWrapper = styled.div`
   min-height: 350px;
   height: 350px;
   border-radius: var(--border-radius);
-  ${CARD_BORDER};
+  border: 1px solid var(--bg-6);
   background-color: ${({ theme }: any) => theme.background};
   transition: all 0.3s ease-in-out;
   contain: paint;

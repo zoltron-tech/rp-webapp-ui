@@ -56,7 +56,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
         <Avatar
           src={novelist?.image || ""}
           alt="profile-menu"
-          size={50}
+          size={45}
           hoverable
         />
         <S.Menu className={classNames({ open })}>

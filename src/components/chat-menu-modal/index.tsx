@@ -108,7 +108,9 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
       <S.ContentContainer onClick={toggleState(setOpen)}>
         {unreadCount > 0 && <S.UnreadBadge>{unreadCount}</S.UnreadBadge>}
 
-        <IoChatbubblesSharp size={40} />
+        <S.IconWrapper>
+          <IoChatbubblesSharp className="menu-icon" />
+        </S.IconWrapper>
         <S.Menu className={classNames({ open })}>
           {conversations &&
             conversations.slice(0, 5).map((conversation) => (

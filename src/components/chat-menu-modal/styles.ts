@@ -13,10 +13,28 @@ export const PositionContainer = styled.div`
   right: 7.8rem;
 `;
 
+export const IconWrapper = styled.div`
+  position: relative;
+  right: 30px;
+  container-type: inline-size;
+
+  .menu-icon {
+    height: 38px;
+    width: 38px;
+  }
+
+  @media (max-width: 700px) {
+    .menu-icon {
+      height: 30px;
+      width: 30px;
+    }
+  }
+`;
+
 export const Menu = styled.div`
   box-shadow: 0px 0px 10px 4px rgba(0, 0, 0, 0.5);
   position: absolute;
-  top: 60px;
+  top: 55px;
   right: -10px;
   padding-inline: 5px;
 
@@ -43,12 +61,18 @@ export const Menu = styled.div`
     height: 1px;
     opacity: 0.6;
   }
+
+  @media (max-width: 700px) {
+    & {
+      top: 45px;
+    }
+  }
 `;
 
 export const UnreadBadge = styled.div`
   position: absolute;
   top: 0;
-  right: 0;
+  right: -5px;
   transform: translate(10%, -10%);
   background-color: ${({ theme }: any) => theme.unreadBadge};
   color: white;

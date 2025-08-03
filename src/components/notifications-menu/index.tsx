@@ -12,6 +12,7 @@ import * as S from "./styles";
 import { getNotifications } from "@/app/rp/novelists/actions";
 import { NovelistWorldNotification } from "@/types";
 import { FriendRequestNotification } from "../friend-request-notification";
+import { IconWrapper } from "./styles";
 
 interface NotificationsMenuProps {}
 
@@ -60,7 +61,9 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
         {unreadCount > 0 && (
           <S.NotificationBadge>{unreadCount}</S.NotificationBadge>
         )}
-        <IoMdNotifications size={45} />
+        <IconWrapper>
+          <IoMdNotifications className="menu-icon" />
+        </IconWrapper>
         <S.Menu className={classNames({ open })}>
           {notifications &&
             notifications.map((request) => (

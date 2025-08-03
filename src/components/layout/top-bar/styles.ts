@@ -39,6 +39,12 @@ export const Bar = styled.div`
   container-name: top-bar;
   container-type: size;
   z-index: ${Z_INDEX.TOPBAR};
+
+  @container (max-width: 700px) {
+    & {
+      height: 45px;
+    }
+  }
 `;
 export const LogoContainer = styled.div`
   display: flex;
@@ -50,8 +56,8 @@ export const LogoContainer = styled.div`
 `;
 
 export const Logo = styled.div`
-  height: 100cqh;
-  width: 80cqh;
+  height: 80cqh;
+  width: 60cqh;
   display: flex;
   align-items: center;
   ${NO_USER_SELECT}
@@ -64,8 +70,8 @@ export const Logo = styled.div`
 `;
 
 export const LogoInner = styled.div`
-  height: 75cqh;
-  width: 75cqh;
+  height: 60cqh;
+  width: 60cqh;
   margin-inline: auto;
   border-radius: 40cqh;
   display: flex;
@@ -80,8 +86,8 @@ export const LogoInner = styled.div`
   ${NO_USER_SELECT}
 
   & > svg {
-    height: 40cqh;
-    width: 40cqh;
+    height: 35cqh;
+    width: 35cqh;
     fill: ${({ theme }: any) => theme.textPrimary};
   }
 
@@ -118,7 +124,7 @@ export const SearchContainer = styled.div`
 
   ${DEV_MODE_BORDER("red")}
 
-  @container (max-width: 650px) {
+  @media (max-width: 700px) {
     & {
       display: none;
     }

@@ -356,9 +356,12 @@ export const NoteContainer = styled(Pill)`
   border-right: 1px solid dimgray;
   padding-inline: 20px;
   z-index: 100;
+  font-size: var(--font-size);
+  padding-block: unset;
 
   @container profile-content (max-width: 800px) {
     & {
+      font-size: var(--font-size-small);
       width: unset;
       right: 120px;
       bottom: 60px;

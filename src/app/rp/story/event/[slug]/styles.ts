@@ -31,6 +31,7 @@ export const RepliesContainer = styled(Container)`
   contain: unset;
   z-index: ${Z_INDEX.CARD_EXPAND};
   background-color: transparent;
+  border: none;
 
   @container content-container (max-width: 800px) {
     max-width: 100%;

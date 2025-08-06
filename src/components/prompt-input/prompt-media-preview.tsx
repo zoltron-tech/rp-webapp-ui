@@ -3,13 +3,13 @@ import { FC, useCallback } from "react";
 import { usePromptInputState } from "./prompt-input.store";
 import { IoIosRemoveCircle } from "react-icons/io";
 import classNames from "classnames";
-import { PromptEvent, usePromptEvents } from "./helpers";
+import { PromptEvent, usePromptInputEvents } from "./helpers";
 import * as S from "./styles";
 
 export const PromptMediaPreview: FC = () => {
   const media = usePromptInputState("media");
   const uploading = usePromptInputState("mediaUploading");
-  const { emit } = usePromptEvents();
+  const { emit } = usePromptInputEvents();
 
   const handleRemoveMedia = useCallback(() => {
     emit(PromptEvent.MediaDeleted);

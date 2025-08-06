@@ -27,6 +27,22 @@ export const verifyUsernamePattern = (username: string) => {
   return usernameRegex.test(username);
 };
 
+export const pluralize = (text: string, count: number): string => {
+  if (count === 1) {
+    return text;
+  }
+
+  if (text.endsWith("s")) {
+    return text; // Already plural
+  }
+
+  if (text.endsWith("y")) {
+    return text.slice(0, -1) + "ies"; // Change 'y' to 'ies'
+  }
+
+  return text + "s"; // Default pluralization
+};
+
 export const toFormattedDate = (dateTimeString: string | undefined): string => {
   if (!dateTimeString) return "unknown";
 
@@ -34,13 +50,30 @@ export const toFormattedDate = (dateTimeString: string | undefined): string => {
   const now = moment();
 
   const units = [
-    { name: "y", value: now.diff(date, "years") },
-    { name: "mon", value: now.diff(date, "months") },
-    { name: "d", value: now.diff(date, "days") },
-    { name: "h", value: now.diff(date, "hours") },
-    { name: "m", value: now.diff(date, "minutes") },
+    { name: "year", value: now.diff(date, "years") },
+    { name: "month", value: now.diff(date, "months") },
+    { name: "day", value: now.diff(date, "days") },
+    { name: "hour", value: now.diff(date, "hours") },
+    { name: "minute", value: now.diff(date, "minutes") },
   ];
 
   const unit = units.find((u) => u.value > 0);
-  return unit ? `${unit.value}${unit.name} ago` : "just now";
+
+  if (!unit) {
+    return "just now";
+  }
+
+  return `${unit.value} ${pluralize(unit.name, unit.value)} ago`;
+};
+
+export const displayDate = (dateTimeString: string | undefined): string => {
+  if (!dateTimeString) return "unknown";
+
+  const date = moment(dateTimeString);
+  return date.format("MMM D, YYYY [at] h:mm A");
+};
+
+export const parseTextContent = (text: string) => {
+  if (!text) return [];
+  return text.split("\\n");
 };

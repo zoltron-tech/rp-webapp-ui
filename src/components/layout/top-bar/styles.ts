@@ -16,7 +16,7 @@ export const Container = styled.div`
   align-items: center;
   top: 0;
   margin-inline: auto;
-  background-color: ${({ theme }: any) => setOpacity(theme.navbar, 0.95)};
+  background-color: var(--bg-3);
   display: flex;
   justify-content: space-between;
   z-index: ${Z_INDEX.TOPBAR};

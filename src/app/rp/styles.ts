@@ -7,9 +7,8 @@ export const PageContainer = styled.main`
   width: 100vw;
   position: relative;
   z-index: ${Z_INDEX.BACKGROUND};
-  background-color: ${({ theme }: any) => theme.background};
-  //background-image: url(https://cli.github.com/assets/images/light-glow.svg);
-  color: ${({ theme }: any) => theme.text};
+  background-color: var(--bg-1);
+  color: var(--text);
 
   scroll-behavior: smooth;
   overflow-y: auto;

@@ -13,6 +13,10 @@ export const getPromptAction = async (promptId: string) => {
 
   const response = await fetch(URL, {
     cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: await authenticateAndGetJWT(),
+    },
   });
 
   Logger.debug("getPromptAction", response.status);
@@ -32,6 +36,10 @@ export const getPropmptCommentsAction = async (promptId: string) => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/${promptId}/comments`;
   const response = await fetch(URL, {
     cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: await authenticateAndGetJWT(),
+    },
   });
 
   if (response.status === 404) {

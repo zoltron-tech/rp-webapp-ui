@@ -5,17 +5,41 @@ export const PromptTrigger = styled.button`
   all: unset;
   cursor: pointer;
   font-family: var(--font);
-  font-size: var(--font-size-large);
-  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-medium);
   display: flex;
   align-items: center;
   justify-content: start;
+  padding: 6px 12px;
+  border-radius: 4px;
+
+  .plus-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+    border-radius: 50%;
+    color: var(--text);
+    background-color: var(--accent);
+  }
 
   &:not(.open) {
-    width: 100%;
-    &:hover,
+    &:hover {
+      /* background-color: var(--bg-3); */
+      .plus-icon {
+        background-color: var(--accent-hover);
+      }
+    }
+
+    &:active {
+      /* background-color: var(--bg-2); */
+      .plus-icon {
+        background-color: var(--accent-active);
+      }
+    }
+
     &:focus {
-      color: var(--accent-hover);
+      outline: 1.5px solid var(--accent);
+      outline-offset: 2px;
     }
   }
 
@@ -41,39 +65,33 @@ export const PromptTrigger = styled.button`
     }
 
     &:focus {
-      outline: 1px solid var(--accent);
+      outline: 1.5px solid var(--accent);
     }
   }
 `;
 
 export const PromptInputRoot = styled.div`
-  width: 100%;
-  position: relative;
-  padding: 8px;
-
-  * {
-    font-family: var(--font);
-  }
-`;
-
-export const PromptInputContainer = styled.div`
   max-width: 800px;
   width: 100%;
   margin: 0 auto;
-  padding: 8px;
 
   transition-property: padding-top;
   transition-duration: 0.25s;
   transition-timing-function: ease-in-out;
-  background-color: var(--bg-2);
-  border: 0.85px solid #333;
-  box-shadow: 0 10px 38px -10px rgba(0, 0, 0, 0.25);
+
   position: relative;
+
+  * {
+    font-family: var(--font);
+  }
 
   &.open {
     padding-top: 28px;
     padding-bottom: 45px;
     padding-inline: 16px;
+    background-color: var(--bg-2);
+    border: 0.85px solid var(--bg-4);
+    box-shadow: 0 10px 38px -10px rgba(0, 0, 0, 0.25);
   }
 
   .form-content {
@@ -107,11 +125,11 @@ export const TextInputContainer = styled(Form.Field)`
     min-height: 100px;
 
     &:focus {
-      outline: 1px solid var(--accent);
+      outline: 1.5px solid var(--accent);
     }
 
     &[data-invalid="true"] {
-      outline: 1px solid var(--error-9-e);
+      outline: 1.5px solid var(--tomato-9-e);
     }
   }
 
@@ -150,7 +168,7 @@ const SelectBase = styled(Form.Field)`
     user-select: none;
 
     &:focus {
-      outline: 1px solid var(--accent);
+      outline: 1.5px solid var(--accent);
     }
 
     .select-value {
@@ -213,6 +231,8 @@ const SelectPortalBase = styled(Select.Portal)`
 
     &:focus {
       outline: none;
+      background-color: var(--bg-5);
+      border-radius: 4px;
     }
 
     &[data-state="unchecked"] {
@@ -373,14 +393,14 @@ export const MediaPreviewRoot = styled.div`
 
     &:hover,
     &:focus {
-      background-color: var(--error-5);
+      background-color: var(--tomato-5);
       & + .media-preview-image {
-        outline: 1px solid var(--error-8);
+        outline: 1.5px solid var(--tomato-8);
       }
     }
 
     &:active {
-      background-color: var(--error-6);
+      background-color: var(--tomato-6);
     }
 
     svg {

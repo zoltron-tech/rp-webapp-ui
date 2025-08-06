@@ -5,6 +5,7 @@ import {
   FormEventHandler,
   forwardRef,
   useCallback,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -22,7 +23,7 @@ import {
   museToSource,
   PromptEvent,
   typeToTriggerButtonText,
-  usePromptEvents,
+  usePromptInputEvents,
 } from "./helpers";
 import { submitPrompt } from "@/app/rp/profile/actions";
 import { PromptPrivacySelect } from "./privacy-select";
@@ -33,6 +34,7 @@ import { BsArrowsCollapse } from "react-icons/bs";
 import { INITIAL_STATE, PromptInputState } from "./prompt-input.store";
 import { PromptMediaPreview } from "./prompt-media-preview";
 import * as S from "./styles";
+import { PromptInputTrigger } from "./prompt-input-trigger";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   muses: Muse[];
@@ -42,7 +44,10 @@ type Props = React.HTMLProps<HTMLDivElement> & {
 };
 
 export const PromptInput: FC<Props> = forwardRef(
-  ({ type = "prompt", parentId = "", onSend, ...rest }, forwardedRef) => {
+  (
+    { type = "prompt", parentId = "", onSend, className, ...rest },
+    forwardedRef
+  ) => {
     const { novelist } = useAuthContext();
     const muses = useMemo(() => {
       return novelist?.muses ?? [];
@@ -50,7 +55,7 @@ export const PromptInput: FC<Props> = forwardRef(
     const [open, setOpen] = useState(false);
     const [sending, setSending] = useState(false);
     const [error, setError] = useState<API_MESSAGE | null>(null);
-    const { emit } = usePromptEvents();
+    const { emit } = usePromptInputEvents();
     const handleInfoBoxClose = useCallback(() => {
       setError(null);
     }, []);
@@ -113,37 +118,28 @@ export const PromptInput: FC<Props> = forwardRef(
           onClose={handleInfoBoxClose}
         />
         <Collapsible.Root open={open} onOpenChange={setOpen} asChild>
-          <S.PromptInputRoot
-            {...rest}
-            ref={forwardedRef as React.Ref<HTMLDivElement>}
+          <StoreProvider<PromptInputState>
+            storeId="prompt-input"
+            initial={{ ...INITIAL_STATE, parentId, type }}
           >
-            <StoreProvider<PromptInputState>
-              storeId="prompt-input"
-              initial={{ ...INITIAL_STATE, parentId, type }}
+            <S.PromptInputRoot
+              {...rest}
+              className={classNames([className, { open }])}
+              ref={forwardedRef as React.Ref<HTMLDivElement>}
             >
-              <S.PromptInputContainer className={classNames([{ open }])}>
-                <Collapsible.Trigger asChild>
-                  <S.PromptTrigger className={classNames([{ open }])}>
-                    {open ? (
-                      <BsArrowsCollapse />
-                    ) : (
-                      typeToTriggerButtonText(type)
-                    )}
-                  </S.PromptTrigger>
-                </Collapsible.Trigger>
-                <Collapsible.Content>
-                  <Form.Root className="form-content" onSubmit={handleSend}>
-                    <PromptMuseSelect muses={muses} />
-                    {type === "prompt" && <PromptPrivacySelect />}
-                    <PromptTextField />
-                    <PromptMediaInput />
-                    <PromptMediaPreview />
-                    <SendButton loading={sending} />
-                  </Form.Root>
-                </Collapsible.Content>
-              </S.PromptInputContainer>
-            </StoreProvider>
-          </S.PromptInputRoot>
+              <PromptInputTrigger open={open} />
+              <Collapsible.Content>
+                <Form.Root className="form-content" onSubmit={handleSend}>
+                  <PromptMuseSelect muses={muses} />
+                  {type === "prompt" && <PromptPrivacySelect />}
+                  <PromptTextField />
+                  <PromptMediaInput />
+                  <PromptMediaPreview />
+                  <SendButton loading={sending} />
+                </Form.Root>
+              </Collapsible.Content>
+            </S.PromptInputRoot>
+          </StoreProvider>
         </Collapsible.Root>
       </>
     );

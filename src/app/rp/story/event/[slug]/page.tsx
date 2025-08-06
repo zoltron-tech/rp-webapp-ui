@@ -162,7 +162,7 @@ export default function StoryboardEventPage({}) {
       </ShouldRender>
       <S.RepliesContainer>
         <S.HeaderContainer>
-          <Flex style={{ width: "100%" }}>
+          <Flex>
             <IoArrowBackOutline
               size={30}
               onClick={() => onBackClick()}

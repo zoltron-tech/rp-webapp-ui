@@ -63,20 +63,20 @@ export const apiMessageToInfoMessage = (
 export const typeToTriggerButtonText = (type: SubmitPromptType): string => {
   switch (type) {
     case "comment":
-      return "Add Comment";
+      return "Start a new thread";
     case "reply":
       return "Reply";
     default:
     case "prompt":
-      return "Create Prompt";
+      return "Create a new prompt";
   }
 };
 
-export const usePromptEvents = () =>
+export const usePromptInputEvents = () =>
   useCustomEvents("prompt-input", usePromptInputState("parentId"));
 
 export const useRunOn = (events: PromptEvent[], callback: () => void) => {
-  const { on, off } = usePromptEvents();
+  const { on, off } = usePromptInputEvents();
 
   useEffect(() => {
     events.forEach((event) => on(event, callback));

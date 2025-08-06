@@ -6,26 +6,14 @@ import { GrRadialSelected } from "react-icons/gr";
 import { SiPrivateinternetaccess } from "react-icons/si";
 import { FaGlobeAmericas, FaUserFriends } from "react-icons/fa";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
-
-type PrivacyLevel = "PUBLIC" | "FRIENDS" | "ONLY_ME";
+import { PrivacyLevel } from "@/types";
+import { PrivacyIcon } from "../common/privacy-icon";
 
 const PRIVACY_OPTIONS = [
   { value: "PUBLIC", label: "Public" },
   { value: "FRIENDS", label: "Friends" },
   { value: "ONLY_ME", label: "Only Me" },
 ] as const;
-
-export const PrivacyIcon: FC<{ privacy: PrivacyLevel }> = ({ privacy }) => {
-  switch (privacy) {
-    case "FRIENDS":
-      return <FaUserFriends />;
-    case "PUBLIC":
-      return <FaGlobeAmericas />;
-    case "ONLY_ME":
-    default:
-      return <SiPrivateinternetaccess />;
-  }
-};
 
 export const PromptPrivacySelect: FC = () => {
   const [privacy, setPrivacy] = useState<PrivacyLevel>("PUBLIC");

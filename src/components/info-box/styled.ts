@@ -64,7 +64,7 @@ export const InfoBoxContent = styled(Dialog.Content)`
     }
 
     &:focus {
-      outline: 1px solid var(--accent);
+      outline: 1.5px solid var(--accent);
     }
   }
 

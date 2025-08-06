@@ -80,7 +80,7 @@ export default function ThreadPage({}) {
 
   const onBackClick = () => {
     if (!comment?.prompt?.id) return;
-    push(`/rp/prompt/${comment?.prompt?.id}`);
+    push(`/rp/prompt/${comment?.prompt?.id}?threadOpen=true`);
   };
 
   const loadReplies = () => {

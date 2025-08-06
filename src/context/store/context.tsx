@@ -2,6 +2,8 @@ import React, { createContext } from "react";
 import { useStoreData } from "./use-store-data";
 import { StoreState } from "@/types/state";
 import { PromptInputState } from "@/components/prompt-input/prompt-input.store";
+import { Comment } from "@/types";
+import { PromptStoreType } from "@/components/prompt/prompt.store";
 
 type SimpleRecord = Record<string, any>;
 
@@ -23,6 +25,8 @@ const createStoreContext = <T extends SimpleRecord>(
 const Stores = {
   "global-store": createStoreContext<StoreState>("global-store"),
   "prompt-input": createStoreContext<PromptInputState>("prompt-input"),
+  prompt: createStoreContext<PromptStoreType>("prompt"),
+  comment: createStoreContext<Comment>("comment"),
 } as const;
 
 export type StoreKey = keyof typeof Stores;

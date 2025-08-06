@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuthContext } from "@/hooks";
-import { toggleState } from "@/utils/helpers";
+import { toFormattedDate, toggleState } from "@/utils/helpers";
 import classNames from "classnames";
 import { useRouter } from "next/navigation";
 import { FC, useEffect, useState } from "react";
@@ -26,18 +26,6 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
 
   const onAvatarClick = (username: string) => {
     push(`/rp/profile/${username}`);
-  };
-
-  const toFormattedDate = (stringdate: string): string => {
-    const today = moment().format("YYYY-MM-DD");
-    const messageDate = moment.utc(stringdate).local();
-
-    const isToday = messageDate.isSame(today, "day");
-    const formattedDate = isToday
-      ? messageDate.format("h:mm A")
-      : messageDate.format("MMM D, h:mm A");
-
-    return formattedDate;
   };
 
   const getConversationPreviewText = (
@@ -120,7 +108,9 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
       <S.ContentContainer onClick={toggleState(setOpen)}>
         {unreadCount > 0 && <S.UnreadBadge>{unreadCount}</S.UnreadBadge>}
 
-        <IoChatbubblesSharp size={40} />
+        <S.IconWrapper>
+          <IoChatbubblesSharp className="menu-icon" />
+        </S.IconWrapper>
         <S.Menu className={classNames({ open })}>
           {conversations &&
             conversations.slice(0, 5).map((conversation) => (
@@ -156,7 +146,11 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
                       >
                         <Flex direction="column" align="flex-start" gap={"0px"}>
                           <S.Heading>{conversation.name}</S.Heading>
-                          <S.Text>
+                          <S.Text
+                            className={
+                              conversation.lastMessage?.isRead ? "" : "unread"
+                            }
+                          >
                             {getConversationPreviewText(
                               conversation,
                               novelist?.username

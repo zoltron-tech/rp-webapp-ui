@@ -306,41 +306,35 @@ export default function UserProfilePage({}) {
               alt="profile-picture"
               size={130}
             />
-            <S.ExtendedBadge
-              tier={novelist?.tier.name || "standard"}
-              className={`badge-${novelist?.tier.name?.toLowerCase()}`}
-              onClick={toTiersPage}
-            >
-              {novelist?.tier.name == "STANDARD" && (
-                <TbSquareRoundedLetterSFilled />
-              )}
-              {novelist?.tier.name == "SILVER" && <GiCircleClaws />}
-              {novelist?.tier.name == "SILVER" && (
-                <TbCircleLetterS className="letter" />
-              )}
-              {novelist?.tier.name == "GOLD" && <GiGoldShell />}
-              {novelist?.tier.name == "GOLD" && (
-                <TbCircleLetterG className="letter" />
-              )}
-              {novelist?.tier.name == "PREMIUM" && <GiStarSwirl />}
-              {novelist?.tier.name == "PREMIUM" && (
-                <TbCircleLetterP className="letter" />
-              )}
-            </S.ExtendedBadge>
-            <S.ButtonsContainer>
-              <ButtonGroup
-                buttons={
-                  state == "LOGGED_IN" && username !== user?.username
-                    ? fetchAppropriateButtons(novelist?.connection)
-                    : LoggedInSelfButtons
-                }
-              />
-            </S.ButtonsContainer>
+            <S.NoteContainer>{novelist?.note}</S.NoteContainer>
           </Flex>
           <S.ContentInner>
-            <S.NameMobile>
-              {novelist?.firstName} {novelist?.lastName}
-            </S.NameMobile>
+            <Flex>
+              <S.NameMobile>
+                {novelist?.firstName} {novelist?.lastName}
+              </S.NameMobile>
+              <S.ExtendedBadge
+                tier={novelist?.tier.name || "standard"}
+                className={`badge-${novelist?.tier.name?.toLowerCase()}`}
+                onClick={toTiersPage}
+              >
+                {novelist?.tier.name == "STANDARD" && (
+                  <TbSquareRoundedLetterSFilled />
+                )}
+                {novelist?.tier.name == "SILVER" && <GiCircleClaws />}
+                {novelist?.tier.name == "SILVER" && (
+                  <TbCircleLetterS className="letter" />
+                )}
+                {novelist?.tier.name == "GOLD" && <GiGoldShell />}
+                {novelist?.tier.name == "GOLD" && (
+                  <TbCircleLetterG className="letter" />
+                )}
+                {novelist?.tier.name == "PREMIUM" && <GiStarSwirl />}
+                {novelist?.tier.name == "PREMIUM" && (
+                  <TbCircleLetterP className="letter" />
+                )}
+              </S.ExtendedBadge>
+            </Flex>
             <S.UsernameContainer>
               <Username username={username} primary />
             </S.UsernameContainer>
@@ -354,9 +348,15 @@ export default function UserProfilePage({}) {
                 Joined {toFormattedDate(novelist?.createdAt)}
               </S.InfoText>
             </Flex>
-            <S.NoteContainer>
-              <Quote>{novelist?.note}</Quote>
-            </S.NoteContainer>
+            <S.ButtonsContainer>
+              <ButtonGroup
+                buttons={
+                  state == "LOGGED_IN" && username !== user?.username
+                    ? fetchAppropriateButtons(novelist?.connection)
+                    : LoggedInSelfButtons
+                }
+              />
+            </S.ButtonsContainer>
             <S.SubText>
               {storyBoards?.length === 0
                 ? "No Stories"

@@ -3,18 +3,16 @@ import { Z_INDEX, CARD_BORDER, BORDER_RADIUS } from "@/theme";
 import { Container, Flex } from "@novelist-world/ui";
 import styled from "styled-components";
 
-export const ParentContainer = styled(Container)`
+export const ParentContainer = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  border: none;
   z-index: ${Z_INDEX.CARD};
-  background-color: transparent;
-  border-radius: unset !important;
-  border: none !important;
+  background-color: var(--bg-1);
+  padding-block: 20px;
 
-  @container content-container (max-width: 1400px) {
+  @container content-container (max-width: 800px) {
     flex-direction: column;
     justify-content: center;
     border-radius: 0px;
@@ -25,17 +23,15 @@ export const ParentContainer = styled(Container)`
 
 export const RepliesContainer = styled(Container)`
   max-width: 60%;
-  margin-bottom: 80px;
   margin-left: 50px;
   width: 100%;
   contain: unset;
   z-index: ${Z_INDEX.CARD_EXPAND};
-  background-color: transparent;
-  border: none;
+  background-color: var(--bg-3);
+  padding-top: unset;
 
   @container content-container (max-width: 800px) {
     max-width: 100%;
-    margin-bottom: 50px;
     margin-left: unset;
     border: none;
     border-radius: unset;
@@ -61,19 +57,17 @@ export const HeaderContainer = styled.div`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 10px;
   width: 100%;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
   border-bottom: 1px solid dimgray;
 `;
 
 export const Avatar = styled(Common.Avatar)`
-  margin-block: 0px;
+  margin-top: 10px;
 
   @container (max-width: 500px) {
     & {
-      margin-top: 0px;
-      --size: 30px;
+      --size: 35px;
     }
   }
 `;
@@ -81,7 +75,7 @@ export const Avatar = styled(Common.Avatar)`
 export const Name = styled.div`
   text-transform: uppercase;
   font-size: 18px;
-  font-weight: 500;
+  font-weight: 700;
   font-style: italic;
   text-align: center;
 
@@ -98,6 +92,7 @@ export const HeaderInfoFlex = styled.div`
   justify-content: flex-end;
   width: 500px;
   gap: 0.2em;
+  margin-left: auto;
 
   @container (max-width: 1000px) {
     & {
@@ -109,7 +104,7 @@ export const HeaderInfoFlex = styled.div`
 export const PromptText = styled.div`
   font-size: 16px;
   font-weight: 300;
-  max-width: 60%;
+  max-width: 90%;
   padding-left: 25px;
   white-space: pre-wrap;
 
@@ -127,11 +122,11 @@ export const DialoguetText = styled.div`
   font-size: 16px;
   font-weight: 300;
   padding: 10px;
-  margin-bottom: 20px;
   white-space: pre-wrap;
-  background-color: ${({ theme }: any) => theme.cardBackgroundTint};
+  background-color: var(--bg-2);
   ${CARD_BORDER}
   border-radius: ${BORDER_RADIUS};
+  text-align: center;
 
   @container (max-width: 700px) {
     & {
@@ -147,12 +142,13 @@ export const AuthorName = styled.div`
   font-size: 12px;
   font-weight: 400;
   color: gray;
+  align-self: flex-end;
+  margin-right: 30px;
 
   @container (max-width: 1400px) {
     & {
       font-size: 10px;
       font-weight: 600;
-      width: 200px;
     }
   }
 `;
@@ -161,6 +157,8 @@ export const MuseName = styled.div`
   font-size: 12px;
   font-weight: 400;
   color: gray;
+  align-self: flex-end;
+  margin: 0px 20px 30px 0px;
 
   @container (max-width: 1400px) {
     & {
@@ -208,12 +206,11 @@ export const CardWrapper = styled.div`
   height: 450px;
   margin-inline: 20px;
   border-radius: 3%;
-  margin-block: 10px;
   ${CARD_BORDER};
 
   &.reply {
-    width: 200px;
-    height: 200px;
+    width: 350px;
+    height: 350px;
   }
 
   transition: all 0.3s ease-in-out;
@@ -223,17 +220,15 @@ export const CardWrapper = styled.div`
   container-name: card;
   container-type: size;
 
-  @container (max-width: 800px) {
-    & {
-      width: 400px;
-      height: 400px;
-    }
-  }
-
-  @container (max-width: 600px) {
+  @container (max-width: 700px) {
     & {
       width: 350px;
       height: 350px;
+
+      &.reply {
+        width: 250px;
+        height: 250px;
+      }
     }
   }
 

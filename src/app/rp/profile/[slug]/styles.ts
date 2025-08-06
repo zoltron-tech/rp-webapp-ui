@@ -1,14 +1,7 @@
-import { Avatar as AvatarCommon, Button, Pill } from "@/components/common";
-import {
-  BLUR_FILTER,
-  BORDER_TOP,
-  DEV_MODE_BORDER,
-  NO_SCROLLBAR,
-  Z_INDEX,
-} from "@/theme";
+import { Avatar as AvatarCommon, Pill } from "@/components/common";
+import { BLUR_FILTER, DEV_MODE_BORDER, Z_INDEX } from "@/theme";
 import styled, { css } from "styled-components";
 import { Badge } from "../../tiers/styles";
-import { Container } from "@novelist-world/ui";
 
 interface BannerProps {
   src: string;
@@ -76,40 +69,44 @@ export const ContentRight = styled.div`
   }
 `;
 
-export const ContentInner = styled(Container)`
+export const ContentInner = styled.div`
   ${DEV_MODE_BORDER("blue")}
   display: flex;
   flex-direction: column;
+  padding-block: 10px;
+  border-radius: 20px;
+  border: 1px solid var(--bg-4);
   align-items: center;
+  background-color: var(--bg-2);
+  width: 850px;
 
   @container (max-width: 1024px) {
-    max-width: 100%;
     width: 100%;
     padding-inline: 0px;
     margin-top: 10px;
     border-radius: 0px;
+    border-right: unset;
+    border-left: unset;
+    border-bottom: unset;
   }
 `;
 
 export const ButtonsContainer = styled.div`
-  position: relative;
+  right: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
   border-radius: var(--border-radius);
-  transform: translate(200px, 30px);
 
   @container (max-width: 800px) {
     & {
-      transform: translate(200px, -10px);
       font-size: 12px;
     }
   }
 
   @container (max-width: 600px) {
     & {
-      transform: translate(40px, -10px);
       font-size: 12px;
     }
   }
@@ -189,13 +186,16 @@ export const PartitionContainer = styled.div`
   }
 `;
 
-export const ContentContainer = styled(Container)`
+export const ContentContainer = styled.div`
   width: 95%;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding-bottom: 5px;
+  padding-inline: unset;
+  padding: 10px 0 5px;
+  border-radius: 10px;
+  background-color: var(--bg-3);
 `;
 
 export const SubText = styled.div`
@@ -203,7 +203,7 @@ export const SubText = styled.div`
   text-transform: uppercase;
   font-size: 20px;
   font-weight: 300;
-  margin-top: 30px;
+  margin-top: 10px;
   margin-bottom: 10px;
   font-style: italic;
 
@@ -273,7 +273,7 @@ export const InfoText = styled.div`
 `;
 
 export const Avatar = styled(AvatarCommon)`
-  margin-top: 30px;
+  margin-top: 100px;
 
   @container profile-content (max-width: 800px) {
     & {
@@ -283,7 +283,7 @@ export const Avatar = styled(AvatarCommon)`
 `;
 
 export const AvatarMobile = styled(AvatarCommon)`
-  margin-top: 30px;
+  margin-top: 80px;
   display: none;
 
   @container profile-content (max-width: 800px) {
@@ -296,8 +296,7 @@ export const AvatarMobile = styled(AvatarCommon)`
 export const ExtendedBadge = styled(Badge)`
   width: 30px;
   height: 30px;
-  position: relative;
-  left: -90px;
+  margin-bottom: 5px;
   cursor: pointer;
 
   & svg {
@@ -307,12 +306,6 @@ export const ExtendedBadge = styled(Badge)`
   &:hover {
     & svg {
       transform: scale(1.1);
-    }
-  }
-
-  @container profile-content (max-width: 800px) {
-    & {
-      left: -50px;
     }
   }
 `;
@@ -325,7 +318,7 @@ export const NameMobile = styled.div`
   ${NameFontStyles};
 
   color: ${({ theme }: any) => theme.text};
-  margin-top: 50px;
+  margin-top: 40px;
   font-size: 36px;
   width: 100%;
   text-align: center;
@@ -353,15 +346,29 @@ export const UsernameContainer = styled.div`
 `;
 
 export const NoteContainer = styled(Pill)`
-  width: 80%;
-  margin-top: 15px;
+  position: relative;
+  width: 40%;
+  right: 170px;
+  bottom: 100px;
   word-break: break-word;
   border-radius: 20px;
   border-bottom: 1px solid dimgray;
   border-right: 1px solid dimgray;
-  padding: 10px 30px 10px;
+  padding-inline: 20px;
+  z-index: 100;
+  font-size: var(--font-size);
+  padding-block: unset;
 
-  @container profile-content (max-width: 200px) {
+  @container profile-content (max-width: 800px) {
+    & {
+      font-size: var(--font-size-small);
+      width: unset;
+      right: 120px;
+      bottom: 60px;
+    }
+  }
+
+  @container profile-content (max-width: 300px) {
     & {
       display: none;
     }
@@ -369,9 +376,9 @@ export const NoteContainer = styled(Pill)`
 `;
 
 export const MusePillContainer = styled.div`
-  width: 100%;
+  width: 95%;
   margin-inline: auto;
-  margin-top: 30px;
+  margin-top: 10px;
   margin-bottom: 20px;
   display: flex;
   flex-direction: column;
@@ -379,8 +386,6 @@ export const MusePillContainer = styled.div`
 
   @container profile-content (max-width: 1024px) {
     & {
-      margin-top: 0px;
-      margin-bottom: 0px;
       gap: 0rem;
     }
   }

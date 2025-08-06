@@ -3,7 +3,7 @@ import { Z_INDEX, CARD_BORDER } from "@/theme";
 import { Container, Flex } from "@novelist-world/ui";
 import styled from "styled-components";
 
-export const VideoContainer = styled(Container)`
+export const VideoContainer = styled.div`
   padding: 0px;
   border-radius: 0px;
 `;

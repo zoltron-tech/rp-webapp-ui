@@ -5,7 +5,6 @@ import {
   Z_INDEX,
 } from "@/theme";
 import styled from "styled-components";
-import * as Common from "@/components/common";
 
 export const PositionContainer = styled.div`
   ${DEV_MODE_BORDER("red")}
@@ -14,12 +13,30 @@ export const PositionContainer = styled.div`
   right: 7.8rem;
 `;
 
+export const IconWrapper = styled.div`
+  position: relative;
+  right: 30px;
+  container-type: inline-size;
+
+  .menu-icon {
+    height: 38px;
+    width: 38px;
+  }
+
+  @media (max-width: 700px) {
+    .menu-icon {
+      height: 30px;
+      width: 30px;
+    }
+  }
+`;
+
 export const Menu = styled.div`
   box-shadow: 0px 0px 10px 4px rgba(0, 0, 0, 0.5);
   position: absolute;
-  top: 60px;
+  top: 55px;
   right: -10px;
-  padding: 5px;
+  padding-inline: 5px;
 
   display: flex;
   flex-direction: column;
@@ -44,12 +61,18 @@ export const Menu = styled.div`
     height: 1px;
     opacity: 0.6;
   }
+
+  @media (max-width: 700px) {
+    & {
+      top: 45px;
+    }
+  }
 `;
 
 export const UnreadBadge = styled.div`
   position: absolute;
   top: 0;
-  right: 0;
+  right: -5px;
   transform: translate(10%, -10%);
   background-color: ${({ theme }: any) => theme.unreadBadge};
   color: white;
@@ -68,8 +91,8 @@ export const UnreadBadge = styled.div`
 export const UnreadMessageIcon = styled.div`
   background-color: ${({ theme }: any) => theme.unreadMark};
   border-radius: 100%;
-  min-width: 10px;
-  height: 10px;
+  min-width: 8px;
+  height: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -91,9 +114,14 @@ export const Heading = styled.div`
 `;
 
 export const Text = styled.div`
-  font-size: 11px;
-  font-weight: 400;
+  font-size: 12px;
+  font-weight: 300;
   color: ${({ theme }: any) => theme.text};
+
+  &.unread {
+    font-size: 10px;
+    font-weight: 600;
+  }
 `;
 
 export const Date = styled.div`
@@ -109,6 +137,7 @@ export const NotificationBox = styled.div`
   align-items: start;
   justify-content: center;
   margin-left: 10px;
+  margin-top: 10px;
   font-size: 18px;
 `;
 
@@ -116,7 +145,7 @@ export const CardWrapper = styled.div`
   position: relative;
   min-width: 250px;
   width: max-content;
-  height: 60px;
+  height: 55px;
   border-radius: var(--border-radius);
   transition: all 0.3s ease-in-out;
   z-index: ${Z_INDEX.CARD};

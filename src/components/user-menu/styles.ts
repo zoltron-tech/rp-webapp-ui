@@ -11,7 +11,7 @@ export const PositionContainer = styled.div`
 export const Menu = styled.div`
   box-shadow: 0px 0px 10px 4px rgba(0, 0, 0, 0.5);
   position: absolute;
-  top: 65px;
+  top: 60px;
   right: 0px;
   padding: 10px 0px;
 
@@ -38,6 +38,12 @@ export const Menu = styled.div`
   hr {
     height: 1px;
     opacity: 0.6;
+  }
+
+  @media (max-width: 700px) {
+    & {
+      top: 55px;
+    }
   }
 `;
 

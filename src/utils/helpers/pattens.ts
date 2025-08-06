@@ -77,3 +77,15 @@ export const parseTextContent = (text: string) => {
   if (!text) return [];
   return text.split("\\n");
 };
+
+export const toFormattedDateFromUnix = (
+  timestamp: number | undefined
+): string => {
+  if (!timestamp) return "unknown";
+
+  // Normalize to milliseconds (check if timestamp is in seconds)
+  const normalizedTimestamp = timestamp < 1e12 ? timestamp * 1000 : timestamp;
+
+  const date = moment(normalizedTimestamp);
+  return toFormattedDate(date.toISOString());
+};

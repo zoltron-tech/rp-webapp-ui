@@ -3,7 +3,7 @@ import { ActivitySource } from "./activity";
 export interface NovelistWorldNotification {
   id: string;
   source: ActivitySource;
-  target: string;
+  target: NotificationTarget;
   type: string;
   notificationText: string;
   isRead: boolean;

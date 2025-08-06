@@ -8,7 +8,7 @@ export const CardWrapper = styled.div`
   position: relative;
   min-width: 250px;
   width: max-content;
-  height: 70px;
+  height: 60px;
   border-radius: var(--border-radius);
   transition: all 0.3s ease-in-out;
   z-index: ${Z_INDEX.CARD};
@@ -42,8 +42,9 @@ export const CardHeader = styled.div`
 export const unReadBadge = styled.div`
   background-color: ${({ theme }: any) => theme.unreadMark};
   border-radius: 100%;
-  min-width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
+  margin-right: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -91,12 +92,19 @@ export const RemoveButton = styled(Button)`
 
 export const Title = styled.div`
   font-size: 13px;
+  font-weight: 600;
   color: ${({ theme }: any) => theme.text};
 `;
 
 export const Subtext = styled.div`
   font-size: 10px;
   color: ${({ theme }: any) => theme.text};
+`;
+
+export const Date = styled.div`
+  font-size: 8px;
+  align-self: flex-end;
+  justify-self: flex-end;
 `;
 
 export const NotificationBox = styled.div`
@@ -107,7 +115,7 @@ export const NotificationBox = styled.div`
   align-items: start;
   justify-content: center;
   margin-left: 10px;
-  font-size: 14px;
+  margin-top: 10px;
 `;
 
 export const NotificationActions = styled.div`

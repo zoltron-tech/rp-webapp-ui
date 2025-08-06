@@ -8,7 +8,7 @@
 
 body {
   font-family: "Montserrat", sans-serif;
-  
+  background-color: var(--bg-1);
   /* Scrollbar Styles */
   scrollbar-width: 0px;
   contain: paint;
@@ -58,7 +58,6 @@ textarea {
   --font-weight-medium: 500;
   --font-weight-regular: 400;
 
-
   --bg-1: #111210;
   --bg-2: #181917;
   --bg-3: #212220;
@@ -68,7 +67,7 @@ textarea {
   --bg-5: #31312E;
   --bg-6: #383A36;
   --bg-7: #454843;
-  --bg-8: #5C625B;
+  --bg-8: #5c625b;
   --bg-9: #687066;
   --bg-10: #767D74;
   --bg-11: #AFB5AD;
@@ -85,9 +84,9 @@ textarea {
   --accent-6:#045468;
   --accent-6-e: #00C7FD5E;
   --accent-5: #004558;
-  --accent-5-e: #00BEFD4D;
+  --accent-5-e: #00befd4d;
   --accent-4: #003848;
-  --accent-4-e: #00BAFF3B;
+  --accent-4-e: #00baff3b;
   --accent: var(--accent-6);
   --accent-hover: var(--accent-7);
   --accent-active: var(--accent-5);

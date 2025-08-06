@@ -37,7 +37,9 @@ export const ListContainer = styled.div`
   background-color: ${({ theme }: any) => theme.background};
   border-top-right-radius: 10px;
   border-bottom-right-radius: 10px;
-  ${CARD_BORDER}
+  border-top: 1px solid var(--bg-6);
+  border-right: 1px solid var(--bg-6);
+  border-bottom: 1px solid var(--bg-6);
 
   @container left_wrapper (max-width: 200px) {
     & {

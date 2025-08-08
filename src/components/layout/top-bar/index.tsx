@@ -2,7 +2,6 @@
 
 import { Search, UserMenu } from "@/components";
 import { Button, ShouldRender, Username } from "@/components/common";
-import { useAuthContext, useVisibility } from "@/hooks";
 import { FC, memo } from "react";
 
 import { NotificationsMenu } from "@/components/notifications-menu";
@@ -12,6 +11,7 @@ import { GoArrowRight } from "react-icons/go";
 import { GiQuillInk } from "react-icons/gi";
 import { ChatMenuModal } from "../../chat-menu-modal";
 import * as S from "./styles";
+import { useGlobalState } from "@/context/store/stores";
 
 const DynamicThemeToggle = dynamic(() => import("@/components/theme-toggle"), {
   ssr: false,
@@ -20,8 +20,7 @@ const DynamicThemeToggle = dynamic(() => import("@/components/theme-toggle"), {
 type Props = {};
 
 export const TopBar: FC<Props> = memo(({}) => {
-  const { show } = useVisibility("login-modal");
-  const { state } = useAuthContext();
+  const authState = useGlobalState("authState");
   const { push } = useRouter();
 
   const onSearchItemClick =
@@ -39,7 +38,7 @@ export const TopBar: FC<Props> = memo(({}) => {
     };
 
   const onLogoClick = () => {
-    push(state === "LOGGED_IN" ? `/rp/home` : `/rp/novelists`);
+    push(authState === "LOGGED_IN" ? `/rp/home` : `/rp/novelists`);
   };
 
   const onLoginClick = () => {
@@ -90,12 +89,14 @@ export const TopBar: FC<Props> = memo(({}) => {
               )}
             />
           </S.SearchContainer>
-          <ShouldRender if={state === "LOGGED_OUT"}>
+          <ShouldRender if={authState === "LOGGED_OUT"}>
             <S.ButtonsContainerDesktop>
               <Button onClick={onLoginClick}>Log In</Button>
             </S.ButtonsContainerDesktop>
           </ShouldRender>
-          <ShouldRender if={state === "LOGGED_IN" || state === "UNINITIALIZED"}>
+          <ShouldRender
+            if={authState === "LOGGED_IN" || authState === "UNINITIALIZED"}
+          >
             <S.ButtonsContainerLoggedInDesktop>
               <ChatMenuModal />
               <NotificationsMenu />

@@ -1,8 +1,5 @@
 "use server";
-import {
-  authenticateAndGetJWT,
-  authenticateAndGetJWTIfExists,
-} from "@/app/actions";
+import { authenticateAndGetJWT, getJWTIfExists } from "@/app/actions";
 import { Fandom, Muse } from "@/types";
 import { WithMessage } from "@/types/common";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
@@ -13,7 +10,7 @@ const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
 
 export const getMuseAction = async (museId: string) => {
-  const jwt = await authenticateAndGetJWTIfExists();
+  const jwt = await getJWTIfExists();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}`;
 
   const headers: Record<string, string> = {
@@ -43,7 +40,7 @@ export const getMuseAction = async (museId: string) => {
 };
 
 export const getAllMusesByUsernameAction = async (username: string) => {
-  const jwt = await authenticateAndGetJWTIfExists();
+  const jwt = await getJWTIfExists();
   let headers: Record<string, string> = {
     "Content-Type": "application/json",
   };

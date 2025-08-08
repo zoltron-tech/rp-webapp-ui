@@ -1,13 +1,11 @@
 "use client";
 
-import { useAuthContext } from "@/hooks";
 import { useParams, useRouter } from "next/navigation";
 
 import { MusesPill } from "@/components";
 import { ButtonGroup, ButtonInfo } from "@/components/button-group";
-import { Button, ShouldRender, Username } from "@/components/common";
+import { ShouldRender, Username } from "@/components/common";
 import { PageLoader } from "@/components/layout";
-import { Quote } from "@/components/novelist-card/styles";
 import { Novelist, StoryBoard } from "@/types";
 import { useCallback, useEffect, useState } from "react";
 import { getNovelistAction } from "../../novelists/actions";
@@ -35,13 +33,12 @@ import {
 import { GiCircleClaws } from "react-icons/gi";
 import { GiGoldShell } from "react-icons/gi";
 import { GiStarSwirl } from "react-icons/gi";
-import { RiUserAddLine } from "react-icons/ri";
 
-import { Container, Flex } from "@novelist-world/ui";
+import { Flex } from "@novelist-world/ui";
 import PromptInput from "@/components/prompt-input";
-import { Z_INDEX } from "@/theme/geometry";
 import { toFormattedDate } from "@/utils/helpers";
 import MuseListItem from "@/components/muse-list-item/intex";
+import { useGlobalState } from "@/context/store/stores";
 
 const useGetActivities = (username: string) => {
   const [activities, setActivities] = useState<Activity[]>();
@@ -70,7 +67,9 @@ const useGetActivities = (username: string) => {
 
 export default function UserProfilePage({}) {
   const params = useParams();
-  const { state, user, novelist: useNovelist } = useAuthContext();
+  const authState = useGlobalState("authState");
+  const user = useGlobalState("user");
+  const useNovelist = useGlobalState("novelist");
   const [novelist, setNovelist] = useState<Novelist | null>(null);
   const [loading, setLoading] = useState(true);
   const username = params?.slug as string;
@@ -263,7 +262,7 @@ export default function UserProfilePage({}) {
   };
 
   useEffect(() => {
-    if (state === "LOADING" || novelist) return;
+    if (authState === "LOADING" || novelist) return;
 
     if (isCurrentUser && useNovelist) {
       setNovelist(useNovelist);
@@ -274,11 +273,11 @@ export default function UserProfilePage({}) {
 
     fetchNovelist(username);
     fetchStoryboards();
-  }, [state]);
+  }, [authState]);
 
   return (
     <>
-      <ShouldRender if={loading && state !== "LOADING"}>
+      <ShouldRender if={loading && authState !== "LOADING"}>
         <PageLoader />
       </ShouldRender>
 
@@ -351,7 +350,7 @@ export default function UserProfilePage({}) {
             <S.ButtonsContainer>
               <ButtonGroup
                 buttons={
-                  state == "LOGGED_IN" && username !== user?.username
+                  authState == "LOGGED_IN" && username !== user?.username
                     ? fetchAppropriateButtons(novelist?.connection)
                     : LoggedInSelfButtons
                 }
@@ -410,12 +409,12 @@ export default function UserProfilePage({}) {
             <S.SubText>
               {activities?.length === 0
                 ? "No Updates"
-                : state == "LOGGED_IN" && username === user?.username
+                : authState == "LOGGED_IN" && username === user?.username
                 ? "Your Updates"
                 : "Updates by " + username}
             </S.SubText>
             <S.ContentContainer>
-              {state == "LOGGED_IN" && username === user?.username && (
+              {authState == "LOGGED_IN" && username === user?.username && (
                 <PromptInput
                   type={"prompt"}
                   muses={novelist?.muses || []}

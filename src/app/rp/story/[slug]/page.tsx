@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuthContext } from "@/hooks";
 import { StoryBoard } from "@/types";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -14,6 +13,7 @@ import { Flex } from "@novelist-world/ui";
 import { TagsContainer } from "@/components/tags-container";
 import { FaGlobeAmericas, FaUserFriends } from "react-icons/fa";
 import { INITIAL_STORY_BOARD_EVENT } from "@/utils/constants";
+import { useGlobalState } from "@/context/store/stores";
 
 const renderPrivacyIcon = (privacy: string | undefined) => {
   switch (privacy) {
@@ -36,8 +36,9 @@ const renderPrivacyIcon = (privacy: string | undefined) => {
 
 export default function UserProfilePage({}) {
   const params = useParams();
-  const { state: authState } = useAuthContext();
-  const { user, novelist } = useAuthContext();
+  const authState = useGlobalState("authState");
+  const user = useGlobalState("user");
+  const novelist = useGlobalState("novelist");
   const [storyboard, setStoryBoard] = useState<StoryBoard | null>(null);
   const [loading, setLoading] = useState(true);
   const storyboardId = params?.slug as string;

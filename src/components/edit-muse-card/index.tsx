@@ -7,7 +7,7 @@ import {
 } from "@/app/rp/muse/actions";
 import { uploadMedia } from "@/app/rp/profile/actions";
 import { ShouldRender, UploadAvatar, Username } from "@/components/common";
-import { useAuthContext, useForm, useUIContext } from "@/hooks";
+import { useForm, useUIContext } from "@/hooks";
 import type { Fandom, Muse } from "@/types";
 import { API_MESSAGE, INITIAL_MUSE } from "@/utils/constants";
 import { Logger } from "@/utils/services";
@@ -17,6 +17,7 @@ import * as S from "./styles";
 import { ThemeProvider } from "styled-components";
 import { DefaultTheme, Input } from "@novelist-world/ui";
 import { FandomValue } from "@/app/rp/muse/[slug]/styles";
+import { useGlobalState } from "@/context/store/stores";
 
 export type EditMuseCardProps = {
   id?: string;
@@ -31,7 +32,8 @@ const Flex = ({ children }: { children?: ReactNode }) => {
 };
 
 export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
-  const { user, state } = useAuthContext();
+  const authState = useGlobalState("authState");
+  const user = useGlobalState("user");
   const [muse, setMuse] = useState<Muse>();
   const [fandomSearch, setFandomSearch] = useState("");
   const [fandoms, setFandoms] = useState<Fandom[] | null>(null);
@@ -235,9 +237,9 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
   };
 
   useEffect(() => {
-    if (state !== "LOGGED_IN") return;
+    if (authState !== "LOGGED_IN") return;
     fetchData();
-  }, [state]);
+  }, [authState]);
 
   useEffect(() => {
     Logger.debug("avatarFile", avatarFile);

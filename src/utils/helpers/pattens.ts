@@ -36,7 +36,7 @@ export const pluralize = (text: string, count: number): string => {
     return text; // Already plural
   }
 
-  if (text.endsWith("y")) {
+  if (text.endsWith("y") && !/[aeiou]y$/.test(text)) {
     return text.slice(0, -1) + "ies"; // Change 'y' to 'ies'
   }
 
@@ -73,9 +73,21 @@ export const displayDate = (dateTimeString: string | undefined): string => {
   return date.format("MMM D, YYYY [at] h:mm A");
 };
 
-export const parseTextContent = (text: string) => {
+export const parseTextContent = (text: string, maxChars?: number) => {
   if (!text) return [];
-  return text.split("\\n");
+  let processed = text;
+  if (
+    typeof maxChars === "number" &&
+    maxChars > 0 &&
+    processed.length > maxChars
+  ) {
+    processed = processed.slice(0, maxChars);
+    if (processed.endsWith("\\")) {
+      processed = processed.slice(0, -1);
+    }
+    processed += "...";
+  }
+  return processed.split("\\n");
 };
 
 export const toFormattedDateFromUnix = (

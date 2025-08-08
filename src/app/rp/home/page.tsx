@@ -2,7 +2,6 @@
 
 import { ShouldRender } from "@/components/common";
 import { PageLoader } from "@/components/layout";
-import { useAuthContext } from "@/hooks";
 import { Muse, Novelist, NovelistWorldNotification, StoryBoard } from "@/types";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -22,9 +21,11 @@ import { FriendListItem } from "@/components/friend-list-item/page";
 import { Activity } from "@/types/activity";
 import { ActivityBox } from "@/components/activity-box";
 import VideoCard from "@/components/video-card";
+import { useGlobalState } from "@/context/store/stores";
 
 export default function HomePage() {
-  const { state, user, novelist } = useAuthContext();
+  const authState = useGlobalState("authState");
+  const novelist = useGlobalState("novelist");
   const [strangers, setStrangers] = useState<Novelist[]>();
   const [friendRequests, setFriendRequests] = useState<
     NovelistWorldNotification[] | null
@@ -123,18 +124,18 @@ export default function HomePage() {
   };
 
   useEffect(() => {
-    if (state === "LOADING") return;
+    if (authState === "LOADING") return;
     fetchStrangers();
     fetchStrangerMuses();
     fetchFriendsMuses();
     fetchFriendsMusesWithVideos();
     fetchRandomStories();
     fetchFriendsActivities();
-  }, [state]);
+  }, [authState]);
 
   return (
     <>
-      <ShouldRender if={loading && state !== "LOADING"}>
+      <ShouldRender if={loading && authState !== "LOADING"}>
         <PageLoader />
       </ShouldRender>
       <S.ParentWrapperContainer>

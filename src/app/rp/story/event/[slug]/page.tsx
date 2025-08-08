@@ -1,7 +1,6 @@
 "use client";
 
 import * as S from "./styles";
-import { useAuthContext } from "@/hooks";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { StoryBoard, StoryBoardEvent, StoryBoardEventThread } from "@/types";
@@ -20,10 +19,12 @@ import {
 } from "../../actions";
 import classNames from "classnames";
 import { Divider } from "@/app/rp/tiers/styles";
+import { useGlobalState } from "@/context/store/stores";
 
 export default function StoryboardEventPage({}) {
   const params = useParams();
-  const { state: authState, novelist, state } = useAuthContext();
+  const authState = useGlobalState("authState");
+
   const [storyboard, setStoryBoard] = useState<StoryBoard | null>(null);
   const [storyboardEvent, setStoryBoardEvent] =
     useState<StoryBoardEvent | null>(null);

@@ -25,7 +25,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <ThemeProvider theme={{ ...theme, ...DefaultTheme }}>
       <StoreProvider<StoreState>
         storeId="global-store"
-        initial={{ novelists: [], theme: cookies.theme || "light", muses: [] }}
+        initial={{
+          novelists: [],
+          theme: cookies.theme || "light",
+          muses: [],
+          authState: "LOGGED_OUT",
+          user: null,
+          novelist: null,
+        }}
       >
         <AuthProvider>
           <UIContextProvider>

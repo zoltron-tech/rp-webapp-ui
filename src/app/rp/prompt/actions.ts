@@ -3,7 +3,7 @@ import { Comment, Prompt } from "@/types";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import getConfig from "next/config";
 import { Logger } from "@/utils/services";
-import { authenticateAndGetJWT } from "@/app/actions";
+import { authenticateAndGetJWT, getJWTIfExists } from "@/app/actions";
 
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
@@ -11,12 +11,19 @@ const { RP_SERVICE_URL } = serverRuntimeConfig;
 export const getPromptAction = async (promptId: string) => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/${promptId}`;
 
+  const jwt = await getJWTIfExists();
+  const headers = {
+    "Content-Type": "application/json",
+    ...(jwt
+      ? {
+          [AUTH_HEADER_NAME]: jwt,
+        }
+      : {}),
+  };
+
   const response = await fetch(URL, {
     cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-      [AUTH_HEADER_NAME]: await authenticateAndGetJWT(),
-    },
+    headers,
   });
 
   Logger.debug("getPromptAction", response.status);
@@ -34,12 +41,19 @@ export const getPromptAction = async (promptId: string) => {
 
 export const getPropmptCommentsAction = async (promptId: string) => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/${promptId}/comments`;
+  const jwt = await getJWTIfExists();
+  const headers = {
+    "Content-Type": "application/json",
+    ...(jwt
+      ? {
+          [AUTH_HEADER_NAME]: jwt,
+        }
+      : {}),
+  };
+
   const response = await fetch(URL, {
     cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-      [AUTH_HEADER_NAME]: await authenticateAndGetJWT(),
-    },
+    headers,
   });
 
   if (response.status === 404) {

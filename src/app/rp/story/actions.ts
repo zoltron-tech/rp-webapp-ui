@@ -1,8 +1,5 @@
 "use server";
-import {
-  authenticateAndGetJWT,
-  authenticateAndGetJWTIfExists,
-} from "@/app/actions";
+import { authenticateAndGetJWT, getJWTIfExists } from "@/app/actions";
 import { StoryBoard, StoryBoardEvent, StoryBoardEventThread } from "@/types";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import getConfig from "next/config";
@@ -12,7 +9,7 @@ const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
 
 export const getAllStoryboardsByUsernameAction = async (username: string) => {
-  const jwt = await authenticateAndGetJWTIfExists();
+  const jwt = await getJWTIfExists();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
@@ -42,7 +39,7 @@ export const getAllStoryboardsByUsernameAction = async (username: string) => {
 };
 
 export const getStoryboardAction = async (storyboardId: string) => {
-  const jwt = await authenticateAndGetJWTIfExists();
+  const jwt = await getJWTIfExists();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
@@ -173,7 +170,7 @@ export const updateStoryBoardEventAction = async (
 };
 
 export const getStoryboardEventAction = async (storyboardEventId: string) => {
-  const jwt = await authenticateAndGetJWTIfExists();
+  const jwt = await getJWTIfExists();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
@@ -207,7 +204,7 @@ export const getStoryboardEventAction = async (storyboardEventId: string) => {
 export const getStoryboardEventThreadsAction = async (
   storyboardEventId: string
 ) => {
-  const jwt = await authenticateAndGetJWTIfExists();
+  const jwt = await getJWTIfExists();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };

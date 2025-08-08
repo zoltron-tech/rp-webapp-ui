@@ -1,8 +1,12 @@
-import { FC, useMemo } from "react";
+"use client";
+
+import { FC, useCallback, useMemo } from "react";
 import * as S from "./styled";
-import { usePromptState } from "./prompt.store";
+import { usePromptState, usePromptStateSet } from "./prompt.store";
 import { parseTextContent } from "@/utils/helpers";
 import { LikeButton } from "../common/like-button";
+import { useGlobalState } from "@/context/store/stores";
+import { useToggleLike } from "@/hooks/use-toggle-like";
 
 type PromptContentProps = {};
 
@@ -12,6 +16,40 @@ export const PromptContent: FC<PromptContentProps> = ({}) => {
   const promptId = usePromptState("id");
   const reacted = usePromptState("reacted");
   const reactions = usePromptState("reactions");
+
+  const authState = useGlobalState("authState");
+  const setPromptState = usePromptStateSet();
+  const { toggleLike } = useToggleLike({
+    type: "prompt",
+    id: promptId,
+    liked: reacted,
+  });
+
+  const handleLikeToggle = useCallback(async () => {
+    setPromptState({
+      reacted: !reacted,
+      reactions: reacted ? reactions - 1 : reactions + 1,
+    });
+    const response = await toggleLike();
+    if (!response || "message" in response) {
+      setPromptState({
+        reacted: reacted,
+        reactions: reacted ? reactions + 1 : reactions - 1,
+      });
+      return;
+    }
+
+    setPromptState({
+      reacted: response.reacted,
+      reactions: response.reactions,
+    });
+  }, [toggleLike, setPromptState, reacted, reactions]);
+
+  const onLike = useMemo(() => {
+    if (authState !== "LOGGED_IN") return undefined;
+
+    return handleLikeToggle;
+  }, [authState, handleLikeToggle]);
 
   const textLines = useMemo(() => parseTextContent(text), [text]);
 
@@ -26,7 +64,12 @@ export const PromptContent: FC<PromptContentProps> = ({}) => {
         </S.PromptMediaContainer>
       )}
       <S.PromptContent.Footer>
-        <LikeButton parentId={promptId} liked={reacted} likes={reactions} />
+        <LikeButton
+          onLike={onLike}
+          parentId={promptId}
+          liked={reacted}
+          likes={reactions}
+        />
       </S.PromptContent.Footer>
     </S.PromptContent.Root>
   );

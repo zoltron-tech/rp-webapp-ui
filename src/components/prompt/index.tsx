@@ -1,3 +1,5 @@
+"use client";
+
 import { Prompt as PromptType } from "@/types";
 import { FC, HTMLProps } from "react";
 import { PromptContent } from "./prompt-content";

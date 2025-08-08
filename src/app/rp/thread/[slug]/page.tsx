@@ -14,6 +14,7 @@ import PromptInput from "@/components/prompt-input";
 import { toFormattedDate } from "@/utils/helpers";
 import { IoArrowBackOutline } from "react-icons/io5";
 import { Z_INDEX } from "@/theme";
+import { useGlobalState } from "@/context/store/stores";
 
 const useGetComment = (commentId: string) => {
   const [comment, setComment] = useState<Comment | null>(null);
@@ -63,7 +64,8 @@ const useGetReplies = (commentId: string) => {
 
 export default function ThreadPage({}) {
   const params = useParams();
-  const { state: authState, user, novelist, state } = useAuthContext();
+  const authState = useGlobalState("authState");
+  const novelist = useGlobalState("novelist");
   const commentId = params?.slug as string;
   const { comment, loading } = useGetComment(commentId);
   const {
@@ -199,7 +201,7 @@ export default function ThreadPage({}) {
           </Flex>
         </Flex>
         {loadReplies()}
-        {state === "LOGGED_IN" && (
+        {authState === "LOGGED_IN" && (
           <PromptInput
             muses={novelist?.muses || []}
             parentId={commentId}

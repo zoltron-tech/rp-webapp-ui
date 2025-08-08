@@ -10,7 +10,6 @@ import {
   useState,
 } from "react";
 import { Muse, SubmitPromptInput, SubmitPromptType } from "@/types";
-import { useAuthContext } from "@/hooks";
 import { StoreProvider } from "@/context/store/context";
 import { Collapsible, Form } from "radix-ui";
 import { PromptTextField } from "./prompt-text-field";
@@ -35,6 +34,7 @@ import { INITIAL_STATE, PromptInputState } from "./prompt-input.store";
 import { PromptMediaPreview } from "./prompt-media-preview";
 import * as S from "./styles";
 import { PromptInputTrigger } from "./prompt-input-trigger";
+import { useGlobalState } from "@/context/store/stores";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   muses: Muse[];
@@ -48,7 +48,7 @@ export const PromptInput: FC<Props> = forwardRef(
     { type = "prompt", parentId = "", onSend, className, ...rest },
     forwardedRef
   ) => {
-    const { novelist } = useAuthContext();
+    const novelist = useGlobalState("novelist");
     const muses = useMemo(() => {
       return novelist?.muses ?? [];
     }, [novelist]);

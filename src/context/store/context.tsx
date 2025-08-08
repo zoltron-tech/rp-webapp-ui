@@ -17,6 +17,7 @@ const createStoreContext = <T extends SimpleRecord>(
     get: () => ({} as T),
     set: () => {},
     subscribe: () => () => {},
+    getServerSnapshot: () => ({} as T),
   });
 
   return Context;

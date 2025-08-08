@@ -3,7 +3,7 @@
 import { FC, useEffect, useState } from "react";
 import { uploadMedia } from "@/app/rp/profile/actions";
 import { Input, UploadAvatar } from "@/components/common";
-import { useAuthContext, useForm, useUIContext } from "@/hooks";
+import { useForm, useUIContext } from "@/hooks";
 import type { StoryBoardEvent } from "@/types";
 import { API_MESSAGE, INITIAL_STORY_BOARD_EVENT } from "@/utils/constants";
 import { Logger } from "@/utils/services";
@@ -13,6 +13,7 @@ import {
   updateStoryBoardEventAction,
 } from "@/app/rp/story/actions";
 import * as S from "./styles";
+import { useGlobalState } from "@/context/store/stores";
 
 export type CreateStoryBoardEventCardProps = {
   storyboardId: string;
@@ -23,7 +24,7 @@ export const CreateStoryBoardEventCard: FC<CreateStoryBoardEventCardProps> = ({
   storyboardId,
   storyboardEventId,
 }) => {
-  const { user, state } = useAuthContext();
+  const authState = useGlobalState("authState");
   const [storyBoardEvent, setStoryBoardEvent] = useState<StoryBoardEvent>();
   const [avatarFile, setAvatarFile] = useState<FormData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -117,9 +118,9 @@ export const CreateStoryBoardEventCard: FC<CreateStoryBoardEventCardProps> = ({
   };
 
   useEffect(() => {
-    if (state !== "LOGGED_IN" || !storyboardEventId) return;
+    if (authState !== "LOGGED_IN" || !storyboardEventId) return;
     fetchData();
-  }, [state]);
+  }, [authState]);
 
   useEffect(() => {
     Logger.debug("avatarFile", avatarFile);

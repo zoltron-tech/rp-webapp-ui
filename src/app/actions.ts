@@ -240,7 +240,7 @@ export const authenticateAndGetJWT = async () => {
   return cookie;
 };
 
-export const authenticateAndGetJWTIfExists = async () => {
+export const getJWTIfExists = async () => {
   const authenticated = await authenticateAction();
   if (!authenticated) return;
   const cookie = getAuthCookie();

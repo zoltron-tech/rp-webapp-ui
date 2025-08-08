@@ -4,7 +4,18 @@ const LikeRoot = styled.div`
   all: unset;
   display: flex;
   align-items: center;
-  user-select: none;
+
+  .heart-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  @media screen and (max-width: 430px) {
+    .heart-icon {
+      width: 20px;
+      height: 20px;
+    }
+  }
 `;
 
 const LikeLabel = styled.label`
@@ -14,6 +25,10 @@ const LikeLabel = styled.label`
   align-items: center;
   justify-content: center;
 
+  &.unliked {
+    pointer-events: none;
+  }
+
   &.liked .heart-icon {
     animation: blink 0.5s ease-in-out;
     color: var(--tomato-9);
@@ -21,11 +36,6 @@ const LikeLabel = styled.label`
 
   &.unliked .heart-icon {
     animation: wiggle 0.5s ease-in-out;
-  }
-
-  .heart-icon {
-    width: 28px;
-    height: 28px;
   }
 
   @keyframes wiggle {

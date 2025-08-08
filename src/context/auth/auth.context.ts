@@ -5,9 +5,6 @@ import { AuthState } from "@/types/state";
 import { createContext } from "react";
 
 export interface AuthContextType {
-  state: AuthState;
-  user: User | null;
-  novelist: Novelist | null;
   login: (payload: LoginPayload) => Promise<LoginResponse>;
   signup: (payload: SignUpPayload) => Promise<WithMessage>;
   forgotPassword: (email: string) => Promise<WithMessage>;
@@ -18,9 +15,6 @@ export interface AuthContextType {
 }
 
 export const AUTH_CONTEXT_INITIAL_STATE: AuthContextType = {
-  state: "LOADING",
-  user: null,
-  novelist: null,
   login: async (): Promise<LoginResponse> => ({
     message: "Context not initialized!",
   }),

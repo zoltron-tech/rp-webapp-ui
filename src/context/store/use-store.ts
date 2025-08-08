@@ -17,15 +17,17 @@ export const createGetFunction =
 
 export const useStoreState = <State, K extends keyof State>(
   storeId: StoreKey,
-  selector: (store: State) => State[K],
+  selector: (store: State) => State[K]
 ) => {
   const store = useStoreContext<State>(storeId);
   if (!store) {
     throw new Error("useStore must be used within a StoreProvider");
   }
 
-  const state = useSyncExternalStore(store.subscribe, () =>
-    selector(store.get()),
+  const state = useSyncExternalStore(
+    store.subscribe,
+    () => selector(store.get()),
+    () => selector(store.getServerSnapshot())
   );
   return state;
 };

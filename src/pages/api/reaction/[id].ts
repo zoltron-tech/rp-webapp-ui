@@ -1,0 +1,113 @@
+import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
+import type { NextApiRequest, NextApiResponse } from "next";
+import JWT from "jsonwebtoken";
+import getConfig from "next/config";
+
+const { serverRuntimeConfig } = getConfig();
+const { RP_SERVICE_URL } = serverRuntimeConfig;
+
+const validateJWT = (jwt: string) => {
+  const decoded = JWT.decode(jwt, { complete: true });
+  if (!decoded || typeof decoded.payload === "string" || !decoded.payload.exp) {
+    return false;
+  }
+  const isValid = decoded.payload.exp * 1000 > Date.now();
+  return isValid;
+};
+
+// Mock database update/delete functions
+async function updateReaction(
+  res: NextApiResponse,
+  jwt: string,
+  id: string,
+  targetType: string
+) {
+  // Implement your update logic here
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/react/${id}?targetType=${targetType}`;
+
+  const response = await fetch(URL, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    cache: "no-store",
+  });
+
+  const result = await response.json();
+
+  if (response.status !== 200) {
+    return res
+      .status(response.status)
+      .json({ message: result.message || API_MESSAGE.Error });
+  }
+
+  return res.status(200).json({
+    reacted: true,
+    reactions: result.reactions || 0,
+  });
+}
+
+async function deleteReaction(res: NextApiResponse, jwt: string, id: string) {
+  // Implement your delete logic here
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/react/${id}`;
+
+  const response = await fetch(URL, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    cache: "no-store",
+  });
+
+  if (response.status !== 200) {
+    return res
+      .status(response.status)
+      .json({ message: response.statusText || API_MESSAGE.Error });
+  }
+  const result = await response.json();
+
+  return res.status(200).json({
+    reacted: false,
+    reactions: result.reactions || 0,
+  });
+}
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  const { method } = req;
+  const { id } = req.query;
+
+  let jwt = req.cookies[AUTH_HEADER_NAME];
+  if (!jwt || !validateJWT(jwt)) {
+    return res.status(401).json({ error: API_MESSAGE.Unauthorized });
+  }
+
+  if (!id || typeof id !== "string") {
+    return res.status(400).json({ error: API_MESSAGE.BadPayload });
+  }
+
+  switch (method) {
+    case "PATCH": {
+      const { targetType } = req.body;
+      try {
+        return updateReaction(res, jwt, id, targetType);
+      } catch (error) {
+        return res.status(500).json({ error: "Failed to update reaction" });
+      }
+    }
+    case "DELETE": {
+      try {
+        return deleteReaction(res, jwt, id);
+      } catch (error) {
+        return res.status(500).json({ error: "Failed to delete reaction" });
+      }
+    }
+    default:
+      res.setHeader("Allow", ["PATCH", "DELETE"]);
+      return res.status(405).end(`Method ${method} Not Allowed`);
+  }
+}

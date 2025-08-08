@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuthContext } from "@/hooks";
+import { useGlobalState } from "@/context/store/stores";
 import { Logger } from "@/utils/services";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -12,16 +12,17 @@ const DynamicEditProfileCard = dynamic(
 );
 
 export default function EditProfilePage({}) {
-  const { state } = useAuthContext();
+  const authState = useGlobalState("authState");
+
   const { push } = useRouter();
 
   useEffect(() => {
-    Logger.debug("EditProfilePage", state);
-    if (state === "LOGGED_OUT") {
+    Logger.debug("EditProfilePage", authState);
+    if (authState === "LOGGED_OUT") {
       Logger.debug("pushing to home");
       push("/rp/novelists");
     }
-  }, [state]);
+  }, [authState]);
 
   Logger.debug("yaha pohanchay hain hum:");
 

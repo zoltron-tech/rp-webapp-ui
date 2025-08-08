@@ -25,7 +25,10 @@ import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 export type EditProfileCardProps = {};
 
 export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
-  const { user, novelist, state, updateNovelist } = useAuthContext();
+  const authState = useGlobalState("authState");
+  const user = useGlobalState("user");
+  const novelist = useGlobalState("novelist");
+  const { updateNovelist } = useAuthContext();
   const [avatarFile, setAvatarFile] = useState<FormData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const novelists = useGlobalState("novelists");
@@ -129,9 +132,9 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
   };
 
   useEffect(() => {
-    if (state !== "LOGGED_IN") return;
+    if (authState !== "LOGGED_IN") return;
     fetchData();
-  }, [state]);
+  }, [authState]);
 
   useEffect(() => {
     Logger.error("avatarFile is ->", avatarFile);

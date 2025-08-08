@@ -1,7 +1,7 @@
 "use server";
 import {
   authenticateAndGetJWT,
-  authenticateAndGetJWTIfExists,
+  getJWTIfExists,
   logoutAction,
 } from "@/app/actions";
 import { Novelist, NovelistWorldNotification } from "@/types";
@@ -41,7 +41,7 @@ export const getNovelistAction = async (username: string) => {
     [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
   };
 
-  const jwt = await authenticateAndGetJWTIfExists();
+  const jwt = await getJWTIfExists();
   if (jwt) {
     headers[AUTH_HEADER_NAME as string] = jwt;
   }
@@ -148,7 +148,7 @@ export const updateUserNovelist = async (_novelist: Novelist) => {
 };
 
 export const searchAction = async (searchTerm: string, type = "novelist") => {
-  const jwt = await authenticateAndGetJWTIfExists();
+  const jwt = await getJWTIfExists();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/${type}/search?prefix=${searchTerm}`;
 
   const headers: Record<string, string> = {

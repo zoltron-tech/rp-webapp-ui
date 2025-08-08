@@ -1,18 +1,21 @@
 import { useCallback, useRef } from "react";
 
-export const useStoreData = <StoreState = object>(
-  id: string,
-  initial: StoreState,
-): {
+type ReturnType<StoreState> = {
   id: string;
   get: () => StoreState;
   set: (
     value:
       | Partial<StoreState>
-      | ((prevValue: StoreState) => Partial<StoreState>),
+      | ((prevValue: StoreState) => Partial<StoreState>)
   ) => void;
   subscribe: (callback: () => void) => () => void;
-} => {
+  getServerSnapshot: () => StoreState;
+};
+
+export const useStoreData = <StoreState = object>(
+  id: string,
+  initial: StoreState
+): ReturnType<StoreState> => {
   const store = useRef<StoreState>(initial);
   const subsribers = useRef(new Set<() => void>());
 
@@ -22,7 +25,7 @@ export const useStoreData = <StoreState = object>(
     (
       value:
         | Partial<StoreState>
-        | ((prevValue: StoreState) => Partial<StoreState>),
+        | ((prevValue: StoreState) => Partial<StoreState>)
     ) => {
       store.current =
         typeof value === "function"
@@ -33,14 +36,14 @@ export const useStoreData = <StoreState = object>(
           : { ...store.current, ...value };
       subsribers.current.forEach((callback) => callback());
     },
-    [],
+    []
   );
 
   const unsubscribe = useCallback(
     (callback: () => void) => () => {
       subsribers.current.delete(callback);
     },
-    [],
+    []
   );
 
   const subscribe = useCallback(
@@ -49,13 +52,18 @@ export const useStoreData = <StoreState = object>(
 
       return unsubscribe(callback);
     },
-    [unsubscribe],
+    [unsubscribe]
   );
+
+  const getServerSnapshot = useCallback(() => {
+    return store.current;
+  }, []);
 
   return {
     id,
     get,
     set,
     subscribe,
+    getServerSnapshot,
   };
 };

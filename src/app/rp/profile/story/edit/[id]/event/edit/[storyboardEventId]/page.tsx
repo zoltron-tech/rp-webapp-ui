@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuthContext } from "@/hooks";
+import { useGlobalState } from "@/context/store/stores";
 import { Logger } from "@/utils/services";
 import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
@@ -14,17 +14,18 @@ const DynamicCreateStoryBoardEventCard = dynamic(
 export default function CreateStoryBoardEventPage({}) {
   const storyboardId = useParams()?.id as string;
   const storyboardEventId = useParams()?.storyboardEventId as string;
-  const { state } = useAuthContext();
+  const authState = useGlobalState("authState");
+
   const { push } = useRouter();
 
   useEffect(() => {
-    Logger.debug("CreateStoryBoardEventPage", state);
-    console.log(state);
-    if (state === "LOGGED_OUT") {
+    Logger.debug("CreateStoryBoardEventPage", authState);
+    console.log(authState);
+    if (authState === "LOGGED_OUT") {
       Logger.debug("pushing to home");
       push("/rp/novelists");
     }
-  }, [state]);
+  }, [authState]);
 
   return (
     <div>

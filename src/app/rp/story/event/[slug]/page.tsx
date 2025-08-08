@@ -1,7 +1,6 @@
 "use client";
 
 import * as S from "./styles";
-import { useAuthContext } from "@/hooks";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { StoryBoard, StoryBoardEvent, StoryBoardEventThread } from "@/types";
@@ -20,10 +19,12 @@ import {
 } from "../../actions";
 import classNames from "classnames";
 import { Divider } from "@/app/rp/tiers/styles";
+import { useGlobalState } from "@/context/store/stores";
 
 export default function StoryboardEventPage({}) {
   const params = useParams();
-  const { state: authState, novelist, state } = useAuthContext();
+  const authState = useGlobalState("authState");
+
   const [storyboard, setStoryBoard] = useState<StoryBoard | null>(null);
   const [storyboardEvent, setStoryBoardEvent] =
     useState<StoryBoardEvent | null>(null);
@@ -97,7 +98,7 @@ export default function StoryboardEventPage({}) {
     if (storyboard?.members.length === 0) return <></>;
     return storyboard?.members.map((member) => (
       <>
-        <S.Avatar src={member?.image || ""} alt={""} size={40} />
+        <S.Avatar src={member?.image ?? null} alt={""} size={40} />
       </>
     ));
   };
@@ -123,7 +124,7 @@ export default function StoryboardEventPage({}) {
                 ))}
                 <Flex justify="center" align="flex-start" gap={10}>
                   <S.Avatar
-                    src={thread.sender?.image || ""}
+                    src={thread.sender?.image ?? null}
                     alt={""}
                     size={50}
                   />

@@ -23,6 +23,11 @@ export const PromptRoot = styled.article`
     margin-block: 10px;
     background-color: var(--bg-6);
   }
+
+  @media screen and (max-width: 430px) {
+    margin-block: 0px;
+    padding-inline: 6px;
+  }
 `;
 
 export const PromptHeaderRoot = styled.header`
@@ -35,6 +40,14 @@ export const PromptHeaderRoot = styled.header`
     width: 64px;
     height: 64px;
     cursor: pointer;
+  }
+
+  @media screen and (max-width: 430px) {
+    .avatar {
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+    }
   }
 `;
 
@@ -123,7 +136,7 @@ export const PromptThreadsSeparator = styled(Separator.Root)`
   height: 1px;
   width: 100%;
   margin-block: 10px;
-  background-color: var(--bg-6);
+  background-color: var(--bg-7);
 `;
 
 const PromptThreadsToggle = styled.button`
@@ -133,9 +146,9 @@ const PromptThreadsToggle = styled.button`
   font-size: var(--font-size);
   font-family: var(--font);
   font-weight: var(--font-weight-medium);
-  padding: 6px 12px;
+  padding: 6px 32px;
   border-radius: 8px;
-  border: 1px solid var(--bg-6);
+  border: 1.5px solid var(--bg-7);
   background-color: var(--bg-4);
   white-space: nowrap;
 

@@ -1,8 +1,5 @@
 "use server";
-import {
-  authenticateAndGetJWT,
-  authenticateAndGetJWTIfExists,
-} from "@/app/actions";
+import { authenticateAndGetJWT, getJWTIfExists } from "@/app/actions";
 import { Fandom, Muse } from "@/types";
 import { WithMessage } from "@/types/common";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
@@ -13,7 +10,7 @@ const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
 
 export const getMuseAction = async (museId: string) => {
-  const jwt = await authenticateAndGetJWTIfExists();
+  const jwt = await getJWTIfExists();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}`;
 
   const headers: Record<string, string> = {
@@ -33,7 +30,7 @@ export const getMuseAction = async (museId: string) => {
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -43,7 +40,7 @@ export const getMuseAction = async (museId: string) => {
 };
 
 export const getAllMusesByUsernameAction = async (username: string) => {
-  const jwt = await authenticateAndGetJWTIfExists();
+  const jwt = await getJWTIfExists();
   let headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
@@ -63,7 +60,7 @@ export const getAllMusesByUsernameAction = async (username: string) => {
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -88,7 +85,7 @@ export const searchFandomsAction = async (prefix: string) => {
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -113,7 +110,7 @@ export const getAllMusesAction = async () => {
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -136,7 +133,7 @@ export const getHeroPageMusesAction = async () => {
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -166,7 +163,7 @@ export const updateMuseAction = async (_muse: Muse) => {
 
     console.log(response);
 
-    if (response.status !== 200) {
+    if (!response.ok) {
       Logger.debug("error", response.status, response.statusText);
       return { message: API_MESSAGE.Error };
     }

@@ -10,8 +10,8 @@ import * as S from "./styles";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { ShouldRender } from "../common";
 import { INITIAL_MUSE } from "@/utils/constants";
-import { useAuthContext } from "@/hooks";
 import classNames from "classnames";
+import { useGlobalState } from "@/context/store/stores";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   muse?: Muse | null;
@@ -19,7 +19,9 @@ type Props = React.HTMLProps<HTMLDivElement> & {
 export const MuseCard: FC<Props> = ({ muse, className, ...rest }) => {
   const { push } = useRouter();
   const params = useParams();
-  const { user } = useAuthContext();
+
+  const user = useGlobalState("user");
+
   const username = params?.slug as string;
   const isCurrentUser = user?.username && user.username === username;
 

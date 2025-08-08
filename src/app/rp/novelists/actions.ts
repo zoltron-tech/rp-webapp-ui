@@ -1,7 +1,7 @@
 "use server";
 import {
   authenticateAndGetJWT,
-  authenticateAndGetJWTIfExists,
+  getJWTIfExists,
   logoutAction,
 } from "@/app/actions";
 import { Novelist, NovelistWorldNotification } from "@/types";
@@ -27,7 +27,7 @@ export const getNovelists = async () => {
 
   if (response.status === 404) {
     return [];
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -41,7 +41,7 @@ export const getNovelistAction = async (username: string) => {
     [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
   };
 
-  const jwt = await authenticateAndGetJWTIfExists();
+  const jwt = await getJWTIfExists();
   if (jwt) {
     headers[AUTH_HEADER_NAME as string] = jwt;
   }
@@ -55,7 +55,7 @@ export const getNovelistAction = async (username: string) => {
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -78,7 +78,7 @@ export const getUserNovelist = async () => {
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     Logger.debug(API_MESSAGE.Error, response.status, response.statusText);
     logoutAction();
   }
@@ -102,7 +102,7 @@ export const getNotifications = async () => {
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     Logger.debug(API_MESSAGE.Error, response.status, response.statusText);
     logoutAction();
   }
@@ -128,7 +128,7 @@ export const updateUserNovelist = async (_novelist: Novelist) => {
     cache: "no-store",
   });
 
-  if (response.status !== 200) {
+  if (!response.ok) {
     Logger.debug("error", response.status, response.statusText);
     return { message: API_MESSAGE.Error };
   }
@@ -148,7 +148,7 @@ export const updateUserNovelist = async (_novelist: Novelist) => {
 };
 
 export const searchAction = async (searchTerm: string, type = "novelist") => {
-  const jwt = await authenticateAndGetJWTIfExists();
+  const jwt = await getJWTIfExists();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/${type}/search?prefix=${searchTerm}`;
 
   const headers: Record<string, string> = {
@@ -167,7 +167,7 @@ export const searchAction = async (searchTerm: string, type = "novelist") => {
   Logger.debug("searchAction", response.status);
   if (response.status === 404) {
     return [];
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -191,7 +191,7 @@ export const chatAction = async (targetUserName: string | null) => {
   Logger.debug("chatAction", response.status);
   if (response.status === 404) {
     return [];
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -217,7 +217,7 @@ export const getConversationsAction = async (
   Logger.debug("getConversationsAction", response.status);
   if (response.status === 404) {
     return [];
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 

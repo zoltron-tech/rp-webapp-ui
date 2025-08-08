@@ -45,7 +45,7 @@ export const StrangerCard: FC<Props> = ({
         ])}
       >
         <S.Avatar
-          src={novelist?.image || ""}
+          src={novelist?.image ?? null}
           alt={""}
           size={150}
           onClick={onAvatarClick}

@@ -1,8 +1,6 @@
 "use client";
 
 import { FC, useState, useEffect } from "react";
-
-import { useAuthContext } from "@/hooks";
 import { toggleState } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import classNames from "classnames";
@@ -13,11 +11,14 @@ import { getNotifications } from "@/app/rp/novelists/actions";
 import { NovelistWorldNotification } from "@/types";
 import { FriendRequestNotification } from "../friend-request-notification";
 import { IconWrapper } from "./styles";
+import { useGlobalState } from "@/context/store/stores";
 
 interface NotificationsMenuProps {}
 
 export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
-  const { user, state } = useAuthContext();
+  const authState = useGlobalState("authState");
+  const user = useGlobalState("user");
+
   const [notifications, setNotifications] = useState<
     NovelistWorldNotification[] | null
   >(null);
@@ -44,10 +45,10 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
   };
 
   useEffect(() => {
-    if (state === "LOADING" || notifications) return;
+    if (authState === "LOADING" || notifications) return;
 
     fetchNotifications();
-  }, [state]);
+  }, [authState]);
 
   Logger.info("NotificationsMenu rendered");
 
@@ -68,7 +69,7 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
           {notifications &&
             notifications.map((request) => (
               <FriendRequestNotification
-                key={request.source.title}
+                key={request.id}
                 notification={request}
                 removeMethod={removeFriendRequestNotification}
               ></FriendRequestNotification>

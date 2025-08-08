@@ -1,6 +1,5 @@
 import { FC, useEffect, useState } from "react";
 import * as S from "./styles";
-import { useAuthContext } from "@/hooks/use-auth-context";
 import { Friend, StoryBoard, StoryBoardMember } from "@/types";
 import { useRouter } from "next/navigation";
 import { Logger } from "@/utils/services";
@@ -14,6 +13,7 @@ import { IoMdAdd } from "react-icons/io";
 import { FiMinus } from "react-icons/fi";
 import { addStoryBoardMember, removeStoryBoardMember } from "./actions";
 import { API_MESSAGE } from "@/utils/constants";
+import { useGlobalState } from "@/context/store/stores";
 
 type ListItemProps = React.HTMLProps<HTMLDivElement> & {
   novelist?: StoryBoardMember | null;
@@ -85,7 +85,7 @@ export const StoryBoardMemberListItem: FC<ListItemProps> = ({
     <S.CardWrapper>
       <S.Card className="muse-card">
         <S.Avatar
-          src={novelist?.image || ""}
+          src={novelist?.image ?? null}
           alt={""}
           size={50}
           onClick={onAvatarClick}
@@ -153,7 +153,7 @@ export const StoryBoardNewMemberListItem: FC<NewMembersListItemProps> = ({
     <S.CardWrapper>
       <S.Card className="muse-card">
         <S.Avatar
-          src={novelist?.image || ""}
+          src={novelist?.image ?? null}
           alt={""}
           size={50}
           onClick={onAvatarClick}
@@ -173,7 +173,8 @@ export const StoryBoardNewMemberListItem: FC<NewMembersListItemProps> = ({
 };
 
 export const StoryBoardMembersList: FC<{ id?: string }> = ({ id }) => {
-  const { state, novelist } = useAuthContext();
+  const state = useGlobalState("authState");
+  const novelist = useGlobalState("novelist");
   const [storyBoard, setStoryBoard] = useState<StoryBoard>();
   const [filteredFriends, setFilteredFriends] = useState<Friend[]>();
   const { push } = useRouter();

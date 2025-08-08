@@ -59,7 +59,7 @@ export const VideoCard: FC<Props> = ({ muse, className, ...rest }) => {
         </Flex>
         <S.RowFlex direction="row" justify="space-between">
           <S.Avatar
-            src={muse.image || ""}
+            src={muse.image ?? null}
             alt=""
             onClick={onAvatarClick}
             hoverable

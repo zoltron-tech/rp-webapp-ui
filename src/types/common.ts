@@ -35,3 +35,5 @@ export interface None extends Tagged {
 }
 
 export type TypeValidator<T extends Tagged> = (value: any) => T | None;
+
+export type Hook<T, K> = (props: T) => K;

@@ -1,3 +1,5 @@
+"use client";
+
 import { FC } from "react";
 import * as S from "./styled";
 import { MuseAvatar } from "../common/muse-avatar";

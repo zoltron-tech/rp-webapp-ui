@@ -13,11 +13,14 @@ import { TbUserEdit } from "react-icons/tb";
 import { LuUser } from "react-icons/lu";
 import { IoIosPeople } from "react-icons/io";
 import { PiBookOpenUserDuotone } from "react-icons/pi";
+import { useGlobalState } from "@/context/store/stores";
 
 interface UserMenuProps {}
 
 export const UserMenu: FC<UserMenuProps> = ({}) => {
-  const { user, novelist, logout } = useAuthContext();
+  const user = useGlobalState("user");
+  const novelist = useGlobalState("novelist");
+  const { logout } = useAuthContext();
   const [open, setOpen] = useState(false);
   const { push } = useRouter();
 
@@ -54,7 +57,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
     <S.PositionContainer>
       <S.ContentContainer onClick={toggleState(setOpen)}>
         <Avatar
-          src={novelist?.image || ""}
+          src={novelist?.image ?? null}
           alt="profile-menu"
           size={45}
           hoverable

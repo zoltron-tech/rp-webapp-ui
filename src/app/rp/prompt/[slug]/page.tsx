@@ -35,7 +35,7 @@ export default function PromptPage({}) {
   const searchParams = useSearchParams();
   const params = useParams();
   const promptId = params?.slug as string;
-  const threadOpen = searchParams.get("threadOpen") === "true";
+  const threadOpen = searchParams?.get("threadOpen") === "true";
 
   const { prompt, loading } = useGetPrompt(promptId);
 

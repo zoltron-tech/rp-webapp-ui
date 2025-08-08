@@ -3,8 +3,8 @@
 import { Avatar, ShouldRender, Username } from "@/components/common";
 import { PageLoader } from "@/components/layout";
 import { Quote } from "@/components/novelist-card/styles";
-import { useAuthContext, useStateMachine } from "@/hooks";
-import { Fandom, Muse, Prompt } from "@/types";
+import { useStateMachine } from "@/hooks";
+import { Muse, Prompt } from "@/types";
 import { Logger } from "@/utils/services";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -26,6 +26,7 @@ import { VscVerifiedFilled } from "react-icons/vsc";
 import { VscUnverified } from "react-icons/vsc";
 import { IoHeart } from "react-icons/io5";
 import { TagsContainer } from "@/components/tags-container";
+import { useGlobalState } from "@/context/store/stores";
 
 type CARD_STATE =
   | "MAIN"
@@ -37,7 +38,8 @@ type CARD_STATE =
 
 export default function MuseProfilePage({}) {
   const params = useParams();
-  const { state: authState } = useAuthContext();
+  const authState = useGlobalState("authState");
+  const novelist = useGlobalState("novelist");
   const [muse, setMuse] = useState<Muse | null>(null);
   const [prompts, setPrompts] = useState<Prompt[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -232,7 +234,7 @@ export default function MuseProfilePage({}) {
         <PageLoader />
       </ShouldRender>
       <S.Banner
-        src={muse?.image && !muse.image.endsWith(".gif") ? muse.image : ""}
+        src={muse?.image && !muse.image.endsWith(".gif") ? muse.image : null}
       />
       <S.CardWrapper
         hoverable={is("MAIN")}
@@ -247,7 +249,7 @@ export default function MuseProfilePage({}) {
               </S.MuseName>
               <S.AuthorContainer>
                 <Avatar
-                  src={muse?.pennedBy?.image || ""}
+                  src={muse?.pennedBy?.image ?? null}
                   alt="profile-picture"
                   size={60}
                   hoverable

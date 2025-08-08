@@ -26,7 +26,7 @@ export const uploadMedia = async (formData: FormData) => {
     cache: "no-store",
   });
 
-  if (response.status !== 200) {
+  if (!response.ok) {
     Logger.error("error", response.status, response.statusText);
     return API_MESSAGE.MediaError;
   }
@@ -51,7 +51,7 @@ export const enhanceAvatar = async (formData: FormData) => {
     cache: "no-store",
   });
 
-  if (response.status !== 200) {
+  if (!response.ok) {
     Logger.debug("error", response.status, response.statusText);
     return API_MESSAGE.MediaError;
   }
@@ -92,7 +92,7 @@ export const sendFriendRequest = async (novelistId: string) => {
     cache: "no-store",
   });
 
-  if (response.status !== 200) {
+  if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -120,7 +120,7 @@ export const acceptFriendRequest = async (novelistId: string) => {
     cache: "no-store",
   });
 
-  if (response.status !== 200) {
+  if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -147,7 +147,7 @@ export const deleteFriendRequest = async (novelistId: string) => {
     cache: "no-store",
   });
 
-  if (response.status !== 200) {
+  if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -175,7 +175,7 @@ export const cancelFriendRequest = async (novelistId: string) => {
     cache: "no-store",
   });
 
-  if (response.status !== 200) {
+  if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -223,7 +223,7 @@ export const submitPrompt = async (
       return { message: API_MESSAGE.ServerError };
   }
 
-  if (response.status !== 200) {
+  if (!response.ok) {
     console.log(
       "error",
       promptWithoutTag,

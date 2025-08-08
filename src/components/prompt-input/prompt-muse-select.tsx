@@ -55,7 +55,7 @@ export const PromptMuseSelect: FC<Props> = forwardRef(
               <Select.Value asChild placeholder="Select a muse">
                 <div className="select-value">
                   <MuseAvatar
-                    src={muse.image || ""}
+                    src={muse.image ?? null}
                     alt={`${muse.firstName} ${muse.lastName}`}
                   />
                   {muse.firstName} {muse.lastName}
@@ -88,7 +88,7 @@ export const PromptMuseSelect: FC<Props> = forwardRef(
   }
 );
 
-const MuseAvatar: FC<{ src: string; alt: string }> = forwardRef(
+const MuseAvatar: FC<{ src: string | null; alt: string }> = forwardRef(
   ({ src, alt, ...rest }, forwardedRef) => {
     return (
       <S.MuseAvatarRoot
@@ -96,7 +96,11 @@ const MuseAvatar: FC<{ src: string; alt: string }> = forwardRef(
         {...rest}
         ref={forwardedRef as React.ForwardedRef<HTMLSpanElement>}
       >
-        <Avatar.Image className="avatar-image" src={src} alt={alt} />
+        <Avatar.Image
+          className="avatar-image"
+          src={src ?? undefined}
+          alt={alt}
+        />
         <Avatar.Fallback className="avatar-fallback" delayMs={600}>
           {alt.charAt(0).toUpperCase()}
         </Avatar.Fallback>
@@ -120,7 +124,7 @@ const SelectItem: FC<{ muse: Muse }> = forwardRef(
         </Select.ItemIndicator>
         <Select.Icon>
           <MuseAvatar
-            src={muse.image || ""}
+            src={muse.image ?? null}
             alt={`${muse.firstName} ${muse.lastName}`}
           />
         </Select.Icon>

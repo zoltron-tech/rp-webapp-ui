@@ -8,7 +8,7 @@ import Image from "next/image";
 import * as S from "./styles";
 
 export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
-  src: string;
+  src: string | null;
   alt: string;
   size?: number;
   name?: React.ReactNode;

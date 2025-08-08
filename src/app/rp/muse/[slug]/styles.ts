@@ -11,7 +11,7 @@ import { Container, RichText as NWRichText } from "@novelist-world/ui";
 import styled from "styled-components";
 
 interface BannerProps {
-  src: string;
+  src: string | null;
 }
 
 export const Banner = styled.div<BannerProps>`

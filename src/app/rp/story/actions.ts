@@ -1,8 +1,5 @@
 "use server";
-import {
-  authenticateAndGetJWT,
-  authenticateAndGetJWTIfExists,
-} from "@/app/actions";
+import { authenticateAndGetJWT, getJWTIfExists } from "@/app/actions";
 import { StoryBoard, StoryBoardEvent, StoryBoardEventThread } from "@/types";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import getConfig from "next/config";
@@ -12,7 +9,7 @@ const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
 
 export const getAllStoryboardsByUsernameAction = async (username: string) => {
-  const jwt = await authenticateAndGetJWTIfExists();
+  const jwt = await getJWTIfExists();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
@@ -32,7 +29,7 @@ export const getAllStoryboardsByUsernameAction = async (username: string) => {
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -42,7 +39,7 @@ export const getAllStoryboardsByUsernameAction = async (username: string) => {
 };
 
 export const getStoryboardAction = async (storyboardId: string) => {
-  const jwt = await authenticateAndGetJWTIfExists();
+  const jwt = await getJWTIfExists();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
@@ -62,7 +59,7 @@ export const getStoryboardAction = async (storyboardId: string) => {
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -87,7 +84,7 @@ export const getAllStoryboardsAction = async () => {
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -112,7 +109,7 @@ export const updateStoryBoardAction = async (_storyboard: StoryBoard) => {
     cache: "no-store",
   });
 
-  if (response.status !== 200) {
+  if (!response.ok) {
     Logger.debug("error", response.status, response.statusText);
     return { message: API_MESSAGE.Error };
   }
@@ -153,7 +150,7 @@ export const updateStoryBoardEventAction = async (
 
   console.log(response);
 
-  if (response.status !== 200) {
+  if (!response.ok) {
     Logger.debug("error", response.status, response.statusText);
     return { message: API_MESSAGE.Error };
   }
@@ -173,7 +170,7 @@ export const updateStoryBoardEventAction = async (
 };
 
 export const getStoryboardEventAction = async (storyboardEventId: string) => {
-  const jwt = await authenticateAndGetJWTIfExists();
+  const jwt = await getJWTIfExists();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
@@ -193,7 +190,7 @@ export const getStoryboardEventAction = async (storyboardEventId: string) => {
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -207,7 +204,7 @@ export const getStoryboardEventAction = async (storyboardEventId: string) => {
 export const getStoryboardEventThreadsAction = async (
   storyboardEventId: string
 ) => {
-  const jwt = await authenticateAndGetJWTIfExists();
+  const jwt = await getJWTIfExists();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
@@ -227,7 +224,7 @@ export const getStoryboardEventThreadsAction = async (
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 

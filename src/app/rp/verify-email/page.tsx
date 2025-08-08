@@ -25,7 +25,6 @@ import {
   LogoText,
 } from "@/components/layout/top-bar/styles";
 import { SiBookstack } from "react-icons/si";
-import { AuthProvider, UIContextProvider } from "@/context";
 import { FaCheckCircle } from "react-icons/fa";
 import { verifyAccountAction } from "@/app/actions";
 import { FaFaceSadTear } from "react-icons/fa6";
@@ -41,7 +40,7 @@ export default function ResetPassword() {
   const jwt = searchParams?.get("token") || "";
   const [disabled, setDisabled] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
-  const { verifyAccount, state: authState } = useAuthContext();
+  const { verifyAccount } = useAuthContext();
   const { push } = useRouter();
   const [verificationStatus, setVerificationStatus] = useState<boolean | null>(
     null

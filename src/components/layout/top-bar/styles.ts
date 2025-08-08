@@ -61,12 +61,6 @@ export const Logo = styled.div`
   display: flex;
   align-items: center;
   ${NO_USER_SELECT}
-
-  @container (max-width: 650px) {
-    & {
-      margin-left: 20px;
-    }
-  }
 `;
 
 export const LogoInner = styled.div`

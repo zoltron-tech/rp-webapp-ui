@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuthContext } from "@/hooks";
 import { StoryBoard } from "@/types";
 import { INITIAL_STORY_BOARD } from "@/utils/constants";
 import { Logger } from "@/utils/services";
@@ -10,11 +9,15 @@ import * as S from "./styles";
 import { ShouldRender } from "@/components/common";
 import StoryCard from "@/components/story-card";
 import { getAllStoryboardsByUsernameAction } from "@/app/rp/story/actions";
+import { useGlobalState } from "@/context/store/stores";
 
 export default function MusesListPage({}) {
   const params = useParams();
   const [storyBoards, setStoryBoards] = useState<StoryBoard[] | null>(null);
-  const { state, user, novelist } = useAuthContext();
+
+  const authState = useGlobalState("authState");
+  const user = useGlobalState("user");
+  const novelist = useGlobalState("novelist");
   const username = params?.slug as string;
   const isCurrentUser = user?.username === username;
   const [loading, setLoading] = useState(true);
@@ -36,10 +39,10 @@ export default function MusesListPage({}) {
   };
 
   useEffect(() => {
-    if (state === "LOADING" || storyBoards) return;
+    if (authState === "LOADING" || storyBoards) return;
 
     fetchStoryboards();
-  }, [state]);
+  }, [authState]);
 
   return (
     <S.Container>

@@ -1,4 +1,4 @@
-import { Muse, Novelist } from ".";
+import { Muse, Novelist, User } from ".";
 
 export type AuthState =
   | "LOGGED_IN"
@@ -10,4 +10,7 @@ export interface StoreState {
   novelists: Novelist[];
   muses: Muse[];
   theme: "light" | "dark";
+  authState: AuthState;
+  user: User | null;
+  novelist: Novelist | null;
 }

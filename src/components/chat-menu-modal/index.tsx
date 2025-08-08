@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuthContext } from "@/hooks";
 import { toFormattedDate, toggleState } from "@/utils/helpers";
 import classNames from "classnames";
 import { useRouter } from "next/navigation";
@@ -13,12 +12,14 @@ import { getConversationsAction } from "@/app/rp/novelists/actions";
 import moment from "moment";
 import { TiGroup } from "react-icons/ti";
 import { Flex } from "@novelist-world/ui";
+import { useGlobalState } from "@/context/store/stores";
 
 interface ChatMenuProps {}
 
 export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
-  const { state: authState } = useAuthContext();
-  const { user, novelist } = useAuthContext();
+  const authState = useGlobalState("authState");
+  const user = useGlobalState("user");
+  const novelist = useGlobalState("novelist");
   const [open, setOpen] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>();
   const [loading, setLoading] = useState(true);

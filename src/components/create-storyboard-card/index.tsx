@@ -7,7 +7,7 @@ import {
   UploadAvatar,
   Username,
 } from "@/components/common";
-import { useAuthContext, useForm, useUIContext } from "@/hooks";
+import { useForm, useUIContext } from "@/hooks";
 import type { StoryBoard } from "@/types";
 import { API_MESSAGE, INITIAL_STORY_BOARD } from "@/utils/constants";
 import { Logger } from "@/utils/services";
@@ -21,13 +21,15 @@ import {
 import { MusesPill } from "../muses-pill";
 import { GrEdit } from "react-icons/gr";
 import { Flex } from "@novelist-world/ui";
+import { useGlobalState } from "@/context/store/stores";
 
 export type CreateStoryBoardCardProps = {
   id?: string;
 };
 
 export const CreateStoryBoardCard: FC<CreateStoryBoardCardProps> = ({ id }) => {
-  const { user, state } = useAuthContext();
+  const authState = useGlobalState("authState");
+  const user = useGlobalState("user");
   const [storyBoard, setStoryBoard] = useState<StoryBoard>();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [avatarFile, setAvatarFile] = useState<FormData | null>(null);
@@ -134,9 +136,9 @@ export const CreateStoryBoardCard: FC<CreateStoryBoardCardProps> = ({ id }) => {
   };
 
   useEffect(() => {
-    if (state !== "LOGGED_IN") return;
+    if (authState !== "LOGGED_IN") return;
     fetchData();
-  }, [state]);
+  }, [authState]);
 
   useEffect(() => {
     Logger.debug("avatarFile", avatarFile);

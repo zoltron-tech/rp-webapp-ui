@@ -25,7 +25,7 @@ export const MuseListItem: FC<Props> = ({ muse, className, ...rest }) => {
     <S.MuseContainer onClick={onAvatarClick}>
       <Flex justify="flex-start">
         <Avatar
-          src={muse?.image || ""}
+          src={muse?.image ?? null}
           alt=""
           size={50}
           name="open"

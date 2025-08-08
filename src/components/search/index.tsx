@@ -1,4 +1,5 @@
 "use client";
+import type { JSX } from "react";
 import { searchAction } from "@/app/rp/novelists/actions";
 import { useForm } from "@/hooks";
 import { SearchResult } from "@/types/common";

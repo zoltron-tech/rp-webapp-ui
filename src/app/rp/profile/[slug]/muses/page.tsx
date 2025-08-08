@@ -1,7 +1,6 @@
 "use client";
 
 import { MuseCard } from "@/components/muse-card";
-import { useAuthContext } from "@/hooks";
 import { Muse } from "@/types";
 import { INITIAL_MUSE } from "@/utils/constants";
 import { Logger } from "@/utils/services";
@@ -10,11 +9,14 @@ import { useEffect, useState } from "react";
 import * as S from "./styles";
 import { getAllMusesByUsernameAction } from "@/app/rp/muse/actions";
 import { ShouldRender } from "@/components/common";
+import { useGlobalState } from "@/context/store/stores";
 
 export default function MusesListPage({}) {
   const params = useParams();
   const [muses, setMuses] = useState<Muse[] | null>(null);
-  const { state, user, novelist } = useAuthContext();
+  const authState = useGlobalState("authState");
+  const user = useGlobalState("user");
+  const novelist = useGlobalState("novelist");
   const username = params?.slug as string;
   const isCurrentUser = user?.username === username;
   const [loading, setLoading] = useState(true);
@@ -36,10 +38,10 @@ export default function MusesListPage({}) {
   };
 
   useEffect(() => {
-    if (state === "LOADING" || muses) return;
+    if (authState === "LOADING" || muses) return;
 
     fetchMuses();
-  }, [state]);
+  }, [authState]);
 
   return (
     <S.Container>

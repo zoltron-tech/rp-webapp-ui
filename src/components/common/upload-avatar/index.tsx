@@ -45,11 +45,15 @@ export const UploadAvatar: FC<UploadAvatarProps> = ({ image, onChange }) => {
           { added: !!image || !!uploadedFile },
         ])}
       >
-        <Image
-          src={uploadedFile ? URL.createObjectURL(uploadedFile) : image || ""}
-          layout="fill"
-          alt={"avatar"}
-        />
+        {uploadedFile ? (
+          <Image
+            src={URL.createObjectURL(uploadedFile)}
+            layout="fill"
+            alt={"avatar"}
+          />
+        ) : image ? (
+          <Image src={image} layout="fill" alt={"avatar"} />
+        ) : null}
         <TbCameraUp />
       </S.UploadAvatar>
     </>

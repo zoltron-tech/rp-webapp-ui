@@ -50,18 +50,34 @@ export const Source = Object.assign(SourceStyled, {
   Time: CommentTime,
 });
 
-const TextLine = styled.span`
-  display: inline-block;
-  margin-bottom: 8px;
-`;
-
 const CommentContentRoot = styled.div`
-  /* padding: 12px; */
   padding-top: 12px;
-  padding-inline: 8px;
+  padding-inline: 12px;
+  padding-bottom: 8px;
   margin-left: 48px;
   background-color: var(--bg-3);
   border-radius: 4px;
+`;
+
+const TextLine = styled.span`
+  display: inline-block;
+  margin-bottom: 6px;
+`;
+
+export const CommentMediaContainer = styled.div`
+  margin-inline: auto;
+  margin-top: 6px;
+
+  max-width: 200px;
+  height: fit-content;
+  display: flex;
+  background-color: #000000;
+`;
+
+export const CommentImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 `;
 
 export const CommentContent = Object.assign(
@@ -69,6 +85,8 @@ export const CommentContent = Object.assign(
   {
     Root: CommentContentRoot,
     TextLine: TextLine,
+    MediaContainer: CommentMediaContainer,
+    Image: CommentImage,
   }
 );
 
@@ -78,9 +96,13 @@ const CommentFooterRoot = styled.footer`
   align-items: center;
   justify-content: space-between;
   width: 100%;
-
   margin-block: 10px;
   gap: 8px;
+
+  @media screen and (max-width: 430px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 `;
 
 const CommentFooterLeft = styled.div`
@@ -94,6 +116,12 @@ const CommentFooterRight = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
+
+  @media screen and (max-width: 430px) {
+    padding-left: 48px;
+    width: 100%;
+    justify-content: space-between;
+  }
 `;
 
 const ReplyCount = styled.a`
@@ -102,9 +130,27 @@ const ReplyCount = styled.a`
   font-size: var(--font-size-small);
   color: var(--bg-11);
   cursor: pointer;
+  display: flex;
+  align-items: center;
 
   &:hover {
     text-decoration: underline;
+  }
+
+  .replies-icon {
+    display: none;
+  }
+
+  @media screen and (max-width: 430px) {
+    color: var(--text);
+    margin-left: 4px;
+
+    .replies-icon {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      margin-right: 8px;
+    }
   }
 `;
 

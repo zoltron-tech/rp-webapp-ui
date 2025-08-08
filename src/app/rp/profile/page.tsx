@@ -1,23 +1,24 @@
 "use client";
 
-import { useAuthContext } from "@/hooks";
+import { useGlobalState } from "@/context/store/stores";
 import { Logger } from "@/utils/services";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function ProfilePage({}) {
-  const { user, state } = useAuthContext();
+  const user = useGlobalState("user");
+  const authState = useGlobalState("authState");
   const { push } = useRouter();
 
   useEffect(() => {
     Logger.debug("ProfilePage");
-    Logger.debug("Auth context: ", state);
+    Logger.debug("Auth context: ", authState);
 
-    if (state === "LOGGED_IN") {
+    if (authState === "LOGGED_IN") {
       Logger.debug("rerouteToProfilePage");
       push(`/rp/profile/${user?.username}`);
     } else {
       push("/rp/novelists");
     }
-  }, [state]);
+  }, [authState]);
 }

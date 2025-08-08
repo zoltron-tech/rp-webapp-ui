@@ -1,12 +1,15 @@
+"use client";
+
 import { FC, MouseEventHandler, useCallback, useMemo } from "react";
 import * as S from "./styled";
-import { useCommentState } from "./comment.store";
+import { useCommentState, useCommentStateSet } from "./comment.store";
 import { pluralize } from "@/utils/helpers";
-import { MdArrowForwardIos, MdOutlineArrowForwardIos } from "react-icons/md";
 import { IoMdArrowForward } from "react-icons/io";
 import { useRouter } from "next/navigation";
-import { HeartIcon } from "../common/heart-icon";
 import { LikeButton } from "../common/like-button";
+import { GoCommentDiscussion } from "react-icons/go";
+import { useGlobalState } from "@/context/store/stores";
+import { useToggleLike } from "@/hooks/use-toggle-like";
 
 export const CommentFooter: FC = () => {
   const replyCount = useCommentState("replyCount");
@@ -15,6 +18,39 @@ export const CommentFooter: FC = () => {
   const threadId = useCommentState("id");
   const threadUrl = useMemo(() => `/rp/thread/${threadId}`, [threadId]);
   const { push } = useRouter();
+  const authState = useGlobalState("authState");
+  const setCommentState = useCommentStateSet();
+  const { toggleLike } = useToggleLike({
+    type: "comment",
+    id: threadId,
+    liked: reacted,
+  });
+
+  const handleLikeToggle = useCallback(async () => {
+    setCommentState({
+      reacted: !reacted,
+      reactions: reacted ? reactions - 1 : reactions + 1,
+    });
+    const response = await toggleLike();
+    if (!response || "message" in response) {
+      setCommentState({
+        reacted: reacted,
+        reactions: reacted ? reactions + 1 : reactions - 1,
+      });
+      return;
+    }
+
+    setCommentState({
+      reacted: response.reacted,
+      reactions: response.reactions,
+    });
+  }, [toggleLike, setCommentState, reacted, reactions]);
+
+  const onLike = useMemo(() => {
+    if (authState !== "LOGGED_IN") return undefined;
+
+    return handleLikeToggle;
+  }, [authState, handleLikeToggle]);
 
   const replyText = useMemo(() => {
     if (replyCount === 0) return "No replies";
@@ -34,10 +70,16 @@ export const CommentFooter: FC = () => {
   return (
     <S.CommentFooter.Root>
       <S.CommentFooter.Left>
-        <LikeButton parentId={threadId} liked={reacted} likes={reactions} />
+        <LikeButton
+          onLike={onLike}
+          parentId={threadId}
+          liked={reacted}
+          likes={reactions}
+        />
       </S.CommentFooter.Left>
       <S.CommentFooter.Right>
         <S.CommentFooter.ReplyCount href={threadUrl} onClick={handleOpenThread}>
+          <GoCommentDiscussion className="replies-icon" />
           {replyText}
         </S.CommentFooter.ReplyCount>
         <S.CommentFooter.OpenThreadButton onClick={handleOpenThread}>

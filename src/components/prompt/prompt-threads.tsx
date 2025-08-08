@@ -5,13 +5,14 @@ import { Comment } from "../comment";
 import { usePromptState } from "./prompt.store";
 import { Collapsible } from "radix-ui";
 import PromptInput from "../prompt-input";
-import { useAuthContext } from "@/hooks";
 import classNames from "classnames";
+import { useGlobalState } from "@/context/store/stores";
 
 export const PromptThreads: FC = () => {
   const threadsOpen = usePromptState("threadOpen");
   const [open, setOpen] = useState(threadsOpen);
-  const { novelist } = useAuthContext();
+
+  const novelist = useGlobalState("novelist");
   const promptId = usePromptState("id");
   const canInteract = usePromptState("canInteract");
   const { comments, refetch: refetchComments } = useGetComments(promptId);

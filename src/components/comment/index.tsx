@@ -1,3 +1,5 @@
+"use client";
+
 import { Comment as CommentType } from "@/types";
 import { FC } from "react";
 import * as S from "./styled";

@@ -224,9 +224,7 @@ export const authenticateJWT = async (jwt: string, useCookies?: boolean) => {
 export const authenticateAction = async () => {
   Logger.debug("authenticate");
   // ADD_AUTH_COOKIE
-  await setAuthCookie(
-    "eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhZDZiZDY3Ni01OWUzLTQxZDMtODIzMC02NDI1OTU2M2FjYzUiLCJleHAiOjE3NTQ3MjA4NjV9.cRr-ZRG0Ybo-BmrPr0L1aM2AFoCe0SF8CVSx13HtFmY"
-  );
+  // await setAuthCookie();
   const jwtCookie = (await cookies()).get(JWT_COOKIE_NAME);
   Logger.info("jwtCookie", jwtCookie);
   if (!jwtCookie?.value) return false;

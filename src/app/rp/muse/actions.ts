@@ -30,7 +30,7 @@ export const getMuseAction = async (museId: string) => {
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -60,7 +60,7 @@ export const getAllMusesByUsernameAction = async (username: string) => {
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -85,7 +85,7 @@ export const searchFandomsAction = async (prefix: string) => {
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -110,7 +110,7 @@ export const getAllMusesAction = async () => {
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -133,7 +133,7 @@ export const getHeroPageMusesAction = async () => {
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -163,7 +163,7 @@ export const updateMuseAction = async (_muse: Muse) => {
 
     console.log(response);
 
-    if (response.status !== 200) {
+    if (!response.ok) {
       Logger.debug("error", response.status, response.statusText);
       return { message: API_MESSAGE.Error };
     }

@@ -98,7 +98,7 @@ export default function StoryboardEventPage({}) {
     if (storyboard?.members.length === 0) return <></>;
     return storyboard?.members.map((member) => (
       <>
-        <S.Avatar src={member?.image || ""} alt={""} size={40} />
+        <S.Avatar src={member?.image ?? null} alt={""} size={40} />
       </>
     ));
   };
@@ -124,7 +124,7 @@ export default function StoryboardEventPage({}) {
                 ))}
                 <Flex justify="center" align="flex-start" gap={10}>
                   <S.Avatar
-                    src={thread.sender?.image || ""}
+                    src={thread.sender?.image ?? null}
                     alt={""}
                     size={50}
                   />

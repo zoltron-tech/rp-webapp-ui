@@ -29,7 +29,7 @@ export const getAllStoryboardsByUsernameAction = async (username: string) => {
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -59,7 +59,7 @@ export const getStoryboardAction = async (storyboardId: string) => {
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -84,7 +84,7 @@ export const getAllStoryboardsAction = async () => {
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -109,7 +109,7 @@ export const updateStoryBoardAction = async (_storyboard: StoryBoard) => {
     cache: "no-store",
   });
 
-  if (response.status !== 200) {
+  if (!response.ok) {
     Logger.debug("error", response.status, response.statusText);
     return { message: API_MESSAGE.Error };
   }
@@ -150,7 +150,7 @@ export const updateStoryBoardEventAction = async (
 
   console.log(response);
 
-  if (response.status !== 200) {
+  if (!response.ok) {
     Logger.debug("error", response.status, response.statusText);
     return { message: API_MESSAGE.Error };
   }
@@ -190,7 +190,7 @@ export const getStoryboardEventAction = async (storyboardEventId: string) => {
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -224,7 +224,7 @@ export const getStoryboardEventThreadsAction = async (
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 

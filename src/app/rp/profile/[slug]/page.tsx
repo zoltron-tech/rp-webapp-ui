@@ -296,12 +296,12 @@ export default function UserProfilePage({}) {
             style={{ marginBottom: "-70px", width: "90%" }}
           >
             <S.Avatar
-              src={novelist?.image || ""}
+              src={novelist?.image ?? null}
               alt="profile-picture"
               size={250}
             />
             <S.AvatarMobile
-              src={novelist?.image || ""}
+              src={novelist?.image ?? null}
               alt="profile-picture"
               size={130}
             />

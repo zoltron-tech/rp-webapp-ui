@@ -39,7 +39,7 @@ export const FriendListItem: FC<Props> = ({ novelist, className, ...rest }) => {
         ])}
       >
         <S.Avatar
-          src={novelist?.image || ""}
+          src={novelist?.image ?? null}
           alt={""}
           size={50}
           onClick={onAvatarClick}

@@ -90,7 +90,7 @@ export default function UserProfilePage({}) {
           <PageLoader />
         </ShouldRender>
         <S.Avatar
-          src={storyboard?.image || ""}
+          src={storyboard?.image ?? null}
           alt="profile-picture"
           size={250}
         />

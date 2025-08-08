@@ -44,7 +44,7 @@ export const useToggleLike: Hook<Props, ReturnType> = ({
       cache: "no-store",
     });
 
-    if (response.status !== 200) {
+    if (!response.ok) {
       return { message: API_MESSAGE.Error };
     }
 

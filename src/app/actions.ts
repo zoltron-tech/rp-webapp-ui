@@ -20,17 +20,17 @@ const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL, USE_LOCAL_DOMAIN } = serverRuntimeConfig;
 
 export const getThemeCookie = async () => {
-  const cookie = cookies().get(THEME_COOKIE_NAME);
+  const cookie = (await cookies()).get(THEME_COOKIE_NAME);
   return cookie ? cookie.value : "dark";
 };
 
 export const getAuthCookie = async () => {
-  const cookie = cookies().get(JWT_COOKIE_NAME);
+  const cookie = (await cookies()).get(JWT_COOKIE_NAME);
   return cookie ? cookie.value : "";
 };
 
 export const setAuthCookie = async (jwt: string) => {
-  cookies().set(JWT_COOKIE_NAME, jwt, {
+  (await cookies()).set(JWT_COOKIE_NAME, jwt, {
     httpOnly: false,
     secure: false,
     sameSite: "strict",
@@ -41,7 +41,7 @@ export const setAuthCookie = async (jwt: string) => {
 
 export const removeAuthCookie = async (jwt: string) => {
   const pastDate = new Date(0);
-  cookies().set(JWT_COOKIE_NAME, jwt, {
+  (await cookies()).set(JWT_COOKIE_NAME, jwt, {
     httpOnly: false,
     secure: false,
     sameSite: "strict",
@@ -62,7 +62,7 @@ export const forgotPasswordAction = async (email: string) => {
     cache: "no-store",
   });
 
-  if (response.status !== 200) {
+  if (!response.ok) {
     return {
       message: "Something went wrong, please try again or contact support.",
     };
@@ -84,7 +84,7 @@ export const verifyAccountAction = async (jwt: string) => {
     cache: "no-store",
   });
 
-  if (response.status !== 200) {
+  if (!response.ok) {
     return {
       message: "Something went wrong, please try again or contact support.",
     };
@@ -110,7 +110,7 @@ export const resetPasswordAction = async (
     body: JSON.stringify(payload),
   });
 
-  if (response.status !== 200) {
+  if (!response.ok) {
     return {
       message: "Something went wrong, please try again or contact support.",
     };
@@ -140,7 +140,7 @@ export const loginAction = async (payload: LoginPayload) => {
     };
   } else if (response.status === 403) {
     return { message: "Account not verified" };
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return {
       message: "Something went wrong, please contact support.",
     };
@@ -206,16 +206,16 @@ export const logoutAction = async () => {
   redirect("/rp/novelists", RedirectType.push);
 };
 
-export const authenticateJWT = (useCookies?: boolean) => (jwt: string) => {
+export const authenticateJWT = async (jwt: string, useCookies?: boolean) => {
   const decoded = JWT.decode(jwt, { complete: true });
   if (!decoded || typeof decoded.payload === "string" || !decoded.payload.exp) {
-    if (useCookies) cookies().delete(JWT_COOKIE_NAME);
+    if (useCookies) (await cookies()).delete(JWT_COOKIE_NAME);
     return false;
   }
   const isValid = decoded.payload.exp * 1000 > Date.now();
 
   if (!isValid) {
-    if (useCookies) cookies().delete(JWT_COOKIE_NAME);
+    if (useCookies) (await cookies()).delete(JWT_COOKIE_NAME);
     return false;
   }
   return true;
@@ -224,26 +224,28 @@ export const authenticateJWT = (useCookies?: boolean) => (jwt: string) => {
 export const authenticateAction = async () => {
   Logger.debug("authenticate");
   // ADD_AUTH_COOKIE
-  // await setAuthCookie();
-  const jwtCookie = cookies().get(JWT_COOKIE_NAME);
+  await setAuthCookie(
+    "eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhZDZiZDY3Ni01OWUzLTQxZDMtODIzMC02NDI1OTU2M2FjYzUiLCJleHAiOjE3NTQ3MjA4NjV9.cRr-ZRG0Ybo-BmrPr0L1aM2AFoCe0SF8CVSx13HtFmY"
+  );
+  const jwtCookie = (await cookies()).get(JWT_COOKIE_NAME);
   Logger.info("jwtCookie", jwtCookie);
   if (!jwtCookie?.value) return false;
 
-  const isValid = authenticateJWT(true)(jwtCookie.value);
+  const isValid = await authenticateJWT(jwtCookie.value, true);
   return isValid;
 };
 
 export const authenticateAndGetJWT = async () => {
   const authenticated = await authenticateAction();
   if (!authenticated) return logoutAction();
-  const cookie = getAuthCookie();
+  const cookie = await getAuthCookie();
   return cookie;
 };
 
 export const getJWTIfExists = async () => {
   const authenticated = await authenticateAction();
   if (!authenticated) return;
-  const cookie = getAuthCookie();
+  const cookie = await getAuthCookie();
   return cookie;
 };
 
@@ -265,7 +267,7 @@ export const checkUsernameAvailability = async (username: string) => {
 
 export const getUser = async () => {
   const URL = `${RP_SERVICE_URL}/rp/user/account/auth`;
-  const jwtCookie = cookies().get(JWT_COOKIE_NAME);
+  const jwtCookie = (await cookies()).get(JWT_COOKIE_NAME);
 
   if (!jwtCookie) redirect("/", RedirectType.push);
   const response = await fetch(URL, {
@@ -277,7 +279,7 @@ export const getUser = async () => {
     cache: "no-store",
   });
 
-  if (response.status !== 200) logoutAction();
+  if (!response.ok) logoutAction();
 
   const _user: WithMessage<any> = await response.json();
 

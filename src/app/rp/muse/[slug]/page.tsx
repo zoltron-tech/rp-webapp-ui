@@ -234,7 +234,7 @@ export default function MuseProfilePage({}) {
         <PageLoader />
       </ShouldRender>
       <S.Banner
-        src={muse?.image && !muse.image.endsWith(".gif") ? muse.image : ""}
+        src={muse?.image && !muse.image.endsWith(".gif") ? muse.image : null}
       />
       <S.CardWrapper
         hoverable={is("MAIN")}
@@ -249,7 +249,7 @@ export default function MuseProfilePage({}) {
               </S.MuseName>
               <S.AuthorContainer>
                 <Avatar
-                  src={muse?.pennedBy?.image || ""}
+                  src={muse?.pennedBy?.image ?? null}
                   alt="profile-picture"
                   size={60}
                   hoverable

@@ -85,7 +85,7 @@ export const StoryBoardMemberListItem: FC<ListItemProps> = ({
     <S.CardWrapper>
       <S.Card className="muse-card">
         <S.Avatar
-          src={novelist?.image || ""}
+          src={novelist?.image ?? null}
           alt={""}
           size={50}
           onClick={onAvatarClick}
@@ -153,7 +153,7 @@ export const StoryBoardNewMemberListItem: FC<NewMembersListItemProps> = ({
     <S.CardWrapper>
       <S.Card className="muse-card">
         <S.Avatar
-          src={novelist?.image || ""}
+          src={novelist?.image ?? null}
           alt={""}
           size={50}
           onClick={onAvatarClick}

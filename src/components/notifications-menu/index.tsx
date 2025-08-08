@@ -69,7 +69,7 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
           {notifications &&
             notifications.map((request) => (
               <FriendRequestNotification
-                key={request.source.title}
+                key={request.id}
                 notification={request}
                 removeMethod={removeFriendRequestNotification}
               ></FriendRequestNotification>

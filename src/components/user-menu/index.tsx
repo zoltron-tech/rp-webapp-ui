@@ -57,7 +57,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
     <S.PositionContainer>
       <S.ContentContainer onClick={toggleState(setOpen)}>
         <Avatar
-          src={novelist?.image || ""}
+          src={novelist?.image ?? null}
           alt="profile-menu"
           size={45}
           hoverable

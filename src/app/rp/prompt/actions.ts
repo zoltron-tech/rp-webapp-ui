@@ -30,7 +30,7 @@ export const getPromptAction = async (promptId: string) => {
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -58,7 +58,7 @@ export const getPropmptCommentsAction = async (promptId: string) => {
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -77,7 +77,7 @@ export const getPromptsByMuseAction = async (museId: string) => {
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -100,7 +100,7 @@ export const updatePromptAction = async (_prompt: Prompt) => {
     cache: "no-store",
   });
 
-  if (response.status !== 200) {
+  if (!response.ok) {
     Logger.debug("error", response.status, response.statusText);
     return { message: API_MESSAGE.Error };
   }

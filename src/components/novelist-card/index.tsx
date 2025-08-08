@@ -80,7 +80,7 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
         </S.ExpandButton>
         <S.CardHeader>
           <S.Avatar
-            src={novelist.image || ""}
+            src={novelist.image ?? null}
             alt={""}
             size={180}
             name={"stalk 👀"}
@@ -102,7 +102,7 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
                 key={`${muse.firstName}-${muse.lastName}`}
                 onClick={() => onMuseAvatarClick(muse.id ? muse.id : "")}
               >
-                <S.Muse.Avatar src={muse.image || ""} alt={""} size={60} />
+                <S.Muse.Avatar src={muse.image ?? null} alt={""} size={60} />
 
                 <S.Muse.Name>
                   {muse.firstName}{" "}

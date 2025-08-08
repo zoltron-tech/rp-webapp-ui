@@ -15,14 +15,12 @@ const validateJWT = (jwt: string) => {
   return isValid;
 };
 
-// Mock database update/delete functions
 async function updateReaction(
   res: NextApiResponse,
   jwt: string,
   id: string,
   targetType: string
 ) {
-  // Implement your update logic here
   const URL = `${RP_SERVICE_URL}/rp/portfolio/react/${id}?targetType=${targetType}`;
 
   const response = await fetch(URL, {
@@ -36,7 +34,7 @@ async function updateReaction(
 
   const result = await response.json();
 
-  if (response.status !== 200) {
+  if (!response.ok) {
     return res
       .status(response.status)
       .json({ message: result.message || API_MESSAGE.Error });
@@ -49,7 +47,6 @@ async function updateReaction(
 }
 
 async function deleteReaction(res: NextApiResponse, jwt: string, id: string) {
-  // Implement your delete logic here
   const URL = `${RP_SERVICE_URL}/rp/portfolio/react/${id}`;
 
   const response = await fetch(URL, {
@@ -61,7 +58,7 @@ async function deleteReaction(res: NextApiResponse, jwt: string, id: string) {
     cache: "no-store",
   });
 
-  if (response.status !== 200) {
+  if (!response.ok) {
     return res
       .status(response.status)
       .json({ message: response.statusText || API_MESSAGE.Error });
@@ -93,6 +90,14 @@ export default async function handler(
   switch (method) {
     case "PATCH": {
       const { targetType } = req.body;
+      const allowedTargetTypes = ["PROMPT", "COMMENT"];
+      if (!allowedTargetTypes.includes(targetType)) {
+        return res.status(400).json({
+          error: `Invalid targetType: ${targetType}, allowed values: ${allowedTargetTypes.join(
+            ", "
+          )}`,
+        });
+      }
       try {
         return updateReaction(res, jwt, id, targetType);
       } catch (error) {

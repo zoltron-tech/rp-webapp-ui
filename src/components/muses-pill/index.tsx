@@ -42,7 +42,7 @@ export const MusesPill: FC<Props> = ({
           ?.slice(0, slice ? slice : novelist?.muses.length)
           .map((muse) => (
             <S.Avatar
-              src={muse.image || ""}
+              src={muse.image ?? null}
               alt={muse.firstName}
               size={65}
               key={muse.firstName}

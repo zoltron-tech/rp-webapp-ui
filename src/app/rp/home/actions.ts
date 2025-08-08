@@ -28,7 +28,7 @@ export const getStrangerNovelistsAction = async (
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -57,7 +57,7 @@ export const getMusesAction = async (
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -86,7 +86,7 @@ export const getMusesWithVideosAction = async (
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -107,7 +107,7 @@ export const getUserActivities = async (
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -136,7 +136,7 @@ export const getFriendActivities = async (
 
   if (response.status === 404) {
     return null;
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 
@@ -156,7 +156,7 @@ export const getRandomStories = async (
 
   if (response.status === 404) {
     return [];
-  } else if (response.status !== 200) {
+  } else if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }
 

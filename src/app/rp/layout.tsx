@@ -9,7 +9,6 @@ import { ThemeProvider } from "styled-components";
 
 import { StoreState } from "@/types/state";
 import * as S from "./styles";
-import { usePathname } from "next/navigation";
 import { DefaultTheme } from "@novelist-world/ui";
 import { StoreProvider } from "@/context/store/context";
 
@@ -18,8 +17,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const theme = useMemo(() => {
     return cookies.theme === "light" ? THEME_LIGHT : THEME_DARK;
   }, [cookies.theme]);
-
-  const pathname = usePathname();
 
   return (
     <ThemeProvider theme={{ ...theme, ...DefaultTheme }}>
@@ -36,7 +33,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       >
         <AuthProvider>
           <UIContextProvider>
-            <S.PageContainer>
+            <S.PageContainer className="dark">
               <TopBar />
               <ContentContainer>{children}</ContentContainer>
             </S.PageContainer>

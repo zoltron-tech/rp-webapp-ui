@@ -2,25 +2,23 @@
 
 import { Search, UserMenu } from "@/components";
 import { Button, ShouldRender, Username } from "@/components/common";
-import { FC, memo } from "react";
+import { FC, memo, useMemo } from "react";
 
 import { NotificationsMenu } from "@/components/notifications-menu";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { GoArrowRight } from "react-icons/go";
 import { GiQuillInk } from "react-icons/gi";
 import { ChatMenuModal } from "../../chat-menu-modal";
 import * as S from "./styles";
 import { useGlobalState } from "@/context/store/stores";
 
-const DynamicThemeToggle = dynamic(() => import("@/components/theme-toggle"), {
-  ssr: false,
-});
-
 type Props = {};
 
 export const TopBar: FC<Props> = memo(({}) => {
   const authState = useGlobalState("authState");
+  const pathname = usePathname();
+  const isLoginPage = useMemo(() => pathname === "/rp/login", [pathname]);
   const { push } = useRouter();
 
   const onSearchItemClick =
@@ -42,7 +40,7 @@ export const TopBar: FC<Props> = memo(({}) => {
   };
 
   const onLoginClick = () => {
-    window.location.replace(`${process.env.RP_LOGIN_URL}`);
+    push("/rp/login");
   };
 
   return (
@@ -56,54 +54,56 @@ export const TopBar: FC<Props> = memo(({}) => {
           </S.Logo>
           <S.LogoText>Novelist World</S.LogoText>
         </S.LogoContainer>
+        <ShouldRender if={!isLoginPage}>
+          <S.ActionsContainer>
+            <S.SearchContainer>
+              <Search
+                placeholder="Search"
+                types={["novelist", "muse", "story"]}
+                renderDropdownItem={(result, close) => (
+                  <S.SearchDropdownItem
+                    onClick={onSearchItemClick(result)(close)}
+                  >
+                    <S.AvatarContainer>
+                      <S.SearchAvatar
+                        size={60}
+                        src={result.image}
+                        alt={result.firstName}
+                      />
+                      <S.NameContainer>
+                        {result.firstName && (
+                          <div>
+                            {result.firstName} {result.lastName}
+                          </div>
+                        )}
+                        {result.name && <div>{result.name}</div>}
+                        {result.username && (
+                          <Username username={result.username} />
+                        )}
+                      </S.NameContainer>
+                    </S.AvatarContainer>
+                    <GoArrowRight />
+                  </S.SearchDropdownItem>
+                )}
+              />
+            </S.SearchContainer>
 
-        <S.ActionsContainer>
-          <S.SearchContainer>
-            <Search
-              placeholder="Search"
-              types={["novelist", "muse", "story"]}
-              renderDropdownItem={(result, close) => (
-                <S.SearchDropdownItem
-                  onClick={onSearchItemClick(result)(close)}
-                >
-                  <S.AvatarContainer>
-                    <S.SearchAvatar
-                      size={60}
-                      src={result.image}
-                      alt={result.firstName}
-                    />
-                    <S.NameContainer>
-                      {result.firstName && (
-                        <div>
-                          {result.firstName} {result.lastName}
-                        </div>
-                      )}
-                      {result.name && <div>{result.name}</div>}
-                      {result.username && (
-                        <Username username={result.username} />
-                      )}
-                    </S.NameContainer>
-                  </S.AvatarContainer>
-                  <GoArrowRight />
-                </S.SearchDropdownItem>
-              )}
-            />
-          </S.SearchContainer>
-          <ShouldRender if={authState === "LOGGED_OUT"}>
-            <S.ButtonsContainerDesktop>
-              <Button onClick={onLoginClick}>Log In</Button>
-            </S.ButtonsContainerDesktop>
-          </ShouldRender>
-          <ShouldRender
-            if={authState === "LOGGED_IN" || authState === "UNINITIALIZED"}
-          >
-            <S.ButtonsContainerLoggedInDesktop>
-              <ChatMenuModal />
-              <NotificationsMenu />
-              <UserMenu />
-            </S.ButtonsContainerLoggedInDesktop>
-          </ShouldRender>
-        </S.ActionsContainer>
+            <ShouldRender if={authState === "LOGGED_OUT"}>
+              <S.ButtonsContainerDesktop>
+                <Button onClick={onLoginClick}>Log In</Button>
+              </S.ButtonsContainerDesktop>
+            </ShouldRender>
+            <ShouldRender
+              if={authState === "LOGGED_IN" || authState === "UNINITIALIZED"}
+            >
+              <S.ButtonsContainerLoggedInDesktop>
+                <ChatMenuModal />
+                <NotificationsMenu />
+                <UserMenu />
+              </S.ButtonsContainerLoggedInDesktop>
+            </ShouldRender>
+          </S.ActionsContainer>
+        </ShouldRender>
       </S.Bar>
     </S.Container>
   );

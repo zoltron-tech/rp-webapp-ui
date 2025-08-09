@@ -9,8 +9,10 @@ export const Container = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  border-radius: var(--border-radius);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size);
+  color: var(--text);
+  border-radius: 4px;
   cursor: pointer;
   white-space: nowrap;
   position: relative;
@@ -35,18 +37,15 @@ export const Container = styled.div`
   }
 
   &.xs {
-    height: 26px;
-    font-size: 12px;
+    font-size: var(--font-size-xsmall);
   }
 
   &.sm {
-    height: 36px;
-    font-size: 16px;
+    font-size: var(--font-size-small);
   }
 
   &.lg {
-    height: 56px;
-    font-size: 20px;
+    font-size: var(--font-size-large);
   }
 
   &.primary {
@@ -154,7 +153,7 @@ export const Container = styled.div`
   }
 
   &.rounded-edge {
-    border-radius: 5px;
+    border-radius: 4px;
   }
 
   &.square {

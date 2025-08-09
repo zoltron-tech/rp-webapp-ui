@@ -16,7 +16,6 @@ import {
 } from "./actions";
 import MuseCard from "@/components/muse-card";
 import StoryCard from "@/components/story-card";
-import { getNotifications } from "../novelists/actions";
 import { FriendListItem } from "@/components/friend-list-item/page";
 import { Activity } from "@/types/activity";
 import { ActivityBox } from "@/components/activity-box";

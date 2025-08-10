@@ -34,7 +34,7 @@ export const InfoBoxContent = styled(Dialog.Content)`
   border: 0.85px solid #333;
 
   font-family: var(--font);
-  color: var(--text-color-dark);
+  color: var(--text);
 
   &.warning {
     border-color: #ffcc00;

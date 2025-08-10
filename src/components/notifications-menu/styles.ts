@@ -96,7 +96,7 @@ export const ContentContainer = styled.div`
 
 export const Text = styled.div`
   font-size: 14px;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
 `;
 
 export const NotificationBox = styled.div`
@@ -124,7 +124,7 @@ export const CardWrapper = styled.div`
   container-type: size;
 
   &:hover {
-    background-color: ${({ theme }: any) => theme.primary};
+    background-color: var(--accent);
   }
 
   &.end {

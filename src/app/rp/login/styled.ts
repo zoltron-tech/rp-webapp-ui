@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Form } from "radix-ui";
 import styled from "styled-components";
 
 export const LoginPageRoot = styled.main``;
@@ -8,15 +9,22 @@ export const FormContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-top: 100px;
+  margin-block: 100px;
   margin-inline: auto;
-  max-width: 600px;
+  max-width: 480px;
   border: 0.85px solid var(--bg-6);
   background-color: var(--bg-2);
   font-family: var(--font);
   font-size: var(--font-size);
   color: var(--text);
   padding: 20px;
+
+  @media screen and (max-width: 430px) {
+    margin-block: 0px;
+    height: calc(100vh - 48px);
+    padding: 10px;
+    border: none;
+  }
 
   .tabs-list {
     width: 100%;
@@ -82,31 +90,64 @@ export const FormContainer = styled.div`
       width: 100%;
       max-width: 400px;
 
+      .field {
+        display: flex;
+        flex-direction: column;
+
+        width: 100%;
+        color: var(--text);
+        font-size: var(--font-size);
+        font-family: var(--font);
+
+        label {
+          margin-left: 2px;
+          font-weight: var(--font-weight-regular);
+          margin-top: 4px;
+          margin-bottom: 4px;
+        }
+      }
+
       input {
-        margin-bottom: 10px;
+        margin-bottom: 8px;
         border: 1px solid var(--bg-6);
         background-color: var(--bg-3);
         padding: 8px;
         border-radius: 4px;
         border: none;
-        color: var(--text-color-dark);
-
+        color: var(--text);
+        border: 1px solid var(--bg-6);
         font-family: var(--font);
 
+        &::placeholder {
+          color: var(--text-secondary);
+          opacity: 0.4;
+        }
+
+        &:hover {
+          outline: 1px solid var(--accent);
+        }
+
         &:focus {
-          outline: 1.5px solid var(--accent);
+          outline: 2px solid var(--accent);
         }
 
         &[data-invalid="true"] {
-          outline: 1.5px solid var(--tomato-9-e);
+          outline: 1.5px solid var(--tomato-a9);
+        }
+
+        &:-internal-autofill-selected {
+          background: var(--bg-3) !important;
+          background-color: var(--bg-3) !important;
+          color: var(--text) !important;
+          appearance: none !important;
         }
       }
 
       button {
+        margin-top: 12px;
         padding: 10px;
         background-color: var(--accent);
         color: var(--text);
-
         border: none;
         border-radius: 4px;
         cursor: pointer;
@@ -128,17 +169,37 @@ export const FormContainer = styled.div`
   }
 `;
 
+export const FieldHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .label-message {
+    color: var(--tomato-a9);
+    font-size: var(--font-size-small);
+    font-weight: var(--font-weight-medium);
+    font-family: var(--font);
+
+    &::before {
+      content: "*";
+      color: var(--tomato-a9);
+      font-weight: var(--font-weight-bold);
+      margin-right: 2px;
+    }
+  }
+`;
+
 export const FrogotPasswordLink = styled(Link)`
-  color: var(--bg-11);
+  color: var(--text-secondary);
   font-size: var(--font-size);
-  font-weight: var(--font-weight-regular);
-  text-decoration: none;
+  font-weight: var(--font-weight-medium);
   margin-top: 8px;
   align-self: flex-end;
+
   &:hover {
-    text-decoration: underline;
     color: var(--text);
   }
+
   &:focus {
     outline: 1.5px solid var(--accent);
     outline-offset: 2px;
@@ -157,9 +218,14 @@ export const OrHelper = styled.div`
   padding-bottom: 10px;
   position: relative;
 
+  @media screen and (max-width: 430px) {
+    margin-bottom: 20px;
+  }
+
   &::before {
-    content: "continue with socials";
+    content: "or continue with";
     position: absolute;
+    white-space: nowrap;
     left: 50%;
     transform: translateX(-50%);
     background-color: var(--bg-2);
@@ -183,8 +249,8 @@ export const SocialsList = styled.ul`
 export const SocialButton = styled.button`
   all: unset;
   cursor: pointer;
-  padding: 10px;
-  border-radius: 50%;
+  padding: 6px 12px;
+  border-radius: 4px;
   background-color: var(--bg-4);
   color: var(--text);
   font-size: var(--font-size);
@@ -192,9 +258,9 @@ export const SocialButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: 1.5px solid var(--bg-6);
+  width: 100px;
+  border: 1px solid var(--bg-6);
+
   &:hover {
     background-color: var(--bg-3);
   }
@@ -205,8 +271,100 @@ export const SocialButton = styled.button`
     outline: 1.5px solid var(--accent);
     outline-offset: 2px;
   }
+
+  span {
+    color: var(--text);
+    font-size: var(--font-size);
+    font-family: var(--font);
+    margin-left: 8px;
+    font-weight: var(--font-weight-medium);
+  }
+
   svg {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
+  }
+
+  &.google {
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  &.discord {
+    svg {
+      fill: #5865f2;
+    }
+  }
+
+  &.facebook {
+    svg {
+      fill: #1877f2;
+    }
+  }
+
+  &.instagram {
+    svg {
+      fill: #c13584;
+    }
+  }
+
+  /* &.google {
+    background-color: var(--text);
+  }
+
+  &:not(.google) {
+    svg {
+      fill: var(--text);
+      path {
+        fill: currentColor;
+      }
+    }
+
+    &.discord {
+      background-color: #5865f2;
+    }
+
+    &.facebook {
+      background-color: #1877f2;
+    }
+
+    &.instagram {
+      background-color: #c13584;
+    }
+  } */
+`;
+
+export const TermsAndConditions = styled.div`
+  margin-top: 20px;
+  margin-inline: 20px;
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  text-align: center;
+  a {
+    color: var(--accent-9);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &:focus {
+      outline: 1.5px solid var(--accent);
+      outline-offset: 2px;
+    }
+  }
+  p {
+    margin: 0;
+  }
+
+  strong {
+    font-weight: var(--font-weight-bold);
+  }
+
+  span {
+    color: var(--text-secondary);
+    font-weight: var(--font-weight-medium);
   }
 `;

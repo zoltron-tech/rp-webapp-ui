@@ -1,6 +1,16 @@
-@import "@radix-ui/colors/cyan-dark.css";
-@import "@radix-ui/colors/tomato-dark.css";
+@import "@radix-ui/colors/jade-dark.css";
+@import "@radix-ui/colors/jade-dark-alpha.css";
 @import "@radix-ui/colors/olive-dark.css";
+@import "@radix-ui/colors/olive-dark-alpha.css";
+
+@import "@radix-ui/colors/tomato-dark.css";
+@import "@radix-ui/colors/tomato-dark-alpha.css";
+
+@import "@radix-ui/colors/grass-dark.css";
+@import "@radix-ui/colors/grass-dark-alpha.css";
+
+@import "@radix-ui/colors/blue-dark.css";
+@import "@radix-ui/colors/blue-dark-alpha.css";
 
 /* BEGIN: Remove base padding and styling */
 * {
@@ -111,7 +121,7 @@ div[class*="nw-toast"] .toast-close:hover {
 }
 
 .nw-toast-dark .toast-close {
-  color: var(--text-color-dark);
+  color: var(--text);
 }
 
 /* END: Custom classes for global styling */

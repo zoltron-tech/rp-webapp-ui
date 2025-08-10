@@ -92,7 +92,7 @@ export const Element = styled.li`
   }
 
   &:hover {
-    background-color: ${({ theme }: any) => theme.primary};
+    background-color: var(--accent);
     color: #ffffff;
 
     svg {

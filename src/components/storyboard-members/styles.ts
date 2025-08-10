@@ -134,7 +134,7 @@ export const Button = styled.div`
   & svg {
     width: 20px;
     height: 20px;
-    fill: ${({ theme }: any) => theme.text};
+    fill: var(--text);
     transition: transform 0.2s ease-in-out;
 
     pointer-events: none;

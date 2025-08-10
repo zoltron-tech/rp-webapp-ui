@@ -46,7 +46,7 @@ export const PromptThreads: FC = () => {
             <Comment
               key={comment.id}
               comment={comment}
-              hide-separator={index === 0}
+              hide-separator={false}
             />
           ))}
         </Collapsible.Content>

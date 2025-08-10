@@ -135,7 +135,7 @@ export const ExpandIcon = styled.div`
   & svg {
     width: 20px;
     height: 15px;
-    fill: ${({ theme }: any) => theme.text};
+    fill: var(--text);
     transition: transform 0.2s ease-in-out;
   }
 
@@ -151,7 +151,7 @@ const TagTypography = css`
   font-weight: 300;
   line-height: 24px;
 
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
 `;
 
 export const TagInline = styled.div`

@@ -52,8 +52,8 @@ export const PromptTrigger = styled.button`
     margin-top: 8px;
     padding: 6px;
     background-color: #000;
-    color: var(--text-color-dark);
-    /* border: 1px solid var(--accent); */
+    color: var(--text);
+
     svg {
       transform: rotate(180deg);
       width: 20px;
@@ -90,8 +90,8 @@ export const PromptInputRoot = styled.div`
     padding-bottom: 45px;
     padding-inline: 16px;
     background-color: var(--bg-2);
-    border: 0.85px solid var(--bg-4);
-    box-shadow: 0 10px 38px -10px rgba(0, 0, 0, 0.25);
+    /* border: 0.85px solid var(--bg-6); */
+    /* box-shadow: 0 10px 38px -10px rgba(0, 0, 0, 0.25); */
   }
 
   .form-content {
@@ -103,7 +103,7 @@ export const PromptInputRoot = styled.div`
   .form-label {
     font-size: var(--font-size);
     font-family: var(--font);
-    color: var(--text-color-dark);
+    color: var(--text);
   }
 `;
 
@@ -118,7 +118,7 @@ export const TextInputContainer = styled(Form.Field)`
     padding: 8px;
     border-radius: 4px;
     border: none;
-    color: var(--text-color-dark);
+    color: var(--text);
     font-size: var(--font-size);
     font-family: var(--font);
     resize: none;
@@ -129,7 +129,7 @@ export const TextInputContainer = styled(Form.Field)`
     }
 
     &[data-invalid="true"] {
-      outline: 1.5px solid var(--tomato-9-e);
+      outline: 1.5px solid var(--tomato-a9);
     }
   }
 
@@ -162,7 +162,7 @@ const SelectBase = styled(Form.Field)`
     display: flex;
     align-items: center;
     cursor: pointer;
-    color: var(--text-color-dark);
+    color: var(--text);
     font-size: var(--font-size);
     font-family: var(--font);
     user-select: none;
@@ -176,7 +176,7 @@ const SelectBase = styled(Form.Field)`
       align-items: center;
       gap: 8px;
       flex-grow: 1;
-      color: var(--text-color-dark);
+      color: var(--text);
       font-size: var(--font-size);
       font-family: var(--font);
     }
@@ -184,7 +184,7 @@ const SelectBase = styled(Form.Field)`
     .select-icon {
       width: 16px;
       height: 16px;
-      color: var(--text-color-dark);
+      color: var(--text);
     }
   }
 `;
@@ -215,7 +215,7 @@ const SelectPortalBase = styled(Select.Portal)`
     user-select: none;
     cursor: pointer;
     position: relative;
-    color: var(--text-color-dark);
+    color: var(--text);
     font-size: var(--font-size);
     font-family: var(--font);
     border-top: 0.85px solid transparent;
@@ -311,7 +311,7 @@ export const MuseAvatarRoot = styled(Avatar.Root)`
     width: 100%;
     height: 100%;
     background-color: var(--bg-2);
-    color: var(--text-color-dark);
+    color: var(--text);
     font-size: var(--font-size-small);
   }
 `;
@@ -383,7 +383,7 @@ export const MediaPreviewRoot = styled.div`
     width: 34px;
     height: 34px;
     border-radius: 50%;
-    color: var(--text-color-dark);
+    color: var(--text);
     font-size: var(--font-size-small);
     background-color: var(--bg-4);
     position: absolute;
@@ -416,10 +416,10 @@ export const SubmitButton = styled.button`
   bottom: 20px;
   right: 16px;
   cursor: pointer;
-  padding: 4px 12px;
+  padding: 8px 18px;
   border-radius: 2px;
   background-color: var(--accent);
-  color: var(--text-color-dark);
+  color: var(--text);
   font-family: var(--font);
   font-size: var(--font-size-button);
   margin-right: auto;

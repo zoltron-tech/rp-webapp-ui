@@ -254,7 +254,7 @@ export const checkUsernameAvailability = async (username: string) => {
 
   if (response.status === 404) {
     return true;
-  } else if (response.status === 200) {
+  } else if (response.ok) {
     return false;
   }
 

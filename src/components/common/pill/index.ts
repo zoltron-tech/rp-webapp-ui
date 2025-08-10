@@ -8,7 +8,7 @@ export const Pill = styled.div`
   min-height: 80px;
   background-color: var(--bg-4);
   position: relative;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -25,6 +25,6 @@ export const Pill = styled.div`
     font-weight: 300;
     line-height: 24px;
 
-    color: ${({ theme }: any) => theme.text};
+    color: var(--text);
   }
 `;

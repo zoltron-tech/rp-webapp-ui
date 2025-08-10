@@ -2,7 +2,7 @@ import { Separator } from "radix-ui";
 import { styled } from "styled-components";
 
 export const PromptRoot = styled.article`
-  background-color: var(--bg-4);
+  background-color: var(--bg-2);
   max-width: 800px;
   margin-inline: auto;
 
@@ -71,7 +71,7 @@ export const SourceName = styled.h1`
 export const PromptSubheader = styled.time`
   all: unset;
   font-size: var(--font-size-small);
-  color: var(--bg-11);
+  color: var(--text-secondary);
   cursor: default;
 
   display: flex;

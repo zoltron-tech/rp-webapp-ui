@@ -23,7 +23,7 @@ export const Title = styled.div`
   font-size: 20px;
   font-weight: 600;
   max-width: 80%;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
   text-align: end;
   opacity: 0;
   transform: translateY(100px);
@@ -140,7 +140,7 @@ export const Button = styled.div`
   & svg {
     width: 15px;
     height: 15px;
-    fill: ${({ theme }: any) => theme.text};
+    fill: var(--text);
     transition: transform 0.2s ease-in-out;
 
     pointer-events: none;

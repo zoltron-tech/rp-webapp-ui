@@ -90,7 +90,7 @@ export const PasteButton = styled.div`
 export const LocalContainer = styled(Container)`
   border: 1px solid slategray;
   background-color: ${({ theme }: any) => theme.colors.background};
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
   border-radius: 16px;
 
   @container (min-width: 700px) {
@@ -237,7 +237,7 @@ export const ExtraAttributesList = styled.ul`
   padding-left: 0;
   width: 100%;
   list-style: none;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
 `;
 
 export const ExtraAttributeItem = styled.li`
@@ -247,7 +247,7 @@ export const ExtraAttributeItem = styled.li`
   margin-bottom: 0.5em;
   border-radius: 6px;
   padding: 6px 12px;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
 `;
 
 export const RemoveButton = styled.button`

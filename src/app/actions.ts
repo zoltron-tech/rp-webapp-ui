@@ -41,7 +41,18 @@ export const setAuthCookie = async (jwt: string) => {
 };
 
 export const removeAuthCookie = async () => {
-  (await cookies()).delete(JWT_COOKIE_NAME);
+  const pastDate = new Date();
+  pastDate.setFullYear(pastDate.getFullYear() - 1);
+  // Remove the cookie by setting an expired date
+  (await cookies()).set(JWT_COOKIE_NAME, "", {
+    httpOnly: false,
+    secure: false,
+    sameSite: "strict",
+    domain: USE_LOCAL_DOMAIN ? "localhost" : "novelist.world",
+    path: "/",
+    maxAge: -1,
+    expires: pastDate,
+  });
 };
 
 export const forgotPasswordAction = async (email: string) => {

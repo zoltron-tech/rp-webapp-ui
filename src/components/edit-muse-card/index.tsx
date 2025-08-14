@@ -218,11 +218,14 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
   const fetchData = async () => {
     if (!id) return;
 
+    setLoading(true);
+
     const response = await getMuseAction(id);
     if (response && !("message" in response)) {
       setMuse(response);
       updateValues(response);
     }
+    setLoading(false);
   };
 
   const fetchFandoms = async (prefix: string) => {
@@ -479,14 +482,13 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
                   <S.Label htmlFor="video">Video</S.Label>
                   <Input name="video" type="file" onChange={uploadVideo} />
                 </Flex>
-
                 <Flex>
                   <S.Label htmlFor="story">Story</S.Label>
 
-                  {muse?.story && JSON.stringify(muse.story) !== "{}" ? (
+                  {!loading ? (
                     <S.RichText
                       height={200}
-                      content={JSON.parse(muse.story)}
+                      content={muse?.story ? JSON.parse(muse.story) : ""}
                       onChange={(content) => {
                         update({
                           target: {

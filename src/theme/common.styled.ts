@@ -1,3 +1,5 @@
+"use client";
+
 import { __DEV__ } from "@/utils/constants";
 import { setOpacity } from "@/utils/helpers/theme";
 import { css } from "styled-components";

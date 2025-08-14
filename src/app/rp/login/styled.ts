@@ -21,8 +21,9 @@ export const FormContainer = styled.div`
 
   @media screen and (max-width: 430px) {
     margin-block: 0px;
-    height: calc(100vh - 48px);
-    padding: 10px;
+    min-height: calc(100vh - 48px);
+    padding-inline: 10px;
+    padding-block: 30px;
     border: none;
   }
 
@@ -100,10 +101,76 @@ export const FormContainer = styled.div`
         font-family: var(--font);
 
         label {
-          margin-left: 2px;
+          padding: 2px;
           font-weight: var(--font-weight-regular);
-          margin-top: 4px;
-          margin-bottom: 4px;
+          margin-block: 4px;
+        }
+
+        &.checkbox {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: flex-start;
+          gap: 8px;
+          margin-top: 12px;
+          margin-bottom: 8px;
+          font-size: var(--font-size-small);
+          font-weight: var(--font-weight-medium);
+          font-family: var(--font);
+          color: var(--text-secondary);
+
+          input[type="checkbox"] {
+            all: unset;
+            width: 20px;
+            height: 20px;
+            aspect-ratio: 1;
+            border-radius: 4px;
+            margin: 0;
+            cursor: pointer;
+            overflow: hidden;
+            accent-color: var(--accent);
+            /* Set unchecked background color */
+            background-color: var(--bg-3);
+            border: 1px solid var(--bg-6);
+
+            &:checked {
+              background-color: var(--accent);
+              border: 1px solid var(--accent-hover);
+
+              &::before {
+                content: "✓";
+                display: block;
+                color: var(--text);
+                text-align: center;
+                line-height: 20px;
+                font-weight: var(--font-weight-bold);
+              }
+            }
+
+            &:not(:checked) {
+              background-color: var(--bg-5);
+              border: 1px solid var(--bg-6);
+            }
+          }
+
+          label {
+            font-weight: var(--font-weight-regular);
+            color: var(--text);
+
+            a {
+              color: var(--accent-9);
+              text-decoration: none;
+
+              &:hover {
+                text-decoration: underline;
+              }
+
+              &:focus {
+                outline: 1.5px solid var(--accent);
+                outline-offset: 2px;
+              }
+            }
+          }
         }
       }
 
@@ -117,6 +184,7 @@ export const FormContainer = styled.div`
         color: var(--text);
         border: 1px solid var(--bg-6);
         font-family: var(--font);
+        outline-offset: 2px;
 
         &::placeholder {
           color: var(--text-secondary);
@@ -143,7 +211,14 @@ export const FormContainer = styled.div`
         }
       }
 
-      button {
+      input[required] + label::before {
+        content: "*";
+        color: var(--tomato-a9);
+        font-weight: var(--font-weight-bold);
+        margin-right: 2px;
+      }
+
+      .submit-button {
         margin-top: 12px;
         padding: 10px;
         background-color: var(--accent);
@@ -152,11 +227,17 @@ export const FormContainer = styled.div`
         border-radius: 4px;
         cursor: pointer;
 
-        &:hover {
+        &[disabled] {
+          background-color: var(--bg-6);
+          cursor: not-allowed;
+          color: var(--text-secondary);
+        }
+
+        &:not([disabled]):hover {
           background-color: var(--accent-hover);
         }
 
-        &:active {
+        &:not([disabled]):active {
           background-color: var(--accent-active);
         }
 
@@ -342,6 +423,7 @@ export const TermsAndConditions = styled.div`
   font-size: var(--font-size-small);
   color: var(--text-secondary);
   text-align: center;
+
   a {
     color: var(--accent-9);
     text-decoration: none;
@@ -355,6 +437,7 @@ export const TermsAndConditions = styled.div`
       outline-offset: 2px;
     }
   }
+
   p {
     margin: 0;
   }

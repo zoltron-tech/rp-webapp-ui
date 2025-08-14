@@ -20,6 +20,7 @@ const nextConfig = {
     LOG_LEVEL: process.env.LOG_LEVEL,
     RP_CHAT_URL: process.env.RP_CHAT_URL,
     RP_LOGIN_URL: process.env.RP_LOGIN_URL,
+    SUPPORT_EMAIL: process.env.SUPPORT_EMAIL,
   },
 
   serverRuntimeConfig: {

@@ -13,4 +13,5 @@ export interface StoreState {
   authState: AuthState;
   user: User | null;
   novelist: Novelist | null;
+  globalLoading: boolean;
 }

@@ -25,7 +25,9 @@ export const LoginForm: FC = () => {
           required
         />
       </Form.Field>
-      <Form.Submit type="submit">Login</Form.Submit>
+      <Form.Submit className="submit-button" type="submit">
+        Login
+      </Form.Submit>
       <S.FrogotPasswordLink href="/rp/forgot-password" tabIndex={0}>
         Forgot Password?
       </S.FrogotPasswordLink>

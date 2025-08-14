@@ -1,4 +1,3 @@
-import Link from "next/link";
 import styled from "styled-components";
 
 export const PageRoot = styled.main`
@@ -132,9 +131,21 @@ export const FormHeading = styled.div`
 
   svg {
     margin-right: 8px;
-    fill: var(--grass-9);
+
     width: 28px;
     height: 28px;
+
+    &.success {
+      color: var(--grass-9);
+    }
+
+    &.error {
+      color: var(--tomato-9);
+    }
+
+    &.warning {
+      color: var(--amber-9);
+    }
   }
 `;
 
@@ -164,13 +175,14 @@ export const InfoBox = styled.div`
     display: flex;
     align-items: center;
     color: var(--blue-12);
-    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size);
+    font-weight: var(--font-weight-bold);
     margin-bottom: 8px;
   }
 
   svg {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     margin-right: 4px;
     fill: var(--blue-9);
   }
@@ -178,11 +190,49 @@ export const InfoBox = styled.div`
   p {
     margin: 0;
     margin-block: 8px;
+    line-height: 1.4;
+  }
+
+  a {
+    color: var(--accent-7);
+    text-decoration: none;
+    font-weight: var(--font-weight-bold);
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: var(--accent-8);
+      text-decoration: underline;
+    }
+
+    &:focus {
+      outline: 1.5px solid var(--accent);
+      outline-offset: 2px;
+    }
   }
 
   strong {
     font-weight: var(--font-weight-bold);
     font-size: var(--font-size);
+  }
+
+  &.error {
+    border-color: var(--tomato-a9);
+    background-color: var(--tomato-a2);
+    color: var(--tomato-12);
+
+    svg {
+      fill: var(--tomato-9);
+    }
+  }
+
+  &.not_found {
+    border-color: var(--amber-a9);
+    background-color: var(--amber-a2);
+    color: var(--amber-12);
+
+    svg {
+      fill: var(--amber-9);
+    }
   }
 `;
 

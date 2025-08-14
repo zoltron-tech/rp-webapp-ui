@@ -1,10 +1,18 @@
 import { Form } from "radix-ui";
-import { FC, useCallback, useState } from "react";
+import { FC, useCallback, useMemo, useState } from "react";
 import * as S from "./styled";
 import { checkUsernameAvailability } from "@/app/actions";
+import Link from "next/link";
+import { UpdatePasswordFields } from "@/components/common/update-password-fields";
 
 export const RegisterForm: FC = () => {
   const [usernameValidityLoader, setUsernameValidityLoader] = useState(false);
+  const [userConsent, setUserConsent] = useState(false);
+  const [passwordsValid, setPasswordsValid] = useState(false);
+
+  const valid = useMemo(() => {
+    return passwordsValid && userConsent;
+  }, [passwordsValid, userConsent]);
 
   const usernameCheck = useCallback(async (value: string) => {
     setUsernameValidityLoader(true);
@@ -13,6 +21,10 @@ export const RegisterForm: FC = () => {
     console.log("Username availability:", available);
     if (!available) return true;
     return false;
+  }, []);
+
+  const onConsentChange = useCallback(() => {
+    setUserConsent((prev) => !prev);
   }, []);
 
   const onFormChange = useCallback(
@@ -60,25 +72,23 @@ export const RegisterForm: FC = () => {
         <Form.Label>Email</Form.Label>
         <Form.Control aria-label="email" name="email" type="email" required />
       </Form.Field>
-      <Form.Field className="field" name="password">
-        <Form.Label>Password</Form.Label>
+      <UpdatePasswordFields setValid={setPasswordsValid} />
+      <Form.Field className="field checkbox" name="consent">
         <Form.Control
-          aria-label="Password"
-          name="password"
-          type="password"
+          aria-label="Consent"
+          type="checkbox"
           required
+          checked={userConsent}
+          onChange={onConsentChange}
         />
+        <Form.Label>
+          I agree to the <Link href="/terms">Terms of Service</Link> and&nbsp;
+          <Link href="/privacy">Privacy Policy</Link>.
+        </Form.Label>
       </Form.Field>
-      <Form.Field className="field" name="confirmPassword">
-        <Form.Label>Confirm password</Form.Label>
-        <Form.Control
-          aria-label="Confirm password"
-          name="confirmPassword"
-          type="password"
-          required
-        />
-      </Form.Field>
-      <Form.Submit type="submit">Register</Form.Submit>
+      <Form.Submit className="submit-button" type="submit" disabled={!valid}>
+        Register
+      </Form.Submit>
     </Form.Root>
   );
 };

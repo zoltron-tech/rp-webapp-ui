@@ -1,6 +1,5 @@
 "use server";
 
-import JWT from "jsonwebtoken";
 import getConfig from "next/config";
 import { cookies } from "next/headers";
 import { RedirectType, redirect } from "next/navigation";
@@ -9,12 +8,14 @@ import type { LoginPayload, User } from "@/types";
 import { With, WithMessage, WithToken } from "@/types/common";
 import { SignUpPayload } from "@/types/register";
 import {
+  API_MESSAGE,
   AUTH_HEADER_NAME,
   JWT_COOKIE_NAME,
   THEME_COOKIE_NAME,
 } from "@/utils/constants";
 import { isNone, validateUser } from "@/utils/helpers/type";
 import { Logger } from "@/utils/services";
+import { validateJWTSync } from "@/utils/helpers";
 
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL, USE_LOCAL_DOMAIN } = serverRuntimeConfig;
@@ -39,20 +40,12 @@ export const setAuthCookie = async (jwt: string) => {
   });
 };
 
-export const removeAuthCookie = async (jwt: string) => {
-  const pastDate = new Date(0);
-  (await cookies()).set(JWT_COOKIE_NAME, jwt, {
-    httpOnly: false,
-    secure: false,
-    sameSite: "strict",
-    domain: USE_LOCAL_DOMAIN ? "localhost" : "novelist.world",
-    path: "/",
-    expires: pastDate,
-  });
+export const removeAuthCookie = async () => {
+  (await cookies()).delete(JWT_COOKIE_NAME);
 };
 
 export const forgotPasswordAction = async (email: string) => {
-  const URL = `${RP_SERVICE_URL}/rp/user/account/forgotPassword?email=${email}`;
+  const URL = `${RP_SERVICE_URL}/rp/user/account/forgotPassword`;
 
   const response = await fetch(URL, {
     method: "POST",
@@ -60,11 +53,16 @@ export const forgotPasswordAction = async (email: string) => {
       "Content-Type": "application/json",
     },
     cache: "no-store",
+    body: JSON.stringify({ email }),
   });
+
+  if (response.status === 404) {
+    return { message: API_MESSAGE.NotFound };
+  }
 
   if (!response.ok) {
     return {
-      message: "Something went wrong, please try again or contact support.",
+      message: API_MESSAGE.UncategorizedError,
     };
   }
 
@@ -94,10 +92,7 @@ export const verifyAccountAction = async (jwt: string) => {
   return result;
 };
 
-export const resetPasswordAction = async (
-  payload: LoginPayload,
-  jwt: string
-) => {
+export const resetPasswordAction = async (jwt: string, password: string) => {
   const URL = `${RP_SERVICE_URL}/rp/user/account/resetPassword`;
 
   const response = await fetch(URL, {
@@ -107,12 +102,18 @@ export const resetPasswordAction = async (
       [AUTH_HEADER_NAME]: jwt,
     },
     cache: "no-store",
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ password }),
   });
 
   if (!response.ok) {
+    if (response.status === 401) {
+      return {
+        message: API_MESSAGE.Unauthorized,
+      };
+    }
+
     return {
-      message: "Something went wrong, please try again or contact support.",
+      message: API_MESSAGE.UncategorizedError,
     };
   }
 
@@ -202,20 +203,14 @@ export const signupAction = async (payload: SignUpPayload) => {
 };
 
 export const logoutAction = async () => {
-  removeAuthCookie(JWT_COOKIE_NAME);
+  removeAuthCookie();
   redirect("/rp/novelists", RedirectType.push);
 };
 
 export const authenticateJWT = async (jwt: string, useCookies?: boolean) => {
-  const decoded = JWT.decode(jwt, { complete: true });
-  if (!decoded || typeof decoded.payload === "string" || !decoded.payload.exp) {
-    if (useCookies) (await cookies()).delete(JWT_COOKIE_NAME);
-    return false;
-  }
-  const isValid = decoded.payload.exp * 1000 > Date.now();
-
+  const isValid = validateJWTSync(jwt);
   if (!isValid) {
-    if (useCookies) (await cookies()).delete(JWT_COOKIE_NAME);
+    if (useCookies) await removeAuthCookie();
     return false;
   }
   return true;

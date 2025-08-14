@@ -2,11 +2,9 @@
 
 import {
   authenticateAction,
-  forgotPasswordAction,
   getUser,
   loginAction,
   logoutAction,
-  resetPasswordAction,
   verifyAccountAction,
   signupAction,
 } from "@/app/actions";
@@ -115,20 +113,6 @@ export const AuthProvider: FC<Props> = ({ children }) => {
     return response;
   };
 
-  const forgotPassword = async (email: string) => {
-    transition("LOADING");
-    const response = await forgotPasswordAction(email);
-    transition("LOGGED_OUT");
-    return response;
-  };
-
-  const resetPassword = async (payload: LoginPayload, jwt: string) => {
-    transition("LOADING");
-    const response = await resetPasswordAction(payload, jwt);
-    transition("LOGGED_OUT");
-    return response;
-  };
-
   const verifyAccount = async (jwt: string) => {
     transition("LOADING");
     const response = await verifyAccountAction(jwt);
@@ -204,8 +188,6 @@ export const AuthProvider: FC<Props> = ({ children }) => {
         login,
         signup,
         logout,
-        forgotPassword,
-        resetPassword,
         verifyAccount,
         updateNovelist,
       }}

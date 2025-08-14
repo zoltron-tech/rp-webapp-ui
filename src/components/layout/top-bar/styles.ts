@@ -7,7 +7,7 @@ import {
   Z_INDEX,
 } from "@/theme";
 import { setOpacity } from "@/utils/helpers";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 
 export const Container = styled.div`
   border: 1px solid ${({ theme }: any) => theme.background};
@@ -67,13 +67,12 @@ export const LogoInner = styled.div`
   height: 60cqh;
   width: 60cqh;
   margin-inline: auto;
-  border-radius: 40cqh;
+  border-radius: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: ${({ theme }: any) =>
-    setOpacity(pSBC(-0.8, theme.primary) as string, 0.5)};
-  border: 1px solid var(--accent);
+  background-color: var(--accent);
+  border: 1px solid var(--accent-hover);
   transition-property: width, height, transform;
   transition-duration: 0.2s;
   transition-timing-function: ease-in-out;
@@ -86,16 +85,63 @@ export const LogoInner = styled.div`
   }
 
   &:hover {
-    transform: translateY(-2px);
+    transform: translateY(-1px);
+  }
+`;
+
+// Smooth fade in for initial load
+const fadeIn = keyframes`
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+export const LogoImage = styled.img`
+  height: 60cqh;
+  width: 60cqh;
+  animation: ${fadeIn} 0.5s ease-out;
+
+  transition: transform 0.25s ease, filter 0.25s ease;
+
+  &:hover {
+    transform: translateY(-2px) scale(1.02);
+    filter: brightness(1.05);
   }
 `;
 
 export const LogoText = styled.div`
   margin-left: 5px;
   text-transform: uppercase;
-  font-size: 18px;
-  font-weight: 500;
+  font-size: 22px;
+  font-weight: 400;
   font-style: italic;
+  ${NO_USER_SELECT}
+
+  @container (max-width: 1000px) {
+    & {
+      font-size: 20px;
+    }
+  }
+
+  @container (max-width: 800px) {
+    & {
+      display: none;
+    }
+  }
+`;
+
+export const LogoTextSuffix = styled.div`
+  margin-left: 5px;
+  text-transform: uppercase;
+  font-size: 24px;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--accent);
   ${NO_USER_SELECT}
 
   @container (max-width: 1000px) {

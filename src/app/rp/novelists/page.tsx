@@ -133,8 +133,6 @@ export default function NovelistsPage() {
             </S.Story>
           </S.InfoCard>
         </S.CardsContainer>
-
-        <TiersCatalog></TiersCatalog>
       </S.PageContainer>
       <Footer />
     </>

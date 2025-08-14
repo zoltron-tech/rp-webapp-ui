@@ -1,5 +1,5 @@
 import { styled, keyframes } from "styled-components";
-import * as Accordion from "@radix-ui/react-accordion";
+import { Accordion } from "radix-ui";
 import { SlArrowDown } from "react-icons/sl";
 
 /* --- container + header --- */

@@ -168,14 +168,22 @@ export const loginAction = async (payload: LoginPayload) => {
 export const signupAction = async (payload: SignUpPayload) => {
   const URL = `${RP_SERVICE_URL}/rp/user/account`;
 
-  const response = await fetch(URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-    cache: "no-store",
-  });
+  // const response = await fetch(URL, {
+  //   method: "POST",
+  //   headers: {
+  //     "Content-Type": "application/json",
+  //   },
+  //   body: JSON.stringify(payload),
+  //   cache: "no-store",
+  // });
+
+  await new Promise((resolve) => setTimeout(resolve, 3000)); // Simulate network delay
+  const response = {
+    status: 400,
+    json: async () => ({
+      message: "Username is already taken",
+    }),
+  };
 
   if (response.status < 200 || response.status > 300) {
     const result: WithMessage = await response.json();

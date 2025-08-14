@@ -125,11 +125,12 @@ export const FormContainer = styled.div`
             height: 20px;
             aspect-ratio: 1;
             border-radius: 4px;
+
             margin: 0;
             cursor: pointer;
             overflow: hidden;
             accent-color: var(--accent);
-            /* Set unchecked background color */
+            outline-offset: 2px;
             background-color: var(--bg-3);
             border: 1px solid var(--bg-6);
 
@@ -150,6 +151,24 @@ export const FormContainer = styled.div`
             &:not(:checked) {
               background-color: var(--bg-5);
               border: 1px solid var(--bg-6);
+            }
+
+            &:hover {
+              outline: 1px solid var(--accent);
+            }
+
+            &[data-invalid="true"] {
+              outline: 1.5px solid var(--tomato-a9);
+            }
+
+            &:focus {
+              outline: 2px solid var(--accent);
+            }
+
+            &[disabled] {
+              background-color: var(--bg-6);
+              cursor: not-allowed;
+              color: var(--text-secondary);
             }
           }
 
@@ -208,6 +227,14 @@ export const FormContainer = styled.div`
           background-color: var(--bg-3) !important;
           color: var(--text) !important;
           appearance: none !important;
+        }
+
+        &[disabled] {
+          background-color: var(--bg-2);
+          cursor: not-allowed;
+          color: var(--text-secondary);
+          font-weight: var(--font-weight-regular);
+          border: 1px solid var(--bg-6);
         }
       }
 

@@ -11,11 +11,15 @@ import * as S from "./styled";
 
 type ResetPasswordPageProps = {
   setValid: (valid: boolean) => void;
+  new?: boolean; // Optional prop to indicate if this is for a new password
+  disabled?: boolean; // Optional prop to disable the fields
 };
 
 const MAX_PASSWORD_LENGTH = 30;
 export const UpdatePasswordFields: FC<ResetPasswordPageProps> = ({
   setValid,
+  new: isNew = false, // Default to false if not provided
+  disabled = false, // Default to false if not provided
 }) => {
   const [password, setPasswordState] = useState<string>("");
   const [confirmPassword, setConfirmPasswordState] = useState<string>("");
@@ -44,7 +48,7 @@ export const UpdatePasswordFields: FC<ResetPasswordPageProps> = ({
     <>
       <S.FormField className="field" name="password">
         <S.FieldHeader>
-          <Form.Label>New password</Form.Label>
+          <Form.Label>{isNew ? "New password" : "Password"}</Form.Label>
           <span>
             ({password.length || 0} / {MAX_PASSWORD_LENGTH} characters)
           </span>
@@ -54,11 +58,12 @@ export const UpdatePasswordFields: FC<ResetPasswordPageProps> = ({
             <PasswordToggleField.Input
               id="new-password"
               className="input"
-              aria-label="New Password"
+              aria-label={isNew ? "New password" : "Password"}
               name="password"
               value={password}
               onChange={setPassword}
               maxLength={MAX_PASSWORD_LENGTH}
+              disabled={disabled}
               required
             />
             <PasswordToggleField.Toggle
@@ -85,6 +90,7 @@ export const UpdatePasswordFields: FC<ResetPasswordPageProps> = ({
               value={confirmPassword}
               onChange={setConfirmPassword}
               maxLength={MAX_PASSWORD_LENGTH}
+              disabled={disabled}
               required
             />
             <PasswordToggleField.Toggle

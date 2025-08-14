@@ -1,14 +1,16 @@
 import { Form } from "radix-ui";
-import { FC, useCallback, useMemo, useState } from "react";
+import { FC, FormEventHandler, useCallback, useMemo, useState } from "react";
 import * as S from "./styled";
-import { checkUsernameAvailability } from "@/app/actions";
+import { checkUsernameAvailability, signupAction } from "@/app/actions";
 import Link from "next/link";
 import { UpdatePasswordFields } from "@/components/common/update-password-fields";
+import { LoaderAction } from "@/components/common/loader-action";
 
 export const RegisterForm: FC = () => {
   const [usernameValidityLoader, setUsernameValidityLoader] = useState(false);
   const [userConsent, setUserConsent] = useState(false);
   const [passwordsValid, setPasswordsValid] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const valid = useMemo(() => {
     return passwordsValid && userConsent;
@@ -27,21 +29,43 @@ export const RegisterForm: FC = () => {
     setUserConsent((prev) => !prev);
   }, []);
 
-  const onFormChange = useCallback(
-    (event: React.FormEvent<HTMLFormElement>) => {
-      const form = event.currentTarget;
-      const usernameField = form.elements.namedItem(
-        "username"
-      ) as HTMLInputElement;
-      if (usernameField) {
-        usernameCheck(usernameField.value);
+  const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(
+    async (event) => {
+      event.preventDefault();
+      const formData = new FormData(event.currentTarget);
+      const username = formData.get("username") as string;
+      const email = formData.get("email") as string;
+      const password = formData.get("password") as string;
+      const consent = formData.get("consent") as string;
+      console.log("Form data:", {
+        username,
+        email,
+        password,
+        consent,
+      });
+
+      if (consent !== "on") {
+        console.error("User must agree to the terms and conditions.");
+        return;
       }
+      setLoading(true);
+
+      const response = await signupAction({
+        username,
+        email,
+        password,
+      });
+
+      console.log("Signup response:", response);
+      setLoading(false);
+
+      // Handle form submission logic here
     },
-    [setUsernameValidityLoader]
+    []
   );
 
   return (
-    <Form.Root onChange={onFormChange}>
+    <Form.Root onSubmit={handleSubmit}>
       <Form.Field className="field" name="username">
         <S.FieldHeader>
           <Form.Label>Username</Form.Label>
@@ -65,29 +89,53 @@ export const RegisterForm: FC = () => {
           aria-label="Username"
           name="username"
           type="text"
+          disabled={loading}
           required
+          autoFocus
         />
       </Form.Field>
       <Form.Field className="field" name="email">
-        <Form.Label>Email</Form.Label>
-        <Form.Control aria-label="email" name="email" type="email" required />
+        <S.FieldHeader>
+          <Form.Label>Email</Form.Label>
+          <Form.Message className="label-message" match={"typeMismatch"}>
+            must be a valid email address
+          </Form.Message>
+        </S.FieldHeader>
+        <Form.Control
+          aria-label="email"
+          name="email"
+          type="email"
+          disabled={loading}
+          required
+        />
       </Form.Field>
-      <UpdatePasswordFields setValid={setPasswordsValid} />
+      <UpdatePasswordFields setValid={setPasswordsValid} disabled={loading} />
       <Form.Field className="field checkbox" name="consent">
         <Form.Control
           aria-label="Consent"
           type="checkbox"
-          required
+          disabled={loading}
           checked={userConsent}
           onChange={onConsentChange}
+          required
         />
         <Form.Label>
-          I agree to the <Link href="/terms">Terms of Service</Link> and&nbsp;
-          <Link href="/privacy">Privacy Policy</Link>.
+          I agree to the
+          <Link href="/rp/terms">&nbsp;Terms of Service&nbsp;</Link>
+          and
+          <Link href="/rp/privacy-policy">&nbsp;Privacy Policy&nbsp;</Link>.
         </Form.Label>
       </Form.Field>
-      <Form.Submit className="submit-button" type="submit" disabled={!valid}>
-        Register
+      <Form.Submit
+        className="submit-button"
+        type="submit"
+        disabled={!valid || loading}
+      >
+        <LoaderAction
+          text="Register"
+          loadingText="Registering..."
+          loading={loading}
+        />
       </Form.Submit>
     </Form.Root>
   );

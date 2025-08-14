@@ -133,7 +133,7 @@ export default function ResetPasswordPage() {
           </S.FormHeading>
           <S.FormDescription>{content.descriptionText}</S.FormDescription>
           <ShouldRender if={operationState === "INITIAL"}>
-            <UpdatePasswordFields setValid={setValid} />
+            <UpdatePasswordFields setValid={setValid} new />
             <Form.Submit
               className="submit-button"
               type="submit"

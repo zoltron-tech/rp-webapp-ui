@@ -8,10 +8,10 @@ import { NotificationsMenu } from "@/components/notifications-menu";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { GoArrowRight } from "react-icons/go";
-import { GiQuillInk } from "react-icons/gi";
 import { ChatMenuModal } from "../../chat-menu-modal";
 import * as S from "./styles";
 import { useGlobalState } from "@/context/store/stores";
+import logoText from "../../../assets/images/Logo text.png";
 
 const DynamicThemeToggle = dynamic(() => import("@/components/theme-toggle"), {
   ssr: false,
@@ -51,10 +51,11 @@ export const TopBar: FC<Props> = memo(({}) => {
         <S.LogoContainer onClick={onLogoClick}>
           <S.Logo>
             <S.LogoInner>
-              <GiQuillInk />
+              <S.LogoImage src={logoText.src} alt="" />
             </S.LogoInner>
           </S.Logo>
-          <S.LogoText>Novelist World</S.LogoText>
+          <S.LogoText>Novelist </S.LogoText>{" "}
+          <S.LogoTextSuffix>World</S.LogoTextSuffix>
         </S.LogoContainer>
 
         <S.ActionsContainer>

@@ -1,7 +1,7 @@
 import { Dialog } from "radix-ui";
 import { styled } from "styled-components";
 
-export const InfoBoxRoot = styled(Dialog.Root)`
+export const InfoModalRoot = styled(Dialog.Root)`
   @keyframes overlayShow {
     from {
       opacity: 0;
@@ -12,7 +12,7 @@ export const InfoBoxRoot = styled(Dialog.Root)`
   }
 `;
 
-export const InfoBoxContent = styled(Dialog.Content)`
+export const ModalContent = styled(Dialog.Content)`
   button,
   fieldset,
   input,

@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useEffect, useRef } from "react";
 import classNames from "classnames";
 import {
   verifyPasswordLength,
@@ -21,12 +21,38 @@ export const PasswordChecks: FC<PasswordChecksProps> = ({
   password,
   confirmPassword,
 }) => {
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const isValid =
+    verifyPasswordPattern(password) &&
+    verifyPasswordsMatch(password, confirmPassword);
+
+  useEffect(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+    if (rootRef.current) {
+      if (isValid) {
+        timerRef.current = setTimeout(() => {
+          rootRef.current?.classList.add("hide");
+        }, 500);
+      }
+
+      return () => {
+        if (timerRef.current) {
+          clearTimeout(timerRef.current);
+        }
+      };
+    }
+  }, [isValid]);
+
   if (!password && !confirmPassword) {
     return null;
   }
 
   return (
     <S.PasswordChecksRoot
+      ref={rootRef}
       className={classNames("error-box", {
         valid:
           verifyPasswordPattern(password) &&

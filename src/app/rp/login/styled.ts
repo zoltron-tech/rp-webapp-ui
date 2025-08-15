@@ -9,7 +9,7 @@ export const FormContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-block: 100px;
+  margin-block: 60px;
   margin-inline: auto;
   max-width: 480px;
   border: 0.85px solid var(--bg-6);
@@ -19,7 +19,7 @@ export const FormContainer = styled.div`
   color: var(--text);
   padding: 20px;
 
-  @media screen and (max-width: 430px) {
+  @media screen and (max-width: 480px) {
     margin-block: 0px;
     min-height: calc(100vh - 48px);
     padding-inline: 10px;
@@ -326,7 +326,7 @@ export const OrHelper = styled.div`
   padding-bottom: 10px;
   position: relative;
 
-  @media screen and (max-width: 430px) {
+  @media screen and (max-width: 480px) {
     margin-bottom: 20px;
   }
 

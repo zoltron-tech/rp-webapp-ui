@@ -1,16 +1,63 @@
 import { Form } from "radix-ui";
-import { FC, FormEventHandler, useCallback, useMemo, useState } from "react";
+import {
+  FC,
+  FormEventHandler,
+  ReactNode,
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
 import * as S from "./styled";
 import { checkUsernameAvailability, signupAction } from "@/app/actions";
 import Link from "next/link";
 import { UpdatePasswordFields } from "@/components/common/update-password-fields";
 import { LoaderAction } from "@/components/common/loader-action";
+import { ShouldRender } from "@novelist-world/ui";
+import { API_MESSAGE } from "@/utils/constants";
+import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
+import { ErrorBox } from "@/components/error-box";
+import { useGlobalStoreSet } from "@/context/store/stores";
+import { usePathname, useRouter } from "next/navigation";
+
+const ErrorKeys = [
+  API_MESSAGE.CONFLICT,
+  API_MESSAGE.UncategorizedError,
+] as const;
+type ErrorKey = (typeof ErrorKeys)[number];
+
+const ERROR_MAP: Record<ErrorKey, ReactNode> = {
+  [API_MESSAGE.CONFLICT]: (
+    <>
+      <p>
+        The email you entered is already in use. Please try&nbsp;
+        <a href="/rp/login?register=0">logging in</a>&nbsp; if you already have
+        an account.
+      </p>
+    </>
+  ),
+  [API_MESSAGE.UncategorizedError]: (
+    <>
+      <p>
+        Something went wrong while logging you in, please try reloading the
+        page.
+      </p>
+      <p>
+        <strong>Tip:&nbsp;</strong>
+        If this keeps happening, try&nbsp;
+        <a href={SUPPORT_EMAIL_URL}>contacting support</a>.
+      </p>
+    </>
+  ),
+};
 
 export const RegisterForm: FC = () => {
   const [usernameValidityLoader, setUsernameValidityLoader] = useState(false);
   const [userConsent, setUserConsent] = useState(false);
   const [passwordsValid, setPasswordsValid] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<ErrorKey | null>(null);
+  const setGlobalState = useGlobalStoreSet();
+  const { push } = useRouter();
 
   const valid = useMemo(() => {
     return passwordsValid && userConsent;
@@ -18,11 +65,17 @@ export const RegisterForm: FC = () => {
 
   const usernameCheck = useCallback(async (value: string) => {
     setUsernameValidityLoader(true);
-    const available = await checkUsernameAvailability(value);
-    setUsernameValidityLoader(false);
-    console.log("Username availability:", available);
-    if (!available) return true;
-    return false;
+    try {
+      const available = await checkUsernameAvailability(value);
+      setUsernameValidityLoader(false);
+      console.log("Username availability:", available);
+      if (!available) return true;
+      return false;
+    } catch (error) {
+      console.error("Error checking username availability:", error);
+      setUsernameValidityLoader(false);
+      return false;
+    }
   }, []);
 
   const onConsentChange = useCallback(() => {
@@ -56,16 +109,35 @@ export const RegisterForm: FC = () => {
         password,
       });
 
-      console.log("Signup response:", response);
-      setLoading(false);
+      if (response.message !== API_MESSAGE.Success) {
+        setError(response.message as ErrorKey);
+        if (response.serverMessage)
+          console.error("Server message:", response.serverMessage);
+        setLoading(false);
+        return;
+      }
 
-      // Handle form submission logic here
+      console.log("Registration successful:", response);
+      setGlobalState({
+        user: response.user!,
+        authState: "UNINITIALIZED",
+      });
+      push("/rp/profile/edit");
     },
     []
   );
 
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
   return (
-    <Form.Root onSubmit={handleSubmit}>
+    <Form.Root onChange={clearError} onSubmit={handleSubmit}>
+      <ShouldRender if={Boolean(error)}>
+        <ErrorBox className="error">
+          {ERROR_MAP[error!] || <p>Unknown error occurred.</p>}
+        </ErrorBox>
+      </ShouldRender>
       <Form.Field className="field" name="username">
         <S.FieldHeader>
           <Form.Label>Username</Form.Label>

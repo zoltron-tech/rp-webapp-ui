@@ -27,7 +27,7 @@ import {
 import { submitPrompt } from "@/app/rp/profile/actions";
 import { PromptPrivacySelect } from "./privacy-select";
 import { API_MESSAGE } from "@/utils/constants";
-import { InfoBox } from "../info-box";
+import { InfoModal } from "../info-modal";
 import classNames from "classnames";
 import { BsArrowsCollapse } from "react-icons/bs";
 import { INITIAL_STATE, PromptInputState } from "./prompt-input.store";
@@ -111,7 +111,7 @@ export const PromptInput: FC<Props> = forwardRef(
 
     return (
       <>
-        <InfoBox
+        <InfoModal
           open={Boolean(error)}
           type="error"
           description={apiMessageToInfoMessage(error)}

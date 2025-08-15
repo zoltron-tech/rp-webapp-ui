@@ -25,7 +25,7 @@ export const FormContainer = styled.div`
   padding: 20px;
   padding-top: 32px;
 
-  @media screen and (max-width: 430px) {
+  @media screen and (max-width: 480px) {
     padding: 20px;
     border: none;
     background-color: var(--bg-1);

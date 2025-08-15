@@ -1,8 +1,8 @@
 "use client";
 
 import { useGlobalState } from "@/context/store/stores";
-import { useCallback, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Separator, Tabs } from "radix-ui";
 import { LoginForm } from "./login-form";
 import { RegisterForm } from "./register-form";
@@ -13,9 +13,9 @@ import { TermsAndConditions } from "./terms-and-conditions";
 
 export default function LoginPage() {
   const authState = useGlobalState("authState");
+  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const isRegister = searchParams?.get("register");
-  const [activeTab, setActiveTab] = useState(isRegister ? "register" : "login");
+  const isRegister = searchParams?.get("register") === "1";
   const { push } = useRouter();
 
   useEffect(() => {
@@ -24,12 +24,19 @@ export default function LoginPage() {
     }
   }, [authState]);
 
+  const handleRegisterClick = useCallback(() => {
+    push(`${pathname}?register=1`);
+  }, [pathname, push]);
+
+  const handleLoginClick = useCallback(() => {
+    push(`${pathname}?register=0`);
+  }, [pathname, push]);
+
   return (
     <S.LoginPageRoot>
       <Tabs.Root
-        defaultValue={activeTab}
+        defaultValue={isRegister ? "register" : "login"}
         className="tabs"
-        onValueChange={setActiveTab}
         asChild
       >
         <S.FormContainer>
@@ -38,10 +45,18 @@ export default function LoginPage() {
             aria-label="Login and Registration"
             tabIndex={0}
           >
-            <Tabs.Trigger className="tab" value="login">
+            <Tabs.Trigger
+              className="tab"
+              value="login"
+              onClick={handleLoginClick}
+            >
               Login
             </Tabs.Trigger>
-            <Tabs.Trigger className="tab" value="register">
+            <Tabs.Trigger
+              className="tab"
+              value="register"
+              onClick={handleRegisterClick}
+            >
               Register
             </Tabs.Trigger>
           </Tabs.List>

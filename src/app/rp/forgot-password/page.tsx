@@ -17,6 +17,7 @@ import { API_MESSAGE } from "@/utils/constants";
 import { useGlobalStoreSet } from "@/context/store/stores";
 import { ShouldRender } from "@novelist-world/ui";
 import { TbError404 } from "react-icons/tb";
+import { SUPPORT_EMAIL, SUPPORT_EMAIL_URL } from "@/utils/constants/common";
 
 type OperationState = "INITIAL" | "SUCCESS" | "ERROR" | "NOT_FOUND";
 
@@ -44,10 +45,7 @@ const InfoBoxContent: Record<OperationState, InfoBoxContentType> = {
       <p>
         <strong>Tip: </strong>
         If you believe this is an error, please contact support at&nbsp;
-        <a href={`mailto:${process.env.SUPPORT_EMAIL}`}>
-          {process.env.SUPPORT_EMAIL}
-        </a>
-        .
+        <a href={SUPPORT_EMAIL_URL}>{SUPPORT_EMAIL}</a>.
       </p>
     ),
   },
@@ -72,10 +70,8 @@ const InfoBoxContent: Record<OperationState, InfoBoxContentType> = {
       <p>
         <strong>Tip: </strong>
         If the issue persists, please contact support at&nbsp;
-        <a href={`mailto:${process.env.SUPPORT_EMAIL}`}>
-          {process.env.SUPPORT_EMAIL}
-        </a>
-        . We apologize for the inconvenience.
+        <a href={SUPPORT_EMAIL_URL}>{SUPPORT_EMAIL}</a>. We apologize for the
+        inconvenience.
       </p>
     ),
   },

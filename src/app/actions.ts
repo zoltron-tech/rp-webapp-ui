@@ -4,7 +4,14 @@ import getConfig from "next/config";
 import { cookies } from "next/headers";
 import { RedirectType, redirect } from "next/navigation";
 
-import type { LoginPayload, User } from "@/types";
+import type {
+  LoginPayload,
+  LoginOAuthProvider,
+  LoginResponsePayload,
+  SignupResponsePayload,
+  User,
+  AuthenticateResponsePayload,
+} from "@/types";
 import { With, WithMessage, WithToken } from "@/types/common";
 import { SignUpPayload } from "@/types/register";
 import {
@@ -16,6 +23,7 @@ import {
 import { isNone, validateUser } from "@/utils/helpers/type";
 import { Logger } from "@/utils/services";
 import { validateJWTSync } from "@/utils/helpers";
+import { assert } from "console";
 
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL, USE_LOCAL_DOMAIN } = serverRuntimeConfig;
@@ -31,17 +39,18 @@ export const getAuthCookie = async () => {
 };
 
 export const setAuthCookie = async (jwt: string) => {
-  (await cookies()).set(JWT_COOKIE_NAME, jwt, {
+  return (await cookies()).set(JWT_COOKIE_NAME, jwt, {
     httpOnly: false,
     secure: false,
     sameSite: "strict",
     domain: USE_LOCAL_DOMAIN ? "localhost" : "novelist.world",
     path: "/",
+    expires: new Date(Date.now() + 60 * 60 * 24 * 30 * 1000), // 30 days
   });
 };
 
 export const removeAuthCookie = async () => {
-  const pastDate = new Date();
+  const pastDate = new Date(0);
   pastDate.setFullYear(pastDate.getFullYear() - 1);
   // Remove the cookie by setting an expired date
   (await cookies()).set(JWT_COOKIE_NAME, "", {
@@ -50,7 +59,6 @@ export const removeAuthCookie = async () => {
     sameSite: "strict",
     domain: USE_LOCAL_DOMAIN ? "localhost" : "novelist.world",
     path: "/",
-    maxAge: -1,
     expires: pastDate,
   });
 };
@@ -132,7 +140,9 @@ export const resetPasswordAction = async (jwt: string, password: string) => {
   return result;
 };
 
-export const loginAction = async (payload: LoginPayload) => {
+export const loginAction = async (
+  payload: LoginPayload
+): Promise<LoginResponsePayload> => {
   const URL = `${RP_SERVICE_URL}/rp/user/account/login`;
 
   const response = await fetch(URL, {
@@ -144,85 +154,88 @@ export const loginAction = async (payload: LoginPayload) => {
     cache: "no-store",
   });
 
-  if (response.status === 404) {
-    return { message: "User not found" };
-  } else if (response.status === 401) {
+  if (response.status === 401) {
     return {
-      message: "Email, Username or password is incorrect",
+      message: API_MESSAGE.BadPayload,
     };
-  } else if (response.status === 403) {
-    return { message: "Account not verified" };
   } else if (!response.ok) {
     return {
-      message: "Something went wrong, please contact support.",
+      message: API_MESSAGE.UncategorizedError,
     };
   }
 
-  const result: WithToken<WithMessage<any>> = await response.json();
-  const _user = validateUser(result?.user);
-  if (isNone(_user)) {
-    return {
-      message: "Something went wrong, please contact support.",
-    };
-  }
+  const result = await response.json();
 
-  setAuthCookie(result.token);
+  setAuthCookie(result.token!);
 
-  const clientResponse: With<"user", WithMessage, User> = {
+  const clientResponse = {
     message: result.message,
-    user: _user,
+    user: result.user!,
   };
 
   return clientResponse;
 };
 
-export const signupAction = async (payload: SignUpPayload) => {
+export const signupAction = async (
+  payload: SignUpPayload
+): Promise<SignupResponsePayload> => {
   const URL = `${RP_SERVICE_URL}/rp/user/account`;
 
-  // const response = await fetch(URL, {
-  //   method: "POST",
-  //   headers: {
-  //     "Content-Type": "application/json",
-  //   },
-  //   body: JSON.stringify(payload),
-  //   cache: "no-store",
-  // });
+  try {
+    const response = await fetch(URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
 
-  await new Promise((resolve) => setTimeout(resolve, 3000)); // Simulate network delay
-  const response = {
-    status: 400,
-    json: async () => ({
-      message: "Username is already taken",
-    }),
-  };
+    const result: LoginResponsePayload = await response.json();
 
-  if (response.status < 200 || response.status > 300) {
-    const result: WithMessage = await response.json();
-    return { message: result.message };
-  }
+    if (!response.ok) {
+      if (response.status === 409) {
+        return {
+          message: API_MESSAGE.CONFLICT,
+        };
+      } else if (response.status === 400) {
+        return {
+          message: API_MESSAGE.BadPayload,
+          serverMessage: result.message,
+        };
+      } else {
+        Logger.debug(API_MESSAGE.Error, response.status, result.message);
+        return {
+          message: API_MESSAGE.UncategorizedError,
+        };
+      }
+    }
 
-  const result: WithToken<WithMessage<any>> = await response.json();
-  if (!result.token) return { message: result.message };
+    await setAuthCookie(result.token!);
+    const clientResponse: LoginResponsePayload = {
+      message: API_MESSAGE.Success,
+      user: result.user!,
+      token: result.token!,
+    };
 
-  const _user = validateUser(result?.user);
-  if (isNone(_user)) {
+    return clientResponse;
+  } catch (error) {
+    Logger.error("Error during signupAction:", error);
     return {
-      message: "Something went wrong, please contact support.",
+      message: API_MESSAGE.UncategorizedError,
     };
   }
+};
 
-  setAuthCookie(result.token);
-
-  const clientResponse: With<"user", WithMessage, User> = {
-    message: result.message,
-    user: _user,
-  };
-
-  return clientResponse;
+export const loginViaProviderAction = async (provider: LoginOAuthProvider) => {
+  redirect(
+    `${RP_SERVICE_URL}/rp/user/oauth2/authorization/${provider}`,
+    RedirectType.push
+  );
 };
 
 export const logoutAction = async () => {
-  removeAuthCookie();
+  await removeAuthCookie();
   redirect("/rp/novelists", RedirectType.push);
 };
 
@@ -291,14 +304,12 @@ export const getUser = async () => {
     cache: "no-store",
   });
 
-  if (!response.ok) logoutAction();
+  const result: AuthenticateResponsePayload = await response.json();
 
-  const _user: WithMessage<any> = await response.json();
-
-  const user = validateUser(_user.user);
-  if (isNone(user)) {
-    return logoutAction();
+  if (!response.ok) {
+    return {
+      message: API_MESSAGE.Unauthorized,
+    };
   }
-
-  return user;
+  return result;
 };

@@ -15,6 +15,11 @@ export const PasswordChecksRoot = styled.div`
   &.valid {
     background-color: var(--grass-a2);
     border: 1px solid var(--grass-a9);
+    animation: fade-out 0.3s ease-in-out forwards 0.3s;
+  }
+
+  &.hide {
+    display: none;
   }
 
   .error-message {
@@ -52,6 +57,17 @@ export const PasswordChecksRoot = styled.div`
     to {
       transform: translateY(0);
       opacity: 1;
+    }
+  }
+
+  @keyframes fade-out {
+    from {
+      grid-template-rows: 1fr;
+      opacity: 1;
+    }
+    to {
+      grid-template-rows: 0;
+      opacity: 0;
     }
   }
 `;

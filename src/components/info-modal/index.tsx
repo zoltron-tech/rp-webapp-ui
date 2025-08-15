@@ -6,7 +6,7 @@ import "./info-box.css";
 import { CgClose } from "react-icons/cg";
 import { IoIosWarning } from "react-icons/io";
 
-type InfoBoxProps = {
+type InfoModalProps = {
   type?: "info" | "warning" | "error";
   title?: string;
   description: string;
@@ -14,7 +14,7 @@ type InfoBoxProps = {
   open: boolean;
 };
 
-const infoTypeToTitle = (type: InfoBoxProps["type"]): string => {
+const infoTypeToTitle = (type: InfoModalProps["type"]): string => {
   switch (type) {
     case "info":
       return "Alert";
@@ -27,12 +27,12 @@ const infoTypeToTitle = (type: InfoBoxProps["type"]): string => {
   }
 };
 
-type InfoBoxTitleProps = {
+type InfoModalTitleProps = {
   title: string;
-  type: InfoBoxProps["type"];
+  type: InfoModalProps["type"];
 };
 
-const InfoBoxTitle: FC<InfoBoxTitleProps> = forwardRef(
+const InfoModalTitle: FC<InfoModalTitleProps> = forwardRef(
   ({ title, type, ...props }, forwardedRef) => {
     if (type === "info") {
       return (
@@ -60,7 +60,7 @@ const InfoBoxTitle: FC<InfoBoxTitleProps> = forwardRef(
   }
 );
 
-export const InfoBox: FC<InfoBoxProps> = ({
+export const InfoModal: FC<InfoModalProps> = ({
   type = "info",
   title,
   description,
@@ -77,11 +77,11 @@ export const InfoBox: FC<InfoBoxProps> = ({
   );
 
   return (
-    <S.InfoBoxRoot open={open} onOpenChange={onOpenChange}>
+    <S.InfoModalRoot open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="info-box-overlay" />
-        <S.InfoBoxContent className={classNames([type])}>
-          <InfoBoxTitle title={title || infoTypeToTitle(type)} type={type} />
+        <S.ModalContent className={classNames([type])}>
+          <InfoModalTitle title={title || infoTypeToTitle(type)} type={type} />
           <Dialog.Description className="description">
             {description}
           </Dialog.Description>
@@ -91,8 +91,8 @@ export const InfoBox: FC<InfoBoxProps> = ({
           >
             <CgClose />
           </Dialog.Close>
-        </S.InfoBoxContent>
+        </S.ModalContent>
       </Dialog.Portal>
-    </S.InfoBoxRoot>
+    </S.InfoModalRoot>
   );
 };

@@ -77,10 +77,14 @@ export const getUserNovelist = async () => {
   });
 
   if (response.status === 404) {
-    return null;
+    return {
+      message: API_MESSAGE.NotFound,
+    };
   } else if (!response.ok) {
     Logger.debug(API_MESSAGE.Error, response.status, response.statusText);
-    logoutAction();
+    return {
+      message: API_MESSAGE.UncategorizedError,
+    };
   }
 
   const novelist: Novelist = await response.json();

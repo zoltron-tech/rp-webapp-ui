@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useState, useEffect } from "react";
+import { FC, useState, useEffect, useCallback } from "react";
 import { toggleState } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import classNames from "classnames";
@@ -25,12 +25,13 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
+    if (authState !== "LOGGED_IN") return;
     setLoading(true);
     const _notifications = await getNotifications();
     setLoading(false);
     setNotifications(_notifications);
-  };
+  }, [authState]);
 
   const removeFriendRequestNotification = async (
     novelistToRemove: NovelistWorldNotification

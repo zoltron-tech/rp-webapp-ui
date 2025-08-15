@@ -1,4 +1,3 @@
-import { BORDER_RADIUS, CARD_BORDER } from "@/theme";
 import { styled } from "styled-components";
 
 export const ParentWrapperContainer = styled.div`

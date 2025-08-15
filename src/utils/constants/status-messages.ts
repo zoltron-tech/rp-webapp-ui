@@ -8,4 +8,5 @@ export enum API_MESSAGE {
   MediaError = "media_error",
   BadPayload = "bad_payload",
   ServerError = "server_error",
+  CONFLICT = "conflict",
 }

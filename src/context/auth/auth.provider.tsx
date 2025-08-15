@@ -3,21 +3,19 @@
 import {
   authenticateAction,
   getUser,
-  loginAction,
-  logoutAction,
   verifyAccountAction,
-  signupAction,
 } from "@/app/actions";
 import { getUserNovelist } from "@/app/rp/novelists/actions";
 import { useStateMachine } from "@/hooks";
-import { LoginPayload, Novelist, User } from "@/types";
+import { Novelist } from "@/types";
 import { SignUpPayload } from "@/types/register";
 import { AuthState } from "@/types/state";
 import { Logger } from "@/utils/services";
 import { usePathname, useRouter } from "next/navigation";
-import { FC, ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { FC, ReactNode, useCallback, useEffect, useRef } from "react";
 import { AuthContext } from "./auth.context";
 import { useGlobalState, useGlobalStoreSet } from "../store/stores";
+import { API_MESSAGE } from "@/utils/constants";
 
 interface Props {
   children: ReactNode;
@@ -28,8 +26,6 @@ export const AuthProvider: FC<Props> = ({ children }) => {
   const pathname = usePathname();
   const { push } = useRouter();
 
-  const user = useGlobalState("user");
-  const novelist = useGlobalState("novelist");
   const authState = useGlobalState("authState");
   const setGlobalState = useGlobalStoreSet();
 
@@ -79,38 +75,20 @@ export const AuthProvider: FC<Props> = ({ children }) => {
     try {
       const _novelist = await getUserNovelist();
 
-      if (_novelist) {
-        setGlobalState({ novelist: _novelist });
-        transition("LOGGED_IN");
-      } else {
-        transition("UNINITIALIZED");
+      if ("message" in _novelist) {
+        if (_novelist.message === API_MESSAGE.NotFound) {
+          pushToCreateProfile();
+          return;
+        } else {
+          transition("LOGGED_OUT");
+          return;
+        }
       }
+
+      setGlobalState({ novelist: _novelist, authState: "LOGGED_IN" });
     } catch (e) {
       transition("LOGGED_OUT");
     }
-  };
-
-  const login = async (payload: LoginPayload) => {
-    transition("LOADING");
-    const response = await loginAction(payload);
-
-    if ("user" in response) {
-      setGlobalState({ user: response.user });
-      await fetchProfile();
-    } else {
-      transition("LOGGED_OUT");
-    }
-    return response;
-  };
-
-  const signup = async (payload: SignUpPayload) => {
-    transition("LOADING");
-    const response = await signupAction(payload);
-    if ("user" in response) {
-      setGlobalState({ user: response.user });
-      transition("UNINITIALIZED");
-    }
-    return response;
   };
 
   const verifyAccount = async (jwt: string) => {
@@ -118,11 +96,6 @@ export const AuthProvider: FC<Props> = ({ children }) => {
     const response = await verifyAccountAction(jwt);
     transition("LOGGED_OUT");
     return response;
-  };
-
-  const logout = async () => {
-    await logoutAction();
-    transition("LOGGED_OUT");
   };
 
   const refreshAuthState = async () => {
@@ -135,14 +108,15 @@ export const AuthProvider: FC<Props> = ({ children }) => {
 
   const verifyInitialAuthState = async () => {
     transition("LOADING");
-
+    console.log("verifyInitialAuthState:");
     try {
       const authenticated = await authenticateAction();
+      console.log("Authenticated:", authenticated);
 
       if (authenticated) {
         const _user = await getUser();
         Logger.info("User", _user);
-        setGlobalState({ user: _user });
+        setGlobalState({ user: _user.user! });
         await fetchProfile();
       } else {
         transition("LOGGED_OUT");
@@ -185,9 +159,6 @@ export const AuthProvider: FC<Props> = ({ children }) => {
   return (
     <AuthContext.Provider
       value={{
-        login,
-        signup,
-        logout,
         verifyAccount,
         updateNovelist,
       }}

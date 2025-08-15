@@ -16,7 +16,13 @@ export const PromptTextField: FC = () => {
   return (
     <S.TextInputContainer name="promptText">
       <Form.Control asChild>
-        <textarea ref={textAreaRef} className="text-area" required autoFocus />
+        <textarea
+          ref={textAreaRef}
+          className="text-area"
+          spellCheck
+          required
+          autoFocus
+        />
       </Form.Control>
       <Form.Message className="form-message" match="valueMissing">
         Prompt cannot be empty

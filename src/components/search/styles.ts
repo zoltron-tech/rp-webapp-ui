@@ -73,7 +73,7 @@ export const DropdownItem = styled.div`
   justify-content: center;
   gap: 10px;
   cursor: pointer;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
 
   transition-property: color, background-color;
 
@@ -85,7 +85,7 @@ export const DropdownItem = styled.div`
   }
 
   &:hover {
-    background-color: ${({ theme }: any) => theme.primary};
+    background-color: var(--accent);
     color: ${({ theme }: any) => theme.textPrimary};
   }
 `;
@@ -100,7 +100,7 @@ export const EmptyDropdown = styled.div`
   align-items: center;
   justify-content: center;
   gap: 20px;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
   opacity: 0.5;
 
   & > svg {
@@ -141,9 +141,9 @@ export const TypeSelectOption = styled.div`
 
   ${TypeSelectTypography}
 
-  background-color: ${({ theme }: any) => theme.primary};
+  background-color: var(--accent);
   &:hover {
-    background-color: ${({ theme }: any) => theme.primaryHover};
+    background-color: var(--accent-hover);
   }
   cursor: pointer;
 `;
@@ -155,7 +155,7 @@ export const TypeSelectOptions = styled.div`
   width: var(--type-select-width);
   border-radius: var(--border-radius);
   height: max-content;
-  background-color: ${({ theme }: any) => theme.primary};
+  background-color: var(--accent);
 
   display: flex;
   flex-direction: column;
@@ -197,9 +197,9 @@ export const TypeSelect = styled.div`
 
   ${TypeSelectTypography}
 
-  background-color: ${({ theme }: any) => theme.primary};
+  background-color: var(--accent);
   &:not(.expanded):hover {
-    background-color: ${({ theme }: any) => theme.primaryHover};
+    background-color: var(--accent-hover);
   }
 
   &:hover {
@@ -220,7 +220,7 @@ export const TypeSelect = styled.div`
 export const Input = styled.input`
   border-radius: var(--border-radius);
   font-size: 16px;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
   background-color: transparent;
   border: none;
   transition: width 0.2s ease-in-out, height 0.2s ease-in-out,
@@ -292,7 +292,7 @@ export const Container = styled.div`
     }
 
     & > button {
-      background-color: ${({ theme }: any) => theme.primary};
+      background-color: var(--accent);
       width: calc(var(--height) - 10px);
       height: calc(var(--height) - 10px);
       right: 5px;
@@ -318,7 +318,7 @@ export const Button = styled.button`
   width: var(--height);
   height: var(--height);
   right: 0px;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
   z-index: ${Z_INDEX.DEFAULT + 1};
   display: flex;
   align-items: center;

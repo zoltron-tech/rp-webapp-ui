@@ -18,7 +18,7 @@ export const MuseContainer = styled(Container)`
 export const MuseName = styled.div`
   font-size: 18px;
   font-weight: 500;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
 
   @container (max-width: 400px) {
     & {

@@ -26,7 +26,7 @@ export const Title = styled.div`
   word-wrap: break-word;
   white-space: wrap;
   max-width: 80%;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
   text-align: end;
   opacity: 0;
   transform: translateY(100px);
@@ -65,7 +65,7 @@ export const CardWrapper = styled.div`
   ${CARD_BORDER};
 
   &.own {
-    border: 3px solid ${({ theme }: any) => theme.primary};
+    border: 3px solid var(--accent);
   }
 
   transition: all 0.3s ease-in-out;
@@ -127,7 +127,7 @@ export const Button = styled.div`
   & svg {
     width: 15px;
     height: 15px;
-    fill: ${({ theme }: any) => theme.text};
+    fill: var(--text);
     transition: transform 0.2s ease-in-out;
 
     pointer-events: none;

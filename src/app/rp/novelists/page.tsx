@@ -43,7 +43,7 @@ export default function NovelistsPage() {
   Logger.info("NovelistsPage rendered");
 
   const onLoginClick = () => {
-    window.location.replace(`${process.env.RP_LOGIN_URL}?modal=SIGNUP`);
+    push("/rp/login");
   };
 
   const toHomePage = () => {

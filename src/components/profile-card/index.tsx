@@ -18,7 +18,7 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
   const fetchData = async () => {
     const fetchedNovelist = await getUserNovelist();
 
-    if (!fetchedNovelist) {
+    if (!fetchedNovelist || "message" in fetchedNovelist) {
       push("/rp/profile/edit");
       return;
     }

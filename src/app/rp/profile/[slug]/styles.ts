@@ -73,12 +73,11 @@ export const ContentInner = styled.div`
   ${DEV_MODE_BORDER("blue")}
   display: flex;
   flex-direction: column;
-  padding-block: 10px;
-  border-radius: 20px;
   border: 1px solid var(--bg-4);
   align-items: center;
   background-color: var(--bg-2);
-  width: 850px;
+  width: 100%;
+  max-width: 800px;
 
   @container (max-width: 1024px) {
     width: 100%;
@@ -187,14 +186,13 @@ export const PartitionContainer = styled.div`
 `;
 
 export const ContentContainer = styled.div`
-  width: 95%;
+  width: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   padding-inline: unset;
-  padding: 10px 0 5px;
-  border-radius: 10px;
+  padding-block: 4px;
   background-color: var(--bg-3);
 `;
 
@@ -232,11 +230,11 @@ export const SeeMoreLink = styled.div`
   margin-block: 10px;
   font-style: italic;
   font-weight: 700;
-  color: ${({ theme }: any) => theme.primary};
+  color: var(--accent);
 
   &:hover {
     cursor: pointer;
-    color: ${({ theme }: any) => theme.primaryHover};
+    color: var(--accent-hover);
   }
 
   @container (max-width: 600px) {
@@ -317,7 +315,7 @@ const NameFontStyles = css`
 export const NameMobile = styled.div`
   ${NameFontStyles};
 
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
   margin-top: 40px;
   font-size: 36px;
   width: 100%;

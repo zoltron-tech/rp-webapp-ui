@@ -115,7 +115,7 @@ export const ExpandButton = styled.div`
   & svg {
     width: 20px;
     height: 20px;
-    fill: ${({ theme }: any) => theme.text};
+    fill: var(--text);
     transition: transform 0.2s ease-in-out;
   }
 
@@ -146,7 +146,7 @@ export const ExpandButton = styled.div`
 export const Title = styled.div`
   font-size: 20px;
   font-weight: 600;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
   text-align: center;
   margin-bottom: 10px;
 
@@ -233,7 +233,7 @@ export const username = styled(Common.Username)`
 export const Quote = styled.div`
   font-size: 14px;
   font-weight: 500;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
   text-align: center;
   margin-top: 5px;
   word-break: break-word;
@@ -319,7 +319,7 @@ const MuseComponent = styled.div`
 const MuseName = styled.div`
   font-size: 18px;
   font-weight: 500;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
 
   @container (max-width: 400px) {
     & {

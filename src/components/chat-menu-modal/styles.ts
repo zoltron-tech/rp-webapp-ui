@@ -110,13 +110,13 @@ export const ContentContainer = styled.div`
 export const Heading = styled.div`
   font-size: 12px;
   font-weight: 600;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
 `;
 
 export const Text = styled.div`
   font-size: 12px;
   font-weight: 300;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
 
   &.unread {
     font-size: 10px;
@@ -155,7 +155,7 @@ export const CardWrapper = styled.div`
   container-type: size;
 
   &:hover {
-    background-color: ${({ theme }: any) => theme.primary};
+    background-color: var(--accent);
   }
 
   &.end {

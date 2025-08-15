@@ -18,7 +18,7 @@ export const CardWrapper = styled.div`
   container-type: size;
 
   &:hover {
-    background-color: ${({ theme }: any) => theme.primary};
+    background-color: var(--accent);
   }
 `;
 
@@ -67,7 +67,7 @@ export const Button = styled.div`
   & svg {
     width: 15px;
     height: 15px;
-    fill: ${({ theme }: any) => theme.text};
+    fill: var(--text);
     transition: transform 0.2s ease-in-out;
   }
 
@@ -93,12 +93,12 @@ export const RemoveButton = styled(Button)`
 export const Title = styled.div`
   font-size: 13px;
   font-weight: 600;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
 `;
 
 export const Subtext = styled.div`
   font-size: 10px;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
 `;
 
 export const Date = styled.div`

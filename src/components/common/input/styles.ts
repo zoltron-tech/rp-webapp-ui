@@ -27,7 +27,7 @@ export const InputContainer = styled.div`
 `;
 
 export const InputLabel = styled.label`
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
   pointer-events: none;
   transition-property: transform, opacity, font-size;
   transition-duration: 0.12s;
@@ -65,7 +65,7 @@ export const Input = styled.input`
     opacity: 0.6;
     font-size: 11px;
     font-weight: 400;
-    color: ${({ theme }: any) => theme.text};
+    color: var(--text);
     /* padding: 0px 5px; */
   }
 
@@ -175,7 +175,7 @@ export const RightIconBox = styled.div`
     height: 22px;
 
     path {
-      fill: ${({ theme }: any) => theme.text};
+      fill: var(--text);
     }
   }
 

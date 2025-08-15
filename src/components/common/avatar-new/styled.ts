@@ -23,7 +23,7 @@ export const AvatarRoot = styled(Avatar.Root)`
     width: 100%;
     height: 100%;
     background-color: var(--bg-2);
-    color: var(--accent-8-e);
+    color: var(--accent-a8);
     font-size: var(--font-size-xxlarge);
     font-weight: var(--font-weight-bold);
   }

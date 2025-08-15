@@ -100,7 +100,7 @@ export const Info = styled.div`
 export const Title = styled.div`
   font-size: 18px;
   font-weight: 400;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
   text-align: center;
   margin-bottom: 10px;
 

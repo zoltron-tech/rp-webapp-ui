@@ -21,13 +21,13 @@ export const Header = styled.div`
   font-size: 22px;
   font-weight: 500;
   position: relative;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
 
   &::after {
     content: "";
     position: absolute;
     height: 1px;
-    background-color: ${({ theme }: any) => theme.primary};
+    background-color: var(--accent);
     width: 100%;
     bottom: -4px;
   }

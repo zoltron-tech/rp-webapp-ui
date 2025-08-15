@@ -9,8 +9,10 @@ export const Container = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  border-radius: var(--border-radius);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size);
+  color: var(--text);
+  border-radius: 4px;
   cursor: pointer;
   white-space: nowrap;
   position: relative;
@@ -35,24 +37,21 @@ export const Container = styled.div`
   }
 
   &.xs {
-    height: 26px;
-    font-size: 12px;
+    font-size: var(--font-size-xsmall);
   }
 
   &.sm {
-    height: 36px;
-    font-size: 16px;
+    font-size: var(--font-size-small);
   }
 
   &.lg {
-    height: 56px;
-    font-size: 20px;
+    font-size: var(--font-size-large);
   }
 
   &.primary {
-    background-color: ${({ theme }: any) => theme.primary};
+    background-color: var(--accent);
     border: none;
-    color: ${({ theme }: any) => theme.text};
+    color: var(--text);
     padding: 10px 20px;
 
     & span {
@@ -60,19 +59,19 @@ export const Container = styled.div`
     }
 
     &:not(.loading):not(.disabled):hover {
-      background-color: ${({ theme }: any) => theme.primaryHover};
+      background-color: var(--accent-hover);
     }
   }
 
   &.secondary {
     background-color: transparent;
-    border: 2px solid ${({ theme }: any) => theme.text};
-    color: ${({ theme }: any) => theme.text};
+    border: 2px solid var(--text);
+    color: var(--text);
     padding: 8px 18px;
 
     &:not(.loading):not(.disabled):hover {
-      border-color: ${({ theme }: any) => theme.primaryHover};
-      background-color: ${({ theme }: any) => theme.primaryHover};
+      border-color: var(--accent-hover);
+      background-color: var(--accent-hover);
     }
   }
 
@@ -80,7 +79,7 @@ export const Container = styled.div`
     background-color: ${({ theme }: any) =>
       pSBC(-0.5, setOpacity(theme.success, 0.8))};
     border: none;
-    color: ${({ theme }: any) => theme.text};
+    color: var(--text);
     padding: 10px 20px;
 
     & span {
@@ -88,7 +87,7 @@ export const Container = styled.div`
     }
 
     &:not(.loading):not(.disabled):hover {
-      background-color: ${({ theme }: any) => theme.primaryHover};
+      background-color: var(--accent-hover);
     }
   }
 
@@ -96,7 +95,7 @@ export const Container = styled.div`
     background-color: ${({ theme }: any) =>
       pSBC(-0.5, setOpacity(theme.error, 0.8))};
     border: none;
-    color: ${({ theme }: any) => theme.text};
+    color: var(--text);
     padding: 10px 20px;
 
     & span {
@@ -104,7 +103,7 @@ export const Container = styled.div`
     }
 
     &:not(.loading):not(.disabled):hover {
-      background-color: ${({ theme }: any) => theme.primaryHover};
+      background-color: var(--accent-hover);
     }
   }
 
@@ -112,7 +111,7 @@ export const Container = styled.div`
     background-color: ${({ theme }: any) =>
       pSBC(-0.5, setOpacity(theme.navbar, 0.8))};
     border: none;
-    color: ${({ theme }: any) => theme.text};
+    color: var(--text);
     padding: 10px 20px;
 
     & span {
@@ -120,19 +119,19 @@ export const Container = styled.div`
     }
 
     &:not(.loading):not(.disabled):hover {
-      background-color: ${({ theme }: any) => theme.primaryHover};
+      background-color: var(--accent-hover);
     }
   }
 
   &.link {
     background-color: transparent;
     border: none;
-    color: ${({ theme }: any) => theme.text};
+    color: var(--text);
     padding: 10px 20px;
     border-radius: 0px;
 
     &:not(.loading):not(.disabled):hover {
-      color: ${({ theme }: any) => theme.primaryHover};
+      color: var(--accent-hover);
     }
   }
 
@@ -145,16 +144,16 @@ export const Container = styled.div`
     padding: 10px 20px;
 
     & span {
-      color: ${({ theme }: any) => theme.text};
+      color: var(--text);
     }
 
     &:not(.loading):not(.disabled):hover {
-      background-color: ${({ theme }: any) => theme.primaryHover};
+      background-color: var(--accent-hover);
     }
   }
 
   &.rounded-edge {
-    border-radius: 5px;
+    border-radius: 4px;
   }
 
   &.square {

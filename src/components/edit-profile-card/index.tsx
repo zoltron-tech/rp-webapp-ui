@@ -121,9 +121,13 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
     let _novelist = novelist;
     if (_novelist === null) {
       setLoading(true);
-      _novelist = await getUserNovelist();
-      setLoading(false);
+      const response = await getUserNovelist();
+      if (!("message" in response)) {
+        _novelist = response;
+      }
     }
+    setLoading(false);
+
     if (_novelist) updateValues(_novelist);
   };
 

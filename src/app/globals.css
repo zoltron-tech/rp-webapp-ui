@@ -1,9 +1,48 @@
+/* Accent colors*/
+/* Jade */
+@import "@radix-ui/colors/jade-dark.css";
+@import "@radix-ui/colors/jade-dark-alpha.css";
+/* Crimson */
+@import "@radix-ui/colors/crimson-dark.css";
+@import "@radix-ui/colors/crimson-dark-alpha.css";
+/* Iris */
+@import "@radix-ui/colors/iris-dark.css";
+@import "@radix-ui/colors/iris-dark-alpha.css";
+
+/* Background colors */
+/* Olive */
+@import "@radix-ui/colors/olive-dark.css";
+@import "@radix-ui/colors/olive-dark-alpha.css";
+/* Muave */
+@import "@radix-ui/colors/mauve-dark.css";
+@import "@radix-ui/colors/mauve-dark-alpha.css";
+/* Slate */
+@import "@radix-ui/colors/slate-dark.css";
+@import "@radix-ui/colors/slate-dark-alpha.css";
+
+/* Success color */
+@import "@radix-ui/colors/grass-dark.css";
+@import "@radix-ui/colors/grass-dark-alpha.css";
+
+/* Info color */
+@import "@radix-ui/colors/blue-dark.css";
+@import "@radix-ui/colors/blue-dark-alpha.css";
+
+/* Error color */
+@import "@radix-ui/colors/tomato-dark.css";
+@import "@radix-ui/colors/tomato-dark-alpha.css";
+
+/* Warning color */
+@import "@radix-ui/colors/amber-dark.css";
+@import "@radix-ui/colors/amber-dark-alpha.css";
+
 /* BEGIN: Remove base padding and styling */
 * {
   padding: 0;
   margin: 0;
   box-sizing: border-box;
   scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -52,55 +91,12 @@ textarea {
   --font-size-large: 16px;
   --font-size: 14px;
   --font-size-small: 12px;
-  --font-size-xsmall: 11px;
+  --font-size-xsmall: 10px;
 
   --font-weight-bold: 700;
   --font-weight-semi-bold: 600;
   --font-weight-medium: 500;
   --font-weight-regular: 400;
-
-  --bg-1: #111210;
-  --bg-2: #181917;
-  --bg-3: #212220;
-  --bg-3-e: #f4f5f312;
-  --bg-4: #282a27;
-  --bg-4-e: #fefef31b;
-  --bg-5: #31312e;
-  --bg-6: #383a36;
-  --bg-7: #454843;
-  --bg-8: #5c625b;
-  --bg-9: #687066;
-  --bg-10: #767d74;
-  --bg-11: #afb5ad;
-  --bg-12: #eceeec;
-
-  --text: var(--bg-12);
-  --text-color-light: #242424;
-  --text-color-dark: var(--text);
-
-  --accent-8: #11809c;
-  --accent-8-e: #11cfff95;
-  --accent-7: #12677e;
-  --accent-7-e: #14cdff75;
-  --accent-6: #045468;
-  --accent-6-e: #00c7fd5e;
-  --accent-5: #004558;
-  --accent-5-e: #00befd4d;
-  --accent-4: #003848;
-  --accent-4-e: #00baff3b;
-  --accent: var(--accent-6);
-  --accent-hover: var(--accent-7);
-  --accent-active: var(--accent-5);
-
-  --tomato-9: #e54d2e;
-  --tomato-9-e: #fe5431e4;
-  --tomato-8: #ac4d39;
-  --tomato-8-e: #fe6d4ea7;
-  --tomato-7: #853a2d;
-  --tomato-6: #6e2920;
-  --tomato-5: #5e1c16;
-  --tomato-4: #4e1511;
-  --tomato-3: #391714;
 
   ::-webkit-scrollbar {
     width: 0.5em;
@@ -150,7 +146,7 @@ div[class*="nw-toast"] .toast-close:hover {
 }
 
 .nw-toast-dark .toast-close {
-  color: var(--text-color-dark);
+  color: var(--text);
 }
 
 /* END: Custom classes for global styling */

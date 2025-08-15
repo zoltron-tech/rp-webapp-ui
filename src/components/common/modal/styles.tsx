@@ -74,7 +74,7 @@ export const CloseButton = styled.div`
   & svg {
     width: 30px;
     height: 30px;
-    fill: ${({ theme }: any) => theme.primary};
+    fill: var(--accent);
   }
 
   &:hover svg {

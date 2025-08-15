@@ -194,7 +194,7 @@ export default function ThreadPage({}) {
           <Flex
             direction="row"
             justify="space-between"
-            style={{ width: "70%" }}
+            style={{ width: "70%", marginBottom: "20px" }}
           >
             <div></div>
             <S.Date>{toFormattedDate(comment?.createdOn)}</S.Date>

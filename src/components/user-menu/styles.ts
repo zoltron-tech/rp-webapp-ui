@@ -50,10 +50,15 @@ export const Menu = styled.div`
 export const ContentContainer = styled.div`
   ${DEV_MODE_BORDER("blue")}
 
-  --avatar-size: 4rem;
+  --avatar-size: 46px;
   position: relative;
   width: max-content;
   height: max-content;
+
+  .avatar {
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+  }
 `;
 
 export const UserAvatar = styled(Avatar)`
@@ -92,7 +97,7 @@ export const Element = styled.li`
   }
 
   &:hover {
-    background-color: ${({ theme }: any) => theme.primary};
+    background-color: var(--accent);
     color: #ffffff;
 
     svg {

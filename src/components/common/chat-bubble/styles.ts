@@ -25,7 +25,7 @@ export const ChatBubbleContainer = styled.div`
     align-items: end;
 
     & > ${ChatBubble} {
-      background-color: ${({ theme }: any) => theme.primary};
+      background-color: var(--accent);
     }
   }
 
@@ -42,5 +42,5 @@ export const TimeStamp = styled.span`
   font-size: 10px;
   opacity: 0.7;
   margin-bottom: 5px;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
 `;

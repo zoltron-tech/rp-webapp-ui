@@ -40,7 +40,7 @@ const SourceInfo = styled.div`
 const CommentTime = styled.time`
   all: unset;
   font-size: var(--font-size-small);
-  color: var(--bg-11);
+  color: var(--text-secondary);
   cursor: default;
 `;
 
@@ -128,7 +128,7 @@ const ReplyCount = styled.a`
   all: unset;
   font-weight: var(--font-weight-medium);
   font-size: var(--font-size-small);
-  color: var(--bg-11);
+  color: var(--text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;

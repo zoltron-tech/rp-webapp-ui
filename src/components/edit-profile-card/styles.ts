@@ -7,7 +7,7 @@ import { Container } from "@novelist-world/ui";
 export const LocalContainer = styled(Container)`
   border: 1px solid slategray;
   background-color: ${({ theme }: any) => theme.colors.background};
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
   border-radius: 16px;
 
   @container (min-width: 700px) {

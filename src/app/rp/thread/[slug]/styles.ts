@@ -23,16 +23,15 @@ export const ParentContainer = styled(Container)`
   }
 `;
 
-export const RepliesContainer = styled(Container)`
-  max-width: 60%;
-  margin-bottom: 80px;
-  margin-left: 50px;
+export const RepliesContainer = styled.div`
+  max-width: 800px;
+  margin-top: 40px;
+
   width: 100%;
-  contain: unset;
-  margin: 0px;
-  padding: 0px;
+  padding: 20px;
   z-index: ${Z_INDEX.CARD_EXPAND};
-  background-color: transparent;
+  background-color: var(--bg-2);
+  border: 0.85px solid var(--bg-6);
 
   @container content-container (max-width: 800px) {
     max-width: 100%;

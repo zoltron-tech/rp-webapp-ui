@@ -239,7 +239,7 @@ export const Title = styled.div`
   justify-content: center;
   font-size: 20px;
   font-weight: 200;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
   text-align: center;
 `;
 
@@ -359,7 +359,7 @@ export const MenuButtonIcon = styled.div`
   @container (min-height: 100px) {
     &:hover {
       scale: 1.1;
-      background-color: ${({ theme }: any) => theme.primary};
+      background-color: var(--accent);
     }
   }
 
@@ -370,7 +370,7 @@ export const MenuButtonIcon = styled.div`
 
   &.selected {
     scale: 1.1;
-    background-color: ${({ theme }: any) => theme.primary};
+    background-color: var(--accent);
   }
 `;
 
@@ -388,7 +388,7 @@ export const Text = styled.div`
   font-size: 12px;
   font-weight: 200;
   padding-inline: 20px;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
   text-align: center;
   height: max-content;
 `;
@@ -399,7 +399,7 @@ export const MuseName = styled.div`
   right: 10px;
   font-size: 30px;
   font-weight: 600;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
   text-align: end;
   opacity: 0;
   transform: translateY(100px);

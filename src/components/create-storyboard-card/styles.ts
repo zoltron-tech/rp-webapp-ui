@@ -7,7 +7,7 @@ import { Container } from "@novelist-world/ui";
 export const LocalContainer = styled(Container)`
   border: 1px solid slategray;
   background-color: ${({ theme }: any) => theme.colors.background};
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
   border-radius: 16px;
 
   @container (min-width: 700px) {
@@ -222,7 +222,7 @@ export const Button = styled.div`
   & svg {
     width: 15px;
     height: 15px;
-    fill: ${({ theme }: any) => theme.text};
+    fill: var(--text);
     transition: transform 0.2s ease-in-out;
 
     pointer-events: none;

@@ -22,7 +22,7 @@ export const Container = styled.div<ContainerProps>`
   margin: ${(props: ContainerProps) => props.margin || "0px"};
   background-color: ${({ theme }: any) => theme.cardBackgroundColor};
   border: 1px solid slategray;
-  color: ${({ theme }: any) => theme.text};
+  color: var(--text);
   border-radius: 16px;
 
   overflow: auto;

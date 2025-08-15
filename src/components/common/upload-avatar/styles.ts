@@ -52,7 +52,7 @@ export const UploadAvatar = styled.div`
   & > svg {
     width: 50%;
     height: 50%;
-    stroke: ${({ theme }: any) => theme.primary};
+    stroke: var(--accent);
     opacity: 0;
     transition: opacity 0.15s linear;
     z-index: ${Z_INDEX.AVATAR};

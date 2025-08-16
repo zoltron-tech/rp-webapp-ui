@@ -19,7 +19,7 @@ export const ROUTES = {
     Index: "/rp/profile",
     Muses: {
       Create: "/rp/profile/muses/create",
-      Edit: (museId: string) => `/rp/profile/muses/edit${museId}`,
+      Edit: (museId: string) => `/rp/profile/muses/edit/${museId}`,
     },
     Story: {
       Create: "/rp/profile/story/create",

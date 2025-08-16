@@ -22,7 +22,11 @@ export const MuseListItem: FC<Props> = ({ muse, className, ...rest }) => {
   if (!muse) return <></>;
 
   return (
-    <S.MuseContainer onClick={onAvatarClick}>
+    <S.MuseContainer
+      onClick={onAvatarClick}
+      className={classNames(["muse-list-item", className])}
+      {...rest}
+    >
       <Flex justify="flex-start">
         <Avatar
           src={muse?.image ?? null}

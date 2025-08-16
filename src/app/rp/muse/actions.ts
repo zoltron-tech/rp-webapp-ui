@@ -1,9 +1,9 @@
 "use server";
-import { authenticateAndGetJWT, getJWTIfExists } from "@/app/actions";
-import { Fandom, Muse } from "@/types";
-import { WithMessage } from "@/types/common";
-import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import getConfig from "next/config";
+import { authenticateAndGetJWT, getJWTIfExists } from "@/app/actions";
+import type { Fandom, Muse } from "@/types";
+import type { WithMessage } from "@/types/common";
+import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import { Logger } from "@/utils/services";
 
 const { serverRuntimeConfig } = getConfig();
@@ -41,7 +41,7 @@ export const getMuseAction = async (museId: string) => {
 
 export const getAllMusesByUsernameAction = async (username: string) => {
   const jwt = await getJWTIfExists();
-  let headers: Record<string, string> = {
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
 
@@ -70,7 +70,7 @@ export const getAllMusesByUsernameAction = async (username: string) => {
 };
 
 export const searchFandomsAction = async (prefix: string) => {
-  let headers: Record<string, string> = {
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
 
@@ -176,7 +176,7 @@ export const updateMuseAction = async (_muse: Muse) => {
       {
         ...result,
         message: undefined,
-      }
+      },
     );
 
     return novelist;

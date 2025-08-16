@@ -1,6 +1,6 @@
-import { FC } from "react";
-import * as S from "./styled";
 import Link from "next/link";
+import type { FC } from "react";
+import * as S from "./styled";
 
 export const TermsAndConditions: FC = () => {
   return (

@@ -1,10 +1,10 @@
+import styled from "styled-components";
 import {
+  BACKGROUND_BLUR,
   BASE_TRANSITION,
   DEV_MODE_BORDER,
-  BACKGROUND_BLUR,
   Z_INDEX,
 } from "@/theme";
-import styled from "styled-components";
 
 export const PositionContainer = styled.div`
   ${DEV_MODE_BORDER("red")}
@@ -124,7 +124,7 @@ export const Text = styled.div`
   }
 `;
 
-export const Date = styled.div`
+export const StyledDate = styled.div`
   font-size: 8px;
   align-self: flex-end;
 `;

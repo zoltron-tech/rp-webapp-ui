@@ -1,6 +1,6 @@
-import { Novelist } from "@/types";
-import { WithMessage } from "@/types/common";
 import { createContext } from "react";
+import type { Novelist } from "@/types";
+import type { WithMessage } from "@/types/common";
 
 export interface AuthContextType {
   verifyAccount: (jwt: string) => Promise<WithMessage>;
@@ -15,5 +15,5 @@ export const AUTH_CONTEXT_INITIAL_STATE: AuthContextType = {
 };
 
 export const AuthContext = createContext<AuthContextType>(
-  AUTH_CONTEXT_INITIAL_STATE
+  AUTH_CONTEXT_INITIAL_STATE,
 );

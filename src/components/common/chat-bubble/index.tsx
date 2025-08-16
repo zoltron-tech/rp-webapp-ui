@@ -1,11 +1,10 @@
 "use client";
 
-import { FC } from "react";
-
 import classNames from "classnames";
 import moment from "moment";
+import type { FC } from "react";
+import type { Message } from "@/types/conversation";
 import * as S from "./styles";
-import { Message } from "@/types/conversation";
 
 type Props = {
   message: Message;

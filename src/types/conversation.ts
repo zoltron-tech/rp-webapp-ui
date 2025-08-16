@@ -1,4 +1,4 @@
-import { Tagged } from "./common";
+import type { Tagged } from "./common";
 
 export interface Conversation extends Tagged {
   _tag: "Conversation";

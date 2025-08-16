@@ -1,4 +1,4 @@
-import { Tagged } from "./common";
+import type { Tagged } from "./common";
 
 export type PrivacyLevel = "PUBLIC" | "FRIENDS" | "ONLY_ME";
 

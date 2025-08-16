@@ -1,5 +1,5 @@
+import type { FC } from "react";
 import { Logger } from "@/utils/services";
-import { FC } from "react";
 import * as S from "./styles";
 
 type Props = {
@@ -16,7 +16,7 @@ export const ShouldRender: FC<Props> = ({
   Logger.info("ShouldRender rendered");
 
   return condition ? (
-    <>{children}</>
+    children
   ) : preserveSpace ? (
     <S.Hidden>{children}</S.Hidden>
   ) : null;

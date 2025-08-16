@@ -1,10 +1,6 @@
-import { FC } from "react";
+import type { FC } from "react";
+import { PiSpinnerGapBold } from "react-icons/pi";
 import * as S from "./styled";
-import {
-  PiSpinnerGap,
-  PiSpinnerGapBold,
-  PiSpinnerGapLight,
-} from "react-icons/pi";
 
 type LoaderActionProps = {
   text: string;

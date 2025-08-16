@@ -1,19 +1,19 @@
 "use client";
 
-import { StoryBoard } from "@/types";
+import { Flex } from "@novelist-world/ui";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getStoryboardAction } from "../actions";
-import * as S from "./styles";
+import { FaGlobeAmericas, FaUserFriends } from "react-icons/fa";
 import { ShouldRender, Username } from "@/components/common";
 import { PageLoader } from "@/components/layout";
 import { MusesPill } from "@/components/muses-pill";
 import StoryCardEvent from "@/components/story-event-card";
-import { Flex } from "@novelist-world/ui";
 import { TagsContainer } from "@/components/tags-container";
-import { FaGlobeAmericas, FaUserFriends } from "react-icons/fa";
-import { INITIAL_STORY_BOARD_EVENT } from "@/utils/constants";
 import { useGlobalState } from "@/context/store/stores";
+import type { StoryBoard } from "@/types";
+import { INITIAL_STORY_BOARD_EVENT } from "@/utils/constants";
+import { getStoryboardAction } from "../actions";
+import * as S from "./styles";
 
 const renderPrivacyIcon = (privacy: string | undefined) => {
   switch (privacy) {
@@ -48,7 +48,7 @@ export default function UserProfilePage({}) {
     if (!storyboard || !user?.username) return false;
 
     return storyboard.members.some(
-      (member) => member.username === user.username && member.isAdmin === true
+      (member) => member.username === user.username && member.isAdmin === true,
     );
   };
 
@@ -149,19 +149,18 @@ export default function UserProfilePage({}) {
               isCurrentUser={isAdmin()}
             ></StoryCardEvent>
           </ShouldRender>
-          {storyboard?.events &&
-            storyboard?.events.map((event) => {
-              return (
-                <StoryCardEvent
-                  key={event.id}
-                  event={event}
-                  storyboardId={storyboardId}
-                  isCurrentUser={isAdmin()}
-                >
-                  {event.name}
-                </StoryCardEvent>
-              );
-            })}
+          {storyboard?.events?.map((event) => {
+            return (
+              <StoryCardEvent
+                key={event.id}
+                event={event}
+                storyboardId={storyboardId}
+                isCurrentUser={isAdmin()}
+              >
+                {event.name}
+              </StoryCardEvent>
+            );
+          })}
         </Flex>
       </S.StoryContainer>
     </>

@@ -1,5 +1,5 @@
-import { FC, HTMLProps } from "react";
 import classNames from "classnames";
+import type { FC, HTMLProps } from "react";
 import * as S from "./styled";
 
 type ErrorBoxProps = HTMLProps<HTMLDivElement>;

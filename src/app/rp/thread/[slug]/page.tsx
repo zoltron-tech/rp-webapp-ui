@@ -1,20 +1,18 @@
 "use client";
 
-import { ShouldRender } from "@/components/common";
-import { PageLoader } from "@/components/layout";
-import { useAuthContext } from "@/hooks";
-import { Comment, Reply } from "@/types";
+import { Flex } from "@novelist-world/ui";
+import classNames from "classnames";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import * as S from "./styles";
-import { Container, Flex } from "@novelist-world/ui";
-import { getCommentAction, getRepliesAction } from "../actions";
-import classNames from "classnames";
-import PromptInput from "@/components/prompt-input";
-import { toFormattedDate } from "@/utils/helpers";
 import { IoArrowBackOutline } from "react-icons/io5";
-import { Z_INDEX } from "@/theme";
+import { ShouldRender } from "@/components/common";
+import { PageLoader } from "@/components/layout";
+import PromptInput from "@/components/prompt-input";
 import { useGlobalState } from "@/context/store/stores";
+import type { Comment, Reply } from "@/types";
+import { toFormattedDate } from "@/utils/helpers";
+import { getCommentAction, getRepliesAction } from "../actions";
+import * as S from "./styles";
 
 const useGetComment = (commentId: string) => {
   const [comment, setComment] = useState<Comment | null>(null);
@@ -114,7 +112,7 @@ export default function ThreadPage({}) {
             style={{ width: "70%" }}
           >
             <div></div>
-            <S.Date>{toFormattedDate(reply.createdOn)}</S.Date>
+            <S.StyledDate>{toFormattedDate(reply.createdOn)}</S.StyledDate>
           </Flex>
         </Flex>
       </>
@@ -164,7 +162,9 @@ export default function ThreadPage({}) {
             style={{ width: "70%" }}
           >
             <div></div>
-            <S.Date>{toFormattedDate(comment?.prompt?.createdOn)}</S.Date>
+            <S.StyledDate>
+              {toFormattedDate(comment?.prompt?.createdOn)}
+            </S.StyledDate>
           </Flex>
         </Flex>
         <Flex direction="column">
@@ -197,7 +197,7 @@ export default function ThreadPage({}) {
             style={{ width: "70%", marginBottom: "20px" }}
           >
             <div></div>
-            <S.Date>{toFormattedDate(comment?.createdOn)}</S.Date>
+            <S.StyledDate>{toFormattedDate(comment?.createdOn)}</S.StyledDate>
           </Flex>
         </Flex>
         {loadReplies()}

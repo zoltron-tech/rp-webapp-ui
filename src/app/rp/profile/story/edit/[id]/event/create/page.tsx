@@ -1,14 +1,14 @@
 "use client";
 
-import { useGlobalState } from "@/context/store/stores";
-import { Logger } from "@/utils/services";
 import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useGlobalState } from "@/context/store/stores";
+import { Logger } from "@/utils/services";
 
 const DynamicCreateStoryBoardEventCard = dynamic(
   () => import("@/components/create-storyboard-event-card"),
-  { ssr: false }
+  { ssr: false },
 );
 
 export default function CreateStoryBoardEventPage({}) {

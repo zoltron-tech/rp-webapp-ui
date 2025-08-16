@@ -1,7 +1,7 @@
-import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
-import type { NextApiRequest, NextApiResponse } from "next";
 import JWT from "jsonwebtoken";
+import type { NextApiRequest, NextApiResponse } from "next";
 import getConfig from "next/config";
+import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
@@ -19,7 +19,7 @@ async function updateReaction(
   res: NextApiResponse,
   jwt: string,
   id: string,
-  targetType: string
+  targetType: string,
 ) {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/react/${id}?targetType=${targetType}`;
 
@@ -73,12 +73,12 @@ async function deleteReaction(res: NextApiResponse, jwt: string, id: string) {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   const { method } = req;
   const { id } = req.query;
 
-  let jwt = req.cookies[AUTH_HEADER_NAME];
+  const jwt = req.cookies[AUTH_HEADER_NAME];
   if (!jwt || !validateJWT(jwt)) {
     return res.status(401).json({ error: API_MESSAGE.Unauthorized });
   }
@@ -94,20 +94,20 @@ export default async function handler(
       if (!allowedTargetTypes.includes(targetType)) {
         return res.status(400).json({
           error: `Invalid targetType: ${targetType}, allowed values: ${allowedTargetTypes.join(
-            ", "
+            ", ",
           )}`,
         });
       }
       try {
         return updateReaction(res, jwt, id, targetType);
-      } catch (error) {
+      } catch (_error) {
         return res.status(500).json({ error: "Failed to update reaction" });
       }
     }
     case "DELETE": {
       try {
         return deleteReaction(res, jwt, id);
-      } catch (error) {
+      } catch (_error) {
         return res.status(500).json({ error: "Failed to delete reaction" });
       }
     }

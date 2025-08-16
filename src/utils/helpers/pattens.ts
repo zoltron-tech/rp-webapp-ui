@@ -7,7 +7,7 @@ export const stripS3Url = (url: string) => {
   Object.keys(ESCAPE_SEQUENCES.S3).forEach((key) => {
     stripped = stripped?.replace(
       key,
-      ESCAPE_SEQUENCES.S3[key as keyof typeof ESCAPE_SEQUENCES.S3]
+      ESCAPE_SEQUENCES.S3[key as keyof typeof ESCAPE_SEQUENCES.S3],
     );
   });
 
@@ -15,15 +15,12 @@ export const stripS3Url = (url: string) => {
 };
 
 export const verifyEmailPattern = (email: string) => {
-  const emailRegex = new RegExp(
-    // eslint-disable-next-line no-useless-escape
-    "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"
-  );
+  const emailRegex = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
   return emailRegex.test(email);
 };
 
 export const verifyUsernamePattern = (username: string) => {
-  const usernameRegex = new RegExp("^[a-zA-Z0-9_.-]+$");
+  const usernameRegex = /^[a-zA-Z0-9_.-]+$/;
   return usernameRegex.test(username);
 };
 
@@ -54,7 +51,7 @@ export const verifyPasswordSpecialChar = (password: string) => {
 
 export const verifyPasswordsMatch = (
   password: string,
-  confirmPassword: string
+  confirmPassword: string,
 ) => {
   if (!password || !confirmPassword) {
     return false;
@@ -85,10 +82,10 @@ export const pluralize = (text: string, count: number): string => {
   }
 
   if (text.endsWith("y") && !/[aeiou]y$/.test(text)) {
-    return text.slice(0, -1) + "ies"; // Change 'y' to 'ies'
+    return `${text.slice(0, -1)}ies`; // Change 'y' to 'ies'
   }
 
-  return text + "s"; // Default pluralization
+  return `${text}s`; // Default pluralization
 };
 
 export const toFormattedDate = (dateTimeString: string | undefined): string => {
@@ -139,7 +136,7 @@ export const parseTextContent = (text: string, maxChars?: number) => {
 };
 
 export const toFormattedDateFromUnix = (
-  timestamp: number | undefined
+  timestamp: number | undefined,
 ): string => {
   if (!timestamp) return "unknown";
 

@@ -1,7 +1,6 @@
-import { User } from "@/types";
-import { None, Tagged, TypeValidator } from "@/types/common";
+import type { User } from "@/types";
+import type { None, Tagged, TypeValidator } from "@/types/common";
 import { NONE } from "../constants";
-import { Logger } from "../services";
 
 export const isNone = (value: Tagged): value is None => value._tag === "None";
 

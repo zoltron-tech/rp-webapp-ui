@@ -1,5 +1,5 @@
+import styled from "styled-components";
 import { DEV_MODE_BORDER } from "@/theme";
-import styled, { css } from "styled-components";
 
 export const Container = styled.div`
   padding-top: 20px;

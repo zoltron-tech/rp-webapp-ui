@@ -1,4 +1,4 @@
-import { Muse, Novelist, User } from ".";
+import type { Muse, Novelist, User } from ".";
 
 export type AuthState =
   | "LOGGED_IN"

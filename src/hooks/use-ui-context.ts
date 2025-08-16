@@ -1,5 +1,5 @@
-import { UIContext } from "@/context";
 import { useContext } from "react";
+import { UIContext } from "@/context";
 
 export const useUIContext = () => {
   const context = useContext(UIContext);

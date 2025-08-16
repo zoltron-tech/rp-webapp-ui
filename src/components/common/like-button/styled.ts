@@ -83,5 +83,5 @@ export const LikeButton = Object.assign(
     Root: LikeRoot,
     Label: LikeLabel,
     Text: LabelText,
-  }
+  },
 );

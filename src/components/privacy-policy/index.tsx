@@ -1,7 +1,7 @@
 "use client";
 
-import * as S from "./styled";
 import { MdOutlinePrivacyTip } from "react-icons/md";
+import * as S from "./styled";
 
 export const PrivacyPolicy = () => {
   return (

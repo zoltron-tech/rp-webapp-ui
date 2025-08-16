@@ -1,12 +1,11 @@
 "use client";
 
-import { FC, memo } from "react";
-
-import { Logger } from "@/utils/services";
+import { type FC, memo } from "react";
 import { CgSpinner } from "react-icons/cg";
+import { Logger } from "@/utils/services";
 import * as S from "./styles";
 
-interface Props {}
+type Props = {};
 
 export const PageLoader: FC<Props> = memo(({}) => {
   Logger.info("PageLoader rendered");

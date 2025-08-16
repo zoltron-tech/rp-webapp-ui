@@ -1,12 +1,11 @@
 "use client";
 
-import { PageLoader } from "@/components/layout";
-import { Prompt as PromptType } from "@/types";
 import { useParams, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { getPromptAction } from "../actions";
-
+import { PageLoader } from "@/components/layout";
 import { Prompt } from "@/components/prompt";
+import type { Prompt as PromptType } from "@/types";
+import { getPromptAction } from "../actions";
 
 const useGetPrompt = (promptId: string) => {
   const [prompt, setPrompt] = useState<PromptType | null>(null);
@@ -41,9 +40,5 @@ export default function PromptPage({}) {
 
   if (!prompt || loading) return <PageLoader />;
 
-  return (
-    <>
-      <Prompt prompt={prompt} threadOpen={threadOpen} />
-    </>
-  );
+  return <Prompt prompt={prompt} threadOpen={threadOpen} />;
 }

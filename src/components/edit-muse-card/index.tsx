@@ -1,23 +1,23 @@
 "use client";
 
+import { DefaultTheme, Input } from "@novelist-world/ui";
+import { useRouter } from "next/navigation";
+import { type FC, type ReactNode, useEffect, useState } from "react";
+import { ThemeProvider } from "styled-components";
+import { FandomValue } from "@/app/rp/muse/[slug]/styles";
 import {
   getMuseAction,
-  updateMuseAction,
   searchFandomsAction,
+  updateMuseAction,
 } from "@/app/rp/muse/actions";
 import { uploadMedia } from "@/app/rp/profile/actions";
 import { ShouldRender, UploadAvatar, Username } from "@/components/common";
+import { useGlobalState } from "@/context/store/stores";
 import { useForm, useUIContext } from "@/hooks";
 import type { Fandom, Muse } from "@/types";
 import { API_MESSAGE, INITIAL_MUSE } from "@/utils/constants";
 import { Logger } from "@/utils/services";
-import { useRouter } from "next/navigation";
-import { FC, ReactNode, useEffect, useState } from "react";
 import * as S from "./styles";
-import { ThemeProvider } from "styled-components";
-import { DefaultTheme, Input } from "@novelist-world/ui";
-import { FandomValue } from "@/app/rp/muse/[slug]/styles";
-import { useGlobalState } from "@/context/store/stores";
 
 export type EditMuseCardProps = {
   id?: string;
@@ -204,7 +204,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
     if (!values.nicknames) return;
 
     const updatedNicknames = values.nicknames.filter(
-      (n) => n !== nicknameToRemove
+      (n) => n !== nicknameToRemove,
     );
 
     update({
@@ -266,7 +266,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
           />
           <S.Profile>
             <S.Title>{id ? "EDIT" : "Create"} Muse</S.Title>
-            <ShouldRender preserveSpace if={id != undefined}>
+            <ShouldRender preserveSpace if={id !== undefined}>
               <S.UsernameContainer>
                 <span>PENNED BY: </span>
                 <Username username={user?.username} primary />
@@ -471,7 +471,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
                                 &times;
                               </S.RemoveButton>
                             </S.ExtraAttributeItem>
-                          )
+                          ),
                         )}
                       </S.ExtraAttributesList>
                     )}

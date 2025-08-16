@@ -1,21 +1,21 @@
 "use client";
 
+import { type FC, useCallback, useEffect } from "react";
+import { Autoplay, EffectCoverflow, Navigation } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
 import { getNovelists } from "@/app/rp/novelists/actions";
 import { useUIContext } from "@/hooks";
 import { Logger } from "@/utils/services";
-import { FC, useCallback, useEffect } from "react";
-import { Autoplay, EffectCoverflow, Navigation } from "swiper/modules";
-import { Swiper, SwiperSlide } from "swiper/react";
 
 import "swiper/css";
 import "swiper/css/effect-coverflow";
 import "swiper/css/navigation";
 
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { NovelistCard } from "..";
 import { ShouldRender } from "../common";
 import { PageLoader } from "../layout";
 import * as S from "./styles";
-import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 
 export const NovelistCarousel: FC = () => {
   const { errorToast: error } = useUIContext();

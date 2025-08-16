@@ -3,27 +3,23 @@
 import getConfig from "next/config";
 import { cookies } from "next/headers";
 import { RedirectType, redirect } from "next/navigation";
-
 import type {
-  LoginPayload,
+  AuthenticateResponsePayload,
   LoginOAuthProvider,
+  LoginPayload,
   LoginResponsePayload,
   SignupResponsePayload,
-  User,
-  AuthenticateResponsePayload,
 } from "@/types";
-import { With, WithMessage, WithToken } from "@/types/common";
-import { SignUpPayload } from "@/types/register";
+import type { WithMessage } from "@/types/common";
+import type { SignUpPayload } from "@/types/register";
 import {
   API_MESSAGE,
   AUTH_HEADER_NAME,
   JWT_COOKIE_NAME,
   THEME_COOKIE_NAME,
 } from "@/utils/constants";
-import { isNone, validateUser } from "@/utils/helpers/type";
-import { Logger } from "@/utils/services";
 import { validateJWTSync } from "@/utils/helpers";
-import { assert } from "console";
+import { Logger } from "@/utils/services";
 
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL, USE_LOCAL_DOMAIN } = serverRuntimeConfig;
@@ -141,7 +137,7 @@ export const resetPasswordAction = async (jwt: string, password: string) => {
 };
 
 export const loginAction = async (
-  payload: LoginPayload
+  payload: LoginPayload,
 ): Promise<LoginResponsePayload> => {
   const URL = `${RP_SERVICE_URL}/rp/user/account/login`;
 
@@ -177,7 +173,7 @@ export const loginAction = async (
 };
 
 export const signupAction = async (
-  payload: SignUpPayload
+  payload: SignUpPayload,
 ): Promise<SignupResponsePayload> => {
   const URL = `${RP_SERVICE_URL}/rp/user/account`;
 
@@ -230,7 +226,7 @@ export const signupAction = async (
 export const loginViaProviderAction = async (provider: LoginOAuthProvider) => {
   redirect(
     `${RP_SERVICE_URL}/rp/user/oauth2/authorization/${provider}`,
-    RedirectType.push
+    RedirectType.push,
   );
 };
 

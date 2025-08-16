@@ -1,7 +1,7 @@
 import { Form } from "radix-ui";
-import { FC, useCallback, useRef } from "react";
-import * as S from "./styles";
+import { type FC, useCallback, useRef } from "react";
 import { PromptEvent, useRunOn } from "./helpers";
+import * as S from "./styles";
 
 export const PromptTextField: FC = () => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -16,13 +16,7 @@ export const PromptTextField: FC = () => {
   return (
     <S.TextInputContainer name="promptText">
       <Form.Control asChild>
-        <textarea
-          ref={textAreaRef}
-          className="text-area"
-          spellCheck
-          required
-          autoFocus
-        />
+        <textarea ref={textAreaRef} className="text-area" spellCheck required />
       </Form.Control>
       <Form.Message className="form-message" match="valueMissing">
         Prompt cannot be empty

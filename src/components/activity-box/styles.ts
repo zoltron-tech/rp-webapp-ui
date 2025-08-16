@@ -1,6 +1,6 @@
-import * as Common from "@/components/common";
-import { Z_INDEX, CARD_BORDER, BORDER_RADIUS } from "@/theme";
 import styled from "styled-components";
+import * as Common from "@/components/common";
+import { BORDER_RADIUS, CARD_BORDER, Z_INDEX } from "@/theme";
 
 export const ParentContainer = styled.div`
   display: flex;
@@ -145,7 +145,7 @@ export const PromptFooterText = styled.div`
   }
 `;
 
-export const Date = styled.div`
+export const StyledDate = styled.div`
   font-size: 16px;
   font-weight: 200;
 

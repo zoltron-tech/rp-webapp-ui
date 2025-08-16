@@ -1,10 +1,9 @@
 "use client";
 
-import { FC } from "react";
-
-import { Logger } from "@/utils/services";
 import classNames from "classnames";
 import Image from "next/image";
+import type { FC } from "react";
+import { Logger } from "@/utils/services";
 import * as S from "./styles";
 
 export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {

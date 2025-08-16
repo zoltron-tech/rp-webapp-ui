@@ -1,40 +1,37 @@
 "use client";
 
+import classNames from "classnames";
+import { Collapsible, Form } from "radix-ui";
 import {
-  FC,
-  FormEventHandler,
+  type FC,
+  type FormEventHandler,
   forwardRef,
   useCallback,
-  useEffect,
   useMemo,
   useState,
 } from "react";
-import { Muse, SubmitPromptInput, SubmitPromptType } from "@/types";
+import { submitPrompt } from "@/app/rp/profile/actions";
 import { StoreProvider } from "@/context/store/context";
-import { Collapsible, Form } from "radix-ui";
-import { PromptTextField } from "./prompt-text-field";
-import { SendButton } from "./sent-button";
-import { PromptMuseSelect } from "./prompt-muse-select";
-import { PromptMediaInput } from "./prompt-media-input";
+import { useGlobalState } from "@/context/store/stores";
+import type { Muse, SubmitPromptInput, SubmitPromptType } from "@/types";
+import { API_MESSAGE } from "@/utils/constants";
+import { InfoModal } from "../info-modal";
 import {
   apiMessageToInfoMessage,
   getParentIdKeyFromPromptType,
   museToSource,
   PromptEvent,
-  typeToTriggerButtonText,
   usePromptInputEvents,
 } from "./helpers";
-import { submitPrompt } from "@/app/rp/profile/actions";
 import { PromptPrivacySelect } from "./privacy-select";
-import { API_MESSAGE } from "@/utils/constants";
-import { InfoModal } from "../info-modal";
-import classNames from "classnames";
-import { BsArrowsCollapse } from "react-icons/bs";
-import { INITIAL_STATE, PromptInputState } from "./prompt-input.store";
-import { PromptMediaPreview } from "./prompt-media-preview";
-import * as S from "./styles";
+import { INITIAL_STATE, type PromptInputState } from "./prompt-input.store";
 import { PromptInputTrigger } from "./prompt-input-trigger";
-import { useGlobalState } from "@/context/store/stores";
+import { PromptMediaInput } from "./prompt-media-input";
+import { PromptMediaPreview } from "./prompt-media-preview";
+import { PromptMuseSelect } from "./prompt-muse-select";
+import { PromptTextField } from "./prompt-text-field";
+import { SendButton } from "./sent-button";
+import * as S from "./styles";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   muses: Muse[];
@@ -46,7 +43,7 @@ type Props = React.HTMLProps<HTMLDivElement> & {
 export const PromptInput: FC<Props> = forwardRef(
   (
     { type = "prompt", parentId = "", onSend, className, ...rest },
-    forwardedRef
+    forwardedRef,
   ) => {
     const novelist = useGlobalState("novelist");
     const muses = useMemo(() => {
@@ -106,7 +103,7 @@ export const PromptInput: FC<Props> = forwardRef(
         setOpen(false);
         onSend?.();
       },
-      [muses, parentId, type, emit, onSend]
+      [muses, parentId, type, emit, onSend],
     );
 
     return (
@@ -143,7 +140,7 @@ export const PromptInput: FC<Props> = forwardRef(
         </Collapsible.Root>
       </>
     );
-  }
+  },
 );
 
 export default PromptInput;

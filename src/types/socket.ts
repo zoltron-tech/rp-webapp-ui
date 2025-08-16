@@ -1,6 +1,6 @@
-import { Server as NetServer, Socket } from "net";
-import { NextApiResponse } from "next";
-import { Server as ServerIO } from "socket.io";
+import type { Server as NetServer, Socket } from "node:net";
+import type { NextApiResponse } from "next";
+import type { Server as ServerIO } from "socket.io";
 
 export type NextApiResponseServerIO = NextApiResponse & {
   socket: Socket & {

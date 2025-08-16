@@ -1,19 +1,18 @@
 "use client";
 
-import { FC, useState, useEffect, useCallback } from "react";
+import classNames from "classnames";
+import { type FC, useCallback, useEffect, useState } from "react";
+import { IoMdNotifications } from "react-icons/io";
+import { getNotifications } from "@/app/rp/novelists/actions";
+import { useGlobalState } from "@/context/store/stores";
+import type { NovelistWorldNotification } from "@/types";
 import { toggleState } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
-import classNames from "classnames";
-import { IoMdNotifications } from "react-icons/io";
-
-import * as S from "./styles";
-import { getNotifications } from "@/app/rp/novelists/actions";
-import { NovelistWorldNotification } from "@/types";
 import { FriendRequestNotification } from "../friend-request-notification";
+import * as S from "./styles";
 import { IconWrapper } from "./styles";
-import { useGlobalState } from "@/context/store/stores";
 
-interface NotificationsMenuProps {}
+type NotificationsMenuProps = {};
 
 export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
   const authState = useGlobalState("authState");
@@ -23,7 +22,7 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
     NovelistWorldNotification[] | null
   >(null);
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
 
   const fetchNotifications = useCallback(async () => {
     if (authState !== "LOGGED_IN") return;
@@ -34,12 +33,12 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
   }, [authState]);
 
   const removeFriendRequestNotification = async (
-    novelistToRemove: NovelistWorldNotification
+    novelistToRemove: NovelistWorldNotification,
   ) => {
     if (!notifications) return;
 
     const updatedFriendRequests = notifications.filter(
-      (notification) => notification.id !== novelistToRemove.id
+      (notification) => notification.id !== novelistToRemove.id,
     );
 
     setNotifications(updatedFriendRequests);
@@ -67,14 +66,13 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
           <IoMdNotifications className="menu-icon" />
         </IconWrapper>
         <S.Menu className={classNames({ open })}>
-          {notifications &&
-            notifications.map((request) => (
-              <FriendRequestNotification
-                key={request.id}
-                notification={request}
-                removeMethod={removeFriendRequestNotification}
-              ></FriendRequestNotification>
-            ))}
+          {notifications?.map((request) => (
+            <FriendRequestNotification
+              key={request.id}
+              notification={request}
+              removeMethod={removeFriendRequestNotification}
+            ></FriendRequestNotification>
+          ))}
           <S.CardWrapper key={"end"} className="end">
             <S.Card className="more-items-box">
               <S.CardHeader>

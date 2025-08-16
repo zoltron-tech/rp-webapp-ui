@@ -1,7 +1,7 @@
 "use client";
 
 import classNames from "classnames";
-import { ComponentPropsWithoutRef, FC } from "react";
+import type { ComponentPropsWithoutRef, FC } from "react";
 import { ImSpinner } from "react-icons/im";
 
 import { Logger } from "@/utils/services";
@@ -62,8 +62,8 @@ export const Button: FC<ButtonProps> = ({
           md: size === "md",
           lg: size === "lg",
           xs: size === "xs",
-          ["rounded-edge"]: shape === "rounded-edge",
-          ["menu-item"]: variant === "menu-item",
+          "rounded-edge": shape === "rounded-edge",
+          "menu-item": variant === "menu-item",
         },
       ])}
       onClick={clickHandler}

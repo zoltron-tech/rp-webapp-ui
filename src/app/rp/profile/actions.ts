@@ -1,11 +1,11 @@
 "use server";
 
+import getConfig from "next/config";
 import { authenticateAndGetJWT } from "@/app/actions";
-import { SubmitPromptInput, SubmitPromptType } from "@/types";
-import { WithMessage } from "@/types/common";
+import type { SubmitPromptInput, SubmitPromptType } from "@/types";
+import type { WithMessage } from "@/types/common";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import { Logger } from "@/utils/services";
-import getConfig from "next/config";
 
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
@@ -190,7 +190,7 @@ type PromptResponse = {
 
 export const submitPrompt = async (
   prompt: SubmitPromptInput,
-  type: SubmitPromptType = "prompt"
+  type: SubmitPromptType = "prompt",
 ): Promise<PromptResponse> => {
   const jwt = await authenticateAndGetJWT();
 
@@ -229,7 +229,7 @@ export const submitPrompt = async (
       promptWithoutTag,
       URL,
       response.status,
-      response.statusText
+      response.statusText,
     );
     return { message: API_MESSAGE.UncategorizedError };
   }

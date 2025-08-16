@@ -1,10 +1,10 @@
 "use client";
 
-import { ComponentPropsWithoutRef, FC } from "react";
-import { Hideable } from "../visibility-provider";
+import classNames from "classnames";
+import type { ComponentPropsWithoutRef, FC } from "react";
 
 import { Logger } from "@/utils/services";
-import classNames from "classnames";
+import type { Hideable } from "../visibility-provider";
 import * as S from "./styles";
 
 export interface DropdownProps

@@ -1,6 +1,6 @@
 import { styled } from "styled-components";
 import * as Common from "@/components/common";
-import { Z_INDEX, CARD_BORDER } from "@/theme";
+import { Z_INDEX } from "@/theme";
 
 type CardProps = {
   banner: string;

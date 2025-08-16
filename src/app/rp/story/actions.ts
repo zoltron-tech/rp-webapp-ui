@@ -1,8 +1,12 @@
 "use server";
-import { authenticateAndGetJWT, getJWTIfExists } from "@/app/actions";
-import { StoryBoard, StoryBoardEvent, StoryBoardEventThread } from "@/types";
-import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import getConfig from "next/config";
+import { authenticateAndGetJWT, getJWTIfExists } from "@/app/actions";
+import type {
+  StoryBoard,
+  StoryBoardEvent,
+  StoryBoardEventThread,
+} from "@/types";
+import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import { Logger } from "@/utils/services";
 
 const { serverRuntimeConfig } = getConfig();
@@ -122,14 +126,14 @@ export const updateStoryBoardAction = async (_storyboard: StoryBoard) => {
     {
       ...result,
       message: undefined,
-    }
+    },
   );
 
   return storyboard;
 };
 
 export const updateStoryBoardEventAction = async (
-  _storyboardEvent: StoryBoardEvent
+  _storyboardEvent: StoryBoardEvent,
 ) => {
   const jwt = await authenticateAndGetJWT();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/story/event`;
@@ -163,7 +167,7 @@ export const updateStoryBoardEventAction = async (
     {
       ...result,
       message: undefined,
-    }
+    },
   );
 
   return storyboardEvent;
@@ -202,7 +206,7 @@ export const getStoryboardEventAction = async (storyboardEventId: string) => {
 };
 
 export const getStoryboardEventThreadsAction = async (
-  storyboardEventId: string
+  storyboardEventId: string,
 ) => {
   const jwt = await getJWTIfExists();
   const headers: Record<string, string> = {

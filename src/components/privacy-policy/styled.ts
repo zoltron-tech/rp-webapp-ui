@@ -1,6 +1,6 @@
-import { styled, keyframes } from "styled-components";
 import { Accordion } from "radix-ui";
 import { SlArrowDown } from "react-icons/sl";
+import { keyframes, styled } from "styled-components";
 
 /* --- container + header --- */
 export const PrivacyRoot = styled.article`

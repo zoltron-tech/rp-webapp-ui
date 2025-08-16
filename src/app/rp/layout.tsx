@@ -1,16 +1,17 @@
 "use client";
 
-import { THEME_DARK, THEME_LIGHT } from "@/theme";
-import { ContentContainer, TopBar } from "@/components/layout";
-import { AuthProvider, UIContextProvider } from "@/context";
-import React, { FC, HTMLProps, useEffect, useMemo } from "react";
+import { DefaultTheme } from "@novelist-world/ui";
+import classNames from "classnames";
+import type React from "react";
+import { type FC, type HTMLProps, useEffect, useMemo } from "react";
 import { useCookies } from "react-cookie";
 import { ThemeProvider } from "styled-components";
-import { StoreState } from "@/types/state";
-import { DefaultTheme } from "@novelist-world/ui";
+import { ContentContainer, TopBar } from "@/components/layout";
+import { AuthProvider, UIContextProvider } from "@/context";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
-import classNames from "classnames";
+import { THEME_DARK, THEME_LIGHT } from "@/theme";
+import type { StoreState } from "@/types/state";
 import * as S from "./styles";
 
 const ACCENT_MAP = {

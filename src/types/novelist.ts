@@ -1,4 +1,4 @@
-import { SearchResult, Tag, Tagged } from "./common";
+import type { Tag, Tagged } from "./common";
 
 export interface Muse extends Tagged {
   _tag: "Muse";

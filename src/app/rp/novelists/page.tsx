@@ -1,22 +1,20 @@
 "use client";
 
-import { Logger } from "@/utils/services";
-import dynamic from "next/dynamic";
-import { useCallback, useEffect, useRef, useState } from "react";
-import * as S from "./styles";
 import { Carousel } from "@novelist-world/ui";
-import { MuseCard } from "@/components/muse-card";
-import { getHeroPageMusesAction } from "../muse/actions";
-import { Muse } from "@/types";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import TiersCatalog from "../tiers/page";
-import { PageContainer } from "../styles";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Footer } from "@/components/layout";
+import { MuseCard } from "@/components/muse-card";
 import { useGlobalState } from "@/context/store/stores";
+import type { Muse } from "@/types";
+import { Logger } from "@/utils/services";
+import { getHeroPageMusesAction } from "../muse/actions";
+import * as S from "./styles";
 
 const NovelistCarouselDynamic = dynamic(
   () => import("@/components/novelist-carousel"),
-  { ssr: false }
+  { ssr: false },
 );
 
 export default function NovelistsPage() {
@@ -70,9 +68,9 @@ export default function NovelistsPage() {
           <S.MainButton
             primary={authState === "LOGGED_IN"}
             secondary={authState !== "LOGGED_IN"}
-            onClick={authState == "LOGGED_IN" ? toHomePage : onLoginClick}
+            onClick={authState === "LOGGED_IN" ? toHomePage : onLoginClick}
           >
-            {authState == "LOGGED_IN" ? "My Dashboard" : "Get Started"}
+            {authState === "LOGGED_IN" ? "My Dashboard" : "Get Started"}
           </S.MainButton>
         </S.ButtonsGroupContainer>
       </S.PageContainer>

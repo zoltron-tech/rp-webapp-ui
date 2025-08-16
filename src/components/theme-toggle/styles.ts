@@ -1,5 +1,5 @@
-import { Z_INDEX } from "@/theme";
 import styled from "styled-components";
+import { Z_INDEX } from "@/theme";
 
 export const THEME_SWITCHER = {
   BACKGROUND: "#6B728E",

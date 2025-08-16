@@ -1,7 +1,7 @@
-import { FC, forwardRef, HTMLProps } from "react";
-import * as S from "./styled";
-import { Avatar } from "radix-ui";
 import classNames from "classnames";
+import { Avatar } from "radix-ui";
+import { type FC, forwardRef, type HTMLProps } from "react";
+import * as S from "./styled";
 
 type AvatarProps = Omit<HTMLProps<HTMLSpanElement>, "src"> & {
   src: string | null;
@@ -22,5 +22,5 @@ export const AvatarNew: FC<AvatarProps> = forwardRef(
         </Avatar.Fallback>
       </S.AvatarRoot>
     );
-  }
+  },
 );

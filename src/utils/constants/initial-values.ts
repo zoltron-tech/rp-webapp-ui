@@ -1,6 +1,6 @@
-import { Novelist, Muse, NovelistTier, Friend } from "@/types";
-import { None } from "@/types/common";
-import { StoryBoard, StoryBoardEvent } from "@/types/story-board";
+import type { Friend, Muse, Novelist, NovelistTier } from "@/types";
+import type { None } from "@/types/common";
+import type { StoryBoard, StoryBoardEvent } from "@/types/story-board";
 
 export const STANDARD_TIER: NovelistTier = {
   name: "STANDARD",

@@ -1,9 +1,9 @@
-import { toggleState } from "@/utils/helpers";
-import { ShouldRender } from "@/components/common";
 import classNames from "classnames";
-import { FC, ReactNode, useState } from "react";
-import { MdOutlineExpandLess, MdOutlineExpandMore } from "react-icons/md";
+import { type FC, type ReactNode, useState } from "react";
 import { BsSearch } from "react-icons/bs";
+import { MdOutlineExpandLess, MdOutlineExpandMore } from "react-icons/md";
+import { ShouldRender } from "@/components/common";
+import { toggleState } from "@/utils/helpers";
 
 import { Logger } from "@/utils/services";
 import * as S from "./styles";
@@ -12,7 +12,7 @@ export interface ExpandablePillProps {
   tag: string;
   scrollableContent: ReactNode;
   expandedContent: ReactNode;
-  expandable: Boolean;
+  expandable: boolean;
 }
 
 export const ExpandablePill: FC<ExpandablePillProps> = ({
@@ -22,7 +22,7 @@ export const ExpandablePill: FC<ExpandablePillProps> = ({
   expandable,
 }) => {
   const [expanded, setExpanded] = useState(false);
-  const [nonExpandable, setNonexpandable] = useState(!expandable);
+  const [nonExpandable, _setNonexpandable] = useState(!expandable);
 
   Logger.info("ExpandablePill rendered");
 

@@ -1,10 +1,10 @@
-import { FC, useCallback } from "react";
-import * as S from "./styled";
-import { GoogleLogo } from "@/assets/logos";
-import { FaDiscord } from "react-icons/fa6";
 import { useRouter } from "next/navigation";
+import { type FC, useCallback } from "react";
+import { FaDiscord } from "react-icons/fa6";
 import { loginViaProviderAction } from "@/app/actions";
-import { LoginOAuthProvider } from "@/types";
+import { GoogleLogo } from "@/assets/logos";
+import type { LoginOAuthProvider } from "@/types";
+import * as S from "./styled";
 
 export const Socials: FC = () => {
   const { push } = useRouter();
@@ -13,7 +13,7 @@ export const Socials: FC = () => {
     (provider: LoginOAuthProvider) => () => {
       loginViaProviderAction(provider);
     },
-    [push]
+    [push],
   );
 
   return (

@@ -1,5 +1,5 @@
+import { Children, type ComponentPropsWithoutRef, type FC } from "react";
 import { Logger } from "@/utils/services";
-import { Children, ComponentPropsWithoutRef, FC } from "react";
 
 export interface ListProps extends ComponentPropsWithoutRef<"ul"> {}
 

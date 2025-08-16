@@ -87,7 +87,7 @@ export const CommentContent = Object.assign(
     TextLine: TextLine,
     MediaContainer: CommentMediaContainer,
     Image: CommentImage,
-  }
+  },
 );
 
 const CommentFooterRoot = styled.footer`
@@ -204,5 +204,5 @@ export const CommentFooter = Object.assign(
 
     ReplyCount: ReplyCount,
     OpenThreadButton: OpenThreadButton,
-  }
+  },
 );

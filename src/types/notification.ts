@@ -1,4 +1,4 @@
-import { ActivitySource } from "./activity";
+import type { ActivitySource } from "./activity";
 
 export interface NovelistWorldNotification {
   id: string;

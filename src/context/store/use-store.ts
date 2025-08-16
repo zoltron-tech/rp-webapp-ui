@@ -1,5 +1,5 @@
 import { useContext, useSyncExternalStore } from "react";
-import { Store, StoreContext, StoreKey } from "./context";
+import { type Store, StoreContext, type StoreKey } from "./context";
 
 const useStoreContext = <State>(id: StoreKey): Store<State> => {
   const context = useContext(StoreContext(id));
@@ -17,7 +17,7 @@ export const createGetFunction =
 
 export const useStoreState = <State, K extends keyof State>(
   storeId: StoreKey,
-  selector: (store: State) => State[K]
+  selector: (store: State) => State[K],
 ) => {
   const store = useStoreContext<State>(storeId);
   if (!store) {
@@ -27,7 +27,7 @@ export const useStoreState = <State, K extends keyof State>(
   const state = useSyncExternalStore(
     store.subscribe,
     () => selector(store.get()),
-    () => selector(store.getServerSnapshot())
+    () => selector(store.getServerSnapshot()),
   );
   return state;
 };

@@ -1,6 +1,6 @@
+import styled, { css } from "styled-components";
 import { Avatar as AvatarCommon, Pill } from "@/components/common";
 import { BLUR_FILTER, DEV_MODE_BORDER, Z_INDEX } from "@/theme";
-import styled, { css } from "styled-components";
 import { Badge } from "../../tiers/styles";
 
 interface BannerProps {

@@ -1,6 +1,6 @@
+import styled from "styled-components";
 import { SPIN, Z_INDEX } from "@/theme";
 import { setOpacity } from "@/utils/helpers";
-import styled from "styled-components";
 
 export const InputWrapper = styled.div`
   margin-bottom: 10px;

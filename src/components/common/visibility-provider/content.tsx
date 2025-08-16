@@ -1,6 +1,11 @@
+import {
+  cloneElement,
+  type FC,
+  isValidElement,
+  type ReactElement,
+} from "react";
 import { useVisibilityContext } from "@/context";
 import { Logger } from "@/utils/services";
-import { FC, ReactElement, cloneElement, isValidElement } from "react";
 
 export interface Hideable {
   isVisible: boolean;

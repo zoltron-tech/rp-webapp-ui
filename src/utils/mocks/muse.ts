@@ -1,4 +1,4 @@
-import { Muse } from "@/types";
+import type { Muse } from "@/types";
 import { STANDARD_TIER } from "../constants";
 
 const MOCK_MUSE: Muse = {

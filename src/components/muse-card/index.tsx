@@ -1,17 +1,15 @@
 "use client";
-import { Muse } from "@/types/novelist";
-import { FC } from "react";
-
-import { Logger } from "@/utils/services";
-import { useParams, useRouter } from "next/navigation";
-import { GrEdit } from "react-icons/gr";
-
-import * as S from "./styles";
-import { FaRegTrashCan } from "react-icons/fa6";
-import { ShouldRender } from "../common";
-import { INITIAL_MUSE } from "@/utils/constants";
 import classNames from "classnames";
+import { useParams, useRouter } from "next/navigation";
+import type { FC } from "react";
+import { FaRegTrashCan } from "react-icons/fa6";
+import { GrEdit } from "react-icons/gr";
 import { useGlobalState } from "@/context/store/stores";
+import type { Muse } from "@/types/novelist";
+import { INITIAL_MUSE } from "@/utils/constants";
+import { Logger } from "@/utils/services";
+import { ShouldRender } from "../common";
+import * as S from "./styles";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   muse?: Muse | null;

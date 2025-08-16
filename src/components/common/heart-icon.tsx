@@ -1,6 +1,6 @@
 import classNames from "classnames";
 import { AccessibleIcon } from "radix-ui";
-import { FC, HTMLProps } from "react";
+import type { FC, HTMLProps } from "react";
 import { IoMdHeart, IoMdHeartEmpty } from "react-icons/io";
 
 type LikeIconProps = HTMLProps<SVGSVGElement> & {

@@ -15,4 +15,4 @@ export enum LOG_LEVELS {
   DEBUG,
 }
 
-export const LOG_LEVEL = process.env.LOG_LEVEL || LOG_LEVELS["DEBUG"];
+export const LOG_LEVEL = process.env.LOG_LEVEL || LOG_LEVELS.DEBUG;

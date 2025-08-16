@@ -1,9 +1,9 @@
 "use client";
 
-import { useGlobalState } from "@/context/store/stores";
-import { Logger } from "@/utils/services";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useGlobalState } from "@/context/store/stores";
+import { Logger } from "@/utils/services";
 
 export default function ProfilePage({}) {
   const user = useGlobalState("user");

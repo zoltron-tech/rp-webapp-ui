@@ -1,8 +1,7 @@
-import { FC, HTMLProps, useRef } from "react";
-
+import classNames from "classnames";
+import { type FC, type HTMLProps, useRef } from "react";
 import { useUIContext } from "@/hooks";
 import { Logger } from "@/utils/services";
-import classNames from "classnames";
 import * as S from "./styles";
 
 type Props = HTMLProps<HTMLDivElement> & {

@@ -1,6 +1,6 @@
-import { getPropmptCommentsAction } from "@/app/rp/prompt/actions";
-import { Comment } from "@/types";
 import { useCallback, useEffect, useState } from "react";
+import { getPropmptCommentsAction } from "@/app/rp/prompt/actions";
+import type { Comment } from "@/types";
 
 export const useGetComments = (promptId: string, skipAutoFetch = false) => {
   const [comments, setComments] = useState<Comment[]>([]);

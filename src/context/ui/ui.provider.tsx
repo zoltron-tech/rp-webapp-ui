@@ -1,11 +1,11 @@
 "use client";
 
+import type { FC } from "react";
+import { useTheme } from "styled-components";
+import type { Theme } from "@/theme";
 import { generateToastError, generateToastSuccess } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
-import { FC } from "react";
-import { useTheme } from "styled-components";
-import { UIContext, UIContextType } from "./ui.context";
-import { Theme } from "@/theme";
+import { UIContext, type UIContextType } from "./ui.context";
 
 type Props = {
   children: React.ReactNode;

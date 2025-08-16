@@ -1,5 +1,5 @@
+import { Container } from "@novelist-world/ui";
 import { styled } from "styled-components";
-import { Container, Flex } from "@novelist-world/ui";
 import { DEV_MODE_BORDER } from "@/theme";
 
 export const MuseContainer = styled(Container)`

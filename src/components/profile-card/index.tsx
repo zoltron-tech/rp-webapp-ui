@@ -1,11 +1,11 @@
 "use client";
-import { getUserNovelist } from "@/app/rp/novelists/actions";
-import { Novelist } from "@/types";
-import { Logger } from "@/utils/services";
 import { useRouter } from "next/navigation";
-import { FC, useEffect, useState } from "react";
-import { Card } from "../common";
+import { type FC, useEffect, useState } from "react";
+import { getUserNovelist } from "@/app/rp/novelists/actions";
 import { useGlobalState } from "@/context/store/stores";
+import type { Novelist } from "@/types";
+import { Logger } from "@/utils/services";
+import { Card } from "../common";
 
 export type ProfileCardProps = {};
 

@@ -1,7 +1,7 @@
 "use client";
 
 import classNames from "classnames";
-import { FC } from "react";
+import type { FC } from "react";
 
 import { Logger } from "@/utils/services";
 import * as S from "./styles";

@@ -1,6 +1,6 @@
-import { SPIN } from "@/theme";
 import styled from "styled-components";
 import { pSBC } from "@/lib/pSBC";
+import { SPIN } from "@/theme";
 import { setOpacity } from "@/utils/helpers";
 
 export const Container = styled.div`

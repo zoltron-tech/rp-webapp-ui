@@ -1,12 +1,12 @@
 "use client";
 
-import { FC, useCallback, useMemo } from "react";
-import * as S from "./styled";
-import { usePromptState, usePromptStateSet } from "./prompt.store";
-import { parseTextContent } from "@/utils/helpers";
-import { LikeButton } from "../common/like-button";
+import { type FC, useCallback, useMemo } from "react";
 import { useGlobalState } from "@/context/store/stores";
 import { useToggleLike } from "@/hooks/use-toggle-like";
+import { parseTextContent } from "@/utils/helpers";
+import { LikeButton } from "../common/like-button";
+import { usePromptState, usePromptStateSet } from "./prompt.store";
+import * as S from "./styled";
 
 type PromptContentProps = {};
 

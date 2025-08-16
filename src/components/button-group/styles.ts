@@ -1,6 +1,5 @@
-import { DEV_MODE_BORDER } from "@/theme";
 import styled from "styled-components";
-import { Button } from "../common";
+import { DEV_MODE_BORDER } from "@/theme";
 
 export const ContentContainer = styled.div`
   --border-radius: 20px;

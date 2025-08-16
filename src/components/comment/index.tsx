@@ -1,22 +1,22 @@
 "use client";
 
-import { Comment as CommentType } from "@/types";
-import { FC } from "react";
-import * as S from "./styled";
 import { Separator } from "radix-ui";
+import type { FC } from "react";
 import { StoreProvider } from "@/context/store/context";
-import { CommentSource } from "./comment-source";
-import { CommentFooter } from "./comment-footer";
+import type { Comment as CommentType } from "@/types";
 import { CommentContent } from "./comment-content";
+import { CommentFooter } from "./comment-footer";
+import { CommentSource } from "./comment-source";
+import * as S from "./styled";
 
 type CommentProps = {
   comment: CommentType;
-  ["hide-separator"]?: boolean;
+  "hide-separator"?: boolean;
 };
 
 export const Comment: FC<CommentProps> = ({
   comment,
-  ["hide-separator"]: hideSeparator = false,
+  "hide-separator": hideSeparator = false,
 }) => {
   return (
     <StoreProvider storeId="comment" initial={comment}>

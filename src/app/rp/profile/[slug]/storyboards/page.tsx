@@ -1,15 +1,15 @@
 "use client";
 
-import { StoryBoard } from "@/types";
-import { INITIAL_STORY_BOARD } from "@/utils/constants";
-import { Logger } from "@/utils/services";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import * as S from "./styles";
+import { getAllStoryboardsByUsernameAction } from "@/app/rp/story/actions";
 import { ShouldRender } from "@/components/common";
 import StoryCard from "@/components/story-card";
-import { getAllStoryboardsByUsernameAction } from "@/app/rp/story/actions";
 import { useGlobalState } from "@/context/store/stores";
+import type { StoryBoard } from "@/types";
+import { INITIAL_STORY_BOARD } from "@/utils/constants";
+import { Logger } from "@/utils/services";
+import * as S from "./styles";
 
 export default function MusesListPage({}) {
   const params = useParams();
@@ -20,7 +20,7 @@ export default function MusesListPage({}) {
   const novelist = useGlobalState("novelist");
   const username = params?.slug as string;
   const isCurrentUser = user?.username === username;
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const { push } = useRouter();
   Logger.debug("params are:", params);
 
@@ -47,13 +47,14 @@ export default function MusesListPage({}) {
   return (
     <S.Container>
       <S.Maintext>
-        {isCurrentUser ? "Your" : username + "'s"} Stories
+        {isCurrentUser ? "Your" : `${username}'s`} Stories
       </S.Maintext>
       <S.Subtext>
         {isCurrentUser
           ? "Stories created by you: " +
             storyBoards?.filter(
-              (storyBoard) => storyBoard?.createdBy?.username == user?.username
+              (storyBoard) =>
+                storyBoard?.createdBy?.username === user?.username,
             )?.length +
             "/" +
             novelist?.tier.storyBoardLimit
@@ -63,20 +64,18 @@ export default function MusesListPage({}) {
         <ShouldRender if={isCurrentUser}>
           <StoryCard key={null} storyBoard={INITIAL_STORY_BOARD}></StoryCard>
         </ShouldRender>
-        {storyBoards &&
-          storyBoards.map((storyBoard) => {
-            // Determine if this storyBoard is "owned"
-            const isOwnBoard =
-              storyBoard.createdBy?.username === user?.username;
+        {storyBoards?.map((storyBoard) => {
+          // Determine if this storyBoard is "owned"
+          const isOwnBoard = storyBoard.createdBy?.username === user?.username;
 
-            return (
-              <StoryCard
-                key={storyBoard.id}
-                storyBoard={storyBoard}
-                className={isOwnBoard ? "own" : ""}
-              />
-            );
-          })}
+          return (
+            <StoryCard
+              key={storyBoard.id}
+              storyBoard={storyBoard}
+              className={isOwnBoard ? "own" : ""}
+            />
+          );
+        })}
       </S.StoryListContainer>
     </S.Container>
   );

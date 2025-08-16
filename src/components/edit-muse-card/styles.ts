@@ -1,13 +1,12 @@
-import { styled } from "styled-components";
-
-import * as Common from "@/components/common";
-import { Z_INDEX } from "@/theme";
 import {
   Container,
   Flex as NWFlex,
   RichText as NWRichText,
   TextArea,
 } from "@novelist-world/ui";
+import { styled } from "styled-components";
+import * as Common from "@/components/common";
+import { Z_INDEX } from "@/theme";
 
 export const RichText = styled(NWRichText)`
   & > .pm-container {

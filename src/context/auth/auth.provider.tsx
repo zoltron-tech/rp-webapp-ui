@@ -1,5 +1,7 @@
 "use client";
 
+import { usePathname, useRouter } from "next/navigation";
+import { type FC, type ReactNode, useCallback, useEffect, useRef } from "react";
 import {
   authenticateAction,
   getUser,
@@ -7,15 +9,12 @@ import {
 } from "@/app/actions";
 import { getUserNovelist } from "@/app/rp/novelists/actions";
 import { useStateMachine } from "@/hooks";
-import { Novelist } from "@/types";
-import { SignUpPayload } from "@/types/register";
-import { AuthState } from "@/types/state";
-import { Logger } from "@/utils/services";
-import { usePathname, useRouter } from "next/navigation";
-import { FC, ReactNode, useCallback, useEffect, useRef } from "react";
-import { AuthContext } from "./auth.context";
-import { useGlobalState, useGlobalStoreSet } from "../store/stores";
+import type { Novelist } from "@/types";
+import type { AuthState } from "@/types/state";
 import { API_MESSAGE } from "@/utils/constants";
+import { Logger } from "@/utils/services";
+import { useGlobalState, useGlobalStoreSet } from "../store/stores";
+import { AuthContext } from "./auth.context";
 
 interface Props {
   children: ReactNode;
@@ -86,7 +85,7 @@ export const AuthProvider: FC<Props> = ({ children }) => {
       }
 
       setGlobalState({ novelist: _novelist, authState: "LOGGED_IN" });
-    } catch (e) {
+    } catch (_e) {
       transition("LOGGED_OUT");
     }
   };

@@ -1,9 +1,8 @@
-import { styled } from "styled-components";
-
-import * as Common from "@/components/common";
-import { Z_INDEX, CARD_BORDER } from "@/theme";
 import { Container, Flex } from "@novelist-world/ui";
+import { styled } from "styled-components";
+import * as Common from "@/components/common";
 import { pSBC } from "@/lib/pSBC";
+import { Z_INDEX } from "@/theme";
 import { setOpacity } from "@/utils/helpers/theme";
 
 export const LocalContainer = styled(Container)`

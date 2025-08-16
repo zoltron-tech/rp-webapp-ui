@@ -1,5 +1,5 @@
-import { Z_INDEX } from "@/theme/geometry";
 import { css, styled } from "styled-components";
+import { Z_INDEX } from "@/theme/geometry";
 
 const NameFontStyles = css`
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.498);

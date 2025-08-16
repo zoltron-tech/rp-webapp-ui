@@ -1,6 +1,6 @@
-import { FC, MouseEventHandler, useCallback } from "react";
-import { AvatarNew } from "./avatar-new";
 import { useRouter } from "next/navigation";
+import { type FC, type MouseEventHandler, useCallback } from "react";
+import { AvatarNew } from "./avatar-new";
 
 type MuseAvatarProps = {
   museId: string;
@@ -16,7 +16,7 @@ export const MuseAvatar: FC<MuseAvatarProps> = ({ museId, image, name }) => {
       e.preventDefault();
       push(`/rp/muse/${museId}`);
     },
-    [museId, push]
+    [museId, push],
   );
 
   return (

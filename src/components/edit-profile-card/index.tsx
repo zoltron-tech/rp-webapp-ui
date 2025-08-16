@@ -1,5 +1,9 @@
 "use client";
 
+import { DefaultTheme } from "@novelist-world/ui";
+import { useRouter } from "next/navigation";
+import { type FC, useEffect, useState } from "react";
+import { ThemeProvider } from "styled-components";
 import {
   getUserNovelist,
   updateUserNovelist,
@@ -11,16 +15,12 @@ import {
   UploadAvatar,
   Username,
 } from "@/components/common";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useAuthContext, useForm, useUIContext } from "@/hooks";
 import type { Novelist } from "@/types";
 import { API_MESSAGE, INITIAL_NOVELIST } from "@/utils/constants";
 import { Logger } from "@/utils/services";
-import { FC, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import * as S from "./styles";
-import { DefaultTheme } from "@novelist-world/ui";
-import { ThemeProvider } from "styled-components";
-import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 
 export type EditProfileCardProps = {};
 

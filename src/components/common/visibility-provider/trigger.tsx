@@ -1,5 +1,10 @@
+import {
+  cloneElement,
+  type FC,
+  isValidElement,
+  type ReactElement,
+} from "react";
 import { useVisibilityContext } from "@/context";
-import { FC, ReactElement, cloneElement, isValidElement } from "react";
 
 export interface Clickable {
   onClick?: () => void;

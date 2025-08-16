@@ -1,9 +1,10 @@
 /* eslint-disable @next/next/no-img-element */
-import { FC, useCallback } from "react";
-import { usePromptInputState } from "./prompt-input.store";
-import { IoIosRemoveCircle } from "react-icons/io";
+
 import classNames from "classnames";
+import { type FC, useCallback } from "react";
+import { IoIosRemoveCircle } from "react-icons/io";
 import { PromptEvent, usePromptInputEvents } from "./helpers";
+import { usePromptInputState } from "./prompt-input.store";
 import * as S from "./styles";
 
 export const PromptMediaPreview: FC = () => {

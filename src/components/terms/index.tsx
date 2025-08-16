@@ -2,7 +2,6 @@
 
 import { GoLaw } from "react-icons/go";
 import * as S from "./../privacy-policy/styled";
-import React from "react";
 
 export const Terms = () => {
   return (
@@ -42,9 +41,7 @@ export const Terms = () => {
         Services from time to time are hereby expressly incorporated herein by
         reference. We reserve the right, in our sole discretion, to make changes
         or modifications to these Legal Terms from time to time. We will alert
-        you about any changes by updating the <strong>
-          `Last updated`
-        </strong>{" "}
+        you about any changes by updating the <strong>`Last updated`</strong>{" "}
         date of these Legal Terms, and you waive any right to receive specific
         notice of each such change. We will provide the history of every version
         availabe at the terms and conditions page.It is your responsibility to
@@ -671,6 +668,7 @@ export const Terms = () => {
                 <a
                   href="https://novelist.world/rp/privacy-policy"
                   target="_blank"
+                  rel="noopener"
                 >
                   <strong>here</strong>
                 </a>

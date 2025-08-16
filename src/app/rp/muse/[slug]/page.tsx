@@ -1,33 +1,31 @@
 "use client";
 
-import { Avatar, ShouldRender, Username } from "@/components/common";
-import { PageLoader } from "@/components/layout";
-import { Quote } from "@/components/novelist-card/styles";
-import { useStateMachine } from "@/hooks";
-import { Muse, Prompt } from "@/types";
-import { Logger } from "@/utils/services";
+import { Flex, RichText } from "@novelist-world/ui";
+import classNames from "classnames";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getMuseAction } from "../../muse/actions";
-import * as S from "./styles";
-import { BsFillPeopleFill } from "react-icons/bs";
-import { TiInfoLarge } from "react-icons/ti";
-import { GiBookCover } from "react-icons/gi";
-import { FiMoreVertical } from "react-icons/fi";
-import { MdClose } from "react-icons/md";
-import { MdOutlineSlowMotionVideo } from "react-icons/md";
 import { BiSolidMessageEdit } from "react-icons/bi";
+import { BsFillPeopleFill } from "react-icons/bs";
 import { FaComments } from "react-icons/fa6";
-import classNames from "classnames";
-import { Flex, RichText } from "@novelist-world/ui";
-import { getPromptsByMuseAction } from "../../prompt/actions";
-import { toFormattedDate } from "@/utils/helpers";
-import { VscVerifiedFilled } from "react-icons/vsc";
-import { VscUnverified } from "react-icons/vsc";
+import { FiMoreVertical } from "react-icons/fi";
+import { GiBookCover } from "react-icons/gi";
 import { IoHeart } from "react-icons/io5";
+import { MdClose, MdOutlineSlowMotionVideo } from "react-icons/md";
+import { TiInfoLarge } from "react-icons/ti";
+import { VscUnverified, VscVerifiedFilled } from "react-icons/vsc";
+import { ShouldRender, Username } from "@/components/common";
+import { AvatarNew } from "@/components/common/avatar-new";
+import { PageLoader } from "@/components/layout";
+import { Quote } from "@/components/novelist-card/styles";
 import { TagsContainer } from "@/components/tags-container";
 import { useGlobalState } from "@/context/store/stores";
-import { AvatarNew } from "@/components/common/avatar-new";
+import { useStateMachine } from "@/hooks";
+import type { Muse, Prompt } from "@/types";
+import { toFormattedDate } from "@/utils/helpers";
+import { Logger } from "@/utils/services";
+import { getMuseAction } from "../../muse/actions";
+import { getPromptsByMuseAction } from "../../prompt/actions";
+import * as S from "./styles";
 
 type CARD_STATE =
   | "MAIN"
@@ -40,7 +38,7 @@ type CARD_STATE =
 export default function MuseProfilePage({}) {
   const params = useParams();
   const authState = useGlobalState("authState");
-  const novelist = useGlobalState("novelist");
+  const _novelist = useGlobalState("novelist");
   const [muse, setMuse] = useState<Muse | null>(null);
   const [prompts, setPrompts] = useState<Prompt[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -153,7 +151,7 @@ export default function MuseProfilePage({}) {
               onMuseAvatarClick(
                 connection.sourceMuseId === muse.id
                   ? connection.targetMuseId
-                  : connection.sourceMuseId
+                  : connection.sourceMuseId,
               )
             }
           >
@@ -222,7 +220,7 @@ export default function MuseProfilePage({}) {
                 View Comments & Replies.
               </S.PromptFooterText>
             </Flex>
-            <S.Date>{toFormattedDate(prompt?.createdOn)}</S.Date>
+            <S.StyledDate>{toFormattedDate(prompt?.createdOn)}</S.StyledDate>
           </S.FooterContainer>
         </Flex>
       </>

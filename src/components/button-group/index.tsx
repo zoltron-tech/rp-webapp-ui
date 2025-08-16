@@ -1,8 +1,8 @@
 "use client";
 
-import { FC } from "react";
+import type { FC } from "react";
 import { Logger } from "@/utils/services";
-import { Button, ButtonProps } from "../common";
+import { Button, type ButtonProps } from "../common";
 import * as S from "./styles";
 
 export interface ButtonInfo {

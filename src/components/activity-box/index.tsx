@@ -1,18 +1,16 @@
 "use client";
 
-import { FC, useMemo } from "react";
-import { Logger } from "@/utils/services";
-import { useRouter } from "next/navigation";
-import * as S from "./styles";
-import classNames from "classnames";
-import { Activity, ActivityTarget } from "@/types/activity";
-import moment from "moment";
-import { ShouldRender } from "../common";
-import { FaComments, FaStreetView, FaUser } from "react-icons/fa6";
 import { Flex } from "@novelist-world/ui";
-import { toFormattedDateFromUnix } from "@/utils/helpers";
-import { IoIosPeople } from "react-icons/io";
+import classNames from "classnames";
+import { useRouter } from "next/navigation";
+import { type FC, useMemo } from "react";
+import { FaComments, FaStreetView, FaUser } from "react-icons/fa6";
 import { PiBookOpenUserDuotone } from "react-icons/pi";
+import type { Activity } from "@/types/activity";
+import { toFormattedDateFromUnix } from "@/utils/helpers";
+import { Logger } from "@/utils/services";
+import { ShouldRender } from "../common";
+import * as S from "./styles";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   activity?: Activity | null;
@@ -35,12 +33,12 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
   const mediaType = useMemo(
     () =>
       activity?.target.url ? getMediaTypeFromUrl(activity.target.url) : "",
-    [activity]
+    [activity],
   );
 
   const handleCardClick = (
     e: React.MouseEvent<HTMLDivElement>,
-    activity: Activity
+    activity: Activity,
   ) => {
     const target = e.target as HTMLDivElement;
     if (target.classList.contains("button")) return;
@@ -49,7 +47,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
       push(`/rp/muse/${activity.target.id}`);
     else if (
       ["PROMPT", "COMMENT", "REPLY"].includes(
-        activity.target.activityTargetType
+        activity.target.activityTargetType,
       )
     )
       push(`/rp/prompt/${activity.target.id}`);
@@ -61,7 +59,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
 
   const onAvatarClick = (
     e: React.MouseEvent<HTMLDivElement>,
-    activity: Activity
+    activity: Activity,
   ) => {
     const target = e.target as HTMLDivElement;
     if (target.classList.contains("button")) return;
@@ -94,12 +92,12 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
           </S.SourceName>
           <S.ActivityText>{activity.activityText}</S.ActivityText>
         </Flex>
-        <S.Date>{toFormattedDateFromUnix(activity.date)}</S.Date>
+        <S.StyledDate>{toFormattedDateFromUnix(activity.date)}</S.StyledDate>
       </S.HeaderContainer>
       <Flex direction="column" align="center">
         <ShouldRender
           if={["PROMPT", "COMMENT", "REPLY"].includes(
-            activity.target.activityTargetType
+            activity.target.activityTargetType,
           )}
         >
           <S.PromptText>
@@ -124,7 +122,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
             <ShouldRender if={mediaType === "video"}>
               <S.Video
                 className="video"
-                src={activity.target.url + "#t=0.3"}
+                src={`${activity.target.url}#t=0.3`}
                 controls
               ></S.Video>
             </ShouldRender>
@@ -147,7 +145,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
               <ShouldRender
                 if={
                   !["PROMPT", "COMMENT", "REPLY"].includes(
-                    activity.target.activityTargetType
+                    activity.target.activityTargetType,
                   )
                 }
               >
@@ -173,7 +171,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
       </Flex>
       <ShouldRender
         if={["PROMPT", "COMMENT", "REPLY"].includes(
-          activity.target.activityTargetType
+          activity.target.activityTargetType,
         )}
       >
         <S.FooterContainer>
@@ -193,7 +191,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
       </ShouldRender>
       <ShouldRender
         if={["STORY_BOARD", "STORY_BOARD_EVENT"].includes(
-          activity.target.activityTargetType
+          activity.target.activityTargetType,
         )}
       >
         <S.FooterContainer>

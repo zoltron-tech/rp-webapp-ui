@@ -1,11 +1,11 @@
 "use client";
-import { Muse } from "@/types";
-import * as S from "./styles";
-import { FC } from "react";
-import { Container, Flex } from "@novelist-world/ui";
-import { Avatar } from "../common";
+import { Flex } from "@novelist-world/ui";
 import classNames from "classnames";
 import { useRouter } from "next/navigation";
+import type { FC } from "react";
+import type { Muse } from "@/types";
+import { Avatar } from "../common";
+import * as S from "./styles";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   muse: Muse | undefined;

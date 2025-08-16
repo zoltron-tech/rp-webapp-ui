@@ -1,9 +1,9 @@
 "use client";
 
-import { useGlobalState } from "@/context/store/stores";
-import { useCallback, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Separator, Tabs } from "radix-ui";
+import { useCallback, useEffect } from "react";
+import { useGlobalState } from "@/context/store/stores";
 import { LoginForm } from "./login-form";
 import { RegisterForm } from "./register-form";
 import { Socials } from "./socials";

@@ -1,5 +1,4 @@
-import { API_MESSAGE } from "@/utils/constants";
-import { User } from "./user";
+import type { User } from "./user";
 
 export type LoginOAuthProvider = "google" | "discord";
 

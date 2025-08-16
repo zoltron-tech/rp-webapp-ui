@@ -21,6 +21,7 @@ import { TagsContainer } from "@/components/tags-container";
 import { useGlobalState } from "@/context/store/stores";
 import { useStateMachine } from "@/hooks";
 import type { Muse, Prompt } from "@/types";
+import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDate } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import { getMuseAction } from "../../muse/actions";
@@ -47,47 +48,47 @@ export default function MuseProfilePage({}) {
   const { state, transition, is } = useStateMachine<CARD_STATE>({
     initial: "MAIN",
     transitions: {
-      MAIN: {
-        MUSE_INFO: true,
-        CONNECTIONS: true,
-        BACK_STORY: true,
-        VIDEO: true,
-        PROMPTS: true,
-      },
-      VIDEO: {
-        MAIN: true,
-        MUSE_INFO: true,
-        CONNECTIONS: true,
-        BACK_STORY: true,
-        PROMPTS: true,
-      },
-      MUSE_INFO: {
-        MAIN: true,
-        CONNECTIONS: true,
-        BACK_STORY: true,
-        VIDEO: true,
-        PROMPTS: true,
-      },
-      CONNECTIONS: {
-        MAIN: true,
-        BACK_STORY: true,
-        MUSE_INFO: true,
-        VIDEO: true,
-        PROMPTS: true,
-      },
       BACK_STORY: {
         CONNECTIONS: true,
         MAIN: true,
         MUSE_INFO: true,
-        VIDEO: true,
         PROMPTS: true,
+        VIDEO: true,
+      },
+      CONNECTIONS: {
+        BACK_STORY: true,
+        MAIN: true,
+        MUSE_INFO: true,
+        PROMPTS: true,
+        VIDEO: true,
+      },
+      MAIN: {
+        BACK_STORY: true,
+        CONNECTIONS: true,
+        MUSE_INFO: true,
+        PROMPTS: true,
+        VIDEO: true,
+      },
+      MUSE_INFO: {
+        BACK_STORY: true,
+        CONNECTIONS: true,
+        MAIN: true,
+        PROMPTS: true,
+        VIDEO: true,
       },
       PROMPTS: {
+        BACK_STORY: true,
         CONNECTIONS: true,
         MAIN: true,
         MUSE_INFO: true,
         VIDEO: true,
+      },
+      VIDEO: {
         BACK_STORY: true,
+        CONNECTIONS: true,
+        MAIN: true,
+        MUSE_INFO: true,
+        PROMPTS: true,
       },
     },
   });
@@ -95,15 +96,15 @@ export default function MuseProfilePage({}) {
 
   const onAuthorAvatarClick = () => {
     const username = muse?.pennedBy?.username;
-    if (username) push(`/rp/profile/${username}`);
+    if (username) push(ROUTES.Profile.View(username).Index);
   };
 
   const onMuseAvatarClick = (museId: string) => {
-    if (museId) push(`/rp/muse/${museId}`);
+    if (museId) push(ROUTES.Muse.View(museId));
   };
 
   const onPromptClick = (promptId: string) => {
-    if (promptId) push(`/rp/prompt/${promptId}`);
+    if (promptId) push(ROUTES.Prompt.View(promptId));
   };
 
   const fetchMuse = async (museId: string) => {
@@ -113,7 +114,7 @@ export default function MuseProfilePage({}) {
     if (!_muse || "message" in _muse) {
       // handle error
       setLoading(false);
-      push("/404");
+      push(ROUTES.NotFound);
       return;
     }
     setLoading(false);
@@ -126,7 +127,7 @@ export default function MuseProfilePage({}) {
 
     if (!_prompts || "message" in _prompts) {
       setLoading(false);
-      push("/404");
+      push(ROUTES.NotFound);
       return;
     }
     console.log(_prompts);

@@ -6,6 +6,7 @@ import { GoCommentDiscussion } from "react-icons/go";
 import { IoMdArrowForward } from "react-icons/io";
 import { useGlobalState } from "@/context/store/stores";
 import { useToggleLike } from "@/hooks/use-toggle-like";
+import { ROUTES } from "@/utils/constants/routes";
 import { pluralize } from "@/utils/helpers";
 import { LikeButton } from "../common/like-button";
 import { useCommentState, useCommentStateSet } from "./comment.store";
@@ -16,14 +17,14 @@ export const CommentFooter: FC = () => {
   const reacted = useCommentState("reacted");
   const reactions = useCommentState("reactions");
   const threadId = useCommentState("id");
-  const threadUrl = useMemo(() => `/rp/thread/${threadId}`, [threadId]);
+  const threadUrl = useMemo(() => ROUTES.Thread.View(threadId), [threadId]);
   const { push } = useRouter();
   const authState = useGlobalState("authState");
   const setCommentState = useCommentStateSet();
   const { toggleLike } = useToggleLike({
-    type: "comment",
     id: threadId,
     liked: reacted,
+    type: "comment",
   });
 
   const handleLikeToggle = useCallback(async () => {

@@ -91,13 +91,13 @@ export const updatePromptAction = async (_prompt: Prompt) => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt`;
 
   const response = await fetch(URL, {
-    method: "POST",
+    body: JSON.stringify(_prompt),
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: jwt,
     },
-    body: JSON.stringify(_prompt),
-    cache: "no-store",
+    method: "POST",
   });
 
   if (!response.ok) {

@@ -22,8 +22,8 @@ export const getMuseAction = async (museId: string) => {
   }
 
   const response = await fetch(URL, {
-    headers,
     cache: "no-store",
+    headers,
   });
 
   Logger.debug("getMuseAction", response.status);
@@ -52,8 +52,8 @@ export const getAllMusesByUsernameAction = async (username: string) => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/by/${username}`;
 
   const response = await fetch(URL, {
-    headers: headers,
     cache: "no-store",
+    headers: headers,
   });
 
   Logger.debug("getAllMusesByUsernameAction", response.status);
@@ -77,8 +77,8 @@ export const searchFandomsAction = async (prefix: string) => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/fandom/search?prefix=${prefix}`;
 
   const response = await fetch(URL, {
-    headers: headers,
     cache: "no-store",
+    headers: headers,
   });
 
   Logger.debug("searchFandomsAction", response.status);
@@ -99,11 +99,11 @@ export const getAllMusesAction = async () => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/all`;
 
   const response = await fetch(URL, {
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: jwt,
     },
-    cache: "no-store",
   });
 
   Logger.debug("getAllMusesAction", response.status);
@@ -123,10 +123,10 @@ export const getHeroPageMusesAction = async () => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/random`;
 
   const response = await fetch(URL, {
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
     },
-    cache: "no-store",
   });
 
   Logger.debug("getHeroPageMusesAction", response.status);
@@ -150,13 +150,13 @@ export const updateMuseAction = async (_muse: Muse) => {
 
   try {
     const response = await fetch(URL, {
-      method: "POST",
+      body: JSON.stringify(_muse),
+      cache: "no-store",
       headers: {
         "Content-Type": "application/json",
         [AUTH_HEADER_NAME]: jwt,
       },
-      body: JSON.stringify(_muse),
-      cache: "no-store",
+      method: "POST",
     });
 
     console.log(JSON.stringify(_muse));

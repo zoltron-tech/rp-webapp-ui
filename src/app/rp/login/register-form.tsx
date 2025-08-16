@@ -17,21 +17,22 @@ import { ErrorBox } from "@/components/error-box";
 import { useGlobalStoreSet } from "@/context/store/stores";
 import { API_MESSAGE } from "@/utils/constants";
 import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
+import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styled";
 
 const ErrorKeys = [
-  API_MESSAGE.CONFLICT,
+  API_MESSAGE.Conflict,
   API_MESSAGE.UncategorizedError,
 ] as const;
 type ErrorKey = (typeof ErrorKeys)[number];
 
 const ERROR_MAP: Record<ErrorKey, ReactNode> = {
-  [API_MESSAGE.CONFLICT]: (
+  [API_MESSAGE.Conflict]: (
     <>
       <p>
         The email you entered is already in use. Please try&nbsp;
-        <a href="/rp/login?register=0">logging in</a>&nbsp; if you already have
-        an account.
+        <a href={`${ROUTES.Login}?register=0`}>logging in</a>&nbsp; if you
+        already have an account.
       </p>
     </>
   ),
@@ -91,10 +92,10 @@ export const RegisterForm: FC = () => {
       const password = formData.get("password") as string;
       const consent = formData.get("consent") as string;
       console.log("Form data:", {
-        username,
+        consent,
         email,
         password,
-        consent,
+        username,
       });
 
       if (consent !== "on") {
@@ -104,9 +105,9 @@ export const RegisterForm: FC = () => {
       setLoading(true);
 
       const response = await signupAction({
-        username,
         email,
         password,
+        username,
       });
 
       if (response.message !== API_MESSAGE.Success) {
@@ -119,10 +120,10 @@ export const RegisterForm: FC = () => {
 
       console.log("Registration successful:", response);
       setGlobalState({
-        user: response.user!,
         authState: "UNINITIALIZED",
+        user: response.user!,
       });
-      push("/rp/profile/edit");
+      push(ROUTES.Profile.Edit);
     },
     [],
   );
@@ -193,9 +194,9 @@ export const RegisterForm: FC = () => {
         />
         <Form.Label>
           I agree to the
-          <Link href="/rp/terms">&nbsp;Terms of Service&nbsp;</Link>
+          <Link href={ROUTES.Terms}>&nbsp;Terms of Service&nbsp;</Link>
           and
-          <Link href="/rp/privacy-policy">&nbsp;Privacy Policy&nbsp;</Link>.
+          <Link href={ROUTES.PrivacyPolicy}>&nbsp;Privacy Policy&nbsp;</Link>.
         </Form.Label>
       </Form.Field>
       <Form.Submit

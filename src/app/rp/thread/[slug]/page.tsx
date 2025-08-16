@@ -10,6 +10,7 @@ import { PageLoader } from "@/components/layout";
 import PromptInput from "@/components/prompt-input";
 import { useGlobalState } from "@/context/store/stores";
 import type { Comment, Reply } from "@/types";
+import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDate } from "@/utils/helpers";
 import { getCommentAction, getRepliesAction } from "../actions";
 import * as S from "./styles";
@@ -57,7 +58,7 @@ const useGetReplies = (commentId: string) => {
     fetchReplies();
   }, [fetchReplies]);
 
-  return { replies, loading, refetch: fetchReplies };
+  return { loading, refetch: fetchReplies, replies };
 };
 
 export default function ThreadPage({}) {
@@ -75,12 +76,12 @@ export default function ThreadPage({}) {
 
   const onAvatarClick = (sourceId: string | undefined) => {
     if (!sourceId) return;
-    push(`/rp/muse/${sourceId}`);
+    push(ROUTES.Muse.View(sourceId));
   };
 
   const onBackClick = () => {
     if (!comment?.prompt?.id) return;
-    push(`/rp/prompt/${comment?.prompt?.id}?threadOpen=true`);
+    push(`${ROUTES.Prompt.View(comment.prompt.id)}?threadOpen=true`);
   };
 
   const loadReplies = () => {
@@ -194,7 +195,7 @@ export default function ThreadPage({}) {
           <Flex
             direction="row"
             justify="space-between"
-            style={{ width: "70%", marginBottom: "20px" }}
+            style={{ marginBottom: "20px", width: "70%" }}
           >
             <div></div>
             <S.StyledDate>{toFormattedDate(comment?.createdOn)}</S.StyledDate>

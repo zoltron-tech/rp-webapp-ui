@@ -15,6 +15,7 @@ import {
   LogoText,
 } from "@/components/layout/top-bar/styles";
 import { useAuthContext } from "@/hooks";
+import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styles";
 
 export default function ResetPassword() {
@@ -45,7 +46,7 @@ export default function ResetPassword() {
   }, []);
 
   const onLogoClick = () => {
-    push("/rp/novelists");
+    push(ROUTES.Novelists);
   };
 
   return (

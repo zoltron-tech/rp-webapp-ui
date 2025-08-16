@@ -8,6 +8,7 @@ import { getStoryboardAction } from "@/app/rp/story/actions";
 import { useGlobalState } from "@/context/store/stores";
 import type { Friend, StoryBoard, StoryBoardMember } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
+import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import { ShouldRender } from "../common";
 import { addStoryBoardMember, removeStoryBoardMember } from "./actions";
@@ -29,7 +30,7 @@ export const StoryBoardMemberListItem: FC<ListItemProps> = ({
 
   const onAvatarClick = () => {
     if (!novelist) return;
-    push(`/rp/profile/${novelist.username}`);
+    push(ROUTES.Profile.View(novelist.username).Index);
   };
 
   const handleMakeAdmin = async () => {
@@ -37,8 +38,8 @@ export const StoryBoardMemberListItem: FC<ListItemProps> = ({
 
     const payload: StoryBoardMember = {
       ...novelist,
-      storyBoardId: storyBoardId,
       isAdmin: true,
+      storyBoardId: storyBoardId,
     };
 
     const response = await addStoryBoardMember(payload);
@@ -53,8 +54,8 @@ export const StoryBoardMemberListItem: FC<ListItemProps> = ({
 
     const payload: StoryBoardMember = {
       ...novelist,
-      storyBoardId: storyBoardId,
       isAdmin: false,
+      storyBoardId: storyBoardId,
     };
 
     const response = await addStoryBoardMember(payload);
@@ -127,17 +128,17 @@ export const StoryBoardNewMemberListItem: FC<NewMembersListItemProps> = ({
 
   const onAvatarClick = () => {
     if (!novelist) return;
-    push(`/rp/profile/${novelist.username}`);
+    push(ROUTES.Profile.View(novelist.username).Index);
   };
 
   const handleAddNewMember = async () => {
     if (!novelist) return;
 
     const payload: StoryBoardMember = {
-      username: novelist.username,
-      storyBoardId: storyBoardId,
       image: novelist.image,
       isAdmin: false,
+      storyBoardId: storyBoardId,
+      username: novelist.username,
     };
 
     const response = await addStoryBoardMember(payload);
@@ -179,7 +180,7 @@ export const StoryBoardMembersList: FC<{ id?: string }> = ({ id }) => {
 
   const onBackClick = () => {
     if (!storyBoard) return;
-    push(`/rp/profile/story/edit/${storyBoard.id}`);
+    push(ROUTES.Profile.Story.Edit(storyBoard.id || "").Index);
   };
 
   const fetchData = async () => {
@@ -232,10 +233,10 @@ export const StoryBoardMembersList: FC<{ id?: string }> = ({ id }) => {
       if (!prev) return prev;
 
       const newMember: StoryBoardMember = {
-        username: friendToAdd.username,
         image: friendToAdd.image,
         isAdmin: false,
         storyBoardId: prev.id || "",
+        username: friendToAdd.username,
       };
 
       return {
@@ -264,7 +265,7 @@ export const StoryBoardMembersList: FC<{ id?: string }> = ({ id }) => {
         </S.Button>
       </S.HeaderFlex>
       <Flex
-        style={{ width: "100%", borderTop: "1px solid dimgray" }}
+        style={{ borderTop: "1px solid dimgray", width: "100%" }}
         direction="column"
         justify="center"
       >

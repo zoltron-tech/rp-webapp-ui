@@ -7,6 +7,7 @@ import { GrEdit } from "react-icons/gr";
 import { useGlobalState } from "@/context/store/stores";
 import type { StoryBoard } from "@/types/story-board";
 import { INITIAL_STORY_BOARD } from "@/utils/constants";
+import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import { ShouldRender } from "../common";
 import * as S from "./styles";
@@ -34,16 +35,16 @@ export const StoryCard: FC<Props> = ({ storyBoard, className, ...rest }) => {
 
   const onAvatarClick = () => {
     if (!storyBoard) return;
-    push(`/rp/story/${storyBoard.id}`);
+    push(ROUTES.Story.View(storyBoard.id || ""));
   };
 
   const onAddClick = () => {
     if (!storyBoard) return;
-    push(`/rp/profile/story/create`);
+    push(ROUTES.Profile.Story.Create);
   };
 
   const onEditClick = () => {
-    push(`/rp/profile/story/edit/${storyBoard?.id}`);
+    push(ROUTES.Profile.Story.Edit(storyBoard?.id || "").Index);
   };
 
   Logger.info("StoryCard rendered");

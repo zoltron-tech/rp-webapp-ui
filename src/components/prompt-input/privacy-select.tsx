@@ -9,9 +9,9 @@ import { PrivacyIcon } from "../common/privacy-icon";
 import * as S from "./styles";
 
 const PRIVACY_OPTIONS = [
-  { value: "PUBLIC", label: "Public" },
-  { value: "FRIENDS", label: "Friends" },
-  { value: "ONLY_ME", label: "Only Me" },
+  { label: "Public", value: "PUBLIC" },
+  { label: "Friends", value: "FRIENDS" },
+  { label: "Only Me", value: "ONLY_ME" },
 ] as const;
 
 export const PromptPrivacySelect: FC = () => {

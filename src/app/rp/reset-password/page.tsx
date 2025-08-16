@@ -21,6 +21,7 @@ import { PiPasswordDuotone, PiSpinnerGapLight } from "react-icons/pi";
 import { resetPasswordAction } from "@/app/actions";
 import { UpdatePasswordFields } from "@/components/common/update-password-fields";
 import { API_MESSAGE } from "@/utils/constants";
+import { ROUTES } from "@/utils/constants/routes";
 import { validateJWTSync } from "@/utils/helpers";
 import * as S from "./styled";
 
@@ -33,33 +34,33 @@ type ContentType = {
 };
 
 const Content: Record<OperationState, ContentType> = {
-  LOADING: {
-    icon: <PiSpinnerGapLight className="loading" />,
-    headingText: "Loading...",
-    descriptionText: "Please wait while we process your request.",
-  },
-  SUCCESS: {
-    icon: <IoMdCheckmark className="success" />,
-    headingText: "Password reset successful",
-    descriptionText:
-      "Your password has been reset successfully. You can now log in with your new password.",
-  },
-  INITIAL: {
-    icon: <PiPasswordDuotone className="with-background" />,
-    headingText: "Enter new password",
-    descriptionText:
-      "Please enter your new password. Make sure it is strong and secure.",
-  },
   ERROR: {
-    icon: <CgClose className="error" />,
-    headingText: "Error resetting password",
     descriptionText: "There was an error while resetting your password.",
+    headingText: "Error resetting password",
+    icon: <CgClose className="error" />,
   },
   EXPIRED: {
-    icon: <MdOutlineSentimentDissatisfied className="warning" />,
-    headingText: "Token expired",
     descriptionText:
       "The token you provided has expired. Please request a new password reset.",
+    headingText: "Token expired",
+    icon: <MdOutlineSentimentDissatisfied className="warning" />,
+  },
+  INITIAL: {
+    descriptionText:
+      "Please enter your new password. Make sure it is strong and secure.",
+    headingText: "Enter new password",
+    icon: <PiPasswordDuotone className="with-background" />,
+  },
+  LOADING: {
+    descriptionText: "Please wait while we process your request.",
+    headingText: "Loading...",
+    icon: <PiSpinnerGapLight className="loading" />,
+  },
+  SUCCESS: {
+    descriptionText:
+      "Your password has been reset successfully. You can now log in with your new password.",
+    headingText: "Password reset successful",
+    icon: <IoMdCheckmark className="success" />,
   },
 };
 
@@ -149,7 +150,7 @@ export default function ResetPasswordPage() {
             )}
           >
             <S.ForwardLinkContainer>
-              <Link href="/rp/forgot-password" tabIndex={0}>
+              <Link href={ROUTES.ForgotPassword} tabIndex={0}>
                 Send new reset link
                 <MdArrowBackIosNew />
               </Link>
@@ -157,7 +158,7 @@ export default function ResetPasswordPage() {
           </ShouldRender>
           <ShouldRender if={"SUCCESS" === operationState}>
             <S.ForwardLinkContainer>
-              <Link href="/rp/login" tabIndex={0}>
+              <Link href={ROUTES.Login} tabIndex={0}>
                 Login with new password
                 <MdArrowBackIosNew />
               </Link>

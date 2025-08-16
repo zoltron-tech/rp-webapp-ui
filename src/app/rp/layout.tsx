@@ -62,14 +62,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <StoreProvider<StoreState>
         storeId="global-store"
         initial={{
+          accent: "jade", // Default accent
+          authState: "LOGGED_OUT",
+          globalLoading: false,
+          muses: [],
+          novelist: null,
           novelists: [],
           theme: "dark",
-          muses: [],
-          authState: "LOGGED_OUT",
           user: null,
-          novelist: null,
-          globalLoading: false,
-          accent: "jade", // Default accent
         }}
       >
         <AuthProvider>

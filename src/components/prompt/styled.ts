@@ -94,8 +94,8 @@ const PromptContentRoot = styled.section`
 export const PromptContent = Object.assign(
   {},
   {
-    Root: PromptContentRoot,
     Footer: PromptContentFooter,
+    Root: PromptContentRoot,
   },
 );
 
@@ -167,10 +167,10 @@ const PromptThreadsToggle = styled.button`
 export const PromptThreads = Object.assign(
   {},
   {
-    Root: PromptThreadsRoot,
     Header: PromptThreadsHeader,
     Left: PromptThreadsSeparator,
     Right: PromptThreadsSeparator,
+    Root: PromptThreadsRoot,
     Toggle: PromptThreadsToggle,
   },
 );

@@ -7,6 +7,7 @@ import { type FC, useMemo } from "react";
 import { FaComments, FaStreetView, FaUser } from "react-icons/fa6";
 import { PiBookOpenUserDuotone } from "react-icons/pi";
 import type { Activity } from "@/types/activity";
+import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDateFromUnix } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import { ShouldRender } from "../common";
@@ -44,17 +45,17 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
     if (target.classList.contains("button")) return;
 
     if (activity?.target.activityTargetType === "MUSE")
-      push(`/rp/muse/${activity.target.id}`);
+      push(ROUTES.Muse.View(activity.target.id));
     else if (
       ["PROMPT", "COMMENT", "REPLY"].includes(
         activity.target.activityTargetType,
       )
     )
-      push(`/rp/prompt/${activity.target.id}`);
+      push(ROUTES.Prompt.View(activity.target.id));
     else if (activity?.target.activityTargetType === "STORY_BOARD")
-      push(`/rp/story/${activity.target.id}`);
+      push(ROUTES.Story.View(activity.target.id));
     else if (activity?.target.activityTargetType === "PROFILE")
-      push(`/rp/profile/${activity.source.urlProp}`);
+      push(ROUTES.Profile.View(activity.source.urlProp).Index);
   };
 
   const onAvatarClick = (
@@ -65,9 +66,9 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
     if (target.classList.contains("button")) return;
 
     if (activity?.source.sourceType === "MUSE")
-      push(`/rp/muse/${activity.source.id}`);
+      push(ROUTES.Muse.View(activity.source.id));
     else if (activity?.source.sourceType === "NOVELIST")
-      push(`/rp/profile/${activity.source.urlProp}`);
+      push(ROUTES.Profile.View(activity.source.urlProp).Index);
   };
 
   Logger.info("activity rendered");

@@ -36,12 +36,12 @@ export const useToggleLike: Hook<Props, ReturnType> = ({
       : JSON.stringify({ targetType: type.toUpperCase() });
 
     const response = await fetch(URL, {
-      method,
+      body,
+      cache: "no-store",
       headers: {
         "Content-Type": "application/json",
       },
-      body,
-      cache: "no-store",
+      method,
     });
 
     if (!response.ok) {

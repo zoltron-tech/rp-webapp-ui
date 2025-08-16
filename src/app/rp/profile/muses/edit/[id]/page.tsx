@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useGlobalState } from "@/context/store/stores";
+import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 
 const DynamicEditMuseCard = dynamic(
@@ -21,7 +22,7 @@ export default function EditMusePage({}) {
     Logger.debug("EditMusePage", authState);
     if (authState === "LOGGED_OUT") {
       Logger.debug("pushing to home");
-      push("/rp/novelists");
+      push(ROUTES.Novelists);
     }
   }, [authState]);
 

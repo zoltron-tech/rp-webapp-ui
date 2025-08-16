@@ -49,8 +49,8 @@ export const getNovelistAction = async (username: string) => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/get?username=${username}`;
 
   const response = await fetch(URL, {
-    headers: headers,
     cache: "no-store",
+    headers: headers,
   });
 
   if (response.status === 404) {
@@ -69,11 +69,11 @@ export const getUserNovelist = async () => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist`;
 
   const response = await fetch(URL, {
+    cache: "no-store",
     headers: {
       [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
       [AUTH_HEADER_NAME]: jwt,
     },
-    cache: "no-store",
   });
 
   if (response.status === 404) {
@@ -97,11 +97,11 @@ export const getNotifications = async () => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/notification`;
 
   const response = await fetch(URL, {
+    cache: "no-store",
     headers: {
       [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
       [AUTH_HEADER_NAME]: jwt,
     },
-    cache: "no-store",
   });
 
   if (response.status === 404) {
@@ -123,13 +123,13 @@ export const updateUserNovelist = async (_novelist: Novelist) => {
   Logger.debug("updateUserNovelist", _novelist);
 
   const response = await fetch(URL, {
-    method: "POST",
+    body: JSON.stringify(_novelist),
+    cache: "no-store",
     headers: {
       [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
       [AUTH_HEADER_NAME]: jwt,
     },
-    body: JSON.stringify(_novelist),
-    cache: "no-store",
+    method: "POST",
   });
 
   if (!response.ok) {
@@ -164,8 +164,8 @@ export const searchAction = async (searchTerm: string, type = "novelist") => {
   }
 
   const response = await fetch(URL, {
-    headers: headers,
     cache: "no-store",
+    headers: headers,
   });
 
   Logger.debug("searchAction", response.status);
@@ -185,11 +185,11 @@ export const chatAction = async (targetUserName: string | null) => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/getMessages/${targetUserName}`;
 
   const response = await fetch(URL, {
+    cache: "no-store",
     headers: {
       [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
       [AUTH_HEADER_NAME]: jwt,
     },
-    cache: "no-store",
   });
 
   Logger.debug("chatAction", response.status);
@@ -211,11 +211,11 @@ export const getConversationsAction = async (
   const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/conversations?pageNumber=${pageNumber}&pageSize=${pageSize}`;
 
   const response = await fetch(URL, {
+    cache: "no-store",
     headers: {
       [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
       [AUTH_HEADER_NAME]: jwt,
     },
-    cache: "no-store",
   });
 
   Logger.debug("getConversationsAction", response.status);

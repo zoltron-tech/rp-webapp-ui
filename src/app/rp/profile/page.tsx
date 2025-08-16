@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useGlobalState } from "@/context/store/stores";
+import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 
 export default function ProfilePage({}) {
@@ -16,9 +17,9 @@ export default function ProfilePage({}) {
 
     if (authState === "LOGGED_IN") {
       Logger.debug("rerouteToProfilePage");
-      push(`/rp/profile/${user?.username}`);
+      push(ROUTES.Profile.View(user?.username || "").Index);
     } else {
-      push("/rp/novelists");
+      push(ROUTES.Novelists);
     }
   }, [authState]);
 }

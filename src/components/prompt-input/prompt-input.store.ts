@@ -16,11 +16,11 @@ export type PromptInputState = {
 };
 
 export const INITIAL_STATE: PromptInputState = {
+  media: null,
+  mediaUploadError: null,
+  mediaUploading: false,
   parentId: "",
   type: "prompt",
-  mediaUploading: false,
-  mediaUploadError: null,
-  media: null,
 };
 
 type PromptInputStoreKey = keyof PromptInputState;

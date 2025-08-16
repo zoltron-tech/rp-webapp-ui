@@ -2,6 +2,7 @@ import { useRouter } from "next/navigation";
 import type { FC } from "react";
 import type { Muse, Novelist, StoryBoard } from "@/types";
 import type { PillType } from "@/types/pill-type";
+import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import { ExpandablePill } from "../common";
 import * as S from "./styles";
@@ -27,11 +28,11 @@ export const MusesPill: FC<Props> = ({
   const { push } = useRouter();
 
   const onAvatarClick = (username: string) => {
-    push(`/rp/profile/${username}`);
+    push(ROUTES.Profile.View(username).Index);
   };
 
   const onMuseAvatarClick = (museId: string) => {
-    if (museId) push(`/rp/muse/${museId}`);
+    if (museId) push(ROUTES.Muse.View(museId));
   };
 
   const loadChildren = (slice = 0, className = "") => {

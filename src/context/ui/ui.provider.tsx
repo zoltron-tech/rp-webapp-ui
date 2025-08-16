@@ -23,8 +23,8 @@ export const UIContextProvider: FC<Props> = ({ children }) => {
   };
 
   const contextValue: UIContextType = {
-    successToast: success,
     errorToast: error,
+    successToast: success,
   };
 
   Logger.info("UIContextProvider rendered");

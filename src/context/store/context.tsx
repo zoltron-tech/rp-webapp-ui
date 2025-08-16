@@ -14,21 +14,21 @@ const createStoreContext = <T extends SimpleRecord>(
   id: string,
 ): React.Context<Store<T>> => {
   const Context = createContext<Store<T>>({
-    id,
     get: () => ({}) as T,
+    getServerSnapshot: () => ({}) as T,
+    id,
     set: () => {},
     subscribe: () => () => {},
-    getServerSnapshot: () => ({}) as T,
   });
 
   return Context;
 };
 
 const Stores = {
-  "global-store": createStoreContext<StoreState>("global-store"),
-  "prompt-input": createStoreContext<PromptInputState>("prompt-input"),
-  prompt: createStoreContext<PromptStoreType>("prompt"),
   comment: createStoreContext<Comment>("comment"),
+  "global-store": createStoreContext<StoreState>("global-store"),
+  prompt: createStoreContext<PromptStoreType>("prompt"),
+  "prompt-input": createStoreContext<PromptInputState>("prompt-input"),
 } as const;
 
 export type StoreKey = keyof typeof Stores;

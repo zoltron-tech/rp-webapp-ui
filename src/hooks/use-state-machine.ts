@@ -27,7 +27,7 @@ export const useStateMachine = <T extends string>({
 
   const transition = (_state: T) =>
     setState((prev) => {
-      Logger.info("useStateMachine transition", { prev, _state });
+      Logger.info("useStateMachine transition", { _state, prev });
       const next = transitions[prev];
       if (!(_state in next)) return prev;
 
@@ -43,5 +43,5 @@ export const useStateMachine = <T extends string>({
 
   Logger.info("useStateMachine rendered");
 
-  return { state, is, transition };
+  return { is, state, transition };
 };

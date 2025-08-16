@@ -12,6 +12,7 @@ import { useGlobalState } from "@/context/store/stores";
 import { useForm, useUIContext } from "@/hooks";
 import type { StoryBoardEvent } from "@/types";
 import { API_MESSAGE, INITIAL_STORY_BOARD_EVENT } from "@/utils/constants";
+import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import * as S from "./styles";
 
@@ -68,8 +69,8 @@ export const CreateStoryBoardEventCard: FC<CreateStoryBoardEventCardProps> = ({
 
     const _sotryboardEvent = {
       ...sotryboardEvent,
-      storyBoardId: storyboardId,
       image: updatedAvatarUrl || "",
+      storyBoardId: storyboardId,
     };
 
     return _sotryboardEvent;
@@ -108,13 +109,13 @@ export const CreateStoryBoardEventCard: FC<CreateStoryBoardEventCardProps> = ({
   };
 
   const { values, update, updateValues, submit } = useForm<StoryBoardEvent>({
+    beforeSubmit,
     initialValues: INITIAL_STORY_BOARD_EVENT,
     onSubmit,
-    beforeSubmit,
   });
 
   const handleCancel = () => {
-    push(`/rp/story/${storyboardId}`);
+    push(ROUTES.Story.View(storyboardId));
   };
 
   useEffect(() => {

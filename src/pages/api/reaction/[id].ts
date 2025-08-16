@@ -24,12 +24,12 @@ async function updateReaction(
   const URL = `${RP_SERVICE_URL}/rp/portfolio/react/${id}?targetType=${targetType}`;
 
   const response = await fetch(URL, {
-    method: "PATCH",
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: jwt,
     },
-    cache: "no-store",
+    method: "PATCH",
   });
 
   const result = await response.json();
@@ -50,12 +50,12 @@ async function deleteReaction(res: NextApiResponse, jwt: string, id: string) {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/react/${id}`;
 
   const response = await fetch(URL, {
-    method: "DELETE",
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: jwt,
     },
-    cache: "no-store",
+    method: "DELETE",
   });
 
   if (!response.ok) {

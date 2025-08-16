@@ -4,12 +4,12 @@ import { Z_INDEX } from "@/theme";
 export const THEME_SWITCHER = {
   BACKGROUND: "#6B728E",
   FRONT: {
-    NIGHT: "#042b52",
     DAY: "#72aae2",
+    NIGHT: "#042b52",
   },
   MOON_COLOR: "#fcea4b",
-  SUN_COLOR: "#fbfd87",
   OPTION_DISABLED: "#6B728E",
+  SUN_COLOR: "#fbfd87",
 };
 
 export const Container = styled.div`

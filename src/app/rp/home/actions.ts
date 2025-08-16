@@ -18,11 +18,11 @@ export const getStrangerNovelistsAction = async (
   const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/suggestions?pageNumber=${pageNumber}&pageSize=${pageSize}`;
 
   const response = await fetch(URL, {
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: jwt,
     },
-    cache: "no-store",
   });
 
   Logger.debug("getAllStoryboardsByUsernameAction", response.status);
@@ -47,11 +47,11 @@ export const getMusesAction = async (
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${type}?pageNumber=${pageNumber}&pageSize=${pageSize}`;
 
   const response = await fetch(URL, {
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: jwt,
     },
-    cache: "no-store",
   });
 
   Logger.debug("getMusesAction", response.status);
@@ -76,11 +76,11 @@ export const getMusesWithVideosAction = async (
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${type}/videos?pageNumber=${pageNumber}&pageSize=${pageSize}`;
 
   const response = await fetch(URL, {
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: jwt,
     },
-    cache: "no-store",
   });
 
   Logger.debug("getMusesAction", response.status);
@@ -126,11 +126,11 @@ export const getFriendActivities = async (
   const URL = `${RP_SERVICE_URL}/rp/portfolio/activity/${type}?pageNumber=${pageNumber}&pageSize=${pageSize}`;
 
   const response = await fetch(URL, {
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: jwt,
     },
-    cache: "no-store",
   });
 
   Logger.debug("getFriendActivities", response.status);

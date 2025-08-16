@@ -35,7 +35,7 @@ export const PromptMediaInput: FC = () => {
   const handleClear = useCallback(() => {
     if (urlInputRef.current) urlInputRef.current.value = "";
     if (fileInputRef.current) fileInputRef.current.value = "";
-    set({ media: null, mediaUploading: false, mediaUploadError: null });
+    set({ media: null, mediaUploadError: null, mediaUploading: false });
   }, [set]);
 
   const handleRemoveMedia = useCallback(() => {
@@ -57,7 +57,7 @@ export const PromptMediaInput: FC = () => {
         urlInputRef.current.value = "";
         return;
       }
-      set({ mediaUploading: true, media: file });
+      set({ media: file, mediaUploading: true });
 
       const formData = new FormData();
       formData.append("file", file);
@@ -69,7 +69,7 @@ export const PromptMediaInput: FC = () => {
       }
 
       urlInputRef.current.value = uploaded;
-      set({ mediaUploading: false, mediaUploadError: null });
+      set({ mediaUploadError: null, mediaUploading: false });
     },
     [urlInputRef, set],
   );

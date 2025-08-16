@@ -20,9 +20,9 @@ export const PromptContent: FC<PromptContentProps> = ({}) => {
   const authState = useGlobalState("authState");
   const setPromptState = usePromptStateSet();
   const { toggleLike } = useToggleLike({
-    type: "prompt",
     id: promptId,
     liked: reacted,
+    type: "prompt",
   });
 
   const handleLikeToggle = useCallback(async () => {

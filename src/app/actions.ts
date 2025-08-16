@@ -18,6 +18,7 @@ import {
   JWT_COOKIE_NAME,
   THEME_COOKIE_NAME,
 } from "@/utils/constants";
+import { ROUTES } from "@/utils/constants/routes";
 import { validateJWTSync } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 
@@ -36,12 +37,12 @@ export const getAuthCookie = async () => {
 
 export const setAuthCookie = async (jwt: string) => {
   return (await cookies()).set(JWT_COOKIE_NAME, jwt, {
-    httpOnly: false,
-    secure: false,
-    sameSite: "strict",
     domain: USE_LOCAL_DOMAIN ? "localhost" : "novelist.world",
-    path: "/",
     expires: new Date(Date.now() + 60 * 60 * 24 * 30 * 1000), // 30 days
+    httpOnly: false,
+    path: "/",
+    sameSite: "strict",
+    secure: false,
   });
 };
 
@@ -50,12 +51,12 @@ export const removeAuthCookie = async () => {
   pastDate.setFullYear(pastDate.getFullYear() - 1);
   // Remove the cookie by setting an expired date
   (await cookies()).set(JWT_COOKIE_NAME, "", {
-    httpOnly: false,
-    secure: false,
-    sameSite: "strict",
     domain: USE_LOCAL_DOMAIN ? "localhost" : "novelist.world",
-    path: "/",
     expires: pastDate,
+    httpOnly: false,
+    path: "/",
+    sameSite: "strict",
+    secure: false,
   });
 };
 
@@ -63,12 +64,12 @@ export const forgotPasswordAction = async (email: string) => {
   const URL = `${RP_SERVICE_URL}/rp/user/account/forgotPassword`;
 
   const response = await fetch(URL, {
-    method: "POST",
+    body: JSON.stringify({ email }),
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
     },
-    cache: "no-store",
-    body: JSON.stringify({ email }),
+    method: "POST",
   });
 
   if (response.status === 404) {
@@ -89,12 +90,12 @@ export const verifyAccountAction = async (jwt: string) => {
   const URL = `${RP_SERVICE_URL}/rp/user/account/verifyAccount`;
 
   const response = await fetch(URL, {
-    method: "POST",
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: jwt,
     },
-    cache: "no-store",
+    method: "POST",
   });
 
   if (!response.ok) {
@@ -111,13 +112,13 @@ export const resetPasswordAction = async (jwt: string, password: string) => {
   const URL = `${RP_SERVICE_URL}/rp/user/account/resetPassword`;
 
   const response = await fetch(URL, {
-    method: "POST",
+    body: JSON.stringify({ password }),
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: jwt,
     },
-    cache: "no-store",
-    body: JSON.stringify({ password }),
+    method: "POST",
   });
 
   if (!response.ok) {
@@ -142,12 +143,12 @@ export const loginAction = async (
   const URL = `${RP_SERVICE_URL}/rp/user/account/login`;
 
   const response = await fetch(URL, {
-    method: "POST",
+    body: JSON.stringify(payload),
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(payload),
-    cache: "no-store",
+    method: "POST",
   });
 
   if (response.status === 401) {
@@ -179,12 +180,12 @@ export const signupAction = async (
 
   try {
     const response = await fetch(URL, {
-      method: "POST",
+      body: JSON.stringify(payload),
+      cache: "no-store",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(payload),
-      cache: "no-store",
+      method: "POST",
     });
 
     const result: LoginResponsePayload = await response.json();
@@ -192,7 +193,7 @@ export const signupAction = async (
     if (!response.ok) {
       if (response.status === 409) {
         return {
-          message: API_MESSAGE.CONFLICT,
+          message: API_MESSAGE.Conflict,
         };
       } else if (response.status === 400) {
         return {
@@ -210,8 +211,8 @@ export const signupAction = async (
     await setAuthCookie(result.token!);
     const clientResponse: LoginResponsePayload = {
       message: API_MESSAGE.Success,
-      user: result.user!,
       token: result.token!,
+      user: result.user!,
     };
 
     return clientResponse;
@@ -232,7 +233,7 @@ export const loginViaProviderAction = async (provider: LoginOAuthProvider) => {
 
 export const logoutAction = async () => {
   await removeAuthCookie();
-  redirect("/rp/novelists", RedirectType.push);
+  redirect(ROUTES.Novelists, RedirectType.push);
 };
 
 export const authenticateJWT = async (jwt: string, useCookies?: boolean) => {
@@ -292,12 +293,12 @@ export const getUser = async () => {
 
   if (!jwtCookie) redirect("/", RedirectType.push);
   const response = await fetch(URL, {
-    method: "GET",
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: `${jwtCookie.value}`,
     },
-    cache: "no-store",
+    method: "GET",
   });
 
   const result: AuthenticateResponsePayload = await response.json();

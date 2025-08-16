@@ -7,6 +7,7 @@ import { FaRegTrashCan } from "react-icons/fa6";
 import { GrEdit } from "react-icons/gr";
 import type { StoryBoardEvent } from "@/types/story-board";
 import { INITIAL_STORY_BOARD_EVENT } from "@/utils/constants";
+import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import { ShouldRender } from "../common";
 import * as S from "./styles";
@@ -27,7 +28,7 @@ export const StoryCardEvent: FC<Props> = ({
   const { push } = useRouter();
 
   const onEventClick = (eventId: string) => {
-    push(`/rp/story/event/${eventId}`);
+    push(ROUTES.Story.Event.View(eventId));
   };
 
   const handleCardClick = (
@@ -42,12 +43,12 @@ export const StoryCardEvent: FC<Props> = ({
 
   const onAddClick = () => {
     if (!event) return;
-    push(`/rp/profile/story/edit/${storyboardId}/event/create`);
+    push(ROUTES.Profile.Story.Edit(storyboardId).Event.Create);
   };
 
   const onEditClick = (eventId: string | null) => {
     if (eventId === null) return;
-    push(`/rp/profile/story/edit/${storyboardId}/event/edit/${eventId}`);
+    push(ROUTES.Profile.Story.Edit(storyboardId).Event.Edit(eventId));
   };
 
   Logger.info("StoryCard rendered");

@@ -18,6 +18,7 @@ import type {
   StoryBoard,
 } from "@/types";
 import type { Activity } from "@/types/activity";
+import { ROUTES } from "@/utils/constants/routes";
 import {
   getFriendActivities,
   getMusesAction,
@@ -50,7 +51,7 @@ export default function HomePage() {
     if (!_strangers || "message" in _strangers) {
       // handle error
       setLoading(false);
-      push("/404");
+      push(ROUTES.NotFound);
       return;
     }
     setLoading(false);
@@ -64,7 +65,7 @@ export default function HomePage() {
     if (!_muses || "message" in _muses) {
       // handle error
       setLoading(false);
-      push("/404");
+      push(ROUTES.NotFound);
       return;
     }
     setLoading(false);
@@ -78,7 +79,7 @@ export default function HomePage() {
     if (!_stories || "message" in _stories) {
       // handle error
       setLoading(false);
-      push("/404");
+      push(ROUTES.NotFound);
       return;
     }
     setLoading(false);
@@ -92,7 +93,7 @@ export default function HomePage() {
     if (!_muses || "message" in _muses) {
       // handle error
       setLoading(false);
-      push("/404");
+      push(ROUTES.NotFound);
       return;
     }
     setLoading(false);
@@ -106,7 +107,7 @@ export default function HomePage() {
     if (!_muses || "message" in _muses) {
       // handle error
       setLoading(false);
-      push("/404");
+      push(ROUTES.NotFound);
       return;
     }
     setLoading(false);
@@ -120,7 +121,7 @@ export default function HomePage() {
     if (!_activities || "message" in _activities) {
       // handle error
       setLoading(false);
-      push("/404");
+      push(ROUTES.NotFound);
       return;
     }
     setLoading(false);

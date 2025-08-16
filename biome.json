@@ -1,9 +1,13 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
-  "vcs": {
-    "enabled": false,
-    "clientKind": "git",
-    "useIgnoreFile": false
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on",
+        "useSortedKeys": "on"
+      }
+    },
+    "enabled": true
   },
   "files": {
     "ignoreUnknown": true,
@@ -11,52 +15,48 @@
   },
   "formatter": {
     "enabled": true,
+    "formatWithErrors": true,
     "indentStyle": "space",
-    "indentWidth": 2,
-    "formatWithErrors": true
-  },
-  "linter": {
-    "enabled": true,
-
-    "rules": {
-      "recommended": true,
-      "correctness": {
-        "useExhaustiveDependencies": "off",
-        "noEmptyPattern": "off",
-        "useUniqueElementIds": "off",
-        "noUnusedVariables": "off",
-        "noNestedComponentDefinitions": "off"
-      },
-      "performance": {
-        "noImgElement": "off"
-      },
-      "suspicious": {
-        "noExplicitAny": "off",
-        "noArrayIndexKey": "off",
-        "useIterableCallbackReturn": "off",
-        "noAssignInExpressions": "off"
-      },
-      "complexity": {
-        "noStaticOnlyClass": "off",
-        "noBannedTypes": "off",
-        "noCommaOperator": "off"
-      },
-      "style": {
-        "noNonNullAssertion": "off"
-      }
-    }
+    "indentWidth": 2
   },
   "javascript": {
     "formatter": {
       "quoteStyle": "double"
     }
   },
-  "assist": {
+  "linter": {
     "enabled": true,
-    "actions": {
-      "source": {
-        "organizeImports": "on"
+    "rules": {
+      "complexity": {
+        "noBannedTypes": "off",
+        "noCommaOperator": "off",
+        "noStaticOnlyClass": "off"
+      },
+      "correctness": {
+        "noEmptyPattern": "off",
+        "noNestedComponentDefinitions": "off",
+        "noUnusedVariables": "off",
+        "useExhaustiveDependencies": "off",
+        "useUniqueElementIds": "off"
+      },
+      "performance": {
+        "noImgElement": "off"
+      },
+      "recommended": true,
+      "style": {
+        "noNonNullAssertion": "off"
+      },
+      "suspicious": {
+        "noArrayIndexKey": "off",
+        "noAssignInExpressions": "off",
+        "noExplicitAny": "off",
+        "useIterableCallbackReturn": "off"
       }
     }
+  },
+  "vcs": {
+    "clientKind": "git",
+    "enabled": false,
+    "useIgnoreFile": false
   }
 }

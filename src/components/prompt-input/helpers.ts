@@ -12,9 +12,9 @@ export enum PromptEvent {
 
 export const museToSource = (muse: Muse): PromptSource => ({
   _tag: "PromptSource",
-  sourceId: muse.id || "",
-  name: `${muse.firstName} ${muse.lastName}`.trim(),
   image: muse.image || "",
+  name: `${muse.firstName} ${muse.lastName}`.trim(),
+  sourceId: muse.id || "",
 });
 
 const videoExtensions = ["mp4"];

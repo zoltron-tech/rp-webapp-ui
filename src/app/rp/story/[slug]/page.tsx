@@ -131,8 +131,8 @@ export default function UserProfilePage({}) {
           direction="row"
           gap={"1rem"}
           style={{
-            marginTop: "25px",
             flexWrap: "wrap",
+            marginTop: "25px",
           }}
         >
           <ShouldRender

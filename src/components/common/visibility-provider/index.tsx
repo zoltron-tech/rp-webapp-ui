@@ -17,11 +17,11 @@ export const VisibilityProvider: FC<VisibilityProviderProps> = ({
   const { state, transition } = useStateMachine<"VISIBLE" | "HIDDEN">({
     initial: visible ? "VISIBLE" : "HIDDEN",
     transitions: {
-      VISIBLE: {
-        HIDDEN: true,
-      },
       HIDDEN: {
         VISIBLE: true,
+      },
+      VISIBLE: {
+        HIDDEN: true,
       },
     },
   });
@@ -78,8 +78,8 @@ export const VisibilityProvider: FC<VisibilityProviderProps> = ({
   return (
     <VisibilityContext.Provider
       value={{
-        name,
         isVisible: state === "VISIBLE",
+        name,
         toggleVisibility,
       }}
     >

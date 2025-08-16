@@ -60,10 +60,10 @@ export const useStoreData = <StoreState = object>(
   }, []);
 
   return {
-    id,
     get,
+    getServerSnapshot,
+    id,
     set,
     subscribe,
-    getServerSnapshot,
   };
 };

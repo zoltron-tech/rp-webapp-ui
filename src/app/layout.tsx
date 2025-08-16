@@ -6,9 +6,7 @@ import "@novelist-world/ui/dist/styles.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Novelist World",
   description: "A platform for writers to create and share their stories.",
-  keywords: ["novelist", "writing", "stories", "community"],
   icons: {
     icon: [
       {
@@ -18,18 +16,20 @@ export const metadata: Metadata = {
       },
       {
         rel: "icon",
-        type: "image/png",
         sizes: "32x32",
+        type: "image/png",
         url: "/favicon-32x32.png",
       },
       {
         rel: "icon",
-        type: "image/png",
         sizes: "16x16",
+        type: "image/png",
         url: "/favicon-16x16.png",
       },
     ],
   },
+  keywords: ["novelist", "writing", "stories", "community"],
+  title: "Novelist World",
 };
 
 export default async function RootLayout({

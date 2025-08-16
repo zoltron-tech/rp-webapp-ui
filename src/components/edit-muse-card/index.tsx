@@ -16,6 +16,7 @@ import { useGlobalState } from "@/context/store/stores";
 import { useForm, useUIContext } from "@/hooks";
 import type { Fandom, Muse } from "@/types";
 import { API_MESSAGE, INITIAL_MUSE } from "@/utils/constants";
+import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import * as S from "./styles";
 
@@ -138,9 +139,9 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
   };
 
   const { values, update, updateValues, submit } = useForm<Muse>({
+    beforeSubmit,
     initialValues: INITIAL_MUSE,
     onSubmit,
-    beforeSubmit,
   });
 
   const handlePrivacySelect = (privacyValue: string) => {
@@ -236,7 +237,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
   };
 
   const handleCancel = () => {
-    push(`/rp/profile/${user?.username}/muses`);
+    push(ROUTES.Profile.View(user?.username || "").Muses);
   };
 
   useEffect(() => {

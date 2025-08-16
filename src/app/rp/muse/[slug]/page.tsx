@@ -27,6 +27,7 @@ import { VscUnverified } from "react-icons/vsc";
 import { IoHeart } from "react-icons/io5";
 import { TagsContainer } from "@/components/tags-container";
 import { useGlobalState } from "@/context/store/stores";
+import { AvatarNew } from "@/components/common/avatar-new";
 
 type CARD_STATE =
   | "MAIN"
@@ -248,11 +249,11 @@ export default function MuseProfilePage({}) {
                 {muse?.firstName} {muse?.lastName}
               </S.MuseName>
               <S.AuthorContainer>
-                <Avatar
+                <AvatarNew
+                  className="selectable"
                   src={muse?.pennedBy?.image ?? null}
-                  alt="profile-picture"
+                  alt={muse?.pennedBy.username ?? "Author Avatar"}
                   size={60}
-                  hoverable
                   onClick={onAuthorAvatarClick}
                 />
                 <S.UsernameContainer>

@@ -201,6 +201,8 @@ export const FormContainer = styled.div`
         border-radius: 4px;
         border: none;
         color: var(--text);
+        font-size: var(--font-size-large);
+        font-weight: var(--font-weight-regular);
         border: 1px solid var(--bg-6);
         font-family: var(--font);
         outline-offset: 2px;
@@ -250,6 +252,8 @@ export const FormContainer = styled.div`
         padding: 10px;
         background-color: var(--accent);
         color: var(--text);
+        font-size: var(--font-size);
+        font-weight: var(--font-weight-medium);
         border: none;
         border-radius: 4px;
         cursor: pointer;

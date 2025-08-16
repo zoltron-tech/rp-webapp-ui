@@ -59,6 +59,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
     <S.PositionContainer>
       <S.ContentContainer onClick={toggleState(setOpen)}>
         <AvatarNew
+          className="selectable"
           src={novelist?.image ?? null}
           alt={user?.username || "User Avatar"}
         />

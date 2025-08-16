@@ -31,21 +31,6 @@ export const ListContainer = styled.div`
   flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
-
-  &::-webkit-scrollbar-track,
-  &::-webkit-scrollbar-thumb,
-  &::-webkit-scrollbar {
-    visibility: hidden;
-    width: 0.35em;
-  }
-
-  &:hover {
-    &::-webkit-scrollbar-track,
-    &::-webkit-scrollbar-thumb,
-    &::-webkit-scrollbar {
-      visibility: visible;
-    }
-  }
 `;
 
 export const CardWrapper = styled.div`

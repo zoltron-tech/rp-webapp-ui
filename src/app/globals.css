@@ -60,9 +60,7 @@ input:focus {
 
 body::-webkit-scrollbar {
   width: 0px;
-  /* remove scrollbar space */
   background: transparent;
-  /* optional: just make scrollbar invisible */
 }
 
 input,
@@ -240,21 +238,13 @@ textarea {
   }
 
   ::-webkit-scrollbar {
-    width: 0.5em;
-    height: 0.5em;
-  }
-
-  ::-webkit-scrollbar-track {
-    border-radius: 100vw;
-    background: #2424249c;
-    margin-block: 1em;
-    margin-inline: 1em;
+    height: 6px;
+    width: 6px;
   }
 
   ::-webkit-scrollbar-thumb {
-    border-radius: 100vw;
-    background: linear-gradient(180deg, rgb(21, 74, 117), rgb(17, 46, 71));
-    border: 0.01em solid #2424249c;
+    border-radius: 4px;
+    background: var(--accent-6);
   }
 }
 

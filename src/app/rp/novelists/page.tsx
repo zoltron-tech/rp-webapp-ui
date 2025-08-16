@@ -8,6 +8,7 @@ import { Footer } from "@/components/layout";
 import { MuseCard } from "@/components/muse-card";
 import { useGlobalState } from "@/context/store/stores";
 import type { Muse } from "@/types";
+import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import { getHeroPageMusesAction } from "../muse/actions";
 import * as S from "./styles";
@@ -41,11 +42,11 @@ export default function NovelistsPage() {
   Logger.info("NovelistsPage rendered");
 
   const onLoginClick = () => {
-    push("/rp/login");
+    push(ROUTES.Login);
   };
 
   const toHomePage = () => {
-    push(`/rp/home/`);
+    push(ROUTES.Home);
   };
 
   return (

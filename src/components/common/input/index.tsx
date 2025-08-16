@@ -122,11 +122,11 @@ export const Input: FC<Props> = ({
       </S.InputContainer>
       <S.Message
         className={classNames({
-          show: !!message,
           error,
+          processing,
+          show: !!message,
           success,
           warning,
-          processing,
         })}
       >
         <ShouldRender if={error}>

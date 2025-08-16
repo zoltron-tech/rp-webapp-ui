@@ -8,10 +8,10 @@ export interface AuthContextType {
 }
 
 export const AUTH_CONTEXT_INITIAL_STATE: AuthContextType = {
+  updateNovelist: () => {},
   verifyAccount: async (): Promise<WithMessage> => ({
     message: "Context not initialized!",
   }),
-  updateNovelist: () => {},
 };
 
 export const AuthContext = createContext<AuthContextType>(

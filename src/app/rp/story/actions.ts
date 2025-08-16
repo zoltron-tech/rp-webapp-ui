@@ -25,8 +25,8 @@ export const getAllStoryboardsByUsernameAction = async (username: string) => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/story/by/${username}`;
 
   const response = await fetch(URL, {
-    headers: headers,
     cache: "no-store",
+    headers: headers,
   });
 
   Logger.debug("getAllStoryboardsByUsernameAction", response.status);
@@ -55,8 +55,8 @@ export const getStoryboardAction = async (storyboardId: string) => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/story/${storyboardId}`;
 
   const response = await fetch(URL, {
-    headers: headers,
     cache: "no-store",
+    headers: headers,
   });
 
   Logger.debug("getStoryboardAction", response.status);
@@ -77,11 +77,11 @@ export const getAllStoryboardsAction = async () => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/story`;
 
   const response = await fetch(URL, {
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: jwt,
     },
-    cache: "no-store",
   });
 
   Logger.debug("getAllStoriesAction", response.status);
@@ -104,13 +104,13 @@ export const updateStoryBoardAction = async (_storyboard: StoryBoard) => {
   Logger.debug("updateStoryBoard", _storyboard);
 
   const response = await fetch(URL, {
-    method: "POST",
+    body: JSON.stringify(_storyboard),
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: jwt,
     },
-    body: JSON.stringify(_storyboard),
-    cache: "no-store",
+    method: "POST",
   });
 
   if (!response.ok) {
@@ -143,13 +143,13 @@ export const updateStoryBoardEventAction = async (
   Logger.debug("updateStoryBoardEvent", _storyboardEvent);
 
   const response = await fetch(URL, {
-    method: "POST",
+    body: JSON.stringify(_storyboardEvent),
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: jwt,
     },
-    body: JSON.stringify(_storyboardEvent),
-    cache: "no-store",
+    method: "POST",
   });
 
   console.log(response);
@@ -186,8 +186,8 @@ export const getStoryboardEventAction = async (storyboardEventId: string) => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/story/event/${storyboardEventId}`;
 
   const response = await fetch(URL, {
-    headers: headers,
     cache: "no-store",
+    headers: headers,
   });
 
   Logger.debug("getStoryboardEventAction", response.status);
@@ -220,8 +220,8 @@ export const getStoryboardEventThreadsAction = async (
   const URL = `${RP_SERVICE_URL}/rp/portfolio/story/event/${storyboardEventId}/threads`;
 
   const response = await fetch(URL, {
-    headers: headers,
     cache: "no-store",
+    headers: headers,
   });
 
   Logger.debug("getStoryboardEventThreadsAction", response.status);

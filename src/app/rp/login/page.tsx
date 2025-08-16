@@ -4,10 +4,10 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Separator, Tabs } from "radix-ui";
 import { useCallback, useEffect } from "react";
 import { useGlobalState } from "@/context/store/stores";
+import { ROUTES } from "@/utils/constants/routes";
 import { LoginForm } from "./login-form";
 import { RegisterForm } from "./register-form";
 import { Socials } from "./socials";
-
 import * as S from "./styled";
 import { TermsAndConditions } from "./terms-and-conditions";
 
@@ -20,7 +20,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (authState === "LOGGED_IN") {
-      push("/rp/home");
+      push(ROUTES.Home);
     }
   }, [authState]);
 

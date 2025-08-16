@@ -7,6 +7,7 @@ import {
 } from "@/app/rp/profile/actions";
 import type { NovelistWorldNotification } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
+import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDateFromUnix } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import { Avatar } from "../common";
@@ -52,15 +53,15 @@ export const FriendRequestNotification: FC<Props> = ({
     if (target.classList.contains("button")) return;
 
     if (notification.type === "MUSE_CONNECTION_REQUEST")
-      push(`/rp/muse/${notification.target.urlProp}`);
+      push(ROUTES.Muse.View(notification.target.urlProp));
     else if (
       ["PROMPT_COMMENT", "PROMPT_COMMENT_REPLY", "REPLY"].includes(
         notification.type,
       )
     )
-      push(`/rp/thread/${notification.target.urlProp}`);
+      push(ROUTES.Thread.View(notification.target.urlProp));
     else if (notification.type === "FRIEND_REQUEST")
-      push(`/rp/profile/${notification.source.urlProp}`);
+      push(ROUTES.Profile.View(notification.source.urlProp).Index);
   };
 
   Logger.info("FriendRequestNotification rendered");

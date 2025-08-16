@@ -22,8 +22,8 @@ export const ChatBubble: FC<Props> = ({ message, currentUsername }) => {
   return (
     <S.ChatBubbleContainer
       className={classNames({
-        sender: message.sender.username === currentUsername,
         receiver: message.sender.username !== currentUsername,
+        sender: message.sender.username === currentUsername,
       })}
     >
       <S.ChatBubble>{message.message}</S.ChatBubble>

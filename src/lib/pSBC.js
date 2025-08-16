@@ -25,8 +25,8 @@ const pSBC = (p, c0, c1, l) => {
       c1 && c1 !== "c"
         ? pSBC.pSBCr(c1)
         : P
-          ? { r: 0, g: 0, b: 0, a: -1 }
-          : { r: 255, g: 255, b: 255, a: -1 }),
+          ? { a: -1, b: 0, g: 0, r: 0 }
+          : { a: -1, b: 255, g: 255, r: 255 }),
     (p = P ? p * -1 : p),
     (P = 1 - p);
   if (!f || !t) return null;

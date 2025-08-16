@@ -80,8 +80,8 @@ const LabelText = styled.span`
 export const LikeButton = Object.assign(
   {},
   {
-    Root: LikeRoot,
     Label: LikeLabel,
+    Root: LikeRoot,
     Text: LabelText,
   },
 );

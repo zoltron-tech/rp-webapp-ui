@@ -9,6 +9,7 @@ import { PiBookOpenUserDuotone } from "react-icons/pi";
 import { TbUserEdit } from "react-icons/tb";
 import { logoutAction } from "@/app/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
+import { ROUTES } from "@/utils/constants/routes";
 import { toggleState } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import { ShouldRender } from "../common";
@@ -29,25 +30,25 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
     logoutAction();
     setGlobalState({
       authState: "LOGGED_OUT",
-      user: null,
       novelist: null,
+      user: null,
     });
   }, [setGlobalState]);
 
   const toEditProfile = () => {
-    push(`/rp/profile/edit`);
+    push(ROUTES.Profile.Edit);
   };
 
   const toMusesPage = () => {
-    push(`/rp/profile/${user?.username}/muses`);
+    push(ROUTES.Profile.View(novelist?.username || "").Muses);
   };
 
   const toStoryBoardsPage = () => {
-    push(`/rp/profile/${user?.username}/storyboards`);
+    push(ROUTES.Profile.View(novelist?.username || "").Storyboards);
   };
 
   const toUserProfile = () => {
-    push(`/rp/profile/${user?.username}`);
+    push(ROUTES.Profile.View(user?.username || "").Index);
   };
 
   Logger.info("UserMenu rendered");

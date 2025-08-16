@@ -6,6 +6,7 @@ import { MdOutlineExpandLess, MdOutlineExpandMore } from "react-icons/md";
 import { useSwiper, useSwiperSlide } from "swiper/react";
 import { ShouldRender } from "@/components/common";
 import type { Novelist } from "@/types/novelist";
+import { ROUTES } from "@/utils/constants/routes";
 import { toggleState } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import * as S from "./styles";
@@ -21,11 +22,11 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
 
   const onAvatarClick = () => {
     if (!novelist) return;
-    push(`/rp/profile/${novelist.username}`);
+    push(ROUTES.Profile.View(novelist.username).Index);
   };
 
   const onMuseAvatarClick = (museId: string) => {
-    if (museId) push(`/rp/muse/${museId}`);
+    if (museId) push(ROUTES.Muse.View(museId));
   };
 
   const handleMouseEnter = () => {

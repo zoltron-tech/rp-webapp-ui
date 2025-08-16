@@ -27,7 +27,7 @@ const useGetPrompt = (promptId: string) => {
     fetchPrompt();
   }, [fetchPrompt]);
 
-  return { prompt, loading, refetch: fetchPrompt };
+  return { loading, prompt, refetch: fetchPrompt };
 };
 
 export default function PromptPage({}) {

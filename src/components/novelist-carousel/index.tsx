@@ -63,8 +63,8 @@ export const NovelistCarousel: FC = () => {
                   }
             }
             coverflowEffect={{
-              rotate: 0,
               depth: 0,
+              rotate: 0,
               scale: 0.6,
               slideShadows: false,
             }}

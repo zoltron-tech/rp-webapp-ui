@@ -4,6 +4,7 @@ import classNames from "classnames";
 import { useRouter } from "next/navigation";
 import type { FC } from "react";
 import type { Muse } from "@/types";
+import { ROUTES } from "@/utils/constants/routes";
 import { Avatar } from "../common";
 import * as S from "./styles";
 
@@ -16,7 +17,7 @@ export const MuseListItem: FC<Props> = ({ muse, className, ...rest }) => {
 
   const onAvatarClick = () => {
     if (!muse) return;
-    push(`/rp/muse/${muse.id}`);
+    push(ROUTES.Muse.View(muse.id || ""));
   };
 
   if (!muse) return <></>;

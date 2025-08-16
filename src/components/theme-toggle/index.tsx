@@ -29,8 +29,8 @@ export const ThemeToggle: FC<Props> = ({}) => {
       <S.ThemeSwitcher onClick={toggleTheme}>
         <S.ThemeSwitchInner
           className={classNames({
-            light: theme === "light",
             dark: theme === "dark",
+            light: theme === "light",
           })}
         >
           <BsSunFill color={S.THEME_SWITCHER.SUN_COLOR} className="sun" />

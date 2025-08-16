@@ -19,6 +19,7 @@ import { useGlobalState } from "@/context/store/stores";
 import { useForm, useUIContext } from "@/hooks";
 import type { StoryBoard } from "@/types";
 import { API_MESSAGE, INITIAL_STORY_BOARD } from "@/utils/constants";
+import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import { MusesPill } from "../muses-pill";
 import * as S from "./styles";
@@ -40,7 +41,7 @@ export const CreateStoryBoardCard: FC<CreateStoryBoardCardProps> = ({ id }) => {
 
   const onEditMembersClick = () => {
     if (!storyBoard) return;
-    push(`/rp/profile/story/edit/${storyBoard.id}/members`);
+    push(ROUTES.Profile.Story.Edit(storyBoard.id || "").Members);
   };
 
   const handlePrivacySelect = (privacyValue: string) => {
@@ -126,13 +127,13 @@ export const CreateStoryBoardCard: FC<CreateStoryBoardCardProps> = ({ id }) => {
   };
 
   const { values, update, updateValues, submit } = useForm<StoryBoard>({
+    beforeSubmit,
     initialValues: INITIAL_STORY_BOARD,
     onSubmit,
-    beforeSubmit,
   });
 
   const handleCancel = () => {
-    push(`/rp/profile/${user?.username}/storyboards`);
+    push(ROUTES.Profile.View(user?.username || "").Storyboards);
   };
 
   useEffect(() => {
@@ -218,7 +219,7 @@ export const CreateStoryBoardCard: FC<CreateStoryBoardCardProps> = ({ id }) => {
             </S.Name>
             <ShouldRender if={id != null}>
               <Flex
-                style={{ width: "100%", paddingInline: "20px" }}
+                style={{ paddingInline: "20px", width: "100%" }}
                 direction="row"
                 justify="space-between"
               >

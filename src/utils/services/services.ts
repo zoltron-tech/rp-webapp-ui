@@ -21,8 +21,8 @@ const logIfLevel = (level: LOG_LEVELS, ...args: any[]) => {
 
 export const Logger = {
   debug: (...args: any[]) => logIfLevel(LOG_LEVELS.DEBUG, ...args),
-  log: (...args: any[]) => logIfLevel(LOG_LEVELS.LOG, ...args),
-  info: (...args: any[]) => logIfLevel(LOG_LEVELS.INFO, ...args),
-  warn: (...args: any[]) => logIfLevel(LOG_LEVELS.WARN, ...args),
   error: (...args: any[]) => logIfLevel(LOG_LEVELS.ERROR, ...args),
+  info: (...args: any[]) => logIfLevel(LOG_LEVELS.INFO, ...args),
+  log: (...args: any[]) => logIfLevel(LOG_LEVELS.LOG, ...args),
+  warn: (...args: any[]) => logIfLevel(LOG_LEVELS.WARN, ...args),
 };

@@ -62,18 +62,18 @@ export const PromptInput: FC<Props> = forwardRef(
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
         const formFields = {
-          text: String(formData.get("promptText")),
-          museId: String(formData.get("muse")),
           media: String(formData.get("mediaUrl")),
+          museId: String(formData.get("muse")),
           privacy: formData.get("privacy") as "PUBLIC" | "FRIENDS" | "ONLY_ME",
+          text: String(formData.get("promptText")),
         };
         const selectedMuse = muses.find((m) => m.id === formFields.museId);
         if (!selectedMuse) return;
 
         const payload: SubmitPromptInput = {
-          text: formFields.text,
-          source: museToSource(selectedMuse),
           media: formFields.media,
+          source: museToSource(selectedMuse),
+          text: formFields.text,
         };
 
         if (type === "prompt") {
@@ -93,9 +93,9 @@ export const PromptInput: FC<Props> = forwardRef(
         }
 
         emit(PromptEvent.Sent, {
-          type,
-          payload,
           muse: selectedMuse,
+          payload,
+          type,
         });
 
         setSending(false);

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { FC } from "react";
 import { Button, ShouldRender } from "@/components/common";
 import type { Novelist } from "@/types";
+import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styles";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
@@ -22,7 +23,7 @@ export const StrangerCard: FC<Props> = ({
 
   const onAvatarClick = () => {
     if (!novelist) return;
-    push(`/rp/profile/${novelist.username}`);
+    push(ROUTES.Profile.View(novelist.username).Index);
   };
 
   return (

@@ -8,6 +8,7 @@ import { PiSpinnerGapLight } from "react-icons/pi";
 import { getUser, setAuthCookie } from "@/app/actions";
 import { useGlobalStoreSet } from "@/context/store/stores";
 import { API_MESSAGE } from "@/utils/constants";
+import { ROUTES } from "@/utils/constants/routes";
 import { validateJWTSync } from "@/utils/helpers";
 import { getUserNovelist } from "../../novelists/actions";
 import * as S from "./styled";
@@ -21,21 +22,21 @@ type ContentType = {
 };
 
 const Content: Record<OperationState, ContentType> = {
+  ERROR: {
+    descriptionText: "There was an error while logging you in.",
+    headingText: "Error logging in",
+    icon: <CgClose className="error" />,
+  },
   LOADING: {
-    icon: <PiSpinnerGapLight className="loading" />,
-    headingText: "Loading...",
     descriptionText: "Please wait while we process your request.",
+    headingText: "Loading...",
+    icon: <PiSpinnerGapLight className="loading" />,
   },
   SUCCESS: {
-    icon: <IoMdCheckmark className="success" />,
-    headingText: "Login successful",
     descriptionText:
       "You have successfully logged in. You will be redirected shortly.",
-  },
-  ERROR: {
-    icon: <CgClose className="error" />,
-    headingText: "Error logging in",
-    descriptionText: "There was an error while logging you in.",
+    headingText: "Login successful",
+    icon: <IoMdCheckmark className="success" />,
   },
 };
 
@@ -75,7 +76,7 @@ export default function LoginOAuthCallbackPage() {
     if ("message" in _novelist) {
       if (_novelist.message === API_MESSAGE.NotFound) {
         setOperationState("SUCCESS");
-        push("/rp/profile/edit");
+        push(ROUTES.Profile.Edit);
         setGlobalState({ authState: "UNINITIALIZED", user: response.user! });
         return;
       } else {
@@ -85,11 +86,11 @@ export default function LoginOAuthCallbackPage() {
     }
 
     setGlobalState({
-      user: response.user!,
-      novelist: _novelist,
       authState: "LOGGED_IN",
+      novelist: _novelist,
+      user: response.user!,
     });
-    push("/rp/home");
+    push(ROUTES.Home);
 
     setOperationState("SUCCESS");
   }, [token, setOperationState]);

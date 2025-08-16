@@ -18,12 +18,12 @@ export const uploadMedia = async (formData: FormData) => {
   Logger.debug("file", file);
 
   const response = await fetch(URL, {
-    method: "POST",
+    body: formData,
+    cache: "no-store",
     headers: {
       [AUTH_HEADER_NAME]: jwt,
     },
-    body: formData,
-    cache: "no-store",
+    method: "POST",
   });
 
   if (!response.ok) {
@@ -46,9 +46,9 @@ export const enhanceAvatar = async (formData: FormData) => {
   Logger.debug("file", file);
 
   const response = await fetch(URL, {
-    method: "POST",
     body: formData,
     cache: "no-store",
+    method: "POST",
   });
 
   if (!response.ok) {
@@ -68,8 +68,8 @@ export const deleteMedia = async (filename: string) => {
   console.log("removing media", URL);
 
   await fetch(URL, {
-    method: "DELETE",
     cache: "no-store",
+    method: "DELETE",
   });
 };
 
@@ -78,18 +78,18 @@ export const sendFriendRequest = async (novelistId: string) => {
 
   const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/connection/invoke`;
   const body = {
-    targetId: novelistId,
     connectionType: "PENDING_FRIEND_REQUEST",
+    targetId: novelistId,
   };
 
   const response = await fetch(URL, {
-    method: "POST",
+    body: JSON.stringify(body),
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: jwt,
     },
-    body: JSON.stringify(body),
-    cache: "no-store",
+    method: "POST",
   });
 
   if (!response.ok) {
@@ -106,18 +106,18 @@ export const acceptFriendRequest = async (novelistId: string) => {
 
   const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/connection/react`;
   const body = {
-    sourceId: novelistId,
     connectionType: "FRIEND",
+    sourceId: novelistId,
   };
 
   const response = await fetch(URL, {
-    method: "POST",
+    body: JSON.stringify(body),
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: jwt,
     },
-    body: JSON.stringify(body),
-    cache: "no-store",
+    method: "POST",
   });
 
   if (!response.ok) {
@@ -134,17 +134,17 @@ export const deleteFriendRequest = async (novelistId: string) => {
 
   const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/connection/delete`;
   const body = {
-    sourceId: novelistId,
     connectionType: "PENDING_FRIEND_REQUEST",
+    sourceId: novelistId,
   };
   const response = await fetch(URL, {
-    method: "POST",
+    body: JSON.stringify(body),
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: jwt,
     },
-    body: JSON.stringify(body),
-    cache: "no-store",
+    method: "POST",
   });
 
   if (!response.ok) {
@@ -161,18 +161,18 @@ export const cancelFriendRequest = async (novelistId: string) => {
 
   const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/connection/cancel`;
   const body = {
-    targetId: novelistId,
     connectionType: "PENDING_FRIEND_REQUEST",
+    targetId: novelistId,
   };
 
   const response = await fetch(URL, {
-    method: "POST",
+    body: JSON.stringify(body),
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: jwt,
     },
-    body: JSON.stringify(body),
-    cache: "no-store",
+    method: "POST",
   });
 
   if (!response.ok) {
@@ -203,13 +203,13 @@ export const submitPrompt = async (
   }
 
   const response = await fetch(URL, {
-    method: "POST",
+    body: JSON.stringify(promptWithoutTag),
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: jwt,
     },
-    body: JSON.stringify(promptWithoutTag),
-    cache: "no-store",
+    method: "POST",
   });
 
   switch (response.status) {

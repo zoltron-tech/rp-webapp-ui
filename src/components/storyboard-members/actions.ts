@@ -16,13 +16,13 @@ export const addStoryBoardMember = async (
   const URL = `${RP_SERVICE_URL}/rp/portfolio/story/member`;
 
   const response = await fetch(URL, {
-    method: "POST",
+    body: JSON.stringify(_storyboardMember),
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: jwt,
     },
-    body: JSON.stringify(_storyboardMember),
-    cache: "no-store",
+    method: "POST",
   });
 
   console.log(response);
@@ -45,13 +45,13 @@ export const removeStoryBoardMember = async (
   const URL = `${RP_SERVICE_URL}/rp/portfolio/story/member`;
 
   const response = await fetch(URL, {
-    method: "DELETE",
+    body: JSON.stringify(_storyboardMember),
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: jwt,
     },
-    body: JSON.stringify(_storyboardMember),
-    cache: "no-store",
+    method: "DELETE",
   });
 
   Logger.debug("removeStoryBoardMember", response.status);

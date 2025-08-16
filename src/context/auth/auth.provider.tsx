@@ -12,6 +12,7 @@ import { useStateMachine } from "@/hooks";
 import type { Novelist } from "@/types";
 import type { AuthState } from "@/types/state";
 import { API_MESSAGE } from "@/utils/constants";
+import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import { useGlobalState, useGlobalStoreSet } from "../store/stores";
 import { AuthContext } from "./auth.context";
@@ -30,36 +31,36 @@ export const AuthProvider: FC<Props> = ({ children }) => {
 
   const pushToCreateProfile = useCallback(() => {
     setGlobalState({ authState: "UNINITIALIZED" });
-    push("/rp/profile/edit");
+    push(ROUTES.Profile.Edit);
   }, [setGlobalState, push]);
 
   const { state, is, transition } = useStateMachine<AuthState>({
     initial: authState,
     transitions: {
+      LOADING: {
+        LOGGED_IN: () => setGlobalState({ authState: "LOGGED_IN" }),
+        LOGGED_OUT: () => {
+          setGlobalState({
+            authState: "LOGGED_OUT",
+            novelist: null,
+            user: null,
+          });
+        },
+        UNINITIALIZED: pushToCreateProfile,
+      },
       LOGGED_IN: {
         LOADING: () => setGlobalState({ authState: "LOADING" }),
         LOGGED_OUT: () => {
           setGlobalState({
             authState: "LOGGED_OUT",
-            user: null,
             novelist: null,
+            user: null,
           });
         },
       },
       LOGGED_OUT: {
         LOADING: () => setGlobalState({ authState: "LOADING" }),
         LOGGED_IN: () => setGlobalState({ authState: "LOGGED_IN" }),
-      },
-      LOADING: {
-        UNINITIALIZED: pushToCreateProfile,
-        LOGGED_IN: () => setGlobalState({ authState: "LOGGED_IN" }),
-        LOGGED_OUT: () => {
-          setGlobalState({
-            authState: "LOGGED_OUT",
-            user: null,
-            novelist: null,
-          });
-        },
       },
       UNINITIALIZED: {
         LOADING: () => setGlobalState({ authState: "LOADING" }),
@@ -84,7 +85,7 @@ export const AuthProvider: FC<Props> = ({ children }) => {
         }
       }
 
-      setGlobalState({ novelist: _novelist, authState: "LOGGED_IN" });
+      setGlobalState({ authState: "LOGGED_IN", novelist: _novelist });
     } catch (_e) {
       transition("LOGGED_OUT");
     }
@@ -130,7 +131,7 @@ export const AuthProvider: FC<Props> = ({ children }) => {
     setGlobalState({ novelist });
     if (is("UNINITIALIZED")) {
       transition("LOGGED_IN");
-      push(`/rp/profile/${novelist.username}`);
+      push(ROUTES.Profile.View(novelist.username).Index);
     }
   };
 
@@ -158,8 +159,8 @@ export const AuthProvider: FC<Props> = ({ children }) => {
   return (
     <AuthContext.Provider
       value={{
-        verifyAccount,
         updateNovelist,
+        verifyAccount,
       }}
     >
       {children}

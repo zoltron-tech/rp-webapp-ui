@@ -26,9 +26,9 @@ export const validateUser: TypeValidator<User> = (value: any) => {
 
   return {
     _tag: "User",
-    username: value.username,
     email: value.email,
     palette: value.palette,
     theme: value.theme,
+    username: value.username,
   };
 };

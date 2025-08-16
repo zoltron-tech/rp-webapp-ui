@@ -7,8 +7,8 @@ export type UIContextType = {
 };
 
 export const UI_INITIAL_STATE: UIContextType = {
-  successToast: (_message) => Logger.debug(`toast service not started!`),
   errorToast: (_message) => Logger.debug(`toast service not started!`),
+  successToast: (_message) => Logger.debug(`toast service not started!`),
 };
 
 export const UIContext = createContext<UIContextType>(UI_INITIAL_STATE);

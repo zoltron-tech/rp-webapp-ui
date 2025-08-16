@@ -7,6 +7,7 @@ import { Search, UserMenu } from "@/components";
 import { Button, ShouldRender, Username } from "@/components/common";
 import { NotificationsMenu } from "@/components/notifications-menu";
 import { useGlobalState } from "@/context/store/stores";
+import { ROUTES } from "@/utils/constants/routes";
 import logoText from "../../../assets/images/Logo text.png";
 import { ChatMenuModal } from "../../chat-menu-modal";
 import * as S from "./styles";
@@ -16,7 +17,7 @@ type Props = {};
 export const TopBar: FC<Props> = memo(({}) => {
   const authState = useGlobalState("authState");
   const pathname = usePathname();
-  const isLoginPage = useMemo(() => pathname === "/rp/login", [pathname]);
+  const isLoginPage = useMemo(() => pathname === ROUTES.Login, [pathname]);
   const { push } = useRouter();
 
   const onSearchItemClick =
@@ -25,20 +26,20 @@ export const TopBar: FC<Props> = memo(({}) => {
     () => {
       close();
       if (record?.username) {
-        push(`/rp/profile/${record.username}`);
+        push(ROUTES.Profile.View(record.username).Index);
       } else if (record?.name) {
-        push(`/rp/story/${record.id}`);
+        push(ROUTES.Story.View(record.id || ""));
       } else if (record?.id) {
-        push(`/rp/muse/${record.id}`);
+        push(ROUTES.Muse.View(record.id));
       }
     };
 
   const onLogoClick = () => {
-    push(authState === "LOGGED_IN" ? `/rp/home` : `/rp/novelists`);
+    push(authState === "LOGGED_IN" ? ROUTES.Home : ROUTES.Novelists);
   };
 
   const onLoginClick = () => {
-    push("/rp/login");
+    push(ROUTES.Login);
   };
 
   return (

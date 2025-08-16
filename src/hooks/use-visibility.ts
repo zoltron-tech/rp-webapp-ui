@@ -41,5 +41,5 @@ export const useVisibility = (name: string): UseVisibilityReturnType => {
 
   Logger.info("useVisibility rendered");
 
-  return { show, hide, toggle };
+  return { hide, show, toggle };
 };

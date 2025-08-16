@@ -21,22 +21,22 @@ const getToastStyle = (
   })();
 
   return {
+    background: theme.toastBackground,
+    borderRadius: BORDER_RADIUS,
     color,
     fontSize: "20px",
     fontWeight: "600",
-    background: theme.toastBackground,
     padding: "20px 20px 20px 30px",
-    borderRadius: BORDER_RADIUS,
   };
 };
 
 const DEFAULT_TOAST_OPTIONS: Partial<toast.Options> = {
-  position: "right",
-  gravity: "bottom",
   className: "nw-toast",
-  stopOnFocus: true,
-  duration: 5000,
   close: true,
+  duration: 5000,
+  gravity: "bottom",
+  position: "right",
+  stopOnFocus: true,
 };
 
 export const generateToastError = (
@@ -46,9 +46,9 @@ export const generateToastError = (
 ) => {
   toast({
     ...DEFAULT_TOAST_OPTIONS,
-    text: message,
     className: `nw-toast-${theme.name}`,
     style: getToastStyle(theme, ToastType.error),
+    text: message,
   }).showToast();
 };
 
@@ -59,7 +59,7 @@ export const generateToastSuccess = (
 ) => {
   toast({
     ...DEFAULT_TOAST_OPTIONS,
-    text: message,
     style: getToastStyle(theme, ToastType.success),
+    text: message,
   }).showToast();
 };

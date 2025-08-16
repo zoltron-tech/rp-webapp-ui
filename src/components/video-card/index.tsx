@@ -4,6 +4,7 @@ import classNames from "classnames";
 import { useRouter } from "next/navigation";
 import { type FC, useRef } from "react";
 import type { Muse } from "@/types/novelist";
+import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import * as S from "./styles";
 
@@ -16,7 +17,7 @@ export const VideoCard: FC<Props> = ({ muse, className, ...rest }) => {
 
   const onAvatarClick = () => {
     if (!muse) return;
-    push(`/rp/muse/${muse.id}`);
+    push(ROUTES.Muse.View(muse.id || ""));
   };
 
   const handleMouseEnter = () => {

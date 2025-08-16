@@ -15,6 +15,7 @@ import { ErrorBox } from "@/components/error-box";
 import { useGlobalStoreSet } from "@/context/store/stores";
 import { API_MESSAGE } from "@/utils/constants";
 import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
+import { ROUTES } from "@/utils/constants/routes";
 import { getUserNovelist } from "../novelists/actions";
 import * as S from "./styled";
 
@@ -68,7 +69,7 @@ export const LoginForm: FC = () => {
       const isEmail = username.includes("@");
       const loginPayload = isEmail
         ? { email: username, password }
-        : { username, password };
+        : { password, username };
 
       const response = await loginAction(loginPayload);
       if (ErrorKeys.includes(response.message as ErrorKey)) {
@@ -82,7 +83,7 @@ export const LoginForm: FC = () => {
       if ("message" in _novelist) {
         if (_novelist.message === API_MESSAGE.NotFound) {
           setLoading(false);
-          push("/rp/profile/edit");
+          push(ROUTES.Profile.Edit);
           setGlobalState({ authState: "UNINITIALIZED", user: response.user! });
           return;
         } else {
@@ -93,11 +94,11 @@ export const LoginForm: FC = () => {
       }
 
       setGlobalState({
-        user: response.user!,
-        novelist: _novelist,
         authState: "LOGGED_IN",
+        novelist: _novelist,
+        user: response.user!,
       });
-      push("/rp/home");
+      push(ROUTES.Home);
     },
     [],
   );
@@ -134,7 +135,7 @@ export const LoginForm: FC = () => {
           loading={loading}
         />
       </Form.Submit>
-      <S.FrogotPasswordLink href="/rp/forgot-password" tabIndex={0}>
+      <S.FrogotPasswordLink href={ROUTES.ForgotPassword} tabIndex={0}>
         Forgot Password?
       </S.FrogotPasswordLink>
     </Form.Root>

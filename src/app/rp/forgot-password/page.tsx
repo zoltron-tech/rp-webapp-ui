@@ -17,6 +17,7 @@ import { forgotPasswordAction } from "@/app/actions";
 import { useGlobalStoreSet } from "@/context/store/stores";
 import { API_MESSAGE } from "@/utils/constants";
 import { SUPPORT_EMAIL, SUPPORT_EMAIL_URL } from "@/utils/constants/common";
+import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styled";
 
 type OperationState = "INITIAL" | "SUCCESS" | "ERROR" | "NOT_FOUND";
@@ -35,36 +36,7 @@ type InfoBoxContentType = {
 } | null;
 
 const InfoBoxContent: Record<OperationState, InfoBoxContentType> = {
-  INITIAL: null,
-  NOT_FOUND: {
-    icon: <IoIosWarning />,
-    headingText: "Email not found",
-    descriptionText:
-      "The email address you entered does not match any account.",
-    extra: (
-      <p>
-        <strong>Tip: </strong>
-        If you believe this is an error, please contact support at&nbsp;
-        <a href={SUPPORT_EMAIL_URL}>{SUPPORT_EMAIL}</a>.
-      </p>
-    ),
-  },
-  SUCCESS: {
-    icon: <IoIosInformationCircleOutline />,
-    headingText: "Next steps",
-    descriptionText:
-      "Please check your inbox and follow the instructions to reset your password.",
-    extra: (
-      <p>
-        <strong>Tip: </strong>
-        If you do not receive the email, please check your spam folder or try
-        again.
-      </p>
-    ),
-  },
   ERROR: {
-    icon: <IoIosInformationCircleOutline />,
-    headingText: "Something went wrong",
     descriptionText: "There was an issue while processing your request.",
     extra: (
       <p>
@@ -74,31 +46,60 @@ const InfoBoxContent: Record<OperationState, InfoBoxContentType> = {
         inconvenience.
       </p>
     ),
+    headingText: "Something went wrong",
+    icon: <IoIosInformationCircleOutline />,
+  },
+  INITIAL: null,
+  NOT_FOUND: {
+    descriptionText:
+      "The email address you entered does not match any account.",
+    extra: (
+      <p>
+        <strong>Tip: </strong>
+        If you believe this is an error, please contact support at&nbsp;
+        <a href={SUPPORT_EMAIL_URL}>{SUPPORT_EMAIL}</a>.
+      </p>
+    ),
+    headingText: "Email not found",
+    icon: <IoIosWarning />,
+  },
+  SUCCESS: {
+    descriptionText:
+      "Please check your inbox and follow the instructions to reset your password.",
+    extra: (
+      <p>
+        <strong>Tip: </strong>
+        If you do not receive the email, please check your spam folder or try
+        again.
+      </p>
+    ),
+    headingText: "Next steps",
+    icon: <IoIosInformationCircleOutline />,
   },
 };
 
 const Content: Record<OperationState, ContentType> = {
-  SUCCESS: {
-    icon: <IoMdCheckmark className="success" />,
-    headingText: "Email sent",
-    descriptionText: "Please check your email for the reset link.",
+  ERROR: {
+    descriptionText: "Sorry but we could not process your request.",
+    headingText: "Error",
+    icon: <CgClose className="error" />,
   },
   INITIAL: {
-    icon: null,
-    headingText: "Reset your password",
     descriptionText:
       "Enter your email address below, and we will send you a link to reset your password.",
-  },
-  ERROR: {
-    icon: <CgClose className="error" />,
-    headingText: "Error",
-    descriptionText: "Sorry but we could not process your request.",
+    headingText: "Reset your password",
+    icon: null,
   },
   NOT_FOUND: {
-    icon: <TbError404 className="warning" />,
-    headingText: "Email not found",
     descriptionText: (email) =>
       `The email address ${email} does not match any account.`,
+    headingText: "Email not found",
+    icon: <TbError404 className="warning" />,
+  },
+  SUCCESS: {
+    descriptionText: "Please check your email for the reset link.",
+    headingText: "Email sent",
+    icon: <IoMdCheckmark className="success" />,
   },
 };
 
@@ -212,12 +213,12 @@ export default function ForgotPasswordPage() {
             {(["NOT_FOUND", "INITIAL"] as OperationState[]).includes(
               operationState,
             ) ? (
-              <Link href="/rp/login" tabIndex={0}>
+              <Link href={ROUTES.Login} tabIndex={0}>
                 <MdArrowBackIosNew />
                 Back to login
               </Link>
             ) : (
-              <Link href="/rp/novelists" tabIndex={0}>
+              <Link href={ROUTES.Novelists} tabIndex={0}>
                 <MdArrowBackIosNew />
                 Back to home
               </Link>

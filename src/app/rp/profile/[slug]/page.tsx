@@ -23,6 +23,7 @@ import { useGlobalState } from "@/context/store/stores";
 import type { Novelist, StoryBoard } from "@/types";
 import type { Activity } from "@/types/activity";
 import { API_MESSAGE } from "@/utils/constants";
+import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDate } from "@/utils/helpers";
 import { getUserActivities } from "../../home/actions";
 import { getNovelistAction } from "../../novelists/actions";
@@ -57,7 +58,7 @@ const useGetActivities = (username: string) => {
     fetchActivities();
   }, [fetchActivities]);
 
-  return { activities, loading, error, refetch: fetchActivities };
+  return { activities, error, loading, refetch: fetchActivities };
 };
 
 export default function UserProfilePage({}) {
@@ -77,15 +78,15 @@ export default function UserProfilePage({}) {
   const handleButtonClick = () => {};
 
   const toTiersPage = () => {
-    push(`/rp/tiers`);
+    push(ROUTES.Tiers);
   };
 
   const toMusesPage = () => {
-    push(`/rp/profile/${username}/muses`);
+    push(ROUTES.Profile.View(username).Muses);
   };
 
   const toStoryBoardsPage = () => {
-    push(`/rp/profile/${username}/storyboards`);
+    push(ROUTES.Profile.View(username).Storyboards);
   };
 
   // TODO: GetConversationId from username and if not exists then open a dialogue to send a message which should create a new conversation in the backend.
@@ -175,13 +176,13 @@ export default function UserProfilePage({}) {
 
   const IncomingRequestButtons: ButtonInfo[] = [
     {
-      onClick: handleAcceptFriendRequest,
       label: "Accept",
+      onClick: handleAcceptFriendRequest,
       variant: "positive",
     },
     {
-      onClick: handleDeleteFriendRequest,
       label: "Decline",
+      onClick: handleDeleteFriendRequest,
       variant: "negative",
     },
     // { onClick: toMessagePage, label: "Message", variant: "action" },
@@ -191,8 +192,8 @@ export default function UserProfilePage({}) {
 
   const OutgoingRequestButtons: ButtonInfo[] = [
     {
-      onClick: handleCancelFriendRequest,
       label: "Friend request sent",
+      onClick: handleCancelFriendRequest,
       variant: "primary",
     },
     // { onClick: toMessagePage, label: "Message", variant: "action" },
@@ -201,16 +202,16 @@ export default function UserProfilePage({}) {
   ];
 
   const FriendButtons: ButtonInfo[] = [
-    { onClick: handleButtonClick, label: "Friends", variant: "primary" },
-    { onClick: toMessagePage, label: "Message", variant: "action" },
+    { label: "Friends", onClick: handleButtonClick, variant: "primary" },
+    { label: "Message", onClick: toMessagePage, variant: "action" },
     // { onClick: toMusesPage, label: "Muses", variant: "action" },
     // { onClick: toStoryBoardsPage, label: "Stories", variant: "action" },
   ];
 
   const StrangerButtons: ButtonInfo[] = [
     {
-      onClick: handleSendFriendRequest,
       label: "Add friend",
+      onClick: handleSendFriendRequest,
       variant: "primary",
     },
     // { onClick: toMusesPage, label: "Muses", variant: "action" },
@@ -242,7 +243,7 @@ export default function UserProfilePage({}) {
     setLoading(true);
     const _novelist = await getNovelistAction(username);
     if (_novelist === null && isCurrentUser) {
-      push(`/rp/profile/edit`);
+      push(ROUTES.Profile.Edit);
       return;
     }
 

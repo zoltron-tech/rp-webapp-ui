@@ -11,8 +11,8 @@ type SocketContext = {
 };
 
 export const SocketContext = createContext<SocketContext>({
-  socket: ClientIO,
   connected: false,
+  socket: ClientIO,
 });
 
 export const useSocket = () => {
@@ -34,8 +34,8 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const socketInstance = new (ClientIO as any)(SOCKET_SERVER_URL, {
-      path: "/api/socket/io",
       addTrailingSlash: false,
+      path: "/api/socket/io",
     });
 
     socketInstance.on("connect", () => {
@@ -57,7 +57,7 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
 
   return (
     <SocketContext.Provider
-      value={{ socket: socket as typeof ClientIO, connected }}
+      value={{ connected, socket: socket as typeof ClientIO }}
     >
       {children}
     </SocketContext.Provider>

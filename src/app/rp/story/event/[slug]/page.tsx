@@ -14,6 +14,7 @@ import type {
   StoryBoardEvent,
   StoryBoardEventThread,
 } from "@/types";
+import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDate } from "@/utils/helpers";
 import {
   getStoryboardAction,
@@ -38,7 +39,7 @@ export default function StoryboardEventPage({}) {
 
   const onBackClick = () => {
     if (!storyboardEvent?.storyBoardId) return;
-    push(`/rp/story/${storyboardEvent?.storyBoardId}`);
+    push(ROUTES.Story.View(storyboardEvent.storyBoardId));
   };
 
   const fetchStoryboard = async (storyboardId: string) => {

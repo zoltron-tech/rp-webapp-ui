@@ -83,10 +83,10 @@ export const CommentImage = styled.img`
 export const CommentContent = Object.assign(
   {},
   {
+    Image: CommentImage,
+    MediaContainer: CommentMediaContainer,
     Root: CommentContentRoot,
     TextLine: TextLine,
-    MediaContainer: CommentMediaContainer,
-    Image: CommentImage,
   },
 );
 
@@ -198,11 +198,11 @@ const OpenThreadButton = styled.button`
 export const CommentFooter = Object.assign(
   {},
   {
-    Root: CommentFooterRoot,
     Left: CommentFooterLeft,
-    Right: CommentFooterRight,
+    OpenThreadButton: OpenThreadButton,
 
     ReplyCount: ReplyCount,
-    OpenThreadButton: OpenThreadButton,
+    Right: CommentFooterRight,
+    Root: CommentFooterRoot,
   },
 );

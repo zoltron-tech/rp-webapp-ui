@@ -10,8 +10,8 @@ export interface VisibilityContextType {
 
 export const VisibilityContext = createContext<VisibilityContextType>({
   isVisible: false,
-  toggleVisibility: () => {},
   name: "visibility-provider",
+  toggleVisibility: () => {},
 });
 
 export const useVisibilityContext = () => {

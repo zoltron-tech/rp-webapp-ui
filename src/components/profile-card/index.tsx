@@ -4,6 +4,7 @@ import { type FC, useEffect, useState } from "react";
 import { getUserNovelist } from "@/app/rp/novelists/actions";
 import { useGlobalState } from "@/context/store/stores";
 import type { Novelist } from "@/types";
+import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import { Card } from "../common";
 
@@ -19,7 +20,7 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
     const fetchedNovelist = await getUserNovelist();
 
     if (!fetchedNovelist || "message" in fetchedNovelist) {
-      push("/rp/profile/edit");
+      push(ROUTES.Profile.Edit);
       return;
     }
 

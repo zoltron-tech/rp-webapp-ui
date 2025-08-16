@@ -13,8 +13,8 @@ const HeartIconInner: FC<LikeIconProps> = ({ filled }) => {
   return (
     <Icon
       className={classNames("heart-icon", {
-        "heart-icon-filled": filled,
         "heart-icon-empty": !filled,
+        "heart-icon-filled": filled,
       })}
       title={filled ? "Filled Heart" : "Empty Heart"}
       aria-label={filled ? "Filled Heart" : "Empty Heart"}

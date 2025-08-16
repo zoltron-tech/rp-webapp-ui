@@ -7,6 +7,7 @@ import { GrEdit } from "react-icons/gr";
 import { useGlobalState } from "@/context/store/stores";
 import type { Muse } from "@/types/novelist";
 import { INITIAL_MUSE } from "@/utils/constants";
+import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import { ShouldRender } from "../common";
 import * as S from "./styles";
@@ -32,16 +33,16 @@ export const MuseCard: FC<Props> = ({ muse, className, ...rest }) => {
 
   const onAvatarClick = () => {
     if (!muse) return;
-    push(`/rp/muse/${muse.id}`);
+    push(ROUTES.Muse.View(muse.id || ""));
   };
 
   const onAddClick = () => {
     if (!muse) return;
-    push(`/rp/profile/muses/create`);
+    push(ROUTES.Profile.Muses.Create);
   };
 
   const onEditClick = () => {
-    push(`/rp/profile/muses/edit/${muse?.id}`);
+    push(ROUTES.Profile.Muses.Edit(muse?.id || ""));
   };
 
   Logger.info("MuseCard rendered");

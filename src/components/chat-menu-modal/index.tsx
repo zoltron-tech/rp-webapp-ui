@@ -9,6 +9,7 @@ import { TiGroup } from "react-icons/ti";
 import { getConversationsAction } from "@/app/rp/novelists/actions";
 import { useGlobalState } from "@/context/store/stores";
 import type { Conversation } from "@/types/conversation";
+import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDate, toggleState } from "@/utils/helpers";
 import { Avatar } from "../common";
 import * as S from "./styles";
@@ -25,7 +26,7 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
   const { push } = useRouter();
 
   const onAvatarClick = (username: string) => {
-    push(`/rp/profile/${username}`);
+    push(ROUTES.Profile.View(username).Index);
   };
 
   const getConversationPreviewText = (

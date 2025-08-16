@@ -19,6 +19,7 @@ import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useAuthContext, useForm, useUIContext } from "@/hooks";
 import type { Novelist } from "@/types";
 import { API_MESSAGE, INITIAL_NOVELIST } from "@/utils/constants";
+import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import * as S from "./styles";
 
@@ -112,9 +113,9 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
   };
 
   const { values, update, updateValues, submit } = useForm<Novelist>({
+    beforeSubmit,
     initialValues: INITIAL_NOVELIST,
     onSubmit,
-    beforeSubmit,
   });
 
   const fetchData = async () => {
@@ -132,7 +133,7 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
   };
 
   const handleCancel = () => {
-    push(`/rp/profile/${user?.username}`);
+    push(ROUTES.Profile.View(user?.username || "").Index);
   };
 
   useEffect(() => {

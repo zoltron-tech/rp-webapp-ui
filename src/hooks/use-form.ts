@@ -130,13 +130,13 @@ export const useForm = <T>({
   };
 
   return {
-    values,
-    errors,
-    loading,
-    update,
-    submit,
     clearErrors,
     clearValues,
+    errors,
+    loading,
+    submit,
+    update,
     updateValues: setValues,
+    values,
   };
 };

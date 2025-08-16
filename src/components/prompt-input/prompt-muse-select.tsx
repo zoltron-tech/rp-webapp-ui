@@ -2,10 +2,11 @@ import { Muse, SubmitPromptType } from "@/types";
 import { Avatar, Form, Select } from "radix-ui";
 import { FC, forwardRef, useState } from "react";
 import * as S from "./styles";
-import { TiTick } from "react-icons/ti";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { GrRadialSelected } from "react-icons/gr";
 import { usePromptInputState } from "./prompt-input.store";
+import { useGlobalState } from "@/context/store/stores";
+import classNames from "classnames";
 
 type Props = {
   muses: Muse[];
@@ -26,6 +27,8 @@ const promptTypeToLabel = (type: SubmitPromptType): string => {
 
 export const PromptMuseSelect: FC<Props> = forwardRef(
   ({ muses, ...props }, forwardedRef) => {
+    const accent = useGlobalState("accent");
+    const theme = useGlobalState("theme");
     const promptType = usePromptInputState("type");
     const [muse, setMuse] = useState<Muse>(muses[0]);
     const handleMuseChange = (value: string) => {
@@ -69,7 +72,7 @@ export const PromptMuseSelect: FC<Props> = forwardRef(
               <Select.Content
                 position="popper"
                 side="bottom"
-                className="select-content"
+                className={classNames("select-content", theme, accent)}
               >
                 <Select.Viewport className="select-viewport">
                   {muses.map((muse) => (

@@ -3,34 +3,45 @@
 import { THEME_DARK, THEME_LIGHT } from "@/theme";
 import { ContentContainer, TopBar } from "@/components/layout";
 import { AuthProvider, UIContextProvider } from "@/context";
-import React, { FC, HTMLProps, useMemo } from "react";
+import React, { FC, HTMLProps, useEffect, useMemo } from "react";
 import { useCookies } from "react-cookie";
 import { ThemeProvider } from "styled-components";
-
 import { StoreState } from "@/types/state";
-import * as S from "./styles";
 import { DefaultTheme } from "@novelist-world/ui";
 import { StoreProvider } from "@/context/store/context";
-import { useGlobalState } from "@/context/store/stores";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import classNames from "classnames";
+import * as S from "./styles";
 
 const ACCENT_MAP = {
   0: "jade",
   1: "crimson",
   2: "iris",
-};
+} as const;
 
-const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
+const useAccent = () => {
   const user = useGlobalState("user");
+  const setGlobalState = useGlobalStoreSet();
   const accent = useMemo(() => {
     if (!user?.palette || user.palette > 2) return ACCENT_MAP[0];
     const _accent = ACCENT_MAP[user.palette as 0 | 1 | 2] || ACCENT_MAP[0];
     return _accent;
   }, [user]);
 
+  useEffect(() => {
+    setGlobalState({ accent });
+  }, [accent, setGlobalState]);
+
+  return accent;
+};
+
+const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
+  const accent = useAccent();
+  const theme = useGlobalState("theme");
+
   return (
     <S.PageContainer
-      className={classNames("page-container", "dark", accent)}
+      className={classNames("page-container", theme, accent)}
       data-accent={accent}
     >
       <TopBar />
@@ -51,12 +62,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         storeId="global-store"
         initial={{
           novelists: [],
-          theme: cookies.theme || "light",
+          theme: "dark",
           muses: [],
           authState: "LOGGED_OUT",
           user: null,
           novelist: null,
           globalLoading: false,
+          accent: "jade", // Default accent
         }}
       >
         <AuthProvider>

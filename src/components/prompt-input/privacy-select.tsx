@@ -1,13 +1,12 @@
 import { FC, forwardRef, useCallback, useState } from "react";
 import * as S from "./styles";
 import { Form, Select } from "radix-ui";
-import { TiTick } from "react-icons/ti";
 import { GrRadialSelected } from "react-icons/gr";
-import { SiPrivateinternetaccess } from "react-icons/si";
-import { FaGlobeAmericas, FaUserFriends } from "react-icons/fa";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { PrivacyLevel } from "@/types";
 import { PrivacyIcon } from "../common/privacy-icon";
+import { useGlobalState } from "@/context/store/stores";
+import classNames from "classnames";
 
 const PRIVACY_OPTIONS = [
   { value: "PUBLIC", label: "Public" },
@@ -16,6 +15,8 @@ const PRIVACY_OPTIONS = [
 ] as const;
 
 export const PromptPrivacySelect: FC = () => {
+  const accent = useGlobalState("accent");
+  const theme = useGlobalState("theme");
   const [privacy, setPrivacy] = useState<PrivacyLevel>("PUBLIC");
   const handlePrivacyChange = useCallback((value: PrivacyLevel) => {
     setPrivacy(value);
@@ -49,7 +50,7 @@ export const PromptPrivacySelect: FC = () => {
               position="popper"
               side="bottom"
               align="end"
-              className="select-content"
+              className={classNames("select-content", theme, accent)}
             >
               <Select.Viewport className="select-viewport">
                 {PRIVACY_OPTIONS.map((option) => (

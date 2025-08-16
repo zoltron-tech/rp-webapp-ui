@@ -31,11 +31,6 @@ import { FaFaceSadTear } from "react-icons/fa6";
 import { PageLoader } from "@/components/layout";
 
 export default function ResetPassword() {
-  const [cookies, _setCookie] = useCookies(["theme"]);
-
-  const getTheme = () => {
-    return cookies.theme === "light" ? THEME_LIGHT : THEME_DARK;
-  };
   const searchParams = useSearchParams();
   const jwt = searchParams?.get("token") || "";
   const [disabled, setDisabled] = useState<boolean>(false);

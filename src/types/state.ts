@@ -14,4 +14,5 @@ export interface StoreState {
   user: User | null;
   novelist: Novelist | null;
   globalLoading: boolean;
+  accent: "jade" | "crimson" | "iris";
 }

@@ -422,6 +422,11 @@ export const AuthorContainer = styled.div`
   transform: translateY(100px);
   transition: opacity 0.5s ease, transform 0.5s ease;
 
+  .avatar {
+    height: 60px;
+    width: 60px;
+  }
+
   @container content-container (max-width: 1000px) {
     opacity: 1;
     transform: none;
@@ -564,8 +569,7 @@ export const ScrollableContent = styled.div`
   transition-duration: 200ms;
 
   &:hover {
-    scrollbar-color: ${({ theme }: any) => setOpacity(theme.primary, 0.5)}
-      transparent;
+    scrollbar-color: var(--accent-6) transparent;
   }
 `;
 

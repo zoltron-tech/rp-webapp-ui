@@ -1,6 +1,7 @@
 import { FC, forwardRef, HTMLProps } from "react";
 import * as S from "./styled";
 import { Avatar } from "radix-ui";
+import classNames from "classnames";
 
 type AvatarProps = Omit<HTMLProps<HTMLSpanElement>, "src"> & {
   src: string | null;
@@ -8,11 +9,11 @@ type AvatarProps = Omit<HTMLProps<HTMLSpanElement>, "src"> & {
 };
 
 export const AvatarNew: FC<AvatarProps> = forwardRef(
-  ({ src, alt, ...rest }, forwardedRef) => {
+  ({ src, alt, className, ...rest }, forwardedRef) => {
     return (
       <S.AvatarRoot
-        className="avatar"
         {...rest}
+        className={classNames("avatar", className)}
         ref={forwardedRef as React.ForwardedRef<HTMLSpanElement>}
       >
         <Avatar.Image className="avatar-image" src={src || ""} alt={alt} />

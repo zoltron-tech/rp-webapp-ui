@@ -10,6 +10,18 @@ export const AvatarRoot = styled(Avatar.Root)`
   flex-shrink: 0;
   user-select: none;
 
+  &.selectable {
+    cursor: pointer;
+
+    &:hover {
+      outline: 1.5px solid var(--accent-a8);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
   .avatar-image {
     width: 100%;
     height: 100%;

@@ -5,6 +5,9 @@ export const LoaderActionRoot = styled.span`
   align-items: center;
   justify-content: center;
   position: relative;
+  font-size: inherit;
+  color: inherit;
+  font-weight: inherit;
 
   svg.loader-icon {
     height: 24px;

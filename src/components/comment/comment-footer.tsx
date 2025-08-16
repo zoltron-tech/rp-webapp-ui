@@ -1,15 +1,15 @@
 "use client";
 
-import { FC, MouseEventHandler, useCallback, useMemo } from "react";
-import * as S from "./styled";
-import { useCommentState, useCommentStateSet } from "./comment.store";
-import { pluralize } from "@/utils/helpers";
-import { IoMdArrowForward } from "react-icons/io";
 import { useRouter } from "next/navigation";
-import { LikeButton } from "../common/like-button";
+import { type FC, type MouseEventHandler, useCallback, useMemo } from "react";
 import { GoCommentDiscussion } from "react-icons/go";
+import { IoMdArrowForward } from "react-icons/io";
 import { useGlobalState } from "@/context/store/stores";
 import { useToggleLike } from "@/hooks/use-toggle-like";
+import { pluralize } from "@/utils/helpers";
+import { LikeButton } from "../common/like-button";
+import { useCommentState, useCommentStateSet } from "./comment.store";
+import * as S from "./styled";
 
 export const CommentFooter: FC = () => {
   const replyCount = useCommentState("replyCount");
@@ -64,7 +64,7 @@ export const CommentFooter: FC = () => {
       e.preventDefault();
       push(threadUrl);
     },
-    [threadUrl, push]
+    [threadUrl, push],
   );
 
   return (

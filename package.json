@@ -6,7 +6,7 @@
     "dev": "rm -rf .next && next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "biome check ",
     "push": "rm -rf .next && yarn build && git add . && git commit -m \"$@\" && git fetch origin && git rebase origin/main && git push -f origin expanded-content",
     "update-local": "rm -rf node_modules/@novelist-world/ui/dist && cd ../novelist-world-ui && yarn build && cp -r dist ../rp-webapp-ui/node_modules/@novelist-world/ui/dist && cd ../rp-webapp-ui"
   },
@@ -41,6 +41,7 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.2.0",
     "@svgr/webpack": "^8.1.0",
     "@swc/plugin-styled-components": "^1.5.122",
     "@types/jsonwebtoken": "^9.0.10",
@@ -51,8 +52,6 @@
     "@types/swiper": "^6.0.0",
     "@types/toastify-js": "^1.12.4",
     "@types/ws": "^8.18.1",
-    "eslint": "^8.57.1",
-    "eslint-config-next": "14.0.4",
     "typescript": "^5.9.2"
   },
   "packageManager": "pnpm@10.13.1+sha512.37ebf1a5c7a30d5fabe0c5df44ee8da4c965ca0c5af3dbab28c3a1681b70a256218d05c81c9c0dcf767ef6b8551eb5b960042b9ed4300c59242336377e01cfad"

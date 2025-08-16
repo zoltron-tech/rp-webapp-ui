@@ -1,7 +1,7 @@
-import { pSBC } from "@/lib/pSBC";
-import { Z_INDEX, CARD_BORDER } from "@/theme";
-import { setOpacity } from "@/utils/helpers";
 import styled from "styled-components";
+import { pSBC } from "@/lib/pSBC";
+import { CARD_BORDER, Z_INDEX } from "@/theme";
+import { setOpacity } from "@/utils/helpers";
 
 export const CardBackground = styled.div<CardProps>`
   position: absolute;

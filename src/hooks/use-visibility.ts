@@ -6,7 +6,7 @@ export interface UseVisibilityReturnType {
   toggle: () => void;
 }
 type StateEvent = <T extends string>(
-  provider: string
+  provider: string,
 ) => (state: T) => (instance: string) => () => void;
 
 type Full<T> = {
@@ -24,7 +24,7 @@ export const createStateEvents =
   (provider: string) =>
   <T extends string>(events: Set<T>) =>
   (
-    instance: string
+    instance: string,
   ): Partial<Record<T, () => void>> | Full<Partial<Record<T, () => void>>> => {
     const stateEvents: Partial<Record<T, () => void>> = {};
     events.forEach((event) => {

@@ -1,5 +1,5 @@
-import { setOpacity } from "@/utils/helpers";
 import { styled } from "styled-components";
+import { setOpacity } from "@/utils/helpers";
 
 export const FooterContainer = styled.footer`
   --footer-height: 2rem;

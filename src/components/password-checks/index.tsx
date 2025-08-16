@@ -1,12 +1,12 @@
-import { FC, useEffect, useRef } from "react";
 import classNames from "classnames";
+import { type FC, useEffect, useRef } from "react";
 import {
   verifyPasswordLength,
   verifyPasswordLowerCase,
   verifyPasswordNumber,
   verifyPasswordPattern,
-  verifyPasswordsMatch,
   verifyPasswordSpecialChar,
+  verifyPasswordsMatch,
   verifyPasswordUpperCase,
 } from "@/utils/helpers/pattens";
 

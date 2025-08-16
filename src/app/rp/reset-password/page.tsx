@@ -1,28 +1,28 @@
 "use client";
 
+import { ShouldRender } from "@novelist-world/ui";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import * as S from "./styled";
 import { Form } from "radix-ui";
-import { PiPasswordDuotone, PiSpinnerGapLight } from "react-icons/pi";
 import {
-  FormEventHandler,
+  type FormEventHandler,
   useCallback,
   useEffect,
   useMemo,
   useState,
 } from "react";
-import { validateJWTSync } from "@/utils/helpers";
-import { IoMdCheckmark } from "react-icons/io";
 import { CgClose } from "react-icons/cg";
+import { IoMdCheckmark } from "react-icons/io";
 import {
   MdArrowBackIosNew,
   MdOutlineSentimentDissatisfied,
 } from "react-icons/md";
-import { ShouldRender } from "@novelist-world/ui";
-import Link from "next/link";
+import { PiPasswordDuotone, PiSpinnerGapLight } from "react-icons/pi";
 import { resetPasswordAction } from "@/app/actions";
-import { API_MESSAGE } from "@/utils/constants";
 import { UpdatePasswordFields } from "@/components/common/update-password-fields";
+import { API_MESSAGE } from "@/utils/constants";
+import { validateJWTSync } from "@/utils/helpers";
+import * as S from "./styled";
 
 type OperationState = "LOADING" | "INITIAL" | "SUCCESS" | "ERROR" | "EXPIRED";
 
@@ -107,7 +107,7 @@ export default function ResetPasswordPage() {
       setOperationState("SUCCESS");
       setValid(false);
     },
-    [token, valid, setOperationState]
+    [token, valid, setOperationState],
   );
 
   useEffect(() => {
@@ -145,7 +145,7 @@ export default function ResetPasswordPage() {
 
           <ShouldRender
             if={(["ERROR", "EXPIRED"] as OperationState[]).includes(
-              operationState
+              operationState,
             )}
           >
             <S.ForwardLinkContainer>

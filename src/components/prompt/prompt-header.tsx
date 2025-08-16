@@ -1,9 +1,9 @@
-import { FC } from "react";
-import * as S from "./styled";
-import { usePromptState } from "./prompt.store";
+import type { FC } from "react";
 import { displayDate, toFormattedDate } from "@/utils/helpers";
-import { PrivacyIcon } from "../common/privacy-icon";
 import { MuseAvatar } from "../common/muse-avatar";
+import { PrivacyIcon } from "../common/privacy-icon";
+import { usePromptState } from "./prompt.store";
+import * as S from "./styled";
 
 type PromptHeaderProps = {};
 

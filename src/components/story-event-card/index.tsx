@@ -1,22 +1,20 @@
 "use client";
-import { FC } from "react";
-
-import { Logger } from "@/utils/services";
-import { useRouter } from "next/navigation";
-import { GrEdit } from "react-icons/gr";
-
-import * as S from "./styles";
-import { FaRegTrashCan } from "react-icons/fa6";
-import { ShouldRender } from "../common";
-import { INITIAL_STORY_BOARD_EVENT } from "@/utils/constants";
 import classNames from "classnames";
-import { StoryBoardEvent } from "@/types/story-board";
+import { useRouter } from "next/navigation";
+import type { FC } from "react";
 import { FaArrowRight } from "react-icons/fa";
+import { FaRegTrashCan } from "react-icons/fa6";
+import { GrEdit } from "react-icons/gr";
+import type { StoryBoardEvent } from "@/types/story-board";
+import { INITIAL_STORY_BOARD_EVENT } from "@/utils/constants";
+import { Logger } from "@/utils/services";
+import { ShouldRender } from "../common";
+import * as S from "./styles";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   event?: StoryBoardEvent | null;
   storyboardId: string;
-  isCurrentUser?: Boolean;
+  isCurrentUser?: boolean;
 };
 
 export const StoryCardEvent: FC<Props> = ({
@@ -34,7 +32,7 @@ export const StoryCardEvent: FC<Props> = ({
 
   const handleCardClick = (
     e: React.MouseEvent<HTMLDivElement>,
-    event: StoryBoardEvent
+    event: StoryBoardEvent,
   ) => {
     const target = e.target as HTMLDivElement;
     if (target.classList.contains("button")) return;

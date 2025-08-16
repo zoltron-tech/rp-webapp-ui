@@ -1,16 +1,32 @@
 "use client";
 
+import { Flex } from "@novelist-world/ui";
 import { useParams, useRouter } from "next/navigation";
-
+import { useCallback, useEffect, useState } from "react";
+import { FcCalendar } from "react-icons/fc";
+import { GiCircleClaws, GiGoldShell, GiStarSwirl } from "react-icons/gi";
+import {
+  TbCircleLetterG,
+  TbCircleLetterP,
+  TbCircleLetterS,
+  TbSquareRoundedLetterSFilled,
+} from "react-icons/tb";
 import { MusesPill } from "@/components";
-import { ButtonGroup, ButtonInfo } from "@/components/button-group";
+import ActivityBox from "@/components/activity-box";
+import { ButtonGroup, type ButtonInfo } from "@/components/button-group";
 import { ShouldRender, Username } from "@/components/common";
 import { PageLoader } from "@/components/layout";
-import { Novelist, StoryBoard } from "@/types";
-import { useCallback, useEffect, useState } from "react";
-import { getNovelistAction } from "../../novelists/actions";
-
+import MuseListItem from "@/components/muse-list-item/intex";
+import PromptInput from "@/components/prompt-input";
+import StoryCard from "@/components/story-card";
+import { useGlobalState } from "@/context/store/stores";
+import type { Novelist, StoryBoard } from "@/types";
+import type { Activity } from "@/types/activity";
 import { API_MESSAGE } from "@/utils/constants";
+import { toFormattedDate } from "@/utils/helpers";
+import { getUserActivities } from "../../home/actions";
+import { getNovelistAction } from "../../novelists/actions";
+import { getAllStoryboardsByUsernameAction } from "../../story/actions";
 import {
   acceptFriendRequest,
   cancelFriendRequest,
@@ -18,27 +34,6 @@ import {
   sendFriendRequest,
 } from "../actions";
 import * as S from "./styles";
-import { Activity } from "@/types/activity";
-import { getUserActivities } from "../../home/actions";
-import ActivityBox from "@/components/activity-box";
-import { getAllStoryboardsByUsernameAction } from "../../story/actions";
-import StoryCard from "@/components/story-card";
-import { TbSquareRoundedLetterSFilled } from "react-icons/tb";
-import { FcCalendar } from "react-icons/fc";
-import {
-  TbCircleLetterS,
-  TbCircleLetterG,
-  TbCircleLetterP,
-} from "react-icons/tb";
-import { GiCircleClaws } from "react-icons/gi";
-import { GiGoldShell } from "react-icons/gi";
-import { GiStarSwirl } from "react-icons/gi";
-
-import { Flex } from "@novelist-world/ui";
-import PromptInput from "@/components/prompt-input";
-import { toFormattedDate } from "@/utils/helpers";
-import MuseListItem from "@/components/muse-list-item/intex";
-import { useGlobalState } from "@/context/store/stores";
 
 const useGetActivities = (username: string) => {
   const [activities, setActivities] = useState<Activity[]>();
@@ -317,19 +312,19 @@ export default function UserProfilePage({}) {
                 className={`badge-${novelist?.tier.name?.toLowerCase()}`}
                 onClick={toTiersPage}
               >
-                {novelist?.tier.name == "STANDARD" && (
+                {novelist?.tier.name === "STANDARD" && (
                   <TbSquareRoundedLetterSFilled />
                 )}
-                {novelist?.tier.name == "SILVER" && <GiCircleClaws />}
-                {novelist?.tier.name == "SILVER" && (
+                {novelist?.tier.name === "SILVER" && <GiCircleClaws />}
+                {novelist?.tier.name === "SILVER" && (
                   <TbCircleLetterS className="letter" />
                 )}
-                {novelist?.tier.name == "GOLD" && <GiGoldShell />}
-                {novelist?.tier.name == "GOLD" && (
+                {novelist?.tier.name === "GOLD" && <GiGoldShell />}
+                {novelist?.tier.name === "GOLD" && (
                   <TbCircleLetterG className="letter" />
                 )}
-                {novelist?.tier.name == "PREMIUM" && <GiStarSwirl />}
-                {novelist?.tier.name == "PREMIUM" && (
+                {novelist?.tier.name === "PREMIUM" && <GiStarSwirl />}
+                {novelist?.tier.name === "PREMIUM" && (
                   <TbCircleLetterP className="letter" />
                 )}
               </S.ExtendedBadge>
@@ -350,7 +345,7 @@ export default function UserProfilePage({}) {
             <S.ButtonsContainer>
               <ButtonGroup
                 buttons={
-                  authState == "LOGGED_IN" && username !== user?.username
+                  authState === "LOGGED_IN" && username !== user?.username
                     ? fetchAppropriateButtons(novelist?.connection)
                     : LoggedInSelfButtons
                 }
@@ -359,21 +354,18 @@ export default function UserProfilePage({}) {
             <S.SubText>
               {storyBoards?.length === 0
                 ? "No Stories"
-                : "Stories (" + storyBoards?.length + ")"}
+                : `Stories (${storyBoards?.length})`}
             </S.SubText>
-            <ShouldRender
-              if={storyBoards && storyBoards?.length > 0 ? true : false}
-            >
+            <ShouldRender if={!!(storyBoards && storyBoards?.length > 0)}>
               <S.ContentContainer>
                 <S.PartitionContainer>
-                  {storyBoards &&
-                    storyBoards.map((storyBoard) => (
-                      <StoryCard
-                        className="profile"
-                        key={storyBoard?.id}
-                        storyBoard={storyBoard}
-                      ></StoryCard>
-                    ))}
+                  {storyBoards?.map((storyBoard) => (
+                    <StoryCard
+                      className="profile"
+                      key={storyBoard?.id}
+                      storyBoard={storyBoard}
+                    ></StoryCard>
+                  ))}
                 </S.PartitionContainer>
               </S.ContentContainer>
               <S.SeeMoreLink onClick={toStoryBoardsPage}>
@@ -383,18 +375,15 @@ export default function UserProfilePage({}) {
             <S.SubText>
               {novelist?.museCount === 0
                 ? "No Muses"
-                : "Muses (" + novelist?.museCount + ")"}
+                : `Muses (${novelist?.museCount})`}
             </S.SubText>
             <ShouldRender
-              if={novelist?.museCount && novelist.museCount > 0 ? true : false}
+              if={!!(novelist?.museCount && novelist.museCount > 0)}
             >
               <S.MuseList>
-                {novelist &&
-                  novelist.muses
-                    .slice(0, 3)
-                    .map((muse) => (
-                      <MuseListItem key={muse.id} muse={muse}></MuseListItem>
-                    ))}
+                {novelist?.muses.slice(0, 3).map((muse) => (
+                  <MuseListItem key={muse.id} muse={muse}></MuseListItem>
+                ))}
               </S.MuseList>
               <S.SeeMoreLink onClick={toMusesPage}>see all...</S.SeeMoreLink>
             </ShouldRender>
@@ -409,25 +398,24 @@ export default function UserProfilePage({}) {
             <S.SubText>
               {activities?.length === 0
                 ? "No Updates"
-                : authState == "LOGGED_IN" && username === user?.username
-                ? "Your Updates"
-                : "Updates by " + username}
+                : authState === "LOGGED_IN" && username === user?.username
+                  ? "Your Updates"
+                  : `Updates by ${username}`}
             </S.SubText>
             <S.ContentContainer>
-              {authState == "LOGGED_IN" && username === user?.username && (
+              {authState === "LOGGED_IN" && username === user?.username && (
                 <PromptInput
                   type={"prompt"}
                   muses={novelist?.muses || []}
                   onSend={refetchAcitivities}
                 />
               )}
-              {activities &&
-                activities.map((activity) => (
-                  <ActivityBox
-                    key={activity?.id}
-                    activity={activity}
-                  ></ActivityBox>
-                ))}
+              {activities?.map((activity) => (
+                <ActivityBox
+                  key={activity?.id}
+                  activity={activity}
+                ></ActivityBox>
+              ))}
             </S.ContentContainer>
           </S.ContentInner>
         </S.ContentRight>

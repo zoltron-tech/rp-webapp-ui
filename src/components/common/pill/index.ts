@@ -1,5 +1,5 @@
-import { DEV_MODE_BORDER, PILL } from "@/theme";
 import { styled } from "styled-components";
+import { DEV_MODE_BORDER, PILL } from "@/theme";
 
 export const Pill = styled.div`
   ${PILL}

@@ -1,4 +1,4 @@
-import { FC, memo } from "react";
+import { type FC, memo } from "react";
 
 import { Logger } from "@/utils/services";
 import * as S from "./styles";

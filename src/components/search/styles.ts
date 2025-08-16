@@ -1,5 +1,6 @@
 "use client";
 
+import { css, styled } from "styled-components";
 import {
   BACKGROUND_BLUR,
   DEV_MODE_BORDER,
@@ -7,7 +8,6 @@ import {
   SPIN,
   Z_INDEX,
 } from "@/theme";
-import { css, styled } from "styled-components";
 
 const TypeSelectTypography = css`
   font-size: 12px;

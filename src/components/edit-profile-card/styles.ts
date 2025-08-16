@@ -1,8 +1,7 @@
+import { Container } from "@novelist-world/ui";
 import { styled } from "styled-components";
-
 import * as Common from "@/components/common";
 import { Z_INDEX } from "@/theme";
-import { Container } from "@novelist-world/ui";
 
 export const LocalContainer = styled(Container)`
   border: 1px solid slategray;

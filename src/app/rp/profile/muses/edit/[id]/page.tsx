@@ -1,14 +1,14 @@
 "use client";
 
-import { useGlobalState } from "@/context/store/stores";
-import { Logger } from "@/utils/services";
 import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useGlobalState } from "@/context/store/stores";
+import { Logger } from "@/utils/services";
 
 const DynamicEditMuseCard = dynamic(
   () => import("@/components/edit-muse-card"),
-  { ssr: false }
+  { ssr: false },
 );
 
 export default function EditMusePage({}) {

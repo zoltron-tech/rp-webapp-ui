@@ -1,4 +1,4 @@
-import { User } from "@/types";
+import type { User } from "@/types";
 
 const USER_MOCK: User = {
   _tag: "User",

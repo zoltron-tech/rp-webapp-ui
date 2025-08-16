@@ -1,3 +1,5 @@
+import { Container } from "@novelist-world/ui";
+import styled from "styled-components";
 import { Avatar as AvatarCommon } from "@/components/common";
 import {
   BACKGROUND_BLUR,
@@ -6,9 +8,6 @@ import {
   CARD_BORDER,
   Z_INDEX,
 } from "@/theme";
-import { setOpacity } from "@/utils/helpers";
-import { Container, RichText as NWRichText } from "@novelist-world/ui";
-import styled from "styled-components";
 
 interface BannerProps {
   src: string | null;
@@ -685,7 +684,7 @@ export const PromptText = styled.div`
   }
 `;
 
-export const Date = styled.div`
+export const StyledDate = styled.div`
   font-size: 10px;
   font-weight: 300;
 `;

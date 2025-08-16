@@ -1,8 +1,7 @@
-import * as Common from "@/components/common";
+import styled from "styled-components";
 import { pSBC } from "@/lib/pSBC";
 import { Z_INDEX } from "@/theme";
 import { setOpacity } from "@/utils/helpers";
-import styled from "styled-components";
 
 export const CardWrapper = styled.div`
   position: relative;
@@ -101,7 +100,7 @@ export const Subtext = styled.div`
   color: var(--text);
 `;
 
-export const Date = styled.div`
+export const StyledDate = styled.div`
   font-size: 8px;
   align-self: flex-end;
   justify-self: flex-end;

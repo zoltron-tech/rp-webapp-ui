@@ -1,45 +1,47 @@
-
 type ConnectionMetadata = {
-    username: string;
-    jwt: string;
+  username: string;
+  jwt: string;
 };
 
 type SocketConnection = {
-    id: string;
-    emit: (event: string, data: any) => void;
-    data: ConnectionMetadata
-
+  id: string;
+  emit: (event: string, data: any) => void;
+  data: ConnectionMetadata;
 };
 
 export class ConnectionsService {
-    static connections: SocketConnection[] = [];
+  static connections: SocketConnection[] = [];
 
-    static addConnection(socket: any) {
-        console.log("a user connected", socket.id);
-        this.connections.push(socket);
+  static addConnection(socket: any) {
+    console.log("a user connected", socket.id);
+    ConnectionsService.connections.push(socket);
 
-        console.log("connections", this.connections.length);
-    }
+    console.log("connections", ConnectionsService.connections.length);
+  }
 
-    static setMetadata(socket: any, metadata: ConnectionMetadata) {
-        const index = this.connections.findIndex((s) => s.id === socket.id);
-        this.connections[index].data = metadata;
-        console.log("metadata set", this.connections[index].data);
-    }
+  static setMetadata(socket: any, metadata: ConnectionMetadata) {
+    const index = ConnectionsService.connections.findIndex(
+      (s) => s.id === socket.id,
+    );
+    ConnectionsService.connections[index].data = metadata;
+    console.log("metadata set", ConnectionsService.connections[index].data);
+  }
 
-    static removeConnection(socket: any) {
-        console.log("socket is:", socket.id);
-        const index = this.connections.findIndex((s) => s.id === socket.id);
-        this.connections.splice(index, 1);
-        console.log("user disconnected", socket.id);
-        console.log("connections", this.connections.length);
-    }
+  static removeConnection(socket: any) {
+    console.log("socket is:", socket.id);
+    const index = ConnectionsService.connections.findIndex(
+      (s) => s.id === socket.id,
+    );
+    ConnectionsService.connections.splice(index, 1);
+    console.log("user disconnected", socket.id);
+    console.log("connections", ConnectionsService.connections.length);
+  }
 
-    static getConnections() {
-        return this.connections;
-    }
+  static getConnections() {
+    return ConnectionsService.connections;
+  }
 
-    static getConnectionsCount() {
-        return this.connections.length;
-    }
+  static getConnectionsCount() {
+    return ConnectionsService.connections.length;
+  }
 }

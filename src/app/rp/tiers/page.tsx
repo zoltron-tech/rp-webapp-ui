@@ -1,16 +1,14 @@
 "use client";
 
-import * as S from "./styles";
-import { TbSquareRoundedLetterSFilled } from "react-icons/tb";
+import { Flex } from "@novelist-world/ui";
+import { GiCircleClaws, GiGoldShell, GiStarSwirl } from "react-icons/gi";
 import {
-  TbCircleLetterS,
   TbCircleLetterG,
   TbCircleLetterP,
+  TbCircleLetterS,
+  TbSquareRoundedLetterSFilled,
 } from "react-icons/tb";
-import { GiCircleClaws } from "react-icons/gi";
-import { GiGoldShell } from "react-icons/gi";
-import { GiStarSwirl } from "react-icons/gi";
-import { Flex } from "@novelist-world/ui";
+import * as S from "./styles";
 
 export default function TiersCatalog() {
   const onLoginClick = () => {
@@ -18,8 +16,7 @@ export default function TiersCatalog() {
   };
 
   return (
-    <>
-      <S.MainContainer>
+    <S.MainContainer>
       <Flex style={{ marginTop: "40px" }} direction="column">
         <S.MainSubtext>Packages</S.MainSubtext>
         <S.CardsContainer>
@@ -196,7 +193,6 @@ export default function TiersCatalog() {
           </S.PremiumInfoCardBorder>
         </S.CardsContainer>
       </Flex>
-        </S.MainContainer>
-    </>
+    </S.MainContainer>
   );
 }

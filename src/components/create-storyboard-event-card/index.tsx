@@ -1,19 +1,19 @@
 "use client";
 
-import { FC, useEffect, useState } from "react";
-import { uploadMedia } from "@/app/rp/profile/actions";
-import { Input, UploadAvatar } from "@/components/common";
-import { useForm, useUIContext } from "@/hooks";
-import type { StoryBoardEvent } from "@/types";
-import { API_MESSAGE, INITIAL_STORY_BOARD_EVENT } from "@/utils/constants";
-import { Logger } from "@/utils/services";
 import { useRouter } from "next/navigation";
+import { type FC, useEffect, useState } from "react";
+import { uploadMedia } from "@/app/rp/profile/actions";
 import {
   getStoryboardEventAction,
   updateStoryBoardEventAction,
 } from "@/app/rp/story/actions";
-import * as S from "./styles";
+import { Input, UploadAvatar } from "@/components/common";
 import { useGlobalState } from "@/context/store/stores";
+import { useForm, useUIContext } from "@/hooks";
+import type { StoryBoardEvent } from "@/types";
+import { API_MESSAGE, INITIAL_STORY_BOARD_EVENT } from "@/utils/constants";
+import { Logger } from "@/utils/services";
+import * as S from "./styles";
 
 export type CreateStoryBoardEventCardProps = {
   storyboardId: string;
@@ -25,7 +25,7 @@ export const CreateStoryBoardEventCard: FC<CreateStoryBoardEventCardProps> = ({
   storyboardEventId,
 }) => {
   const authState = useGlobalState("authState");
-  const [storyBoardEvent, setStoryBoardEvent] = useState<StoryBoardEvent>();
+  const [_storyBoardEvent, setStoryBoardEvent] = useState<StoryBoardEvent>();
   const [avatarFile, setAvatarFile] = useState<FormData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const { push } = useRouter();

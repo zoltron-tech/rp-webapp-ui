@@ -1,22 +1,12 @@
 "use client";
-import { Button, Input, ShouldRender } from "@/components/common";
-import {
-  ErrorType,
-  useAuthContext,
-  useForm,
-  useUIContext,
-  useVisibility,
-} from "@/hooks";
-import { Logger } from "@/utils/services";
-import { useCallback, useEffect, useRef, useState } from "react";
 
-import { useRouter } from "next/navigation";
-import * as S from "./styles";
-import { LoginPayload } from "@/types";
-import { ThemeProvider } from "styled-components";
-import { useCookies } from "react-cookie";
-import { THEME_DARK, THEME_LIGHT } from "@/theme";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { FaCheckCircle } from "react-icons/fa";
+import { FaFaceSadTear } from "react-icons/fa6";
+import { SiBookstack } from "react-icons/si";
+import { ShouldRender } from "@/components/common";
+import { PageLoader } from "@/components/layout";
 import {
   Bar,
   Logo,
@@ -24,21 +14,18 @@ import {
   LogoInner,
   LogoText,
 } from "@/components/layout/top-bar/styles";
-import { SiBookstack } from "react-icons/si";
-import { FaCheckCircle } from "react-icons/fa";
-import { verifyAccountAction } from "@/app/actions";
-import { FaFaceSadTear } from "react-icons/fa6";
-import { PageLoader } from "@/components/layout";
+import { useAuthContext } from "@/hooks";
+import * as S from "./styles";
 
 export default function ResetPassword() {
   const searchParams = useSearchParams();
   const jwt = searchParams?.get("token") || "";
-  const [disabled, setDisabled] = useState<boolean>(false);
+  const [_disabled, _setDisabled] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const { verifyAccount } = useAuthContext();
   const { push } = useRouter();
   const [verificationStatus, setVerificationStatus] = useState<boolean | null>(
-    null
+    null,
   );
 
   const getVerificationStatus = useCallback(async () => {

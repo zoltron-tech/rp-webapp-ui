@@ -1,23 +1,23 @@
 "use client";
 
-import { Form } from "radix-ui";
-import { MdArrowBackIosNew } from "react-icons/md";
+import { ShouldRender } from "@novelist-world/ui";
+import classNames from "classnames";
 import Link from "next/link";
-import { FormEventHandler, useCallback, useMemo, useState } from "react";
+import { Form } from "radix-ui";
+import { type FormEventHandler, useCallback, useMemo, useState } from "react";
+import { CgClose } from "react-icons/cg";
 import {
   IoIosInformationCircleOutline,
   IoIosWarning,
   IoMdCheckmark,
 } from "react-icons/io";
-import * as S from "./styled";
-import classNames from "classnames";
-import { CgClose } from "react-icons/cg";
-import { forgotPasswordAction } from "@/app/actions";
-import { API_MESSAGE } from "@/utils/constants";
-import { useGlobalStoreSet } from "@/context/store/stores";
-import { ShouldRender } from "@novelist-world/ui";
+import { MdArrowBackIosNew } from "react-icons/md";
 import { TbError404 } from "react-icons/tb";
+import { forgotPasswordAction } from "@/app/actions";
+import { useGlobalStoreSet } from "@/context/store/stores";
+import { API_MESSAGE } from "@/utils/constants";
 import { SUPPORT_EMAIL, SUPPORT_EMAIL_URL } from "@/utils/constants/common";
+import * as S from "./styled";
 
 type OperationState = "INITIAL" | "SUCCESS" | "ERROR" | "NOT_FOUND";
 
@@ -157,7 +157,7 @@ export default function ForgotPasswordPage() {
       setOperationState("SUCCESS");
       globalStoreSet({ globalLoading: false });
     },
-    [setOperationState, globalStoreSet]
+    [setOperationState, globalStoreSet],
   );
 
   return (
@@ -180,7 +180,7 @@ export default function ForgotPasswordPage() {
             >
               <div>
                 {infoBoxContent.icon}
-                <>{infoBoxContent.headingText}</>
+                {infoBoxContent.headingText}
               </div>
 
               <p>{infoBoxContent.descriptionText}</p>
@@ -191,7 +191,7 @@ export default function ForgotPasswordPage() {
 
           <ShouldRender
             if={(["NOT_FOUND", "INITIAL"] as OperationState[]).includes(
-              operationState
+              operationState,
             )}
           >
             <Form.Field className="field" name="userEmail">
@@ -210,7 +210,7 @@ export default function ForgotPasswordPage() {
 
           <S.BackLinkContainer>
             {(["NOT_FOUND", "INITIAL"] as OperationState[]).includes(
-              operationState
+              operationState,
             ) ? (
               <Link href="/rp/login" tabIndex={0}>
                 <MdArrowBackIosNew />

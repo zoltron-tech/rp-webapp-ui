@@ -1,5 +1,5 @@
-import { DEV_MODE_BORDER } from "@/theme";
 import styled from "styled-components";
+import { DEV_MODE_BORDER } from "@/theme";
 
 export const Container = styled.div`
   ${DEV_MODE_BORDER("aqua")}

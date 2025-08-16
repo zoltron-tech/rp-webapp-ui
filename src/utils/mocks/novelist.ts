@@ -1,4 +1,4 @@
-import { Novelist } from "@/types";
+import type { Novelist } from "@/types";
 import { STANDARD_TIER } from "../constants/initial-values";
 
 const NOVELIST_MOCK: Novelist = {

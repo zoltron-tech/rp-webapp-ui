@@ -1,10 +1,9 @@
-import { ShouldRender } from "@/components/common";
 import classNames from "classnames";
 import {
-  ChangeEventHandler,
-  FC,
-  InputHTMLAttributes,
-  ReactElement,
+  type ChangeEventHandler,
+  type FC,
+  type InputHTMLAttributes,
+  type ReactElement,
   useState,
 } from "react";
 import { FaRegCircleCheck } from "react-icons/fa6";
@@ -12,6 +11,7 @@ import { GoEye, GoEyeClosed } from "react-icons/go";
 import { ImSpinner } from "react-icons/im";
 import { PiWarning } from "react-icons/pi";
 import { VscError } from "react-icons/vsc";
+import { ShouldRender } from "@/components/common";
 
 import { Logger } from "@/utils/services";
 import * as S from "./styles";

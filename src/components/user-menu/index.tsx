@@ -1,22 +1,21 @@
 "use client";
 
-import { FC, useCallback, useState } from "react";
-
-import { toggleState } from "@/utils/helpers";
-import { useRouter } from "next/navigation";
-import { Logger } from "@/utils/services";
 import classNames from "classnames";
-import { Avatar, ShouldRender } from "../common";
-import * as S from "./styles";
-import { TbUserEdit } from "react-icons/tb";
-import { LuUser } from "react-icons/lu";
+import { useRouter } from "next/navigation";
+import { type FC, useCallback, useState } from "react";
 import { IoIosPeople } from "react-icons/io";
+import { LuUser } from "react-icons/lu";
 import { PiBookOpenUserDuotone } from "react-icons/pi";
-import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
+import { TbUserEdit } from "react-icons/tb";
 import { logoutAction } from "@/app/actions";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
+import { toggleState } from "@/utils/helpers";
+import { Logger } from "@/utils/services";
+import { ShouldRender } from "../common";
 import { AvatarNew } from "../common/avatar-new";
+import * as S from "./styles";
 
-interface UserMenuProps {}
+type UserMenuProps = {};
 
 export const UserMenu: FC<UserMenuProps> = ({}) => {
   const user = useGlobalState("user");

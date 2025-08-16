@@ -1,7 +1,7 @@
+import { type FC, useEffect } from "react";
 import { VisibilityContext } from "@/context";
 import { useStateMachine } from "@/hooks/use-state-machine";
 import { Logger } from "@/utils/services";
-import { FC, useEffect } from "react";
 
 export interface VisibilityProviderProps {
   name: string;
@@ -56,21 +56,21 @@ export const VisibilityProvider: FC<VisibilityProviderProps> = ({
     window.addEventListener(`visibility-provider:close:${name}`, onCloseEvent);
     window.addEventListener(
       `visibility-provider:toggle:${name}`,
-      onToggleEvent
+      onToggleEvent,
     );
 
     return () => {
       window.removeEventListener(
         `visibility-provider:open:${name}`,
-        onOpenEvent
+        onOpenEvent,
       );
       window.removeEventListener(
         `visibility-provider:close:${name}`,
-        onCloseEvent
+        onCloseEvent,
       );
       window.removeEventListener(
         `visibility-provider:toggle:${name}`,
-        onToggleEvent
+        onToggleEvent,
       );
     };
   }, []);

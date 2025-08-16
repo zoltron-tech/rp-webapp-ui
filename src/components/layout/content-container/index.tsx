@@ -1,10 +1,10 @@
 "use client";
+import { type FC, useMemo } from "react";
 import { ShouldRender } from "@/components/common";
+import { useGlobalState } from "@/context/store/stores";
 import { Logger } from "@/utils/services";
-import { FC, useMemo } from "react";
 import { PageLoader } from "../page-loader";
 import * as S from "./styles";
-import { useGlobalState } from "@/context/store/stores";
 
 type Props = {
   children?: React.ReactNode;

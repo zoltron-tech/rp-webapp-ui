@@ -1,12 +1,12 @@
-import { FC, forwardRef, useCallback, useState } from "react";
-import * as S from "./styles";
+import classNames from "classnames";
 import { Form, Select } from "radix-ui";
+import { type FC, forwardRef, useCallback, useState } from "react";
 import { GrRadialSelected } from "react-icons/gr";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
-import { PrivacyLevel } from "@/types";
-import { PrivacyIcon } from "../common/privacy-icon";
 import { useGlobalState } from "@/context/store/stores";
-import classNames from "classnames";
+import type { PrivacyLevel } from "@/types";
+import { PrivacyIcon } from "../common/privacy-icon";
+import * as S from "./styles";
 
 const PRIVACY_OPTIONS = [
   { value: "PUBLIC", label: "Public" },
@@ -88,5 +88,5 @@ const SelectItem: FC<SelectItemProps> = forwardRef(
         <Select.ItemText>{option.label}</Select.ItemText>
       </Select.Item>
     );
-  }
+  },
 );

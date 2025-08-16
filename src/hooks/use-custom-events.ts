@@ -8,7 +8,7 @@ export const useCustomEvents = (prefix: string, uniqifier?: string) => {
       window.addEventListener(
         getEventName(name),
         callback as EventListener,
-        false
+        false,
       );
     },
     off: (name: string, callback: (event: CustomEvent) => void) => {

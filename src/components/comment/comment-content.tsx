@@ -1,9 +1,9 @@
 "use client";
 
-import { FC, useMemo } from "react";
-import * as S from "./styled";
-import { useCommentState } from "./comment.store";
+import { type FC, useMemo } from "react";
 import { parseTextContent } from "@/utils/helpers";
+import { useCommentState } from "./comment.store";
+import * as S from "./styled";
 
 export const CommentContent: FC = () => {
   const text = useCommentState("text");

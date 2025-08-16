@@ -1,7 +1,7 @@
-import * as Common from "@/components/common";
-import { Z_INDEX, CARD_BORDER } from "@/theme";
 import { Container } from "@novelist-world/ui";
 import styled from "styled-components";
+import * as Common from "@/components/common";
+import { CARD_BORDER, Z_INDEX } from "@/theme";
 
 export const ParentContainer = styled(Container)`
   display: flex;
@@ -107,7 +107,7 @@ export const PromptText = styled.div`
   }
 `;
 
-export const Date = styled.div`
+export const StyledDate = styled.div`
   font-size: 12px;
   font-weight: 200;
 

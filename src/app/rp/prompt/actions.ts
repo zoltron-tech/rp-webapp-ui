@@ -1,9 +1,9 @@
 "use server";
-import { Comment, Prompt } from "@/types";
-import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import getConfig from "next/config";
-import { Logger } from "@/utils/services";
 import { authenticateAndGetJWT, getJWTIfExists } from "@/app/actions";
+import type { Comment, Prompt } from "@/types";
+import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
+import { Logger } from "@/utils/services";
 
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
@@ -113,7 +113,7 @@ export const updatePromptAction = async (_prompt: Prompt) => {
     {
       ...result,
       message: undefined,
-    }
+    },
   );
 
   return prompt;

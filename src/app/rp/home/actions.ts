@@ -1,18 +1,18 @@
 "use server";
 
-import { authenticateAndGetJWT } from "@/app/actions";
-import { Muse, Novelist, StoryBoard } from "@/types";
-import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import getConfig from "next/config";
+import { authenticateAndGetJWT } from "@/app/actions";
+import type { Muse, Novelist, StoryBoard } from "@/types";
+import type { Activity } from "@/types/activity";
+import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import { Logger } from "@/utils/services";
-import { Activity } from "@/types/activity";
 
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
 
 export const getStrangerNovelistsAction = async (
   pageNumber: number,
-  pageSize: number
+  pageSize: number,
 ) => {
   const jwt = await authenticateAndGetJWT();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/suggestions?pageNumber=${pageNumber}&pageSize=${pageSize}`;
@@ -41,7 +41,7 @@ export const getStrangerNovelistsAction = async (
 export const getMusesAction = async (
   pageNumber: number,
   pageSize: number,
-  type: "friends" | "unknown"
+  type: "friends" | "unknown",
 ) => {
   const jwt = await authenticateAndGetJWT();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${type}?pageNumber=${pageNumber}&pageSize=${pageSize}`;
@@ -70,7 +70,7 @@ export const getMusesAction = async (
 export const getMusesWithVideosAction = async (
   pageNumber: number,
   pageSize: number,
-  type: "friends" | "unknown"
+  type: "friends" | "unknown",
 ) => {
   const jwt = await authenticateAndGetJWT();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${type}/videos?pageNumber=${pageNumber}&pageSize=${pageSize}`;
@@ -99,7 +99,7 @@ export const getMusesWithVideosAction = async (
 export const getUserActivities = async (
   username: string,
   pageNumber: number,
-  pageSize: number
+  pageSize: number,
 ) => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/activity/${username}?pageNumber=${pageNumber}&pageSize=${pageSize}`;
 
@@ -120,7 +120,7 @@ export const getUserActivities = async (
 export const getFriendActivities = async (
   pageNumber: number,
   pageSize: number,
-  type: "friends" | "unknown"
+  type: "friends" | "unknown",
 ) => {
   const jwt = await authenticateAndGetJWT();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/activity/${type}?pageNumber=${pageNumber}&pageSize=${pageSize}`;
@@ -148,7 +148,7 @@ export const getFriendActivities = async (
 
 export const getRandomStories = async (
   pageNumber: number,
-  pageSize: number
+  pageSize: number,
 ) => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/story/random?pageNumber=${pageNumber}&pageSize=${pageSize}`;
 

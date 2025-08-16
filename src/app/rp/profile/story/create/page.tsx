@@ -1,18 +1,18 @@
 "use client";
 
-import { useGlobalState } from "@/context/store/stores";
-import { Logger } from "@/utils/services";
 import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useGlobalState } from "@/context/store/stores";
+import { Logger } from "@/utils/services";
 
 const DynamicCreateStoryBoardCard = dynamic(
   () => import("@/components/create-storyboard-card"),
-  { ssr: false }
+  { ssr: false },
 );
 
 export default function CreateStoryBoardPage({}) {
-  const id = useParams()?.id as string;
+  const _id = useParams()?.id as string;
   const authState = useGlobalState("authState");
   const { push } = useRouter();
 

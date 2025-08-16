@@ -1,4 +1,4 @@
-import { FC, memo, SVGProps } from "react";
+import { type FC, memo, type SVGProps } from "react";
 
 export const GoogleLogo: FC<SVGProps<SVGSVGElement>> = memo((props) => (
   <svg

@@ -1,17 +1,15 @@
 "use client";
-import { FC } from "react";
-
-import { Logger } from "@/utils/services";
-import { useParams, useRouter } from "next/navigation";
-import { GrEdit } from "react-icons/gr";
-
-import * as S from "./styles";
-import { FaRegTrashCan } from "react-icons/fa6";
-import { ShouldRender } from "../common";
-import { INITIAL_STORY_BOARD } from "@/utils/constants";
 import classNames from "classnames";
-import { StoryBoard } from "@/types/story-board";
+import { useParams, useRouter } from "next/navigation";
+import type { FC } from "react";
+import { FaRegTrashCan } from "react-icons/fa6";
+import { GrEdit } from "react-icons/gr";
 import { useGlobalState } from "@/context/store/stores";
+import type { StoryBoard } from "@/types/story-board";
+import { INITIAL_STORY_BOARD } from "@/utils/constants";
+import { Logger } from "@/utils/services";
+import { ShouldRender } from "../common";
+import * as S from "./styles";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   storyBoard?: StoryBoard | null;
@@ -26,7 +24,7 @@ export const StoryCard: FC<Props> = ({ storyBoard, className, ...rest }) => {
 
   const handleCardClick = (
     e: React.MouseEvent<HTMLDivElement>,
-    storyBoard: StoryBoard
+    storyBoard: StoryBoard,
   ) => {
     const target = e.target as HTMLDivElement;
     if (target.classList.contains("button")) return;

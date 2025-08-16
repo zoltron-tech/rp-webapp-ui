@@ -1,6 +1,6 @@
+import { type ChangeEventHandler, type FC, useCallback, useState } from "react";
 import { PasswordChecks } from "@/components/password-checks";
 import { verifyPasswordPattern, verifyPasswordsMatch } from "@/utils/helpers";
-import { FC, useState, ChangeEventHandler, useCallback } from "react";
 import { PasswordField } from "../password-field";
 
 type ResetPasswordPageProps = {
@@ -24,7 +24,7 @@ export const UpdatePasswordFields: FC<ResetPasswordPageProps> = ({
       const isValid = verifyPasswordPattern(value);
       setValid(isValid && verifyPasswordsMatch(value, confirmPassword));
     },
-    [confirmPassword]
+    [confirmPassword],
   );
 
   const setConfirmPassword: ChangeEventHandler<HTMLInputElement> = useCallback(
@@ -34,7 +34,7 @@ export const UpdatePasswordFields: FC<ResetPasswordPageProps> = ({
       const isValid = verifyPasswordPattern(value);
       setValid(isValid && verifyPasswordsMatch(value, password));
     },
-    [password]
+    [password],
   );
 
   return (

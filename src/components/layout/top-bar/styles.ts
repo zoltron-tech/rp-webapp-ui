@@ -1,13 +1,11 @@
+import styled, { keyframes } from "styled-components";
 import { Avatar } from "@/components/common";
-import { pSBC } from "@/lib/pSBC";
 import {
   BASE_TRANSITION,
   DEV_MODE_BORDER,
   NO_USER_SELECT,
   Z_INDEX,
 } from "@/theme";
-import { setOpacity } from "@/utils/helpers";
-import styled, { keyframes } from "styled-components";
 
 export const Container = styled.div`
   border: 1px solid ${({ theme }: any) => theme.background};

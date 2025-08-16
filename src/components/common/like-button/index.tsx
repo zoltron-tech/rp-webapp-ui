@@ -1,8 +1,8 @@
-import { FC, useCallback, useEffect, useMemo, useState } from "react";
+import classNames from "classnames";
+import { type FC, useCallback, useEffect, useMemo, useState } from "react";
+import { pluralize } from "@/utils/helpers";
 import { HeartIcon } from "../heart-icon";
 import * as S from "./styled";
-import classNames from "classnames";
-import { pluralize } from "@/utils/helpers";
 
 type LikeButtonProps = {
   parentId: string;

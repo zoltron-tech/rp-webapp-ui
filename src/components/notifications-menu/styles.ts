@@ -1,10 +1,10 @@
+import styled from "styled-components";
 import {
+  BACKGROUND_BLUR,
   BASE_TRANSITION,
   DEV_MODE_BORDER,
-  BACKGROUND_BLUR,
   Z_INDEX,
 } from "@/theme";
-import styled from "styled-components";
 
 export const PositionContainer = styled.div`
   ${DEV_MODE_BORDER("red")}

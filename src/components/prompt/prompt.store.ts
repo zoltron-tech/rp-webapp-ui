@@ -3,7 +3,7 @@ import {
   useStoreSet,
   useStoreState,
 } from "@/context/store/use-store";
-import { Prompt as PromptType } from "@/types";
+import type { Prompt as PromptType } from "@/types";
 
 export type PromptStoreType = PromptType & {
   threadOpen: boolean;

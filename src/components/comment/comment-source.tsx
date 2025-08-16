@@ -1,10 +1,10 @@
 "use client";
 
-import { FC } from "react";
-import * as S from "./styled";
+import type { FC } from "react";
+import { displayDate, toFormattedDate } from "@/utils/helpers";
 import { MuseAvatar } from "../common/muse-avatar";
 import { useCommentState } from "./comment.store";
-import { displayDate, toFormattedDate } from "@/utils/helpers";
+import * as S from "./styled";
 
 export const CommentSource: FC = () => {
   const source = useCommentState("source");

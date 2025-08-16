@@ -1,6 +1,6 @@
-import { MaybePromise } from "@/types/common";
-import { Logger } from "@/utils/services";
 import { useRef, useState } from "react";
+import type { MaybePromise } from "@/types/common";
+import { Logger } from "@/utils/services";
 
 export type ErrorType<T> = Partial<{
   [TKey in keyof T]: string;

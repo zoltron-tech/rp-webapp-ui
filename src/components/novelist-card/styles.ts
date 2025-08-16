@@ -1,6 +1,6 @@
+import styled from "styled-components";
 import * as Common from "@/components/common";
 import { BORDER_TOP, NO_SCROLLBAR, NO_USER_SELECT, Z_INDEX } from "@/theme";
-import styled from "styled-components";
 
 export const CardWrapper = styled.div`
   position: relative;

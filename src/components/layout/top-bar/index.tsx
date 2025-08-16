@@ -1,17 +1,15 @@
 "use client";
 
+import { usePathname, useRouter } from "next/navigation";
+import { type FC, memo, useMemo } from "react";
+import { GoArrowRight } from "react-icons/go";
 import { Search, UserMenu } from "@/components";
 import { Button, ShouldRender, Username } from "@/components/common";
-import { FC, memo, useMemo } from "react";
-
 import { NotificationsMenu } from "@/components/notifications-menu";
-import dynamic from "next/dynamic";
-import { usePathname, useRouter } from "next/navigation";
-import { GoArrowRight } from "react-icons/go";
-import { ChatMenuModal } from "../../chat-menu-modal";
-import * as S from "./styles";
 import { useGlobalState } from "@/context/store/stores";
 import logoText from "../../../assets/images/Logo text.png";
+import { ChatMenuModal } from "../../chat-menu-modal";
+import * as S from "./styles";
 
 type Props = {};
 

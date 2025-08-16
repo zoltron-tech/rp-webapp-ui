@@ -1,6 +1,6 @@
-import { FC, ForwardedRef, forwardRef, useCallback } from "react";
-import { Dialog } from "radix-ui";
 import classNames from "classnames";
+import { Dialog } from "radix-ui";
+import { type FC, type ForwardedRef, forwardRef, useCallback } from "react";
 import * as S from "./styled";
 import "./info-box.css";
 import { CgClose } from "react-icons/cg";
@@ -57,7 +57,7 @@ const InfoModalTitle: FC<InfoModalTitleProps> = forwardRef(
         {title}
       </Dialog.Title>
     );
-  }
+  },
 );
 
 export const InfoModal: FC<InfoModalProps> = ({
@@ -73,7 +73,7 @@ export const InfoModal: FC<InfoModalProps> = ({
         onClose();
       }
     },
-    [onClose]
+    [onClose],
   );
 
   return (

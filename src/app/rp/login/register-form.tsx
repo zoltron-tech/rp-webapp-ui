@@ -1,23 +1,23 @@
+import { ShouldRender } from "@novelist-world/ui";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Form } from "radix-ui";
 import {
-  FC,
-  FormEventHandler,
-  ReactNode,
+  type FC,
+  type FormEventHandler,
+  type ReactNode,
   useCallback,
   useMemo,
   useState,
 } from "react";
-import * as S from "./styled";
 import { checkUsernameAvailability, signupAction } from "@/app/actions";
-import Link from "next/link";
-import { UpdatePasswordFields } from "@/components/common/update-password-fields";
 import { LoaderAction } from "@/components/common/loader-action";
-import { ShouldRender } from "@novelist-world/ui";
-import { API_MESSAGE } from "@/utils/constants";
-import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
+import { UpdatePasswordFields } from "@/components/common/update-password-fields";
 import { ErrorBox } from "@/components/error-box";
 import { useGlobalStoreSet } from "@/context/store/stores";
-import { usePathname, useRouter } from "next/navigation";
+import { API_MESSAGE } from "@/utils/constants";
+import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
+import * as S from "./styled";
 
 const ErrorKeys = [
   API_MESSAGE.CONFLICT,
@@ -124,7 +124,7 @@ export const RegisterForm: FC = () => {
       });
       push("/rp/profile/edit");
     },
-    []
+    [],
   );
 
   const clearError = useCallback(() => {

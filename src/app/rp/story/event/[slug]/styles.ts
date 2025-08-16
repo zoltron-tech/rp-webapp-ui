@@ -1,7 +1,7 @@
-import * as Common from "@/components/common";
-import { Z_INDEX, CARD_BORDER, BORDER_RADIUS } from "@/theme";
-import { Container, Flex } from "@novelist-world/ui";
+import { Container } from "@novelist-world/ui";
 import styled from "styled-components";
+import * as Common from "@/components/common";
+import { BORDER_RADIUS, CARD_BORDER, Z_INDEX } from "@/theme";
 
 export const ParentContainer = styled.div`
   display: flex;
@@ -168,7 +168,7 @@ export const MuseName = styled.div`
   }
 `;
 
-export const Date = styled.div`
+export const StyledDate = styled.div`
   font-size: 12px;
   font-weight: 200;
   width: 400px;

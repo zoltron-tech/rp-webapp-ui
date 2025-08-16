@@ -1,16 +1,16 @@
 "use client";
-import type { JSX } from "react";
-import { searchAction } from "@/app/rp/novelists/actions";
-import { useForm } from "@/hooks";
-import { SearchResult } from "@/types/common";
-import { toggleState } from "@/utils/helpers";
-import { Logger } from "@/utils/services";
 import classNames from "classnames";
-import { FC, useEffect, useRef, useState } from "react";
+import type { JSX } from "react";
+import { type FC, useEffect, useRef, useState } from "react";
 import { BsSearch } from "react-icons/bs";
 import { CgSpinner } from "react-icons/cg";
 import { IoCloseOutline } from "react-icons/io5";
 import { PiSmileyThin } from "react-icons/pi";
+import { searchAction } from "@/app/rp/novelists/actions";
+import { useForm } from "@/hooks";
+import type { SearchResult } from "@/types/common";
+import { toggleState } from "@/utils/helpers";
+import { Logger } from "@/utils/services";
 import { ShouldRender } from "../common";
 import * as S from "./styles";
 
@@ -100,7 +100,7 @@ export const Search: FC<SearchProps> = ({
     <S.Wrapper>
       <S.Container
         tabIndex={0}
-        className={classNames({ expanded, ["type-select"]: types.length })}
+        className={classNames({ expanded, "type-select": types.length })}
       >
         {types.length && (
           <S.TypeSelect
@@ -134,7 +134,7 @@ export const Search: FC<SearchProps> = ({
         <S.Dropdown
           className={classNames({
             empty: noResults,
-            ["has-result"]: searchResults?.length,
+            "has-result": searchResults?.length,
           })}
         >
           <S.DropdownArea>

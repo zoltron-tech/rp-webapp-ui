@@ -1,23 +1,24 @@
-import React, { createContext } from "react";
+import type React from "react";
+import { createContext } from "react";
+import type { PromptStoreType } from "@/components/prompt/prompt.store";
+import type { PromptInputState } from "@/components/prompt-input/prompt-input.store";
+import type { Comment } from "@/types";
+import type { StoreState } from "@/types/state";
 import { useStoreData } from "./use-store-data";
-import { StoreState } from "@/types/state";
-import { PromptInputState } from "@/components/prompt-input/prompt-input.store";
-import { Comment } from "@/types";
-import { PromptStoreType } from "@/components/prompt/prompt.store";
 
 type SimpleRecord = Record<string, any>;
 
 export type Store<T = object> = ReturnType<typeof useStoreData<T>>;
 
 const createStoreContext = <T extends SimpleRecord>(
-  id: string
+  id: string,
 ): React.Context<Store<T>> => {
   const Context = createContext<Store<T>>({
     id,
-    get: () => ({} as T),
+    get: () => ({}) as T,
     set: () => {},
     subscribe: () => () => {},
-    getServerSnapshot: () => ({} as T),
+    getServerSnapshot: () => ({}) as T,
   });
 
   return Context;
@@ -33,7 +34,7 @@ const Stores = {
 export type StoreKey = keyof typeof Stores;
 
 export const StoreContext = <State extends object>(
-  id: StoreKey
+  id: StoreKey,
 ): React.Context<Store<State>> => {
   if (Stores[id]) {
     return Stores[id] as unknown as React.Context<Store<State>>;

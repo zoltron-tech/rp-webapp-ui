@@ -1,18 +1,16 @@
 "use client";
-import { FC, HTMLProps } from "react";
-
-import { Logger } from "@/utils/services";
 import { useRouter } from "next/navigation";
-
+import type { FC, HTMLProps } from "react";
 import {
   acceptFriendRequest,
   deleteFriendRequest,
 } from "@/app/rp/profile/actions";
+import type { NovelistWorldNotification } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
+import { toFormattedDateFromUnix } from "@/utils/helpers";
+import { Logger } from "@/utils/services";
 import { Avatar } from "../common";
 import * as S from "./styles";
-import { NovelistWorldNotification } from "@/types";
-import { toFormattedDateFromUnix } from "@/utils/helpers";
 
 type Props = HTMLProps<HTMLDivElement> & {
   notification?: NovelistWorldNotification | null;
@@ -26,7 +24,7 @@ export const FriendRequestNotification: FC<Props> = ({
 }) => {
   const { push } = useRouter();
 
-  const handleAcceptFriendRequest = async () => {
+  const _handleAcceptFriendRequest = async () => {
     if (!notification?.id) return;
 
     const response = await acceptFriendRequest(notification.id);
@@ -36,7 +34,7 @@ export const FriendRequestNotification: FC<Props> = ({
     }
   };
 
-  const handleDeleteFriendRequest = async () => {
+  const _handleDeleteFriendRequest = async () => {
     if (!notification?.id) return;
 
     const response = await deleteFriendRequest(notification.id);
@@ -48,7 +46,7 @@ export const FriendRequestNotification: FC<Props> = ({
 
   const handleCardClick = (
     e: React.MouseEvent<HTMLDivElement>,
-    notification: NovelistWorldNotification
+    notification: NovelistWorldNotification,
   ) => {
     const target = e.target as HTMLDivElement;
     if (target.classList.contains("button")) return;
@@ -57,7 +55,7 @@ export const FriendRequestNotification: FC<Props> = ({
       push(`/rp/muse/${notification.target.urlProp}`);
     else if (
       ["PROMPT_COMMENT", "PROMPT_COMMENT_REPLY", "REPLY"].includes(
-        notification.type
+        notification.type,
       )
     )
       push(`/rp/thread/${notification.target.urlProp}`);
@@ -86,11 +84,11 @@ export const FriendRequestNotification: FC<Props> = ({
           <S.NotificationBox>
             <S.Title>{notification.source.title}</S.Title>
             <S.Subtext>{notification.notificationText}</S.Subtext>
-            <S.Date>
+            <S.StyledDate>
               {notification.date
                 ? toFormattedDateFromUnix(notification.date)
                 : ""}
-            </S.Date>
+            </S.StyledDate>
           </S.NotificationBox>
           <S.NotificationActions>
             {/* <S.AcceptButton onClick={handleAcceptFriendRequest}>

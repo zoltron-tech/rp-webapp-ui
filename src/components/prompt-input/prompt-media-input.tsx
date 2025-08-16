@@ -1,23 +1,23 @@
 "use client";
 
-import { deleteMedia, uploadMedia } from "@/app/rp/profile/actions";
 import { Form } from "radix-ui";
 import {
-  ChangeEventHandler,
-  FC,
+  type ChangeEventHandler,
+  type FC,
   useCallback,
   useEffect,
   useMemo,
   useRef,
 } from "react";
-import * as S from "./styles";
-import { API_MESSAGE } from "@/utils/constants";
 import { GrAttachment } from "react-icons/gr";
+import { deleteMedia, uploadMedia } from "@/app/rp/profile/actions";
+import { API_MESSAGE } from "@/utils/constants";
+import { PromptEvent, useRunOn } from "./helpers";
 import {
   usePromptInputState,
   usePromptInputStoreSet,
 } from "./prompt-input.store";
-import { PromptEvent, useRunOn } from "./helpers";
+import * as S from "./styles";
 
 export const PromptMediaInput: FC = () => {
   const mediaUploadError = usePromptInputState("mediaUploadError");
@@ -71,7 +71,7 @@ export const PromptMediaInput: FC = () => {
       urlInputRef.current.value = uploaded;
       set({ mediaUploading: false, mediaUploadError: null });
     },
-    [urlInputRef, set]
+    [urlInputRef, set],
   );
 
   useEffect(() => {

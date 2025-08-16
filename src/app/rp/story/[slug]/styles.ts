@@ -1,6 +1,6 @@
-import { Avatar as AvatarCommon } from "@/components/common";
-import { BLUR_FILTER, CARD_BORDER, Z_INDEX } from "@/theme";
 import styled, { css } from "styled-components";
+import { Avatar as AvatarCommon } from "@/components/common";
+import { BLUR_FILTER, Z_INDEX } from "@/theme";
 
 interface BannerProps {
   src: string;

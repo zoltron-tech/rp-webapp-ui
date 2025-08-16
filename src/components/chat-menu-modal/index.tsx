@@ -1,20 +1,19 @@
 "use client";
 
-import { toFormattedDate, toggleState } from "@/utils/helpers";
+import { Flex } from "@novelist-world/ui";
 import classNames from "classnames";
 import { useRouter } from "next/navigation";
-import { FC, useEffect, useState } from "react";
+import { type FC, useEffect, useState } from "react";
 import { IoChatbubblesSharp } from "react-icons/io5";
+import { TiGroup } from "react-icons/ti";
+import { getConversationsAction } from "@/app/rp/novelists/actions";
+import { useGlobalState } from "@/context/store/stores";
+import type { Conversation } from "@/types/conversation";
+import { toFormattedDate, toggleState } from "@/utils/helpers";
 import { Avatar } from "../common";
 import * as S from "./styles";
-import { Conversation } from "@/types/conversation";
-import { getConversationsAction } from "@/app/rp/novelists/actions";
-import moment from "moment";
-import { TiGroup } from "react-icons/ti";
-import { Flex } from "@novelist-world/ui";
-import { useGlobalState } from "@/context/store/stores";
 
-interface ChatMenuProps {}
+type ChatMenuProps = {};
 
 export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
   const authState = useGlobalState("authState");
@@ -22,7 +21,7 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
   const novelist = useGlobalState("novelist");
   const [open, setOpen] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>();
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const { push } = useRouter();
 
   const onAvatarClick = (username: string) => {
@@ -31,7 +30,7 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
 
   const getConversationPreviewText = (
     conversation: Conversation,
-    currentUsername?: string
+    currentUsername?: string,
   ): string => {
     const lastMsg = conversation.lastMessage;
 
@@ -113,67 +112,64 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
           <IoChatbubblesSharp className="menu-icon" />
         </S.IconWrapper>
         <S.Menu className={classNames({ open })}>
-          {conversations &&
-            conversations.slice(0, 5).map((conversation) => (
-              <S.CardWrapper
-                onClick={() => onOpenMessagesClick(conversation.id)}
-                key={conversation.id}
-              >
-                <S.Card className="muse-card">
-                  <S.CardHeader>
-                    {!conversation.isGroup && (
-                      <Avatar
-                        src={conversation.image}
-                        alt={conversation.id}
-                        size={40}
-                        key={conversation.id}
-                        name={"open"}
-                        onClick={() =>
-                          onAvatarClick(
-                            conversation.lastMessage.sender.username
-                          )
-                        }
-                        hoverable
-                      />
-                    )}
-                    {conversation.isGroup && <TiGroup size={40} />}
+          {conversations?.slice(0, 5).map((conversation) => (
+            <S.CardWrapper
+              onClick={() => onOpenMessagesClick(conversation.id)}
+              key={conversation.id}
+            >
+              <S.Card className="muse-card">
+                <S.CardHeader>
+                  {!conversation.isGroup && (
+                    <Avatar
+                      src={conversation.image}
+                      alt={conversation.id}
+                      size={40}
+                      key={conversation.id}
+                      name={"open"}
+                      onClick={() =>
+                        onAvatarClick(conversation.lastMessage.sender.username)
+                      }
+                      hoverable
+                    />
+                  )}
+                  {conversation.isGroup && <TiGroup size={40} />}
 
-                    <S.NotificationBox>
-                      <Flex
-                        style={{
-                          justifyContent: "space-between",
-                          width: "95%",
-                        }}
-                      >
-                        <Flex direction="column" align="flex-start" gap={"0px"}>
-                          <S.Heading>{conversation.name}</S.Heading>
-                          <S.Text
-                            className={
-                              conversation.lastMessage?.isRead ? "" : "unread"
-                            }
-                          >
-                            {getConversationPreviewText(
-                              conversation,
-                              novelist?.username
-                            )}
-                          </S.Text>
-                        </Flex>
-                        {conversation.lastMessage &&
-                          !conversation.lastMessage.isRead && (
-                            <S.UnreadMessageIcon />
+                  <S.NotificationBox>
+                    <Flex
+                      style={{
+                        justifyContent: "space-between",
+                        width: "95%",
+                      }}
+                    >
+                      <Flex direction="column" align="flex-start" gap={"0px"}>
+                        <S.Heading>{conversation.name}</S.Heading>
+                        <S.Text
+                          className={
+                            conversation.lastMessage?.isRead ? "" : "unread"
+                          }
+                        >
+                          {getConversationPreviewText(
+                            conversation,
+                            novelist?.username,
                           )}
+                        </S.Text>
                       </Flex>
+                      {conversation.lastMessage &&
+                        !conversation.lastMessage.isRead && (
+                          <S.UnreadMessageIcon />
+                        )}
+                    </Flex>
 
-                      <S.Date>
-                        {conversation.lastMessage?.createdAt
-                          ? toFormattedDate(conversation.lastMessage.createdAt)
-                          : ""}
-                      </S.Date>
-                    </S.NotificationBox>
-                  </S.CardHeader>
-                </S.Card>
-              </S.CardWrapper>
-            ))}
+                    <S.StyledDate>
+                      {conversation.lastMessage?.createdAt
+                        ? toFormattedDate(conversation.lastMessage.createdAt)
+                        : ""}
+                    </S.StyledDate>
+                  </S.NotificationBox>
+                </S.CardHeader>
+              </S.Card>
+            </S.CardWrapper>
+          ))}
           <S.CardWrapper key={"end"} className="end">
             <S.Card
               className="more-items-box"

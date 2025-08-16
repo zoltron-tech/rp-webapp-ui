@@ -1,10 +1,10 @@
 "use client";
 
-import { Prompt as PromptType } from "@/types";
-import { FC, HTMLProps } from "react";
-import { PromptContent } from "./prompt-content";
 import { Separator } from "radix-ui";
+import type { FC, HTMLProps } from "react";
 import { StoreProvider } from "@/context/store/context";
+import type { Prompt as PromptType } from "@/types";
+import { PromptContent } from "./prompt-content";
 import { PromptHeader } from "./prompt-header";
 import { PromptThreads } from "./prompt-threads";
 

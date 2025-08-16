@@ -1,5 +1,5 @@
-import { CARD_BG_BLUR, SPIN, Z_INDEX } from "@/theme";
 import styled from "styled-components";
+import { CARD_BG_BLUR, SPIN, Z_INDEX } from "@/theme";
 
 export const Background = styled.div`
   width: 100%;

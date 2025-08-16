@@ -3,7 +3,7 @@ import {
   useStoreSet,
   useStoreState,
 } from "@/context/store/use-store";
-import { Comment as CommentType } from "@/types";
+import type { Comment as CommentType } from "@/types";
 
 type CommentStoreKey = keyof CommentType;
 

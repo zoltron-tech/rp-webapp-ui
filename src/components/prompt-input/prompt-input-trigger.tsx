@@ -1,11 +1,11 @@
-import { Collapsible } from "radix-ui";
-import * as S from "./styles";
 import classNames from "classnames";
-import { typeToTriggerButtonText } from "./helpers";
+import { Collapsible } from "radix-ui";
+import type { FC } from "react";
 import { BsArrowsCollapse } from "react-icons/bs";
-import { FC } from "react";
-import { usePromptInputState } from "./prompt-input.store";
 import { IoMdAdd } from "react-icons/io";
+import { typeToTriggerButtonText } from "./helpers";
+import { usePromptInputState } from "./prompt-input.store";
+import * as S from "./styles";
 
 type PromptInputTriggerProps = {
   open: boolean;

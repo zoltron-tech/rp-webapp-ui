@@ -1,16 +1,22 @@
-import { Form } from "radix-ui";
-import { FC, FormEventHandler, ReactNode, useCallback, useState } from "react";
-import * as S from "./styled";
-import { useRouter } from "next/navigation";
-import { LoaderAction } from "@/components/common/loader-action";
-import { loginAction } from "@/app/actions";
-import { API_MESSAGE } from "@/utils/constants";
 import { ShouldRender } from "@novelist-world/ui";
-import { ErrorBox } from "@/components/error-box";
-import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
-import { useGlobalStoreSet } from "@/context/store/stores";
-import { getUserNovelist } from "../novelists/actions";
+import { useRouter } from "next/navigation";
+import { Form } from "radix-ui";
+import {
+  type FC,
+  type FormEventHandler,
+  type ReactNode,
+  useCallback,
+  useState,
+} from "react";
+import { loginAction } from "@/app/actions";
+import { LoaderAction } from "@/components/common/loader-action";
 import { PasswordField } from "@/components/common/password-field";
+import { ErrorBox } from "@/components/error-box";
+import { useGlobalStoreSet } from "@/context/store/stores";
+import { API_MESSAGE } from "@/utils/constants";
+import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
+import { getUserNovelist } from "../novelists/actions";
+import * as S from "./styled";
 
 const ErrorKeys = [
   API_MESSAGE.BadPayload,
@@ -93,7 +99,7 @@ export const LoginForm: FC = () => {
       });
       push("/rp/home");
     },
-    []
+    [],
   );
 
   const clearError = useCallback(() => {

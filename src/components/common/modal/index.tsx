@@ -1,5 +1,5 @@
 "use client";
-import { FC } from "react";
+import type { FC } from "react";
 import { IoIosCloseCircle } from "react-icons/io";
 
 import { Logger } from "@/utils/services";

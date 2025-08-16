@@ -1,8 +1,8 @@
 import { Form } from "radix-ui";
-import { FC, HTMLProps, useMemo } from "react";
-import * as S from "./styles";
-import { SubmitPromptType } from "@/types";
+import { type FC, type HTMLProps, useMemo } from "react";
+import type { SubmitPromptType } from "@/types";
 import { usePromptInputState } from "./prompt-input.store";
+import * as S from "./styles";
 
 const promptTypeToButtonText = (type: SubmitPromptType): string => {
   switch (type) {

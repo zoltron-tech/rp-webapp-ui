@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, createContext, useContext, useEffect, useState } from "react";
+import { createContext, type FC, useContext, useEffect, useState } from "react";
 import { io as ClientIO } from "socket.io-client";
 
 const SOCKET_SERVER_URL = "http://localhost:3000";
@@ -46,7 +46,7 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
       setConnected(false);
     });
 
-    socketInstance.on("message", (data: any) => {});
+    socketInstance.on("message", (_data: any) => {});
 
     setSocket(socketInstance);
 

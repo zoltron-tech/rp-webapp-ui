@@ -1,6 +1,6 @@
+import { Button, Container } from "@novelist-world/ui";
 import styled from "styled-components";
 import { setOpacity } from "@/utils/helpers";
-import { Button, Container } from "@novelist-world/ui";
 
 export const PageContainer = styled.div`
   display: flex;

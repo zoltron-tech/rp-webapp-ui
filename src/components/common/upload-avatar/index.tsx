@@ -1,10 +1,10 @@
-import { Logger } from "@/utils/services";
 import classNames from "classnames";
 import Image from "next/image";
-import React, { FC, useState } from "react";
+import type React from "react";
+import { type FC, useState } from "react";
 import { TbCameraUp } from "react-icons/tb";
-
 import { useUIContext } from "@/hooks";
+import { Logger } from "@/utils/services";
 import * as S from "./styles";
 
 type UploadAvatarProps = {

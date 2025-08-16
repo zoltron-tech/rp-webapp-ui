@@ -1,7 +1,7 @@
-import { useCustomEvents } from "@/hooks";
-import { Muse, PromptSource, SubmitPromptType } from "@/types";
-import { API_MESSAGE } from "@/utils/constants";
 import { useEffect } from "react";
+import { useCustomEvents } from "@/hooks";
+import type { Muse, PromptSource, SubmitPromptType } from "@/types";
+import { API_MESSAGE } from "@/utils/constants";
 import { usePromptInputState } from "./prompt-input.store";
 
 export enum PromptEvent {
@@ -13,7 +13,7 @@ export enum PromptEvent {
 export const museToSource = (muse: Muse): PromptSource => ({
   _tag: "PromptSource",
   sourceId: muse.id || "",
-  name: (muse.firstName + " " + muse.lastName).trim(),
+  name: `${muse.firstName} ${muse.lastName}`.trim(),
   image: muse.image || "",
 });
 
@@ -32,19 +32,18 @@ export const getMediaTypeFromUrl = (url: string) => {
 type PromptIdKey = "promptId" | "commentId";
 
 export const getParentIdKeyFromPromptType = (
-  type: Exclude<SubmitPromptType, "prompt">
+  type: Exclude<SubmitPromptType, "prompt">,
 ): PromptIdKey => {
   switch (type) {
     case "comment":
       return "promptId";
-    case "reply":
     default:
       return "commentId";
   }
 };
 
 export const apiMessageToInfoMessage = (
-  message: API_MESSAGE | null
+  message: API_MESSAGE | null,
 ): string => {
   switch (message) {
     case API_MESSAGE.Success:
@@ -67,7 +66,6 @@ export const typeToTriggerButtonText = (type: SubmitPromptType): string => {
     case "reply":
       return "Reply";
     default:
-    case "prompt":
       return "Create a new prompt";
   }
 };

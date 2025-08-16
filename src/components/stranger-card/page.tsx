@@ -1,11 +1,11 @@
 "use client";
 
-import { Button, ShouldRender } from "@/components/common";
-import { useRouter } from "next/navigation";
-import { FC } from "react";
-import * as S from "./styles";
-import { Novelist } from "@/types";
 import classNames from "classnames";
+import { useRouter } from "next/navigation";
+import type { FC } from "react";
+import { Button, ShouldRender } from "@/components/common";
+import type { Novelist } from "@/types";
+import * as S from "./styles";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   novelist?: Novelist | null;

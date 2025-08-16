@@ -1,8 +1,6 @@
 import { styled } from "styled-components";
 import * as Common from "@/components/common";
-import { pSBC } from "@/lib/pSBC";
-import { Z_INDEX, CARD_BORDER } from "@/theme";
-import { setOpacity } from "@/utils/helpers";
+import { CARD_BORDER, Z_INDEX } from "@/theme";
 
 type CardProps = {
   banner: string;

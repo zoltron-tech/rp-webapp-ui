@@ -1,11 +1,11 @@
+import classNames from "classnames";
 import {
   Form,
   unstable_PasswordToggleField as PasswordToggleField,
 } from "radix-ui";
-import { ComponentProps, FC } from "react";
-import * as S from "./styled";
-import classNames from "classnames";
+import type { ComponentProps, FC } from "react";
 import { PiEyeClosedLight, PiEyeDuotone } from "react-icons/pi";
+import * as S from "./styled";
 
 const MAX_PASSWORD_LENGTH = 30;
 type PasswordFieldProps = ComponentProps<typeof PasswordToggleField.Input> & {

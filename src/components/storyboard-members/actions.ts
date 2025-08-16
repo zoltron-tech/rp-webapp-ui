@@ -1,16 +1,16 @@
 "use server";
-import { authenticateAndGetJWT } from "@/app/actions";
-import { Muse, Novelist, StoryBoard, StoryBoardMember } from "@/types";
-import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import getConfig from "next/config";
+import { authenticateAndGetJWT } from "@/app/actions";
+import type { StoryBoardMember } from "@/types";
+import type { WithMessage } from "@/types/common";
+import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import { Logger } from "@/utils/services";
-import { WithMessage } from "@/types/common";
 
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
 
 export const addStoryBoardMember = async (
-  _storyboardMember: StoryBoardMember
+  _storyboardMember: StoryBoardMember,
 ) => {
   const jwt = await authenticateAndGetJWT();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/story/member`;
@@ -39,7 +39,7 @@ export const addStoryBoardMember = async (
 };
 
 export const removeStoryBoardMember = async (
-  _storyboardMember: StoryBoardMember
+  _storyboardMember: StoryBoardMember,
 ) => {
   const jwt = await authenticateAndGetJWT();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/story/member`;

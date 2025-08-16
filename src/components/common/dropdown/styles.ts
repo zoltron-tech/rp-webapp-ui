@@ -1,5 +1,5 @@
-import { BASE_TRANSITION } from "@/theme";
 import { styled } from "styled-components";
+import { BASE_TRANSITION } from "@/theme";
 
 export const DropdownContainer = styled.div`
   position: absolute;

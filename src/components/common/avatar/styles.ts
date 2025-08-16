@@ -1,10 +1,10 @@
+import { styled } from "styled-components";
 import {
   AVATAR_IMAGE,
   BASE_TRANSITION,
   DEV_MODE_BORDER,
   Z_INDEX,
 } from "@/theme";
-import { styled } from "styled-components";
 
 interface AvatarProps {
   width?: number;

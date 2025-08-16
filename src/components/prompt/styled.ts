@@ -96,7 +96,7 @@ export const PromptContent = Object.assign(
   {
     Root: PromptContentRoot,
     Footer: PromptContentFooter,
-  }
+  },
 );
 
 export const PromptMediaContainer = styled.div`
@@ -172,5 +172,5 @@ export const PromptThreads = Object.assign(
     Left: PromptThreadsSeparator,
     Right: PromptThreadsSeparator,
     Toggle: PromptThreadsToggle,
-  }
+  },
 );

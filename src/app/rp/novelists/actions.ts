@@ -1,12 +1,13 @@
 "use server";
+import getConfig from "next/config";
 import {
   authenticateAndGetJWT,
   getJWTIfExists,
   logoutAction,
 } from "@/app/actions";
-import { Novelist, NovelistWorldNotification } from "@/types";
-import { SearchResult, WithMessage } from "@/types/common";
-import { Conversation, Message } from "@/types/conversation";
+import type { Novelist, NovelistWorldNotification } from "@/types";
+import type { SearchResult, WithMessage } from "@/types/common";
+import type { Conversation, Message } from "@/types/conversation";
 import {
   API_MESSAGE,
   AUTH_HEADER_NAME,
@@ -14,7 +15,6 @@ import {
   MEDIA_JSON_HEADER_VALUE,
 } from "@/utils/constants";
 import { Logger } from "@/utils/services";
-import getConfig from "next/config";
 
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
@@ -37,7 +37,7 @@ export const getNovelists = async () => {
 };
 
 export const getNovelistAction = async (username: string) => {
-  let headers: Record<string, string> = {
+  const headers: Record<string, string> = {
     [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
   };
 
@@ -145,7 +145,7 @@ export const updateUserNovelist = async (_novelist: Novelist) => {
     {
       ...result,
       message: undefined,
-    }
+    },
   );
 
   return novelist;
@@ -205,7 +205,7 @@ export const chatAction = async (targetUserName: string | null) => {
 
 export const getConversationsAction = async (
   pageNumber: number,
-  pageSize: number
+  pageSize: number,
 ) => {
   const jwt = await authenticateAndGetJWT();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/conversations?pageNumber=${pageNumber}&pageSize=${pageSize}`;

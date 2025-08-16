@@ -1,25 +1,27 @@
 "use client";
 
-import * as S from "./styles";
+import { Flex, ShouldRender } from "@novelist-world/ui";
+import classNames from "classnames";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { StoryBoard, StoryBoardEvent, StoryBoardEventThread } from "@/types";
-import { PageLoader } from "@/components/layout";
-import { toFormattedDate } from "@/utils/helpers";
-import { ShouldRender, Flex } from "@novelist-world/ui";
+import { BsCalendar2Date } from "react-icons/bs";
 import { IoArrowBackOutline } from "react-icons/io5";
 import { TfiLocationPin } from "react-icons/tfi";
-import { BsCalendar2Date } from "react-icons/bs";
-import { CiCircleMore } from "react-icons/ci";
-
+import { Divider } from "@/app/rp/tiers/styles";
+import { PageLoader } from "@/components/layout";
+import { useGlobalState } from "@/context/store/stores";
+import type {
+  StoryBoard,
+  StoryBoardEvent,
+  StoryBoardEventThread,
+} from "@/types";
+import { toFormattedDate } from "@/utils/helpers";
 import {
   getStoryboardAction,
   getStoryboardEventAction,
   getStoryboardEventThreadsAction,
 } from "../../actions";
-import classNames from "classnames";
-import { Divider } from "@/app/rp/tiers/styles";
-import { useGlobalState } from "@/context/store/stores";
+import * as S from "./styles";
 
 export default function StoryboardEventPage({}) {
   const params = useParams();
@@ -73,9 +75,8 @@ export default function StoryboardEventPage({}) {
   const fetchStoryboardEventThreads = async () => {
     setLoading(true);
     console.log("going to fetch event threads");
-    const _storyboardEventThreads = await getStoryboardEventThreadsAction(
-      storyboardEventId
-    );
+    const _storyboardEventThreads =
+      await getStoryboardEventThreadsAction(storyboardEventId);
 
     if (!_storyboardEventThreads || "message" in _storyboardEventThreads) {
       // handle error
@@ -189,11 +190,11 @@ export default function StoryboardEventPage({}) {
           <S.Name>{storyboardEvent?.name}</S.Name>
           <Flex gap={5}>
             <BsCalendar2Date />
-            <S.Date>{toFormattedDate(storyboardEvent?.eventTime || "")}</S.Date>
+            <S.StyledDate>{toFormattedDate(storyboardEvent?.eventTime || "")}</S.StyledDate>
           </Flex>
           <Flex gap={5}>
             <TfiLocationPin />
-            <S.Date>{storyboardEvent?.location}</S.Date>
+            <S.StyledDate>{storyboardEvent?.location}</S.StyledDate>
           </Flex>
           <S.PromptText>{storyboardEvent?.description}</S.PromptText>
           <Divider></Divider>

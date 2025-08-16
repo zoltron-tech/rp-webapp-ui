@@ -256,7 +256,8 @@ div[class*="nw-toast"] {
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 3px 6px -1px rgb(81 81 81 / 12%),
+  box-shadow:
+    0 3px 6px -1px rgb(81 81 81 / 12%),
     0 10px 36px -4px rgb(81 81 81 / 30%);
 }
 

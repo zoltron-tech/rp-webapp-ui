@@ -1,12 +1,12 @@
-import { Muse, SubmitPromptType } from "@/types";
-import { Avatar, Form, Select } from "radix-ui";
-import { FC, forwardRef, useState } from "react";
-import * as S from "./styles";
-import { MdOutlineKeyboardArrowDown } from "react-icons/md";
-import { GrRadialSelected } from "react-icons/gr";
-import { usePromptInputState } from "./prompt-input.store";
-import { useGlobalState } from "@/context/store/stores";
 import classNames from "classnames";
+import { Avatar, Form, Select } from "radix-ui";
+import { type FC, forwardRef, useState } from "react";
+import { GrRadialSelected } from "react-icons/gr";
+import { MdOutlineKeyboardArrowDown } from "react-icons/md";
+import { useGlobalState } from "@/context/store/stores";
+import type { Muse, SubmitPromptType } from "@/types";
+import { usePromptInputState } from "./prompt-input.store";
+import * as S from "./styles";
 
 type Props = {
   muses: Muse[];
@@ -88,7 +88,7 @@ export const PromptMuseSelect: FC<Props> = forwardRef(
         </Form.Message>
       </S.MuseSelect>
     );
-  }
+  },
 );
 
 const MuseAvatar: FC<{ src: string | null; alt: string }> = forwardRef(
@@ -109,7 +109,7 @@ const MuseAvatar: FC<{ src: string | null; alt: string }> = forwardRef(
         </Avatar.Fallback>
       </S.MuseAvatarRoot>
     );
-  }
+  },
 );
 
 const SelectItem: FC<{ muse: Muse }> = forwardRef(
@@ -136,5 +136,5 @@ const SelectItem: FC<{ muse: Muse }> = forwardRef(
         </Select.ItemText>
       </Select.Item>
     );
-  }
+  },
 );

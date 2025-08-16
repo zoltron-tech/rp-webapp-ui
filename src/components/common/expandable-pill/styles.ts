@@ -1,6 +1,6 @@
+import { css, styled } from "styled-components";
 import { Pill } from "@/components/common/pill";
 import { DEV_MODE_BORDER, NO_SCROLLBAR, PILL } from "@/theme";
-import { css, styled } from "styled-components";
 
 export const PillContinaer = styled(Pill)`
   --expanded-height: 500px;

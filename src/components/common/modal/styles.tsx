@@ -1,6 +1,6 @@
-import { BORDER_RADIUS, Z_INDEX } from "@/theme";
 import styled from "styled-components";
-import { Hideable } from "../visibility-provider";
+import { BORDER_RADIUS, Z_INDEX } from "@/theme";
+import type { Hideable } from "../visibility-provider";
 
 export const Container = styled.div<Partial<Hideable>>`
   position: fixed;

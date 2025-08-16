@@ -1,13 +1,11 @@
 "use client";
-import { Muse } from "@/types/novelist";
-import { FC, useRef } from "react";
-
-import { Logger } from "@/utils/services";
-import { useRouter } from "next/navigation";
-
-import * as S from "./styles";
-import classNames from "classnames";
 import { Flex } from "@novelist-world/ui";
+import classNames from "classnames";
+import { useRouter } from "next/navigation";
+import { type FC, useRef } from "react";
+import type { Muse } from "@/types/novelist";
+import { Logger } from "@/utils/services";
+import * as S from "./styles";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   muse?: Muse | null;
@@ -52,7 +50,7 @@ export const VideoCard: FC<Props> = ({ muse, className, ...rest }) => {
           <S.Video
             ref={videoRef}
             className="video"
-            src={muse.video + "#t=0.3"}
+            src={`${muse.video}#t=0.3`}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
           ></S.Video>

@@ -1,10 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { FC } from "react";
-import * as S from "./styles";
-import { Friend } from "@/types";
 import classNames from "classnames";
+import { useRouter } from "next/navigation";
+import type { FC } from "react";
+import type { Friend } from "@/types";
+import * as S from "./styles";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   novelist?: Friend | null;

@@ -1,4 +1,4 @@
-import { LOG_LEVEL, LOG_LEVELS, __DEV__ } from "../constants";
+import { __DEV__, LOG_LEVEL, LOG_LEVELS } from "../constants";
 
 const LOG_PREFIX = {
   [LOG_LEVELS.DEBUG]: "DEBUG",
@@ -10,7 +10,11 @@ const LOG_PREFIX = {
 };
 
 const logIfLevel = (level: LOG_LEVELS, ...args: any[]) => {
-  if (__DEV__ && !isNaN(Number(LOG_LEVEL)) && level <= Number(LOG_LEVEL)) {
+  if (
+    __DEV__ &&
+    !Number.isNaN(Number(LOG_LEVEL)) &&
+    level <= Number(LOG_LEVEL)
+  ) {
     console.log(`${LOG_PREFIX[level as LOG_LEVELS]}:- `, ...args);
   }
 };

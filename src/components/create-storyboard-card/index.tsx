@@ -1,27 +1,27 @@
 "use client";
 
+import { Flex } from "@novelist-world/ui";
+import { useRouter } from "next/navigation";
+import { type FC, useEffect, useState } from "react";
+import { GrEdit } from "react-icons/gr";
 import { uploadMedia } from "@/app/rp/profile/actions";
+import {
+  getStoryboardAction,
+  updateStoryBoardAction,
+} from "@/app/rp/story/actions";
 import {
   Input,
   ShouldRender,
   UploadAvatar,
   Username,
 } from "@/components/common";
+import { useGlobalState } from "@/context/store/stores";
 import { useForm, useUIContext } from "@/hooks";
 import type { StoryBoard } from "@/types";
 import { API_MESSAGE, INITIAL_STORY_BOARD } from "@/utils/constants";
 import { Logger } from "@/utils/services";
-import { useRouter } from "next/navigation";
-import { FC, useEffect, useState } from "react";
-import * as S from "./styles";
-import {
-  getStoryboardAction,
-  updateStoryBoardAction,
-} from "@/app/rp/story/actions";
 import { MusesPill } from "../muses-pill";
-import { GrEdit } from "react-icons/gr";
-import { Flex } from "@novelist-world/ui";
-import { useGlobalState } from "@/context/store/stores";
+import * as S from "./styles";
 
 export type CreateStoryBoardCardProps = {
   id?: string;
@@ -161,7 +161,7 @@ export const CreateStoryBoardCard: FC<CreateStoryBoardCardProps> = ({ id }) => {
         />
         <S.Profile>
           <S.Title>{id ? "EDIT" : "Create"} Story</S.Title>
-          <ShouldRender if={id != undefined}>
+          <ShouldRender if={id !== undefined}>
             <S.UsernameContainer>
               <span>Author: </span>
               <Username username={storyBoard?.createdBy.username} primary />

@@ -1,12 +1,12 @@
-import { FC, useMemo, useState } from "react";
-import * as S from "./styled";
-import { useGetComments } from "./helpers";
-import { Comment } from "../comment";
-import { usePromptState } from "./prompt.store";
-import { Collapsible } from "radix-ui";
-import PromptInput from "../prompt-input";
 import classNames from "classnames";
+import { Collapsible } from "radix-ui";
+import { type FC, useMemo, useState } from "react";
 import { useGlobalState } from "@/context/store/stores";
+import { Comment } from "../comment";
+import PromptInput from "../prompt-input";
+import { useGetComments } from "./helpers";
+import { usePromptState } from "./prompt.store";
+import * as S from "./styled";
 
 export const PromptThreads: FC = () => {
   const threadsOpen = usePromptState("threadOpen");

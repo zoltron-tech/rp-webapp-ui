@@ -1,7 +1,7 @@
-import * as Common from "@/components/common";
-import { Z_INDEX, CARD_BORDER } from "@/theme";
-import { Container, Flex } from "@novelist-world/ui";
+import { Flex } from "@novelist-world/ui";
 import styled from "styled-components";
+import * as Common from "@/components/common";
+import { CARD_BORDER, Z_INDEX } from "@/theme";
 
 export const VideoContainer = styled.div`
   padding: 0px;

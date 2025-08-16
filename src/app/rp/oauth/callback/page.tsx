@@ -1,17 +1,16 @@
 "use client";
 
-import { InfoModal } from "@/components/info-modal";
 import { useRouter, useSearchParams } from "next/navigation";
-import * as S from "./styled";
-import { PiSpinnerGapLight } from "react-icons/pi";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { IoMdCheckmark } from "react-icons/io";
 import { CgClose } from "react-icons/cg";
-import { validateJWTSync } from "@/utils/helpers";
-import { authenticateAction, getUser, setAuthCookie } from "@/app/actions";
-import { API_MESSAGE } from "@/utils/constants";
+import { IoMdCheckmark } from "react-icons/io";
+import { PiSpinnerGapLight } from "react-icons/pi";
+import { getUser, setAuthCookie } from "@/app/actions";
 import { useGlobalStoreSet } from "@/context/store/stores";
+import { API_MESSAGE } from "@/utils/constants";
+import { validateJWTSync } from "@/utils/helpers";
 import { getUserNovelist } from "../../novelists/actions";
+import * as S from "./styled";
 
 type OperationState = "LOADING" | "SUCCESS" | "ERROR";
 

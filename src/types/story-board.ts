@@ -1,5 +1,5 @@
-import { Tag, Tagged } from "./common";
-import { Friend } from "./novelist";
+import type { Tag, Tagged } from "./common";
+import type { Friend } from "./novelist";
 
 export interface StoryBoard {
   id: string | null;

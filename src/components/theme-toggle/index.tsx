@@ -1,13 +1,12 @@
 "use client";
 
 import classNames from "classnames";
-import { FC, useEffect } from "react";
-import { BsMoonFill, BsSunFill } from "react-icons/bs";
-
-import { Logger } from "@/utils/services";
+import { type FC, useEffect } from "react";
 import { useCookies } from "react-cookie";
-import * as S from "./styles";
+import { BsMoonFill, BsSunFill } from "react-icons/bs";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
+import { Logger } from "@/utils/services";
+import * as S from "./styles";
 
 type Props = {};
 

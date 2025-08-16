@@ -3,7 +3,7 @@ import {
   useStoreSet,
   useStoreState,
 } from "@/context/store/use-store";
-import { SubmitPromptType } from "@/types";
+import type { SubmitPromptType } from "@/types";
 
 type MediaUploadError = "INVALID_FILE_TYPE" | "UPLOAD_FAILED" | null;
 

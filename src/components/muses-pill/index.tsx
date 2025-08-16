@@ -1,10 +1,9 @@
-import { Novelist, Muse, StoryBoard } from "@/types";
-import { PillType } from "@/types/pill-type";
-import { FC } from "react";
-import { ExpandablePill } from "../common";
 import { useRouter } from "next/navigation";
-
+import type { FC } from "react";
+import type { Muse, Novelist, StoryBoard } from "@/types";
+import type { PillType } from "@/types/pill-type";
 import { Logger } from "@/utils/services";
+import { ExpandablePill } from "../common";
 import * as S from "./styles";
 
 interface Props {
@@ -13,7 +12,7 @@ interface Props {
   muse?: Muse | null;
   storyboard?: StoryBoard | null;
   pillType: PillType;
-  expandable: Boolean;
+  expandable: boolean;
 }
 
 export const MusesPill: FC<Props> = ({

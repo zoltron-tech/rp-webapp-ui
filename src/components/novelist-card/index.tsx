@@ -1,14 +1,13 @@
 "use client";
-import { ShouldRender } from "@/components/common";
-import { Novelist } from "@/types/novelist";
 import classNames from "classnames";
-import { FC, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { type FC, useEffect, useState } from "react";
 import { MdOutlineExpandLess, MdOutlineExpandMore } from "react-icons/md";
 import { useSwiper, useSwiperSlide } from "swiper/react";
-
+import { ShouldRender } from "@/components/common";
+import type { Novelist } from "@/types/novelist";
 import { toggleState } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
-import { useRouter } from "next/navigation";
 import * as S from "./styles";
 
 type Props = {

@@ -12,7 +12,7 @@ type Props = React.HTMLProps<HTMLDivElement> & {
 export const TagsContainer: FC<Props> = ({ tags, className, ...rest }) => {
   return (
     <ShouldRender if={tags?.length !== undefined && tags?.length > 0}>
-      <S.TagContainer>
+      <S.TagContainer className={className} {...rest}>
         {tags?.map((tag) => (
           <S.TagValue key={tag.id} color={tag.color || "red"}>
             {tag.label}

@@ -1,5 +1,4 @@
 "use client";
-
 import { Flex, ShouldRender } from "@novelist-world/ui";
 import classNames from "classnames";
 import { useParams, useRouter } from "next/navigation";
@@ -190,7 +189,9 @@ export default function StoryboardEventPage({}) {
           <S.Name>{storyboardEvent?.name}</S.Name>
           <Flex gap={5}>
             <BsCalendar2Date />
-            <S.StyledDate>{toFormattedDate(storyboardEvent?.eventTime || "")}</S.StyledDate>
+            <S.StyledDate>
+              {toFormattedDate(storyboardEvent?.eventTime || "")}
+            </S.StyledDate>
           </Flex>
           <Flex gap={5}>
             <TfiLocationPin />

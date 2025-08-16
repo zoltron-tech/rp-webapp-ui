@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["src/**/*.ts"]
+    "includes": ["src/**/*"]
   },
   "formatter": {
     "enabled": true,
@@ -27,10 +27,14 @@
         "noUnusedVariables": "off",
         "noNestedComponentDefinitions": "off"
       },
+      "performance": {
+        "noImgElement": "off"
+      },
       "suspicious": {
         "noExplicitAny": "off",
         "noArrayIndexKey": "off",
-        "useIterableCallbackReturn": "off"
+        "useIterableCallbackReturn": "off",
+        "noAssignInExpressions": "off"
       },
       "complexity": {
         "noStaticOnlyClass": "off",

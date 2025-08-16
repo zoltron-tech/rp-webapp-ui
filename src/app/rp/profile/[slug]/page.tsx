@@ -16,7 +16,7 @@ import ActivityBox from "@/components/activity-box";
 import { ButtonGroup, type ButtonInfo } from "@/components/button-group";
 import { ShouldRender, Username } from "@/components/common";
 import { PageLoader } from "@/components/layout";
-import MuseListItem from "@/components/muse-list-item/intex";
+import MuseListItem from "@/components/muse-list-item";
 import PromptInput from "@/components/prompt-input";
 import StoryCard from "@/components/story-card";
 import { useGlobalState } from "@/context/store/stores";

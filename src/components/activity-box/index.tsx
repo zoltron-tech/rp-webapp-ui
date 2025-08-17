@@ -58,13 +58,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
       push(ROUTES.Profile.View(activity.source.urlProp).Index);
   };
 
-  const onAvatarClick = (
-    e: React.MouseEvent<HTMLDivElement>,
-    activity: Activity,
-  ) => {
-    const target = e.target as HTMLDivElement;
-    if (target.classList.contains("button")) return;
-
+  const onAvatarClick = (activity: Activity) => {
     if (activity?.source.sourceType === "MUSE")
       push(ROUTES.Muse.View(activity.source.id));
     else if (activity?.source.sourceType === "NOVELIST")
@@ -81,13 +75,11 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
         <Flex style={{ gap: "0.2em" }}>
           <S.Avatar
             src={activity.source?.image || ""}
-            alt={""}
-            size={50}
-            onClick={(e) => onAvatarClick(e, activity)}
-            hoverable
+            alt={activity.source.title || "Avatar"}
+            onClick={() => onAvatarClick(activity)}
           />
 
-          <S.SourceName onClick={(e) => onAvatarClick(e, activity)}>
+          <S.SourceName onClick={() => onAvatarClick(activity)}>
             {" "}
             {activity.source.title}
           </S.SourceName>

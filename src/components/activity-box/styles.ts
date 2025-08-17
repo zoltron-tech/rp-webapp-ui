@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import * as Common from "@/components/common";
 import { BORDER_RADIUS, CARD_BORDER, Z_INDEX } from "@/theme";
+import { AvatarNew } from "../common/avatar-new";
 
 export const ParentContainer = styled.div`
   display: flex;
@@ -46,8 +47,10 @@ export const HeaderContainer = styled.div`
   }
 `;
 
-export const Avatar = styled(Common.Avatar)`
+export const Avatar = styled(AvatarNew)`
   margin-block: 10px;
+  height: 50px;
+  width: 50px;
 
   @container (max-width: 500px) {
     & {

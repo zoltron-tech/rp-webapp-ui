@@ -291,7 +291,10 @@ export default function UserProfilePage({}) {
             justify="flex-start"
             style={{ marginBottom: "-70px", width: "90%" }}
           >
-            <S.Avatar src={novelist?.image ?? null} alt="profile-picture" />
+            <S.Avatar
+              src={novelist?.image ?? null}
+              alt={novelist?.firstName ?? "Avatar"}
+            />
             <S.AvatarMobile
               src={novelist?.image ?? null}
               alt="profile-picture"

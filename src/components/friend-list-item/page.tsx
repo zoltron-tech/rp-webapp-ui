@@ -40,11 +40,10 @@ export const FriendListItem: FC<Props> = ({ novelist, className, ...rest }) => {
         ])}
       >
         <S.Avatar
+          className="selectable"
           src={novelist?.image ?? null}
-          alt={""}
-          size={50}
+          alt={novelist?.username ?? "Avatar"}
           onClick={onAvatarClick}
-          hoverable
         />
         <S.Info>
           <S.username username={novelist?.username} />

@@ -74,6 +74,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
       <S.HeaderContainer>
         <Flex style={{ gap: "0.2em" }}>
           <S.Avatar
+            className="selectable"
             src={activity.source?.image || ""}
             alt={activity.source.title || "Avatar"}
             onClick={() => onAvatarClick(activity)}

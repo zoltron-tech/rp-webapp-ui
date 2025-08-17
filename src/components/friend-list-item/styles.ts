@@ -1,6 +1,7 @@
 import { styled } from "styled-components";
 import * as Common from "@/components/common";
 import { Z_INDEX } from "@/theme";
+import { AvatarNew } from "../common/avatar-new";
 
 type CardProps = {
   banner: string;
@@ -53,9 +54,14 @@ export const Card = styled.div`
   contain: paint;
   gap: 1em;
   border-bottom: 1px solid var(--bg-6);
+
+  .avatar {
+    height: 50px;
+    width: 50px;
+  }
 `;
 
-export const Avatar = styled(Common.Avatar)`
+export const Avatar = styled(AvatarNew)`
   margin-top: 15px;
   @container friend-list-card (max-width: 160px) {
     & {

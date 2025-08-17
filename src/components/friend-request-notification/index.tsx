@@ -11,6 +11,7 @@ import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDateFromUnix } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import { Avatar } from "../common";
+import { AvatarNew } from "../common/avatar-new";
 import * as S from "./styles";
 
 type Props = HTMLProps<HTMLDivElement> & {
@@ -75,12 +76,10 @@ export const FriendRequestNotification: FC<Props> = ({
         onClick={(e) => handleCardClick(e, notification)}
       >
         <S.CardHeader>
-          <Avatar
+          <AvatarNew
             src={notification.source.image || ""}
-            alt={""}
-            size={40}
+            alt={notification.source.title || "Avatar"}
             name={"open"}
-            hoverable
           />
           <S.NotificationBox>
             <S.Title>{notification.source.title}</S.Title>

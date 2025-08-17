@@ -6,6 +6,7 @@ import type { FC } from "react";
 import type { Muse } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { Avatar } from "../common";
+import { AvatarNew } from "../common/avatar-new";
 import * as S from "./styles";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
@@ -29,13 +30,11 @@ export const MuseListItem: FC<Props> = ({ muse, className, ...rest }) => {
       {...rest}
     >
       <Flex justify="flex-start">
-        <Avatar
+        <AvatarNew
           src={muse?.image ?? null}
-          alt=""
-          size={50}
+          alt={muse?.firstName ?? "Muse"}
           name="open"
           onClick={onAvatarClick}
-          hoverable
         />
         <S.MuseName>
           {muse.firstName}{" "}

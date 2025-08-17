@@ -36,6 +36,11 @@ export const CardHeader = styled.div`
   align-items: center;
   justify-content: space-around;
   position: relative;
+
+  .avatar {
+    height: 40px;
+    width: 40px;
+  }
 `;
 
 export const unReadBadge = styled.div`

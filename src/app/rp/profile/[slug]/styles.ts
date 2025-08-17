@@ -1,5 +1,6 @@
 import styled, { css } from "styled-components";
 import { Avatar as AvatarCommon, Pill } from "@/components/common";
+import { AvatarNew } from "@/components/common/avatar-new";
 import { BLUR_FILTER, DEV_MODE_BORDER, Z_INDEX } from "@/theme";
 import { Badge } from "../../tiers/styles";
 
@@ -270,8 +271,11 @@ export const InfoText = styled.div`
   }
 `;
 
-export const Avatar = styled(AvatarCommon)`
+export const Avatar = styled(AvatarNew)`
   margin-top: 100px;
+  height: 250px;
+  width: 250px;
+  z-index: 100;
 
   @container profile-content (max-width: 800px) {
     & {
@@ -280,8 +284,11 @@ export const Avatar = styled(AvatarCommon)`
   }
 `;
 
-export const AvatarMobile = styled(AvatarCommon)`
+export const AvatarMobile = styled(AvatarNew)`
   margin-top: 80px;
+  height: 130px;
+  width: 130px;
+  z-index: 100;
   display: none;
 
   @container profile-content (max-width: 800px) {

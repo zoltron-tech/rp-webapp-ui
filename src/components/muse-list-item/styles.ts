@@ -13,6 +13,11 @@ export const MuseContainer = styled(Container)`
     cursor: pointer;
     background-color: ${({ theme }: any) => theme.hoverGreyAlpha};
   }
+
+  .avatar {
+    height: 50px;
+    width: 50px;
+  }
 `;
 
 export const MuseName = styled.div`

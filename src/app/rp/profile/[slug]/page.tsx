@@ -293,13 +293,11 @@ export default function UserProfilePage({}) {
           >
             <S.Avatar
               src={novelist?.image ?? null}
-              alt="profile-picture"
-              size={250}
+              alt={novelist?.firstName ?? "Avatar"}
             />
             <S.AvatarMobile
               src={novelist?.image ?? null}
               alt="profile-picture"
-              size={130}
             />
             <S.NoteContainer>{novelist?.note}</S.NoteContainer>
           </Flex>

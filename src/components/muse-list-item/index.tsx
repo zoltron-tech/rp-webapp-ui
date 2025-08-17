@@ -32,7 +32,7 @@ export const MuseListItem: FC<Props> = ({ muse, className, ...rest }) => {
       <Flex justify="flex-start">
         <AvatarNew
           src={muse?.image ?? null}
-          alt=""
+          alt={muse?.firstName ?? "Muse"}
           name="open"
           onClick={onAvatarClick}
         />

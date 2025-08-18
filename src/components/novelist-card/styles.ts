@@ -293,13 +293,13 @@ export const MuseList = styled.div`
   scroll-snap-type: y mandatory;
   gap: 0.5em;
   
-  @container (max-width: 300px) {
+  @container (max-width: 400px) {
     & {
       margin-top: 80px;
     }
   }
 
-  @container (max-width: 120px) {
+  @container (max-width: 200px) {
     & {
       margin-top: 40px;
     }

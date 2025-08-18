@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import * as Common from "@/components/common";
 import { BORDER_TOP, NO_SCROLLBAR, NO_USER_SELECT, Z_INDEX } from "@/theme";
+import { AvatarNew } from "../common/avatar-new";
 
 export const CardWrapper = styled.div`
   position: relative;
@@ -19,7 +20,7 @@ export const CardWrapper = styled.div`
 
   @container (max-width: 1200px) {
     & {
-      height: 200px;
+      height: 240px;
     }
 
     &.expanded {
@@ -29,7 +30,17 @@ export const CardWrapper = styled.div`
 
   @container (max-width: 900px) {
     & {
-      height: 140px;
+      height: 190px;
+    }
+
+    &.expanded {
+      height: 300px;
+    }
+  }
+
+  @container (max-width: 600px) {
+    & {
+      height: 150px;
     }
 
     &.expanded {
@@ -157,31 +168,40 @@ export const Title = styled.div`
   }
 `;
 
-export const Avatar = styled(Common.Avatar)`
+export const Avatar = styled(AvatarNew)`
+  height: 180px;
+  width: 180px;
   @container (max-width: 400px) {
     & {
-      --size: 150px;
+        height: 150px;
+        width: 150px;
     }
   }
 
   @container (max-width: 300px) {
     & {
-      --size: 100px;
+        height: 100px;
+        width: 100px;
     }
   }
 `;
 
-const MuseAvatar = styled(Common.Avatar)`
-  --size: 70px;
+const MuseAvatar = styled(AvatarNew)`
+  height: 60px;
+  width: 60px;
+  margin-block: 5px;
+
   @container (max-width: 400px) {
     & {
-      --size: 50px;
+        height: 50px;
+        width: 50px;
     }
   }
 
   @container (max-width: 300px) {
     & {
-      --size: 30px;
+        height: 30px;
+        width: 30px;
     }
   }
 `;
@@ -271,6 +291,7 @@ export const MuseList = styled.div`
   margin-top: 40px;
   padding-bottom: 10px;
   scroll-snap-type: y mandatory;
+  gap: 0.5em;
 
   @container (max-width: 400px) {
     & {
@@ -280,7 +301,7 @@ export const MuseList = styled.div`
 
   @container (max-height: 400px) {
     & {
-      margin-top: 40px;
+      margin-top: 80px;
     }
   }
 

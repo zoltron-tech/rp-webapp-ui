@@ -37,7 +37,7 @@ export const FormContainer = styled.div`
       all: unset;
       padding: 10px 20px;
       cursor: pointer;
-      font-size: var(--font-size-large);
+      font-size: var(--font-size-h6);
       font-weight: var(--font-weight-medium);
       color: var(--bg-10);
       min-width: 100px;
@@ -200,7 +200,7 @@ export const FormContainer = styled.div`
         border-radius: 4px;
         border: none;
         color: var(--text);
-        font-size: var(--font-size-large);
+        font-size: var(--font-size-input);
         font-weight: var(--font-weight-regular);
         border: 1px solid var(--bg-6);
         font-family: var(--font);

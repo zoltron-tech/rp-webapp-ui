@@ -119,7 +119,7 @@ export const TextInputContainer = styled(Form.Field)`
     border-radius: 4px;
     border: none;
     color: var(--text);
-    font-size: var(--font-size-large);
+    font-size: var(--font-size-input);
     font-family: var(--font);
     resize: none;
     min-height: 100px;

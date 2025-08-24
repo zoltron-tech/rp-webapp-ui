@@ -1,9 +1,6 @@
-import type { Tagged } from "./common";
-
 export type PrivacyLevel = "PUBLIC" | "FRIENDS" | "ONLY_ME";
 
-export interface Prompt extends Tagged {
-  _tag: "Prompt";
+export interface Prompt {
   id: string;
   source: PromptSource;
   text: string;
@@ -16,8 +13,7 @@ export interface Prompt extends Tagged {
   reactions: number;
 }
 
-export interface Comment extends Tagged {
-  _tag: "Comment";
+export interface Comment {
   id: string;
   prompt: Prompt | null;
   promptId: string;
@@ -31,8 +27,7 @@ export interface Comment extends Tagged {
   reacted: boolean;
 }
 
-export interface Reply extends Tagged {
-  _tag: "Reply";
+export interface Reply {
   id: string;
   commentId: string;
   source: PromptSource;
@@ -41,8 +36,7 @@ export interface Reply extends Tagged {
   createdOn: string;
 }
 
-export interface PromptSource extends Tagged {
-  _tag: "PromptSource";
+export interface PromptSource {
   sourceId: string;
   name: string;
   image: string;

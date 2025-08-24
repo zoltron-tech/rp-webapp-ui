@@ -11,7 +11,6 @@ export enum PromptEvent {
 }
 
 export const museToSource = (muse: Muse): PromptSource => ({
-  _tag: "PromptSource",
   image: muse.image || "",
   name: `${muse.firstName} ${muse.lastName}`.trim(),
   sourceId: muse.id || "",

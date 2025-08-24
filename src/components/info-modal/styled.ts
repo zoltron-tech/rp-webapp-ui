@@ -20,7 +20,7 @@ export const ModalContent = styled(Dialog.Content)`
     all: unset;
   }
 
-  background-color: #151515;
+  background-color: var(--bg-2);
   box-shadow: 0 10px 38px -10px rgba(0, 0, 0, 0.25);
   position: fixed;
   top: 50%;
@@ -34,6 +34,7 @@ export const ModalContent = styled(Dialog.Content)`
   border: 0.85px solid #333;
 
   font-family: var(--font);
+  font-size: var(--font-size);
   color: var(--text);
 
   &.warning {
@@ -45,22 +46,21 @@ export const ModalContent = styled(Dialog.Content)`
     top: 10px;
     right: 10px;
     cursor: pointer;
-    background-color: #333;
-
+    background-color: var(--bg-5);
     border-radius: 50%;
-    width: 24px;
-    height: 24px;
+    width: var(--font-size-h4);
+    height: var(--font-size-h4);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #fff;
+    color: var(--text);
 
     &:hover {
-      background-color: #444;
+      background-color: var(--bg-6);
     }
 
     &:active {
-      background-color: #555;
+      background-color: var(--bg-4);
     }
 
     &:focus {
@@ -72,18 +72,18 @@ export const ModalContent = styled(Dialog.Content)`
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: var(--font-size-large);
+    font-size: var(--font-size-h5);
     font-family: var(--font);
     font-weight: var(--font-weight-bold);
 
     .warning-icon {
       color: #ffcc00;
-      font-size: 1.5em;
+     font-size: var(--font-size-h4);
     }
 
     .error-icon {
       color: #ff0000;
-      font-size: 1.5em;
+       font-size: var(--font-size-h4);
     }
   }
 

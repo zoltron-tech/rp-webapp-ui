@@ -19,9 +19,12 @@ export const verifyEmailPattern = (email: string) => {
   return emailRegex.test(email);
 };
 
-export const verifyUsernamePattern = (username: string) => {
+export const checkUsernameInvalidity = (username: string) => {
+  if (username.length < 3 || username.length > 50) {
+    return true; // Username must be between 3 and 50 characters
+  }
   const usernameRegex = /^[a-zA-Z0-9_.-]+$/;
-  return usernameRegex.test(username);
+  return !usernameRegex.test(username);
 };
 
 export const verifyPasswordLength = (password: string) => {

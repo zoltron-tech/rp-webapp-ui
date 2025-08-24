@@ -1,6 +1,5 @@
 import styled from "styled-components";
 import { BACKGROUND_BLUR, BASE_TRANSITION, DEV_MODE_BORDER } from "@/theme";
-import { Avatar } from "../common";
 
 export const PositionContainer = styled.div`
   ${DEV_MODE_BORDER("red")}
@@ -50,20 +49,21 @@ export const Menu = styled.div`
 export const ContentContainer = styled.div`
   ${DEV_MODE_BORDER("blue")}
 
-  --avatar-size: 46px;
   position: relative;
   width: max-content;
   height: max-content;
 
   .avatar {
-    width: var(--avatar-size);
-    height: var(--avatar-size);
+    width: var(--font-size-h2);
+    height: var(--font-size-h2);
   }
-`;
 
-export const UserAvatar = styled(Avatar)`
-  ${DEV_MODE_BORDER("green")}
-  --size: var(--avatar-size);
+  @media screen and (max-width: 480px) {
+  .avatar {
+    width: var(--font-size-h3);
+    height: var(--font-size-h3);
+  }
+  }
 `;
 
 export const Separator = styled.div`

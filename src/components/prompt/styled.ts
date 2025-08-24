@@ -62,7 +62,7 @@ export const SourceName = styled.h1`
   all: unset;
 
   line-height: 1.5;
-  font-size: var(--font-size-large);
+  font-size: var(--font-size-h5);
   font-weight: var(--font-weight-bold);
   color: var(--text);
   font-family: var(--font);

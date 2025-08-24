@@ -129,15 +129,9 @@ export default function ForgotPasswordPage() {
     async (event) => {
       event.preventDefault();
       const formData = new FormData(event.currentTarget);
-
-      console.log("Submitting forgot password request for:", formData);
-
       const email = formData.get("userEmail") as string;
-      console.log("Submitting forgot password request for:", email);
 
       if (!email) return;
-
-      console.log("Submitting forgot password request for:", email);
 
       setOperationState("INITIAL");
       globalStoreSet({ globalLoading: true });

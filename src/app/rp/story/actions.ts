@@ -138,8 +138,6 @@ export const updateStoryBoardEventAction = async (
   const jwt = await authenticateAndGetJWT();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/story/event`;
 
-  console.log(_storyboardEvent);
-
   Logger.debug("updateStoryBoardEvent", _storyboardEvent);
 
   const response = await fetch(URL, {
@@ -151,8 +149,6 @@ export const updateStoryBoardEventAction = async (
     },
     method: "POST",
   });
-
-  console.log(response);
 
   if (!response.ok) {
     Logger.debug("error", response.status, response.statusText);

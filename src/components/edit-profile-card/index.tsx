@@ -16,7 +16,7 @@ import {
   Username,
 } from "@/components/common";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
-import { useAuthContext, useForm, useUIContext } from "@/hooks";
+import { useForm, useUIContext } from "@/hooks";
 import type { Novelist } from "@/types";
 import { API_MESSAGE, INITIAL_NOVELIST } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
@@ -29,7 +29,6 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
   const authState = useGlobalState("authState");
   const user = useGlobalState("user");
   const novelist = useGlobalState("novelist");
-  const { updateNovelist } = useAuthContext();
   const [avatarFile, setAvatarFile] = useState<FormData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const novelists = useGlobalState("novelists");
@@ -97,7 +96,6 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
     }
 
     updateValues(novelist);
-    updateNovelist(novelist);
 
     if (
       novelists.find((_novelist) => _novelist.username === novelist.username)

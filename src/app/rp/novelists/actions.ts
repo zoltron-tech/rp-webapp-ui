@@ -5,7 +5,11 @@ import {
   getJWTIfExists,
   logoutAction,
 } from "@/app/actions";
-import type { Novelist, NovelistWorldNotification } from "@/types";
+import type {
+  Novelist,
+  NovelistWorldNotification,
+  UpdateNovelistPayload,
+} from "@/types";
 import type { SearchResult, WithMessage } from "@/types/common";
 import type { Conversation, Message } from "@/types/conversation";
 import {
@@ -116,7 +120,10 @@ export const getNotifications = async () => {
   return notifications;
 };
 
-export const updateUserNovelist = async (_novelist: Novelist) => {
+export const updateUserNovelist = async (
+  _novelist: UpdateNovelistPayload,
+  create = false,
+) => {
   const jwt = await authenticateAndGetJWT();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist`;
 
@@ -129,11 +136,10 @@ export const updateUserNovelist = async (_novelist: Novelist) => {
       [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
       [AUTH_HEADER_NAME]: jwt,
     },
-    method: "POST",
+    method: create ? "POST" : "PUT",
   });
 
   if (!response.ok) {
-    Logger.debug("error", response.status, response.statusText);
     return { message: API_MESSAGE.Error };
   }
 

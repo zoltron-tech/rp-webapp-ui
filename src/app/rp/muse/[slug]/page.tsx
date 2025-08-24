@@ -130,7 +130,6 @@ export default function MuseProfilePage({}) {
       push(ROUTES.NotFound);
       return;
     }
-    console.log(_prompts);
     setLoading(false);
     setPrompts(_prompts);
   };

@@ -23,7 +23,7 @@ export const MainButton = styled(Button)`
   box-shadow: rgb(0 0 0 / 5%) 0 0 8px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  font-size: 15px;
+  font-size: var(--font-size);
   transition: all 0.5s ease;
 
   &:hover {
@@ -127,42 +127,34 @@ export const ButtonContainer = styled.div`
 export const MainHeading = styled.div`
   margin-top: 30px;
   text-transform: uppercase;
-  font-size: 100px;
+  font-size: var(--font-size-h1);
   font-weight: 700;
   font-style: italic;
 
-  @container (max-width: 1000px) {
-    & {
-      font-size: 70px;
-    }
+  @media screen and (max-width: 640px) {
+    font-size: var(--font-size-h2);
   }
 
-  @container (max-width: 600px) {
-    & {
-      font-size: 50px;
-    }
+    @media screen and (max-width: 520px) {
+    font-size: var(--font-size-h3);
   }
 `;
 
 export const MainSubtext = styled.div`
   margin-left: 5px;
   text-transform: uppercase;
-  font-size: 28px;
+  font-size: var(--font-size-h4);
   font-weight: 600;
   font-style: italic;
   margin-bottom: 30px;
   text-align: center;
 
-  @container (max-width: 1000px) {
-    & {
-      font-size: 22px;
-    }
+  @media screen and (max-width: 640px) {
+    font-size: var(--font-size-h5);
   }
 
-  @container (max-width: 600px) {
-    & {
-      font-size: 18px;
-    }
+    @media screen and (max-width: 520px) {
+    font-size: var(--font-size-h6);
   }
 `;
 
@@ -178,20 +170,16 @@ export const MuseCarouselContainer = styled.div`
 export const Story = styled.div`
   margin-left: 5px;
   text-transform: uppercase;
-  font-size: 18px;
+  font-size: var(--font-size-h6);
   font-weight: 300;
   font-style: italic;
   margin-block: 30px;
 
-  @container (max-width: 1000px) {
-    & {
-      font-size: 14px;
-    }
+  @media screen and (max-width: 640px) {
+    font-size: var(--font-size);
   }
 
-  @container (max-width: 600px) {
-    & {
-      font-size: 12px;
-    }
+    @media screen and (max-width: 520px) {
+    font-size: var(--font-size-small);
   }
 `;

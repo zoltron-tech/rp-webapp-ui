@@ -69,7 +69,6 @@ export const RegisterForm: FC = () => {
     try {
       const available = await checkUsernameAvailability(value);
       setUsernameValidityLoader(false);
-      console.log("Username availability:", available);
       if (!available) return true;
       return false;
     } catch (error) {
@@ -91,13 +90,6 @@ export const RegisterForm: FC = () => {
       const email = formData.get("email") as string;
       const password = formData.get("password") as string;
       const consent = formData.get("consent") as string;
-      console.log("Form data:", {
-        consent,
-        email,
-        password,
-        username,
-      });
-
       if (consent !== "on") {
         console.error("User must agree to the terms and conditions.");
         return;
@@ -118,12 +110,11 @@ export const RegisterForm: FC = () => {
         return;
       }
 
-      console.log("Registration successful:", response);
       setGlobalState({
         authState: "UNINITIALIZED",
         user: response.user!,
       });
-      push(ROUTES.Profile.Edit);
+      push(ROUTES.Onboarding);
     },
     [],
   );

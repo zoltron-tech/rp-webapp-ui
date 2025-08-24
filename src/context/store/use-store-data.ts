@@ -59,6 +59,10 @@ export const useStoreData = <StoreState = object>(
     return store.current;
   }, []);
 
+  // useEffect(() => {
+  //   store.current = initial;
+  // }, [initial]);
+
   return {
     get,
     getServerSnapshot,

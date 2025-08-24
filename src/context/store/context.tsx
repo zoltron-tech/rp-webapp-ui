@@ -27,6 +27,7 @@ const createStoreContext = <T extends SimpleRecord>(
 const Stores = {
   comment: createStoreContext<Comment>("comment"),
   "global-store": createStoreContext<StoreState>("global-store"),
+  onboarding: createStoreContext("onboarding"),
   prompt: createStoreContext<PromptStoreType>("prompt"),
   "prompt-input": createStoreContext<PromptInputState>("prompt-input"),
 } as const;

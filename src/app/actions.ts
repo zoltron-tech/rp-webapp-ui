@@ -9,6 +9,8 @@ import type {
   LoginPayload,
   LoginResponsePayload,
   SignupResponsePayload,
+  UpdateThemePayload,
+  UpdateThemeResponse,
 } from "@/types";
 import type { WithMessage } from "@/types/common";
 import type { SignUpPayload } from "@/types/register";
@@ -308,5 +310,85 @@ export const getUser = async () => {
       message: API_MESSAGE.Unauthorized,
     };
   }
+  return result;
+};
+
+export const updateUsernameAction = async (username: string) => {
+  const URL = `${RP_SERVICE_URL}/rp/user/account/updateUsername`;
+
+  const jwtCookie = await authenticateAndGetJWT();
+
+  const response = await fetch(URL, {
+    body: JSON.stringify({ username }),
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwtCookie,
+    },
+    method: "POST",
+  });
+
+  if (!response.ok) {
+    if (response.status === 409) {
+      return {
+        message: API_MESSAGE.Conflict,
+      };
+    }
+
+    return {
+      message: API_MESSAGE.UncategorizedError,
+    };
+  }
+
+  const result: WithMessage = await response.json();
+  return result;
+};
+
+export const updateUserTheme = async (payload: UpdateThemePayload) => {
+  const URL = `${RP_SERVICE_URL}/rp/user/account/updateUser`;
+
+  const jwtCookie = await authenticateAndGetJWT();
+
+  const response = await fetch(URL, {
+    body: JSON.stringify(payload),
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwtCookie,
+    },
+    method: "POST",
+  });
+
+  if (!response.ok) {
+    return {
+      message: API_MESSAGE.UncategorizedError,
+    };
+  }
+
+  const result: UpdateThemeResponse = await response.json();
+  return result;
+};
+
+export const finishOnboardingAction = async () => {
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/onboard`;
+
+  const jwtCookie = await authenticateAndGetJWT();
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwtCookie,
+    },
+    method: "POST",
+  });
+
+  if (!response.ok) {
+    return {
+      message: API_MESSAGE.UncategorizedError,
+    };
+  }
+
+  const result: WithMessage = await response.json();
   return result;
 };

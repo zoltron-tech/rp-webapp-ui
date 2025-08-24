@@ -8,14 +8,7 @@ export type WithToken<T = {}> = With<"token", T>;
 
 export type MaybePromise<T> = T | Promise<T>;
 
-export interface Tagged {
-  readonly _tag: string;
-}
-
-export type Untagged<T> = Omit<T, "_tag">;
-
-export interface SearchResult extends Tagged {
-  _tag: "SearchResult";
+export interface SearchResult {
   username?: string;
   id?: string;
   name?: string;
@@ -29,11 +22,5 @@ export interface Tag {
   label: string;
   color: string;
 }
-
-export interface None extends Tagged {
-  _tag: "None";
-}
-
-export type TypeValidator<T extends Tagged> = (value: any) => T | None;
 
 export type Hook<T, K> = (props: T) => K;

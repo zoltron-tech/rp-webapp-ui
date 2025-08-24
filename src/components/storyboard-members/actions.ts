@@ -25,8 +25,6 @@ export const addStoryBoardMember = async (
     method: "POST",
   });
 
-  console.log(response);
-
   Logger.debug("addStoryBoardMember", response.status);
 
   if (response.status === 404) {

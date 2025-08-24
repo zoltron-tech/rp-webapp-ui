@@ -1,4 +1,5 @@
 import type { Muse, Novelist, User } from ".";
+import type { AccentValue } from "./theme";
 
 export type AuthState =
   | "LOGGED_IN"
@@ -14,5 +15,5 @@ export interface StoreState {
   user: User | null;
   novelist: Novelist | null;
   globalLoading: boolean;
-  accent: "jade" | "crimson" | "iris";
+  accent: AccentValue;
 }

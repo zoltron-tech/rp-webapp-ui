@@ -5,6 +5,7 @@ import * as S from "./styled";
 import "./info-box.css";
 import { CgClose } from "react-icons/cg";
 import { IoIosWarning } from "react-icons/io";
+import { useGlobalState } from "@/context/store/stores";
 
 type InfoModalProps = {
   type?: "info" | "warning" | "error";
@@ -67,6 +68,8 @@ export const InfoModal: FC<InfoModalProps> = ({
   onClose = () => {},
   open,
 }) => {
+  const theme = useGlobalState("theme");
+  const accent = useGlobalState("accent");
   const onOpenChange = useCallback(
     (open: boolean) => {
       if (!open) {
@@ -79,8 +82,8 @@ export const InfoModal: FC<InfoModalProps> = ({
   return (
     <S.InfoModalRoot open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="info-box-overlay" />
-        <S.ModalContent className={classNames([type])}>
+        <Dialog.Overlay className={classNames("info-box-overlay")} />
+        <S.ModalContent className={classNames(type, theme, accent)}>
           <InfoModalTitle title={title || infoTypeToTitle(type)} type={type} />
           <Dialog.Description className="description">
             {description}

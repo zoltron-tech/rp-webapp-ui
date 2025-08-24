@@ -38,7 +38,7 @@ export const Bar = styled.div`
   container-type: size;
   z-index: ${Z_INDEX.TOPBAR};
 
-  @container (max-width: 700px) {
+  @media screen and (max-width: 480px) {
     & {
       height: 45px;
     }
@@ -54,16 +54,21 @@ export const LogoContainer = styled.div`
 `;
 
 export const Logo = styled.div`
-  height: 80cqh;
-  width: 60cqh;
+  height: var(--font-size-h2);
+  width: var(--font-size-h2);
   display: flex;
   align-items: center;
   ${NO_USER_SELECT}
+
+  @media screen and (max-width: 480px) {
+    height: var(--font-size-h3);
+    width: var(--font-size-h3); 
+  }
 `;
 
 export const LogoInner = styled.div`
-  height: 60cqh;
-  width: 60cqh;
+  height: 100%;
+  width: 100%;
   margin-inline: auto;
   border-radius: 5px;
   display: flex;
@@ -71,45 +76,62 @@ export const LogoInner = styled.div`
   justify-content: center;
   background-color: var(--accent);
   border: 1px solid var(--accent-hover);
-  transition-property: width, height, transform;
-  transition-duration: 0.2s;
-  transition-timing-function: ease-in-out;
   ${NO_USER_SELECT}
 
   & > svg {
-    height: 35cqh;
-    width: 35cqh;
+    height: 100%;
+    width: 100%;
     fill: ${({ theme }: any) => theme.textPrimary};
-  }
-
-  &:hover {
-    transform: translateY(-1px);
   }
 `;
 
-// Smooth fade in for initial load
 const fadeIn = keyframes`
   0% {
     opacity: 0;
-    transform: translateY(4px);
+  }
+  15.6% {
+    opacity: 0.279;
+  }
+  27.6% {
+    opacity: 0.99;
+  }
+  38.4% {
+    opacity: 0.45;
+  }
+  48% {
+    opacity: 0.997;
+  }
+  54.8% {
+    opacity: 0.634;
+  }
+  62% {
+    opacity: 0.999;
+  }
+  67.2% {
+    opacity: 0.766;
+  }
+  73.2% {
+    opacity: 0.99;
+  }
+  78% {
+    opacity: 0.865;
+  }
+  83.2% {
+    opacity: 1;
+  }
+  86.8% {
+    opacity: 0.938;
   }
   100% {
     opacity: 1;
-    transform: translateY(0);
   }
 `;
 
 export const LogoImage = styled.img`
-  height: 60cqh;
-  width: 60cqh;
-  animation: ${fadeIn} 0.5s ease-out;
-
-  transition: transform 0.25s ease, filter 0.25s ease;
-
-  &:hover {
-    transform: translateY(-2px) scale(1.02);
-    filter: brightness(1.05);
-  }
+  height: 100%;
+  width: 100%;
+  opacity: 0;
+  animation: ${fadeIn} 0.7s ease-in-out forwards 0.2s;
 `;
 
 export const LogoText = styled.div`
@@ -120,17 +142,18 @@ export const LogoText = styled.div`
   font-style: italic;
   ${NO_USER_SELECT}
 
-  @container (max-width: 1000px) {
+  @container (max-width: 600px) {
     & {
-      font-size: 20px;
+      font-size: var(--font-size-h6);
     }
   }
 
-  @container (max-width: 800px) {
+      @container (max-width: 430px) {
     & {
-      display: none;
+    font-size: var(--font-size-input);
     }
   }
+
 `;
 
 export const LogoTextSuffix = styled.div`
@@ -139,18 +162,20 @@ export const LogoTextSuffix = styled.div`
   font-size: 24px;
   font-weight: 700;
   font-style: italic;
-  color: var(--accent);
+  color: var(--accent-8);
   ${NO_USER_SELECT}
+  opacity: 0;
+  animation: ${fadeIn} 0.75s ease-in-out forwards 0.6s;
 
-  @container (max-width: 1000px) {
+  @container (max-width: 600px) {
     & {
-      font-size: 20px;
+    font-size: var(--font-size-h6);
     }
   }
 
-  @container (max-width: 800px) {
+    @container (max-width: 430px) {
     & {
-      display: none;
+    font-size: var(--font-size-input);
     }
   }
 `;
@@ -167,6 +192,8 @@ export const SearchContainer = styled.div`
       display: none;
     }
   }
+
+  
 `;
 
 export const SearchDropdownItem = styled.div`

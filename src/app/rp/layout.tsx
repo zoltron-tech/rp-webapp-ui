@@ -12,20 +12,16 @@ import { StoreProvider } from "@/context/store/context";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { THEME_DARK, THEME_LIGHT } from "@/theme";
 import type { StoreState } from "@/types/state";
+import { ACCENT_MAP } from "@/types/theme";
 import * as S from "./styles";
-
-const ACCENT_MAP = {
-  0: "jade",
-  1: "crimson",
-  2: "iris",
-} as const;
 
 const useAccent = () => {
   const user = useGlobalState("user");
   const setGlobalState = useGlobalStoreSet();
   const accent = useMemo(() => {
-    if (!user?.palette || user.palette > 2) return ACCENT_MAP[0];
-    const _accent = ACCENT_MAP[user.palette as 0 | 1 | 2] || ACCENT_MAP[0];
+    if (typeof user?.palette === "undefined" || user.palette > 3)
+      return ACCENT_MAP[0];
+    const _accent = ACCENT_MAP[user.palette] || ACCENT_MAP[0];
     return _accent;
   }, [user]);
 

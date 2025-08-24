@@ -11,14 +11,12 @@ export const STANDARD_TIER: NovelistTier = {
 };
 
 export const EMPTY_FRIEND: Friend = {
-  _tag: "Friend",
   id: "",
   image: "",
   username: "",
 };
 
 export const INITIAL_NOVELIST: Novelist = {
-  _tag: "Novelist",
   connection: null,
   createdAt: "",
   firstName: "",
@@ -35,7 +33,6 @@ export const INITIAL_NOVELIST: Novelist = {
 };
 
 export const INITIAL_MUSE: Muse = {
-  _tag: "Muse",
   connections: [],
   extraAttributes: null,
   fandom: {
@@ -81,6 +78,4 @@ export const INITIAL_STORY_BOARD_EVENT: StoryBoardEvent = {
   storyBoardId: "",
 };
 
-export const NONE: None = {
-  _tag: "None",
-};
+export const NONE: None = {};

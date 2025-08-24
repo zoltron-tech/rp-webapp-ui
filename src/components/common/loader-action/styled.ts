@@ -8,6 +8,7 @@ export const LoaderActionRoot = styled.span`
   font-size: inherit;
   color: inherit;
   font-weight: inherit;
+  
 
   svg.loader-icon {
     height: 24px;
@@ -15,7 +16,6 @@ export const LoaderActionRoot = styled.span`
     position: absolute;
     left: -28px;
     aspect-ratio: 1;
-    margin-right: 8px;
     color: var(--accent-a8);
     animation-timing-function: steps(8, end);
     animation-name: spin;

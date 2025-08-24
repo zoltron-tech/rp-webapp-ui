@@ -67,13 +67,13 @@ export const PrivacyHeader = styled.header`
   gap: 10px;
 
   h1 {
-    font-size: var(--font-size-xlarge);
+    font-size: var(--font-size-h4);
     font-weight: var(--font-weight-bold);
-    color: var(--accent-8);
+    color: var(--accent-8)3
   }
 
   .icon {
-    font-size: 1.85rem;
+    font-size: var(--font-size-h1);
     color: var(--accent-8);
   }
 `;
@@ -215,7 +215,7 @@ export const Header = styled.div`
 export const ValidFrom = styled.div`
   width: auto;
   margin-top: 2px;
-  font-size: var(--font-size-xsmall);
+  font-size: var(--font-size-small);
   font-weight: var(--font-weight-regular);
   color: var(--bg-11);
 `;

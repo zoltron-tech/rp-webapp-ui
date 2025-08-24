@@ -76,8 +76,8 @@ export default function LoginOAuthCallbackPage() {
     if ("message" in _novelist) {
       if (_novelist.message === API_MESSAGE.NotFound) {
         setOperationState("SUCCESS");
-        push(ROUTES.Profile.Edit);
         setGlobalState({ authState: "UNINITIALIZED", user: response.user! });
+        push(ROUTES.Onboarding);
         return;
       } else {
         setOperationState("ERROR");
@@ -86,7 +86,7 @@ export default function LoginOAuthCallbackPage() {
     }
 
     setGlobalState({
-      authState: "LOGGED_IN",
+      authState: _novelist.isOnboarded ? "LOGGED_IN" : "UNINITIALIZED",
       novelist: _novelist,
       user: response.user!,
     });

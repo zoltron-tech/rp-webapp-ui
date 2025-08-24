@@ -2,7 +2,6 @@ import type { Muse } from "@/types";
 import { STANDARD_TIER } from "../constants";
 
 const MOCK_MUSE: Muse = {
-  _tag: "Muse",
   connections: [],
   extraAttributes: null,
   fandom: {
@@ -18,7 +17,6 @@ const MOCK_MUSE: Muse = {
   nicknames: null,
   note: "Something",
   pennedBy: {
-    _tag: "Novelist",
     connection: "",
     createdAt: "",
     firstName: "John",

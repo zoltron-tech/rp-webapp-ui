@@ -80,7 +80,7 @@ export const FormHeading = styled.div`
 
   h1 {
     all: unset;
-    font-size: var(--font-size-large);
+    font-size: var(--font-size-h5);
     font-weight: var(--font-weight-bold);
     color: var(--text);
   }

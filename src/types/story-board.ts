@@ -1,4 +1,4 @@
-import type { Tag, Tagged } from "./common";
+import type { Tag } from "./common";
 import type { Friend } from "./novelist";
 
 export interface StoryBoard {
@@ -31,8 +31,7 @@ export interface StoryBoardEvent {
   createdAt: string | null;
 }
 
-export interface StoryBoardEventThread extends Tagged {
-  _tag: "StoryBoardEventThread";
+export interface StoryBoardEventThread {
   id: string | null;
   storyBoardEventId: string;
   sender: StoryBoardEventThreadSender;
@@ -42,15 +41,13 @@ export interface StoryBoardEventThread extends Tagged {
   createdAt: string | null;
 }
 
-export interface StoryBoardEventThreadSender extends Tagged {
-  _tag: "StoryBoardEventThreadSender";
+export interface StoryBoardEventThreadSender {
   sourceId: string;
   name: string;
   image: string;
 }
 
-export interface StoryBoardEventThreadAttachement extends Tagged {
-  _tag: "StoryBoardEventThreadAttachement";
+export interface StoryBoardEventThreadAttachement {
   id: string;
   url: string;
   createdAt: string;

@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 type ReturnType<StoreState> = {
   id: string;
@@ -58,6 +58,10 @@ export const useStoreData = <StoreState = object>(
   const getServerSnapshot = useCallback(() => {
     return store.current;
   }, []);
+
+  // useEffect(() => {
+  //   store.current = initial;
+  // }, [initial]);
 
   return {
     get,

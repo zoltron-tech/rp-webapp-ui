@@ -2,13 +2,11 @@ import type { Novelist } from "@/types";
 import { STANDARD_TIER } from "../constants/initial-values";
 
 const NOVELIST_MOCK: Novelist = {
-  _tag: "Novelist",
   connection: "",
   createdAt: "",
   firstName: "John",
   friends: [
     {
-      _tag: "Friend",
       id: "",
       image: "",
       username: "Jonah",
@@ -21,7 +19,6 @@ const NOVELIST_MOCK: Novelist = {
   museCount: 1,
   muses: [
     {
-      _tag: "Muse",
       connections: [],
       extraAttributes: null,
       fandom: {
@@ -37,7 +34,6 @@ const NOVELIST_MOCK: Novelist = {
       nicknames: null,
       note: "Something",
       pennedBy: {
-        _tag: "Novelist",
         connection: "",
         createdAt: "",
         firstName: "John",

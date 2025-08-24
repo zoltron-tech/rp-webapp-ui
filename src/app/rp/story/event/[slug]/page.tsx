@@ -58,7 +58,6 @@ export default function StoryboardEventPage({}) {
 
   const fetchStoryboardEvent = async () => {
     setLoading(true);
-    console.log("going to fetch event");
     const _storyboardEvent = await getStoryboardEventAction(storyboardEventId);
 
     if (!_storyboardEvent || "message" in _storyboardEvent) {
@@ -74,7 +73,6 @@ export default function StoryboardEventPage({}) {
 
   const fetchStoryboardEventThreads = async () => {
     setLoading(true);
-    console.log("going to fetch event threads");
     const _storyboardEventThreads =
       await getStoryboardEventThreadsAction(storyboardEventId);
 

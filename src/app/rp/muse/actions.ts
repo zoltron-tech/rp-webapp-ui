@@ -159,10 +159,6 @@ export const updateMuseAction = async (_muse: Muse) => {
       method: "POST",
     });
 
-    console.log(JSON.stringify(_muse));
-
-    console.log(response);
-
     if (!response.ok) {
       Logger.debug("error", response.status, response.statusText);
       return { message: API_MESSAGE.Error };
@@ -181,7 +177,7 @@ export const updateMuseAction = async (_muse: Muse) => {
 
     return novelist;
   } catch (e) {
-    console.log(e, JSON.stringify(_muse));
+
     return { message: API_MESSAGE.Error };
   }
 };

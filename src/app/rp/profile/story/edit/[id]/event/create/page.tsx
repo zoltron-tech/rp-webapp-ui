@@ -20,7 +20,6 @@ export default function CreateStoryBoardEventPage({}) {
 
   useEffect(() => {
     Logger.debug("CreateStoryBoardEventPage", authState);
-    console.log(authState);
     if (authState === "LOGGED_OUT") {
       Logger.debug("pushing to home");
       push(ROUTES.Novelists);

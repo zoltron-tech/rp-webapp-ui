@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { type FC, useEffect, useState } from "react";
 import { getUserNovelist } from "@/app/rp/novelists/actions";
-import { useGlobalState } from "@/context/store/stores";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import type { Novelist } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
@@ -14,13 +14,20 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
   const { push } = useRouter();
   const [novelist, setNovelist] = useState<Novelist>();
   const authState = useGlobalState("authState");
+  const setGlobalState = useGlobalStoreSet();
   const user = useGlobalState("user");
 
   const fetchData = async () => {
+    if (authState === "UNINITIALIZED") {
+      push(ROUTES.Onboarding);
+      return;
+    }
+
     const fetchedNovelist = await getUserNovelist();
 
     if (!fetchedNovelist || "message" in fetchedNovelist) {
-      push(ROUTES.Profile.Edit);
+      setGlobalState({ authState: "UNINITIALIZED" });
+      push(ROUTES.Onboarding);
       return;
     }
 

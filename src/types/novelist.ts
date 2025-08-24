@@ -1,7 +1,6 @@
-import type { Tag, Tagged } from "./common";
+import type { Tag } from "./common";
 
-export interface Muse extends Tagged {
-  _tag: "Muse";
+export interface Muse {
   id: string | null;
   firstName: string;
   fandom: Fandom;
@@ -19,8 +18,7 @@ export interface Muse extends Tagged {
   privacy: string;
 }
 
-export interface MuseConnection extends Tagged {
-  _tag: "MuseConnection";
+export interface MuseConnection {
   id: string;
   firstName: string;
   lastName: string;
@@ -40,8 +38,7 @@ export interface NovelistTier {
   mediaLimit: number;
 }
 
-export interface Novelist extends Tagged {
-  _tag: "Novelist";
+export type Novelist = {
   id: string;
   username: string;
   tier: NovelistTier;
@@ -55,10 +52,15 @@ export interface Novelist extends Tagged {
   friends: Friend[];
   connection: string | null;
   createdAt: string;
-}
+  about: string | null;
+  isOnboarded: boolean;
+};
 
-export interface Friend extends Tagged {
-  _tag: "Friend";
+export type UpdateNovelistPayload = Omit<Partial<Novelist>, "firstName"> & {
+  firstName: string;
+};
+
+export interface Friend {
   id: string;
   username: string;
   image: string;

@@ -222,7 +222,6 @@ export const StoryBoardMembersList: FC<{ id?: string }> = ({ id }) => {
   };
 
   const handleMemberAddition = (addedUsername: string) => {
-    console.log("agya me");
     const friendToAdd = filteredFriends?.find(
       (friend) => friend.username === addedUsername,
     );

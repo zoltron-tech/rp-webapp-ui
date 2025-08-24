@@ -1,7 +1,4 @@
-import type { Tagged } from "./common";
-
-export interface Conversation extends Tagged {
-  _tag: "Conversation";
+export interface Conversation {
   id: string;
   name: string;
   image: string;
@@ -12,8 +9,7 @@ export interface Conversation extends Tagged {
   modifiedAt: string;
 }
 
-export interface ConversationParticipant extends Tagged {
-  _tag: "Conversation";
+export interface ConversationParticipant {
   conversationId: string;
   novelistId: string;
   firstName: string;
@@ -45,8 +41,7 @@ export interface MessageSender {
   messageSourceType: string;
 }
 
-export interface Attachment extends Tagged {
-  _tag: "Attachment";
+export interface Attachment {
   id: string;
   url: string;
 }

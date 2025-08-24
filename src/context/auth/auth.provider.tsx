@@ -9,7 +9,6 @@ import {
 } from "@/app/actions";
 import { getUserNovelist } from "@/app/rp/novelists/actions";
 import { useStateMachine } from "@/hooks";
-import type { Novelist } from "@/types";
 import type { AuthState } from "@/types/state";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
@@ -31,7 +30,7 @@ export const AuthProvider: FC<Props> = ({ children }) => {
 
   const pushToCreateProfile = useCallback(() => {
     setGlobalState({ authState: "UNINITIALIZED" });
-    push(ROUTES.Profile.Edit);
+    push(ROUTES.Onboarding);
   }, [setGlobalState, push]);
 
   const { state, is, transition } = useStateMachine<AuthState>({
@@ -85,7 +84,10 @@ export const AuthProvider: FC<Props> = ({ children }) => {
         }
       }
 
-      setGlobalState({ authState: "LOGGED_IN", novelist: _novelist });
+      setGlobalState({
+        authState: _novelist.isOnboarded ? "LOGGED_IN" : "UNINITIALIZED",
+        novelist: _novelist,
+      });
     } catch (_e) {
       transition("LOGGED_OUT");
     }
@@ -108,10 +110,8 @@ export const AuthProvider: FC<Props> = ({ children }) => {
 
   const verifyInitialAuthState = async () => {
     transition("LOADING");
-    console.log("verifyInitialAuthState:");
     try {
       const authenticated = await authenticateAction();
-      console.log("Authenticated:", authenticated);
 
       if (authenticated) {
         const _user = await getUser();
@@ -127,14 +127,6 @@ export const AuthProvider: FC<Props> = ({ children }) => {
     }
   };
 
-  const updateNovelist = (novelist: Novelist) => {
-    setGlobalState({ novelist });
-    if (is("UNINITIALIZED")) {
-      transition("LOGGED_IN");
-      push(ROUTES.Profile.View(novelist.username).Index);
-    }
-  };
-
   useEffect(() => {
     if (initialRender.current) {
       initialRender.current = false;
@@ -142,24 +134,9 @@ export const AuthProvider: FC<Props> = ({ children }) => {
     }
   }, []);
 
-  useEffect(() => {
-    Logger.debug("auth state changed: ", state);
-  }, [state]);
-
-  useEffect(() => {
-    if (is("LOGGED_IN")) {
-      refreshAuthState();
-    } else if (is("UNINITIALIZED")) {
-      pushToCreateProfile();
-    }
-  }, [pathname]);
-
-  Logger.info("AuthProvider rendered");
-
   return (
     <AuthContext.Provider
       value={{
-        updateNovelist,
         verifyAccount,
       }}
     >

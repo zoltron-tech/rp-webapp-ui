@@ -65,8 +65,6 @@ export const deleteMedia = async (filename: string) => {
   const parsedFilename = filename.replace("/", "-slash-");
   const URL = `${RP_SERVICE_URL}/rp/portfolio/s3/delete/${parsedFilename}`;
 
-  console.log("removing media", URL);
-
   await fetch(URL, {
     cache: "no-store",
     method: "DELETE",

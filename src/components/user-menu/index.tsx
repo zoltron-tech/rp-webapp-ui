@@ -21,6 +21,7 @@ type UserMenuProps = {};
 export const UserMenu: FC<UserMenuProps> = ({}) => {
   const user = useGlobalState("user");
   const novelist = useGlobalState("novelist");
+  const authState = useGlobalState("authState");
   const setGlobalState = useGlobalStoreSet();
   const [open, setOpen] = useState(false);
   const { push } = useRouter();
@@ -34,6 +35,10 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
       user: null,
     });
   }, [setGlobalState]);
+
+  const toOnboarding = () => {
+    push(ROUTES.Onboarding);
+  };
 
   const toEditProfile = () => {
     push(ROUTES.Profile.Edit);
@@ -64,7 +69,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
           alt={user?.username || "User Avatar"}
         />
         <S.Menu className={classNames({ open })}>
-          <ShouldRender if={Boolean(novelist)}>
+          <ShouldRender if={authState === "LOGGED_IN"}>
             <S.List>
               <S.Element onClick={toUserProfile}>
                 <LuUser />
@@ -80,14 +85,19 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
               </S.Element>
             </S.List>
             <S.Separator />
+            <S.List>
+              <S.Element onClick={toEditProfile}>
+                <TbUserEdit />
+                Edit profile
+              </S.Element>
+            </S.List>
+            <S.Separator />
           </ShouldRender>
-          <S.List>
-            <S.Element onClick={toEditProfile}>
-              <TbUserEdit />
-              Edit profile
-            </S.Element>
-          </S.List>
-          <S.Separator />
+          <ShouldRender if={authState === "UNINITIALIZED"}>
+            <S.List onClick={toOnboarding}>
+              <S.Element>Onboarding</S.Element>
+            </S.List>
+          </ShouldRender>
 
           <S.List>
             <S.DisabledElement>Settings & privacy</S.DisabledElement>

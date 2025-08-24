@@ -51,17 +51,17 @@ export const PromptMuseSelect: FC<Props> = forwardRef(
           <Select.Root
             name="muse"
             required
-            defaultValue={muse.id ?? ""}
+            defaultValue={muse?.id ?? ""}
             onValueChange={handleMuseChange}
           >
             <Select.Trigger className="select-trigger">
               <Select.Value asChild placeholder="Select a muse">
                 <div className="select-value">
                   <MuseAvatar
-                    src={muse.image ?? null}
-                    alt={`${muse.firstName} ${muse.lastName}`}
+                    src={muse?.image ?? null}
+                    alt={`${muse?.firstName} ${muse?.lastName}`}
                   />
-                  {muse.firstName} {muse.lastName}
+                  {muse?.firstName} {muse?.lastName}
                 </div>
               </Select.Value>
               <Select.Icon>

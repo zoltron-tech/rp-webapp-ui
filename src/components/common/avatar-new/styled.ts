@@ -9,6 +9,7 @@ export const AvatarRoot = styled(Avatar.Root)`
   overflow: hidden;
   flex-shrink: 0;
   user-select: none;
+  background-color: var(--bg-2);
 
   &.selectable {
     cursor: pointer;
@@ -34,9 +35,9 @@ export const AvatarRoot = styled(Avatar.Root)`
     justify-content: center;
     width: 100%;
     height: 100%;
-    background-color: var(--bg-2);
+
     color: var(--accent-a8);
-    font-size: var(--font-size-xxlarge);
+    font-size: var(--font-size-h4);
     font-weight: var(--font-weight-bold);
   }
 `;

@@ -19,7 +19,7 @@ import { PageLoader } from "@/components/layout";
 import MuseListItem from "@/components/muse-list-item";
 import PromptInput from "@/components/prompt-input";
 import StoryCard from "@/components/story-card";
-import { useGlobalState } from "@/context/store/stores";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import type { Novelist, StoryBoard } from "@/types";
 import type { Activity } from "@/types/activity";
 import { API_MESSAGE } from "@/utils/constants";
@@ -65,7 +65,7 @@ export default function UserProfilePage({}) {
   const params = useParams();
   const authState = useGlobalState("authState");
   const user = useGlobalState("user");
-  const useNovelist = useGlobalState("novelist");
+  const userNovelist = useGlobalState("novelist");
   const [novelist, setNovelist] = useState<Novelist | null>(null);
   const [loading, setLoading] = useState(true);
   const username = params?.slug as string;
@@ -74,6 +74,7 @@ export default function UserProfilePage({}) {
     useGetActivities(username);
   const [storyBoards, setStories] = useState<StoryBoard[] | null>(null);
   const { push } = useRouter();
+  const setGlobalState = useGlobalStoreSet();
 
   const handleButtonClick = () => {};
 
@@ -243,7 +244,8 @@ export default function UserProfilePage({}) {
     setLoading(true);
     const _novelist = await getNovelistAction(username);
     if (_novelist === null && isCurrentUser) {
-      push(ROUTES.Profile.Edit);
+      setGlobalState({ authState: "UNINITIALIZED" });
+      push(ROUTES.Onboarding);
       return;
     }
 
@@ -258,10 +260,15 @@ export default function UserProfilePage({}) {
   };
 
   useEffect(() => {
+    if (authState === "UNINITIALIZED") {
+      push(ROUTES.Onboarding);
+      return;
+    }
+
     if (authState === "LOADING" || novelist) return;
 
-    if (isCurrentUser && useNovelist) {
-      setNovelist(useNovelist);
+    if (isCurrentUser) {
+      setNovelist(userNovelist);
       fetchStoryboards();
       setLoading(false);
       return;

@@ -1,10 +1,11 @@
-import type { FC } from "react";
+import classNames from "classnames";
+import type { FC, ReactNode } from "react";
 import { PiSpinnerGapBold } from "react-icons/pi";
 import * as S from "./styled";
 
 type LoaderActionProps = {
-  text: string;
-  loadingText: string;
+  text: ReactNode;
+  loadingText: ReactNode;
   loading?: boolean;
 };
 export const LoaderAction: FC<LoaderActionProps> = ({
@@ -13,7 +14,7 @@ export const LoaderAction: FC<LoaderActionProps> = ({
   loading = false,
 }) => {
   return (
-    <S.LoaderActionRoot>
+    <S.LoaderActionRoot className={classNames("loader-action", { loading })}>
       {loading ? (
         <>
           <PiSpinnerGapBold className="loader-icon" />

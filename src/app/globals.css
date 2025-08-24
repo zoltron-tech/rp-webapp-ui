@@ -8,6 +8,12 @@
 /* Iris */
 @import "@radix-ui/colors/iris-dark.css";
 @import "@radix-ui/colors/iris-dark-alpha.css";
+/* Cyan */
+@import "@radix-ui/colors/cyan-dark.css";
+@import "@radix-ui/colors/cyan-dark-alpha.css";
+/* Mint */
+@import "@radix-ui/colors/mint-dark.css";
+@import "@radix-ui/colors/mint-dark-alpha.css";
 
 /* Background colors */
 /* Olive */
@@ -19,6 +25,12 @@
 /* Slate */
 @import "@radix-ui/colors/slate-dark.css";
 @import "@radix-ui/colors/slate-dark-alpha.css";
+/* Gray */
+@import "@radix-ui/colors/gray-dark.css";
+@import "@radix-ui/colors/gray-dark-alpha.css";
+/* Sage */
+@import "@radix-ui/colors/sage-dark.css";
+@import "@radix-ui/colors/sage-dark-alpha.css";
 
 /* Success color */
 @import "@radix-ui/colors/grass-dark.css";
@@ -47,7 +59,7 @@
 
 body {
   font-family: "Montserrat", sans-serif;
-  background-color: var(--bg-1);
+  background-color: #000;
   /* Scrollbar Styles */
   scrollbar-width: 0px;
   contain: paint;
@@ -84,9 +96,13 @@ textarea {
 
   --font: Montserrat, sans-serif;
 
-  --font-size-xxlarge: 30px;
-  --font-size-xlarge: 22px;
-  --font-size-large: 16px;
+  --font-size-h1: 54px;
+  --font-size-h2: 43px;
+  --font-size-h3: 34px;
+  --font-size-h4: 27px;
+  --font-size-h5: 22px;
+  --font-size-h6: 18px;
+  --font-size-input: 16px;
   --font-size: 14px;
   --font-size-small: 12px;
   --font-size-xsmall: 10px;
@@ -237,6 +253,104 @@ textarea {
     --text-secondary: var(--bg-11);
   }
 
+  .cyan {
+    --bg-1: var(--gray-1);
+    --bg-2: var(--gray-2);
+    --bg-3: var(--gray-3);
+    --bg-4: var(--gray-4);
+    --bg-5: var(--gray-5);
+    --bg-6: var(--gray-6);
+    --bg-7: var(--gray-7);
+    --bg-8: var(--gray-8);
+    --bg-9: var(--gray-9);
+    --bg-10: var(--gray-10);
+    --bg-11: var(--gray-11);
+    --bg-12: var(--gray-12);
+
+    --accent-a1: var(--cyan-a1);
+    --accent-a2: var(--cyan-a2);
+    --accent-a3: var(--cyan-a3);
+    --accent-a4: var(--cyan-a4);
+    --accent-a5: var(--cyan-a5);
+    --accent-a6: var(--cyan-a6);
+    --accent-a7: var(--cyan-a7);
+    --accent-a8: var(--cyan-a8);
+    --accent-a9: var(--cyan-a9);
+    --accent-a10: var(--cyan-a10);
+    --accent-a11: var(--cyan-a11);
+    --accent-a12: var(--cyan-a12);
+    --accent-1: var(--cyan-1);
+    --accent-2: var(--cyan-2);
+    --accent-3: var(--cyan-3);
+    --accent-4: var(--cyan-4);
+    --accent-5: var(--cyan-5);
+    --accent-6: var(--cyan-6);
+    --accent-7: var(--cyan-7);
+    --accent-8: var(--cyan-8);
+    --accent-9: var(--cyan-9);
+    --accent-10: var(--cyan-10);
+    --accent-11: var(--cyan-11);
+    --accent-12: var(--cyan-12);
+
+    --accent: var(--accent-6);
+    --accent-hover: var(--accent-7);
+    --accent-active: var(--accent-5);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  .mint {
+    --bg-1: var(--sage-1);
+    --bg-2: var(--sage-2);
+    --bg-3: var(--sage-3);
+    --bg-4: var(--sage-4);
+    --bg-5: var(--sage-5);
+    --bg-6: var(--sage-6);
+    --bg-7: var(--sage-7);
+    --bg-8: var(--sage-8);
+    --bg-9: var(--sage-9);
+    --bg-10: var(--sage-10);
+    --bg-11: var(--sage-11);
+    --bg-12: var(--sage-12);
+
+    --accent-a1: var(--mint-a1);
+    --accent-a2: var(--mint-a2);
+    --accent-a3: var(--mint-a3);
+    --accent-a4: var(--mint-a4);
+    --accent-a5: var(--mint-a5);
+    --accent-a6: var(--mint-a6);
+    --accent-a7: var(--mint-a7);
+    --accent-a8: var(--mint-a8);
+    --accent-a9: var(--mint-a9);
+    --accent-a10: var(--mint-a10);
+    --accent-a11: var(--mint-a11);
+    --accent-a12: var(--mint-a12);
+    --accent-1: var(--mint-1);
+    --accent-2: var(--mint-2);
+    --accent-3: var(--mint-3);
+    --accent-4: var(--mint-4);
+    --accent-5: var(--mint-5);
+    --accent-6: var(--mint-6);
+    --accent-7: var(--mint-7);
+    --accent-8: var(--mint-8);
+    --accent-9: var(--mint-9);
+    --accent-10: var(--mint-10);
+    --accent-11: var(--mint-11);
+    --accent-12: var(--mint-12);
+
+    --accent: var(--accent-6);
+    --accent-hover: var(--accent-7);
+    --accent-active: var(--accent-5);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  ::selection {
+    background-color: var(--accent-a5);
+  }
+
   ::-webkit-scrollbar {
     height: 6px;
     width: 6px;
@@ -265,7 +379,7 @@ div[class*="nw-toast"] .toast-close {
   opacity: 1;
   margin-left: 20px;
   padding: 0px;
-  font-size: 18px;
+  font-size: var(--font-size);
   transition: all 0.2s ease-in-out;
 }
 
@@ -286,125 +400,143 @@ div[class*="nw-toast"] .toast-close:hover {
 @font-face {
   font-family: "Montserrat";
   src: url("../assets/fonts/Montserrat-Black.ttf") format("truetype");
-  font-weight: 900; /* Black weight */
+  font-weight: 900;
+  /* Black weight */
   font-style: normal;
 }
 
 @font-face {
   font-family: "Montserrat";
   src: url("../assets/fonts/Montserrat-BlackItalic.ttf") format("truetype");
-  font-weight: 900; /* Black weight */
+  font-weight: 900;
+  /* Black weight */
   font-style: italic;
 }
 
 @font-face {
   font-family: "Montserrat";
   src: url("../assets/fonts/Montserrat-Bold.ttf") format("truetype");
-  font-weight: 700; /* Bold weight */
+  font-weight: 700;
+  /* Bold weight */
   font-style: normal;
 }
 
 @font-face {
   font-family: "Montserrat";
   src: url("../assets/fonts/Montserrat-BoldItalic.ttf") format("truetype");
-  font-weight: 700; /* Bold weight */
+  font-weight: 700;
+  /* Bold weight */
   font-style: italic;
 }
 
 @font-face {
   font-family: "Montserrat";
   src: url("../assets/fonts/Montserrat-ExtraBold.ttf") format("truetype");
-  font-weight: 800; /* Extra Bold weight */
+  font-weight: 800;
+  /* Extra Bold weight */
   font-style: normal;
 }
 
 @font-face {
   font-family: "Montserrat";
   src: url("../assets/fonts/Montserrat-ExtraBoldItalic.ttf") format("truetype");
-  font-weight: 800; /* Extra Bold weight */
+  font-weight: 800;
+  /* Extra Bold weight */
   font-style: italic;
 }
 
 @font-face {
   font-family: "Montserrat";
   src: url("../assets/fonts/Montserrat-ExtraLight.ttf") format("truetype");
-  font-weight: 200; /* Extra Light weight */
+  font-weight: 200;
+  /* Extra Light weight */
   font-style: normal;
 }
 
 @font-face {
   font-family: "Montserrat";
   src: url("../assets/fonts/Montserrat-ExtraLightItalic.ttf") format("truetype");
-  font-weight: 200; /* Extra Light weight */
+  font-weight: 200;
+  /* Extra Light weight */
   font-style: italic;
 }
 
 @font-face {
   font-family: "Montserrat";
   src: url("../assets/fonts/Montserrat-Italic.ttf") format("truetype");
-  font-weight: 400; /* Regular weight */
+  font-weight: 400;
+  /* Regular weight */
   font-style: italic;
 }
 
 @font-face {
   font-family: "Montserrat";
   src: url("../assets/fonts/Montserrat-Light.ttf") format("truetype");
-  font-weight: 300; /* Light weight */
+  font-weight: 300;
+  /* Light weight */
   font-style: normal;
 }
 
 @font-face {
   font-family: "Montserrat";
   src: url("../assets/fonts/Montserrat-LightItalic.ttf") format("truetype");
-  font-weight: 300; /* Light weight */
+  font-weight: 300;
+  /* Light weight */
   font-style: italic;
 }
 
 @font-face {
   font-family: "Montserrat";
   src: url("../assets/fonts/Montserrat-Medium.ttf") format("truetype");
-  font-weight: 500; /* Medium weight */
+  font-weight: 500;
+  /* Medium weight */
   font-style: normal;
 }
 
 @font-face {
   font-family: "Montserrat";
   src: url("../assets/fonts/Montserrat-MediumItalic.ttf") format("truetype");
-  font-weight: 500; /* Medium weight */
+  font-weight: 500;
+  /* Medium weight */
   font-style: italic;
 }
 
 @font-face {
   font-family: "Montserrat";
   src: url("../assets/fonts/Montserrat-Regular.ttf") format("truetype");
-  font-weight: 400; /* Regular weight */
+  font-weight: 400;
+  /* Regular weight */
   font-style: normal;
 }
 
 @font-face {
   font-family: "Montserrat";
   src: url("../assets/fonts/Montserrat-SemiBold.ttf") format("truetype");
-  font-weight: 600; /* SemiBold weight */
+  font-weight: 600;
+  /* SemiBold weight */
   font-style: normal;
 }
 
 @font-face {
   font-family: "Montserrat";
   src: url("../assets/fonts/Montserrat-SemiBoldItalic.ttf") format("truetype");
-  font-weight: 600; /* SemiBold weight */
+  font-weight: 600;
+  /* SemiBold weight */
   font-style: italic;
 }
 
 @font-face {
   font-family: "Montserrat";
   src: url("../assets/fonts/Montserrat-Thin.ttf") format("truetype");
-  font-weight: 100; /* Thin weight */
+  font-weight: 100;
+  /* Thin weight */
   font-style: normal;
 }
 
 @font-face {
   font-family: "Montserrat";
   src: url("../assets/fonts/Montserrat-ThinItalic.ttf") format("truetype");
-  font-weight: 100; /* Thin weight */
+  font-weight: 100;
+  /* Thin weight */
   font-style: italic;
 }

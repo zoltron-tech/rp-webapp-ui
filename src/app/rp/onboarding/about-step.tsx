@@ -5,7 +5,6 @@ import {
   type FormEventHandler,
   type ReactNode,
   useCallback,
-  useEffect,
   useState,
 } from "react";
 import { ErrorBox } from "@/components/error-box";

@@ -177,7 +177,6 @@ export const updateMuseAction = async (_muse: Muse) => {
 
     return novelist;
   } catch (e) {
-
     return { message: API_MESSAGE.Error };
   }
 };

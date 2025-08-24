@@ -1,5 +1,4 @@
 import type { Friend, Muse, Novelist, NovelistTier } from "@/types";
-import type { None } from "@/types/common";
 import type { StoryBoard, StoryBoardEvent } from "@/types/story-board";
 
 export const STANDARD_TIER: NovelistTier = {
@@ -17,6 +16,7 @@ export const EMPTY_FRIEND: Friend = {
 };
 
 export const INITIAL_NOVELIST: Novelist = {
+  about: null,
   connection: null,
   createdAt: "",
   firstName: "",
@@ -24,6 +24,7 @@ export const INITIAL_NOVELIST: Novelist = {
   friendsCount: 0,
   id: "",
   image: "",
+  isOnboarded: false,
   lastName: "",
   museCount: 0,
   muses: [],
@@ -77,5 +78,3 @@ export const INITIAL_STORY_BOARD_EVENT: StoryBoardEvent = {
   ordinal: 1,
   storyBoardId: "",
 };
-
-export const NONE: None = {};

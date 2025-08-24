@@ -1,6 +1,5 @@
 import styled from "styled-components";
 import { BACKGROUND_BLUR, BASE_TRANSITION, DEV_MODE_BORDER } from "@/theme";
-import { Avatar } from "../common";
 
 export const PositionContainer = styled.div`
   ${DEV_MODE_BORDER("red")}

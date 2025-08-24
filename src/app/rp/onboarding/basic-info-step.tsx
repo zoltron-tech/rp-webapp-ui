@@ -5,17 +5,14 @@ import {
   type FormEventHandler,
   type ReactNode,
   useCallback,
-  useEffect,
   useState,
 } from "react";
-import { checkUsernameAvailability, updateUsernameAction } from "@/app/actions";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { ErrorBox } from "@/components/error-box";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
-import type { Novelist, UpdateNovelistPayload, User } from "@/types";
+import type { UpdateNovelistPayload } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
-import { checkUsernameInvalidity } from "@/utils/helpers";
 import { updateUserNovelist } from "../novelists/actions";
 import { uploadMedia } from "../profile/actions";
 import { useOnboardingState, useOnboardingStoreSet } from "./onboarding.store";

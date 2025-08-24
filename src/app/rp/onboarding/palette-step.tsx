@@ -6,7 +6,6 @@ import {
   type FormEventHandler,
   type ReactNode,
   useCallback,
-  useEffect,
   useState,
 } from "react";
 import { updateUserTheme } from "@/app/actions";

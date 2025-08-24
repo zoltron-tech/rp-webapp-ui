@@ -3,7 +3,7 @@
 import { ShouldRender } from "@novelist-world/ui";
 import { useRouter } from "next/navigation";
 import { Separator, Tabs } from "radix-ui";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { ImProfile } from "react-icons/im";
 import { finishOnboardingAction } from "@/app/actions";
 import { StoreProvider } from "@/context/store/context";

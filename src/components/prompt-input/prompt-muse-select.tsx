@@ -30,9 +30,9 @@ export const PromptMuseSelect: FC<Props> = forwardRef(
     const accent = useGlobalState("accent");
     const theme = useGlobalState("theme");
     const promptType = usePromptInputState("type");
-    const [muse, setMuse] = useState<Muse>(muses[0]);
+    const [muse, setMuse] = useState<Muse>(muses?.[0]);
     const handleMuseChange = (value: string) => {
-      const selectedMuse = muses.find((m) => m.id === value);
+      const selectedMuse = muses?.find((m) => m.id === value);
       if (selectedMuse) {
         setMuse(selectedMuse);
       }
@@ -75,7 +75,7 @@ export const PromptMuseSelect: FC<Props> = forwardRef(
                 className={classNames("select-content", theme, accent)}
               >
                 <Select.Viewport className="select-viewport">
-                  {muses.map((muse) => (
+                  {muses?.map((muse) => (
                     <SelectItem key={muse.id} muse={muse} />
                   ))}
                 </Select.Viewport>

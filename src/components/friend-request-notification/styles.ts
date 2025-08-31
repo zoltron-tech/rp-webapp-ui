@@ -103,6 +103,8 @@ export const Title = styled.div`
 export const Subtext = styled.div`
   font-size: 10px;
   color: var(--text);
+  white-space: normal;
+  word-wrap: break-word;
 `;
 
 export const StyledDate = styled.div`

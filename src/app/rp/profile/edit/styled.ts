@@ -222,7 +222,6 @@ export const FormContainer = styled.div`
 
 export const BasicInfoFields = styled.div`
 
-    flex-direction: row;
     flex-direction: column;
     justify-content: center;
     align-items: center;

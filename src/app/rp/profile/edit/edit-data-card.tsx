@@ -159,8 +159,8 @@ export default function EditDataCard() {
       const target = e.target as HTMLFormElement;
       const _firstName = target.firstName.value.trim();
       const _lastName = target.lastName.value.trim();
-      const _about = target.lastName.value.trim();
-      const _note = target.lastName.value.trim();
+      const _about = target.about.value.trim();
+      const _note = target.note.value.trim();
       const _palatte = target.palette.value.trim();
 
       if (

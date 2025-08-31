@@ -1,35 +1,38 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { ShouldRender } from "@novelist-world/ui";
+import { StoreProvider } from "@/context/store/context";
 import { useGlobalState } from "@/context/store/stores";
-import { ROUTES } from "@/utils/constants/routes";
-import { Logger } from "@/utils/services";
+import { API_MESSAGE } from "@/utils/constants";
+import EditDataCard from "./edit-data-card";
+import type { ProfileState } from "./profile.store";
+import * as S from "./styled";
 
-const DynamicEditProfileCard = dynamic(
-  () => import("@/components/edit-profile-card"),
-  { ssr: false },
-);
+const ErrorKeys = [API_MESSAGE.UncategorizedError] as const;
+type ErrorKey = (typeof ErrorKeys)[number];
 
-export default function EditProfilePage({}) {
-  const authState = useGlobalState("authState");
-
-  const { push } = useRouter();
-
-  useEffect(() => {
-    Logger.debug("EditProfilePage", authState);
-    if (authState === "LOGGED_OUT") {
-      Logger.debug("pushing to home");
-      push(ROUTES.Novelists);
-    }
-  }, [authState]);
-
-  Logger.debug("yaha pohanchay hain hum:");
+export default function EditProfilePage() {
+  const novelist = useGlobalState("novelist");
+  const user = useGlobalState("user");
 
   return (
-    <div>
-      <DynamicEditProfileCard />
-    </div>
+    <S.EditProfilePageRoot>
+      <ShouldRender if={Boolean(user && novelist)}>
+        <StoreProvider<ProfileState>
+          storeId="profile"
+          initial={{
+            about: novelist?.about || "",
+            firstName: novelist?.firstName || "",
+            image: novelist?.image || "",
+            lastName: novelist?.lastName || "",
+            note: novelist?.note || "",
+            palette: user?.palette ?? 0,
+            theme: "dark",
+          }}
+        >
+          <EditDataCard />
+        </StoreProvider>
+      </ShouldRender>
+    </S.EditProfilePageRoot>
   );
 }

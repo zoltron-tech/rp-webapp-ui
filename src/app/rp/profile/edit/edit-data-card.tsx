@@ -164,7 +164,7 @@ export default function EditDataCard() {
       const _palatte = target.palette.value.trim();
 
       if (
-        _firstName !== novelist?.username ||
+        _firstName !== novelist?.firstName ||
         _lastName !== novelist?.lastName ||
         _about !== novelist?.about ||
         _note !== novelist?.note ||

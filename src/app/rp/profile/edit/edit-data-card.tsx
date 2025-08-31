@@ -228,7 +228,7 @@ export default function EditDataCard() {
     setPalette(user?.palette ?? 0);
     setLoading(false);
     setError(null);
-  }, [novelist, setFirstname, setLastname, setLoading, setError]);
+  }, [novelist, setFirstname, setLastname, setAbout, setNote, setPalette, user, setLoading, setError]);
 
   return (
     <S.Card>

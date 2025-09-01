@@ -1,7 +1,5 @@
 import { RadioGroup } from "radix-ui";
 import styled from "styled-components";
-import { AvatarNew } from "@/components/common/avatar-new";
-
 export const EditProfilePageRoot = styled.div``;
 
 export const Card = styled.div`

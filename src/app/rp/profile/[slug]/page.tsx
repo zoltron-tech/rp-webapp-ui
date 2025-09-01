@@ -34,6 +34,7 @@ import {
   deleteFriendRequest,
   sendFriendRequest,
 } from "../actions";
+import ExpandableText from "./expandable-text";
 import * as S from "./styles";
 
 const useGetActivities = (username: string) => {
@@ -306,7 +307,11 @@ export default function UserProfilePage({}) {
               src={novelist?.image ?? null}
               alt="profile-picture"
             />
-            <S.NoteContainer>{novelist?.note}</S.NoteContainer>
+            <ShouldRender
+              if={novelist?.note !== undefined && novelist?.note?.length > 0}
+            >
+              <S.NoteContainer>{novelist?.note}</S.NoteContainer>
+            </ShouldRender>
           </Flex>
           <S.ContentInner>
             <Flex>
@@ -357,6 +362,13 @@ export default function UserProfilePage({}) {
                 }
               />
             </S.ButtonsContainer>
+            <S.SubText>About</S.SubText>
+            <S.AboutContainer>
+              <ExpandableText
+                text={novelist?.about ?? ""}
+                collapsedHeight={300}
+              />
+            </S.AboutContainer>
             <S.SubText>
               {storyBoards?.length === 0
                 ? "No Stories"

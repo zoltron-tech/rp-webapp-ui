@@ -1,5 +1,6 @@
 import { RadioGroup } from "radix-ui";
 import styled from "styled-components";
+import { AvatarNew } from "@/components/common/avatar-new";
 
 export const EditProfilePageRoot = styled.div``;
 
@@ -232,13 +233,13 @@ export const BasicInfoFields = styled.div`
 
 
   .avatar-field {
-    width: 100px;
-    height: 100px;
+    width: 150px;
+    height: 150px;
     margin-block: 24px;
 
           .avatar {
-                width: 100px;
-    height: 100px;
+                width: 150px;
+    height: 150px;
     margin-block: 16px;
     background-color: var(--bg-2);
     border: 6px solid var(--bg-1);

@@ -197,6 +197,48 @@ export const ContentContainer = styled.div`
   background-color: var(--bg-3);
 `;
 
+export const AboutContainer = styled.div`
+  width: 100%;
+  min-height: 300px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  background-color: var(--bg-3);
+  white-space: pre-wrap; /* preserve line breaks + spaces */
+  word-break: break-word; /* prevent overflow on long words */
+  font-family: inherit;
+`;
+
+export const Wrapper = styled.div<{ $animating: boolean }>`
+  white-space: pre-wrap;
+  overflow: hidden;
+  transition: max-height 0.4s ease-in-out;
+  ${({ $animating }) => $animating && "will-change: max-height;"}
+`;
+
+export const Toggle = styled.span`
+  font-size: var(--font-size-h6);
+  font-weight: 300;
+  margin-top: 10px;
+  margin-inline-start: 10px;
+  font-style: italic;
+  font-weight: 700;
+  color: var(--accent);
+
+  &:hover {
+    cursor: pointer;
+    color: var(--accent-hover);
+  }
+
+  @container (max-width: 600px) {
+    & {
+      font-size: var(--font-size-input);
+    }
+  }
+`;
+
 export const SubText = styled.div`
   width: 80%;
   text-transform: uppercase;
@@ -282,6 +324,10 @@ export const Avatar = styled(AvatarNew)`
       display: none;
     }
   }
+
+    .avatar-fallback {
+    font-size: calc(2*var(--font-size-h1));
+  }
 `;
 
 export const AvatarMobile = styled(AvatarNew)`
@@ -323,7 +369,7 @@ export const NameMobile = styled.div`
   ${NameFontStyles};
 
   color: var(--text);
-  margin-top: 40px;
+  margin-top: 60px;
   font-size: 36px;
   width: 100%;
   text-align: center;

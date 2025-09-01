@@ -189,7 +189,6 @@ export default function EditDataCard() {
         setGlobalState({
           novelist: response,
         });
-        console.log(response);
         setProfileState({
           about: response.about || "",
           firstName: response.firstName || "",

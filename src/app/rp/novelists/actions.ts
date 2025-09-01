@@ -139,6 +139,7 @@ export const updateUserNovelist = async (
     method: create ? "POST" : "PUT",
   });
 
+
   if (!response.ok) {
     return { message: API_MESSAGE.Error };
   }

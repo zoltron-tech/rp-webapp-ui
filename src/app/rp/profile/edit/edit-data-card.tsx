@@ -162,7 +162,6 @@ export default function EditDataCard() {
       const _about = target.about.value.trim();
       const _note = target.note.value.trim();
       const _palatte = target.palette.value.trim();
-
       if (
         _firstName !== novelist?.firstName ||
         _lastName !== novelist?.lastName ||
@@ -171,13 +170,14 @@ export default function EditDataCard() {
         image !== novelist?.image
       ) {
         const payload = {
-          about: about,
+          about: _about,
           firstName: _firstName,
           image: image ?? undefined,
           lastName: _lastName,
           note: note ?? "",
         } satisfies UpdateNovelistPayload;
 
+        console.log(payload);
         setLoading(true);
         const response = await updateUserNovelist(payload, !novelist?.id);
         setLoading(false);
@@ -228,7 +228,17 @@ export default function EditDataCard() {
     setPalette(user?.palette ?? 0);
     setLoading(false);
     setError(null);
-  }, [novelist, setFirstname, setLastname, setAbout, setNote, setPalette, user, setLoading, setError]);
+  }, [
+    novelist,
+    setFirstname,
+    setLastname,
+    setAbout,
+    setNote,
+    setPalette,
+    user,
+    setLoading,
+    setError,
+  ]);
 
   return (
     <S.Card>

@@ -362,13 +362,17 @@ export default function UserProfilePage({}) {
                 }
               />
             </S.ButtonsContainer>
-            <S.SubText>About</S.SubText>
-            <S.AboutContainer>
-              <ExpandableText
-                text={novelist?.about ?? ""}
-                collapsedHeight={300}
-              />
-            </S.AboutContainer>
+            <ShouldRender
+              if={!!(novelist?.about && novelist?.about.length > 0)}
+            >
+              <S.SubText>About</S.SubText>
+              <S.AboutContainer>
+                <ExpandableText
+                  text={novelist?.about ?? ""}
+                  collapsedHeight={300}
+                />
+              </S.AboutContainer>
+            </ShouldRender>
             <S.SubText>
               {storyBoards?.length === 0
                 ? "No Stories"

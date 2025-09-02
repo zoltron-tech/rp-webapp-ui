@@ -369,7 +369,7 @@ export default function UserProfilePage({}) {
               <S.AboutContainer>
                 <ExpandableText
                   text={novelist?.about ?? ""}
-                  collapsedHeight={300}
+                  collapsedHeight={200}
                 />
               </S.AboutContainer>
             </ShouldRender>

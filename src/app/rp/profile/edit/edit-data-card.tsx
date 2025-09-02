@@ -174,7 +174,7 @@ export default function EditDataCard() {
           firstName: _firstName,
           image: image ?? undefined,
           lastName: _lastName,
-          note: note ?? "",
+          note: _note ?? "",
         } satisfies UpdateNovelistPayload;
 
         console.log(payload);
@@ -335,9 +335,6 @@ export default function EditDataCard() {
                 onValueChange={setPalette}
                 name="palette"
               >
-                <S.FieldHeader>
-                  <Form.Label>Theme</Form.Label>
-                </S.FieldHeader>
                 <S.PaletteGroup
                   defaultValue={palette.toString()}
                   onValueChange={setPalette}

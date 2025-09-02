@@ -199,7 +199,7 @@ export const ContentContainer = styled.div`
 
 export const AboutContainer = styled.div`
   width: 100%;
-  min-height: 300px;
+  min-height: 200px;
   padding: 20px;
   display: flex;
   flex-direction: column;

@@ -11,7 +11,7 @@ interface ExpandableTextProps {
 
 const ExpandableText: React.FC<ExpandableTextProps> = ({
   text,
-  collapsedHeight = 300,
+  collapsedHeight = 200,
 }) => {
   const [expanded, setExpanded] = useState(false);
   const [maxHeight, setMaxHeight] = useState<string>(`${collapsedHeight}px`);
@@ -26,7 +26,7 @@ const ExpandableText: React.FC<ExpandableTextProps> = ({
         setMaxHeight(`${collapsedHeight}px`);
       }
       setAnimating(true);
-      const timeout = setTimeout(() => setAnimating(false), 400);
+      const timeout = setTimeout(() => setAnimating(false), 200);
       return () => clearTimeout(timeout);
     }
   }, [expanded, collapsedHeight, text]);
@@ -38,7 +38,7 @@ const ExpandableText: React.FC<ExpandableTextProps> = ({
       <S.Wrapper ref={ref} style={{ maxHeight }} $animating={animating}>
         {text}
       </S.Wrapper>
-      {text.length > 400 && (
+      {text.length > 200 && (
         <S.Toggle onClick={() => setExpanded(!expanded)}>
           {expanded ? " Show less..." : " See more..."}
         </S.Toggle>

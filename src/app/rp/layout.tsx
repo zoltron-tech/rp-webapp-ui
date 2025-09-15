@@ -62,6 +62,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           authState: "LOGGED_OUT",
           globalLoading: false,
           muses: [],
+          notifications: null,
           novelist: null,
           novelists: [],
           theme: "dark",

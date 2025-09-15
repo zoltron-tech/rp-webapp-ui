@@ -97,7 +97,6 @@ export const TopBar: FC<Props> = memo(({}) => {
               if={authState === "LOGGED_IN" || authState === "UNINITIALIZED"}
             >
               <S.ButtonsContainerLoggedInDesktop>
-                <ChatMenuModal />
                 <NotificationsMenu />
                 <UserMenu />
               </S.ButtonsContainerLoggedInDesktop>

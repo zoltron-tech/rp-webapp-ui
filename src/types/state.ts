@@ -1,4 +1,4 @@
-import type { Muse, Novelist, User } from ".";
+import type { Muse, Novelist, NovelistWorldNotification, User } from ".";
 import type { AccentValue } from "./theme";
 
 export type AuthState =
@@ -16,4 +16,5 @@ export interface StoreState {
   novelist: Novelist | null;
   globalLoading: boolean;
   accent: AccentValue;
+  notifications: NovelistWorldNotification[] | null;
 }

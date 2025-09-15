@@ -88,7 +88,7 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
           <IoMdNotifications className="menu-icon" />
         </IconWrapper>
         <S.Menu className={classNames({ open })}>
-          {notifications?.map((request) => (
+          {notifications?.slice(0, 5).map((request) => (
             <FriendRequestNotification
               key={request.id}
               notification={request}
@@ -98,7 +98,7 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
           <S.CardWrapper key={"end"} className="end">
             <S.Card className="more-items-box" onClick={handleSeeAllClick}>
               <S.CardHeader>
-                <S.Text>See all friend requests</S.Text>
+                <S.Text>See all notifications</S.Text>
               </S.CardHeader>
             </S.Card>
           </S.CardWrapper>

@@ -347,7 +347,7 @@ export default function UserProfilePage({}) {
               <S.InfoTextBold>{novelist?.friendsCount}</S.InfoTextBold>{" "}
               <S.InfoText> Friends </S.InfoText>
               <S.InfoTextBold>{novelist?.museCount}</S.InfoTextBold>{" "}
-              <S.InfoText> Muses </S.InfoText>
+              <S.InfoText> Characters </S.InfoText>
               <FcCalendar />
               <S.InfoText>
                 Joined {toFormattedDate(novelist?.createdAt)}
@@ -396,8 +396,8 @@ export default function UserProfilePage({}) {
             </ShouldRender>
             <S.SubText>
               {novelist?.museCount === 0
-                ? "No Muses"
-                : `Muses (${novelist?.museCount})`}
+                ? "No Characters yet"
+                : `Characters (${novelist?.museCount})`}
             </S.SubText>
             <ShouldRender
               if={!!(novelist?.museCount && novelist.museCount > 0)}

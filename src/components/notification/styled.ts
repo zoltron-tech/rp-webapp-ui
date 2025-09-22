@@ -1,4 +1,5 @@
 import { styled } from "styled-components";
+import { Button } from "../common";
 
 export const ListRoot = styled.div`
   display: flex;
@@ -36,25 +37,12 @@ export const NotificationsHeaderRoot = styled.header`
   width: 100%;
   align-items: flex-end;
   justify-content: flex-end;
-  padding: 5px;
-  padding-right: 20px;
+  padding: 5px 20px;
 `;
 
-export const NotificationHeaderText = styled.header`
-  display: flex;
-  padding: 5px;
-  padding-inline: 10px;
-  border-radius: 20px;
-  border: 3px solid var(--accent-hover);
-  font-size: var(--font-size-small);
-  font-weight: 600;
-  color: var(--accent-hover);
-  cursor: pointer;
-
-  &:hover {
-    background-color: var(--accent-hover);
-    color: var(--text);
-  }
+export const NotificationHeaderText = styled(Button)`
+  max-width: 150px;
+  height: 30px;
 `;
 
 export const NotificationsBoxRoot = styled.header`

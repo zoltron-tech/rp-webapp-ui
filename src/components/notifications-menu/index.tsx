@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { type FC, useCallback, useEffect, useMemo, useState } from "react";
 import { IoMdNotifications } from "react-icons/io";
 import { getNotifications } from "@/app/rp/novelists/actions";
-import { useGlobalState } from "@/context/store/stores";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import type { NovelistWorldNotification } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { toggleState } from "@/utils/helpers";
@@ -23,15 +23,13 @@ function checkIsMobile() {
 
 export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
   const authState = useGlobalState("authState");
+  const notifications = useGlobalState("notifications");
   const user = useGlobalState("user");
   const { push } = useRouter();
-
-  const [notifications, setNotifications] = useState<
-    NovelistWorldNotification[] | null
-  >(null);
   const [open, setOpen] = useState(false);
   const [_loading, setLoading] = useState(true);
   const isMobile = useMemo(() => checkIsMobile(), []);
+  const set = useGlobalStoreSet();
 
   const handleSeeAllClick = useCallback(() => {
     push(ROUTES.Notification);
@@ -51,7 +49,8 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
     setLoading(true);
     const _notifications = await getNotifications();
     setLoading(false);
-    setNotifications(_notifications);
+
+    set({ notifications: _notifications });
   }, [authState]);
 
   const removeFriendRequestNotification = async (
@@ -63,7 +62,7 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
       (notification) => notification.id !== novelistToRemove.id,
     );
 
-    setNotifications(updatedFriendRequests);
+    set({ notifications: updatedFriendRequests });
   };
 
   useEffect(() => {

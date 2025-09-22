@@ -32,6 +32,7 @@ export const Button: FC<ButtonProps> = ({
   loading,
   size = "md",
   onClick,
+  className,
 }) => {
   const clickHandler = () => {
     if (disabled || loading) return;
@@ -46,6 +47,7 @@ export const Button: FC<ButtonProps> = ({
         Logger.debug("onKeyDown:button", e.key);
       }}
       className={classNames([
+        className,
         "button",
         {
           action: variant === "action",

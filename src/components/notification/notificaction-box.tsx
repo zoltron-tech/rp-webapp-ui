@@ -1,3 +1,4 @@
+import { ShouldRender } from "@novelist-world/ui";
 import { useRouter } from "next/navigation";
 import {
   type FC,
@@ -46,7 +47,9 @@ export const NotificationBox: FC<NotificationBoxProps> = ({ notification }) => {
         </S.Text>
       </S.Content>
       <S.Extras>
-        <S.unReadBadge />
+        <ShouldRender preserveSpace if={!notification.isRead}>
+          <S.unReadBadge />
+        </ShouldRender>
         <S.StyledDate>
           {notification.date ? toFormattedDateFromUnix(notification.date) : ""}
         </S.StyledDate>

@@ -10,7 +10,7 @@ import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDateFromUnix } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
-import { Avatar } from "../common";
+import { Avatar, ShouldRender } from "../common";
 import { AvatarNew } from "../common/avatar-new";
 import * as S from "./styles";
 
@@ -98,7 +98,9 @@ export const FriendRequestNotification: FC<Props> = ({
               <RxCross2 />
             </S.RemoveButton> */}
 
-            <S.unReadBadge />
+            <ShouldRender preserveSpace if={!notification.isRead}>
+              <S.unReadBadge />
+            </ShouldRender>
           </S.NotificationActions>
         </S.CardHeader>
       </S.Card>

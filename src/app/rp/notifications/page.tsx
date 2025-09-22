@@ -3,24 +3,22 @@
 import { useCallback, useEffect, useState } from "react";
 import { PageLoader } from "@/components/layout";
 import { NotificcationsList } from "@/components/notification";
-import { useGlobalState } from "@/context/store/stores";
-import type { NovelistWorldNotification } from "@/types";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { getNotifications } from "../novelists/actions";
 
 export default function NotifiactionsPage({}) {
   const [loading, setLoading] = useState(true);
   const authState = useGlobalState("authState");
-
-  const [notifications, setNotifications] = useState<
-    NovelistWorldNotification[] | null
-  >(null);
+  const notifications = useGlobalState("notifications");
+  const set = useGlobalStoreSet();
 
   const fetchNotifications = useCallback(async () => {
     if (authState !== "LOGGED_IN") return;
     setLoading(true);
     const _notifications = await getNotifications();
     setLoading(false);
-    setNotifications(_notifications);
+
+    set({ notifications: _notifications });
   }, [authState]);
 
   useEffect(() => {
@@ -31,5 +29,5 @@ export default function NotifiactionsPage({}) {
 
   if (loading) return <PageLoader />;
 
-  return <NotificcationsList notifications={notifications} />;
+  return <NotificcationsList />;
 }

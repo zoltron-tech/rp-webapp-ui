@@ -110,14 +110,31 @@ export const getNotifications = async () => {
 
   if (response.status === 404) {
     return null;
-  } else if (!response.ok) {
-    Logger.debug(API_MESSAGE.Error, response.status, response.statusText);
-    logoutAction();
   }
 
   const notifications: NovelistWorldNotification[] = await response.json();
 
   return notifications;
+};
+
+export const patchNotifications = async () => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/notification`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers: {
+      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "PATCH",
+  });
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  return "success";
 };
 
 export const updateUserNovelist = async (
@@ -138,7 +155,6 @@ export const updateUserNovelist = async (
     },
     method: create ? "POST" : "PUT",
   });
-
 
   if (!response.ok) {
     return { message: API_MESSAGE.Error };

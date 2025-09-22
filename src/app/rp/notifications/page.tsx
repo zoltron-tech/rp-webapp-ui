@@ -27,7 +27,7 @@ export default function NotifiactionsPage({}) {
     fetchNotifications();
   }, [authState]);
 
-  if (loading) return <PageLoader />;
+  // if (loading) return <PageLoader />;
 
   return <NotificcationsList />;
 }

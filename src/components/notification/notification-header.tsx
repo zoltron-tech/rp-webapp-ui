@@ -13,22 +13,12 @@ export const NotificationHeader = () => {
   const authState = useGlobalState("authState");
   const set = useGlobalStoreSet();
 
-  const fetchNotifications = useCallback(async () => {
-    if (authState !== "LOGGED_IN") return;
-    setLoading(true);
-    const _notifications = await getNotifications();
-    setLoading(false);
-
-    set({ notifications: _notifications });
-  }, [authState]);
-
   const markNotificationsAsRead = useCallback(async () => {
-    console.log(authState);
     if (authState !== "LOGGED_IN") return;
     setLoading(true);
-    console.log("andar");
     await patchNotifications();
-    fetchNotifications();
+    const _notifications = await getNotifications();
+    set({ notifications: _notifications });
     setLoading(false);
   }, [authState]);
 

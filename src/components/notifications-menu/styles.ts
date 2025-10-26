@@ -5,6 +5,7 @@ import {
   DEV_MODE_BORDER,
   Z_INDEX,
 } from "@/theme";
+import { Button } from "../common";
 
 export const PositionContainer = styled.div`
   ${DEV_MODE_BORDER("red")}

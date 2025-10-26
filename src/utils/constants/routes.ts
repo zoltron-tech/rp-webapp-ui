@@ -7,6 +7,7 @@ export const ROUTES = {
     View: (slug: string) => `/rp/muse/${slug}`,
   },
   NotFound: "/404",
+  Notification: "/rp/notifications",
   Novelists: "/rp/novelists",
   Oauth: {
     Callback: "/rp/oauth/callback",

@@ -9,7 +9,6 @@ import { NotificationsMenu } from "@/components/notifications-menu";
 import { useGlobalState } from "@/context/store/stores";
 import { ROUTES } from "@/utils/constants/routes";
 import logoText from "../../../assets/images/Logo text.png";
-import { ChatMenuModal } from "../../chat-menu-modal";
 import * as S from "./styles";
 
 type Props = {};
@@ -97,7 +96,6 @@ export const TopBar: FC<Props> = memo(({}) => {
               if={authState === "LOGGED_IN" || authState === "UNINITIALIZED"}
             >
               <S.ButtonsContainerLoggedInDesktop>
-                <ChatMenuModal />
                 <NotificationsMenu />
                 <UserMenu />
               </S.ButtonsContainerLoggedInDesktop>

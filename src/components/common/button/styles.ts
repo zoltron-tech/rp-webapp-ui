@@ -165,11 +165,11 @@ export const Container = styled.div`
     cursor: wait;
 
     &.primary {
-      background-color: ${({ theme }: any) => theme.primaryLoading};
+      background-color: var(--bg3);
     }
 
     &.secondary {
-      border-color: ${({ theme }: any) => theme.primaryLoading};
+      background-color: var(--bg3);
       color: ${({ theme }: any) => theme.primaryLoading};
     }
 

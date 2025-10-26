@@ -45,7 +45,9 @@ export default function MusesListPage({}) {
 
   return (
     <S.Container>
-      <S.Maintext>{isCurrentUser ? "Your" : `${username}'s`} Muses</S.Maintext>
+      <S.Maintext>
+        {isCurrentUser ? "Your" : `${username}'s`} Characters
+      </S.Maintext>
       <S.Subtext>
         {isCurrentUser ? `${muses?.length}/${novelist?.tier.museLimit}` : ""}
       </S.Subtext>

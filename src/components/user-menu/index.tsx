@@ -77,7 +77,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
               </S.Element>
               <S.Element onClick={toMusesPage}>
                 <IoIosPeople />
-                Your muses
+                Your characters
               </S.Element>
               <S.Element onClick={toStoryBoardsPage}>
                 <PiBookOpenUserDuotone />

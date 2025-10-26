@@ -262,7 +262,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
             onChange={(image) => setAvatarFile(image)}
           />
           <S.Profile>
-            <S.Title>{id ? "EDIT" : "Create"} Muse</S.Title>
+            <S.Title>{id ? "EDIT" : "Create a new"} Character</S.Title>
             <ShouldRender preserveSpace if={id !== undefined}>
               <S.UsernameContainer>
                 <span>PENNED BY: </span>

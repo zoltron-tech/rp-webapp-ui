@@ -258,7 +258,7 @@ export const ButtonsContainerDesktop = styled.div`
 `;
 
 export const ButtonsContainerLoggedInDesktop = styled(ButtonsContainerDesktop)`
-  width: 130px;
+  width: 75px;
 `;
 
 export const ButtonsContainerMobile = styled.div`

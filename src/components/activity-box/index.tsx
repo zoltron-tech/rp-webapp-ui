@@ -179,7 +179,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
         <S.FooterContainer>
           <FaStreetView />
           <S.PromptFooterText onClick={(e) => handleCardClick(e, activity)}>
-            View Muse.
+            View Character.
           </S.PromptFooterText>
         </S.FooterContainer>
       </ShouldRender>

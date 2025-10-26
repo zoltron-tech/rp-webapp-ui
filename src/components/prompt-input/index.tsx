@@ -128,7 +128,9 @@ export const PromptInput: FC<Props> = forwardRef(
               <Collapsible.Content>
                 <Form.Root className="form-content" onSubmit={handleSend}>
                   <PromptMuseSelect muses={muses} />
-                  {type === "prompt" && <PromptPrivacySelect />}
+                  {type === "prompt" && (
+                    <PromptPrivacySelect className="prompt-input-privacy-select" />
+                  )}
                   <PromptTextField />
                   <PromptMediaInput />
                   <PromptMediaPreview />

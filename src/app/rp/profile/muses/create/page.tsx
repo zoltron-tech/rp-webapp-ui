@@ -7,10 +7,9 @@ import { useGlobalState } from "@/context/store/stores";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 
-const DynamicEditMuseCard = dynamic(
-  () => import("@/components/edit-muse-card"),
-  { ssr: false },
-);
+const DynamicEditMuseCard = dynamic(() => import("@/components/edit-muse"), {
+  ssr: false,
+});
 
 export default function CreateMusePage({}) {
   const _id = useParams()?.id as string;

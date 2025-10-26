@@ -15,6 +15,7 @@ import { updateUserTheme } from "@/app/actions";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { ErrorBox } from "@/components/error-box";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
+import { useUIContext } from "@/hooks";
 import type { UpdateNovelistPayload } from "@/types/novelist";
 import { ACCENT_MAP, type Accent } from "@/types/theme";
 import { API_MESSAGE } from "@/utils/constants";
@@ -58,6 +59,7 @@ export default function EditDataCard() {
   const [imageUploading, setImageUploading] = useState(false);
   const authState = useGlobalState("authState");
   const setGlobalState = useGlobalStoreSet();
+  const { successToast, errorToast } = useUIContext();
   const { push } = useRouter();
   const [currentStep, setCurrentStep] = useState("username");
 
@@ -215,6 +217,7 @@ export default function EditDataCard() {
           user: response.user,
         });
         setProfileState({ palette: Number(_palatte) as Accent });
+        successToast("Data updated successfully.");
       }
     },
     [novelist, image, setGlobalState],

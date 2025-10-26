@@ -126,13 +126,6 @@ export default function EditMuseDataCard() {
     [setNote],
   );
 
-  const handleStoryChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setStory(e.target.value);
-    },
-    [setStory],
-  );
-
   const handleAvatarChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
@@ -210,7 +203,7 @@ export default function EditMuseDataCard() {
           <S.TopBar>
             <S.FormHeading>
               <ImProfile />
-              <h1>{id ? "Edit your " : "Create a new"} muse</h1>
+              <h1>{id ? "Edit your " : "Create a new"} character</h1>
             </S.FormHeading>
             <PromptPrivacySelect
               className="muse-privacy-select"
@@ -302,7 +295,6 @@ export default function EditMuseDataCard() {
               aria-label="Backstory"
               name="story"
               value={story ?? ""}
-              onChange={handleStoryChange}
               asChild
             >
               <S.RichText

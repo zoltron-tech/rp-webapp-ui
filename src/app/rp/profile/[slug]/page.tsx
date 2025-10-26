@@ -318,7 +318,7 @@ export default function UserProfilePage({}) {
               <S.NameMobile>
                 {novelist?.firstName} {novelist?.lastName}
               </S.NameMobile>
-              <S.ExtendedBadge
+              {/* <S.ExtendedBadge
                 tier={novelist?.tier.name || "standard"}
                 className={`badge-${novelist?.tier.name?.toLowerCase()}`}
                 onClick={toTiersPage}
@@ -338,7 +338,7 @@ export default function UserProfilePage({}) {
                 {novelist?.tier.name === "PREMIUM" && (
                   <TbCircleLetterP className="letter" />
                 )}
-              </S.ExtendedBadge>
+              </S.ExtendedBadge> */}
             </Flex>
             <S.UsernameContainer>
               <Username username={username} primary />

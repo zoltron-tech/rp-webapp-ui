@@ -146,9 +146,7 @@ export const updateMuseAction = async (
   _museId: string | null,
   _muse: CreateUpdateMuse,
 ) => {
-  console.log("action");
   const jwt = await authenticateAndGetJWT();
-  console.log(jwt);
   // Choose URL and HTTP method dynamically
   const isUpdate = !!_museId && _museId.trim() !== "";
   const URL = isUpdate
@@ -157,8 +155,6 @@ export const updateMuseAction = async (
   const method = isUpdate ? "PUT" : "POST";
 
   Logger.debug("updateMuseAction", { method, muse: _muse, URL });
-
-  console.log("updating");
 
   try {
     const response = await fetch(URL, {
@@ -170,8 +166,6 @@ export const updateMuseAction = async (
       },
       method,
     });
-
-    console.log(response);
 
     if (!response.ok) {
       Logger.debug(

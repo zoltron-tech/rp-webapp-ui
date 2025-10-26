@@ -20,7 +20,6 @@ import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
 import { ROUTES } from "@/utils/constants/routes";
 import { AvatarNew } from "../common/avatar-new";
 import { ErrorBox } from "../error-box";
-import { Muse } from "../novelist-card/styles";
 import { PromptPrivacySelect } from "../prompt-input/privacy-select";
 import { FandomSelect } from "./fandom-select";
 import { useMuseState, useMuseStoreSet } from "./muse.store";

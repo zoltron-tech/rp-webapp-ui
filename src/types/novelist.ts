@@ -1,4 +1,5 @@
 import type { Tag } from "./common";
+import type { PrivacyLevel } from "./prompt";
 
 export interface Muse {
   id: string | null;
@@ -12,6 +13,22 @@ export interface Muse {
   video: string | null;
   song: string | null;
   nicknames: string[] | null;
+  extraAttributes: Record<string, string> | null;
+  connections: MuseConnection[];
+  tags: Tag[];
+  privacy: PrivacyLevel;
+}
+
+export interface CreateUpdateMuse {
+  firstName: string;
+  fandom: Fandom;
+  lastName: string;
+  note: string | null;
+  story: string | null;
+  image: string | null;
+  video: string | null;
+  song: string | null;
+  nicknames: string[];
   extraAttributes: Record<string, string> | null;
   connections: MuseConnection[];
   tags: Tag[];

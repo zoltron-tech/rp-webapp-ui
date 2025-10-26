@@ -1,7 +1,7 @@
 "use server";
 import getConfig from "next/config";
 import { authenticateAndGetJWT, getJWTIfExists } from "@/app/actions";
-import type { Fandom, Muse } from "@/types";
+import type { CreateUpdateMuse, Fandom, Muse } from "@/types";
 import type { WithMessage } from "@/types/common";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import { Logger } from "@/utils/services";
@@ -142,11 +142,23 @@ export const getHeroPageMusesAction = async () => {
   return muse;
 };
 
-export const updateMuseAction = async (_muse: Muse) => {
+export const updateMuseAction = async (
+  _museId: string | null,
+  _muse: CreateUpdateMuse,
+) => {
+  console.log("action");
   const jwt = await authenticateAndGetJWT();
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse`;
+  console.log(jwt);
+  // Choose URL and HTTP method dynamically
+  const isUpdate = !!_museId && _museId.trim() !== "";
+  const URL = isUpdate
+    ? `${RP_SERVICE_URL}/rp/portfolio/muse/${_museId}`
+    : `${RP_SERVICE_URL}/rp/portfolio/muse`;
+  const method = isUpdate ? "PUT" : "POST";
 
-  Logger.debug("updateMuse", _muse);
+  Logger.debug("updateMuseAction", { method, muse: _muse, URL });
+
+  console.log("updating");
 
   try {
     const response = await fetch(URL, {
@@ -156,18 +168,24 @@ export const updateMuseAction = async (_muse: Muse) => {
         "Content-Type": "application/json",
         [AUTH_HEADER_NAME]: jwt,
       },
-      method: "POST",
+      method,
     });
 
+    console.log(response);
+
     if (!response.ok) {
-      Logger.debug("error", response.status, response.statusText);
+      Logger.debug(
+        "updateMuseAction error",
+        response.status,
+        response.statusText,
+      );
       return { message: API_MESSAGE.Error };
     }
 
     const result: WithMessage<Muse> = await response.json();
-    Logger.debug("updateMuse", result);
+    Logger.debug("updateMuseAction result", result);
 
-    const novelist: Muse = Object.assign(
+    const muse: Muse = Object.assign(
       {},
       {
         ...result,
@@ -175,8 +193,9 @@ export const updateMuseAction = async (_muse: Muse) => {
       },
     );
 
-    return novelist;
+    return muse;
   } catch (e) {
+    Logger.error("updateMuseAction exception", e);
     return { message: API_MESSAGE.Error };
   }
 };

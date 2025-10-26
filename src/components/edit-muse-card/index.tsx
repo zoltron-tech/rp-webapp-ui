@@ -121,14 +121,14 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
       return muse;
     }
 
-    const resonse = await updateMuseAction(muse);
+    // const resonse = await updateMuseAction(muse);
 
     setLoading(false);
 
-    Logger.debug("resonse", resonse);
-    if ("message" in resonse) {
-      return errorToast(API_MESSAGE.Error);
-    }
+    // Logger.debug("resonse", resonse);
+    //if ("message" in resonse) {
+    //  return errorToast(API_MESSAGE.Error);
+    //}
 
     updateValues(muse);
     successToast("Data updated successfully.");

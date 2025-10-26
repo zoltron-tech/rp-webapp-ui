@@ -1,4 +1,4 @@
-import type { Friend, Muse, Novelist, NovelistTier } from "@/types";
+import type { Fandom, Friend, Muse, Novelist, NovelistTier } from "@/types";
 import type { StoryBoard, StoryBoardEvent } from "@/types/story-board";
 
 export const STANDARD_TIER: NovelistTier = {
@@ -33,15 +33,17 @@ export const INITIAL_NOVELIST: Novelist = {
   username: "",
 };
 
+export const FANDOMLESS: Fandom = {
+  color: "rgb(51, 102, 153)",
+  description: "rgb(51, 102, 153)",
+  id: "FANDOMLESS",
+  name: "Fandomless Original Characters",
+};
+
 export const INITIAL_MUSE: Muse = {
   connections: [],
   extraAttributes: null,
-  fandom: {
-    color: "rgb(51, 102, 153)",
-    description: "rgb(51, 102, 153)",
-    id: "FANDOMLESS",
-    name: "Fandomless Original Characters",
-  },
+  fandom: FANDOMLESS,
   firstName: "",
   id: null,
   image: null,

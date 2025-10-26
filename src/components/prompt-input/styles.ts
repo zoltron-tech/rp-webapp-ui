@@ -105,6 +105,12 @@ export const PromptInputRoot = styled.div`
     font-family: var(--font);
     color: var(--text);
   }
+
+  .prompt-input-privacy-select {
+  position: absolute;
+  top: 20px;
+  right: 16px;
+  }
 `;
 
 export const TextInputContainer = styled(Form.Field)`
@@ -259,9 +265,7 @@ const SelectPortalBase = styled(Select.Portal)`
 `;
 
 export const PrivacySelect = styled(SelectBase)`
-  position: absolute;
-  top: 20px;
-  right: 16px;
+
   .select-trigger {
     min-width: 34px;
     background-color: transparent;

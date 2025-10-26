@@ -1,6 +1,12 @@
 import classNames from "classnames";
 import { Form, Select } from "radix-ui";
-import { type FC, forwardRef, useCallback, useState } from "react";
+import {
+  type FC,
+  forwardRef,
+  type HTMLProps,
+  useCallback,
+  useState,
+} from "react";
 import { GrRadialSelected } from "react-icons/gr";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { useGlobalState } from "@/context/store/stores";
@@ -14,25 +20,35 @@ const PRIVACY_OPTIONS = [
   { label: "Only Me", value: "ONLY_ME" },
 ] as const;
 
-export const PromptPrivacySelect: FC = () => {
+type PromptPrivacySelectProps = HTMLProps<HTMLDivElement> & {
+  initial?: "PUBLIC" | "FRIENDS" | "ONLY_ME";
+};
+
+export const PromptPrivacySelect: FC<PromptPrivacySelectProps> = ({
+  className,
+  initial = "PUBLIC",
+  ...rest
+}) => {
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
-  const [privacy, setPrivacy] = useState<PrivacyLevel>("PUBLIC");
+  const [privacy, setPrivacy] = useState<PrivacyLevel>(initial);
   const handlePrivacyChange = useCallback((value: PrivacyLevel) => {
     setPrivacy(value);
   }, []);
 
   return (
     <S.PrivacySelect
+      className={className}
       name="privacy"
       title={`Privacy level: ${privacy.toLocaleLowerCase()}`}
+      {...rest}
     >
       <Form.Control asChild>
         <Select.Root
           aria-label="Privacy"
           name="privacy"
           required
-          defaultValue="PUBLIC"
+          defaultValue={privacy}
           onValueChange={handlePrivacyChange}
         >
           <Select.Trigger className="select-trigger">

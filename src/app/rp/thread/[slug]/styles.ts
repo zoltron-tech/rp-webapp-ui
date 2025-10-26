@@ -28,14 +28,14 @@ export const RepliesContainer = styled.div`
   margin-top: 40px;
 
   width: 100%;
-  padding: 20px;
+  padding-inline: 20px;
   z-index: ${Z_INDEX.CARD_EXPAND};
   background-color: var(--bg-2);
   border: 0.85px solid var(--bg-6);
 
   @container content-container (max-width: 800px) {
     max-width: 100%;
-    margin-bottom: 50px;
+    margin-top: unset;
     margin-left: unset;
     border: none;
     border-radius: unset;
@@ -61,7 +61,6 @@ export const HeaderContainer = styled.div`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  padding-left: 20px;
   width: 100%;
 `;
 
@@ -70,7 +69,6 @@ export const Avatar = styled(Common.Avatar)`
 
   @container (max-width: 500px) {
     & {
-      margin-top: 10px;
       --size: 30px;
     }
   }

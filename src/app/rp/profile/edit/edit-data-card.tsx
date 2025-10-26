@@ -370,10 +370,17 @@ export default function EditDataCard() {
             </ErrorBox>
           </ShouldRender>
           <S.FormActions>
-            <S.ResetButton type="reset" className="reset-button">
+            <S.ResetButton
+              type="reset"
+              className="reset-button"
+              disabled={loading || imageUploading}
+            >
               Reset
             </S.ResetButton>
-            <Form.Submit className="submit-button" disabled={loading}>
+            <Form.Submit
+              className="submit-button"
+              disabled={loading || imageUploading}
+            >
               Save
             </Form.Submit>
           </S.FormActions>

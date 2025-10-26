@@ -315,10 +315,17 @@ export default function EditMuseDataCard() {
           </ShouldRender>
 
           <S.FormActions>
-            <S.ResetButton type="reset" className="reset-button">
+            <S.ResetButton
+              type="reset"
+              className="reset-button"
+              disabled={loading || imageUploading}
+            >
               Cancel
             </S.ResetButton>
-            <Form.Submit className="submit-button" disabled={loading}>
+            <Form.Submit
+              className="submit-button"
+              disabled={loading || imageUploading}
+            >
               Save
             </Form.Submit>
           </S.FormActions>

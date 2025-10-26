@@ -177,7 +177,6 @@ export default function EditMuseDataCard() {
         video: null,
       } satisfies CreateUpdateMuse;
 
-      console.log(payload);
       setLoading(true);
       const response = await updateMuseAction(id, payload);
 

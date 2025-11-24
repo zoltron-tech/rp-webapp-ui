@@ -1,7 +1,7 @@
 "use client";
 import classNames from "classnames";
 import { useParams, useRouter } from "next/navigation";
-import type { FC } from "react";
+import { type FC, useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { GrEdit } from "react-icons/gr";
 import { useGlobalState } from "@/context/store/stores";
@@ -10,6 +10,7 @@ import { INITIAL_STORY_BOARD } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import { ShouldRender } from "../common";
+import { AppAlertDialog } from "../dialog";
 import * as S from "./styles";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
@@ -20,6 +21,7 @@ export const StoryCard: FC<Props> = ({ storyBoard, className, ...rest }) => {
   const { push } = useRouter();
   const params = useParams();
   const user = useGlobalState("user");
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const username = params?.slug as string;
   const isCurrentUser = user?.username && user.username === username;
 
@@ -61,6 +63,14 @@ export const StoryCard: FC<Props> = ({ storyBoard, className, ...rest }) => {
       ])}
       {...rest}
     >
+      <ShouldRender if={storyBoard !== INITIAL_STORY_BOARD && !!isCurrentUser}>
+        <AppAlertDialog
+          heading={`Delete ${storyBoard.name}?`}
+          text="This action is permanent. Are you sure?"
+          open={showDeleteAlert}
+          onOpenChange={setShowDeleteAlert}
+        />
+      </ShouldRender>
       <S.CardBackground banner={storyBoard.image || ""} />
       <S.Card
         className={classNames([
@@ -77,7 +87,10 @@ export const StoryCard: FC<Props> = ({ storyBoard, className, ...rest }) => {
           <S.EditButton className="button" onClick={onEditClick}>
             <GrEdit />
           </S.EditButton>
-          <S.DeleteButton className="button">
+          <S.DeleteButton
+            className="button"
+            onClick={() => setShowDeleteAlert(true)}
+          >
             <FaRegTrashCan />
           </S.DeleteButton>
         </ShouldRender>

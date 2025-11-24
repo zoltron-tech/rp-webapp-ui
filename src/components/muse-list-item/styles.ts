@@ -7,6 +7,7 @@ export const MuseContainer = styled(Container)`
   width: 95%;
   align-items: flex-start;
   padding-block: 5px;
+  border-radius: 5px;
   background-color: var(--bg-3);
 
   &:hover {

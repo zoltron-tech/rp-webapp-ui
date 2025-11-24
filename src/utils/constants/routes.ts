@@ -28,10 +28,10 @@ export const ROUTES = {
         Event: {
           Create: `/rp/profile/story/${storyId}/event/create`,
           Edit: (eventId: string) =>
-            `/rp/profile/story/${storyId}/event/edit/${eventId}`,
+            `/rp/profile/story/edit/${storyId}/event/edit/${eventId}`,
         },
-        Index: `/rp/profile/story/${storyId}`,
-        Members: `/rp/profile/story/${storyId}/members`,
+        Index: `/rp/profile/story/edit/${storyId}`,
+        Members: `/rp/profile/story/edit/${storyId}/members`,
       }),
       Index: "/rp/profile/story",
     },

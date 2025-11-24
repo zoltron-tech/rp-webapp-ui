@@ -15,6 +15,7 @@ import { MusesPill } from "@/components";
 import ActivityBox from "@/components/activity-box";
 import { ButtonGroup, type ButtonInfo } from "@/components/button-group";
 import { ShouldRender, Username } from "@/components/common";
+import { AppAlertDialog } from "@/components/dialog";
 import { PageLoader } from "@/components/layout";
 import MuseListItem from "@/components/muse-list-item";
 import PromptInput from "@/components/prompt-input";
@@ -362,6 +363,10 @@ export default function UserProfilePage({}) {
                 }
               />
             </S.ButtonsContainer>
+            <AppAlertDialog
+              heading="Delete your account?"
+              text="This action is permanent and cannot be undone. Are you sure you want to proceed?"
+            />
             <ShouldRender
               if={!!(novelist?.about && novelist?.about.length > 0)}
             >
@@ -375,7 +380,7 @@ export default function UserProfilePage({}) {
             </ShouldRender>
             <S.SubText>
               {storyBoards?.length === 0
-                ? "No Stories"
+                ? "No stories yet"
                 : `Stories (${storyBoards?.length})`}
             </S.SubText>
             <ShouldRender if={!!(storyBoards && storyBoards?.length > 0)}>
@@ -396,7 +401,7 @@ export default function UserProfilePage({}) {
             </ShouldRender>
             <S.SubText>
               {novelist?.museCount === 0
-                ? "No Characters yet"
+                ? "No characters yet"
                 : `Characters (${novelist?.museCount})`}
             </S.SubText>
             <ShouldRender

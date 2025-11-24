@@ -1,3 +1,4 @@
+import { Container, ContainerClasses } from "@novelist-world/ui";
 import styled, { css } from "styled-components";
 import { Avatar as AvatarCommon, Pill } from "@/components/common";
 import { AvatarNew } from "@/components/common/avatar-new";
@@ -66,7 +67,6 @@ export const ContentRight = styled.div`
     max-width: 100%;
     width: 100%;
     padding-inline: 0px;
-    margin-top: 10px;
   }
 `;
 
@@ -186,8 +186,9 @@ export const PartitionContainer = styled.div`
   }
 `;
 
-export const ContentContainer = styled.div`
-  width: 100%;
+export const ContentContainer = styled(Container)`
+  width: 95%;
+  border-radius: 5px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -195,10 +196,12 @@ export const ContentContainer = styled.div`
   padding-inline: unset;
   padding-block: 4px;
   background-color: var(--bg-3);
+  margin-bottom: 10px;
 `;
 
-export const AboutContainer = styled.div`
-  width: 100%;
+export const AboutContainer = styled(Container)`
+  width: 95%;
+  border-radius: 5px;
   min-height: 200px;
   padding: 20px;
   display: flex;
@@ -240,13 +243,11 @@ export const Toggle = styled.span`
 `;
 
 export const SubText = styled.div`
-  width: 80%;
-  text-transform: uppercase;
+  width: 85%;
   font-size: 20px;
-  font-weight: 300;
+  font-weight: var(--font-weight-semi-bold);
   margin-top: 10px;
-  margin-bottom: 10px;
-  font-style: italic;
+  margin-bottom: 4px;
 
   @container (max-width: 1000px) {
     & {
@@ -314,7 +315,9 @@ export const InfoText = styled.div`
 `;
 
 export const Avatar = styled(AvatarNew)`
-  margin-top: 100px;
+  border: 8px solid var(--bg-2);
+  background-color: var(--bg-2);
+  margin-top: 30px;
   height: 250px;
   width: 250px;
   z-index: 100;
@@ -331,7 +334,9 @@ export const Avatar = styled(AvatarNew)`
 `;
 
 export const AvatarMobile = styled(AvatarNew)`
-  margin-top: 80px;
+  border: 5px solid var(--bg-2);
+  background-color: var(--bg-2);
+  margin-top: 20px;
   height: 130px;
   width: 130px;
   z-index: 100;
@@ -396,26 +401,22 @@ export const UsernameContainer = styled.div`
   }
 `;
 
-export const NoteContainer = styled(Pill)`
-  position: relative;
-  width: 40%;
-  right: 170px;
-  bottom: 100px;
+export const NoteContainer = styled(Container)`
+  width: unset;
+  right: 50px;
+  bottom: -80px;
   word-break: break-word;
   border-radius: 20px;
-  border-bottom: 1px solid dimgray;
-  border-right: 1px solid dimgray;
-  padding-inline: 20px;
+  padding-inline: 10px;
   z-index: 100;
   font-size: var(--font-size);
-  padding-block: unset;
 
   @container profile-content (max-width: 800px) {
     & {
-      font-size: var(--font-size-small);
+      font-size: var(--font-size-xsmall);
       width: unset;
-      right: 120px;
-      bottom: 60px;
+      right: 40px;
+      bottom: -50px;
     }
   }
 

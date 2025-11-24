@@ -193,3 +193,40 @@ export const updateMuseAction = async (
     return { message: API_MESSAGE.Error };
   }
 };
+
+export const deleteMuseAction = async (museId: string) => {
+  const jwt = await getJWTIfExists();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}`;
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (jwt) {
+    headers[AUTH_HEADER_NAME] = jwt;
+  }
+
+  try {
+    const response = await fetch(URL, {
+      cache: "no-store",
+      headers: headers,
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      Logger.debug(
+        "deleteMuseAction error",
+        response.status,
+        response.statusText,
+      );
+      return { message: API_MESSAGE.Error };
+    }
+
+    const result: WithMessage<Muse> = await response.json();
+    Logger.debug("deleteMuseAction result", result);
+  } catch (e) {
+    Logger.error("updateMuseAction exception", e);
+    return { message: API_MESSAGE.Error };
+  }
+  return { message: API_MESSAGE.Success };
+};

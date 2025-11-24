@@ -6,6 +6,7 @@ export const RichText = styled(NWRichText)`
   & > .pm-container {
     & > .ProseMirror {
       background-color: ${({ theme }: any) => theme.colors.inputBackground};
+      font-size: var(--font-size-input);
     }
   }
 `;

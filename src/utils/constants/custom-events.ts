@@ -1,5 +1,8 @@
 export const EVENTS = {
-  MuseDeleted: "muse:deleted",
+  MUSE: {
+    base: "muse",
+    DELETED: "deleted",
+  },
 } as const;
 
 export type MuseDeletedPayload = {

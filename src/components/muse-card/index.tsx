@@ -23,7 +23,7 @@ export const MuseCard: FC<Props> = ({ muse, className, ...rest }) => {
   const { push } = useRouter();
   const params = useParams();
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
-  const { emit } = useCustomEvents("muse");
+  const { emit } = useCustomEvents(EVENTS.MUSE.base);
 
   const user = useGlobalState("user");
 
@@ -55,7 +55,7 @@ export const MuseCard: FC<Props> = ({ muse, className, ...rest }) => {
     if (!muse?.id) return;
     const deleted = await deleteMuseAction(muse.id);
     if (deleted.message === API_MESSAGE.Success) {
-      emit("deleted", {
+      emit(EVENTS.MUSE.DELETED, {
         id: muse.id,
         name: muse.firstName,
       });

@@ -9,9 +9,10 @@ import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents, useUIContext } from "@/hooks";
 import type { Muse } from "@/types";
 import { INITIAL_MUSE } from "@/utils/constants";
-import type {
-  CustomEventType,
-  MuseDeletedPayload,
+import {
+  type CustomEventType,
+  EVENTS,
+  type MuseDeletedPayload,
 } from "@/utils/constants/custom-events";
 import { Logger } from "@/utils/services";
 import * as S from "./styles";
@@ -55,14 +56,14 @@ export default function MusesListPage({}) {
       const museId = e.detail.id;
       const name = e.detail.name;
 
-      setMuses(muses?.filter((muse) => muse.id !== museId) || []);
+      setMuses((prev) => prev?.filter((muse) => muse.id !== museId) || []);
       successToast(`${name} removed successfully.`);
     };
 
-    on("deleted", handleMuseDeleted);
+    on(EVENTS.MUSE.DELETED, handleMuseDeleted);
 
     return () => {
-      off("deleted", handleMuseDeleted);
+      off(EVENTS.MUSE.DELETED, handleMuseDeleted);
     };
   }, [on]);
 

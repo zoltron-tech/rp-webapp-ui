@@ -225,7 +225,7 @@ export const deleteMuseAction = async (museId: string) => {
     const result: WithMessage<Muse> = await response.json();
     Logger.debug("deleteMuseAction result", result);
   } catch (e) {
-    Logger.error("updateMuseAction exception", e);
+    Logger.error("deleteMuseAction exception", e);
     return { message: API_MESSAGE.Error };
   }
   return { message: API_MESSAGE.Success };

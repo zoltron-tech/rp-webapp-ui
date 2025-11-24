@@ -363,10 +363,6 @@ export default function UserProfilePage({}) {
                 }
               />
             </S.ButtonsContainer>
-            <AppAlertDialog
-              heading="Delete your account?"
-              text="This action is permanent and cannot be undone. Are you sure you want to proceed?"
-            />
             <ShouldRender
               if={!!(novelist?.about && novelist?.about.length > 0)}
             >

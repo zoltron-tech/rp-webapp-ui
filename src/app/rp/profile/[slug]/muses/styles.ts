@@ -52,7 +52,6 @@ export const Subtext = styled.div`
   margin-left: 5px;
   text-transform: uppercase;
   font-size: 22px;
-  font-weight: 300;
   font-style: italic;
   text-align: center;
 

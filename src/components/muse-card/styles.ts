@@ -55,7 +55,6 @@ export const Title = styled.div`
 `;
 
 export const CardWrapper = styled.div`
-  position: relative;
   width: 200px;
   min-width: 200px;
   min-height: 300px;

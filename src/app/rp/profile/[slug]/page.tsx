@@ -462,41 +462,43 @@ export default function UserProfilePage({}) {
             </ShouldRender>
           </Flex>
           <S.ContentInner>
-            <S.ProfileDropdownMenuContainer>
-              {renderConnectionDropdown(novelist?.connection, username)}
-              <ShouldRender if={!isCurrentUser}>
-                <AppDropdownMenu
-                  trigger={<BsThreeDots size={18} />}
-                  items={[
-                    {
-                      icon: <IoCopySharp />,
-                      label: `Copy username`,
-                      onClick: handleCopyUsername,
-                    },
-                    {
-                      icon: <RiShareBoxFill />,
-                      label: `Share profile`,
-                      onClick: () => console.log("Edit"),
-                    },
-                    {
-                      separator: true,
-                    },
-                    {
-                      icon: <RiFlagFill />,
-                      label: `Report ${username}`,
-                      onClick: () => setShowReportAlert(true),
-                      variant: "danger",
-                    },
-                    {
-                      icon: <MdOutlineAppBlocking />,
-                      label: `Block ${username}`,
-                      onClick: () => setShowBlockAlert(true),
-                      variant: "danger",
-                    },
-                  ]}
-                />
-              </ShouldRender>
-            </S.ProfileDropdownMenuContainer>
+            <ShouldRender if={authState === "LOGGED_IN"}>
+              <S.ProfileDropdownMenuContainer>
+                {renderConnectionDropdown(novelist?.connection, username)}
+                <ShouldRender if={!isCurrentUser}>
+                  <AppDropdownMenu
+                    trigger={<BsThreeDots size={18} />}
+                    items={[
+                      {
+                        icon: <IoCopySharp />,
+                        label: `Copy username`,
+                        onClick: handleCopyUsername,
+                      },
+                      {
+                        icon: <RiShareBoxFill />,
+                        label: `Share profile`,
+                        onClick: () => console.log("Edit"),
+                      },
+                      {
+                        separator: true,
+                      },
+                      {
+                        icon: <RiFlagFill />,
+                        label: `Report ${username}`,
+                        onClick: () => setShowReportAlert(true),
+                        variant: "danger",
+                      },
+                      {
+                        icon: <MdOutlineAppBlocking />,
+                        label: `Block ${username}`,
+                        onClick: () => setShowBlockAlert(true),
+                        variant: "danger",
+                      },
+                    ]}
+                  />
+                </ShouldRender>
+              </S.ProfileDropdownMenuContainer>
+            </ShouldRender>
             <Flex>
               <S.NameMobile>
                 {novelist?.firstName} {novelist?.lastName}

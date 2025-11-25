@@ -4,40 +4,17 @@ import { Flex } from "@novelist-world/ui";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { BiSolidMessage } from "react-icons/bi";
-import {
-  BsPersonFillCheck,
-  BsPersonFillGear,
-  BsPersonFillUp,
-  BsThreeDots,
-} from "react-icons/bs";
+import { BsPersonFillCheck, BsPersonFillUp, BsThreeDots } from "react-icons/bs";
 import { FcCalendar } from "react-icons/fc";
-import {
-  GiCheckMark,
-  GiCircleClaws,
-  GiCrossMark,
-  GiGoldShell,
-  GiStarSwirl,
-} from "react-icons/gi";
-import { ImBook } from "react-icons/im";
-import { IoIosCheckmarkCircle, IoMdPersonAdd } from "react-icons/io";
-import { IoCopySharp, IoPersonRemove, IoRemoveCircle } from "react-icons/io5";
+import { GiCheckMark, GiCrossMark } from "react-icons/gi";
+import { IoMdPersonAdd } from "react-icons/io";
+import { IoCopySharp, IoPersonRemove } from "react-icons/io5";
 import { MdOutlineAppBlocking } from "react-icons/md";
-import {
-  RiFlagFill,
-  RiMailAddLine,
-  RiShareBoxFill,
-  RiUserFollowLine,
-} from "react-icons/ri";
+import { RiFlagFill, RiShareBoxFill } from "react-icons/ri";
 import { SiMdbook } from "react-icons/si";
-import {
-  TbCircleLetterG,
-  TbCircleLetterP,
-  TbCircleLetterS,
-  TbSquareRoundedLetterSFilled,
-} from "react-icons/tb";
 import { MusesPill } from "@/components";
 import ActivityBox from "@/components/activity-box";
-import { ButtonGroup, type ButtonInfo } from "@/components/button-group";
+import type { ButtonInfo } from "@/components/button-group";
 import { ShouldRender, Username } from "@/components/common";
 import { AppAlertDialog } from "@/components/dialog";
 import { PageLoader } from "@/components/layout";

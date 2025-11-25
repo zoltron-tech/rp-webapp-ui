@@ -18,7 +18,7 @@ transform: translate(-50%, -50%) scale(1);
 `;
 
 export const Overlay = styled(AlertDialog.Overlay)`
-background-color: rgba(0, 0, 0, 0.45);
+background-color: rgba(0, 0, 0, 0.66);
 position: fixed;
 inset: 0;
 animation: ${overlayShow} 150ms ease-out;

@@ -3,8 +3,26 @@
 import { Flex } from "@novelist-world/ui";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { BiSolidMessage } from "react-icons/bi";
+import {
+  BsPersonFillCheck,
+  BsPersonFillGear,
+  BsPersonFillUp,
+  BsThreeDots,
+} from "react-icons/bs";
 import { FcCalendar } from "react-icons/fc";
 import { GiCircleClaws, GiGoldShell, GiStarSwirl } from "react-icons/gi";
+import { ImBook } from "react-icons/im";
+import { IoIosCheckmarkCircle, IoMdPersonAdd } from "react-icons/io";
+import { IoCopySharp, IoPersonRemove, IoRemoveCircle } from "react-icons/io5";
+import { MdOutlineAppBlocking } from "react-icons/md";
+import {
+  RiFlagFill,
+  RiMailAddLine,
+  RiShareBoxFill,
+  RiUserFollowLine,
+} from "react-icons/ri";
+import { SiMdbook } from "react-icons/si";
 import {
   TbCircleLetterG,
   TbCircleLetterP,
@@ -18,9 +36,11 @@ import { ShouldRender, Username } from "@/components/common";
 import { AppAlertDialog } from "@/components/dialog";
 import { PageLoader } from "@/components/layout";
 import MuseListItem from "@/components/muse-list-item";
+import { AppDropdownMenu } from "@/components/profile-more-dropdown";
 import PromptInput from "@/components/prompt-input";
 import StoryCard from "@/components/story-card";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
+import { useUIContext } from "@/hooks/use-ui-context";
 import type { Novelist, StoryBoard } from "@/types";
 import type { Activity } from "@/types/activity";
 import { API_MESSAGE } from "@/utils/constants";
@@ -66,6 +86,9 @@ const useGetActivities = (username: string) => {
 export default function UserProfilePage({}) {
   const params = useParams();
   const authState = useGlobalState("authState");
+  const [showUnfriendAlert, setShowUnfriendAlert] = useState(false);
+  const [showBlockAlert, setShowBlockAlert] = useState(false);
+  const [showReportAlert, setShowReportAlert] = useState(false);
   const user = useGlobalState("user");
   const userNovelist = useGlobalState("novelist");
   const [novelist, setNovelist] = useState<Novelist | null>(null);
@@ -77,11 +100,15 @@ export default function UserProfilePage({}) {
   const [storyBoards, setStories] = useState<StoryBoard[] | null>(null);
   const { push } = useRouter();
   const setGlobalState = useGlobalStoreSet();
+  const { successToast } = useUIContext();
 
   const handleButtonClick = () => {};
 
-  const toTiersPage = () => {
-    push(ROUTES.Tiers);
+  const handleCopyUsername = () => {
+    if (username) {
+      navigator.clipboard.writeText(username);
+      successToast("Username copied to clipboard");
+    }
   };
 
   const toMusesPage = () => {
@@ -108,9 +135,10 @@ export default function UserProfilePage({}) {
         const copied = { ...current };
 
         copied.connection = "FRIEND_REQUEST_SENT";
-
         return copied;
       });
+
+      successToast("Friend request sent");
     }
   };
 
@@ -127,6 +155,8 @@ export default function UserProfilePage({}) {
 
         return copied;
       });
+
+      successToast("Friend request accepted");
     }
   };
 
@@ -143,6 +173,8 @@ export default function UserProfilePage({}) {
 
         return copied;
       });
+
+      successToast("Friend request rejected");
     }
   };
 
@@ -160,6 +192,8 @@ export default function UserProfilePage({}) {
 
         return copied;
       });
+
+      successToast("Friend request cancelled");
     }
   };
 
@@ -241,6 +275,92 @@ export default function UserProfilePage({}) {
     }
   };
 
+  const renderConnectionDropdown = (
+    connection: string | null | undefined,
+    username: string,
+  ) => {
+    switch (connection) {
+      case "FRIEND":
+        return (
+          <AppDropdownMenu
+            trigger={<BsPersonFillCheck size={18} />}
+            items={[
+              {
+                icon: <SiMdbook />,
+                label: `Invite ${username} to a story`,
+                onClick: () => console.log("Unfriend"),
+              },
+              {
+                icon: <BiSolidMessage />,
+                label: `Message ${username}`,
+                onClick: () => console.log("Unfriend"),
+              },
+              {
+                separator: true,
+              },
+              {
+                icon: <IoPersonRemove />,
+                label: `Unfriend ${username}`,
+                onClick: () => setShowUnfriendAlert(true),
+                variant: "danger",
+              },
+            ]}
+          />
+        );
+
+      case "FRIEND_REQUEST_SENT":
+        return (
+          <AppDropdownMenu
+            trigger={<BsPersonFillUp size={18} />}
+            items={[
+              {
+                label: `Cancel request to ${username}`,
+                onClick: handleCancelFriendRequest,
+                variant: "danger",
+              },
+            ]}
+          />
+        );
+
+      case "FRIEND_REQUEST_RECEIVED":
+        return (
+          <AppDropdownMenu
+            trigger={<IoMdPersonAdd size={18} />}
+            showUnread={true}
+            items={[
+              {
+                icon: <IoIosCheckmarkCircle />,
+                label: `Accept request from ${username}`,
+                onClick: handleAcceptFriendRequest,
+                variant: "positive",
+              },
+              {
+                icon: <IoRemoveCircle />,
+                label: `Reject request from ${username}`,
+                onClick: handleDeleteFriendRequest,
+                variant: "danger",
+              },
+            ]}
+          />
+        );
+
+      default:
+        return !isCurrentUser ? (
+          <AppDropdownMenu
+            trigger={<IoMdPersonAdd size={18} />}
+            items={[
+              {
+                icon: <IoMdPersonAdd />,
+                label: `Add ${username}`,
+                onClick: handleSendFriendRequest,
+                variant: "positive",
+              },
+            ]}
+          />
+        ) : null;
+    }
+  };
+
   const fetchNovelist = async (username: string) => {
     // fetch novelist by username
     setLoading(true);
@@ -282,6 +402,33 @@ export default function UserProfilePage({}) {
 
   return (
     <>
+      <AppAlertDialog
+        heading={`Unfriend ${username}?`}
+        text={`Unfriending ${username} will not affect any of your previous collaborations. Are you sure you want to remove ${username} from your friends list?`}
+        open={showUnfriendAlert}
+        onOpenChange={setShowUnfriendAlert}
+        onConfirm={() => {
+          console.log("UNFRIEND called");
+        }}
+      />
+      <AppAlertDialog
+        heading={`Report ${username}?`}
+        text={`We strive to maintain a safe and welcoming community. If you notice any misconduct from ${username}, please report it. Our team will review the issue and take appropriate action as quickly as possible.`}
+        open={showReportAlert}
+        onOpenChange={setShowReportAlert}
+        onConfirm={() => {
+          console.log("Report called");
+        }}
+      />
+      <AppAlertDialog
+        heading={`Block ${username}?`}
+        text={`${username} will no longer be able to find you or view anything related to you or your characters. They will also be unable to contact you or your characters in any way. Are you sure you want to block ${username}?`}
+        open={showBlockAlert}
+        onOpenChange={setShowBlockAlert}
+        onConfirm={() => {
+          console.log("BLOCK called");
+        }}
+      />
       <ShouldRender if={loading && authState !== "LOADING"}>
         <PageLoader />
       </ShouldRender>
@@ -315,6 +462,41 @@ export default function UserProfilePage({}) {
             </ShouldRender>
           </Flex>
           <S.ContentInner>
+            <S.ProfileDropdownMenuContainer>
+              {renderConnectionDropdown(novelist?.connection, username)}
+              <ShouldRender if={!isCurrentUser}>
+                <AppDropdownMenu
+                  trigger={<BsThreeDots size={18} />}
+                  items={[
+                    {
+                      icon: <IoCopySharp />,
+                      label: `Copy username`,
+                      onClick: handleCopyUsername,
+                    },
+                    {
+                      icon: <RiShareBoxFill />,
+                      label: `Share profile`,
+                      onClick: () => console.log("Edit"),
+                    },
+                    {
+                      separator: true,
+                    },
+                    {
+                      icon: <RiFlagFill />,
+                      label: `Report ${username}`,
+                      onClick: () => setShowReportAlert(true),
+                      variant: "danger",
+                    },
+                    {
+                      icon: <MdOutlineAppBlocking />,
+                      label: `Block ${username}`,
+                      onClick: () => setShowBlockAlert(true),
+                      variant: "danger",
+                    },
+                  ]}
+                />
+              </ShouldRender>
+            </S.ProfileDropdownMenuContainer>
             <Flex>
               <S.NameMobile>
                 {novelist?.firstName} {novelist?.lastName}
@@ -354,7 +536,7 @@ export default function UserProfilePage({}) {
                 Joined {toFormattedDate(novelist?.createdAt)}
               </S.InfoText>
             </Flex>
-            <S.ButtonsContainer>
+            {/* <S.ButtonsContainer>
               <ButtonGroup
                 buttons={
                   authState === "LOGGED_IN" && username !== user?.username
@@ -362,7 +544,7 @@ export default function UserProfilePage({}) {
                     : LoggedInSelfButtons
                 }
               />
-            </S.ButtonsContainer>
+            </S.ButtonsContainer> */}
             <ShouldRender
               if={!!(novelist?.about && novelist?.about.length > 0)}
             >
@@ -373,27 +555,6 @@ export default function UserProfilePage({}) {
                   collapsedHeight={200}
                 />
               </S.AboutContainer>
-            </ShouldRender>
-            <S.SubText>
-              {storyBoards?.length === 0
-                ? "No stories yet"
-                : `Stories (${storyBoards?.length})`}
-            </S.SubText>
-            <ShouldRender if={!!(storyBoards && storyBoards?.length > 0)}>
-              <S.ContentContainer>
-                <S.PartitionContainer>
-                  {storyBoards?.map((storyBoard) => (
-                    <StoryCard
-                      className="profile"
-                      key={storyBoard?.id}
-                      storyBoard={storyBoard}
-                    ></StoryCard>
-                  ))}
-                </S.PartitionContainer>
-              </S.ContentContainer>
-              <S.SeeMoreLink onClick={toStoryBoardsPage}>
-                see all...
-              </S.SeeMoreLink>
             </ShouldRender>
             <S.SubText>
               {novelist?.museCount === 0
@@ -418,6 +579,27 @@ export default function UserProfilePage({}) {
                 expandable={true}
               />
             </S.MusePillContainer>
+            <S.SubText>
+              {storyBoards?.length === 0
+                ? "No stories yet"
+                : `Stories (${storyBoards?.length})`}
+            </S.SubText>
+            <ShouldRender if={!!(storyBoards && storyBoards?.length > 0)}>
+              <S.ContentContainer>
+                <S.PartitionContainer>
+                  {storyBoards?.map((storyBoard) => (
+                    <StoryCard
+                      className="profile"
+                      key={storyBoard?.id}
+                      storyBoard={storyBoard}
+                    ></StoryCard>
+                  ))}
+                </S.PartitionContainer>
+              </S.ContentContainer>
+              <S.SeeMoreLink onClick={toStoryBoardsPage}>
+                see all...
+              </S.SeeMoreLink>
+            </ShouldRender>
             <S.SubText>
               {activities?.length === 0
                 ? "No Updates"

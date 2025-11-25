@@ -53,7 +53,7 @@ export const THEME_LIGHT: Theme = {
     "rgba(255, 255, 255, 0.546) 80%",
     "#dedede",
   ],
-  error: pSBC(-0.1, "#d13232cc") as string,
+  error: pSBC(-0.1, "#a93434ff") as string,
   hoverGrey: "#e6e6e6",
   hoverGreyAlpha: "rgba(230, 230, 230, 0.5)",
   inputBackground: "#c5c5c5",
@@ -97,7 +97,7 @@ export const THEME_DARK: Theme = {
     "rgba(0, 0, 0, 1)",
   ],
 
-  error: pSBC(0.1, "#d13232cc") as string,
+  error: pSBC(0.1, "#a93434ff") as string,
   hoverGrey: "#333333",
   hoverGreyAlpha: "rgba(51, 51, 51, 0.5)",
   inputBackground: "#3a3a3a",
@@ -121,6 +121,6 @@ export const THEME_DARK: Theme = {
   textStark: "#fff",
   toastBackground: "#1b1b1b",
   unreadBadge: "#b32c2c",
-  unreadMark: "#9b55d4",
+  unreadMark: "#c34141",
   warning: pSBC(0.1, "#d1a000") as string,
 };

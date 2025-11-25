@@ -2,6 +2,7 @@ import { Container, ContainerClasses } from "@novelist-world/ui";
 import styled, { css } from "styled-components";
 import { Avatar as AvatarCommon, Pill } from "@/components/common";
 import { AvatarNew } from "@/components/common/avatar-new";
+import { AppDropdownMenu } from "@/components/profile-more-dropdown";
 import { BLUR_FILTER, DEV_MODE_BORDER, Z_INDEX } from "@/theme";
 import { Badge } from "../../tiers/styles";
 
@@ -70,8 +71,23 @@ export const ContentRight = styled.div`
   }
 `;
 
+export const ProfileDropdownMenuContainer = styled.div`
+  ${DEV_MODE_BORDER("blue")}
+  display: flex;
+  gap: 12px;
+  position: absolute;
+  right: 20px;
+  top: -80px
+`;
+
+export const ProfileMoreDropdownMenu = styled.div`
+  ${DEV_MODE_BORDER("blue")}
+  position: relative;
+`;
+
 export const ContentInner = styled.div`
   ${DEV_MODE_BORDER("blue")}
+    position: relative;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--bg-4);
@@ -246,7 +262,7 @@ export const SubText = styled.div`
   width: 85%;
   font-size: 20px;
   font-weight: var(--font-weight-semi-bold);
-  margin-top: 10px;
+  margin-top: 40px;
   margin-bottom: 4px;
 
   @container (max-width: 1000px) {

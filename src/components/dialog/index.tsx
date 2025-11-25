@@ -11,6 +11,7 @@ interface AlertProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onConfirm?: () => void;
+  actionButtonLabel?: string;
 }
 
 export const AppAlertDialog = ({
@@ -19,6 +20,7 @@ export const AppAlertDialog = ({
   open,
   onOpenChange,
   onConfirm,
+  actionButtonLabel = "Confirm",
 }: AlertProps) => {
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
@@ -36,7 +38,9 @@ export const AppAlertDialog = ({
               <S.CancelButton>Cancel</S.CancelButton>
             </AlertDialog.Cancel>
             <AlertDialog.Action asChild>
-              <S.ActionButton onClick={onConfirm}>Confirm</S.ActionButton>
+              <S.ActionButton onClick={onConfirm}>
+                {actionButtonLabel}
+              </S.ActionButton>
             </AlertDialog.Action>
           </S.Actions>
         </S.Content>

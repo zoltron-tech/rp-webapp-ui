@@ -11,7 +11,13 @@ import {
   BsThreeDots,
 } from "react-icons/bs";
 import { FcCalendar } from "react-icons/fc";
-import { GiCircleClaws, GiGoldShell, GiStarSwirl } from "react-icons/gi";
+import {
+  GiCheckMark,
+  GiCircleClaws,
+  GiCrossMark,
+  GiGoldShell,
+  GiStarSwirl,
+} from "react-icons/gi";
 import { ImBook } from "react-icons/im";
 import { IoIosCheckmarkCircle, IoMdPersonAdd } from "react-icons/io";
 import { IoCopySharp, IoPersonRemove, IoRemoveCircle } from "react-icons/io5";
@@ -100,7 +106,7 @@ export default function UserProfilePage({}) {
   const [storyBoards, setStories] = useState<StoryBoard[] | null>(null);
   const { push } = useRouter();
   const setGlobalState = useGlobalStoreSet();
-  const { successToast } = useUIContext();
+  const { successToast, warningToast } = useUIContext();
 
   const handleButtonClick = () => {};
 
@@ -108,6 +114,19 @@ export default function UserProfilePage({}) {
     if (username) {
       navigator.clipboard.writeText(username);
       successToast("Username copied to clipboard");
+    }
+  };
+
+  const handleNotImplemented = () => {
+    warningToast("This feature is coming soon!");
+  };
+
+  const handleShareProfile = () => {
+    if (username) {
+      navigator.clipboard.writeText(
+        `https://novelist.world/rp/profile/${username}`,
+      );
+      successToast("Profle link copied to clipboard");
     }
   };
 
@@ -288,12 +307,12 @@ export default function UserProfilePage({}) {
               {
                 icon: <SiMdbook />,
                 label: `Invite ${username} to a story`,
-                onClick: () => console.log("Unfriend"),
+                onClick: handleNotImplemented,
               },
               {
                 icon: <BiSolidMessage />,
                 label: `Message ${username}`,
-                onClick: () => console.log("Unfriend"),
+                onClick: handleNotImplemented,
               },
               {
                 separator: true,
@@ -314,7 +333,8 @@ export default function UserProfilePage({}) {
             trigger={<BsPersonFillUp size={18} />}
             items={[
               {
-                label: `Cancel request to ${username}`,
+                icon: <GiCrossMark size={18} />,
+                label: `Cancel friend request`,
                 onClick: handleCancelFriendRequest,
                 variant: "danger",
               },
@@ -329,13 +349,13 @@ export default function UserProfilePage({}) {
             showUnread={true}
             items={[
               {
-                icon: <IoIosCheckmarkCircle />,
+                icon: <GiCheckMark size={18} />,
                 label: `Accept request from ${username}`,
                 onClick: handleAcceptFriendRequest,
                 variant: "positive",
               },
               {
-                icon: <IoRemoveCircle />,
+                icon: <GiCrossMark size={18} />,
                 label: `Reject request from ${username}`,
                 onClick: handleDeleteFriendRequest,
                 variant: "danger",
@@ -404,30 +424,27 @@ export default function UserProfilePage({}) {
     <>
       <AppAlertDialog
         heading={`Unfriend ${username}?`}
-        text={`Unfriending ${username} will not affect any of your previous collaborations. Are you sure you want to remove ${username} from your friends list?`}
+        text={`Are you sure you want to remove ${username} from your friends list?`}
         open={showUnfriendAlert}
         onOpenChange={setShowUnfriendAlert}
-        onConfirm={() => {
-          console.log("UNFRIEND called");
-        }}
+        onConfirm={handleNotImplemented}
+        actionButtonLabel="Unfriend"
       />
       <AppAlertDialog
         heading={`Report ${username}?`}
         text={`We strive to maintain a safe and welcoming community. If you notice any misconduct from ${username}, please report it. Our team will review the issue and take appropriate action as quickly as possible.`}
         open={showReportAlert}
         onOpenChange={setShowReportAlert}
-        onConfirm={() => {
-          console.log("Report called");
-        }}
+        onConfirm={handleNotImplemented}
+        actionButtonLabel="Report"
       />
       <AppAlertDialog
         heading={`Block ${username}?`}
-        text={`${username} will no longer be able to find you or view anything related to you or your characters. They will also be unable to contact you or your characters in any way. Are you sure you want to block ${username}?`}
+        text={`${username} will no longer be able to find you or view anything related to you or your characters. Are you sure you want to block ${username}?`}
         open={showBlockAlert}
         onOpenChange={setShowBlockAlert}
-        onConfirm={() => {
-          console.log("BLOCK called");
-        }}
+        onConfirm={handleNotImplemented}
+        actionButtonLabel="Block"
       />
       <ShouldRender if={loading && authState !== "LOADING"}>
         <PageLoader />
@@ -462,41 +479,43 @@ export default function UserProfilePage({}) {
             </ShouldRender>
           </Flex>
           <S.ContentInner>
-            <S.ProfileDropdownMenuContainer>
-              {renderConnectionDropdown(novelist?.connection, username)}
-              <ShouldRender if={!isCurrentUser}>
-                <AppDropdownMenu
-                  trigger={<BsThreeDots size={18} />}
-                  items={[
-                    {
-                      icon: <IoCopySharp />,
-                      label: `Copy username`,
-                      onClick: handleCopyUsername,
-                    },
-                    {
-                      icon: <RiShareBoxFill />,
-                      label: `Share profile`,
-                      onClick: () => console.log("Edit"),
-                    },
-                    {
-                      separator: true,
-                    },
-                    {
-                      icon: <RiFlagFill />,
-                      label: `Report ${username}`,
-                      onClick: () => setShowReportAlert(true),
-                      variant: "danger",
-                    },
-                    {
-                      icon: <MdOutlineAppBlocking />,
-                      label: `Block ${username}`,
-                      onClick: () => setShowBlockAlert(true),
-                      variant: "danger",
-                    },
-                  ]}
-                />
-              </ShouldRender>
-            </S.ProfileDropdownMenuContainer>
+            <ShouldRender if={authState === "LOGGED_IN"}>
+              <S.ProfileDropdownMenuContainer>
+                {renderConnectionDropdown(novelist?.connection, username)}
+                <ShouldRender if={!isCurrentUser}>
+                  <AppDropdownMenu
+                    trigger={<BsThreeDots size={18} />}
+                    items={[
+                      {
+                        icon: <IoCopySharp />,
+                        label: `Copy username`,
+                        onClick: handleCopyUsername,
+                      },
+                      {
+                        icon: <RiShareBoxFill />,
+                        label: `Share profile`,
+                        onClick: handleShareProfile,
+                      },
+                      {
+                        separator: true,
+                      },
+                      {
+                        icon: <RiFlagFill />,
+                        label: `Report ${username}`,
+                        onClick: () => setShowReportAlert(true),
+                        variant: "danger",
+                      },
+                      {
+                        icon: <MdOutlineAppBlocking />,
+                        label: `Block ${username}`,
+                        onClick: () => setShowBlockAlert(true),
+                        variant: "danger",
+                      },
+                    ]}
+                  />
+                </ShouldRender>
+              </S.ProfileDropdownMenuContainer>
+            </ShouldRender>
             <Flex>
               <S.NameMobile>
                 {novelist?.firstName} {novelist?.lastName}

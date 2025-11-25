@@ -12,7 +12,7 @@ export const Menu = styled.div`
   position: absolute;
   top: 60px;
   right: 0px;
-  padding: 10px 0px;
+  padding: 5px 0px;
 
   display: flex;
   flex-direction: column;
@@ -41,7 +41,7 @@ export const Menu = styled.div`
 
   @media (max-width: 700px) {
     & {
-      top: 55px;
+      top: 45px;
     }
   }
 `;
@@ -75,7 +75,7 @@ export const List = styled.ul`
   display: flex;
   flex-direction: column;
   gap: 5px;
-  padding: 0px 8px;
+  padding: 0px 4px;
 `;
 
 export const Element = styled.li`
@@ -83,11 +83,11 @@ export const Element = styled.li`
   justify-content: center;
   align-items: center;
   font-weight: 600;
-  color: rgb(171, 178, 189);
+  color: rgba(209, 216, 226, 1);
   gap: 10px;
   padding: 10px;
   cursor: pointer;
-  border-radius: 10px;
+  border-radius: 4px;
   transition: all 0.3s ease-out;
 
   svg {
@@ -107,7 +107,10 @@ export const Element = styled.li`
 `;
 
 export const DeleteElement = styled(Element)`
+  color: #b23636ff;
+  
   &:hover {
+    color: #ffffff;
     background-color: #8e2a2a;
   }
 `;
@@ -117,7 +120,7 @@ export const DisabledElement = styled.li`
   justify-content: center;
   align-items: center;
   font-weight: 600;
-  color: rgb(103, 109, 117);
+  color: rgba(82, 87, 93, 1);
   gap: 10px;
   padding: 10px;
   border-radius: 10px;

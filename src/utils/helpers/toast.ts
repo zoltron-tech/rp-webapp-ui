@@ -5,6 +5,8 @@ import { BORDER_RADIUS, type Theme } from "@/theme";
 enum ToastType {
   success = "success",
   error = "error",
+  warning = "warning",
+  info = "info",
 }
 
 const getToastStyle = (
@@ -17,6 +19,10 @@ const getToastStyle = (
         return theme.success;
       case ToastType.error:
         return theme.error;
+      case ToastType.warning:
+        return "#dbbf1fff";
+      case ToastType.info:
+        return "#227da1";
     }
   })();
 
@@ -48,6 +54,32 @@ export const generateToastError = (
     ...DEFAULT_TOAST_OPTIONS,
     className: `nw-toast-${theme.name}`,
     style: getToastStyle(theme, ToastType.error),
+    text: message,
+  }).showToast();
+};
+
+export const generateToastWarning = (
+  message: string,
+  theme: DefaultTheme & Theme,
+  _id = "",
+) => {
+  toast({
+    ...DEFAULT_TOAST_OPTIONS,
+    className: `nw-toast-${theme.name}`,
+    style: getToastStyle(theme, ToastType.warning),
+    text: message,
+  }).showToast();
+};
+
+export const generateToastInfo = (
+  message: string,
+  theme: DefaultTheme & Theme,
+  _id = "",
+) => {
+  toast({
+    ...DEFAULT_TOAST_OPTIONS,
+    className: `nw-toast-${theme.name}`,
+    style: getToastStyle(theme, ToastType.info),
     text: message,
   }).showToast();
 };

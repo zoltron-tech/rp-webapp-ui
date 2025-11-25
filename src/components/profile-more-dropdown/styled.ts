@@ -8,7 +8,6 @@ to { opacity: 1; transform: translateY(0); }
 
 export const TriggerWrapper = styled.div`
   position: relative;
-  /* display: inline-flex; keeps the button inline */
 `;
 
 export const ActionBadge = styled.div`
@@ -17,14 +16,14 @@ export const ActionBadge = styled.div`
   width: 10px;
   height: 10px;
   position: absolute;
-  top: -3px;
-  right: -4px;
+  top: -1px;
+  right: -1px;
   z-index: 10;
 `;
 
 export const TriggerButton = styled.button`
   all: unset;
-  padding-inline: 8px;
+  padding-inline: 10px;
   padding-block: 6px;
   text-align: center;
   background-color: var(--bg-3);
@@ -32,7 +31,7 @@ export const TriggerButton = styled.button`
   font-size: var(--font-size-h6);
   font-weight: var(--font-weight-regular);
   border: 1px solid var(--bg-6);
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
 
   display: flex;
@@ -65,8 +64,7 @@ export const Content = styled(DropdownMenu.Content)`
   background-color: var(--bg-3);
   border-radius: 4px;
   padding: 4px;
-  box-shadow: 0 10px 38px -10px rgba(22, 23, 24, 0.35),
-    0 10px 20px -15px rgba(22, 23, 24, 0.2);
+  box-shadow: 0px 0px 20px 4px rgba(0, 0, 0, 0.5);
   border: 1px solid var(--bg-6);
   animation: ${fadeIn} 120ms ease-out;
   z-index: 99999;
@@ -83,10 +81,11 @@ export const Content = styled(DropdownMenu.Content)`
 `;
 
 export const Item = styled(DropdownMenu.Item)`
-  padding: 8px 12px;
+  padding: 10px 12px;
+  margin-block: 2px;
   border-radius: 4px;
-  font-size: var(--font-size);
-  font-weight: var(--font-weight-semi-bold);
+  font-size: var(--font-size-input);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
 
   /* default colors */

@@ -74,9 +74,9 @@ export const ContentRight = styled.div`
 export const ProfileDropdownMenuContainer = styled.div`
   ${DEV_MODE_BORDER("blue")}
   display: flex;
-  gap: 12px;
+  gap: 6px;
   position: absolute;
-  right: 20px;
+  right: 10px;
   top: -80px
 `;
 

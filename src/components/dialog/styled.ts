@@ -25,10 +25,10 @@ animation: ${overlayShow} 150ms ease-out;
 `;
 
 export const Content = styled(AlertDialog.Content)`
-background-color: var(--bg-3);
+background-color: var(--bg-2);
 border: 1px solid var(--bg-6);
 border-radius: 4px;
-box-shadow: 0 10px 38px -10px rgba(22, 23, 24, 0.35), 0 10px 20px -15px rgba(22, 23, 24, 0.2);
+box-shadow: 0px 0px 20px 4px rgba(0, 0, 0, 0.5);
 position: fixed;
 top: 50%;
 left: 50%;
@@ -98,7 +98,7 @@ export const ActionButton = styled.button`
   width: 100px;
   padding: 8px;
   text-align: center;
-  background-color: ${({ theme }: any) => setOpacity(theme.error, 0.8)};
+  background-color: #922a2aff;
   color: var(--text-primary);
   font-size: var(--font-size);
   font-weight: var(--font-weight-regular);
@@ -108,6 +108,6 @@ export const ActionButton = styled.button`
   transition: background-color 0.15s ease;
 
   &:hover {
-    background-color: ${({ theme }: any) => theme.error};
+    background-color: #d03c3cff;
   }
 `;

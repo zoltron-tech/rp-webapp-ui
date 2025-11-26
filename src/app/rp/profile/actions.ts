@@ -182,6 +182,60 @@ export const cancelFriendRequest = async (novelistId: string) => {
   return result;
 };
 
+export const reportProfile = async (novelistId: string, reason: string) => {
+  const jwt = await authenticateAndGetJWT();
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/report`;
+  const body = {
+    reason,
+    targetId: novelistId,
+    targetType: "PROFILE",
+  };
+
+  const response = await fetch(URL, {
+    body: JSON.stringify(body),
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "POST",
+  });
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const result = await response.json();
+
+  return result;
+};
+
+export const unfriendNovelist = async (novelistId: string) => {
+  const jwt = await authenticateAndGetJWT();
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/connection/${novelistId}/unfriend`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "DELETE",
+  });
+
+  console.log(response);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const result = await response.json();
+
+  return result;
+};
+
 type PromptResponse = {
   message: API_MESSAGE;
 };

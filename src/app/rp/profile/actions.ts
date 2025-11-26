@@ -211,10 +211,10 @@ export const reportProfile = async (novelistId: string) => {
   return result;
 };
 
-export const unfriendNovelist = async (targetNovelistId: string) => {
+export const unfriendNovelist = async (novelistId: string) => {
   const jwt = await authenticateAndGetJWT();
 
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/connection/${targetNovelistId}/unfriend`;
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/connection/${novelistId}/unfriend`;
 
   const response = await fetch(URL, {
     cache: "no-store",

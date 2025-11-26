@@ -58,7 +58,9 @@ export const StrangerCard: FC<Props> = ({
         </S.Info>
         <S.ButtonContainer>
           <ShouldRender if={isRequest !== true}>
-            <Button variant="primary">Add Friend</Button>
+            <Button variant="primary" onClick={onAvatarClick}>
+              View Profile
+            </Button>
           </ShouldRender>
           <ShouldRender if={isRequest === true}>
             <Button variant="positive">Accept</Button>

@@ -201,7 +201,7 @@ export default function HomePage() {
             </S.ContentContainer>
           </ShouldRender>
           <S.ContentContainer>
-            <S.SubText>Friend Requests & Suggestions</S.SubText>
+            <S.SubText>Friend Suggestions</S.SubText>
             <S.PartitionContainer>
               {strangers?.map((stranger) => (
                 <StrangerCard

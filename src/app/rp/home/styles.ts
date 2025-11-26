@@ -15,13 +15,14 @@ export const LeftWrapperContainer = styled.div`
   justify-content: center;
   align-items: center;
   width: 20cqw;
+  margin-right: 2px;
 
   container-name: left_wrapper;
   container-type: inline-size;
 
   @container (max-width: 1200px) {
     & {
-      width: 75px;
+      width: 70px;
     }
   }
 `;
@@ -42,7 +43,7 @@ export const ListContainer = styled.div`
 
   @container left_wrapper (max-width: 200px) {
     & {
-      width: 60px;
+      width: 70px;
     }
   }
 

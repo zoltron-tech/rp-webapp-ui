@@ -76,7 +76,6 @@ export default function UserProfilePage({}) {
   const [showReportAlert, setShowReportAlert] = useState(false);
   const user = useGlobalState("user");
   const userNovelist = useGlobalState("novelist");
-  const set = useGlobalStoreSet();
   const [novelist, setNovelist] = useState<Novelist | null>(null);
   const [loading, setLoading] = useState(true);
   const username = params?.slug as string;
@@ -195,7 +194,7 @@ export default function UserProfilePage({}) {
         return copied;
       });
 
-      set((prev) => {
+      setGlobalState((prev) => {
         const prevNovelist = prev.novelist;
         if (!prevNovelist) return prev;
         const updatedFriends = prevNovelist.friends.filter(
@@ -220,7 +219,7 @@ export default function UserProfilePage({}) {
   const handleReportNovelist = async () => {
     if (!novelist?.id) return;
 
-    const response = await reportProfile(novelist.id);
+    const response = await reportProfile(novelist.id, "");
     if (response?.message === API_MESSAGE.Success) {
       successToast(`Reported ${novelist.username}`);
     } else {

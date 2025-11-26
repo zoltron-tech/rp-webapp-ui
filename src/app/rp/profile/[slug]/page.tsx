@@ -36,7 +36,9 @@ import {
   acceptFriendRequest,
   cancelFriendRequest,
   deleteFriendRequest,
+  reportProfile,
   sendFriendRequest,
+  unfriendNovelist,
 } from "../actions";
 import ExpandableText from "./expandable-text";
 import * as S from "./styles";
@@ -74,6 +76,7 @@ export default function UserProfilePage({}) {
   const [showReportAlert, setShowReportAlert] = useState(false);
   const user = useGlobalState("user");
   const userNovelist = useGlobalState("novelist");
+  const set = useGlobalStoreSet();
   const [novelist, setNovelist] = useState<Novelist | null>(null);
   const [loading, setLoading] = useState(true);
   const username = params?.slug as string;
@@ -83,7 +86,7 @@ export default function UserProfilePage({}) {
   const [storyBoards, setStories] = useState<StoryBoard[] | null>(null);
   const { push } = useRouter();
   const setGlobalState = useGlobalStoreSet();
-  const { successToast, warningToast } = useUIContext();
+  const { successToast, warningToast, errorToast } = useUIContext();
 
   const handleButtonClick = () => {};
 
@@ -171,6 +174,56 @@ export default function UserProfilePage({}) {
       });
 
       successToast("Friend request rejected");
+    }
+  };
+
+  const handleUnfriendNovelist = async () => {
+    if (!novelist?.id) return;
+
+    const response = await unfriendNovelist(novelist.id);
+    if (response?.message === API_MESSAGE.Success) {
+      setNovelist((current) => {
+        if (!current) return current;
+        const copied = { ...current };
+
+        copied.connection = null;
+        copied.friends = copied.friends.filter(
+          (friend) => friend.username !== user?.username,
+        );
+        copied.friendsCount = Math.max(copied.friendsCount - 1, 0);
+
+        return copied;
+      });
+
+      set((prev) => {
+        const prevNovelist = prev.novelist;
+        if (!prevNovelist) return prev;
+        const updatedFriends = prevNovelist?.friends.filter(
+          (friend) => friend.id !== novelist?.id,
+        );
+        prevNovelist.friends = updatedFriends;
+        prevNovelist.friendsCount = Math.max(prevNovelist.friendsCount - 1, 0);
+
+        return {
+          novelist: prevNovelist,
+        };
+      });
+
+      successToast(`Unfriended ${novelist.username}`);
+    } else {
+      errorToast("There was an issue while unfriending.");
+    }
+  };
+
+  const handleReportNovelist = async () => {
+    if (!novelist?.id) return;
+
+    const response = await reportProfile(novelist.id);
+    console.log(response);
+    if (response?.message === API_MESSAGE.Success) {
+      successToast(`Reported ${novelist.username}`);
+    } else {
+      errorToast("There was an issue while reporting this profile.");
     }
   };
 
@@ -404,7 +457,7 @@ export default function UserProfilePage({}) {
         text={`Are you sure you want to remove ${username} from your friends list?`}
         open={showUnfriendAlert}
         onOpenChange={setShowUnfriendAlert}
-        onConfirm={handleNotImplemented}
+        onConfirm={handleUnfriendNovelist}
         actionButtonLabel="Unfriend"
       />
       <AppAlertDialog
@@ -412,7 +465,7 @@ export default function UserProfilePage({}) {
         text={`We strive to maintain a safe and welcoming community. If you notice any misconduct from ${username}, please report it. Our team will review the issue and take appropriate action as quickly as possible.`}
         open={showReportAlert}
         onOpenChange={setShowReportAlert}
-        onConfirm={handleNotImplemented}
+        onConfirm={handleReportNovelist}
         actionButtonLabel="Report"
       />
       <AppAlertDialog

@@ -221,7 +221,6 @@ export default function UserProfilePage({}) {
     if (!novelist?.id) return;
 
     const response = await reportProfile(novelist.id);
-    console.log(response);
     if (response?.message === API_MESSAGE.Success) {
       successToast(`Reported ${novelist.username}`);
     } else {

@@ -198,14 +198,16 @@ export default function UserProfilePage({}) {
       set((prev) => {
         const prevNovelist = prev.novelist;
         if (!prevNovelist) return prev;
-        const updatedFriends = prevNovelist?.friends.filter(
+        const updatedFriends = prevNovelist.friends.filter(
           (friend) => friend.id !== novelist?.id,
         );
-        prevNovelist.friends = updatedFriends;
-        prevNovelist.friendsCount = Math.max(prevNovelist.friendsCount - 1, 0);
-
+        const updatedNovelist = {
+          ...prevNovelist,
+          friends: updatedFriends,
+          friendsCount: Math.max(prevNovelist.friendsCount - 1, 0),
+        };
         return {
-          novelist: prevNovelist,
+          novelist: updatedNovelist,
         };
       });
 

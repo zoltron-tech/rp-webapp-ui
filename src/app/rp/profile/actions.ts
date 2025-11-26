@@ -182,12 +182,12 @@ export const cancelFriendRequest = async (novelistId: string) => {
   return result;
 };
 
-export const reportProfile = async (novelistId: string) => {
+export const reportProfile = async (novelistId: string, reason: string) => {
   const jwt = await authenticateAndGetJWT();
 
   const URL = `${RP_SERVICE_URL}/rp/portfolio/report`;
   const body = {
-    reason: "",
+    reason,
     targetId: novelistId,
     targetType: "PROFILE",
   };

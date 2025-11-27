@@ -43,11 +43,15 @@ export const FandomSelect: FC<FandomSelectProps> = forwardRef(
       const fetchFandoms = async () => {
         setLoading(true);
         const result = await searchFandomsAction(fandomSearch);
+
         if (result && !("message" in result)) {
-          setFandoms(result);
+          // Sort by id ascending
+          const sorted = [...result].sort((a, b) => a.id.localeCompare(b.id));
+          setFandoms(sorted);
         } else {
           setFandoms([]);
         }
+
         setLoading(false);
       };
 
@@ -85,13 +89,13 @@ export const FandomSelect: FC<FandomSelectProps> = forwardRef(
                 side="bottom"
                 className={classNames("select-content", theme, accent)}
               >
-                <S.FandomDropdownSearchInput
+                {/* <S.FandomDropdownSearchInput
                   type="text"
                   className={classNames("select-input", theme, accent)}
                   placeholder="Search fandoms..."
                   value={fandomSearch}
                   onChange={(e) => setFandomSearch(e.target.value)}
-                />
+                /> */}
 
                 <Select.Viewport className="select-viewport">
                   {loading && (

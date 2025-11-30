@@ -40,7 +40,7 @@ export const CommentSource: FC = () => {
     if (response?.message === API_MESSAGE.Success) {
       successToast(`Reported successfully`);
     } else {
-      errorToast("There was an issue while reporting this prompt.");
+      errorToast("There was an issue while reporting this comment.");
     }
   }, [commentId, source, successToast, errorToast]);
 

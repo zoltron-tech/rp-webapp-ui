@@ -14,7 +14,7 @@ export const ParentContainer = styled(Container)`
   border-radius: unset !important;
   border: none !important;
 
-  @container content-container (max-width: 1400px) {
+  @container content-container (max-width: 800px) {
     flex-direction: column;
     justify-content: center;
     border-radius: 0px;

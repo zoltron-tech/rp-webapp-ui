@@ -7,6 +7,7 @@ import type { Prompt as PromptType } from "@/types";
 
 export type PromptStoreType = PromptType & {
   threadOpen: boolean;
+  promptAlert: "report" | "delete" | null;
 };
 
 type PromptInputStoreKey = keyof PromptStoreType;

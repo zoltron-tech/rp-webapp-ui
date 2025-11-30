@@ -24,7 +24,7 @@ export const PromptRoot = styled.article`
     background-color: var(--bg-6);
   }
 
-  @media screen and (max-width: 430px) {
+  @media screen and (max-width: 800px) {
     margin-block: 0px;
     padding-inline: 6px;
   }
@@ -66,6 +66,15 @@ export const SourceName = styled.h1`
   font-weight: var(--font-weight-bold);
   color: var(--text);
   font-family: var(--font);
+`;
+
+export const HeaderDropdownMenuContainer = styled.div`
+
+  display: flex;
+  gap: 6px;
+  position: absolute;
+  right: 0px;
+  top: 10px
 `;
 
 export const PromptSubheader = styled.time`

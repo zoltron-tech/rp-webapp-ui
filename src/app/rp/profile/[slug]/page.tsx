@@ -6,15 +6,13 @@ import { useCallback, useEffect, useState } from "react";
 import { BiSolidMessage } from "react-icons/bi";
 import { BsPersonFillCheck, BsPersonFillUp, BsThreeDots } from "react-icons/bs";
 import { FcCalendar } from "react-icons/fc";
-import { GiCheckMark, GiCrossMark } from "react-icons/gi";
+import { GiBookmarklet, GiCheckMark, GiCrossMark } from "react-icons/gi";
 import { IoMdPersonAdd } from "react-icons/io";
 import { IoCopySharp, IoPersonRemove } from "react-icons/io5";
 import { MdOutlineAppBlocking } from "react-icons/md";
 import { RiFlagFill, RiShareBoxFill } from "react-icons/ri";
-import { SiMdbook } from "react-icons/si";
 import { MusesPill } from "@/components";
 import ActivityBox from "@/components/activity-box";
-import type { ButtonInfo } from "@/components/button-group";
 import { ShouldRender, Username } from "@/components/common";
 import { AppAlertDialog } from "@/components/dialog";
 import { PageLoader } from "@/components/layout";
@@ -260,70 +258,6 @@ export default function UserProfilePage({}) {
     setStories(_muses);
   };
 
-  const IncomingRequestButtons: ButtonInfo[] = [
-    {
-      label: "Accept",
-      onClick: handleAcceptFriendRequest,
-      variant: "positive",
-    },
-    {
-      label: "Decline",
-      onClick: handleDeleteFriendRequest,
-      variant: "negative",
-    },
-    // { onClick: toMessagePage, label: "Message", variant: "action" },
-    // { onClick: toMusesPage, label: "Muses", variant: "action" },
-    // { onClick: toStoryBoardsPage, label: "Story Boards", variant: "action" },
-  ];
-
-  const OutgoingRequestButtons: ButtonInfo[] = [
-    {
-      label: "Friend request sent",
-      onClick: handleCancelFriendRequest,
-      variant: "primary",
-    },
-    // { onClick: toMessagePage, label: "Message", variant: "action" },
-    // { onClick: toMusesPage, label: "Muses", variant: "action" },
-    // { onClick: toStoryBoardsPage, label: "Stories", variant: "action" },
-  ];
-
-  const FriendButtons: ButtonInfo[] = [
-    { label: "Friends", onClick: handleButtonClick, variant: "primary" },
-    { label: "Message", onClick: toMessagePage, variant: "action" },
-    // { onClick: toMusesPage, label: "Muses", variant: "action" },
-    // { onClick: toStoryBoardsPage, label: "Stories", variant: "action" },
-  ];
-
-  const StrangerButtons: ButtonInfo[] = [
-    {
-      label: "Add friend",
-      onClick: handleSendFriendRequest,
-      variant: "primary",
-    },
-    // { onClick: toMusesPage, label: "Muses", variant: "action" },
-    // { onClick: toStoryBoardsPage, label: "Stories", variant: "action" },
-  ];
-
-  const LoggedInSelfButtons: ButtonInfo[] = [
-    // { onClick: toMusesPage, label: "Muses", variant: "action" },
-    // { onClick: toStoryBoardsPage, label: "Stories", variant: "action" },
-  ];
-
-  const fetchAppropriateButtons = (connection: string | null | undefined) => {
-    if (!connection) return StrangerButtons;
-
-    switch (connection) {
-      case "FRIEND":
-        return FriendButtons;
-      case "FRIEND_REQUEST_SENT":
-        return OutgoingRequestButtons;
-      case "FRIEND_REQUEST_RECEIVED":
-        return IncomingRequestButtons;
-      default:
-        return StrangerButtons;
-    }
-  };
-
   const renderConnectionDropdown = (
     connection: string | null | undefined,
     username: string,
@@ -332,15 +266,16 @@ export default function UserProfilePage({}) {
       case "FRIEND":
         return (
           <AppDropdownMenu
+            variant="bordered"
             trigger={<BsPersonFillCheck size={18} />}
             items={[
               {
-                icon: <SiMdbook />,
+                icon: <GiBookmarklet size={18} />,
                 label: `Invite ${username} to a story`,
                 onClick: handleNotImplemented,
               },
               {
-                icon: <BiSolidMessage />,
+                icon: <BiSolidMessage size={18} />,
                 label: `Message ${username}`,
                 onClick: handleNotImplemented,
               },
@@ -348,7 +283,7 @@ export default function UserProfilePage({}) {
                 separator: true,
               },
               {
-                icon: <IoPersonRemove />,
+                icon: <IoPersonRemove size={18} />,
                 label: `Unfriend ${username}`,
                 onClick: () => setShowUnfriendAlert(true),
                 variant: "danger",
@@ -360,6 +295,7 @@ export default function UserProfilePage({}) {
       case "FRIEND_REQUEST_SENT":
         return (
           <AppDropdownMenu
+            variant="bordered"
             trigger={<BsPersonFillUp size={18} />}
             items={[
               {
@@ -375,6 +311,7 @@ export default function UserProfilePage({}) {
       case "FRIEND_REQUEST_RECEIVED":
         return (
           <AppDropdownMenu
+            variant="bordered"
             trigger={<IoMdPersonAdd size={18} />}
             showUnread={true}
             items={[
@@ -397,10 +334,11 @@ export default function UserProfilePage({}) {
       default:
         return !isCurrentUser ? (
           <AppDropdownMenu
+            variant="bordered"
             trigger={<IoMdPersonAdd size={18} />}
             items={[
               {
-                icon: <IoMdPersonAdd />,
+                icon: <IoMdPersonAdd size={18} />,
                 label: `Add ${username}`,
                 onClick: handleSendFriendRequest,
                 variant: "positive",
@@ -514,15 +452,16 @@ export default function UserProfilePage({}) {
                 {renderConnectionDropdown(novelist?.connection, username)}
                 <ShouldRender if={!isCurrentUser}>
                   <AppDropdownMenu
+                    variant="bordered"
                     trigger={<BsThreeDots size={18} />}
                     items={[
                       {
-                        icon: <IoCopySharp />,
+                        icon: <IoCopySharp size={18} />,
                         label: `Copy username`,
                         onClick: handleCopyUsername,
                       },
                       {
-                        icon: <RiShareBoxFill />,
+                        icon: <RiShareBoxFill size={18} />,
                         label: `Share profile`,
                         onClick: handleShareProfile,
                       },
@@ -530,13 +469,13 @@ export default function UserProfilePage({}) {
                         separator: true,
                       },
                       {
-                        icon: <RiFlagFill />,
+                        icon: <RiFlagFill size={18} />,
                         label: `Report ${username}`,
                         onClick: () => setShowReportAlert(true),
                         variant: "danger",
                       },
                       {
-                        icon: <MdOutlineAppBlocking />,
+                        icon: <MdOutlineAppBlocking size={18} />,
                         label: `Block ${username}`,
                         onClick: () => setShowBlockAlert(true),
                         variant: "danger",

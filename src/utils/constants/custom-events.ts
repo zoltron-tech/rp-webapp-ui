@@ -1,4 +1,8 @@
 export const EVENTS = {
+  COMMENT: {
+    base: "comment",
+    DELETED: "deleted",
+  },
   MUSE: {
     base: "muse",
     DELETED: "deleted",
@@ -8,6 +12,10 @@ export const EVENTS = {
 export type MuseDeletedPayload = {
   id: string;
   name: string;
+};
+
+export type CommentDeletedPayload = {
+  id: string;
 };
 
 export type CustomEventType<T> = {

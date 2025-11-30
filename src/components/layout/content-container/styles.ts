@@ -3,9 +3,8 @@ import { DEV_MODE_BORDER } from "@/theme";
 
 export const Container = styled.div`
   ${DEV_MODE_BORDER("aqua")}
-
-  height: max-content;
-  min-height: calc(100vh - 80px);
+  min-height: auto;
+  height: auto;
   position: relative;
   background-color: transparent;
   container-name: content-container;

@@ -121,7 +121,7 @@ export const CommentSource: FC = () => {
       />
       <AppAlertDialog
         heading={`Delete this thread?`}
-        text={`Deleting the prompt will remove all of it's threads and replies too. Are you sure you want to delete this reply?`}
+        text={`Deleting the prompt will remove all of its threads and replies too. Are you sure you want to delete this reply?`}
         open={commentAlert === "delete"}
         onOpenChange={handleOpenChange("delete")}
         onConfirm={handleDeleteComment}

@@ -52,7 +52,7 @@ export const CommentSource: FC = () => {
       });
       successToast(`Deleted successfully`);
     } else {
-      errorToast("There was an issue while deleting this reply.");
+      errorToast("There was an issue while deleting this comment.");
     }
   }, [commentId, source, successToast, errorToast]);
 

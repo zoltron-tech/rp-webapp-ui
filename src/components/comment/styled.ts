@@ -17,6 +17,7 @@ const SourceStyled = styled.div`
   display: flex;
   align-items: center;
   margin-bottom: 6px;
+  position: relative;
 
   .avatar {
     width: 40px;
@@ -49,6 +50,14 @@ export const Source = Object.assign(SourceStyled, {
   Name: SourceName,
   Time: CommentTime,
 });
+
+export const HeaderDropdownMenuContainer = styled.div`
+  display: flex;
+  gap: 6px;
+  position: absolute;
+  right: 0px;
+  top: 10px;
+`;
 
 const CommentContentRoot = styled.div`
   padding-top: 12px;

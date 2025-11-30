@@ -27,7 +27,7 @@ export default function MusesListPage({}) {
   const isCurrentUser = user?.username === username;
   const [_loading, setLoading] = useState(true);
   const { push } = useRouter();
-  const { on, off } = useCustomEvents("muse");
+  const { on, off } = useCustomEvents(EVENTS.MUSE.base);
   const { successToast } = useUIContext();
   Logger.debug("params are:", params);
 

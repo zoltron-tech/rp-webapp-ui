@@ -1,7 +1,7 @@
 import { Container } from "@novelist-world/ui";
 import styled from "styled-components";
 import * as Common from "@/components/common";
-import { CARD_BORDER, Z_INDEX } from "@/theme";
+import { CARD_BORDER, DEV_MODE_BORDER, Z_INDEX } from "@/theme";
 
 export const ParentContainer = styled(Container)`
   display: flex;
@@ -61,6 +61,7 @@ export const HeaderContainer = styled.div`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+  position: relative;
   width: 100%;
 `;
 
@@ -177,4 +178,22 @@ export const CardWrapper = styled.div`
       scale: 1.03;
     }
   }
+`;
+
+export const DropdownMenuContainer = styled.div`
+  ${DEV_MODE_BORDER("blue")}
+  display: flex;
+  gap: 6px;
+  position: absolute;
+  right: 0px;
+  top: 0px
+`;
+
+export const HeaderDropdownMenuContainer = styled.div`
+  ${DEV_MODE_BORDER("blue")}
+  display: flex;
+  gap: 6px;
+  position: absolute;
+  right: 0px;
+  top: 10px
 `;

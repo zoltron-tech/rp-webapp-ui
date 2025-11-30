@@ -26,17 +26,30 @@ export const TriggerButton = styled.button`
   padding-inline: 10px;
   padding-block: 6px;
   text-align: center;
-  background-color: var(--bg-3);
+
   color: var(--text-secondary);
   font-size: var(--font-size-h6);
   font-weight: var(--font-weight-regular);
-  border: 1px solid var(--bg-6);
+
   border-radius: 8px;
   cursor: pointer;
 
   display: flex;
   align-items: center;
   justify-content: center;
+
+  &.bordered {
+  border: 1px solid var(--bg-6);
+    background-color: var(--bg-3);
+
+    &:disabled {
+    background-color: var(--bg-2);
+  }
+  }
+
+  &.minimal {
+     border: none; 
+  }
 
   &:hover {
     background-color: var(--bg-4);
@@ -52,7 +65,6 @@ export const TriggerButton = styled.button`
   }
 
   &:disabled {
-    background-color: var(--bg-2);
     color: var(--text-secondary);
     cursor: not-allowed;
   }

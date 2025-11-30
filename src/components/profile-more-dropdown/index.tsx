@@ -5,6 +5,8 @@ import { DropdownMenu } from "radix-ui";
 import { useGlobalState } from "@/context/store/stores";
 import * as S from "./styled";
 
+type Variant = "bordered" | "minimal";
+
 interface DropdownItem {
   label?: string;
   onClick?: () => void;
@@ -17,12 +19,14 @@ interface AppDropdownMenuProps {
   items: DropdownItem[];
   trigger: React.ReactNode;
   showUnread?: boolean;
+  variant?: Variant;
 }
 
 export const AppDropdownMenu = ({
   items,
   trigger,
   showUnread,
+  variant = "minimal",
   ...rest
 }: AppDropdownMenuProps) => {
   const accent = useGlobalState("accent");
@@ -32,7 +36,9 @@ export const AppDropdownMenu = ({
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
         <S.TriggerWrapper>
-          <S.TriggerButton>{trigger}</S.TriggerButton>
+          <S.TriggerButton className={classNames([variant])}>
+            {trigger}
+          </S.TriggerButton>
           {showUnread && <S.ActionBadge />}
         </S.TriggerWrapper>
       </DropdownMenu.Trigger>

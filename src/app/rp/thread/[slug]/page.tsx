@@ -276,7 +276,7 @@ export default function ThreadPage({}) {
       />
       <AppAlertDialog
         heading={`Delete this prompt?`}
-        text={`Deleting the prompt will remove all of it's threads and replies too. Are you sure you want to delete this reply?`}
+        text={`Deleting the prompt will remove all of its threads and replies too. Are you sure you want to delete this reply?`}
         open={showDeletePromptAlert}
         onOpenChange={setShowDeletePromptAlert}
         onConfirm={handleDeletePrompt}

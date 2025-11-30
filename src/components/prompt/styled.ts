@@ -74,7 +74,7 @@ export const HeaderDropdownMenuContainer = styled.div`
   gap: 6px;
   position: absolute;
   right: 0px;
-  top: 10px
+  top: 10px;
 `;
 
 export const PromptSubheader = styled.time`

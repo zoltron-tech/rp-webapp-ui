@@ -151,8 +151,8 @@ export const deleteCommentAction = async (commentId: string) => {
   return result;
 };
 
-export const deletePromptAction = async (commentId: string) => {
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/${commentId}`;
+export const deletePromptAction = async (promptId: string) => {
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/${promptId}`;
   const jwt = await authenticateAndGetJWT();
 
   const headers: Record<string, string> = {

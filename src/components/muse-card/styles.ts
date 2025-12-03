@@ -9,6 +9,7 @@ export const CardBackground = styled.div<CardProps>`
   height: 100%;
 
   background-image: url(${(props): string => props.banner});
+  background-color: var(--bg-2);
   background-size: cover;
   transition-timing-function: ease-out;
   transition-duration: 300ms;
@@ -20,7 +21,7 @@ export const CardBackground = styled.div<CardProps>`
 export const Title = styled.div`
   position: absolute;
   bottom: -280px;
-  font-size: 20px;
+  font-size: var(--font-size);
   font-weight: 600;
   max-width: 80%;
   color: var(--text);
@@ -45,7 +46,7 @@ export const Title = styled.div`
 
   @container content-container (max-width: 1000px) {
     bottom: -180px;
-    font-size: 14px;
+  font-size: var(--font-size-xsmall);
     opacity: 1;
     transform: none;
     &.new {
@@ -55,8 +56,8 @@ export const Title = styled.div`
 `;
 
 export const CardWrapper = styled.div`
-  width: 200px;
-  min-width: 200px;
+  width: 169px;
+  min-width: 169px;
   min-height: 300px;
   height: 300px;
   border-radius: var(--border-radius);
@@ -71,8 +72,8 @@ export const CardWrapper = styled.div`
 
   &.hero {
     height: 200px;
-    width: 134px;
-    min-width: 134px;
+    width: 113px;
+    min-width: 113px;
     min-height: 200px;
   }
 
@@ -84,17 +85,17 @@ export const CardWrapper = styled.div`
 
   @container content-container (max-width: 1000px) {
     & {
-      width: 134px;
+      width: 113px;
       height: 200px;
-      min-width: 134px;
+      min-width: 113px;
       min-height: 200px;
     }
 
     &.hero {
       height: 120px;
-      width: 80px;
+      width: 68px;
       min-height: 120px;
-      min-width: 80px;
+      min-width: 68px;
     }
 
     &.hero ${Title} {

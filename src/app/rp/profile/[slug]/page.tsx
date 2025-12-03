@@ -536,22 +536,18 @@ export default function UserProfilePage({}) {
             <ShouldRender
               if={!!(novelist?.about && novelist?.about.length > 0)}
             >
-              <S.SubText>About</S.SubText>
+              <S.SubText>About Me</S.SubText>
               <S.AboutContainer>
                 <ExpandableText
                   text={novelist?.about ?? ""}
-                  collapsedHeight={200}
+                  collapsedHeight={130}
                 />
               </S.AboutContainer>
             </ShouldRender>
-            <S.SubText>
-              {novelist?.museCount === 0
-                ? "No characters yet"
-                : `Characters (${novelist?.museCount})`}
-            </S.SubText>
             <ShouldRender
               if={!!(novelist?.museCount && novelist.museCount > 0)}
             >
+              <S.SubText>{`Characters (${novelist?.museCount})`}</S.SubText>
               <S.MuseList>
                 {novelist?.muses.slice(0, 3).map((muse) => (
                   <MuseListItem key={muse.id} muse={muse}></MuseListItem>
@@ -567,12 +563,8 @@ export default function UserProfilePage({}) {
                 expandable={true}
               />
             </S.MusePillContainer>
-            <S.SubText>
-              {storyBoards?.length === 0
-                ? "No stories yet"
-                : `Stories (${storyBoards?.length})`}
-            </S.SubText>
             <ShouldRender if={!!(storyBoards && storyBoards?.length > 0)}>
+              <S.SubText>{`Stories (${storyBoards?.length})`}</S.SubText>
               <S.ContentContainer>
                 <S.PartitionContainer>
                   {storyBoards?.map((storyBoard) => (

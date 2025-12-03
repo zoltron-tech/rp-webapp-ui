@@ -64,7 +64,7 @@ export const ContentRight = styled.div`
   flex-direction: column;
   align-items: center;
 
-  @container (max-width: 1024px) {
+  @container (max-width: 800px) {
     max-width: 100%;
     width: 100%;
     padding-inline: 0px;
@@ -138,63 +138,63 @@ export const PartitionContainer = styled.div`
   overflow-x: auto;
   padding-bottom: 10px;
 
-  @container (max-width: 1000px) {
+  @media (max-width: 900px) {
     & {
       width: 90cqw;
       font-size: 18px;
     }
   }
 
-  @container (max-width: 700px) {
+  @media (max-width: 700px) {
     & {
       width: 85cqw;
       font-size: 18px;
     }
   }
 
-  @container (max-width: 600px) {
+  @media (max-width: 600px) {
     & {
       width: 86cqw;
       font-size: 18px;
     }
   }
 
-  @container (max-width: 550px) {
+  @media (max-width: 550px) {
     & {
       width: 85.5cqw;
       font-size: 18px;
     }
   }
 
-  @container (max-width: 460px) {
+  @media (max-width: 460px) {
     & {
       width: 82cqw;
       font-size: 18px;
     }
   }
 
-  @container (max-width: 430px) {
+  @media (max-width: 430px) {
     & {
       width: 82cqw;
       font-size: 18px;
     }
   }
 
-  @container (max-width: 415px) {
+  @media (max-width: 415px) {
     & {
       width: 81cqw;
       font-size: 18px;
     }
   }
 
-  @container (max-width: 400px) {
+  @media (max-width: 400px) {
     & {
       width: 80cqw;
       font-size: 18px;
     }
   }
 
-  @container (max-width: 360px) {
+  @media (max-width: 360px) {
     & {
       width: 78cqw;
       font-size: 18px;
@@ -262,7 +262,7 @@ export const SubText = styled.div`
   width: 85%;
   font-size: 20px;
   font-weight: var(--font-weight-semi-bold);
-  margin-top: 40px;
+  margin-top: 25px;
   margin-bottom: 4px;
 
   @container (max-width: 1000px) {
@@ -331,8 +331,8 @@ export const InfoText = styled.div`
 `;
 
 export const Avatar = styled(AvatarNew)`
-  border: 8px solid var(--bg-2);
-  background-color: var(--bg-2);
+  /* border: 8px solid var(--bg-2); */
+  /* background-color: var(--bg-2); */
   margin-top: 30px;
   height: 250px;
   width: 250px;
@@ -350,8 +350,8 @@ export const Avatar = styled(AvatarNew)`
 `;
 
 export const AvatarMobile = styled(AvatarNew)`
-  border: 5px solid var(--bg-2);
-  background-color: var(--bg-2);
+  /* border: 5px solid var(--bg-2); */
+  /* background-color: var(--bg-2); */
   margin-top: 20px;
   height: 130px;
   width: 130px;
@@ -461,7 +461,6 @@ export const MusePillContainer = styled.div`
 
 export const MuseList = styled.div`
   width: 100%;
-  min-height: 100px;
   display: flex;
   flex-direction: column;
   align-items: center;

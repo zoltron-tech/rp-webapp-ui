@@ -69,6 +69,27 @@ export default function MusesListPage({}) {
 
   return (
     <S.Container>
+      {/* ✨ Background mesh */}
+      <S.BackgroundContainer>
+        {muses?.map((muse, i) => {
+          // Randomize position and transform for a natural look
+          const top = 5 + Math.random() * 80; // 5% → 85%
+          const left = 5 + Math.random() * 80; // 5% → 85%
+          const rotation = -45 + Math.random() * 90; // -45° → 45°
+          const scale = 1.5 + Math.random() * 2.5; // 1.5 + 2.5 = 4.0 max
+
+          return (
+            <S.BackgroundTile
+              key={i}
+              image={muse.image || ""}
+              top={top}
+              left={left}
+              rotation={rotation}
+              scale={scale}
+            />
+          );
+        })}
+      </S.BackgroundContainer>
       <S.Maintext>
         {isCurrentUser ? "Your" : `${username}'s`} Characters
       </S.Maintext>

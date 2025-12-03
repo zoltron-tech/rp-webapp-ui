@@ -158,7 +158,7 @@ export default function MuseProfilePage({}) {
             <S.Avatar
               src={connection.image}
               alt={connection.firstName}
-              size={65}
+              size={40}
               key={connection.firstName}
               className={className}
               name={connection.firstName}
@@ -236,7 +236,7 @@ export default function MuseProfilePage({}) {
         src={muse?.image && !muse.image.endsWith(".gif") ? muse.image : null}
       />
       <S.CardWrapper
-        hoverable={is("MAIN")}
+        // hoverable={is("MAIN")}
         className={classNames({ closed: is("MAIN"), open: !is("MAIN") })}
       >
         <S.CardBackground banner={muse?.image || ""} />
@@ -244,18 +244,18 @@ export default function MuseProfilePage({}) {
           <S.CardHeader>
             <S.MuseInfo>
               <S.MuseName>
-                {muse?.firstName} {muse?.lastName}
+                {muse?.firstName} <br />
+                {muse?.lastName}
               </S.MuseName>
               <S.AuthorContainer>
-                <AvatarNew
+                {/* <AvatarNew
                   className="selectable"
                   src={muse?.pennedBy?.image ?? null}
                   alt={muse?.pennedBy.username ?? "Author Avatar"}
-                  size={60}
                   onClick={onAuthorAvatarClick}
-                />
+                /> */}
                 <S.UsernameContainer>
-                  <span>PENNED BY:</span>
+                  <span className="penned">PENNED BY:</span>
                   <Username username={muse?.pennedBy?.username} primary />
                 </S.UsernameContainer>
               </S.AuthorContainer>
@@ -414,7 +414,7 @@ export default function MuseProfilePage({}) {
           >
             <GiBookCover size={"45%"} />
           </S.MenuButtonIcon>
-          <S.MenuText>STORY</S.MenuText>
+          <S.MenuText>ABOUT</S.MenuText>
         </S.MenuButton>
         <S.MenuButton>
           <S.MenuButtonIcon
@@ -432,7 +432,7 @@ export default function MuseProfilePage({}) {
           >
             <BsFillPeopleFill size={"45%"} />
           </S.MenuButtonIcon>
-          <S.MenuText>CONTACTS</S.MenuText>
+          <S.MenuText>CONNECTIONS</S.MenuText>
         </S.MenuButton>
         <ShouldRender if={!is("MAIN")}>
           <S.MenuButton className="stick-top">

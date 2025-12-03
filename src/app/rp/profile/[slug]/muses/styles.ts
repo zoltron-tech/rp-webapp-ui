@@ -1,6 +1,39 @@
 import styled from "styled-components";
 import { DEV_MODE_BORDER } from "@/theme";
 
+// Background container
+export const BackgroundContainer = styled.div`
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+    overflow: visible;
+`;
+
+// Each blurred background tile
+export const BackgroundTile = styled.div<{
+  image: string;
+  top: number;
+  left: number;
+  rotation: number;
+  scale: number;
+}>`
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  top: ${(props) => props.top}%;
+  left: ${(props) => props.left}%;
+  background-image: url(${(props) => props.image});
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  transform: rotate(${(props) => props.rotation}deg) scale(${(props) => props.scale});
+  filter: blur(25px) brightness(1);
+  opacity: 0.5;
+`;
+
 export const Container = styled.div`
   padding-top: 20px;
   display: flex;

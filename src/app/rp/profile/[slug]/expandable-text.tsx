@@ -26,7 +26,7 @@ const ExpandableText: React.FC<ExpandableTextProps> = ({
         setMaxHeight(`${collapsedHeight}px`);
       }
       setAnimating(true);
-      const timeout = setTimeout(() => setAnimating(false), 200);
+      const timeout = setTimeout(() => setAnimating(false), 130);
       return () => clearTimeout(timeout);
     }
   }, [expanded, collapsedHeight, text]);
@@ -38,7 +38,7 @@ const ExpandableText: React.FC<ExpandableTextProps> = ({
       <S.Wrapper ref={ref} style={{ maxHeight }} $animating={animating}>
         {text}
       </S.Wrapper>
-      {text.length > 200 && (
+      {text.length > 130 && (
         <S.Toggle onClick={() => setExpanded(!expanded)}>
           {expanded ? " Show less..." : " See more..."}
         </S.Toggle>

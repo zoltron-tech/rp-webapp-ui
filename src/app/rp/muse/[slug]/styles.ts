@@ -15,17 +15,21 @@ interface BannerProps {
 
 export const Banner = styled.div<BannerProps>`
   width: 100cqw;
-  height: clamp(
+  /* height: clamp(
     var(--profile-banner-height-min),
     30cqw,
     var(--profile-banner-height-max)
-  );
+  ); */
+  top: 0px;
+  height: 92vh;
   z-index: ${Z_INDEX.BACKGROUND};
   position: absolute;
 
   background-image: url(${({ src }) => src});
+  filter: grayscale(40%) brightness(40%) blur(25px);
   background-repeat: no-repeat;
   background-size: cover;
+  background-position: center;
   contain: paint;
 
   @container (max-width: 950px) {
@@ -35,7 +39,7 @@ export const Banner = styled.div<BannerProps>`
     }
   }
 
-  ${BLUR_FILTER}
+  /* ${BLUR_FILTER} */
 `;
 
 export const MuseContainer = styled.div`
@@ -45,19 +49,9 @@ export const MuseContainer = styled.div`
   margin-inline: auto;
   justify-content: center;
 
-  @container (max-width: 400px) {
+  @media (max-width: 350px) {
     & {
       padding-top: 0px;
-      padding-bottom: 10px;
-      padding-inline: 0px;
-      gap: 0.2rem;
-    }
-  }
-
-  @container (max-width: 350px) {
-    & {
-      padding-top: 0px;
-      padding-bottom: 10px;
       padding-inline: 0px;
       gap: 0.2rem;
     }
@@ -80,7 +74,7 @@ export const CardBackground = styled.div<CardProps>`
 `;
 
 export const CardWrapper = styled(Container)`
-  width: 350px;
+  width: 326px;
   height: 580px;
   padding: 0px !important;
   &.open {
@@ -99,10 +93,10 @@ export const CardWrapper = styled(Container)`
 
   container-name: muse-card;
   container-type: size;
-
-  @container (min-width: 2559px) {
+/* 
+  @media (min-width: 2569px) {
     margin-top: 40px;
-    width: 700px;
+    width: 652px;
     height: 1160px;
 
     &:hover {
@@ -110,12 +104,12 @@ export const CardWrapper = styled(Container)`
         scale: 1.03;
       }
     }
-  }
-
-  @container (min-width: 2047px) and (max-width: 2559px) {
+  } 
+ 
+  @media (min-width: 2047px) and (max-width: 2559px) {
     margin-top: 40px;
 
-    width: 525px;
+    width: 489px;
     height: 870px;
 
     &:hover {
@@ -123,11 +117,11 @@ export const CardWrapper = styled(Container)`
         scale: 1.03;
       }
     }
-  }
+  }  */
 
-  @container (min-width: 950px) and (max-width: 2047px) {
+ @media (min-width: 1024px) and (max-width: 2047px) {
     margin-top: 20px;
-    width: 420px;
+    width: 422px;
     height: 750px;
 
     &:hover {
@@ -137,14 +131,14 @@ export const CardWrapper = styled(Container)`
     }
   }
 
-  @container (min-width: 400px) and (max-width: 950px) {
+  @media (min-width: 350px) and (max-width: 950px) {
     &.open {
       border-radius: 0px;
       display: none;
     }
   }
 
-  @container (max-width: 400px) {
+  @media (max-width: 350px) {
     margin-top: 0px;
     width: 100%;
     height: 70vh;
@@ -162,7 +156,7 @@ export const CardWrapper = styled(Container)`
 
 export const CardExpandedWrapper = styled.div`
   position: relative;
-  width: 350px;
+  width: 326px;
   height: 580px;
   border-top-right-radius: var(--border-radius);
   border-bottom-right-radius: var(--border-radius);
@@ -175,9 +169,9 @@ export const CardExpandedWrapper = styled.div`
   container-name: muse-card;
   container-type: size;
 
-  @container (min-width: 2559px) {
+  /* @media (min-width: 2559px) {
     margin-top: 40px;
-    width: 700px;
+    width: 652px;
     height: 1160px;
 
     &:hover {
@@ -190,7 +184,7 @@ export const CardExpandedWrapper = styled.div`
   @container (min-width: 2047px) and (max-width: 2559px) {
     margin-top: 40px;
 
-    width: 525px;
+    width: 489px;
     height: 870px;
 
     &:hover {
@@ -198,11 +192,11 @@ export const CardExpandedWrapper = styled.div`
         scale: 1.03;
       }
     }
-  }
+  } */
 
-  @container (min-width: 950px) and (max-width: 2047px) {
+  @media (min-width: 1024px) and (max-width: 2047px) {
     margin-top: 20px;
-    width: 420px;
+    width: 422px;
     height: 750px;
 
     &:hover {
@@ -212,14 +206,14 @@ export const CardExpandedWrapper = styled.div`
     }
   }
 
-  @container (min-width: 400px) and (max-width: 950px) {
+  @media (min-width: 350px) and (max-width: 1024px) {
     &.open {
       border-radius: 0px;
       display: none;
     }
   }
 
-  @container (max-width: 400px) {
+  @media (max-width: 350px) {
     margin-top: 0px;
     width: 100%;
     height: 70vh;
@@ -279,11 +273,12 @@ export const SideMenu = styled.div`
   justify-content: flex-end;
   align-items: center;
   gap: 0.8rem;
+  margin-left: 10px;
 
   container-name: side-menu;
   container-type: size;
 
-  @container (min-width: 2559px) {
+  /* @container (min-width: 2559px) {
     margin-top: 40px;
     width: 150px;
     height: 1160px;
@@ -294,21 +289,28 @@ export const SideMenu = styled.div`
 
     width: 140px;
     height: 870px;
-  }
+  } */
 
-  @container (min-width: 880px) and (max-width: 2047px) {
+  @media (min-width: 1024px) and (max-width: 2047px) {
     margin-top: 20px;
     width: 100px;
     height: 725px;
-  }
+  } 
 
-  @container (max-width: 880px) {
+  @media (min-width: 600px) and (max-width: 1024px) {
+    margin-top: unset;
+    width: 100px;
+    height: 540px;
+  } 
+
+  @media (max-width: 600px) {
     justify-content: center;
     align-items: center;
     margin-top: 10px;
     flex-direction: row;
     width: 400px;
     height: 50px;
+    margin-left: unset;
   }
 `;
 
@@ -348,7 +350,7 @@ export const MenuButtonIcon = styled.div`
   transition: all 0.3s ease-in-out;
   contain: paint;
   z-index: ${Z_INDEX.CARD};
-  background-color: ${({ theme }: any) => theme.modalBackground};
+  background-color: ${({ theme }: any) => `${theme.modalBackground}98`};
   cursor: pointer;
   justify-content: center;
   align-items: center;
@@ -394,9 +396,8 @@ export const Text = styled.div`
 
 export const MuseName = styled.div`
   position: absolute;
-  bottom: 70px;
-  right: 10px;
-  font-size: 30px;
+  bottom: 15px;
+  font-size: var(--font-size-h3);
   font-weight: 600;
   color: var(--text);
   text-align: end;
@@ -422,8 +423,9 @@ export const AuthorContainer = styled.div`
   transition: opacity 0.5s ease, transform 0.5s ease;
 
   .avatar {
-    height: 60px;
-    width: 60px;
+    height: 30px;
+    width: 30px;
+    margin-right: 0.4rem;
   }
 
   @container content-container (max-width: 1000px) {
@@ -436,14 +438,15 @@ export const AuthorContainer = styled.div`
 export const UsernameContainer = styled.div`
   & > div {
     text-align: center;
-    font-size: 20px;
+    font-size: var(--font-size-small);
   }
 
-  max-width: 100%;
+  .penned {
+      font-size: var(--font-size-xsmall)
+    }
 
   & > span {
-    font-size: 14px;
-    margin-left: 1rem;
+    font-size: var(--font-size-small);
   }
 `;
 
@@ -531,10 +534,11 @@ export const VideoCardContent = styled.div`
 
 export const ConnectionItem = styled.div`
   justify-content: flex-start;
+  height: 60px;
   display: flex;
   flex-direction: row;
   width: inherit;
-  font-size: 12px;
+  font-size: var(--font-size-small);
   padding-inline: 20px;
   border-radius: ${BORDER_RADIUS};
 
@@ -545,13 +549,13 @@ export const ConnectionItem = styled.div`
 `;
 
 export const ConnectionLabel = styled.span`
-  font-size: 16;
+font-size: var(--font-size-small);
   font-weight: bold;
 `;
 
 export const ConnectionType = styled.span`
   text-transform: uppercase;
-  font-size: 14px;
+font-size: var(--font-size-small);
   font-style: italic;
 `;
 
@@ -578,7 +582,6 @@ export const MuseInfo = styled.div`
   flex-direction: column;
   align-items: flex-end;
   justify-content: end;
-  font-size: 14px;
 `;
 
 export const CardHeader = styled.div`
@@ -587,7 +590,7 @@ export const CardHeader = styled.div`
   align-items: center;
   justify-content: space-around;
   position: absolute;
-  bottom: 30px;
+  bottom: 10px;
   right: 10px;
 `;
 

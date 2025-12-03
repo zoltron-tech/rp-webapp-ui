@@ -1,6 +1,8 @@
 import classNames from "classnames";
+import { useRouter } from "next/navigation";
 import { type FC, type HTMLProps, useRef } from "react";
 import { useUIContext } from "@/hooks";
+import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import * as S from "./styles";
 
@@ -17,6 +19,7 @@ export const Username: FC<Props> = ({
 }) => {
   const usernameRef = useRef<HTMLInputElement>(null);
   const { successToast } = useUIContext();
+  const { push } = useRouter();
 
   const clickHandler = () => {
     const username = usernameRef.current?.innerText;
@@ -26,13 +29,18 @@ export const Username: FC<Props> = ({
     }
   };
 
+  const onAuthorAvatarClick = () => {
+    const username = usernameRef.current?.innerText;
+    if (username) push(ROUTES.Profile.View(username).Index);
+  };
+
   Logger.info("Username rendered");
 
   return (
     <S.Container
       className={classNames([className, { primary }])}
       ref={usernameRef}
-      onClick={clickHandler}
+      onClick={onAuthorAvatarClick}
       {...rest}
     >
       {username || ""}

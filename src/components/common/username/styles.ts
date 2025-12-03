@@ -1,9 +1,9 @@
 import styled from "styled-components";
 
-export const Container = styled.div`
-  font-size: 18px;
-  font-weight: 600;
-  cursor: copy;
+export const Container = styled.span`
+  font-size: var(--font-size-h6);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
 
   color: var(--text);
   &.primary {

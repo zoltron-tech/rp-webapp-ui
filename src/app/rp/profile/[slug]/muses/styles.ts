@@ -3,12 +3,17 @@ import { DEV_MODE_BORDER } from "@/theme";
 
 // Background container
 export const BackgroundContainer = styled.div`
+--navbar-width: 80px;
   position: absolute;
   inset: 0;
   z-index: -1;
-  overflow: hidden;
   pointer-events: none;
-    overflow: visible;
+    overflow: hidden;
+    min-height: calc(100dvh - var(--navbar-width));
+
+    @media screen and (min-width: 480px) {
+       --navbar-width: 60px;
+    }
 `;
 
 // Each blurred background tile

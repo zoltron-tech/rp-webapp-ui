@@ -21,7 +21,7 @@ export const Banner = styled.div<BannerProps>`
     var(--profile-banner-height-max)
   ); */
   top: 0px;
-  height: 92vh;
+  height: 80dvh;
   z-index: ${Z_INDEX.BACKGROUND};
   position: absolute;
 

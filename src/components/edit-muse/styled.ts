@@ -524,7 +524,6 @@ export const BasicInfoFields = styled.div`
 
   .avatar-field {
     .avatar {
-      margin-top: 40px;
       width: 150px;
       height: 150px;
       background-color: var(--bg-2);
@@ -627,12 +626,7 @@ export const MediaUploadSectionContainer = styled.div`
     width: 100%;
     gap: 20px;
 
-    @media screen and (max-width: 720px) {
-      padding-top: 40px;
-    }
-
     .media-label {
-      height: 240px;
       display: flex;
       flex-direction: column;
       align-items: center;

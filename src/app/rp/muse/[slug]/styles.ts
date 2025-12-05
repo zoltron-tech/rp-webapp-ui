@@ -17,15 +17,18 @@ interface BannerProps {
 
 export const Banner = styled.div<BannerProps>`
   width: 100cqw;
-  height: clamp(
+  /* height: clamp(
     var(--profile-banner-height-min),
     30cqw,
     var(--profile-banner-height-max)
-  );
+  ); */
   top: 0px;
-  /* height: calc(100dvh - 60px); */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   z-index: ${Z_INDEX.BACKGROUND};
-  position: absolute;
 
   background-image: url(${({ src }) => src});
   /* Apply dynamic filters */

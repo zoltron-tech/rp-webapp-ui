@@ -41,6 +41,8 @@ export const FANDOMLESS: Fandom = {
 };
 
 export const INITIAL_MUSE: Muse = {
+  avatar: null,
+  cardBackground: null,
   connections: [],
   extraAttributes: null,
   fandom: FANDOMLESS,
@@ -56,6 +58,7 @@ export const INITIAL_MUSE: Muse = {
   story: '{"type":"doc","content":[{"type":"paragraph"}]}',
   tags: [],
   video: null,
+  wallpaper: null,
 };
 
 export const INITIAL_STORY_BOARD: StoryBoard = {

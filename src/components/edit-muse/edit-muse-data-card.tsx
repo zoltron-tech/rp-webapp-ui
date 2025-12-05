@@ -380,6 +380,7 @@ export default function EditMuseDataCard() {
                   onChange={handleAvatarChange}
                   accept="image/*"
                   hidden
+                  autoFocus
                 />
               </Form.Field>
               <Form.Field className="field checkbox" name="consent">
@@ -465,7 +466,6 @@ export default function EditMuseDataCard() {
                   value={firstName ?? ""}
                   onChange={handleFirstnameChange}
                   required
-                  autoFocus
                 />
               </Form.Field>
               <Form.Field className="field" name="lastName">

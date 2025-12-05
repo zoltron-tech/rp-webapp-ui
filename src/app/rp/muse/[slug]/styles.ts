@@ -8,25 +8,31 @@ import {
   CARD_BORDER,
   Z_INDEX,
 } from "@/theme";
+import type { ImageFilter } from "@/types";
 
 interface BannerProps {
   src: string | null;
+  filterValues: ImageFilter | null;
 }
 
 export const Banner = styled.div<BannerProps>`
   width: 100cqw;
-  /* height: clamp(
+  height: clamp(
     var(--profile-banner-height-min),
     30cqw,
     var(--profile-banner-height-max)
-  ); */
+  );
   top: 0px;
-  height: 80dvh;
+  /* height: calc(100dvh - 60px); */
   z-index: ${Z_INDEX.BACKGROUND};
   position: absolute;
 
   background-image: url(${({ src }) => src});
-  filter: grayscale(40%) brightness(40%) blur(25px);
+  /* Apply dynamic filters */
+  filter: ${({ filterValues }) =>
+    `grayscale(${filterValues?.greyscale ?? 0}%)
+     brightness(${filterValues?.brightness ?? 100}%)
+     blur(${filterValues?.blur ?? 0}px)`};
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
@@ -35,7 +41,6 @@ export const Banner = styled.div<BannerProps>`
   @container (max-width: 950px) {
     & {
       top: 0px;
-      height: 92vh;
     }
   }
 
@@ -273,7 +278,6 @@ export const SideMenu = styled.div`
   justify-content: flex-end;
   align-items: center;
   gap: 0.8rem;
-  margin-left: 10px;
 
   container-name: side-menu;
   container-type: size;

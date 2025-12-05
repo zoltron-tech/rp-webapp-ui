@@ -1,6 +1,7 @@
 import { RichText as NWRichText } from "@novelist-world/ui";
 import { Form, Select } from "radix-ui";
 import styled from "styled-components";
+import { AvatarNew } from "../common/avatar-new";
 
 export const RichText = styled(NWRichText)`
   & > .pm-container {
@@ -143,6 +144,92 @@ export const FormContainer = styled.div`
           margin-right: 2px;
         }
       }
+
+          &.checkbox {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          margin-top: 12px;
+          margin-bottom: 8px;
+          font-size: var(--font-size-small);
+          font-weight: var(--font-weight-medium);
+          font-family: var(--font);
+          color: var(--text-secondary);
+
+          input[type="checkbox"] {
+            all: unset;
+            width: 20px;
+            height: 20px;
+            aspect-ratio: 1;
+            border-radius: 4px;
+
+            margin: 0;
+            cursor: pointer;
+            overflow: hidden;
+            accent-color: var(--accent);
+            outline-offset: 2px;
+            background-color: var(--bg-3);
+            border: 1px solid var(--bg-6);
+
+            &:checked {
+              background-color: var(--accent);
+              border: 1px solid var(--accent-hover);
+
+              &::before {
+                content: "✓";
+                display: block;
+                color: var(--text);
+                text-align: center;
+                line-height: 20px;
+                font-weight: var(--font-weight-bold);
+              }
+            }
+
+            &:not(:checked) {
+              background-color: var(--bg-5);
+              border: 1px solid var(--bg-6);
+            }
+
+            &:hover {
+              outline: 1px solid var(--accent);
+            }
+
+            &[data-invalid="true"] {
+              outline: 1.5px solid var(--tomato-a9);
+            }
+
+            &:focus {
+              outline: 2px solid var(--accent);
+            }
+
+            &[disabled] {
+              background-color: var(--bg-6);
+              cursor: not-allowed;
+              color: var(--text-secondary);
+            }
+          }
+
+          label {
+            font-weight: var(--font-weight-regular);
+            color: var(--text);
+
+            a {
+              color: var(--accent-9);
+              text-decoration: none;
+
+              &:hover {
+                text-decoration: underline;
+              }
+
+              &:focus {
+                outline: 1.5px solid var(--accent);
+                outline-offset: 2px;
+              }
+            }
+          }
+        }
     }
 
     input {
@@ -436,10 +523,8 @@ export const BasicInfoFields = styled.div`
   gap: 2em;
 
   .avatar-field {
-    width: 150px;
-    height: 150px;
-
     .avatar {
+      margin-top: 40px;
       width: 150px;
       height: 150px;
       background-color: var(--bg-2);
@@ -531,4 +616,87 @@ export const ResetButton = styled.button`
     color: var(--text-secondary);
     cursor: not-allowed;
   }
+`;
+
+export const MediaUploadSectionContainer = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    position: relative;
+    width: 100%;
+    gap: 20px;
+
+    @media screen and (max-width: 720px) {
+      padding-top: 40px;
+    }
+
+    .media-label {
+      height: 240px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+  
+
+      span {
+        font-family: var(--font);
+        font-size: var(--font-size);
+        font-weight: var(--font-weight-regular);
+        color: var(--text-secondary);
+      }
+    }
+`;
+
+export const infoButton = styled.button`
+  all: unset;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1.5px solid var(--bg-10);
+
+  svg {
+    fill: var(--bg-10);
+    stroke: var(--bg-10);
+    height: 16px;
+    width: 16px;
+  }
+
+  &:active {
+    scale: 0.98;
+  }
+
+  &:hover, &:focus {
+      border-color: var(--accent-7);
+      background-color: var(--bg-1);
+   svg {
+    fill: var(--accent-7);
+  
+   }
+  }
+`;
+
+export const CardBackgroundSelect = styled(AvatarNew)`
+margin-block: 10px;
+border-radius: unset;
+height: 200px;
+width: 113px;
+      background-color: var(--bg-2);
+      border: 6px solid var(--bg-1);
+`;
+
+export const WallpaperSelect = styled(AvatarNew)`
+margin-block: 10px;
+border-radius: unset;
+height: 200px;
+width: 300px;
+      background-color: var(--bg-2);
+      border: 6px solid var(--bg-1);
 `;

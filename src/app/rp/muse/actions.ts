@@ -167,6 +167,9 @@ export const updateMuseAction = async (
       method,
     });
 
+    console.log(JSON.stringify(_muse));
+    console.log(response);
+
     if (!response.ok) {
       Logger.debug(
         "updateMuseAction error",

@@ -47,6 +47,7 @@ export const EditMuseForm: FC<EditMuseCardProps> = ({ id }) => {
         <StoreProvider<MuseState>
           storeId="muse"
           initial={{
+            cardBackground: muse?.cardBackground || null,
             fandom: muse?.fandom || FANDOMLESS,
             firstName: muse?.firstName || "",
             gender: null,
@@ -56,6 +57,7 @@ export const EditMuseForm: FC<EditMuseCardProps> = ({ id }) => {
             note: muse?.note || "",
             privacy: muse?.privacy || "PUBLIC",
             story: muse?.story || "",
+            wallpaper: muse?.wallpaper || null,
           }}
         >
           <EditMuseDataCard />

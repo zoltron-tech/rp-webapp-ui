@@ -1,17 +1,21 @@
 "use client";
 
+import { ShouldRender } from "@novelist-world/ui";
 import classNames from "classnames";
 import { AlertDialog } from "radix-ui";
+import type { ReactNode } from "react";
 import { useGlobalState } from "@/context/store/stores";
 import * as S from "./styled";
 
 interface AlertProps {
-  heading: string;
-  text: string;
+  heading: ReactNode;
+  text: ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onConfirm?: () => void;
   actionButtonLabel?: string;
+  showConfirm?: boolean;
+  closeButtonText?: string;
 }
 
 export const AppAlertDialog = ({
@@ -21,6 +25,8 @@ export const AppAlertDialog = ({
   onOpenChange,
   onConfirm,
   actionButtonLabel = "Confirm",
+  showConfirm = true,
+  closeButtonText = "Cancel",
 }: AlertProps) => {
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
@@ -35,13 +41,15 @@ export const AppAlertDialog = ({
 
           <S.Actions>
             <AlertDialog.Cancel asChild>
-              <S.CancelButton>Cancel</S.CancelButton>
+              <S.CancelButton>{closeButtonText}</S.CancelButton>
             </AlertDialog.Cancel>
-            <AlertDialog.Action asChild>
-              <S.ActionButton onClick={onConfirm}>
-                {actionButtonLabel}
-              </S.ActionButton>
-            </AlertDialog.Action>
+            <ShouldRender if={showConfirm}>
+              <AlertDialog.Action asChild>
+                <S.ActionButton onClick={onConfirm}>
+                  {actionButtonLabel}
+                </S.ActionButton>
+              </AlertDialog.Action>
+            </ShouldRender>
           </S.Actions>
         </S.Content>
       </AlertDialog.Portal>

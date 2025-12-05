@@ -10,6 +10,9 @@ export interface Muse {
   note: string;
   story: string;
   image: string | null;
+  wallpaper: NWImage | null;
+  avatar: NWImage | null;
+  cardBackground: NWImage | null;
   video: string | null;
   song: string | null;
   nicknames: string[] | null;
@@ -26,6 +29,8 @@ export interface CreateUpdateMuse {
   note: string | null;
   story: string | null;
   image: string | null;
+  wallpaper: NWImage | null;
+  cardBackground: NWImage | null;
   video: string | null;
   song: string | null;
   nicknames: string[];
@@ -88,4 +93,24 @@ export interface Fandom {
   name: string;
   description: string;
   color: string;
+}
+
+export interface NWImage {
+  src: string;
+  filterValues: ImageFilter;
+  crop: ImageCropFilter;
+}
+
+export interface ImageFilter {
+  greyscale: number;
+  brightness: number;
+  blur: number;
+}
+
+export interface ImageCropFilter {
+  src: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }

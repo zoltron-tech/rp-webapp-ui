@@ -99,6 +99,8 @@ export default function MuseProfilePage({}) {
     if (username) push(ROUTES.Profile.View(username).Index);
   };
 
+  const getSafeImage = (src?: string) => src || "";
+
   const onMuseAvatarClick = (museId: string) => {
     if (museId) push(ROUTES.Muse.View(museId));
   };
@@ -233,13 +235,27 @@ export default function MuseProfilePage({}) {
         <PageLoader />
       </ShouldRender>
       <S.Banner
-        src={muse?.image && !muse.image.endsWith(".gif") ? muse.image : null}
+        src={
+          getSafeImage(muse?.wallpaper?.src) || getSafeImage(muse?.image || "")
+        }
+        filterValues={
+          muse?.wallpaper?.filterValues ?? {
+            blur: 20,
+            brightness: 50,
+            greyscale: 20,
+          }
+        }
       />
       <S.CardWrapper
         // hoverable={is("MAIN")}
         className={classNames({ closed: is("MAIN"), open: !is("MAIN") })}
       >
-        <S.CardBackground banner={muse?.image || ""} />
+        <S.CardBackground
+          banner={
+            getSafeImage(muse?.cardBackground?.src) ||
+            getSafeImage(muse?.image || "")
+          }
+        />
         <S.Card className="muse-card">
           <S.CardHeader>
             <S.MuseInfo>
@@ -267,7 +283,7 @@ export default function MuseProfilePage({}) {
         <S.CardExpandedWrapper>
           <S.CardBack className="muse-card">
             <S.InfoCardContent>
-              <S.Title>Muse Information</S.Title>
+              <S.Title>Information</S.Title>
               <S.InfoContainer>
                 <S.InfoItem>
                   <S.InfoLabel>Visibility:</S.InfoLabel>
@@ -349,11 +365,17 @@ export default function MuseProfilePage({}) {
         <S.CardExpandedWrapper>
           <S.CardBack className="muse-card">
             <S.InfoCardContent>
-              <S.Title>Back Story</S.Title>
+              <S.Title>Story</S.Title>
               <S.ScrollableContent>
-                <S.NoteContainer>
-                  <Quote>{muse?.note}</Quote>
-                </S.NoteContainer>
+                <ShouldRender
+                  if={
+                    muse?.note?.length !== undefined && muse?.note?.length > 0
+                  }
+                >
+                  <S.NoteContainer>
+                    <Quote>{muse?.note}</Quote>
+                  </S.NoteContainer>
+                </ShouldRender>
                 <ShouldRender if={Boolean(muse?.story)}>
                   <RichText content={JSON.parse(muse?.story || "{}")} />
                 </ShouldRender>
@@ -409,15 +431,6 @@ export default function MuseProfilePage({}) {
         </S.MenuButton>
         <S.MenuButton>
           <S.MenuButtonIcon
-            onClick={() => transition("BACK_STORY")}
-            className={classNames({ selected: is("BACK_STORY") })}
-          >
-            <GiBookCover size={"45%"} />
-          </S.MenuButtonIcon>
-          <S.MenuText>ABOUT</S.MenuText>
-        </S.MenuButton>
-        <S.MenuButton>
-          <S.MenuButtonIcon
             onClick={() => transition("MUSE_INFO")}
             className={classNames({ selected: is("MUSE_INFO") })}
           >
@@ -427,12 +440,21 @@ export default function MuseProfilePage({}) {
         </S.MenuButton>
         <S.MenuButton>
           <S.MenuButtonIcon
+            onClick={() => transition("BACK_STORY")}
+            className={classNames({ selected: is("BACK_STORY") })}
+          >
+            <GiBookCover size={"45%"} />
+          </S.MenuButtonIcon>
+          <S.MenuText>STORY</S.MenuText>
+        </S.MenuButton>
+        <S.MenuButton>
+          <S.MenuButtonIcon
             onClick={() => transition("CONNECTIONS")}
             className={classNames({ selected: is("CONNECTIONS") })}
           >
             <BsFillPeopleFill size={"45%"} />
           </S.MenuButtonIcon>
-          <S.MenuText>CONNECTIONS</S.MenuText>
+          <S.MenuText>RELATIONS</S.MenuText>
         </S.MenuButton>
         <ShouldRender if={!is("MAIN")}>
           <S.MenuButton className="stick-top">

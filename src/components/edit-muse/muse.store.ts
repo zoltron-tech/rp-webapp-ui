@@ -3,7 +3,7 @@ import {
   useStoreSet,
   useStoreState,
 } from "@/context/store/use-store";
-import type { Fandom, PrivacyLevel } from "@/types";
+import type { Fandom, NWImage, PrivacyLevel } from "@/types";
 import { FANDOMLESS } from "@/utils/constants";
 
 export type MuseState = {
@@ -14,11 +14,14 @@ export type MuseState = {
   gender: string | null;
   story: string | null;
   image: string | null;
+  wallpaper: NWImage | null;
+  cardBackground: NWImage | null;
   fandom: Fandom;
   privacy: PrivacyLevel;
 };
 
 export const INITIAL_STATE: MuseState = {
+  cardBackground: null,
   fandom: FANDOMLESS,
   firstName: null,
   gender: null,
@@ -28,6 +31,7 @@ export const INITIAL_STATE: MuseState = {
   note: null,
   privacy: "ONLY_ME",
   story: null,
+  wallpaper: null,
 };
 
 type ProfileStoreKey = keyof MuseState;

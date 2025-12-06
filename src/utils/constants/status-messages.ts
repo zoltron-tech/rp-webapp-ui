@@ -3,6 +3,7 @@ export enum API_MESSAGE {
   Error = "error",
   NotFound = "not_found",
   UncategorizedError = "uncatogorized_error",
+  FileTooLarge = "file_size_too_large",
   Unauthorized = "unauthorized",
   AccessDenied = "access_denied",
   MediaError = "media_error",

@@ -521,6 +521,7 @@ export const BasicInfoFields = styled.div`
   width: 100%;
   display: flex;
   gap: 2em;
+  margin-block: 5px;
 
   .avatar-field {
     .avatar {
@@ -731,4 +732,13 @@ export const ColorPickerWrapper = styled.div`
       }
     }
   }
+`;
+
+export const MediaErrorWrapper = styled.div`
+display: flex;
+align-items: center;
+justify-content: center;
+padding-inline: 20px;
+padding-top: 20px;
+width: 100%;
 `;

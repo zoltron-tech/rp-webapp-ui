@@ -29,8 +29,14 @@ import { FandomSelect } from "./fandom-select";
 import { useMuseState, useMuseStoreSet } from "./muse.store";
 import * as S from "./styled";
 
-const ErrorKeys = [API_MESSAGE.UncategorizedError] as const;
+const ErrorKeys = [
+  API_MESSAGE.UncategorizedError,
+  API_MESSAGE.FileTooLarge,
+  API_MESSAGE.MediaError,
+] as const;
 type ErrorKey = (typeof ErrorKeys)[number];
+
+const VALID_IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif"];
 
 const ERROR_MAP: Record<ErrorKey, ReactNode> = {
   [API_MESSAGE.UncategorizedError]: (
@@ -46,9 +52,22 @@ const ERROR_MAP: Record<ErrorKey, ReactNode> = {
       </p>
     </>
   ),
+  [API_MESSAGE.FileTooLarge]: (
+    <p>
+      The selected file is too large. Maximum allowed size is{" "}
+      <strong>10 MB</strong>.
+    </p>
+  ),
+  [API_MESSAGE.MediaError]: (
+    <p>
+      File type is not supported. Allowed file types are{" "}
+      <strong>(.png, .jpg, .gif)</strong>.
+    </p>
+  ),
 };
 
 export default function EditMuseDataCard() {
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
   const novelist = useGlobalState("novelist");
   const user = useGlobalState("user");
   const id = useMuseState("id");
@@ -64,6 +83,8 @@ export default function EditMuseDataCard() {
   const privacy = useMuseState("privacy");
   const setMuseState = useMuseStoreSet();
   const [error, setError] = useState<ErrorKey | null>(null);
+  const [mediaError, setMediaError] = useState<ErrorKey | null>(null);
+  const [mediaTypeError, setMediaTypeError] = useState<ErrorKey | null>(null);
   const [loading, setLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const [showAccentPicker, setShowAccentPicker] = useState(Boolean(accent));
@@ -137,11 +158,46 @@ export default function EditMuseDataCard() {
     [setNote],
   );
 
+  const checkFileSize = (file: File | undefined): boolean => {
+    if (!file) return false;
+    if (file.size > MAX_FILE_SIZE) {
+      setMediaError(API_MESSAGE.FileTooLarge);
+      return true;
+    }
+    return false;
+  };
+
+  const checkFileType = (file: File | undefined): boolean => {
+    if (!file) return false;
+
+    // File type validation
+    if (!VALID_IMAGE_TYPES.includes(file.type)) {
+      setMediaTypeError(API_MESSAGE.MediaError);
+      return true;
+    }
+
+    return false;
+  };
+
   const handleAvatarChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
 
       if (!file) return;
+
+      if (checkFileSize(file)) {
+        e.target.value = ""; // reset input
+        return;
+      }
+
+      if (checkFileType(file)) {
+        e.target.value = ""; // reset input
+        return;
+      }
+
+      setMediaTypeError(null);
+      setMediaError(null);
+
       const reader = new FileReader();
       reader.onloadend = async () => {
         setMuseState({ image: reader.result as string });
@@ -165,6 +221,18 @@ export default function EditMuseDataCard() {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
+
+      if (checkFileSize(file)) {
+        e.target.value = ""; // reset input
+        return;
+      }
+      if (checkFileType(file)) {
+        e.target.value = ""; // reset input
+        return;
+      }
+
+      setMediaTypeError(null);
+      setMediaError(null);
 
       const reader = new FileReader();
 
@@ -230,6 +298,18 @@ export default function EditMuseDataCard() {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
+
+      if (checkFileSize(file)) {
+        e.target.value = ""; // reset input
+        return;
+      }
+      if (checkFileType(file)) {
+        e.target.value = ""; // reset input
+        return;
+      }
+
+      setMediaTypeError(null);
+      setMediaError(null);
 
       const reader = new FileReader();
 
@@ -455,6 +535,20 @@ export default function EditMuseDataCard() {
                 />
               </S.MediaUploadSectionContainer>
             </S.BasicInfoFields>
+            <ShouldRender if={Boolean(mediaError)}>
+              <S.MediaErrorWrapper>
+                <ErrorBox className="error">
+                  {ERROR_MAP[mediaError!] || <p>Unknown error occurred.</p>}
+                </ErrorBox>
+              </S.MediaErrorWrapper>
+            </ShouldRender>
+            <ShouldRender if={Boolean(mediaTypeError)}>
+              <S.MediaErrorWrapper>
+                <ErrorBox className="error">
+                  {ERROR_MAP[mediaTypeError!] || <p>Unknown error occurred.</p>}
+                </ErrorBox>
+              </S.MediaErrorWrapper>
+            </ShouldRender>
           </ShouldRender>
           <Separator.Root className="separator" orientation="horizontal" />
           <S.BasicInfoFields>

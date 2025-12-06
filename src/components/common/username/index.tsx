@@ -2,6 +2,7 @@ import classNames from "classnames";
 import { useRouter } from "next/navigation";
 import { type FC, type HTMLProps, useRef } from "react";
 import { useUIContext } from "@/hooks";
+import { accentColor } from "@/theme";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import * as S from "./styles";
@@ -9,11 +10,13 @@ import * as S from "./styles";
 type Props = HTMLProps<HTMLDivElement> & {
   username?: string;
   primary?: boolean;
+  accentOverride?: string;
 };
 
 export const Username: FC<Props> = ({
   username,
   primary,
+  accentOverride,
   className,
   ...rest
 }) => {
@@ -39,6 +42,7 @@ export const Username: FC<Props> = ({
   return (
     <S.Container
       className={classNames([className, { primary }])}
+      accent={accentOverride}
       ref={usernameRef}
       onClick={onAuthorAvatarClick}
       {...rest}

@@ -348,7 +348,9 @@ export const MenuButton = styled.div`
   }
 `;
 
-export const MenuButtonIcon = styled.div`
+export const MenuButtonIcon = styled.div<{
+  accent?: string | null;
+}>`
   position: relative;
   display: flex;
   width: 50px;
@@ -357,7 +359,11 @@ export const MenuButtonIcon = styled.div`
   transition: all 0.3s ease-in-out;
   contain: paint;
   z-index: ${Z_INDEX.CARD};
-  background-color: ${({ theme }: any) => `${theme.modalBackground}98`};
+  background-color: ${({ accent }) =>
+    accent && accent.trim() !== ""
+      ? `color-mix(in srgb, ${accent} 10%, var(--bg-2) 90%)`
+      : "var(--bg-2)"};
+
   cursor: pointer;
   justify-content: center;
   align-items: center;
@@ -365,9 +371,13 @@ export const MenuButtonIcon = styled.div`
   ${CARD_BORDER};
 
   @container (min-height: 100px) {
-    &:hover {
+  &:hover {
       scale: 1.1;
-      background-color: var(--accent);
+      background-color: ${({ accent }) =>
+        accent && accent.trim() !== ""
+          ? `color-mix(in srgb, ${accent} 70%, black)` // ~30% darker
+          : "var(--accent)"};
+
     }
   }
 
@@ -378,7 +388,11 @@ export const MenuButtonIcon = styled.div`
 
   &.selected {
     scale: 1.1;
-    background-color: var(--accent);
+    background-color: ${({ accent }) =>
+      accent && accent.trim() !== ""
+        ? `color-mix(in srgb, ${accent} 70%, black)` // ~30% darker
+        : "var(--accent)"};
+
   }
 `;
 
@@ -457,7 +471,7 @@ export const UsernameContainer = styled.div`
   }
 `;
 
-export const CardBack = styled.div`
+export const CardBack = styled.div<{ accent?: string | null }>`
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -466,9 +480,19 @@ export const CardBack = styled.div`
   position: relative;
   height: 100%;
   contain: paint;
-  background: linear-gradient(
-    ${({ theme }: any): string => theme.cardBackgroundGradient.join(", ")}
-  );
+  background: ${({ accent }: any) => {
+    if (accent && accent.trim() !== "") {
+      return `linear-gradient(
+      to bottom,
+      ${accent}18,  /* accent with 80% opacity */
+      black          /* solid black at bottom */
+    )`;
+    }
+
+    return "linear-gradient(to bottom, transparent, black)"; // fallback if no accent
+  }};
+
+
 
   & {
     ${BACKGROUND_BLUR()}
@@ -566,7 +590,7 @@ font-size: var(--font-size-small);
   font-style: italic;
 `;
 
-export const ScrollableContent = styled.div`
+export const ScrollableContent = styled.div<{ accent?: string | null }>`
   margin-bottom: 20px;
   overflow-y: auto;
   scrollbar-width: thin;
@@ -579,7 +603,10 @@ export const ScrollableContent = styled.div`
   transition-duration: 200ms;
 
   &:hover {
-    scrollbar-color: var(--accent-6) transparent;
+    scrollbar-color: ${({ accent }) =>
+      accent && accent.trim() !== ""
+        ? `color-mix(in srgb, ${accent} 80%, black)` /* darkened scrollbar */
+        : "var(--accent-6)"} transparent;
   }
 `;
 

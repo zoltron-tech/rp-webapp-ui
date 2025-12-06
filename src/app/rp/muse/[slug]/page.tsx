@@ -272,7 +272,11 @@ export default function MuseProfilePage({}) {
                 /> */}
                 <S.UsernameContainer>
                   <span className="penned">PENNED BY:</span>
-                  <Username username={muse?.pennedBy?.username} primary />
+                  <Username
+                    username={muse?.pennedBy?.username}
+                    accentOverride={muse?.accent || undefined}
+                    primary
+                  />
                 </S.UsernameContainer>
               </S.AuthorContainer>
             </S.MuseInfo>
@@ -281,7 +285,7 @@ export default function MuseProfilePage({}) {
       </S.CardWrapper>
       <ShouldRender if={is("MUSE_INFO")}>
         <S.CardExpandedWrapper>
-          <S.CardBack className="muse-card">
+          <S.CardBack className="muse-card" accent={muse?.accent}>
             <S.InfoCardContent>
               <S.Title>Information</S.Title>
               <S.InfoContainer>
@@ -347,11 +351,11 @@ export default function MuseProfilePage({}) {
       </ShouldRender>
       <ShouldRender if={is("CONNECTIONS")}>
         <S.CardExpandedWrapper>
-          <S.CardBack className="muse-card">
+          <S.CardBack className="muse-card" accent={muse?.accent}>
             <S.InfoCardContent>
               <S.Title>Connections</S.Title>
               <S.ConnectionsContainer>
-                <S.ScrollableContent>
+                <S.ScrollableContent accent={muse?.accent}>
                   <S.ExpandedContentInner>
                     {loadChonnections(0, "paddington")}
                   </S.ExpandedContentInner>
@@ -363,10 +367,10 @@ export default function MuseProfilePage({}) {
       </ShouldRender>
       <ShouldRender if={is("BACK_STORY")}>
         <S.CardExpandedWrapper>
-          <S.CardBack className="muse-card">
+          <S.CardBack className="muse-card" accent={muse?.accent}>
             <S.InfoCardContent>
               <S.Title>Story</S.Title>
-              <S.ScrollableContent>
+              <S.ScrollableContent accent={muse?.accent}>
                 <ShouldRender
                   if={
                     muse?.note?.length !== undefined && muse?.note?.length > 0
@@ -400,10 +404,12 @@ export default function MuseProfilePage({}) {
       </ShouldRender>
       <ShouldRender if={is("PROMPTS")}>
         <S.CardExpandedWrapper>
-          <S.CardBack className="muse-card">
+          <S.CardBack className="muse-card" accent={muse?.accent}>
             <S.InfoCardContent>
               <S.Title>Prompts</S.Title>
-              <S.ScrollableContent>{loadPrompts()}</S.ScrollableContent>
+              <S.ScrollableContent accent={muse?.accent}>
+                {loadPrompts()}
+              </S.ScrollableContent>
             </S.InfoCardContent>
           </S.CardBack>
         </S.CardExpandedWrapper>
@@ -414,6 +420,7 @@ export default function MuseProfilePage({}) {
             <S.MenuButtonIcon
               onClick={() => transition("VIDEO")}
               className={classNames({ selected: is("VIDEO") })}
+              accent={muse?.accent}
             >
               <MdOutlineSlowMotionVideo size={"45%"} />
             </S.MenuButtonIcon>
@@ -424,6 +431,7 @@ export default function MuseProfilePage({}) {
           <S.MenuButtonIcon
             onClick={() => transition("PROMPTS")}
             className={classNames({ selected: is("PROMPTS") })}
+            accent={muse?.accent}
           >
             <BiSolidMessageEdit size={"45%"} />
           </S.MenuButtonIcon>
@@ -433,6 +441,7 @@ export default function MuseProfilePage({}) {
           <S.MenuButtonIcon
             onClick={() => transition("MUSE_INFO")}
             className={classNames({ selected: is("MUSE_INFO") })}
+            accent={muse?.accent}
           >
             <TiInfoLarge size={"45%"} />
           </S.MenuButtonIcon>
@@ -442,6 +451,7 @@ export default function MuseProfilePage({}) {
           <S.MenuButtonIcon
             onClick={() => transition("BACK_STORY")}
             className={classNames({ selected: is("BACK_STORY") })}
+            accent={muse?.accent}
           >
             <GiBookCover size={"45%"} />
           </S.MenuButtonIcon>
@@ -451,6 +461,7 @@ export default function MuseProfilePage({}) {
           <S.MenuButtonIcon
             onClick={() => transition("CONNECTIONS")}
             className={classNames({ selected: is("CONNECTIONS") })}
+            accent={muse?.accent}
           >
             <BsFillPeopleFill size={"45%"} />
           </S.MenuButtonIcon>
@@ -462,6 +473,7 @@ export default function MuseProfilePage({}) {
               onClick={() => {
                 transition("MAIN");
               }}
+              accent={muse?.accent}
             >
               <MdClose />
             </S.MenuButtonIcon>
@@ -473,6 +485,7 @@ export default function MuseProfilePage({}) {
               onClick={() => {
                 transition("MAIN");
               }}
+              accent={muse?.accent}
             >
               <FiMoreVertical size={"45%"} />
             </S.MenuButtonIcon>

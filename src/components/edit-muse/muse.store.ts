@@ -13,6 +13,7 @@ export type MuseState = {
   note: string | null;
   gender: string | null;
   story: string | null;
+  accent: string | null;
   image: string | null;
   wallpaper: NWImage | null;
   cardBackground: NWImage | null;
@@ -21,6 +22,7 @@ export type MuseState = {
 };
 
 export const INITIAL_STATE: MuseState = {
+  accent: null,
   cardBackground: null,
   fandom: FANDOMLESS,
   firstName: null,

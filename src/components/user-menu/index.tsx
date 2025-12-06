@@ -14,6 +14,7 @@ import { toggleState } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import { ShouldRender } from "../common";
 import { AvatarNew } from "../common/avatar-new";
+import { AppAlertDialog } from "../dialog";
 import * as S from "./styles";
 
 type UserMenuProps = {};
@@ -22,6 +23,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
   const user = useGlobalState("user");
   const novelist = useGlobalState("novelist");
   const authState = useGlobalState("authState");
+  const [showLogoutAlert, setShowLogoutAlert] = useState(false);
   const setGlobalState = useGlobalStoreSet();
   const [open, setOpen] = useState(false);
   const { push } = useRouter();
@@ -62,6 +64,14 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
 
   return (
     <S.PositionContainer>
+      <AppAlertDialog
+        heading={`Logout?`}
+        text={`Are you sure you want to logout?`}
+        open={showLogoutAlert}
+        onOpenChange={setShowLogoutAlert}
+        onConfirm={handleLogout}
+        actionButtonLabel="Logout"
+      />
       <S.ContentContainer onClick={toggleState(setOpen)}>
         <AvatarNew
           className="selectable"
@@ -106,7 +116,9 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
           </S.List>
           <S.Separator />
           <S.List>
-            <S.DeleteElement onClick={handleLogout}>Log out</S.DeleteElement>
+            <S.DeleteElement onClick={() => setShowLogoutAlert(true)}>
+              Log out
+            </S.DeleteElement>
           </S.List>
         </S.Menu>
       </S.ContentContainer>

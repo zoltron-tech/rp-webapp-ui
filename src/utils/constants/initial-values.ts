@@ -41,6 +41,7 @@ export const FANDOMLESS: Fandom = {
 };
 
 export const INITIAL_MUSE: Muse = {
+  accent: null,
   avatar: null,
   cardBackground: null,
   connections: [],

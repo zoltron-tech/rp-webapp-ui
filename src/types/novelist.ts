@@ -9,6 +9,7 @@ export interface Muse {
   lastName: string;
   note: string;
   story: string;
+  accent: string | null;
   image: string | null;
   wallpaper: NWImage | null;
   avatar: NWImage | null;
@@ -23,6 +24,7 @@ export interface Muse {
 }
 
 export interface CreateUpdateMuse {
+  accent: string | null;
   firstName: string;
   fandom: Fandom;
   lastName: string;

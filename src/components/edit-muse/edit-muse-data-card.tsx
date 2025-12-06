@@ -10,13 +10,9 @@ import {
   useCallback,
   useState,
 } from "react";
+import { HexColorPicker } from "react-colorful";
 import { BsInfoLg } from "react-icons/bs";
 import { ImProfile } from "react-icons/im";
-import {
-  IoIosInformation,
-  IoIosInformationCircleOutline,
-} from "react-icons/io";
-import { IoInformationSharp } from "react-icons/io5";
 import { updateMuseAction } from "@/app/rp/muse/actions";
 import { uploadMedia } from "@/app/rp/profile/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
@@ -58,6 +54,7 @@ export default function EditMuseDataCard() {
   const id = useMuseState("id");
   const firstName = useMuseState("firstName");
   const lastName = useMuseState("lastName");
+  const accent = useMuseState("accent");
   const image = useMuseState("image");
   const wallpaper = useMuseState("wallpaper");
   const cardBackground = useMuseState("cardBackground");
@@ -69,6 +66,7 @@ export default function EditMuseDataCard() {
   const [error, setError] = useState<ErrorKey | null>(null);
   const [loading, setLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
+  const [showAccentPicker, setShowAccentPicker] = useState(Boolean(accent));
   const [showMediaHelpInfo, setShowMediaHelpInfo] = useState(false);
   const [showMediaFields, setShowMediaFields] = useState(
     Boolean(wallpaper || cardBackground),
@@ -304,7 +302,13 @@ export default function EditMuseDataCard() {
       const _privacy = target.privacy.value;
       const _fandom = target.fandom.value;
 
+      // Only include accent if checkbox is ON and accent is non-empty
+      const _accent = showAccentPicker && accent?.trim() ? accent.trim() : null;
+
+      console.log(_accent);
+
       const payload = {
+        accent: _accent,
         cardBackground: cardBackground ?? null,
         connections: [],
         extraAttributes: null,
@@ -335,7 +339,7 @@ export default function EditMuseDataCard() {
       }
       successToast("Data updated successfully.");
     },
-    [novelist, story, image, wallpaper, cardBackground, setGlobalState],
+    [novelist, story, image, wallpaper, cardBackground, accent, setGlobalState],
   );
 
   const handleReset = useCallback(() => {
@@ -361,7 +365,6 @@ export default function EditMuseDataCard() {
             />
           </S.TopBar>
           <Separator.Root className="separator" orientation="horizontal" />
-
           <S.BasicInfoFields>
             <S.MediaUploadSectionContainer>
               <Form.Field className="avatar-field" name="avatar">
@@ -395,7 +398,6 @@ export default function EditMuseDataCard() {
               </Form.Field>
             </S.MediaUploadSectionContainer>
           </S.BasicInfoFields>
-
           <ShouldRender if={showMediaFields}>
             <S.BasicInfoFields>
               <S.MediaUploadSectionContainer>
@@ -480,15 +482,11 @@ export default function EditMuseDataCard() {
               </Form.Field>
             </div>
           </S.BasicInfoFields>
-
           <Separator.Root className="separator" orientation="horizontal" />
-
           <S.FandomSelectWrapper>
             <FandomSelect value={fandom} onChange={setFandom} />
           </S.FandomSelectWrapper>
-
           <Separator.Root className="separator" orientation="horizontal" />
-
           <S.BasicInfoFields>
             <div className="note">
               <Form.Field className="field" name="note">
@@ -511,9 +509,29 @@ export default function EditMuseDataCard() {
               </Form.Field>
             </div>
           </S.BasicInfoFields>
-
           <Separator.Root className="separator" orientation="horizontal" />
+          <S.MediaUploadSectionContainer>
+            <Form.Field className="field checkbox" name="accentEnabled">
+              <Form.Control
+                aria-label="Accent Enabled"
+                type="checkbox"
+                checked={showAccentPicker}
+                onChange={() => setShowAccentPicker((prev) => !prev)}
+              />
+              <Form.Label>Set custom accent color</Form.Label>
+            </Form.Field>
 
+            {showAccentPicker && (
+              <div style={{ marginTop: "10px" }}>
+                <HexColorPicker
+                  color={accent ?? "#ff0000"}
+                  onChange={(value) => setMuseState({ accent: value })}
+                />
+                <p style={{ marginTop: "8px" }}>Selected: {accent}</p>
+              </div>
+            )}
+          </S.MediaUploadSectionContainer>
+          <Separator.Root className="separator" orientation="horizontal" />
           <Form.Field className="field" name="story">
             <S.FieldHeader>
               <Form.Label>Backstory</Form.Label>
@@ -535,15 +553,12 @@ export default function EditMuseDataCard() {
               ></S.RichText>
             </Form.Control>
           </Form.Field>
-
           <Separator.Root className="separator" orientation="horizontal" />
-
           <ShouldRender if={Boolean(error)}>
             <ErrorBox className="error">
               {ERROR_MAP[error!] || <p>Unknown error occurred.</p>}
             </ErrorBox>
           </ShouldRender>
-
           <S.FormActions>
             <S.ResetButton
               type="reset"

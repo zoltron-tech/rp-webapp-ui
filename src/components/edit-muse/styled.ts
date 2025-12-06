@@ -694,3 +694,41 @@ width: 300px;
       background-color: var(--bg-2);
       border: 6px solid var(--bg-1);
 `;
+
+export const ColorPickerWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+
+  .colorpicker-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    span {
+      font-family: var(--font);
+      font-size: var(--font-size);
+      font-weight: var(--font-weight-regular);
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    input {
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      width: 80px;
+      text-align: center;
+      font-family: var(--font);
+      font-size: var(--font-size);
+      color: var(--text-primary);
+
+      &:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+    }
+  }
+`;

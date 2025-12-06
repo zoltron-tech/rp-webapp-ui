@@ -522,13 +522,26 @@ export default function EditMuseDataCard() {
             </Form.Field>
 
             {showAccentPicker && (
-              <div style={{ marginTop: "10px" }}>
+              <S.ColorPickerWrapper>
                 <HexColorPicker
                   color={accent ?? "#ff0000"}
                   onChange={(value) => setMuseState({ accent: value })}
                 />
-                <p style={{ marginTop: "8px" }}>Selected: {accent}</p>
-              </div>
+
+                <div className="colorpicker-label">
+                  <span>Selected:</span>
+                  <input
+                    type="text"
+                    value={accent ?? ""}
+                    onChange={(e) => {
+                      let val = e.target.value;
+                      if (val && val[0] !== "#") val = "#" + val;
+                      setMuseState({ accent: val });
+                    }}
+                    placeholder="#ff0000"
+                  />
+                </div>
+              </S.ColorPickerWrapper>
             )}
           </S.MediaUploadSectionContainer>
           <Separator.Root className="separator" orientation="horizontal" />

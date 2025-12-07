@@ -134,7 +134,7 @@ export default function HomePage() {
     fetchStrangerMuses();
     fetchFriendsMuses();
     fetchFriendsMusesWithVideos();
-    fetchRandomStories();
+    //fetchRandomStories();
     fetchFriendsActivities();
   }, [authState]);
 

@@ -379,13 +379,12 @@ export default function UserProfilePage({}) {
 
     if (isCurrentUser) {
       setNovelist(userNovelist);
-      fetchStoryboards();
       setLoading(false);
       return;
     }
 
     fetchNovelist(username);
-    fetchStoryboards();
+    //fetchStoryboards();
   }, [authState]);
 
   return (

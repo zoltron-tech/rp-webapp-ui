@@ -177,7 +177,7 @@ export default function HomePage() {
               ))}
             </S.PartitionContainer>
           </S.ContentContainer>
-          <S.ContentContainer>
+          {/* <S.ContentContainer>
             <S.SubText>Dive into the Stories</S.SubText>
             <S.PartitionContainer>
               {storyboards?.map((storyBoard) => (
@@ -187,7 +187,7 @@ export default function HomePage() {
                 ></StoryCard>
               ))}
             </S.PartitionContainer>
-          </S.ContentContainer>
+          </S.ContentContainer> */}
           <ShouldRender
             if={friendsMuses !== undefined && friendsMuses.length > 0}
           >

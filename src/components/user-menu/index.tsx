@@ -54,6 +54,10 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
     push(ROUTES.Profile.View(novelist?.username || "").Storyboards);
   };
 
+  const toOutgoingThreadsPage = () => {
+    push(ROUTES.outgoingThreads);
+  };
+
   const toUserProfile = () => {
     push(ROUTES.Profile.View(user?.username || "").Index);
   };
@@ -89,9 +93,9 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                 <IoIosPeople />
                 Your characters
               </S.Element>
-              <S.Element onClick={toStoryBoardsPage}>
+              <S.Element onClick={toOutgoingThreadsPage}>
                 <PiBookOpenUserDuotone />
-                Your stories
+                Ongoing threads
               </S.Element>
             </S.List>
             <S.Separator />

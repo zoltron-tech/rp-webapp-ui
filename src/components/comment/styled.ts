@@ -69,7 +69,7 @@ const CommentContentRoot = styled.div`
 `;
 
 const TextLine = styled.span`
-  display: inline-block;
+  display: block;
   margin-bottom: 6px;
 `;
 

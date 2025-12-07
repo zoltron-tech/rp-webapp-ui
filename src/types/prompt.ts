@@ -13,6 +13,17 @@ export interface Prompt {
   reactions: number;
 }
 
+export interface PromptThreadComment {
+  id: string;
+  tyoe: "COMMENT" | "REPLY";
+  parentId: string;
+  source: PromptSource;
+  text: string;
+  media: string;
+  createdOn: number;
+  replyCount: number;
+}
+
 export interface Comment {
   id: string;
   prompt: Prompt | null;

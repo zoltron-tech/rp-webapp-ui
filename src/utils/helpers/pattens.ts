@@ -91,7 +91,9 @@ export const pluralize = (text: string, count: number): string => {
   return `${text}s`; // Default pluralization
 };
 
-export const toFormattedDate = (dateTimeString: string | undefined): string => {
+export const toFormattedDate = (
+  dateTimeString: string | number | undefined,
+): string => {
   if (!dateTimeString) return "unknown";
 
   const date = moment(dateTimeString, "YYYY-MM-DD HH:mm:ss.SSSSSS");
@@ -114,15 +116,24 @@ export const toFormattedDate = (dateTimeString: string | undefined): string => {
   return `${unit.value} ${pluralize(unit.name, unit.value)} ago`;
 };
 
-export const displayDate = (dateTimeString: string | undefined): string => {
+export const displayDate = (
+  dateTimeString: string | number | undefined,
+): string => {
   if (!dateTimeString) return "unknown";
 
   const date = moment(dateTimeString);
   return date.format("MMM D, YYYY [at] h:mm A");
 };
 
-export const parseTextContent = (text: string, maxChars?: number) => {
+export const parseTextContent = (
+  text: string,
+  options: {
+    maxChars?: number;
+    lineBreak?: string;
+  } = {},
+) => {
   if (!text) return [];
+  const { maxChars = null, lineBreak = "\n" } = options;
   let processed = text;
   if (
     typeof maxChars === "number" &&
@@ -135,7 +146,7 @@ export const parseTextContent = (text: string, maxChars?: number) => {
     }
     processed += "...";
   }
-  return processed.split("\\n");
+  return processed.split(lineBreak);
 };
 
 export const toFormattedDateFromUnix = (

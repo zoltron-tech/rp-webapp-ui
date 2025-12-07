@@ -67,10 +67,8 @@ export const MuseListContainer = styled.div`
 
 export const Maintext = styled.div`
   margin-left: 5px;
-  text-transform: uppercase;
-  font-size: 28px;
-  font-weight: 600;
-  font-style: italic;
+  font-size: 22px;
+  font-weight: var(--font-weight-bold);
   text-align: center;
 
   @container (max-width: 1000px) {
@@ -88,9 +86,7 @@ export const Maintext = styled.div`
 
 export const Subtext = styled.div`
   margin-left: 5px;
-  text-transform: uppercase;
-  font-size: 22px;
-  font-style: italic;
+  font-size: 18px;
   text-align: center;
 
   @container (max-width: 1000px) {

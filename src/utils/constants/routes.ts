@@ -14,6 +14,7 @@ export const ROUTES = {
     Failed: "/rp/oauth/failed",
   },
   Onboarding: "/rp/onboarding",
+  outgoingThreads: "/rp/outgoing-threads",
   PrivacyPolicy: "/rp/privacy-policy",
   Profile: {
     Edit: "/rp/profile/edit",

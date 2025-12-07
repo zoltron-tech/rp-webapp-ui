@@ -7,8 +7,13 @@ import * as S from "./styled";
 
 export const CommentContent: FC = () => {
   const text = useCommentState("text");
-  const textLines = useMemo(() => parseTextContent(text, 200), [text]);
+  const textLines = useMemo(
+    () => parseTextContent(text, { maxChars: 200 }),
+    [text],
+  );
   const media = useCommentState("media");
+
+  console.log({ text });
 
   return (
     <S.CommentContent.Root>

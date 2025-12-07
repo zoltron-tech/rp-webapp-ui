@@ -10,9 +10,15 @@ import { Logger } from "@/utils/services";
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
 
-export const uploadToS3 = async (formData: FormData) => {
+type PresignedFileUploadObject = {
+  uploadUrl: string;
+  fileUrl: string;
+  method: string;
+};
+
+export const getPresignedFileUploadObject = async (formData: FormData) => {
   const jwt = await authenticateAndGetJWT();
-  const file = formData.get("file");
+
   const contentType = formData.get("contentType") as string;
   const prefix = formData.get("prefix") as string | null;
 
@@ -41,22 +47,14 @@ export const uploadToS3 = async (formData: FormData) => {
     return API_MESSAGE.MediaError;
   }
 
-  const { uploadUrl, fileUrl, method } = await presignRes.json();
+  const { uploadUrl, fileUrl, method }: PresignedFileUploadObject =
+    await presignRes.json();
 
-  const s3Res = await fetch(uploadUrl, {
-    body: file,
-    headers: {
-      "Content-Type": contentType,
-    },
+  return {
+    fileUrl,
     method,
-  });
-
-  if (!s3Res.ok) {
-    console.error("Failed to upload to S3", s3Res.status, s3Res.statusText);
-    return API_MESSAGE.MediaError;
-  }
-
-  return fileUrl;
+    uploadUrl,
+  };
 };
 
 export const uploadMedia = async (formData: FormData) => {

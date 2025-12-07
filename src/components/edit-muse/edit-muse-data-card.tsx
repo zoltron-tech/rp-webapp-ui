@@ -2,7 +2,6 @@
 
 import { ShouldRender } from "@novelist-world/ui";
 import { useRouter } from "next/navigation";
-import { resolve } from "path";
 import { Form, Separator } from "radix-ui";
 import {
   type FormEventHandler,
@@ -14,9 +13,10 @@ import { HexColorPicker } from "react-colorful";
 import { BsInfoLg } from "react-icons/bs";
 import { ImProfile } from "react-icons/im";
 import { updateMuseAction } from "@/app/rp/muse/actions";
-import { deleteMedia, uploadMedia, uploadToS3 } from "@/app/rp/profile/actions";
+import { deleteMedia } from "@/app/rp/profile/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
+import { useUploadMedia } from "@/hooks/use-upload-media";
 import type { CreateUpdateMuse, Fandom } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
@@ -102,6 +102,7 @@ export default function EditMuseDataCard() {
   const authState = useGlobalState("authState");
   const setGlobalState = useGlobalStoreSet();
   const { successToast, errorToast } = useUIContext();
+  const { uploadMedia } = useUploadMedia();
   const { push } = useRouter();
 
   const setFirstname = useCallback(
@@ -220,7 +221,7 @@ export default function EditMuseDataCard() {
       if (id) {
         formData.append("prefix", id);
       }
-      const s3Url = await uploadToS3(formData);
+      const s3Url = await uploadMedia(formData);
       setImageUploading(false);
 
       if (s3Url === API_MESSAGE.MediaError) {
@@ -291,7 +292,7 @@ export default function EditMuseDataCard() {
       if (id) {
         formData.append("prefix", id);
       }
-      const s3Url = await uploadToS3(formData);
+      const s3Url = await uploadMedia(formData);
       setImageUploading(false);
 
       if (s3Url === API_MESSAGE.MediaError) {
@@ -378,7 +379,7 @@ export default function EditMuseDataCard() {
       if (id) {
         formData.append("prefix", id);
       }
-      const s3Url = await uploadToS3(formData);
+      const s3Url = await uploadMedia(formData);
       setImageUploading(false);
 
       if (s3Url === API_MESSAGE.MediaError) {

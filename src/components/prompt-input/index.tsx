@@ -49,7 +49,7 @@ export const PromptInput: FC<Props> = forwardRef(
     const muses = useMemo(() => {
       return novelist?.muses ?? [];
     }, [novelist]);
-    const [open, setOpen] = useState(false);
+    const [open, setOpen] = useState(true);
     const [sending, setSending] = useState(false);
     const [error, setError] = useState<API_MESSAGE | null>(null);
     const { emit } = usePromptInputEvents();

@@ -10,6 +10,55 @@ import { Logger } from "@/utils/services";
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
 
+export const uploadToS3 = async (formData: FormData) => {
+  const jwt = await authenticateAndGetJWT();
+  const file = formData.get("file");
+  const contentType = formData.get("contentType") as string;
+  const prefix = formData.get("prefix") as string | null;
+
+  // Build query parameters dynamically
+  const queryParams = new URLSearchParams({ contentType });
+  if (prefix) {
+    queryParams.append("prefix", prefix);
+  }
+
+  const presignRes = await fetch(
+    `${RP_SERVICE_URL}/rp/portfolio/s3/presigned-url?${queryParams.toString()}`,
+    {
+      headers: {
+        [AUTH_HEADER_NAME]: jwt,
+      },
+      method: "GET",
+    },
+  );
+
+  if (!presignRes.ok) {
+    console.error(
+      "Failed to get presigned URL",
+      presignRes.status,
+      presignRes.statusText,
+    );
+    return API_MESSAGE.MediaError;
+  }
+
+  const { uploadUrl, fileUrl, method } = await presignRes.json();
+
+  const s3Res = await fetch(uploadUrl, {
+    body: file,
+    headers: {
+      "Content-Type": contentType,
+    },
+    method,
+  });
+
+  if (!s3Res.ok) {
+    console.error("Failed to upload to S3", s3Res.status, s3Res.statusText);
+    return API_MESSAGE.MediaError;
+  }
+
+  return fileUrl;
+};
+
 export const uploadMedia = async (formData: FormData) => {
   const jwt = await authenticateAndGetJWT();
 
@@ -61,14 +110,33 @@ export const enhanceAvatar = async (formData: FormData) => {
   return result;
 };
 
+export const getS3KeyFromUrl = (url: string): string => {
+  try {
+    const u = new URL(url);
+    return u.pathname;
+  } catch {
+    return url;
+  }
+};
+
 export const deleteMedia = async (filename: string) => {
-  const parsedFilename = filename.replace("/", "-slash-");
+  const jwt = await authenticateAndGetJWT();
+  const s3Key = getS3KeyFromUrl(filename).replace(/^\/+/, "");
+  const parsedFilename = s3Key.replace(/\//g, "-slash-");
   const URL = `${RP_SERVICE_URL}/rp/portfolio/s3/delete/${parsedFilename}`;
 
-  await fetch(URL, {
-    cache: "no-store",
-    method: "DELETE",
-  });
+  try {
+    const res = await fetch(URL, {
+      cache: "no-store",
+      headers: {
+        [AUTH_HEADER_NAME]: jwt,
+      },
+      method: "DELETE",
+    });
+    console.log("Delete response:", res.status, await res.text());
+  } catch (err) {
+    console.error("Delete failed:", err);
+  }
 };
 
 export const sendFriendRequest = async (novelistId: string) => {
@@ -224,8 +292,6 @@ export const unfriendNovelist = async (novelistId: string) => {
     },
     method: "DELETE",
   });
-
-  console.log(response);
 
   if (!response.ok) {
     return { message: API_MESSAGE.Error };

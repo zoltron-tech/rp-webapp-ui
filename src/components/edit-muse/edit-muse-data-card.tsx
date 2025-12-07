@@ -14,7 +14,7 @@ import { HexColorPicker } from "react-colorful";
 import { BsInfoLg } from "react-icons/bs";
 import { ImProfile } from "react-icons/im";
 import { updateMuseAction } from "@/app/rp/muse/actions";
-import { uploadMedia } from "@/app/rp/profile/actions";
+import { deleteMedia, uploadMedia, uploadToS3 } from "@/app/rp/profile/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import type { CreateUpdateMuse, Fandom } from "@/types";
@@ -22,6 +22,7 @@ import { API_MESSAGE } from "@/utils/constants";
 import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
 import { ROUTES } from "@/utils/constants/routes";
 import { AvatarNew } from "../common/avatar-new";
+import { LoaderAction } from "../common/loader-action";
 import { AppAlertDialog } from "../dialog";
 import { ErrorBox } from "../error-box";
 import { PromptPrivacySelect } from "../prompt-input/privacy-select";
@@ -67,7 +68,7 @@ const ERROR_MAP: Record<ErrorKey, ReactNode> = {
 };
 
 export default function EditMuseDataCard() {
-  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
   const novelist = useGlobalState("novelist");
   const user = useGlobalState("user");
   const id = useMuseState("id");
@@ -77,6 +78,12 @@ export default function EditMuseDataCard() {
   const image = useMuseState("image");
   const wallpaper = useMuseState("wallpaper");
   const cardBackground = useMuseState("cardBackground");
+  const [tempUploads, setTempUploads] = useState<{
+    image?: string;
+    wallpaper?: string;
+    cardBackground?: string;
+  }>({});
+
   const note = useMuseState("note");
   const story = useMuseState("story");
   const fandom = useMuseState("fandom");
@@ -180,63 +187,76 @@ export default function EditMuseDataCard() {
   };
 
   const handleAvatarChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-
       if (!file) return;
 
-      if (checkFileSize(file)) {
-        e.target.value = ""; // reset input
-        return;
-      }
-
-      if (checkFileType(file)) {
-        e.target.value = ""; // reset input
+      if (checkFileSize(file) || checkFileType(file)) {
+        e.target.value = "";
         return;
       }
 
       setMediaTypeError(null);
       setMediaError(null);
 
+      // Show preview immediately
       const reader = new FileReader();
-      reader.onloadend = async () => {
+      reader.onloadend = () => {
         setMuseState({ image: reader.result as string });
-        const formData = new FormData();
-        formData.append("file", file);
-        setImageUploading(true);
-        const response = await uploadMedia(formData);
-        setImageUploading(false);
-        if (response === API_MESSAGE.MediaError) {
-          setError(API_MESSAGE.UncategorizedError);
-          return;
-        }
-        setMuseState({ image: response });
       };
       reader.readAsDataURL(file);
+
+      // Delete previous temp upload **for avatar only**
+      if (tempUploads.image) {
+        await deleteMedia(tempUploads.image);
+      }
+
+      // Upload to S3
+      setImageUploading(true);
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("contentType", file.type);
+      // Only append prefix if id exists
+      if (id) {
+        formData.append("prefix", id);
+      }
+      const s3Url = await uploadToS3(formData);
+      setImageUploading(false);
+
+      if (s3Url === API_MESSAGE.MediaError) {
+        setError(API_MESSAGE.UncategorizedError);
+        return;
+      }
+
+      // Track new temp upload for avatar only
+      setTempUploads((prev) => ({ ...prev, image: s3Url }));
+
+      // Update muse state
+      setMuseState({ image: s3Url });
     },
-    [setMuseState],
+    [setMuseState, tempUploads.image],
   );
 
   const handleWallpaperChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
 
       if (checkFileSize(file)) {
-        e.target.value = ""; // reset input
+        e.target.value = "";
         return;
       }
       if (checkFileType(file)) {
-        e.target.value = ""; // reset input
+        e.target.value = "";
         return;
       }
 
       setMediaTypeError(null);
       setMediaError(null);
 
+      // Show preview immediately
       const reader = new FileReader();
-
-      reader.onloadend = async () => {
+      reader.onloadend = () => {
         setMuseState({
           wallpaper: {
             crop: {
@@ -254,57 +274,69 @@ export default function EditMuseDataCard() {
             src: reader.result as string,
           },
         });
-
-        const formData = new FormData();
-        formData.append("file", file);
-
-        setImageUploading(true);
-        const response = await uploadMedia(formData);
-        setImageUploading(false);
-
-        console.log("API for wallpaper upload: ");
-        console.log(response);
-
-        if (response === API_MESSAGE.MediaError) {
-          setError(API_MESSAGE.UncategorizedError);
-          return;
-        }
-
-        setMuseState({
-          wallpaper: {
-            crop: {
-              height: 500,
-              src: response,
-              width: 500,
-              x: 0,
-              y: 0,
-            },
-            filterValues: {
-              blur: 0,
-              brightness: 100,
-              greyscale: 0,
-            },
-            src: response,
-          },
-        });
       };
-
       reader.readAsDataURL(file);
+
+      // Delete previous temp upload
+      if (tempUploads.wallpaper) {
+        await deleteMedia(tempUploads.wallpaper);
+      }
+
+      // Upload directly to S3
+      setImageUploading(true);
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("contentType", file.type);
+      // Only append prefix if id exists
+      if (id) {
+        formData.append("prefix", id);
+      }
+      const s3Url = await uploadToS3(formData);
+      setImageUploading(false);
+
+      if (s3Url === API_MESSAGE.MediaError) {
+        setError(API_MESSAGE.UncategorizedError);
+        return;
+      }
+
+      // Track as temp upload
+      setTempUploads((prev) => ({
+        ...prev,
+        wallpaper: s3Url,
+      }));
+
+      setMuseState({
+        wallpaper: {
+          crop: {
+            height: 500,
+            src: s3Url,
+            width: 500,
+            x: 0,
+            y: 0,
+          },
+          filterValues: {
+            blur: 0,
+            brightness: 100,
+            greyscale: 0,
+          },
+          src: s3Url,
+        },
+      });
     },
-    [setMuseState],
+    [setMuseState, tempUploads.wallpaper],
   );
 
   const handleCardBackgroundChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
 
       if (checkFileSize(file)) {
-        e.target.value = ""; // reset input
+        e.target.value = "";
         return;
       }
       if (checkFileType(file)) {
-        e.target.value = ""; // reset input
+        e.target.value = "";
         return;
       }
 
@@ -312,8 +344,7 @@ export default function EditMuseDataCard() {
       setMediaError(null);
 
       const reader = new FileReader();
-
-      reader.onloadend = async () => {
+      reader.onloadend = () => {
         setMuseState({
           cardBackground: {
             crop: {
@@ -331,44 +362,55 @@ export default function EditMuseDataCard() {
             src: reader.result as string,
           },
         });
-
-        const formData = new FormData();
-        formData.append("file", file);
-
-        setImageUploading(true);
-        const response = await uploadMedia(formData);
-        setImageUploading(false);
-
-        console.log("API for cardBackground upload: ");
-        console.log(response);
-
-        if (response === API_MESSAGE.MediaError) {
-          setError(API_MESSAGE.UncategorizedError);
-          return;
-        }
-
-        setMuseState({
-          cardBackground: {
-            crop: {
-              height: 500,
-              src: response,
-              width: 500,
-              x: 0,
-              y: 0,
-            },
-            filterValues: {
-              blur: 0,
-              brightness: 100,
-              greyscale: 0,
-            },
-            src: response,
-          },
-        });
       };
-
       reader.readAsDataURL(file);
+
+      // Delete previous temp upload
+      if (tempUploads.cardBackground) {
+        await deleteMedia(tempUploads.cardBackground);
+      }
+
+      setImageUploading(true);
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("contentType", file.type);
+      // Only append prefix if id exists
+      if (id) {
+        formData.append("prefix", id);
+      }
+      const s3Url = await uploadToS3(formData);
+      setImageUploading(false);
+
+      if (s3Url === API_MESSAGE.MediaError) {
+        setError(API_MESSAGE.UncategorizedError);
+        return;
+      }
+
+      // Track as temp upload
+      setTempUploads((prev) => ({
+        ...prev,
+        cardBackground: s3Url,
+      }));
+
+      setMuseState({
+        cardBackground: {
+          crop: {
+            height: 500,
+            src: s3Url,
+            width: 500,
+            x: 0,
+            y: 0,
+          },
+          filterValues: {
+            blur: 0,
+            brightness: 100,
+            greyscale: 0,
+          },
+          src: s3Url,
+        },
+      });
     },
-    [setMuseState],
+    [setMuseState, tempUploads.cardBackground],
   );
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(
@@ -384,8 +426,6 @@ export default function EditMuseDataCard() {
 
       // Only include accent if checkbox is ON and accent is non-empty
       const _accent = showAccentPicker && accent?.trim() ? accent.trim() : null;
-
-      console.log(_accent);
 
       const payload = {
         accent: _accent,
@@ -405,26 +445,43 @@ export default function EditMuseDataCard() {
         video: null,
         wallpaper: wallpaper ?? null,
       } satisfies CreateUpdateMuse;
-
-      console.log(payload);
       setLoading(true);
       const response = await updateMuseAction(id, payload);
-
-      console.log(response);
       setLoading(false);
 
       if ("message" in response) {
         setError(response.message as ErrorKey);
         return;
       }
+
+      // Success: clear temp uploads because they are now used in the final state
+      setTempUploads({});
+
       successToast("Data updated successfully.");
+      // Reset form to previous state
+      push(ROUTES.Profile.View(user?.username || "").Muses);
     },
-    [novelist, story, image, wallpaper, cardBackground, accent, setGlobalState],
+    [
+      push,
+      novelist,
+      story,
+      image,
+      wallpaper,
+      cardBackground,
+      accent,
+      setGlobalState,
+    ],
   );
 
-  const handleReset = useCallback(() => {
+  const handleReset = useCallback(async () => {
+    // Delete temp uploads if they exist
+    for (const key of Object.values(tempUploads)) {
+      if (key) await deleteMedia(key);
+    }
+
+    // Reset form to previous state
     push(ROUTES.Profile.View(user?.username || "").Muses);
-  }, [push, user]);
+  }, [push, user, tempUploads]);
 
   const handleMediaInfoClick = useCallback(() => {
     setShowMediaHelpInfo((prev) => !prev);
@@ -678,7 +735,11 @@ export default function EditMuseDataCard() {
               className="submit-button"
               disabled={loading || imageUploading}
             >
-              Save
+              <LoaderAction
+                loading={imageUploading}
+                text="Save"
+                loadingText="Uploading..."
+              />
             </Form.Submit>
           </S.FormActions>
         </Form.Root>

@@ -302,6 +302,7 @@ export const FormContainer = styled.div`
       &[disabled] {
         background-color: var(--bg-6);
         cursor: not-allowed;
+        width: 150px;
         color: var(--text-secondary);
       }
 

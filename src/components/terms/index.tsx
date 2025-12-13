@@ -10,7 +10,7 @@ export const Terms = () => {
 
   useEffect(() => {
     stopPageLoading();
-  });
+  }, [stopPageLoading]);
 
   return (
     <S.PrivacyRoot>

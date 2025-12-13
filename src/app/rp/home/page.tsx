@@ -38,7 +38,7 @@ export default function HomePage() {
   const [friendsMusesWithVideos, setFriendsMusesWithVideos] =
     useState<Muse[]>();
   const [activities, setActivities] = useState<Activity[]>();
-  const { routeToPage, stopPageLoading, baseDataLoader } = usePageRouter();
+  const { baseDataLoader } = usePageRouter();
 
   const fetchStrangers = async () => {
     const _strangers = await getStrangerNovelistsAction(1, 20);
@@ -49,11 +49,6 @@ export default function HomePage() {
   const fetchStrangerMuses = async () => {
     const _muses = await getMusesAction(1, 20, "unknown");
     if (_muses && !("message" in _muses)) setUnknownMuses(_muses);
-  };
-
-  const fetchRandomStories = async () => {
-    const _stories = await getRandomStories(1, 20);
-    if (_stories && !("message" in _stories)) setStoryboards(_stories);
   };
 
   const fetchFriendsMuses = async () => {
@@ -118,7 +113,7 @@ export default function HomePage() {
       </S.LeftWrapperContainer>
       <S.RightWrapperContainer>
         <S.ContentContainer>
-          <S.SubText>Vidoes by your friends</S.SubText>
+          <S.SubText>Videos by your friends</S.SubText>
           <S.PartitionContainer>
             {friendsMusesWithVideos?.map((friendMuseWithVideo) => (
               <VideoCard

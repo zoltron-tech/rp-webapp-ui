@@ -1,11 +1,11 @@
 "use client";
 import classNames from "classnames";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { type FC, useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { GrEdit } from "react-icons/gr";
 import { deleteMuseAction } from "@/app/rp/muse/actions";
-import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
+import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { Muse } from "@/types/novelist";

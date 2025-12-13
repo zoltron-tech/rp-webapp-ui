@@ -33,7 +33,7 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
 
   const handleSeeAllClick = useCallback(() => {
     routeToPage(ROUTES.Notification);
-  }, []);
+  }, [routeToPage]);
 
   const handleClick = useCallback(() => {
     if (isMobile) {

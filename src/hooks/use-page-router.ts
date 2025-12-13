@@ -17,7 +17,6 @@ export const usePageRouter = () => {
 
   const routeToPage = useCallback(
     async (route: string, options: PageLoadingOptions = {}) => {
-      console.log(pathname, route);
       if (!options.skipLoading && route !== pathname) {
         setGlobalState({
           pageLoading: true,
@@ -72,5 +71,3 @@ export const useBindPageLoader = (loading: boolean) => {
     });
   }, [loading]);
 };
-
-/// baseDataLoader(() => method(asdasdr))

@@ -1,19 +1,16 @@
 import { ShouldRender } from "@novelist-world/ui";
-import { useRouter } from "next/navigation";
 import { Form } from "radix-ui";
 import {
   type FC,
   type FormEventHandler,
   type ReactNode,
   useCallback,
-  useEffect,
   useState,
 } from "react";
 import { loginAction } from "@/app/actions";
 import { LoaderAction } from "@/components/common/loader-action";
 import { PasswordField } from "@/components/common/password-field";
 import { ErrorBox } from "@/components/error-box";
-import { AuthContext } from "@/context";
 import { useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { API_MESSAGE } from "@/utils/constants";

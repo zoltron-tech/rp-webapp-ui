@@ -14,7 +14,7 @@ export const NotificcationsList = () => {
 
   useEffect(() => {
     stopPageLoading();
-  }, []);
+  }, [stopPageLoading]);
 
   return (
     <S.ListRoot>

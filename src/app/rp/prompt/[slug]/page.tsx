@@ -2,32 +2,25 @@
 
 import { useParams, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { PageLoader } from "@/components/layout";
 import { Prompt } from "@/components/prompt";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { Prompt as PromptType } from "@/types";
 import { getPromptAction } from "../actions";
 
 const useGetPrompt = (promptId: string) => {
   const [prompt, setPrompt] = useState<PromptType | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { baseDataLoader } = usePageRouter();
 
   const fetchPrompt = useCallback(async () => {
-    setLoading(true);
-    const _prompt = await getPromptAction(promptId);
-
-    if (!_prompt || "message" in _prompt) {
-      setLoading(false);
-      return;
-    }
+    const _prompt = await baseDataLoader(() => getPromptAction(promptId));
     setPrompt(_prompt);
-    setLoading(false);
   }, [promptId]);
 
   useEffect(() => {
     fetchPrompt();
   }, [fetchPrompt]);
 
-  return { loading, prompt, refetch: fetchPrompt };
+  return { prompt, refetch: fetchPrompt };
 };
 
 export default function PromptPage({}) {
@@ -35,10 +28,9 @@ export default function PromptPage({}) {
   const params = useParams();
   const promptId = params?.slug as string;
   const threadOpen = searchParams?.get("threadOpen") === "true";
+  const { prompt } = useGetPrompt(promptId);
 
-  const { prompt, loading } = useGetPrompt(promptId);
-
-  if (!prompt || loading) return <PageLoader />;
+  if (!prompt) return <></>;
 
   return <Prompt prompt={prompt} threadOpen={threadOpen} />;
 }

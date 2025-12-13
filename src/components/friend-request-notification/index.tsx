@@ -5,12 +5,13 @@ import {
   acceptFriendRequest,
   deleteFriendRequest,
 } from "@/app/rp/profile/actions";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { NovelistWorldNotification } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDateFromUnix } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
-import { Avatar, ShouldRender } from "../common";
+import { ShouldRender } from "../common";
 import { AvatarNew } from "../common/avatar-new";
 import * as S from "./styles";
 
@@ -24,7 +25,7 @@ export const FriendRequestNotification: FC<Props> = ({
   removeMethod,
   ...rest
 }) => {
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
 
   const _handleAcceptFriendRequest = async () => {
     if (!notification?.id) return;
@@ -54,15 +55,15 @@ export const FriendRequestNotification: FC<Props> = ({
     if (target.classList.contains("button")) return;
 
     if (notification.type === "MUSE_CONNECTION_REQUEST")
-      push(ROUTES.Muse.View(notification.target.urlProp));
+      routeToPage(ROUTES.Muse.View(notification.target.urlProp));
     else if (
       ["PROMPT_COMMENT", "PROMPT_COMMENT_REPLY", "REPLY"].includes(
         notification.type,
       )
     )
-      push(ROUTES.Thread.View(notification.target.urlProp));
+      routeToPage(ROUTES.Thread.View(notification.target.urlProp));
     else if (notification.type === "FRIEND_REQUEST")
-      push(ROUTES.Profile.View(notification.source.urlProp).Index);
+      routeToPage(ROUTES.Profile.View(notification.source.urlProp).Index);
   };
 
   Logger.info("FriendRequestNotification rendered");

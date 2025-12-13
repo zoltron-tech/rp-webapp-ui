@@ -10,8 +10,15 @@ import { Button } from "../common";
 export const PositionContainer = styled.div`
   ${DEV_MODE_BORDER("red")}
   position: absolute;
-  margin-top: 8px;
-  right: 4.7rem;
+  right: 4.5rem;
+
+  @media (max-width: 700px) {
+    right: 4rem;
+  }
+
+  @media (max-width: 480px) {
+    right: 4rem;
+  }
 `;
 
 export const IconWrapper = styled.div`
@@ -26,8 +33,8 @@ export const IconWrapper = styled.div`
 
   @media (max-width: 700px) {
     .menu-icon {
-      height: 30px;
-      width: 30px;
+      height: 32px;
+      width: 32px;
     }
   }
 `;
@@ -40,16 +47,16 @@ export const Menu = styled.div`
 
   display: flex;
   flex-direction: column;
-  background-color: ${({ theme }: any) => theme.modalBackground};
+  background-color: var(--bg-3);
   width: max-content;
   height: max-content;
   opacity: 0;
   pointer-events: none;
   transition-property: opacity, width, height;
   ${BASE_TRANSITION}
-  ${BACKGROUND_BLUR()}
+  /* ${BACKGROUND_BLUR()} */
 
-  border-radius: var(--border-radius);
+  border-radius: 5px;
 
   &.open {
     opacity: 1;

@@ -60,11 +60,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         initial={{
           accent: "jade", // Default accent
           authState: "LOGGED_OUT",
-          globalLoading: false,
           muses: [],
           notifications: null,
           novelist: null,
           novelists: [],
+          pageLoading: false,
           theme: "dark",
           user: null,
         }}

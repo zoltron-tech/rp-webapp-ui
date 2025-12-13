@@ -277,6 +277,33 @@ export const reportProfile = async (novelistId: string, reason: string) => {
   return result;
 };
 
+export const sendFeedbackMessage = async (message: string) => {
+  const jwt = await authenticateAndGetJWT();
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/feedback`;
+  const body = {
+    message,
+  };
+
+  const response = await fetch(URL, {
+    body: JSON.stringify(body),
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "POST",
+  });
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const result = await response.json();
+
+  return result;
+};
+
 export const unfriendNovelist = async (novelistId: string) => {
   const jwt = await authenticateAndGetJWT();
 

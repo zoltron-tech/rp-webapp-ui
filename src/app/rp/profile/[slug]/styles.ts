@@ -215,6 +215,18 @@ export const ContentContainer = styled(Container)`
   margin-bottom: 10px;
 `;
 
+export const ActivitiesContainer = styled.div`
+  width: 95%;
+  border-radius: 5px;
+  display: flex;
+  border: 1px solid var(--bg-6);
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--bg-2);
+  margin-top: 10px;
+`;
+
 export const AboutContainer = styled(Container)`
   width: 95%;
   border-radius: 5px;
@@ -421,8 +433,16 @@ export const NoteContainer = styled(Container)`
   width: unset;
   right: 50px;
   bottom: -80px;
+  background: linear-gradient(
+    135deg,
+    var(--accent-4) 0%,
+    var(--accent-3) 100%
+  );
+
+  opacity: 95%;
   word-break: break-word;
   border-radius: 20px;
+  border-top-left-radius: 0%;
   padding-inline: 10px;
   z-index: 100;
   font-size: var(--font-size);

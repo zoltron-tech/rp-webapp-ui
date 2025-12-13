@@ -1,14 +1,14 @@
 "use client";
-import { Flex, ShouldRender } from "@novelist-world/ui";
+import { Flex } from "@novelist-world/ui";
 import classNames from "classnames";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { BsCalendar2Date } from "react-icons/bs";
 import { IoArrowBackOutline } from "react-icons/io5";
 import { TfiLocationPin } from "react-icons/tfi";
 import { Divider } from "@/app/rp/tiers/styles";
-import { PageLoader } from "@/components/layout";
 import { useGlobalState } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type {
   StoryBoard,
   StoryBoardEvent,
@@ -33,57 +33,36 @@ export default function StoryboardEventPage({}) {
   const [storyboardEventThreads, setStoryBoardEventThreads] = useState<
     StoryBoardEventThread[]
   >([]);
-  const [loading, setLoading] = useState(true);
   const storyboardEventId = params?.slug as string;
-  const { push } = useRouter();
+  const { routeToPage, baseDataLoader } = usePageRouter();
 
   const onBackClick = () => {
     if (!storyboardEvent?.storyBoardId) return;
-    push(ROUTES.Story.View(storyboardEvent.storyBoardId));
+    routeToPage(ROUTES.Story.View(storyboardEvent.storyBoardId));
   };
 
   const fetchStoryboard = async (storyboardId: string) => {
-    setLoading(true);
-    const _storyboard = await getStoryboardAction(storyboardId);
-
-    if (!_storyboard || "message" in _storyboard) {
-      // handle error
-      setLoading(false);
-      push("/404");
-      return;
-    }
-    setLoading(false);
+    const _storyboard = await baseDataLoader(() =>
+      getStoryboardAction(storyboardId),
+    );
     setStoryBoard(_storyboard);
   };
 
   const fetchStoryboardEvent = async () => {
-    setLoading(true);
-    const _storyboardEvent = await getStoryboardEventAction(storyboardEventId);
-
-    if (!_storyboardEvent || "message" in _storyboardEvent) {
-      // handle error
-      setLoading(false);
-      push("/404");
-      return;
-    }
-    setLoading(false);
+    const _storyboardEvent = await baseDataLoader(() =>
+      getStoryboardEventAction(storyboardEventId),
+    );
     setStoryBoardEvent(_storyboardEvent);
-    fetchStoryboard(_storyboardEvent.storyBoardId);
+    if (_storyboardEvent !== null)
+      fetchStoryboard(_storyboardEvent.storyBoardId);
   };
 
   const fetchStoryboardEventThreads = async () => {
-    setLoading(true);
-    const _storyboardEventThreads =
-      await getStoryboardEventThreadsAction(storyboardEventId);
-
-    if (!_storyboardEventThreads || "message" in _storyboardEventThreads) {
-      // handle error
-      setLoading(false);
-      push("/404");
-      return;
-    }
-    setLoading(false);
-    setStoryBoardEventThreads(_storyboardEventThreads);
+    const _storyboardEventThreads = await baseDataLoader(() =>
+      getStoryboardEventThreadsAction(storyboardEventId),
+    );
+    if (_storyboardEventThreads !== null)
+      setStoryBoardEventThreads(_storyboardEventThreads);
   };
 
   useEffect(() => {
@@ -157,9 +136,6 @@ export default function StoryboardEventPage({}) {
 
   return (
     <S.ParentContainer>
-      <ShouldRender if={loading}>
-        <PageLoader />
-      </ShouldRender>
       <S.RepliesContainer>
         <S.HeaderContainer>
           <Flex>

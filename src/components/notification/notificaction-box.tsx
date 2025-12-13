@@ -1,11 +1,6 @@
 import { ShouldRender } from "@novelist-world/ui";
-import { useRouter } from "next/navigation";
-import {
-  type FC,
-  MouseEvent,
-  type MouseEventHandler,
-  useCallback,
-} from "react";
+import { type FC, type MouseEventHandler, useCallback } from "react";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { NovelistWorldNotification } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDateFromUnix } from "@/utils/helpers";
@@ -17,19 +12,19 @@ type NotificationBoxProps = {
 };
 
 export const NotificationBox: FC<NotificationBoxProps> = ({ notification }) => {
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
   const handleClick: MouseEventHandler<HTMLElement> = useCallback(
     (_e) => {
       if (notification.type === "MUSE_CONNECTION_REQUEST")
-        push(ROUTES.Muse.View(notification.target.urlProp));
+        routeToPage(ROUTES.Muse.View(notification.target.urlProp));
       else if (
         ["PROMPT_COMMENT", "PROMPT_COMMENT_REPLY", "REPLY"].includes(
           notification.type,
         )
       )
-        push(ROUTES.Thread.View(notification.target.urlProp));
+        routeToPage(ROUTES.Thread.View(notification.target.urlProp));
       else if (notification.type === "FRIEND_REQUEST")
-        push(ROUTES.Profile.View(notification.source.urlProp).Index);
+        routeToPage(ROUTES.Profile.View(notification.source.urlProp).Index);
     },
     [notification],
   );

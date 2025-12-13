@@ -1,9 +1,17 @@
 "use client";
 
+import { useEffect } from "react";
 import { GoLaw } from "react-icons/go";
+import { usePageRouter } from "@/hooks/use-page-router";
 import * as S from "./../privacy-policy/styled";
 
 export const Terms = () => {
+  const { stopPageLoading } = usePageRouter();
+
+  useEffect(() => {
+    stopPageLoading();
+  }, [stopPageLoading]);
+
   return (
     <S.PrivacyRoot>
       <S.PrivacyHeader>

@@ -3,13 +3,9 @@
 import { ShouldRender } from "@novelist-world/ui";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState } from "@/context/store/stores";
-import { API_MESSAGE } from "@/utils/constants";
 import EditDataCard from "./edit-data-card";
 import type { ProfileState } from "./profile.store";
 import * as S from "./styled";
-
-const ErrorKeys = [API_MESSAGE.UncategorizedError] as const;
-type ErrorKey = (typeof ErrorKeys)[number];
 
 export default function EditProfilePage() {
   const novelist = useGlobalState("novelist");

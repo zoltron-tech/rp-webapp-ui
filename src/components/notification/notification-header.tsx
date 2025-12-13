@@ -6,10 +6,12 @@ import {
   patchNotifications,
 } from "@/app/rp/novelists/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
 import * as S from "./styled";
 
 export const NotificationHeader = () => {
   const [loading, setLoading] = useState(false);
+  const { baseDataLoader } = usePageRouter();
   const authState = useGlobalState("authState");
   const set = useGlobalStoreSet();
 
@@ -17,7 +19,7 @@ export const NotificationHeader = () => {
     if (authState !== "LOGGED_IN") return;
     setLoading(true);
     await patchNotifications();
-    const _notifications = await getNotifications();
+    const _notifications = await baseDataLoader(() => getNotifications());
     set({ notifications: _notifications });
     setLoading(false);
   }, [authState]);

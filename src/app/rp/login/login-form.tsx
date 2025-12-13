@@ -1,5 +1,4 @@
 import { ShouldRender } from "@novelist-world/ui";
-import { useRouter } from "next/navigation";
 import { Form } from "radix-ui";
 import {
   type FC,
@@ -13,6 +12,7 @@ import { LoaderAction } from "@/components/common/loader-action";
 import { PasswordField } from "@/components/common/password-field";
 import { ErrorBox } from "@/components/error-box";
 import { useGlobalStoreSet } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
 import { API_MESSAGE } from "@/utils/constants";
 import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
 import { ROUTES } from "@/utils/constants/routes";
@@ -54,13 +54,13 @@ export const LoginForm: FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ErrorKey | null>(null);
   const setGlobalState = useGlobalStoreSet();
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(
     async (event) => {
       event.preventDefault();
       const formData = new FormData(event.currentTarget);
-      const username = formData.get("username") as string;
+      const username = (formData.get("username") as string).trim();
       const password = formData.get("password") as string;
 
       clearError();
@@ -84,7 +84,7 @@ export const LoginForm: FC = () => {
         if (_novelist.message === API_MESSAGE.NotFound) {
           setLoading(false);
           setGlobalState({ authState: "UNINITIALIZED", user: response.user! });
-          push(ROUTES.Onboarding);
+          routeToPage(ROUTES.Onboarding);
           return;
         } else {
           setError(API_MESSAGE.UncategorizedError);
@@ -97,7 +97,7 @@ export const LoginForm: FC = () => {
         novelist: _novelist,
         user: response.user!,
       });
-      push(_novelist.isOnboarded ? ROUTES.Home : ROUTES.Onboarding);
+      routeToPage(_novelist.isOnboarded ? ROUTES.Home : ROUTES.Onboarding);
     },
     [],
   );

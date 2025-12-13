@@ -79,6 +79,7 @@ export const CardBackground = styled.div<CardProps>`
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center center;
+  cursor: zoom-in;
 `;
 
 export const CardWrapper = styled(Container)`
@@ -730,7 +731,7 @@ export const PromptMedia = styled.div`
   position: relative;
   width: 300px;
   height: 300px;
-  border-radius: 3%;
+  border-radius: 8px;
   ${CARD_BORDER};
 
   transition: all 0.3s ease-in-out;

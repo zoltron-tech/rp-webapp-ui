@@ -44,18 +44,18 @@ export const Container = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 1rem;
+  gap: 0.5rem;
 `;
 
 export const MuseListContainer = styled.div`
   ${DEV_MODE_BORDER("red")}
-  padding-top: 10px;
-  padding-inline: 60px;
   display: flex;
   flex-wrap: wrap;
   margin-inline: auto;
-  justify-content: center;
+  /* justify-content: center; */
+  margin-top: 10px;
   gap: 0.3rem;
+  max-width: 800px;
 
   @container (max-width: 800px) {
     & {
@@ -65,39 +65,27 @@ export const MuseListContainer = styled.div`
   }
 `;
 
-export const Maintext = styled.div`
-  margin-left: 5px;
-  font-size: 22px;
-  font-weight: var(--font-weight-bold);
-  text-align: center;
+export const UsernameLink = styled.span`
+  font-size: var(--font-size-h5);
+  cursor: pointer;
+  color: var(--accent);
 
-  @container (max-width: 1000px) {
-    & {
-      font-size: 22px;
-    }
-  }
-
-  @container (max-width: 600px) {
-    & {
-      font-size: 18px;
-    }
+  &:hover {
+    opacity: 0.8;
   }
 `;
 
-export const Subtext = styled.div`
-  margin-left: 5px;
-  font-size: 18px;
+export const Maintext = styled.span`
+  font-size: var(--font-size-h6);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  font-style: italic;
   text-align: center;
 
-  @container (max-width: 1000px) {
-    & {
-      font-size: 18px;
-    }
-  }
-
-  @container (max-width: 600px) {
-    & {
-      font-size: 16px;
-    }
+  @media (max-width: 800px) {
+      font-size: var(--font-size-h6);
+      padding-left: 20px;
+      text-align: left;
+      font-size: 22px;
   }
 `;

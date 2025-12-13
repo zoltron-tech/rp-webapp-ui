@@ -8,7 +8,7 @@ export const CardWrapper = styled.div`
   min-width: 250px;
   width: max-content;
   height: 60px;
-  border-radius: var(--border-radius);
+  border-radius: 5px;
   transition: all 0.3s ease-in-out;
   z-index: ${Z_INDEX.CARD};
   padding: 5px;

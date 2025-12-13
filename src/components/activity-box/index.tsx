@@ -2,10 +2,10 @@
 
 import { Flex } from "@novelist-world/ui";
 import classNames from "classnames";
-import { useRouter } from "next/navigation";
 import { type FC, useMemo } from "react";
 import { FaComments, FaStreetView, FaUser } from "react-icons/fa6";
 import { PiBookOpenUserDuotone } from "react-icons/pi";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { Activity } from "@/types/activity";
 import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDateFromUnix } from "@/utils/helpers";
@@ -30,7 +30,7 @@ const getMediaTypeFromUrl = (url: string) => {
 };
 
 export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
   const mediaType = useMemo(
     () =>
       activity?.target.url ? getMediaTypeFromUrl(activity.target.url) : "",
@@ -45,24 +45,24 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
     if (target.classList.contains("button")) return;
 
     if (activity?.target.activityTargetType === "MUSE")
-      push(ROUTES.Muse.View(activity.target.id));
+      routeToPage(ROUTES.Muse.View(activity.target.id));
     else if (
       ["PROMPT", "COMMENT", "REPLY"].includes(
         activity.target.activityTargetType,
       )
     )
-      push(ROUTES.Prompt.View(activity.target.id));
+      routeToPage(ROUTES.Prompt.View(activity.target.id));
     else if (activity?.target.activityTargetType === "STORY_BOARD")
-      push(ROUTES.Story.View(activity.target.id));
+      routeToPage(ROUTES.Story.View(activity.target.id));
     else if (activity?.target.activityTargetType === "PROFILE")
-      push(ROUTES.Profile.View(activity.source.urlProp).Index);
+      routeToPage(ROUTES.Profile.View(activity.source.urlProp).Index);
   };
 
   const onAvatarClick = (activity: Activity) => {
     if (activity?.source.sourceType === "MUSE")
-      push(ROUTES.Muse.View(activity.source.id));
+      routeToPage(ROUTES.Muse.View(activity.source.id));
     else if (activity?.source.sourceType === "NOVELIST")
-      push(ROUTES.Profile.View(activity.source.urlProp).Index);
+      routeToPage(ROUTES.Profile.View(activity.source.urlProp).Index);
   };
 
   Logger.info("activity rendered");

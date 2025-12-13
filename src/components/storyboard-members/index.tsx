@@ -1,11 +1,11 @@
 import { Flex } from "@novelist-world/ui";
-import { useRouter } from "next/navigation";
 import { type FC, useEffect, useState } from "react";
 import { FiMinus } from "react-icons/fi";
 import { IoIosStarOutline, IoMdAdd, IoMdArrowRoundBack } from "react-icons/io";
 import { TbStarFilled } from "react-icons/tb";
 import { getStoryboardAction } from "@/app/rp/story/actions";
 import { useGlobalState } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { Friend, StoryBoard, StoryBoardMember } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
@@ -25,12 +25,12 @@ export const StoryBoardMemberListItem: FC<ListItemProps> = ({
   storyBoardId,
   onRemoveMember,
 }) => {
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
   const [isAdmin, setIsAdmin] = useState(novelist?.isAdmin);
 
   const onAvatarClick = () => {
     if (!novelist) return;
-    push(ROUTES.Profile.View(novelist.username).Index);
+    routeToPage(ROUTES.Profile.View(novelist.username).Index);
   };
 
   const handleMakeAdmin = async () => {
@@ -124,11 +124,11 @@ export const StoryBoardNewMemberListItem: FC<NewMembersListItemProps> = ({
   storyBoardId,
   onAddMember,
 }) => {
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
 
   const onAvatarClick = () => {
     if (!novelist) return;
-    push(ROUTES.Profile.View(novelist.username).Index);
+    routeToPage(ROUTES.Profile.View(novelist.username).Index);
   };
 
   const handleAddNewMember = async () => {
@@ -176,11 +176,11 @@ export const StoryBoardMembersList: FC<{ id?: string }> = ({ id }) => {
   const novelist = useGlobalState("novelist");
   const [storyBoard, setStoryBoard] = useState<StoryBoard>();
   const [filteredFriends, setFilteredFriends] = useState<Friend[]>();
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
 
   const onBackClick = () => {
     if (!storyBoard) return;
-    push(ROUTES.Profile.Story.Edit(storyBoard.id || "").Index);
+    routeToPage(ROUTES.Profile.Story.Edit(storyBoard.id || "").Index);
   };
 
   const fetchData = async () => {

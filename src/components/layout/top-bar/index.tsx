@@ -1,12 +1,13 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { type FC, memo, useMemo } from "react";
 import { GoArrowRight } from "react-icons/go";
 import { Search, UserMenu } from "@/components";
 import { Button, ShouldRender, Username } from "@/components/common";
 import { NotificationsMenu } from "@/components/notifications-menu";
 import { useGlobalState } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
 import logoText from "../../../assets/images/Logo text.png";
 import * as S from "./styles";
@@ -17,7 +18,7 @@ export const TopBar: FC<Props> = memo(({}) => {
   const authState = useGlobalState("authState");
   const pathname = usePathname();
   const isLoginPage = useMemo(() => pathname === ROUTES.Login, [pathname]);
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
 
   const onSearchItemClick =
     (record: { id?: string; username?: string; name?: string }) =>
@@ -25,20 +26,20 @@ export const TopBar: FC<Props> = memo(({}) => {
     () => {
       close();
       if (record?.username) {
-        push(ROUTES.Profile.View(record.username).Index);
+        routeToPage(ROUTES.Profile.View(record.username).Index);
       } else if (record?.name) {
-        push(ROUTES.Story.View(record.id || ""));
+        routeToPage(ROUTES.Story.View(record.id || ""));
       } else if (record?.id) {
-        push(ROUTES.Muse.View(record.id));
+        routeToPage(ROUTES.Muse.View(record.id));
       }
     };
 
   const onLogoClick = () => {
-    push(authState === "LOGGED_IN" ? ROUTES.Home : ROUTES.Novelists);
+    routeToPage(authState === "LOGGED_IN" ? ROUTES.Home : ROUTES.Novelists);
   };
 
   const onLoginClick = () => {
-    push(ROUTES.Login);
+    routeToPage(ROUTES.Login);
   };
 
   return (

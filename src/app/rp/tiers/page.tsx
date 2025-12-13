@@ -31,7 +31,7 @@ export default function TiersCatalog() {
               <S.InfoContainer>
                 <S.InfoItem>
                   <S.InfoLabel>Muses:</S.InfoLabel>
-                  <S.InfoValue>10</S.InfoValue>
+                  <S.InfoValue>50</S.InfoValue>
                 </S.InfoItem>
                 <S.InfoItem>
                   <S.InfoLabel>Storyboards:</S.InfoLabel>
@@ -74,7 +74,7 @@ export default function TiersCatalog() {
               <S.InfoContainer>
                 <S.InfoItem>
                   <S.InfoLabel>Muses:</S.InfoLabel>
-                  <S.InfoValue>30</S.InfoValue>
+                  <S.InfoValue>60</S.InfoValue>
                 </S.InfoItem>
                 <S.InfoItem>
                   <S.InfoLabel>Storyboards:</S.InfoLabel>
@@ -117,7 +117,7 @@ export default function TiersCatalog() {
               <S.InfoContainer>
                 <S.InfoItem>
                   <S.InfoLabel>Muses:</S.InfoLabel>
-                  <S.InfoValue>40</S.InfoValue>
+                  <S.InfoValue>100</S.InfoValue>
                 </S.InfoItem>
                 <S.InfoItem>
                   <S.InfoLabel>Storyboards:</S.InfoLabel>
@@ -160,7 +160,7 @@ export default function TiersCatalog() {
               <S.InfoContainer>
                 <S.InfoItem>
                   <S.InfoLabel>Muses:</S.InfoLabel>
-                  <S.InfoValue>50</S.InfoValue>
+                  <S.InfoValue>200</S.InfoValue>
                 </S.InfoItem>
                 <S.InfoItem>
                   <S.InfoLabel>Storyboards:</S.InfoLabel>

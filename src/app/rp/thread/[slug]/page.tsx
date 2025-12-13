@@ -3,6 +3,7 @@
 import { Flex } from "@novelist-world/ui";
 import classNames from "classnames";
 import { useParams, useRouter } from "next/navigation";
+import { Separator } from "radix-ui";
 import { useCallback, useEffect, useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
 import { FaRegEdit } from "react-icons/fa";
@@ -10,16 +11,19 @@ import { FaRegTrashCan } from "react-icons/fa6";
 import { IoArrowBackOutline } from "react-icons/io5";
 import { RiFlagFill } from "react-icons/ri";
 import { ShouldRender } from "@/components/common";
+import { MuseAvatar } from "@/components/common/muse-avatar";
 import { AppAlertDialog } from "@/components/dialog";
-import { PageLoader } from "@/components/layout";
+import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
+import { PageLoaderTypeWriter } from "@/components/layout/loader-2/PageLoaderTypewriter";
 import { AppDropdownMenu } from "@/components/profile-more-dropdown";
 import PromptInput from "@/components/prompt-input";
 import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
+import { useBindPageLoader, usePageRouter } from "@/hooks/use-page-router";
 import type { Comment, Reply } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
-import { toFormattedDate } from "@/utils/helpers";
+import { displayDate, toFormattedDate } from "@/utils/helpers";
 import {
   deleteCommentAction,
   deletePromptAction,
@@ -81,10 +85,10 @@ export default function ThreadPage({}) {
   const authState = useGlobalState("authState");
   const novelist = useGlobalState("novelist");
   const commentId = params?.slug as string;
-  const { comment, loading } = useGetComment(commentId);
+  const { comment, loading: loadingComments } = useGetComment(commentId);
   const {
     replies,
-    loading: repliesLoading,
+    loading: loadingReplies,
     refetch: refetchReplies,
     setReplies,
   } = useGetReplies(commentId);
@@ -95,8 +99,9 @@ export default function ThreadPage({}) {
   const [showDeletePromptAlert, setShowDeletePromptAlert] = useState(false);
   const [showReportPromptAlert, setShowReportPromptAlert] = useState(false);
   const [selectedReplyId, setSelectedReplyId] = useState("");
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
   const { successToast, warningToast, errorToast } = useUIContext();
+  useBindPageLoader(loadingComments || loadingReplies);
 
   const handleReportPrompt = async () => {
     if (!comment?.prompt?.id) return;
@@ -181,12 +186,12 @@ export default function ThreadPage({}) {
 
   const onAvatarClick = (sourceId: string | undefined) => {
     if (!sourceId) return;
-    push(ROUTES.Muse.View(sourceId));
+    routeToPage(ROUTES.Muse.View(sourceId));
   };
 
   const onBackClick = () => {
     if (!comment?.prompt?.id) return;
-    push(`${ROUTES.Prompt.View(comment.prompt.id)}?threadOpen=true`);
+    routeToPage(`${ROUTES.Prompt.View(comment.prompt.id)}?threadOpen=true`);
   };
 
   const loadReplies = () => {
@@ -232,33 +237,33 @@ export default function ThreadPage({}) {
               />
             </ShouldRender>
           </S.DropdownMenuContainer>
-          <Flex>
-            <S.Avatar
-              src={reply.source?.image || ""}
-              alt={""}
-              size={50}
-              onClick={() => onAvatarClick(reply.source.sourceId)}
-              hoverable
+          <S.ReplyHeaderContainer>
+            <MuseAvatar
+              museId={reply?.source?.sourceId || ""}
+              image={reply?.source.image || ""}
+              name={reply?.source.name || ""}
             />
-            <S.SourceName onClick={() => onAvatarClick(reply.source.sourceId)}>
-              {reply.source.name}
-            </S.SourceName>
-          </Flex>
+            <S.SourceInfo>
+              <S.SourceName>{reply?.source.name}</S.SourceName>
+              <ShouldRender if={Boolean(reply?.createdOn)}>
+                <S.PromptSubheader
+                  title={reply?.createdOn ? displayDate(reply.createdOn) : ""}
+                  dateTime={reply?.createdOn}
+                >
+                  {reply?.createdOn ? toFormattedDate(reply?.createdOn) : ""}
+                </S.PromptSubheader>
+              </ShouldRender>
+            </S.SourceInfo>
+          </S.ReplyHeaderContainer>
 
           <S.PromptText>{reply.text}</S.PromptText>
           {reply.media && (
-            <S.CardWrapper className={classNames("reply")}>
-              <S.CardBackground banner={reply.media || ""} className="image" />
-            </S.CardWrapper>
+            <S.MediaContainer>
+              <AppImageViewer src={reply?.media} alt="Reply media">
+                <S.PromptImage src={reply.media || ""} alt="image" />
+              </AppImageViewer>
+            </S.MediaContainer>
           )}
-          <Flex
-            direction="row"
-            justify="space-between"
-            style={{ width: "70%" }}
-          >
-            <div></div>
-            <S.StyledDate>{toFormattedDate(reply.createdOn)}</S.StyledDate>
-          </Flex>
         </Flex>
       </>
     ));
@@ -314,9 +319,6 @@ export default function ThreadPage({}) {
         onConfirm={handleDeleteReply}
         actionButtonLabel="Delete"
       />
-      <ShouldRender if={loading}>
-        <PageLoader />
-      </ShouldRender>
       <S.RepliesContainer>
         <S.HeaderContainer>
           <Flex>
@@ -325,18 +327,28 @@ export default function ThreadPage({}) {
               onClick={() => onBackClick()}
               style={{ cursor: "pointer" }}
             />
-            <S.Avatar
-              src={comment?.prompt?.source?.image || ""}
-              alt={""}
-              size={50}
-              onClick={() => onAvatarClick(comment?.prompt?.source.sourceId)}
-              hoverable
+            <MuseAvatar
+              museId={comment?.prompt?.source.sourceId || ""}
+              image={comment?.prompt?.source.image || ""}
+              name={comment?.prompt?.source.name || ""}
             />
-            <S.SourceName
-              onClick={() => onAvatarClick(comment?.prompt?.source.sourceId)}
-            >
-              {comment?.prompt?.source?.name}
-            </S.SourceName>
+            <S.SourceInfo>
+              <S.SourceName>{comment?.prompt?.source.name}</S.SourceName>
+              <ShouldRender if={Boolean(comment?.prompt?.createdOn)}>
+                <S.PromptSubheader
+                  title={
+                    comment?.prompt?.createdOn
+                      ? displayDate(comment?.prompt?.createdOn)
+                      : ""
+                  }
+                  dateTime={comment?.prompt?.createdOn}
+                >
+                  {comment?.prompt?.createdOn
+                    ? toFormattedDate(comment?.prompt?.createdOn)
+                    : ""}
+                </S.PromptSubheader>
+              </ShouldRender>
+            </S.SourceInfo>
           </Flex>
           <S.HeaderDropdownMenuContainer>
             <ShouldRender if={authState === "LOGGED_IN"}>
@@ -368,26 +380,16 @@ export default function ThreadPage({}) {
             </ShouldRender>
           </S.HeaderDropdownMenuContainer>
         </S.HeaderContainer>
+        <Separator.Root className="separator" orientation="horizontal" />
         <Flex direction="column">
           <S.PromptText>{comment?.prompt?.text}</S.PromptText>
           {comment?.prompt?.media && (
-            <S.CardWrapper>
-              <S.CardBackground
-                banner={comment?.prompt?.media || ""}
-                className="image"
-              />
-            </S.CardWrapper>
+            <S.MediaContainer>
+              <AppImageViewer src={comment?.prompt?.media} alt="Prompt media">
+                <S.PromptImage src={comment?.prompt?.media || ""} alt="image" />
+              </AppImageViewer>
+            </S.MediaContainer>
           )}
-          <Flex
-            direction="row"
-            justify="space-between"
-            style={{ width: "70%" }}
-          >
-            <div></div>
-            <S.StyledDate>
-              {toFormattedDate(comment?.prompt?.createdOn)}
-            </S.StyledDate>
-          </Flex>
         </Flex>
         <Flex
           direction="column"
@@ -422,46 +424,48 @@ export default function ThreadPage({}) {
               />
             </ShouldRender>
           </S.DropdownMenuContainer>
-          <Flex>
-            <S.Avatar
-              src={comment?.source?.image || ""}
-              alt={""}
-              size={50}
-              onClick={() => onAvatarClick(comment?.source.sourceId)}
-              hoverable
+          <S.ReplyHeaderContainer>
+            <MuseAvatar
+              museId={comment?.source?.sourceId || ""}
+              image={comment?.source.image || ""}
+              name={comment?.source.name || ""}
             />
-            <S.SourceName
-              onClick={() => onAvatarClick(comment?.source.sourceId)}
-            >
-              {comment?.source.name}
-            </S.SourceName>
-          </Flex>
+            <S.SourceInfo>
+              <S.SourceName>{comment?.source.name}</S.SourceName>
+              <ShouldRender if={Boolean(comment?.createdOn)}>
+                <S.PromptSubheader
+                  title={
+                    comment?.createdOn ? displayDate(comment.createdOn) : ""
+                  }
+                  dateTime={comment?.createdOn}
+                >
+                  {comment?.createdOn
+                    ? toFormattedDate(comment?.createdOn)
+                    : ""}
+                </S.PromptSubheader>
+              </ShouldRender>
+            </S.SourceInfo>
+          </S.ReplyHeaderContainer>
           <S.PromptText>{comment?.text}</S.PromptText>
           {comment?.media && (
-            <S.CardWrapper>
-              <S.CardBackground
-                banner={comment.media || ""}
-                className="image"
-              />
-            </S.CardWrapper>
+            <S.MediaContainer>
+              <AppImageViewer src={comment?.media} alt="Comment media">
+                <S.PromptImage src={comment.media || ""} alt="image" />
+              </AppImageViewer>
+            </S.MediaContainer>
           )}
-          <Flex
-            direction="row"
-            justify="space-between"
-            style={{ marginBottom: "20px", width: "70%" }}
-          >
-            <div></div>
-            <S.StyledDate>{toFormattedDate(comment?.createdOn)}</S.StyledDate>
-          </Flex>
         </Flex>
         {loadReplies()}
         {authState === "LOGGED_IN" && (
-          <PromptInput
-            muses={novelist?.muses || []}
-            parentId={commentId}
-            type="reply"
-            onSend={refetchReplies}
-          />
+          <>
+            <Separator.Root className="separator" orientation="horizontal" />
+            <PromptInput
+              muses={novelist?.muses || []}
+              parentId={commentId}
+              type="reply"
+              onSend={refetchReplies}
+            />
+          </>
         )}
       </S.RepliesContainer>
     </S.ParentContainer>

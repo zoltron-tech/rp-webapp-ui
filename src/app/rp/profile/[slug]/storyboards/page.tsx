@@ -1,11 +1,13 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getAllStoryboardsByUsernameAction } from "@/app/rp/story/actions";
+import { BreadCrumb } from "@/components/breadcrumb";
 import { ShouldRender } from "@/components/common";
 import StoryCard from "@/components/story-card";
 import { useGlobalState } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { StoryBoard } from "@/types";
 import { INITIAL_STORY_BOARD } from "@/utils/constants";
 import { Logger } from "@/utils/services";
@@ -17,25 +19,16 @@ export default function MusesListPage({}) {
 
   const authState = useGlobalState("authState");
   const user = useGlobalState("user");
-  const novelist = useGlobalState("novelist");
   const username = params?.slug as string;
   const isCurrentUser = user?.username === username;
-  const [_loading, setLoading] = useState(true);
-  const { push } = useRouter();
+  const { baseDataLoader } = usePageRouter();
   Logger.debug("params are:", params);
 
   const fetchStoryboards = async () => {
-    setLoading(true);
-    const _storyboards = await getAllStoryboardsByUsernameAction(username);
-
-    if (!_storyboards || "message" in _storyboards) {
-      // handle error
-      setLoading(false);
-      push("/404");
-      return;
-    }
+    const _storyboards = await baseDataLoader(() =>
+      getAllStoryboardsByUsernameAction(username),
+    );
     setStoryBoards(_storyboards);
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -46,20 +39,7 @@ export default function MusesListPage({}) {
 
   return (
     <S.Container>
-      <S.Maintext>
-        {isCurrentUser ? "Your" : `${username}'s`} Stories
-      </S.Maintext>
-      <S.Subtext>
-        {isCurrentUser
-          ? "Stories created by you: " +
-            storyBoards?.filter(
-              (storyBoard) =>
-                storyBoard?.createdBy?.username === user?.username,
-            )?.length +
-            "/" +
-            novelist?.tier.storyBoardLimit
-          : ""}
-      </S.Subtext>
+      <BreadCrumb label="Stories" username={username} />
       <S.StoryListContainer>
         <ShouldRender if={isCurrentUser}>
           <StoryCard key={null} storyBoard={INITIAL_STORY_BOARD}></StoryCard>

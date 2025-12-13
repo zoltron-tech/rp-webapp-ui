@@ -6,7 +6,7 @@ import { FaCheckCircle } from "react-icons/fa";
 import { FaFaceSadTear } from "react-icons/fa6";
 import { SiBookstack } from "react-icons/si";
 import { ShouldRender } from "@/components/common";
-import { PageLoader } from "@/components/layout";
+import { PageLoaderTypeWriter } from "@/components/layout/loader-2/PageLoaderTypewriter";
 import {
   Bar,
   Logo,
@@ -52,7 +52,7 @@ export default function ResetPassword() {
   return (
     <S.Container>
       <ShouldRender if={loading}>
-        <PageLoader />
+        <PageLoaderTypeWriter />
       </ShouldRender>
       <ShouldRender if={!loading}>
         <Bar>

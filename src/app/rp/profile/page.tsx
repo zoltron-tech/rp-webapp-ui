@@ -1,15 +1,15 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useGlobalState } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 
 export default function ProfilePage({}) {
   const user = useGlobalState("user");
   const authState = useGlobalState("authState");
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
 
   useEffect(() => {
     Logger.debug("ProfilePage");
@@ -17,9 +17,9 @@ export default function ProfilePage({}) {
 
     if (authState === "LOGGED_IN") {
       Logger.debug("rerouteToProfilePage");
-      push(ROUTES.Profile.View(user?.username || "").Index);
+      routeToPage(ROUTES.Profile.View(user?.username || "").Index);
     } else {
-      push(ROUTES.Novelists);
+      routeToPage(ROUTES.Novelists);
     }
   }, [authState]);
 }

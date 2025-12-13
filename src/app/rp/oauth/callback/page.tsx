@@ -7,6 +7,7 @@ import { IoMdCheckmark } from "react-icons/io";
 import { PiSpinnerGapLight } from "react-icons/pi";
 import { getUser, setAuthCookie } from "@/app/actions";
 import { useGlobalStoreSet } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { validateJWTSync } from "@/utils/helpers";
@@ -46,7 +47,7 @@ export default function LoginOAuthCallbackPage() {
   const [operationState, setOperationState] =
     useState<OperationState>("LOADING");
   const setGlobalState = useGlobalStoreSet();
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
 
   const content = useMemo(() => {
     return Content[operationState];
@@ -77,7 +78,7 @@ export default function LoginOAuthCallbackPage() {
       if (_novelist.message === API_MESSAGE.NotFound) {
         setOperationState("SUCCESS");
         setGlobalState({ authState: "UNINITIALIZED", user: response.user! });
-        push(ROUTES.Onboarding);
+        routeToPage(ROUTES.Onboarding);
         return;
       } else {
         setOperationState("ERROR");
@@ -90,7 +91,7 @@ export default function LoginOAuthCallbackPage() {
       novelist: _novelist,
       user: response.user!,
     });
-    push(ROUTES.Home);
+    routeToPage(ROUTES.Home);
 
     setOperationState("SUCCESS");
   }, [token, setOperationState]);

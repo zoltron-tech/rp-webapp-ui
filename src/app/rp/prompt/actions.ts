@@ -2,13 +2,16 @@
 import getConfig from "next/config";
 import { authenticateAndGetJWT, getJWTIfExists } from "@/app/actions";
 import type { Comment, Prompt } from "@/types";
+import type { DataType } from "@/types/common";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import { Logger } from "@/utils/services";
 
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
 
-export const getPromptAction = async (promptId: string) => {
+export const getPromptAction = async (
+  promptId: string,
+): Promise<DataType<Prompt>> => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/${promptId}`;
 
   const jwt = await getJWTIfExists();
@@ -66,7 +69,9 @@ export const getPropmptCommentsAction = async (promptId: string) => {
   return comments;
 };
 
-export const getPromptsByMuseAction = async (museId: string) => {
+export const getPromptsByMuseAction = async (
+  museId: string,
+): Promise<DataType<Prompt[]>> => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/by/${museId}`;
 
   const response = await fetch(URL, {

@@ -1,6 +1,5 @@
 import { AlertDialog } from "radix-ui";
 import { keyframes, styled } from "styled-components";
-import { setOpacity } from "@/utils/helpers/theme";
 
 const overlayShow = keyframes`
 from { opacity: 0; }
@@ -94,20 +93,34 @@ export const CancelButton = styled.button`
   }
 `;
 
-export const ActionButton = styled.button`
-  width: 100px;
+export const ActionButton = styled.button<{
+  colorVariant?: "negative" | "neutral";
+}>`
+  min-width: 120px;
   padding: 8px;
   text-align: center;
-  background-color: #922a2aff;
-  color: var(--text-primary);
+
+  background-color: ${({ colorVariant, disabled }) =>
+    disabled
+      ? "var(--bg-4)" // or another lighter neutral color for disabled
+      : colorVariant === "neutral"
+        ? "var(--accent)"
+        : "#922a2aff"};
+
+  color: ${({ disabled }) => (disabled ? "var(--text-secondary)" : "var(--text-primary)")};
   font-size: var(--font-size);
   font-weight: var(--font-weight-regular);
   border: none;
   border-radius: 4px;
-  cursor: pointer;
+  cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
   transition: background-color 0.15s ease;
 
   &:hover {
-    background-color: #d03c3cff;
+    background-color: ${({ colorVariant, disabled }) =>
+      disabled
+        ? "var(--bg-4)" // keep same as disabled background
+        : colorVariant === "neutral"
+          ? "var(--accent)" // accent hover
+          : "#d03c3cff"}; // red hover
   }
 `;

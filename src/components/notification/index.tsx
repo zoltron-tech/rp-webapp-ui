@@ -1,13 +1,20 @@
 "use client";
 
 import { Separator } from "radix-ui";
+import { useEffect } from "react";
 import { useGlobalState } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
 import { NotificationBox } from "./notificaction-box";
 import { NotificationHeader } from "./notification-header";
 import * as S from "./styled";
 
 export const NotificcationsList = () => {
+  const { stopPageLoading } = usePageRouter();
   const notifications = useGlobalState("notifications");
+
+  useEffect(() => {
+    stopPageLoading();
+  }, [stopPageLoading]);
 
   return (
     <S.ListRoot>

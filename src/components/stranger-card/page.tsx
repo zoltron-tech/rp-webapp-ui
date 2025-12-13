@@ -1,9 +1,9 @@
 "use client";
 
 import classNames from "classnames";
-import { useRouter } from "next/navigation";
 import type { FC } from "react";
 import { Button, ShouldRender } from "@/components/common";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { Novelist } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styles";
@@ -19,11 +19,11 @@ export const StrangerCard: FC<Props> = ({
   className,
   ...rest
 }) => {
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
 
   const onAvatarClick = () => {
     if (!novelist) return;
-    push(ROUTES.Profile.View(novelist.username).Index);
+    routeToPage(ROUTES.Profile.View(novelist.username).Index);
   };
 
   return (

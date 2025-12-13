@@ -2,11 +2,11 @@
 
 import { Carousel } from "@novelist-world/ui";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Footer } from "@/components/layout";
 import { MuseCard } from "@/components/muse-card";
 import { useGlobalState } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { Muse } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
@@ -22,10 +22,10 @@ export default function NovelistsPage() {
   const initialRender = useRef(true);
   const [muses, set] = useState<Muse[]>([]);
   const authState = useGlobalState("authState");
-  const { push } = useRouter();
+  const { routeToPage, baseDataLoader } = usePageRouter();
 
   const updateMuses = useCallback(async () => {
-    const response = await getHeroPageMusesAction();
+    const response = await baseDataLoader(() => getHeroPageMusesAction());
     if (response && !("message" in response)) {
       set(response);
     }
@@ -42,11 +42,11 @@ export default function NovelistsPage() {
   Logger.info("NovelistsPage rendered");
 
   const onLoginClick = () => {
-    push(ROUTES.Login);
+    routeToPage(ROUTES.Login);
   };
 
   const toHomePage = () => {
-    push(ROUTES.Home);
+    routeToPage(ROUTES.Home);
   };
 
   return (

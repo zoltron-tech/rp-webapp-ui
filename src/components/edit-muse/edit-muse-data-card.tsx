@@ -1,7 +1,6 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
-import { useRouter } from "next/navigation";
 import { Form, Separator } from "radix-ui";
 import {
   type FormEventHandler,
@@ -16,6 +15,7 @@ import { updateMuseAction } from "@/app/rp/muse/actions";
 import { deleteMedia } from "@/app/rp/profile/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
+import { usePageRouter } from "@/hooks/use-page-router";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import type { CreateUpdateMuse, Fandom } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
@@ -99,11 +99,10 @@ export default function EditMuseDataCard() {
   const [showMediaFields, setShowMediaFields] = useState(
     Boolean(wallpaper || cardBackground),
   );
-  const authState = useGlobalState("authState");
   const setGlobalState = useGlobalStoreSet();
-  const { successToast, errorToast } = useUIContext();
+  const { successToast } = useUIContext();
   const { uploadMedia } = useUploadMedia();
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
 
   const setFirstname = useCallback(
     (value: string) => {
@@ -460,10 +459,10 @@ export default function EditMuseDataCard() {
 
       successToast("Data updated successfully.");
       // Reset form to previous state
-      push(ROUTES.Profile.View(user?.username || "").Muses);
+      routeToPage(ROUTES.Profile.View(user?.username || "").Muses);
     },
     [
-      push,
+      routeToPage,
       novelist,
       story,
       image,
@@ -475,14 +474,12 @@ export default function EditMuseDataCard() {
   );
 
   const handleReset = useCallback(async () => {
-    // Delete temp uploads if they exist
     for (const key of Object.values(tempUploads)) {
       if (key) await deleteMedia(key);
     }
 
-    // Reset form to previous state
-    push(ROUTES.Profile.View(user?.username || "").Muses);
-  }, [push, user, tempUploads]);
+    routeToPage(ROUTES.Profile.View(user?.username || "").Muses);
+  }, [routeToPage, user, tempUploads]);
 
   const handleMediaInfoClick = useCallback(() => {
     setShowMediaHelpInfo((prev) => !prev);

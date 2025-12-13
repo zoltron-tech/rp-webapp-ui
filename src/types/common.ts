@@ -1,3 +1,5 @@
+import type { API_MESSAGE } from "@/utils/constants";
+
 export type With<A extends string | number | symbol, T = {}, K = string> = T & {
   [key in A]: K;
 };
@@ -24,3 +26,9 @@ export interface Tag {
 }
 
 export type Hook<T, K> = (props: T) => K;
+
+export type ErrorType = {
+  message: API_MESSAGE.Error;
+};
+
+export type DataType<T> = ErrorType | T | null;

@@ -1,8 +1,8 @@
 "use client";
-import { useRouter } from "next/navigation";
 import { type FC, useEffect, useState } from "react";
 import { getUserNovelist } from "@/app/rp/novelists/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { Novelist } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
@@ -11,7 +11,7 @@ import { Card } from "../common";
 export type ProfileCardProps = {};
 
 export const ProfileCard: FC<ProfileCardProps> = ({}) => {
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
   const [novelist, setNovelist] = useState<Novelist>();
   const authState = useGlobalState("authState");
   const setGlobalState = useGlobalStoreSet();
@@ -19,7 +19,7 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
 
   const fetchData = async () => {
     if (authState === "UNINITIALIZED") {
-      push(ROUTES.Onboarding);
+      routeToPage(ROUTES.Onboarding);
       return;
     }
 
@@ -27,7 +27,7 @@ export const ProfileCard: FC<ProfileCardProps> = ({}) => {
 
     if (!fetchedNovelist || "message" in fetchedNovelist) {
       setGlobalState({ authState: "UNINITIALIZED" });
-      push(ROUTES.Onboarding);
+      routeToPage(ROUTES.Onboarding);
       return;
     }
 

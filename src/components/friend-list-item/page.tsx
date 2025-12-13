@@ -1,8 +1,8 @@
 "use client";
 
 import classNames from "classnames";
-import { useRouter } from "next/navigation";
 import type { FC } from "react";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { Friend } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styles";
@@ -13,11 +13,11 @@ type Props = React.HTMLProps<HTMLDivElement> & {
 };
 
 export const FriendListItem: FC<Props> = ({ novelist, className, ...rest }) => {
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
 
   const onAvatarClick = () => {
     if (!novelist) return;
-    push(ROUTES.Profile.View(novelist.username).Index);
+    routeToPage(ROUTES.Profile.View(novelist.username).Index);
   };
 
   return (

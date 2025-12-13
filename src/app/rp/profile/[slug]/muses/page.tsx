@@ -1,12 +1,14 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { getAllMusesByUsernameAction } from "@/app/rp/muse/actions";
+import { BreadCrumb } from "@/components/breadcrumb";
 import { ShouldRender } from "@/components/common";
 import { MuseCard } from "@/components/muse-card";
 import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents, useUIContext } from "@/hooks";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { Muse } from "@/types";
 import { INITIAL_MUSE } from "@/utils/constants";
 import {
@@ -14,6 +16,7 @@ import {
   EVENTS,
   type MuseDeletedPayload,
 } from "@/utils/constants/custom-events";
+import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import * as S from "./styles";
 
@@ -25,23 +28,15 @@ export default function MusesListPage({}) {
   const novelist = useGlobalState("novelist");
   const username = params?.slug as string;
   const isCurrentUser = user?.username === username;
-  const [_loading, setLoading] = useState(true);
-  const { push } = useRouter();
+  const { baseDataLoader } = usePageRouter();
   const { on, off } = useCustomEvents(EVENTS.MUSE.base);
   const { successToast } = useUIContext();
-  Logger.debug("params are:", params);
+  const { routeToPage } = usePageRouter();
 
   const fetchMuses = async () => {
-    setLoading(true);
-    const _muses = await getAllMusesByUsernameAction(username);
-
-    if (!_muses || "message" in _muses) {
-      // handle error
-      setLoading(false);
-      push("/404");
-      return;
-    }
-    setLoading(false);
+    const _muses = await baseDataLoader(() =>
+      getAllMusesByUsernameAction(username),
+    );
     setMuses(_muses);
   };
 
@@ -67,6 +62,11 @@ export default function MusesListPage({}) {
     };
   }, [on]);
 
+  const toUserProfile = useCallback(() => {
+    if (!username) return;
+    routeToPage(ROUTES.Profile.View(username).Index);
+  }, [username, routeToPage]);
+
   return (
     <S.Container>
       {/* ✨ Background mesh */}
@@ -90,12 +90,7 @@ export default function MusesListPage({}) {
           );
         })}
       </S.BackgroundContainer>
-      <S.Maintext>
-        {isCurrentUser ? "Your" : `${username}'s`} Characters
-      </S.Maintext>
-      <S.Subtext>
-        {isCurrentUser ? `${muses?.length}/${novelist?.tier.museLimit}` : ""}
-      </S.Subtext>
+      <BreadCrumb label="Characters" username={username} />
       <S.MuseListContainer>
         <ShouldRender
           if={

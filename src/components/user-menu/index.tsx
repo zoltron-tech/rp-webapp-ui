@@ -1,14 +1,17 @@
 "use client";
 
 import classNames from "classnames";
-import { useRouter } from "next/navigation";
 import { type FC, useCallback, useState } from "react";
+import { GoLaw } from "react-icons/go";
 import { IoIosPeople } from "react-icons/io";
-import { LuUser } from "react-icons/lu";
-import { PiBookOpenUserDuotone } from "react-icons/pi";
-import { TbUserEdit } from "react-icons/tb";
+import { LuMessagesSquare, LuUser } from "react-icons/lu";
+import { TbHelpHexagonFilled, TbLogout, TbUserEdit } from "react-icons/tb";
 import { logoutAction } from "@/app/actions";
+import { sendFeedbackMessage } from "@/app/rp/profile/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
+import { useUIContext } from "@/hooks";
+import { usePageRouter } from "@/hooks/use-page-router";
+import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { toggleState } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
@@ -19,14 +22,60 @@ import * as S from "./styles";
 
 type UserMenuProps = {};
 
+const ContactSupportForm = ({
+  message,
+  setMessage,
+}: {
+  message: string;
+  setMessage: (val: string) => void;
+}) => (
+  <S.FormRoot
+    onSubmit={(event) => {
+      event.preventDefault(); // prevent default form submission
+    }}
+  >
+    <S.FormField name="supportMessage">
+      <S.FormLabel>
+        Your message <span>{`(required)`}</span>
+      </S.FormLabel>
+      <S.FormControl asChild>
+        <S.FormTextArea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Type your message..."
+        />
+      </S.FormControl>
+      <S.FormMessage>
+        {
+          "The team will get back to you ASAP. Check your notifications for updates."
+        }
+      </S.FormMessage>
+    </S.FormField>
+  </S.FormRoot>
+);
+
 export const UserMenu: FC<UserMenuProps> = ({}) => {
   const user = useGlobalState("user");
   const novelist = useGlobalState("novelist");
   const authState = useGlobalState("authState");
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
+  const [showContactSupportAlert, setShowContactSupportAlert] = useState(false);
+  const [supportMessage, setSupportMessage] = useState("");
   const setGlobalState = useGlobalStoreSet();
   const [open, setOpen] = useState(false);
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
+  const { successToast, errorToast } = useUIContext();
+
+  const handleSendFeedbackMessage = async () => {
+    const response = await sendFeedbackMessage(supportMessage.trim());
+    if (response?.message === API_MESSAGE.Success) {
+      successToast(`Feedback sent successfully.`);
+    } else {
+      errorToast(
+        "There was an issue while sending feedback Please contact at support@zoltrontech.com.",
+      );
+    }
+  };
 
   const handleLogout = useCallback(async () => {
     toggleState(setOpen)();
@@ -39,27 +88,33 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
   }, [setGlobalState]);
 
   const toOnboarding = () => {
-    push(ROUTES.Onboarding);
+    routeToPage(ROUTES.Onboarding);
   };
 
   const toEditProfile = () => {
-    push(ROUTES.Profile.Edit);
+    routeToPage(ROUTES.Profile.Edit, {
+      skipLoading: true,
+    });
   };
 
   const toMusesPage = () => {
-    push(ROUTES.Profile.View(novelist?.username || "").Muses);
+    routeToPage(ROUTES.Profile.View(novelist?.username || "").Muses);
   };
 
   const toStoryBoardsPage = () => {
-    push(ROUTES.Profile.View(novelist?.username || "").Storyboards);
+    routeToPage(ROUTES.Profile.View(novelist?.username || "").Storyboards);
   };
 
   const toOutgoingThreadsPage = () => {
-    push(ROUTES.outgoingThreads);
+    routeToPage(ROUTES.outgoingThreads);
   };
 
   const toUserProfile = () => {
-    push(ROUTES.Profile.View(user?.username || "").Index);
+    routeToPage(ROUTES.Profile.View(user?.username || "").Index);
+  };
+
+  const toTermsAndConditionsPage = () => {
+    routeToPage(ROUTES.Terms);
   };
 
   Logger.info("UserMenu rendered");
@@ -76,6 +131,28 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
         onConfirm={handleLogout}
         actionButtonLabel="Logout"
       />
+      <AppAlertDialog
+        heading="Contact Support"
+        text="Send a message to support. We will try to get back to you via in-app notifications."
+        body={
+          <ContactSupportForm
+            message={supportMessage}
+            setMessage={setSupportMessage}
+          />
+        }
+        open={showContactSupportAlert}
+        onOpenChange={setShowContactSupportAlert}
+        onConfirm={async () => {
+          if (!supportMessage.trim()) return; // validation
+          await handleSendFeedbackMessage();
+          setShowContactSupportAlert(false); // close dialog
+          setSupportMessage(""); // reset message
+        }}
+        actionButtonLabel="Send message"
+        actionColor="neutral"
+        isConfirmDisabled={supportMessage.trim() === ""}
+      />
+
       <S.ContentContainer onClick={toggleState(setOpen)}>
         <AvatarNew
           className="selectable"
@@ -94,8 +171,8 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                 Your characters
               </S.Element>
               <S.Element onClick={toOutgoingThreadsPage}>
-                <PiBookOpenUserDuotone />
-                Ongoing threads
+                <LuMessagesSquare />
+                Your interactions
               </S.Element>
             </S.List>
             <S.Separator />
@@ -114,13 +191,19 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
           </ShouldRender>
 
           <S.List>
-            <S.DisabledElement>Settings & privacy</S.DisabledElement>
-            <S.DisabledElement>Help & support</S.DisabledElement>
-            <S.DisabledElement>Display & accessibility</S.DisabledElement>
+            <S.Element onClick={toTermsAndConditionsPage}>
+              <GoLaw />
+              Terms & Conditions
+            </S.Element>
+            <S.Element onClick={() => setShowContactSupportAlert(true)}>
+              <TbHelpHexagonFilled />
+              Help & support
+            </S.Element>
           </S.List>
           <S.Separator />
           <S.List>
             <S.DeleteElement onClick={() => setShowLogoutAlert(true)}>
+              <TbLogout />
               Log out
             </S.DeleteElement>
           </S.List>

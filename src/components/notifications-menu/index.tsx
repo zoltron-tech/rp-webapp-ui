@@ -1,11 +1,11 @@
 "use client";
 
 import classNames from "classnames";
-import { useRouter } from "next/navigation";
 import { type FC, useCallback, useEffect, useMemo, useState } from "react";
 import { IoMdNotifications } from "react-icons/io";
 import { getNotifications } from "@/app/rp/novelists/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { NovelistWorldNotification } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { toggleState } from "@/utils/helpers";
@@ -25,15 +25,15 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
   const authState = useGlobalState("authState");
   const notifications = useGlobalState("notifications");
   const user = useGlobalState("user");
-  const { push } = useRouter();
+  const { routeToPage, baseDataLoader } = usePageRouter();
   const [open, setOpen] = useState(false);
   const [_loading, setLoading] = useState(true);
   const isMobile = useMemo(() => checkIsMobile(), []);
   const set = useGlobalStoreSet();
 
   const handleSeeAllClick = useCallback(() => {
-    push(ROUTES.Notification);
-  }, []);
+    routeToPage(ROUTES.Notification);
+  }, [routeToPage]);
 
   const handleClick = useCallback(() => {
     if (isMobile) {
@@ -47,7 +47,7 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
   const fetchNotifications = useCallback(async () => {
     if (authState !== "LOGGED_IN") return;
     setLoading(true);
-    const _notifications = await getNotifications();
+    const _notifications = await baseDataLoader(() => getNotifications());
     setLoading(false);
 
     set({ notifications: _notifications });

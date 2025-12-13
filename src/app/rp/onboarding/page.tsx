@@ -1,13 +1,13 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
-import { useRouter } from "next/navigation";
 import { Separator, Tabs } from "radix-ui";
 import { useCallback, useState } from "react";
 import { ImProfile } from "react-icons/im";
 import { finishOnboardingAction } from "@/app/actions";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { getUserNovelist } from "../novelists/actions";
@@ -26,7 +26,7 @@ export default function OnboardingPage() {
   const novelist = useGlobalState("novelist");
   const authState = useGlobalState("authState");
   const setGlobalState = useGlobalStoreSet();
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
   const [currentStep, setCurrentStep] = useState("username");
 
   const handleUsernameNext = useCallback(() => {
@@ -58,8 +58,8 @@ export default function OnboardingPage() {
       novelist: updatedNovelist,
     });
 
-    push(ROUTES.Profile.View(user?.username || "").Index);
-  }, [push, novelist, user]);
+    routeToPage(ROUTES.Profile.View(user?.username || "").Index);
+  }, [routeToPage, novelist, user]);
 
   return (
     <S.OnboardingPageRoot>

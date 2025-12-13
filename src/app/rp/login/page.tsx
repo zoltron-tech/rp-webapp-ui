@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Separator, Tabs } from "radix-ui";
 import { useCallback, useEffect } from "react";
 import { useGlobalState } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
 import { LoginForm } from "./login-form";
 import { RegisterForm } from "./register-form";
@@ -16,21 +17,25 @@ export default function LoginPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isRegister = searchParams?.get("register") === "1";
-  const { push } = useRouter();
+  const { routeToPage, stopPageLoading } = usePageRouter();
 
   useEffect(() => {
     if (authState === "LOGGED_IN") {
-      push(ROUTES.Home);
+      routeToPage(ROUTES.Home);
     }
   }, [authState]);
 
   const handleRegisterClick = useCallback(() => {
-    push(`${pathname}?register=1`);
-  }, [pathname, push]);
+    routeToPage(`${pathname}?register=1`);
+  }, [pathname, routeToPage]);
 
   const handleLoginClick = useCallback(() => {
-    push(`${pathname}?register=0`);
-  }, [pathname, push]);
+    routeToPage(`${pathname}?register=0`);
+  }, [pathname, routeToPage]);
+
+  useEffect(() => {
+    stopPageLoading();
+  }, []);
 
   return (
     <S.LoginPageRoot>

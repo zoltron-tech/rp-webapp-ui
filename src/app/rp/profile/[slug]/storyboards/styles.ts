@@ -11,13 +11,14 @@ export const Container = styled.div`
 
 export const StoryListContainer = styled.div`
   ${DEV_MODE_BORDER("red")}
-  padding-top: 20px;
-  padding-inline: 30px;
+
+
   display: flex;
   flex-wrap: wrap;
   margin-inline: auto;
-  justify-content: center;
+  /* justify-content: center; */
   gap: 0.3rem;
+    max-width: 800px;
 
   @container (max-width: 800px) {
     & {

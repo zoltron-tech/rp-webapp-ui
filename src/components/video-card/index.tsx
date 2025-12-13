@@ -1,8 +1,8 @@
 "use client";
 import { Flex } from "@novelist-world/ui";
 import classNames from "classnames";
-import { useRouter } from "next/navigation";
 import { type FC, useRef } from "react";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { Muse } from "@/types/novelist";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
@@ -12,12 +12,12 @@ type Props = React.HTMLProps<HTMLDivElement> & {
   muse?: Muse | null;
 };
 export const VideoCard: FC<Props> = ({ muse, className, ...rest }) => {
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const onAvatarClick = () => {
     if (!muse) return;
-    push(ROUTES.Muse.View(muse.id || ""));
+    routeToPage(ROUTES.Muse.View(muse.id || ""));
   };
 
   const handleMouseEnter = () => {

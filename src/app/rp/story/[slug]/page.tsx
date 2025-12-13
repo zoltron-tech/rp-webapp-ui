@@ -1,15 +1,16 @@
 "use client";
 
 import { Flex } from "@novelist-world/ui";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaGlobeAmericas, FaUserFriends } from "react-icons/fa";
 import { ShouldRender, Username } from "@/components/common";
-import { PageLoader } from "@/components/layout";
+import { PageLoaderTypeWriter } from "@/components/layout/loader-2/PageLoaderTypewriter";
 import { MusesPill } from "@/components/muses-pill";
 import StoryCardEvent from "@/components/story-event-card";
 import { TagsContainer } from "@/components/tags-container";
 import { useGlobalState } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { StoryBoard } from "@/types";
 import { INITIAL_STORY_BOARD_EVENT } from "@/utils/constants";
 import { getStoryboardAction } from "../actions";
@@ -40,9 +41,8 @@ export default function UserProfilePage({}) {
   const user = useGlobalState("user");
   const novelist = useGlobalState("novelist");
   const [storyboard, setStoryBoard] = useState<StoryBoard | null>(null);
-  const [loading, setLoading] = useState(true);
   const storyboardId = params?.slug as string;
-  const { push } = useRouter();
+  const { baseDataLoader } = usePageRouter();
 
   const isAdmin = () => {
     if (!storyboard || !user?.username) return false;
@@ -53,16 +53,9 @@ export default function UserProfilePage({}) {
   };
 
   const fetchStoryboard = async () => {
-    setLoading(true);
-    const _storyboard = await getStoryboardAction(storyboardId);
-
-    if (!_storyboard || "message" in _storyboard) {
-      // handle error
-      setLoading(false);
-      push("/404");
-      return;
-    }
-    setLoading(false);
+    const _storyboard = await baseDataLoader(() =>
+      getStoryboardAction(storyboardId),
+    );
     setStoryBoard(_storyboard);
   };
 
@@ -74,9 +67,6 @@ export default function UserProfilePage({}) {
 
   return (
     <>
-      <ShouldRender if={loading}>
-        <PageLoader />
-      </ShouldRender>
       <S.Banner
         src={
           storyboard?.image && !storyboard.image.endsWith(".gif")
@@ -86,9 +76,6 @@ export default function UserProfilePage({}) {
       />
       <S.SolidBackground></S.SolidBackground>
       <S.StoryContainer>
-        <ShouldRender if={loading}>
-          <PageLoader />
-        </ShouldRender>
         <S.Avatar
           src={storyboard?.image ?? null}
           alt="profile-picture"

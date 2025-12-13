@@ -5,14 +5,12 @@ import { type FC, useEffect, useState } from "react";
 import { getMuseAction } from "@/app/rp/muse/actions";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { Muse } from "@/types";
-import { API_MESSAGE, FANDOMLESS } from "@/utils/constants";
+import { FANDOMLESS } from "@/utils/constants";
 import EditMuseDataCard from "./edit-muse-data-card";
 import type { MuseState } from "./muse.store";
 import * as S from "./styled";
-
-const ErrorKeys = [API_MESSAGE.UncategorizedError] as const;
-type ErrorKey = (typeof ErrorKeys)[number];
 
 export type EditMuseCardProps = {
   id?: string;
@@ -22,18 +20,16 @@ export const EditMuseForm: FC<EditMuseCardProps> = ({ id }) => {
   const authState = useGlobalState("authState");
   const novelist = useGlobalState("novelist");
   const [muse, setMuse] = useState<Muse>();
-  const [loading, setLoading] = useState<boolean>(false);
+  const { baseDataLoader, stopPageLoading } = usePageRouter();
 
   const fetchData = async () => {
-    if (!id) return;
-
-    setLoading(true);
-
-    const response = await getMuseAction(id);
-    if (response && !("message" in response)) {
-      setMuse(response);
+    if (!id) {
+      stopPageLoading();
+      return;
     }
-    setLoading(false);
+
+    const response = await baseDataLoader(() => getMuseAction(id));
+    if (response !== null) setMuse(response);
   };
 
   useEffect(() => {

@@ -2,7 +2,7 @@
 
 import { Flex, RichText } from "@novelist-world/ui";
 import classNames from "classnames";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { BiSolidMessageEdit } from "react-icons/bi";
 import { BsFillPeopleFill } from "react-icons/bs";
@@ -14,12 +14,12 @@ import { MdClose, MdOutlineSlowMotionVideo } from "react-icons/md";
 import { TiInfoLarge } from "react-icons/ti";
 import { VscUnverified, VscVerifiedFilled } from "react-icons/vsc";
 import { ShouldRender, Username } from "@/components/common";
-import { AvatarNew } from "@/components/common/avatar-new";
-import { PageLoader } from "@/components/layout";
+import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { Quote } from "@/components/novelist-card/styles";
 import { TagsContainer } from "@/components/tags-container";
 import { useGlobalState } from "@/context/store/stores";
 import { useStateMachine } from "@/hooks";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { Muse, Prompt } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDate } from "@/utils/helpers";
@@ -39,13 +39,11 @@ type CARD_STATE =
 export default function MuseProfilePage({}) {
   const params = useParams();
   const authState = useGlobalState("authState");
-  const _novelist = useGlobalState("novelist");
   const [muse, setMuse] = useState<Muse | null>(null);
   const [prompts, setPrompts] = useState<Prompt[] | null>(null);
-  const [loading, setLoading] = useState(true);
   const username = params?.slug as string;
-  const { push } = useRouter();
-  const { state, transition, is } = useStateMachine<CARD_STATE>({
+  const { routeToPage, baseDataLoader } = usePageRouter();
+  const { transition, is } = useStateMachine<CARD_STATE>({
     initial: "MAIN",
     transitions: {
       BACK_STORY: {
@@ -94,45 +92,23 @@ export default function MuseProfilePage({}) {
   });
   Logger.debug("params are:", params);
 
-  const onAuthorAvatarClick = () => {
-    const username = muse?.pennedBy?.username;
-    if (username) push(ROUTES.Profile.View(username).Index);
-  };
-
   const getSafeImage = (src?: string) => src || "";
 
   const onMuseAvatarClick = (museId: string) => {
-    if (museId) push(ROUTES.Muse.View(museId));
+    if (museId) routeToPage(ROUTES.Muse.View(museId));
   };
 
   const onPromptClick = (promptId: string) => {
-    if (promptId) push(ROUTES.Prompt.View(promptId));
+    if (promptId) routeToPage(ROUTES.Prompt.View(promptId));
   };
 
   const fetchMuse = async (museId: string) => {
-    setLoading(true);
-    const _muse = await getMuseAction(museId);
-
-    if (!_muse || "message" in _muse) {
-      // handle error
-      setLoading(false);
-      push(ROUTES.NotFound);
-      return;
-    }
-    setLoading(false);
+    const _muse = await baseDataLoader(() => getMuseAction(museId));
     setMuse(_muse);
   };
 
   const fetchPrompts = async (museId: string) => {
-    setLoading(true);
-    const _prompts = await getPromptsByMuseAction(museId);
-
-    if (!_prompts || "message" in _prompts) {
-      setLoading(false);
-      push(ROUTES.NotFound);
-      return;
-    }
-    setLoading(false);
+    const _prompts = await baseDataLoader(() => getPromptsByMuseAction(museId));
     setPrompts(_prompts);
   };
 
@@ -207,10 +183,12 @@ export default function MuseProfilePage({}) {
           </ShouldRender>
           {prompt?.media && (
             <S.PromptMedia>
-              <S.CardBackground
-                banner={prompt?.media || ""}
-                className="image"
-              />
+              <AppImageViewer src={prompt?.media} alt="Prompt media">
+                <S.CardBackground
+                  banner={prompt?.media || ""}
+                  className="image"
+                />
+              </AppImageViewer>
             </S.PromptMedia>
           )}
           <S.FooterContainer>
@@ -231,9 +209,6 @@ export default function MuseProfilePage({}) {
 
   return (
     <S.MuseContainer>
-      <ShouldRender if={loading}>
-        <PageLoader />
-      </ShouldRender>
       <S.Banner
         src={
           getSafeImage(muse?.wallpaper?.src) || getSafeImage(muse?.image || "")

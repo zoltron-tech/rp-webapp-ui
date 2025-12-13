@@ -1,10 +1,11 @@
 "use client";
 import classNames from "classnames";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { type FC, useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { GrEdit } from "react-icons/gr";
 import { useGlobalState } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { StoryBoard } from "@/types/story-board";
 import { INITIAL_STORY_BOARD } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
@@ -18,7 +19,7 @@ type Props = React.HTMLProps<HTMLDivElement> & {
 };
 
 export const StoryCard: FC<Props> = ({ storyBoard, className, ...rest }) => {
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
   const params = useParams();
   const user = useGlobalState("user");
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
@@ -37,16 +38,16 @@ export const StoryCard: FC<Props> = ({ storyBoard, className, ...rest }) => {
 
   const onAvatarClick = () => {
     if (!storyBoard) return;
-    push(ROUTES.Story.View(storyBoard.id || ""));
+    routeToPage(ROUTES.Story.View(storyBoard.id || ""));
   };
 
   const onAddClick = () => {
     if (!storyBoard) return;
-    push(ROUTES.Profile.Story.Create);
+    routeToPage(ROUTES.Profile.Story.Create);
   };
 
   const onEditClick = () => {
-    push(ROUTES.Profile.Story.Edit(storyBoard?.id || "").Index);
+    routeToPage(ROUTES.Profile.Story.Edit(storyBoard?.id || "").Index);
   };
 
   Logger.info("StoryCard rendered");

@@ -14,6 +14,7 @@ import { uploadMedia } from "@/app/rp/profile/actions";
 import { ShouldRender, UploadAvatar, Username } from "@/components/common";
 import { useGlobalState } from "@/context/store/stores";
 import { useForm, useUIContext } from "@/hooks";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { Fandom, Muse } from "@/types";
 import { API_MESSAGE, INITIAL_MUSE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
@@ -41,7 +42,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
   const [avatarFile, setAvatarFile] = useState<FormData | null>(null);
   const [videoFile, setVideoFile] = useState<FormData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
   const [extraKey, setExtraKey] = useState("");
   const [extraValue, setExtraValue] = useState("");
   const [nicknameInput, setNicknameInput] = useState("");
@@ -233,7 +234,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
   };
 
   const handleCancel = () => {
-    push(ROUTES.Profile.View(user?.username || "").Muses);
+    routeToPage(ROUTES.Profile.View(user?.username || "").Muses);
   };
 
   useEffect(() => {

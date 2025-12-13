@@ -5,6 +5,7 @@ import { useGlobalState } from "@/context/store/stores";
 import { useToggleLike } from "@/hooks/use-toggle-like";
 import { parseTextContent } from "@/utils/helpers";
 import { LikeButton } from "../common/like-button";
+import { AppImageViewer } from "../image-viewer/AppImageViewer";
 import { usePromptState, usePromptStateSet } from "./prompt.store";
 import * as S from "./styled";
 
@@ -60,7 +61,13 @@ export const PromptContent: FC<PromptContentProps> = ({}) => {
       ))}
       {media && (
         <S.PromptMediaContainer>
-          <S.PromptImage src={media} alt="Prompt media" />
+          <AppImageViewer src={media} alt="Prompt media">
+            <S.PromptImage
+              src={media}
+              alt="Prompt media"
+              style={{ cursor: "zoom-in" }}
+            />
+          </AppImageViewer>
         </S.PromptMediaContainer>
       )}
       <S.PromptContent.Footer>

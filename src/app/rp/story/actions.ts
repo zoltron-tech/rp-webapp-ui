@@ -6,13 +6,16 @@ import type {
   StoryBoardEvent,
   StoryBoardEventThread,
 } from "@/types";
+import type { DataType } from "@/types/common";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import { Logger } from "@/utils/services";
 
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
 
-export const getAllStoryboardsByUsernameAction = async (username: string) => {
+export const getAllStoryboardsByUsernameAction = async (
+  username: string,
+): Promise<DataType<StoryBoard[]>> => {
   const jwt = await getJWTIfExists();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -42,7 +45,9 @@ export const getAllStoryboardsByUsernameAction = async (username: string) => {
   return storyBoard;
 };
 
-export const getStoryboardAction = async (storyboardId: string) => {
+export const getStoryboardAction = async (
+  storyboardId: string,
+): Promise<DataType<StoryBoard>> => {
   const jwt = await getJWTIfExists();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -169,7 +174,9 @@ export const updateStoryBoardEventAction = async (
   return storyboardEvent;
 };
 
-export const getStoryboardEventAction = async (storyboardEventId: string) => {
+export const getStoryboardEventAction = async (
+  storyboardEventId: string,
+): Promise<DataType<StoryBoardEvent>> => {
   const jwt = await getJWTIfExists();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -203,7 +210,7 @@ export const getStoryboardEventAction = async (storyboardEventId: string) => {
 
 export const getStoryboardEventThreadsAction = async (
   storyboardEventId: string,
-) => {
+): Promise<DataType<StoryBoardEventThread[]>> => {
   const jwt = await getJWTIfExists();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",

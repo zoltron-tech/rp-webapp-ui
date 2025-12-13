@@ -1,12 +1,13 @@
 "use client";
 import classNames from "classnames";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { type FC, useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { GrEdit } from "react-icons/gr";
 import { deleteMuseAction } from "@/app/rp/muse/actions";
 import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents } from "@/hooks";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { Muse } from "@/types/novelist";
 import { API_MESSAGE, INITIAL_MUSE } from "@/utils/constants";
 import { EVENTS } from "@/utils/constants/custom-events";
@@ -20,7 +21,7 @@ type Props = React.HTMLProps<HTMLDivElement> & {
   muse?: Muse | null;
 };
 export const MuseCard: FC<Props> = ({ muse, className, ...rest }) => {
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
   const params = useParams();
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const { emit } = useCustomEvents(EVENTS.MUSE.base);
@@ -39,16 +40,16 @@ export const MuseCard: FC<Props> = ({ muse, className, ...rest }) => {
 
   const onAvatarClick = () => {
     if (!muse) return;
-    push(ROUTES.Muse.View(muse.id || ""));
+    routeToPage(ROUTES.Muse.View(muse.id || ""));
   };
 
   const onAddClick = () => {
     if (!muse) return;
-    push(ROUTES.Profile.Muses.Create);
+    routeToPage(ROUTES.Profile.Muses.Create);
   };
 
   const onEditClick = () => {
-    push(ROUTES.Profile.Muses.Edit(muse?.id || ""));
+    routeToPage(ROUTES.Profile.Muses.Edit(muse?.id || ""));
   };
 
   const onConfirmDelete = async () => {
@@ -62,6 +63,8 @@ export const MuseCard: FC<Props> = ({ muse, className, ...rest }) => {
     }
     setShowDeleteAlert(false);
   };
+
+  const getSafeImage = (src?: string) => src || "";
 
   Logger.info("MuseCard rendered");
 
@@ -86,7 +89,12 @@ export const MuseCard: FC<Props> = ({ muse, className, ...rest }) => {
           onConfirm={onConfirmDelete}
         />
       </ShouldRender>
-      <S.CardBackground banner={muse.image || ""} />
+      <S.CardBackground
+        banner={
+          getSafeImage(muse?.cardBackground?.src) ||
+          getSafeImage(muse?.image || "")
+        }
+      />
       <S.Card
         className={classNames([
           "muse-card",

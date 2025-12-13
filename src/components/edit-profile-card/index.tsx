@@ -17,6 +17,7 @@ import {
 } from "@/components/common";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useForm, useUIContext } from "@/hooks";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { Novelist } from "@/types";
 import { API_MESSAGE, INITIAL_NOVELIST } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
@@ -33,7 +34,7 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
   const [loading, setLoading] = useState<boolean>(false);
   const novelists = useGlobalState("novelists");
   const set = useGlobalStoreSet();
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
 
   const { successToast, errorToast } = useUIContext();
 
@@ -131,7 +132,7 @@ export const EditProfileCard: FC<EditProfileCardProps> = ({}) => {
   };
 
   const handleCancel = () => {
-    push(ROUTES.Profile.View(user?.username || "").Index);
+    routeToPage(ROUTES.Profile.View(user?.username || "").Index);
   };
 
   useEffect(() => {

@@ -65,6 +65,11 @@ export const SourceName = styled.h1`
   font-weight: var(--font-weight-bold);
   color: var(--text);
   font-family: var(--font);
+
+  @media(max-width: 600px) {
+    max-width: 200px;
+    font-size: var(--font-size-input);
+  }
 `;
 
 export const PromptSubheader = styled.time`
@@ -76,6 +81,10 @@ export const PromptSubheader = styled.time`
   display: flex;
   align-items: center;
   gap: 8px;
+
+    @media(max-width: 600px) {
+    font-size: var(--font-size-xsmall);
+  }
 `;
 
 export const PromptThreadsSeparator = styled(Separator.Root)`
@@ -85,23 +94,43 @@ export const PromptThreadsSeparator = styled(Separator.Root)`
   background-color: var(--bg-7);
 `;
 
-const PromptContentFooter = styled.footer`
-  display: flex;
-  align-items: center;
-  margin-top: 18px;
-  padding-bottom: 8px;
+export const TextLine = styled.div`
+  margin-bottom: 8px;
 `;
 
-const PromptContentRoot = styled.section`
-  padding-inline: 16px;
-  padding-top: 20px;
+export const PromptImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  cursor: zoom-in;
+`;
+
+export const CommentMediaContainer = styled.div`
+  margin-inline: auto;
+  margin-top: 6px;
+
+  max-width: 200px;
+  height: fit-content;
+  display: flex;
+  background-color: #000000;
+`;
+
+const PromptContentRoot = styled.div`
+  padding-top: 12px;
+  padding-inline: 12px;
+  padding-bottom: 8px;
+  margin-left: 48px;
+  background-color: var(--bg-3);
+  border-radius: 4px;
 `;
 
 export const PromptContent = Object.assign(
   {},
   {
-    Footer: PromptContentFooter,
+    Image: PromptImage,
+    MediaContainer: CommentMediaContainer,
     Root: PromptContentRoot,
+    TextLine: TextLine,
   },
 );
 
@@ -112,16 +141,6 @@ export const PromptMediaContainer = styled.div`
   height: fit-content;
   display: flex;
   background-color: #000000;
-`;
-
-export const PromptImage = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-`;
-
-export const TextLine = styled.div`
-  margin-bottom: 8px;
 `;
 
 const CommentFooterRoot = styled.footer`
@@ -197,7 +216,7 @@ export const UnreadBadge = styled.a`
   color: var(--text);
   font-family: var(--font);
   font-size: var(--font-size-small);
-  font-weight: var(--font-weight-regular);
+  font-weight: var(--font-weight-semi-bold);
   border-radius: 12px;
   padding-inline: 8px;
   padding-block: 4px;
@@ -207,6 +226,11 @@ export const UnreadBadge = styled.a`
   justify-content: center;
   z-index: 1;
   cursor: pointer;
+
+  @media (max-width: 600px) {
+    top: 10px;
+    right: 5px;
+  }
 `;
 
 const OpenThreadButton = styled.button`

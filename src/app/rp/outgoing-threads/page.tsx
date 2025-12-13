@@ -1,41 +1,30 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { ShouldRender } from "@/components/common";
+import { useCallback, useEffect, useState } from "react";
+import { BreadCrumb } from "@/components/breadcrumb";
 import { PromptThreadCommentCard } from "@/components/outgoing-reply";
-import StoryCard from "@/components/story-card";
 import { useGlobalState } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { PromptThreadComment } from "@/types";
-import { INITIAL_STORY_BOARD } from "@/utils/constants";
-import { Logger } from "@/utils/services";
 import { getOutgoingThreadsAction } from "./actions";
 import * as S from "./styles";
 
 export default function OutgoingThreadPage({}) {
+  const user = useGlobalState("user");
+
   const [promptThreadComments, setPromptThreadComments] = useState<
     PromptThreadComment[] | null
   >(null);
 
   const authState = useGlobalState("authState");
-  const user = useGlobalState("user");
-  const novelist = useGlobalState("novelist");
-  const [_loading, setLoading] = useState(true);
-  const { push } = useRouter();
 
-  const fetchOutgoingThreads = async () => {
-    setLoading(true);
-    const _threads = await getOutgoingThreadsAction();
+  const { baseDataLoader } = usePageRouter();
 
-    if (!_threads || "message" in _threads) {
-      // handle error
-      setLoading(false);
-      push("/404");
-      return;
-    }
+  const fetchOutgoingThreads = useCallback(async () => {
+    const _threads = await baseDataLoader(getOutgoingThreadsAction);
+    if (!_threads) return;
     setPromptThreadComments(_threads);
-    setLoading(false);
-  };
+  }, [baseDataLoader]);
 
   useEffect(() => {
     if (authState === "LOADING" || promptThreadComments) return;
@@ -45,8 +34,8 @@ export default function OutgoingThreadPage({}) {
 
   return (
     <S.Container>
-      <S.Maintext>Your Threads</S.Maintext>
-      <S.Subtext>These are your outgoing threads</S.Subtext>
+      <BreadCrumb label="Interactions" username={user?.username ?? ""} />
+
       <S.StoryListContainer>
         {promptThreadComments?.map((thread) => {
           return (

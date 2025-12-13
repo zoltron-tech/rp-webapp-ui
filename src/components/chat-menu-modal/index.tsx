@@ -8,6 +8,7 @@ import { IoChatbubblesSharp } from "react-icons/io5";
 import { TiGroup } from "react-icons/ti";
 import { getConversationsAction } from "@/app/rp/novelists/actions";
 import { useGlobalState } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { Conversation } from "@/types/conversation";
 import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDate, toggleState } from "@/utils/helpers";
@@ -23,10 +24,10 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
   const [open, setOpen] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>();
   const [_loading, setLoading] = useState(true);
-  const { push } = useRouter();
+  const { routeToPage, baseDataLoader } = usePageRouter();
 
   const onAvatarClick = (username: string) => {
-    push(ROUTES.Profile.View(username).Index);
+    routeToPage(ROUTES.Profile.View(username).Index);
   };
 
   const getConversationPreviewText = (
@@ -79,17 +80,8 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
   };
 
   const fetchConversations = async () => {
-    setLoading(true);
-    const _muse = await getConversationsAction(1, 5);
-
-    if (!_muse || "message" in _muse) {
-      // handle error
-      setLoading(false);
-      push("/404");
-      return;
-    }
-    setLoading(false);
-    setConversations(_muse);
+    const _muse = await baseDataLoader(() => getConversationsAction(1, 5));
+    if (_muse !== null) setConversations(_muse);
   };
 
   useEffect(() => {

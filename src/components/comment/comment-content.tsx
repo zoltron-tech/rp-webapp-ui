@@ -2,6 +2,7 @@
 
 import { type FC, useMemo } from "react";
 import { parseTextContent } from "@/utils/helpers";
+import { AppImageViewer } from "../image-viewer/AppImageViewer";
 import { useCommentState } from "./comment.store";
 import * as S from "./styled";
 
@@ -24,7 +25,13 @@ export const CommentContent: FC = () => {
       ))}
       {media && (
         <S.CommentContent.MediaContainer>
-          <S.CommentContent.Image src={media} alt="Comment media" />
+          <AppImageViewer src={media} alt="Comment media">
+            <S.CommentContent.Image
+              src={media}
+              alt="Comment media"
+              style={{ cursor: "zoom-in" }}
+            />
+          </AppImageViewer>
         </S.CommentContent.MediaContainer>
       )}
     </S.CommentContent.Root>

@@ -2,8 +2,7 @@
 
 import { ShouldRender } from "@novelist-world/ui";
 import classNames from "classnames";
-import { useRouter } from "next/navigation";
-import { Form, Label, RadioGroup, Separator } from "radix-ui";
+import { Form, RadioGroup, Separator } from "radix-ui";
 import {
   type FormEventHandler,
   type ReactNode,
@@ -57,11 +56,8 @@ export default function EditDataCard() {
   const [error, setError] = useState<ErrorKey | null>(null);
   const [loading, setLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
-  const authState = useGlobalState("authState");
   const setGlobalState = useGlobalStoreSet();
-  const { successToast, errorToast } = useUIContext();
-  const { push } = useRouter();
-  const [currentStep, setCurrentStep] = useState("username");
+  const { successToast } = useUIContext();
 
   const setFirstname = useCallback(
     (value: string) => {

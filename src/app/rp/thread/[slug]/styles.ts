@@ -1,6 +1,7 @@
 import { Container } from "@novelist-world/ui";
 import styled from "styled-components";
 import * as Common from "@/components/common";
+import { AvatarNew } from "@/components/common/avatar-new";
 import { CARD_BORDER, DEV_MODE_BORDER, Z_INDEX } from "@/theme";
 
 export const ParentContainer = styled(Container)`
@@ -26,12 +27,32 @@ export const ParentContainer = styled(Container)`
 export const RepliesContainer = styled.div`
   max-width: 800px;
   margin-top: 40px;
-
   width: 100%;
-  padding-inline: 20px;
+  padding: 10px 20px 20px;
   z-index: ${Z_INDEX.CARD_EXPAND};
   background-color: var(--bg-2);
   border: 0.85px solid var(--bg-6);
+
+    .separator[data-orientation="horizontal"] {
+    height: 1px;
+    width: 100%;
+    margin-block: 10px;
+    background-color: var(--bg-6);
+  }
+
+    .avatar {
+    width: 64px;
+    height: 64px;
+    cursor: pointer;
+  }
+
+  @media screen and (max-width: 430px) {
+    .avatar {
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+    }
+  }
 
   @container content-container (max-width: 800px) {
     max-width: 100%;
@@ -65,45 +86,77 @@ export const HeaderContainer = styled.div`
   width: 100%;
 `;
 
-export const Avatar = styled(Common.Avatar)`
-  margin-block: 10px;
+export const SourceInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-left: 10px;
+`;
 
-  @container (max-width: 500px) {
-    & {
-      --size: 30px;
-    }
+export const SourceName = styled.h1`
+  all: unset;
+
+  line-height: 1.5;
+  font-size: var(--font-size-h5);
+  font-weight: var(--font-weight-bold);
+  color: var(--text);
+  font-family: var(--font);
+
+  @media(max-width: 600px) {
+    max-width: 200px;
+    font-size: var(--font-size-input);
   }
 `;
 
-export const SourceName = styled.div`
-  text-transform: uppercase;
-  font-size: 18px;
-  font-weight: 500;
-  font-style: italic;
-  text-align: center;
-  cursor: pointer;
+export const PromptSubheader = styled.time`
+  all: unset;
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  cursor: default;
 
-  @container (max-width: 1000px) {
-    & {
-      font-size: 16px;
-    }
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+    @media(max-width: 600px) {
+    font-size: var(--font-size-xsmall);
   }
 `;
 
 export const PromptText = styled.div`
-  font-size: 16px;
+  font-size: var(--font-size);
   font-weight: 300;
-  max-width: 60%;
+  max-width: 80%;
   padding-left: 25px;
   white-space: pre-wrap;
 
   @container (max-width: 700px) {
     & {
       padding-left: unset;
-      font-size: 12px;
-      font-weight: 400;
+      font-size: var(--font-size-small);
     }
   }
+`;
+
+export const MediaContainer = styled.div`
+  margin-inline: auto;
+  margin-top: 6px;
+
+  max-width: 400px;
+  height: fit-content;
+  display: flex;
+  background-color: #000000;
+
+  @media (max-width: 500px) {
+    max-width: 200px;
+  }
+`;
+
+export const PromptImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  cursor: zoom-in;
 `;
 
 export const StyledDate = styled.div`
@@ -147,6 +200,7 @@ export const CardWrapper = styled.div`
 
   transition: all 0.3s ease-in-out;
   contain: paint;
+  cursor: zoom-in;
   z-index: ${Z_INDEX.CARD};
 
   container-name: card;
@@ -178,6 +232,13 @@ export const CardWrapper = styled.div`
       scale: 1.03;
     }
   }
+`;
+
+export const ReplyHeaderContainer = styled.div`
+  ${DEV_MODE_BORDER("blue")}
+  display: flex;
+  width: 100%;
+  padding-block: 20px;
 `;
 
 export const DropdownMenuContainer = styled.div`

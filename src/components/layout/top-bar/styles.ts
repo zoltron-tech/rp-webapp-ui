@@ -240,7 +240,7 @@ export const ActionsContainer = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-right: 1rem;
+  margin-right: 0.5rem;
 `;
 
 export const ButtonsContainerDesktop = styled.div`
@@ -259,22 +259,4 @@ export const ButtonsContainerDesktop = styled.div`
 
 export const ButtonsContainerLoggedInDesktop = styled(ButtonsContainerDesktop)`
   width: 75px;
-`;
-
-export const ButtonsContainerMobile = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-direction: column;
-  width: 100px;
-
-  @container (min-width: 800px) {
-    & {
-      display: none;
-    }
-  }
-
-  & > .button:not(:last-child) {
-    border-bottom: 1px solid var(--text);
-  }
 `;

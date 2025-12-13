@@ -1,7 +1,7 @@
 "use client";
 
 import { Flex } from "@novelist-world/ui";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { BiSolidMessage } from "react-icons/bi";
 import { BsPersonFillCheck, BsPersonFillUp, BsThreeDots } from "react-icons/bs";
@@ -15,12 +15,12 @@ import { MusesPill } from "@/components";
 import ActivityBox from "@/components/activity-box";
 import { ShouldRender, Username } from "@/components/common";
 import { AppAlertDialog } from "@/components/dialog";
-import { PageLoader } from "@/components/layout";
 import MuseListItem from "@/components/muse-list-item";
 import { AppDropdownMenu } from "@/components/profile-more-dropdown";
 import PromptInput from "@/components/prompt-input";
 import StoryCard from "@/components/story-card";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import type { Novelist, StoryBoard } from "@/types";
 import type { Activity } from "@/types/activity";
@@ -43,19 +43,19 @@ import * as S from "./styles";
 
 const useGetActivities = (username: string) => {
   const [activities, setActivities] = useState<Activity[]>();
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<boolean>(false);
+  const { stopPageLoading, baseDataLoader } = usePageRouter();
 
   const fetchActivities = useCallback(async () => {
-    setLoading(true);
-    const _activities = (await getUserActivities(username, 1, 10)) ?? [];
+    const _activities =
+      (await baseDataLoader(() => getUserActivities(username, 1, 10))) ?? [];
 
     if (_activities && "message" in _activities) {
-      setLoading(false);
+      stopPageLoading();
       setError(true);
       return;
     }
-    setLoading(false);
+    stopPageLoading();
     setActivities(_activities);
   }, [username]);
 
@@ -63,7 +63,7 @@ const useGetActivities = (username: string) => {
     fetchActivities();
   }, [fetchActivities]);
 
-  return { activities, error, loading, refetch: fetchActivities };
+  return { activities, error, refetch: fetchActivities, stopPageLoading };
 };
 
 export default function UserProfilePage({}) {
@@ -75,17 +75,14 @@ export default function UserProfilePage({}) {
   const user = useGlobalState("user");
   const userNovelist = useGlobalState("novelist");
   const [novelist, setNovelist] = useState<Novelist | null>(null);
-  const [loading, setLoading] = useState(true);
   const username = params?.slug as string;
   const isCurrentUser = username === user?.username;
   const { activities, refetch: refetchAcitivities } =
     useGetActivities(username);
   const [storyBoards, setStories] = useState<StoryBoard[] | null>(null);
-  const { push } = useRouter();
   const setGlobalState = useGlobalStoreSet();
   const { successToast, warningToast, errorToast } = useUIContext();
-
-  const handleButtonClick = () => {};
+  const { routeToPage, stopPageLoading, baseDataLoader } = usePageRouter();
 
   const handleCopyUsername = () => {
     if (username) {
@@ -108,11 +105,11 @@ export default function UserProfilePage({}) {
   };
 
   const toMusesPage = () => {
-    push(ROUTES.Profile.View(username).Muses);
+    routeToPage(ROUTES.Profile.View(username).Muses);
   };
 
   const toStoryBoardsPage = () => {
-    push(ROUTES.Profile.View(username).Storyboards);
+    routeToPage(ROUTES.Profile.View(username).Storyboards);
   };
 
   // TODO: GetConversationId from username and if not exists then open a dialogue to send a message which should create a new conversation in the backend.
@@ -245,17 +242,10 @@ export default function UserProfilePage({}) {
   };
 
   const fetchStoryboards = async () => {
-    setLoading(true);
-    const _muses = await getAllStoryboardsByUsernameAction(username);
-
-    if (!_muses || "message" in _muses) {
-      // handle error
-      setLoading(false);
-      push("/404");
-      return;
-    }
-    setLoading(false);
-    setStories(_muses);
+    const _storyboards = await baseDataLoader(() =>
+      getAllStoryboardsByUsernameAction(username),
+    );
+    setStories(_storyboards);
   };
 
   const renderConnectionDropdown = (
@@ -351,27 +341,19 @@ export default function UserProfilePage({}) {
 
   const fetchNovelist = async (username: string) => {
     // fetch novelist by username
-    setLoading(true);
-    const _novelist = await getNovelistAction(username);
-    if (_novelist === null && isCurrentUser) {
+    const _novelist = await baseDataLoader(() => getNovelistAction(username));
+    if (!_novelist || isCurrentUser) {
       setGlobalState({ authState: "UNINITIALIZED" });
-      push(ROUTES.Onboarding);
+      routeToPage(ROUTES.Onboarding);
       return;
     }
 
-    if (!_novelist || "message" in _novelist) {
-      // handle error
-      setLoading(false);
-      push("/404");
-      return;
-    }
-    setLoading(false);
     setNovelist(_novelist);
   };
 
   useEffect(() => {
     if (authState === "UNINITIALIZED") {
-      push(ROUTES.Onboarding);
+      routeToPage(ROUTES.Onboarding);
       return;
     }
 
@@ -379,7 +361,7 @@ export default function UserProfilePage({}) {
 
     if (isCurrentUser) {
       setNovelist(userNovelist);
-      setLoading(false);
+      stopPageLoading();
       return;
     }
 
@@ -413,9 +395,6 @@ export default function UserProfilePage({}) {
         onConfirm={handleNotImplemented}
         actionButtonLabel="Block"
       />
-      <ShouldRender if={loading && authState !== "LOADING"}>
-        <PageLoader />
-      </ShouldRender>
 
       <S.Banner
         src={
@@ -429,7 +408,7 @@ export default function UserProfilePage({}) {
           <Flex
             direction="row"
             justify="flex-start"
-            style={{ marginBottom: "-70px", width: "90%" }}
+            style={{ marginBottom: "-70px", overflow: "visible", width: "90%" }}
           >
             <S.Avatar
               src={novelist?.image ?? null}
@@ -586,7 +565,7 @@ export default function UserProfilePage({}) {
                   ? "Your Updates"
                   : `Updates by ${username}`}
             </S.SubText>
-            <S.ContentContainer>
+            <S.ActivitiesContainer>
               {authState === "LOGGED_IN" && username === user?.username && (
                 <PromptInput
                   type={"prompt"}
@@ -600,7 +579,7 @@ export default function UserProfilePage({}) {
                   activity={activity}
                 ></ActivityBox>
               ))}
-            </S.ContentContainer>
+            </S.ActivitiesContainer>
           </S.ContentInner>
         </S.ContentRight>
       </S.Content>

@@ -1,10 +1,10 @@
 "use client";
 import classNames from "classnames";
-import { useRouter } from "next/navigation";
 import type { FC } from "react";
 import { FaArrowRight } from "react-icons/fa";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { GrEdit } from "react-icons/gr";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { StoryBoardEvent } from "@/types/story-board";
 import { INITIAL_STORY_BOARD_EVENT } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
@@ -25,10 +25,10 @@ export const StoryCardEvent: FC<Props> = ({
   className,
   ...rest
 }) => {
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
 
   const onEventClick = (eventId: string) => {
-    push(ROUTES.Story.Event.View(eventId));
+    routeToPage(ROUTES.Story.Event.View(eventId));
   };
 
   const handleCardClick = (
@@ -43,12 +43,12 @@ export const StoryCardEvent: FC<Props> = ({
 
   const onAddClick = () => {
     if (!event) return;
-    push(ROUTES.Profile.Story.Edit(storyboardId).Event.Create);
+    routeToPage(ROUTES.Profile.Story.Edit(storyboardId).Event.Create);
   };
 
   const onEditClick = (eventId: string | null) => {
     if (eventId === null) return;
-    push(ROUTES.Profile.Story.Edit(storyboardId).Event.Edit(eventId));
+    routeToPage(ROUTES.Profile.Story.Edit(storyboardId).Event.Edit(eventId));
   };
 
   Logger.info("StoryCard rendered");

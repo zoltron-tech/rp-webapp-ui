@@ -10,7 +10,7 @@ import type {
   NovelistWorldNotification,
   UpdateNovelistPayload,
 } from "@/types";
-import type { SearchResult, WithMessage } from "@/types/common";
+import type { DataType, SearchResult, WithMessage } from "@/types/common";
 import type { Conversation, Message } from "@/types/conversation";
 import {
   API_MESSAGE,
@@ -40,7 +40,9 @@ export const getNovelists = async () => {
   return novelists;
 };
 
-export const getNovelistAction = async (username: string) => {
+export const getNovelistAction = async (
+  username: string,
+): Promise<DataType<Novelist>> => {
   const headers: Record<string, string> = {
     [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
   };
@@ -96,7 +98,9 @@ export const getUserNovelist = async () => {
   return novelist;
 };
 
-export const getNotifications = async () => {
+export const getNotifications = async (): Promise<
+  DataType<NovelistWorldNotification[]>
+> => {
   const jwt = await authenticateAndGetJWT();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/notification`;
 
@@ -229,7 +233,7 @@ export const chatAction = async (targetUserName: string | null) => {
 export const getConversationsAction = async (
   pageNumber: number,
   pageSize: number,
-) => {
+): Promise<DataType<Conversation[]>> => {
   const jwt = await authenticateAndGetJWT();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/conversations?pageNumber=${pageNumber}&pageSize=${pageSize}`;
 

@@ -5,6 +5,7 @@ import { type FC, type MouseEventHandler, useCallback, useMemo } from "react";
 import { GoCommentDiscussion } from "react-icons/go";
 import { IoMdArrowForward } from "react-icons/io";
 import { useGlobalState } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
 import { useToggleLike } from "@/hooks/use-toggle-like";
 import { ROUTES } from "@/utils/constants/routes";
 import { pluralize } from "@/utils/helpers";
@@ -18,7 +19,7 @@ export const CommentFooter: FC = () => {
   const reactions = useCommentState("reactions");
   const threadId = useCommentState("id");
   const threadUrl = useMemo(() => ROUTES.Thread.View(threadId), [threadId]);
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
   const authState = useGlobalState("authState");
   const setCommentState = useCommentStateSet();
   const { toggleLike } = useToggleLike({
@@ -63,9 +64,9 @@ export const CommentFooter: FC = () => {
   > = useCallback(
     (e) => {
       e.preventDefault();
-      push(threadUrl);
+      routeToPage(threadUrl);
     },
-    [threadUrl, push],
+    [threadUrl, routeToPage],
   );
 
   return (

@@ -1,23 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { PageLoader } from "@/components/layout";
+import { useCallback, useEffect } from "react";
 import { NotificcationsList } from "@/components/notification";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
 import { getNotifications } from "../novelists/actions";
 
 export default function NotifiactionsPage({}) {
-  const [loading, setLoading] = useState(true);
   const authState = useGlobalState("authState");
   const notifications = useGlobalState("notifications");
+  const { baseDataLoader } = usePageRouter();
+
   const set = useGlobalStoreSet();
 
   const fetchNotifications = useCallback(async () => {
-    if (authState !== "LOGGED_IN") return;
-    setLoading(true);
-    const _notifications = await getNotifications();
-    setLoading(false);
-
+    const _notifications = await baseDataLoader(() => getNotifications());
     set({ notifications: _notifications });
   }, [authState]);
 
@@ -26,8 +23,6 @@ export default function NotifiactionsPage({}) {
 
     fetchNotifications();
   }, [authState]);
-
-  // if (loading) return <PageLoader />;
 
   return <NotificcationsList />;
 }

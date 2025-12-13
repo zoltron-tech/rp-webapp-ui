@@ -134,23 +134,23 @@ export default function ForgotPasswordPage() {
       if (!email) return;
 
       setOperationState("INITIAL");
-      globalStoreSet({ globalLoading: true });
+      globalStoreSet({ pageLoading: true });
       const response = await forgotPasswordAction(email);
       if (response.message === API_MESSAGE.NotFound) {
         setOperationState("NOT_FOUND");
         setSubmittedEmail(email);
-        globalStoreSet({ globalLoading: false });
+        globalStoreSet({ pageLoading: false });
         return;
       }
 
       if (response.message === API_MESSAGE.UncategorizedError) {
         setOperationState("ERROR");
-        globalStoreSet({ globalLoading: false });
+        globalStoreSet({ pageLoading: false });
         return;
       }
 
       setOperationState("SUCCESS");
-      globalStoreSet({ globalLoading: false });
+      globalStoreSet({ pageLoading: false });
     },
     [setOperationState, globalStoreSet],
   );

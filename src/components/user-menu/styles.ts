@@ -1,5 +1,11 @@
+import { Form as RadixForm } from "radix-ui";
 import styled from "styled-components";
-import { BACKGROUND_BLUR, BASE_TRANSITION, DEV_MODE_BORDER } from "@/theme";
+import {
+  BACKGROUND_BLUR,
+  BASE_TRANSITION,
+  DEV_MODE_BORDER,
+  Z_INDEX,
+} from "@/theme";
 
 export const PositionContainer = styled.div`
   ${DEV_MODE_BORDER("red")}
@@ -7,17 +13,69 @@ export const PositionContainer = styled.div`
   right: 1rem;
 `;
 
+export const FormRoot = styled(RadixForm.Root)`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+`;
+
+export const FormField = styled(RadixForm.Field)`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+export const FormLabel = styled(RadixForm.Label)`
+  margin-bottom: 10px;
+  font-size: var(--font-size);
+  color: var(--text-secondary);
+
+  span {
+    font-size: var(--font-size-small);
+    font-weight: var(--font-weight-semi-bold);
+    font-style: italic;
+    color: var(--accent);
+  }
+`;
+
+export const FormControl = styled(RadixForm.Control)`
+  width: 100%;
+  min-height: 120px;
+  padding: 10px;
+  background: var(--bg-3);
+  color: var(--text);
+  border: 1px solid var(--bg-6);
+  border-radius: 4px;
+  resize: vertical;
+  font-size: var(--font-size);
+  font-family: var(--font);
+`;
+
+export const FormMessage = styled(RadixForm.Message)`
+  margin-top: 10px;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  color: var(--accent);
+`;
+
+export const FormTextArea = styled.textarea`
+    font-size: var(--font-size-input);
+`;
+
 export const Menu = styled.div`
   box-shadow: 0px 0px 10px 4px rgba(0, 0, 0, 0.5);
   position: absolute;
   top: 60px;
   right: 0px;
-  padding: 5px 0px;
+  padding: 8px 0px 8px;
 
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  background-color: ${({ theme }: any) => theme.modalBackground};
+  background-color: var(--bg-3);
+
+  z-index: ${Z_INDEX.MODAL};
 
   width: 15rem;
   height: max-content;
@@ -25,9 +83,9 @@ export const Menu = styled.div`
   pointer-events: none;
   transition-property: opacity, width, height;
   ${BASE_TRANSITION}
-  ${BACKGROUND_BLUR()}
+  /* ${BACKGROUND_BLUR()} */
 
-  border-radius: var(--border-radius);
+  border-radius: 5px;
 
   &.open {
     opacity: 1;
@@ -41,7 +99,7 @@ export const Menu = styled.div`
 
   @media (max-width: 700px) {
     & {
-      top: 45px;
+      top: 50px;
     }
   }
 `;
@@ -67,7 +125,7 @@ export const ContentContainer = styled.div`
 `;
 
 export const Separator = styled.div`
-  border-top: 1px solid #42434a;
+  border-top: 1px solid #61626bff;
 `;
 
 export const List = styled.ul`
@@ -80,12 +138,13 @@ export const List = styled.ul`
 
 export const Element = styled.li`
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   font-weight: 600;
   color: rgba(209, 216, 226, 1);
   gap: 10px;
   padding: 10px;
+  padding-left: 15px;
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.3s ease-out;
@@ -113,17 +172,6 @@ export const DeleteElement = styled(Element)`
     color: #ffffff;
     background-color: #8e2a2a;
   }
-`;
-
-export const DisabledElement = styled.li`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: 600;
-  color: rgba(82, 87, 93, 1);
-  gap: 10px;
-  padding: 10px;
-  border-radius: 10px;
 `;
 
 export const LastSectionElement = styled(Element)`

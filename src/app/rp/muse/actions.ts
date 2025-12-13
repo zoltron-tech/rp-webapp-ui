@@ -2,14 +2,16 @@
 import getConfig from "next/config";
 import { authenticateAndGetJWT, getJWTIfExists } from "@/app/actions";
 import type { CreateUpdateMuse, Fandom, Muse } from "@/types";
-import type { WithMessage } from "@/types/common";
+import type { DataType, WithMessage } from "@/types/common";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import { Logger } from "@/utils/services";
 
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
 
-export const getMuseAction = async (museId: string) => {
+export const getMuseAction = async (
+  museId: string,
+): Promise<DataType<Muse>> => {
   const jwt = await getJWTIfExists();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}`;
 
@@ -39,7 +41,9 @@ export const getMuseAction = async (museId: string) => {
   return muse;
 };
 
-export const getAllMusesByUsernameAction = async (username: string) => {
+export const getAllMusesByUsernameAction = async (
+  username: string,
+): Promise<DataType<Muse[]>> => {
   const jwt = await getJWTIfExists();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -119,7 +123,7 @@ export const getAllMusesAction = async () => {
   return muse;
 };
 
-export const getHeroPageMusesAction = async () => {
+export const getHeroPageMusesAction = async (): Promise<DataType<Muse[]>> => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/random`;
 
   const response = await fetch(URL, {

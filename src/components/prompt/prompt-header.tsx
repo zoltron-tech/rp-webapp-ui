@@ -1,7 +1,6 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
-import { useRouter } from "next/navigation";
 import { type FC, useCallback } from "react";
 import { BsThreeDots } from "react-icons/bs";
 import { FaRegEdit } from "react-icons/fa";
@@ -13,6 +12,7 @@ import {
 } from "@/app/rp/thread/actions";
 import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
+import { usePageRouter } from "@/hooks/use-page-router";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { displayDate, toFormattedDate } from "@/utils/helpers";
@@ -32,7 +32,7 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
   const privacy = usePromptState("privacy");
   const promptAlert = usePromptState("promptAlert");
   const setPromptState = usePromptStateSet();
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
   const { successToast, errorToast, warningToast } = useUIContext();
   const authState = useGlobalState("authState");
 
@@ -57,11 +57,11 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
     const response = await deletePromptAction(promptId);
     if (response?.message === API_MESSAGE.Success) {
       successToast(`Deleted successfully`);
-      push(ROUTES.Muse.View(source.sourceId));
+      routeToPage(ROUTES.Muse.View(source.sourceId));
     } else {
       errorToast("There was an issue while deleting this reply.");
     }
-  }, [promptId, source, push, successToast, errorToast]);
+  }, [promptId, source, routeToPage, successToast, errorToast]);
 
   const handleOpenChange = useCallback(
     (type: typeof promptAlert) =>

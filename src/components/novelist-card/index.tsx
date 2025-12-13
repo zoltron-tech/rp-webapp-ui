@@ -1,10 +1,10 @@
 "use client";
 import classNames from "classnames";
-import { useRouter } from "next/navigation";
 import { type FC, useEffect, useState } from "react";
 import { MdOutlineExpandLess, MdOutlineExpandMore } from "react-icons/md";
 import { useSwiper, useSwiperSlide } from "swiper/react";
 import { ShouldRender } from "@/components/common";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { Novelist } from "@/types/novelist";
 import { ROUTES } from "@/utils/constants/routes";
 import { toggleState } from "@/utils/helpers";
@@ -18,15 +18,15 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
   const [expanded, setExpanded] = useState(false);
   const { isActive } = useSwiperSlide();
   const { autoplay } = useSwiper();
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
 
   const onAvatarClick = () => {
     if (!novelist) return;
-    push(ROUTES.Profile.View(novelist.username).Index);
+    routeToPage(ROUTES.Profile.View(novelist.username).Index);
   };
 
   const onMuseAvatarClick = (museId: string) => {
-    if (museId) push(ROUTES.Muse.View(museId));
+    if (museId) routeToPage(ROUTES.Muse.View(museId));
   };
 
   const handleMouseEnter = () => {

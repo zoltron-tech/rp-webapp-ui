@@ -10,6 +10,7 @@ import {
 import { Input, UploadAvatar } from "@/components/common";
 import { useGlobalState } from "@/context/store/stores";
 import { useForm, useUIContext } from "@/hooks";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { StoryBoardEvent } from "@/types";
 import { API_MESSAGE, INITIAL_STORY_BOARD_EVENT } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
@@ -29,7 +30,7 @@ export const CreateStoryBoardEventCard: FC<CreateStoryBoardEventCardProps> = ({
   const [_storyBoardEvent, setStoryBoardEvent] = useState<StoryBoardEvent>();
   const [avatarFile, setAvatarFile] = useState<FormData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
 
   const { successToast, errorToast } = useUIContext();
 
@@ -115,7 +116,7 @@ export const CreateStoryBoardEventCard: FC<CreateStoryBoardEventCardProps> = ({
   });
 
   const handleCancel = () => {
-    push(ROUTES.Story.View(storyboardId));
+    routeToPage(ROUTES.Story.View(storyboardId));
   };
 
   useEffect(() => {

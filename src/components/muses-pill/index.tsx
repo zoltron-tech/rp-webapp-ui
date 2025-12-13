@@ -1,5 +1,5 @@
-import { useRouter } from "next/navigation";
 import type { FC } from "react";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { Muse, Novelist, StoryBoard } from "@/types";
 import type { PillType } from "@/types/pill-type";
 import { ROUTES } from "@/utils/constants/routes";
@@ -25,14 +25,14 @@ export const MusesPill: FC<Props> = ({
   expandable,
 }) => {
   Logger.info("MusesPill rendered");
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
 
   const onAvatarClick = (username: string) => {
-    push(ROUTES.Profile.View(username).Index);
+    routeToPage(ROUTES.Profile.View(username).Index);
   };
 
   const onMuseAvatarClick = (museId: string) => {
-    if (museId) push(ROUTES.Muse.View(museId));
+    if (museId) routeToPage(ROUTES.Muse.View(museId));
   };
 
   const loadChildren = (slice = 0, className = "") => {

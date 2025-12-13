@@ -1,9 +1,10 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect } from "react";
 import { useGlobalState } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 
@@ -15,13 +16,13 @@ export default function CreateMusePage({}) {
   const _id = useParams()?.id as string;
   const authState = useGlobalState("authState");
 
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
 
   useEffect(() => {
     Logger.debug("CreateMusePage", authState);
     if (authState === "LOGGED_OUT") {
       Logger.debug("pushing to home");
-      push(ROUTES.Novelists);
+      routeToPage(ROUTES.Novelists);
     }
   }, [authState]);
 

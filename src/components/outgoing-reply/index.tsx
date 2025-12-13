@@ -1,11 +1,11 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
-import { useRouter } from "next/navigation";
 import { Separator } from "radix-ui";
 import { type FC, type MouseEventHandler, useCallback, useMemo } from "react";
 import { GoCommentDiscussion } from "react-icons/go";
 import { IoMdArrowForward } from "react-icons/io";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { PromptThreadComment } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import {
@@ -14,9 +14,8 @@ import {
   pluralize,
   toFormattedDate,
 } from "@/utils/helpers";
-import { UnreadBadge } from "../chat-menu-modal/styles";
 import { MuseAvatar } from "../common/muse-avatar";
-import { PrivacyIcon } from "../common/privacy-icon";
+import { AppImageViewer } from "../image-viewer/AppImageViewer";
 import * as S from "./styled";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
@@ -28,7 +27,7 @@ export const PromptThreadCommentCard: FC<Props> = ({
   className,
   ...rest
 }) => {
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
   const threadUrl = useMemo(
     () => ROUTES.Thread.View(promptThreadComment?.parentId || ""),
     [promptThreadComment?.parentId],
@@ -45,8 +44,10 @@ export const PromptThreadCommentCard: FC<Props> = ({
   const newReplyCount = useMemo(() => {
     if (!promptThreadComment) return 0;
     return promptThreadComment?.replyCount < 10
-      ? String(promptThreadComment?.replyCount)
-      : "9+";
+      ? String(promptThreadComment?.replyCount) +
+          " new " +
+          pluralize("reply", promptThreadComment?.replyCount)
+      : "9+ new " + pluralize("reply", promptThreadComment?.replyCount);
   }, [promptThreadComment]);
 
   const date = useMemo(() => {
@@ -59,14 +60,12 @@ export const PromptThreadCommentCard: FC<Props> = ({
   > = useCallback(
     (e) => {
       e.preventDefault();
-      push(threadUrl);
+      routeToPage(threadUrl);
     },
-    [threadUrl, push],
+    [threadUrl, routeToPage],
   );
 
-  console.log(date);
-
-  if (!promptThreadComment) return <></>;
+  if (!promptThreadComment) return null;
 
   return (
     <S.ThreadRoot>
@@ -101,11 +100,18 @@ export const PromptThreadCommentCard: FC<Props> = ({
         ))}
         {/* {promptThreadComment.text} */}
         {promptThreadComment.media && (
-          <S.PromptMediaContainer>
-            <S.PromptImage src={promptThreadComment.media} alt="Prompt media" />
-          </S.PromptMediaContainer>
+          <S.PromptContent.MediaContainer>
+            <AppImageViewer
+              src={promptThreadComment?.media}
+              alt="outgoing thread media"
+            >
+              <S.PromptImage
+                src={promptThreadComment.media}
+                alt="Prompt media"
+              />
+            </AppImageViewer>
+          </S.PromptContent.MediaContainer>
         )}
-        <S.PromptContent.Footer></S.PromptContent.Footer>
       </S.PromptContent.Root>
 
       <S.CommentFooter.Root>

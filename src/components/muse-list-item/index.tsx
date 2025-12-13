@@ -1,11 +1,10 @@
 "use client";
 import { Flex } from "@novelist-world/ui";
 import classNames from "classnames";
-import { useRouter } from "next/navigation";
 import type { FC } from "react";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { Muse } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
-import { Avatar } from "../common";
 import { AvatarNew } from "../common/avatar-new";
 import * as S from "./styles";
 
@@ -14,11 +13,11 @@ type Props = React.HTMLProps<HTMLDivElement> & {
 };
 
 export const MuseListItem: FC<Props> = ({ muse, className, ...rest }) => {
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
 
   const onAvatarClick = () => {
     if (!muse) return;
-    push(ROUTES.Muse.View(muse.id || ""));
+    routeToPage(ROUTES.Muse.View(muse.id || ""));
   };
 
   if (!muse) return <></>;

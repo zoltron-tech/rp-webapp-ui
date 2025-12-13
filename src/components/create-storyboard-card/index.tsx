@@ -1,7 +1,6 @@
 "use client";
 
 import { Flex } from "@novelist-world/ui";
-import { useRouter } from "next/navigation";
 import { type FC, useEffect, useState } from "react";
 import { GrEdit } from "react-icons/gr";
 import { uploadMedia } from "@/app/rp/profile/actions";
@@ -17,6 +16,7 @@ import {
 } from "@/components/common";
 import { useGlobalState } from "@/context/store/stores";
 import { useForm, useUIContext } from "@/hooks";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { StoryBoard } from "@/types";
 import { API_MESSAGE, INITIAL_STORY_BOARD } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
@@ -35,13 +35,13 @@ export const CreateStoryBoardCard: FC<CreateStoryBoardCardProps> = ({ id }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [avatarFile, setAvatarFile] = useState<FormData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const { push } = useRouter();
+  const { routeToPage } = usePageRouter();
 
   const { successToast, errorToast } = useUIContext();
 
   const onEditMembersClick = () => {
     if (!storyBoard) return;
-    push(ROUTES.Profile.Story.Edit(storyBoard.id || "").Members);
+    routeToPage(ROUTES.Profile.Story.Edit(storyBoard.id || "").Members);
   };
 
   const handlePrivacySelect = (privacyValue: string) => {
@@ -133,7 +133,7 @@ export const CreateStoryBoardCard: FC<CreateStoryBoardCardProps> = ({ id }) => {
   });
 
   const handleCancel = () => {
-    push(ROUTES.Profile.View(user?.username || "").Storyboards);
+    routeToPage(ROUTES.Profile.View(user?.username || "").Storyboards);
   };
 
   useEffect(() => {

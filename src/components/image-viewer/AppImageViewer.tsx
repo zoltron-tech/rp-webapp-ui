@@ -136,6 +136,10 @@ export const AppImageViewer = ({
         </Dialog.Trigger>
       )}
 
+      <Dialog.Overlay asChild>
+        <S.Overlay />
+      </Dialog.Overlay>
+
       <Dialog.Portal>
         <S.Root className={classNames(accent, theme)}>
           <S.Content className="touch-container">

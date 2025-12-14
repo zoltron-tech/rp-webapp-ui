@@ -39,6 +39,7 @@ export const AppImageViewer = ({
   const pointers = useRef<Map<number, { x: number; y: number }>>(new Map());
   const lastDistance = useRef<number | null>(null);
   const lastCenter = useRef<{ x: number; y: number } | null>(null);
+  const hasInteracted = useRef(false);
 
   const minScale = 1;
   const maxScale = 4;
@@ -49,6 +50,13 @@ export const AppImageViewer = ({
     x: (a.x + b.x) / 2,
     y: (a.y + b.y) / 2,
   });
+
+  const reset = useCallback(() => {
+    setIsAnimating(true);
+    setScale(1);
+    setTranslate({ x: 0, y: 0 });
+    setTimeout(() => setIsAnimating(false), 150);
+  }, []);
 
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
@@ -68,6 +76,8 @@ export const AppImageViewer = ({
       pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
       if (pointers.current.size === 1 && scale > 1) {
+        hasInteracted.current = true;
+
         setTranslate((t) => ({
           x: t.x + e.movementX,
           y: t.y + e.movementY,
@@ -75,12 +85,15 @@ export const AppImageViewer = ({
       }
 
       if (pointers.current.size === 2) {
+        hasInteracted.current = true;
+
         const pts = Array.from(pointers.current.values());
         const curDist = distance(pts[0], pts[1]);
         const curCenter = centerPoint(pts[0], pts[1]);
 
         if (lastDistance.current && lastCenter.current) {
           const factor = curDist / lastDistance.current;
+
           setScale((s) => Math.max(minScale, Math.min(maxScale, s * factor)));
 
           setTranslate((t) => ({
@@ -96,13 +109,22 @@ export const AppImageViewer = ({
     [scale],
   );
 
-  const onPointerUp = useCallback((e: React.PointerEvent) => {
-    pointers.current.delete(e.pointerId);
-    if (pointers.current.size < 2) {
-      lastDistance.current = null;
-      lastCenter.current = null;
-    }
-  }, []);
+  const onPointerUp = useCallback(
+    (e: React.PointerEvent) => {
+      pointers.current.delete(e.pointerId);
+
+      if (pointers.current.size === 0 && hasInteracted.current) {
+        hasInteracted.current = false;
+        reset();
+      }
+
+      if (pointers.current.size < 2) {
+        lastDistance.current = null;
+        lastCenter.current = null;
+      }
+    },
+    [reset],
+  );
 
   const onWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
@@ -110,16 +132,11 @@ export const AppImageViewer = ({
     setScale((s) => Math.max(minScale, Math.min(maxScale, s * factor)));
   }, []);
 
-  const reset = useCallback(() => {
-    setIsAnimating(true);
-    setScale(1);
-    setTranslate({ x: 0, y: 0 });
-    setTimeout(() => setIsAnimating(false), 150);
-  }, []);
-
-  // ✅ reset when dialog closes
   useEffect(() => {
-    if (!open) reset();
+    if (!open) {
+      hasInteracted.current = false;
+      reset();
+    }
   }, [open, reset]);
 
   return (

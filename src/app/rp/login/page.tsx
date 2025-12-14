@@ -36,7 +36,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     stopPageLoading();
-  }, []);
+  }, [stopPageLoading]);
 
   return (
     <S.LoginPageRoot>

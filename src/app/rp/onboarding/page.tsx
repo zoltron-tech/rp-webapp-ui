@@ -2,7 +2,7 @@
 
 import { ShouldRender } from "@novelist-world/ui";
 import { Separator, Tabs } from "radix-ui";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ImProfile } from "react-icons/im";
 import { finishOnboardingAction } from "@/app/actions";
 import { StoreProvider } from "@/context/store/context";
@@ -28,6 +28,7 @@ export default function OnboardingPage() {
   const setGlobalState = useGlobalStoreSet();
   const { routeToPage } = usePageRouter();
   const [currentStep, setCurrentStep] = useState("username");
+  const { stopPageLoading } = usePageRouter();
 
   const handleUsernameNext = useCallback(() => {
     setCurrentStep("name");
@@ -60,6 +61,10 @@ export default function OnboardingPage() {
 
     routeToPage(ROUTES.Profile.View(user?.username || "").Index);
   }, [routeToPage, novelist, user]);
+
+  useEffect(() => {
+    stopPageLoading();
+  }, [stopPageLoading]);
 
   return (
     <S.OnboardingPageRoot>

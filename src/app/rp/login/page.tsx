@@ -18,6 +18,7 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const isRegister = searchParams?.get("register") === "1";
   const { routeToPage, stopPageLoading } = usePageRouter();
+  const { push } = useRouter();
 
   useEffect(() => {
     if (authState === "LOGGED_IN") {
@@ -26,11 +27,11 @@ export default function LoginPage() {
   }, [authState]);
 
   const handleRegisterClick = useCallback(() => {
-    routeToPage(`${pathname}?register=1`);
+    push(`${pathname}?register=1`);
   }, [pathname, routeToPage]);
 
   const handleLoginClick = useCallback(() => {
-    routeToPage(`${pathname}?register=0`);
+    push(`${pathname}?register=0`);
   }, [pathname, routeToPage]);
 
   useEffect(() => {

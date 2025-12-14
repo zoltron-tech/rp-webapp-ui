@@ -183,12 +183,17 @@ export default function MuseProfilePage({}) {
           </ShouldRender>
           {prompt?.media && (
             <S.PromptMedia>
-              <AppImageViewer src={prompt?.media} alt="Prompt media">
-                <S.CardBackground
-                  banner={prompt?.media || ""}
-                  className="image"
-                />
-              </AppImageViewer>
+              <ShouldRender if={prompt?.media.endsWith("mp4")}>
+                <S.PromptVideo src={`${prompt?.media}#t=0.3`} controls />
+              </ShouldRender>
+              <ShouldRender if={!prompt?.media.endsWith("mp4")}>
+                <AppImageViewer src={prompt?.media} alt="Prompt media">
+                  <S.CardBackground
+                    banner={prompt?.media || ""}
+                    className="image"
+                  />
+                </AppImageViewer>
+              </ShouldRender>
             </S.PromptMedia>
           )}
           <S.FooterContainer>

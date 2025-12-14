@@ -51,6 +51,8 @@ export interface PromptSource {
   sourceId: string;
   name: string;
   image: string;
+  sourceType: "NOVELIST" | "MUSE";
+  urlProp: string;
 }
 
 export type SubmitPromptInput = {

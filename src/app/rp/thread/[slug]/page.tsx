@@ -12,6 +12,7 @@ import { IoArrowBackOutline } from "react-icons/io5";
 import { RiFlagFill } from "react-icons/ri";
 import { ShouldRender } from "@/components/common";
 import { MuseAvatar } from "@/components/common/muse-avatar";
+import { NovelistAvatar } from "@/components/common/novelist-avatar";
 import { AppAlertDialog } from "@/components/dialog";
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { PageLoaderTypeWriter } from "@/components/layout/loader-2/PageLoaderTypewriter";
@@ -238,11 +239,20 @@ export default function ThreadPage({}) {
             </ShouldRender>
           </S.DropdownMenuContainer>
           <S.ReplyHeaderContainer>
-            <MuseAvatar
-              museId={reply?.source?.sourceId || ""}
-              image={reply?.source.image || ""}
-              name={reply?.source.name || ""}
-            />
+            <ShouldRender if={reply?.source.sourceType === "MUSE"}>
+              <MuseAvatar
+                museId={reply?.source.sourceId || ""}
+                image={reply?.source.image || ""}
+                name={reply?.source.name || ""}
+              />
+            </ShouldRender>
+            <ShouldRender if={reply?.source.sourceType === "NOVELIST"}>
+              <NovelistAvatar
+                username={reply?.source.urlProp || ""}
+                image={reply?.source.image || ""}
+                name={reply?.source.name || ""}
+              />
+            </ShouldRender>
             <S.SourceInfo>
               <S.SourceName>{reply?.source.name}</S.SourceName>
               <ShouldRender if={Boolean(reply?.createdOn)}>
@@ -259,9 +269,14 @@ export default function ThreadPage({}) {
           <S.PromptText>{reply.text}</S.PromptText>
           {reply.media && (
             <S.MediaContainer>
-              <AppImageViewer src={reply?.media} alt="Reply media">
-                <S.PromptImage src={reply.media || ""} alt="image" />
-              </AppImageViewer>
+              <ShouldRender if={reply?.media.endsWith("mp4")}>
+                <S.PromptVideo src={`${reply?.media}#t=0.3`} controls />
+              </ShouldRender>
+              <ShouldRender if={!comment?.prompt?.media.endsWith("mp4")}>
+                <AppImageViewer src={reply?.media} alt="Reply media">
+                  <S.PromptImage src={reply.media || ""} alt="image" />
+                </AppImageViewer>
+              </ShouldRender>
             </S.MediaContainer>
           )}
         </Flex>
@@ -327,11 +342,22 @@ export default function ThreadPage({}) {
               onClick={() => onBackClick()}
               style={{ cursor: "pointer" }}
             />
-            <MuseAvatar
-              museId={comment?.prompt?.source.sourceId || ""}
-              image={comment?.prompt?.source.image || ""}
-              name={comment?.prompt?.source.name || ""}
-            />
+            <ShouldRender if={comment?.prompt?.source.sourceType === "MUSE"}>
+              <MuseAvatar
+                museId={comment?.prompt?.source.sourceId || ""}
+                image={comment?.prompt?.source.image || ""}
+                name={comment?.prompt?.source.name || ""}
+              />
+            </ShouldRender>
+            <ShouldRender
+              if={comment?.prompt?.source.sourceType === "NOVELIST"}
+            >
+              <NovelistAvatar
+                username={comment?.prompt?.source.urlProp || ""}
+                image={comment?.prompt?.source.image || ""}
+                name={comment?.prompt?.source.name || ""}
+              />
+            </ShouldRender>
             <S.SourceInfo>
               <S.SourceName>{comment?.prompt?.source.name}</S.SourceName>
               <ShouldRender if={Boolean(comment?.prompt?.createdOn)}>
@@ -385,9 +411,20 @@ export default function ThreadPage({}) {
           <S.PromptText>{comment?.prompt?.text}</S.PromptText>
           {comment?.prompt?.media && (
             <S.MediaContainer>
-              <AppImageViewer src={comment?.prompt?.media} alt="Prompt media">
-                <S.PromptImage src={comment?.prompt?.media || ""} alt="image" />
-              </AppImageViewer>
+              <ShouldRender if={comment?.prompt?.media.endsWith("mp4")}>
+                <S.PromptVideo
+                  src={`${comment?.prompt?.media}#t=0.3`}
+                  controls
+                />
+              </ShouldRender>
+              <ShouldRender if={!comment?.prompt?.media.endsWith("mp4")}>
+                <AppImageViewer src={comment?.prompt?.media} alt="Prompt media">
+                  <S.PromptImage
+                    src={comment?.prompt?.media || ""}
+                    alt="image"
+                  />
+                </AppImageViewer>
+              </ShouldRender>
             </S.MediaContainer>
           )}
         </Flex>
@@ -425,11 +462,20 @@ export default function ThreadPage({}) {
             </ShouldRender>
           </S.DropdownMenuContainer>
           <S.ReplyHeaderContainer>
-            <MuseAvatar
-              museId={comment?.source?.sourceId || ""}
-              image={comment?.source.image || ""}
-              name={comment?.source.name || ""}
-            />
+            <ShouldRender if={comment?.source.sourceType === "MUSE"}>
+              <MuseAvatar
+                museId={comment?.source.sourceId || ""}
+                image={comment?.source.image || ""}
+                name={comment?.source.name || ""}
+              />
+            </ShouldRender>
+            <ShouldRender if={comment?.source.sourceType === "NOVELIST"}>
+              <NovelistAvatar
+                username={comment?.source.urlProp || ""}
+                image={comment?.source.image || ""}
+                name={comment?.source.name || ""}
+              />
+            </ShouldRender>
             <S.SourceInfo>
               <S.SourceName>{comment?.source.name}</S.SourceName>
               <ShouldRender if={Boolean(comment?.createdOn)}>
@@ -449,9 +495,14 @@ export default function ThreadPage({}) {
           <S.PromptText>{comment?.text}</S.PromptText>
           {comment?.media && (
             <S.MediaContainer>
-              <AppImageViewer src={comment?.media} alt="Comment media">
-                <S.PromptImage src={comment.media || ""} alt="image" />
-              </AppImageViewer>
+              <ShouldRender if={comment?.media.endsWith("mp4")}>
+                <S.PromptVideo src={`${comment?.media}#t=0.3`} controls />
+              </ShouldRender>
+              <ShouldRender if={!comment?.media.endsWith("mp4")}>
+                <AppImageViewer src={comment?.media} alt="Comment media">
+                  <S.PromptImage src={comment.media || ""} alt="image" />
+                </AppImageViewer>
+              </ShouldRender>
             </S.MediaContainer>
           )}
         </Flex>
@@ -460,7 +511,6 @@ export default function ThreadPage({}) {
           <>
             <Separator.Root className="separator" orientation="horizontal" />
             <PromptInput
-              muses={novelist?.muses || []}
               parentId={commentId}
               type="reply"
               onSend={refetchReplies}

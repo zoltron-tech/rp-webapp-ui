@@ -5,7 +5,15 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { BiSolidMessage } from "react-icons/bi";
 import { BsPersonFillCheck, BsPersonFillUp, BsThreeDots } from "react-icons/bs";
-import { FcCalendar } from "react-icons/fc";
+import {
+  FcAnswers,
+  FcCalendar,
+  FcComments,
+  FcConferenceCall,
+  FcReading,
+  FcShare,
+  FcTreeStructure,
+} from "react-icons/fc";
 import { GiBookmarklet, GiCheckMark, GiCrossMark } from "react-icons/gi";
 import { IoMdPersonAdd } from "react-icons/io";
 import { IoCopySharp, IoPersonRemove } from "react-icons/io5";
@@ -260,12 +268,12 @@ export default function UserProfilePage({}) {
             trigger={<BsPersonFillCheck size={18} />}
             items={[
               {
-                icon: <GiBookmarklet size={18} />,
+                icon: <FcReading size={22} />,
                 label: `Invite ${username} to a story`,
                 onClick: handleNotImplemented,
               },
               {
-                icon: <BiSolidMessage size={18} />,
+                icon: <FcComments size={22} />,
                 label: `Message ${username}`,
                 onClick: handleNotImplemented,
               },
@@ -328,7 +336,7 @@ export default function UserProfilePage({}) {
             trigger={<IoMdPersonAdd size={18} />}
             items={[
               {
-                icon: <IoMdPersonAdd size={18} />,
+                icon: <IoMdPersonAdd size={22} />,
                 label: `Add ${username}`,
                 onClick: handleSendFriendRequest,
                 variant: "positive",
@@ -434,12 +442,12 @@ export default function UserProfilePage({}) {
                     trigger={<BsThreeDots size={18} />}
                     items={[
                       {
-                        icon: <IoCopySharp size={18} />,
+                        icon: <FcAnswers size={22} />,
                         label: `Copy username`,
                         onClick: handleCopyUsername,
                       },
                       {
-                        icon: <RiShareBoxFill size={18} />,
+                        icon: <FcShare size={22} />,
                         label: `Share profile`,
                         onClick: handleShareProfile,
                       },
@@ -447,13 +455,13 @@ export default function UserProfilePage({}) {
                         separator: true,
                       },
                       {
-                        icon: <RiFlagFill size={18} />,
+                        icon: <RiFlagFill size={22} />,
                         label: `Report ${username}`,
                         onClick: () => setShowReportAlert(true),
                         variant: "danger",
                       },
                       {
-                        icon: <MdOutlineAppBlocking size={18} />,
+                        icon: <MdOutlineAppBlocking size={22} />,
                         label: `Block ${username}`,
                         onClick: () => setShowBlockAlert(true),
                         variant: "danger",
@@ -492,12 +500,14 @@ export default function UserProfilePage({}) {
             <S.UsernameContainer>
               <Username username={username} primary />
             </S.UsernameContainer>
-            <Flex>
+            <Flex style={{ paddingInline: "10px" }}>
+              <FcTreeStructure size={"18px"} />
               <S.InfoTextBold>{novelist?.friendsCount}</S.InfoTextBold>{" "}
               <S.InfoText> Friends </S.InfoText>
+              <FcConferenceCall size={"18px"} />
               <S.InfoTextBold>{novelist?.museCount}</S.InfoTextBold>{" "}
               <S.InfoText> Characters </S.InfoText>
-              <FcCalendar />
+              <FcCalendar size={"18px"} />
               <S.InfoText>
                 Joined {toFormattedDate(novelist?.createdAt)}
               </S.InfoText>
@@ -567,11 +577,7 @@ export default function UserProfilePage({}) {
             </S.SubText>
             <S.ActivitiesContainer>
               {authState === "LOGGED_IN" && username === user?.username && (
-                <PromptInput
-                  type={"prompt"}
-                  muses={novelist?.muses || []}
-                  onSend={refetchAcitivities}
-                />
+                <PromptInput type={"prompt"} onSend={refetchAcitivities} />
               )}
               {activities?.map((activity) => (
                 <ActivityBox

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useCustomEvents } from "@/hooks";
-import type { Muse, PromptSource, SubmitPromptType } from "@/types";
+import type { Muse, Novelist, PromptSource, SubmitPromptType } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { usePromptInputState } from "./prompt-input.store";
 
@@ -14,6 +14,16 @@ export const museToSource = (muse: Muse): PromptSource => ({
   image: muse.image || "",
   name: `${muse.firstName} ${muse.lastName}`.trim(),
   sourceId: muse.id || "",
+  sourceType: "MUSE",
+  urlProp: muse.id || "",
+});
+
+export const novelistToSource = (novelist: Novelist): PromptSource => ({
+  image: novelist.image || "",
+  name: `${novelist.firstName} ${novelist.lastName}`.trim(),
+  sourceId: novelist.id || "",
+  sourceType: "NOVELIST",
+  urlProp: novelist.username || "",
 });
 
 const videoExtensions = ["mp4"];
@@ -49,6 +59,8 @@ export const apiMessageToInfoMessage = (
       return "Operation completed successfully.";
     case API_MESSAGE.Error:
       return "An error occurred. Please try again.";
+    case API_MESSAGE.NotAllowed:
+      return "Cross-posting between novelists and characters is not permitted.";
     case API_MESSAGE.BadPayload:
       return "Invalid input provided. Please check your data.";
     case API_MESSAGE.AccessDenied:

@@ -1,5 +1,6 @@
 "use client";
 
+import { ShouldRender } from "@novelist-world/ui";
 import { type FC, useCallback, useMemo } from "react";
 import { useGlobalState } from "@/context/store/stores";
 import { useToggleLike } from "@/hooks/use-toggle-like";
@@ -61,13 +62,20 @@ export const PromptContent: FC<PromptContentProps> = ({}) => {
       ))}
       {media && (
         <S.PromptMediaContainer>
-          <AppImageViewer src={media} alt="Prompt media">
-            <S.PromptImage
-              src={media}
-              alt="Prompt media"
-              style={{ cursor: "zoom-in" }}
-            />
-          </AppImageViewer>
+          <ShouldRender if={media.endsWith("mp4")}>
+            <S.PromptVideo src={`${media}#t=0.3`} controls />
+          </ShouldRender>
+          <ShouldRender if={!media.endsWith("mp4")}>
+            <AppImageViewer src={media} alt="Prompt media">
+              <ShouldRender if={!media.endsWith("mp4")}>
+                <S.PromptImage
+                  src={media}
+                  alt="Prompt media"
+                  style={{ cursor: "zoom-in" }}
+                />
+              </ShouldRender>
+            </AppImageViewer>
+          </ShouldRender>
         </S.PromptMediaContainer>
       )}
       <S.PromptContent.Footer>

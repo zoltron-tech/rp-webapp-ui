@@ -208,6 +208,14 @@ const SelectPortalBase = styled(Select.Portal)`
   .select-viewport {
     display: flex;
     flex-direction: column;
+    padding-top: 5px;
+
+    .separator[data-orientation="horizontal"] {
+    height: 1px;
+    width: 100%;
+    margin-block: 5px;
+    background-color: var(--bg-6);
+  }
   }
 
   .select-item {

@@ -17,6 +17,7 @@ import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { displayDate, toFormattedDate } from "@/utils/helpers";
 import { MuseAvatar } from "../common/muse-avatar";
+import { NovelistAvatar } from "../common/novelist-avatar";
 import { PrivacyIcon } from "../common/privacy-icon";
 import { AppAlertDialog } from "../dialog";
 import { AppDropdownMenu } from "../profile-more-dropdown";
@@ -78,11 +79,20 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
 
   return (
     <S.PromptHeaderRoot>
-      <MuseAvatar
-        museId={source.sourceId}
-        image={source.image}
-        name={source.name}
-      />
+      <ShouldRender if={source.sourceType === "MUSE"}>
+        <MuseAvatar
+          museId={source.sourceId}
+          image={source.image}
+          name={source.name}
+        />
+      </ShouldRender>
+      <ShouldRender if={source.sourceType === "NOVELIST"}>
+        <NovelistAvatar
+          username={source.urlProp}
+          image={source.image}
+          name={source.name}
+        />
+      </ShouldRender>
       <S.SourceInfo>
         <S.SourceName>{source.name}</S.SourceName>
         <S.PromptSubheader title={displayDate(createdOn)} dateTime={createdOn}>

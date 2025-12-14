@@ -722,6 +722,12 @@ export const PromptText = styled.div`
   }
 `;
 
+export const PromptVideo = styled.video`
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+`;
+
 export const StyledDate = styled.div`
   font-size: 10px;
   font-weight: 300;

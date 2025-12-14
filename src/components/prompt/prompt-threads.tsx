@@ -38,7 +38,6 @@ export const PromptThreads: FC = () => {
               className="comment-action"
               parentId={promptId}
               type="comment"
-              muses={novelist?.muses ?? []}
               onSend={refetchComments}
             />
           )}

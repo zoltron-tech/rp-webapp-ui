@@ -115,6 +115,12 @@ export const CommentMediaContainer = styled.div`
   background-color: #000000;
 `;
 
+export const PromptVideo = styled.video`
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+`;
+
 const PromptContentRoot = styled.div`
   padding-top: 12px;
   padding-inline: 12px;

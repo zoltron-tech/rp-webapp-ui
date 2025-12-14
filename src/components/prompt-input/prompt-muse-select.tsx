@@ -1,15 +1,15 @@
 import classNames from "classnames";
-import { Avatar, Form, Select } from "radix-ui";
+import { Avatar, Form, Select, Separator } from "radix-ui";
 import { type FC, forwardRef, useState } from "react";
 import { GrRadialSelected } from "react-icons/gr";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { useGlobalState } from "@/context/store/stores";
-import type { Muse, SubmitPromptType } from "@/types";
+import type { Muse, PromptSource, SubmitPromptType } from "@/types";
 import { usePromptInputState } from "./prompt-input.store";
 import * as S from "./styles";
 
 type Props = {
-  muses: Muse[];
+  sources: PromptSource[];
 };
 
 const promptTypeToLabel = (type: SubmitPromptType): string => {
@@ -26,15 +26,18 @@ const promptTypeToLabel = (type: SubmitPromptType): string => {
 };
 
 export const PromptMuseSelect: FC<Props> = forwardRef(
-  ({ muses, ...props }, forwardedRef) => {
+  ({ sources, ...props }, forwardedRef) => {
     const accent = useGlobalState("accent");
     const theme = useGlobalState("theme");
     const promptType = usePromptInputState("type");
-    const [muse, setMuse] = useState<Muse>(muses?.[0]);
+    const [source, setSource] = useState<PromptSource>(sources?.[0]);
+    const novelistSource = sources.find((s) => s.sourceType === "NOVELIST");
+
+    const museSources = sources.filter((s) => s.sourceType === "MUSE");
     const handleMuseChange = (value: string) => {
-      const selectedMuse = muses?.find((m) => m.id === value);
-      if (selectedMuse) {
-        setMuse(selectedMuse);
+      const selectedSource = sources?.find((s) => s.sourceId === value);
+      if (selectedSource) {
+        setSource(selectedSource);
       }
     };
 
@@ -51,17 +54,17 @@ export const PromptMuseSelect: FC<Props> = forwardRef(
           <Select.Root
             name="muse"
             required
-            defaultValue={muse?.id ?? ""}
+            defaultValue={source?.sourceId ?? ""}
             onValueChange={handleMuseChange}
           >
             <Select.Trigger className="select-trigger">
               <Select.Value asChild placeholder="Select a muse">
                 <div className="select-value">
                   <MuseAvatar
-                    src={muse?.image ?? null}
-                    alt={`${muse?.firstName} ${muse?.lastName}`}
+                    src={source?.image ?? null}
+                    alt={`${source?.name}`}
                   />
-                  {muse?.firstName} {muse?.lastName}
+                  {source?.name}
                 </div>
               </Select.Value>
               <Select.Icon>
@@ -75,8 +78,16 @@ export const PromptMuseSelect: FC<Props> = forwardRef(
                 className={classNames("select-content", theme, accent)}
               >
                 <Select.Viewport className="select-viewport">
-                  {muses?.map((muse) => (
-                    <SelectItem key={muse.id} muse={muse} />
+                  <SelectItem
+                    key={novelistSource?.sourceId}
+                    source={novelistSource}
+                  />
+                  <Separator.Root
+                    className="separator"
+                    orientation="horizontal"
+                  />
+                  {museSources?.map((source) => (
+                    <SelectItem key={source.sourceId} source={source} />
                   ))}
                 </Select.Viewport>
               </Select.Content>
@@ -84,7 +95,7 @@ export const PromptMuseSelect: FC<Props> = forwardRef(
           </Select.Root>
         </Form.Control>
         <Form.Message className="form-message" match="valueMissing">
-          Please select a muse
+          Please select a muse or yourself as the author
         </Form.Message>
       </S.MuseSelect>
     );
@@ -112,12 +123,13 @@ const MuseAvatar: FC<{ src: string | null; alt: string }> = forwardRef(
   },
 );
 
-const SelectItem: FC<{ muse: Muse }> = forwardRef(
-  ({ muse, ...props }, forwardedRef) => {
+const SelectItem: FC<{ source: PromptSource | undefined }> = forwardRef(
+  ({ source, ...props }, forwardedRef) => {
+    if (source === undefined) return null;
     return (
       <Select.Item
-        key={muse.id}
-        value={muse.id!}
+        key={source.sourceId}
+        value={source.sourceId!}
         className="select-item"
         {...props}
         ref={forwardedRef as React.ForwardedRef<HTMLDivElement>}
@@ -126,14 +138,9 @@ const SelectItem: FC<{ muse: Muse }> = forwardRef(
           <GrRadialSelected />
         </Select.ItemIndicator>
         <Select.Icon>
-          <MuseAvatar
-            src={muse.image ?? null}
-            alt={`${muse.firstName} ${muse.lastName}`}
-          />
+          <MuseAvatar src={source.image ?? null} alt={`${source.name}`} />
         </Select.Icon>
-        <Select.ItemText>
-          {muse.firstName} {muse.lastName}
-        </Select.ItemText>
+        <Select.ItemText>{source.name}</Select.ItemText>
       </Select.Item>
     );
   },

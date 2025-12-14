@@ -150,8 +150,8 @@ export const Element = styled.li`
   transition: all 0.3s ease-out;
 
   svg {
-    width: 19px;
-    height: 19px;
+    width: 22px;
+    height: 22px;
     transition: all 0.3s ease-out;
   }
 

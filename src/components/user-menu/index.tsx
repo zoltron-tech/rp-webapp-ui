@@ -2,6 +2,15 @@
 
 import classNames from "classnames";
 import { type FC, useCallback, useState } from "react";
+import {
+  FcCollaboration,
+  FcConferenceCall,
+  FcExport,
+  FcLibrary,
+  FcManager,
+  FcServices,
+  FcSupport,
+} from "react-icons/fc";
 import { GoLaw } from "react-icons/go";
 import { IoIosPeople } from "react-icons/io";
 import { LuMessagesSquare, LuUser } from "react-icons/lu";
@@ -163,22 +172,22 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
           <ShouldRender if={authState === "LOGGED_IN"}>
             <S.List>
               <S.Element onClick={toUserProfile}>
-                <LuUser />
+                <FcManager />
                 Your profile
               </S.Element>
               <S.Element onClick={toMusesPage}>
-                <IoIosPeople />
+                <FcConferenceCall />
                 Your characters
               </S.Element>
               <S.Element onClick={toOutgoingThreadsPage}>
-                <LuMessagesSquare />
+                <FcCollaboration />
                 Your interactions
               </S.Element>
             </S.List>
             <S.Separator />
             <S.List>
               <S.Element onClick={toEditProfile}>
-                <TbUserEdit />
+                <FcServices />
                 Edit profile
               </S.Element>
             </S.List>
@@ -192,18 +201,18 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
 
           <S.List>
             <S.Element onClick={toTermsAndConditionsPage}>
-              <GoLaw />
+              <FcLibrary />
               Terms & Conditions
             </S.Element>
             <S.Element onClick={() => setShowContactSupportAlert(true)}>
-              <TbHelpHexagonFilled />
+              <FcSupport />
               Help & support
             </S.Element>
           </S.List>
           <S.Separator />
           <S.List>
             <S.DeleteElement onClick={() => setShowLogoutAlert(true)}>
-              <TbLogout />
+              <FcExport />
               Log out
             </S.DeleteElement>
           </S.List>

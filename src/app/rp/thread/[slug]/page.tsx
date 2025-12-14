@@ -269,10 +269,14 @@ export default function ThreadPage({}) {
           <S.PromptText>{reply.text}</S.PromptText>
           {reply.media && (
             <S.MediaContainer>
-              <ShouldRender if={reply?.media.endsWith("mp4")}>
+              <ShouldRender
+                if={reply?.media.toLocaleLowerCase().endsWith("mp4")}
+              >
                 <S.PromptVideo src={`${reply?.media}#t=0.3`} controls />
               </ShouldRender>
-              <ShouldRender if={!comment?.prompt?.media.endsWith("mp4")}>
+              <ShouldRender
+                if={!reply?.media.toLocaleLowerCase().endsWith("mp4")}
+              >
                 <AppImageViewer src={reply?.media} alt="Reply media">
                   <S.PromptImage src={reply.media || ""} alt="image" />
                 </AppImageViewer>
@@ -411,13 +415,17 @@ export default function ThreadPage({}) {
           <S.PromptText>{comment?.prompt?.text}</S.PromptText>
           {comment?.prompt?.media && (
             <S.MediaContainer>
-              <ShouldRender if={comment?.prompt?.media.endsWith("mp4")}>
+              <ShouldRender
+                if={comment?.prompt?.media.toLocaleLowerCase().endsWith("mp4")}
+              >
                 <S.PromptVideo
                   src={`${comment?.prompt?.media}#t=0.3`}
                   controls
                 />
               </ShouldRender>
-              <ShouldRender if={!comment?.prompt?.media.endsWith("mp4")}>
+              <ShouldRender
+                if={!comment?.prompt?.media.toLocaleLowerCase().endsWith("mp4")}
+              >
                 <AppImageViewer src={comment?.prompt?.media} alt="Prompt media">
                   <S.PromptImage
                     src={comment?.prompt?.media || ""}
@@ -495,10 +503,14 @@ export default function ThreadPage({}) {
           <S.PromptText>{comment?.text}</S.PromptText>
           {comment?.media && (
             <S.MediaContainer>
-              <ShouldRender if={comment?.media.endsWith("mp4")}>
+              <ShouldRender
+                if={comment?.media.toLocaleLowerCase().endsWith("mp4")}
+              >
                 <S.PromptVideo src={`${comment?.media}#t=0.3`} controls />
               </ShouldRender>
-              <ShouldRender if={!comment?.media.endsWith("mp4")}>
+              <ShouldRender
+                if={!comment?.media.toLocaleLowerCase().endsWith("mp4")}
+              >
                 <AppImageViewer src={comment?.media} alt="Comment media">
                   <S.PromptImage src={comment.media || ""} alt="image" />
                 </AppImageViewer>

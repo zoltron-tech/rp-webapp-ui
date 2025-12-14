@@ -101,13 +101,19 @@ export const PromptThreadCommentCard: FC<Props> = ({
         {/* {promptThreadComment.text} */}
         {promptThreadComment.media && (
           <S.PromptContent.MediaContainer>
-            <ShouldRender if={promptThreadComment.media.endsWith("mp4")}>
+            <ShouldRender
+              if={promptThreadComment.media.toLocaleLowerCase().endsWith("mp4")}
+            >
               <S.PromptVideo
                 src={`${promptThreadComment.media}#t=0.3`}
                 controls
               />
             </ShouldRender>
-            <ShouldRender if={!promptThreadComment.media.endsWith("mp4")}>
+            <ShouldRender
+              if={
+                !promptThreadComment.media.toLocaleLowerCase().endsWith("mp4")
+              }
+            >
               <AppImageViewer
                 src={promptThreadComment?.media}
                 alt="outgoing thread media"

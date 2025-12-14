@@ -6,30 +6,42 @@ const overlayShow = keyframes`
   to { opacity: 1; }
 `;
 
-export const Overlay = styled(Dialog.Overlay)`
-  background: rgba(0, 0, 0, 1);
+export const Root = styled.div`
   position: fixed;
   inset: 0;
+  z-index: 1000;
+
+  /* Critical: isolate stacking context */
+  isolation: isolate;
+`;
+
+export const Overlay = styled(Dialog.Overlay)`
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 1);
   animation: ${overlayShow} 150ms ease-out;
 `;
 
-export const Content = styled(Dialog.Content)`
-  position: fixed;
+export const Content = styled.div`
+  position: absolute;
   inset: 0;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   outline: none;
 `;
 
 export const GestureContainer = styled.div`
   width: 100%;
   height: 100%;
+
   display: flex;
   align-items: center;
   justify-content: center;
 
-  touch-action: none;
+  touch-action: none; /* blocks browser pinch zoom */
   user-select: none;
   -webkit-user-drag: none;
 `;
@@ -38,12 +50,15 @@ export const Image = styled.img`
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+
   will-change: transform;
+  transform-origin: center;
 `;
 
 export const CloseButton = styled.button`
   all: unset;
-  position: fixed;
+
+  position: absolute;
   top: 12px;
   right: 12px;
   z-index: 10;

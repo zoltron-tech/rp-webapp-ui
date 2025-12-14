@@ -74,8 +74,19 @@ export const getPromptsByMuseAction = async (
 ): Promise<DataType<Prompt[]>> => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/by/${museId}`;
 
+  const jwt = await getJWTIfExists();
+  const headers = {
+    "Content-Type": "application/json",
+    ...(jwt
+      ? {
+          [AUTH_HEADER_NAME]: jwt,
+        }
+      : {}),
+  };
+
   const response = await fetch(URL, {
     cache: "no-store",
+    headers,
   });
 
   Logger.debug("getPromptsByMuseAction", response.status);

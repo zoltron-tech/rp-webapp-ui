@@ -1,8 +1,7 @@
 "use client";
 
 import { Flex } from "@novelist-world/ui";
-import classNames from "classnames";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Separator } from "radix-ui";
 import { useCallback, useEffect, useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
@@ -15,7 +14,6 @@ import { MuseAvatar } from "@/components/common/muse-avatar";
 import { NovelistAvatar } from "@/components/common/novelist-avatar";
 import { AppAlertDialog } from "@/components/dialog";
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
-import { PageLoaderTypeWriter } from "@/components/layout/loader-2/PageLoaderTypewriter";
 import { AppDropdownMenu } from "@/components/profile-more-dropdown";
 import PromptInput from "@/components/prompt-input";
 import { useGlobalState } from "@/context/store/stores";

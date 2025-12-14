@@ -71,6 +71,8 @@ export const LoginForm: FC = () => {
         ? { email: username, password }
         : { password, username };
 
+      console.log(loginPayload);
+
       const response = await loginAction(loginPayload);
       if (ErrorKeys.includes(response.message as ErrorKey)) {
         setError(response.message as ErrorKey);
@@ -78,7 +80,11 @@ export const LoginForm: FC = () => {
         return;
       }
 
+      console.log(response);
+
       const _novelist = await getUserNovelist();
+
+      console.log(_novelist);
 
       if ("message" in _novelist) {
         if (_novelist.message === API_MESSAGE.NotFound) {

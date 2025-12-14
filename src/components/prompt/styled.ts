@@ -123,6 +123,12 @@ export const PromptImage = styled.img`
   object-fit: contain;
 `;
 
+export const PromptVideo = styled.video`
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+`;
+
 export const TextLine = styled.span`
   display: inline-block;
   margin-bottom: 8px;

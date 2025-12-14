@@ -101,15 +101,29 @@ export const PromptThreadCommentCard: FC<Props> = ({
         {/* {promptThreadComment.text} */}
         {promptThreadComment.media && (
           <S.PromptContent.MediaContainer>
-            <AppImageViewer
-              src={promptThreadComment?.media}
-              alt="outgoing thread media"
+            <ShouldRender
+              if={promptThreadComment.media.toLocaleLowerCase().endsWith("mp4")}
             >
-              <S.PromptImage
-                src={promptThreadComment.media}
-                alt="Prompt media"
+              <S.PromptVideo
+                src={`${promptThreadComment.media}#t=0.3`}
+                controls
               />
-            </AppImageViewer>
+            </ShouldRender>
+            <ShouldRender
+              if={
+                !promptThreadComment.media.toLocaleLowerCase().endsWith("mp4")
+              }
+            >
+              <AppImageViewer
+                src={promptThreadComment?.media}
+                alt="outgoing thread media"
+              >
+                <S.PromptImage
+                  src={promptThreadComment.media}
+                  alt="Prompt media"
+                />
+              </AppImageViewer>
+            </ShouldRender>
           </S.PromptContent.MediaContainer>
         )}
       </S.PromptContent.Root>

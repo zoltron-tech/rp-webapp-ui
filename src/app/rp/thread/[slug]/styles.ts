@@ -159,6 +159,12 @@ export const PromptImage = styled.img`
   cursor: zoom-in;
 `;
 
+export const PromptVideo = styled.video`
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+`;
+
 export const StyledDate = styled.div`
   font-size: 12px;
   font-weight: 200;

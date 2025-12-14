@@ -361,7 +361,7 @@ export const submitPrompt = async (
     case 401:
       return { message: API_MESSAGE.Unauthorized };
     case 403:
-      return { message: API_MESSAGE.AccessDenied };
+      return { message: API_MESSAGE.NotAllowed };
     case 500:
       return { message: API_MESSAGE.ServerError };
   }

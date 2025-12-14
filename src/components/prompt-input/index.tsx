@@ -13,13 +13,18 @@ import {
 import { submitPrompt } from "@/app/rp/profile/actions";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState } from "@/context/store/stores";
-import type { Muse, SubmitPromptInput, SubmitPromptType } from "@/types";
+import type {
+  PromptSource,
+  SubmitPromptInput,
+  SubmitPromptType,
+} from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { InfoModal } from "../info-modal";
 import {
   apiMessageToInfoMessage,
   getParentIdKeyFromPromptType,
   museToSource,
+  novelistToSource,
   PromptEvent,
   usePromptInputEvents,
 } from "./helpers";
@@ -34,7 +39,6 @@ import { SendButton } from "./sent-button";
 import * as S from "./styles";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
-  muses: Muse[];
   type: SubmitPromptType;
   parentId?: string;
   onSend?: () => void;
@@ -46,9 +50,16 @@ export const PromptInput: FC<Props> = forwardRef(
     forwardedRef,
   ) => {
     const novelist = useGlobalState("novelist");
-    const muses = useMemo(() => {
-      return novelist?.muses ?? [];
+
+    const sources = useMemo(() => {
+      if (!novelist) return [];
+
+      return [
+        novelistToSource(novelist),
+        ...(novelist.muses ?? []).map(museToSource),
+      ];
     }, [novelist]);
+
     const [open, setOpen] = useState(true);
     const [sending, setSending] = useState(false);
     const [error, setError] = useState<API_MESSAGE | null>(null);
@@ -67,12 +78,14 @@ export const PromptInput: FC<Props> = forwardRef(
           privacy: formData.get("privacy") as "PUBLIC" | "FRIENDS" | "ONLY_ME",
           text: String(formData.get("promptText")),
         };
-        const selectedMuse = muses.find((m) => m.id === formFields.museId);
-        if (!selectedMuse) return;
+        const selectedSource = sources.find(
+          (s) => s.sourceId === formFields.museId,
+        );
+        if (!selectedSource) return;
 
         const payload: SubmitPromptInput = {
           media: formFields.media,
-          source: museToSource(selectedMuse),
+          source: selectedSource,
           text: formFields.text,
         };
 
@@ -93,7 +106,7 @@ export const PromptInput: FC<Props> = forwardRef(
         }
 
         emit(PromptEvent.Sent, {
-          muse: selectedMuse,
+          muse: selectedSource,
           payload,
           type,
         });
@@ -103,7 +116,7 @@ export const PromptInput: FC<Props> = forwardRef(
         setOpen(false);
         onSend?.();
       },
-      [muses, parentId, type, emit, onSend],
+      [sources, parentId, type, emit, onSend],
     );
 
     return (
@@ -127,7 +140,7 @@ export const PromptInput: FC<Props> = forwardRef(
               <PromptInputTrigger open={open} />
               <Collapsible.Content>
                 <Form.Root className="form-content" onSubmit={handleSend}>
-                  <PromptMuseSelect muses={muses} />
+                  <PromptMuseSelect sources={sources} />
                   {type === "prompt" && (
                     <PromptPrivacySelect className="prompt-input-privacy-select" />
                   )}

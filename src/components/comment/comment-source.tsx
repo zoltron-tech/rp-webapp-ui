@@ -16,6 +16,7 @@ import { API_MESSAGE } from "@/utils/constants";
 import { EVENTS } from "@/utils/constants/custom-events";
 import { displayDate, toFormattedDate } from "@/utils/helpers";
 import { MuseAvatar } from "../common/muse-avatar";
+import { NovelistAvatar } from "../common/novelist-avatar";
 import { AppAlertDialog } from "../dialog";
 import { AppDropdownMenu } from "../profile-more-dropdown";
 import { useCommentState, useCommentStateSet } from "./comment.store";
@@ -71,11 +72,20 @@ export const CommentSource: FC = () => {
 
   return (
     <S.Source>
-      <MuseAvatar
-        museId={source.sourceId}
-        image={source.image}
-        name={source.name}
-      />
+      <ShouldRender if={source.sourceType === "MUSE"}>
+        <MuseAvatar
+          museId={source.sourceId}
+          image={source.image}
+          name={source.name}
+        />
+      </ShouldRender>
+      <ShouldRender if={source.sourceType === "NOVELIST"}>
+        <NovelistAvatar
+          username={source.urlProp}
+          image={source.image}
+          name={source.name}
+        />
+      </ShouldRender>
       <S.Source.Info>
         <S.Source.Name>{source.name}</S.Source.Name>
         <S.Source.Time title={displayDate(createdOn)} dateTime={createdOn}>

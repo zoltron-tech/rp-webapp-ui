@@ -135,13 +135,11 @@ export const AppImageViewer = ({
           <span>{children}</span>
         </Dialog.Trigger>
       )}
-
-      <Dialog.Overlay asChild>
-        <S.Overlay />
-      </Dialog.Overlay>
-
       <Dialog.Portal>
         <S.Root className={classNames(accent, theme)}>
+          <Dialog.Overlay asChild>
+            <S.Overlay />
+          </Dialog.Overlay>
           <S.Content className="touch-container">
             <S.GestureContainer
               onPointerDown={onPointerDown}

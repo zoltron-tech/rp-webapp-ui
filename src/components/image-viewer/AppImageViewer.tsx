@@ -122,9 +122,9 @@ export const AppImageViewer = ({
 
       <Dialog.Portal>
         <S.Root className={classNames(accent, theme)}>
-          <Dialog.Overlay asChild>
+          {/* <Dialog.Overlay asChild>
             <S.Overlay />
-          </Dialog.Overlay>
+          </Dialog.Overlay> */}
 
           <Dialog.Content asChild>
             <S.Content>

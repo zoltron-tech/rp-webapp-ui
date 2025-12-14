@@ -37,6 +37,7 @@ export const AppImageViewer = ({
   const pointers = useRef<Map<number, { x: number; y: number }>>(new Map());
   const lastDistance = useRef<number | null>(null);
   const lastCenter = useRef<{ x: number; y: number } | null>(null);
+  const raf = useRef<number | null>(null);
 
   const minScale = 1;
   const maxScale = 4;
@@ -48,8 +49,18 @@ export const AppImageViewer = ({
     setTimeout(() => setIsAnimating(false), 150);
   }, []);
 
-  const distance = (a: any, b: any) => Math.hypot(a.x - b.x, a.y - b.y);
+  const updateTransform = (
+    newScale: number,
+    newTranslate: { x: number; y: number },
+  ) => {
+    if (raf.current) cancelAnimationFrame(raf.current);
+    raf.current = requestAnimationFrame(() => {
+      setScale(newScale);
+      setTranslate(newTranslate);
+    });
+  };
 
+  const distance = (a: any, b: any) => Math.hypot(a.x - b.x, a.y - b.y);
   const centerPoint = (a: any, b: any) => ({
     x: (a.x + b.x) / 2,
     y: (a.y + b.y) / 2,
@@ -66,31 +77,36 @@ export const AppImageViewer = ({
     }
   }, []);
 
-  const onPointerMove = useCallback((e: React.PointerEvent) => {
-    if (!pointers.current.has(e.pointerId)) return;
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!pointers.current.has(e.pointerId)) return;
 
-    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
-    if (pointers.current.size === 2) {
-      const pts = Array.from(pointers.current.values());
-      const curDist = distance(pts[0], pts[1]);
-      const curCenter = centerPoint(pts[0], pts[1]);
+      if (pointers.current.size === 2) {
+        const pts = Array.from(pointers.current.values());
+        const curDist = distance(pts[0], pts[1]);
+        const curCenter = centerPoint(pts[0], pts[1]);
 
-      if (lastDistance.current && lastCenter.current) {
-        const factor = curDist / lastDistance.current;
+        if (lastDistance.current && lastCenter.current) {
+          const factor = curDist / lastDistance.current;
+          const newScale = Math.max(
+            minScale,
+            Math.min(maxScale, scale * factor),
+          );
+          const newTranslate = {
+            x: translate.x + (curCenter.x - lastCenter.current.x),
+            y: translate.y + (curCenter.y - lastCenter.current.y),
+          };
+          updateTransform(newScale, newTranslate);
+        }
 
-        setScale((s) => Math.max(minScale, Math.min(maxScale, s * factor)));
-
-        setTranslate((t) => ({
-          x: t.x + (curCenter.x - lastCenter.current!.x),
-          y: t.y + (curCenter.y - lastCenter.current!.y),
-        }));
+        lastDistance.current = curDist;
+        lastCenter.current = curCenter;
       }
-
-      lastDistance.current = curDist;
-      lastCenter.current = curCenter;
-    }
-  }, []);
+    },
+    [scale, translate],
+  );
 
   const onPointerUp = useCallback(
     (e: React.PointerEvent) => {
@@ -122,37 +138,29 @@ export const AppImageViewer = ({
 
       <Dialog.Portal>
         <S.Root className={classNames(accent, theme)}>
-          {/* <Dialog.Overlay asChild>
-            <S.Overlay />
-          </Dialog.Overlay> */}
+          <S.Content className="touch-container">
+            <S.GestureContainer
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onPointerCancel={onPointerUp}
+              onDoubleClick={reset}
+            >
+              <S.Image
+                src={src}
+                alt={alt}
+                draggable={false}
+                style={{
+                  transform: `translate3d(${translate.x}px, ${translate.y}px, 0) scale(${scale})`,
+                  transition: isAnimating ? "transform 150ms ease-out" : "none",
+                }}
+              />
+            </S.GestureContainer>
 
-          <Dialog.Content asChild>
-            <S.Content>
-              <S.GestureContainer
-                onPointerDown={onPointerDown}
-                onPointerMove={onPointerMove}
-                onPointerUp={onPointerUp}
-                onPointerCancel={onPointerUp}
-                onDoubleClick={reset}
-              >
-                <S.Image
-                  src={src}
-                  alt={alt}
-                  draggable={false}
-                  style={{
-                    transform: `translate3d(${translate.x}px, ${translate.y}px, 0) scale(${scale})`,
-                    transition: isAnimating
-                      ? "transform 150ms ease-out"
-                      : "none",
-                  }}
-                />
-              </S.GestureContainer>
-
-              <Dialog.Close asChild>
-                <S.CloseButton aria-label="Close image">×</S.CloseButton>
-              </Dialog.Close>
-            </S.Content>
-          </Dialog.Content>
+            <Dialog.Close asChild>
+              <S.CloseButton aria-label="Close image">×</S.CloseButton>
+            </Dialog.Close>
+          </S.Content>
         </S.Root>
       </Dialog.Portal>
     </Dialog.Root>

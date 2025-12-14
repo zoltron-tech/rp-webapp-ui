@@ -26,6 +26,11 @@ export const Content = styled.div`
   position: absolute;
   inset: 0;
 
+  .touch-container {
+  touch-action: none;
+  overscroll-behavior: contain;
+}
+
   display: flex;
   align-items: center;
   justify-content: center;
@@ -51,7 +56,7 @@ export const Image = styled.img`
   max-height: 100%;
   object-fit: contain;
 
-  will-change: transform;
+  /* will-change: transform; */
   transform-origin: center;
 `;
 

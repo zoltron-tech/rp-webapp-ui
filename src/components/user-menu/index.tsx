@@ -191,7 +191,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
               </S.Element>
               <S.Element onClick={toExplorePromptsPage}>
                 <FcVoicePresentation />
-                Open interactions
+                Explore interactions
               </S.Element>
             </S.List>
             <S.Separator />

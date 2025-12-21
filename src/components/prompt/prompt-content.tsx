@@ -62,19 +62,21 @@ export const PromptContent: FC<PromptContentProps> = ({}) => {
       ))}
       {media && (
         <S.PromptMediaContainer>
-          <ShouldRender if={media.toLowerCase().endsWith("mp4")}>
-            <S.PromptVideo src={`${media}#t=0.3`} controls />
-          </ShouldRender>
-          <ShouldRender if={!media.toLowerCase().endsWith("mp4")}>
-            <AppImageViewer src={media} alt="Prompt media">
-              <ShouldRender if={!media.endsWith("mp4")}>
-                <S.PromptImage
-                  src={media}
-                  alt="Prompt media"
-                  style={{ cursor: "zoom-in" }}
-                />
-              </ShouldRender>
-            </AppImageViewer>
+          <ShouldRender if={media.toLocaleLowerCase().startsWith("http")}>
+            <ShouldRender if={media.toLowerCase().endsWith("mp4")}>
+              <S.PromptVideo src={`${media}#t=0.3`} controls />
+            </ShouldRender>
+            <ShouldRender if={!media.toLowerCase().endsWith("mp4")}>
+              <AppImageViewer src={media} alt="Prompt media">
+                <ShouldRender if={!media.endsWith("mp4")}>
+                  <S.PromptImage
+                    src={media}
+                    alt="Prompt media"
+                    style={{ cursor: "zoom-in" }}
+                  />
+                </ShouldRender>
+              </AppImageViewer>
+            </ShouldRender>
           </ShouldRender>
         </S.PromptMediaContainer>
       )}

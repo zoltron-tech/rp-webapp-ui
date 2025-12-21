@@ -49,7 +49,7 @@ export default function OutgoingThreadPage({}) {
         <S.MessageContainer>
           <S.MessageText>
             You do not have anything active right now, but there is plenty to discover! ✨
-            Why not explore starters posted by other people and spark a new interaction?
+            <br />Why not explore starters posted by other people and spark a new interaction?
             <br />
             <S.HyperLink onClick={toExplorePromptsPage}>
               Explore Open Interactions {` `}

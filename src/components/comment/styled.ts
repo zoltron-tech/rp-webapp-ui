@@ -71,6 +71,7 @@ const CommentContentRoot = styled.div`
 const TextLine = styled.span`
   display: block;
   margin-bottom: 6px;
+    min-height: 1em;
 `;
 
 export const CommentMediaContainer = styled.div`

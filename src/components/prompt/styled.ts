@@ -3,6 +3,7 @@ import { styled } from "styled-components";
 
 export const PromptRoot = styled.article`
   background-color: var(--bg-2);
+  width: 100%;
   max-width: 800px;
   margin-inline: auto;
 
@@ -14,7 +15,6 @@ export const PromptRoot = styled.article`
   padding: 10px;
   padding-bottom: 20px;
   margin-top: 40px;
-  margin-bottom: 20px;
   border: 0.85px solid var(--bg-6);
 
   .separator[data-orientation="horizontal"] {
@@ -130,8 +130,9 @@ export const PromptVideo = styled.video`
 `;
 
 export const TextLine = styled.span`
-  display: inline-block;
+  display: block;
   margin-bottom: 8px;
+  min-height: 1em;
 `;
 
 const PromptThreadsRoot = styled.div`

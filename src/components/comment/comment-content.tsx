@@ -20,7 +20,7 @@ export const CommentContent: FC = () => {
     <S.CommentContent.Root>
       {textLines.map((line, index) => (
         <S.CommentContent.TextLine key={index}>
-          {line.trim()}
+          {line}
         </S.CommentContent.TextLine>
       ))}
       {media && (

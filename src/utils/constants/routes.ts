@@ -1,4 +1,5 @@
 export const ROUTES = {
+  explorePrompts: "/rp/explore-prompts",
   ForgotPassword: "/rp/forgot-password",
   Home: "/rp/home",
   Login: "/rp/login",

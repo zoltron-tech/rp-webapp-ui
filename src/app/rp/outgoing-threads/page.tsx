@@ -44,12 +44,12 @@ export default function OutgoingThreadPage({}) {
       <BreadCrumb label="Interactions" username={user?.username ?? ""} />
 
       <ShouldRender
-        if={!promptThreadComments || promptThreadComments.length < 0}
+        if={!promptThreadComments || promptThreadComments.length === 0}
       >
         <S.MessageContainer>
           <S.MessageText>
-            You do not have any ongoing interactions, Explore open starters
-            posted by people have start interactions.
+            You do not have anything active right now, but there is plenty to discover! ✨
+            Why not explore starters posted by other people and spark a new interaction?
             <br />
             <S.HyperLink onClick={toExplorePromptsPage}>
               Explore Open Interactions {` `}

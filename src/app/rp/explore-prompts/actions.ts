@@ -26,7 +26,7 @@ export const getNewPromptsAction = async (): Promise<DataType<Prompt[]>> => {
     headers: headers,
   });
 
-  Logger.debug("getOutgoingThreadsAction", response.status);
+  Logger.debug("getNewPromptsAction", response.status);
 
   if (response.status === 404) {
     return null;

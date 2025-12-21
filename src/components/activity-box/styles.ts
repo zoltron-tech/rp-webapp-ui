@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import * as Common from "@/components/common";
 import { BORDER_RADIUS, CARD_BORDER, Z_INDEX } from "@/theme";
 import { AvatarNew } from "../common/avatar-new";
 
@@ -32,7 +31,6 @@ export const HeaderContainer = styled.div`
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding-inline: 10px;
   border-bottom: 1px solid var(--bg-6);
   gap: 0.3em;
 
@@ -41,7 +39,7 @@ export const HeaderContainer = styled.div`
   }
 
   @container content-container (max-width: 600px) {
-    width: 90%;
+    width: 98%;
     padding-inline: 5px;
     margin-bottom: 5px;
   }
@@ -54,8 +52,9 @@ export const Avatar = styled(AvatarNew)`
 
   @container (max-width: 500px) {
     & {
-      margin-inline: unset;
-      --size: 40px;
+        margin-inline: unset;
+        height: 30px;
+        width: 30px;
     }
   }
 `;
@@ -63,20 +62,14 @@ export const Avatar = styled(AvatarNew)`
 export const FooterContainer = styled.div`
   display: flex;
   flex-direction: row;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: center;
   width: 100%;
   gap: 0.5em;
-  margin-top: 10px;
+  margin-top: 5px;
   border-top: 1px solid var(--bg-6);
 
   @container content-container (max-width: 1000px) {
-    margin-bottom: 10px;
-  }
-
-  @container content-container (max-width: 600px) {
-    width: 90%;
-    padding-inline: 5px;
     margin-bottom: 5px;
   }
 `;
@@ -112,7 +105,7 @@ export const ActivityText = styled.div`
 
   @container (max-width: 800px) {
     & {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 400;
     }
   }
@@ -149,19 +142,19 @@ export const PromptFooterText = styled.div`
 `;
 
 export const StyledDate = styled.div`
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 200;
 
   @container (max-width: 1400px) {
     & {
-      font-size: 14px;
+      font-size: 12px;
     }
   }
 
   @container (max-width: 800px) {
     & {
-      font-weight: 300;
-      font-size: 10px;
+      font-weight: 400;
+      font-size: 8px;
     }
   }
 `;
@@ -181,7 +174,7 @@ export const CardBackground = styled.div<CardProps>`
 `;
 
 export const Title = styled.div`
-  font-size: 30px;
+  font-size: 24px;
   font-weight: 600;
   word-wrap: break-word;
   white-space: wrap;
@@ -210,9 +203,9 @@ export const CardWrapper = styled.div`
   position: relative;
   width: 500px;
   height: 500px;
-  margin-inline: 100px;
-  border-radius: 10px;
-  margin-block: 20px;
+  margin-inline: 10px;
+  border-radius: 5px;
+  margin-block: 10px;
   ${CARD_BORDER};
 
   transition: all 0.3s ease-in-out;
@@ -226,8 +219,6 @@ export const CardWrapper = styled.div`
     & {
       width: 400px;
       height: 400px;
-      margin-inline: 20px;
-      margin-bottom: 30px;
     }
   }
 
@@ -235,8 +226,6 @@ export const CardWrapper = styled.div`
     & {
       width: 350px;
       height: 350px;
-      margin-inline: 10px;
-      margin-bottom: 20px;
     }
   }
 
@@ -244,8 +233,6 @@ export const CardWrapper = styled.div`
     & {
       width: 300px;
       height: 300px;
-      margin-inline: unset;
-      margin-bottom: 10px;
     }
   }
 
@@ -253,8 +240,6 @@ export const CardWrapper = styled.div`
     & {
       width: 200px;
       height: 200px;
-      margin-inline: 0px;
-      margin-bottom: 10px;
     }
   }
 
@@ -274,7 +259,6 @@ export const Card = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  padding: 5px 10px 0px;
   position: relative;
   height: 100%;
   contain: paint;
@@ -290,7 +274,7 @@ export const CardHeader = styled.div`
   align-items: center;
   justify-content: center;
   position: relative;
-  margin-bottom: 50px;
+  margin-bottom: 10px;
 `;
 
 export const ActivityInfo = styled.div`
@@ -299,7 +283,6 @@ export const ActivityInfo = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
 `;
 
 export const Video = styled.video`

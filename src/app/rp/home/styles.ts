@@ -3,7 +3,6 @@ import { styled } from "styled-components";
 export const ParentWrapperContainer = styled.div`
   display: flex;
   flex-direction: row;
-  height: 90dvh;
   justify-content: start;
   align-items: flex-start;
   gap: 0.3em;
@@ -14,8 +13,7 @@ export const LeftWrapperContainer = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 20cqw;
-  margin-right: 2px;
+  width: 15cqw;
 
   container-name: left_wrapper;
   container-type: inline-size;
@@ -28,15 +26,15 @@ export const LeftWrapperContainer = styled.div`
 `;
 
 export const ListContainer = styled.div`
-  height: 78dvh;
+  height: 80dvh;
   width: 100%;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
   background-color: ${({ theme }: any) => theme.background};
-  border-top-right-radius: 10px;
-  border-bottom-right-radius: 10px;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
   border-top: 1px solid var(--bg-6);
   border-right: 1px solid var(--bg-6);
   border-bottom: 1px solid var(--bg-6);
@@ -68,18 +66,10 @@ export const RightWrapperContainer = styled.div`
   flex-direction: column;
   justify-content: start;
   align-items: flex-start;
-  height: 88dvh;
+  height: 93dvh;
   overflow-y: auto;
   overflow-x: hidden;
   align-items: flex-start;
-`;
-
-export const HeaderContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  margin-top: 10px;
 `;
 
 export const ContentContainer = styled.div`
@@ -88,33 +78,26 @@ export const ContentContainer = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding-inline: 10px;
-  margin-top: 30px;
-
-  @container (max-width: 600px) {
-    & {
-      padding-inline: 0px;
-    }
-  }
+  margin-top: 10px;
 `;
 
 export const SubText = styled.div`
   text-transform: uppercase;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 300;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   font-style: italic;
   text-align: center;
 
   @container (max-width: 1000px) {
     & {
-      font-size: 18px;
+      font-size: 14px;
     }
   }
 
   @container (max-width: 600px) {
     & {
-      font-size: 16px;
+      font-size: 12px;
     }
   }
 
@@ -127,7 +110,7 @@ export const SubText = styled.div`
 `;
 
 export const PartitionContainer = styled.div`
-  width: 81cqw;
+  width: 84cqw;
   display: flex;
   flex-direction: row;
   justify-content: start;

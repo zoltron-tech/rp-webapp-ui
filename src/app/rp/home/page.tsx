@@ -5,6 +5,7 @@ import { ActivityBox } from "@/components/activity-box";
 import { ShouldRender } from "@/components/common";
 import { FriendListItem } from "@/components/friend-list-item/page";
 import MuseCard from "@/components/muse-card";
+import { Prompt as PromptComponent } from "@/components/prompt";
 import { StrangerCard } from "@/components/stranger-card/page";
 import VideoCard from "@/components/video-card";
 import { useGlobalState } from "@/context/store/stores";
@@ -13,9 +14,11 @@ import type {
   Muse,
   Novelist,
   NovelistWorldNotification,
+  Prompt,
   StoryBoard,
 } from "@/types";
 import type { Activity } from "@/types/activity";
+import { getNewPromptsAction } from "../explore-prompts/actions";
 import {
   getFriendActivities,
   getMusesAction,
@@ -33,6 +36,7 @@ export default function HomePage() {
     NovelistWorldNotification[] | null
   >(null);
   const [storyboards, setStoryboards] = useState<StoryBoard[]>();
+  const [prompts, setPrompts] = useState<Prompt[]>();
   const [unknownMuses, setUnknownMuses] = useState<Muse[]>();
   const [friendsMuses, setFriendsMuses] = useState<Muse[]>();
   const [friendsMusesWithVideos, setFriendsMusesWithVideos] =
@@ -67,15 +71,21 @@ export default function HomePage() {
     if (_activities && !("message" in _activities)) setActivities(_activities);
   };
 
+  const fetchOpenPrompts = async () => {
+    const _prompts = await getNewPromptsAction();
+    if (_prompts && !("message" in _prompts)) setPrompts(_prompts);
+  };
+
   const fetchData = async () =>
     baseDataLoader(async () => {
       await Promise.all([
         fetchStrangers(),
         fetchStrangerMuses(),
         fetchFriendsMuses(),
-        fetchFriendsMusesWithVideos(),
+        // fetchFriendsMusesWithVideos(),
         //fetchRandomStories(),
         fetchFriendsActivities(),
+        // fetchOpenPrompts(),
       ]);
 
       return {
@@ -112,7 +122,7 @@ export default function HomePage() {
         </S.ContentContainer>
       </S.LeftWrapperContainer>
       <S.RightWrapperContainer>
-        <S.ContentContainer>
+        {/* <S.ContentContainer>
           <S.SubText>Videos by your friends</S.SubText>
           <S.PartitionContainer>
             {friendsMusesWithVideos?.map((friendMuseWithVideo) => (
@@ -122,7 +132,7 @@ export default function HomePage() {
               ></VideoCard>
             ))}
           </S.PartitionContainer>
-        </S.ContentContainer>
+        </S.ContentContainer> */}
         {/* <S.ContentContainer>
             <S.SubText>Dive into the Stories</S.SubText>
             <S.PartitionContainer>
@@ -159,13 +169,19 @@ export default function HomePage() {
           </S.PartitionContainer>
         </S.ContentContainer>
         <S.ContentContainer>
-          <S.SubText>Meet New Characters</S.SubText>
+          <S.SubText>Public Characters out there</S.SubText>
           <S.PartitionContainer>
             {unknownMuses?.map((unknownMuse) => (
               <MuseCard key={unknownMuse?.id} muse={unknownMuse}></MuseCard>
             ))}
           </S.PartitionContainer>
         </S.ContentContainer>
+        {/* <S.ContentContainer>
+          <S.SubText>Interactions</S.SubText>
+          {prompts?.map((prompt) => (
+            <PromptComponent key={prompt.id} prompt={prompt} />
+          ))}
+        </S.ContentContainer> */}
         <S.ContentContainer>
           <S.SubText>Updates from your friends</S.SubText>
           {activities?.map((activity) => (

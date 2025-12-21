@@ -58,7 +58,7 @@ export const PromptContent: FC<PromptContentProps> = ({}) => {
   return (
     <S.PromptContent.Root>
       {textLines.map((line, index) => (
-        <S.TextLine key={index}>{line.trim()}</S.TextLine>
+        <S.TextLine key={index}>{line}</S.TextLine>
       ))}
       {media && (
         <S.PromptMediaContainer>

@@ -10,6 +10,7 @@ import {
   FcManager,
   FcServices,
   FcSupport,
+  FcVoicePresentation,
 } from "react-icons/fc";
 import { GoLaw } from "react-icons/go";
 import { IoIosPeople } from "react-icons/io";
@@ -118,6 +119,11 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
     routeToPage(ROUTES.outgoingThreads);
   };
 
+  const toExplorePromptsPage = () => {
+    console.log(ROUTES.explorePrompts);
+    routeToPage(ROUTES.explorePrompts);
+  };
+
   const toUserProfile = () => {
     routeToPage(ROUTES.Profile.View(user?.username || "").Index);
   };
@@ -182,6 +188,10 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
               <S.Element onClick={toOutgoingThreadsPage}>
                 <FcCollaboration />
                 Your interactions
+              </S.Element>
+              <S.Element onClick={toExplorePromptsPage}>
+                <FcVoicePresentation />
+                Open interactions
               </S.Element>
             </S.List>
             <S.Separator />

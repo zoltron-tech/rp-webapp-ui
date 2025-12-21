@@ -33,7 +33,10 @@ export const usePageRouter = () => {
   }, [pageLoading, setGlobalState]);
 
   const baseDataLoader = useCallback(
-    async <T>(method: () => Promise<DataType<T>>) => {
+    async <T>(
+      method: () => Promise<DataType<T>>,
+      skipRedirect: Boolean = false,
+    ) => {
       const data = await method();
 
       if (
@@ -43,9 +46,11 @@ export const usePageRouter = () => {
       ) {
         // handle error
         stopPageLoading();
-        routeToPage("/404", {
-          skipLoading: true,
-        });
+        if (!skipRedirect) {
+          routeToPage("/404", {
+            skipLoading: true,
+          });
+        }
         return null;
       }
 

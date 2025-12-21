@@ -18,6 +18,7 @@ export interface PromptThreadComment {
   tyoe: "COMMENT" | "REPLY";
   parentId: string;
   source: PromptSource;
+  target: PromptSource;
   text: string;
   media: string;
   createdOn: number;

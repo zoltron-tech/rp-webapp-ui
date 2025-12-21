@@ -5,6 +5,7 @@ import { Separator } from "radix-ui";
 import { type FC, type MouseEventHandler, useCallback, useMemo } from "react";
 import { GoCommentDiscussion } from "react-icons/go";
 import { IoMdArrowForward } from "react-icons/io";
+import { MdArrowLeft, MdArrowRight } from "react-icons/md";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { PromptThreadComment } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
@@ -71,12 +72,21 @@ export const PromptThreadCommentCard: FC<Props> = ({
     <S.ThreadRoot>
       <S.PromptHeaderRoot>
         <MuseAvatar
+          museId={promptThreadComment.target.sourceId}
+          image={promptThreadComment.target.image}
+          name={promptThreadComment.target.name}
+        />
+        <MdArrowLeft size={24} />
+        <MuseAvatar
           museId={promptThreadComment.source.sourceId}
           image={promptThreadComment.source.image}
           name={promptThreadComment.source.name}
         />
         <S.SourceInfo>
-          <S.SourceName>{promptThreadComment.source.name}</S.SourceName>
+          <S.SourceName>
+            {" "}
+            {promptThreadComment.source.name.split(" ")[0]}
+          </S.SourceName>
           <ShouldRender if={Boolean(date)}>
             <S.PromptSubheader
               title={date ? displayDate(date) : ""}

@@ -133,6 +133,7 @@ export const TextLine = styled.span`
   display: block;
   margin-bottom: 8px;
   min-height: 1em;
+  overflow-wrap: break-word;
 `;
 
 const PromptThreadsRoot = styled.div`

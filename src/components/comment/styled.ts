@@ -72,6 +72,7 @@ const TextLine = styled.span`
   display: block;
   margin-bottom: 6px;
     min-height: 1em;
+    overflow-wrap: break-word;
 `;
 
 export const CommentMediaContainer = styled.div`

@@ -97,6 +97,7 @@ export const PromptThreadsSeparator = styled(Separator.Root)`
 export const TextLine = styled.div`
   margin-bottom: 8px;
     min-height: 1em;
+    overflow-wrap: break-word;
 `;
 
 export const PromptImage = styled.img`

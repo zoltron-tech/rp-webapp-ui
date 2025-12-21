@@ -5,7 +5,11 @@ import {
 } from "@/context/store/use-store";
 import type { SubmitPromptType } from "@/types";
 
-type MediaUploadError = "INVALID_FILE_TYPE" | "UPLOAD_FAILED" | null;
+type MediaUploadError =
+  | "INVALID_FILE_TYPE"
+  | "UPLOAD_FAILED"
+  | "FILE_TOO_LARGE"
+  | null;
 
 export type PromptInputState = {
   parentId: string;

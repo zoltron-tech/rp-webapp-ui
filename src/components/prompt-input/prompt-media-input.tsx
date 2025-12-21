@@ -20,6 +20,7 @@ import {
 import * as S from "./styles";
 
 export const PromptMediaInput: FC = () => {
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
   const mediaUploadError = usePromptInputState("mediaUploadError");
   const media = usePromptInputState("media");
   const mediaUploading = usePromptInputState("mediaUploading");
@@ -50,6 +51,7 @@ export const PromptMediaInput: FC = () => {
 
   const handleFileUpload: ChangeEventHandler<HTMLInputElement> = useCallback(
     async (e) => {
+      console.log("agya");
       if (!urlInputRef.current || !fileInputRef.current) return;
 
       const file = e.currentTarget.files?.[0] ?? null;
@@ -57,6 +59,19 @@ export const PromptMediaInput: FC = () => {
         urlInputRef.current.value = "";
         return;
       }
+
+      // 🔴 SIZE CHECK
+      if (file.size > MAX_FILE_SIZE) {
+        console.log("inside error");
+        set({
+          media: null,
+          mediaUploadError: "FILE_TOO_LARGE",
+          mediaUploading: false,
+        });
+        fileInputRef.current.value = "";
+        return;
+      }
+
       set({ media: file, mediaUploading: true });
 
       const formData = new FormData();
@@ -98,6 +113,9 @@ export const PromptMediaInput: FC = () => {
           )}
           {mediaUploadError === "UPLOAD_FAILED" && (
             <span>File upload failed. Please try again.</span>
+          )}
+          {mediaUploadError === "FILE_TOO_LARGE" && (
+            <span>Attachment should not be larger than 10MB.</span>
           )}
         </Form.Message>
         <Form.Control asChild>

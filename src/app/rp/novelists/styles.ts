@@ -14,32 +14,117 @@ export const PageContainer = styled.div`
   background-image: url(https://cli.github.com/assets/images/light-glow.svg);
 `;
 
-export const MainButton = styled(Button)`
-  padding: 17px 40px;
-  border-radius: 50px;
+export const MainButton = styled.button`
+  appearance: none;
+  border: none;
+  background: none;
+  background-color: transparent;
+  color: #0f1923;
   cursor: pointer;
-  border: 0;
-  background-color: white;
-  box-shadow: rgb(0 0 0 / 5%) 0 0 8px;
-  letter-spacing: 1.5px;
+  position: relative;
+  padding: 8px;
   text-transform: uppercase;
-  font-size: var(--font-size);
-  transition: all 0.5s ease;
+  font-weight: bold;
+  font-size: 14px;
+  transition: all 0.15s ease;
 
-  &:hover {
-    letter-spacing: 3px;
-    background-color: ${({ theme }: any) => setOpacity(theme.navbar, 0.3)};
-    color: hsl(0, 0%, 100%);
-    box-shadow: rgba(24, 93, 120, 0.8) 0px 10px 20px 0px;
+  /* Outer frame */
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    left: 0;
+    height: calc(50% - 5px);
+    border: 1px solid #7d8082;
+    transition: all 0.15s ease;
+    pointer-events: none;
   }
 
+  &::before {
+    top: 0;
+    border-bottom-width: 0;
+  }
+
+  &::after {
+    bottom: 0;
+    border-top-width: 0;
+  }
+
+  &:focus,
   &:active {
-    letter-spacing: 3px;
-    background-color: ${({ theme }: any) => setOpacity(theme.navbar, 0.3)};
-    color: hsl(0, 0%, 100%);
-    box-shadow: rgba(24, 93, 220, 0.8) 0px 0px 0px 0px;
-    transform: translateY(10px);
-    transition: 100ms;
+    outline: none;
+  }
+
+  &:active::before,
+  &:active::after {
+    right: 3px;
+    left: 3px;
+  }
+
+  &:active::before {
+    top: 3px;
+  }
+
+  &:active::after {
+    bottom: 3px;
+  }
+
+  /* Inner button */
+  .buttonLg {
+    position: relative;
+    display: block;
+    padding: 10px 20px;
+    color: #fff;
+    background-color: #0f1923;
+    overflow: hidden;
+  }
+
+  .buttonLg::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2px;
+    height: 2px;
+    background-color: #0f1923;
+  }
+
+  .buttonLg::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 4px;
+    height: 4px;
+    background-color: #0f1923;
+    transition: all 0.2s ease;
+  }
+
+  /* Sliding accent */
+  .buttonSl {
+    position: absolute;
+    top: 0;
+    bottom: -1px;
+    left: -8px;
+    width: 0;
+    background-color: var(--accent);
+    transform: skew(-15deg);
+    transition: all 0.2s ease;
+  }
+
+  .buttonText {
+    position: relative;
+    z-index: 1;
+    letter-spacing: 1.5px;
+  }
+
+  &:hover {
+    color: #0f1923;
+  }
+
+  &:hover .buttonSl {
+    width: calc(100% + 15px);
   }
 `;
 

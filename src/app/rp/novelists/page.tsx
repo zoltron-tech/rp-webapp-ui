@@ -67,11 +67,14 @@ export default function NovelistsPage() {
         </S.Story>
         <S.ButtonsGroupContainer>
           <S.MainButton
-            primary={authState === "LOGGED_IN"}
-            secondary={authState !== "LOGGED_IN"}
             onClick={authState === "LOGGED_IN" ? toHomePage : onLoginClick}
           >
-            {authState === "LOGGED_IN" ? "My Dashboard" : "Get Started"}
+            <span className="buttonLg">
+              <span className="buttonSl" />
+              <span className="buttonText">
+                {authState === "LOGGED_IN" ? "My Dashboard" : "Get Started"}
+              </span>
+            </span>
           </S.MainButton>
         </S.ButtonsGroupContainer>
       </S.PageContainer>

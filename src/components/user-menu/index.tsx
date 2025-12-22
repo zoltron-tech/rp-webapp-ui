@@ -13,10 +13,6 @@ import {
   FcSupport,
   FcVoicePresentation,
 } from "react-icons/fc";
-import { GoLaw } from "react-icons/go";
-import { IoIosPeople } from "react-icons/io";
-import { LuMessagesSquare, LuUser } from "react-icons/lu";
-import { TbHelpHexagonFilled, TbLogout, TbUserEdit } from "react-icons/tb";
 import { logoutAction } from "@/app/actions";
 import { sendFeedbackMessage } from "@/app/rp/profile/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
@@ -181,14 +177,16 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
         <S.Menu className={classNames({ open })}>
           <ShouldRender if={authState === "LOGGED_IN"}>
             <S.List>
-              <S.Element onClick={toNewsFeed}>
-                <FcNews />
-                Newsfeed
-              </S.Element>
               <S.Element onClick={toUserProfile}>
                 <FcManager />
                 Your profile
               </S.Element>
+              <S.Separator />
+              <S.Element onClick={toNewsFeed}>
+                <FcNews />
+                Newsfeed
+              </S.Element>
+
               <S.Element onClick={toMusesPage}>
                 <FcConferenceCall />
                 Your characters
@@ -220,7 +218,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
           <S.List>
             <S.Element onClick={toTermsAndConditionsPage}>
               <FcLibrary />
-              Terms & Conditions
+              Terms & conditions
             </S.Element>
             <S.Element onClick={() => setShowContactSupportAlert(true)}>
               <FcSupport />

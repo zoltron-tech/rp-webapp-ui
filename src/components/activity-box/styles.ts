@@ -120,7 +120,6 @@ export const PromptText = styled(ActivityText)`
   text-transform: unset;
   font-style: unset;
   text-align: unset;
-  max-width: 60%;
   margin-top: 30px;
   white-space: pre-wrap;
 `;

@@ -32,6 +32,7 @@ export const PromptContent: FC<PromptContentProps> = ({}) => {
       reacted: !reacted,
       reactions: reacted ? reactions - 1 : reactions + 1,
     });
+    console.log("liked");
     const response = await toggleLike();
     if (!response || "message" in response) {
       setPromptState({

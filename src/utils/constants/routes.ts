@@ -10,6 +10,7 @@ export const ROUTES = {
   NotFound: "/404",
   Notification: "/rp/notifications",
   Novelists: "/rp/novelists",
+  newsFeed: "/rp/news-feed",
   Oauth: {
     Callback: "/rp/oauth/callback",
     Failed: "/rp/oauth/failed",

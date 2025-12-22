@@ -8,6 +8,7 @@ import {
   FcExport,
   FcLibrary,
   FcManager,
+  FcNews,
   FcServices,
   FcSupport,
   FcVoicePresentation,
@@ -120,8 +121,11 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
   };
 
   const toExplorePromptsPage = () => {
-    console.log(ROUTES.explorePrompts);
     routeToPage(ROUTES.explorePrompts);
+  };
+
+  const toNewsFeed = () => {
+    routeToPage(ROUTES.newsFeed);
   };
 
   const toUserProfile = () => {
@@ -177,6 +181,10 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
         <S.Menu className={classNames({ open })}>
           <ShouldRender if={authState === "LOGGED_IN"}>
             <S.List>
+              <S.Element onClick={toNewsFeed}>
+                <FcNews />
+                Newsfeed
+              </S.Element>
               <S.Element onClick={toUserProfile}>
                 <FcManager />
                 Your profile

@@ -11,5 +11,6 @@ export interface NovelistWorldNotification {
 }
 
 export interface NotificationTarget {
+  targetType: string;
   urlProp: string;
 }

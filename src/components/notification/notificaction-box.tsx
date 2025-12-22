@@ -25,6 +25,13 @@ export const NotificationBox: FC<NotificationBoxProps> = ({ notification }) => {
         routeToPage(ROUTES.Thread.View(notification.target.urlProp));
       else if (notification.type === "FRIEND_REQUEST")
         routeToPage(ROUTES.Profile.View(notification.source.urlProp).Index);
+      else if (notification.type === "REACTION")
+        if (["COMMENT", "REPLY"].includes(notification.target.targetType))
+          routeToPage(ROUTES.Thread.View(notification.target.urlProp));
+        else if (notification.target.targetType === "PROMPT") {
+          console.log("Here");
+          routeToPage(ROUTES.Prompt.View(notification.target.urlProp));
+        }
     },
     [notification],
   );

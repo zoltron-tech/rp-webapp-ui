@@ -52,18 +52,12 @@ export default function NovelistsPage() {
   return (
     <>
       <S.PageContainer>
-        <S.MainHeading>NOVELIST WORLD</S.MainHeading>
-        <S.MainSubtext>
-          Create Worlds, Write Stories, Collaborate with Creators.
-        </S.MainSubtext>
+        <S.MainHeading />
+        <S.MainSubtext>Create live worlds.</S.MainSubtext>
+        <S.MainSubtext>Write stories together.</S.MainSubtext>
         <S.Story>
-          Collaborate with friends and fellow novelists to bring your
-          imagination to life. <br />
-          Work together to craft intricate realms, develop compelling
-          characters, and weave stories that reflect your collective creativity.{" "}
-          <br />
-          Join a community of like-minded writers where you can share ideas,
-          inspire each other, and build entire worlds together.
+          Build realms with friends, interact with characters, <br />
+          and watch your stories evolve through collaboration.
         </S.Story>
         <S.ButtonsGroupContainer>
           <S.MainButton
@@ -79,41 +73,41 @@ export default function NovelistsPage() {
         </S.ButtonsGroupContainer>
       </S.PageContainer>
       <S.TabContainer>
-        <S.MainSubtext>Collaborate with fellow Novelists</S.MainSubtext>
+        {/* <S.MainSubtext>Collaborate with fellow Novelists</S.MainSubtext> */}
       </S.TabContainer>
       <NovelistCarouselDynamic />
-      <S.MainSubtext>Interact with Characters</S.MainSubtext>
-      <S.MuseCarouselContainer>
-        <Carousel>
-          {muses.length &&
-            muses
-              .slice(0, Math.floor(muses.length / 2))
-              .map((muse) => (
-                <MuseCard
-                  key={muse?.id}
-                  className="hero"
-                  muse={muse}
-                ></MuseCard>
-              ))}
-        </Carousel>
-        <Carousel direction="to-right">
-          {muses.length &&
-            muses
-              .slice(Math.floor(muses.length / 2))
-              .map((muse) => (
-                <MuseCard
-                  key={muse?.id}
-                  className="hero"
-                  muse={muse}
-                ></MuseCard>
-              ))}
-        </Carousel>
-      </S.MuseCarouselContainer>
-
+      {/* <S.MainSubtext>Interact with Characters</S.MainSubtext> */}
       <S.PageContainer>
+        <S.MuseCarouselContainer>
+          <Carousel>
+            {muses.length &&
+              muses
+                .slice(0, Math.floor(muses.length / 2))
+                .map((muse) => (
+                  <MuseCard
+                    key={muse?.id}
+                    className="hero"
+                    muse={muse}
+                  ></MuseCard>
+                ))}
+          </Carousel>
+          <Carousel direction="to-right">
+            {muses.length &&
+              muses
+                .slice(Math.floor(muses.length / 2))
+                .map((muse) => (
+                  <MuseCard
+                    key={muse?.id}
+                    className="hero"
+                    muse={muse}
+                  ></MuseCard>
+                ))}
+          </Carousel>
+        </S.MuseCarouselContainer>
+
         <S.CardsContainer>
           <S.InfoCard tiltOnHover effectStrength={15}>
-            <S.MainSubtext>Create Your Own Realm</S.MainSubtext>
+            <S.Cardheading>Create Your Own Realm</S.Cardheading>
             <S.Story>
               Create and customize realms, populate them with unique characters,
               and fill them with magical objects. Your imagination is the only
@@ -121,14 +115,14 @@ export default function NovelistsPage() {
             </S.Story>
           </S.InfoCard>
           <S.InfoCard tiltOnHover effectStrength={15}>
-            <S.MainSubtext>Collaborate and Connect</S.MainSubtext>
+            <S.Cardheading>Collaborate and Connect</S.Cardheading>
             <S.Story>
               Work with fellow writers to expand your stories. Share ideas,
               develop plots, and create something extraordinary together.
             </S.Story>
           </S.InfoCard>
           <S.InfoCard tiltOnHover effectStrength={15}>
-            <S.MainSubtext>Join a Thriving Community</S.MainSubtext>
+            <S.Cardheading>Join a Thriving Community</S.Cardheading>
             <S.Story>
               Whether you are a seasoned writer or just starting, you will find
               inspiration and support in our diverse and welcoming community.

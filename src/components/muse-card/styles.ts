@@ -1,3 +1,4 @@
+import { Container } from "@novelist-world/ui";
 import styled from "styled-components";
 import { pSBC } from "@/lib/pSBC";
 import { CARD_BORDER, Z_INDEX } from "@/theme";
@@ -99,7 +100,7 @@ export const CardWrapper = styled.div`
     }
 
     &.hero ${Title} {
-      font-size: 8px;
+      font-size: 6px;
       bottom: -110px;
     }
   }

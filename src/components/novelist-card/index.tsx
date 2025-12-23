@@ -60,63 +60,65 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
   if (!novelist) return <></>;
 
   return (
-    <S.CardWrapper
-      className={classNames({ expanded })}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      <S.CardBackground banner={novelist.image} />
-      <S.Card className="novelist-card">
-        <S.ExpandButton
-          onClick={toggleState(setExpanded)}
-          className={classNames({ expanded })}
-        >
-          <ShouldRender if={!expanded}>
-            <MdOutlineExpandMore />
-          </ShouldRender>
+    <S.Border>
+      <S.CardWrapper
+        className={classNames({ expanded })}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <S.CardBackground banner={novelist.image} />
+        <S.Card className="novelist-card">
+          <S.ExpandButton
+            onClick={toggleState(setExpanded)}
+            className={classNames({ expanded })}
+          >
+            <ShouldRender if={!expanded}>
+              <MdOutlineExpandMore />
+            </ShouldRender>
+            <ShouldRender if={expanded}>
+              <MdOutlineExpandLess />
+            </ShouldRender>
+          </S.ExpandButton>
+          <S.CardHeader>
+            <S.Avatar
+              className="selectable"
+              src={novelist.image ?? null}
+              alt={novelist.username ?? "Avatar"}
+              name={"stalk 👀"}
+              onClick={onAvatarClick}
+            />
+            <S.NovelistInfo>
+              <S.Title>
+                {novelist.firstName} {novelist.lastName}
+              </S.Title>
+              <S.username username={novelist.username} />
+              <S.Quote>{novelist.note}</S.Quote>
+            </S.NovelistInfo>
+          </S.CardHeader>
           <ShouldRender if={expanded}>
-            <MdOutlineExpandLess />
-          </ShouldRender>
-        </S.ExpandButton>
-        <S.CardHeader>
-          <S.Avatar
-            className="selectable"
-            src={novelist.image ?? null}
-            alt={novelist.username ?? "Avatar"}
-            name={"stalk 👀"}
-            onClick={onAvatarClick}
-          />
-          <S.NovelistInfo>
-            <S.Title>
-              {novelist.firstName} {novelist.lastName}
-            </S.Title>
-            <S.username username={novelist.username} />
-            <S.Quote>{novelist.note}</S.Quote>
-          </S.NovelistInfo>
-        </S.CardHeader>
-        <ShouldRender if={expanded}>
-          <S.MuseList>
-            {novelist.muses.map((muse) => (
-              <S.Muse
-                key={`${muse.firstName}-${muse.lastName}`}
-                onClick={() => onMuseAvatarClick(muse.id ? muse.id : "")}
-              >
-                <S.Muse.Avatar
-                  src={muse.image ?? null}
-                  alt={muse.firstName ?? "Muse"}
-                />
+            <S.MuseList>
+              {novelist.muses.map((muse) => (
+                <S.Muse
+                  key={`${muse.firstName}-${muse.lastName}`}
+                  onClick={() => onMuseAvatarClick(muse.id ? muse.id : "")}
+                >
+                  <S.Muse.Avatar
+                    src={muse.image ?? null}
+                    alt={muse.firstName ?? "Muse"}
+                  />
 
-                <S.Muse.Name>
-                  {muse.firstName}{" "}
-                  <span className={classNames(["muse-last-name"])}>
-                    {muse.lastName}
-                  </span>
-                </S.Muse.Name>
-              </S.Muse>
-            ))}
-          </S.MuseList>
-        </ShouldRender>
-      </S.Card>
-    </S.CardWrapper>
+                  <S.Muse.Name>
+                    {muse.firstName}{" "}
+                    <span className={classNames(["muse-last-name"])}>
+                      {muse.lastName}
+                    </span>
+                  </S.Muse.Name>
+                </S.Muse>
+              ))}
+            </S.MuseList>
+          </ShouldRender>
+        </S.Card>
+      </S.CardWrapper>
+    </S.Border>
   );
 };

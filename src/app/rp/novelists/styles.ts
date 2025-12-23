@@ -1,4 +1,4 @@
-import { Button, Container } from "@novelist-world/ui";
+import { Container } from "@novelist-world/ui";
 import styled from "styled-components";
 import { setOpacity } from "@/utils/helpers";
 
@@ -7,11 +7,15 @@ export const PageContainer = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding-inline: 50px;
-  margin-top: 30px;
   padding-bottom: 30px;
   border-bottom: 1px solid dimgray;
-  background-image: url(https://cli.github.com/assets/images/light-glow.svg);
+  background-image: 
+  linear-gradient(
+      rgba(0, 0, 0, 0.09),
+      rgba(0, 0, 0, 0.32)
+    ),
+    url(https://rp-webapp-ui.s3.eu-central-1.amazonaws.com/deployments/NW-Wallpaper.png); //url(https://cli.github.com/assets/images/light-glow.svg);
+  background-size: cover;
 `;
 
 export const MainButton = styled.button`
@@ -131,8 +135,9 @@ export const MainButton = styled.button`
 export const InfoCard = styled(Container)`
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-evenly;
   align-items: center;
+  border-radius: var(--border-radius);
   box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
   background-color: ${({ theme }: any) =>
     setOpacity(theme.navbar, 0.3)} !important;
@@ -173,7 +178,9 @@ export const CardsContainer = styled.div`
 
   @container (max-width: 800px) {
     & {
-      flex-direction: column;
+        margin-top: 0px;
+        margin-bottom: 20px;
+        flex-direction: column;
     }
   }
 `;
@@ -226,13 +233,27 @@ export const MainHeading = styled.div`
 `;
 
 export const MainSubtext = styled.div`
-  margin-left: 5px;
-  text-transform: uppercase;
+  font-size: var(--font-size-h2);
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
+
+  @media screen and (max-width: 640px) {
+    font-size: var(--font-size-h5);
+  }
+
+    @media screen and (max-width: 520px) {
+    font-size: var(--font-size-h6);
+  }
+`;
+
+export const Cardheading = styled.div`
   font-size: var(--font-size-h4);
   font-weight: 600;
-  font-style: italic;
-  margin-bottom: 30px;
+  color: var(--text);
   text-align: center;
+  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
 
   @media screen and (max-width: 640px) {
     font-size: var(--font-size-h5);
@@ -254,11 +275,12 @@ export const MuseCarouselContainer = styled.div`
 
 export const Story = styled.div`
   margin-left: 5px;
-  text-transform: uppercase;
-  font-size: var(--font-size-h6);
-  font-weight: 300;
-  font-style: italic;
+  font-size: var(--font-size-h5);
+  color: var(--text);
+  font-weight: 400;
   margin-block: 30px;
+  max-width: 800px;
+  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
 
   @media screen and (max-width: 640px) {
     font-size: var(--font-size);

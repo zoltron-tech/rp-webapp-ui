@@ -4,7 +4,7 @@ export const CarouselContainer = styled.div`
   padding-block: 30px;
   max-width: 2000px;
   margin-inline: auto;
-  margin-bottom: 50px;
+  margin-bottom: 20px;
   contain: paint;
 
   & .swiper-button-prev,

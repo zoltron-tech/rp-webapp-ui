@@ -1,7 +1,15 @@
+import { Container } from "@novelist-world/ui";
 import styled from "styled-components";
 import * as Common from "@/components/common";
 import { BORDER_TOP, NO_SCROLLBAR, NO_USER_SELECT, Z_INDEX } from "@/theme";
 import { AvatarNew } from "../common/avatar-new";
+
+export const Border = styled(Container)`
+  background: linear-gradient(135deg, var(--accent-3), var(--bg-8));
+  padding: 1px;  
+  border-radius: var(--border-radius);
+  box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
+`;
 
 export const CardWrapper = styled.div`
   position: relative;

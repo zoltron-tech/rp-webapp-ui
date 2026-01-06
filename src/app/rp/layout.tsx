@@ -65,6 +65,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           novelist: null,
           novelists: [],
           pageLoading: false,
+          searchBarExpanded: false,
           theme: "dark",
           user: null,
         }}

@@ -16,5 +16,6 @@ export interface StoreState {
   novelist: Novelist | null;
   pageLoading: boolean;
   accent: AccentValue;
+  searchBarExpanded: Boolean;
   notifications: NovelistWorldNotification[] | null;
 }

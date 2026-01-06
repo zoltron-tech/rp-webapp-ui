@@ -117,6 +117,18 @@ export const Wrapper = styled.div`
   --type-select-width: calc(2 * var(--height));
   --type-select-gap: 2px;
 
+  @media (max-width: 700px) {
+        --height: 30px;
+  }
+
+  @media (max-width: 400px) {
+      --max-width: 340px;
+  }
+
+  @media (max-width: 380px) {
+      --max-width: 300px;
+  }
+
   height: var(--height);
   width: var(--height);
 

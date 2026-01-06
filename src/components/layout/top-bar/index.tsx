@@ -16,6 +16,7 @@ type Props = {};
 
 export const TopBar: FC<Props> = memo(({}) => {
   const authState = useGlobalState("authState");
+  const searchBarExpanded = useGlobalState("searchBarExpanded");
   const pathname = usePathname();
   const isLoginPage = useMemo(() => pathname === ROUTES.Login, [pathname]);
   const { routeToPage } = usePageRouter();
@@ -47,19 +48,31 @@ export const TopBar: FC<Props> = memo(({}) => {
       <S.Bar>
         <S.LogoContainer onClick={onLogoClick}>
           <S.Logo>
-            <S.LogoInner>
+            <S.LogoInner
+              className={searchBarExpanded ? "searchBarExpanded" : undefined}
+            >
               <S.LogoImage src={logoText.src} alt="" />
             </S.LogoInner>
           </S.Logo>
-          <S.LogoText>Novelist </S.LogoText>{" "}
-          <S.LogoTextSuffix>World</S.LogoTextSuffix>
+          <S.LogoText
+            className={searchBarExpanded ? "searchBarExpanded" : undefined}
+          >
+            Novelist{" "}
+          </S.LogoText>{" "}
+          <S.LogoTextSuffix
+            className={searchBarExpanded ? "searchBarExpanded" : undefined}
+          >
+            World
+          </S.LogoTextSuffix>
         </S.LogoContainer>
         <ShouldRender if={!isLoginPage}>
-          <S.ActionsContainer>
+          <S.ActionsContainer
+            className={searchBarExpanded ? "searchBarExpanded" : undefined}
+          >
             <S.SearchContainer>
               <Search
                 placeholder="Search"
-                types={["novelist", "muse", "story"]}
+                types={["novelist", "muse"]} // "story" not added yet
                 renderDropdownItem={(result, close) => (
                   <S.SearchDropdownItem
                     onClick={onSearchItemClick(result)(close)}
@@ -89,14 +102,18 @@ export const TopBar: FC<Props> = memo(({}) => {
             </S.SearchContainer>
 
             <ShouldRender if={authState === "LOGGED_OUT"}>
-              <S.ButtonsContainerDesktop>
+              <S.ButtonsContainerDesktop
+                className={searchBarExpanded ? "searchBarExpanded" : undefined}
+              >
                 <Button onClick={onLoginClick}>Log In</Button>
               </S.ButtonsContainerDesktop>
             </ShouldRender>
             <ShouldRender
               if={authState === "LOGGED_IN" || authState === "UNINITIALIZED"}
             >
-              <S.ButtonsContainerLoggedInDesktop>
+              <S.ButtonsContainerLoggedInDesktop
+                className={searchBarExpanded ? "searchBarExpanded" : undefined}
+              >
                 <NotificationsMenu />
                 <UserMenu />
               </S.ButtonsContainerLoggedInDesktop>

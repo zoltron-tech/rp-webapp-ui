@@ -78,6 +78,22 @@ export const LogoInner = styled.div`
   border: 1px solid var(--accent-hover);
   ${NO_USER_SELECT}
 
+  
+  transition-property: width, opacity;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in-out;
+
+    @media (max-width: 700px) {
+    &.searchBarExpanded {
+      width: -0px;
+      opacity: 0;
+
+      * {
+        display: none;
+      }
+    }
+  }
+
   & > svg {
     height: 100%;
     width: 100%;
@@ -142,6 +158,17 @@ export const LogoText = styled.div`
   font-style: italic;
   ${NO_USER_SELECT}
 
+  
+  transition-property: opacity;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in-out;
+
+    @media (max-width: 700px) {
+    &.searchBarExpanded {
+      opacity: 0;
+    }
+  }
+
   @container (max-width: 600px) {
     & {
       font-size: var(--font-size-h6);
@@ -167,6 +194,16 @@ export const LogoTextSuffix = styled.div`
   opacity: 0;
   animation: ${fadeIn} 0.75s ease-in-out forwards 0.6s;
 
+  transition-property: opacity;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in-out;
+
+    @media (max-width: 700px) {
+    &.searchBarExpanded {
+      opacity: 0;
+    }
+  }
+
   @container (max-width: 600px) {
     & {
     font-size: var(--font-size-h6);
@@ -186,14 +223,6 @@ export const SearchContainer = styled.div`
   align-items: center;
 
   ${DEV_MODE_BORDER("red")}
-
-  @media (max-width: 700px) {
-    & {
-      display: none;
-    }
-  }
-
-  
 `;
 
 export const SearchDropdownItem = styled.div`
@@ -241,6 +270,17 @@ export const ActionsContainer = styled.div`
   justify-content: space-between;
   gap: 10px;
   margin-right: 0.5rem;
+
+  transition-property: gap, margin-right;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in-out;
+
+    @media (max-width: 700px) {
+    &.searchBarExpanded {
+      gap: 0px;
+      margin-right: 0rem;
+    }
+  }
 `;
 
 export const ButtonsContainerDesktop = styled.div`
@@ -249,6 +289,20 @@ export const ButtonsContainerDesktop = styled.div`
   justify-content: space-between;
   width: 100px;
   gap: 10px;
+  transition-property: width, gap;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in-out;
+
+    @media (max-width: 700px) {
+    &.searchBarExpanded {
+      width: 0px;
+      gap: 0px;
+
+      * {
+        display: none;
+      }
+    }
+  }
 
   @container (max-width: 800px) {
     & {
@@ -259,4 +313,19 @@ export const ButtonsContainerDesktop = styled.div`
 
 export const ButtonsContainerLoggedInDesktop = styled(ButtonsContainerDesktop)`
   width: 75px;
+
+  transition-property: width, gap;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in-out;
+
+    @media (max-width: 700px) {
+    &.searchBarExpanded {
+      width: 0px;
+      gap: 0px;
+
+      * {
+        display: none;
+      }
+    }
+  }
 `;

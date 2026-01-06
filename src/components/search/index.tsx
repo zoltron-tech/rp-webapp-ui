@@ -7,6 +7,7 @@ import { CgSpinner } from "react-icons/cg";
 import { IoCloseOutline } from "react-icons/io5";
 import { PiSmileyThin } from "react-icons/pi";
 import { searchAction } from "@/app/rp/novelists/actions";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useForm } from "@/hooks";
 import type { SearchResult } from "@/types/common";
 import { toggleState } from "@/utils/helpers";
@@ -30,6 +31,8 @@ export const Search: FC<SearchProps> = ({
   types = [],
   renderDropdownItem,
 }) => {
+  const searchBarExpanded = useGlobalState("searchBarExpanded");
+  const setGlobalState = useGlobalStoreSet();
   const [expanded, setExpanded] = useState(false);
   const [expandTag, setTagExpanded] = useState(false);
   const [selectedType, setSelectedType] = useState<string>(types?.[0] || "");
@@ -81,6 +84,7 @@ export const Search: FC<SearchProps> = ({
       setSearchResults([]);
     } else {
       toggleState(setExpanded)();
+      setGlobalState({ searchBarExpanded: !searchBarExpanded });
     }
   };
 

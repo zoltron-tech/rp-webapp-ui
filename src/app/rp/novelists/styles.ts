@@ -14,7 +14,7 @@ export const PageContainer = styled.div`
       rgba(0, 0, 0, 0.09),
       rgba(0, 0, 0, 0.32)
     ),
-    url(https://rp-webapp-ui.s3.eu-central-1.amazonaws.com/deployments/NW-Wallpaper.png); //url(https://cli.github.com/assets/images/light-glow.svg);
+    url(https://rp-webapp-ui.s3.eu-central-1.amazonaws.com/deployments/NW-Wallpaper.gif); //url(https://cli.github.com/assets/images/light-glow.svg);
   background-size: cover;
 `;
 

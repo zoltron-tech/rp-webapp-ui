@@ -1,12 +1,12 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { type FC, memo, useMemo } from "react";
+import { type FC, memo, useCallback, useMemo } from "react";
 import { GoArrowRight } from "react-icons/go";
 import { Search, UserMenu } from "@/components";
 import { Button, ShouldRender, Username } from "@/components/common";
 import { NotificationsMenu } from "@/components/notifications-menu";
-import { useGlobalState } from "@/context/store/stores";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
 import logoText from "../../../assets/images/Logo text.png";
@@ -16,6 +16,7 @@ type Props = {};
 
 export const TopBar: FC<Props> = memo(({}) => {
   const authState = useGlobalState("authState");
+  const setGlobalState = useGlobalStoreSet();
   const searchBarExpanded = useGlobalState("searchBarExpanded");
   const pathname = usePathname();
   const isLoginPage = useMemo(() => pathname === ROUTES.Login, [pathname]);
@@ -26,6 +27,7 @@ export const TopBar: FC<Props> = memo(({}) => {
     (close: () => void) =>
     () => {
       close();
+      setGlobalState({ searchBarExpanded: false });
       if (record?.username) {
         routeToPage(ROUTES.Profile.View(record.username).Index);
       } else if (record?.name) {

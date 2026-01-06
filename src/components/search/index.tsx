@@ -1,7 +1,7 @@
 "use client";
 import classNames from "classnames";
 import type { JSX } from "react";
-import { type FC, useEffect, useRef, useState } from "react";
+import { type FC, useCallback, useEffect, useRef, useState } from "react";
 import { BsSearch } from "react-icons/bs";
 import { CgSpinner } from "react-icons/cg";
 import { IoCloseOutline } from "react-icons/io5";
@@ -9,6 +9,7 @@ import { PiSmileyThin } from "react-icons/pi";
 import { searchAction } from "@/app/rp/novelists/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useForm } from "@/hooks";
+import { useOutsideClick } from "@/hooks/use-outside-click";
 import type { SearchResult } from "@/types/common";
 import { toggleState } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
@@ -31,15 +32,22 @@ export const Search: FC<SearchProps> = ({
   types = [],
   renderDropdownItem,
 }) => {
-  const searchBarExpanded = useGlobalState("searchBarExpanded");
+  const expanded = useGlobalState("searchBarExpanded");
   const setGlobalState = useGlobalStoreSet();
-  const [expanded, setExpanded] = useState(false);
   const [expandTag, setTagExpanded] = useState(false);
   const [selectedType, setSelectedType] = useState<string>(types?.[0] || "");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [noResults, setNoResults] = useState(false);
   const searchDebounce = 1000;
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const searchRef = useRef(null);
+
+  const handleSearchbarClose = useCallback(() => {
+    setGlobalState({ searchBarExpanded: false });
+    setSearchResults([]);
+  }, []);
+
+  useOutsideClick([searchRef], handleSearchbarClose);
 
   const handleSearch = async ({ search }: SearchInput) => {
     if (!search?.trim()) return;
@@ -83,8 +91,7 @@ export const Search: FC<SearchProps> = ({
     if (expanded && searchResults.length) {
       setSearchResults([]);
     } else {
-      toggleState(setExpanded)();
-      setGlobalState({ searchBarExpanded: !searchBarExpanded });
+      setGlobalState({ searchBarExpanded: !expanded });
     }
   };
 
@@ -101,7 +108,7 @@ export const Search: FC<SearchProps> = ({
   Logger.info("Search rendered");
 
   return (
-    <S.Wrapper>
+    <S.Wrapper ref={searchRef}>
       <S.Container
         tabIndex={0}
         className={classNames({ expanded, "type-select": types.length })}
@@ -161,7 +168,7 @@ export const Search: FC<SearchProps> = ({
           onClick={handleButtonClick}
           className={classNames({ loading })}
         >
-          <ShouldRender if={!loading && expanded}>
+          <ShouldRender if={Boolean(!loading && expanded)}>
             <IoCloseOutline />
           </ShouldRender>
           <ShouldRender if={!loading && !expanded}>

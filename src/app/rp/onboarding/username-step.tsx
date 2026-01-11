@@ -112,6 +112,7 @@ export const UsernameStep: FC<UsernameStepProps> = ({ handleNext }) => {
         const updatedUser = {
           authApp: user.authApp,
           email: user.email,
+          emailVerified: user.emailVerified,
           palette: user.palette,
           theme: user.theme,
           username: value,

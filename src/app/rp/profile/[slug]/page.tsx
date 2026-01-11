@@ -1,6 +1,7 @@
 "use client";
 
 import { Flex } from "@novelist-world/ui";
+import Head from "next/head";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { BiSolidMessage } from "react-icons/bi";
@@ -12,6 +13,7 @@ import {
   FcConferenceCall,
   FcReading,
   FcShare,
+  FcSupport,
   FcTreeStructure,
 } from "react-icons/fc";
 import { GiBookmarklet, GiCheckMark, GiCrossMark } from "react-icons/gi";
@@ -19,10 +21,12 @@ import { IoMdPersonAdd } from "react-icons/io";
 import { IoCopySharp, IoPersonRemove } from "react-icons/io5";
 import { MdOutlineAppBlocking } from "react-icons/md";
 import { RiFlagFill, RiShareBoxFill } from "react-icons/ri";
-import { MusesPill } from "@/components";
+import { VscVerifiedFilled } from "react-icons/vsc";
+import { ContactSupportForm, MusesPill } from "@/components";
 import ActivityBox from "@/components/activity-box";
 import { ShouldRender, Username } from "@/components/common";
 import { AppAlertDialog } from "@/components/dialog";
+import { Image } from "@/components/image-viewer/styled";
 import MuseListItem from "@/components/muse-list-item";
 import { AppDropdownMenu } from "@/components/profile-more-dropdown";
 import PromptInput from "@/components/prompt-input";
@@ -43,6 +47,7 @@ import {
   cancelFriendRequest,
   deleteFriendRequest,
   reportProfile,
+  sendFeedbackMessage,
   sendFriendRequest,
   unfriendNovelist,
 } from "../actions";
@@ -80,6 +85,9 @@ export default function UserProfilePage({}) {
   const [showUnfriendAlert, setShowUnfriendAlert] = useState(false);
   const [showBlockAlert, setShowBlockAlert] = useState(false);
   const [showReportAlert, setShowReportAlert] = useState(false);
+  const [showReportNWAlert, setShowReportNWAlert] = useState(false);
+  const [showContactSupportAlert, setShowContactSupportAlert] = useState(false);
+  const [supportMessage, setSupportMessage] = useState("");
   const user = useGlobalState("user");
   const userNovelist = useGlobalState("novelist");
   const [novelist, setNovelist] = useState<Novelist | null>(null);
@@ -109,6 +117,17 @@ export default function UserProfilePage({}) {
         `https://novelist.world/rp/profile/${username}`,
       );
       successToast("Profle link copied to clipboard");
+    }
+  };
+
+  const handleSendFeedbackMessage = async () => {
+    const response = await sendFeedbackMessage(supportMessage.trim());
+    if (response?.message === API_MESSAGE.Success) {
+      successToast(`Feedback sent successfully.`);
+    } else {
+      errorToast(
+        "There was an issue while sending feedback Please contact at support@zoltrontech.com.",
+      );
     }
   };
 
@@ -379,6 +398,17 @@ export default function UserProfilePage({}) {
 
   return (
     <>
+      <Head>
+        <title>
+          {novelist?.firstName} {novelist?.lastName}
+        </title>
+        <meta property="og:title" content={username} />
+        <meta
+          property="og:description"
+          content={`Find ${username} at Novelist World`}
+        />
+        <meta property="og:image" content={novelist?.image} />
+      </Head>
       <AppAlertDialog
         heading={`Unfriend ${username}?`}
         text={`Are you sure you want to remove ${username} from your friends list?`}
@@ -396,12 +426,49 @@ export default function UserProfilePage({}) {
         actionButtonLabel="Report"
       />
       <AppAlertDialog
+        heading={`Report ${username}?`}
+        text={`Really man?`}
+        body={
+          <Image
+            src={
+              "https://rp-webapp-ui.s3.eu-central-1.amazonaws.com/deployments/block-nw-react.jpeg"
+            }
+            alt="nw"
+          />
+        }
+        open={showReportNWAlert}
+        onOpenChange={setShowReportNWAlert}
+        onConfirm={() => setShowReportNWAlert(false)}
+        actionButtonLabel="Report"
+      />
+      <AppAlertDialog
         heading={`Block ${username}?`}
         text={`${username} will no longer be able to find you or view anything related to you or your characters. Are you sure you want to block ${username}?`}
         open={showBlockAlert}
         onOpenChange={setShowBlockAlert}
         onConfirm={handleNotImplemented}
         actionButtonLabel="Block"
+      />
+      <AppAlertDialog
+        heading="Contact Support"
+        text="Send a message to support. We will try to get back to you via in-app notifications."
+        body={
+          <ContactSupportForm
+            message={supportMessage}
+            setMessage={setSupportMessage}
+          />
+        }
+        open={showContactSupportAlert}
+        onOpenChange={setShowContactSupportAlert}
+        onConfirm={async () => {
+          if (!supportMessage.trim()) return; // validation
+          await handleSendFeedbackMessage();
+          setShowContactSupportAlert(false); // close dialog
+          setSupportMessage(""); // reset message
+        }}
+        actionButtonLabel="Send message"
+        actionColor="neutral"
+        isConfirmDisabled={supportMessage.trim() === ""}
       />
 
       <S.Banner
@@ -435,8 +502,12 @@ export default function UserProfilePage({}) {
           <S.ContentInner>
             <ShouldRender if={authState === "LOGGED_IN"}>
               <S.ProfileDropdownMenuContainer>
-                {renderConnectionDropdown(novelist?.connection, username)}
-                <ShouldRender if={!isCurrentUser}>
+                <ShouldRender if={user?.emailVerified === true}>
+                  {renderConnectionDropdown(novelist?.connection, username)}
+                </ShouldRender>
+                <ShouldRender
+                  if={!isCurrentUser && username !== "novelistworld"}
+                >
                   <AppDropdownMenu
                     variant="bordered"
                     trigger={<BsThreeDots size={18} />}
@@ -464,6 +535,40 @@ export default function UserProfilePage({}) {
                         icon: <MdOutlineAppBlocking size={22} />,
                         label: `Block ${username}`,
                         onClick: () => setShowBlockAlert(true),
+                        variant: "danger",
+                      },
+                    ]}
+                  />
+                </ShouldRender>
+                <ShouldRender
+                  if={!isCurrentUser && username === "novelistworld"}
+                >
+                  <AppDropdownMenu
+                    variant="bordered"
+                    trigger={<BsThreeDots size={18} />}
+                    items={[
+                      {
+                        icon: <FcAnswers size={22} />,
+                        label: `Copy username`,
+                        onClick: handleCopyUsername,
+                      },
+                      {
+                        icon: <FcShare size={22} />,
+                        label: `Share profile`,
+                        onClick: handleShareProfile,
+                      },
+                      {
+                        icon: <FcSupport size={22} />,
+                        label: `Contact support`,
+                        onClick: () => setShowContactSupportAlert(true),
+                      },
+                      {
+                        separator: true,
+                      },
+                      {
+                        icon: <RiFlagFill size={22} />,
+                        label: `Report ${username}`,
+                        onClick: () => setShowReportNWAlert(true),
                         variant: "danger",
                       },
                     ]}
@@ -498,20 +603,25 @@ export default function UserProfilePage({}) {
               </S.ExtendedBadge> */}
             </Flex>
             <S.UsernameContainer>
-              <Username username={username} primary />
+              <Username username={username} primary />{" "}
+              <ShouldRender if={user?.emailVerified === true}>
+                <VscVerifiedFilled size={20} color="rgb(28, 123, 201)" />
+              </ShouldRender>
             </S.UsernameContainer>
-            <Flex style={{ paddingInline: "10px" }}>
-              <FcTreeStructure size={"18px"} />
-              <S.InfoTextBold>{novelist?.friendsCount}</S.InfoTextBold>{" "}
-              <S.InfoText> Friends </S.InfoText>
-              <FcConferenceCall size={"18px"} />
-              <S.InfoTextBold>{novelist?.museCount}</S.InfoTextBold>{" "}
-              <S.InfoText> Characters </S.InfoText>
-              <FcCalendar size={"18px"} />
-              <S.InfoText>
-                Joined {toFormattedDate(novelist?.createdAt)}
-              </S.InfoText>
-            </Flex>
+            <ShouldRender if={username !== "novelistworld"}>
+              <Flex style={{ paddingInline: "10px" }}>
+                <FcTreeStructure size={"18px"} />
+                <S.InfoTextBold>{novelist?.friendsCount}</S.InfoTextBold>{" "}
+                <S.InfoText> Friends </S.InfoText>
+                <FcConferenceCall size={"18px"} />
+                <S.InfoTextBold>{novelist?.museCount}</S.InfoTextBold>{" "}
+                <S.InfoText> Characters </S.InfoText>
+                <FcCalendar size={"18px"} />
+                <S.InfoText>
+                  Joined {toFormattedDate(novelist?.createdAt)}
+                </S.InfoText>
+              </Flex>
+            </ShouldRender>
             {/* <S.ButtonsContainer>
               <ButtonGroup
                 buttons={
@@ -543,14 +653,16 @@ export default function UserProfilePage({}) {
               </S.MuseList>
               <S.SeeMoreLink onClick={toMusesPage}>see all...</S.SeeMoreLink>
             </ShouldRender>
-            <S.MusePillContainer>
-              <MusesPill
-                title="FRIENDS"
-                pillType="FRIENDS"
-                novelist={novelist}
-                expandable={true}
-              />
-            </S.MusePillContainer>
+            <ShouldRender if={username !== "novelistworld"}>
+              <S.MusePillContainer>
+                <MusesPill
+                  title="FRIENDS"
+                  pillType="FRIENDS"
+                  novelist={novelist}
+                  expandable={true}
+                />
+              </S.MusePillContainer>
+            </ShouldRender>
             <ShouldRender if={!!(storyBoards && storyBoards?.length > 0)}>
               <S.SubText>{`Stories (${storyBoards?.length})`}</S.SubText>
               <S.ContentContainer>

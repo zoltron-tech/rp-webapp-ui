@@ -415,6 +415,10 @@ export const NameMobile = styled.div`
 `;
 
 export const UsernameContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
   margin-block: 5px;
   & > div {
     text-align: center;

@@ -29,7 +29,7 @@ import * as S from "./styles";
 
 type UserMenuProps = {};
 
-const ContactSupportForm = ({
+export const ContactSupportForm = ({
   message,
   setMessage,
 }: {

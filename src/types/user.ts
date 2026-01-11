@@ -4,6 +4,7 @@ import type { ACCENT_MAP } from "./theme";
 export interface User {
   username: string;
   email: string;
+  emailVerified: boolean;
   palette: keyof typeof ACCENT_MAP;
   theme: 0 | 1;
   authApp: "GOOGLE" | "DISCORD" | "NOVELIST_WORLD";

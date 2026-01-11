@@ -4,10 +4,21 @@ export const ErrorBoxRoot = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   border: 1px solid var(--blue-a6);
   padding: 12px;
   font-family: var(--font);
+
+  &.email_button {
+    padding-inline: 30px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  @media (max-width: 700px) {
+      padding-inline: 20px;
+  }
 
   font-weight: var(--font-weight-regular);
   color: var(--blue-12);

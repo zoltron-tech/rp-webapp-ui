@@ -9,7 +9,7 @@ export const AvatarRoot = styled(Avatar.Root)`
   overflow: hidden;
   flex-shrink: 0;
   user-select: none;
-  /* background-color: var(--bg-3); */
+  background-color: var(--bg-2);
 
   &.selectable {
     cursor: pointer;

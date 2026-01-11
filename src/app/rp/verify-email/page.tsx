@@ -55,16 +55,6 @@ export default function ResetPassword() {
         <PageLoaderTypeWriter />
       </ShouldRender>
       <ShouldRender if={!loading}>
-        <Bar>
-          <LogoContainer onClick={onLogoClick}>
-            <Logo>
-              <LogoInner>
-                <SiBookstack />
-              </LogoInner>
-            </Logo>
-            <LogoText>Novelist World</LogoText>
-          </LogoContainer>
-        </Bar>
         <S.Content>
           <ShouldRender if={verificationStatus === true}>
             <S.Header>

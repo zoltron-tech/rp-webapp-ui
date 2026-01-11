@@ -1,9 +1,15 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
-import { type FC, useCallback, useMemo } from "react";
+import { type FC, useCallback, useEffect, useMemo } from "react";
 import { useGlobalState } from "@/context/store/stores";
+import { useCustomEvents } from "@/hooks";
 import { useToggleLike } from "@/hooks/use-toggle-like";
+import {
+  type CustomEventType,
+  EVENTS,
+  type PromptCommentReplyUpdatedPayload,
+} from "@/utils/constants/custom-events";
 import { parseTextContent } from "@/utils/helpers";
 import { LikeButton } from "../common/like-button";
 import { AppImageViewer } from "../image-viewer/AppImageViewer";
@@ -26,6 +32,25 @@ export const PromptContent: FC<PromptContentProps> = ({}) => {
     liked: reacted,
     type: "prompt",
   });
+  const { on: onPromptEvent, off: offPromptEvent } = useCustomEvents(
+    EVENTS.PROMPT.base,
+  );
+
+  useEffect(() => {
+    const handlePromptUpdated = (
+      e: CustomEventType<PromptCommentReplyUpdatedPayload>,
+    ) => {
+      const updatedText = e.detail.text;
+
+      setPromptState({ text: updatedText });
+    };
+
+    onPromptEvent(EVENTS.PROMPT.UPDATED, handlePromptUpdated);
+
+    return () => {
+      offPromptEvent(EVENTS.PROMPT.UPDATED, handlePromptUpdated);
+    };
+  }, [onPromptEvent]);
 
   const handleLikeToggle = useCallback(async () => {
     setPromptState({

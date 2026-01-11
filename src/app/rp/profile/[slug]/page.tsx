@@ -1,7 +1,6 @@
 "use client";
 
 import { Flex } from "@novelist-world/ui";
-import type { Metadata } from "next";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { BiSolidMessage } from "react-icons/bi";
@@ -78,52 +77,6 @@ const useGetActivities = (username: string) => {
 
   return { activities, error, refetch: fetchActivities, stopPageLoading };
 };
-
-type PageMetaProps = {
-  params: { username: string };
-};
-
-export async function generateMetadata({
-  params,
-}: PageMetaProps): Promise<Metadata> {
-  const { username } = params;
-
-  // ⚠️ MUST be server-side fetch
-  const res = await fetch(
-    `https://api.novelist.world/users/${username}`,
-    { cache: "no-store" }, // or revalidate
-  );
-
-  if (!res.ok) {
-    return {
-      title: "Novelist World",
-    };
-  }
-
-  const novelist = await res.json();
-
-  return {
-    description: `Find ${username} at Novelist World`,
-    openGraph: {
-      description: `Find ${username} at Novelist World`,
-      images: [
-        {
-          height: 630,
-          url: novelist.image, // MUST be absolute HTTPS
-          width: 1200,
-        },
-      ],
-      title: `${novelist.firstName} ${novelist.lastName}`,
-    },
-    title: `${novelist.firstName} ${novelist.lastName}`,
-    twitter: {
-      card: "summary_large_image",
-      description: `Find ${username} at Novelist World`,
-      images: [novelist.image],
-      title: `${novelist.firstName} ${novelist.lastName}`,
-    },
-  };
-}
 
 export default function UserProfilePage({}) {
   const params = useParams();
@@ -639,7 +592,7 @@ export default function UserProfilePage({}) {
             </Flex>
             <S.UsernameContainer>
               <Username username={username} primary />{" "}
-              <ShouldRender if={user?.emailVerified === true}>
+              <ShouldRender if={novelist?.isVerified === true}>
                 <VscVerifiedFilled size={20} color="rgb(28, 123, 201)" />
               </ShouldRender>
             </S.UsernameContainer>

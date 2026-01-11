@@ -1,7 +1,6 @@
 import classNames from "classnames";
 import { Collapsible } from "radix-ui";
 import { type FC, useMemo, useState } from "react";
-import { useGlobalState } from "@/context/store/stores";
 import { Comment } from "../comment";
 import PromptInput from "../prompt-input";
 import { useGetComments } from "./helpers";
@@ -11,8 +10,6 @@ import * as S from "./styled";
 export const PromptThreads: FC = () => {
   const threadsOpen = usePromptState("threadOpen");
   const [open, setOpen] = useState(threadsOpen);
-
-  const novelist = useGlobalState("novelist");
   const promptId = usePromptState("id");
   const canInteract = usePromptState("canInteract");
   const { comments, refetch: refetchComments } = useGetComments(promptId);

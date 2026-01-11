@@ -134,3 +134,40 @@ export const updatePromptAction = async (_prompt: Prompt) => {
 
   return prompt;
 };
+
+export const updatePromptCommentAction = async (
+  promptId: string,
+  updatedText: string,
+  promptType: "prompt" | "comment" | "reply",
+) => {
+  const jwt = await authenticateAndGetJWT();
+
+  const slug = promptType !== "prompt" ? `${promptType}/` : "";
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/${slug}${promptId}`;
+
+  const body = {
+    updatedText: updatedText,
+  };
+
+  console.log(body, URL);
+  const response = await fetch(URL, {
+    body: JSON.stringify(body),
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "PUT",
+  });
+
+  console.log(response);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const result = await response.json();
+
+  return result;
+};

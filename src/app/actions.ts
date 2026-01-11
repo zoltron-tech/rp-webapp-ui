@@ -90,7 +90,6 @@ export const forgotPasswordAction = async (email: string) => {
 
 export const verifyAccountAction = async (jwt: string) => {
   const URL = `${RP_SERVICE_URL}/rp/user/account/verifyAccount`;
-
   const response = await fetch(URL, {
     cache: "no-store",
     headers: {
@@ -103,6 +102,27 @@ export const verifyAccountAction = async (jwt: string) => {
   if (!response.ok) {
     return {
       message: "Something went wrong, please try again or contact support.",
+    };
+  }
+
+  const result: WithMessage = await response.json();
+  return result;
+};
+
+export const sendVerificationEmailAction = async (jwt: string) => {
+  const URL = `${RP_SERVICE_URL}/rp/user/account/verificationEmail`;
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "POST",
+  });
+
+  if (!response.ok) {
+    return {
+      message: API_MESSAGE.Error,
     };
   }
 

@@ -78,6 +78,7 @@ export type Novelist = {
   createdAt: string;
   about: string | null;
   isOnboarded: boolean;
+  isVerified: boolean;
 };
 
 export type UpdateNovelistPayload = Omit<Partial<Novelist>, "firstName"> & {

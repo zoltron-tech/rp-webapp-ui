@@ -253,6 +253,12 @@ export const BasicInfoFields = styled.div`
     gap: 8px;
     width: 400px;
   }
+
+  @media (max-width: 500px) {
+    .name-fields {
+      width: 300px;
+    }
+  }
 `;
 
 export const FieldHeader = styled.div`
@@ -315,6 +321,118 @@ export const FormActions = styled.div`
   gap: 8px;
   margin-top: var(--font-size-small);
   width: 100%;
+`;
+
+export const VerficationEmailButton = styled.button`
+      width: 120px;
+      padding: 8px;
+      background-color: var(--amber-a7);
+      color: var(--text);
+      font-size: var(--font-size);
+      font-weight: var(--font-weight-medium);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+
+      &[disabled] {
+        background-color: var(--bg-6);
+        cursor: not-allowed;
+        color: var(--text-secondary);
+      }
+
+      &:not([disabled]):hover {
+        background-color: var(--amber-8);
+      }
+
+      &:not([disabled]):active {
+        background-color: var(--amber-8);
+      }
+
+      &:focus {
+        outline: 1.5px solid var(--amber-a7);
+        outline-offset: 2px;
+      }
+`;
+
+export const InfoBox = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  border: 1px solid var(--blue-a6);
+  padding: 12px;
+  font-family: var(--font);
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-regular);
+  color: var(--blue-12);
+  background-color: var(--blue-a2);
+
+  margin-bottom: 22px;
+
+  div {
+    display: flex;
+    align-items: center;
+    color: var(--blue-12);
+    font-size: var(--font-size);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: 8px;
+  }
+
+  svg {
+    width: 22px;
+    height: 22px;
+    margin-right: 4px;
+    fill: var(--blue-9);
+  }
+
+  p {
+    margin: 0;
+    margin-block: 8px;
+    line-height: 1.4;
+  }
+
+  a {
+    color: var(--accent-7);
+    text-decoration: none;
+    font-weight: var(--font-weight-bold);
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: var(--accent-8);
+      text-decoration: underline;
+    }
+
+    &:focus {
+      outline: 1.5px solid var(--accent);
+      outline-offset: 2px;
+    }
+  }
+
+  strong {
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size);
+  }
+
+  &.error {
+    border-color: var(--tomato-a9);
+    background-color: var(--tomato-a2);
+    color: var(--tomato-12);
+
+    svg {
+      fill: var(--tomato-9);
+    }
+  }
+
+  &.not_found {
+    border-color: var(--amber-a9);
+    background-color: var(--amber-a2);
+    color: var(--amber-12);
+
+    svg {
+      fill: var(--amber-9);
+    }
+  }
 `;
 
 export const ResetButton = styled.button`

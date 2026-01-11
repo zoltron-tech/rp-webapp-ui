@@ -25,6 +25,7 @@ export const INITIAL_NOVELIST: Novelist = {
   id: "",
   image: "",
   isOnboarded: false,
+  isVerified: false,
   lastName: "",
   museCount: 0,
   muses: [],

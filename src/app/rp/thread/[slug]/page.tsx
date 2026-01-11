@@ -16,11 +16,20 @@ import { AppAlertDialog } from "@/components/dialog";
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { AppDropdownMenu } from "@/components/profile-more-dropdown";
 import PromptInput from "@/components/prompt-input";
+import {
+  UpdatePromptForm,
+  type UpdatePromptProps,
+} from "@/components/update-prompt";
 import { useGlobalState } from "@/context/store/stores";
-import { useUIContext } from "@/hooks";
+import { useCustomEvents, useUIContext } from "@/hooks";
 import { useBindPageLoader, usePageRouter } from "@/hooks/use-page-router";
-import type { Comment, Reply } from "@/types";
+import type { Comment, Prompt, Reply } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
+import {
+  type CustomEventType,
+  EVENTS,
+  type PromptCommentReplyUpdatedPayload,
+} from "@/utils/constants/custom-events";
 import { ROUTES } from "@/utils/constants/routes";
 import { displayDate, toFormattedDate } from "@/utils/helpers";
 import {
@@ -36,6 +45,55 @@ import * as S from "./styles";
 const useGetComment = (commentId: string) => {
   const [comment, setComment] = useState<Comment | null>(null);
   const [loading, setLoading] = useState(true);
+  const { on: onPromptEvent, off: offPromptEvent } = useCustomEvents(
+    EVENTS.PROMPT.base,
+  );
+  const { on: onCommentEvent, off: offCommentEvent } = useCustomEvents(
+    EVENTS.COMMENT.base,
+  );
+
+  useEffect(() => {
+    const handlePromptUpdated = (
+      e: CustomEventType<PromptCommentReplyUpdatedPayload>,
+    ) => {
+      const updatedText = e.detail.text;
+
+      setComment((prev) => {
+        if (!prev) return prev;
+        const newComment: Comment = { ...prev };
+        if (newComment.prompt === null) return prev;
+        newComment.prompt.text = updatedText || "";
+        return newComment;
+      });
+    };
+
+    onPromptEvent(EVENTS.PROMPT.UPDATED, handlePromptUpdated);
+
+    return () => {
+      offPromptEvent(EVENTS.PROMPT.UPDATED, handlePromptUpdated);
+    };
+  }, [onPromptEvent]);
+
+  useEffect(() => {
+    const handleCommentUpdated = (
+      e: CustomEventType<PromptCommentReplyUpdatedPayload>,
+    ) => {
+      const updatedText = e.detail.text;
+
+      setComment((prev) => {
+        if (!prev) return prev;
+        const newComment: Comment = { ...prev };
+        newComment.text = updatedText || "";
+        return newComment;
+      });
+    };
+
+    onCommentEvent(EVENTS.COMMENT.UPDATED, handleCommentUpdated);
+
+    return () => {
+      offCommentEvent(EVENTS.COMMENT.UPDATED, handleCommentUpdated);
+    };
+  }, [onCommentEvent]);
 
   const fetchComment = useCallback(async () => {
     setLoading(true);
@@ -97,10 +155,48 @@ export default function ThreadPage({}) {
   const [showReportCommentAlert, setShowReportCommentAlert] = useState(false);
   const [showDeletePromptAlert, setShowDeletePromptAlert] = useState(false);
   const [showReportPromptAlert, setShowReportPromptAlert] = useState(false);
+  const [showEditPromptAlert, setShowEditPromptAlert] = useState(false);
+  const [editPromptPayload, setEditPromptPayload] =
+    useState<UpdatePromptProps["payload"]>(null);
+  const [editPromptType, setEditPromptType] =
+    useState<UpdatePromptProps["type"]>("prompt");
   const [selectedReplyId, setSelectedReplyId] = useState("");
+  const isPromptOwner =
+    novelist?.muses.some(
+      (muse) => muse.id === comment?.prompt?.source.sourceId,
+    ) || comment?.prompt?.source.sourceId === novelist?.id;
+  const isCommentOwner =
+    novelist?.muses.some((muse) => muse.id === comment?.source.sourceId) ||
+    comment?.source.sourceId === novelist?.id;
+
   const { routeToPage } = usePageRouter();
   const { successToast, warningToast, errorToast } = useUIContext();
   useBindPageLoader(loadingComments || loadingReplies);
+  const { on: onReplyEvent, off: offReplyEvent } = useCustomEvents(
+    EVENTS.REPLY.base,
+  );
+
+  useEffect(() => {
+    const handleReplyUpdated = (
+      e: CustomEventType<PromptCommentReplyUpdatedPayload>,
+    ) => {
+      const { id, text } = e.detail;
+
+      setReplies((prev) =>
+        prev
+          ? prev.map((reply) =>
+              reply.id === id ? { ...reply, text: text ?? "" } : reply,
+            )
+          : prev,
+      );
+    };
+
+    onReplyEvent(EVENTS.REPLY.UPDATED, handleReplyUpdated);
+
+    return () => {
+      offReplyEvent(EVENTS.REPLY.UPDATED, handleReplyUpdated);
+    };
+  }, [onReplyEvent, setReplies]);
 
   const handleReportPrompt = async () => {
     if (!comment?.prompt?.id) return;
@@ -205,34 +301,39 @@ export default function ThreadPage({}) {
             <ShouldRender if={authState === "LOGGED_IN"}>
               <AppDropdownMenu
                 trigger={<BsThreeDots size={18} />}
-                items={[
-                  {
-                    icon: <FaRegEdit />,
-                    label: `Edit reply`,
-                    onClick: handleNotImplemented,
-                  },
-                  {
-                    separator: true,
-                  },
-                  {
-                    icon: <RiFlagFill />,
-                    label: `Report this reply`,
-                    onClick: () => {
-                      setShowReportAlert(true);
-                      setSelectedReplyId(reply.id);
-                    },
-                    variant: "danger",
-                  },
-                  {
-                    icon: <FaRegTrashCan />,
-                    label: `Delete this reply`,
-                    onClick: () => {
-                      setShowDeleteAlert(true);
-                      setSelectedReplyId(reply.id);
-                    },
-                    variant: "danger",
-                  },
-                ]}
+                items={
+                  novelist?.muses.some(
+                    (muse) => muse.id === reply.source.sourceId,
+                  ) || reply.source.sourceId === novelist?.id
+                    ? [
+                        {
+                          icon: <FaRegEdit />,
+                          label: `Edit prompt`,
+                          onClick: () => {
+                            setEditPromptPayload(reply);
+                            setEditPromptType("reply");
+                            setShowEditPromptAlert(true);
+                          },
+                        },
+                        {
+                          separator: true,
+                        },
+                        {
+                          icon: <FaRegTrashCan />,
+                          label: `Delete this prompt`,
+                          onClick: () => setShowDeletePromptAlert(true),
+                          variant: "danger",
+                        },
+                      ]
+                    : [
+                        {
+                          icon: <RiFlagFill />,
+                          label: `Report this prompt`,
+                          onClick: () => setShowReportPromptAlert(true),
+                          variant: "danger",
+                        },
+                      ]
+                }
               />
             </ShouldRender>
           </S.DropdownMenuContainer>
@@ -336,6 +437,12 @@ export default function ThreadPage({}) {
         onConfirm={handleDeleteReply}
         actionButtonLabel="Delete"
       />
+      <UpdatePromptForm
+        type={editPromptType}
+        payload={editPromptPayload}
+        open={showEditPromptAlert}
+        setOpen={setShowEditPromptAlert}
+      />
       <S.RepliesContainer>
         <S.HeaderContainer>
           <Flex>
@@ -382,28 +489,37 @@ export default function ThreadPage({}) {
             <ShouldRender if={authState === "LOGGED_IN"}>
               <AppDropdownMenu
                 trigger={<BsThreeDots size={18} />}
-                items={[
-                  {
-                    icon: <FaRegEdit />,
-                    label: `Edit prompt`,
-                    onClick: handleNotImplemented,
-                  },
-                  {
-                    separator: true,
-                  },
-                  {
-                    icon: <RiFlagFill />,
-                    label: `Report this prompt`,
-                    onClick: () => setShowReportPromptAlert(true),
-                    variant: "danger",
-                  },
-                  {
-                    icon: <FaRegTrashCan />,
-                    label: `Delete this prompt`,
-                    onClick: () => setShowDeletePromptAlert(true),
-                    variant: "danger",
-                  },
-                ]}
+                items={
+                  isPromptOwner
+                    ? [
+                        {
+                          icon: <FaRegEdit />,
+                          label: `Edit prompt`,
+                          onClick: () => {
+                            setEditPromptPayload(comment?.prompt || null);
+                            setEditPromptType("prompt");
+                            setShowEditPromptAlert(true);
+                          },
+                        },
+                        {
+                          separator: true,
+                        },
+                        {
+                          icon: <FaRegTrashCan />,
+                          label: `Delete this prompt`,
+                          onClick: () => setShowDeletePromptAlert(true),
+                          variant: "danger",
+                        },
+                      ]
+                    : [
+                        {
+                          icon: <RiFlagFill />,
+                          label: `Report this prompt`,
+                          onClick: () => setShowReportPromptAlert(true),
+                          variant: "danger",
+                        },
+                      ]
+                }
               />
             </ShouldRender>
           </S.HeaderDropdownMenuContainer>
@@ -442,28 +558,37 @@ export default function ThreadPage({}) {
             <ShouldRender if={authState === "LOGGED_IN"}>
               <AppDropdownMenu
                 trigger={<BsThreeDots size={18} />}
-                items={[
-                  {
-                    icon: <FaRegEdit />,
-                    label: `Edit reply`,
-                    onClick: handleNotImplemented,
-                  },
-                  {
-                    separator: true,
-                  },
-                  {
-                    icon: <RiFlagFill />,
-                    label: `Report this reply`,
-                    onClick: () => setShowReportCommentAlert(true),
-                    variant: "danger",
-                  },
-                  {
-                    icon: <FaRegTrashCan />,
-                    label: `Delete this reply`,
-                    onClick: () => setShowDeleteCommentAlert(true),
-                    variant: "danger",
-                  },
-                ]}
+                items={
+                  isCommentOwner
+                    ? [
+                        {
+                          icon: <FaRegEdit />,
+                          label: `Edit reply`,
+                          onClick: () => {
+                            setEditPromptPayload(comment);
+                            setEditPromptType("comment");
+                            setShowEditPromptAlert(true);
+                          },
+                        },
+                        {
+                          separator: true,
+                        },
+                        {
+                          icon: <FaRegTrashCan />,
+                          label: `Delete this reply`,
+                          onClick: () => setShowDeletePromptAlert(true),
+                          variant: "danger",
+                        },
+                      ]
+                    : [
+                        {
+                          icon: <RiFlagFill />,
+                          label: `Report this report`,
+                          onClick: () => setShowReportPromptAlert(true),
+                          variant: "danger",
+                        },
+                      ]
+                }
               />
             </ShouldRender>
           </S.DropdownMenuContainer>

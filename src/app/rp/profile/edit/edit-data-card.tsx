@@ -7,10 +7,16 @@ import {
   type FormEventHandler,
   type ReactNode,
   useCallback,
+  useMemo,
   useState,
 } from "react";
 import { ImProfile } from "react-icons/im";
-import { updateUserTheme } from "@/app/actions";
+import { IoIosInformationCircleOutline, IoIosWarning } from "react-icons/io";
+import {
+  getJWTIfExists,
+  sendVerificationEmailAction,
+  updateUserTheme,
+} from "@/app/actions";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { ErrorBox } from "@/components/error-box";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
@@ -18,7 +24,7 @@ import { useUIContext } from "@/hooks";
 import type { UpdateNovelistPayload } from "@/types/novelist";
 import { ACCENT_MAP, type Accent } from "@/types/theme";
 import { API_MESSAGE } from "@/utils/constants";
-import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
+import { SUPPORT_EMAIL, SUPPORT_EMAIL_URL } from "@/utils/constants/common";
 import { updateUserNovelist } from "../../novelists/actions";
 import { uploadMedia } from "../actions";
 import { useProfileState, useProfileStoreSet } from "./profile.store";
@@ -43,6 +49,45 @@ const ERROR_MAP: Record<ErrorKey, ReactNode> = {
   ),
 };
 
+type OperationState = "INITIAL" | "SUCCESS" | "ERROR";
+
+type InfoBoxContentType = {
+  icon: React.ReactNode;
+  headingText: string;
+  descriptionText: string;
+  extra: React.ReactNode | null;
+} | null;
+
+const InfoBoxContent: Record<OperationState, InfoBoxContentType> = {
+  ERROR: {
+    descriptionText: "There was an issue while processing your request.",
+    extra: (
+      <p>
+        <strong>Tip: </strong>
+        If the issue persists, please contact support at&nbsp;
+        <a href={SUPPORT_EMAIL_URL}>{SUPPORT_EMAIL}</a>. We apologize for the
+        inconvenience.
+      </p>
+    ),
+    headingText: "Something went wrong",
+    icon: <IoIosInformationCircleOutline />,
+  },
+  INITIAL: null,
+  SUCCESS: {
+    descriptionText:
+      "Please check your inbox and follow the instructions to reset your password.",
+    extra: (
+      <p>
+        <strong>Tip: </strong>
+        If you do not receive the email, please check your spam folder or try
+        again.
+      </p>
+    ),
+    headingText: "Next steps",
+    icon: <IoIosInformationCircleOutline />,
+  },
+};
+
 export default function EditDataCard() {
   const novelist = useGlobalState("novelist");
   const user = useGlobalState("user");
@@ -56,8 +101,14 @@ export default function EditDataCard() {
   const [error, setError] = useState<ErrorKey | null>(null);
   const [loading, setLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
+  const [operationState, setOperationState] =
+    useState<OperationState>("INITIAL");
   const setGlobalState = useGlobalStoreSet();
   const { successToast } = useUIContext();
+
+  const infoBoxContent = useMemo(() => {
+    return InfoBoxContent[operationState];
+  }, [operationState]);
 
   const setFirstname = useCallback(
     (value: string) => {
@@ -175,7 +226,6 @@ export default function EditDataCard() {
           note: _note ?? "",
         } satisfies UpdateNovelistPayload;
 
-        console.log(payload);
         setLoading(true);
         const response = await updateUserNovelist(payload, !novelist?.id);
         setLoading(false);
@@ -238,6 +288,19 @@ export default function EditDataCard() {
     setLoading,
     setError,
   ]);
+
+  const handleverifyAccount = async () => {
+    const jwt = await getJWTIfExists();
+    setLoading(true);
+    const response = await sendVerificationEmailAction(jwt || "");
+    if (response.message === API_MESSAGE.Success) {
+      setOperationState("SUCCESS");
+    } else {
+      setOperationState("ERROR");
+    }
+    setLoading(false);
+    return response;
+  };
 
   return (
     <S.Card>
@@ -360,6 +423,36 @@ export default function EditDataCard() {
               </RadioGroup.Root>
             </Form.FormField>
           </S.BasicInfoFields>
+          {infoBoxContent ? (
+            <S.InfoBox
+              className={classNames("info-box", operationState.toLowerCase())}
+            >
+              <div>
+                {infoBoxContent.icon}
+                {infoBoxContent.headingText}
+              </div>
+
+              <p>{infoBoxContent.descriptionText}</p>
+
+              {infoBoxContent.extra}
+            </S.InfoBox>
+          ) : null}
+
+          <ShouldRender
+            if={!novelist?.isVerified && operationState === "INITIAL"}
+          >
+            <ErrorBox className="email_button not_found">
+              {<p>Your email is not verified yet.</p>}
+              <S.VerficationEmailButton
+                type="button"
+                onClick={handleverifyAccount}
+                className="not_found"
+                disabled={loading || imageUploading}
+              >
+                Resend email
+              </S.VerficationEmailButton>
+            </ErrorBox>
+          </ShouldRender>
           <ShouldRender if={Boolean(error)}>
             <ErrorBox className="error">
               {ERROR_MAP[error!] || <p>Unknown error occurred.</p>}

@@ -1,7 +1,7 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
-import { type FC, useCallback } from "react";
+import { type FC, useCallback, useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
 import { FaRegEdit } from "react-icons/fa";
 import { FaRegTrashCan } from "react-icons/fa6";
@@ -19,11 +19,13 @@ import { MuseAvatar } from "../common/muse-avatar";
 import { NovelistAvatar } from "../common/novelist-avatar";
 import { AppAlertDialog } from "../dialog";
 import { AppDropdownMenu } from "../profile-more-dropdown";
+import { UpdatePromptForm, type UpdatePromptProps } from "../update-prompt";
 import { useCommentState, useCommentStateSet } from "./comment.store";
 import * as S from "./styled";
 
 export const CommentSource: FC = () => {
   const commentId = useCommentState("id");
+  const commentText = useCommentState("text");
   const source = useCommentState("source");
   const createdOn = useCommentState("createdOn");
   const commentAlert = useCommentState("commentAlert");
@@ -31,10 +33,16 @@ export const CommentSource: FC = () => {
   const { successToast, errorToast, warningToast } = useUIContext();
   const authState = useGlobalState("authState");
   const { emit } = useCustomEvents(EVENTS.COMMENT.base);
+  const [showEditCommentAlert, setShowEditCommentAlert] = useState(false);
+  const [editCommentPayload, setEditCommentPayload] =
+    useState<UpdatePromptProps["payload"]>(null);
+  const [editCommentType, setEditCommentType] =
+    useState<UpdatePromptProps["type"]>("comment");
 
-  const handleNotImplemented = useCallback(() => {
-    warningToast("This feature is coming soon!");
-  }, [warningToast]);
+  const novelist = useGlobalState("novelist");
+  const isOwner =
+    novelist?.muses.some((muse) => muse.id === source.sourceId) ||
+    source.sourceId === novelist?.id;
 
   const handleReportComment = useCallback(async () => {
     const response = await reportPromptCommentReply(commentId, "", "COMMENT");
@@ -70,8 +78,47 @@ export const CommentSource: FC = () => {
     [commentAlert, setCommentState],
   );
 
+  const dropdownItems = isOwner
+    ? [
+        {
+          icon: <FaRegEdit />,
+          label: "Edit reply",
+          onClick: () => {
+            setEditCommentPayload({
+              id: commentId,
+              text: commentText,
+            });
+            setEditCommentType("comment");
+            setShowEditCommentAlert(true);
+          },
+        },
+        {
+          separator: true,
+        },
+        {
+          icon: <FaRegTrashCan />,
+          label: "Delete this reply",
+          onClick: () => handleOpenChange("delete")(true),
+          variant: "danger" as const,
+        },
+      ]
+    : [
+        {
+          icon: <RiFlagFill />,
+          label: "Report this reply",
+          onClick: () => handleOpenChange("report")(true),
+          variant: "danger" as const,
+        },
+      ];
+
   return (
     <S.Source>
+      <UpdatePromptForm
+        type={editCommentType}
+        payload={editCommentPayload}
+        open={showEditCommentAlert}
+        setOpen={setShowEditCommentAlert}
+      />
       <ShouldRender if={source.sourceType === "MUSE"}>
         <MuseAvatar
           museId={source.sourceId}
@@ -96,28 +143,7 @@ export const CommentSource: FC = () => {
         <ShouldRender if={authState === "LOGGED_IN"}>
           <AppDropdownMenu
             trigger={<BsThreeDots size={18} />}
-            items={[
-              {
-                icon: <FaRegEdit />,
-                label: `Edit reply`,
-                onClick: handleNotImplemented,
-              },
-              {
-                separator: true,
-              },
-              {
-                icon: <RiFlagFill />,
-                label: `Report this reply`,
-                onClick: () => handleOpenChange("report")(true),
-                variant: "danger",
-              },
-              {
-                icon: <FaRegTrashCan />,
-                label: `Delete this thread`,
-                onClick: () => handleOpenChange("delete")(true),
-                variant: "danger",
-              },
-            ]}
+            items={dropdownItems}
           />
         </ShouldRender>
       </S.HeaderDropdownMenuContainer>

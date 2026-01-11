@@ -1,7 +1,7 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
-import { type FC, useCallback } from "react";
+import { type FC, useCallback, useEffect, useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
 import { FaRegEdit } from "react-icons/fa";
 import { FaRegTrashCan } from "react-icons/fa6";
@@ -21,6 +21,7 @@ import { NovelistAvatar } from "../common/novelist-avatar";
 import { PrivacyIcon } from "../common/privacy-icon";
 import { AppAlertDialog } from "../dialog";
 import { AppDropdownMenu } from "../profile-more-dropdown";
+import { UpdatePromptForm, type UpdatePromptProps } from "../update-prompt";
 import { usePromptState, usePromptStateSet } from "./prompt.store";
 import * as S from "./styled";
 
@@ -28,18 +29,24 @@ type PromptHeaderProps = {};
 
 export const PromptHeader: FC<PromptHeaderProps> = () => {
   const promptId = usePromptState("id");
-  const source = usePromptState("source");
+  const promptText = usePromptState("text");
   const createdOn = usePromptState("createdOn");
   const privacy = usePromptState("privacy");
   const promptAlert = usePromptState("promptAlert");
+  const source = usePromptState("source");
+  const novelist = useGlobalState("novelist");
+  const isOwner =
+    novelist?.muses.some((muse) => muse.id === source.sourceId) ||
+    source.sourceId === novelist?.id;
   const setPromptState = usePromptStateSet();
   const { routeToPage } = usePageRouter();
   const { successToast, errorToast, warningToast } = useUIContext();
   const authState = useGlobalState("authState");
-
-  const handleNotImplemented = useCallback(() => {
-    warningToast("This feature is coming soon!");
-  }, [warningToast]);
+  const [showEditPromptAlert, setShowEditPromptAlert] = useState(false);
+  const [editPromptPayload, setEditPromptPayload] =
+    useState<UpdatePromptProps["payload"]>(null);
+  const [editPromptType, setEditPromptType] =
+    useState<UpdatePromptProps["type"]>("prompt");
 
   const handleReportPrompt = useCallback(async () => {
     if (!promptId) return;
@@ -64,6 +71,39 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
     }
   }, [promptId, source, routeToPage, successToast, errorToast]);
 
+  const dropdownItems = isOwner
+    ? [
+        {
+          icon: <FaRegEdit />,
+          label: "Edit prompt",
+          onClick: () => {
+            setEditPromptPayload({
+              id: promptId,
+              text: promptText,
+            });
+            setEditPromptType("prompt");
+            setShowEditPromptAlert(true);
+          },
+        },
+        {
+          separator: true,
+        },
+        {
+          icon: <FaRegTrashCan />,
+          label: "Delete this prompt",
+          onClick: () => handleOpenChange("delete")(true),
+          variant: "danger" as const,
+        },
+      ]
+    : [
+        {
+          icon: <RiFlagFill />,
+          label: "Report this prompt",
+          onClick: () => handleOpenChange("report")(true),
+          variant: "danger" as const,
+        },
+      ];
+
   const handleOpenChange = useCallback(
     (type: typeof promptAlert) =>
       (open: boolean = false) => {
@@ -79,6 +119,12 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
 
   return (
     <S.PromptHeaderRoot>
+      <UpdatePromptForm
+        type={editPromptType}
+        payload={editPromptPayload}
+        open={showEditPromptAlert}
+        setOpen={setShowEditPromptAlert}
+      />
       <ShouldRender if={source.sourceType === "MUSE"}>
         <MuseAvatar
           museId={source.sourceId}
@@ -105,28 +151,7 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
         <ShouldRender if={authState === "LOGGED_IN"}>
           <AppDropdownMenu
             trigger={<BsThreeDots size={18} />}
-            items={[
-              {
-                icon: <FaRegEdit />,
-                label: `Edit prompt`,
-                onClick: handleNotImplemented,
-              },
-              {
-                separator: true,
-              },
-              {
-                icon: <RiFlagFill />,
-                label: `Report this prompt`,
-                onClick: () => handleOpenChange("report")(true),
-                variant: "danger",
-              },
-              {
-                icon: <FaRegTrashCan />,
-                label: `Delete this prompt`,
-                onClick: () => handleOpenChange("delete")(true),
-                variant: "danger",
-              },
-            ]}
+            items={dropdownItems}
           />
         </ShouldRender>
       </S.HeaderDropdownMenuContainer>

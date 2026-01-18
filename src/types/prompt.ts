@@ -1,4 +1,6 @@
-export type PrivacyLevel = "PUBLIC" | "FRIENDS" | "ONLY_ME";
+import type { Friend } from "./novelist";
+
+export type PrivacyLevel = "PUBLIC" | "FRIENDS" | "ONLY_ME" | "CUSTOM";
 
 export interface Prompt {
   id: string;
@@ -11,6 +13,7 @@ export interface Prompt {
   reacted: boolean;
   commentCount: number;
   reactions: number;
+  sharedWith: Friend[];
 }
 
 export interface PromptThreadComment {
@@ -62,7 +65,8 @@ export type SubmitPromptInput = {
   media: string;
   promptId?: string;
   commentId?: string;
-  privacy?: "PUBLIC" | "FRIENDS" | "ONLY_ME";
+  privacy?: "PUBLIC" | "FRIENDS" | "ONLY_ME" | "CUSTOM";
+  sharedWith?: Friend[];
 };
 
 export type SubmitPromptType = "prompt" | "comment" | "reply";

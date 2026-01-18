@@ -5,12 +5,15 @@ import {
   forwardRef,
   type HTMLProps,
   useCallback,
+  useEffect,
   useState,
 } from "react";
 import { GrRadialSelected } from "react-icons/gr";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { useGlobalState } from "@/context/store/stores";
+import { useCustomEvents } from "@/hooks";
 import type { PrivacyLevel } from "@/types";
+import { EVENTS } from "@/utils/constants/custom-events";
 import { PrivacyIcon } from "../common/privacy-icon";
 import * as S from "./styles";
 
@@ -18,10 +21,11 @@ const PRIVACY_OPTIONS = [
   { label: "Public", value: "PUBLIC" },
   { label: "Friends", value: "FRIENDS" },
   { label: "Only Me", value: "ONLY_ME" },
+  { label: "Custom", value: "CUSTOM" },
 ] as const;
 
 type PromptPrivacySelectProps = HTMLProps<HTMLDivElement> & {
-  initial?: "PUBLIC" | "FRIENDS" | "ONLY_ME";
+  initial?: "PUBLIC" | "FRIENDS" | "ONLY_ME" | "CUSTOM";
 };
 
 export const PromptPrivacySelect: FC<PromptPrivacySelectProps> = ({
@@ -32,8 +36,32 @@ export const PromptPrivacySelect: FC<PromptPrivacySelectProps> = ({
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
   const [privacy, setPrivacy] = useState<PrivacyLevel>(initial);
+  const { emit } = useCustomEvents(EVENTS.PRIVACY.CUSTOM.base);
+  const { on, off } = useCustomEvents(EVENTS.PRIVACY.CUSTOM.base);
+
+  useEffect(() => {
+    const handleCustomPrivacySelectionCleared = () => {
+      setPrivacy("ONLY_ME");
+    };
+
+    on(
+      EVENTS.PRIVACY.CUSTOM.SELECTION_CLEARED,
+      handleCustomPrivacySelectionCleared,
+    );
+
+    return () => {
+      off(
+        EVENTS.PRIVACY.CUSTOM.SELECTION_CLEARED,
+        handleCustomPrivacySelectionCleared,
+      );
+    };
+  }, [on]);
+
   const handlePrivacyChange = useCallback((value: PrivacyLevel) => {
     setPrivacy(value);
+
+    if (value === "CUSTOM") emit(EVENTS.PRIVACY.CUSTOM.APPLIED);
+    else emit(EVENTS.PRIVACY.CUSTOM.REMOVED);
   }, []);
 
   return (
@@ -48,7 +76,7 @@ export const PromptPrivacySelect: FC<PromptPrivacySelectProps> = ({
           aria-label="Privacy"
           name="privacy"
           required
-          defaultValue={privacy}
+          value={privacy}
           onValueChange={handlePrivacyChange}
         >
           <Select.Trigger className="select-trigger">

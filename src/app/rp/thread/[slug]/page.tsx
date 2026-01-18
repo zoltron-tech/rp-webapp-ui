@@ -23,7 +23,7 @@ import {
 import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents, useUIContext } from "@/hooks";
 import { useBindPageLoader, usePageRouter } from "@/hooks/use-page-router";
-import type { Comment, Prompt, Reply } from "@/types";
+import type { Comment, Reply } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import {
   type CustomEventType,

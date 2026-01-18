@@ -467,3 +467,12 @@ export const ResetButton = styled.button`
     cursor: not-allowed;
   }
 `;
+
+export const MediaErrorWrapper = styled.div`
+display: flex;
+align-items: center;
+justify-content: center;
+padding-inline: 20px;
+padding-top: 20px;
+width: 100%;
+`;

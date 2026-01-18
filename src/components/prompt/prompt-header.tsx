@@ -1,10 +1,12 @@
 "use client";
 
-import { ShouldRender } from "@novelist-world/ui";
+import { Flex, ShouldRender } from "@novelist-world/ui";
 import { type FC, useCallback, useEffect, useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
 import { FaRegEdit } from "react-icons/fa";
 import { FaRegTrashCan } from "react-icons/fa6";
+import { IoIosShareAlt } from "react-icons/io";
+import { PiDotsThreeCircleFill, PiDotsThreeOutlineFill } from "react-icons/pi";
 import { RiFlagFill } from "react-icons/ri";
 import {
   deletePromptAction,
@@ -16,10 +18,12 @@ import { usePageRouter } from "@/hooks/use-page-router";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { displayDate, toFormattedDate } from "@/utils/helpers";
+import { AvatarNew } from "../common/avatar-new";
 import { MuseAvatar } from "../common/muse-avatar";
 import { NovelistAvatar } from "../common/novelist-avatar";
 import { PrivacyIcon } from "../common/privacy-icon";
 import { AppAlertDialog } from "../dialog";
+import { FriendsList } from "../friends-list";
 import { AppDropdownMenu } from "../profile-more-dropdown";
 import { UpdatePromptForm, type UpdatePromptProps } from "../update-prompt";
 import { usePromptState, usePromptStateSet } from "./prompt.store";
@@ -32,6 +36,9 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
   const promptText = usePromptState("text");
   const createdOn = usePromptState("createdOn");
   const privacy = usePromptState("privacy");
+  const privacySelectedFriends = usePromptState("sharedWith");
+  const [showPrivacySelectedFriends, setShowPrivacySelectedFriends] =
+    useState(false);
   const promptAlert = usePromptState("promptAlert");
   const source = usePromptState("source");
   const novelist = useGlobalState("novelist");
@@ -119,6 +126,22 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
 
   return (
     <S.PromptHeaderRoot>
+      <AppAlertDialog
+        heading={`Shared with`}
+        text={`Share with friends`}
+        body={<FriendsList friends={privacySelectedFriends} />}
+        open={showPrivacySelectedFriends}
+        onOpenChange={setShowPrivacySelectedFriends}
+        onCancel={() => setShowPrivacySelectedFriends(false)}
+        onConfirm={() => {
+          setShowPrivacySelectedFriends(false);
+        }}
+        closeButtonText="Cancel"
+        actionButtonLabel="Ok"
+        actionColor="neutral"
+        isCancelHidden={true}
+      />
+
       <UpdatePromptForm
         type={editPromptType}
         payload={editPromptPayload}
@@ -143,7 +166,46 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
         <S.SourceName>{source.name}</S.SourceName>
         <S.PromptSubheader title={displayDate(createdOn)} dateTime={createdOn}>
           {toFormattedDate(createdOn)}
-          <PrivacyIcon privacy={privacy} />
+          <Flex
+            style={{
+              alignItems: "center",
+              gap: "0.3rem",
+              justifyContent: "flex-start",
+            }}
+          >
+            <Flex
+              onClick={
+                privacy === "CUSTOM"
+                  ? () => setShowPrivacySelectedFriends(true)
+                  : () => {}
+              }
+              style={{ cursor: "pointer" }}
+            >
+              <PrivacyIcon privacy={privacy} />
+            </Flex>
+            <ShouldRender if={privacy === "CUSTOM"}>
+              <IoIosShareAlt
+                onClick={() => setShowPrivacySelectedFriends(true)}
+                style={{ cursor: "pointer" }}
+              />
+              {privacySelectedFriends.slice(0, 2).map((friend) => (
+                <>
+                  <AvatarNew
+                    className="privacyAvatar"
+                    key={friend.id}
+                    src={friend.image}
+                    alt={friend.username}
+                    onClick={() => setShowPrivacySelectedFriends(true)}
+                  />
+                </>
+              ))}
+              <S.privacyAvatarMoreIcon
+                onClick={() => setShowPrivacySelectedFriends(true)}
+              >
+                <PiDotsThreeOutlineFill />
+              </S.privacyAvatarMoreIcon>
+            </ShouldRender>
+          </Flex>
         </S.PromptSubheader>
       </S.SourceInfo>
 

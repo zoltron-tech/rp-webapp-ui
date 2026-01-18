@@ -8,6 +8,14 @@ export const EVENTS = {
     base: "muse",
     DELETED: "deleted",
   },
+  PRIVACY: {
+    CUSTOM: {
+      APPLIED: "applied",
+      base: "privacy.custom",
+      REMOVED: "removed",
+      SELECTION_CLEARED: "cleared",
+    },
+  },
   PROMPT: {
     base: "prompt",
     UPDATED: "updated",
@@ -35,4 +43,8 @@ export type CustomEventType<T> = {
 export type PromptCommentReplyUpdatedPayload = {
   id: string;
   text: string;
+};
+
+export type PrivacyCustomAppliedPayload = {
+  sharedWith: string[];
 };

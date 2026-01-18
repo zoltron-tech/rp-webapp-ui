@@ -17,7 +17,6 @@ import {
   type MuseDeletedPayload,
 } from "@/utils/constants/custom-events";
 import { ROUTES } from "@/utils/constants/routes";
-import { Logger } from "@/utils/services";
 import * as S from "./styles";
 
 export default function MusesListPage({}) {

@@ -12,12 +12,14 @@ interface AlertProps {
   body?: ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onCancel?: () => void;
   onConfirm?: () => void;
   actionButtonLabel?: string;
   showConfirm?: boolean;
   closeButtonText?: string;
   actionColor?: "negative" | "neutral";
   isConfirmDisabled?: boolean;
+  isCancelHidden?: boolean;
 }
 
 export const AppAlertDialog = ({
@@ -26,12 +28,14 @@ export const AppAlertDialog = ({
   body,
   open,
   onOpenChange,
+  onCancel,
   onConfirm,
   actionButtonLabel = "Confirm",
   showConfirm = true,
   closeButtonText = "Cancel",
   actionColor = "negative",
   isConfirmDisabled = false,
+  isCancelHidden = false,
 }: AlertProps) => {
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
@@ -50,9 +54,11 @@ export const AppAlertDialog = ({
           )}
 
           <S.Actions>
-            <AlertDialog.Cancel asChild>
-              <S.CancelButton>{closeButtonText}</S.CancelButton>
-            </AlertDialog.Cancel>
+            {!isCancelHidden && (
+              <AlertDialog.Cancel onClick={onCancel} asChild>
+                <S.CancelButton>{closeButtonText}</S.CancelButton>
+              </AlertDialog.Cancel>
+            )}
 
             {showConfirm && (
               <S.ActionButton

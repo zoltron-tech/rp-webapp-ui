@@ -30,8 +30,14 @@ import { uploadMedia } from "../actions";
 import { useProfileState, useProfileStoreSet } from "./profile.store";
 import * as S from "./styled";
 
-const ErrorKeys = [API_MESSAGE.UncategorizedError] as const;
+const ErrorKeys = [
+  API_MESSAGE.UncategorizedError,
+  API_MESSAGE.FileTooLarge,
+  API_MESSAGE.MediaError,
+] as const;
 type ErrorKey = (typeof ErrorKeys)[number];
+
+const VALID_IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif"];
 
 const ERROR_MAP: Record<ErrorKey, ReactNode> = {
   [API_MESSAGE.UncategorizedError]: (
@@ -46,6 +52,18 @@ const ERROR_MAP: Record<ErrorKey, ReactNode> = {
         <a href={SUPPORT_EMAIL_URL}>contacting support</a>.
       </p>
     </>
+  ),
+  [API_MESSAGE.FileTooLarge]: (
+    <p>
+      The selected file is too large. Maximum allowed size is{" "}
+      <strong>10 MB</strong>.
+    </p>
+  ),
+  [API_MESSAGE.MediaError]: (
+    <p>
+      File type is not supported. Allowed file types are{" "}
+      <strong>(.png, .jpg, .gif)</strong>.
+    </p>
   ),
 };
 
@@ -75,12 +93,12 @@ const InfoBoxContent: Record<OperationState, InfoBoxContentType> = {
   INITIAL: null,
   SUCCESS: {
     descriptionText:
-      "Please check your inbox and follow the instructions to reset your password.",
+      "Please check your inbox and follow the instructions to verify your email address.",
     extra: (
       <p>
         <strong>Tip: </strong>
         If you do not receive the email, please check your spam folder or try
-        again.
+        again later.
       </p>
     ),
     headingText: "Next steps",
@@ -89,6 +107,7 @@ const InfoBoxContent: Record<OperationState, InfoBoxContentType> = {
 };
 
 export default function EditDataCard() {
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
   const novelist = useGlobalState("novelist");
   const user = useGlobalState("user");
   const firstName = useProfileState("firstName");
@@ -99,6 +118,8 @@ export default function EditDataCard() {
   const palette = useProfileState("palette");
   const setProfileState = useProfileStoreSet();
   const [error, setError] = useState<ErrorKey | null>(null);
+  const [mediaError, setMediaError] = useState<ErrorKey | null>(null);
+  const [mediaTypeError, setMediaTypeError] = useState<ErrorKey | null>(null);
   const [loading, setLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const [operationState, setOperationState] =
@@ -178,11 +199,42 @@ export default function EditDataCard() {
     [setNote],
   );
 
+  const checkFileSize = (file: File | undefined): boolean => {
+    if (!file) return false;
+    if (file.size > MAX_FILE_SIZE) {
+      console.log("filesize too big.");
+      setMediaError(API_MESSAGE.FileTooLarge);
+      return true;
+    }
+    return false;
+  };
+
+  const checkFileType = (file: File | undefined): boolean => {
+    if (!file) return false;
+
+    // File type validation
+    if (!VALID_IMAGE_TYPES.includes(file.type)) {
+      setMediaTypeError(API_MESSAGE.MediaError);
+      return true;
+    }
+
+    return false;
+  };
+
   const handleAvatarChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
 
       if (!file) return;
+
+      if (checkFileSize(file) || checkFileType(file)) {
+        e.target.value = "";
+        return;
+      }
+
+      setMediaTypeError(null);
+      setMediaError(null);
+
       const reader = new FileReader();
       reader.onloadend = async () => {
         setProfileState({ image: reader.result as string });
@@ -330,6 +382,21 @@ export default function EditDataCard() {
                 hidden
               />
             </Form.Field>
+
+            <ShouldRender if={Boolean(mediaError)}>
+              <S.MediaErrorWrapper>
+                <ErrorBox className="error">
+                  {ERROR_MAP[mediaError!] || <p>Unknown error occurred.</p>}
+                </ErrorBox>
+              </S.MediaErrorWrapper>
+            </ShouldRender>
+            <ShouldRender if={Boolean(mediaTypeError)}>
+              <S.MediaErrorWrapper>
+                <ErrorBox className="error">
+                  {ERROR_MAP[mediaTypeError!] || <p>Unknown error occurred.</p>}
+                </ErrorBox>
+              </S.MediaErrorWrapper>
+            </ShouldRender>
 
             <div className="name-fields">
               <Form.Field className="field" name="firstName">

@@ -1,6 +1,6 @@
 "use server";
 import getConfig from "next/config";
-import { authenticateAndGetJWT } from "@/app/actions";
+import { authenticateAndGetJWT, getJWTIfExists } from "@/app/actions";
 import type { Comment, Reply } from "@/types";
 import {
   API_MESSAGE,
@@ -47,10 +47,19 @@ export const reportPromptCommentReply = async (
 };
 
 export const getCommentAction = async (commentId: string) => {
+  const jwt = await getJWTIfExists();
+  const headers: Record<string, string> = {
+    [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
+  };
+  if (jwt) {
+    headers[AUTH_HEADER_NAME as string] = jwt;
+  }
+
   const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/comment/${commentId}`;
 
   const response = await fetch(URL, {
     cache: "no-store",
+    headers: headers,
   });
 
   Logger.debug("getCommentAction", response.status);
@@ -67,10 +76,18 @@ export const getCommentAction = async (commentId: string) => {
 };
 
 export const getRepliesAction = async (commentId: string) => {
+  const jwt = await getJWTIfExists();
+  const headers: Record<string, string> = {
+    [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
+  };
+  if (jwt) {
+    headers[AUTH_HEADER_NAME as string] = jwt;
+  }
   const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/comment/${commentId}/replies`;
 
   const response = await fetch(URL, {
     cache: "no-store",
+    headers: headers,
   });
 
   if (response.status === 404) {

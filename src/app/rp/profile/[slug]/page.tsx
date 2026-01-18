@@ -597,17 +597,27 @@ export default function UserProfilePage({}) {
               </ShouldRender>
             </S.UsernameContainer>
             <ShouldRender if={username !== "novelistworld"}>
-              <Flex style={{ paddingInline: "10px" }}>
-                <FcTreeStructure size={"18px"} />
-                <S.InfoTextBold>{novelist?.friendsCount}</S.InfoTextBold>{" "}
-                <S.InfoText> Friends </S.InfoText>
-                <FcConferenceCall size={"18px"} />
-                <S.InfoTextBold>{novelist?.museCount}</S.InfoTextBold>{" "}
-                <S.InfoText> Characters </S.InfoText>
-                <FcCalendar size={"18px"} />
-                <S.InfoText>
-                  Joined {toFormattedDate(novelist?.createdAt)}
-                </S.InfoText>
+              <Flex
+                // gap={"0px"}
+                align="flex-start"
+                // style={{ marginLeft: "100px", width: "100%" }}
+              >
+                <Flex gap={"2px"}>
+                  <FcTreeStructure size={"16px"} />
+                  <S.InfoTextBold>{novelist?.friendsCount}</S.InfoTextBold>{" "}
+                  <S.InfoText> Friends</S.InfoText>
+                </Flex>
+                <Flex gap={"2px"}>
+                  <FcConferenceCall size={"16px"} />
+                  <S.InfoTextBold>{novelist?.museCount}</S.InfoTextBold>{" "}
+                  <S.InfoText> Characters</S.InfoText>
+                </Flex>
+                <Flex gap={"2px"}>
+                  <FcCalendar size={"16px"} />
+                  <S.InfoText>
+                    {` `} Joined {toFormattedDate(novelist?.createdAt)}
+                  </S.InfoText>
+                </Flex>
               </Flex>
             </ShouldRender>
             {/* <S.ButtonsContainer>
@@ -622,7 +632,10 @@ export default function UserProfilePage({}) {
             <ShouldRender
               if={!!(novelist?.about && novelist?.about.length > 0)}
             >
-              <S.SubText>About Me</S.SubText>
+              {/* <S.SubText>About Me</S.SubText> */}
+              <p>
+                <br />
+              </p>
               <S.AboutContainer>
                 <ExpandableText
                   text={novelist?.about ?? ""}

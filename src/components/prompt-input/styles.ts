@@ -1,5 +1,6 @@
 import { Avatar, Form, Select } from "radix-ui";
 import styled from "styled-components";
+import { AvatarNew } from "../common/avatar-new";
 
 export const PromptTrigger = styled.button`
   all: unset;
@@ -67,6 +68,32 @@ export const PromptTrigger = styled.button`
     &:focus {
       outline: 1.5px solid var(--accent);
     }
+  }
+`;
+
+export const PrivacySelectedFriendAvatar = styled(AvatarNew)`
+  height: 22px;
+  width: 22px;
+  margin-top: 20px;
+  cursor: pointer;
+`;
+
+export const privacyAvatarMoreIcon = styled.div`
+  display: flex;
+  background-color: var(--bg-3);
+  border-radius: 50%;
+  border: 1px solid var(--bg-6);
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+
+    @media screen and (max-width: 430px) {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
   }
 `;
 

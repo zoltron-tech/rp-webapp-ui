@@ -334,10 +334,11 @@ export const InfoText = styled.div`
   font-weight: 300;
   font-style: italic;
   text-align: center;
+  margin-block: 8px;
 
-  @container (max-width: 300px) {
+  @container (max-width: 700px) {
     & {
-      font-size: 12px;
+      font-size: 11px;
     }
   }
 `;

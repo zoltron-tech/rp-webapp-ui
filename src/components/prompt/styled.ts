@@ -1,5 +1,6 @@
 import { Separator } from "radix-ui";
 import { styled } from "styled-components";
+import { AvatarNew } from "../common/avatar-new";
 
 export const PromptRoot = styled.article`
   background-color: var(--bg-2);
@@ -42,12 +43,42 @@ export const PromptHeaderRoot = styled.header`
     cursor: pointer;
   }
 
+  .privacyAvatar {
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+  }
+
   @media screen and (max-width: 430px) {
     .avatar {
       width: 40px;
       height: 40px;
       cursor: pointer;
     }
+
+    .privacyAvatar {
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+  }
+  }
+`;
+
+export const privacyAvatarMoreIcon = styled.div`
+  display: flex;
+  background-color: var(--bg-3);
+  border-radius: 50%;
+  border: 1px solid var(--bg-6);
+  width: 35px;
+  height: 35px;
+  cursor: pointer;
+  justify-content: center;
+  align-items: center;
+
+    @media screen and (max-width: 430px) {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
   }
 `;
 

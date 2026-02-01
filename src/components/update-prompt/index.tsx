@@ -1,9 +1,13 @@
-import { type FC, useCallback, useEffect, useState } from "react";
+import { type FC, useCallback, useEffect, useMemo, useState } from "react";
+import { searchMentionMusesAction } from "@/app/rp/muse/actions";
 import { updatePromptCommentAction } from "@/app/rp/prompt/actions";
+import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents, useUIContext } from "@/hooks";
+import type { MentionDataItem, MentionTab } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { EVENTS } from "@/utils/constants/custom-events";
 import { AppAlertDialog } from "../dialog";
+import { RichTextEditor } from "../rich-text-editor-input";
 import * as S from "./styled";
 
 type PayloadType = {
@@ -25,6 +29,7 @@ export const UpdatePromptForm: FC<UpdatePromptProps> = ({
   setOpen,
 }) => {
   const [text, setText] = useState(payload?.text);
+  const novelist = useGlobalState("novelist");
   const { successToast, errorToast } = useUIContext();
 
   const emitters = {
@@ -41,6 +46,47 @@ export const UpdatePromptForm: FC<UpdatePromptProps> = ({
       event: EVENTS.REPLY.UPDATED,
     },
   } as const;
+
+  const fetchMentionableMuses = useCallback(
+    async (prefix: string = ""): Promise<MentionDataItem[]> => {
+      return await searchMentionMusesAction(prefix);
+    },
+    [],
+  );
+
+  const fetchMentionableFriends = useCallback(
+    async (prefix: string = ""): Promise<MentionDataItem[]> => {
+      const friends = novelist?.friends ?? [];
+
+      return friends
+        .filter((f) => f.username.toLowerCase().includes(prefix.toLowerCase()))
+        .map((friend) => ({
+          displayName: friend.username,
+          id: friend.id,
+          image: friend.image,
+          type: "NOVELIST",
+        }));
+    },
+    [novelist?.friends],
+  );
+
+  const MENTION_TABS: MentionTab[] = useMemo(
+    () => [
+      {
+        getData: fetchMentionableFriends,
+        iconKey: "avatar",
+        id: "novelists",
+        label: "Friends",
+      },
+      {
+        getData: fetchMentionableMuses,
+        iconKey: "icon",
+        id: "muses",
+        label: "Muses",
+      },
+    ],
+    [fetchMentionableFriends, fetchMentionableMuses],
+  );
 
   const handleClose = useCallback((_newValue: boolean) => {
     setText("");
@@ -80,10 +126,11 @@ export const UpdatePromptForm: FC<UpdatePromptProps> = ({
         >
           <S.FormField name="supportMessage">
             <S.FormControl asChild>
-              <S.FormTextArea
+              <RichTextEditor
+                placeholder="Enter text"
                 value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder="Type your message..."
+                mentionTabs={MENTION_TABS}
+                onChange={(e) => setText(e)}
               />
             </S.FormControl>
           </S.FormField>

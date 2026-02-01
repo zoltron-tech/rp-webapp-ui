@@ -17,6 +17,7 @@ export type PromptInputState = {
   mediaUploading: boolean;
   mediaUploadError: MediaUploadError;
   media: File | null;
+  promptText: string | null;
 };
 
 export const INITIAL_STATE: PromptInputState = {
@@ -24,6 +25,7 @@ export const INITIAL_STATE: PromptInputState = {
   mediaUploadError: null,
   mediaUploading: false,
   parentId: "",
+  promptText: "",
   type: "prompt",
 };
 

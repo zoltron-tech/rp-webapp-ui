@@ -13,6 +13,7 @@ import {
 import { parseTextContent } from "@/utils/helpers";
 import { LikeButton } from "../common/like-button";
 import { AppImageViewer } from "../image-viewer/AppImageViewer";
+import { RichTextRenderer } from "../rich-text-editor-input/rich-test-renderer";
 import { usePromptState, usePromptStateSet } from "./prompt.store";
 import * as S from "./styled";
 
@@ -83,9 +84,15 @@ export const PromptContent: FC<PromptContentProps> = ({}) => {
 
   return (
     <S.PromptContent.Root>
-      {textLines.map((line, index) => (
+      {/* {textLines.map((line, index) => (
         <S.TextLine key={index}>{line}</S.TextLine>
-      ))}
+      ))} */}
+
+      <RichTextRenderer
+        savedText={text ?? ""}
+        collapsedHeight={100}
+        overlayHidden
+      />
       {media && (
         <S.PromptMediaContainer>
           <ShouldRender if={media.toLocaleLowerCase().startsWith("http")}>

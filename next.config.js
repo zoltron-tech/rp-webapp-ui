@@ -21,6 +21,7 @@ const nextConfig = {
     RP_CHAT_URL: process.env.RP_CHAT_URL,
     RP_LOGIN_URL: process.env.RP_LOGIN_URL,
     SUPPORT_EMAIL: process.env.SUPPORT_EMAIL,
+      RP_SERVICE_URL: process.env.RP_SERVICE_URL,
   },
 
   serverRuntimeConfig: {

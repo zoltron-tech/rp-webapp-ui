@@ -9,6 +9,7 @@ import {
 } from "@/utils/constants/custom-events";
 import { parseTextContent } from "@/utils/helpers";
 import { AppImageViewer } from "../image-viewer/AppImageViewer";
+import { RichTextRenderer } from "../rich-text-editor-input/rich-test-renderer";
 import { useCommentState, useCommentStateSet } from "./comment.store";
 import * as S from "./styled";
 
@@ -45,11 +46,12 @@ export const CommentContent: FC = () => {
 
   return (
     <S.CommentContent.Root>
-      {textLines.map((line, index) => (
+      {/* {textLines.map((line, index) => (
         <S.CommentContent.TextLine key={index}>
           {line}
         </S.CommentContent.TextLine>
-      ))}
+      ))} */}
+      <RichTextRenderer savedText={text ?? ""} collapsedHeight={100} />
       {media && (
         <S.CommentContent.MediaContainer>
           <AppImageViewer src={media} alt="Comment media">

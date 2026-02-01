@@ -154,17 +154,13 @@ export const PromptSubheader = styled.time`
   }
 `;
 
-export const PromptText = styled.div`
-  font-size: var(--font-size);
-  font-weight: 300;
+export const PromptTextContainer = styled.div`
   max-width: 80%;
   padding-left: 25px;
-  white-space: pre-wrap;
 
   @container (max-width: 700px) {
     & {
       padding-left: unset;
-      font-size: var(--font-size-small);
     }
   }
 `;

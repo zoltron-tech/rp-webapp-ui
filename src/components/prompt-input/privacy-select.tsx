@@ -25,12 +25,14 @@ const PRIVACY_OPTIONS = [
 ] as const;
 
 type PromptPrivacySelectProps = HTMLProps<HTMLDivElement> & {
-  initial?: "PUBLIC" | "FRIENDS" | "ONLY_ME" | "CUSTOM";
+  initial?: PrivacyLevel;
+  blockedOptions?: Array<PrivacyLevel>;
 };
 
 export const PromptPrivacySelect: FC<PromptPrivacySelectProps> = ({
   className,
   initial = "PUBLIC",
+  blockedOptions = [],
   ...rest
 }) => {
   const accent = useGlobalState("accent");
@@ -97,7 +99,9 @@ export const PromptPrivacySelect: FC<PromptPrivacySelectProps> = ({
               className={classNames("select-content", theme, accent)}
             >
               <Select.Viewport className="select-viewport">
-                {PRIVACY_OPTIONS.map((option) => (
+                {PRIVACY_OPTIONS.filter(
+                  ({ value }) => !blockedOptions?.includes(value),
+                ).map((option) => (
                   <SelectItem key={option.value} option={option} />
                 ))}
               </Select.Viewport>

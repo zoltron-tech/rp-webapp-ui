@@ -16,6 +16,7 @@ import { AppAlertDialog } from "@/components/dialog";
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { AppDropdownMenu } from "@/components/profile-more-dropdown";
 import PromptInput from "@/components/prompt-input";
+import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
 import {
   UpdatePromptForm,
   type UpdatePromptProps,
@@ -365,7 +366,12 @@ export default function ThreadPage({}) {
             </S.SourceInfo>
           </S.ReplyHeaderContainer>
 
-          <S.PromptText>{reply.text}</S.PromptText>
+          <S.PromptTextContainer>
+            <RichTextRenderer
+              savedText={reply.text ?? ""}
+              collapsedHeight={100}
+            />
+          </S.PromptTextContainer>
           {reply.media && (
             <S.MediaContainer>
               <ShouldRender
@@ -526,7 +532,12 @@ export default function ThreadPage({}) {
         </S.HeaderContainer>
         <Separator.Root className="separator" orientation="horizontal" />
         <Flex direction="column">
-          <S.PromptText>{comment?.prompt?.text}</S.PromptText>
+          <S.PromptTextContainer>
+            <RichTextRenderer
+              savedText={comment?.prompt?.text ?? ""}
+              collapsedHeight={100}
+            />
+          </S.PromptTextContainer>
           {comment?.prompt?.media && (
             <S.MediaContainer>
               <ShouldRender
@@ -623,7 +634,12 @@ export default function ThreadPage({}) {
               </ShouldRender>
             </S.SourceInfo>
           </S.ReplyHeaderContainer>
-          <S.PromptText>{comment?.text}</S.PromptText>
+          <S.PromptTextContainer>
+            <RichTextRenderer
+              savedText={comment?.text ?? ""}
+              collapsedHeight={100}
+            />
+          </S.PromptTextContainer>
           {comment?.media && (
             <S.MediaContainer>
               <ShouldRender

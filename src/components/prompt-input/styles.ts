@@ -108,10 +108,6 @@ export const PromptInputRoot = styled.div`
 
   position: relative;
 
-  * {
-    font-family: var(--font);
-  }
-
   &.open {
     padding-top: 28px;
     padding-bottom: 45px;
@@ -153,7 +149,6 @@ export const TextInputContainer = styled(Form.Field)`
     border: none;
     color: var(--text);
     font-size: var(--font-size-input);
-    font-family: var(--font);
     resize: none;
     min-height: 100px;
 
@@ -169,7 +164,6 @@ export const TextInputContainer = styled(Form.Field)`
   .form-message {
     margin-top: 4px;
     font-size: var(--font-size-small);
-    font-family: var(--font);
   }
 `;
 

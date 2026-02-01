@@ -17,6 +17,7 @@ import {
 } from "@/utils/helpers";
 import { MuseAvatar } from "../common/muse-avatar";
 import { AppImageViewer } from "../image-viewer/AppImageViewer";
+import { RichTextRenderer } from "../rich-text-editor-input/rich-test-renderer";
 import * as S from "./styled";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
@@ -105,10 +106,10 @@ export const PromptThreadCommentCard: FC<Props> = ({
       <Separator.Root className="separator" orientation="horizontal" />
 
       <S.PromptContent.Root>
-        {textLines.map((line, index) => (
-          <S.TextLine key={index}>{line.trim()}</S.TextLine>
-        ))}
-        {/* {promptThreadComment.text} */}
+        <RichTextRenderer
+          savedText={promptThreadComment.text ?? ""}
+          collapsedHeight={100}
+        />
         {promptThreadComment.media && (
           <S.PromptContent.MediaContainer>
             <ShouldRender

@@ -1,6 +1,20 @@
 import type { Tag } from "./common";
 import type { PrivacyLevel } from "./prompt";
 
+export interface MentionDataItem {
+  id: string;
+  type: "NOVELIST" | "MUSE";
+  displayName: string;
+  image: string;
+}
+
+export interface MentionTab {
+  getData: (prefix: string) => Promise<MentionDataItem[]>;
+  id: string;
+  iconKey: string;
+  label: string;
+}
+
 export interface Muse {
   id: string | null;
   firstName: string;

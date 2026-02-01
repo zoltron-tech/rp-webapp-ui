@@ -1,7 +1,7 @@
 "use server";
 import getConfig from "next/config";
 import { authenticateAndGetJWT, getJWTIfExists } from "@/app/actions";
-import type { CreateUpdateMuse, Fandom, Muse } from "@/types";
+import type { CreateUpdateMuse, Fandom, MentionDataItem, Muse } from "@/types";
 import type { DataType, WithMessage } from "@/types/common";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import { Logger } from "@/utils/services";
@@ -94,6 +94,36 @@ export const searchFandomsAction = async (prefix: string) => {
   }
 
   const fandoms: Fandom[] = await response.json();
+
+  return fandoms;
+};
+
+export const searchMentionMusesAction = async (prefix: string) => {
+  const jwt = await getJWTIfExists();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (jwt) {
+    headers[AUTH_HEADER_NAME] = jwt;
+  }
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/search/musesByFriends?prefix=${prefix}`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers: headers,
+  });
+
+  Logger.debug("searchFandomsAction", response.status);
+
+  if (response.status === 404) {
+    return [];
+  } else if (!response.ok) {
+    return [];
+  }
+
+  const fandoms: MentionDataItem[] = await response.json();
 
   return fandoms;
 };

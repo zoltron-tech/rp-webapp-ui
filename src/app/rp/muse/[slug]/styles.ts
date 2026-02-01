@@ -707,21 +707,6 @@ export const Avatar = styled(AvatarCommon)`
   }
 `;
 
-export const PromptText = styled.div`
-  font-size: 14px;
-  font-weight: 200;
-  max-width: 60%;
-  font-style: italic;
-  white-space: pre-wrap;
-  margin-top: 20px;
-
-  @container (max-width: 500px) {
-    & {
-      font-weight: 300;
-    }
-  }
-`;
-
 export const PromptVideo = styled.video`
   width: 100%;
   height: 100%;
@@ -788,14 +773,6 @@ export const PromptFooterText = styled.div`
   font-size: 10px;
   font-weight: 400;
   max-width: 80%;
-  font-style: italic;
-  text-align: center;
-  cursor: pointer;
-`;
-
-export const ViewMoreText = styled.div`
-  font-size: 12px;
-  font-weight: 500;
   font-style: italic;
   text-align: center;
   cursor: pointer;

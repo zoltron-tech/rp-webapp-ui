@@ -87,16 +87,15 @@ export const ProfileMoreDropdownMenu = styled.div`
 
 export const ContentInner = styled.div`
   ${DEV_MODE_BORDER("blue")}
-    position: relative;
+  position: relative;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--bg-4);
   align-items: center;
   background-color: var(--bg-2);
-  width: 100%;
-  max-width: 800px;
+  width: 800px;
 
-  @container (max-width: 1024px) {
+  @container (max-width: 800px) {
     width: 100%;
     padding-inline: 0px;
     margin-top: 10px;
@@ -231,7 +230,7 @@ export const AboutContainer = styled(Container)`
   width: 95%;
   border-radius: 5px;
   min-height: 200px;
-  padding: 20px;
+  padding-inline: unset;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -297,8 +296,8 @@ export const SubText = styled.div`
 `;
 
 export const SeeMoreLink = styled.div`
-  font-size: 20px;
-  font-weight: 300;
+  color: var(--accent);
+  font-size: var(--font-size-h6);
   margin-block: 10px;
   font-style: italic;
   font-weight: 700;
@@ -307,11 +306,12 @@ export const SeeMoreLink = styled.div`
   &:hover {
     cursor: pointer;
     color: var(--accent-hover);
+        text-decoration: underline;
   }
 
   @container (max-width: 600px) {
     & {
-      font-size: 16px;
+        font-size: var(--font-size-input);
     }
   }
 `;

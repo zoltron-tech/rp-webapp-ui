@@ -16,6 +16,7 @@ import { VscUnverified, VscVerifiedFilled } from "react-icons/vsc";
 import { ShouldRender, Username } from "@/components/common";
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { Quote } from "@/components/novelist-card/styles";
+import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
 import { TagsContainer } from "@/components/tags-container";
 import { useGlobalState } from "@/context/store/stores";
 import { useStateMachine } from "@/hooks";
@@ -169,18 +170,11 @@ export default function MuseProfilePage({}) {
     return prompts?.map((prompt) => (
       <>
         <Flex direction="column">
-          <S.PromptText>
-            {prompt.text.length > 200
-              ? `${prompt.text.slice(0, 200)} ...`
-              : prompt.text}
-          </S.PromptText>
-          <ShouldRender if={prompt.text.length > 80}>
-            <S.ViewMoreText
-              onClick={() => onPromptClick(prompt.id ? prompt.id : "")}
-            >
-              Read more...
-            </S.ViewMoreText>
-          </ShouldRender>
+          <RichTextRenderer
+            savedText={prompt.text ?? ""}
+            collapsedHeight={100}
+            overlayHidden
+          />
           {prompt?.media && (
             <S.PromptMedia>
               <ShouldRender if={prompt?.media.toLowerCase().endsWith("mp4")}>

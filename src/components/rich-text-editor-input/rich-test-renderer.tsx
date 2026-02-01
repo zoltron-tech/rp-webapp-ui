@@ -48,16 +48,17 @@ export const RichTextRenderer = ({
     const container = contentRef.current;
     if (!container) return;
 
-    // Set the HTML
-    container.innerHTML = savedText;
+    // Create a temporary DOM element to manipulate the HTML
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = savedText;
 
-    // Hide all images temporarily
-    const images = container.querySelectorAll("img");
-    images.forEach((img) => {
-      img.style.visibility = "hidden";
-      img.style.width = "10px"; // optional tiny width
-      img.style.height = "auto"; // maintain aspect ratio
-    });
+    // Remove all <img> tags
+    const images = tempDiv.querySelectorAll("img");
+    images.forEach((img) => img.remove());
+
+    // Set the cleaned HTML
+    container.innerHTML = tempDiv.innerHTML;
+    // container.innerHTML = savedText;
 
     const handleMentionClick = (e: Event) => {
       const target = e.target as HTMLElement;

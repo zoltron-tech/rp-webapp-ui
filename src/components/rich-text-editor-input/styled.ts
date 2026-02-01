@@ -179,7 +179,7 @@ export const EditorContent = styled.div`
     var(--accent-hover) 70%
   );
   color: var(--text, var(--text));
-  padding: 1px 8px 1px 1px;
+  padding: 1px 8px 1px 8px;
   border-radius: 999px;
   font-weight: var(--font-weight-bold);
   margin: 2px;
@@ -278,7 +278,7 @@ export const SavedContent = styled.div`
     var(--accent-hover) 70%
   );
   color: var(--text, var(--text));
-  padding: 1px 8px 1px 1px;
+  padding: 1px 8px 1px 8px;
   border-radius: 999px;
   font-weight: var(--font-weight-bold);
   margin: 2px;

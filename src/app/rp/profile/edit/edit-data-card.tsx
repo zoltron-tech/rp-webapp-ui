@@ -11,7 +11,7 @@ import {
   useState,
 } from "react";
 import { ImProfile } from "react-icons/im";
-import { IoIosInformationCircleOutline, IoIosWarning } from "react-icons/io";
+import { IoIosInformationCircleOutline } from "react-icons/io";
 import {
   getJWTIfExists,
   sendVerificationEmailAction,
@@ -19,12 +19,18 @@ import {
 } from "@/app/actions";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { ErrorBox } from "@/components/error-box";
+import { RichTextEditor } from "@/components/rich-text-editor-input";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
-import type { UpdateNovelistPayload } from "@/types/novelist";
+import type {
+  MentionDataItem,
+  MentionTab,
+  UpdateNovelistPayload,
+} from "@/types/novelist";
 import { ACCENT_MAP, type Accent } from "@/types/theme";
 import { API_MESSAGE } from "@/utils/constants";
 import { SUPPORT_EMAIL, SUPPORT_EMAIL_URL } from "@/utils/constants/common";
+import { searchMentionMusesAction } from "../../muse/actions";
 import { updateUserNovelist } from "../../novelists/actions";
 import { uploadMedia } from "../actions";
 import { useProfileState, useProfileStoreSet } from "./profile.store";
@@ -127,6 +133,47 @@ export default function EditDataCard() {
   const setGlobalState = useGlobalStoreSet();
   const { successToast } = useUIContext();
 
+  const fetchMentionableMuses = useCallback(
+    async (prefix: string = ""): Promise<MentionDataItem[]> => {
+      return await searchMentionMusesAction(prefix);
+    },
+    [],
+  );
+
+  const fetchMentionableFriends = useCallback(
+    async (prefix: string = ""): Promise<MentionDataItem[]> => {
+      const friends = novelist?.friends ?? [];
+
+      return friends
+        .filter((f) => f.username.toLowerCase().includes(prefix.toLowerCase()))
+        .map((friend) => ({
+          displayName: friend.username,
+          id: friend.id,
+          image: friend.image,
+          type: "NOVELIST",
+        }));
+    },
+    [novelist?.friends],
+  );
+
+  const MENTION_TABS: MentionTab[] = useMemo(
+    () => [
+      {
+        getData: fetchMentionableFriends,
+        iconKey: "avatar",
+        id: "novelists",
+        label: "Friends",
+      },
+      {
+        getData: fetchMentionableMuses,
+        iconKey: "icon",
+        id: "muses",
+        label: "Muses",
+      },
+    ],
+    [fetchMentionableFriends, fetchMentionableMuses],
+  );
+
   const infoBoxContent = useMemo(() => {
     return InfoBoxContent[operationState];
   }, [operationState]);
@@ -186,8 +233,8 @@ export default function EditDataCard() {
   );
 
   const handleAboutChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setAbout(e.target.value);
+    (content: string) => {
+      setAbout(content);
     },
     [setAbout],
   );
@@ -260,18 +307,17 @@ export default function EditDataCard() {
       const target = e.target as HTMLFormElement;
       const _firstName = target.firstName.value.trim();
       const _lastName = target.lastName.value.trim();
-      const _about = target.about.value.trim();
       const _note = target.note.value.trim();
       const _palatte = target.palette.value.trim();
       if (
         _firstName !== novelist?.firstName ||
         _lastName !== novelist?.lastName ||
-        _about !== novelist?.about ||
+        about !== novelist?.about ||
         _note !== novelist?.note ||
         image !== novelist?.image
       ) {
         const payload = {
-          about: _about,
+          about: about,
           firstName: _firstName,
           image: image ?? undefined,
           lastName: _lastName,
@@ -318,7 +364,7 @@ export default function EditDataCard() {
         successToast("Data updated successfully.");
       }
     },
-    [novelist, image, setGlobalState],
+    [novelist, image, about, setGlobalState],
   );
 
   const handleReset = useCallback(() => {
@@ -441,21 +487,15 @@ export default function EditDataCard() {
 
             <Form.Field className="field" name="about">
               <S.FieldHeader>
-                <Form.Label>About</Form.Label>
+                <Form.Label></Form.Label>
                 <span className="secondary-text ">(Optional)</span>
               </S.FieldHeader>
-              <Form.Control
-                aria-label="About you"
-                name="about"
-                value={about ?? ""}
+              <RichTextEditor
+                placeholder="Share something about yourself"
+                value={novelist?.about ?? ""}
+                mentionTabs={MENTION_TABS}
                 onChange={handleAboutChange}
-                asChild
-              >
-                <textarea
-                  placeholder="Tell us a bit about yourself..."
-                  spellCheck
-                />
-              </Form.Control>
+              />
             </Form.Field>
 
             <Form.FormField className="field" name="palette" asChild>

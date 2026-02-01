@@ -497,6 +497,7 @@ export default function EditMuseDataCard() {
             <PromptPrivacySelect
               className="muse-privacy-select"
               initial={privacy}
+              blockedOptions={["CUSTOM"]}
             />
           </S.TopBar>
           <Separator.Root className="separator" orientation="horizontal" />

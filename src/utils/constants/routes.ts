@@ -9,6 +9,9 @@ export const ROUTES = {
   },
   NotFound: "/404",
   Notification: "/rp/notifications",
+  Novelist: {
+    View: (novelistId: string) => `/rp/novelist/${novelistId}`,
+  },
   Novelists: "/rp/novelists",
   newsFeed: "/rp/news-feed",
   Oauth: {

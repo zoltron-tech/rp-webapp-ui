@@ -3,7 +3,6 @@
 import { Flex } from "@novelist-world/ui";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { BiSolidMessage } from "react-icons/bi";
 import { BsPersonFillCheck, BsPersonFillUp, BsThreeDots } from "react-icons/bs";
 import {
   FcAnswers,
@@ -15,11 +14,11 @@ import {
   FcSupport,
   FcTreeStructure,
 } from "react-icons/fc";
-import { GiBookmarklet, GiCheckMark, GiCrossMark } from "react-icons/gi";
+import { GiCheckMark, GiCrossMark } from "react-icons/gi";
 import { IoMdPersonAdd } from "react-icons/io";
-import { IoCopySharp, IoPersonRemove } from "react-icons/io5";
+import { IoPersonRemove } from "react-icons/io5";
 import { MdOutlineAppBlocking } from "react-icons/md";
-import { RiFlagFill, RiShareBoxFill } from "react-icons/ri";
+import { RiFlagFill } from "react-icons/ri";
 import { VscVerifiedFilled } from "react-icons/vsc";
 import { ContactSupportForm, MusesPill } from "@/components";
 import ActivityBox from "@/components/activity-box";
@@ -29,6 +28,7 @@ import { Image } from "@/components/image-viewer/styled";
 import MuseListItem from "@/components/muse-list-item";
 import { AppDropdownMenu } from "@/components/profile-more-dropdown";
 import PromptInput from "@/components/prompt-input";
+import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
 import StoryCard from "@/components/story-card";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -50,7 +50,6 @@ import {
   sendFriendRequest,
   unfriendNovelist,
 } from "../actions";
-import ExpandableText from "./expandable-text";
 import * as S from "./styles";
 
 const useGetActivities = (username: string) => {
@@ -620,26 +619,16 @@ export default function UserProfilePage({}) {
                 </Flex>
               </Flex>
             </ShouldRender>
-            {/* <S.ButtonsContainer>
-              <ButtonGroup
-                buttons={
-                  authState === "LOGGED_IN" && username !== user?.username
-                    ? fetchAppropriateButtons(novelist?.connection)
-                    : LoggedInSelfButtons
-                }
-              />
-            </S.ButtonsContainer> */}
             <ShouldRender
               if={!!(novelist?.about && novelist?.about.length > 0)}
             >
-              {/* <S.SubText>About Me</S.SubText> */}
               <p>
                 <br />
               </p>
               <S.AboutContainer>
-                <ExpandableText
-                  text={novelist?.about ?? ""}
-                  collapsedHeight={130}
+                <RichTextRenderer
+                  savedText={novelist?.about ?? ""}
+                  collapsedHeight={160}
                 />
               </S.AboutContainer>
             </ShouldRender>

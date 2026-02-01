@@ -40,8 +40,8 @@ export const getNovelists = async () => {
   return novelists;
 };
 
-export const getNovelistAction = async (
-  username: string,
+export const getNovelistByIdAction = async (
+  novelistId: string,
 ): Promise<DataType<Novelist>> => {
   const headers: Record<string, string> = {
     [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
@@ -52,7 +52,7 @@ export const getNovelistAction = async (
     headers[AUTH_HEADER_NAME as string] = jwt;
   }
 
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/get?username=${username}`;
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/${novelistId}`;
 
   const response = await fetch(URL, {
     cache: "no-store",
@@ -68,6 +68,49 @@ export const getNovelistAction = async (
   const novelist: Novelist = await response.json();
 
   return novelist;
+};
+
+export const getNovelistAction = async (
+  username: string,
+): Promise<DataType<Novelist>> => {
+  const headers: Record<string, string> = {
+    [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
+  };
+
+  console.log("getNovelistAction");
+
+  const jwt = await getJWTIfExists();
+  if (jwt) {
+    headers[AUTH_HEADER_NAME as string] = jwt;
+  }
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/get?username=${username}`;
+
+  try {
+    const response = await fetch(URL, {
+      cache: "no-store",
+      headers: headers,
+    });
+
+    if (response.status === 404) {
+      return null;
+    } else if (!response.ok) {
+      return { message: API_MESSAGE.Error };
+    }
+
+    const novelist: Novelist = await response.json();
+
+    return novelist;
+  } catch (e) {
+    console.log("error occured in getNovelistAction", e);
+    return { message: API_MESSAGE.Error };
+  }
+
+  // const response = {
+  //   json: async () => ({}) as Novelist,
+  //   ok: true,
+  //   status: 200,
+  // };
 };
 
 export const getUserNovelist = async () => {

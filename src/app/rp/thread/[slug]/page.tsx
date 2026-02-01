@@ -370,6 +370,7 @@ export default function ThreadPage({}) {
             <RichTextRenderer
               savedText={reply.text ?? ""}
               collapsedHeight={100}
+              overlayHidden
             />
           </S.PromptTextContainer>
           {reply.media && (
@@ -536,6 +537,7 @@ export default function ThreadPage({}) {
             <RichTextRenderer
               savedText={comment?.prompt?.text ?? ""}
               collapsedHeight={100}
+              overlayHidden
             />
           </S.PromptTextContainer>
           {comment?.prompt?.media && (
@@ -638,6 +640,7 @@ export default function ThreadPage({}) {
             <RichTextRenderer
               savedText={comment?.text ?? ""}
               collapsedHeight={100}
+              overlayHidden
             />
           </S.PromptTextContainer>
           {comment?.media && (

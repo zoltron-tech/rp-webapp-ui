@@ -1,6 +1,7 @@
 import classNames from "classnames";
 import { Collapsible } from "radix-ui";
 import { type FC, useMemo, useState } from "react";
+import { useGlobalState } from "@/context/store/stores";
 import { Comment } from "../comment";
 import PromptInput from "../prompt-input";
 import { useGetComments } from "./helpers";
@@ -11,6 +12,7 @@ export const PromptThreads: FC = () => {
   const threadsOpen = usePromptState("threadOpen");
   const [open, setOpen] = useState(threadsOpen);
   const promptId = usePromptState("id");
+  const authState = useGlobalState("authState");
   const canInteract = usePromptState("canInteract");
   const { comments, refetch: refetchComments } = useGetComments(promptId);
 
@@ -30,7 +32,7 @@ export const PromptThreads: FC = () => {
           <S.PromptThreads.Left />
         </S.PromptThreads.Header>
         <Collapsible.Content>
-          {canInteract && (
+          {authState === "LOGGED_IN" && canInteract && (
             <PromptInput
               className="comment-action"
               parentId={promptId}

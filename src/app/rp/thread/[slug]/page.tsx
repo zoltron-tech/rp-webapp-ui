@@ -658,7 +658,7 @@ export default function ThreadPage({}) {
           )}
         </Flex>
         {loadReplies()}
-        {authState === "LOGGED_IN" && (
+        {authState === "LOGGED_IN" && comment?.prompt?.canInteract && (
           <>
             <Separator.Root className="separator" orientation="horizontal" />
             <PromptInput

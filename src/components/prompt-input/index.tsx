@@ -19,7 +19,7 @@ import { PiDotsThreeCircleFill, PiDotsThreeOutlineFill } from "react-icons/pi";
 import { submitPrompt } from "@/app/rp/profile/actions";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState } from "@/context/store/stores";
-import { useCustomEvents } from "@/hooks";
+import { useCustomEvents, useUIContext } from "@/hooks";
 import type { Friend, SubmitPromptInput, SubmitPromptType } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { EVENTS } from "@/utils/constants/custom-events";
@@ -71,6 +71,7 @@ export const PromptForm: FC<PromptInputFormProps> = ({
   const [sending, setSending] = useState(false);
   const novelist = useGlobalState("novelist");
   const promptText = usePromptInputState("promptText");
+  const { successToast, errorToast } = useUIContext();
 
   const [open, setOpen] = useState(true);
 
@@ -110,6 +111,14 @@ export const PromptForm: FC<PromptInputFormProps> = ({
   const handleSend: FormEventHandler<HTMLFormElement> = useCallback(
     async (e) => {
       e.preventDefault();
+      if (
+        promptText === undefined ||
+        promptText === null ||
+        promptText === ""
+      ) {
+        errorToast("Prompt body cannot be empty.");
+        return;
+      }
       const formData = new FormData(e.currentTarget);
       const formFields = {
         media: String(formData.get("mediaUrl")),
@@ -148,6 +157,8 @@ export const PromptForm: FC<PromptInputFormProps> = ({
         emit(PromptEvent.Error, response.message);
         return;
       }
+
+      successToast("Sent successfully");
 
       emit(PromptEvent.Sent, {
         muse: selectedSource,

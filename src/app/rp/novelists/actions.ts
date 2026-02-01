@@ -80,13 +80,11 @@ export const getNovelistAction = async (
   console.log("getNovelistAction");
 
   const jwt = await getJWTIfExists();
-  console.log("jwt", jwt);
   if (jwt) {
     headers[AUTH_HEADER_NAME as string] = jwt;
   }
 
   const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/get?username=${username}`;
-  console.log(URL);
 
   try {
     const response = await fetch(URL, {

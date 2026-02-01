@@ -1,4 +1,3 @@
-import { Form } from "radix-ui";
 import { type FC, useCallback, useMemo, useRef, useState } from "react";
 import { searchMentionMusesAction } from "@/app/rp/muse/actions";
 import { useGlobalState } from "@/context/store/stores";
@@ -73,7 +72,7 @@ export const PromptTextField: FC = () => {
     <S.TextInputContainer name="promptText">
       {/* <textarea ref={textAreaRef} className="text-area" spellCheck required /> */}
       <RichTextEditor
-        placeholder="Share something about yourself"
+        placeholder="Type your story here... @ to mention other novelists or muses"
         value={""}
         mentionTabs={MENTION_TABS}
         onChange={handlePromptTextChange}

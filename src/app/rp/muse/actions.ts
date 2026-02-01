@@ -115,7 +115,7 @@ export const searchMentionMusesAction = async (prefix: string) => {
     headers: headers,
   });
 
-  Logger.debug("searchFandomsAction", response.status);
+  Logger.debug("searchMentionMusesAction", response.status);
 
   if (response.status === 404) {
     return [];

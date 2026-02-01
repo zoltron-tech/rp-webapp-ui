@@ -11,6 +11,7 @@ import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDateFromUnix } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import { ShouldRender } from "../common";
+import { RichTextRenderer } from "../rich-text-editor-input/rich-test-renderer";
 import * as S from "./styles";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
@@ -94,11 +95,16 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
             activity.target.activityTargetType,
           )}
         >
-          <S.PromptText>
+          {/* <S.PromptText>
             {activity.target.title.length > 80
               ? `${activity.target.title.slice(0, 80)} ...`
               : activity.target.title}
-          </S.PromptText>
+          </S.PromptText> */}
+          <RichTextRenderer
+            savedText={activity.target.title ?? ""}
+            collapsedHeight={100}
+            overlayHidden
+          />
           <ShouldRender if={activity.target.title.length > 80}>
             <S.ViewMoreText onClick={(e) => handleCardClick(e, activity)}>
               Read more...

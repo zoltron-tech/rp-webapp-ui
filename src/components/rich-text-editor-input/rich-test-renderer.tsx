@@ -2,7 +2,6 @@
 
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styled";

@@ -193,10 +193,6 @@ export const RichTextEditor = ({
     [execCommand],
   );
 
-  interface ToggleItemProps {
-    $active?: boolean;
-  }
-
   // Alignment options
   type AlignId = "left" | "center" | "right" | "justify";
 
@@ -220,21 +216,6 @@ export const RichTextEditor = ({
     },
     [restoreSelection, saveSelection],
   );
-
-  // const filterItems = useCallback(
-  //   (items: MentionDataItem[], search: string): MentionDataItem[] => {
-  //     if (!search) return items;
-  //     return items.filter((item) =>
-  //       item.displayName.toLowerCase().includes(search.toLowerCase()),
-  //     );
-  //   },
-  //   [],
-  // );
-
-  // const getCurrentTabData = useCallback(() => {
-  //   const tab = mentionTabs.find((t) => t.id === selectedTab);
-  //   return tab ? filterItems(tab.data, mentionSearch) : [];
-  // }, [selectedTab, mentionSearch, filterItems]);
 
   const checkForMention = useCallback(() => {
     const selection = window.getSelection();
@@ -574,12 +555,12 @@ export const RichTextEditor = ({
         </Popover.Root>
       </S.EditorWrapper>
 
-      <S.SaveButtonWrapper>
+      {/* <S.SaveButtonWrapper>
         <S.SaveButton type="button" onClick={handleSave}>
           <TbZoomPan size={20} />
           Open in full screen
         </S.SaveButton>
-      </S.SaveButtonWrapper>
+      </S.SaveButtonWrapper> */}
     </S.Container>
   );
 };

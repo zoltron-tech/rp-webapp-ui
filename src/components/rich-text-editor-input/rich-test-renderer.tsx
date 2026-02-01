@@ -48,7 +48,16 @@ export const RichTextRenderer = ({
     const container = contentRef.current;
     if (!container) return;
 
+    // Set the HTML
     container.innerHTML = savedText;
+
+    // Hide all images temporarily
+    const images = container.querySelectorAll("img");
+    images.forEach((img) => {
+      img.style.visibility = "hidden";
+      img.style.width = "10px"; // optional tiny width
+      img.style.height = "auto"; // maintain aspect ratio
+    });
 
     const handleMentionClick = (e: Event) => {
       const target = e.target as HTMLElement;

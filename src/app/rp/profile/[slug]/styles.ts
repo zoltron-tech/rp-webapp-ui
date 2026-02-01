@@ -230,7 +230,6 @@ export const AboutContainer = styled(Container)`
   width: 95%;
   border-radius: 5px;
   min-height: 200px;
-  padding-inline: unset;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;

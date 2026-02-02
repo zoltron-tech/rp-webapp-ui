@@ -32,7 +32,7 @@ export const ROUTES = {
       Create: "/rp/profile/story/create",
       Edit: (storyId: string) => ({
         Event: {
-          Create: `/rp/profile/story/${storyId}/event/create`,
+          Create: `/rp/profile/story/edit/${storyId}/event/create`,
           Edit: (eventId: string) =>
             `/rp/profile/story/edit/${storyId}/event/edit/${eventId}`,
         },

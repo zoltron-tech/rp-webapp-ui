@@ -31,6 +31,7 @@ export const CreateStoryBoardEventCard: FC<CreateStoryBoardEventCardProps> = ({
   const [avatarFile, setAvatarFile] = useState<FormData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const { routeToPage } = usePageRouter();
+  const { baseDataLoader, stopPageLoading } = usePageRouter();
 
   const { successToast, errorToast } = useUIContext();
 
@@ -99,9 +100,14 @@ export const CreateStoryBoardEventCard: FC<CreateStoryBoardEventCardProps> = ({
   };
 
   const fetchData = async () => {
-    if (!storyboardEventId) return;
+    if (!storyboardEventId) {
+      stopPageLoading();
+      return;
+    }
 
-    const response = await getStoryboardEventAction(storyboardEventId);
+    const response = await baseDataLoader(() =>
+      getStoryboardEventAction(storyboardEventId),
+    );
 
     if (response && !("message" in response)) {
       setStoryBoardEvent(response);
@@ -120,7 +126,8 @@ export const CreateStoryBoardEventCard: FC<CreateStoryBoardEventCardProps> = ({
   };
 
   useEffect(() => {
-    if (authState !== "LOGGED_IN" || !storyboardEventId) return;
+    console.log(authState);
+    if (authState !== "LOGGED_IN") console.log("something");
     fetchData();
   }, [authState]);
 

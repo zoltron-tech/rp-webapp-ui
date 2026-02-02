@@ -36,6 +36,7 @@ export const CreateStoryBoardCard: FC<CreateStoryBoardCardProps> = ({ id }) => {
   const [avatarFile, setAvatarFile] = useState<FormData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const { routeToPage } = usePageRouter();
+  const { baseDataLoader, stopPageLoading } = usePageRouter();
 
   const { successToast, errorToast } = useUIContext();
 
@@ -116,9 +117,12 @@ export const CreateStoryBoardCard: FC<CreateStoryBoardCardProps> = ({ id }) => {
   };
 
   const fetchData = async () => {
-    if (!id) return;
+    if (!id) {
+      stopPageLoading();
+      return;
+    }
 
-    const response = await getStoryboardAction(id);
+    const response = await baseDataLoader(() => getStoryboardAction(id));
 
     if (response && !("message" in response)) {
       setStoryBoard(response);

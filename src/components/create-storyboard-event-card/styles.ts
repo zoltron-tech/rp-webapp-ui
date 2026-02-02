@@ -174,11 +174,6 @@ export const FormGroup = styled.div`
   @container (max-width: 600px) {
     & {
       padding-left: 0px;
-    }
-  }
-
-  &.new {
-    @container (max-width: 600px) {
       margin-top: 60px;
     }
   }

@@ -22,12 +22,12 @@ export const ParentContainer = styled.div`
 `;
 
 export const RepliesContainer = styled(Container)`
-  max-width: 60%;
+  max-width: 800px;
   margin-left: 50px;
   width: 100%;
   contain: unset;
   z-index: ${Z_INDEX.CARD_EXPAND};
-  background-color: var(--bg-3);
+  background-color: var(--bg-2);
   padding-top: unset;
 
   @container content-container (max-width: 800px) {

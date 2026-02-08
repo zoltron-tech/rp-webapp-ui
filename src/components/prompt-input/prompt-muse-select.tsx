@@ -1,3 +1,4 @@
+import { Flex } from "@novelist-world/ui";
 import classNames from "classnames";
 import { Avatar, Form, Select, Separator } from "radix-ui";
 import { type FC, forwardRef, useState } from "react";
@@ -82,10 +83,10 @@ export const PromptMuseSelect: FC<Props> = forwardRef(
                     key={novelistSource?.sourceId}
                     source={novelistSource}
                   />
-                  <Separator.Root
-                    className="separator"
-                    orientation="horizontal"
-                  />
+                  <S.OrDivider>OR</S.OrDivider>
+                  <Flex direction="column" gap={0}>
+                    <S.DialogueLabel>Post as a muse</S.DialogueLabel>
+                  </Flex>
                   {museSources?.map((source) => (
                     <SelectItem key={source.sourceId} source={source} />
                   ))}

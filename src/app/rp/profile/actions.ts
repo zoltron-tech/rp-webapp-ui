@@ -2,7 +2,11 @@
 
 import getConfig from "next/config";
 import { authenticateAndGetJWT } from "@/app/actions";
-import type { SubmitPromptInput, SubmitPromptType } from "@/types";
+import type {
+  StoryBoardEventThreadInput,
+  SubmitPromptInput,
+  SubmitPromptType,
+} from "@/types";
 import type { WithMessage } from "@/types/common";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import { Logger } from "@/utils/services";
@@ -374,6 +378,44 @@ export const submitPrompt = async (
       response.status,
       response.statusText,
     );
+    return { message: API_MESSAGE.UncategorizedError };
+  }
+
+  const result = await response.json();
+
+  return result;
+};
+
+export const submitEventThreadReply = async (
+  input: StoryBoardEventThreadInput,
+): Promise<PromptResponse> => {
+  const jwt = await authenticateAndGetJWT();
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/story/event/${input.storyBoardEventId}/reply`;
+
+  const response = await fetch(URL, {
+    body: JSON.stringify(input),
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "POST",
+  });
+
+  switch (response.status) {
+    case 400:
+      return { message: API_MESSAGE.BadPayload };
+    case 401:
+      return { message: API_MESSAGE.Unauthorized };
+    case 403:
+      return { message: API_MESSAGE.NotAllowed };
+    case 500:
+      return { message: API_MESSAGE.ServerError };
+  }
+
+  if (!response.ok) {
+    console.log("error", input, URL, response.status, response.statusText);
     return { message: API_MESSAGE.UncategorizedError };
   }
 

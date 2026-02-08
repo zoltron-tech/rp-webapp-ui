@@ -2,11 +2,13 @@
 import { Flex } from "@novelist-world/ui";
 import classNames from "classnames";
 import { useParams } from "next/navigation";
+import { Separator } from "radix-ui";
 import { useEffect, useState } from "react";
 import { BsCalendar2Date } from "react-icons/bs";
 import { IoArrowBackOutline } from "react-icons/io5";
 import { TfiLocationPin } from "react-icons/tfi";
 import { Divider } from "@/app/rp/tiers/styles";
+import EventThreadInput from "@/components/event-thread-input";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type {
@@ -26,6 +28,9 @@ import * as S from "./styles";
 export default function StoryboardEventPage({}) {
   const params = useParams();
   const authState = useGlobalState("authState");
+
+  const accent = useGlobalState("accent");
+  const theme = useGlobalState("theme");
 
   const [storyboard, setStoryBoard] = useState<StoryBoard | null>(null);
   const [storyboardEvent, setStoryBoardEvent] =
@@ -135,7 +140,7 @@ export default function StoryboardEventPage({}) {
   };
 
   return (
-    <S.ParentContainer>
+    <S.ParentContainer className={classNames([accent, theme])}>
       <S.RepliesContainer>
         <S.HeaderContainer>
           <Flex>
@@ -183,11 +188,12 @@ export default function StoryboardEventPage({}) {
           </Flex>
         </Flex>
         {loadThreads()}
-        {/* {state === "LOGGED_IN" && (
-          <Flex style={{ borderTop: "1px solid gray" }}>
-            <PromptInput className="upward" muses={novelist?.muses || []} />
-          </Flex>
-        )} */}
+        {authState === "LOGGED_IN" && (
+          <>
+            <Separator.Root className="separator" orientation="horizontal" />
+            <EventThreadInput storyBoardEventId={storyboardEventId} />
+          </>
+        )}
       </S.RepliesContainer>
     </S.ParentContainer>
   );

@@ -136,6 +136,39 @@ export const PromptInputRoot = styled.div`
   }
 `;
 
+export const OrDivider = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  font-size: var(--font-size-xsmall);
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  pointer-events: none;
+  color: var(--text);
+
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background-color: var(--bg-6);
+  }
+`;
+
+export const SelectGroupLabel = styled.div`
+  padding: 6px;
+  font-size: var(--font-size-xsmall);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  pointer-events: none;
+`;
+
+export const DialogueLabel = styled(SelectGroupLabel)`
+  opacity: 0.7;
+  margin-bottom: 4px;
+`;
 export const TextInputContainer = styled(Form.Field)`
   display: flex;
   flex-direction: column;

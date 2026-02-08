@@ -51,7 +51,6 @@ export const PromptMediaInput: FC = () => {
 
   const handleFileUpload: ChangeEventHandler<HTMLInputElement> = useCallback(
     async (e) => {
-      console.log("agya");
       if (!urlInputRef.current || !fileInputRef.current) return;
 
       const file = e.currentTarget.files?.[0] ?? null;
@@ -62,7 +61,6 @@ export const PromptMediaInput: FC = () => {
 
       // 🔴 SIZE CHECK
       if (file.size > MAX_FILE_SIZE) {
-        console.log("inside error");
         set({
           media: null,
           mediaUploadError: "FILE_TOO_LARGE",

@@ -1,5 +1,6 @@
 import type { Tag } from "./common";
 import type { Friend } from "./novelist";
+import type { PromptSource } from "./prompt";
 
 export interface StoryBoard {
   id: string | null;
@@ -34,21 +35,25 @@ export interface StoryBoardEvent {
 export interface StoryBoardEventThread {
   id: string | null;
   storyBoardEventId: string;
-  sender: StoryBoardEventThreadSender;
-  type: string;
+  sender: PromptSource;
+  type: EventThreadType;
   message: string | null;
   attachments: StoryBoardEventThreadAttachement[];
   createdAt: string | null;
 }
 
-export interface StoryBoardEventThreadSender {
-  sourceId: string;
-  name: string;
-  image: string;
-}
+export type StoryBoardEventThreadInput = {
+  storyBoardEventId: string;
+  sender: PromptSource;
+  type: EventThreadType;
+  message: string | null;
+  attachments: StoryBoardEventThreadAttachement[];
+};
 
 export interface StoryBoardEventThreadAttachement {
-  id: string;
+  id: string | null;
   url: string;
-  createdAt: string;
+  createdAt: string | null;
 }
+
+export type EventThreadType = "NARRATION" | "DIALOGUE";

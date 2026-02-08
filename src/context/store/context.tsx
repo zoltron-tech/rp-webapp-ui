@@ -2,6 +2,7 @@ import type React from "react";
 import { createContext } from "react";
 import type { ProfileState } from "@/app/rp/profile/edit/profile.store";
 import type { MuseState } from "@/components/edit-muse/muse.store";
+import type { EventThreadInputState } from "@/components/event-thread-input/event-thread-input.store";
 import type { PromptStoreType } from "@/components/prompt/prompt.store";
 import type { PromptInputState } from "@/components/prompt-input/prompt-input.store";
 import type { Comment } from "@/types";
@@ -28,6 +29,8 @@ const createStoreContext = <T extends SimpleRecord>(
 
 const Stores = {
   comment: createStoreContext<Comment>("comment"),
+  "event-thread-input":
+    createStoreContext<EventThreadInputState>("event-thread-input"),
   "global-store": createStoreContext<StoreState>("global-store"),
   muse: createStoreContext<MuseState>("muse"),
   onboarding: createStoreContext("onboarding"),

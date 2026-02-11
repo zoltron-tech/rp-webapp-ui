@@ -223,6 +223,7 @@ export default function ThreadPage({}) {
       "REPLY",
     );
     if (response?.message === API_MESSAGE.Success) {
+      setSelectedReplyId("");
       successToast(`Reported successfully`);
     } else {
       errorToast("There was an issue while reporting this prompt.");
@@ -235,6 +236,8 @@ export default function ThreadPage({}) {
     const response = await deleteReplyAction(selectedReplyId);
     if (response?.message === API_MESSAGE.Success) {
       setReplies((prev) => prev.filter((r) => r.id !== selectedReplyId));
+      setSelectedReplyId("");
+      setShowDeleteAlert(false);
       successToast(`Deleted successfully`);
     } else {
       errorToast("There was an issue while deleting this reply.");
@@ -276,10 +279,6 @@ export default function ThreadPage({}) {
     }
   };
 
-  const handleNotImplemented = () => {
-    warningToast("This feature is coming soon!");
-  };
-
   const onAvatarClick = (sourceId: string | undefined) => {
     if (!sourceId) return;
     routeToPage(ROUTES.Muse.View(sourceId));
@@ -309,10 +308,11 @@ export default function ThreadPage({}) {
                     ? [
                         {
                           icon: <FaRegEdit />,
-                          label: `Edit prompt`,
+                          label: `Edit reply`,
                           onClick: () => {
                             setEditPromptPayload(reply);
                             setEditPromptType("reply");
+                            setSelectedReplyId(reply.id);
                             setShowEditPromptAlert(true);
                           },
                         },
@@ -321,16 +321,22 @@ export default function ThreadPage({}) {
                         },
                         {
                           icon: <FaRegTrashCan />,
-                          label: `Delete this prompt`,
-                          onClick: () => setShowDeletePromptAlert(true),
+                          label: `Delete this reply`,
+                          onClick: () => {
+                            setShowDeleteAlert(true),
+                              setSelectedReplyId(reply.id);
+                          },
                           variant: "danger",
                         },
                       ]
                     : [
                         {
                           icon: <RiFlagFill />,
-                          label: `Report this prompt`,
-                          onClick: () => setShowReportPromptAlert(true),
+                          label: `Report this reply`,
+                          onClick: () => {
+                            setShowReportAlert(true),
+                              setSelectedReplyId(reply.id);
+                          },
                           variant: "danger",
                         },
                       ]

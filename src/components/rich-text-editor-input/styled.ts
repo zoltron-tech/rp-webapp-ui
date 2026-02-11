@@ -145,6 +145,7 @@ export const EditorWrapper = styled.div`
 export const EditorContent = styled.div`
   width: 100%;
   min-height: 16rem;
+  max-height: 40dvh;
   padding: 1rem;
   border-left: 1px solid var(--bg-6);
   border-right: 1px solid var(--bg-6);

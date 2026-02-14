@@ -172,7 +172,9 @@ export const EditorContent = styled.div`
   display: inline-flex;
   align-items: center;
   min-width: 70px;
-  gap: 6px; /* 👈 space between avatar and text */
+  position: relative;
+  top: 6px;
+  gap: 4px; /* 👈 space between avatar and text */
 
   background: linear-gradient(
     135deg,
@@ -180,10 +182,9 @@ export const EditorContent = styled.div`
     var(--accent-hover) 70%
   );
   color: var(--text, var(--text));
-  padding: 1px 8px 1px 8px;
+  padding: 1px 6px 1px 2px;
   border-radius: 999px;
-  font-weight: var(--font-weight-bold);
-  margin: 2px;
+  font-weight: var(--font-weight-semi-bold);
   user-select: none;
   font-size: var(--font-size);
 
@@ -269,6 +270,8 @@ export const SavedContent = styled.div`
 .mention-tag {
   display: inline-flex;
   align-items: center;
+  position: relative;
+  top: 6px;
   min-width: 70px;
   gap: 6px; /* 👈 space between avatar and text */
   cursor: pointer;
@@ -279,7 +282,7 @@ export const SavedContent = styled.div`
     var(--accent-hover) 70%
   );
   color: var(--text, var(--text));
-  padding: 1px 8px 1px 8px;
+  padding: 1px 6px 1px 2px;
   border-radius: 999px;
   font-weight: var(--font-weight-bold);
   margin: 2px;

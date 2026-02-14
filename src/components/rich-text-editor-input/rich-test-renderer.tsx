@@ -52,10 +52,6 @@ export const RichTextRenderer = ({
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = savedText;
 
-    // Remove all <img> tags
-    const images = tempDiv.querySelectorAll("img");
-    images.forEach((img) => img.remove());
-
     // Set the cleaned HTML
     container.innerHTML = tempDiv.innerHTML;
     // container.innerHTML = savedText;

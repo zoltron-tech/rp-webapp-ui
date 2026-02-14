@@ -75,7 +75,11 @@ export const getCommentAction = async (commentId: string) => {
   return comment;
 };
 
-export const getRepliesAction = async (commentId: string) => {
+export const getRepliesAction = async (
+  commentId: string,
+  pageNumber: number,
+  pageSize: number,
+) => {
   const jwt = await getJWTIfExists();
   const headers: Record<string, string> = {
     [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
@@ -83,7 +87,7 @@ export const getRepliesAction = async (commentId: string) => {
   if (jwt) {
     headers[AUTH_HEADER_NAME as string] = jwt;
   }
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/comment/${commentId}/replies`;
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/comment/${commentId}/replies?pageNumber=${pageNumber}&pageSize=${pageSize}`;
 
   const response = await fetch(URL, {
     cache: "no-store",

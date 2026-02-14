@@ -3,20 +3,26 @@
 import { Flex } from "@novelist-world/ui";
 import { useParams } from "next/navigation";
 import { Separator } from "radix-ui";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
 import { FaRegEdit } from "react-icons/fa";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { IoArrowBackOutline } from "react-icons/io5";
 import { RiFlagFill } from "react-icons/ri";
 import { ShouldRender } from "@/components/common";
+import { LikeButton } from "@/components/common/like-button";
 import { MuseAvatar } from "@/components/common/muse-avatar";
 import { NovelistAvatar } from "@/components/common/novelist-avatar";
 import { AppAlertDialog } from "@/components/dialog";
+import {
+  museToSource,
+  novelistToSource,
+} from "@/components/event-thread-input/helpers";
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { AppDropdownMenu } from "@/components/profile-more-dropdown";
 import PromptInput from "@/components/prompt-input";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
+import { Spinner } from "@/components/rich-text-editor-input/styled";
 import {
   UpdatePromptForm,
   type UpdatePromptProps,
@@ -24,7 +30,8 @@ import {
 import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents, useUIContext } from "@/hooks";
 import { useBindPageLoader, usePageRouter } from "@/hooks/use-page-router";
-import type { Comment, Reply } from "@/types";
+import { useToggleLike } from "@/hooks/use-toggle-like";
+import type { Comment, PromptSource, Reply } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import {
   type CustomEventType,
@@ -115,27 +122,79 @@ const useGetComment = (commentId: string) => {
   return { comment, loading, refetch: fetchComment };
 };
 
+const PAGE_SIZE = 2;
+
 const useGetReplies = (commentId: string) => {
   const [replies, setReplies] = useState<Reply[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
-  const fetchReplies = useCallback(async () => {
-    setLoading(true);
-    const _replies = await getRepliesAction(commentId);
+  const refreshLatestReplies = useCallback(async () => {
+    const _replies = await getRepliesAction(commentId, 1, PAGE_SIZE);
 
-    if (!_replies || "message" in _replies) {
-      setLoading(false);
-      return;
-    }
-    setReplies(_replies);
-    setLoading(false);
+    if (!_replies || "message" in _replies) return;
+
+    setReplies((prev) => {
+      // Merge without duplicates
+      const existingIds = new Set(prev.map((r) => r.id));
+      const newReplies = _replies.filter((r) => !existingIds.has(r.id));
+
+      return [...prev, ...newReplies];
+    });
   }, [commentId]);
 
+  const fetchReplies = useCallback(
+    async (page: number, append = false) => {
+      if (append) {
+        setLoadingMore(true);
+      } else {
+        setInitialLoading(true);
+      }
+
+      const _replies = await getRepliesAction(commentId, page, PAGE_SIZE);
+
+      if (!_replies || "message" in _replies) {
+        setInitialLoading(false);
+        setLoadingMore(false);
+        return;
+      }
+
+      setReplies((prev) => (append ? [...prev, ..._replies] : _replies));
+
+      if (_replies.length < PAGE_SIZE) {
+        setHasMore(false);
+      }
+
+      setInitialLoading(false);
+      setLoadingMore(false);
+    },
+    [commentId],
+  );
+
   useEffect(() => {
-    fetchReplies();
+    setReplies([]);
+    setPageNumber(1);
+    setHasMore(true);
+    fetchReplies(1, false);
   }, [fetchReplies]);
 
-  return { loading, refetch: fetchReplies, replies, setReplies };
+  const loadMore = async () => {
+    const nextPage = pageNumber + 1;
+    await fetchReplies(nextPage, true);
+    setPageNumber(nextPage);
+  };
+
+  return {
+    hasMore,
+    initialLoading,
+    loadingMore,
+    loadMore,
+    refreshLatestReplies,
+    replies,
+    setReplies,
+  };
 };
 
 export default function ThreadPage({}) {
@@ -146,10 +205,119 @@ export default function ThreadPage({}) {
   const { comment, loading: loadingComments } = useGetComment(commentId);
   const {
     replies,
-    loading: loadingReplies,
-    refetch: refetchReplies,
+    initialLoading,
+    loadingMore,
+    loadMore,
+    hasMore,
     setReplies,
+    refreshLatestReplies,
   } = useGetReplies(commentId);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const [highlightedReplyId, setHighlightedReplyId] = useState<string | null>(
+    null,
+  );
+
+  // Top level of ThreadPage
+  const togglePromptLike = useToggleLike({
+    id: comment?.prompt?.id || "",
+    liked: comment?.prompt?.reacted || false,
+    type: "prompt",
+  });
+
+  // State for optimistic updates
+  const [promptState, setPromptState] = useState({
+    reacted: false,
+    reactions: 0,
+  });
+
+  useEffect(() => {
+    if (comment?.prompt) {
+      setPromptState({
+        reacted: comment.prompt.reacted || false,
+        reactions: comment.prompt.reactions || 0,
+      });
+    }
+  }, [comment?.prompt]);
+
+  // Handle toggle
+  const handlePromptLikeToggle = useCallback(async () => {
+    setPromptState((prev) => ({
+      ...prev,
+      reacted: !prev.reacted,
+      reactions: prev.reacted ? prev.reactions - 1 : prev.reactions + 1,
+    }));
+
+    const response = await togglePromptLike.toggleLike();
+
+    if (!response || "message" in response) {
+      // rollback
+      setPromptState({
+        reacted: comment?.prompt?.reacted || false,
+        reactions: comment?.prompt?.reactions || 0,
+      });
+      return;
+    }
+
+    setPromptState({
+      reacted: response.reacted,
+      reactions: response.reactions,
+    });
+  }, [togglePromptLike, comment?.prompt?.reacted, comment?.prompt?.reactions]);
+
+  // Memoized onLike
+  const onPromptLike = useMemo(() => {
+    if (authState !== "LOGGED_IN") return undefined;
+    return handlePromptLikeToggle;
+  }, [authState, handlePromptLikeToggle]);
+
+  const toggleCommentLike = useToggleLike({
+    id: comment?.id || "",
+    liked: comment?.reacted || false,
+    type: "comment",
+  });
+
+  const [commentState, setCommentState] = useState({
+    reacted: false,
+    reactions: 0,
+  });
+
+  useEffect(() => {
+    if (comment) {
+      setCommentState({
+        reacted: comment.reacted || false,
+        reactions: comment.reactions || 0,
+      });
+    }
+  }, [comment]);
+
+  const handleCommentLikeToggle = useCallback(async () => {
+    setCommentState((prev) => ({
+      ...prev,
+      reacted: !prev.reacted,
+      reactions: prev.reacted ? prev.reactions - 1 : prev.reactions + 1,
+    }));
+
+    const response = await toggleCommentLike.toggleLike();
+
+    if (!response || "message" in response) {
+      setCommentState({
+        reacted: comment?.reacted || false,
+        reactions: comment?.reactions || 0,
+      });
+      return;
+    }
+
+    setCommentState({
+      reacted: response.reacted,
+      reactions: response.reactions,
+    });
+  }, [toggleCommentLike, comment?.reacted, comment?.reactions]);
+
+  const onCommentLike = useMemo(() => {
+    if (authState !== "LOGGED_IN") return undefined;
+    return handleCommentLikeToggle;
+  }, [authState, handleCommentLikeToggle]);
+
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [showReportAlert, setShowReportAlert] = useState(false);
   const [showDeleteCommentAlert, setShowDeleteCommentAlert] = useState(false);
@@ -171,11 +339,76 @@ export default function ThreadPage({}) {
     comment?.source.sourceId === novelist?.id;
 
   const { routeToPage } = usePageRouter();
-  const { successToast, warningToast, errorToast } = useUIContext();
-  useBindPageLoader(loadingComments || loadingReplies);
+  const { successToast, errorToast } = useUIContext();
+  useBindPageLoader(loadingComments);
   const { on: onReplyEvent, off: offReplyEvent } = useCustomEvents(
     EVENTS.REPLY.base,
   );
+
+  const isOOCPost = comment?.prompt?.source.sourceType === "NOVELIST";
+
+  const initialSelection: PromptSource | undefined = useMemo(() => {
+    if (!novelist) return undefined;
+
+    const novelistSource = novelistToSource(novelist);
+    const museSources = (novelist.muses ?? []).map(museToSource);
+
+    // 1️⃣ If OOC post → always novelist
+    if (isOOCPost) {
+      return novelistSource;
+    }
+
+    // 2️⃣ If there are replies, find latest reply from our muses
+    if (replies?.length) {
+      const museIds = new Set((novelist.muses ?? []).map((m) => m.id));
+
+      const latestMuseReply = [...replies]
+        .reverse() // assuming replies are chronological
+        .find((reply) => museIds.has(reply.source.sourceId));
+
+      if (latestMuseReply) {
+        return latestMuseReply.source;
+      }
+    }
+
+    // 3️⃣ Fallback → first muse if available
+    if (museSources.length > 0) {
+      return museSources[0];
+    }
+
+    // 4️⃣ Final fallback → novelist
+    return novelistSource;
+  }, [novelist, replies, isOOCPost]);
+
+  const initialLoadDone = useRef(false);
+
+  useEffect(() => {
+    if (!initialLoading && replies.length > 0 && !initialLoadDone.current) {
+      initialLoadDone.current = true; // prevent future triggers
+      const lastReply = replies[0];
+
+      // Scroll to bottom
+      bottomRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
+
+      // // Highlight last reply
+      // setHighlightedReplyId(lastReply.id);
+
+      // // Remove highlight after 1 second
+      // highlightTimer.current = setTimeout(() => {
+      //   setHighlightedReplyId(null);
+      // }, 1000);
+
+      // // Cleanup on unmount
+      // return () => {
+      //   if (highlightTimer.current) {
+      //     clearTimeout(highlightTimer.current);
+      //   }
+      // };
+    }
+  }, [initialLoading, replies]);
 
   useEffect(() => {
     const handleReplyUpdated = (
@@ -289,13 +522,65 @@ export default function ThreadPage({}) {
     routeToPage(`${ROUTES.Prompt.View(comment.prompt.id)}?threadOpen=true`);
   };
 
-  const loadReplies = () => {
-    return [...replies].reverse().map((reply) => (
-      <>
+  const ReplyItem = ({ reply }: { reply: Reply }) => {
+    const toggleReplyLike = useToggleLike({
+      id: reply.id || "",
+      liked: reply.reacted || false,
+      type: "reply",
+    });
+
+    const [replyState, setReplyState] = useState({
+      reacted: false,
+      reactions: 0,
+    });
+
+    useEffect(() => {
+      if (reply) {
+        setReplyState({
+          reacted: reply.reacted || false,
+          reactions: reply.reactions || 0,
+        });
+      }
+    }, [reply]);
+
+    const handleReplyLikeToggle = useCallback(async () => {
+      setReplyState((prev) => ({
+        ...prev,
+        reacted: !prev.reacted,
+        reactions: prev.reacted ? prev.reactions - 1 : prev.reactions + 1,
+      }));
+
+      const response = await toggleReplyLike.toggleLike();
+
+      if (!response || "message" in response) {
+        setReplyState({
+          reacted: reply.reacted || false,
+          reactions: reply.reactions || 0,
+        });
+        return;
+      }
+
+      setReplyState({
+        reacted: response.reacted,
+        reactions: response.reactions,
+      });
+    }, [toggleReplyLike, reply?.reacted, reply?.reactions]);
+
+    const onReplyLike = useMemo(() => {
+      if (authState !== "LOGGED_IN") return undefined;
+      return handleReplyLikeToggle;
+    }, [authState, handleReplyLikeToggle]);
+
+    return (
+      <S.ReplyWrapper
+        key={reply.id}
+        $highlight={highlightedReplyId === reply.id}
+      >
         <Flex
           direction="column"
           gap={0}
           style={{ marginBottom: "10px", position: "relative" }}
+          className={highlightedReplyId === reply.id ? "highlight" : ""}
         >
           <S.DropdownMenuContainer>
             <ShouldRender if={authState === "LOGGED_IN"}>
@@ -395,9 +680,23 @@ export default function ThreadPage({}) {
               </ShouldRender>
             </S.MediaContainer>
           )}
+          <S.PromptContentFooter>
+            <LikeButton
+              onLike={onReplyLike}
+              parentId={reply.id}
+              liked={replyState.reacted}
+              likes={replyState.reactions}
+            />
+          </S.PromptContentFooter>
         </Flex>
-      </>
-    ));
+      </S.ReplyWrapper>
+    );
+  };
+
+  const loadReplies = () => {
+    return [...replies]
+      .reverse()
+      .map((reply) => <ReplyItem key={reply.id} reply={reply} />);
   };
 
   return (
@@ -568,6 +867,18 @@ export default function ThreadPage({}) {
               </ShouldRender>
             </S.MediaContainer>
           )}
+          {comment !== undefined &&
+            comment?.prompt !== undefined &&
+            comment.prompt?.id !== undefined && (
+              <S.PromptContentFooter>
+                <LikeButton
+                  onLike={onPromptLike}
+                  parentId={comment?.prompt?.id}
+                  liked={promptState.reacted}
+                  likes={promptState.reactions}
+                />
+              </S.PromptContentFooter>
+            )}
         </Flex>
         <Flex
           direction="column"
@@ -665,18 +976,43 @@ export default function ThreadPage({}) {
               </ShouldRender>
             </S.MediaContainer>
           )}
+          {comment !== undefined && comment?.prompt !== undefined && (
+            <S.PromptContentFooter>
+              <LikeButton
+                onLike={onCommentLike}
+                parentId={comment?.id}
+                liked={commentState?.reacted}
+                likes={commentState?.reactions}
+              />
+            </S.PromptContentFooter>
+          )}
         </Flex>
-        {loadReplies()}
-        {authState === "LOGGED_IN" && comment?.prompt?.canInteract && (
-          <>
-            <Separator.Root className="separator" orientation="horizontal" />
-            <PromptInput
-              parentId={commentId}
-              type="reply"
-              onSend={refetchReplies}
-            />
-          </>
+        {hasMore && (
+          <S.LoadMoreContainer>
+            {loadingMore ? (
+              <Spinner size={24} />
+            ) : (
+              <S.LoadMoreButton onClick={loadMore}>Load more</S.LoadMoreButton>
+            )}
+          </S.LoadMoreContainer>
         )}
+
+        {loadReplies()}
+        {authState === "LOGGED_IN" &&
+          !initialLoading &&
+          comment?.prompt?.canInteract && (
+            <>
+              <Separator.Root className="separator" orientation="horizontal" />
+              <PromptInput
+                parentId={commentId}
+                type="reply"
+                initialSelection={initialSelection}
+                dropdownSelection={isOOCPost ? "NOVELIST" : "MUSE"}
+                onSend={refreshLatestReplies}
+              />
+            </>
+          )}
+        <div ref={bottomRef} />
       </S.RepliesContainer>
     </S.ParentContainer>
   );

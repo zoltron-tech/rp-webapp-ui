@@ -111,16 +111,13 @@ export const PromptInputRoot = styled.div`
   &.open {
     padding-top: 28px;
     padding-bottom: 45px;
-    padding-inline: 16px;
     background-color: var(--bg-2);
-    /* border: 0.85px solid var(--bg-6); */
-    /* box-shadow: 0 10px 38px -10px rgba(0, 0, 0, 0.25); */
   }
 
   .form-content {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
   }
 
   .form-label {
@@ -173,7 +170,6 @@ export const TextInputContainer = styled(Form.Field)`
   display: flex;
   flex-direction: column;
 
-  margin-top: 8px;
 
   textarea {
     background-color: var(--bg-3);

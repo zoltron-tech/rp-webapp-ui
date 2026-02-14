@@ -1,16 +1,18 @@
-import { Flex } from "@novelist-world/ui";
+import { Flex, ShouldRender } from "@novelist-world/ui";
 import classNames from "classnames";
-import { Avatar, Form, Select, Separator } from "radix-ui";
-import { type FC, forwardRef, useState } from "react";
+import { Avatar, Form, Select } from "radix-ui";
+import { type FC, forwardRef, useEffect, useState } from "react";
 import { GrRadialSelected } from "react-icons/gr";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { useGlobalState } from "@/context/store/stores";
-import type { Muse, PromptSource, SubmitPromptType } from "@/types";
+import type { PromptSource, SubmitPromptType } from "@/types";
 import { usePromptInputState } from "./prompt-input.store";
 import * as S from "./styles";
 
 type Props = {
+  initialSelection: PromptSource | undefined;
   sources: PromptSource[];
+  dropdownSelection: "NOVELIST" | "MUSE" | "ALL";
 };
 
 const promptTypeToLabel = (type: SubmitPromptType): string => {
@@ -27,11 +29,17 @@ const promptTypeToLabel = (type: SubmitPromptType): string => {
 };
 
 export const PromptMuseSelect: FC<Props> = forwardRef(
-  ({ sources, ...props }, forwardedRef) => {
+  (
+    { sources, dropdownSelection, initialSelection, ...props },
+    forwardedRef,
+  ) => {
     const accent = useGlobalState("accent");
     const theme = useGlobalState("theme");
     const promptType = usePromptInputState("type");
-    const [source, setSource] = useState<PromptSource>(sources?.[0]);
+    const [source, setSource] = useState<PromptSource | undefined>(
+      initialSelection ?? sources?.[0],
+    );
+
     const novelistSource = sources.find((s) => s.sourceType === "NOVELIST");
 
     const museSources = sources.filter((s) => s.sourceType === "MUSE");
@@ -41,6 +49,14 @@ export const PromptMuseSelect: FC<Props> = forwardRef(
         setSource(selectedSource);
       }
     };
+
+    useEffect(() => {
+      if (initialSelection) {
+        setSource(initialSelection);
+      } else if (sources?.length) {
+        setSource(sources[0]);
+      }
+    }, [initialSelection, sources]);
 
     return (
       <S.MuseSelect
@@ -55,7 +71,7 @@ export const PromptMuseSelect: FC<Props> = forwardRef(
           <Select.Root
             name="muse"
             required
-            defaultValue={source?.sourceId ?? ""}
+            value={source?.sourceId ?? ""}
             onValueChange={handleMuseChange}
           >
             <Select.Trigger className="select-trigger">
@@ -79,17 +95,23 @@ export const PromptMuseSelect: FC<Props> = forwardRef(
                 className={classNames("select-content", theme, accent)}
               >
                 <Select.Viewport className="select-viewport">
-                  <SelectItem
-                    key={novelistSource?.sourceId}
-                    source={novelistSource}
-                  />
-                  <S.OrDivider>OR</S.OrDivider>
-                  <Flex direction="column" gap={0}>
-                    <S.DialogueLabel>Post as a muse</S.DialogueLabel>
-                  </Flex>
-                  {museSources?.map((source) => (
-                    <SelectItem key={source.sourceId} source={source} />
-                  ))}
+                  <ShouldRender if={dropdownSelection !== "MUSE"}>
+                    <SelectItem
+                      key={novelistSource?.sourceId}
+                      source={novelistSource}
+                    />
+                  </ShouldRender>
+                  <ShouldRender if={dropdownSelection === "ALL"}>
+                    <S.OrDivider>OR</S.OrDivider>
+                  </ShouldRender>
+                  <ShouldRender if={dropdownSelection !== "NOVELIST"}>
+                    <Flex direction="column" gap={0}>
+                      <S.DialogueLabel>Post as a muse</S.DialogueLabel>
+                    </Flex>
+                    {museSources?.map((source) => (
+                      <SelectItem key={source.sourceId} source={source} />
+                    ))}
+                  </ShouldRender>
                 </Select.Viewport>
               </Select.Content>
             </S.MuseSelectPortal>

@@ -112,9 +112,7 @@ export const RichTextRenderer = ({
     return (
       <S.Container>
         <S.EmptyState>
-          <S.EmptyText>
-            No saved texts yet. Create and save some content above!
-          </S.EmptyText>
+          <S.EmptyText>Loading</S.EmptyText>
         </S.EmptyState>
       </S.Container>
     );

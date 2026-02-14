@@ -49,6 +49,8 @@ export interface Reply {
   text: string;
   media: string;
   createdOn: string;
+  reactions: number;
+  reacted: boolean;
 }
 
 export interface PromptSource {

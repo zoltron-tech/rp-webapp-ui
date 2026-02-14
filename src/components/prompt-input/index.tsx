@@ -15,12 +15,17 @@ import {
   useState,
 } from "react";
 import { IoIosShareAlt } from "react-icons/io";
-import { PiDotsThreeCircleFill, PiDotsThreeOutlineFill } from "react-icons/pi";
+import { PiDotsThreeOutlineFill } from "react-icons/pi";
 import { submitPrompt } from "@/app/rp/profile/actions";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents, useUIContext } from "@/hooks";
-import type { Friend, SubmitPromptInput, SubmitPromptType } from "@/types";
+import type {
+  Friend,
+  PromptSource,
+  SubmitPromptInput,
+  SubmitPromptType,
+} from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { EVENTS } from "@/utils/constants/custom-events";
 import { AppAlertDialog } from "../dialog";
@@ -51,6 +56,8 @@ import * as S from "./styles";
 type Props = React.HTMLProps<HTMLDivElement> & {
   type: SubmitPromptType;
   parentId?: string;
+  dropdownSelection: "NOVELIST" | "MUSE" | "ALL";
+  initialSelection: PromptSource | undefined;
   onSend?: () => void;
 };
 
@@ -63,6 +70,8 @@ type PromptInputFormProps = Props & {
 export const PromptForm: FC<PromptInputFormProps> = ({
   type = "prompt",
   parentId = "",
+  dropdownSelection,
+  initialSelection,
   onSend,
   setPrivacySelectedFriends,
   setShowCustomPrivacyListSelection,
@@ -102,11 +111,21 @@ export const PromptForm: FC<PromptInputFormProps> = ({
   const sources = useMemo(() => {
     if (!novelist) return [];
 
-    return [
-      novelistToSource(novelist),
-      ...(novelist.muses ?? []).map(museToSource),
-    ];
-  }, [novelist]);
+    const novelistSource = novelistToSource(novelist);
+    const museSources = (novelist.muses ?? []).map(museToSource);
+
+    switch (dropdownSelection) {
+      case "NOVELIST":
+        return [novelistSource];
+
+      case "MUSE":
+        return museSources;
+
+      case "ALL":
+      default:
+        return [novelistSource, ...museSources];
+    }
+  }, [novelist, dropdownSelection]);
 
   const handleSend: FormEventHandler<HTMLFormElement> = useCallback(
     async (e) => {
@@ -184,7 +203,11 @@ export const PromptForm: FC<PromptInputFormProps> = ({
           marginTop: "8px",
         }}
       >
-        <PromptMuseSelect sources={sources} />
+        <PromptMuseSelect
+          sources={sources}
+          dropdownSelection={dropdownSelection}
+          initialSelection={initialSelection}
+        />
         <ShouldRender if={privacySelectedFriends.length > 0}>
           <IoIosShareAlt
             style={{
@@ -225,7 +248,15 @@ export const PromptForm: FC<PromptInputFormProps> = ({
 
 export const PromptInput: FC<Props> = forwardRef(
   (
-    { type = "prompt", parentId = "", onSend, className, ...rest },
+    {
+      type = "prompt",
+      parentId = "",
+      dropdownSelection,
+      initialSelection,
+      onSend,
+      className,
+      ...rest
+    },
     forwardedRef,
   ) => {
     const [privacySelectedFriends, setPrivacySelectedFriends] = useState<
@@ -292,6 +323,8 @@ export const PromptInput: FC<Props> = forwardRef(
                 <PromptForm
                   type={type}
                   parentId={parentId}
+                  dropdownSelection={dropdownSelection}
+                  initialSelection={initialSelection}
                   onSend={onSend}
                   className={className}
                   privacySelectedFriends={privacySelectedFriends}

@@ -35,6 +35,16 @@ export const FormTextArea = styled.textarea`
     font-size: var(--font-size-input);
 `;
 
+export const ReplyWrapper = styled.div<{ $highlight?: boolean }>`
+  border-radius: 20px;
+  transition: background-color 0.4s ease;
+
+  background-color: ${({ $highlight }) =>
+    $highlight
+      ? "color-mix(in srgb, var(--accent) 25%, transparent)"
+      : "transparent"};
+`;
+
 export const ParentContainer = styled(Container)`
   display: flex;
   flex-direction: column;
@@ -155,13 +165,67 @@ export const PromptSubheader = styled.time`
 `;
 
 export const PromptTextContainer = styled.div`
-  max-width: 80%;
-  padding-left: 25px;
+  max-width: 90%;
+  padding-left: 40px;
 
   @container (max-width: 700px) {
     & {
-      padding-left: unset;
+      padding-left: 32px;
     }
+  }
+`;
+
+export const PromptContentFooter = styled.footer`
+  width: 100%;
+  padding-left: 40px;
+  display: flex;
+  align-items: flex-start;
+  margin-top: 18px;
+  padding-bottom: 8px;
+
+  @container (max-width: 700px) {
+    & {
+      padding-left: 32px;
+    }
+  }
+`;
+
+export const LoadMoreContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+`;
+
+export const LoadMoreButton = styled.button`
+    background: none;
+  border: none;
+  color: var(--accent);
+  font-size: var(--font-size-h6);
+  margin-inline-start: 10px;
+  font-style: italic;
+  font-weight: 700;
+    cursor: pointer;
+      transition: opacity 0.2s ease;
+
+  &:hover {
+    cursor: pointer;
+    color: var(--accent-hover);
+    text-decoration: underline;
+  }
+
+  @container (max-width: 600px) {
+    & {
+      font-size: var(--font-size-input);
+    }
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+
+  &:hover:not(:disabled) {
+    opacity: 0.8;
   }
 `;
 
@@ -271,7 +335,7 @@ export const ReplyHeaderContainer = styled.div`
   ${DEV_MODE_BORDER("blue")}
   display: flex;
   width: 100%;
-  padding-block: 20px;
+  padding-top: 20px;
 `;
 
 export const DropdownMenuContainer = styled.div`
@@ -280,7 +344,7 @@ export const DropdownMenuContainer = styled.div`
   gap: 6px;
   position: absolute;
   right: 0px;
-  top: 0px
+  top: 20px
 `;
 
 export const HeaderDropdownMenuContainer = styled.div`

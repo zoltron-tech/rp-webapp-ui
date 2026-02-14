@@ -1,5 +1,6 @@
 "use client";
 
+import { Flex } from "@novelist-world/ui";
 import classNames from "classnames";
 import { Popover, Tabs } from "radix-ui";
 import type React from "react";
@@ -442,43 +443,47 @@ export const RichTextEditor = ({
         </S.FontSelectRoot>
         <S.Divider />
 
-        <S.ToggleGroup type="multiple">
-          {FORMAT_BUTTONS.map((btn) => {
-            const Icon = btn.icon;
-            return (
-              <S.ToggleItem
-                key={btn.id}
-                value={btn.id}
-                $active={activeStyles[btn.id]}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => handleFormatClick(btn.command)}
-                title={btn.title}
-              >
-                <Icon size={20} />
-              </S.ToggleItem>
-            );
-          })}
-        </S.ToggleGroup>
+        <Flex>
+          <S.ToggleGroup type="multiple">
+            {FORMAT_BUTTONS.map((btn) => {
+              const Icon = btn.icon;
+              return (
+                <S.ToggleItem
+                  key={btn.id}
+                  value={btn.id}
+                  $active={activeStyles[btn.id]}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => handleFormatClick(btn.command)}
+                  title={btn.title}
+                >
+                  <Icon size={20} />
+                </S.ToggleItem>
+              );
+            })}
+          </S.ToggleGroup>
 
-        <S.Divider />
+          <S.Divider />
 
-        <S.ToggleGroup type="single" value={activeAlign}>
-          {ALIGNMENT_BUTTONS.map((btn) => {
-            const Icon = btn.icon;
-            return (
-              <S.ToggleItem
-                key={btn.id}
-                value={btn.id}
-                $active={activeAlign === btn.id}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => handleAlignClick(btn.id as AlignId, btn.command)}
-                title={btn.title}
-              >
-                <Icon size={20} />
-              </S.ToggleItem>
-            );
-          })}
-        </S.ToggleGroup>
+          <S.ToggleGroup type="single" value={activeAlign}>
+            {ALIGNMENT_BUTTONS.map((btn) => {
+              const Icon = btn.icon;
+              return (
+                <S.ToggleItem
+                  key={btn.id}
+                  value={btn.id}
+                  $active={activeAlign === btn.id}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() =>
+                    handleAlignClick(btn.id as AlignId, btn.command)
+                  }
+                  title={btn.title}
+                >
+                  <Icon size={20} />
+                </S.ToggleItem>
+              );
+            })}
+          </S.ToggleGroup>
+        </Flex>
       </S.ToolbarRoot>
 
       <S.EditorWrapper>

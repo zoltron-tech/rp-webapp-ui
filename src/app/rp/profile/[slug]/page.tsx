@@ -24,6 +24,7 @@ import { ContactSupportForm, MusesPill } from "@/components";
 import ActivityBox from "@/components/activity-box";
 import { ShouldRender, Username } from "@/components/common";
 import { AppAlertDialog } from "@/components/dialog";
+import { novelistToSource } from "@/components/event-thread-input/helpers";
 import { Image } from "@/components/image-viewer/styled";
 import MuseListItem from "@/components/muse-list-item";
 import { AppDropdownMenu } from "@/components/profile-more-dropdown";
@@ -678,9 +679,16 @@ export default function UserProfilePage({}) {
                   : `Updates by ${username}`}
             </S.SubText>
             <S.ActivitiesContainer>
-              {authState === "LOGGED_IN" && username === user?.username && (
-                <PromptInput type={"prompt"} onSend={refetchAcitivities} />
-              )}
+              {authState === "LOGGED_IN" &&
+                username === user?.username &&
+                novelist !== null && (
+                  <PromptInput
+                    type={"prompt"}
+                    onSend={refetchAcitivities}
+                    dropdownSelection="ALL"
+                    initialSelection={novelistToSource(novelist)}
+                  />
+                )}
               {activities?.map((activity) => (
                 <ActivityBox
                   key={activity?.id}

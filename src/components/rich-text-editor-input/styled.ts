@@ -42,9 +42,9 @@ export const Container = styled.div`
 export const EmptyState = styled.div`
   text-align: center;
   padding: 3rem 0;
-  background-color: #f9fafb;
+  width: 90%;
+  background-color: var(--bg-3);
   border-radius: 0.5rem;
-  border: 2px dashed #d1d5db;
 `;
 
 export const EmptyText = styled.p`
@@ -104,7 +104,7 @@ box-sizing: content-box;
 export const Divider = styled.div`
   width: 1px;
   height: 2rem;
-  background-color: #d1d5db;
+  background-color: var(--bg-6);
   margin: 0 0.25rem;
 `;
 
@@ -144,8 +144,8 @@ export const EditorWrapper = styled.div`
 
 export const EditorContent = styled.div`
   width: 100%;
-  min-height: 16rem;
-  max-height: 40dvh;
+  min-height: 10rem;
+  max-height: 20dvh;
   padding: 1rem;
   border-left: 1px solid var(--bg-6);
   border-right: 1px solid var(--bg-6);

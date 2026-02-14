@@ -141,7 +141,7 @@ const useGetReplies = (commentId: string) => {
       const existingIds = new Set(prev.map((r) => r.id));
       const newReplies = _replies.filter((r) => !existingIds.has(r.id));
 
-      return [...prev, ...newReplies];
+      return [...newReplies, ...prev];
     });
   }, [commentId]);
 

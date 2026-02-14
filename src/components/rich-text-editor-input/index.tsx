@@ -10,6 +10,7 @@ import { TbZoomPan } from "react-icons/tb";
 import { useGlobalState } from "@/context/store/stores";
 import type { MentionDataItem, MentionTab } from "@/types";
 import { AvatarNew } from "../common/avatar-new";
+import { PromptEvent, useRunOn } from "../prompt-input/helpers";
 import {
   ALIGNMENT_BUTTONS,
   DEFAULT_FONT,
@@ -23,6 +24,7 @@ interface RichTextEditorProps {
   value?: string;
   mentionTabs?: MentionTab[];
   onChange: (value: string) => void;
+  onClear?: () => void;
 }
 
 interface Position {
@@ -37,6 +39,7 @@ export const RichTextEditor = ({
   value,
   mentionTabs = [],
   onChange,
+  onClear,
 }: RichTextEditorProps) => {
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
@@ -63,6 +66,17 @@ export const RichTextEditor = ({
 
   const editorRef = useRef<HTMLDivElement | null>(null);
   const savedSelectionRef = useRef<Range | null>(null);
+
+  // expose a clear function
+  const clearEditor = useCallback(() => {
+    if (editorRef.current) {
+      editorRef.current.innerHTML = "";
+      onChange("");
+    }
+    onClear?.();
+  }, [onChange, onClear]);
+
+  useRunOn([PromptEvent.Sent], clearEditor); // optional: auto clear on send
 
   // Initialize the editor content on first render
   useEffect(() => {

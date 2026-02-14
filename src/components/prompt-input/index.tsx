@@ -44,6 +44,7 @@ import {
   INITIAL_STATE,
   type PromptInputState,
   usePromptInputState,
+  usePromptInputStoreSet,
 } from "./prompt-input.store";
 import { PromptInputTrigger } from "./prompt-input-trigger";
 import { PromptMediaInput } from "./prompt-media-input";
@@ -81,6 +82,7 @@ export const PromptForm: FC<PromptInputFormProps> = ({
   const novelist = useGlobalState("novelist");
   const promptText = usePromptInputState("promptText");
   const { successToast, errorToast } = useUIContext();
+  const setPromptInputState = usePromptInputStoreSet();
 
   const [open, setOpen] = useState(true);
 
@@ -188,6 +190,7 @@ export const PromptForm: FC<PromptInputFormProps> = ({
       setSending(false);
       setError(null);
       setOpen(false);
+      setPromptInputState({ media: null, promptText: "" });
       onSend?.();
     },
     [sources, promptText, parentId, type, emit, onSend],

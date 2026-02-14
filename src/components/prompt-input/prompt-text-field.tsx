@@ -7,7 +7,11 @@ import { PromptEvent, useRunOn } from "./helpers";
 import { usePromptInputStoreSet } from "./prompt-input.store";
 import * as S from "./styles";
 
-export const PromptTextField: FC = () => {
+interface PromptTextFieldProps {
+  onClear?: () => void;
+}
+
+export const PromptTextField: FC<PromptTextFieldProps> = ({ onClear }) => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const novelist = useGlobalState("novelist");
   const setPromptInputState = usePromptInputStoreSet();
@@ -20,10 +24,16 @@ export const PromptTextField: FC = () => {
   );
 
   const handleClear = useCallback(() => {
+    console.log("Clearing form");
+    setPromptInputState({ promptText: "" });
     if (textAreaRef.current) {
+      console.log("resetting current");
       textAreaRef.current.value = "";
     }
-  }, []);
+    onClear?.();
+  }, [setPromptInputState, onClear]);
+
+  useRunOn([PromptEvent.Sent], handleClear);
 
   const fetchMentionableMuses = useCallback(
     async (prefix: string = ""): Promise<MentionDataItem[]> => {
@@ -76,6 +86,7 @@ export const PromptTextField: FC = () => {
         value={""}
         mentionTabs={MENTION_TABS}
         onChange={handlePromptTextChange}
+        onClear={handleClear}
       />
     </S.TextInputContainer>
   );

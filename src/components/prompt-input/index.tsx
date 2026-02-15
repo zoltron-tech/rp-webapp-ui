@@ -203,6 +203,7 @@ export const PromptForm: FC<PromptInputFormProps> = ({
           alignItems: "center",
           gap: "2px",
           justifyContent: "flex-start",
+          marginLeft: "8px",
           marginTop: "8px",
         }}
       >

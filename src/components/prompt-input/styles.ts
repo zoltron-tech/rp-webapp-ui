@@ -382,6 +382,7 @@ export const MediaSelect = styled(Form.Field)`
   display: flex;
   flex-direction: column;
   margin-top: 4px;
+  margin-left: 8px;
 
   .media-input {
     display: none;

@@ -55,11 +55,9 @@ export const EmptyText = styled.p`
 export const ToolbarRoot = styled(Toolbar.Root)`
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 0.75rem;
+  gap: 0.25rem;
+  padding: 0.25rem;
   background-color: var(--bg-4);
-  border-top-left-radius: 0.5rem;
-  border-top-right-radius: 0.5rem;
   border: 1px solid var(--bg-6);
 `;
 

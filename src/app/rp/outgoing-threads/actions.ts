@@ -9,9 +9,10 @@ import { Logger } from "@/utils/services";
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
 
-export const getOutgoingThreadsAction = async (): Promise<
-  DataType<PromptThreadComment[]>
-> => {
+export const getOutgoingThreadsAction = async (
+  pageNumber: number,
+  pageSize: number,
+): Promise<DataType<PromptThreadComment[]>> => {
   const jwt = await getJWTIfExists();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -21,7 +22,7 @@ export const getOutgoingThreadsAction = async (): Promise<
     headers[AUTH_HEADER_NAME] = jwt;
   }
 
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/outgoing`;
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/outgoing?pageNumber=${pageNumber}&pageSize=${pageSize}`;
 
   const response = await fetch(URL, {
     cache: "no-store",
@@ -36,7 +37,7 @@ export const getOutgoingThreadsAction = async (): Promise<
     return { message: API_MESSAGE.Error };
   }
 
-  const storyBoard = await response.json();
+  const threads: PromptThreadComment[] = await response.json();
 
-  return storyBoard;
+  return threads;
 };

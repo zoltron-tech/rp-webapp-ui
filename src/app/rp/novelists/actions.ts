@@ -143,11 +143,12 @@ export const getUserNovelist = async () => {
   return novelist;
 };
 
-export const getNotifications = async (): Promise<
-  DataType<NovelistWorldNotification[]>
-> => {
+export const getNotifications = async (
+  pageNumber: number,
+  pageSize: number,
+): Promise<DataType<NovelistWorldNotification[]>> => {
   const jwt = await authenticateAndGetJWT();
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/notification`;
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/notification?pageNumber=${pageNumber}&pageSize=${pageSize}`;
 
   const response = await fetch(URL, {
     cache: "no-store",
@@ -162,7 +163,6 @@ export const getNotifications = async (): Promise<
   }
 
   const notifications: NovelistWorldNotification[] = await response.json();
-
   return notifications;
 };
 

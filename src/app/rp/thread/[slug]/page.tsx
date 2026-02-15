@@ -19,6 +19,7 @@ import {
   novelistToSource,
 } from "@/components/event-thread-input/helpers";
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
+import { InlineMusicPlayer } from "@/components/inline-music-player/page";
 import { AppDropdownMenu } from "@/components/profile-more-dropdown";
 import PromptInput from "@/components/prompt-input";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
@@ -39,7 +40,11 @@ import {
   type PromptCommentReplyUpdatedPayload,
 } from "@/utils/constants/custom-events";
 import { ROUTES } from "@/utils/constants/routes";
-import { displayDate, toFormattedDate } from "@/utils/helpers";
+import {
+  displayDate,
+  getFileNameFromUrl,
+  toFormattedDate,
+} from "@/utils/helpers";
 import {
   deleteCommentAction,
   deletePromptAction,
@@ -781,20 +786,34 @@ export default function ThreadPage({}) {
             </ShouldRender>
             <S.SourceInfo>
               <S.SourceName>{comment?.prompt?.source.name}</S.SourceName>
-              <ShouldRender if={Boolean(comment?.prompt?.createdOn)}>
-                <S.PromptSubheader
-                  title={
-                    comment?.prompt?.createdOn
-                      ? displayDate(comment?.prompt?.createdOn)
-                      : ""
+              <Flex gap={0}>
+                <ShouldRender if={Boolean(comment?.prompt?.createdOn)}>
+                  <S.PromptSubheader
+                    title={
+                      comment?.prompt?.createdOn
+                        ? displayDate(comment?.prompt?.createdOn)
+                        : ""
+                    }
+                    dateTime={comment?.prompt?.createdOn}
+                  >
+                    {comment?.prompt?.createdOn
+                      ? toFormattedDate(comment?.prompt?.createdOn)
+                      : ""}
+                  </S.PromptSubheader>
+                </ShouldRender>
+                <ShouldRender
+                  if={
+                    comment?.prompt?.song !== undefined &&
+                    comment?.prompt?.song !== null &&
+                    comment?.prompt?.song.length > 0
                   }
-                  dateTime={comment?.prompt?.createdOn}
                 >
-                  {comment?.prompt?.createdOn
-                    ? toFormattedDate(comment?.prompt?.createdOn)
-                    : ""}
-                </S.PromptSubheader>
-              </ShouldRender>
+                  <InlineMusicPlayer
+                    url={comment?.prompt?.song || ""}
+                    name={getFileNameFromUrl(comment?.prompt?.song || "")}
+                  />
+                </ShouldRender>
+              </Flex>
             </S.SourceInfo>
           </Flex>
           <S.HeaderDropdownMenuContainer>

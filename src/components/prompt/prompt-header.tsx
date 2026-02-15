@@ -17,13 +17,18 @@ import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
-import { displayDate, toFormattedDate } from "@/utils/helpers";
+import {
+  displayDate,
+  getFileNameFromUrl,
+  toFormattedDate,
+} from "@/utils/helpers";
 import { AvatarNew } from "../common/avatar-new";
 import { MuseAvatar } from "../common/muse-avatar";
 import { NovelistAvatar } from "../common/novelist-avatar";
 import { PrivacyIcon } from "../common/privacy-icon";
 import { AppAlertDialog } from "../dialog";
 import { FriendsList } from "../friends-list";
+import { InlineMusicPlayer } from "../inline-music-player/page";
 import { AppDropdownMenu } from "../profile-more-dropdown";
 import { UpdatePromptForm, type UpdatePromptProps } from "../update-prompt";
 import { usePromptState, usePromptStateSet } from "./prompt.store";
@@ -34,6 +39,7 @@ type PromptHeaderProps = {};
 export const PromptHeader: FC<PromptHeaderProps> = () => {
   const promptId = usePromptState("id");
   const promptText = usePromptState("text");
+  const promptSong = usePromptState("song");
   const createdOn = usePromptState("createdOn");
   const privacy = usePromptState("privacy");
   const privacySelectedFriends = usePromptState("sharedWith");
@@ -206,6 +212,18 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
               </S.privacyAvatarMoreIcon>
             </ShouldRender>
           </Flex>
+          <ShouldRender
+            if={
+              promptSong !== undefined &&
+              promptSong !== null &&
+              promptSong.length > 0
+            }
+          >
+            <InlineMusicPlayer
+              url={promptSong || ""}
+              name={getFileNameFromUrl(promptSong || "")}
+            />
+          </ShouldRender>
         </S.PromptSubheader>
       </S.SourceInfo>
 

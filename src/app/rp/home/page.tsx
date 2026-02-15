@@ -72,7 +72,7 @@ export default function HomePage() {
   };
 
   const fetchOpenPrompts = async () => {
-    const _prompts = await getNewPromptsAction();
+    const _prompts = await getNewPromptsAction(1, 5);
     if (_prompts && !("message" in _prompts)) setPrompts(_prompts);
   };
 

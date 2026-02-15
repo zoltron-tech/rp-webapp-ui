@@ -9,7 +9,10 @@ import { Logger } from "@/utils/services";
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
 
-export const getNewPromptsAction = async (): Promise<DataType<Prompt[]>> => {
+export const getNewPromptsAction = async (
+  pageNumber: number,
+  pageSize: number,
+): Promise<DataType<Prompt[]>> => {
   const jwt = await getJWTIfExists();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -19,7 +22,7 @@ export const getNewPromptsAction = async (): Promise<DataType<Prompt[]>> => {
     headers[AUTH_HEADER_NAME] = jwt;
   }
 
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/explore`;
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/explore?pageNumber=${pageNumber}&pageSize=${pageSize}`;
 
   const response = await fetch(URL, {
     cache: "no-store",
@@ -34,7 +37,7 @@ export const getNewPromptsAction = async (): Promise<DataType<Prompt[]>> => {
     return { message: API_MESSAGE.Error };
   }
 
-  const prompts = await response.json();
+  const prompts: Prompt[] = await response.json();
 
   return prompts;
 };

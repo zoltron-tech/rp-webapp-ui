@@ -7,6 +7,7 @@ export interface Prompt {
   source: PromptSource;
   text: string;
   media: string;
+  song: string;
   privacy: PrivacyLevel;
   createdOn: string;
   canInteract: boolean;

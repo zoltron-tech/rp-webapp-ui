@@ -52,6 +52,30 @@ export const verifyPasswordSpecialChar = (password: string) => {
   return /[!@#$%^&*(),.?":{}|<>]/.test(password);
 };
 
+export const getFileNameFromUrl = (url: string): string => {
+  if (!url) return "";
+
+  try {
+    // Extract last part after '/'
+    const parts = url.split("/");
+    let fileName = parts[parts.length - 1];
+
+    // Remove file extension
+    fileName = fileName.replace(/\.[^/.]+$/, "");
+
+    // Replace special characters with spaces
+    fileName = fileName.replace(/[-_+%20]+/g, " ");
+
+    // Decode URI components if needed (e.g., %20 -> space)
+    fileName = decodeURIComponent(fileName);
+
+    // Trim extra spaces
+    return fileName.trim();
+  } catch (err) {
+    return "";
+  }
+};
+
 export const verifyPasswordsMatch = (
   password: string,
   confirmPassword: string,

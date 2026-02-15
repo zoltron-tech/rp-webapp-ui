@@ -47,7 +47,7 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
   const fetchNotifications = useCallback(async () => {
     if (authState !== "LOGGED_IN") return;
     setLoading(true);
-    const _notifications = await baseDataLoader(() => getNotifications());
+    const _notifications = await baseDataLoader(() => getNotifications(1, 5));
     setLoading(false);
 
     set({ notifications: _notifications });

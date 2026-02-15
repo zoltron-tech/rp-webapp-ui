@@ -116,7 +116,7 @@ export const PromptSubheader = styled.time`
 
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 `;
 
 const PromptContentFooter = styled.footer`

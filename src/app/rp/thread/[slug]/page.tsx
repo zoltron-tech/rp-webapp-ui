@@ -786,7 +786,7 @@ export default function ThreadPage({}) {
             </ShouldRender>
             <S.SourceInfo>
               <S.SourceName>{comment?.prompt?.source.name}</S.SourceName>
-              <Flex gap={0}>
+              <Flex gap={4}>
                 <ShouldRender if={Boolean(comment?.prompt?.createdOn)}>
                   <S.PromptSubheader
                     title={

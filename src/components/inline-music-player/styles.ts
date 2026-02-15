@@ -13,11 +13,8 @@ const scrollText = keyframes`
 export const CardWrapper = styled.div`
   position: relative;
   height: 30px;
-  max-width: 140px;
-  width: 100%; 
-  min-width: 80px;
-  box-sizing: border-box;
-  padding-inline: 5px;
+  width: 120px;
+  padding-inline: 2px;
 
   transition: all 0.3s ease-in-out;
   contain: paint;

@@ -61,11 +61,6 @@ export default function MusesListPage({}) {
     };
   }, [on]);
 
-  const toUserProfile = useCallback(() => {
-    if (!username) return;
-    routeToPage(ROUTES.Profile.View(username).Index);
-  }, [username, routeToPage]);
-
   return (
     <S.Container>
       {/* ✨ Background mesh */}

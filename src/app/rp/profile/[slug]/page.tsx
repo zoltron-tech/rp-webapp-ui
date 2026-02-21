@@ -2,7 +2,7 @@
 
 import { Flex } from "@novelist-world/ui";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BsPersonFillCheck, BsPersonFillUp, BsThreeDots } from "react-icons/bs";
 import {
   FcAnswers,
@@ -17,16 +17,22 @@ import {
 import { GiCheckMark, GiCrossMark } from "react-icons/gi";
 import { IoMdPersonAdd } from "react-icons/io";
 import { IoPersonRemove } from "react-icons/io5";
-import { MdOutlineAppBlocking } from "react-icons/md";
+import {
+  MdDoubleArrow,
+  MdOutlineAppBlocking,
+  MdOutlineKeyboardDoubleArrowRight,
+} from "react-icons/md";
 import { RiFlagFill } from "react-icons/ri";
 import { VscVerifiedFilled } from "react-icons/vsc";
 import { ContactSupportForm, MusesPill } from "@/components";
 import ActivityBox from "@/components/activity-box";
 import { ShouldRender, Username } from "@/components/common";
+import { NovelistAvatar } from "@/components/common/novelist-avatar";
 import { AppAlertDialog } from "@/components/dialog";
 import { novelistToSource } from "@/components/event-thread-input/helpers";
 import { Image } from "@/components/image-viewer/styled";
 import MuseListItem from "@/components/muse-list-item";
+import ProfileFriendListItem from "@/components/profile-friend-list-item";
 import { AppDropdownMenu } from "@/components/profile-more-dropdown";
 import PromptInput from "@/components/prompt-input";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
@@ -92,12 +98,36 @@ export default function UserProfilePage({}) {
   const [novelist, setNovelist] = useState<Novelist | null>(null);
   const username = params?.slug as string;
   const isCurrentUser = username === user?.username;
+  const [showAllFriends, setShowAllFriends] = useState(false);
+  const [maxHeight, setMaxHeight] = useState("0px");
+  const listRef = useRef<HTMLDivElement>(null);
   const { activities, refetch: refetchAcitivities } =
     useGetActivities(username);
   const [storyBoards, setStories] = useState<StoryBoard[] | null>(null);
   const setGlobalState = useGlobalStoreSet();
   const { successToast, warningToast, errorToast } = useUIContext();
   const { routeToPage, stopPageLoading, baseDataLoader } = usePageRouter();
+
+  useEffect(() => {
+    if (listRef.current) {
+      if (showAllFriends) {
+        setMaxHeight(`${listRef.current.scrollHeight}px`); // expand
+      } else {
+        const itemHeight = 60; // approx height of 1 friend item including margin
+        const visibleCount = Math.min(3, novelist?.friends.length ?? 0);
+        setMaxHeight(`${itemHeight * visibleCount}px`); // collapse to 3 items
+      }
+    }
+  }, [showAllFriends, novelist?.friends]);
+
+  const mutualFriends = useMemo(() => {
+    if (isCurrentUser) return [];
+
+    const userFriendIds = new Set(userNovelist?.friends.map((f) => f.id));
+    return novelist?.friends.filter((f) => userFriendIds.has(f.id));
+  }, [novelist, userNovelist]);
+
+  const toggleFriends = () => setShowAllFriends((prev) => !prev);
 
   const handleCopyUsername = () => {
     if (username) {
@@ -597,11 +627,7 @@ export default function UserProfilePage({}) {
               </ShouldRender>
             </S.UsernameContainer>
             <ShouldRender if={username !== "novelistworld"}>
-              <Flex
-                // gap={"0px"}
-                align="flex-start"
-                // style={{ marginLeft: "100px", width: "100%" }}
-              >
+              <Flex align="flex-start">
                 <Flex gap={"2px"}>
                   <FcTreeStructure size={"16px"} />
                   <S.InfoTextBold>{novelist?.friendsCount}</S.InfoTextBold>{" "}
@@ -621,15 +647,34 @@ export default function UserProfilePage({}) {
               </Flex>
             </ShouldRender>
             <ShouldRender
+              if={mutualFriends !== undefined && mutualFriends?.length > 0}
+            >
+              <Flex
+                align="center"
+                justify="flex-start"
+                gap="0.5rem"
+                style={{ paddingLeft: "2rem", width: "100%" }}
+              >
+                <S.InfoText>{`Mutual friends (${mutualFriends?.length})`}</S.InfoText>
+                <S.MutualFriendsList>
+                  {mutualFriends?.slice(0, 3).map((friend) => (
+                    <NovelistAvatar
+                      key={friend.id}
+                      image={friend.image}
+                      name={friend.username}
+                      username={friend.username}
+                    />
+                  ))}
+                </S.MutualFriendsList>
+              </Flex>
+            </ShouldRender>
+            <ShouldRender
               if={!!(novelist?.about && novelist?.about.length > 0)}
             >
-              <p>
-                <br />
-              </p>
               <S.AboutContainer>
                 <RichTextRenderer
                   savedText={novelist?.about ?? ""}
-                  collapsedHeight={160}
+                  collapsedHeight={100}
                 />
               </S.AboutContainer>
             </ShouldRender>
@@ -642,17 +687,33 @@ export default function UserProfilePage({}) {
                   <MuseListItem key={muse.id} muse={muse}></MuseListItem>
                 ))}
               </S.MuseList>
-              <S.SeeMoreLink onClick={toMusesPage}>see all...</S.SeeMoreLink>
+              <S.SeeMoreLink onClick={toMusesPage}>
+                <span>
+                  See all characters
+                  <MdOutlineKeyboardDoubleArrowRight />
+                </span>
+              </S.SeeMoreLink>
             </ShouldRender>
-            <ShouldRender if={username !== "novelistworld"}>
-              <S.MusePillContainer>
-                <MusesPill
-                  title="FRIENDS"
-                  pillType="FRIENDS"
-                  novelist={novelist}
-                  expandable={true}
-                />
-              </S.MusePillContainer>
+            <ShouldRender
+              if={
+                username !== "novelistworld" ||
+                !!(novelist?.friends && novelist.friends.length > 0)
+              }
+            >
+              <S.SubText>{`Friends (${novelist?.friends.length})`}</S.SubText>
+
+              <S.FriendList ref={listRef} maxHeight={maxHeight}>
+                {novelist?.friends.map((friend) => (
+                  <ProfileFriendListItem key={friend.id} friend={friend} />
+                ))}
+              </S.FriendList>
+
+              {novelist?.friends !== undefined &&
+                novelist?.friends.length > 3 && (
+                  <S.SeeMoreLink onClick={toggleFriends}>
+                    <span>{showAllFriends ? "Show less" : "Show all"}</span>
+                  </S.SeeMoreLink>
+                )}
             </ShouldRender>
             <ShouldRender if={!!(storyBoards && storyBoards?.length > 0)}>
               <S.SubText>{`Stories (${storyBoards?.length})`}</S.SubText>

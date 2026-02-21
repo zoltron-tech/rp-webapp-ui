@@ -10,8 +10,11 @@ export const STANDARD_TIER: NovelistTier = {
 };
 
 export const EMPTY_FRIEND: Friend = {
+  firstName: "",
   id: "",
   image: "",
+  isVerified: false,
+  lastName: "",
   username: "",
 };
 

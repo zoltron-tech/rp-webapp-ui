@@ -1,6 +1,5 @@
-import { Separator } from "radix-ui";
-import { styled } from "styled-components";
-import { AvatarNew } from "../common/avatar-new";
+import { Collapsible, Separator } from "radix-ui";
+import { keyframes, styled } from "styled-components";
 
 export const PromptRoot = styled.article`
   background-color: var(--bg-2);
@@ -15,7 +14,7 @@ export const PromptRoot = styled.article`
 
   padding: 10px;
   padding-bottom: 20px;
-  margin-top: 40px;
+  margin-top: 20px;
   border: 0.85px solid var(--bg-6);
 
   .separator[data-orientation="horizontal"] {
@@ -187,15 +186,48 @@ export const PromptThreadsSeparator = styled(Separator.Root)`
   background-color: var(--bg-7);
 `;
 
+export const PromptThreadsSeparatorPartialFirst = styled(Separator.Root)`
+  height: 1px;
+  width: 10%;
+  margin-block: 10px;
+  background-color: var(--bg-7);
+`;
+
+export const PromptThreadsSeparatorPartialMid = styled(Separator.Root)`
+  height: 1px;
+  width: 20%;
+  margin-block: 10px;
+  background-color: var(--bg-7);
+`;
+
+export const PromptThreadsSeparatorPartialPlaceholder = styled(Separator.Root)`
+  height: 1px;
+  width: 10%;
+  margin-block: 10px;
+  background-color: var(--bg-7);
+`;
+
+export const PromptThreadsSeparatorPartialLast = styled(Separator.Root)`
+  height: 1px;
+  width: 70%;
+  margin-block: 10px;
+  background-color: var(--bg-7);
+`;
+
 const PromptThreadsToggle = styled.button`
   all: unset;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
   color: var(--text);
   font-size: var(--font-size);
   font-family: var(--font);
   font-weight: var(--font-weight-medium);
-  padding: 6px 32px;
-  border-radius: 8px;
+  padding: 6px 16px;
+  min-height: 32px;
+  border-radius: 5px;
   border: 1.5px solid var(--bg-7);
   background-color: var(--bg-4);
   white-space: nowrap;
@@ -203,20 +235,94 @@ const PromptThreadsToggle = styled.button`
   &:hover {
     background-color: var(--bg-3);
   }
+
   &:active {
     background-color: var(--bg-2);
   }
+
   &:focus {
     outline: 1.5px solid var(--accent);
     outline-offset: 2px;
   }
 `;
 
+const slideDown = keyframes`
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-collapsible-content-height);
+  }
+`;
+
+const slideUp = keyframes`
+  from {
+    height: var(--radix-collapsible-content-height);
+  }
+  to {
+    height: 0;
+  }
+`;
+
+const PromptThreadsContent = styled(Collapsible.Content)`
+  overflow: hidden;
+
+  &[data-state="open"] {
+    animation: ${slideDown} 220ms ease;
+  }
+
+  &[data-state="closed"] {
+    animation: ${slideUp} 220ms ease;
+  }
+`;
+
+export const ThreadsCounter = styled.span`
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: ${({ theme }: any) => theme.unreadBadge};
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semi-bold);
+  border-radius: 50%;
+  min-width: 20px;
+  height: 20px;
+  line-height: 1;
+`;
+
+export const PromptThreadsAvatars = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding-inline: 4px;
+  max-width: 20%;
+  gap: 0.25em;
+
+  .avatar {
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    border-radius: 50%;
+
+    @media screen and (max-width: 600px) {
+      width: 24px;
+      height: 24px;
+    }
+  }
+`;
+
 export const PromptThreads = Object.assign(
   {},
   {
+    Avatars: PromptThreadsAvatars,
+    Content: PromptThreadsContent,
     Header: PromptThreadsHeader,
-    Left: PromptThreadsSeparator,
+    LeftMid: PromptThreadsSeparatorPartialMid,
+    LeftPlaceholder: PromptThreadsSeparatorPartialPlaceholder,
+    LeftPost: PromptThreadsSeparatorPartialLast,
+    LeftPre: PromptThreadsSeparatorPartialFirst,
     Right: PromptThreadsSeparator,
     Root: PromptThreadsRoot,
     Toggle: PromptThreadsToggle,

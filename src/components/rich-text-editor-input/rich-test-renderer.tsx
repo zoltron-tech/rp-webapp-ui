@@ -127,7 +127,7 @@ export const RichTextRenderer = ({
 
       {isOverflowing && (
         <S.Toggle onClick={() => setExpanded((v) => !v)}>
-          {expanded ? "Show less..." : "See more..."}
+          {expanded ? "Show less..." : "Read more..."}
         </S.Toggle>
       )}
     </S.Container>

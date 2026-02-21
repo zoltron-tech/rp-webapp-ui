@@ -7,8 +7,18 @@ export const MuseContainer = styled(Container)`
   width: 95%;
   align-items: flex-start;
   padding-block: 5px;
-  border-radius: 5px;
+  border-radius: 0;
   background-color: var(--bg-3);
+
+  &:first-child {
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+  }
+
+  &:last-child {
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+  }
 
   &:hover {
     cursor: pointer;

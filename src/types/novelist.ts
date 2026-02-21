@@ -101,7 +101,10 @@ export type UpdateNovelistPayload = Omit<Partial<Novelist>, "firstName"> & {
 
 export interface Friend {
   id: string;
+  firstName: string;
+  lastName: string | null;
   username: string;
+  isVerified: boolean;
   image: string;
 }
 

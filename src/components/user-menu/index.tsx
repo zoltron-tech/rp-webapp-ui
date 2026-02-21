@@ -8,6 +8,7 @@ import {
   FcExport,
   FcLibrary,
   FcManager,
+  FcMusic,
   FcNews,
   FcServices,
   FcSupport,
@@ -108,6 +109,10 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
     routeToPage(ROUTES.Profile.View(novelist?.username || "").Muses);
   };
 
+  const toMusicPage = () => {
+    routeToPage(ROUTES.Profile.View(novelist?.username || "").Music);
+  };
+
   const toStoryBoardsPage = () => {
     routeToPage(ROUTES.Profile.View(novelist?.username || "").Storyboards);
   };
@@ -179,25 +184,29 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
             <S.List>
               <S.Element onClick={toUserProfile}>
                 <FcManager />
-                Your profile
+                My profile
               </S.Element>
               <S.Separator />
               <S.Element onClick={toNewsFeed}>
                 <FcNews />
-                Newsfeed
+                Posts by novelists
               </S.Element>
 
               <S.Element onClick={toMusesPage}>
                 <FcConferenceCall />
-                Your characters
+                My characters
+              </S.Element>
+              <S.Element onClick={toMusicPage}>
+                <FcMusic />
+                My music
               </S.Element>
               <S.Element onClick={toOutgoingThreadsPage}>
                 <FcCollaboration />
-                Your interactions
+                My interactions
               </S.Element>
               <S.Element onClick={toExplorePromptsPage}>
                 <FcVoicePresentation />
-                Explore interactions
+                Explore prompts
               </S.Element>
             </S.List>
             <S.Separator />

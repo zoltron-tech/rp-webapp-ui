@@ -103,8 +103,8 @@ export const Row = styled.label`
   }
 `;
 
-export const Username = styled.span`
-  font-size: 0.9rem;
+export const Name = styled.span`
+  font-size: var(--font-size-small);
   color: var(--text-primary);
 `;
 

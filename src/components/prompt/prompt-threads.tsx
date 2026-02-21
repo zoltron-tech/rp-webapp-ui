@@ -1,9 +1,11 @@
+import { ShouldRender } from "@novelist-world/ui";
 import classNames from "classnames";
 import { Collapsible } from "radix-ui";
 import { type FC, useMemo, useState } from "react";
 import { useGlobalState } from "@/context/store/stores";
 import type { PromptSource } from "@/types";
 import { Comment } from "../comment";
+import { AvatarNew } from "../common/avatar-new";
 import { museToSource, novelistToSource } from "../event-thread-input/helpers";
 import PromptInput from "../prompt-input";
 import { useGetComments } from "./helpers";
@@ -21,9 +23,12 @@ export const PromptThreads: FC = () => {
   const { comments, refetch: refetchComments } = useGetComments(promptId);
 
   const buttonText = useMemo(() => {
-    if (open) return "Hide Threads";
-    return "View Threads";
-  }, [open]);
+    return open
+      ? "Hide Threads"
+      : comments.length === 0
+        ? "Start new thread"
+        : "View Threads";
+  }, [open, comments.length]);
 
   const isOOCPost = promptSource.sourceType === "NOVELIST";
 
@@ -50,13 +55,42 @@ export const PromptThreads: FC = () => {
     <Collapsible.Root open={open} onOpenChange={setOpen} asChild>
       <S.PromptThreads.Root className={classNames({ open })}>
         <S.PromptThreads.Header>
-          <S.PromptThreads.Right />
+          <S.PromptThreads.LeftPre />
+          <ShouldRender if={comments.length > 0}>
+            <S.PromptThreads.Avatars>
+              {comments.slice(0, 2).map((comment) => {
+                const source = comment.source;
+                if (!source) return null;
+
+                return (
+                  <AvatarNew
+                    key={comment.id}
+                    src={source.image}
+                    alt={source.name}
+                    style={{ cursor: "default" }}
+                  />
+                );
+              })}
+            </S.PromptThreads.Avatars>
+            <ShouldRender if={comments.length === 1}>
+              <S.PromptThreads.LeftPlaceholder />
+            </ShouldRender>
+          </ShouldRender>
+          <ShouldRender if={comments.length === 0}>
+            <S.PromptThreads.LeftMid />
+          </ShouldRender>
+          <S.PromptThreads.LeftPost />
           <Collapsible.Trigger asChild>
-            <S.PromptThreads.Toggle>{buttonText}</S.PromptThreads.Toggle>
+            <S.PromptThreads.Toggle>
+              {buttonText}{" "}
+              <ShouldRender if={comments.length > 0}>
+                <S.ThreadsCounter>{comments.length}</S.ThreadsCounter>
+              </ShouldRender>
+            </S.PromptThreads.Toggle>
           </Collapsible.Trigger>
-          <S.PromptThreads.Left />
+          <S.PromptThreads.Right />
         </S.PromptThreads.Header>
-        <Collapsible.Content>
+        <S.PromptThreads.Content>
           {authState === "LOGGED_IN" && canInteract && (
             <PromptInput
               className="comment-action"
@@ -74,7 +108,7 @@ export const PromptThreads: FC = () => {
               hide-separator={!canInteract && index === 0}
             />
           ))}
-        </Collapsible.Content>
+        </S.PromptThreads.Content>
       </S.PromptThreads.Root>
     </Collapsible.Root>
   );

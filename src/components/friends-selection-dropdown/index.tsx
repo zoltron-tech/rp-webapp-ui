@@ -56,7 +56,7 @@ export const FriendSelectionDropdown = ({
         {selectedFriends.map((friend) => (
           <S.Chip key={friend.username}>
             <AvatarNew src={friend.image} alt={friend.username} />
-            {friend.username}
+            {friend.firstName}
             <S.RemoveButton onClick={() => removeFriend(friend.username)}>
               <FaXmark />
             </S.RemoveButton>
@@ -81,7 +81,9 @@ export const FriendSelectionDropdown = ({
             <S.Row key={friend.username}>
               <Flex>
                 <AvatarNew src={friend.image} alt={friend.username} />
-                <S.Username>{friend.username}</S.Username>
+                <S.Name>
+                  {friend.firstName} {friend.lastName}
+                </S.Name>
               </Flex>
               <Flex>
                 <Checkbox.Root

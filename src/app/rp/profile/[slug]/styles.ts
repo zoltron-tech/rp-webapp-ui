@@ -228,8 +228,8 @@ export const ActivitiesContainer = styled.div`
 
 export const AboutContainer = styled(Container)`
   width: 95%;
+  margin-top: 4px;
   border-radius: 5px;
-  min-height: 200px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -269,11 +269,19 @@ export const Toggle = styled.span`
 `;
 
 export const SubText = styled.div`
-  width: 85%;
   font-size: 20px;
-  font-weight: var(--font-weight-semi-bold);
-  margin-top: 25px;
+  margin-left: 28px;
+  align-self: flex-start;
+  font-weight: var(--font-weight-medium);
+  margin-top: 8px;
   margin-bottom: 4px;
+  border-bottom: 2px solid;
+  border-image: linear-gradient(
+    to right,
+    transparent,
+    var(--accent),
+    transparent
+  ) 1;
 
   @container (max-width: 1000px) {
     & {
@@ -283,34 +291,68 @@ export const SubText = styled.div`
 
   @container (max-width: 600px) {
     & {
+      margin-left: 18px;
       font-size: 16px;
     }
   }
 
   @container (max-width: 300px) {
     & {
+      margin-left: 14px;
       font-size: 12px;
     }
   }
 `;
 
 export const SeeMoreLink = styled.div`
-  color: var(--accent);
-  font-size: var(--font-size-h6);
-  margin-block: 10px;
-  font-style: italic;
-  font-weight: 700;
-  color: var(--accent);
+  width: 95%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-block: 16px;
 
-  &:hover {
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background-color: var(--bg-6);
+    opacity: 0.8;
+  }
+
+  span {
+    display: inline-flex; /* ✅ important */
+    align-items: center;  /* ✅ vertical alignment */
+    gap: 6px;             /* space between text and icon */
+
+    padding: 6px 16px;
+    border: 1px solid var(--accent);
+    border-radius: 50px;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    font-size: var(--font-size-h6);
+    font-weight: 700;
+    font-style: italic;
+    color: var(--accent);
+    white-space: nowrap;
+    transition: all 0.2s ease;
+
+    svg {
+      display: block;     /* prevents baseline misalignment */
+    }
+  }
+
+  span:hover {
     cursor: pointer;
     color: var(--accent-hover);
-        text-decoration: underline;
+    border-color: var(--accent-hover);
+    background: color-mix(in srgb, var(--accent) 20%, transparent);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--accent-hover) 50%, transparent);
   }
 
   @container (max-width: 600px) {
-    & {
-        font-size: var(--font-size-input);
+    span {
+      font-size: var(--font-size-input);
     }
   }
 `;
@@ -402,7 +444,7 @@ export const NameMobile = styled.div`
   ${NameFontStyles};
 
   color: var(--text);
-  margin-top: 60px;
+  margin-top: 50px;
   font-size: 36px;
   width: 100%;
   text-align: center;
@@ -419,18 +461,8 @@ export const UsernameContainer = styled.div`
   align-items: center;
   justify-content: center;
   gap: 0.2rem;
-  margin-block: 5px;
-  & > div {
-    text-align: center;
-    font-size: 24px;
-  }
+  margin-block: 2px;
   max-width: 100%;
-
-  @container profile-content (max-width: 800px) {
-    & > div {
-      font-size: 20px;
-    }
-  }
 `;
 
 export const NoteContainer = styled(Container)`
@@ -447,7 +479,7 @@ export const NoteContainer = styled(Container)`
   word-break: break-word;
   border-radius: 20px;
   border-top-left-radius: 0%;
-  padding-inline: 10px;
+  padding: 5px 10px;
   z-index: 100;
   font-size: var(--font-size);
 
@@ -455,8 +487,8 @@ export const NoteContainer = styled(Container)`
     & {
       font-size: var(--font-size-xsmall);
       width: unset;
-      right: 40px;
-      bottom: -50px;
+      right: 30px;
+      bottom: -40px;
     }
   }
 
@@ -470,7 +502,6 @@ export const NoteContainer = styled(Container)`
 export const MusePillContainer = styled.div`
   width: 95%;
   margin-inline: auto;
-  margin-top: 10px;
   margin-bottom: 20px;
   display: flex;
   flex-direction: column;
@@ -485,9 +516,28 @@ export const MusePillContainer = styled.div`
 
 export const MuseList = styled.div`
   width: 100%;
+  border-radius: 5px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: 10px;
+`;
+
+export const FriendList = styled.div<{ maxHeight: string }>`
+  width: 100%;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+  max-height: ${({ maxHeight }) => maxHeight ?? "0px"};
+`;
+
+export const MutualFriendsList = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.2rem; // space between avatars
 `;

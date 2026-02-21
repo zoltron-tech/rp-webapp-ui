@@ -19,11 +19,9 @@ export const LoadMore = ({
 
   return (
     <S.LoadMoreContainer>
-      {loadingMore ? (
-        <Spinner size={24} />
-      ) : (
-        <S.LoadMoreButton onClick={onLoadMore}>Load more</S.LoadMoreButton>
-      )}
+      <S.LoadMoreButton onClick={onLoadMore} disabled={loadingMore}>
+        {loadingMore ? <Spinner size={16} /> : "Load more..."}
+      </S.LoadMoreButton>
     </S.LoadMoreContainer>
   );
 };

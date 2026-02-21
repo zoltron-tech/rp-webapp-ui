@@ -1,6 +1,7 @@
 "use client";
 
-import { Flex } from "@novelist-world/ui";
+import { Flex, ShouldRender } from "@novelist-world/ui";
+import { VscVerifiedFilled } from "react-icons/vsc";
 import type { Friend } from "@/types";
 import { AvatarNew } from "../common/avatar-new";
 import * as S from "./styled";
@@ -19,7 +20,14 @@ export const FriendsList = ({ friends }: FriendsListProps) => {
             <S.Row key={friend.username}>
               <Flex>
                 <AvatarNew src={friend.image} alt={friend.username} />
-                <S.Username>{friend.username}</S.Username>
+                <Flex gap={"0.1rem"} justify="center">
+                  <S.Name>
+                    {friend.firstName} {friend.lastName}
+                  </S.Name>
+                  <ShouldRender if={friend?.isVerified === true}>
+                    <VscVerifiedFilled size={12} color="rgb(28, 123, 201)" />
+                  </ShouldRender>
+                </Flex>
               </Flex>
             </S.Row>
           );

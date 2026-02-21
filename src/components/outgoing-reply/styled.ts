@@ -234,6 +234,11 @@ export const UnreadBadge = styled.a`
   justify-content: center;
   z-index: 1;
   cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 0 10px ${({ theme }: any) => theme.unreadBadge};
+  }
 
   @media (max-width: 600px) {
     top: 10px;

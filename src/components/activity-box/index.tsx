@@ -89,27 +89,17 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
         </Flex>
         <S.StyledDate>{toFormattedDateFromUnix(activity.date)}</S.StyledDate>
       </S.HeaderContainer>
-      <Flex direction="column" align="center">
+      <Flex direction="column" align="center" style={{ paddingInline: "10px" }}>
         <ShouldRender
           if={["PROMPT", "COMMENT", "REPLY"].includes(
             activity.target.activityTargetType,
           )}
         >
-          {/* <S.PromptText>
-            {activity.target.title.length > 80
-              ? `${activity.target.title.slice(0, 80)} ...`
-              : activity.target.title}
-          </S.PromptText> */}
           <RichTextRenderer
             savedText={activity.target.title ?? ""}
             collapsedHeight={100}
             overlayHidden
           />
-          <ShouldRender if={activity.target.title.length > 80}>
-            <S.ViewMoreText onClick={(e) => handleCardClick(e, activity)}>
-              Read more...
-            </S.ViewMoreText>
-          </ShouldRender>
         </ShouldRender>
         <ShouldRender if={Boolean(mediaType)}>
           <S.CardWrapper>

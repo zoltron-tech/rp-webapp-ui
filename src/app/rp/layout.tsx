@@ -6,8 +6,9 @@ import type React from "react";
 import { type FC, type HTMLProps, useEffect, useMemo } from "react";
 import { useCookies } from "react-cookie";
 import { ThemeProvider } from "styled-components";
+import { GlobalMusicPlayer } from "@/components/global-music-player";
 import { ContentContainer, TopBar } from "@/components/layout";
-import { AuthProvider, UIContextProvider } from "@/context";
+import { AuthProvider, MusicProvider, UIContextProvider } from "@/context";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { THEME_DARK, THEME_LIGHT } from "@/theme";
@@ -42,6 +43,7 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
       data-accent={accent}
     >
       <TopBar />
+      <GlobalMusicPlayer />
       <ContentContainer>{children}</ContentContainer>
     </S.PageContainer>
   );
@@ -72,7 +74,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       >
         <AuthProvider>
           <UIContextProvider>
-            <PageContainer>{children}</PageContainer>
+            <MusicProvider>
+              <PageContainer>{children}</PageContainer>
+            </MusicProvider>
           </UIContextProvider>
         </AuthProvider>
       </StoreProvider>

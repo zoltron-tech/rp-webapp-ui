@@ -1,0 +1,60 @@
+import { Container } from "@novelist-world/ui";
+import { styled } from "styled-components";
+import { DEV_MODE_BORDER } from "@/theme";
+
+export const ProfileContainer = styled(Container)`
+  ${DEV_MODE_BORDER("blue")}
+  width: 95%;
+  align-items: flex-start;
+  padding-block: 5px;
+  border-radius: 0;
+  background-color: var(--bg-3);
+
+  &:first-child {
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+  }
+
+  &:last-child {
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+  }
+
+  &:hover {
+    cursor: pointer;
+    background-color: ${({ theme }: any) => theme.hoverGreyAlpha};
+  }
+
+  .avatar {
+    height: 50px;
+    width: 50px;
+  }
+`;
+
+export const Name = styled.div`
+  font-size: var(--font-size);
+  font-weight: 500;
+  color: var(--text);
+
+  @container (max-width: 400px) {
+    & {
+      font-size: 14px;
+    }
+  }
+
+  @container (max-width: 300px) {
+    & {
+      font-size: 10px;
+      text-align: end;
+    }
+  }
+
+  @container (max-width: 200px) {
+    font-size: 8px;
+    text-align: center;
+    width: calc(100% - 30px);
+    & .muse-last-name {
+      display: none;
+    }
+  }
+`;

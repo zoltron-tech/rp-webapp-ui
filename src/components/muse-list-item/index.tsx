@@ -2,6 +2,7 @@
 import { Flex } from "@novelist-world/ui";
 import classNames from "classnames";
 import type { FC } from "react";
+import { FiChevronRight } from "react-icons/fi";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { Muse } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
@@ -28,19 +29,23 @@ export const MuseListItem: FC<Props> = ({ muse, className, ...rest }) => {
       className={classNames(["muse-list-item", className])}
       {...rest}
     >
-      <Flex justify="flex-start">
-        <AvatarNew
-          src={muse?.image ?? null}
-          alt={muse?.firstName ?? "Muse"}
-          name="open"
-          onClick={onAvatarClick}
-        />
-        <S.MuseName>
-          {muse.firstName}{" "}
-          <span className={classNames(["muse-last-name"])}>
-            {muse.lastName}
-          </span>
-        </S.MuseName>
+      <Flex justify="space-between" align="center" style={{ width: "100%" }}>
+        <Flex justify="flex-start" align="center">
+          <AvatarNew
+            src={muse?.image ?? null}
+            alt={muse?.firstName ?? "Muse"}
+            name="open"
+            onClick={onAvatarClick}
+          />
+          <S.MuseName>
+            {muse.firstName}{" "}
+            <span className={classNames(["muse-last-name"])}>
+              {muse.lastName}
+            </span>
+          </S.MuseName>
+        </Flex>
+
+        <FiChevronRight size={20} color="gray" />
       </Flex>
     </S.MuseContainer>
   );

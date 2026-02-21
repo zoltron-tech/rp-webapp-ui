@@ -7,6 +7,14 @@ export const Container = styled.span<{
   font-weight: var(--font-weight-bold);
   cursor: pointer;
 
+  &.mini {
+    font-size: var(--font-size-small);
+  }
+
+  &.medium {
+      font-weight: var(--font-weight-medium);
+  }
+
   color: var(--text);
   &.primary {
     color:  ${({ accent }) =>

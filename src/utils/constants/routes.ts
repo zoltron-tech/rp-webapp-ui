@@ -44,6 +44,7 @@ export const ROUTES = {
     View: (username: string) => ({
       Index: `/rp/profile/${username}`,
       Muses: `/rp/profile/${username}/muses`,
+      Music: `/rp/profile/${username}/music`,
       Storyboards: `/rp/profile/${username}/storyboards`,
     }),
   },

@@ -73,7 +73,7 @@ const ERROR_MAP: Record<ErrorKey, ReactNode> = {
 };
 
 export default function EditMusicDataCard() {
-  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 20MB
+  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
   const novelist = useGlobalState("novelist");
   const id = useMusicState("id");
   const name = useMusicState("name");
@@ -109,7 +109,6 @@ export default function EditMusicDataCard() {
   const checkFileType = (file: File | undefined): boolean => {
     if (!file) return false;
 
-    console.log("Selected file type:", file.type);
     // File type validation
     if (!VALID_AUDIO_TYPES.includes(file.type)) {
       setMediaTypeError(API_MESSAGE.MediaError);
@@ -152,8 +151,6 @@ export default function EditMusicDataCard() {
         setError(API_MESSAGE.UncategorizedError);
         return;
       }
-
-      console.log("Audio uploaded to:", s3Url);
 
       // Track new temp upload
       setTempUpload(s3Url);
@@ -297,6 +294,7 @@ export default function EditMusicDataCard() {
       setError(API_MESSAGE.UncategorizedError);
       setLoading(false);
     }
+    setLoading(false);
   };
 
   const handleReset = useCallback(async () => {
@@ -347,16 +345,6 @@ export default function EditMusicDataCard() {
               <Spinner />
             </ShouldRender>
           </S.FormLabel>
-          {/* <S.Input
-            id="url"
-            type="url"
-            value={url}
-            onChange={handleUrlChange}
-            placeholder="https://example.com/song.mp3"
-            disabled={loading}
-            required
-          /> */}
-
           <S.DropZone
             $dragging={dragging}
             onClick={() => fileRef.current?.click()}

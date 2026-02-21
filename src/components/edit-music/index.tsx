@@ -34,7 +34,7 @@ export const EditMusicForm: FC<EditMusicCardProps> = ({ id }) => {
   useEffect(() => {
     if (authState !== "LOGGED_IN") return;
     fetchData();
-  }, [authState]);
+  }, [authState, fetchData]);
 
   return (
     <S.AddEditMusicPageRoot>

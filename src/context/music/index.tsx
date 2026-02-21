@@ -1,7 +1,7 @@
 "use client";
 
 import type { FC, ReactNode } from "react";
-import { createContext, useContext, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 
 interface MusicContextType {
   playingSongId: string | null;
@@ -144,6 +144,17 @@ export const MusicProvider: FC<{ children: ReactNode }> = ({ children }) => {
     setPlayingSongName(null);
     setProgress(0);
   };
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.removeEventListener("timeupdate", handleTimeUpdate);
+        audioRef.current.removeEventListener("ended", handleEnded);
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   return (
     <MusicContext.Provider

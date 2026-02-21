@@ -18,13 +18,12 @@ import { GiCheckMark, GiCrossMark } from "react-icons/gi";
 import { IoMdPersonAdd } from "react-icons/io";
 import { IoPersonRemove } from "react-icons/io5";
 import {
-  MdDoubleArrow,
   MdOutlineAppBlocking,
   MdOutlineKeyboardDoubleArrowRight,
 } from "react-icons/md";
 import { RiFlagFill } from "react-icons/ri";
 import { VscVerifiedFilled } from "react-icons/vsc";
-import { ContactSupportForm, MusesPill } from "@/components";
+import { ContactSupportForm } from "@/components";
 import ActivityBox from "@/components/activity-box";
 import { ShouldRender, Username } from "@/components/common";
 import { NovelistAvatar } from "@/components/common/novelist-avatar";
@@ -118,14 +117,14 @@ export default function UserProfilePage({}) {
         setMaxHeight(`${itemHeight * visibleCount}px`); // collapse to 3 items
       }
     }
-  }, [showAllFriends, novelist?.friends]);
+  }, [showAllFriends, novelist?.friends, listRef]);
 
   const mutualFriends = useMemo(() => {
     if (isCurrentUser) return [];
 
     const userFriendIds = new Set(userNovelist?.friends.map((f) => f.id));
     return novelist?.friends.filter((f) => userFriendIds.has(f.id));
-  }, [novelist, userNovelist]);
+  }, [novelist, userNovelist, isCurrentUser]);
 
   const toggleFriends = () => setShowAllFriends((prev) => !prev);
 
@@ -696,7 +695,7 @@ export default function UserProfilePage({}) {
             </ShouldRender>
             <ShouldRender
               if={
-                username !== "novelistworld" ||
+                username !== "novelistworld" &&
                 !!(novelist?.friends && novelist.friends.length > 0)
               }
             >

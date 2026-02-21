@@ -23,9 +23,6 @@ export const useUploadMedia = () => {
         return API_MESSAGE.MediaError;
       }
 
-      console.log("Presigned URL response:", presignedRes);
-      console.log("File to upload:", file);
-
       const { uploadUrl, fileUrl, method } = presignedRes;
 
       const s3Res = await fetch(uploadUrl, {

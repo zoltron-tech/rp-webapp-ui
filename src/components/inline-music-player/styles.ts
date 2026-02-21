@@ -67,13 +67,13 @@ export const ProgressBar = styled.div`
   background: var(--bg-6);
   border-radius: 4px;
   cursor: pointer;
-  overflow: hidden;
+  overflow-x: hidden;
   margin-top: 2px;
 
   transition: height 0.2s ease;
 
-    /* allow vertical glow bleed */
-  overflow: visible;
+  /* allow vertical glow bleed */
+  overflow-y: visible;
 `;
 
 export const ProgressFill = styled.div`

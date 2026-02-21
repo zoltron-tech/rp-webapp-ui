@@ -14,7 +14,7 @@ export const EMPTY_FRIEND: Friend = {
   id: "",
   image: "",
   isVerified: false,
-  lastName: "",
+  lastName: null,
   username: "",
 };
 

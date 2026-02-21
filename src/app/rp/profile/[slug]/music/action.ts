@@ -68,7 +68,6 @@ export const createSongAction = async (songData: {
   const jwt = await authenticateAndGetJWT();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/songs`;
 
-  console.log("Creating song with data:", songData);
   const response = await fetch(URL, {
     body: JSON.stringify(songData),
     cache: "no-store",

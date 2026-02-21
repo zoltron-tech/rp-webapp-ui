@@ -2,32 +2,21 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  MdOutlineCloudUpload,
-  MdOutlineKeyboardDoubleArrowRight,
-} from "react-icons/md";
+import { MdOutlineCloudUpload } from "react-icons/md";
 import { BreadCrumb } from "@/components/breadcrumb";
 import { MusicListItem } from "@/components/music-list-item/page";
 import { useGlobalState } from "@/context/store/stores";
-import { useCustomEvents, useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { Song } from "@/types/music";
-import { EVENTS } from "@/utils/constants/custom-events";
 import { getOwnMusicAction } from "./action";
 import * as S from "./styles";
 
 export default function SongsListPage({}) {
   const params = useParams();
-  const user = useGlobalState("user");
   const authState = useGlobalState("authState");
   const [songs, setSongs] = useState<Song[] | null>(null);
-  const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(
-    new Set(),
-  );
   const username = params?.slug as string;
   const { baseDataLoader } = usePageRouter();
-  const { on, off } = useCustomEvents(EVENTS.MUSE.base);
-  const { successToast } = useUIContext();
   const { routeToPage } = usePageRouter();
 
   const fetchMusic = async () => {
@@ -35,23 +24,11 @@ export default function SongsListPage({}) {
     setSongs(_songs);
   };
 
-  const toggleDescription = (songId: string) => {
-    setExpandedDescriptions((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(songId)) {
-        newSet.delete(songId);
-      } else {
-        newSet.add(songId);
-      }
-      return newSet;
-    });
-  };
-
   useEffect(() => {
     if (authState === "LOADING" || songs) return;
 
     fetchMusic();
-  }, [authState]);
+  }, [authState, fetchMusic]);
 
   return (
     <S.Container>

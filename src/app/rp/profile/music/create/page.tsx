@@ -24,7 +24,7 @@ export default function CreateMusicPage({}) {
       Logger.debug("pushing to home");
       routeToPage(ROUTES.Novelists);
     }
-  }, [authState]);
+  }, [authState, routeToPage]);
 
   return (
     <div>

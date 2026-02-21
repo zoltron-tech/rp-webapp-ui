@@ -30,7 +30,7 @@ export const ProfileFriendListItem: FC<Props> = ({
   if (!friend) return <></>;
 
   return (
-    <S.MuseContainer
+    <S.ProfileContainer
       onClick={onAvatarClick}
       className={classNames(["muse-list-item", className])}
       {...rest}
@@ -62,7 +62,7 @@ export const ProfileFriendListItem: FC<Props> = ({
 
         <FiChevronRight size={20} color="gray" />
       </Flex>
-    </S.MuseContainer>
+    </S.ProfileContainer>
   );
 };
 

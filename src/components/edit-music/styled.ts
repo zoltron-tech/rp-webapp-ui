@@ -265,7 +265,6 @@ export const AddTagSection = styled.div`
   align-items: center;
   gap: 8px;
   margin-top: 12px;
-  align-items: center;
 `;
 
 export const ButtonGroup = styled.div`

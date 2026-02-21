@@ -61,7 +61,10 @@ export const MusicListItem: FC<Props> = ({ song, className, ...rest }) => {
       <S.Card>
         <S.Info>
           <Flex>
-            <S.PlayButton onClick={togglePlay}>
+            <S.PlayButton
+              onClick={togglePlay}
+              aria-label={playing ? "Pause song" : "Play song"}
+            >
               {playing ? <FaPause /> : <FaPlay />}
             </S.PlayButton>
             <Flex direction="column">

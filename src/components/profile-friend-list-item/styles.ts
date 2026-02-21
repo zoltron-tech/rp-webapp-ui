@@ -2,7 +2,7 @@ import { Container } from "@novelist-world/ui";
 import { styled } from "styled-components";
 import { DEV_MODE_BORDER } from "@/theme";
 
-export const MuseContainer = styled(Container)`
+export const ProfileContainer = styled(Container)`
   ${DEV_MODE_BORDER("blue")}
   width: 95%;
   align-items: flex-start;

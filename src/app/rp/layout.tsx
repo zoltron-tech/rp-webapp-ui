@@ -63,6 +63,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           accent: "jade", // Default accent
           authState: "LOGGED_OUT",
           muses: [],
+          musicPlayer: {
+            currentTime: 0,
+            duration: 0,
+            playingSongId: null,
+            playingSongName: null,
+            playingSongUrl: null,
+            progress: 0,
+          },
           notifications: null,
           novelist: null,
           novelists: [],

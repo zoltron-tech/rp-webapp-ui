@@ -6,6 +6,7 @@ import {
   FcCollaboration,
   FcConferenceCall,
   FcExport,
+  FcFaq,
   FcLibrary,
   FcManager,
   FcMusic,
@@ -137,6 +138,10 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
     routeToPage(ROUTES.Terms);
   };
 
+  const toFAQsPage = () => {
+    routeToPage(ROUTES.FAQs);
+  };
+
   Logger.info("UserMenu rendered");
 
   if (!user) return <></>;
@@ -184,7 +189,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
             <S.List>
               <S.Element onClick={toUserProfile}>
                 <FcManager />
-                My profile
+                Your profile
               </S.Element>
               <S.Separator />
               <S.Element onClick={toNewsFeed}>
@@ -194,15 +199,15 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
 
               <S.Element onClick={toMusesPage}>
                 <FcConferenceCall />
-                My characters
+                Your characters
               </S.Element>
               <S.Element onClick={toMusicPage}>
                 <FcMusic />
-                My music
+                Your music box
               </S.Element>
               <S.Element onClick={toOutgoingThreadsPage}>
                 <FcCollaboration />
-                My interactions
+                Your interactions
               </S.Element>
               <S.Element onClick={toExplorePromptsPage}>
                 <FcVoicePresentation />
@@ -228,6 +233,10 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
             <S.Element onClick={toTermsAndConditionsPage}>
               <FcLibrary />
               Terms & conditions
+            </S.Element>
+            <S.Element onClick={toFAQsPage}>
+              <FcFaq />
+              FAQs
             </S.Element>
             <S.Element onClick={() => setShowContactSupportAlert(true)}>
               <FcSupport />

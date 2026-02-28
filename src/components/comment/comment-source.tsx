@@ -6,10 +6,7 @@ import { BsThreeDots } from "react-icons/bs";
 import { FaRegEdit } from "react-icons/fa";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { RiFlagFill } from "react-icons/ri";
-import {
-  deleteCommentAction,
-  reportPromptCommentReply,
-} from "@/app/rp/thread/actions";
+import { deleteCommentAction, reportAction } from "@/app/rp/thread/actions";
 import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents, useUIContext } from "@/hooks";
 import { API_MESSAGE } from "@/utils/constants";
@@ -45,7 +42,7 @@ export const CommentSource: FC = () => {
     source.sourceId === novelist?.id;
 
   const handleReportComment = useCallback(async () => {
-    const response = await reportPromptCommentReply(commentId, "", "COMMENT");
+    const response = await reportAction(commentId, "", "COMMENT");
     if (response?.message === API_MESSAGE.Success) {
       successToast(`Reported successfully`);
     } else {

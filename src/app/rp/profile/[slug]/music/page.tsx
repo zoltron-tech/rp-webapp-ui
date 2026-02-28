@@ -5,19 +5,31 @@ import { useEffect, useState } from "react";
 import { MdOutlineCloudUpload } from "react-icons/md";
 import { BreadCrumb } from "@/components/breadcrumb";
 import { MusicListItem } from "@/components/music-list-item/page";
-import { useGlobalState } from "@/context/store/stores";
+import { useMusicContext } from "@/context";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
+import { useCustomEvents } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { Song } from "@/types/music";
+import {
+  type CustomEventType,
+  EVENTS,
+  type ItemDeletedPayload,
+  type SongUpdatedPayload,
+} from "@/utils/constants/custom-events";
 import { getOwnMusicAction } from "./action";
 import * as S from "./styles";
 
 export default function SongsListPage({}) {
   const params = useParams();
   const authState = useGlobalState("authState");
+  const { playingSongId } = useGlobalState("musicPlayer");
+  const setGlobalState = useGlobalStoreSet();
   const [songs, setSongs] = useState<Song[] | null>(null);
   const username = params?.slug as string;
   const { baseDataLoader } = usePageRouter();
   const { routeToPage } = usePageRouter();
+  const { on, off } = useCustomEvents(EVENTS.SONG.base);
+  const { clearSong } = useMusicContext();
 
   const fetchMusic = async () => {
     const _songs = await baseDataLoader(() => getOwnMusicAction());
@@ -29,6 +41,73 @@ export default function SongsListPage({}) {
 
     fetchMusic();
   }, [authState, fetchMusic]);
+
+  useEffect(() => {
+    const handleSongDeleted = (e: CustomEventType<ItemDeletedPayload>) => {
+      const songId = e.detail.id;
+
+      setSongs((prev) => prev?.filter((song) => song.id !== songId) || []);
+
+      if (playingSongId === songId) {
+        clearSong();
+        setGlobalState({
+          musicPlayer: {
+            currentTime: 0,
+            duration: 0,
+            playingSongId: null,
+            playingSongName: null,
+            playingSongUrl: null,
+            progress: 0,
+          },
+        });
+      }
+    };
+
+    on(EVENTS.SONG.DELETED, handleSongDeleted);
+
+    return () => {
+      off(EVENTS.SONG.DELETED, handleSongDeleted);
+    };
+  }, [on, off, playingSongId, setGlobalState, clearSong]);
+
+  useEffect(() => {
+    const handleSongUpdated = (e: CustomEventType<SongUpdatedPayload>) => {
+      const songId = e.detail.id;
+      const songName = e.detail.name;
+      const songDescription = e.detail.description;
+      const songTags = e.detail.tags;
+
+      setSongs((prev) => {
+        if (!prev || prev.length === 0) return prev;
+        return prev.map((song) => {
+          if (song.id === songId) {
+            return {
+              ...song,
+              description: songDescription ?? song.description,
+              name: songName,
+              tags: songTags ?? song.tags,
+            };
+          }
+          return song;
+        });
+      });
+
+      if (playingSongId === songId) {
+        setGlobalState((prev) => ({
+          musicPlayer: {
+            ...prev.musicPlayer,
+            playingSongName: songName,
+          },
+        }));
+      }
+    };
+
+    on(EVENTS.SONG.UPDATED, handleSongUpdated);
+
+    return () => {
+      off(EVENTS.SONG.UPDATED, handleSongUpdated);
+    };
+  }, [on, off, playingSongId, setGlobalState]);
 
   return (
     <S.Container>

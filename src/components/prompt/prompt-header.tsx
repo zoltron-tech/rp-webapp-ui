@@ -8,10 +8,7 @@ import { FaRegTrashCan } from "react-icons/fa6";
 import { IoIosShareAlt } from "react-icons/io";
 import { PiDotsThreeCircleFill, PiDotsThreeOutlineFill } from "react-icons/pi";
 import { RiFlagFill } from "react-icons/ri";
-import {
-  deletePromptAction,
-  reportPromptCommentReply,
-} from "@/app/rp/thread/actions";
+import { deletePromptAction, reportAction } from "@/app/rp/thread/actions";
 import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -64,7 +61,7 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
   const handleReportPrompt = useCallback(async () => {
     if (!promptId) return;
 
-    const response = await reportPromptCommentReply(promptId, "", "PROMPT");
+    const response = await reportAction(promptId, "", "PROMPT");
     if (response?.message === API_MESSAGE.Success) {
       successToast(`Reported successfully`);
     } else {

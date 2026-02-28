@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { getAllMusesByUsernameAction } from "@/app/rp/muse/actions";
 import { BreadCrumb } from "@/components/breadcrumb";
 import { ShouldRender } from "@/components/common";
@@ -16,7 +16,6 @@ import {
   EVENTS,
   type MuseDeletedPayload,
 } from "@/utils/constants/custom-events";
-import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styles";
 
 export default function MusesListPage({}) {

@@ -12,12 +12,6 @@ export const FormRoot = styled(RadixForm.Root)`
   margin-top: 20px;
 `;
 
-export const FormField = styled(RadixForm.Field)`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-`;
-
 export const FormControl = styled(RadixForm.Control)`
   width: 100%;
   min-height: 200px;

@@ -465,7 +465,7 @@ export const UsernameContainer = styled.div`
   max-width: 100%;
 `;
 
-export const NoteContainer = styled(Container)`
+export const NoteContainer = styled.div`
   width: unset;
   right: 50px;
   bottom: -80px;
@@ -478,10 +478,36 @@ export const NoteContainer = styled(Container)`
   opacity: 95%;
   word-break: break-word;
   border-radius: 20px;
-  border-top-left-radius: 0%;
   padding: 5px 10px;
   z-index: 100;
   font-size: var(--font-size);
+  position: relative;
+  overflow: visible;
+
+  /* Thought bubble tail */
+  &::before {
+    content: "";
+    position: absolute;
+    top: -20px;
+    left: 18px;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    border-left: 20px solid var(--accent-4);
+    border-bottom: 20px solid var(--accent-4);
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: -12px;
+    left: 5px;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    border-left: 12px solid var(--accent-3);
+    border-bottom: 12px solid var(--accent-3);
+  }
 
   @container profile-content (max-width: 800px) {
     & {
@@ -489,6 +515,22 @@ export const NoteContainer = styled(Container)`
       width: unset;
       right: 30px;
       bottom: -40px;
+    }
+
+    &::before {
+      top: -14px;
+      left: 12px;
+      border-radius: 50%;
+      border-left: 12px solid var(--accent-4);
+      border-bottom: 12px solid var(--accent-4);
+    }
+
+    &::after {
+      top: -10px;
+      left: 4px;
+      border-radius: 50%; 
+      border-left: 8px solid var(--accent-3);
+      border-bottom: 8px solid var(--accent-3);
     }
   }
 

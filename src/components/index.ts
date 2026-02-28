@@ -5,4 +5,5 @@ export * from "./novelist-carousel";
 export * from "./profile-card";
 export * from "./search";
 export * from "./theme-toggle";
+export * from "./update-song-info";
 export * from "./user-menu";

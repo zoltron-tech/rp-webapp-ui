@@ -9,10 +9,12 @@ import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styles";
 
 export const GlobalMusicPlayer: FC = () => {
+  // Get music state directly from global store
+  const musicState = useGlobalState("musicPlayer");
+  const { playingSongId, playingSongName, progress } = musicState;
+
+  // Get music control functions from context
   const {
-    playingSongId,
-    playingSongName,
-    progress,
     isAnyPlaying,
     togglePlayPause,
     seek,

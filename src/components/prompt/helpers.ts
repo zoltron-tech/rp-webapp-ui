@@ -3,9 +3,9 @@ import { getPropmptCommentsAction } from "@/app/rp/prompt/actions";
 import { useCustomEvents } from "@/hooks";
 import type { Comment } from "@/types";
 import {
-  type CommentDeletedPayload,
   type CustomEventType,
   EVENTS,
+  type ItemDeletedPayload,
 } from "@/utils/constants/custom-events";
 
 export const useGetComments = (promptId: string, skipAutoFetch = false) => {
@@ -33,7 +33,7 @@ export const useGetComments = (promptId: string, skipAutoFetch = false) => {
 
   useEffect(() => {
     const handleDeleteComment = (
-      event: CustomEventType<CommentDeletedPayload>,
+      event: CustomEventType<ItemDeletedPayload>,
     ) => {
       const commentId = event.detail.id;
 

@@ -7,6 +7,15 @@ export type AuthState =
   | "LOADING"
   | "UNINITIALIZED";
 
+export interface MusicPlayerState {
+  playingSongId: string | null;
+  playingSongUrl: string | null;
+  playingSongName: string | null;
+  progress: number;
+  currentTime: number;
+  duration: number;
+}
+
 export interface StoreState {
   novelists: Novelist[];
   muses: Muse[];
@@ -18,4 +27,5 @@ export interface StoreState {
   accent: AccentValue;
   searchBarExpanded: Boolean;
   notifications: NovelistWorldNotification[] | null;
+  musicPlayer: MusicPlayerState;
 }

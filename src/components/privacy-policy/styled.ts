@@ -206,6 +206,52 @@ export const AccordionContentInner = styled.div`
       }
     }
   }
+
+  ol {
+    margin: 10px 0;
+    padding-left: 20px;
+    counter-reset: list-counter;
+    list-style: none;
+
+    li {
+      margin: 8px 0;
+      counter-increment: list-counter;
+      position: relative;
+      padding-left: 10px;
+
+      &::before {
+        content: counter(list-counter) ".";
+        font-weight: var(--font-weight-bold);
+        color: var(--accent);
+        position: absolute;
+        left: -20px;
+      }
+    }
+  }
+
+  strong {
+    font-weight: var(--font-weight-semi-bold);
+  }
+
+  em {
+    font-style: italic;
+  }
+`;
+
+export const FAQImage = styled.img`
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  margin-top: 12px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--bg-6);
+  cursor: zoom-in;
+  display: block;
+
+  &:hover {
+    border-color: var(--accent);
+  }
 `;
 
 export const Header = styled.div`

@@ -94,7 +94,6 @@ export const updateSongAction = async (
   songData: {
     name: string;
     description: string | null;
-    url: string;
     tags: Array<{ label: string; color: string }>;
   },
 ): Promise<Song | typeof API_MESSAGE.UncategorizedError> => {
@@ -120,4 +119,30 @@ export const updateSongAction = async (
   const song: Song = await response.json();
 
   return song;
+};
+
+export const deleteSongAction = async (
+  id: string,
+): Promise<{ message: string } | null> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/songs/${id}`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "DELETE",
+  });
+
+  Logger.debug("deleteSongAction", response.status);
+
+  if (response.status === 404) {
+    return null;
+  } else if (!response.ok) {
+    return null;
+  }
+
+  return { message: API_MESSAGE.Success };
 };

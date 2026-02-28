@@ -51,7 +51,7 @@ import {
   deleteReplyAction,
   getCommentAction,
   getRepliesAction,
-  reportPromptCommentReply,
+  reportAction,
 } from "../actions";
 import * as S from "./styles";
 
@@ -440,11 +440,7 @@ export default function ThreadPage({}) {
   const handleReportPrompt = async () => {
     if (!comment?.prompt?.id) return;
 
-    const response = await reportPromptCommentReply(
-      comment?.prompt?.id,
-      "",
-      "PROMPT",
-    );
+    const response = await reportAction(comment?.prompt?.id, "", "PROMPT");
     if (response?.message === API_MESSAGE.Success) {
       successToast(`Reported successfully`);
     } else {
@@ -455,11 +451,7 @@ export default function ThreadPage({}) {
   const handleReportReply = async () => {
     if (!selectedReplyId || selectedReplyId === "") return;
 
-    const response = await reportPromptCommentReply(
-      selectedReplyId,
-      "",
-      "REPLY",
-    );
+    const response = await reportAction(selectedReplyId, "", "REPLY");
     if (response?.message === API_MESSAGE.Success) {
       setSelectedReplyId("");
       successToast(`Reported successfully`);
@@ -509,7 +501,7 @@ export default function ThreadPage({}) {
   const handleReportComment = async () => {
     if (!comment?.id) return;
 
-    const response = await reportPromptCommentReply(comment?.id, "", "COMMENT");
+    const response = await reportAction(comment?.id, "", "COMMENT");
     if (response?.message === API_MESSAGE.Success) {
       successToast(`Reported successfully`);
     } else {

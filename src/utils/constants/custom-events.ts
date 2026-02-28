@@ -1,3 +1,5 @@
+import type { Tag } from "@/types/common";
+
 export const EVENTS = {
   COMMENT: {
     base: "comment",
@@ -25,6 +27,11 @@ export const EVENTS = {
     DELETED: "deleted",
     UPDATED: "updated",
   },
+  SONG: {
+    base: "song",
+    DELETED: "deleted",
+    UPDATED: "updated",
+  },
 } as const;
 
 export type MuseDeletedPayload = {
@@ -32,7 +39,7 @@ export type MuseDeletedPayload = {
   name: string;
 };
 
-export type CommentDeletedPayload = {
+export type ItemDeletedPayload = {
   id: string;
 };
 
@@ -47,4 +54,11 @@ export type PromptCommentReplyUpdatedPayload = {
 
 export type PrivacyCustomAppliedPayload = {
   sharedWith: string[];
+};
+
+export type SongUpdatedPayload = {
+  id: string;
+  name: string;
+  description?: string | null;
+  tags?: Tag[];
 };

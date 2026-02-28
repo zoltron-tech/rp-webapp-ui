@@ -13,7 +13,7 @@ import { Logger } from "@/utils/services";
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
 
-export const reportPromptCommentReply = async (
+export const reportAction = async (
   replyId: string,
   reason: string,
   targetType: string,

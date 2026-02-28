@@ -9,6 +9,12 @@ export const AddEditMusicPageRoot = styled.div`
   width: 100%;
   max-width: 800px;
   margin: 0 auto;
+  margin-top: 40px;
+  
+  @media (max-width: 600px) {
+    padding: unset;
+    margin-top: 0px;
+  }
 `;
 
 export const FormContainer = styled.div`
@@ -17,6 +23,10 @@ export const FormContainer = styled.div`
   border: 1px solid var(--bg-6);
   border-radius: 8px;
   padding: 24px;
+
+    @media (max-width: 600px) {
+      border-radius: unset;
+  }
 `;
 
 export const FormSection = styled.div`

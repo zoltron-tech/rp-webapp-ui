@@ -1,4 +1,4 @@
-import { keyframes, styled } from "styled-components";
+import { css, keyframes, styled } from "styled-components";
 import { DEV_MODE_BORDER, Z_INDEX } from "@/theme";
 
 const scrollText = keyframes`
@@ -13,10 +13,21 @@ const scrollText = keyframes`
 export const CardWrapper = styled.div<{
   $isPlaying?: boolean;
   $hasTags?: boolean;
+  $hasDescription?: boolean;
 }>`
   ${DEV_MODE_BORDER("blue")}
   width: 95%;
-  min-height: ${(props) => (props.$isPlaying && props.$hasTags ? "90px" : props.$hasTags ? "70px" : "60px")};
+  min-height: ${(p) => {
+    const base = 60;
+    const height =
+      base +
+      (p.$isPlaying ? 15 : 0) +
+      (p.$hasTags ? 15 : 0) +
+      (p.$hasDescription ? 25 : 0) +
+      (p.$isPlaying && p.$hasTags && p.$hasDescription ? 5 : 0);
+
+    return `${height}px`;
+  }};
   height: auto;
   padding-inline: 10px;
   align-items: flex-start;
@@ -151,30 +162,36 @@ export const Info = styled.div`
   }
 `;
 
-export const CopyButton = styled.button`
+export const HeaderDropdownMenuContainer = styled.div`
+
   display: flex;
+  gap: 6px;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+`;
+
+export const AuthorPill = styled.div`
+  display: flex;
+  background-color: var(--accent);
+  white-space: nowrap;
+  margin-inline: 4px;
+  padding: 2px 4px;
+  border-radius: 999px;
   align-items: center;
-  justify-content: center;
+  gap: 4px;
+    cursor: pointer;
 
-  background: transparent;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-
-  color: var(--accent);
-  font-size: 12px;
-  opacity: 0.8;
-
-  transition: opacity 0.2s ease, transform 0.15s ease;
-
-  &:hover {
-    opacity: 1;
-    transform: scale(1.1);
+  .avatar {
+    height: 14px;
+    width: 14px;
   }
+`;
 
-  &:active {
-    transform: scale(0.95);
-  }
+export const AuthorName = styled.div`
+  font-size: var(--font-size-xsmall);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text);
 `;
 
 /**
@@ -184,27 +201,63 @@ export const SongNameWrapper = styled.div`
   overflow: hidden;
   white-space: nowrap;
   width: 100%;
+
+  @media (max-width: 400px) {
+    width: 70%;
+  }
 `;
 
 /**
  * Animated inner text
  */
-export const SongName = styled.div<{ $isPlaying?: boolean }>`
+export const SongName = styled.div<{
+  $isPlaying?: boolean;
+  $isOverflow?: boolean;
+}>`
   display: inline-block;
   font-size: var(--font-size);
   font-weight: var(--font-weight-semi-bold);
   white-space: nowrap;
   padding-right: 2rem;
   color: var(--text-secondary);
+  position: relative;
+  
+  ${(props) =>
+    props.$isOverflow
+      ? css`
+          &::after {
+            content: "...";
+            position: absolute;
+            right: 0;
+            background: inherit;
+            padding-left: 4px;
+          }
+        `
+      : ""}
+  
+  ${(props) =>
+    props.$isOverflow && props.$isPlaying
+      ? css`
+          animation: ${scrollText} 10s linear infinite;
+          
+          &::after {
+            display: none;
+          }
+        `
+      : ""}
 `;
 
 export const SongDescription = styled.div`
   font-size: var(--font-size-small);
   color: var(--text-secondary);
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  width: 100%;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal;
+  word-break: break-word;
+  min-width: 200px;
+  width: 70%;
 `;
 
 export const Audio = styled.audio`

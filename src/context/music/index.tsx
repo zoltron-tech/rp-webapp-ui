@@ -47,6 +47,40 @@ export const MusicProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const store = useContext(StoreContext<StoreState>("global-store"));
   const getStoreState = useCallback(() => store.get().musicPlayer, [store]);
 
+  const handleTimeUpdate = useCallback(() => {
+    if (!audioRef.current) return;
+
+    const { currentTime, duration: dur } = audioRef.current;
+    if (!dur) return;
+
+    const newProgress = (currentTime / dur) * 100;
+    const currentState = getStoreState();
+
+    setStoreState({
+      musicPlayer: {
+        currentTime,
+        duration: dur,
+        playingSongId: currentState.playingSongId,
+        playingSongName: currentState.playingSongName,
+        playingSongUrl: currentState.playingSongUrl,
+        progress: newProgress,
+      },
+    });
+  }, [setStoreState, getStoreState]);
+
+  const handleEnded = useCallback(() => {
+    setStoreState({
+      musicPlayer: {
+        currentTime: 0,
+        duration: 0,
+        playingSongId: null,
+        playingSongName: null,
+        playingSongUrl: null,
+        progress: 0,
+      },
+    });
+  }, [setStoreState]);
+
   const playSong = useCallback(
     async (songId: string, songUrl: string, songName: string) => {
       if (!audioRef.current) {
@@ -83,7 +117,7 @@ export const MusicProvider: FC<{ children: ReactNode }> = ({ children }) => {
         },
       });
     },
-    [setStoreState, getStoreState],
+    [setStoreState, getStoreState, handleTimeUpdate, handleEnded],
   );
 
   const pauseSong = useCallback(() => {
@@ -166,52 +200,6 @@ export const MusicProvider: FC<{ children: ReactNode }> = ({ children }) => {
       audioRef.current.currentTime = percentage * audioRef.current.duration;
     }
   }, []);
-
-  const handleTimeUpdate = useCallback(() => {
-    if (!audioRef.current) return;
-
-    const { currentTime, duration: dur } = audioRef.current;
-    if (!dur) return;
-
-    const newProgress = (currentTime / dur) * 100;
-    const currentState = getStoreState();
-
-    setStoreState({
-      musicPlayer: {
-        currentTime,
-        duration: dur,
-        playingSongId: currentState.playingSongId,
-        playingSongName: currentState.playingSongName,
-        playingSongUrl: currentState.playingSongUrl,
-        progress: newProgress,
-      },
-    });
-  }, [setStoreState, getStoreState]);
-
-  const handleEnded = useCallback(() => {
-    setStoreState({
-      musicPlayer: {
-        currentTime: 0,
-        duration: 0,
-        playingSongId: null,
-        playingSongName: null,
-        playingSongUrl: null,
-        progress: 0,
-      },
-    });
-  }, [setStoreState]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    return () => {
-      if (audio) {
-        audio.removeEventListener("timeupdate", handleTimeUpdate);
-        audio.removeEventListener("ended", handleEnded);
-        audio.pause();
-        audioRef.current = null;
-      }
-    };
-  }, [handleTimeUpdate, handleEnded]);
 
   // Memoize context value to prevent unnecessary re-renders
   const contextValue = useMemo(

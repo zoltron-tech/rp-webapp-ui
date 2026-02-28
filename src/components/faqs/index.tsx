@@ -3,7 +3,9 @@
 import { useEffect } from "react";
 import { FaQuestion } from "react-icons/fa6";
 import CharSelectScreen from "@/assets/images/FAQs/char-select.png";
+import EditProfileImage from "@/assets/images/FAQs/edit-profile.png";
 import UserMenuCharsImage from "@/assets/images/FAQs/user-menu-chars.png";
+import UserMenuEditProfileImage from "@/assets/images/FAQs/user-menu-edit-profile.png";
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { usePageRouter } from "@/hooks/use-page-router";
 import * as S from "./../privacy-policy/styled";
@@ -110,6 +112,15 @@ export const FAQs = () => {
                 </li>
                 <li>
                   Click on <strong>'Edit Profile'</strong> option.
+                  <AppImageViewer
+                    src={UserMenuEditProfileImage.src}
+                    alt="User menu with Edit Profile option"
+                  >
+                    <S.FAQImage
+                      src={UserMenuEditProfileImage.src}
+                      alt="User menu with Edit Profile option"
+                    />
+                  </AppImageViewer>
                 </li>
                 <li>
                   You can change first name and last name in the input fields.
@@ -117,6 +128,15 @@ export const FAQs = () => {
                 <li>
                   To change avatar, click on the avatar and upload the desired
                   image that you want to set as your avatar.
+                  <AppImageViewer
+                    src={EditProfileImage.src}
+                    alt="Edit Profile screen with input fields for first name, last name, avatar, and bio"
+                  >
+                    <S.FAQImage
+                      src={EditProfileImage.src}
+                      alt="Edit Profile screen with input fields for first name, last name, avatar, and bio"
+                    />
+                  </AppImageViewer>
                 </li>
                 <li>
                   <strong>Note:</strong> This is what appears next to your

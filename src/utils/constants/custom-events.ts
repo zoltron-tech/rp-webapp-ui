@@ -1,3 +1,5 @@
+import type { Tag } from "@/types/common";
+
 export const EVENTS = {
   COMMENT: {
     base: "comment",
@@ -58,5 +60,5 @@ export type SongUpdatedPayload = {
   id: string;
   name: string;
   description?: string | null;
-  tags?: any[];
+  tags?: Tag[];
 };

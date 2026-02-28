@@ -170,7 +170,7 @@ export const UpdateSongInfoForm: FC<UpdateSongInfoProps> = ({
                 value={newTagLabel}
                 onChange={(e) => setNewTagLabel(e.target.value)}
                 placeholder="Add new tag"
-                onKeyPress={(e) => {
+                onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
                     handleAddTag();

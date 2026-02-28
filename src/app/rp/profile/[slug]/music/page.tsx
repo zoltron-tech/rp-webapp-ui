@@ -50,16 +50,6 @@ export default function SongsListPage({}) {
 
       if (playingSongId === songId) {
         clearSong();
-        setGlobalState({
-          musicPlayer: {
-            currentTime: 0,
-            duration: 0,
-            playingSongId: null,
-            playingSongName: null,
-            playingSongUrl: null,
-            progress: 0,
-          },
-        });
       }
     };
 

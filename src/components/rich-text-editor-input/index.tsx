@@ -999,7 +999,6 @@ export const RichTextEditor = ({
                   }
                   return null;
                 })()}
-                <RiArrowDropDownLine />
               </S.AlignmentSelectorButton>
             </S.FontSelectRoot>
 

@@ -415,11 +415,23 @@ export const RichTextEditor = ({
 
       const editor = editorRef.current;
       if (editor) {
-        editor.querySelectorAll('font[size="7"]').forEach((node) => {
-          const el = node as HTMLElement;
-          el.removeAttribute("size");
-          el.style.fontSize = fontSize;
-        });
+        const selection = window.getSelection();
+        const range =
+          selection && selection.rangeCount > 0
+            ? selection.getRangeAt(0)
+            : null;
+
+        if (range) {
+          editor.querySelectorAll('font[size="7"]').forEach((node) => {
+            // Only adjust nodes that intersect with the current selection/range
+            if (!range.intersectsNode(node)) {
+              return;
+            }
+            const el = node as HTMLElement;
+            el.removeAttribute("size");
+            el.style.fontSize = fontSize;
+          });
+        }
       }
 
       pendingFontSizeRef.current = fontSize;

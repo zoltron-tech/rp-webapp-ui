@@ -80,6 +80,13 @@ export const RichTextEditor = ({
   const [showBulletDropdown, setShowBulletDropdown] = useState<boolean>(false);
   const [showQuotationDropdown, setShowQuotationDropdown] =
     useState<boolean>(false);
+  const [quotationDropdownPlacement, setQuotationDropdownPlacement] = useState<{
+    alignRight: boolean;
+    openUpward: boolean;
+  }>({
+    alignRight: false,
+    openUpward: false,
+  });
   const [showAlignmentDropdown, setShowAlignmentDropdown] =
     useState<boolean>(false);
 
@@ -448,7 +455,7 @@ export const RichTextEditor = ({
     (listTag: "UL" | "OL", styleType: string) => {
       const list = getClosestListElement(listTag);
       if (!list) return;
-      list.style.listStyleType = "none";
+      list.style.listStyleType = styleType;
       list.setAttribute("data-list-style-type", styleType);
     },
     [getClosestListElement],
@@ -900,6 +907,57 @@ export const RichTextEditor = ({
     }
   }, [showQuotationDropdown]);
 
+  // Position quotation dropdown based on available viewport space
+  useEffect(() => {
+    if (!showQuotationDropdown) return;
+
+    const updateQuotationDropdownPlacement = () => {
+      const trigger = quotationDropdownRef.current;
+      const panel = quotationDropdownPanelRef.current;
+      if (!trigger || !panel) return;
+
+      const spacing = 8;
+      const viewportPadding = 12;
+
+      const triggerRect = trigger.getBoundingClientRect();
+      const panelRect = panel.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      const openUpward =
+        triggerRect.bottom + spacing + panelRect.height >
+          viewportHeight - viewportPadding &&
+        triggerRect.top - spacing - panelRect.height > viewportPadding;
+
+      const alignRight =
+        triggerRect.left - 40 + panelRect.width >
+        viewportWidth - viewportPadding;
+
+      setQuotationDropdownPlacement((prev) => {
+        if (prev.alignRight === alignRight && prev.openUpward === openUpward) {
+          return prev;
+        }
+
+        return { alignRight, openUpward };
+      });
+    };
+
+    const frameId = requestAnimationFrame(updateQuotationDropdownPlacement);
+
+    window.addEventListener("resize", updateQuotationDropdownPlacement);
+    window.addEventListener("scroll", updateQuotationDropdownPlacement, true);
+
+    return () => {
+      cancelAnimationFrame(frameId);
+      window.removeEventListener("resize", updateQuotationDropdownPlacement);
+      window.removeEventListener(
+        "scroll",
+        updateQuotationDropdownPlacement,
+        true,
+      );
+    };
+  }, [showQuotationDropdown]);
+
   // Handle click outside alignment dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -1027,155 +1085,161 @@ export const RichTextEditor = ({
 
           <S.Divider />
 
-          <S.ToggleGroup type="multiple">
-            {LIST_BUTTONS.map((btn) => {
-              const Icon = btn.icon;
-              return (
-                <Fragment key={btn.id}>
-                  <S.ToggleItem
-                    value={btn.id}
-                    $active={activeLists[btn.id]}
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() =>
-                      handleListToggle(
-                        btn.command,
-                        btn.id as "unordered" | "ordered",
-                      )
-                    }
-                    title={btn.title}
-                  >
-                    <Icon size={20} />
-                  </S.ToggleItem>
+          <S.ListAndQuotationRow>
+            <S.ToggleGroup type="multiple">
+              {LIST_BUTTONS.map((btn) => {
+                const Icon = btn.icon;
+                return (
+                  <Fragment key={btn.id}>
+                    <S.ToggleItem
+                      value={btn.id}
+                      $active={activeLists[btn.id]}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() =>
+                        handleListToggle(
+                          btn.command,
+                          btn.id as "unordered" | "ordered",
+                        )
+                      }
+                      title={btn.title}
+                    >
+                      <Icon size={20} />
+                    </S.ToggleItem>
 
-                  {btn.id === "unordered" && activeLists[btn.id] && (
-                    <S.BulletDropdownContainer ref={bulletDropdownRef}>
-                      <S.FontSelectRoot>
-                        <RiArrowDropDownLine className="font-select-dropdown-icon" />
-                        <S.BulletSelectorButton
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setShowBulletDropdown(!showBulletDropdown);
-                          }}
-                          onMouseDown={(e) => e.preventDefault()}
-                        >
-                          {UNORDERED_LIST_STYLES.find(
-                            (s) => s.value === currentUnorderedListStyle,
-                          )?.label || "•"}
-                        </S.BulletSelectorButton>
-                      </S.FontSelectRoot>
-
-                      {showBulletDropdown && (
-                        <S.BulletDropdownPanel ref={bulletDropdownPanelRef}>
-                          {Object.entries(BULLET_POINT_CATEGORIES).map(
-                            ([key, category]) => (
-                              <S.BulletCategoryGroup key={key}>
-                                <S.BulletCategoryTitle>
-                                  {category.name}
-                                </S.BulletCategoryTitle>
-                                <S.BulletGrid>
-                                  {category.symbols.map((symbol) => (
-                                    <S.BulletGridItem
-                                      key={symbol.value}
-                                      type="button"
-                                      data-value={symbol.value}
-                                      $selected={
-                                        currentUnorderedListStyle ===
-                                        symbol.value
-                                      }
-                                      onClick={() => {
-                                        handleUnorderedListStyleChange(
-                                          symbol.value,
-                                        );
-                                        setShowBulletDropdown(false);
-                                      }}
-                                      onMouseDown={(e) => e.preventDefault()}
-                                      title={symbol.label}
-                                    >
-                                      {symbol.label}
-                                    </S.BulletGridItem>
-                                  ))}
-                                </S.BulletGrid>
-                              </S.BulletCategoryGroup>
-                            ),
-                          )}
-                        </S.BulletDropdownPanel>
-                      )}
-                    </S.BulletDropdownContainer>
-                  )}
-
-                  {btn.id === "ordered" && activeLists[btn.id] && (
-                    <S.FontSelectRoot>
-                      <RiArrowDropDownLine className="font-select-dropdown-icon" />
-                      <S.FontSelect
-                        name="ordered-list-style-select"
-                        value={currentOrderedListStyle}
-                        onChange={(e) =>
-                          handleOrderedListStyleChange(e.target.value)
-                        }
-                      >
-                        {ORDERED_LIST_STYLES.map((item) => (
-                          <option key={item.value} value={item.value}>
-                            {item.label}
-                          </option>
-                        ))}
-                      </S.FontSelect>
-                    </S.FontSelectRoot>
-                  )}
-                </Fragment>
-              );
-            })}
-          </S.ToggleGroup>
-
-          <S.Divider />
-
-          {/* Quotation Mark Selector */}
-          <S.QuotationDropdownContainer ref={quotationDropdownRef}>
-            <S.FontSelectRoot>
-              <RiArrowDropDownLine className="font-select-dropdown-icon" />
-              <S.QuotationSelectorButton
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setShowQuotationDropdown(!showQuotationDropdown);
-                }}
-                onMouseDown={(e) => e.preventDefault()}
-                title="Insert Quotation Mark"
-              >
-                "
-              </S.QuotationSelectorButton>
-            </S.FontSelectRoot>
-
-            {showQuotationDropdown && (
-              <S.QuotationDropdownPanel ref={quotationDropdownPanelRef}>
-                {Object.entries(QUOTATION_MARK_CATEGORIES).map(
-                  ([key, category]) => (
-                    <S.QuotationCategoryGroup key={key}>
-                      <S.QuotationCategoryTitle>
-                        {category.name}
-                      </S.QuotationCategoryTitle>
-                      <S.QuotationGrid>
-                        {category.symbols.map((symbol) => (
-                          <S.QuotationGridItem
-                            key={symbol.id}
+                    {btn.id === "unordered" && activeLists[btn.id] && (
+                      <S.BulletDropdownContainer ref={bulletDropdownRef}>
+                        <S.FontSelectRoot>
+                          <RiArrowDropDownLine className="font-select-dropdown-icon" />
+                          <S.BulletSelectorButton
                             type="button"
-                            onClick={() => {
-                              handleQuotationMarkInsert(symbol.value || "");
-                              setShowQuotationDropdown(false);
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setShowBulletDropdown(!showBulletDropdown);
                             }}
                             onMouseDown={(e) => e.preventDefault()}
-                            title={symbol.id}
                           >
-                            {symbol.label}
-                          </S.QuotationGridItem>
-                        ))}
-                      </S.QuotationGrid>
-                    </S.QuotationCategoryGroup>
-                  ),
-                )}
-              </S.QuotationDropdownPanel>
-            )}
-          </S.QuotationDropdownContainer>
+                            {UNORDERED_LIST_STYLES.find(
+                              (s) => s.value === currentUnorderedListStyle,
+                            )?.label || "•"}
+                          </S.BulletSelectorButton>
+                        </S.FontSelectRoot>
+
+                        {showBulletDropdown && (
+                          <S.BulletDropdownPanel ref={bulletDropdownPanelRef}>
+                            {Object.entries(BULLET_POINT_CATEGORIES).map(
+                              ([key, category]) => (
+                                <S.BulletCategoryGroup key={key}>
+                                  <S.BulletCategoryTitle>
+                                    {category.name}
+                                  </S.BulletCategoryTitle>
+                                  <S.BulletGrid>
+                                    {category.symbols.map((symbol) => (
+                                      <S.BulletGridItem
+                                        key={symbol.value}
+                                        type="button"
+                                        data-value={symbol.value}
+                                        $selected={
+                                          currentUnorderedListStyle ===
+                                          symbol.value
+                                        }
+                                        onClick={() => {
+                                          handleUnorderedListStyleChange(
+                                            symbol.value,
+                                          );
+                                          setShowBulletDropdown(false);
+                                        }}
+                                        onMouseDown={(e) => e.preventDefault()}
+                                        title={symbol.label}
+                                      >
+                                        {symbol.label}
+                                      </S.BulletGridItem>
+                                    ))}
+                                  </S.BulletGrid>
+                                </S.BulletCategoryGroup>
+                              ),
+                            )}
+                          </S.BulletDropdownPanel>
+                        )}
+                      </S.BulletDropdownContainer>
+                    )}
+
+                    {btn.id === "ordered" && activeLists[btn.id] && (
+                      <S.FontSelectRoot>
+                        <RiArrowDropDownLine className="font-select-dropdown-icon" />
+                        <S.FontSelect
+                          name="ordered-list-style-select"
+                          value={currentOrderedListStyle}
+                          onChange={(e) =>
+                            handleOrderedListStyleChange(e.target.value)
+                          }
+                        >
+                          {ORDERED_LIST_STYLES.map((item) => (
+                            <option key={item.value} value={item.value}>
+                              {item.label}
+                            </option>
+                          ))}
+                        </S.FontSelect>
+                      </S.FontSelectRoot>
+                    )}
+                  </Fragment>
+                );
+              })}
+            </S.ToggleGroup>
+
+            <S.Divider />
+
+            {/* Quotation Mark Selector */}
+            <S.QuotationDropdownContainer ref={quotationDropdownRef}>
+              <S.FontSelectRoot>
+                <RiArrowDropDownLine className="font-select-dropdown-icon" />
+                <S.QuotationSelectorButton
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowQuotationDropdown(!showQuotationDropdown);
+                  }}
+                  onMouseDown={(e) => e.preventDefault()}
+                  title="Insert Quotation Mark"
+                >
+                  "
+                </S.QuotationSelectorButton>
+              </S.FontSelectRoot>
+
+              {showQuotationDropdown && (
+                <S.QuotationDropdownPanel
+                  ref={quotationDropdownPanelRef}
+                  $alignRight={quotationDropdownPlacement.alignRight}
+                  $openUpward={quotationDropdownPlacement.openUpward}
+                >
+                  {Object.entries(QUOTATION_MARK_CATEGORIES).map(
+                    ([key, category]) => (
+                      <S.QuotationCategoryGroup key={key}>
+                        <S.QuotationCategoryTitle>
+                          {category.name}
+                        </S.QuotationCategoryTitle>
+                        <S.QuotationGrid>
+                          {category.symbols.map((symbol) => (
+                            <S.QuotationGridItem
+                              key={symbol.id}
+                              type="button"
+                              onClick={() => {
+                                handleQuotationMarkInsert(symbol.value || "");
+                                setShowQuotationDropdown(false);
+                              }}
+                              onMouseDown={(e) => e.preventDefault()}
+                              title={symbol.id}
+                            >
+                              {symbol.label}
+                            </S.QuotationGridItem>
+                          ))}
+                        </S.QuotationGrid>
+                      </S.QuotationCategoryGroup>
+                    ),
+                  )}
+                </S.QuotationDropdownPanel>
+              )}
+            </S.QuotationDropdownContainer>
+          </S.ListAndQuotationRow>
         </S.ToolbarSection>
       </S.ToolbarRoot>
 

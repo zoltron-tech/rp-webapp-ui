@@ -68,6 +68,16 @@ export const ToolbarSection = styled.div`
   align-items: center;
 `;
 
+export const ListAndQuotationRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  @media (max-width: 900px) {
+    flex-basis: 100%;
+  }
+`;
+
 export const FontSelectRoot = styled.div`
   position: relative;
 
@@ -224,10 +234,17 @@ export const QuotationDropdownContainer = styled.div`
   position: relative;
 `;
 
-export const QuotationDropdownPanel = styled.div`
+interface QuotationDropdownPanelProps {
+  $alignRight?: boolean;
+  $openUpward?: boolean;
+}
+
+export const QuotationDropdownPanel = styled.div<QuotationDropdownPanelProps>`
   position: absolute;
-  top: calc(100% + 0.50rem);
-  left: -40px;
+  top: ${(props) => (props.$openUpward ? "auto" : "calc(100% + 0.50rem)")};
+  bottom: ${(props) => (props.$openUpward ? "calc(100% + 0.50rem)" : "auto")};
+  left: ${(props) => (props.$alignRight ? "auto" : "-40px")};
+  right: ${(props) => (props.$alignRight ? "0" : "auto")};
   background-color: var(--bg-3);
   border: 1px solid var(--bg-6);
   border-radius: 4px;
@@ -235,7 +252,9 @@ export const QuotationDropdownPanel = styled.div`
   z-index: 1000;
   padding: 0.75rem;
   max-height: 140px;
+  max-width: min(18rem, calc(100vw - 1rem));
   overflow-y: auto;
+  overflow-x: hidden;
   animation: ${fadeIn} 0.15s ease-out;
   min-width: 100px;
 `;
@@ -402,31 +421,11 @@ export const EditorWrapper = styled.div`
   position: relative;
 `;
 
-export const EditorContent = styled.div`
-  width: 100%;
-  min-height: 10rem;
-  max-height: 20dvh;
-  padding: 1rem;
-  border-left: 1px solid var(--bg-6);
-  border-right: 1px solid var(--bg-6);
-  border-bottom: 1px solid var(--bg-6);
-  outline: none;
-  overflow: auto;
+const richTextContentBase = css`
   line-height: 1.6;
   word-wrap: break-word;
   white-space: pre-wrap;
   font-size: var(--font-size-input);
-
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--accent);
-  }
-
-  &:empty::before {
-    content: attr(data-placeholder);
-    color: #9ca3af;
-    pointer-events: none;
-  }
 
   ul,
   ol {
@@ -629,75 +628,134 @@ export const EditorContent = styled.div`
   ul[style*="list-style-type: arrow-open-head"] li::before { content: "⇾ "; }
   ul[style*="list-style-type: arrow-double"] li::before { content: "⇒ "; }
 
-.mention-tag {
-  display: inline-flex;
-  align-items: center;
-  min-width: 70px;
-  position: relative;
-  top: 6px;
-  gap: 4px; /* 👈 space between avatar and text */
+  .mention-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
 
-  background: linear-gradient(
-    135deg,
-    var(--accent) 0%,
-    var(--accent-hover) 70%
-  );
-  color: var(--text, var(--text));
-  padding: 1px 6px 1px 2px;
-  border-radius: 999px;
-  font-weight: var(--font-weight-semi-bold);
-  user-select: none;
-  font-size: var(--font-size);
+  .mention-text {
+    white-space: nowrap;
+  }
 
-  &:hover {
+  .inline-image-container {
+    display: inline-block;
+    position: relative;
+    vertical-align: middle;
+    margin: 0 4px;
+  }
+
+  .inline-image {
+    max-width: 300px;
+    max-height: 300px;
+    min-width: 100px;
+    min-height: 100px;
+    width: auto;
+    height: auto;
+    border-radius: 4px;
+    object-fit: contain;
+    display: inline-block;
+    vertical-align: middle;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: var(--accent);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transform: scale(1.02);
+    }
+  }
+`;
+
+const editorMentionTagStyles = css`
+  .mention-tag {
+    display: inline-flex;
+    align-items: center;
+    min-width: 70px;
+    position: relative;
+    top: 6px;
+    gap: 4px;
+
     background: linear-gradient(
       135deg,
-      var(--accent-hover) 0%,
-      var(--accent-active, var(--accent-hover)) 100%
+      var(--accent) 0%,
+      var(--accent-hover) 70%
     );
+    color: var(--text, var(--text));
+    padding: 1px 6px 1px 2px;
+    border-radius: 999px;
+    font-weight: var(--font-weight-semi-bold);
+    user-select: none;
+    font-size: var(--font-size);
+
+    &:hover {
+      background: linear-gradient(
+        135deg,
+        var(--accent-hover) 0%,
+        var(--accent-active, var(--accent-hover)) 100%
+      );
+    }
   }
-}
+`;
 
-.mention-avatar {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
+const savedMentionTagStyles = css`
+  .mention-tag {
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+    top: 6px;
+    min-width: 70px;
+    gap: 6px;
+    cursor: pointer;
 
-.mention-text {
-  white-space: nowrap;
-}
+    background: linear-gradient(
+      135deg,
+      var(--accent) 0%,
+      var(--accent-hover) 70%
+    );
+    color: var(--text, var(--text));
+    padding: 1px 6px 1px 2px;
+    border-radius: 999px;
+    font-weight: var(--font-weight-bold);
+    margin: 2px;
+    user-select: none;
+    font-size: var(--font-size);
 
-.inline-image-container {
-  display: inline-block;
-  position: relative;
-  vertical-align: middle;
-  margin: 0 4px;
-}
-
-.inline-image {
-  max-width: 300px;
-  max-height: 300px;
-  min-width: 100px;
-  min-height: 100px;
-  width: auto;
-  height: auto;
-  border-radius: 4px;
-  /* border: 2px solid var(--bg-6); */
-  object-fit: contain;
-  display: inline-block;
-  vertical-align: middle;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    border-color: var(--accent);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transform: scale(1.02);
+    &:hover {
+      background: linear-gradient(
+        135deg,
+        var(--accent-hover) 0%,
+        var(--accent-active, var(--accent-hover)) 100%
+      );
+    }
   }
-}
+`;
+
+export const EditorContent = styled.div`
+  width: 100%;
+  min-height: 10rem;
+  max-height: 20dvh;
+  padding: 1rem;
+  border-left: 1px solid var(--bg-6);
+  border-right: 1px solid var(--bg-6);
+  border-bottom: 1px solid var(--bg-6);
+  outline: none;
+  overflow: auto;
+  ${richTextContentBase}
+  ${editorMentionTagStyles}
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+
+  &:empty::before {
+    content: attr(data-placeholder);
+    color: #9ca3af;
+    pointer-events: none;
+  }
 
 `;
 
@@ -756,283 +814,8 @@ export const SavedContent = styled.div`
   width: 100%;
   outline: none;
   overflow: auto;
-  line-height: 1.6;
-  word-wrap: break-word;
-  white-space: pre-wrap;
-  font-size: var(--font-size-input);
-
-  ul,
-  ol {
-    padding-left: 1.25rem;
-    margin-left: 0; 
-  }
-
-  li {
-    margin-left: 0;
-  }
-
-  /* Custom bullet styles - disable default numbering */
-  ul[style*="list-style-type: bullet"],
-  ul[style*="list-style-type: middle-dot"],
-  ul[style*="list-style-type: white-circle"],
-  ul[style*="list-style-type: black-circle"],
-  ul[style*="list-style-type: fisheye"],
-  ul[style*="list-style-type: circled-dot"],
-  ul[style*="list-style-type: circled-ring"],
-  ul[style*="list-style-type: circled-asterisk"],
-  ul[style*="list-style-type: dotted-circle"],
-  ul[style*="list-style-type: circle-vertical-fill"],
-  ul[style*="list-style-type: bullseye"],
-  ul[style*="list-style-type: white-bullet"],
-  ul[style*="list-style-type: sun"],
-  ul[style*="list-style-type: circled-white"],
-  ul[style*="list-style-type: circled-black"],
-  ul[style*="list-style-type: hyphen-bullet"],
-  ul[style*="list-style-type: left-bullet"],
-  ul[style*="list-style-type: right-bullet"],
-  ul[style*="list-style-type: black-diamond"],
-  ul[style*="list-style-type: white-diamond"],
-  ul[style*="list-style-type: white-diamond-black"],
-  ul[style*="list-style-type: black-star"],
-  ul[style*="list-style-type: white-star"],
-  ul[style*="list-style-type: black-square"],
-  ul[style*="list-style-type: white-square"],
-  ul[style*="list-style-type: small-square-filled"],
-  ul[style*="list-style-type: small-filled"],
-  ul[style*="list-style-type: inverse-bullet"],
-  ul[style*="list-style-type: ballot-box"],
-  ul[style*="list-style-type: ballot-box-check"],
-  ul[style*="list-style-type: ballot-box-x"],
-  ul[style*="list-style-type: check-mark"],
-  ul[style*="list-style-type: heavy-check-mark"],
-  ul[style*="list-style-type: rotated-heavy-heart"],
-  ul[style*="list-style-type: rotated-floral-heart"],
-  ul[style*="list-style-type: reversed-floral-heart"],
-  ul[style*="list-style-type: dharma-wheel"],
-  ul[style*="list-style-type: asterisk-four-spoke"],
-  ul[style*="list-style-type: heavy-asterisk"],
-  ul[style*="list-style-type: open-asterisk"],
-  ul[style*="list-style-type: small-triangle"],
-  ul[style*="list-style-type: white-small-triangle"],
-  ul[style*="list-style-type: triangle-right"],
-  ul[style*="list-style-type: white-triangle-right"],
-  ul[style*="list-style-type: pointer"],
-  ul[style*="list-style-type: white-pointer"],
-  ul[style*="list-style-type: triangular-bullet"],
-  ul[style*="list-style-type: arrow-two-head"],
-  ul[style*="list-style-type: arrow-tail"],
-  ul[style*="list-style-type: arrow-bar"],
-  ul[style*="list-style-type: arrow-loop"],
-  ul[style*="list-style-type: arrow-triple"],
-  ul[style*="list-style-type: arrow-squiggle"],
-  ul[style*="list-style-type: arrow-dashed"],
-  ul[style*="list-style-type: arrow-white"],
-  ul[style*="list-style-type: arrow-heavy"],
-  ul[style*="list-style-type: arrow-heavy-right"],
-  ul[style*="list-style-type: arrow-drafting"],
-  ul[style*="list-style-type: arrow-round"],
-  ul[style*="list-style-type: arrow-triangle-head"],
-  ul[style*="list-style-type: arrow-triangle-heavy"],
-  ul[style*="list-style-type: arrow-triangle-dashed"],
-  ul[style*="list-style-type: arrow-triangle-heavy-dashed"],
-  ul[style*="list-style-type: arrow-black"],
-  ul[style*="list-style-type: arrow-top-light"],
-  ul[style*="list-style-type: arrow-bottom-light"],
-  ul[style*="list-style-type: arrowhead-black"],
-  ul[style*="list-style-type: arrow-curved-down"],
-  ul[style*="list-style-type: arrow-curved-up"],
-  ul[style*="list-style-type: arrow-squat"],
-  ul[style*="list-style-type: arrow-concave"],
-  ul[style*="list-style-type: arrow-shadowed"],
-  ul[style*="list-style-type: arrow-notched"],
-  ul[style*="list-style-type: arrow-circled"],
-  ul[style*="list-style-type: arrow-feathered"],
-  ul[style*="list-style-type: arrow-feathered-black"],
-  ul[style*="list-style-type: arrow-feathered-heavy"],
-  ul[style*="list-style-type: arrow-wedge"],
-  ul[style*="list-style-type: arrow-wedge-heavy"],
-  ul[style*="list-style-type: arrow-open-outline"],
-  ul[style*="list-style-type: arrow-simple"],
-  ul[style*="list-style-type: arrow-open-head"],
-  ul[style*="list-style-type: arrow-double"] {
-    list-style: none !important;
-    padding-left: 1.25rem;
-  }
-
-  /* Basic Bullets */
-  ul[style*="list-style-type: bullet"] li::before { content: "• "; }
-  ul[style*="list-style-type: middle-dot"] li::before { content: "· "; }
-  ul[style*="list-style-type: white-circle"] li::before { content: "○ "; }
-  ul[style*="list-style-type: black-circle"] li::before { content: "● "; }
-  ul[style*="list-style-type: fisheye"] li::before { content: "◉ "; }
-
-  /* Circle Variants */
-  ul[style*="list-style-type: circled-dot"] li::before { content: "⊙ "; }
-  ul[style*="list-style-type: circled-ring"] li::before { content: "⊚ "; }
-  ul[style*="list-style-type: circled-asterisk"] li::before { content: "⊛ "; }
-  ul[style*="list-style-type: dotted-circle"] li::before { content: "◌ "; }
-  ul[style*="list-style-type: circle-vertical-fill"] li::before { content: "◍ "; }
-  ul[style*="list-style-type: bullseye"] li::before { content: "◎ "; }
-  ul[style*="list-style-type: white-bullet"] li::before { content: "◦ "; }
-  ul[style*="list-style-type: sun"] li::before { content: "☉ "; }
-  ul[style*="list-style-type: circled-white"] li::before { content: "⦾ "; }
-  ul[style*="list-style-type: circled-black"] li::before { content: "⦿ "; }
-
-  /* Dashes & Special */
-  ul[style*="list-style-type: hyphen-bullet"] li::before { content: "⁃ "; }
-  ul[style*="list-style-type: left-bullet"] li::before { content: "⁌ "; }
-  ul[style*="list-style-type: right-bullet"] li::before { content: "⁍ "; }
-
-  /* Diamonds */
-  ul[style*="list-style-type: black-diamond"] li::before { content: "◆ "; }
-  ul[style*="list-style-type: white-diamond"] li::before { content: "◇ "; }
-  ul[style*="list-style-type: white-diamond-black"] li::before { content: "◈ "; }
-
-  /* Stars */
-  ul[style*="list-style-type: black-star"] li::before { content: "★ "; }
-  ul[style*="list-style-type: white-star"] li::before { content: "☆ "; }
-
-  /* Squares & Boxes */
-  ul[style*="list-style-type: black-square"] li::before { content: "■ "; }
-  ul[style*="list-style-type: white-square"] li::before { content: "□ "; }
-  ul[style*="list-style-type: small-square-filled"] li::before { content: "◾ "; }
-  ul[style*="list-style-type: small-filled"] li::before { content: "▪ "; }
-  ul[style*="list-style-type: inverse-bullet"] li::before { content: "◘ "; }
-
-  /* Checkmarks & Boxes */
-  ul[style*="list-style-type: ballot-box"] li::before { content: "☐ "; }
-  ul[style*="list-style-type: ballot-box-check"] li::before { content: "☑ "; }
-  ul[style*="list-style-type: ballot-box-x"] li::before { content: "☒ "; }
-  ul[style*="list-style-type: check-mark"] li::before { content: "✓ "; }
-  ul[style*="list-style-type: heavy-check-mark"] li::before { content: "✔ "; }
-
-  /* Decorative */
-  ul[style*="list-style-type: rotated-heavy-heart"] li::before { content: "❥ "; }
-  ul[style*="list-style-type: rotated-floral-heart"] li::before { content: "❧ "; }
-  ul[style*="list-style-type: reversed-floral-heart"] li::before { content: "☙ "; }
-  ul[style*="list-style-type: dharma-wheel"] li::before { content: "☸ "; }
-  ul[style*="list-style-type: asterisk-four-spoke"] li::before { content: "✤ "; }
-  ul[style*="list-style-type: heavy-asterisk"] li::before { content: "✱ "; }
-  ul[style*="list-style-type: open-asterisk"] li::before { content: "✲ "; }
-
-  /* Triangles & Pointers */
-  ul[style*="list-style-type: small-triangle"] li::before { content: "▸ "; }
-  ul[style*="list-style-type: white-small-triangle"] li::before { content: "▹ "; }
-  ul[style*="list-style-type: triangle-right"] li::before { content: "▶ "; }
-  ul[style*="list-style-type: white-triangle-right"] li::before { content: "▷ "; }
-  ul[style*="list-style-type: pointer"] li::before { content: "► "; }
-  ul[style*="list-style-type: white-pointer"] li::before { content: "▻ "; }
-  ul[style*="list-style-type: triangular-bullet"] li::before { content: "‣ "; }
-
-  /* Arrows */
-  ul[style*="list-style-type: arrow-two-head"] li::before { content: "↠ "; }
-  ul[style*="list-style-type: arrow-tail"] li::before { content: "↣ "; }
-  ul[style*="list-style-type: arrow-bar"] li::before { content: "↦ "; }
-  ul[style*="list-style-type: arrow-loop"] li::before { content: "↬ "; }
-  ul[style*="list-style-type: arrow-triple"] li::before { content: "⇛ "; }
-  ul[style*="list-style-type: arrow-squiggle"] li::before { content: "⇝ "; }
-  ul[style*="list-style-type: arrow-dashed"] li::before { content: "⇢ "; }
-  ul[style*="list-style-type: arrow-white"] li::before { content: "⇨ "; }
-  ul[style*="list-style-type: arrow-heavy"] li::before { content: "➔ "; }
-  ul[style*="list-style-type: arrow-heavy-right"] li::before { content: "➙ "; }
-  ul[style*="list-style-type: arrow-drafting"] li::before { content: "➛ "; }
-  ul[style*="list-style-type: arrow-round"] li::before { content: "➜ "; }
-  ul[style*="list-style-type: arrow-triangle-head"] li::before { content: "➝ "; }
-  ul[style*="list-style-type: arrow-triangle-heavy"] li::before { content: "➞ "; }
-  ul[style*="list-style-type: arrow-triangle-dashed"] li::before { content: "➟ "; }
-  ul[style*="list-style-type: arrow-triangle-heavy-dashed"] li::before { content: "➠ "; }
-  ul[style*="list-style-type: arrow-black"] li::before { content: "➡ "; }
-  ul[style*="list-style-type: arrow-top-light"] li::before { content: "➢ "; }
-  ul[style*="list-style-type: arrow-bottom-light"] li::before { content: "➣ "; }
-  ul[style*="list-style-type: arrowhead-black"] li::before { content: "➤ "; }
-  ul[style*="list-style-type: arrow-curved-down"] li::before { content: "➥ "; }
-  ul[style*="list-style-type: arrow-curved-up"] li::before { content: "➦ "; }
-  ul[style*="list-style-type: arrow-squat"] li::before { content: "➧ "; }
-  ul[style*="list-style-type: arrow-concave"] li::before { content: "➨ "; }
-  ul[style*="list-style-type: arrow-shadowed"] li::before { content: "➮ "; }
-  ul[style*="list-style-type: arrow-notched"] li::before { content: "➱ "; }
-  ul[style*="list-style-type: arrow-circled"] li::before { content: "➲ "; }
-  ul[style*="list-style-type: arrow-feathered"] li::before { content: "➳ "; }
-  ul[style*="list-style-type: arrow-feathered-black"] li::before { content: "➵ "; }
-  ul[style*="list-style-type: arrow-feathered-heavy"] li::before { content: "➸ "; }
-  ul[style*="list-style-type: arrow-wedge"] li::before { content: "➼ "; }
-  ul[style*="list-style-type: arrow-wedge-heavy"] li::before { content: "➽ "; }
-  ul[style*="list-style-type: arrow-open-outline"] li::before { content: "➾ "; }
-  ul[style*="list-style-type: arrow-simple"] li::before { content: "→ "; }
-  ul[style*="list-style-type: arrow-open-head"] li::before { content: "⇾ "; }
-  ul[style*="list-style-type: arrow-double"] li::before { content: "⇒ "; }
-
-.mention-tag {
-  display: inline-flex;
-  align-items: center;
-  position: relative;
-  top: 6px;
-  min-width: 70px;
-  gap: 6px; /* 👈 space between avatar and text */
-  cursor: pointer;
-
-  background: linear-gradient(
-    135deg,
-    var(--accent) 0%,
-    var(--accent-hover) 70%
-  );
-  color: var(--text, var(--text));
-  padding: 1px 6px 1px 2px;
-  border-radius: 999px;
-  font-weight: var(--font-weight-bold);
-  margin: 2px;
-  user-select: none;
-  font-size: var(--font-size);
-
-  &:hover {
-    background: linear-gradient(
-      135deg,
-      var(--accent-hover) 0%,
-      var(--accent-active, var(--accent-hover)) 100%
-    );
-  }
-}
-
-.mention-avatar {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.mention-text {
-  white-space: nowrap;
-}
-
-.inline-image-container {
-  display: inline-block;
-  position: relative;
-  vertical-align: middle;
-  margin: 0 4px;
-}
-
-.inline-image {
-  max-width: 300px;
-  max-height: 300px;
-  min-width: 100px;
-  min-height: 100px;
-  width: auto;
-  height: auto;
-  border-radius: 0.5rem;
-  border: 2px solid var(--bg-6);
-  object-fit: contain;
-  display: inline-block;
-  vertical-align: middle;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    border-color: var(--accent);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transform: scale(1.02);
-  }
-}
+  ${richTextContentBase}
+  ${savedMentionTagStyles}
 `;
 
 export const PopoverAnchor = styled(Popover.Anchor)`

@@ -448,7 +448,8 @@ export const RichTextEditor = ({
     (listTag: "UL" | "OL", styleType: string) => {
       const list = getClosestListElement(listTag);
       if (!list) return;
-      list.style.listStyleType = styleType;
+      list.style.listStyleType = "none";
+      list.setAttribute("data-list-style-type", styleType);
     },
     [getClosestListElement],
   );

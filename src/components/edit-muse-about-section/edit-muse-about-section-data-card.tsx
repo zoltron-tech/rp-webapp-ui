@@ -1,6 +1,5 @@
 "use client";
 
-import { Console } from "console";
 import { useCallback, useState } from "react";
 import {
   addMuseAboutSectionAction,

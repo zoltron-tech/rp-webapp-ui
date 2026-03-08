@@ -133,7 +133,6 @@ export const getMuseAboutSectionAction = async (
     return { message: API_MESSAGE.Error };
   }
 
-  console.log("getMuseAboutSectionAction response", response);
   const section: MuseAboutSection = await response.json();
 
   return section;
@@ -160,13 +159,7 @@ export const deleteMuseAboutSectionAction = async (
       method: "DELETE",
     });
 
-    console.log("deleteMuseAboutSectionAction response", response);
-
     if (response.status !== 200) {
-      console.log("insde deleteMuseAboutSectionAction error handling", {
-        status: response.status,
-        statusText: response.statusText,
-      });
       Logger.debug(
         "deleteMuseAboutSectionAction error",
         response.status,
@@ -180,7 +173,6 @@ export const deleteMuseAboutSectionAction = async (
     Logger.error("deleteMuseAboutSectionAction exception", e);
     return { message: API_MESSAGE.Error };
   }
-  console.log("deleteMuseAboutSectionAction success");
   return { message: API_MESSAGE.Success };
 };
 
@@ -370,9 +362,6 @@ export const updateMuseAction = async (
       },
       method,
     });
-
-    console.log(JSON.stringify(_muse));
-    console.log(response);
 
     if (!response.ok) {
       Logger.debug(

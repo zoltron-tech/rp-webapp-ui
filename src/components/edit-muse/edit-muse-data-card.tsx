@@ -493,9 +493,11 @@ export default function EditMuseDataCard() {
           <S.TopBar>
             <S.BackButton
               type="button"
-              onClick={() =>
-                routeToPage(ROUTES.Profile.View(user?.username || "").Muses)
-              }
+              disabled={!user?.username}
+              onClick={() => {
+                if (!user?.username) return;
+                routeToPage(ROUTES.Profile.View(user.username).Muses);
+              }}
             >
               <BsArrowLeft size={18} />
             </S.BackButton>

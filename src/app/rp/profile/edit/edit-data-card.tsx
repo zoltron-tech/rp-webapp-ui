@@ -23,7 +23,6 @@ import { ErrorBox } from "@/components/error-box";
 import { RichTextEditor } from "@/components/rich-text-editor-input";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
-import { usePageRouter } from "@/hooks/use-page-router";
 import type {
   MentionDataItem,
   MentionTab,

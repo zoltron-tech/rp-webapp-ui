@@ -368,9 +368,9 @@ export default function MuseProfilePage({}) {
                 <ShouldRender
                   if={Boolean(aboutSections && aboutSections.length > 0)}
                 >
-                  {aboutSections?.map((section) => (
+                  {aboutSections?.map((section, index) => (
                     <RichTextRenderer
-                      key={section.id}
+                      key={section.id ?? `about-section-${index}`}
                       savedText={section.text || ""}
                       overlayHidden
                       disableCollapse

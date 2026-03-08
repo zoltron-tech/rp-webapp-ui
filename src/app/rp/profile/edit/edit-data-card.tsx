@@ -10,6 +10,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { BsArrowLeft } from "react-icons/bs";
 import { ImProfile } from "react-icons/im";
 import { IoIosInformationCircleOutline } from "react-icons/io";
 import {
@@ -22,6 +23,7 @@ import { ErrorBox } from "@/components/error-box";
 import { RichTextEditor } from "@/components/rich-text-editor-input";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type {
   MentionDataItem,
   MentionTab,
@@ -30,6 +32,7 @@ import type {
 import { ACCENT_MAP, type Accent } from "@/types/theme";
 import { API_MESSAGE } from "@/utils/constants";
 import { SUPPORT_EMAIL, SUPPORT_EMAIL_URL } from "@/utils/constants/common";
+import { ROUTES } from "@/utils/constants/routes";
 import { searchMentionMusesAction } from "../../muse/actions";
 import { updateUserNovelist } from "../../novelists/actions";
 import { uploadMedia } from "../actions";

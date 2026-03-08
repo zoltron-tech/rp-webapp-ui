@@ -68,16 +68,6 @@ export const ToolbarSection = styled.div`
   align-items: center;
 `;
 
-export const ListAndQuotationRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-
-  @media (max-width: 900px) {
-    flex-basis: 100%;
-  }
-`;
-
 export const FontSelectRoot = styled.div`
   position: relative;
 

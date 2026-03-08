@@ -1,6 +1,5 @@
 "use client";
 
-import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
@@ -10,12 +9,14 @@ interface RichTextRendererProps {
   savedText: string;
   collapsedHeight?: number;
   overlayHidden?: boolean;
+  disableCollapse?: boolean;
 }
 
 export const RichTextRenderer = ({
   savedText = "",
   collapsedHeight = 160,
   overlayHidden = false,
+  disableCollapse = false,
 }: RichTextRendererProps) => {
   const { routeToPage } = usePageRouter();
 
@@ -80,6 +81,13 @@ export const RichTextRenderer = ({
     const content = contentRef.current;
     if (!content) return;
 
+    if (disableCollapse) {
+      setIsOverflowing(false);
+      setMaxHeight("none");
+      setAnimating(false);
+      return;
+    }
+
     const contentHeight = content.scrollHeight;
     const shouldOverflow = contentHeight > collapsedHeight + 4;
 
@@ -102,7 +110,7 @@ export const RichTextRenderer = ({
     setAnimating(true);
     const timeout = setTimeout(() => setAnimating(false), 160);
     return () => clearTimeout(timeout);
-  }, [expanded, savedText, collapsedHeight]);
+  }, [expanded, savedText, collapsedHeight, disableCollapse]);
 
   if (!savedText.length) {
     return (
@@ -122,10 +130,12 @@ export const RichTextRenderer = ({
         $animating={animating}
       >
         <S.SavedContent ref={contentRef} />
-        {!expanded && isOverflowing && !overlayHidden && <S.FadeOverlay />}
+        {!disableCollapse && !expanded && isOverflowing && !overlayHidden && (
+          <S.FadeOverlay />
+        )}
       </S.ContentWrapper>
 
-      {isOverflowing && (
+      {!disableCollapse && isOverflowing && (
         <S.Toggle onClick={() => setExpanded((v) => !v)}>
           {expanded ? "Show less..." : "Read more..."}
         </S.Toggle>

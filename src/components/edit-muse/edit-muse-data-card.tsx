@@ -9,8 +9,9 @@ import {
   useState,
 } from "react";
 import { HexColorPicker } from "react-colorful";
-import { BsInfoLg } from "react-icons/bs";
+import { BsArrowLeft, BsInfoLg } from "react-icons/bs";
 import { ImProfile } from "react-icons/im";
+import { MdDoubleArrow } from "react-icons/md";
 import { updateMuseAction } from "@/app/rp/muse/actions";
 import { deleteMedia } from "@/app/rp/profile/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
@@ -490,6 +491,14 @@ export default function EditMuseDataCard() {
       <S.FormContainer>
         <Form.Root onSubmit={handleSubmit} onReset={handleReset}>
           <S.TopBar>
+            <S.BackButton
+              type="button"
+              onClick={() =>
+                routeToPage(ROUTES.Profile.View(user?.username || "").Muses)
+              }
+            >
+              <BsArrowLeft size={18} />
+            </S.BackButton>
             <S.FormHeading>
               <ImProfile />
               <h1>{id ? "Edit your " : "Create a new"} character</h1>
@@ -695,27 +704,14 @@ export default function EditMuseDataCard() {
             )}
           </S.MediaUploadSectionContainer>
           <Separator.Root className="separator" orientation="horizontal" />
-          <Form.Field className="field" name="story">
-            <S.FieldHeader>
-              <Form.Label>Backstory</Form.Label>
-              <span className="secondary-text ">(Optional)</span>
-            </S.FieldHeader>
-            <Form.Control
-              aria-label="Backstory"
-              name="story"
-              value={story ?? ""}
-              asChild
-            >
-              <S.RichText
-                height={200}
-                content={story ? JSON.parse(story) : ""}
-                onChange={(content) => {
-                  setStory(JSON.stringify(content));
-                }}
-                editable
-              ></S.RichText>
-            </Form.Control>
-          </Form.Field>
+          <S.AboutSectionsLink
+            onClick={() => routeToPage(ROUTES.Profile.Muses.About(id || ""))}
+          >
+            <span>
+              Edit Character Story
+              <MdDoubleArrow size={20} />
+            </span>
+          </S.AboutSectionsLink>
           <Separator.Root className="separator" orientation="horizontal" />
           <ShouldRender if={Boolean(error)}>
             <ErrorBox className="error">

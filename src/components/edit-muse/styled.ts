@@ -14,6 +14,26 @@ export const RichText = styled(NWRichText)`
 
 export const AddEditMusePageRoot = styled.div``;
 
+export const BackButton = styled.button`
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--bg-6);
+  border-radius: 9999px;
+  background-color: var(--bg-2);
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    cursor: pointer;
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+`;
+
 export const Card = styled.div`
   display: flex;
   flex-direction: column;
@@ -575,6 +595,55 @@ export const FieldHeader = styled.div`
     font-size: var(--font-size-small);
     color: var(--text-secondary);
     font-weight: var(--font-weight-regular);
+  }
+`;
+
+export const AboutSectionsLink = styled.div`
+  width: 95%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-block: 8px;
+  max-width: 700px;
+  margin-inline: auto;
+
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background-color: var(--bg-6);
+    opacity: 0.8;
+  }
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    padding: 6px 16px;
+    border: 1px solid var(--accent);
+    border-radius: 50px;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    font-size: var(--font-size-h6);
+    font-weight: 700;
+    font-style: italic;
+    color: var(--accent);
+    white-space: nowrap;
+    transition: all 0.2s ease;
+
+    svg {
+      display: block;
+    }
+  }
+
+  span:hover {
+    cursor: pointer;
+    color: var(--accent-hover);
+    border-color: var(--accent-hover);
+    background: color-mix(in srgb, var(--accent) 20%, transparent);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--accent-hover) 50%, transparent);
   }
 `;
 

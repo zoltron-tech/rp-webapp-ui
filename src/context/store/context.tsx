@@ -2,6 +2,7 @@ import type React from "react";
 import { createContext } from "react";
 import type { ProfileState } from "@/app/rp/profile/edit/profile.store";
 import type { MuseState } from "@/components/edit-muse/muse.store";
+import type { MuseAboutSectionState } from "@/components/edit-muse-about-section/muse-about-section.store";
 import type { MusicState } from "@/components/edit-music/music.store";
 import type { EventThreadInputState } from "@/components/event-thread-input/event-thread-input.store";
 import type { PromptStoreType } from "@/components/prompt/prompt.store";
@@ -34,6 +35,8 @@ const Stores = {
     createStoreContext<EventThreadInputState>("event-thread-input"),
   "global-store": createStoreContext<StoreState>("global-store"),
   muse: createStoreContext<MuseState>("muse"),
+  "muse-about-section":
+    createStoreContext<MuseAboutSectionState>("muse-about-section"),
   music: createStoreContext<MusicState>("music"),
   onboarding: createStoreContext("onboarding"),
   profile: createStoreContext<ProfileState>("profile"),

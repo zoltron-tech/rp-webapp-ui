@@ -1,7 +1,13 @@
 "use server";
 import getConfig from "next/config";
 import { authenticateAndGetJWT, getJWTIfExists } from "@/app/actions";
-import type { CreateUpdateMuse, Fandom, MentionDataItem, Muse } from "@/types";
+import type {
+  CreateUpdateMuse,
+  Fandom,
+  MentionDataItem,
+  Muse,
+  MuseAboutSection,
+} from "@/types";
 import type { DataType, WithMessage } from "@/types/common";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import { Logger } from "@/utils/services";
@@ -39,6 +45,170 @@ export const getMuseAction = async (
   const muse: Muse = await response.json();
 
   return muse;
+};
+
+export const getMuseAboutSectionsAction = async (
+  museId: string,
+): Promise<DataType<MuseAboutSection[]>> => {
+  const jwt = await getJWTIfExists();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/about/by/${museId}`;
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (jwt) {
+    headers[AUTH_HEADER_NAME] = jwt;
+  }
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers,
+  });
+
+  Logger.debug("getMuseAboutSectionsAction", response.status);
+
+  if (response.status === 404) {
+    return null;
+  } else if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const aboutSections: MuseAboutSection[] = await response.json();
+
+  return aboutSections;
+};
+
+export const addMuseAboutSectionAction = async (
+  museId: string,
+  text: string,
+  ordinal: number,
+) => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/about`;
+  const response = await fetch(URL, {
+    body: JSON.stringify({ museId, ordinal, text }),
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "POST",
+  });
+
+  Logger.debug("addMuseAboutSectionAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const newSection: MuseAboutSection = await response.json();
+
+  return newSection;
+};
+
+export const getMuseAboutSectionAction = async (
+  sectionId: string,
+): Promise<DataType<MuseAboutSection>> => {
+  const jwt = await getJWTIfExists();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/about/${sectionId}`;
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (jwt) {
+    headers[AUTH_HEADER_NAME] = jwt;
+  }
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers,
+  });
+
+  Logger.debug("getMuseAboutSectionAction", response.status);
+
+  if (response.status === 404) {
+    return null;
+  } else if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  console.log("getMuseAboutSectionAction response", response);
+  const section: MuseAboutSection = await response.json();
+
+  return section;
+};
+
+export const deleteMuseAboutSectionAction = async (
+  sectionId: string,
+): Promise<WithMessage> => {
+  const jwt = await getJWTIfExists();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/about/${sectionId}`;
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (jwt) {
+    headers[AUTH_HEADER_NAME] = jwt;
+  }
+
+  try {
+    const response = await fetch(URL, {
+      cache: "no-store",
+      headers,
+      method: "DELETE",
+    });
+
+    console.log("deleteMuseAboutSectionAction response", response);
+
+    if (response.status !== 200) {
+      console.log("insde deleteMuseAboutSectionAction error handling", {
+        status: response.status,
+        statusText: response.statusText,
+      });
+      Logger.debug(
+        "deleteMuseAboutSectionAction error",
+        response.status,
+        response.statusText,
+      );
+      return { message: API_MESSAGE.Error };
+    }
+
+    Logger.debug("deleteMuseAboutSectionAction", response.status);
+  } catch (e) {
+    Logger.error("deleteMuseAboutSectionAction exception", e);
+    return { message: API_MESSAGE.Error };
+  }
+  console.log("deleteMuseAboutSectionAction success");
+  return { message: API_MESSAGE.Success };
+};
+
+export const updateMuseAboutSectionAction = async (
+  sectionId: string,
+  text: string,
+  ordinal: number,
+): Promise<MuseAboutSection | WithMessage> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/about/${sectionId}`;
+  const response = await fetch(URL, {
+    body: JSON.stringify({ ordinal, text }),
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "PUT",
+  });
+
+  Logger.debug("updateMuseAboutSectionAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const updatedSection: MuseAboutSection = await response.json();
+
+  return updatedSection;
 };
 
 export const getAllMusesByUsernameAction = async (

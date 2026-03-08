@@ -21,11 +21,11 @@ import { TagsContainer } from "@/components/tags-container";
 import { useGlobalState } from "@/context/store/stores";
 import { useStateMachine } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Muse, Prompt } from "@/types";
+import type { Muse, MuseAboutSection, Prompt } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDate } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
-import { getMuseAction } from "../../muse/actions";
+import { getMuseAboutSectionsAction, getMuseAction } from "../../muse/actions";
 import { getPromptsByMuseAction } from "../../prompt/actions";
 import * as S from "./styles";
 
@@ -42,6 +42,9 @@ export default function MuseProfilePage({}) {
   const authState = useGlobalState("authState");
   const [muse, setMuse] = useState<Muse | null>(null);
   const [prompts, setPrompts] = useState<Prompt[] | null>(null);
+  const [aboutSections, setAboutSections] = useState<MuseAboutSection[] | null>(
+    null,
+  );
   const username = params?.slug as string;
   const { routeToPage, baseDataLoader } = usePageRouter();
   const { transition, is } = useStateMachine<CARD_STATE>({
@@ -113,11 +116,19 @@ export default function MuseProfilePage({}) {
     setPrompts(_prompts);
   };
 
+  const fetchAboutSections = async (museId: string) => {
+    const _aboutSections = await baseDataLoader(() =>
+      getMuseAboutSectionsAction(museId),
+    );
+    setAboutSections(_aboutSections);
+  };
+
   useEffect(() => {
     if (authState === "LOADING" || muse) return;
 
     fetchMuse(username);
     fetchPrompts(username);
+    fetchAboutSections(username);
   }, [authState]);
 
   const loadChonnections = (slice = 0, className = "") => {
@@ -354,8 +365,17 @@ export default function MuseProfilePage({}) {
                     <Quote>{muse?.note}</Quote>
                   </S.NoteContainer>
                 </ShouldRender>
-                <ShouldRender if={Boolean(muse?.story)}>
-                  <RichText content={JSON.parse(muse?.story || "{}")} />
+                <ShouldRender
+                  if={Boolean(aboutSections && aboutSections.length > 0)}
+                >
+                  {aboutSections?.map((section) => (
+                    <RichTextRenderer
+                      key={section.id}
+                      savedText={section.text || ""}
+                      overlayHidden
+                      disableCollapse
+                    />
+                  ))}
                 </ShouldRender>
               </S.ScrollableContent>
             </S.InfoCardContent>

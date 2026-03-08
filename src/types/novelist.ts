@@ -37,6 +37,20 @@ export interface Muse {
   privacy: PrivacyLevel;
 }
 
+export interface MuseAboutSection {
+  id: string | null;
+  parentId: string;
+  text: string | null;
+  ordinal: number;
+  image: string | null;
+}
+
+export interface UpdateMuseAboutSection {
+  text: string | null;
+  ordinal: number;
+  image: string | null;
+}
+
 export interface CreateUpdateMuse {
   accent: string | null;
   firstName: string;

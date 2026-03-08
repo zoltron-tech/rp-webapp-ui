@@ -598,6 +598,7 @@ export const ScrollableContent = styled.div<{ accent?: string | null }>`
   scrollbar-color: transparent transparent;
   height: inherit;
   padding-bottom: 20px;
+  padding-inline: 10px;
 
   transition-property: scrollbar-color;
   transition-timing-function: ease-in-out;

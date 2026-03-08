@@ -26,6 +26,11 @@ export const ROUTES = {
     Edit: "/rp/profile/edit",
     Index: "/rp/profile",
     Muses: {
+      About: (museId: string) => `/rp/profile/muses/edit/${museId}/about`,
+      AboutCreate: (museId: string) =>
+        `/rp/profile/muses/edit/${museId}/about/create`,
+      AboutEdit: (museId: string, sectionId: string) =>
+        `/rp/profile/muses/edit/${museId}/about/edit/${sectionId}`,
       Create: "/rp/profile/muses/create",
       Edit: (museId: string) => `/rp/profile/muses/edit/${museId}`,
     },

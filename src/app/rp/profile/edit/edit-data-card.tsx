@@ -10,7 +10,6 @@ import {
   useMemo,
   useState,
 } from "react";
-import { BsArrowLeft } from "react-icons/bs";
 import { ImProfile } from "react-icons/im";
 import { IoIosInformationCircleOutline } from "react-icons/io";
 import {

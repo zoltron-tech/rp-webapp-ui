@@ -35,8 +35,16 @@ export default function EditMuseAboutSectionDataCard() {
   const handleOrdinalChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
+
+      // Allow empty string during editing (defaults to 0)
+      if (value === "") {
+        setSectionState({ ordinal: 0 });
+        setError(null);
+        return;
+      }
+
       const parsed = parseInt(value, 10);
-      if (!Number.isNaN(parsed)) {
+      if (!Number.isNaN(parsed) && parsed >= 0) {
         setSectionState({ ordinal: parsed });
         setError(null);
       }

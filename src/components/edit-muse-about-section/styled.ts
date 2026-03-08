@@ -41,9 +41,18 @@ export const OrdinalInput = styled.input`
   border: 1px solid var(--bg-6);
   border-radius: 0.25rem;
   background-color: var(--bg-3);
+  accent-color: var(--accent);
   color: var(--text);
-  font-size: 0.875rem;
+  font-size: var(--font-size-input);
   transition: border-color 0.2s;
+
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    background-color: var(--bg-3);
+    color: var(--accent);
+    cursor: pointer;
+    opacity: 1;
+  }
 
   &:hover {
     border-color: var(--bg-5);

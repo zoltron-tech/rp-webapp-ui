@@ -24,6 +24,7 @@ import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { toggleState } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
+import { UnreadBadge } from "../chat-menu-modal/styles";
 import { ShouldRender } from "../common";
 import { AvatarNew } from "../common/avatar-new";
 import { AppAlertDialog } from "../dialog";

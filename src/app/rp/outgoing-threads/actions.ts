@@ -31,6 +31,7 @@ export const getOutgoingThreadsAction = async (
 
   Logger.debug("getOutgoingThreadsAction", response.status);
 
+  console.log("result from api", { status: response.status, URL });
   if (response.status === 404) {
     return null;
   } else if (!response.ok) {

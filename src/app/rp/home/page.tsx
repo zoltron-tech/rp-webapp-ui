@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ActivityBox } from "@/components/activity-box";
 import { ShouldRender } from "@/components/common";
 import { FriendListItem } from "@/components/friend-list-item/page";
+import HomeTourGuide from "@/components/home-tour-guide";
 import MuseCard from "@/components/muse-card";
 import { Prompt as PromptComponent } from "@/components/prompt";
 import { StrangerCard } from "@/components/stranger-card/page";
@@ -29,6 +30,7 @@ import {
 import * as S from "./styles";
 
 export default function HomePage() {
+  const [startTour, setStartTour] = useState(false);
   const authState = useGlobalState("authState");
   const novelist = useGlobalState("novelist");
   const [strangers, setStrangers] = useState<Novelist[]>();
@@ -43,6 +45,14 @@ export default function HomePage() {
     useState<Muse[]>();
   const [activities, setActivities] = useState<Activity[]>();
   const { baseDataLoader } = usePageRouter();
+
+  const handleStartTour = () => {
+    setStartTour(true);
+  };
+
+  const handleEndTour = () => {
+    setStartTour(false);
+  };
 
   const fetchStrangers = async () => {
     const _strangers = await getStrangerNovelistsAction(1, 20);
@@ -99,30 +109,41 @@ export default function HomePage() {
   }, [authState]);
 
   return (
-    <S.ParentWrapperContainer>
-      <S.LeftWrapperContainer>
-        <S.ContentContainer>
-          <S.SubText>Friends</S.SubText>
-          <S.ListContainer>
-            <ShouldRender
-              if={friendsMuses === undefined || friendsMuses.length === 0}
-            >
-              <S.SubText></S.SubText>
-              <S.SubText></S.SubText>
-              <S.SubText>No friends yet</S.SubText>
-            </ShouldRender>
-            {novelist?.friends.map((friend) => (
-              <FriendListItem
-                key={friend?.username}
-                novelist={friend}
-                isRequest={false}
-              ></FriendListItem>
-            ))}
-          </S.ListContainer>
-        </S.ContentContainer>
-      </S.LeftWrapperContainer>
-      <S.RightWrapperContainer>
-        {/* <S.ContentContainer>
+    <S.PageContainer>
+      {/* <ShouldRender if={!startTour}>
+        <S.Button onClick={handleStartTour}>Start Tour</S.Button>
+      </ShouldRender>
+      {startTour && (
+        <HomeTourGuide
+          start={startTour}
+          setStartTour={setStartTour}
+          onTourEnd={handleEndTour}
+        />
+      )} */}
+      <S.ParentWrapperContainer>
+        <S.LeftWrapperContainer>
+          <S.ContentContainer className="friends-container">
+            <S.SubText>Friends</S.SubText>
+            <S.ListContainer id="home-tour-step-1">
+              <ShouldRender
+                if={friendsMuses === undefined || friendsMuses.length === 0}
+              >
+                <S.SubText></S.SubText>
+                <S.SubText></S.SubText>
+                <S.SubText>No friends yet</S.SubText>
+              </ShouldRender>
+              {novelist?.friends.map((friend) => (
+                <FriendListItem
+                  key={friend?.username}
+                  novelist={friend}
+                  isRequest={false}
+                ></FriendListItem>
+              ))}
+            </S.ListContainer>
+          </S.ContentContainer>
+        </S.LeftWrapperContainer>
+        <S.RightWrapperContainer>
+          {/* <S.ContentContainer>
           <S.SubText>Videos by your friends</S.SubText>
           <S.PartitionContainer>
             {friendsMusesWithVideos?.map((friendMuseWithVideo) => (
@@ -133,7 +154,7 @@ export default function HomePage() {
             ))}
           </S.PartitionContainer>
         </S.ContentContainer> */}
-        {/* <S.ContentContainer>
+          {/* <S.ContentContainer>
             <S.SubText>Dive into the Stories</S.SubText>
             <S.PartitionContainer>
               {storyboards?.map((storyBoard) => (
@@ -144,51 +165,54 @@ export default function HomePage() {
               ))}
             </S.PartitionContainer>
           </S.ContentContainer> */}
-        <ShouldRender
-          if={friendsMuses !== undefined && friendsMuses.length > 0}
-        >
-          <S.ContentContainer>
-            <S.SubText>characters by your friends</S.SubText>
+          <ShouldRender
+            if={friendsMuses !== undefined && friendsMuses.length > 0}
+          >
+            <S.ContentContainer id="home-tour-step-2">
+              <S.SubText>characters by your friends</S.SubText>
+              <S.PartitionContainer>
+                {friendsMuses?.map((knownMuse) => (
+                  <MuseCard key={knownMuse?.id} muse={knownMuse}></MuseCard>
+                ))}
+              </S.PartitionContainer>
+            </S.ContentContainer>
+          </ShouldRender>
+          <S.ContentContainer id="home-tour-step-3">
+            <S.SubText>Friend Suggestions</S.SubText>
             <S.PartitionContainer>
-              {friendsMuses?.map((knownMuse) => (
-                <MuseCard key={knownMuse?.id} muse={knownMuse}></MuseCard>
+              {strangers?.map((stranger) => (
+                <StrangerCard
+                  key={stranger?.username}
+                  novelist={stranger}
+                  isRequest={false}
+                ></StrangerCard>
               ))}
             </S.PartitionContainer>
           </S.ContentContainer>
-        </ShouldRender>
-        <S.ContentContainer>
-          <S.SubText>Friend Suggestions</S.SubText>
-          <S.PartitionContainer>
-            {strangers?.map((stranger) => (
-              <StrangerCard
-                key={stranger?.username}
-                novelist={stranger}
-                isRequest={false}
-              ></StrangerCard>
-            ))}
-          </S.PartitionContainer>
-        </S.ContentContainer>
-        <S.ContentContainer>
-          <S.SubText>Public Characters out there</S.SubText>
-          <S.PartitionContainer>
-            {unknownMuses?.map((unknownMuse) => (
-              <MuseCard key={unknownMuse?.id} muse={unknownMuse}></MuseCard>
-            ))}
-          </S.PartitionContainer>
-        </S.ContentContainer>
-        {/* <S.ContentContainer>
+          <S.ContentContainer id="home-tour-step-4">
+            <S.SubText>Public Characters out there</S.SubText>
+            <S.PartitionContainer>
+              {unknownMuses?.map((unknownMuse) => (
+                <MuseCard key={unknownMuse?.id} muse={unknownMuse}></MuseCard>
+              ))}
+            </S.PartitionContainer>
+          </S.ContentContainer>
+          {/* <S.ContentContainer>
           <S.SubText>Interactions</S.SubText>
           {prompts?.map((prompt) => (
             <PromptComponent key={prompt.id} prompt={prompt} />
           ))}
         </S.ContentContainer> */}
-        <S.ContentContainer>
-          <S.SubText>Updates from your friends</S.SubText>
-          {activities?.map((activity) => (
-            <ActivityBox key={activity?.id} activity={activity}></ActivityBox>
-          ))}
-        </S.ContentContainer>
-      </S.RightWrapperContainer>
-    </S.ParentWrapperContainer>
+          <S.ContentContainer>
+            <S.SubText id="home-tour-step-5">
+              Updates from your friends
+            </S.SubText>
+            {activities?.map((activity) => (
+              <ActivityBox key={activity?.id} activity={activity}></ActivityBox>
+            ))}
+          </S.ContentContainer>
+        </S.RightWrapperContainer>
+      </S.ParentWrapperContainer>
+    </S.PageContainer>
   );
 }

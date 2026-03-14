@@ -1,5 +1,29 @@
 import { styled } from "styled-components";
 
+export const PageContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 0.5em;
+  gap: 0.5em;
+`;
+
+export const Button = styled.button`
+  padding: 0.5em 1em;
+  background-color: var(--accent);
+  color: var(--text);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: var(--accent-hover);
+  }
+`;
+
 export const ParentWrapperContainer = styled.div`
   display: flex;
   flex-direction: row;

@@ -646,6 +646,10 @@ export const InfoItem = styled.div`
   width: inherit;
   font-size: 12px;
   padding-inline: 20px;
+
+  @media (max-width: 1024px) {
+    padding-inline: 5px;
+  }
 `;
 
 export const InfoLabel = styled.span`
@@ -678,6 +682,12 @@ export const FandomValue = styled.span<{ color: string }>`
   &:hover {
     filter: brightness(1.2); /* Slight brightening effect */
     transform: translateY(-1px); /* Subtle hover lift */
+  }
+
+  @media (max-width: 1024px) {
+    letter-spacing: 1px;
+    padding: 4px 8px;
+    max-width: 300px;
   }
 `;
 

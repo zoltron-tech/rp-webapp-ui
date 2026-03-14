@@ -33,6 +33,7 @@ import { Image } from "@/components/image-viewer/styled";
 import MuseListItem from "@/components/muse-list-item";
 import ProfileFriendListItem from "@/components/profile-friend-list-item";
 import { AppDropdownMenu } from "@/components/profile-more-dropdown";
+import ProfileTourGuide from "@/components/profile-tour-guide";
 import PromptInput from "@/components/prompt-input";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
 import StoryCard from "@/components/story-card";
@@ -85,6 +86,7 @@ const useGetActivities = (username: string) => {
 
 export default function UserProfilePage({}) {
   const params = useParams();
+  const [startTour, setStartTour] = useState(false);
   const authState = useGlobalState("authState");
   const [showUnfriendAlert, setShowUnfriendAlert] = useState(false);
   const [showBlockAlert, setShowBlockAlert] = useState(false);
@@ -127,6 +129,14 @@ export default function UserProfilePage({}) {
   }, [novelist, userNovelist, isCurrentUser]);
 
   const toggleFriends = () => setShowAllFriends((prev) => !prev);
+
+  const handleStartTour = () => {
+    setStartTour(true);
+  };
+
+  const handleEndTour = () => {
+    setStartTour(false);
+  };
 
   const handleCopyUsername = () => {
     if (username) {
@@ -426,6 +436,33 @@ export default function UserProfilePage({}) {
 
   return (
     <>
+      {/* {!startTour && (
+        <button
+          type="button"
+          onClick={handleStartTour}
+          style={{
+            background: "var(--bg-3)",
+            border: "1px solid var(--bg-6)",
+            borderRadius: "6px",
+            color: "var(--text)",
+            cursor: "pointer",
+            left: "12px",
+            padding: "0.4rem 0.8rem",
+            position: "fixed",
+            top: "12px",
+            zIndex: 11000,
+          }}
+        >
+          Start Profile Tour
+        </button>
+      )}
+      {startTour && (
+        <ProfileTourGuide
+          start={startTour}
+          setStartTour={setStartTour}
+          onTourEnd={handleEndTour}
+        />
+      )} */}
       <AppAlertDialog
         heading={`Unfriend ${username}?`}
         text={`Are you sure you want to remove ${username} from your friends list?`}
@@ -495,7 +532,7 @@ export default function UserProfilePage({}) {
             : ""
         }
       />
-      <S.Content>
+      <S.Content id="profile-tour-step-1">
         <S.ContentRight>
           <Flex
             direction="row"
@@ -519,9 +556,7 @@ export default function UserProfilePage({}) {
           <S.ContentInner>
             <ShouldRender if={authState === "LOGGED_IN"}>
               <S.ProfileDropdownMenuContainer>
-                <ShouldRender if={user?.emailVerified === true}>
-                  {renderConnectionDropdown(novelist?.connection, username)}
-                </ShouldRender>
+                {renderConnectionDropdown(novelist?.connection, username)}
                 <ShouldRender
                   if={!isCurrentUser && username !== "novelistworld"}
                 >
@@ -593,7 +628,7 @@ export default function UserProfilePage({}) {
                 </ShouldRender>
               </S.ProfileDropdownMenuContainer>
             </ShouldRender>
-            <Flex>
+            <Flex id="profile-tour-step-2">
               <S.NameMobile>
                 {novelist?.firstName} {novelist?.lastName}
               </S.NameMobile>
@@ -626,7 +661,7 @@ export default function UserProfilePage({}) {
               </ShouldRender>
             </S.UsernameContainer>
             <ShouldRender if={username !== "novelistworld"}>
-              <Flex align="flex-start">
+              <Flex id="profile-tour-step-3" align="flex-start">
                 <Flex gap={"2px"}>
                   <FcTreeStructure size={"16px"} />
                   <S.InfoTextBold>{novelist?.friendsCount}</S.InfoTextBold>{" "}
@@ -649,6 +684,7 @@ export default function UserProfilePage({}) {
               if={mutualFriends !== undefined && mutualFriends?.length > 0}
             >
               <Flex
+                id="profile-tour-step-4"
                 align="center"
                 justify="flex-start"
                 gap="0.5rem"
@@ -670,7 +706,7 @@ export default function UserProfilePage({}) {
             <ShouldRender
               if={!!(novelist?.about && novelist?.about.length > 0)}
             >
-              <S.AboutContainer>
+              <S.AboutContainer id="profile-tour-step-5">
                 <RichTextRenderer
                   savedText={novelist?.about ?? ""}
                   collapsedHeight={100}
@@ -680,18 +716,24 @@ export default function UserProfilePage({}) {
             <ShouldRender
               if={!!(novelist?.museCount && novelist.museCount > 0)}
             >
-              <S.SubText>{`Characters (${novelist?.museCount})`}</S.SubText>
-              <S.MuseList>
-                {novelist?.muses.slice(0, 3).map((muse) => (
-                  <MuseListItem key={muse.id} muse={muse}></MuseListItem>
-                ))}
-              </S.MuseList>
-              <S.SeeMoreLink onClick={toMusesPage}>
-                <span>
-                  See all characters
-                  <MdOutlineKeyboardDoubleArrowRight />
-                </span>
-              </S.SeeMoreLink>
+              <Flex
+                id="profile-tour-step-6"
+                style={{ width: "100%" }}
+                direction="column"
+              >
+                <S.SubText>{`Characters (${novelist?.museCount})`}</S.SubText>
+                <S.MuseList>
+                  {novelist?.muses.slice(0, 3).map((muse) => (
+                    <MuseListItem key={muse.id} muse={muse}></MuseListItem>
+                  ))}
+                </S.MuseList>
+                <S.SeeMoreLink onClick={toMusesPage}>
+                  <span>
+                    See all characters
+                    <MdOutlineKeyboardDoubleArrowRight />
+                  </span>
+                </S.SeeMoreLink>
+              </Flex>
             </ShouldRender>
             <ShouldRender
               if={
@@ -699,20 +741,26 @@ export default function UserProfilePage({}) {
                 !!(novelist?.friends && novelist.friends.length > 0)
               }
             >
-              <S.SubText>{`Friends (${novelist?.friends.length})`}</S.SubText>
+              <Flex
+                id="profile-tour-step-7"
+                style={{ width: "100%" }}
+                direction="column"
+              >
+                <S.SubText>{`Friends (${novelist?.friends.length})`}</S.SubText>
 
-              <S.FriendList ref={listRef} maxHeight={maxHeight}>
-                {novelist?.friends.map((friend) => (
-                  <ProfileFriendListItem key={friend.id} friend={friend} />
-                ))}
-              </S.FriendList>
+                <S.FriendList ref={listRef} maxHeight={maxHeight}>
+                  {novelist?.friends.map((friend) => (
+                    <ProfileFriendListItem key={friend.id} friend={friend} />
+                  ))}
+                </S.FriendList>
 
-              {novelist?.friends !== undefined &&
-                novelist?.friends.length > 3 && (
-                  <S.SeeMoreLink onClick={toggleFriends}>
-                    <span>{showAllFriends ? "Show less" : "Show all"}</span>
-                  </S.SeeMoreLink>
-                )}
+                {novelist?.friends !== undefined &&
+                  novelist?.friends.length > 3 && (
+                    <S.SeeMoreLink onClick={toggleFriends}>
+                      <span>{showAllFriends ? "Show less" : "Show all"}</span>
+                    </S.SeeMoreLink>
+                  )}
+              </Flex>
             </ShouldRender>
             <ShouldRender if={!!(storyBoards && storyBoards?.length > 0)}>
               <S.SubText>{`Stories (${storyBoards?.length})`}</S.SubText>

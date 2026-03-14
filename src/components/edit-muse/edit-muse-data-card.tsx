@@ -97,6 +97,8 @@ export default function EditMuseDataCard() {
   const [imageUploading, setImageUploading] = useState(false);
   const [showAccentPicker, setShowAccentPicker] = useState(Boolean(accent));
   const [showMediaHelpInfo, setShowMediaHelpInfo] = useState(false);
+  const [showBackstoryPrompt, setShowBackstoryPrompt] = useState(false);
+  const [savedMuseId, setSavedMuseId] = useState<string | null>(id);
   const [showMediaFields, setShowMediaFields] = useState(
     Boolean(wallpaper || cardBackground),
   );
@@ -455,22 +457,25 @@ export default function EditMuseDataCard() {
         return;
       }
 
+      const returnedMuseId = response.id ?? id;
+      setMuseState({ id: returnedMuseId });
+      setSavedMuseId(returnedMuseId);
+
       // Success: clear temp uploads because they are now used in the final state
       setTempUploads({});
 
       successToast("Data updated successfully.");
-      // Reset form to previous state
-      routeToPage(ROUTES.Profile.View(user?.username || "").Muses);
+      setShowBackstoryPrompt(true);
     },
     [
-      routeToPage,
-      novelist,
       story,
       image,
       wallpaper,
       cardBackground,
       accent,
-      setGlobalState,
+      id,
+      setMuseState,
+      showBackstoryPrompt,
     ],
   );
 
@@ -486,8 +491,33 @@ export default function EditMuseDataCard() {
     setShowMediaHelpInfo((prev) => !prev);
   }, []);
 
+  const handleBackstoryCancel = useCallback(() => {
+    setShowBackstoryPrompt(false);
+    routeToPage(ROUTES.Profile.View(user?.username || "").Muses);
+  }, [routeToPage, user]);
+
+  const handleBackstoryConfirm = useCallback(() => {
+    setShowBackstoryPrompt(false);
+    if (!savedMuseId) {
+      routeToPage(ROUTES.Profile.View(user?.username || "").Muses);
+      return;
+    }
+    routeToPage(ROUTES.Profile.Muses.About(savedMuseId));
+  }, [routeToPage, savedMuseId, user]);
+
   return (
     <S.Card>
+      <AppAlertDialog
+        open={showBackstoryPrompt}
+        onOpenChange={setShowBackstoryPrompt}
+        onCancel={handleBackstoryCancel}
+        onConfirm={handleBackstoryConfirm}
+        actionButtonLabel="Yes"
+        closeButtonText="No"
+        actionColor="neutral"
+        heading="Backstory"
+        text="Would you like to add or edit backstory for this muse now?"
+      />
       <S.FormContainer>
         <Form.Root onSubmit={handleSubmit} onReset={handleReset}>
           <S.TopBar>
@@ -705,15 +735,17 @@ export default function EditMuseDataCard() {
               </S.ColorPickerWrapper>
             )}
           </S.MediaUploadSectionContainer>
-          <Separator.Root className="separator" orientation="horizontal" />
-          <S.AboutSectionsLink
-            onClick={() => routeToPage(ROUTES.Profile.Muses.About(id || ""))}
-          >
-            <span>
-              Edit Character Story
-              <MdDoubleArrow size={20} />
-            </span>
-          </S.AboutSectionsLink>
+          <ShouldRender if={Boolean(id)}>
+            <Separator.Root className="separator" orientation="horizontal" />
+            <S.AboutSectionsLink
+              onClick={() => routeToPage(ROUTES.Profile.Muses.About(id || ""))}
+            >
+              <span>
+                Edit Character Story
+                <MdDoubleArrow size={20} />
+              </span>
+            </S.AboutSectionsLink>
+          </ShouldRender>
           <Separator.Root className="separator" orientation="horizontal" />
           <ShouldRender if={Boolean(error)}>
             <ErrorBox className="error">

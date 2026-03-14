@@ -38,7 +38,7 @@ export const usePageRouter = () => {
       skipRedirect: Boolean = false,
     ) => {
       const data = await method();
-
+      console.log("data from baseDataLoader", data);
       if (
         !data ||
         ("message" in (data as ErrorType) &&
@@ -46,11 +46,11 @@ export const usePageRouter = () => {
       ) {
         // handle error
         stopPageLoading();
-        if (!skipRedirect) {
-          routeToPage("/404", {
-            skipLoading: true,
-          });
-        }
+        // if (!skipRedirect) {
+        //   routeToPage("/404", {
+        //     skipLoading: true,
+        //   });
+        // }
         return null;
       }
 

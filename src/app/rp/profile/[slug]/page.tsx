@@ -1,6 +1,7 @@
 "use client";
 
 import { Flex } from "@novelist-world/ui";
+import classNames from "classnames";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BsPersonFillCheck, BsPersonFillUp, BsThreeDots } from "react-icons/bs";
@@ -33,7 +34,6 @@ import { Image } from "@/components/image-viewer/styled";
 import MuseListItem from "@/components/muse-list-item";
 import ProfileFriendListItem from "@/components/profile-friend-list-item";
 import { AppDropdownMenu } from "@/components/profile-more-dropdown";
-import ProfileTourGuide from "@/components/profile-tour-guide";
 import PromptInput from "@/components/prompt-input";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
 import StoryCard from "@/components/story-card";
@@ -42,6 +42,7 @@ import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import type { Novelist, StoryBoard } from "@/types";
 import type { Activity } from "@/types/activity";
+import { ACCENT_MAP, type Accent } from "@/types/theme";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDate } from "@/utils/helpers";
@@ -127,6 +128,16 @@ export default function UserProfilePage({}) {
     const userFriendIds = new Set(userNovelist?.friends.map((f) => f.id));
     return novelist?.friends.filter((f) => userFriendIds.has(f.id));
   }, [novelist, userNovelist, isCurrentUser]);
+
+  const profileAccent = useMemo(() => {
+    if (typeof novelist?.palette !== "number") {
+      return undefined;
+    }
+
+    const palette = novelist.palette as Accent;
+    console.log("PROFILE ACCENT", { accent: ACCENT_MAP[palette], palette });
+    return ACCENT_MAP[palette] ?? ACCENT_MAP[0];
+  }, [novelist?.palette]);
 
   const toggleFriends = () => setShowAllFriends((prev) => !prev);
 
@@ -532,7 +543,11 @@ export default function UserProfilePage({}) {
             : ""
         }
       />
-      <S.Content id="profile-tour-step-1">
+      <S.Content
+        id="profile-tour-step-1"
+        className={classNames(profileAccent)}
+        data-accent={profileAccent}
+      >
         <S.ContentRight>
           <Flex
             direction="row"

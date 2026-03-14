@@ -30,6 +30,18 @@ export default function MusesListPage({}) {
   const { on, off } = useCustomEvents(EVENTS.MUSE.base);
   const { successToast } = useUIContext();
   const { routeToPage } = usePageRouter();
+  const [visibility, setVisibility] = useState({
+    FRIENDS: true,
+    ONLY_ME: true,
+    PUBLIC: true,
+  });
+
+  const displayedMuses = muses?.filter((m) => {
+    if (m.privacy === "PUBLIC") return visibility.PUBLIC;
+    if (m.privacy === "FRIENDS") return visibility.FRIENDS;
+    if (m.privacy === "ONLY_ME") return visibility.ONLY_ME;
+    return true;
+  });
 
   const fetchMuses = async () => {
     const _muses = await baseDataLoader(() =>
@@ -84,6 +96,49 @@ export default function MusesListPage({}) {
         })}
       </S.BackgroundContainer>
       <BreadCrumb label="Characters" username={username} />
+      {isCurrentUser && (
+        <S.FilterRow>
+          <label>
+            <input
+              type="checkbox"
+              checked={visibility.PUBLIC}
+              onChange={(e) =>
+                setVisibility((prev) => ({
+                  ...prev,
+                  PUBLIC: e.target.checked,
+                }))
+              }
+            />
+            Public
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={visibility.FRIENDS}
+              onChange={(e) =>
+                setVisibility((prev) => ({
+                  ...prev,
+                  FRIENDS: e.target.checked,
+                }))
+              }
+            />
+            Friends
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={visibility.ONLY_ME}
+              onChange={(e) =>
+                setVisibility((prev) => ({
+                  ...prev,
+                  ONLY_ME: e.target.checked,
+                }))
+              }
+            />
+            Only me
+          </label>
+        </S.FilterRow>
+      )}
       <S.MuseListContainer>
         <ShouldRender
           if={
@@ -95,7 +150,7 @@ export default function MusesListPage({}) {
         >
           <MuseCard disabled key={null} muse={INITIAL_MUSE}></MuseCard>
         </ShouldRender>
-        {muses?.map((muse) => (
+        {displayedMuses?.map((muse) => (
           <MuseCard key={muse?.id} muse={muse}></MuseCard>
         ))}
       </S.MuseListContainer>

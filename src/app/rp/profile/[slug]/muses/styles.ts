@@ -47,6 +47,84 @@ export const Container = styled.div`
   gap: 0.5rem;
 `;
 
+export const FilterRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  margin-bottom: 8px;
+  max-width: 800px;
+  margin-inline: auto;
+  padding-inline: 10px;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font);
+  color: var(--text-secondary);
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+    font-size: var(--font-size);
+    font-weight: var(--font-weight-regular);
+    font-family: var(--font);
+    line-height: 1.4;
+    color: var(--text);
+  }
+
+  input[type="checkbox"] {
+    all: unset;
+    width: 20px;
+    height: 20px;
+    aspect-ratio: 1;
+    border-radius: 4px;
+    margin: 0;
+    overflow: hidden;
+    accent-color: var(--accent);
+    outline-offset: 2px;
+    background-color: var(--bg-3);
+    border: 1px solid var(--bg-6);
+    cursor: pointer;
+
+    &:checked {
+      background-color: var(--accent);
+      border: 1px solid var(--accent-hover);
+
+      &::before {
+        content: "✓";
+        display: block;
+        color: var(--text);
+        text-align: center;
+        line-height: 20px;
+        font-weight: var(--font-weight-bold);
+      }
+    }
+
+    &:not(:checked) {
+      background-color: var(--bg-5);
+      border: 1px solid var(--bg-6);
+    }
+
+    &:hover {
+      outline: 1px solid var(--accent);
+    }
+
+    &:focus {
+      outline: 2px solid var(--accent);
+    }
+
+    &[disabled] {
+      background-color: var(--bg-6);
+      cursor: not-allowed;
+      color: var(--text-secondary);
+    }
+  }
+`;
+
 export const MuseListContainer = styled.div`
   ${DEV_MODE_BORDER("red")}
   display: flex;

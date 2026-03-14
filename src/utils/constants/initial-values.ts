@@ -33,6 +33,7 @@ export const INITIAL_NOVELIST: Novelist = {
   museCount: 0,
   muses: [],
   note: "",
+  palette: 0,
   tier: STANDARD_TIER,
   username: "",
 };

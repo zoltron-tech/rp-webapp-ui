@@ -99,6 +99,7 @@ export type Novelist = {
   note: string;
   image: string;
   museCount: number;
+  palette: number;
   muses: Muse[];
   friendsCount: number;
   friends: Friend[];

@@ -10,7 +10,6 @@ import {
   FcLibrary,
   FcManager,
   FcMusic,
-  FcNews,
   FcServices,
   FcSupport,
   FcVoicePresentation,
@@ -24,7 +23,6 @@ import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { toggleState } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
-import { UnreadBadge } from "../chat-menu-modal/styles";
 import { ShouldRender } from "../common";
 import { AvatarNew } from "../common/avatar-new";
 import { AppAlertDialog } from "../dialog";
@@ -123,12 +121,8 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
     routeToPage(ROUTES.outgoingThreads);
   };
 
-  const toExplorePromptsPage = () => {
-    routeToPage(ROUTES.explorePrompts);
-  };
-
-  const toNewsFeed = () => {
-    routeToPage(ROUTES.newsFeed);
+  const toExplorePage = () => {
+    routeToPage(ROUTES.explore);
   };
 
   const toUserProfile = () => {
@@ -188,16 +182,15 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
         <S.Menu className={classNames({ open })}>
           <ShouldRender if={authState === "LOGGED_IN"}>
             <S.List>
+              <S.Element onClick={toExplorePage}>
+                <FcVoicePresentation />
+                Explore posts
+              </S.Element>
+              <S.Separator />
               <S.Element onClick={toUserProfile}>
                 <FcManager />
                 Your profile
               </S.Element>
-              <S.Separator />
-              <S.Element onClick={toNewsFeed}>
-                <FcNews />
-                Posts by novelists
-              </S.Element>
-
               <S.Element onClick={toMusesPage}>
                 <FcConferenceCall />
                 Your characters
@@ -209,10 +202,6 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
               <S.Element onClick={toOutgoingThreadsPage}>
                 <FcCollaboration />
                 Your interactions
-              </S.Element>
-              <S.Element onClick={toExplorePromptsPage}>
-                <FcVoicePresentation />
-                Explore prompts
               </S.Element>
             </S.List>
             <S.Separator />

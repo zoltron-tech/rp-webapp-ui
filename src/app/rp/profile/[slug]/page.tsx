@@ -5,6 +5,7 @@ import classNames from "classnames";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BsPersonFillCheck, BsPersonFillUp, BsThreeDots } from "react-icons/bs";
+import { FaPeopleGroup } from "react-icons/fa6";
 import {
   FcAnswers,
   FcCalendar,
@@ -16,6 +17,7 @@ import {
   FcTreeStructure,
 } from "react-icons/fc";
 import { GiCheckMark, GiCrossMark } from "react-icons/gi";
+import { GoChevronDown, GoChevronUp } from "react-icons/go";
 import { IoMdPersonAdd } from "react-icons/io";
 import { IoPersonRemove } from "react-icons/io5";
 import {
@@ -744,6 +746,7 @@ export default function UserProfilePage({}) {
                 </S.MuseList>
                 <S.SeeMoreLink onClick={toMusesPage}>
                   <span>
+                    <FaPeopleGroup />
                     See all characters
                     <MdOutlineKeyboardDoubleArrowRight />
                   </span>
@@ -772,7 +775,10 @@ export default function UserProfilePage({}) {
                 {novelist?.friends !== undefined &&
                   novelist?.friends.length > 3 && (
                     <S.SeeMoreLink onClick={toggleFriends}>
-                      <span>{showAllFriends ? "Show less" : "Show all"}</span>
+                      <span>
+                        {showAllFriends ? "Show less" : "Show all"}{" "}
+                        {showAllFriends ? <GoChevronUp /> : <GoChevronDown />}
+                      </span>
                     </S.SeeMoreLink>
                   )}
               </Flex>

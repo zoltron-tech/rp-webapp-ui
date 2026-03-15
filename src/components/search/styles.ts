@@ -114,7 +114,7 @@ export const Wrapper = styled.div`
   --max-width: 390px;
   --border-radius: calc(var(--height) / 2);
   --type-select-radius: calc(var(--border-radius) / 2);
-  --type-select-width: calc(2 * var(--height));
+  --type-select-width: calc(2 * var(--height) + 10px);
   --type-select-gap: 2px;
 
   @media (max-width: 700px) {
@@ -193,6 +193,7 @@ export const TypeSelect = styled.div`
   top: 50%;
   transform: translateY(-51%);
   left: 0px;
+  gap: 3px;
   color: ${({ theme }: any) => theme.textPrimary};
   z-index: ${Z_INDEX.AVATAR};
 

@@ -81,7 +81,7 @@ export const PromptThreads: FC = () => {
           </ShouldRender>
           <S.PromptThreads.LeftPost />
           <Collapsible.Trigger asChild>
-            <S.PromptThreads.Toggle>
+            <S.PromptThreads.Toggle $active={open}>
               {buttonText}{" "}
               <ShouldRender if={comments.length > 0}>
                 <S.ThreadsCounter>{comments.length}</S.ThreadsCounter>

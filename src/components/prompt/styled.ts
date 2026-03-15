@@ -214,30 +214,36 @@ export const PromptThreadsSeparatorPartialLast = styled(Separator.Root)`
   background-color: var(--bg-7);
 `;
 
-const PromptThreadsToggle = styled.button`
+const PromptThreadsToggle = styled.button<{ $active: boolean }>`
   all: unset;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
 
-  color: var(--text);
+  min-width: 120px;  
+  color: ${({ $active }) => ($active ? "var(--accent-hover)" : "var(--accent)")};
   font-size: var(--font-size);
-  font-family: var(--font);
-  font-weight: var(--font-weight-medium);
-  padding: 6px 16px;
+  font-weight: var(--font-weight-semi-bold);
+  padding: 2px 12px;
   min-height: 32px;
-  border-radius: 5px;
-  border: 1.5px solid var(--bg-7);
-  background-color: var(--bg-4);
+  border-radius: 50px;
+  border: 1.5px solid ${({ $active }) => ($active ? "var(--accent-hover)" : "var(--accent)")};
+  background: ${({ $active }) =>
+    $active
+      ? "color-mix(in srgb, var(--accent) 30%, transparent)"
+      : "color-mix(in srgb, var(--accent) 10%, transparent)"};
+  transition: all 0.2s ease;
   white-space: nowrap;
 
   &:hover {
-    background-color: var(--bg-3);
+    background-color: color-mix(in srgb, var(--accent) 10%, transparent);
+    color: var(--accent-hover);
   }
 
   &:active {
-    background-color: var(--bg-2);
+    background-color: color-mix(in srgb, var(--accent) 30%, transparent);
+    color: var(--accent-hover);
   }
 
   &:focus {

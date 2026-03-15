@@ -1,0 +1,124 @@
+import styled from "styled-components";
+import { DEV_MODE_BORDER } from "@/theme";
+
+export const Container = styled.div`
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+`;
+
+export const ModeSwitcher = styled.div`
+  width: 95%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block: 8px;
+  margin-inline: auto;
+  padding-inline: 0;
+
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background-color: var(--bg-6);
+    opacity: 0.8;
+  }
+
+  @media (max-width: 800px) {
+    & {
+      padding-inline: 5px;
+    }
+  }
+`;
+
+export const ModeTabButton = styled.button<{ $active: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 112px;
+  padding: 6px 16px;
+  border: 1px solid
+    ${({ $active }) => ($active ? "var(--accent-hover)" : "var(--accent-4)")};
+  border-radius: 50px;
+  background: ${({ $active }) =>
+    $active
+      ? "color-mix(in srgb, var(--accent) 30%, transparent)"
+      : "color-mix(in srgb, var(--accent) 10%, transparent)"};
+  font-size: var(--font-size-h6);
+  font-weight: var(--font-weight-semi-bold);
+  font-style: italic;
+  color: ${({ $active }) => ($active ? "var(--accent-hover)" : "var(--accent-6)")};
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--accent-hover);
+    border-color: var(--accent-hover);
+    background: color-mix(in srgb, var(--accent) 20%, transparent);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--accent-hover) 50%, transparent);
+  }
+
+  @media (max-width: 600px) {
+    & {
+      font-size: var(--font-size);
+      font-weight: var(--font-weight-semi-bold);
+    }
+  }
+`;
+
+export const ScrollToTopButton = styled.button<{ $active: boolean }>`
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  min-width: 0;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 50%;
+  z-index: 20;
+  background-color: var(--bg-3);
+  border: 1px solid
+    ${({ $active }) => ($active ? "var(--accent-hover)" : "var(--accent-4)")};
+  color: var(--accent);
+
+  &:hover {
+    color: var(--accent-hover);
+    border-color: var(--accent-hover);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--accent-hover) 50%, transparent);
+  }
+
+  @media (max-width: 600px) {
+    & {
+      right: 12px;
+      bottom: 12px;
+      width: 44px;
+      height: 44px;
+    }
+  }
+`;
+
+export const PromptListContainer = styled.div`
+  ${DEV_MODE_BORDER("red")}
+  padding-inline: 10px;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 10px;
+  gap: 0rem;
+  width: 100%;
+
+  @media (max-width: 800px) {
+    & {
+      padding-inline: 5px;
+      gap: 0.5rem;
+    }
+  }
+`;

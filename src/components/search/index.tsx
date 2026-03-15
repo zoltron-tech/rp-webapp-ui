@@ -2,6 +2,7 @@
 import classNames from "classnames";
 import type { JSX } from "react";
 import { type FC, useCallback, useEffect, useRef, useState } from "react";
+import { BiExpandVertical } from "react-icons/bi";
 import { BsSearch } from "react-icons/bs";
 import { CgSpinner } from "react-icons/cg";
 import { IoCloseOutline } from "react-icons/io5";
@@ -119,7 +120,7 @@ export const Search: FC<SearchProps> = ({
             className={classNames({ expanded: expandTag })}
           >
             {selectedType}
-
+            <BiExpandVertical size={12} />
             <S.TypeSelectOptions>
               {[selectedType]
                 .concat(types.filter((type) => type !== selectedType))

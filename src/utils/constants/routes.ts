@@ -1,5 +1,6 @@
 export const ROUTES = {
-  explorePrompts: "/rp/explore-prompts",
+  explore: "/rp/explore",
+  explorePrompts: "/rp/explore?tab=prompts",
   FAQs: "/rp/faqs",
   ForgotPassword: "/rp/forgot-password",
   Home: "/rp/home",
@@ -14,7 +15,7 @@ export const ROUTES = {
     View: (novelistId: string) => `/rp/novelist/${novelistId}`,
   },
   Novelists: "/rp/novelists",
-  newsFeed: "/rp/news-feed",
+  newsFeed: "/rp/explore?tab=newsfeed",
   Oauth: {
     Callback: "/rp/oauth/callback",
     Failed: "/rp/oauth/failed",

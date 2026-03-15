@@ -278,7 +278,6 @@ export const SubText = styled.div`
   border-bottom: 2px solid;
   border-image: linear-gradient(
     to right,
-    transparent,
     var(--accent),
     transparent
   ) 1;

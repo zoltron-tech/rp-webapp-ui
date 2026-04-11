@@ -121,7 +121,7 @@ export const SenderSearch = styled.input`
   border: 1px solid var(--bg-6);
   background: var(--bg-4);
   color: var(--text);
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-input);
   font-family: var(--font);
 
   &:focus {
@@ -178,7 +178,7 @@ export const SenderInfo = styled.div`
 `;
 
 export const SenderName = styled.span`
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-input);
   color: var(--text);
   font-weight: var(--font-weight-semi-bold);
   overflow: hidden;
@@ -187,7 +187,7 @@ export const SenderName = styled.span`
 `;
 
 export const SenderType = styled.span`
-  font-size: var(--font-size-xsmall);
+  font-size: var(--font-size-input);
   color: var(--text-secondary);
 `;
 

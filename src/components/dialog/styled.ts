@@ -34,14 +34,15 @@ left: 50%;
 transform: translate(-50%, -50%);
 width: 95vw;
 max-width: 450px;
-padding: 25px;
+padding: 8px;
 animation: ${contentShow} 150ms ease-out;
 color: var(--text);
 font-family: var(--font);
 `;
 
 export const Title = styled(AlertDialog.Title)`
-margin: 0;
+margin-top: 10px;
+margin-left: 12px;
 font-size: var(--font-size-h4);
 font-weight: var(--font-weight-semi-bold);
 `;

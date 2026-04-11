@@ -8,7 +8,7 @@ import { useCookies } from "react-cookie";
 import { ThemeProvider } from "styled-components";
 import { GlobalMusicPlayer } from "@/components/global-music-player";
 import { ContentContainer, TopBar } from "@/components/layout";
-import { AuthProvider, MusicProvider, UIContextProvider } from "@/context";
+import { AuthProvider, MusicProvider, SocketProvider, UIContextProvider } from "@/context";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { THEME_DARK, THEME_LIGHT } from "@/theme";
@@ -81,11 +81,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         }}
       >
         <AuthProvider>
-          <UIContextProvider>
-            <MusicProvider>
-              <PageContainer>{children}</PageContainer>
-            </MusicProvider>
-          </UIContextProvider>
+          <SocketProvider>
+            <UIContextProvider>
+              <MusicProvider>
+                <PageContainer>{children}</PageContainer>
+              </MusicProvider>
+            </UIContextProvider>
+          </SocketProvider>
         </AuthProvider>
       </StoreProvider>
     </ThemeProvider>

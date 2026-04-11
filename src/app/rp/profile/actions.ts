@@ -169,6 +169,62 @@ export const sendFriendRequest = async (novelistId: string) => {
   return result;
 };
 
+export const blockUser = async (novelistId: string) => {
+  const jwt = await authenticateAndGetJWT();
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/connection/invoke`;
+  const body = {
+    connectionType: "BLOCKED",
+    targetId: novelistId,
+  };
+
+  const response = await fetch(URL, {
+    body: JSON.stringify(body),
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "POST",
+  });
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const result = await response.json();
+
+  return result;
+};
+
+export const blacklistUser = async (novelistId: string) => {
+  const jwt = await authenticateAndGetJWT();
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/connection/invoke`;
+  const body = {
+    connectionType: "BLACKLISTED",
+    targetId: novelistId,
+  };
+
+  const response = await fetch(URL, {
+    body: JSON.stringify(body),
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "POST",
+  });
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const result = await response.json();
+
+  return result;
+};
+
 export const acceptFriendRequest = async (novelistId: string) => {
   const jwt = await authenticateAndGetJWT();
 

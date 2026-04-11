@@ -4,6 +4,7 @@ import { Flex } from "@novelist-world/ui";
 import classNames from "classnames";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { BiHide } from "react-icons/bi";
 import { BsPersonFillCheck, BsPersonFillUp, BsThreeDots } from "react-icons/bs";
 import { FaPeopleGroup } from "react-icons/fa6";
 import {
@@ -53,6 +54,8 @@ import { getNovelistAction } from "../../novelists/actions";
 import { getAllStoryboardsByUsernameAction } from "../../story/actions";
 import {
   acceptFriendRequest,
+  blacklistUser,
+  blockUser,
   cancelFriendRequest,
   deleteFriendRequest,
   reportProfile,
@@ -93,6 +96,7 @@ export default function UserProfilePage({}) {
   const authState = useGlobalState("authState");
   const [showUnfriendAlert, setShowUnfriendAlert] = useState(false);
   const [showBlockAlert, setShowBlockAlert] = useState(false);
+  const [showBlackListAlert, setShowBlackListAlert] = useState(false);
   const [showReportAlert, setShowReportAlert] = useState(false);
   const [showReportNWAlert, setShowReportNWAlert] = useState(false);
   const [showContactSupportAlert, setShowContactSupportAlert] = useState(false);
@@ -210,6 +214,44 @@ export default function UserProfilePage({}) {
       });
 
       successToast("Friend request sent");
+    }
+  };
+
+  const handleBlockUser = async () => {
+    if (!novelist?.id) return;
+
+    const response = await blockUser(novelist.id);
+
+    if (response?.message === API_MESSAGE.Success) {
+      setNovelist((current) => {
+        if (!current) return current;
+        const copied = { ...current };
+
+        copied.connection = "BLOCKED";
+        return copied;
+      });
+
+      successToast("User blocked");
+      routeToPage(ROUTES.Home);
+    }
+  };
+
+  const handleBlackListUser = async () => {
+    if (!novelist?.id) return;
+
+    const response = await blacklistUser(novelist.id);
+
+    if (response?.message === API_MESSAGE.Success) {
+      setNovelist((current) => {
+        if (!current) return current;
+        const copied = { ...current };
+
+        copied.connection = "BLACKLISTED";
+        return copied;
+      });
+
+      successToast("User blacklisted");
+      routeToPage(ROUTES.Home);
     }
   };
 
@@ -513,8 +555,16 @@ export default function UserProfilePage({}) {
         text={`${username} will no longer be able to find you or view anything related to you or your characters. Are you sure you want to block ${username}?`}
         open={showBlockAlert}
         onOpenChange={setShowBlockAlert}
-        onConfirm={handleNotImplemented}
+        onConfirm={handleBlockUser}
         actionButtonLabel="Block"
+      />
+      <AppAlertDialog
+        heading={`Blacklist ${username}?`}
+        text={`You will no longer be able to see content posted by ${username}. Are you sure you want to blacklist ${username}?`}
+        open={showBlackListAlert}
+        onOpenChange={setShowBlackListAlert}
+        onConfirm={handleBlackListUser}
+        actionButtonLabel="Blacklist"
       />
       <AppAlertDialog
         heading="Contact Support"
@@ -559,10 +609,12 @@ export default function UserProfilePage({}) {
             <S.Avatar
               src={novelist?.image ?? null}
               alt={novelist?.firstName ?? "Avatar"}
+              username={novelist?.username}
             />
             <S.AvatarMobile
               src={novelist?.image ?? null}
               alt="profile-picture"
+              username={novelist?.username}
             />
             <ShouldRender
               if={novelist?.note !== undefined && novelist?.note?.length > 0}
@@ -598,6 +650,12 @@ export default function UserProfilePage({}) {
                         icon: <RiFlagFill size={22} />,
                         label: `Report ${username}`,
                         onClick: () => setShowReportAlert(true),
+                        variant: "danger",
+                      },
+                      {
+                        icon: <BiHide size={22} />,
+                        label: `Blacklist ${username}`,
+                        onClick: () => setShowBlackListAlert(true),
                         variant: "danger",
                       },
                       {

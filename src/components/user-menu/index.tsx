@@ -4,6 +4,7 @@ import classNames from "classnames";
 import { type FC, useCallback, useState } from "react";
 import {
   FcCollaboration,
+  FcComments,
   FcConferenceCall,
   FcExport,
   FcFaq,
@@ -125,6 +126,10 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
     routeToPage(ROUTES.explore);
   };
 
+  const toConversationsPage = () => {
+    routeToPage(ROUTES.conversations);
+  };
+
   const toUserProfile = () => {
     routeToPage(ROUTES.Profile.View(user?.username || "").Index);
   };
@@ -185,6 +190,10 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
               <S.Element onClick={toExplorePage}>
                 <FcVoicePresentation />
                 Explore posts
+              </S.Element>
+              <S.Element onClick={toConversationsPage}>
+                <FcComments />
+                Conversations
               </S.Element>
               <S.Separator />
               <S.Element onClick={toUserProfile}>

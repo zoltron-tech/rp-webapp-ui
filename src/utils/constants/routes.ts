@@ -1,4 +1,8 @@
 export const ROUTES = {
+  Conversation: {
+    View: (conversationId: string) => `/rp/conversations/${conversationId}`,
+  },
+  conversations: "/rp/conversations",
   explore: "/rp/explore",
   explorePrompts: "/rp/explore?tab=prompts",
   FAQs: "/rp/faqs",

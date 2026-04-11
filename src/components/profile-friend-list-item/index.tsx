@@ -42,6 +42,7 @@ export const ProfileFriendListItem: FC<Props> = ({
             alt={friend?.username ?? "Friend"}
             name="open"
             onClick={onAvatarClick}
+            username={friend.username}
           />
           <Flex
             direction="column"

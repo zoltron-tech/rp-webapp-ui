@@ -1,0 +1,350 @@
+"use client";
+
+import {
+  type FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import type { MentionDataItem } from "@/types";
+import { AvatarNew } from "../common/avatar-new";
+import { createMentionChip } from "../rich-text-editor-input/mention-chip";
+import * as S from "./styled";
+
+interface ChatRichInputProps {
+  placeholder?: string;
+  /** Plain-text value. Set to "" to clear the editor. */
+  value: string;
+  /** Fires with stripped plain text (for `hasValue` and external state). */
+  onChange: (text: string) => void;
+  /** Fires with raw innerHTML (for sending). */
+  onHtmlChange: (html: string) => void;
+  /** Called when Enter is pressed without Shift. */
+  onSubmit?: () => void;
+  mentionItems?: MentionDataItem[];
+  /** When provided, muses are fetched dynamically from the server on each query change. */
+  getMentionMuseItems?: (prefix: string) => Promise<MentionDataItem[]>;
+}
+
+export const ChatRichInput: FC<ChatRichInputProps> = ({
+  placeholder = "Write a message...",
+  value,
+  onChange,
+  onHtmlChange,
+  onSubmit,
+  mentionItems = [],
+  getMentionMuseItems,
+}) => {
+  const editorRef = useRef<HTMLDivElement>(null);
+  const [isEmpty, setIsEmpty] = useState(true);
+  const [showMention, setShowMention] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState("");
+  const [focusedIndex, setFocusedIndex] = useState(0);
+  const [dynamicMuses, setDynamicMuses] = useState<MentionDataItem[]>([]);
+  const mentionAnchorRef = useRef<{ node: Node; offset: number } | null>(null);
+
+  // Clear the editor when parent sets value to ""
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const currentContent = editor.innerHTML;
+    if (value === "" && currentContent !== "" && currentContent !== "<br>") {
+      editor.innerHTML = "";
+      setIsEmpty(true);
+      setShowMention(false);
+      mentionAnchorRef.current = null;
+      onChange("");
+      onHtmlChange("");
+    }
+  }, [value, onChange, onHtmlChange]);
+
+  const emitChange = useCallback(
+    (editor: HTMLDivElement) => {
+      const raw = editor.innerText || editor.textContent || "";
+      const text = raw
+        .replace(/\u200B/g, "") // strip zero-width spaces
+        .replace(/\u00A0/g, " ") // normalise non-breaking spaces
+        .trim();
+      setIsEmpty(text.length === 0);
+      onChange(text);
+      onHtmlChange(editor.innerHTML);
+    },
+    [onChange, onHtmlChange],
+  );
+
+  /**
+   * Attempts to convert a complete *italic* or **bold** markdown pattern
+   * immediately before the cursor into the corresponding HTML element.
+   * Returns true when a replacement was made.
+   */
+  const tryApplyFormatting = useCallback((): boolean => {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return false;
+
+    const range = sel.getRangeAt(0);
+    const node = range.startContainer;
+    if (node.nodeType !== Node.TEXT_NODE) return false;
+
+    const offset = range.startOffset;
+    const textBefore = (node.textContent ?? "").slice(0, offset);
+
+    // ── Bold: **word** ────────────────────────────────────────────────────
+    const boldMatch = textBefore.match(/\*\*([^*\n]+)\*\*$/);
+    if (boldMatch) {
+      const start = offset - boldMatch[0].length;
+      const replaceRange = document.createRange();
+      replaceRange.setStart(node, start);
+      replaceRange.setEnd(node, offset);
+      replaceRange.deleteContents();
+
+      const strong = document.createElement("strong");
+      strong.textContent = boldMatch[1];
+      replaceRange.insertNode(strong);
+
+      // Insert a plain text node so the cursor leaves the bold context
+      const anchor = document.createTextNode("\u200B");
+      strong.after(anchor);
+
+      const after = document.createRange();
+      after.setStart(anchor, 1);
+      after.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(after);
+      return true;
+    }
+
+    // ── Italic: *word* (opening * not preceded by *) ──────────────────────
+    const italicMatch = textBefore.match(/(?<!\*)\*(?!\*)([^*\n]+)\*(?!\*)$/);
+    if (italicMatch) {
+      const start = offset - italicMatch[0].length;
+      const replaceRange = document.createRange();
+      replaceRange.setStart(node, start);
+      replaceRange.setEnd(node, offset);
+      replaceRange.deleteContents();
+
+      const em = document.createElement("em");
+      em.textContent = italicMatch[1];
+      replaceRange.insertNode(em);
+
+      // Insert a plain text node so the cursor leaves the italic context
+      const anchor = document.createTextNode("\u200B");
+      em.after(anchor);
+
+      const after = document.createRange();
+      after.setStart(anchor, 1);
+      after.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(after);
+      return true;
+    }
+
+    return false;
+  }, []);
+
+  const insertMention = useCallback(
+    (item: MentionDataItem) => {
+      const editor = editorRef.current;
+      const anchor = mentionAnchorRef.current;
+      if (!editor || !anchor) return;
+
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+
+      const curRange = sel.getRangeAt(0);
+
+      // Delete from the @ character to the current cursor position
+      const deleteRange = document.createRange();
+      deleteRange.setStart(anchor.node, anchor.offset - 1); // include @
+      deleteRange.setEnd(curRange.startContainer, curRange.startOffset);
+      deleteRange.deleteContents();
+
+      // Insert non-editable mention chip
+      const span = createMentionChip(item);
+      deleteRange.insertNode(span);
+
+      // Trailing space so cursor has somewhere to land outside the chip
+      const spacer = document.createTextNode("\u00A0");
+      span.after(spacer);
+
+      const afterRange = document.createRange();
+      afterRange.setStart(spacer, 1);
+      afterRange.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(afterRange);
+
+      setShowMention(false);
+      setMentionQuery("");
+      mentionAnchorRef.current = null;
+      emitChange(editor);
+    },
+    [emitChange],
+  );
+
+  // Fetch muses dynamically whenever the mention query changes (debounced)
+  useEffect(() => {
+    if (!getMentionMuseItems || !showMention) return;
+    const timer = setTimeout(() => {
+      getMentionMuseItems(mentionQuery).then(setDynamicMuses);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [mentionQuery, showMention, getMentionMuseItems]);
+
+  // Reset dynamic muses when dropdown closes
+  useEffect(() => {
+    if (!showMention) setDynamicMuses([]);
+  }, [showMention]);
+
+  const filteredItems = useMemo(() => {
+    const query = mentionQuery.toLowerCase();
+    const staticFiltered = mentionItems.filter((item) =>
+      item.displayName.toLowerCase().includes(query),
+    );
+    if (getMentionMuseItems) {
+      // Combine static (novelist) items with server-fetched muse items
+      return [...staticFiltered, ...dynamicMuses];
+    }
+    return staticFiltered;
+  }, [mentionItems, mentionQuery, dynamicMuses, getMentionMuseItems]);
+
+  // Keep focusedIndex within bounds as the filtered list changes
+  useEffect(() => {
+    setFocusedIndex((i) =>
+      filteredItems.length === 0 ? 0 : Math.min(i, filteredItems.length - 1),
+    );
+  }, [filteredItems.length]);
+
+  const handleInput = useCallback(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    const formatted = tryApplyFormatting();
+
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) {
+      emitChange(editor);
+      return;
+    }
+
+    const range = sel.getRangeAt(0);
+    const node = range.startContainer;
+    const offset = range.startOffset;
+
+    if (node.nodeType === Node.TEXT_NODE) {
+      const textBefore = (node.textContent ?? "").slice(0, offset);
+
+      // ── Update active mention query ──────────────────────────────────────
+      if (showMention && mentionAnchorRef.current) {
+        const anchor = mentionAnchorRef.current;
+        if (anchor.node === node && offset >= anchor.offset) {
+          const query = textBefore.slice(anchor.offset);
+          if (query.includes(" ")) {
+            // Space typed → close dropdown
+            setShowMention(false);
+            mentionAnchorRef.current = null;
+          } else {
+            setMentionQuery(query);
+            setFocusedIndex(0);
+          }
+          emitChange(editor);
+          return;
+        }
+        // Cursor moved away from the anchor → close
+        setShowMention(false);
+        mentionAnchorRef.current = null;
+      }
+
+      // ── Detect fresh @ trigger ───────────────────────────────────────────
+      if (!formatted) {
+        const lastChar = textBefore[textBefore.length - 1];
+        if (lastChar === "@") {
+          setMentionQuery("");
+          setShowMention(true);
+          setFocusedIndex(0);
+          mentionAnchorRef.current = { node, offset };
+        }
+      }
+    } else if (showMention) {
+      setShowMention(false);
+      mentionAnchorRef.current = null;
+    }
+
+    emitChange(editor);
+  }, [showMention, tryApplyFormatting, emitChange]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      // ── Mention navigation ───────────────────────────────────────────────
+      if (showMention && filteredItems.length > 0) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setFocusedIndex((i) => Math.min(i + 1, filteredItems.length - 1));
+          return;
+        }
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setFocusedIndex((i) => Math.max(i - 1, 0));
+          return;
+        }
+        if (e.key === "Enter" || e.key === "Tab") {
+          const item = filteredItems[focusedIndex];
+          if (item) {
+            e.preventDefault();
+            insertMention(item);
+          }
+          return;
+        }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          setShowMention(false);
+          mentionAnchorRef.current = null;
+          return;
+        }
+      }
+
+      // ── Enter submits (Shift+Enter = newline) ────────────────────────────
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        onSubmit?.();
+      }
+    },
+    [showMention, filteredItems, focusedIndex, insertMention, onSubmit],
+  );
+
+  return (
+    <S.InputWrap>
+      {showMention && filteredItems.length > 0 && (
+        <S.MentionDropdown>
+          {filteredItems.map((item, idx) => (
+            <S.MentionItem
+              key={item.id}
+              type="button"
+              $focused={idx === focusedIndex}
+              onMouseEnter={() => setFocusedIndex(idx)}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                insertMention(item);
+              }}
+            >
+              <AvatarNew src={item.image || null} alt={item.displayName} />
+              <S.MentionName>{item.displayName}</S.MentionName>
+              <S.MentionType>
+                {item.type === "NOVELIST" ? "Novelist" : "Muse"}
+              </S.MentionType>
+            </S.MentionItem>
+          ))}
+        </S.MentionDropdown>
+      )}
+      <S.Editor
+        ref={editorRef}
+        contentEditable
+        suppressContentEditableWarning
+        data-empty={isEmpty ? "true" : undefined}
+        data-placeholder={placeholder}
+        onInput={handleInput}
+        onKeyDown={handleKeyDown}
+      />
+    </S.InputWrap>
+  );
+};

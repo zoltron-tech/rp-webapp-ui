@@ -54,10 +54,12 @@ export const Card = styled.div`
   contain: paint;
   gap: 1em;
   border-bottom: 1px solid var(--bg-6);
+  justify-content: center;
+  align-items: flex-start;
 
   .avatar {
-    height: 50px;
-    width: 50px;
+    height: 45px;
+    width: 45px;
   }
 `;
 
@@ -66,7 +68,6 @@ export const Avatar = styled(AvatarNew)`
   @container friend-list-card (max-width: 160px) {
     & {
       margin-top: 10px;
-      --size: 40px;
     }
   }
 `;

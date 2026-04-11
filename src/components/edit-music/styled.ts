@@ -60,7 +60,7 @@ export const Input = styled.input`
   border-radius: 4px;
   background: var(--bg-3);
   color: var(--text);
-  font-size: var(--font-size);
+  font-size: var(--font-size-input);
   
   &:focus {
     outline: none;
@@ -138,7 +138,7 @@ export const TextArea = styled.textarea`
   border-radius: 4px;
   background: var(--bg-3);
   color: var(--text);
-  font-size: var(--font-size);
+  font-size: var(--font-size-input);
   min-height: 100px;
   resize: vertical;
   
@@ -168,7 +168,7 @@ export const TagItem = styled.div<{ $color: string }>`
   border: 1px solid ${(props) => props.$color};
   padding: 6px 12px;
   border-radius: 4px;
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-input);
 `;
 
 export const RemoveTagButton = styled.button`
@@ -202,7 +202,7 @@ export const AddTagButton = styled.button`
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: var(--font-size-input);
   
   &:hover {
     background: var(--accent-hover);
@@ -227,7 +227,7 @@ export const TagInput = styled.input`
   border-radius: 4px;
   background: var(--bg-3);
   color: var(--text);
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-input);
   
   &:focus {
     outline: none;
@@ -243,6 +243,7 @@ export const ColorInput = styled.button<{ $color: string }>`
   cursor: pointer;
   padding: 0;
   background: ${(props) => props.$color};
+  font-size: var(--font-size-input);
   
   &:hover {
     opacity: 0.8;

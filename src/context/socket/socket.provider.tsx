@@ -100,8 +100,14 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
   // ─── Core connect logic ──────────────────────────────────────────────────
 
   const connectSocket = useCallback(() => {
-    // Guard: skip if already open/connecting or prerequisites missing
-    if (socketRef.current || !jwtRef.current || !SOCKET_URL) return;
+    // Guard: skip if already open/connecting, not logged in, or prerequisites missing
+    if (
+      socketRef.current ||
+      authStateRef.current !== "LOGGED_IN" ||
+      !jwtRef.current ||
+      !SOCKET_URL
+    )
+      return;
 
     const params = new URLSearchParams();
     params.append("token", jwtRef.current);
@@ -152,10 +158,17 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
     }
 
     // Tear down the socket whenever the user is no longer logged in
-    if (authState === "LOGGED_OUT" && socketRef.current) {
-      socketRef.current.close();
-      socketRef.current = null;
-      setSocket(null);
+    if (authState === "LOGGED_OUT") {
+      // Cancel any pending reconnect attempt before tearing down
+      if (connectDebounceRef.current) {
+        clearTimeout(connectDebounceRef.current);
+        connectDebounceRef.current = null;
+      }
+      if (socketRef.current) {
+        socketRef.current.close();
+        socketRef.current = null;
+        setSocket(null);
+      }
     }
   }, [authState, jwt, connectSocket]);
 
@@ -235,6 +248,10 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
   // Ensure the socket is closed when the component unmounts
   useEffect(() => {
     return () => {
+      if (connectDebounceRef.current) {
+        clearTimeout(connectDebounceRef.current);
+        connectDebounceRef.current = null;
+      }
       if (socketRef.current) {
         if (socketRef.current.pingTimeout) {
           clearTimeout(socketRef.current.pingTimeout);

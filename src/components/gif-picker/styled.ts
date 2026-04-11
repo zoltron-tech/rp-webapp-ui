@@ -20,7 +20,7 @@ export const SearchInput = styled.input`
   background: var(--bg-3);
   color: var(--text);
   padding: 0 12px;
-  font-size: 13px;
+  font-size: var(--font-size-input);
   font-family: var(--font);
   transition: border-color 0.15s ease;
   margin-bottom: 20px;
@@ -70,15 +70,13 @@ export const GifCell = styled.button`
 export const GifThumb = styled.img`
   width: 100%;
   object-fit: cover;
-
-
 `;
 
 export const StatusText = styled.p`
   column-span: all;
   text-align: center;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: var(--font-size-input);
   padding: 28px 0;
   margin: 0;
 `;

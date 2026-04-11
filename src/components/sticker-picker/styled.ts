@@ -20,7 +20,7 @@ export const SearchInput = styled.input`
   background: var(--bg-3);
   color: var(--text);
   padding: 0 12px;
-  font-size: 13px;
+  font-size: var(--font-size-input);
   font-family: var(--font);
   transition: border-color 0.15s ease;
   margin-bottom: 20px;
@@ -80,7 +80,7 @@ export const StickerThumb = styled.img`
 export const StatusText = styled.p`
   text-align: center;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: var(--font-size-input);
   padding: 24px 0;
   margin: 0;
 `;

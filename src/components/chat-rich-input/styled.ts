@@ -23,7 +23,7 @@ export const Editor = styled.div`
   background: transparent;
   color: var(--text);
   padding: 11px 12px;
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-input);
   line-height: 1.35;
   outline: none;
   white-space: pre-wrap;

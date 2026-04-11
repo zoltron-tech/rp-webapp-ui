@@ -3,6 +3,7 @@
 import {
   createContext,
   type FC,
+  useCallback,
   useContext,
   useEffect,
   useRef,
@@ -27,11 +28,14 @@ type SocketContextType = {
   isConnected: boolean;
   onlineUsernames: string[];
   lastIncomingMessage: Message | null;
+  /** Call before any user action to guarantee the socket is open (no-op if already connected or not logged in). */
+  ensureConnected: () => void;
 };
 
 // ─── Context & hook ──────────────────────────────────────────────────────────
 
 const SocketContext = createContext<SocketContextType>({
+  ensureConnected: () => {},
   isConnected: false,
   lastIncomingMessage: null,
   onlineUsernames: [],
@@ -50,6 +54,18 @@ export const useSocket = (): SocketContextType => {
 
 const CONNECT_DEBOUNCE_MS = 500;
 
+/** User-interaction events that trigger a reconnect check. */
+const ACTIVITY_EVENTS = [
+  "click",
+  "keydown",
+  "scroll",
+  "touchstart",
+  "mousemove",
+] as const;
+
+/** Minimum ms between activity-triggered reconnect attempts. */
+const ACTIVITY_THROTTLE_MS = 2_000;
+
 // ─── Provider ────────────────────────────────────────────────────────────────
 
 type SocketProviderProps = {
@@ -58,7 +74,6 @@ type SocketProviderProps = {
 
 export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
   const authState = useGlobalState("authState");
-  const user = useGlobalState("user");
   const novelist = useGlobalState("novelist");
   const [cookies] = useCookies([JWT_COOKIE_NAME]);
   const jwt: string | undefined = cookies[JWT_COOKIE_NAME];
@@ -67,60 +82,118 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
   const [onlineUsernames, setOnlineUsernames] = useState<string[]>([]);
   const [lastIncomingMessage, setLastIncomingMessage] =
     useState<Message | null>(null);
-  // Keep a stable ref so cleanup inside the effect always sees current socket
+
+  // Keep stable refs so callbacks never capture stale values
   const socketRef = useRef<WebSocketExt | null>(null);
+  const authStateRef = useRef(authState);
+  const jwtRef = useRef(jwt);
+  const connectDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastActivityCheckRef = useRef<number>(0);
 
   useEffect(() => {
-    const cleanup = () => {
+    authStateRef.current = authState;
+  }, [authState]);
+  useEffect(() => {
+    jwtRef.current = jwt;
+  }, [jwt]);
+
+  // ─── Core connect logic ──────────────────────────────────────────────────
+
+  const connectSocket = useCallback(() => {
+    // Guard: skip if already open/connecting, not logged in, or prerequisites missing
+    if (
+      socketRef.current ||
+      authStateRef.current !== "LOGGED_IN" ||
+      !jwtRef.current ||
+      !SOCKET_URL
+    )
+      return;
+
+    const params = new URLSearchParams();
+    params.append("token", jwtRef.current);
+    const webSocketUrl = `${SOCKET_URL}?${params.toString()}`;
+
+    const socketInstance = new WebSocket(webSocketUrl) as WebSocketExt;
+
+    socketInstance.addEventListener("open", () => {
+      console.log("websocket:open");
+      setIsConnected(true);
+    });
+
+    socketInstance.addEventListener("error", (error) => {
+      console.log("websocket:error", error);
+    });
+
+    socketInstance.addEventListener("close", (event) => {
+      console.log("websocket:close", event);
+      if (socketInstance.pingTimeout) clearTimeout(socketInstance.pingTimeout);
+      socketRef.current = null;
+      setSocket(null);
+      setIsConnected(false);
+    });
+
+    socketRef.current = socketInstance;
+    setSocket(socketInstance);
+  }, []);
+
+  // ─── Debounced ensureConnected ───────────────────────────────────────────
+  // Schedules a connection attempt (if not already open) after a short debounce.
+
+  const ensureConnected = useCallback(() => {
+    if (authStateRef.current !== "LOGGED_IN" || !jwtRef.current || !SOCKET_URL)
+      return;
+    if (socketRef.current) return; // already open or connecting
+
+    if (connectDebounceRef.current) clearTimeout(connectDebounceRef.current);
+    connectDebounceRef.current = setTimeout(connectSocket, CONNECT_DEBOUNCE_MS);
+  }, [connectSocket]);
+
+  // ─── Auth-change effect ──────────────────────────────────────────────────
+  // Connects on login; closes the socket on logout.
+
+  useEffect(() => {
+    if (authState === "LOGGED_IN" && jwt && SOCKET_URL) {
+      const timeout = setTimeout(connectSocket, CONNECT_DEBOUNCE_MS);
+      return () => clearTimeout(timeout);
+    }
+
+    // Tear down the socket whenever the user is no longer logged in
+    if (authState === "LOGGED_OUT") {
+      // Cancel any pending reconnect attempt before tearing down
+      if (connectDebounceRef.current) {
+        clearTimeout(connectDebounceRef.current);
+        connectDebounceRef.current = null;
+      }
       if (socketRef.current) {
         socketRef.current.close();
         socketRef.current = null;
         setSocket(null);
       }
+    }
+  }, [authState, jwt, connectSocket]);
+
+  // ─── User-activity listeners ─────────────────────────────────────────────
+  // Any user interaction re-checks the connection so it is re-established
+  // automatically after a drop, without the user having to refresh.
+
+  useEffect(() => {
+    const handleActivity = () => {
+      const now = Date.now();
+      if (now - lastActivityCheckRef.current < ACTIVITY_THROTTLE_MS) return;
+      lastActivityCheckRef.current = now;
+      ensureConnected();
     };
 
-    // Only connect when logged in, JWT is present, URL is configured,
-    // and no connection is already alive.
-    if (authState !== "LOGGED_IN" || !jwt || !SOCKET_URL || socketRef.current) {
-      return;
+    for (const event of ACTIVITY_EVENTS) {
+      window.addEventListener(event, handleActivity, { passive: true });
     }
 
-    const connect = () => {
-      const params = new URLSearchParams();
-      params.append("token", jwt);
-      const webSocketUrl = `${SOCKET_URL}?${params.toString()}`;
-
-      const socketInstance = new WebSocket(webSocketUrl) as WebSocketExt;
-
-      socketInstance.addEventListener("open", () => {
-        console.log("websocket:open");
-        setIsConnected(true);
-      });
-
-      socketInstance.addEventListener("error", (error) => {
-        console.log("websocket:error", error);
-      });
-
-      socketInstance.addEventListener("close", (event) => {
-        console.log("websocket:close", event);
-        if (socketInstance.pingTimeout)
-          clearTimeout(socketInstance.pingTimeout);
-        socketRef.current = null;
-        setSocket(null);
-        setIsConnected(false);
-      });
-
-      socketRef.current = socketInstance;
-      setSocket(socketInstance);
-    };
-
-    const timeout = setTimeout(connect, CONNECT_DEBOUNCE_MS);
-
     return () => {
-      clearTimeout(timeout);
-      cleanup();
+      for (const event of ACTIVITY_EVENTS) {
+        window.removeEventListener(event, handleActivity);
+      }
     };
-  }, [authState, jwt]);
+  }, [ensureConnected]);
 
   // ─── Heartbeat handler ───────────────────────────────────────────────────
   // Listens for server pings and responds with a pong to keep the connection
@@ -175,6 +248,10 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
   // Ensure the socket is closed when the component unmounts
   useEffect(() => {
     return () => {
+      if (connectDebounceRef.current) {
+        clearTimeout(connectDebounceRef.current);
+        connectDebounceRef.current = null;
+      }
       if (socketRef.current) {
         if (socketRef.current.pingTimeout) {
           clearTimeout(socketRef.current.pingTimeout);
@@ -187,7 +264,13 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
 
   return (
     <SocketContext.Provider
-      value={{ isConnected, lastIncomingMessage, onlineUsernames, socket }}
+      value={{
+        ensureConnected,
+        isConnected,
+        lastIncomingMessage,
+        onlineUsernames,
+        socket,
+      }}
     >
       {children}
     </SocketContext.Provider>

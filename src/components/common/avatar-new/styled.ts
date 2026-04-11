@@ -1,7 +1,7 @@
 import { Avatar } from "radix-ui";
 import { styled } from "styled-components";
 
-export const AvatarRoot = styled(Avatar.Root)`
+export const AvatarRoot = styled(Avatar.Root)<{ $online?: boolean }>`
   display: inline-flex;
   width: 20px;
   height: 20px;
@@ -10,6 +10,9 @@ export const AvatarRoot = styled(Avatar.Root)`
   flex-shrink: 0;
   user-select: none;
   background-color: var(--bg-2);
+  box-shadow: ${({ $online }) =>
+    $online ? "0 0 0 2px #22c55e" : "none"};
+  transition: box-shadow 0.2s ease;
 
   &.selectable {
     cursor: pointer;

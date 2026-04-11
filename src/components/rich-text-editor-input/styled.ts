@@ -1,6 +1,11 @@
 import { Popover, Tabs, Toolbar } from "radix-ui";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import styled, { css, keyframes } from "styled-components";
+import {
+  editorMentionTagCss,
+  mentionChildrenCss,
+  savedMentionTagCss,
+} from "./mention-chip";
 
 const fadeIn = keyframes`
   from {
@@ -37,6 +42,7 @@ export const Spinner = styled(AiOutlineLoading3Quarters)`
 
 export const Container = styled.div`
   width: 100%;
+  box-sizing: border-box;
 `;
 
 export const EmptyState = styled.div`
@@ -54,18 +60,78 @@ export const EmptyText = styled.p`
 
 export const ToolbarRoot = styled(Toolbar.Root)`
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  padding: 0.25rem;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem;
+  padding-bottom: 0.625rem;
+  margin-bottom: 1px;
   background-color: var(--bg-4);
-  border: 1px solid var(--bg-6);
+  border: 2px solid var(--border, var(--bg-6, #e5e4e7));
+  border-radius: 0.5rem 0.5rem 0 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+  z-index: 20;
+  flex-shrink: 0;
+  box-sizing: border-box;
+
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-6, #e5e4e7) var(--bg-3, #f9fafb);
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+  &::-webkit-scrollbar-track {
+    background: var(--bg-3, #f9fafb);
+    border-radius: 0 0 4px 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--bg-6, #e5e4e7);
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary, #6b7280);
+  }
 `;
 
 export const ToolbarSection = styled.div`
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  gap: 0.375rem;
   align-items: center;
+`;
+
+interface ToolbarSelectWrapProps {
+  $nested?: boolean;
+}
+
+export const ToolbarSelectWrap = styled.div<ToolbarSelectWrapProps>`
+  display: flex;
+  align-items: center;
+  border: ${(p) => (p.$nested ? "none" : "1px solid var(--bg-6, #e5e4e7)")};
+  border-radius: ${(p) => (p.$nested ? "0" : "0.375rem")};
+  background-color: ${(p) => (p.$nested ? "transparent" : "var(--bg-3, #fff)")};
+  overflow: hidden;
+  flex-shrink: 0;
+  min-height: 40px;
+
+  &:hover {
+    background-color: ${(p) => (p.$nested ? "transparent" : "var(--bg-5, #f3f4f6)")};
+  }
+`;
+
+export const ChevronBox = styled.div`
+  width: 32px;
+  flex-shrink: 0;
+  height: 100%;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 1px solid var(--bg-6, #e5e4e7);
+  color: var(--text);
+  pointer-events: none;
 `;
 
 export const FontSelectRoot = styled.div`
@@ -85,22 +151,151 @@ export const FontSelectRoot = styled.div`
 
 export const FontSelect = styled.select`
   box-sizing: content-box;
-  padding: 0.5rem;
-  padding-right: 2rem;
-  border: 1px solid var(--bg-6);
-  border-radius: 0.25rem;
-  background-color: var(--bg-3);
+  padding: 0.5rem 0.75rem;
+  min-width: 0;
+  width: 6.5rem;
+  border: none;
+  border-radius: 0;
+  background: transparent;
   cursor: pointer;
-  transition: background-color 0.2s;
   color: var(--text);
-  -moz-appearance: none; /* Firefox */
-  -webkit-appearance: none; /* Safari and Chrome */
+  font-size: inherit;
+  -moz-appearance: none;
+  -webkit-appearance: none;
   appearance: none;
-  max-height: 200px;
-  overflow-y: auto;
+
+  &:focus {
+    outline: none;
+  }
+`;
+
+/* Radix Popover dropdown – shared by all toolbar dropdowns, opaque bg */
+export const DropdownPopoverContent = styled(Popover.Content)`
+  position: relative;
+  isolation: isolate;
+  background-color: var(--bg-3, var(--bg, #ffffff));
+  border: 1px solid var(--bg-6, var(--border, #e5e4e7));
+  border-radius: 0.5rem;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28), 0 4px 10px rgba(0, 0, 0, 0.12);
+  z-index: 2147483647;
+  padding: 0.75rem;
+  animation: ${fadeIn} 0.15s ease-out;
+
+  &:focus {
+    outline: none;
+  }
+`;
+
+export const DropdownTriggerBtn = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid var(--bg-6, #e5e4e7);
+  border-radius: 0.375rem;
+  background-color: var(--bg-3, #fff);
+  cursor: pointer;
+  min-height: 40px;
+  padding: 0;
+  overflow: hidden;
+  flex-shrink: 0;
 
   &:hover {
-    background-color: var(--bg-5);
+    background-color: var(--bg-5, #f3f4f6);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+`;
+
+export const DropdownTriggerValue = styled.span`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0 0.375rem;
+  color: var(--text);
+  font-size: 1.25rem;
+`;
+
+export const DropdownTriggerChevron = styled.span`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  min-height: 40px;
+  border-left: 1px solid var(--bg-6, #e5e4e7);
+  color: var(--text);
+  flex-shrink: 0;
+`;
+
+export const ListOptionGroup = styled.div`
+  display: flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  border: 2px solid var(--bg-6, #e5e4e7);
+  border-radius: 0.5rem;
+  overflow: visible;
+  background-color: var(--bg-4, #f9fafb);
+`;
+
+export const ListOptionMain = styled.div`
+  display: flex;
+  align-items: center;
+  border-radius: 0.35rem 0 0 0.35rem;
+  overflow: hidden;
+`;
+
+export const ListOptionSub = styled.div`
+  display: flex;
+  align-items: center;
+  border-left: 2px solid var(--bg-6, #e5e4e7);
+  background-color: var(--bg-3, #fff);
+  border-radius: 0 0.35rem 0.35rem 0;
+  overflow: hidden;
+`;
+
+export const ListSubTriggerBtn = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  min-height: 40px;
+  padding: 0;
+  color: var(--text);
+  flex-shrink: 0;
+
+  &:hover {
+    background-color: var(--bg-5, #f3f4f6);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+`;
+
+interface OrderedListItemProps {
+  $selected?: boolean;
+}
+
+export const OrderedListDropdownItem = styled.button<OrderedListItemProps>`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  border: none;
+  background-color: ${(p) => (p.$selected ? "color-mix(in srgb, var(--accent) 25%, transparent)" : "transparent")};
+  color: var(--text);
+  font-weight: ${(p) => (p.$selected ? "600" : "normal")};
+
+  &:hover {
+    background-color: var(--accent);
   }
 `;
 
@@ -172,31 +367,32 @@ interface BulletItemProps {
 }
 
 export const BulletGridItem = styled.button<BulletItemProps>`
-  padding: 0px;
-  border: 1px solid ${(props) => (props.$selected ? "var(--accent)" : "var(--bg-6)")};
-  border-radius: 0.25rem;
-  background-color: ${(props) => (props.$selected ? "var(--accent)" : "var(--bg-4)")};
+  padding: 0.5rem;
+  min-height: 44px;
+  border: 1px solid ${(props) => (props.$selected ? "var(--accent)" : "var(--bg-6, #e5e4e7)")};
+  border-radius: 0.375rem;
+  background-color: ${(props) => (props.$selected ? "var(--accent)" : "var(--bg-4, #f9fafb)")};
   color: ${(props) => (props.$selected ? "var(--text)" : "var(--text-secondary)")};
   cursor: pointer;
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  aspect-ratio: 1;
 
   &:hover {
-    background-color: ${(props) => (props.$selected ? "var(--accent)" : "var(--bg-5)")};
+    background-color: ${(props) => (props.$selected ? "var(--accent)" : "var(--bg-5, #f3f4f6)")};
     border-color: var(--accent);
     transform: scale(1.05);
   }
 `;
 
 export const Divider = styled.div`
+  flex-shrink: 0;
   width: 1px;
   height: 2rem;
-  background-color: var(--bg-6);
-  margin: 0 0.25rem;
+  background-color: var(--bg-6, #e5e4e7);
+  margin: 0 0.125rem;
 `;
 
 // Quotation Mark Selector Styles
@@ -277,21 +473,21 @@ interface QuotationItemProps {
 }
 
 export const QuotationGridItem = styled.button<QuotationItemProps>`
-  padding: 0px;
-  border: 1px solid var(--bg-6);
-  border-radius: 0.25rem;
-  background-color: var(--bg-4);
+  padding: 0.5rem;
+  min-height: 44px;
+  border: 1px solid var(--bg-6, #e5e4e7);
+  border-radius: 0.375rem;
+  background-color: var(--bg-4, #f9fafb);
   color: var(--text-secondary);
   cursor: pointer;
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  aspect-ratio: 1;
 
   &:hover {
-    background-color: var(--bg-5);
+    background-color: var(--bg-5, #f3f4f6);
     border-color: var(--accent);
     transform: scale(1.05);
   }
@@ -350,28 +546,20 @@ interface AlignmentItemProps {
 
 export const AlignmentGridItem = styled.button<AlignmentItemProps>`
   padding: 0.5rem;
-  border: 1px solid ${(props) => (props.$selected ? "var(--accent)" : "var(--bg-6)")};
-  border-radius: 0.25rem;
-  background-color: ${(props) => (props.$selected ? "var(--accent)" : "var(--bg-4)")};
+  min-height: 44px;
+  border: 1px solid ${(props) => (props.$selected ? "var(--accent)" : "var(--bg-6, #e5e4e7)")};
+  border-radius: 0.375rem;
+  background-color: ${(props) => (props.$selected ? "var(--accent)" : "var(--bg-4, #f9fafb)")};
   color: ${(props) => (props.$selected ? "var(--text)" : "var(--text-secondary)")};
   cursor: pointer;
   font-size: 1.25rem;
   transition: all 0.2s;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
   justify-content: center;
-  aspect-ratio: 1;
-
-  span {
-    font-size: 0.65rem;
-    text-align: center;
-    line-height: 1;
-  }
 
   &:hover {
-    background-color: ${(props) => (props.$selected ? "var(--accent)" : "var(--bg-5)")};
+    background-color: ${(props) => (props.$selected ? "var(--accent)" : "var(--bg-5, #f3f4f6)")};
     border-color: var(--accent);
     transform: scale(1.05);
   }
@@ -379,12 +567,15 @@ export const AlignmentGridItem = styled.button<AlignmentItemProps>`
 
 export const ToggleGroup = styled(Toolbar.ToggleGroup)`
   display: flex;
+  flex-shrink: 0;
   gap: 0.25rem;
 `;
 
 const toggleItemBase = css`
   padding: 0.5rem;
-  border-radius: 0.25rem;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 0.375rem;
   transition: all 0.2s;
   border: none;
   cursor: pointer;
@@ -409,6 +600,8 @@ export const ToggleItem = styled(Toolbar.ToggleItem)<ToggleItemProps>`
 
 export const EditorWrapper = styled.div`
   position: relative;
+  z-index: 0;
+  box-sizing: border-box;
 `;
 
 const richTextContentBase = css`
@@ -618,17 +811,7 @@ const richTextContentBase = css`
   ul[style*="list-style-type: arrow-open-head"] li::before { content: "⇾ "; }
   ul[style*="list-style-type: arrow-double"] li::before { content: "⇒ "; }
 
-  .mention-avatar {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    object-fit: cover;
-    flex-shrink: 0;
-  }
-
-  .mention-text {
-    white-space: nowrap;
-  }
+  ${mentionChildrenCss}
 
   .inline-image-container {
     display: inline-block;
@@ -659,86 +842,25 @@ const richTextContentBase = css`
   }
 `;
 
-const editorMentionTagStyles = css`
-  .mention-tag {
-    display: inline-flex;
-    align-items: center;
-    min-width: 70px;
-    position: relative;
-    top: 6px;
-    gap: 4px;
+interface EditorContentProps {
+  $dropdownOpen?: boolean;
+}
 
-    background: linear-gradient(
-      135deg,
-      var(--accent) 0%,
-      var(--accent-hover) 70%
-    );
-    color: var(--text, var(--text));
-    padding: 1px 6px 1px 2px;
-    border-radius: 999px;
-    font-weight: var(--font-weight-semi-bold);
-    user-select: none;
-    font-size: var(--font-size);
-
-    &:hover {
-      background: linear-gradient(
-        135deg,
-        var(--accent-hover) 0%,
-        var(--accent-active, var(--accent-hover)) 100%
-      );
-    }
-  }
-`;
-
-const savedMentionTagStyles = css`
-  .mention-tag {
-    display: inline-flex;
-    align-items: center;
-    position: relative;
-    top: 6px;
-    min-width: 70px;
-    gap: 6px;
-    cursor: pointer;
-
-    background: linear-gradient(
-      135deg,
-      var(--accent) 0%,
-      var(--accent-hover) 70%
-    );
-    color: var(--text, var(--text));
-    padding: 1px 6px 1px 2px;
-    border-radius: 999px;
-    font-weight: var(--font-weight-bold);
-    margin: 2px;
-    user-select: none;
-    font-size: var(--font-size);
-
-    &:hover {
-      background: linear-gradient(
-        135deg,
-        var(--accent-hover) 0%,
-        var(--accent-active, var(--accent-hover)) 100%
-      );
-    }
-  }
-`;
-
-export const EditorContent = styled.div`
+export const EditorContent = styled.div<EditorContentProps>`
+  box-sizing: border-box;
   width: 100%;
   min-height: 10rem;
   max-height: 20dvh;
   padding: 1rem;
-  border-left: 1px solid var(--bg-6);
-  border-right: 1px solid var(--bg-6);
-  border-bottom: 1px solid var(--bg-6);
   outline: none;
   overflow: auto;
   ${richTextContentBase}
-  ${editorMentionTagStyles}
+  ${editorMentionTagCss}
 
   &:focus {
     outline: none;
-    box-shadow: 0 0 0 2px var(--accent);
+    box-shadow: ${(p) =>
+      p.$dropdownOpen ? "none" : "inset 0 0 0 2px var(--accent)"};
   }
 
   &:empty::before {
@@ -746,7 +868,6 @@ export const EditorContent = styled.div`
     color: #9ca3af;
     pointer-events: none;
   }
-
 `;
 
 export const FadeOverlay = styled.div`
@@ -805,7 +926,7 @@ export const SavedContent = styled.div`
   outline: none;
   overflow: auto;
   ${richTextContentBase}
-  ${savedMentionTagStyles}
+  ${savedMentionTagCss}
 `;
 
 export const PopoverAnchor = styled(Popover.Anchor)`

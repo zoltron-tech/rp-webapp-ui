@@ -17,7 +17,7 @@ export interface ConversationParticipant {
   userName: string;
   image: string;
   role: string;
-  modifiedAt: string;
+  joinedAt: string;
 }
 
 export interface Message {
@@ -28,9 +28,16 @@ export interface Message {
   type: string;
   image: string;
   message: string;
-  isRead: string;
+  isRead: boolean;
+  reactions: Reaction[];
   attachments: Attachment[];
   createdAt: string;
+}
+
+export interface Reaction {
+  messageId: string;
+  sender: MessageSender;
+  reaction: string;
 }
 
 export interface MessageSender {

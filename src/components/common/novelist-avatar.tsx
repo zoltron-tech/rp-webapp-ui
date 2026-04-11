@@ -26,7 +26,7 @@ export const NovelistAvatar: FC<NovelistAvatarProps> = ({
 
   return (
     <a onClick={handleClick} href={ROUTES.Profile.View(username).Index}>
-      <AvatarNew src={image} alt={name} />
+      <AvatarNew src={image} alt={name} username={username}/>
     </a>
   );
 };

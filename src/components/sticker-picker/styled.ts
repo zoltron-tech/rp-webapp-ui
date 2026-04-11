@@ -23,6 +23,7 @@ export const SearchInput = styled.input`
   font-size: 13px;
   font-family: var(--font);
   transition: border-color 0.15s ease;
+  margin-bottom: 20px;
 
   &:focus {
     outline: none;

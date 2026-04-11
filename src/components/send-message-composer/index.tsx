@@ -2,8 +2,10 @@
 
 import type { FC, FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { HiPaperAirplane } from "react-icons/hi2";
+import { HiGif, HiPaperAirplane } from "react-icons/hi2";
 import { IoCheckmark } from "react-icons/io5";
+import { LuSticker } from "react-icons/lu";
+import { MdOutlineGifBox } from "react-icons/md";
 import { TiArrowSortedUp } from "react-icons/ti";
 import { ChatRichInput } from "@/components/chat-rich-input";
 import { AvatarNew } from "@/components/common/avatar-new";
@@ -92,6 +94,7 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
     null,
   );
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [mediaToolbarOpen, setMediaToolbarOpen] = useState(false);
   const [gifPickerOpen, setGifPickerOpen] = useState(false);
   const [stickerPickerOpen, setStickerPickerOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -141,6 +144,7 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
   const handleSubmit = async (event?: FormEvent<HTMLFormElement>) => {
     event?.preventDefault();
     if (!hasValue || sending) return;
+    setMediaToolbarOpen(false);
     await onSubmit();
   };
 
@@ -158,43 +162,21 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
 
   return (
     <>
-      <S.Composer onSubmit={(e) => handleSubmit(e)}>
-        <S.SenderButton
-          type="button"
-          title={activeSender?.name ?? "Select sender"}
-          onClick={() => setDialogOpen(true)}
-        >
-          <AvatarNew
-            src={activeSender?.image ?? null}
-            alt={activeSender?.name ?? "Sender"}
-          />
-          <S.SenderCaret>
-            <TiArrowSortedUp size={10} />
-          </S.SenderCaret>
-        </S.SenderButton>
-
-        <ChatRichInput
-          value={value}
-          onChange={onChange}
-          onHtmlChange={onHtmlChange ?? (() => {})}
-          onSubmit={() => handleSubmit()}
-          mentionItems={mentionItems}
-          getMentionMuseItems={getMentionMuseItems}
-        />
-
-        <S.MediaButtons>
-          <S.GifButton
-            type="button"
-            title="Send a GIF"
-            data-active={gifPickerOpen ? "true" : undefined}
-            onClick={() => {
-              setGifPickerOpen((prev) => !prev);
-              setStickerPickerOpen(false);
-            }}
-          >
-            GIF
-          </S.GifButton>
-
+      <S.ComposerWrapper>
+        <S.MediaToolbar $open={mediaToolbarOpen}>
+          {onSendGif && (
+            <S.GifButton
+              type="button"
+              title="Send a GIF"
+              data-active={gifPickerOpen ? "true" : undefined}
+              onClick={() => {
+                setGifPickerOpen((prev) => !prev);
+                setStickerPickerOpen(false);
+              }}
+            >
+              <HiGif size={24} />
+            </S.GifButton>
+          )}
           {onSendSticker && (
             <S.StickerButton
               type="button"
@@ -205,16 +187,54 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
                 setGifPickerOpen(false);
               }}
             >
-              STK
+              <LuSticker size={24} />
             </S.StickerButton>
           )}
-        </S.MediaButtons>
+        </S.MediaToolbar>
 
-        <S.SendButton type="submit" disabled={sending || !hasValue}>
-          <HiPaperAirplane size={16} />
-          <S.SendButtonText>{sending ? "Sending..." : "Send"}</S.SendButtonText>
-        </S.SendButton>
-      </S.Composer>
+        <S.Composer onSubmit={(e) => handleSubmit(e)}>
+          <S.SenderButton
+            type="button"
+            title={activeSender?.name ?? "Select sender"}
+            onClick={() => setDialogOpen(true)}
+          >
+            <AvatarNew
+              src={activeSender?.image ?? null}
+              alt={activeSender?.name ?? "Sender"}
+            />
+            <S.SenderCaret>
+              <TiArrowSortedUp size={10} />
+            </S.SenderCaret>
+          </S.SenderButton>
+
+          <ChatRichInput
+            value={value}
+            onChange={onChange}
+            onHtmlChange={onHtmlChange ?? (() => {})}
+            onSubmit={() => handleSubmit()}
+            mentionItems={mentionItems}
+            getMentionMuseItems={getMentionMuseItems}
+          />
+
+          {(onSendGif || onSendSticker) && (
+            <S.MediaToggleButton
+              type="button"
+              title="Media"
+              data-open={mediaToolbarOpen ? "true" : undefined}
+              onClick={() => setMediaToolbarOpen((prev) => !prev)}
+            >
+              <span>+</span>
+            </S.MediaToggleButton>
+          )}
+
+          <S.SendButton type="submit" disabled={sending || !hasValue}>
+            <HiPaperAirplane size={16} />
+            <S.SendButtonText>
+              {sending ? "Sending..." : "Send"}
+            </S.SendButtonText>
+          </S.SendButton>
+        </S.Composer>
+      </S.ComposerWrapper>
 
       <AppAlertDialog
         heading="Send as"
@@ -278,6 +298,7 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
               onSelect={(gifUrl) => {
                 onSendGif(gifUrl);
                 setGifPickerOpen(false);
+                setMediaToolbarOpen(false);
               }}
             />
           }
@@ -299,6 +320,7 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
               onSelect={(stickerUrl) => {
                 onSendSticker(stickerUrl);
                 setStickerPickerOpen(false);
+                setMediaToolbarOpen(false);
               }}
             />
           }

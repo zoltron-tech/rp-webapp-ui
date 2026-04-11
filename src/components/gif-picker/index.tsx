@@ -36,7 +36,6 @@ export const GifPicker: FC<GifPickerProps> = ({ onSelect }) => {
       .then((r) => r.json())
       .then((data: { items: GifItem[] }) => {
         if (!cancelled) {
-          console.log("Fetched GIFs:", data);
           const grouped = [];
           // fill row first, then column
           const gifsPerColumn = Math.ceil(data.items.length / GIF_COLUMNS);
@@ -46,7 +45,6 @@ export const GifPicker: FC<GifPickerProps> = ({ onSelect }) => {
             grouped.push(group);
           }
           setGifs(grouped);
-          console.log("Fetched GIFs:", grouped);
 
           setLoading(false);
         }

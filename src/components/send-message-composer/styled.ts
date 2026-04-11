@@ -9,11 +9,24 @@ export const Composer = styled.form`
   background-color: var(--bg-1);
 `;
 
-export const MediaButtons = styled.div`
+export const ComposerWrapper = styled.div`
+  position: relative;
+`;
+
+export const MediaToolbar = styled.div<{ $open: boolean }>`
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
   display: flex;
   align-items: center;
-  gap: 2px;
-  flex-shrink: 0;
+  gap: 6px;
+  padding: 10px;
+  background-color: var(--bg-1);
+  transform: ${({ $open }) => ($open ? "translateY(0)" : "translateY(100%)")};
+  opacity: ${({ $open }) => ($open ? "1" : "0")};
+  pointer-events: ${({ $open }) => ($open ? "auto" : "none")};
+  transition: transform 0.2s ease, opacity 0.15s ease;
 `;
 
 export const SendButton = styled.button`
@@ -187,8 +200,8 @@ export const SenderSelectedMark = styled.span`
 `;
 
 const MediaPickerButton = styled.button`
-  width: 44px;
-  height: 44px;
+  height: 32px;
+  padding-inline: 4px;
   border: 1px solid var(--bg-6);
   border-radius: 4px;
   background: var(--bg-3);
@@ -196,6 +209,7 @@ const MediaPickerButton = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 4px;
   cursor: pointer;
   font-size: 11px;
   font-weight: 700;
@@ -212,16 +226,53 @@ const MediaPickerButton = styled.button`
     color: var(--accent);
     border-color: color-mix(in srgb, var(--accent) 40%, var(--bg-6));
   }
+`;
+
+export const GifButton = MediaPickerButton;
+export const StickerButton = MediaPickerButton;
+
+export const MediaToggleButton = styled.button`
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border: 1px solid var(--bg-6);
+  border-radius: 4px;
+  background: var(--bg-3);
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 22px;
+  font-weight: 300;
+  line-height: 1;
+  transition: background 0.12s ease, color 0.12s ease;
+
+  > span {
+    display: inline-flex;
+    transition: transform 0.2s ease;
+  }
+
+  &[data-open="true"] {
+    background: color-mix(in srgb, var(--accent) 12%, var(--bg-4));
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--bg-6));
+
+    > span {
+      transform: rotate(45deg);
+    }
+  }
+
+  &:hover {
+    background: var(--bg-4);
+    color: var(--text);
+  }
 
   @media (max-width: 680px) {
     width: 38px;
     height: 38px;
   }
 `;
-
-export const GifButton = MediaPickerButton;
-
-export const StickerButton = MediaPickerButton;
 
 export const SenderEmptyText = styled.p`
   margin: 0;

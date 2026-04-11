@@ -120,10 +120,6 @@ export const markConversationReadAction = async (
 
   const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/conversation/${encodeURIComponent(conversationId)}/markRead`;
 
-  console.log(
-    `Marking conversation ${conversationId} as read with URL: ${URL}`,
-  );
-
   const response = await fetch(URL, {
     cache: "no-store",
     headers,

@@ -319,9 +319,7 @@ export default function ConversationDetailPage() {
             <AvatarNew
               src={targetImage}
               alt={targetDisplayName || "Conversation"}
-              username={
-                resolvedTargetUserName || conversation?.name || conversationId
-              }
+              username={resolvedTargetUserName}
             />
             <S.ChatTitleWrap>
               <S.ChatTitle>{targetDisplayName}</S.ChatTitle>

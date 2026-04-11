@@ -48,7 +48,7 @@ export const AppAlertDialog = ({
           <S.Title>{heading}</S.Title>
 
           {body ? (
-            <div style={{ marginTop: "20px" }}>{body}</div>
+            <div style={{ marginTop: "4px" }}>{body}</div>
           ) : (
             <S.Description>{text}</S.Description>
           )}

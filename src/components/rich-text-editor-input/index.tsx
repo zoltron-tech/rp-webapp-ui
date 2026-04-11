@@ -716,10 +716,10 @@ export const RichTextEditor = ({
           case "Tab": {
             e.preventDefault();
             const currentIndex = mentionTabs.findIndex(
-              (t: any) => t.id === selectedTab,
+              (t) => t.id === selectedTab,
             );
             const nextIndex = (currentIndex + 1) % mentionTabs.length;
-            setSelectedTab((mentionTabs[nextIndex] as any).id);
+            setSelectedTab(mentionTabs[nextIndex].id);
             setFocusedItemIndex(0);
             return;
           }

@@ -92,8 +92,6 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
 
       const socketInstance = new WebSocket(webSocketUrl) as WebSocketExt;
 
-      console.log("websocket:connecting", webSocketUrl);
-
       socketInstance.addEventListener("open", () => {
         console.log("websocket:open");
         setIsConnected(true);
@@ -139,14 +137,11 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
       }
 
       if (isServerMessage(data)) {
-        console.log("websocket:message received", data.id, data.conversationId);
         setLastIncomingMessage(data);
         return;
       }
 
       if (!isServerPing(data)) return;
-
-      console.log("websocket:ping received", data.payload.usernames);
 
       // Track which users the server reports as online
       setOnlineUsernames(data.payload.usernames);
@@ -164,9 +159,7 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
 
       // Reply so the server resets its own heartbeat flag and records this user
       const usernames = novelist?.friends?.map((f) => f.username) ?? [];
-      console.log("friends", novelist?.friends);
       socket.send(JSON.stringify(createHeartbeatPong(usernames)));
-      console.log("websocket:pong sent", usernames);
     };
 
     socket.addEventListener("message", onMessage);

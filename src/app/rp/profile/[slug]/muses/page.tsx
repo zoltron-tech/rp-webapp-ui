@@ -54,7 +54,7 @@ export default function MusesListPage({}) {
   const displayedMuses = muses?.filter((m) => {
     if (
       search &&
-      !`${m.firstName ?? ""} ${m.lastName ?? ""}`
+      !`${m.firstName} ${m.lastName}`
         .toLowerCase()
         .includes(search.toLowerCase())
     )

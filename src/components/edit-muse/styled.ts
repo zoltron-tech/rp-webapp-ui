@@ -15,22 +15,26 @@ export const RichText = styled(NWRichText)`
 export const AddEditMusePageRoot = styled.div``;
 
 export const BackButton = styled.button`
-  width: 36px;
-  min-width: 36px;
-  height: 36px;
-  padding: 0;
-  border: 1px solid var(--bg-6);
-  border-radius: 9999px;
-  background-color: var(--bg-2);
-  color: var(--text-primary);
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border: none;
+  background: var(--bg-2);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
 
-  &:hover {
-    cursor: pointer;
-    border-color: var(--accent);
+  &:hover,
+  &:active {
     color: var(--accent);
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
   }
 `;
 
@@ -49,7 +53,6 @@ export const Card = styled.div`
 
   @media screen and (max-width: 800px) {
     margin-block: 0px;
-    background-color: var(--bg-1);
     padding-inline: 10px;
     padding-block: 30px;
     border: none;
@@ -72,7 +75,6 @@ export const TopBar = styled.div`
 export const FormHeading = styled.div`
   display: flex;
   align-items: center;
-  margin-bottom: var(--font-size-h4);
 
   h1 {
     all: unset;

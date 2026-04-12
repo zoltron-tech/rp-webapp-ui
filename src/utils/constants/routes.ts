@@ -74,5 +74,6 @@ export const ROUTES = {
     View: (threadId: string) => `/rp/thread/${threadId}`,
   },
   Tiers: "/rp/tiers",
+  UserMenu: "/rp/user-menu",
   VerifyEmail: "/rp/verify-email",
 } as const;

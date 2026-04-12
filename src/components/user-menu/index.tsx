@@ -1,7 +1,8 @@
 "use client";
 
 import classNames from "classnames";
-import { type FC, useCallback, useState } from "react";
+import { usePathname } from "next/navigation";
+import { type FC, useCallback, useMemo, useState } from "react";
 import {
   FcCollaboration,
   FcComments,
@@ -9,12 +10,11 @@ import {
   FcExport,
   FcFaq,
   FcLibrary,
-  FcManager,
   FcMusic,
-  FcServices,
   FcSupport,
   FcVoicePresentation,
 } from "react-icons/fc";
+import { FiChevronRight, FiEdit2 } from "react-icons/fi";
 import { logoutAction } from "@/app/actions";
 import { sendFeedbackMessage } from "@/app/rp/profile/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
@@ -27,9 +27,15 @@ import { Logger } from "@/utils/services";
 import { ShouldRender } from "../common";
 import { AvatarNew } from "../common/avatar-new";
 import { AppAlertDialog } from "../dialog";
+import { Flex } from "../edit-muse-card/styles";
 import * as S from "./styles";
 
 type UserMenuProps = {};
+
+function checkIsMobile() {
+  const minWidth = 768;
+  return window.innerWidth < minWidth || screen.width < minWidth;
+}
 
 export const ContactSupportForm = ({
   message,
@@ -74,6 +80,17 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
   const [open, setOpen] = useState(false);
   const { routeToPage } = usePageRouter();
   const { successToast, errorToast } = useUIContext();
+  const isMobile = useMemo(() => checkIsMobile(), []);
+  const pathname = usePathname();
+
+  const handleClick = useCallback(() => {
+    if (isMobile) {
+      if (pathname === ROUTES.UserMenu) return;
+      routeToPage(ROUTES.UserMenu);
+      return;
+    }
+    toggleState(setOpen)();
+  }, [isMobile, routeToPage, pathname]);
 
   const handleSendFeedbackMessage = async () => {
     const response = await sendFeedbackMessage(supportMessage.trim());
@@ -178,75 +195,120 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
         isConfirmDisabled={supportMessage.trim() === ""}
       />
 
-      <S.ContentContainer onClick={toggleState(setOpen)}>
+      <S.ContentContainer onClick={handleClick}>
         <AvatarNew
           className="selectable"
           src={novelist?.image ?? null}
           alt={user?.username || "User Avatar"}
         />
         <S.Menu className={classNames({ open })}>
+          <S.MenuUserHeader onClick={toUserProfile}>
+            <AvatarNew
+              src={novelist?.image ?? null}
+              alt={user?.username || "User Avatar"}
+            />
+            <S.MenuUserInfo>
+              <S.MenuUserName>
+                {novelist
+                  ? `${novelist.firstName} ${novelist.lastName}`.trim() ||
+                    novelist.username
+                  : user.username}
+              </S.MenuUserName>
+              <S.MenuUserHandle>@{user.username}</S.MenuUserHandle>
+            </S.MenuUserInfo>
+            <S.MenuEditButton
+              onClick={(e) => {
+                e.stopPropagation();
+                toEditProfile();
+              }}
+            >
+              <FiEdit2 />
+            </S.MenuEditButton>
+          </S.MenuUserHeader>
+          <S.Separator />
           <ShouldRender if={authState === "LOGGED_IN"}>
             <S.List>
               <S.Element onClick={toExplorePage}>
-                <FcVoicePresentation />
-                Explore posts
-              </S.Element>
-              <S.Element onClick={toConversationsPage}>
-                <FcComments />
-                Conversations
-              </S.Element>
-              <S.Separator />
-              <S.Element onClick={toUserProfile}>
-                <FcManager />
-                Your profile
-              </S.Element>
-              <S.Element onClick={toMusesPage}>
-                <FcConferenceCall />
-                Your characters
-              </S.Element>
-              <S.Element onClick={toMusicPage}>
-                <FcMusic />
-                Your music box
+                <Flex justify="flex-start" align="center" gap="12px">
+                  <FcVoicePresentation />
+                  Explore
+                </Flex>
+                <FiChevronRight size={16} color="gray" />
               </S.Element>
               <S.Element onClick={toOutgoingThreadsPage}>
-                <FcCollaboration />
-                Your interactions
+                <Flex justify="flex-start" align="center" gap="12px">
+                  <FcCollaboration />
+                  Interactions
+                </Flex>
+                <FiChevronRight size={16} color="gray" />
+              </S.Element>
+              <S.Separator />
+              <S.Element onClick={toMusesPage}>
+                <Flex justify="flex-start" align="center" gap="12px">
+                  <FcConferenceCall />
+                  Characters
+                </Flex>
+                <FiChevronRight size={16} color="gray" />
+              </S.Element>
+              <S.Element onClick={toConversationsPage}>
+                <Flex justify="flex-start" align="center" gap="12px">
+                  <FcComments />
+                  Inbox
+                </Flex>
+                <FiChevronRight size={16} color="gray" />
+              </S.Element>
+              <S.Element onClick={toMusicPage}>
+                <Flex justify="flex-start" align="center" gap="12px">
+                  <FcMusic />
+                  Music
+                </Flex>
+                <FiChevronRight size={16} color="gray" />
               </S.Element>
             </S.List>
-            <S.Separator />
-            <S.List>
-              <S.Element onClick={toEditProfile}>
-                <FcServices />
-                Edit profile
-              </S.Element>
-            </S.List>
-            <S.Separator />
           </ShouldRender>
           <ShouldRender if={authState === "UNINITIALIZED"}>
             <S.List onClick={toOnboarding}>
-              <S.Element>Onboarding</S.Element>
+              <S.Element>
+                <Flex justify="flex-start" align="center" gap="12px">
+                  Onboarding
+                </Flex>
+                <FiChevronRight size={16} color="gray" />
+              </S.Element>
             </S.List>
           </ShouldRender>
 
           <S.List>
+            <S.Separator />
             <S.Element onClick={toTermsAndConditionsPage}>
-              <FcLibrary />
-              Terms & conditions
+              <Flex justify="flex-start" align="center" gap="12px">
+                <FcLibrary />
+                Terms & conditions
+              </Flex>
+              <FiChevronRight size={16} color="gray" />
             </S.Element>
             <S.Element onClick={toFAQsPage}>
-              <FcFaq />
-              FAQs
+              <Flex justify="flex-start" align="center" gap="12px">
+                <FcFaq />
+                FAQs
+              </Flex>
+              <FiChevronRight size={16} color="gray" />
             </S.Element>
             <S.Element onClick={() => setShowContactSupportAlert(true)}>
-              <FcSupport />
-              Help & support
+              <Flex justify="flex-start" align="center" gap="12px">
+                <FcSupport />
+                Help & support
+              </Flex>
+              <FiChevronRight size={16} color="gray" />
             </S.Element>
           </S.List>
           <S.Separator />
           <S.List>
             <S.DeleteElement onClick={() => setShowLogoutAlert(true)}>
-              <FcExport />
-              Log out
+              <Flex justify="flex-start" align="center" gap="12px">
+                <FcExport />
+                Log out
+              </Flex>
+              <FiChevronRight size={16} color="gray" />
             </S.DeleteElement>
           </S.List>
         </S.Menu>

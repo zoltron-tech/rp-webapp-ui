@@ -1,6 +1,7 @@
 "use client";
 
 import classNames from "classnames";
+import { usePathname } from "next/navigation";
 import { type FC, useCallback, useEffect, useMemo, useState } from "react";
 import { IoMdNotifications } from "react-icons/io";
 import { getNotifications } from "@/app/rp/novelists/actions";
@@ -29,11 +30,13 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
   const [open, setOpen] = useState(false);
   const [_loading, setLoading] = useState(true);
   const isMobile = useMemo(() => checkIsMobile(), []);
+  const pathname = usePathname();
   const set = useGlobalStoreSet();
 
   const handleSeeAllClick = useCallback(() => {
+    if (pathname === ROUTES.Notification) return;
     routeToPage(ROUTES.Notification);
-  }, [routeToPage]);
+  }, [routeToPage, pathname]);
 
   const handleClick = useCallback(() => {
     if (isMobile) {
@@ -42,7 +45,7 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
     }
 
     toggleState(setOpen)();
-  }, [isMobile]);
+  }, [isMobile, handleSeeAllClick]);
 
   const fetchNotifications = useCallback(async () => {
     if (authState !== "LOGGED_IN") return;

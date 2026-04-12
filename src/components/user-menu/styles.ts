@@ -104,6 +104,84 @@ export const Menu = styled.div`
   }
 `;
 
+export const MenuUserHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin: 0 4px;
+  transition: background-color 0.3s ease-out;
+
+  &:hover {
+    background-color: var(--accent);
+
+    span {
+      color: #ffffff;
+    }
+  }
+
+  .avatar {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+  }
+`;
+
+export const MenuUserInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+`;
+
+export const MenuUserName = styled.span`
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+export const MenuUserHandle = styled.span`
+  font-size: var(--font-size-xsmall);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+export const MenuEditButton = styled.button`
+  margin-left: auto;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--bg-6);
+  background: var(--bg-2);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+
+  &:hover,
+  &:active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+  }
+
+  svg {
+    width: 13px;
+    height: 13px;
+  }
+`;
+
 export const ContentContainer = styled.div`
   ${DEV_MODE_BORDER("blue")}
 
@@ -138,7 +216,7 @@ export const List = styled.ul`
 
 export const Element = styled.li`
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
   font-weight: 600;
   color: rgba(209, 216, 226, 1);

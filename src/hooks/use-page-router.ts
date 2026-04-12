@@ -1,7 +1,7 @@
 import type { NavigateOptions } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect } from "react";
-import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
+import { useGlobalStoreSet } from "@/context/store/stores";
 import type { DataType, ErrorType } from "@/types/common";
 import { API_MESSAGE } from "@/utils/constants";
 
@@ -12,7 +12,6 @@ interface PageLoadingOptions extends NavigateOptions {
 export const usePageRouter = () => {
   const { push } = useRouter();
   const pathname = usePathname();
-  const pageLoading = useGlobalState("pageLoading");
   const setGlobalState = useGlobalStoreSet();
 
   const routeToPage = useCallback(
@@ -29,8 +28,8 @@ export const usePageRouter = () => {
   );
 
   const stopPageLoading = useCallback(() => {
-    if (pageLoading) setGlobalState({ pageLoading: false });
-  }, [pageLoading, setGlobalState]);
+    setGlobalState({ pageLoading: false });
+  }, [setGlobalState]);
 
   const baseDataLoader = useCallback(
     async <T>(
@@ -44,13 +43,7 @@ export const usePageRouter = () => {
         ("message" in (data as ErrorType) &&
           (data as ErrorType).message === API_MESSAGE.Error)
       ) {
-        // handle error
         stopPageLoading();
-        // if (!skipRedirect) {
-        //   routeToPage("/404", {
-        //     skipLoading: true,
-        //   });
-        // }
         return null;
       }
 
@@ -58,7 +51,7 @@ export const usePageRouter = () => {
 
       return data! as T;
     },
-    [stopPageLoading, routeToPage],
+    [stopPageLoading],
   );
 
   return {

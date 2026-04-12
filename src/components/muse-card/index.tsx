@@ -71,65 +71,72 @@ export const MuseCard: FC<Props> = ({ muse, className, ...rest }) => {
   if (!muse) return <></>;
 
   return (
-    <S.CardWrapper
-      className={classNames([
-        className,
-        {
-          new: !muse.firstName,
-        },
-      ])}
-      {...rest}
-    >
+    <S.CardContainer>
       <ShouldRender if={muse !== INITIAL_MUSE && !!isCurrentUser}>
-        <AppAlertDialog
-          heading={`Unalive ${muse.firstName}?`}
-          text="This action is permanent. Are you sure?"
-          open={showDeleteAlert}
-          onOpenChange={setShowDeleteAlert}
-          onConfirm={onConfirmDelete}
-        />
-      </ShouldRender>
-      <S.CardBackground
-        banner={
-          getSafeImage(muse?.cardBackground?.src) ||
-          getSafeImage(muse?.image || "")
-        }
-      />
-      <S.Card
-        className={classNames([
-          "muse-card",
-          {
-            new: !muse.firstName,
-          },
-        ])}
-        onClick={(e) => handleCardClick(e, muse)}
-      >
-        <ShouldRender if={muse !== INITIAL_MUSE && !!isCurrentUser}>
-          <S.EditButton className="button" onClick={onEditClick}>
+        <S.ActionBar>
+          <S.EditButton type="button" className="button" onClick={onEditClick}>
             <GrEdit />
+            <S.ButtonLabel>Edit</S.ButtonLabel>
           </S.EditButton>
           <S.DeleteButton
+            type="button"
             className="button"
             onClick={() => setShowDeleteAlert(true)}
           >
             <FaRegTrashCan />
+            <S.ButtonLabel>Delete</S.ButtonLabel>
           </S.DeleteButton>
+        </S.ActionBar>
+      </ShouldRender>
+      <S.CardWrapper
+        className={classNames([
+          className,
+          {
+            new: !muse.firstName,
+          },
+        ])}
+        {...rest}
+      >
+        <ShouldRender if={muse !== INITIAL_MUSE && !!isCurrentUser}>
+          <AppAlertDialog
+            heading={`Unalive ${muse.firstName}?`}
+            text="This action is permanent. Are you sure?"
+            open={showDeleteAlert}
+            onOpenChange={setShowDeleteAlert}
+            onConfirm={onConfirmDelete}
+          />
         </ShouldRender>
-        <S.CardHeader>
-          <S.MuseInfo>
-            <S.Title
-              className={classNames([
-                {
-                  new: !muse.firstName,
-                },
-              ])}
-            >
-              {muse.firstName || "Add New"} {muse.lastName || ""}
-            </S.Title>
-          </S.MuseInfo>
-        </S.CardHeader>
-      </S.Card>
-    </S.CardWrapper>
+        <S.CardBackground
+          banner={
+            getSafeImage(muse?.cardBackground?.src) ||
+            getSafeImage(muse?.image || "")
+          }
+        />
+        <S.Card
+          className={classNames([
+            "muse-card",
+            {
+              new: !muse.firstName,
+            },
+          ])}
+          onClick={(e) => handleCardClick(e, muse)}
+        >
+          <S.CardHeader>
+            <S.MuseInfo>
+              <S.Title
+                className={classNames([
+                  {
+                    new: !muse.firstName,
+                  },
+                ])}
+              >
+                {muse.firstName || "Add New"} {muse.lastName || ""}
+              </S.Title>
+            </S.MuseInfo>
+          </S.CardHeader>
+        </S.Card>
+      </S.CardWrapper>
+    </S.CardContainer>
   );
 };
 

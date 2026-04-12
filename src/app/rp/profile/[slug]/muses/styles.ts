@@ -47,6 +47,50 @@ export const Container = styled.div`
   gap: 0.5rem;
 `;
 
+export const SearchWrapper = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 350px;
+  margin-inline: auto;
+`;
+
+export const SearchInput = styled.input`
+  width: 100%;
+  padding: 10px 40px 10px 14px;
+  background: var(--bg-3);
+  border: 1px solid var(--bg-6);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: var(--font-size-input);
+  font-family: var(--font);
+  outline: none;
+  transition: border-color 0.2s ease;
+
+  &::placeholder {
+    color: var(--text-secondary);
+  }
+
+  &:focus {
+    border-color: var(--accent);
+  }
+
+  &::-webkit-search-cancel-button,
+  &::-webkit-search-decoration {
+    appearance: none;
+  }
+`;
+
+export const SearchIcon = styled.span`
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  color: var(--text-secondary);
+`;
+
 export const FilterRow = styled.div`
   display: flex;
   align-items: center;
@@ -130,7 +174,7 @@ export const MuseListContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   margin-inline: auto;
-  /* justify-content: center; */
+  justify-content: center;
   margin-top: 10px;
   gap: 0.3rem;
   max-width: 800px;

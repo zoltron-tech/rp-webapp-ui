@@ -1,8 +1,5 @@
-import { Container } from "@novelist-world/ui";
 import styled from "styled-components";
-import { pSBC } from "@/lib/pSBC";
 import { CARD_BORDER, Z_INDEX } from "@/theme";
-import { setOpacity } from "@/utils/helpers";
 
 export const CardBackground = styled.div<CardProps>`
   position: absolute;
@@ -120,89 +117,79 @@ type CardProps = {
   banner: string;
 };
 
-export const Button = styled.div`
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 30px;
-  height: 30px;
+export const CardContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: fit-content;
+
+  container-name: card-container;
+  container-type: size;
+`;
+
+export const ActionBar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--bg-3);
+  border-top-right-radius: 6px;
+  border-top-left-radius: 6px;
+  width: 100%;
+`;
+
+export const ButtonLabel = styled.span;
+
+export const Button = styled.button`
+  flex: 1;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: ${({ theme }: any) => theme.hoverGreyAlpha};
-  border-radius: 50%;
-  box-shadow: 0px 0px 5px 2px rgba(0, 0, 0, 0.4);
-  z-index: ${Z_INDEX.MODAL};
-  transition: background-color 0.1s ease-in-out;
-  opacity: 0;
-  transition: opacity 0.5s ease;
+  gap: 5px;
+  border: none;
+  font-size: var(--font-size-xsmall);
+  font-weight: 600;
   cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
 
   & svg {
-    width: 15px;
-    height: 15px;
-    fill: var(--text);
-    transition: transform 0.2s ease-in-out;
-
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
     pointer-events: none;
   }
 
-  &:hover {
-    background-color: ${({ theme }: any) => theme.hoverGrey};
-  }
-
-  @container content-container (max-width: 1000px) {
-    opacity: 1;
-    transform: none;
-    transition: none;
+  &:active {
+    transform: scale(0.96);
   }
 
   @container (max-height: 200px) {
-    & {
-      top: 5px;
-      right: 0px;
-      width: 25px;
-      height: 25px;
-    }
+    height: 26px;
+    font-size: var(--font-size-xsmall);
 
     & svg {
-      width: 15px;
-      height: 15px;
+      width: 8px;
+      height: 8px;
     }
   }
 `;
 
 export const EditButton = styled(Button)`
-  top: 10px;
-  right: 50px;
-
-  @container content-container (max-width: 1000px) {
-    right: 35px;
-    background-color: ${({ theme }: any) =>
-      pSBC(-0.5, setOpacity(theme.processing, 0.8))};
-  }
+  background-color: var(--bg-3);
+  border-top-left-radius: 6px;
+  color: #fff;
 
   &:hover {
-    background-color: ${({ theme }: any) =>
-      pSBC(-0.5, setOpacity(theme.processing, 0.8))};
+    background-color: var(--accent);
   }
 `;
 
 export const DeleteButton = styled(Button)`
-  top: 10px;
-  right: 10px;
-
-  background-color: ${({ theme }: any) => setOpacity(theme.error, 0.5)};
-
-  @container content-container (max-width: 1000px) {
-    right: 5px;
-    background-color: ${({ theme }: any) =>
-      pSBC(-0.5, setOpacity(theme.error, 0.8))};
-  }
+  background-color: rgb(86, 25, 25);
+  border-top-right-radius: 6px;
+  color: #fff;
 
   &:hover {
-    background-color: ${({ theme }: any) =>
-      pSBC(-0.5, setOpacity(theme.error, 0.8))};
+    background-color: rgb(134, 41, 41);
   }
 `;
 

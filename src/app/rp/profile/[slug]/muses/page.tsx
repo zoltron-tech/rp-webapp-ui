@@ -1,21 +1,23 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { FiSearch } from "react-icons/fi";
+import { HiUserAdd } from "react-icons/hi";
 import { getAllMusesByUsernameAction } from "@/app/rp/muse/actions";
 import { BreadCrumb } from "@/components/breadcrumb";
-import { ShouldRender } from "@/components/common";
+import { AddNewButton } from "@/components/common";
 import { MuseCard } from "@/components/muse-card";
 import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents, useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { Muse } from "@/types";
-import { INITIAL_MUSE } from "@/utils/constants";
 import {
   type CustomEventType,
   EVENTS,
   type MuseDeletedPayload,
 } from "@/utils/constants/custom-events";
+import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styles";
 
 export default function MusesListPage({}) {
@@ -35,8 +37,28 @@ export default function MusesListPage({}) {
     ONLY_ME: true,
     PUBLIC: true,
   });
+  const [search, setSearch] = useState("");
+
+  const backgroundTiles = useMemo(
+    () =>
+      muses?.map((muse) => ({
+        image: muse.image || "",
+        left: 5 + Math.random() * 80,
+        rotation: -45 + Math.random() * 90,
+        scale: 1.5 + Math.random() * 2.5,
+        top: 5 + Math.random() * 80,
+      })) ?? [],
+    [muses],
+  );
 
   const displayedMuses = muses?.filter((m) => {
+    if (
+      search &&
+      !`${m.firstName ?? ""} ${m.lastName ?? ""}`
+        .toLowerCase()
+        .includes(search.toLowerCase())
+    )
+      return false;
     if (m.privacy === "PUBLIC") return visibility.PUBLIC;
     if (m.privacy === "FRIENDS") return visibility.FRIENDS;
     if (m.privacy === "ONLY_ME") return visibility.ONLY_ME;
@@ -76,26 +98,36 @@ export default function MusesListPage({}) {
     <S.Container>
       {/* ✨ Background mesh */}
       <S.BackgroundContainer>
-        {muses?.map((muse, i) => {
-          // Randomize position and transform for a natural look
-          const top = 5 + Math.random() * 80; // 5% → 85%
-          const left = 5 + Math.random() * 80; // 5% → 85%
-          const rotation = -45 + Math.random() * 90; // -45° → 45°
-          const scale = 1.5 + Math.random() * 2.5; // 1.5 + 2.5 = 4.0 max
-
-          return (
-            <S.BackgroundTile
-              key={i}
-              image={muse.image || ""}
-              top={top}
-              left={left}
-              rotation={rotation}
-              scale={scale}
-            />
-          );
-        })}
+        {backgroundTiles.map((tile, i) => (
+          <S.BackgroundTile
+            key={i}
+            image={tile.image}
+            top={tile.top}
+            left={tile.left}
+            rotation={tile.rotation}
+            scale={tile.scale}
+          />
+        ))}
       </S.BackgroundContainer>
       <BreadCrumb label="Characters" username={username} />
+      {isCurrentUser && (
+        <AddNewButton
+          label="Add a new character"
+          icon={<HiUserAdd size={18} />}
+          onClick={() => routeToPage(ROUTES.Profile.Muses.Create)}
+        />
+      )}
+      <S.SearchWrapper>
+        <S.SearchInput
+          type="search"
+          placeholder="Search characters..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <S.SearchIcon>
+          <FiSearch size={16} />
+        </S.SearchIcon>
+      </S.SearchWrapper>
       {isCurrentUser && (
         <S.FilterRow>
           <label>
@@ -140,16 +172,6 @@ export default function MusesListPage({}) {
         </S.FilterRow>
       )}
       <S.MuseListContainer>
-        <ShouldRender
-          if={
-            isCurrentUser &&
-            muses != null &&
-            novelist != null &&
-            muses.length < novelist?.tier.museLimit
-          }
-        >
-          <MuseCard disabled key={null} muse={INITIAL_MUSE}></MuseCard>
-        </ShouldRender>
         {displayedMuses?.map((muse) => (
           <MuseCard key={muse?.id} muse={muse}></MuseCard>
         ))}

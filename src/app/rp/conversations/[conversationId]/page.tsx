@@ -41,6 +41,9 @@ export default function ConversationDetailPage() {
   const searchParams = useSearchParams();
   const user = useGlobalState("user");
   const novelist = useGlobalState("novelist");
+  const musicPlayer = useGlobalState("musicPlayer");
+  const musicPlayerHeight =
+    musicPlayer?.playingSongId && musicPlayer?.playingSongName ? 53 : 0;
   const { socket, isConnected, lastIncomingMessage } = useSocket();
   const { baseDataLoader, routeToPage } = usePageRouter();
   const { errorToast, successToast } = useUIContext();
@@ -307,7 +310,7 @@ export default function ConversationDetailPage() {
   }, [conversationId, lastMessageId, scrollToBottom]);
 
   return (
-    <S.Container>
+    <S.Container $playerHeight={musicPlayerHeight}>
       <S.ChatWrapper>
         <S.ChatHeader>
           <S.ChatPerson>

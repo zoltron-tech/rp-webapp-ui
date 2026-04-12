@@ -22,7 +22,7 @@ import type { CreateUpdateMuse, Fandom } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
 import { ROUTES } from "@/utils/constants/routes";
-import { AvatarNew } from "../common/avatar-new";
+import { AvatarUploadField } from "../common/avatar-upload-field";
 import { LoaderAction } from "../common/loader-action";
 import { AppAlertDialog } from "../dialog";
 import { ErrorBox } from "../error-box";
@@ -546,11 +546,7 @@ export default function EditMuseDataCard() {
             <S.MediaUploadSectionContainer>
               <Form.Field className="avatar-field" name="avatar">
                 <Form.Label className="media-label">
-                  <AvatarNew
-                    className="selectable"
-                    src={image}
-                    alt={firstName || "Avatar"}
-                  />
+                  <AvatarUploadField src={image} alt={firstName || "Avatar"} />
                   <span>Avatar</span>
                 </Form.Label>
                 <Form.Control

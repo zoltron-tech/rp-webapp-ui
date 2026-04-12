@@ -1,4 +1,6 @@
+export * from "./add-new-button";
 export * from "./avatar";
+export * from "./avatar-upload-field";
 export * from "./button";
 export * from "./card";
 export * from "./chat-bubble";

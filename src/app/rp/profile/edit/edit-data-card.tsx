@@ -10,6 +10,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { BsArrowLeft } from "react-icons/bs";
 import { ImProfile } from "react-icons/im";
 import { IoIosInformationCircleOutline } from "react-icons/io";
 import {
@@ -17,11 +18,14 @@ import {
   sendVerificationEmailAction,
   updateUserTheme,
 } from "@/app/actions";
-import { AvatarNew } from "@/components/common/avatar-new";
+import { AvatarUploadField } from "@/components/common/avatar-upload-field";
+import { AppAlertDialog } from "@/components/dialog";
+import { Flex } from "@/components/edit-muse-card/styles";
 import { ErrorBox } from "@/components/error-box";
 import { RichTextEditor } from "@/components/rich-text-editor-input";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type {
   MentionDataItem,
   MentionTab,
@@ -30,9 +34,11 @@ import type {
 import { ACCENT_MAP, type Accent } from "@/types/theme";
 import { API_MESSAGE } from "@/utils/constants";
 import { SUPPORT_EMAIL, SUPPORT_EMAIL_URL } from "@/utils/constants/common";
+import { ROUTES } from "@/utils/constants/routes";
 import { searchMentionMusesAction } from "../../muse/actions";
 import { updateUserNovelist } from "../../novelists/actions";
 import { uploadMedia } from "../actions";
+import { NoteDialogBody } from "./note-dialog-body";
 import { useProfileState, useProfileStoreSet } from "./profile.store";
 import * as S from "./styled";
 
@@ -130,8 +136,11 @@ export default function EditDataCard() {
   const [imageUploading, setImageUploading] = useState(false);
   const [operationState, setOperationState] =
     useState<OperationState>("INITIAL");
+  const [noteDialogOpen, setNoteDialogOpen] = useState(false);
+  const [tempNote, setTempNote] = useState("");
   const setGlobalState = useGlobalStoreSet();
   const { successToast } = useUIContext();
+  const { routeToPage } = usePageRouter();
 
   const fetchMentionableMuses = useCallback(
     async (prefix: string = ""): Promise<MentionDataItem[]> => {
@@ -402,10 +411,22 @@ export default function EditDataCard() {
 
   return (
     <S.Card>
-      <S.FormHeading>
-        <ImProfile />
-        <h1>Edit your profile</h1>
-      </S.FormHeading>
+      <Flex justify="flex-start" style={{ width: "100%" }}>
+        <S.BackButton
+          type="button"
+          disabled={!user?.username}
+          onClick={() => {
+            if (!user?.username) return;
+            routeToPage(ROUTES.Profile.View(user.username).Index);
+          }}
+        >
+          <BsArrowLeft />
+        </S.BackButton>
+        <S.FormHeading>
+          <ImProfile />
+          <h1>Edit your profile</h1>
+        </S.FormHeading>
+      </Flex>
       <Separator.Root className="separator" orientation="horizontal" />
 
       <S.FormContainer>
@@ -413,10 +434,14 @@ export default function EditDataCard() {
           <S.BasicInfoFields>
             <Form.Field className="avatar-field" name="avatar">
               <Form.Label>
-                <AvatarNew
-                  className="selectable"
+                <AvatarUploadField
                   src={image}
                   alt={firstName || ""}
+                  note={note}
+                  onNoteClick={() => {
+                    setTempNote(note ?? "");
+                    setNoteDialogOpen(true);
+                  }}
                 />
               </Form.Label>
               <Form.Control
@@ -428,6 +453,21 @@ export default function EditDataCard() {
                 hidden
               />
             </Form.Field>
+            <input type="hidden" name="note" value={note ?? ""} readOnly />
+            <AppAlertDialog
+              heading="Share a thought..."
+              text=""
+              body={<NoteDialogBody value={tempNote} onChange={setTempNote} />}
+              open={noteDialogOpen}
+              onOpenChange={setNoteDialogOpen}
+              onConfirm={() => {
+                setNote(tempNote);
+                setNoteDialogOpen(false);
+              }}
+              onCancel={() => setNoteDialogOpen(false)}
+              actionButtonLabel="Save"
+              actionColor="neutral"
+            />
 
             <ShouldRender if={Boolean(mediaError)}>
               <S.MediaErrorWrapper>
@@ -467,21 +507,6 @@ export default function EditDataCard() {
                   value={lastName ?? ""}
                   onChange={handleLastnameChange}
                 />
-              </Form.Field>
-              <Form.Field className="field" name="note">
-                <S.FieldHeader>
-                  <Form.Label>Note</Form.Label>
-                  <span className="secondary-text ">(Optional)</span>
-                </S.FieldHeader>
-                <Form.Control
-                  aria-label="Note"
-                  name="note"
-                  value={note ?? ""}
-                  onChange={handleNoteChange}
-                  asChild
-                >
-                  <textarea placeholder="What's on your mind?" spellCheck />
-                </Form.Control>
               </Form.Field>
             </div>
 

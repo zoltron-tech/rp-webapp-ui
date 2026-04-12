@@ -851,6 +851,7 @@ export const EditorContent = styled.div<EditorContentProps>`
   width: 100%;
   min-height: 10rem;
   max-height: 20dvh;
+  background-color: var(--bg-3);
   padding: 1rem;
   outline: none;
   overflow: auto;

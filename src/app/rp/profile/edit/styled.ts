@@ -17,7 +17,6 @@ export const Card = styled.div`
 
   @media screen and (max-width: 800px) {
     margin-block: 0px;
-    background-color: var(--bg-1);
     padding-inline: 10px;
     padding-block: 30px;
     border: none;
@@ -31,10 +30,33 @@ export const Card = styled.div`
   }
 `;
 
+export const BackButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border: none;
+  background: var(--bg-2);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+
+  &:hover,
+  &:active {
+    color: var(--accent);
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+`;
+
 export const FormHeading = styled.div`
   display: flex;
   align-items: center;
-  margin-bottom: var(--font-size-h4);
 
   h1 {
     all: unset;
@@ -226,7 +248,6 @@ export const BasicInfoFields = styled.div`
     align-items: center;
     width: 100%;
     display: flex;
-       padding-right: 12px;
 
 
 
@@ -235,10 +256,9 @@ export const BasicInfoFields = styled.div`
     height: 150px;
     margin-block: 24px;
 
-          .avatar {
-                width: 150px;
+  .avatar {
+    width: 150px;
     height: 150px;
-    margin-block: 16px;
     background-color: var(--bg-2);
     border: 6px solid var(--bg-1);
     z-index: 1;
@@ -250,7 +270,6 @@ export const BasicInfoFields = styled.div`
   .name-fields {
     display: flex;
     flex-direction: column;
-    gap: 8px;
     width: 400px;
   }
 
@@ -475,4 +494,37 @@ justify-content: center;
 padding-inline: 20px;
 padding-top: 20px;
 width: 100%;
+`;
+
+export const NoteDialogTextarea = styled.textarea`
+  width: 100%;
+  min-height: 100px;
+  resize: vertical;
+  background: var(--bg-3);
+  color: var(--text);
+  border: 1px solid var(--bg-6);
+  border-radius: 4px;
+  padding: 8px;
+  font-family: var(--font);
+  font-size: var(--font-size);
+  box-sizing: border-box;
+  word-break: break-word;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+`;
+
+export const NoteDialogBodyWrapper = styled.div`
+  padding: 4px 12px 0;
+`;
+
+export const NoteCharCount = styled.span`
+  display: block;
+  text-align: right;
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  margin-top: 4px;
+
+  &.warn {
+    color: var(--tomato-a9);
+  }
 `;

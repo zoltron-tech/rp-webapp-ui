@@ -1,5 +1,4 @@
 export * from "./conversation-card";
-export * from "./edit-profile-card";
 export * from "./muses-pill";
 export * from "./novelist-card";
 export * from "./novelist-carousel";

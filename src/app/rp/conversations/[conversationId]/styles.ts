@@ -1,15 +1,17 @@
 import styled from "styled-components";
 
-export const Container = styled.div`
+export const Container = styled.div<{ $playerHeight: number }>`
   padding-top: 10px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
   width: 100%;
+  height: calc(100dvh - 60px - ${({ $playerHeight }) => $playerHeight}px);
+  overflow: hidden;
 
   @media (max-width: 680px) {
     padding-top: 0px;
+    height: calc(100dvh - 45px - ${({ $playerHeight }) => $playerHeight}px);
   }
 `;
 
@@ -18,6 +20,8 @@ export const ChatWrapper = styled.div`
   max-width: 900px;
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
   gap: 12px;
 
   @media (max-width: 680px) {
@@ -70,8 +74,8 @@ export const ChatMeta = styled.span`
 `;
 
 export const MessagesContainer = styled.div`
-  min-height: 380px;
-  max-height: 72vh;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   border: 1px solid var(--bg-3);
   border-radius: 8px;

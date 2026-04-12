@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { MdOutlineCloudUpload } from "react-icons/md";
 import { BreadCrumb } from "@/components/breadcrumb";
+import { AddNewButton } from "@/components/common";
 import { MusicListItem } from "@/components/music-list-item/page";
 import { useMusicContext } from "@/context";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
@@ -102,12 +103,11 @@ export default function SongsListPage({}) {
   return (
     <S.Container>
       <BreadCrumb label="Music" username={username} />
-      <S.SeeMoreLink onClick={() => routeToPage(`/rp/profile/music/create`)}>
-        <span>
-          Upload a new song
-          <MdOutlineCloudUpload size={20} />
-        </span>
-      </S.SeeMoreLink>
+      <AddNewButton
+        label="Upload a new song"
+        icon={<MdOutlineCloudUpload size={20} />}
+        onClick={() => routeToPage(`/rp/profile/music/create`)}
+      />
       <S.SongListContainer>
         {songs?.map((song) => {
           return <MusicListItem key={song.id} song={song} />;

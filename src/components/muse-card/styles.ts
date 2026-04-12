@@ -121,9 +121,6 @@ export const CardContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: fit-content;
-
-  container-name: card-container;
-  container-type: size;
 `;
 
 export const ActionBar = styled.div`

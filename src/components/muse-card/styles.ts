@@ -121,6 +121,9 @@ export const CardContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: fit-content;
+
+  container-name: card-container;
+  container-type: size;
 `;
 
 export const ActionBar = styled.div`
@@ -133,11 +136,7 @@ export const ActionBar = styled.div`
   width: 100%;
 `;
 
-export const ButtonLabel = styled.span`
-  @container muse-card (max-width: 140px) {
-    display: none;
-  }
-`;
+export const ButtonLabel = styled.span;
 
 export const Button = styled.button`
   flex: 1;

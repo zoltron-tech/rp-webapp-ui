@@ -22,7 +22,7 @@ export const ChatRow = styled.div`
 
 export const SenderAvatarWrap = styled.div`
   display: flex;
-  align-items: flex-end;
+  align-items: center;
 
   .avatar {
     width: 30px;
@@ -60,16 +60,12 @@ export const ChatBubble = styled(Pill)`
   white-space: pre-wrap;
 
   a {
-    color: var(--accent);
+    color: #3498DB;
     text-decoration: underline;
   }
 
   &.sender {
     background-color: var(--accent);
-
-    a {
-      color: var(--text);
-    }
 
     .mention-tag {
       background: rgba(255, 255, 255, 0.25);
@@ -96,8 +92,23 @@ export const ChatBubbleContainer = styled.div`
   width: 100%;
 `;
 
+export const SenderNameRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  margin-inline: 8px;
+
+  .avatar {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+  }
+`;
+
 export const SenderName = styled.span`
-  font-size: 10px;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-bold);
   color: var(--text-secondary);
 `;
 
@@ -105,14 +116,20 @@ export const ActivityBubble = styled.div`
   display: inline-flex;
   justify-content: center;
   align-items: center;
+  gap: 4px;
   max-width: min(90%, 520px);
-  font-size: 11px;
+  font-size: var(--font-size-small);
   border-radius: 999px;
   padding: 6px 12px;
   color: var(--text-secondary);
   background: color-mix(in srgb, var(--accent) 10%, var(--bg-3));
   border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--bg-6));
   text-align: center;
+`;
+
+export const ActivitySenderName = styled.span`
+  font-weight: var(--font-weight-bold);
+  color: var(--text-secondary);
 `;
 
 export const AttachmentsGrid = styled.div`
@@ -319,7 +336,7 @@ export const LinkAnchor = styled.a`
   display: inline-block;
   width: fit-content;
   max-width: 100%;
-  font-size: 12px;
+  font-size: var(--font-size-small);
   color: var(--accent);
   text-decoration: underline;
   overflow-wrap: anywhere;
@@ -548,11 +565,17 @@ export const SocialBrandBadge = styled.div`
   padding: 3px 7px;
 `;
 
+export const EmojiOnlyMessage = styled.span`
+  font-size: var(--font-size-h1);
+  line-height: 1.2;
+  display: block;
+`;
+
 export const TimeStamp = styled.span`
-  font-size: 10px;
+  font-size: var(--font-size-xxsmall);
   opacity: 0.7;
   margin-inline: 2px;
-  color: var(--text);
+  color: var(--text-secondary);
 `;
 
 export const ReactionsBar = styled.div`

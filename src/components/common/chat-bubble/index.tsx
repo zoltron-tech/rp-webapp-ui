@@ -189,6 +189,8 @@ const getReactionDisplay = (reaction: string) => {
 
 /** Detects messages that contain rich-text HTML tags produced by ChatRichInput. */
 const HTML_CONTENT_RE = /<(strong|em|b|i|span)\b/i;
+const EMOJI_ONLY_RE =
+  /^(\p{Extended_Pictographic}|\p{Emoji_Modifier}|\uFE0F|\u20E3|\u200D|\s)+$/u;
 
 /**
  * Renders a rich-text HTML message (bold, italic, mention tags).
@@ -683,6 +685,11 @@ export const ChatBubble: FC<Props> = ({ message, currentUsername }) => {
   const hasAttachments = !!message.attachments?.length;
   const [activeReaction, setActiveReaction] = useState<string | null>(null);
   const isHtmlMessage = HTML_CONTENT_RE.test(messageText);
+  const isEmojiOnly = useMemo(
+    () =>
+      !isHtmlMessage && !!messageText.trim() && EMOJI_ONLY_RE.test(messageText),
+    [messageText, isHtmlMessage],
+  );
 
   const isMessageOnlyUrls = useMemo(() => {
     if (urls.length !== 1) return false;
@@ -724,7 +731,12 @@ export const ChatBubble: FC<Props> = ({ message, currentUsername }) => {
   if (isActivityMessage) {
     return (
       <S.ChatRow className="activity">
-        <S.ActivityBubble>{messageText || "Activity update"}</S.ActivityBubble>
+        <S.ActivityBubble>
+          <S.ActivitySenderName>
+            {message.sender.name || message.sender.username}
+          </S.ActivitySenderName>
+          {messageText || "Activity update"}
+        </S.ActivityBubble>
       </S.ChatRow>
     );
   }
@@ -747,7 +759,16 @@ export const ChatBubble: FC<Props> = ({ message, currentUsername }) => {
       ) : null}
 
       <S.BubbleStack className={isSender ? "sender" : "receiver"}>
-        {!isSender ? <S.SenderName>{message.sender.name}</S.SenderName> : null}
+        <S.SenderNameRow>
+          {isSender ? (
+            <AvatarNew
+              src={message.sender.image || null}
+              alt={message.sender.name || message.sender.username || "User"}
+              username={message.sender.username}
+            />
+          ) : null}
+          <S.SenderName>{message.sender.name}</S.SenderName>
+        </S.SenderNameRow>
 
         {urls.length > 0 && !isHtmlMessage
           ? urls.map((url) => <LinkPreview key={url} url={url} />)
@@ -759,6 +780,8 @@ export const ChatBubble: FC<Props> = ({ message, currentUsername }) => {
               html={messageText}
               className={isSender ? "sender" : "receiver"}
             />
+          ) : isEmojiOnly ? (
+            <S.EmojiOnlyMessage>{messageText}</S.EmojiOnlyMessage>
           ) : (
             <S.ChatBubble className={isSender ? "sender" : "receiver"}>
               {toRenderableMessage(messageText)}

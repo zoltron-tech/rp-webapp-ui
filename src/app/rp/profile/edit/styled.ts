@@ -506,7 +506,7 @@ export const NoteDialogTextarea = styled.textarea`
   border-radius: 4px;
   padding: 8px;
   font-family: var(--font);
-  font-size: var(--font-size);
+  font-size: var(--font-size-input);
   box-sizing: border-box;
   word-break: break-word;
   white-space: pre-wrap;

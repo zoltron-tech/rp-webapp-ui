@@ -13,11 +13,12 @@ import { LoadMore } from "@/components/load-more/page";
 import type { ComposerSender } from "@/components/send-message-composer";
 import { SendMessageComposer } from "@/components/send-message-composer";
 import { useSocket } from "@/context/socket";
-import { useGlobalState } from "@/context/store/stores";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import type { Conversation, MentionDataItem, Message } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
+import { getUnreadConversationIdsAction } from "../actions";
 import {
   getConversationByIdAction,
   getConversationMessagesAction,
@@ -28,6 +29,16 @@ import {
 import { ForwardMessageDialog } from "./forward-message-dialog";
 import { ReplyPreview } from "./reply-preview";
 import * as S from "./styles";
+
+const useUpdateUnreadConversations = () => {
+  const setGlobalState = useGlobalStoreSet();
+  return async () => {
+    const unreadIds = await getUnreadConversationIdsAction();
+    if (Array.isArray(unreadIds)) {
+      setGlobalState({ unreadConversationIds: unreadIds });
+    }
+  };
+};
 
 const deriveTargetUserName = (
   conversation: Conversation | null,
@@ -98,6 +109,7 @@ const RETENTION_NOTICES: { line1: string; line2: string }[] = [
 ];
 
 export default function ConversationDetailPage() {
+  const updateUnreadConversations = useUpdateUnreadConversations();
   const params = useParams();
   const searchParams = useSearchParams();
   const user = useGlobalState("user");
@@ -236,8 +248,9 @@ export default function ConversationDetailPage() {
     }
 
     setConversation(result);
-    markConversationReadAction(conversationId);
-  }, [baseDataLoader, conversationId]);
+    await markConversationReadAction(conversationId);
+    await updateUnreadConversations();
+  }, [baseDataLoader, conversationId, updateUnreadConversations]);
 
   const fetchMessages = useCallback(
     async (conversationId: string, pageNumber = 1, append = false) => {
@@ -429,8 +442,11 @@ export default function ConversationDetailPage() {
       if (prev.some((m) => m.id === lastIncomingMessage.id)) return prev;
       return [...prev, lastIncomingMessage];
     });
-    markConversationReadAction(conversationId);
-  }, [lastIncomingMessage, conversationId]);
+    (async () => {
+      await markConversationReadAction(conversationId);
+      await updateUnreadConversations();
+    })();
+  }, [lastIncomingMessage, conversationId, updateUnreadConversations]);
 
   const fallbackMessages =
     messages.length > 0

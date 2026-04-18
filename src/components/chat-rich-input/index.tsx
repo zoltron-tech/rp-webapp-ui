@@ -1,15 +1,17 @@
 "use client";
 
+import type { ReactNode } from "react";
 import {
-  type FC,
+  forwardRef,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
 } from "react";
 import type { MentionDataItem } from "@/types";
-import { AvatarNew } from "../common/avatar-new";
+import { MentionDropdown } from "../mention-dropdown";
 import { createMentionChip } from "../rich-text-editor-input/mention-chip";
 import * as S from "./styled";
 
@@ -26,17 +28,31 @@ interface ChatRichInputProps {
   mentionItems?: MentionDataItem[];
   /** When provided, muses are fetched dynamically from the server on each query change. */
   getMentionMuseItems?: (prefix: string) => Promise<MentionDataItem[]>;
+  /** Optional node rendered inside the input area on the trailing edge. */
+  trailingAction?: ReactNode;
 }
 
-export const ChatRichInput: FC<ChatRichInputProps> = ({
-  placeholder = "Write a message...",
-  value,
-  onChange,
-  onHtmlChange,
-  onSubmit,
-  mentionItems = [],
-  getMentionMuseItems,
-}) => {
+export interface ChatRichInputHandle {
+  /** Insert text at the current cursor position (or append if no selection). */
+  insertText(text: string): void;
+}
+
+export const ChatRichInput = forwardRef<
+  ChatRichInputHandle,
+  ChatRichInputProps
+>(function ChatRichInput(
+  {
+    placeholder = "Write a message...",
+    value,
+    onChange,
+    onHtmlChange,
+    onSubmit,
+    mentionItems = [],
+    getMentionMuseItems,
+    trailingAction,
+  },
+  ref,
+) {
   const editorRef = useRef<HTMLDivElement>(null);
   const [isEmpty, setIsEmpty] = useState(true);
   const [showMention, setShowMention] = useState(false);
@@ -44,6 +60,34 @@ export const ChatRichInput: FC<ChatRichInputProps> = ({
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [dynamicMuses, setDynamicMuses] = useState<MentionDataItem[]>([]);
   const mentionAnchorRef = useRef<{ node: Node; offset: number } | null>(null);
+
+  useImperativeHandle(ref, () => ({
+    insertText(text: string) {
+      const editor = editorRef.current;
+      if (!editor) return;
+      editor.focus();
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        range.deleteContents();
+        const node = document.createTextNode(text);
+        range.insertNode(node);
+        range.setStartAfter(node);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      } else {
+        const node = document.createTextNode(text);
+        editor.appendChild(node);
+        const range = document.createRange();
+        range.setStartAfter(node);
+        range.collapse(true);
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      }
+      emitChange(editor);
+    },
+  }));
 
   // Clear the editor when parent sets value to ""
   useEffect(() => {
@@ -69,7 +113,12 @@ export const ChatRichInput: FC<ChatRichInputProps> = ({
         .trim();
       setIsEmpty(text.length === 0);
       onChange(text);
-      onHtmlChange(editor.innerHTML);
+
+      // Strip trailing browser-injected <br> / <div><br></div> artifacts
+      const html = editor.innerHTML
+        .replace(/(<div><br\s*\/?><\/div>|<br\s*\/?>)+$/gi, "")
+        .trim();
+      onHtmlChange(html);
     },
     [onChange, onHtmlChange],
   );
@@ -315,26 +364,14 @@ export const ChatRichInput: FC<ChatRichInputProps> = ({
   return (
     <S.InputWrap>
       {showMention && filteredItems.length > 0 && (
-        <S.MentionDropdown>
-          {filteredItems.map((item, idx) => (
-            <S.MentionItem
-              key={item.id}
-              type="button"
-              $focused={idx === focusedIndex}
-              onMouseEnter={() => setFocusedIndex(idx)}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                insertMention(item);
-              }}
-            >
-              <AvatarNew src={item.image || null} alt={item.displayName} />
-              <S.MentionName>{item.displayName}</S.MentionName>
-              <S.MentionType>
-                {item.type === "NOVELIST" ? "Novelist" : "Muse"}
-              </S.MentionType>
-            </S.MentionItem>
-          ))}
-        </S.MentionDropdown>
+        <MentionDropdown
+          items={filteredItems}
+          focusedIndex={focusedIndex}
+          onSelect={insertMention}
+          onHover={setFocusedIndex}
+          showType
+          style={{ bottom: "calc(100% + 6px)", left: 0, right: 0 }}
+        />
       )}
       <S.Editor
         ref={editorRef}
@@ -345,6 +382,9 @@ export const ChatRichInput: FC<ChatRichInputProps> = ({
         onInput={handleInput}
         onKeyDown={handleKeyDown}
       />
+      {trailingAction ? (
+        <S.TrailingAction>{trailingAction}</S.TrailingAction>
+      ) : null}
     </S.InputWrap>
   );
-};
+});

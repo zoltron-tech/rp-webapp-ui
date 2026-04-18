@@ -319,6 +319,29 @@ export const PromptThreadsAvatars = styled.div`
   }
 `;
 
+export const AddCommentButton = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: var(--bg-3);
+  border: 1px solid var(--bg-6);
+  border-radius: var(--border-radius);
+  color: var(--text-secondary);
+  font-family: var(--font);
+  font-size: var(--font-size);
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--bg-4);
+    color: var(--text);
+  }
+`;
+
 export const PromptThreads = Object.assign(
   {},
   {

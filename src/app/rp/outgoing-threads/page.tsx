@@ -6,7 +6,6 @@ import { FcRight } from "react-icons/fc";
 import { BreadCrumb } from "@/components/breadcrumb";
 import { LoadMore } from "@/components/load-more/page";
 import { PromptThreadCommentCard } from "@/components/outgoing-reply";
-import { Spinner } from "@/components/rich-text-editor-input/styled";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { PromptThreadComment } from "@/types";

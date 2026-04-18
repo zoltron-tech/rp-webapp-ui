@@ -42,3 +42,35 @@ export const getConversationsAction = async (
 
   return conversations;
 };
+
+export const getUnreadConversationIdsAction = async (): Promise<
+  DataType<string[]>
+> => {
+  const jwt = await getJWTIfExists();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (jwt) {
+    headers[AUTH_HEADER_NAME] = jwt;
+  }
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/conversations/unread`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers: headers,
+  });
+
+  Logger.debug("getUnreadConversationIdsAction", response.status);
+
+  if (response.status === 404) {
+    return null;
+  } else if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const ids: string[] = await response.json();
+
+  return ids;
+};

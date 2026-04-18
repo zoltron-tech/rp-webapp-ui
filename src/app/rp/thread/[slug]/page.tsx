@@ -20,10 +20,10 @@ import {
 } from "@/components/event-thread-input/helpers";
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { InlineMusicPlayer } from "@/components/inline-music-player/page";
+import { Spinner } from "@/components/mention-dropdown/styled";
 import { AppDropdownMenu } from "@/components/profile-more-dropdown";
 import PromptInput from "@/components/prompt-input";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
-import { Spinner } from "@/components/rich-text-editor-input/styled";
 import {
   UpdatePromptForm,
   type UpdatePromptProps,
@@ -32,6 +32,7 @@ import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents, useUIContext } from "@/hooks";
 import { useBindPageLoader, usePageRouter } from "@/hooks/use-page-router";
 import { useToggleLike } from "@/hooks/use-toggle-like";
+import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import type { Comment, PromptSource, Reply } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import {
@@ -346,6 +347,8 @@ export default function ThreadPage({}) {
   const { routeToPage } = usePageRouter();
   const { successToast, errorToast } = useUIContext();
   useBindPageLoader(loadingComments);
+  const { width } = useWindowDimensions();
+  const isMobile = (width ?? 0) <= 800;
   const { on: onReplyEvent, off: offReplyEvent } = useCustomEvents(
     EVENTS.REPLY.base,
   );
@@ -1014,13 +1017,30 @@ export default function ThreadPage({}) {
           comment?.prompt?.canInteract && (
             <>
               <Separator.Root className="separator" orientation="horizontal" />
-              <PromptInput
-                parentId={commentId}
-                type="reply"
-                initialSelection={initialSelection}
-                dropdownSelection={isOOCPost ? "NOVELIST" : "MUSE"}
-                onSend={refreshLatestReplies}
-              />
+              {isMobile ? (
+                <S.AddReplyButton
+                  type="button"
+                  onClick={() =>
+                    routeToPage(
+                      ROUTES.Compose({
+                        dropdownSelection: isOOCPost ? "NOVELIST" : "MUSE",
+                        parentId: commentId,
+                        type: "reply",
+                      }),
+                    )
+                  }
+                >
+                  + Add Reply
+                </S.AddReplyButton>
+              ) : (
+                <PromptInput
+                  parentId={commentId}
+                  type="reply"
+                  initialSelection={initialSelection}
+                  dropdownSelection={isOOCPost ? "NOVELIST" : "MUSE"}
+                  onSend={refreshLatestReplies}
+                />
+              )}
             </>
           )}
         <div ref={bottomRef} />

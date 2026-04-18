@@ -788,3 +788,13 @@ export const PromptFooterText = styled.div`
   text-align: center;
   cursor: pointer;
 `;
+
+export const AboutSectionImage = styled.img`
+  display: block;
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 4px;
+  object-fit: contain;
+  margin-bottom: 0.75rem;
+  cursor: zoom-in;
+`;

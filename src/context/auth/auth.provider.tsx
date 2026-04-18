@@ -7,6 +7,7 @@ import {
   getUser,
   verifyAccountAction,
 } from "@/app/actions";
+import { getUnreadConversationIdsAction } from "@/app/rp/conversations/actions";
 import { getUserNovelist } from "@/app/rp/novelists/actions";
 import { useStateMachine } from "@/hooks";
 import type { AuthState } from "@/types/state";
@@ -88,6 +89,13 @@ export const AuthProvider: FC<Props> = ({ children }) => {
         authState: _novelist.isOnboarded ? "LOGGED_IN" : "UNINITIALIZED",
         novelist: _novelist,
       });
+
+      if (_novelist.isOnboarded) {
+        const unreadResult = await getUnreadConversationIdsAction();
+        if (Array.isArray(unreadResult)) {
+          setGlobalState({ unreadConversationIds: unreadResult });
+        }
+      }
     } catch (_e) {
       transition("LOGGED_OUT");
     }

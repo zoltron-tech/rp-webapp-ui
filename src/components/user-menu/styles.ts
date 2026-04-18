@@ -6,6 +6,7 @@ import {
   DEV_MODE_BORDER,
   Z_INDEX,
 } from "@/theme";
+import { UnreadBadgeBase } from "../common/unread-badge";
 
 export const PositionContainer = styled.div`
   ${DEV_MODE_BORDER("red")}
@@ -266,4 +267,26 @@ export const LastSectionElement = styled(Element)`
       stroke: #bd89ff;
     }
   }
+`;
+
+export const AvatarWrapper = styled.div`
+  position: relative;
+  margin-top: 4px;
+  display: inline-flex;
+  flex-shrink: 0;
+`;
+
+export const UnreadDot = styled(UnreadBadgeBase)`
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 16px;
+  height: 16px;
+  font-size: 9px;
+  border: 2px solid var(--bg-3);
+`;
+
+export const UnreadBadge = styled(UnreadBadgeBase)`
+  margin-left: auto;
+  flex-shrink: 0;
 `;

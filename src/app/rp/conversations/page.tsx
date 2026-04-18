@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { BreadCrumb } from "@/components/breadcrumb";
 import { ConversationCard } from "@/components/conversation-card";
 import { LoadMore } from "@/components/load-more/page";
@@ -11,10 +11,11 @@ import type { Conversation } from "@/types";
 import { getConversationsAction } from "./actions";
 import * as S from "./styles";
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 
 export default function ConversationsPage() {
   const user = useGlobalState("user");
+  const unreadConversationIds = useGlobalState("unreadConversationIds");
   const { lastIncomingMessage } = useSocket();
   const [conversations, setConversations] = useState<Conversation[] | null>(
     null,
@@ -85,6 +86,12 @@ export default function ConversationsPage() {
     setLoadingMore(false);
   };
 
+  const unreadBadgeCount = useMemo(() => {
+    if (!unreadConversationIds?.length || !hasMore) return 0;
+    const fetchedIds = new Set(conversations?.map((c) => c.id) ?? []);
+    return unreadConversationIds.filter((id) => !fetchedIds.has(id)).length;
+  }, [unreadConversationIds, conversations, hasMore]);
+
   return (
     <S.Container>
       <BreadCrumb label="Conversations" username={user?.username ?? ""} />
@@ -105,6 +112,7 @@ export default function ConversationsPage() {
           hasMore={hasMore && !!conversations?.length}
           loadingMore={loadingMore}
           onLoadMore={loadMore}
+          unreadCount={unreadBadgeCount}
         />
       </S.ConversationListContainer>
     </S.Container>

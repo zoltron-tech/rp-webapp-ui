@@ -8,9 +8,13 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
 import { GrAttachment } from "react-icons/gr";
+import { MdGif } from "react-icons/md";
 import { deleteMedia, uploadMedia } from "@/app/rp/profile/actions";
+import { AppAlertDialog } from "@/components/dialog";
+import { GifPicker } from "@/components/gif-picker";
 import { API_MESSAGE } from "@/utils/constants";
 import { PromptEvent, useRunOn } from "./helpers";
 import {
@@ -26,9 +30,10 @@ export const PromptMediaInput: FC = () => {
   const mediaUploading = usePromptInputState("mediaUploading");
   const set = usePromptInputStoreSet();
 
+  const [showGifPicker, setShowGifPicker] = useState(false);
+
   const urlInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const showUploadButton = useMemo(() => {
     return !media && !mediaUploading;
   }, [media, mediaUploading]);
@@ -93,39 +98,67 @@ export const PromptMediaInput: FC = () => {
     }
   }, [mediaUploadError, set]);
 
+  const handleGifSelect = useCallback(
+    (gifUrl: string) => {
+      set({ gifToInsert: gifUrl });
+      setShowGifPicker(false);
+    },
+    [set],
+  );
+
   return (
     <>
-      <S.MediaSelect name="media">
-        {showUploadButton && (
-          <Form.Label className="form-label" tabIndex={0}>
-            <GrAttachment />
-            Add attachment
-          </Form.Label>
-        )}
-        <Form.Message
-          className="form-message"
-          forceMatch={Boolean(mediaUploadError)}
+      <S.MediaActions>
+        <S.MediaSelect name="media">
+          {showUploadButton && (
+            <Form.Label className="form-label" tabIndex={0}>
+              <GrAttachment />
+            </Form.Label>
+          )}
+          <Form.Message
+            className="form-message"
+            forceMatch={Boolean(mediaUploadError)}
+          >
+            {mediaUploadError === "INVALID_FILE_TYPE" && (
+              <span>Invalid file type. Please upload a valid file.</span>
+            )}
+            {mediaUploadError === "UPLOAD_FAILED" && (
+              <span>File upload failed. Please try again.</span>
+            )}
+            {mediaUploadError === "FILE_TOO_LARGE" && (
+              <span>Attachment should not be larger than 10MB.</span>
+            )}
+          </Form.Message>
+          <Form.Control asChild>
+            <input
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              className="media-input"
+              type="file"
+              accept={"audio/*,video/*,image/*"}
+            />
+          </Form.Control>
+        </S.MediaSelect>
+
+        <S.ToolButton
+          type="button"
+          aria-label="Insert GIF"
+          onClick={() => setShowGifPicker(true)}
         >
-          {mediaUploadError === "INVALID_FILE_TYPE" && (
-            <span>Invalid file type. Please upload a valid file.</span>
-          )}
-          {mediaUploadError === "UPLOAD_FAILED" && (
-            <span>File upload failed. Please try again.</span>
-          )}
-          {mediaUploadError === "FILE_TOO_LARGE" && (
-            <span>Attachment should not be larger than 10MB.</span>
-          )}
-        </Form.Message>
-        <Form.Control asChild>
-          <input
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-            className="media-input"
-            type="file"
-            accept={"audio/*,video/*,image/*"}
-          />
-        </Form.Control>
-      </S.MediaSelect>
+          <MdGif />
+        </S.ToolButton>
+
+        <AppAlertDialog
+          heading="Insert GIF"
+          text=""
+          body={<GifPicker onSelect={handleGifSelect} />}
+          open={showGifPicker}
+          onOpenChange={setShowGifPicker}
+          showConfirm={false}
+          closeButtonText="Close"
+        />
+      </S.MediaActions>
+
       <Form.Field hidden name="mediaUrl">
         <Form.Control asChild>
           <input ref={urlInputRef} type="text" />

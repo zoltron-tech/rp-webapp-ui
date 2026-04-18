@@ -10,6 +10,40 @@ interface BannerProps {
   src: string;
 }
 
+export const AddPromptButton = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: var(--bg-3);
+  border: 1px solid var(--bg-6);
+  border-top-right-radius: var(--border-radius);
+  border-top-left-radius: var(--border-radius);
+  color: var(--accent);
+  font-family: var(--font);
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--bg-4);
+    color: var(--text);
+  }
+
+  &:active {
+    background-color: var(--bg-5);
+  }
+
+  &:focus-visible {
+    outline: 1.5px solid var(--accent);
+    outline-offset: 2px;
+  }
+`;
+
 export const Banner = styled.div<BannerProps>`
   width: 100cqw;
   height: clamp(

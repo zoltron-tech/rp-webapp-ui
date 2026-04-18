@@ -17,6 +17,7 @@ export interface ConversationParticipant {
   userName: string;
   image: string;
   role: string;
+  isVerified: boolean;
   joinedAt: string;
 }
 
@@ -28,6 +29,7 @@ export interface Message {
   type: string;
   image: string;
   message: string;
+  repliedTo?: Message;
   isRead: boolean;
   reactions: Reaction[];
   attachments: Attachment[];

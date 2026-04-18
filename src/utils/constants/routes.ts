@@ -1,5 +1,19 @@
 export const ROUTES = {
+  Compose: (params: {
+    type: string;
+    parentId?: string;
+    dropdownSelection: string;
+  }) => {
+    const query = new URLSearchParams({
+      dropdownSelection: params.dropdownSelection,
+      type: params.type,
+    });
+    if (params.parentId) query.set("parentId", params.parentId);
+    return `/rp/compose?${query.toString()}`;
+  },
   Conversation: {
+    Details: (conversationId: string) =>
+      `/rp/conversations/${conversationId}/details`,
     View: (conversationId: string) => `/rp/conversations/${conversationId}`,
   },
   conversations: "/rp/conversations",
@@ -60,6 +74,7 @@ export const ROUTES = {
     }),
   },
   Prompt: {
+    Post: "/rp/post-prompt",
     View: (promptId: string) => `/rp/prompt/${promptId}`,
   },
   ResetPassword: "/rp/reset-password",

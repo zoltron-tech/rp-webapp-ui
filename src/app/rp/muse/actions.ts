@@ -83,11 +83,12 @@ export const addMuseAboutSectionAction = async (
   museId: string,
   text: string,
   ordinal: number,
+  image?: string | null,
 ) => {
   const jwt = await authenticateAndGetJWT();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/about`;
   const response = await fetch(URL, {
-    body: JSON.stringify({ museId, ordinal, text }),
+    body: JSON.stringify({ image: image ?? null, museId, ordinal, text }),
     headers: {
       "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: jwt,
@@ -180,11 +181,12 @@ export const updateMuseAboutSectionAction = async (
   sectionId: string,
   text: string,
   ordinal: number,
+  image?: string | null,
 ): Promise<MuseAboutSection | WithMessage> => {
   const jwt = await authenticateAndGetJWT();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/about/${sectionId}`;
   const response = await fetch(URL, {
-    body: JSON.stringify({ ordinal, text }),
+    body: JSON.stringify({ image: image ?? null, ordinal, text }),
     headers: {
       "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: jwt,

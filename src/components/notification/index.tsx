@@ -5,7 +5,6 @@ import { useEffect } from "react";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { LoadMore } from "../load-more/page";
-import { Spinner } from "../rich-text-editor-input/styled";
 import { NotificationBox } from "./notificaction-box";
 import { NotificationHeader } from "./notification-header";
 import * as S from "./styled";

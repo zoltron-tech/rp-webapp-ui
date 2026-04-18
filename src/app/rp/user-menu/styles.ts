@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { UnreadBadgeBase } from "@/components/common/unread-badge";
 
 export const Container = styled.div`
   display: flex;
@@ -130,4 +131,9 @@ export const DestructiveMenuItem = styled(MenuItem)`
     background: #8e2a2a;
     color: #ffffff;
   }
+`;
+
+export const UnreadBadge = styled(UnreadBadgeBase)`
+  margin-left: auto;
+  flex-shrink: 0;
 `;

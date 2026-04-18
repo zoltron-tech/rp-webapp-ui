@@ -18,9 +18,11 @@ export type PromptInputState = {
   mediaUploadError: MediaUploadError;
   media: File | null;
   promptText: string | null;
+  gifToInsert: string | null;
 };
 
 export const INITIAL_STATE: PromptInputState = {
+  gifToInsert: null,
   media: null,
   mediaUploadError: null,
   mediaUploading: false,

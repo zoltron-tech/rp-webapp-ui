@@ -3,19 +3,27 @@
 import classNames from "classnames";
 import moment from "moment";
 import { type FC, useEffect, useMemo, useRef, useState } from "react";
+import { BsForward, BsReply, BsThreeDots } from "react-icons/bs";
 import { FaPause, FaPlay } from "react-icons/fa";
-import { FiDownload, FiExternalLink } from "react-icons/fi";
+import { FiCopy, FiDownload, FiExternalLink } from "react-icons/fi";
+import { RiFlagFill } from "react-icons/ri";
+import { TbError404 } from "react-icons/tb";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { useUIContext } from "@/hooks/use-ui-context";
 import type { Message } from "@/types/conversation";
 import { ROUTES } from "@/utils/constants/routes";
 import { AppAlertDialog } from "../../dialog";
 import { AppImageViewer } from "../../image-viewer/AppImageViewer";
+import { AppDropdownMenu } from "../../profile-more-dropdown";
 import { AvatarNew } from "../avatar-new";
 import * as S from "./styles";
 
 type Props = {
   message: Message;
   currentUsername: string;
+  onReply?: (message: Message) => void;
+  onForward?: (message: Message) => void;
+  onReport?: (message: Message) => void;
 };
 
 type LinkMeta = {
@@ -187,6 +195,60 @@ const getReactionDisplay = (reaction: string) => {
   return REACTION_EMOJI_MAP[normalized] || reaction;
 };
 
+const REPLIED_URL_RE = /(https?:\/\/[\w\-.~:/?#[\]@!$&'()*+,;=%]+)/i;
+const REPLIED_MENTION_RE = /class="mention-tag"/i;
+
+const getRepliedImageSrc = (message: Message): string | null => {
+  const imgAttachment = message.attachments?.find((att) => {
+    const ext =
+      att.url.split("?")[0]?.split("#")[0]?.split(".").pop()?.toLowerCase() ??
+      "";
+    return IMAGE_EXTENSIONS.includes(ext);
+  });
+  if (imgAttachment) return imgAttachment.url;
+
+  const text = message.message || "";
+  const urlMatch = text.match(REPLIED_URL_RE);
+  if (urlMatch) {
+    const ext =
+      urlMatch[0]
+        .split("?")[0]
+        ?.split("#")[0]
+        ?.split(".")
+        .pop()
+        ?.toLowerCase() ?? "";
+    if (IMAGE_EXTENSIONS.includes(ext)) return urlMatch[0];
+  }
+  return null;
+};
+
+const isRepliedImageOnly = (message: Message): boolean => {
+  if (REPLIED_MENTION_RE.test(message.message || "")) return false;
+  const hasText = !!message.message?.trim();
+  const hasImageAttachment = message.attachments?.some((att) => {
+    const ext =
+      att.url.split("?")[0]?.split("#")[0]?.split(".").pop()?.toLowerCase() ??
+      "";
+    return IMAGE_EXTENSIONS.includes(ext);
+  });
+  if (hasImageAttachment && !hasText) return true;
+  if (hasText) {
+    const text = message.message.trim();
+    const urlMatch = text.match(REPLIED_URL_RE);
+    if (urlMatch && urlMatch[0] === text) {
+      const ext =
+        urlMatch[0]
+          .split("?")[0]
+          ?.split("#")[0]
+          ?.split(".")
+          .pop()
+          ?.toLowerCase() ?? "";
+      if (IMAGE_EXTENSIONS.includes(ext)) return true;
+    }
+  }
+  return false;
+};
+
 /** Detects messages that contain rich-text HTML tags produced by ChatRichInput. */
 const HTML_CONTENT_RE = /<(strong|em|b|i|span)\b/i;
 const EMOJI_ONLY_RE =
@@ -258,10 +320,14 @@ const LinkPreview: FC<{ url: string }> = ({ url }) => {
   const isTwitter = useMemo(() => isTwitterUrl(url), [url]);
   const isTenor = useMemo(() => isTenorUrl(url), [url]);
   const isDirectImage = useMemo(() => isDirectImageUrl(url), [url]);
+  const isDirectVideo = useMemo(
+    () => getAttachmentKind(url) === "video",
+    [url],
+  );
 
   useEffect(() => {
-    // Skip metadata fetch for direct image files and social platforms with static previews
-    if (isDirectImage || isYouTube) return;
+    // Skip metadata fetch for direct media files and social platforms with static previews
+    if (isDirectImage || isDirectVideo || isYouTube) return;
     let isMounted = true;
 
     const fetchMeta = async () => {
@@ -283,7 +349,11 @@ const LinkPreview: FC<{ url: string }> = ({ url }) => {
     return () => {
       isMounted = false;
     };
-  }, [url, isDirectImage, isYouTube]);
+  }, [url, isDirectImage, isDirectVideo, isYouTube]);
+
+  if (isDirectVideo) {
+    return <ChatVideoAttachment src={url} />;
+  }
 
   // Direct image/GIF URLs (e.g. from Klipy, Tenor CDN) — render immediately
   if (isDirectImage) {
@@ -462,10 +532,18 @@ const formatTime = (seconds: number) => {
   return `${mins}:${secs}`;
 };
 
+const AttachmentFallback: FC = () => (
+  <S.AttachmentFallback>
+    <TbError404 size={32} />
+    No longer available.
+  </S.AttachmentFallback>
+);
+
 const ChatAudioAttachment: FC<{ src: string }> = ({ src }) => {
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(
     null,
   );
+  const [audioError, setAudioError] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -473,6 +551,7 @@ const ChatAudioAttachment: FC<{ src: string }> = ({ src }) => {
 
   useEffect(() => {
     if (!audioElement) return;
+    if (audioError) return;
 
     registerMediaElement(audioElement);
 
@@ -515,7 +594,7 @@ const ChatAudioAttachment: FC<{ src: string }> = ({ src }) => {
       audioElement.removeEventListener("play", onPlay);
       audioElement.removeEventListener("pause", onPause);
     };
-  }, [audioElement]);
+  }, [audioElement, audioError]);
 
   const onTogglePlay = async () => {
     if (!audioElement) return;
@@ -543,9 +622,17 @@ const ChatAudioAttachment: FC<{ src: string }> = ({ src }) => {
     audioElement.currentTime = duration * percentage;
   };
 
+  if (audioError) {
+    return <AttachmentFallback />;
+  }
   return (
     <S.AudioAttachmentCard>
-      <S.HiddenAudio ref={setAudioElement} preload="metadata" src={src} />
+      <S.HiddenAudio
+        ref={setAudioElement}
+        preload="metadata"
+        src={src}
+        onError={() => setAudioError(true)}
+      />
       <S.AudioAttachmentTop>
         <S.AudioPlayButton
           onClick={onTogglePlay}
@@ -571,6 +658,7 @@ const ChatVideoAttachment: FC<{ src: string }> = ({ src }) => {
   const [videoElement, setVideoElement] = useState<HTMLVideoElement | null>(
     null,
   );
+  const [videoError, setVideoError] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -578,6 +666,7 @@ const ChatVideoAttachment: FC<{ src: string }> = ({ src }) => {
 
   useEffect(() => {
     if (!videoElement) return;
+    if (videoError) return;
 
     registerMediaElement(videoElement);
 
@@ -619,7 +708,7 @@ const ChatVideoAttachment: FC<{ src: string }> = ({ src }) => {
       videoElement.removeEventListener("play", onPlayExclusive);
       videoElement.removeEventListener("pause", onPause);
     };
-  }, [videoElement]);
+  }, [videoElement, videoError]);
 
   const onTogglePlay = async () => {
     if (!videoElement) return;
@@ -646,10 +735,18 @@ const ChatVideoAttachment: FC<{ src: string }> = ({ src }) => {
     videoElement.currentTime = duration * percentage;
   };
 
+  if (videoError) {
+    return <AttachmentFallback />;
+  }
   return (
     <S.VideoAttachmentCard>
       <S.VideoViewport>
-        <S.VideoElement ref={setVideoElement} preload="metadata" src={src} />
+        <S.VideoElement
+          ref={setVideoElement}
+          preload="metadata"
+          src={src}
+          onError={() => setVideoError(true)}
+        />
       </S.VideoViewport>
 
       <S.AudioAttachmentTop>
@@ -673,9 +770,17 @@ const ChatVideoAttachment: FC<{ src: string }> = ({ src }) => {
   );
 };
 
-export const ChatBubble: FC<Props> = ({ message, currentUsername }) => {
+export const ChatBubble: FC<Props> = ({
+  message,
+  currentUsername,
+  onReply,
+  onForward,
+  onReport,
+}) => {
+  const { successToast } = useUIContext();
   const today = moment().format("YYYY-MM-DD");
   const messageDate = moment.utc(message.createdAt).local();
+  const [imgError, setImgError] = useState(false);
 
   const isSender = message.sender.username === currentUsername;
   const isActivityMessage = message.type?.toLowerCase() === "activity";
@@ -685,11 +790,137 @@ export const ChatBubble: FC<Props> = ({ message, currentUsername }) => {
   const hasAttachments = !!message.attachments?.length;
   const [activeReaction, setActiveReaction] = useState<string | null>(null);
   const isHtmlMessage = HTML_CONTENT_RE.test(messageText);
+  const [repliedWiggling, setRepliedWiggling] = useState(false);
+
+  const handleRepliedToClick = () => {
+    const targetId = message.repliedTo?.id;
+    if (!targetId) return;
+    const el = document.getElementById(`msg-${targetId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      // Highlight after scroll reaches the element
+      setTimeout(() => {
+        el.classList.add("highlighted");
+        el.addEventListener(
+          "animationend",
+          () => el.classList.remove("highlighted"),
+          { once: true },
+        );
+      }, 400);
+    } else {
+      setRepliedWiggling(true);
+    }
+  };
+
+  // ── Swipe-to-reply ────────────────────────────────────────────────────────
+  const [swipeTranslate, setSwipeTranslate] = useState(0);
+  const [swipeTransitioning, setSwipeTransitioning] = useState(false);
+  const swipeTouchStartX = useRef(0);
+  const swipeTouchStartY = useRef(0);
+  const swipeRawDeltaX = useRef(0);
+  const swipeIsHorizontal = useRef<boolean | null>(null);
+
+  const onSwipeTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    if (!touch) return;
+    swipeTouchStartX.current = touch.clientX;
+    swipeTouchStartY.current = touch.clientY;
+    swipeRawDeltaX.current = 0;
+    swipeIsHorizontal.current = null;
+    setSwipeTransitioning(false);
+  };
+
+  const onSwipeTouchMove = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    if (!touch) return;
+    const deltaX = touch.clientX - swipeTouchStartX.current;
+    const deltaY = touch.clientY - swipeTouchStartY.current;
+
+    if (swipeIsHorizontal.current === null) {
+      if (Math.abs(deltaX) < 5 && Math.abs(deltaY) < 5) return;
+      swipeIsHorizontal.current = Math.abs(deltaX) > Math.abs(deltaY);
+    }
+
+    if (!swipeIsHorizontal.current) return;
+
+    swipeRawDeltaX.current = deltaX;
+
+    const SOFT_LIMIT = 60;
+    const rubberBand = (magnitude: number) => {
+      if (magnitude <= SOFT_LIMIT) return magnitude;
+      return SOFT_LIMIT + (magnitude - SOFT_LIMIT) * 0.2;
+    };
+
+    // Receiver messages: swipe right; sender messages: swipe left
+    if (!isSender && deltaX > 0) {
+      setSwipeTranslate(rubberBand(deltaX * 0.5));
+    } else if (isSender && deltaX < 0) {
+      setSwipeTranslate(-rubberBand(-deltaX * 0.5));
+    }
+  };
+
+  const onSwipeTouchEnd = () => {
+    if (!swipeIsHorizontal.current) return;
+
+    const SWIPE_THRESHOLD = 60;
+    if (Math.abs(swipeRawDeltaX.current) >= SWIPE_THRESHOLD) {
+      onReply?.(message);
+    }
+
+    swipeRawDeltaX.current = 0;
+    setSwipeTransitioning(true);
+    setSwipeTranslate(0);
+  };
+
+  const isSwipingActive = swipeTranslate !== 0;
+  // 0 → 1 over the first 20 px of drag — drives cross-fades
+  const swipeProgress = Math.min(Math.abs(swipeTranslate) / 20, 1);
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const handleCopyMessage = () => {
+    const plain = isHtmlMessage
+      ? messageText
+          .replace(/<[^>]+>/g, "")
+          .replace(/&nbsp;/g, " ")
+          .replace(/&amp;/g, "&")
+          .trim()
+      : messageText;
+    navigator.clipboard.writeText(plain).catch(() => {});
+    successToast("Message copied to clipboard");
+  };
+
+  const menuItems = useMemo(
+    () => [
+      { icon: <BsReply />, label: "Reply", onClick: () => onReply?.(message) },
+      {
+        icon: <BsForward />,
+        label: "Forward",
+        onClick: () => onForward?.(message),
+      },
+      { icon: <FiCopy />, label: "Copy message", onClick: handleCopyMessage },
+      { separator: true as const },
+      {
+        icon: <RiFlagFill />,
+        label: "Report",
+        onClick: () => onReport?.(message),
+        variant: "danger" as const,
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [message, onReply, onForward, onReport],
+  );
   const isEmojiOnly = useMemo(
     () =>
       !isHtmlMessage && !!messageText.trim() && EMOJI_ONLY_RE.test(messageText),
     [messageText, isHtmlMessage],
   );
+
+  const isKlipyClip = useMemo(() => {
+    const trimmed = messageText.trim();
+    return (
+      trimmed.startsWith("https://static.klipy.com") && trimmed.endsWith(".mp4")
+    );
+  }, [messageText]);
 
   const isMessageOnlyUrls = useMemo(() => {
     if (urls.length !== 1) return false;
@@ -743,6 +974,7 @@ export const ChatBubble: FC<Props> = ({ message, currentUsername }) => {
 
   return (
     <S.ChatRow
+      id={`msg-${message.id}`}
       className={classNames({
         receiver: !isSender,
         sender: isSender,
@@ -750,15 +982,85 @@ export const ChatBubble: FC<Props> = ({ message, currentUsername }) => {
     >
       {!isSender ? (
         <S.SenderAvatarWrap>
-          <AvatarNew
-            src={message.sender.image || null}
-            alt={message.sender.name || message.sender.username || "User"}
-            username={message.sender.username}
-          />
+          {/* Crossfade: avatar fades out, reply icon fades + scales in */}
+          <div
+            style={{
+              flexShrink: 0,
+              height: 30,
+              position: "relative",
+              width: 30,
+            }}
+          >
+            <div
+              style={{
+                alignItems: "center",
+                display: "flex",
+                height: "100%",
+                justifyContent: "center",
+                left: 0,
+                opacity: 1 - swipeProgress,
+                position: "absolute",
+                top: 0,
+                transition: "opacity 0.18s ease",
+                width: "100%",
+              }}
+            >
+              <AvatarNew
+                src={message.sender.image || null}
+                alt={message.sender.name || message.sender.username || "User"}
+                username={message.sender.username}
+              />
+            </div>
+            <div
+              style={{
+                alignItems: "center",
+                color: "var(--accent)",
+                display: "flex",
+                height: "100%",
+                justifyContent: "center",
+                left: 0,
+                opacity: swipeProgress,
+                position: "absolute",
+                top: 0,
+                transform: `scale(${0.5 + swipeProgress * 0.5})`,
+                transition: "opacity 0.18s ease, transform 0.18s ease",
+                width: "100%",
+              }}
+            >
+              <BsReply size={20} />
+            </div>
+          </div>
         </S.SenderAvatarWrap>
       ) : null}
 
-      <S.BubbleStack className={isSender ? "sender" : "receiver"}>
+      <S.MessageMenuWrapper
+        style={{
+          opacity:
+            swipeProgress > 0 ? Math.max(0, 1 - swipeProgress * 3) : undefined,
+          overflow: isSender ? undefined : "hidden",
+          pointerEvents: isSwipingActive ? "none" : undefined,
+          visibility: isSender ? undefined : "hidden",
+          width: isSender ? undefined : 0,
+        }}
+      >
+        <AppDropdownMenu
+          trigger={<BsThreeDots size={14} />}
+          items={menuItems}
+        />
+      </S.MessageMenuWrapper>
+
+      <S.BubbleStack
+        className={isSender ? "sender" : "receiver"}
+        onTouchStart={onSwipeTouchStart}
+        onTouchMove={onSwipeTouchMove}
+        onTouchEnd={onSwipeTouchEnd}
+        onTransitionEnd={() => setSwipeTransitioning(false)}
+        style={{
+          transform: `translateX(${swipeTranslate}px)`,
+          transition: swipeTransitioning ? "transform 0.25s ease" : "none",
+          willChange: "transform",
+        }}
+      >
         <S.SenderNameRow>
           {isSender ? (
             <AvatarNew
@@ -770,66 +1072,122 @@ export const ChatBubble: FC<Props> = ({ message, currentUsername }) => {
           <S.SenderName>{message.sender.name}</S.SenderName>
         </S.SenderNameRow>
 
-        {urls.length > 0 && !isHtmlMessage
-          ? urls.map((url) => <LinkPreview key={url} url={url} />)
-          : null}
-
-        {messageText && !isMessageOnlyUrls ? (
-          isHtmlMessage ? (
-            <HtmlChatBubble
-              html={messageText}
-              className={isSender ? "sender" : "receiver"}
-            />
-          ) : isEmojiOnly ? (
-            <S.EmojiOnlyMessage>{messageText}</S.EmojiOnlyMessage>
-          ) : (
-            <S.ChatBubble className={isSender ? "sender" : "receiver"}>
-              {toRenderableMessage(messageText)}
-            </S.ChatBubble>
-          )
+        {message.repliedTo ? (
+          <S.RepliedToQuote
+            $wiggling={repliedWiggling}
+            onClick={handleRepliedToClick}
+            onAnimationEnd={() => setRepliedWiggling(false)}
+          >
+            <S.RepliedToBody>
+              <S.RepliedToSender>
+                {message.repliedTo.sender.name ||
+                  message.repliedTo.sender.username}
+              </S.RepliedToSender>
+              {isRepliedImageOnly(message.repliedTo) ? (
+                <S.RepliedToThumbLabel>📷 Image</S.RepliedToThumbLabel>
+              ) : (
+                <S.RepliedToText>
+                  {message.repliedTo.message
+                    ? message.repliedTo.message
+                        .replace(/<[^>]+>/g, "")
+                        .trim()
+                        .slice(0, 100)
+                    : "(attachment)"}
+                </S.RepliedToText>
+              )}
+            </S.RepliedToBody>
+            {(() => {
+              const imgSrc = getRepliedImageSrc(message.repliedTo);
+              return imgSrc ? (
+                <S.RepliedToThumb src={imgSrc} alt="Replied image" />
+              ) : null;
+            })()}
+          </S.RepliedToQuote>
         ) : null}
 
+        {/* Klipy clip: only render video, not text bubble */}
+        {isKlipyClip ? (
+          <ChatVideoAttachment src={messageText.trim()} />
+        ) : (
+          <>
+            {urls.length > 0 && !isHtmlMessage
+              ? urls.map((url) => <LinkPreview key={url} url={url} />)
+              : null}
+
+            {messageText && !isMessageOnlyUrls ? (
+              isHtmlMessage ? (
+                <HtmlChatBubble
+                  html={messageText}
+                  className={isSender ? "sender" : "receiver"}
+                />
+              ) : isEmojiOnly ? (
+                <S.EmojiOnlyMessage>{messageText}</S.EmojiOnlyMessage>
+              ) : (
+                <S.ChatBubble className={isSender ? "sender" : "receiver"}>
+                  {toRenderableMessage(messageText)}
+                </S.ChatBubble>
+              )
+            ) : null}
+          </>
+        )}
+
         {hasAttachments ? (
-          <S.AttachmentsGrid>
-            {message.attachments.map((attachment) => (
-              <S.AttachmentItem key={attachment.id || attachment.url}>
-                {getAttachmentKind(attachment.url) === "image" ? (
-                  <AppImageViewer src={attachment.url} alt="Message attachment">
-                    <S.AttachmentImage
-                      src={attachment.url}
-                      alt="Message attachment"
-                    />
-                  </AppImageViewer>
-                ) : null}
+          <S.AttachmentsGrid $multi={message.attachments.length > 1}>
+            {message.attachments.map((attachment) => {
+              const isImg = getAttachmentKind(attachment.url) === "image";
+              const isHalf = message.attachments.length > 1 && isImg;
+              return (
+                <S.AttachmentItem
+                  key={attachment.id || attachment.url}
+                  $half={isHalf}
+                >
+                  {isImg ? (
+                    imgError ? (
+                      <AttachmentFallback />
+                    ) : (
+                      <AppImageViewer
+                        src={attachment.url}
+                        alt="Message attachment"
+                      >
+                        <S.AttachmentImage
+                          src={attachment.url}
+                          alt="Message attachment"
+                          $grid={isHalf}
+                          onError={() => setImgError(true)}
+                        />
+                      </AppImageViewer>
+                    )
+                  ) : null}
 
-                {getAttachmentKind(attachment.url) === "video" ? (
-                  <ChatVideoAttachment src={attachment.url} />
-                ) : null}
+                  {getAttachmentKind(attachment.url) === "video" ? (
+                    <ChatVideoAttachment src={attachment.url} />
+                  ) : null}
 
-                {getAttachmentKind(attachment.url) === "audio" ? (
-                  <ChatAudioAttachment src={attachment.url} />
-                ) : null}
+                  {getAttachmentKind(attachment.url) === "audio" ? (
+                    <ChatAudioAttachment src={attachment.url} />
+                  ) : null}
 
-                {getAttachmentKind(attachment.url) === "file" ? (
-                  <S.FileAttachmentCard
-                    href={attachment.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    download
-                  >
-                    <S.FileAttachmentIcon>📄</S.FileAttachmentIcon>
-                    <S.FileAttachmentInfo>
-                      <S.FileAttachmentName>
-                        {getFileNameFromUrl(attachment.url)}
-                      </S.FileAttachmentName>
-                    </S.FileAttachmentInfo>
-                    <S.FileDownloadButton>
-                      <FiDownload size={16} />
-                    </S.FileDownloadButton>
-                  </S.FileAttachmentCard>
-                ) : null}
-              </S.AttachmentItem>
-            ))}
+                  {getAttachmentKind(attachment.url) === "file" ? (
+                    <S.FileAttachmentCard
+                      href={attachment.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      download
+                    >
+                      <S.FileAttachmentIcon>📄</S.FileAttachmentIcon>
+                      <S.FileAttachmentInfo>
+                        <S.FileAttachmentName>
+                          {getFileNameFromUrl(attachment.url)}
+                        </S.FileAttachmentName>
+                      </S.FileAttachmentInfo>
+                      <S.FileDownloadButton>
+                        <FiDownload size={16} />
+                      </S.FileDownloadButton>
+                    </S.FileAttachmentCard>
+                  ) : null}
+                </S.AttachmentItem>
+              );
+            })}
           </S.AttachmentsGrid>
         ) : null}
 
@@ -850,6 +1208,22 @@ export const ChatBubble: FC<Props> = ({ message, currentUsername }) => {
 
         <S.TimeStamp>{formattedDate}</S.TimeStamp>
       </S.BubbleStack>
+
+      <S.MessageMenuWrapper
+        style={{
+          opacity:
+            swipeProgress > 0 ? Math.max(0, 1 - swipeProgress * 3) : undefined,
+          overflow: !isSender ? undefined : "hidden",
+          pointerEvents: isSwipingActive ? "none" : undefined,
+          visibility: !isSender ? undefined : "hidden",
+          width: !isSender ? undefined : 0,
+        }}
+      >
+        <AppDropdownMenu
+          trigger={<BsThreeDots size={14} />}
+          items={menuItems}
+        />
+      </S.MessageMenuWrapper>
 
       <AppAlertDialog
         heading={

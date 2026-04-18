@@ -1,6 +1,7 @@
 "use client";
 
 import type { FC } from "react";
+import { VscVerifiedFilled } from "react-icons/vsc";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { Conversation } from "@/types";
@@ -151,10 +152,19 @@ export const ConversationCard: FC<ConversationCardProps> = ({
   );
   const unread = isMessageUnread(lastMessage?.isRead);
 
+  const otherMember = conversation.members?.find(
+    (member) => member.userName !== user?.username,
+  );
+  const displayName = conversation.isGroup
+    ? conversation.name || "Untitled conversation"
+    : `${otherMember?.firstName} ${otherMember?.lastName}`.trim() ||
+      otherMember?.userName ||
+      conversation.name ||
+      "Untitled conversation";
+
   const openConversation = () => {
     const targetUserName =
-      conversation.members?.find((member) => member.userName !== user?.username)
-        ?.userName || lastMessage?.sender?.username;
+      otherMember?.userName || lastMessage?.sender?.username;
 
     const conversationRoute = ROUTES.Conversation.View(conversation.id);
     const route = targetUserName
@@ -170,18 +180,16 @@ export const ConversationCard: FC<ConversationCardProps> = ({
       <S.Header>
         <AvatarNew
           src={conversation.image ?? null}
-          alt={conversation.name || "Conversation"}
-          username={
-            conversation.members?.find(
-              (member) => member.userName !== user?.username,
-            )?.userName
-          }
+          alt={displayName}
+          username={otherMember?.userName}
         />
         <S.Content>
           <S.TopRow>
-            <S.Title className={unread ? "unread" : ""}>
-              {conversation.name || "Untitled conversation"}
-            </S.Title>
+            <S.Title className={unread ? "unread" : ""}>{displayName}</S.Title>
+            {!conversation.isGroup &&
+              conversation.members?.some((m) => m.isVerified) && (
+                <VscVerifiedFilled size={16} color="rgb(28, 123, 201)" />
+              )}
           </S.TopRow>
 
           <S.BottomRow>

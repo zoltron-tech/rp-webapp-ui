@@ -28,4 +28,6 @@ export interface StoreState {
   searchBarExpanded: Boolean;
   notifications: NovelistWorldNotification[] | null;
   musicPlayer: MusicPlayerState;
+  unreadConversationIds: string[] | null;
+  helloStickers: { stickerUrl: string; previewUrl: string }[] | null;
 }

@@ -73,6 +73,8 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
   const user = useGlobalState("user");
   const novelist = useGlobalState("novelist");
   const authState = useGlobalState("authState");
+  const unreadConversationIds = useGlobalState("unreadConversationIds");
+  const hasUnread = Boolean(unreadConversationIds?.length);
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
   const [showContactSupportAlert, setShowContactSupportAlert] = useState(false);
   const [supportMessage, setSupportMessage] = useState("");
@@ -196,16 +198,27 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
       />
 
       <S.ContentContainer onClick={handleClick}>
-        <AvatarNew
-          className="selectable"
-          src={novelist?.image ?? null}
-          alt={user?.username || "User Avatar"}
-        />
+        <S.AvatarWrapper>
+          <AvatarNew
+            className="selectable"
+            src={novelist?.image ?? null}
+            alt={user?.username || "User Avatar"}
+            username={user?.username}
+          />
+          <ShouldRender if={hasUnread}>
+            <S.UnreadDot>
+              {(unreadConversationIds?.length ?? 0) > 99
+                ? "99+"
+                : unreadConversationIds?.length}
+            </S.UnreadDot>
+          </ShouldRender>
+        </S.AvatarWrapper>
         <S.Menu className={classNames({ open })}>
           <S.MenuUserHeader onClick={toUserProfile}>
             <AvatarNew
               src={novelist?.image ?? null}
               alt={user?.username || "User Avatar"}
+              username={user?.username}
             />
             <S.MenuUserInfo>
               <S.MenuUserName>
@@ -255,6 +268,13 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                   <FcComments />
                   Inbox
                 </Flex>
+                <ShouldRender if={hasUnread}>
+                  <S.UnreadBadge>
+                    {(unreadConversationIds?.length ?? 0) > 99
+                      ? "99+"
+                      : unreadConversationIds?.length}
+                  </S.UnreadBadge>
+                </ShouldRender>
                 <FiChevronRight size={16} color="gray" />
               </S.Element>
               <S.Element onClick={toMusicPage}>

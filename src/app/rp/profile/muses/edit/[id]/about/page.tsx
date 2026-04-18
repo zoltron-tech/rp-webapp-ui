@@ -11,6 +11,7 @@ import {
   getMuseAboutSectionsAction,
 } from "@/app/rp/muse/actions";
 import { AppAlertDialog } from "@/components/dialog";
+import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { AppDropdownMenu } from "@/components/profile-more-dropdown";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
 import { useGlobalState } from "@/context/store/stores";
@@ -126,6 +127,14 @@ export default function MuseAboutListSectionsPage() {
                 />
               </S.SectionHeader>
               <S.SectionContent>
+                {section.image && (
+                  <AppImageViewer src={section.image} alt="Section attachment">
+                    <S.SectionImage
+                      src={section.image}
+                      alt="Section attachment"
+                    />
+                  </AppImageViewer>
+                )}
                 <RichTextRenderer
                   savedText={section.text || ""}
                   overlayHidden

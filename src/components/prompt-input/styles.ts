@@ -2,6 +2,129 @@ import { Avatar, Form, Select } from "radix-ui";
 import styled from "styled-components";
 import { AvatarNew } from "../common/avatar-new";
 
+/* ─── Full-page prompt input layout ─────────────────────────────────────── */
+
+export const FPRoot = styled.div`
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: var(--topbar-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(100dvh - var(--topbar-height) - 2px);
+  width: 100%;
+  background-color: var(--bg-2);
+  overflow: hidden;
+  z-index: 1000;
+`;
+
+export const FPTopBar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  background-color: var(--bg-3);
+  border-bottom: 1px solid var(--bg-6);
+  flex-shrink: 0;
+`;
+
+export const FPBackButton = styled.button`
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--text);
+  transition: background-color 0.15s;
+
+  &:hover {
+    background-color: var(--bg-5);
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+`;
+
+export const FPTopBarRight = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+export const FPMetaRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--bg-3);
+  border-bottom: 1px solid var(--bg-6);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+`;
+
+export const FPMetaRight = styled.div`
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+`;
+
+export const FPEditorArea = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: visible;
+`;
+
+export const FPSharedWith = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+export const FPSubmitButton = styled.button`
+  all: unset;
+  cursor: pointer;
+  padding: 6px 16px;
+  border-radius: 2px;
+  background-color: var(--accent);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--font-size-button);
+  min-width: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:not(:disabled) {
+    &:hover {
+      background-color: var(--accent-hover);
+    }
+
+    &:active {
+      background-color: var(--accent-active);
+    }
+  }
+
+  &:focus {
+    outline: 1.5px solid #fff;
+    outline-offset: 1.5px;
+  }
+
+  &:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+  }
+`;
+
+/* ─── End full-page ─────────────────────────────────────────────────────── */
+
 export const PromptTrigger = styled.button`
   all: unset;
   cursor: pointer;
@@ -166,9 +289,10 @@ export const DialogueLabel = styled(SelectGroupLabel)`
   opacity: 0.7;
   margin-bottom: 4px;
 `;
-export const TextInputContainer = styled(Form.Field)`
+export const TextInputContainer = styled(Form.Field)<{ $fullPage?: boolean }>`
   display: flex;
   flex-direction: column;
+  ${(p) => p.$fullPage && "flex: 1; min-height: 0;"}
 
 
   textarea {
@@ -378,10 +502,45 @@ export const MuseAvatarRoot = styled(Avatar.Root)`
   }
 `;
 
+export const MediaActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  margin-left: 8px;
+`;
+
+export const ToolButton = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text);
+  background-color: var(--accent);
+  flex-shrink: 0;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    background-color: var(--accent-hover);
+  }
+
+  &:active {
+    background-color: var(--accent-active);
+  }
+`;
+
 export const MediaSelect = styled(Form.Field)`
   display: flex;
   flex-direction: column;
-  margin-top: 4px;
   margin-left: 8px;
 
   .media-input {
@@ -389,14 +548,14 @@ export const MediaSelect = styled(Form.Field)`
   }
 
   .form-label {
-    width: fit-content;
+    box-sizing: border-box;
+    width: 32px;
+    height: 32px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 4px;
-    font-size: var(--font-size);
-    padding: 4px 8px;
-    border-radius: 2px;
+    justify-content: center;
+    border-radius: 4px;
     background-color: var(--accent);
 
     &:hover {

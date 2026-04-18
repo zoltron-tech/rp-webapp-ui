@@ -129,3 +129,13 @@ export const SectionHeader = styled.div`
 export const SectionContent = styled.div`
   flex: 1;
 `;
+
+export const SectionImage = styled.img`
+  display: block;
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 4px;
+  object-fit: contain;
+  margin-bottom: 0.75rem;
+  cursor: zoom-in;
+`;

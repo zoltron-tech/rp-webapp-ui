@@ -2,10 +2,14 @@
 
 import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
-import { useGlobalState } from "@/context/store/stores";
+import { EditMuseAboutSectionForm } from "@/components/edit-muse-about-section";
+import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 
-const DynamicEditMuseSectionCard = dynamic(
-  () => import("@/components/edit-muse-about-section"),
+const DynamicFullPageEditMuseAboutSection = dynamic(
+  () =>
+    import(
+      "@/components/edit-muse-about-section/full-page-edit-muse-about-section"
+    ),
   {
     ssr: false,
   },
@@ -13,7 +17,12 @@ const DynamicEditMuseSectionCard = dynamic(
 
 export default function MuseAboutListSectionsPage() {
   const id = useParams()?.id as string;
-  const authState = useGlobalState("authState");
+  const { width } = useWindowDimensions();
+  const isMobile = (width ?? 0) <= 800;
 
-  return <DynamicEditMuseSectionCard museId={id} />;
+  if (isMobile) {
+    return <DynamicFullPageEditMuseAboutSection museId={id} />;
+  }
+
+  return <EditMuseAboutSectionForm museId={id} />;
 }

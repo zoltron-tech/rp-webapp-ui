@@ -1,8 +1,10 @@
 // components/styled.ts
 import styled from "styled-components";
+import { UnreadBadgeBase } from "../common/unread-badge";
 
 export const LoadMoreContainer = styled.div`
   display: flex;
+  min-height: 40px;
   justify-content: center;
   margin: 12px 0px 20px 0px;
 `;
@@ -12,17 +14,17 @@ export const LoadMoreButton = styled.button`
   align-items: center;
   justify-content: center;
   gap: 6px;
-  width: 140px;
+  width: 160px;
 
   padding: 2px 12px;
   border: 1px solid var(--accent);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
 
   font-size: var(--font-size-h6);
   font-weight: 700;
   font-style: italic;
-  color: var(--accent);
+  color: var(--accent-hover);
   white-space: nowrap;
 
   transition: all 0.2s ease;
@@ -31,7 +33,7 @@ export const LoadMoreButton = styled.button`
     cursor: pointer;
     color: var(--accent-hover);
     border-color: var(--accent-hover);
-    background: color-mix(in srgb, var(--accent) 20%, transparent);
+    background: color-mix(in srgb, var(--accent-hover) 20%, transparent);
     box-shadow: 0 0 8px
       color-mix(in srgb, var(--accent-hover) 50%, transparent);
   }
@@ -44,4 +46,8 @@ export const LoadMoreButton = styled.button`
   @container (max-width: 600px) {
     font-size: var(--font-size-input);
   }
+`;
+
+export const UnreadDot = styled(UnreadBadgeBase)`
+  flex-shrink: 0;
 `;

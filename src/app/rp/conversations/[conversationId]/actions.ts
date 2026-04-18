@@ -113,6 +113,33 @@ export const getConversationMusesAction = async (
   return muses;
 };
 
+export const reportMessageAction = async (
+  messageId: string,
+): Promise<DataType<boolean>> => {
+  const headers = await getAuthHeaders();
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/report`;
+
+  const response = await fetch(URL, {
+    body: JSON.stringify({
+      reason: "",
+      targetId: messageId,
+      targetType: "MESSAGE",
+    }),
+    cache: "no-store",
+    headers,
+    method: "POST",
+  });
+
+  Logger.debug("reportMessageAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  return true;
+};
+
 export const markConversationReadAction = async (
   conversationId: string,
 ): Promise<void> => {

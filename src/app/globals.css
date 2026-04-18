@@ -85,6 +85,12 @@ textarea {
 /* BEGIN: Global variables */
 
 :root {
+  --topbar-height: 60px;
+
+  @media screen and (max-width: 480px) {
+    --topbar-height: 45px;
+  }
+
   --profile-banner-height-min: 270px;
   --profile-banner-height-max: 460px;
   --profile-avatar-size: 340px;

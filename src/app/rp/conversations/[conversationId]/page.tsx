@@ -2,9 +2,13 @@
 
 import { useParams, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { BsThreeDotsVertical } from "react-icons/bs";
+import { FaChevronDown } from "react-icons/fa";
 import { IoArrowBackOutline } from "react-icons/io5";
+import { VscVerifiedFilled } from "react-icons/vsc";
 import { ChatBubble } from "@/components/common";
 import { AvatarNew } from "@/components/common/avatar-new";
+import { AppAlertDialog } from "@/components/dialog";
 import { LoadMore } from "@/components/load-more/page";
 import type { ComposerSender } from "@/components/send-message-composer";
 import { SendMessageComposer } from "@/components/send-message-composer";
@@ -19,7 +23,10 @@ import {
   getConversationMessagesAction,
   getConversationMusesAction,
   markConversationReadAction,
+  reportMessageAction,
 } from "./actions";
+import { ForwardMessageDialog } from "./forward-message-dialog";
+import { ReplyPreview } from "./reply-preview";
 import * as S from "./styles";
 
 const deriveTargetUserName = (
@@ -35,6 +42,60 @@ const deriveTargetUserName = (
     ""
   );
 };
+
+const HELLO_MESSAGES: { line1: string; line2: string }[] = [
+  {
+    line1: "No messages here yet.",
+    line2: "Be the first to break the ice! 🧊",
+  },
+  {
+    line1: "The conversation starts with you.",
+    line2: "Send a little hello and see what happens. ✨",
+  },
+  {
+    line1: "Silence can be golden...",
+    line2: "But a warm hello is even better. 🌟",
+  },
+  {
+    line1: "Nothing here yet — it's a blank canvas.",
+    line2: "Paint it with your first message. 🎨",
+  },
+  {
+    line1: "Every great story has a first line.",
+    line2: "Write yours and say hello. 📖",
+  },
+  {
+    line1: "This chat is waiting for you.",
+    line2: "Don't keep it waiting too long! ⏳",
+  },
+];
+
+const RETENTION_NOTICES: { line1: string; line2: string }[] = [
+  {
+    line1: "✨ This is a safe space — speak freely.",
+    line2: "Chats quietly disappear after 14 days.",
+  },
+  {
+    line1: "🕊️ Words shared here are yours alone.",
+    line2: "Messages vanish after 14 days, no trace left.",
+  },
+  {
+    line1: "🌙 Every conversation has a natural end.",
+    line2: "These messages fade away after 14 days.",
+  },
+  {
+    line1: "💬 Keep it real, keep it private.",
+    line2: "This chat self-destructs in 14 days.",
+  },
+  {
+    line1: "🔥 Live in the moment — this chat does too.",
+    line2: "All messages are gone after 14 days.",
+  },
+  {
+    line1: "🌊 Like whispers on the wind.",
+    line2: "Your messages drift away after 14 days.",
+  },
+];
 
 export default function ConversationDetailPage() {
   const params = useParams();
@@ -53,6 +114,27 @@ export default function ConversationDetailPage() {
     if (Array.isArray(routeParam)) return routeParam[0] || "";
     return routeParam || "";
   }, [params]);
+
+  const retentionNotice = useMemo(
+    () =>
+      RETENTION_NOTICES[Math.floor(Math.random() * RETENTION_NOTICES.length)],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [conversationId],
+  );
+
+  const helloStickers = useGlobalState("helloStickers");
+
+  const helloMessage = useMemo(
+    () => HELLO_MESSAGES[Math.floor(Math.random() * HELLO_MESSAGES.length)],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [conversationId],
+  );
+
+  const helloSticker = useMemo(() => {
+    if (!helloStickers?.length) return null;
+    return helloStickers[Math.floor(Math.random() * helloStickers.length)];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId, helloStickers?.length]);
 
   const defaultSender = useMemo<ComposerSender | null>(() => {
     if (!novelist) return null;
@@ -77,7 +159,15 @@ export default function ConversationDetailPage() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const [reportingMessage, setReportingMessage] = useState<Message | null>(
+    null,
+  );
+  const [forwardingMessage, setForwardingMessage] = useState<Message | null>(
+    null,
+  );
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const [isScrolledUp, setIsScrolledUp] = useState(false);
 
   const PAGE_SIZE = 10;
 
@@ -109,9 +199,11 @@ export default function ConversationDetailPage() {
     "Conversation";
   // Prefer conversation name > target member's name > last message sender's name > last message sender's username > fallback text
   const targetDisplayName =
-    conversation?.name ||
-    `${targetMember?.firstName} ${targetMember?.lastName}`.trim() ||
-    fallbackTargetName;
+    conversation && !conversation.isGroup
+      ? `${targetMember?.firstName} ${targetMember?.lastName}`.trim() ||
+        targetMember?.userName ||
+        fallbackTargetName
+      : conversation?.name || fallbackTargetName;
   const targetImage =
     conversation?.image ||
     targetMember?.image ||
@@ -120,6 +212,15 @@ export default function ConversationDetailPage() {
 
   const onBackClick = () => {
     routeToPage(`${ROUTES.conversations}`);
+  };
+
+  const handleConvHeaderClick = () => {
+    if (!conversation) return;
+    if (conversation.isGroup) {
+      routeToPage(ROUTES.Conversation.Details(conversationId));
+    } else {
+      routeToPage(ROUTES.Profile.View(resolvedTargetUserName).Index);
+    }
   };
 
   const fetchConversation = useCallback(async () => {
@@ -180,6 +281,8 @@ export default function ConversationDetailPage() {
     [baseDataLoader, PAGE_SIZE],
   );
 
+  // Fetch a hello/wave sticker for the empty state — now handled globally in layout.tsx
+
   useEffect(() => {
     fetchConversation();
   }, [fetchConversation]);
@@ -200,7 +303,11 @@ export default function ConversationDetailPage() {
     setLoadingMore(false);
   };
 
-  const sendMessage = async (text: string) => {
+  const sendMessage = async (
+    text: string,
+    attachments: { url: string }[] | null = null,
+    type = "TEXT",
+  ) => {
     if (!conversationId) {
       errorToast("Unable to resolve recipient for this conversation.");
       return;
@@ -215,10 +322,10 @@ export default function ConversationDetailPage() {
 
     const activeSender = selectedSender;
     const payload = {
-      attachments: null,
+      attachments,
       conversationId,
       message: text,
-      repliedTo: null,
+      repliedTo: replyingTo?.id ?? null,
       sender: {
         id: activeSender?.id ?? novelist?.id ?? "",
         image: activeSender?.image ?? novelist?.image ?? null,
@@ -226,11 +333,14 @@ export default function ConversationDetailPage() {
         name: activeSender?.name ?? novelist?.firstName ?? user?.username ?? "",
         username: user?.username ?? "",
       },
-      type: "TEXT",
+      type,
     };
+
+    console.log("Sending message with payload:", payload);
 
     try {
       socket.send(JSON.stringify({ payload, type: "message" }));
+      setReplyingTo(null);
       successToast("Message sent.");
       scrollToBottom();
     } catch {
@@ -282,6 +392,33 @@ export default function ConversationDetailPage() {
     await sendMessage(stickerUrl);
   };
 
+  const onSendClip = async (clipUrl: string) => {
+    if (!clipUrl || sending) return;
+    await sendMessage(clipUrl);
+  };
+
+  const onSendMedia = async (urls: string[]) => {
+    if (!urls.length || sending) return;
+    const text = messageHtml || messageText.trim();
+    await sendMessage(
+      text,
+      urls.map((url) => ({ url })),
+    );
+    setMessageText("");
+    setMessageHtml("");
+  };
+
+  const handleReportMessage = async () => {
+    if (!reportingMessage) return;
+    const response = await reportMessageAction(reportingMessage.id);
+    if (response === true) {
+      successToast("Message reported successfully.");
+    } else {
+      errorToast("There was an issue while reporting this message.");
+    }
+    setReportingMessage(null);
+  };
+
   // Append incoming real-time messages that belong to this conversation
   useEffect(() => {
     if (!lastIncomingMessage) return;
@@ -319,43 +456,153 @@ export default function ConversationDetailPage() {
               onClick={() => onBackClick()}
               style={{ cursor: "pointer" }}
             />
-            <AvatarNew
-              src={targetImage}
-              alt={targetDisplayName || "Conversation"}
-              username={resolvedTargetUserName}
-            />
-            <S.ChatTitleWrap>
-              <S.ChatTitle>{targetDisplayName}</S.ChatTitle>
-              <S.ChatMeta>
-                @
-                {conversation?.name || resolvedTargetUserName || conversationId}
-              </S.ChatMeta>
-            </S.ChatTitleWrap>
+            <button
+              type="button"
+              onClick={handleConvHeaderClick}
+              style={{
+                alignItems: "center",
+                background: "none",
+                border: "none",
+                cursor: conversation ? "pointer" : "default",
+                display: "flex",
+                gap: "10px",
+                minWidth: 0,
+                padding: 0,
+              }}
+            >
+              <AvatarNew
+                src={targetImage}
+                alt={targetDisplayName || "Conversation"}
+                username={resolvedTargetUserName}
+              />
+              <S.ChatTitleWrap>
+                <S.ChatTitleRow>
+                  <S.ChatTitle>{targetDisplayName}</S.ChatTitle>
+                  {!conversation?.isGroup && targetMember?.isVerified && (
+                    <VscVerifiedFilled size={16} color="rgb(28, 123, 201)" />
+                  )}
+                </S.ChatTitleRow>
+                <S.ChatMeta>
+                  @
+                  {conversation?.name ||
+                    resolvedTargetUserName ||
+                    conversationId}
+                </S.ChatMeta>
+              </S.ChatTitleWrap>
+            </button>
           </S.ChatPerson>
+          <BsThreeDotsVertical
+            size={18}
+            style={{
+              color: "var(--text-secondary)",
+              cursor: "pointer",
+              flexShrink: 0,
+              marginLeft: "auto",
+            }}
+            onClick={() =>
+              routeToPage(ROUTES.Conversation.Details(conversationId))
+            }
+          />
         </S.ChatHeader>
 
-        <S.MessagesContainer ref={messagesContainerRef}>
-          {fallbackMessages.length > 0 ? (
-            <S.MessagesList>
-              <LoadMore
-                hasMore={hasMore}
-                loadingMore={loadingMore}
-                onLoadMore={loadMoreMessages}
-              />
-              {fallbackMessages.map((message) => (
-                <ChatBubble
-                  key={message.id}
-                  message={message}
-                  currentUsername={user?.username || ""}
+        <S.MessagesWrapper>
+          <S.MessagesContainer
+            ref={messagesContainerRef}
+            onScroll={(e) => {
+              const el = e.currentTarget;
+              const distanceFromBottom =
+                el.scrollHeight - el.scrollTop - el.clientHeight;
+              setIsScrolledUp(distanceFromBottom > 120);
+            }}
+          >
+            <S.RetentionNotice>
+              <span>{retentionNotice.line1}</span>
+              <S.RetentionNoticeHighlight>
+                {retentionNotice.line2.replace("14 days", "").trim()}{" "}
+                <strong>14 days</strong>
+                {retentionNotice.line2.endsWith("14 days.") ? "." : ""}
+              </S.RetentionNoticeHighlight>
+            </S.RetentionNotice>
+            {fallbackMessages.length > 0 ? (
+              <S.MessagesList>
+                <LoadMore
+                  hasMore={hasMore}
+                  loadingMore={loadingMore}
+                  onLoadMore={loadMoreMessages}
                 />
-              ))}
-            </S.MessagesList>
-          ) : (
-            <S.EmptyText>
-              No messages found for this conversation yet.
-            </S.EmptyText>
-          )}
-        </S.MessagesContainer>
+                {fallbackMessages.map((message, idx) => {
+                  const msgDate = message.createdAt
+                    ? new Date(message.createdAt).toDateString()
+                    : null;
+                  const prevDate =
+                    idx > 0 && fallbackMessages[idx - 1].createdAt
+                      ? new Date(
+                          fallbackMessages[idx - 1].createdAt,
+                        ).toDateString()
+                      : null;
+                  const showSeparator =
+                    idx > 0 && msgDate && msgDate !== prevDate;
+                  return (
+                    <span key={message.id}>
+                      {showSeparator && (
+                        <S.DateSeparator>
+                          {new Date(message.createdAt).toLocaleDateString(
+                            undefined,
+                            {
+                              day: "numeric",
+                              month: "long",
+                              year: "numeric",
+                            },
+                          )}
+                        </S.DateSeparator>
+                      )}
+                      <ChatBubble
+                        message={message}
+                        currentUsername={user?.username || ""}
+                        onReply={(msg) => setReplyingTo(msg)}
+                        onForward={(msg) => setForwardingMessage(msg)}
+                        onReport={(msg) => setReportingMessage(msg)}
+                      />
+                    </span>
+                  );
+                })}
+              </S.MessagesList>
+            ) : helloSticker ? (
+              <S.HelloState>
+                <S.HelloBox
+                  type="button"
+                  disabled={sending}
+                  onClick={() => onSendSticker(helloSticker.stickerUrl)}
+                >
+                  <S.EmptyText>{helloMessage.line1}</S.EmptyText>
+                  <S.EmptyTextSub>{helloMessage.line2}</S.EmptyTextSub>
+                  <S.HelloStickerImg
+                    src={helloSticker.previewUrl}
+                    alt="Say hello"
+                  />
+                  <S.HelloLabel>Tap here to say Hello 👋</S.HelloLabel>
+                </S.HelloBox>
+              </S.HelloState>
+            ) : (
+              <S.EmptyText>No messages yet. Say hello!</S.EmptyText>
+            )}
+          </S.MessagesContainer>
+          <S.ScrollToBottomButton
+            type="button"
+            $visible={isScrolledUp}
+            onClick={scrollToBottom}
+            aria-label="Scroll to bottom"
+          >
+            <FaChevronDown size={16} />
+          </S.ScrollToBottomButton>
+        </S.MessagesWrapper>
+
+        {replyingTo ? (
+          <ReplyPreview
+            message={replyingTo}
+            onDismiss={() => setReplyingTo(null)}
+          />
+        ) : null}
 
         <SendMessageComposer
           value={messageText}
@@ -364,13 +611,32 @@ export default function ConversationDetailPage() {
           onSubmit={onSendMessage}
           onSendGif={onSendGif}
           onSendSticker={onSendSticker}
+          onSendClip={onSendClip}
+          onSendMedia={onSendMedia}
           sending={sending}
+          conversationId={conversationId}
           selectedSender={selectedSender}
           onSenderChange={setSelectedSender}
           mentionItems={mentionItems}
           getMentionMuseItems={getMentionMuseItems}
         />
       </S.ChatWrapper>
+
+      <AppAlertDialog
+        heading="Report this message?"
+        text="We strive to maintain a safe and welcoming community. If this message violates our guidelines, please report it. Our team will review and take appropriate action as quickly as possible."
+        open={!!reportingMessage}
+        onOpenChange={(open) => {
+          if (!open) setReportingMessage(null);
+        }}
+        onConfirm={handleReportMessage}
+        actionButtonLabel="Report"
+      />
+
+      <ForwardMessageDialog
+        message={forwardingMessage}
+        onClose={() => setForwardingMessage(null)}
+      />
     </S.Container>
   );
 }

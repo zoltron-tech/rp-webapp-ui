@@ -25,12 +25,20 @@ export const getPresignedFileUploadObject = async (formData: FormData) => {
 
   const contentType = formData.get("contentType") as string;
   const prefix = formData.get("prefix") as string | null;
+  const mediaBucket = formData.get("mediaBucket") as string | null;
 
   // Build query parameters dynamically
   const queryParams = new URLSearchParams({ contentType });
   if (prefix) {
     queryParams.append("prefix", prefix);
   }
+  queryParams.append("mediaBucket", mediaBucket ?? "APP_MEDIA");
+
+  console.log("Requesting presigned URL with params:", {
+    contentType,
+    mediaBucket,
+    prefix,
+  });
 
   const presignRes = await fetch(
     `${RP_SERVICE_URL}/rp/portfolio/s3/presigned-url?${queryParams.toString()}`,
@@ -41,6 +49,8 @@ export const getPresignedFileUploadObject = async (formData: FormData) => {
       method: "GET",
     },
   );
+
+  console.log("Presigned URL response status:", presignRes);
 
   if (!presignRes.ok) {
     console.error(

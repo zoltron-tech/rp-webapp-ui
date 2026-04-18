@@ -1,5 +1,4 @@
-import { Popover, Tabs, Toolbar } from "radix-ui";
-import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { Popover, Toolbar } from "radix-ui";
 import styled, { css, keyframes } from "styled-components";
 import {
   editorMentionTagCss,
@@ -18,31 +17,17 @@ const fadeIn = keyframes`
   }
 `;
 
-const spin = keyframes`
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-`;
-
-export const LoadingWrapper = styled.div`
-  height: 6rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-export const Spinner = styled(AiOutlineLoading3Quarters)`
-  animation: ${spin} 0.8s linear infinite;
-  font-size: 1.5rem;
-  opacity: 0.7;
-`;
-
-export const Container = styled.div`
+export const Container = styled.div<{ $fullPage?: boolean }>`
   width: 100%;
   box-sizing: border-box;
+  ${(p) =>
+    p.$fullPage &&
+    `
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  `}
 `;
 
 export const EmptyState = styled.div`
@@ -68,7 +53,6 @@ export const ToolbarRoot = styled(Toolbar.Root)`
   margin-bottom: 1px;
   background-color: var(--bg-4);
   border: 2px solid var(--border, var(--bg-6, #e5e4e7));
-  border-radius: 0.5rem 0.5rem 0 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   position: relative;
@@ -173,8 +157,8 @@ export const FontSelect = styled.select`
 export const DropdownPopoverContent = styled(Popover.Content)`
   position: relative;
   isolation: isolate;
-  background-color: var(--bg-3, var(--bg, #ffffff));
-  border: 1px solid var(--bg-6, var(--border, #e5e4e7));
+  background-color: var(--bg-3);
+  border: 1px solid var(--bg-6);
   border-radius: 0.5rem;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28), 0 4px 10px rgba(0, 0, 0, 0.12);
   z-index: 2147483647;
@@ -190,9 +174,9 @@ export const DropdownTriggerBtn = styled.button`
   display: flex;
   align-items: center;
   gap: 0;
-  border: 1px solid var(--bg-6, #e5e4e7);
+  border: 1px solid var(--bg-6);
   border-radius: 0.375rem;
-  background-color: var(--bg-3, #fff);
+  background-color: var(--bg-3);
   cursor: pointer;
   min-height: 40px;
   padding: 0;
@@ -200,7 +184,7 @@ export const DropdownTriggerBtn = styled.button`
   flex-shrink: 0;
 
   &:hover {
-    background-color: var(--bg-5, #f3f4f6);
+    background-color: var(--bg-5);
   }
   &:focus-visible {
     outline: 2px solid var(--accent);
@@ -225,7 +209,7 @@ export const DropdownTriggerChevron = styled.span`
   justify-content: center;
   width: 28px;
   min-height: 40px;
-  border-left: 1px solid var(--bg-6, #e5e4e7);
+  border-left: 1px solid var(--bg-6);
   color: var(--text);
   flex-shrink: 0;
 `;
@@ -234,10 +218,10 @@ export const ListOptionGroup = styled.div`
   display: flex;
   align-items: stretch;
   flex-shrink: 0;
-  border: 2px solid var(--bg-6, #e5e4e7);
+  border: 2px solid var(--bg-6);
   border-radius: 0.5rem;
   overflow: visible;
-  background-color: var(--bg-4, #f9fafb);
+  background-color: var(--bg-4);
 `;
 
 export const ListOptionMain = styled.div`
@@ -250,8 +234,8 @@ export const ListOptionMain = styled.div`
 export const ListOptionSub = styled.div`
   display: flex;
   align-items: center;
-  border-left: 2px solid var(--bg-6, #e5e4e7);
-  background-color: var(--bg-3, #fff);
+  border-left: 2px solid var(--bg-6);
+  background-color: var(--bg-3);
   border-radius: 0 0.35rem 0.35rem 0;
   overflow: hidden;
 `;
@@ -269,7 +253,7 @@ export const ListSubTriggerBtn = styled.button`
   flex-shrink: 0;
 
   &:hover {
-    background-color: var(--bg-5, #f3f4f6);
+    background-color: var(--bg-5);
   }
   &:focus-visible {
     outline: 2px solid var(--accent);
@@ -475,10 +459,10 @@ interface QuotationItemProps {
 export const QuotationGridItem = styled.button<QuotationItemProps>`
   padding: 0.5rem;
   min-height: 44px;
-  border: 1px solid var(--bg-6, #e5e4e7);
+  border: 1px solid ${(props) => (props.$selected ? "var(--accent)" : "var(--bg-6, #e5e4e7)")};
   border-radius: 0.375rem;
-  background-color: var(--bg-4, #f9fafb);
-  color: var(--text-secondary);
+  background-color: ${(props) => (props.$selected ? "var(--accent)" : "var(--bg-4, #f9fafb)")};
+  color: ${(props) => (props.$selected ? "var(--text)" : "var(--text-secondary)")};
   cursor: pointer;
   font-size: 1.35rem;
   transition: all 0.2s;
@@ -487,7 +471,7 @@ export const QuotationGridItem = styled.button<QuotationItemProps>`
   justify-content: center;
 
   &:hover {
-    background-color: var(--bg-5, #f3f4f6);
+    background-color: ${(props) => (props.$selected ? "var(--accent)" : "var(--bg-5, #f3f4f6)")};
     border-color: var(--accent);
     transform: scale(1.05);
   }
@@ -590,18 +574,25 @@ interface ToggleItemProps {
 
 export const ToggleItem = styled(Toolbar.ToggleItem)<ToggleItemProps>`
   ${toggleItemBase}
-  background-color: ${(props) => (props.$active ? "var(--accent)" : "var(--text-background)")};
+  background-color: ${(props) => (props.$active ? "var(--accent)" : "var(--bg-4, #f9fafb)")};
   color: ${(props) => (props.$active ? "var(--text)" : "var(--text-secondary)")};
 
   &:hover {
-    background-color: ${(props) => (props.$active ? "var(--accent)" : "var(--hover-background)")};
+    background-color: ${(props) => (props.$active ? "var(--accent)" : "var(--bg-5, #f3f4f6)")};
   }
 `;
 
-export const EditorWrapper = styled.div`
+export const EditorWrapper = styled.div<{ $fullPage?: boolean }>`
   position: relative;
-  z-index: 0;
   box-sizing: border-box;
+  ${(p) =>
+    p.$fullPage &&
+    `
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  `}
 `;
 
 const richTextContentBase = css`
@@ -844,13 +835,15 @@ const richTextContentBase = css`
 
 interface EditorContentProps {
   $dropdownOpen?: boolean;
+  $fullPage?: boolean;
 }
 
 export const EditorContent = styled.div<EditorContentProps>`
   box-sizing: border-box;
   width: 100%;
-  min-height: 10rem;
-  max-height: 20dvh;
+  min-height: ${(p) => (p.$fullPage ? "0" : "10rem")};
+  max-height: ${(p) => (p.$fullPage ? "none" : "20dvh")};
+  ${(p) => p.$fullPage && "flex: 1;"}
   background-color: var(--bg-3);
   padding: 1rem;
   outline: none;
@@ -942,80 +935,6 @@ export const PopoverContent = styled(Popover.Content)`
   border: 1px solid var(--bg-6);
   z-index: 50;
   animation: ${fadeIn} 0.15s ease-out;
-`;
-
-export const TabsList = styled(Tabs.List)`
-  display: flex;
-  border-bottom: 1px solid var(--bg-6);
-`;
-
-export const TabsTrigger = styled(Tabs.Trigger)`
-  flex: 1;
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-  border-bottom: 2px solid transparent;
-
-  &:hover {
-    color: var(--text);
-    background-color: var(--accent);
-  }
-
-  &[data-state='active'] {
-    color: var(--text);
-    background-color: var(--accent);
-  }
-`;
-
-export const TabsContent = styled(Tabs.Content)`
-  max-height: 16rem;
-  overflow-y: auto;
-`;
-
-interface MenuItemProps {
-  $focused?: boolean;
-}
-
-export const MentionItem = styled.button<MenuItemProps>`
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 0.5rem;
-  transition: all 0.2s;
-  text-align: left;
-  border: none;
-  cursor: pointer;
-  background-color: ${(props) => (props.$focused ? "var(--accent)" : "var(--text-background)")};
-  color: ${(props) => (props.$focused ? "var(--text)" : "var(--text-secondary)")};
-
-  &:hover {
-    background-color: var(--accent);
-  }
-
-  .avatar {
-    height: 30px;
-    width: 30px;
-  }
-`;
-
-export const MentionIcon = styled.span`
-  font-size: 1.5rem;
-`;
-
-export const MentionName = styled.span`
-  color: var(--text);
-`;
-
-export const EmptyMessage = styled.div`
-  padding: 1.5rem 1rem;
-  text-align: center;
-  color: #6b7280;
 `;
 
 export const SaveButtonWrapper = styled.div`

@@ -3,7 +3,10 @@ import classNames from "classnames";
 import { Collapsible } from "radix-ui";
 import { type FC, useMemo, useState } from "react";
 import { useGlobalState } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
+import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import type { PromptSource } from "@/types";
+import { ROUTES } from "@/utils/constants/routes";
 import { Comment } from "../comment";
 import { AvatarNew } from "../common/avatar-new";
 import { museToSource, novelistToSource } from "../event-thread-input/helpers";
@@ -16,11 +19,14 @@ export const PromptThreads: FC = () => {
   const threadsOpen = usePromptState("threadOpen");
   const novelist = useGlobalState("novelist");
   const [open, setOpen] = useState(threadsOpen);
+  const { routeToPage } = usePageRouter();
   const promptId = usePromptState("id");
   const promptSource = usePromptState("source");
   const authState = useGlobalState("authState");
   const canInteract = usePromptState("canInteract");
   const { comments, refetch: refetchComments } = useGetComments(promptId);
+  const { width } = useWindowDimensions();
+  const isMobile = (width ?? 0) <= 800;
 
   const buttonText = useMemo(() => {
     return open
@@ -92,14 +98,33 @@ export const PromptThreads: FC = () => {
         </S.PromptThreads.Header>
         <S.PromptThreads.Content>
           {authState === "LOGGED_IN" && canInteract && (
-            <PromptInput
-              className="comment-action"
-              initialSelection={initialSelection}
-              dropdownSelection={isOOCPost ? "NOVELIST" : "MUSE"}
-              parentId={promptId}
-              type="comment"
-              onSend={refetchComments}
-            />
+            <>
+              {isMobile ? (
+                <S.AddCommentButton
+                  type="button"
+                  onClick={() =>
+                    routeToPage(
+                      ROUTES.Compose({
+                        dropdownSelection: isOOCPost ? "NOVELIST" : "MUSE",
+                        parentId: promptId,
+                        type: "comment",
+                      }),
+                    )
+                  }
+                >
+                  + Add Comment
+                </S.AddCommentButton>
+              ) : (
+                <PromptInput
+                  className="comment-action"
+                  initialSelection={initialSelection}
+                  dropdownSelection={isOOCPost ? "NOVELIST" : "MUSE"}
+                  parentId={promptId}
+                  type="comment"
+                  onSend={refetchComments}
+                />
+              )}
+            </>
           )}
           {comments.map((comment, index) => (
             <Comment

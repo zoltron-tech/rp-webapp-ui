@@ -5,7 +5,7 @@ import {
   DEV_MODE_BORDER,
   Z_INDEX,
 } from "@/theme";
-import { Button } from "../common";
+import { UnreadBadgeBase } from "../common/unread-badge";
 
 export const PositionContainer = styled.div`
   ${DEV_MODE_BORDER("red")}
@@ -23,6 +23,7 @@ export const PositionContainer = styled.div`
 
 export const IconWrapper = styled.div`
   position: relative;
+  margin-top: 4px;
   right: 35px;
   container-type: inline-size;
 
@@ -75,22 +76,12 @@ export const Menu = styled.div`
   }
 `;
 
-export const NotificationBadge = styled.div`
+export const NotificationBadge = styled(UnreadBadgeBase)`
   position: absolute;
   top: 0;
   right: 0;
   transform: translate(10%, -10%);
-  background-color: ${({ theme }: any) => theme.unreadBadge};
-  color: white;
-  font-size: 12px;
-  font-weight: bold;
-  border-radius: 100%;
-  padding: 6px;
-  min-width: 22px;
-  height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border: 2px solid var(--bg-3);
   z-index: 10;
 `;
 

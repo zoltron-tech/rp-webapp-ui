@@ -29,7 +29,7 @@ export const Bar = styled.div`
   width: 100%;
   max-width: 1400px;
   margin-inline: auto;
-  height: 60px;
+  height: var(--topbar-height);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -37,12 +37,6 @@ export const Bar = styled.div`
   container-name: top-bar;
   container-type: size;
   z-index: ${Z_INDEX.TOPBAR};
-
-  @media screen and (max-width: 480px) {
-    & {
-      height: 45px;
-    }
-  }
 `;
 export const LogoContainer = styled.div`
   display: flex;

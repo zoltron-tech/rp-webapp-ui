@@ -2,6 +2,7 @@ import classNames from "classnames";
 import { Avatar } from "radix-ui";
 import { type FC, forwardRef, type HTMLProps, useMemo } from "react";
 import { useSocket } from "@/context/socket";
+import { useGlobalState } from "@/context/store/stores";
 import * as S from "./styled";
 
 type AvatarProps = Omit<HTMLProps<HTMLSpanElement>, "src"> & {
@@ -14,14 +15,21 @@ type AvatarProps = Omit<HTMLProps<HTMLSpanElement>, "src"> & {
 };
 
 export const AvatarNew: FC<AvatarProps> = forwardRef(
-  ({ src, alt, className, placeholder = "", username, ...rest }, forwardedRef) => {
+  (
+    { src, alt, className, placeholder = "", username, ...rest },
+    forwardedRef,
+  ) => {
     const fallbackText = useMemo(() => {
       if (placeholder) return placeholder;
       return alt.charAt(0).toUpperCase();
     }, [placeholder, alt]);
 
-    const { onlineUsernames } = useSocket();
-    const isOnline = !!username && onlineUsernames.includes(username);
+    const { onlineUsernames, isConnected } = useSocket();
+    const currentUser = useGlobalState("user");
+    const isOnline =
+      !!username &&
+      (onlineUsernames.includes(username) ||
+        (isConnected && username === currentUser?.username));
 
     return (
       <S.AvatarRoot

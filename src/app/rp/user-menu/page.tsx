@@ -31,6 +31,9 @@ export default function UserMenuPage() {
   const user = useGlobalState("user");
   const novelist = useGlobalState("novelist");
   const authState = useGlobalState("authState");
+  const unreadConversationIds = useGlobalState("unreadConversationIds");
+  const hasUnread = Boolean(unreadConversationIds?.length);
+  const unreadCount = unreadConversationIds?.length ?? 0;
   const setGlobalState = useGlobalStoreSet();
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
   const [showContactSupportAlert, setShowContactSupportAlert] = useState(false);
@@ -117,7 +120,7 @@ export default function UserMenuPage() {
         <S.EditButton
           onClick={(e) => {
             e.stopPropagation();
-            routeToPage(ROUTES.Profile.Edit, { skipLoading: true });
+            routeToPage(ROUTES.Profile.Edit);
           }}
         >
           <FiEdit2 />
@@ -159,6 +162,11 @@ export default function UserMenuPage() {
               <FcComments />
               Inbox
             </Flex>
+            <ShouldRender if={hasUnread}>
+              <S.UnreadBadge>
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </S.UnreadBadge>
+            </ShouldRender>
             <FiChevronRight size={16} color="gray" />
           </S.MenuItem>
           <S.MenuItem

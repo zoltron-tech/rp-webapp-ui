@@ -43,6 +43,7 @@ import StoryCard from "@/components/story-card";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
+import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import type { Novelist, StoryBoard } from "@/types";
 import type { Activity } from "@/types/activity";
 import { ACCENT_MAP, type Accent } from "@/types/theme";
@@ -111,6 +112,8 @@ export default function UserProfilePage({}) {
   const listRef = useRef<HTMLDivElement>(null);
   const { activities, refetch: refetchAcitivities } =
     useGetActivities(username);
+  const { width } = useWindowDimensions();
+  const isMobile = (width ?? 0) <= 800;
   const [storyBoards, setStories] = useState<StoryBoard[] | null>(null);
   const setGlobalState = useGlobalStoreSet();
   const { successToast, warningToast, errorToast } = useUIContext();
@@ -869,12 +872,30 @@ export default function UserProfilePage({}) {
               {authState === "LOGGED_IN" &&
                 username === user?.username &&
                 novelist !== null && (
-                  <PromptInput
-                    type={"prompt"}
-                    onSend={refetchAcitivities}
-                    dropdownSelection="ALL"
-                    initialSelection={novelistToSource(novelist)}
-                  />
+                  <>
+                    {isMobile ? (
+                      <S.AddPromptButton
+                        type="button"
+                        onClick={() =>
+                          routeToPage(
+                            ROUTES.Compose({
+                              dropdownSelection: "ALL",
+                              type: "prompt",
+                            }),
+                          )
+                        }
+                      >
+                        + Add Prompt
+                      </S.AddPromptButton>
+                    ) : (
+                      <PromptInput
+                        type="prompt"
+                        onSend={refetchAcitivities}
+                        dropdownSelection="ALL"
+                        initialSelection={novelistToSource(novelist)}
+                      />
+                    )}
+                  </>
                 )}
               {activities?.map((activity) => (
                 <ActivityBox

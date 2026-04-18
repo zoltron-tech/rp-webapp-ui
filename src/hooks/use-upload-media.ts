@@ -11,13 +11,21 @@ export const useUploadMedia = () => {
       const formDataWithoutFile = new FormData();
       const file = formData.get("file") as Blob;
       const contentType = formData.get("contentType") as string;
-      const prefix = formData.get("prefix") as string;
+      const prefix = formData.get("prefix") as string | null;
+      const mediaBucket = formData.get("mediaBucket") as string | null;
 
       formDataWithoutFile.append("contentType", contentType);
-      formDataWithoutFile.append("prefix", prefix);
+      if (prefix) {
+        formDataWithoutFile.append("prefix", prefix);
+      }
+      if (mediaBucket) {
+        formDataWithoutFile.append("mediaBucket", mediaBucket);
+      }
+
       const presignedRes =
         await getPresignedFileUploadObject(formDataWithoutFile);
 
+      console.log("Presigned URL response", presignedRes);
       if (!presignedRes || typeof presignedRes === "string") {
         errorToast?.("Failed to upload");
         return API_MESSAGE.MediaError;

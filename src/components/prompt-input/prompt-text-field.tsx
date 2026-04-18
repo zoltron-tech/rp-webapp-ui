@@ -1,20 +1,39 @@
-import { type FC, useCallback, useMemo, useRef, useState } from "react";
+import { type FC, useCallback, useEffect, useMemo, useRef } from "react";
 import { searchMentionMusesAction } from "@/app/rp/muse/actions";
 import { useGlobalState } from "@/context/store/stores";
 import type { MentionDataItem, MentionTab } from "@/types";
-import { RichTextEditor } from "../rich-text-editor-input";
+import {
+  RichTextEditor,
+  type RichTextEditorHandle,
+} from "../rich-text-editor-input";
 import { PromptEvent, useRunOn } from "./helpers";
-import { usePromptInputStoreSet } from "./prompt-input.store";
+import {
+  usePromptInputState,
+  usePromptInputStoreSet,
+} from "./prompt-input.store";
 import * as S from "./styles";
 
 interface PromptTextFieldProps {
   onClear?: () => void;
+  fullPage?: boolean;
 }
 
-export const PromptTextField: FC<PromptTextFieldProps> = ({ onClear }) => {
+export const PromptTextField: FC<PromptTextFieldProps> = ({
+  onClear,
+  fullPage,
+}) => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<RichTextEditorHandle>(null);
   const novelist = useGlobalState("novelist");
   const setPromptInputState = usePromptInputStoreSet();
+  const gifToInsert = usePromptInputState("gifToInsert");
+
+  useEffect(() => {
+    if (gifToInsert && editorRef.current) {
+      editorRef.current.insertGif(gifToInsert);
+      setPromptInputState({ gifToInsert: null });
+    }
+  }, [gifToInsert, setPromptInputState]);
 
   const handlePromptTextChange = useCallback(
     (value: string) => {
@@ -79,14 +98,16 @@ export const PromptTextField: FC<PromptTextFieldProps> = ({ onClear }) => {
   useRunOn([PromptEvent.Sent], handleClear);
 
   return (
-    <S.TextInputContainer name="promptText">
+    <S.TextInputContainer name="promptText" $fullPage={fullPage}>
       {/* <textarea ref={textAreaRef} className="text-area" spellCheck required /> */}
       <RichTextEditor
+        ref={editorRef}
         placeholder="Type your story here... @ to mention other novelists or muses"
         value={""}
         mentionTabs={MENTION_TABS}
         onChange={handlePromptTextChange}
         onClear={handleClear}
+        fullPage={fullPage}
       />
     </S.TextInputContainer>
   );

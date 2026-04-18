@@ -1,20 +1,32 @@
 "use client";
 
+import type { EmojiClickData } from "emoji-picker-react";
+import { Theme as EmojiTheme } from "emoji-picker-react";
+import dynamic from "next/dynamic";
 import type { FC, FormEvent } from "react";
-import { useEffect, useMemo, useState } from "react";
-import { HiGif, HiPaperAirplane } from "react-icons/hi2";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FcAddImage } from "react-icons/fc";
+import { HiFaceSmile, HiGif, HiPaperAirplane } from "react-icons/hi2";
 import { IoCheckmark } from "react-icons/io5";
-import { LuSticker } from "react-icons/lu";
-import { MdOutlineGifBox } from "react-icons/md";
+import { MdOutlineSlowMotionVideo } from "react-icons/md";
+import { RiEmojiStickerLine } from "react-icons/ri";
 import { TiArrowSortedUp } from "react-icons/ti";
+import { deleteMedia } from "@/app/rp/profile/actions";
+import type { ChatRichInputHandle } from "@/components/chat-rich-input";
 import { ChatRichInput } from "@/components/chat-rich-input";
+import { ClipPicker } from "@/components/clip-picker";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { AppAlertDialog } from "@/components/dialog";
 import { GifPicker } from "@/components/gif-picker";
 import { StickerPicker } from "@/components/sticker-picker";
 import { useGlobalState } from "@/context/store/stores";
+import { useUploadMedia } from "@/hooks/use-upload-media";
 import type { MentionDataItem, Muse, Novelist } from "@/types";
+import { API_MESSAGE } from "@/utils/constants";
+import { Flex } from "../edit-muse-card/styles";
 import * as S from "./styled";
+
+const EmojiPicker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 
 export type ComposerSender = {
   id: string;
@@ -23,13 +35,168 @@ export type ComposerSender = {
   image: string | null;
 };
 
+const MAX_MEDIA_FILES = 10;
+const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
+const ALLOWED_MEDIA_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/webp",
+  "video/mp4",
+]);
+const MEDIA_ACCEPT = "image/png,image/jpeg,image/gif,image/webp,video/mp4";
+
+type FileValidationResult = { valid: File[]; errors: string[] };
+
+const validateMediaFiles = (files: File[]): FileValidationResult => {
+  const valid: File[] = [];
+  const errors: string[] = [];
+  for (const f of files) {
+    if (!ALLOWED_MEDIA_TYPES.has(f.type)) {
+      errors.push(
+        `"${f.name}" — unsupported type. Allowed: PNG, JPG, GIF, WebP, MP4.`,
+      );
+    } else if (f.size > MAX_FILE_SIZE_BYTES) {
+      errors.push(`"${f.name}" — exceeds the 50 MB size limit.`);
+    } else {
+      valid.push(f);
+    }
+  }
+  return { errors, valid };
+};
+
+type MediaFile = {
+  file: File;
+  localUrl: string;
+  uploadedUrl: string | null;
+  uploading: boolean;
+  uploadError: boolean;
+};
+
+type MediaPickerBodyProps = {
+  mediaFiles: MediaFile[];
+  onAdd: (files: File[]) => void;
+  onRemove: (index: number) => void;
+  onSend: () => void;
+};
+
+const MediaPickerBody: FC<MediaPickerBodyProps> = ({
+  mediaFiles,
+  onAdd,
+  onRemove,
+  onSend,
+}) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const remaining = MAX_MEDIA_FILES - mediaFiles.length;
+  const [errors, setErrors] = useState<string[]>([]);
+
+  const applyValidated = (raw: File[]) => {
+    const { valid, errors: errs } = validateMediaFiles(raw);
+    const allowed = valid.slice(0, remaining);
+    const overflowErrors =
+      valid.length > remaining
+        ? [
+            `Maximum ${MAX_MEDIA_FILES} files allowed. ${valid.length - remaining} file${valid.length - remaining !== 1 ? "s" : ""} were not added.`,
+          ]
+        : [];
+    setErrors([...errs, ...overflowErrors]);
+    if (allowed.length) onAdd(allowed);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    applyValidated(Array.from(e.target.files ?? []));
+    e.target.value = "";
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    applyValidated(Array.from(e.dataTransfer.files));
+  };
+
+  return (
+    <S.MediaPickerDialogBody>
+      {errors.length > 0 && (
+        <S.MediaPickerError>
+          {errors.map((err) => (
+            <li key={err}>{err}</li>
+          ))}
+        </S.MediaPickerError>
+      )}
+      {mediaFiles.length < MAX_MEDIA_FILES && (
+        <S.MediaPickerDropZone
+          onClick={() => fileInputRef.current?.click()}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={handleDrop}
+        >
+          <FcAddImage size={28} />
+          <span>Click or drag to add images / videos</span>
+          <span
+            style={{
+              color: "var(--text-secondary)",
+              fontSize: "var(--font-size-small)",
+            }}
+          >
+            {mediaFiles.length} / {MAX_MEDIA_FILES}
+          </span>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={MEDIA_ACCEPT}
+            multiple
+            style={{ display: "none" }}
+            onChange={handleFileChange}
+          />
+        </S.MediaPickerDropZone>
+      )}
+
+      {mediaFiles.length > 0 && (
+        <S.MediaPickerGrid>
+          {mediaFiles.map(({ file, localUrl, uploading, uploadError }, idx) => (
+            <S.MediaPickerThumb key={localUrl}>
+              {file.type.startsWith("video/") ? (
+                <S.MediaPickerThumbVideo src={localUrl} muted playsInline />
+              ) : (
+                <S.MediaPickerThumbImg src={localUrl} alt={file.name} />
+              )}
+              {uploading && (
+                <S.MediaUploadOverlay>
+                  <S.MediaUploadSpinner />
+                </S.MediaUploadOverlay>
+              )}
+              {uploadError && !uploading && (
+                <S.MediaUploadErrorBadge>⚠</S.MediaUploadErrorBadge>
+              )}
+              <S.MediaPickerRemoveBtn
+                type="button"
+                onClick={() => onRemove(idx)}
+                aria-label="Remove"
+              >
+                ×
+              </S.MediaPickerRemoveBtn>
+            </S.MediaPickerThumb>
+          ))}
+        </S.MediaPickerGrid>
+      )}
+
+      {mediaFiles.length > 0 && (
+        <S.MediaPickerSendBtn type="button" onClick={onSend}>
+          Add
+        </S.MediaPickerSendBtn>
+      )}
+    </S.MediaPickerDialogBody>
+  );
+};
+
 type SendMessageComposerProps = {
   value: string;
   sending: boolean;
+  conversationId?: string;
   onChange: (value: string) => void;
   onSubmit: () => Promise<void> | void;
   onSendGif?: (gifUrl: string) => Promise<void> | void;
   onSendSticker?: (stickerUrl: string) => Promise<void> | void;
+  onSendClip?: (clipUrl: string) => Promise<void> | void;
+  onSendMedia?: (urls: string[]) => Promise<void> | void;
   selectedSender?: ComposerSender | null;
   onSenderChange?: (sender: ComposerSender) => void;
   mentionItems?: MentionDataItem[];
@@ -79,10 +246,13 @@ const SenderRow: FC<{
 export const SendMessageComposer: FC<SendMessageComposerProps> = ({
   value,
   sending,
+  conversationId,
   onChange,
   onSubmit,
   onSendGif,
   onSendSticker,
+  onSendClip,
+  onSendMedia,
   selectedSender,
   onSenderChange,
   mentionItems = [],
@@ -97,13 +267,87 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
   const [mediaToolbarOpen, setMediaToolbarOpen] = useState(false);
   const [gifPickerOpen, setGifPickerOpen] = useState(false);
   const [stickerPickerOpen, setStickerPickerOpen] = useState(false);
+  const [clipPickerOpen, setClipPickerOpen] = useState(false);
+  const [selectedClipUrl, setSelectedClipUrl] = useState<string | null>(null);
+  const [imagePickerOpen, setImagePickerOpen] = useState(false);
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
+  const toolbarFileInputRef = useRef<HTMLInputElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const chatInputRef = useRef<ChatRichInputHandle>(null);
   const [search, setSearch] = useState("");
+
+  const { uploadMedia } = useUploadMedia();
+
+  const addMediaFiles = useCallback(
+    (files: File[]) => {
+      const newEntries: MediaFile[] = files.map((f) => ({
+        file: f,
+        localUrl: URL.createObjectURL(f),
+        uploadError: false,
+        uploadedUrl: null,
+        uploading: true,
+      }));
+      setMediaFiles((prev) => [...prev, ...newEntries]);
+      for (const entry of newEntries) {
+        const formData = new FormData();
+        formData.append("file", entry.file);
+        formData.append("contentType", entry.file.type);
+        formData.append("prefix", conversationId ?? "chat-media");
+        formData.append("mediaBucket", "CHAT_MEDIA");
+        uploadMedia(formData).then((result) => {
+          const success =
+            typeof result === "string" && result !== API_MESSAGE.MediaError;
+          if (success) console.log("[chat-media] uploaded:", result);
+          setMediaFiles((prev) =>
+            prev.map((mf) =>
+              mf.localUrl === entry.localUrl
+                ? {
+                    ...mf,
+                    uploadError: !success,
+                    uploadedUrl: success ? result : null,
+                    uploading: false,
+                  }
+                : mf,
+            ),
+          );
+        });
+      }
+    },
+    [uploadMedia],
+  );
+
+  const removeMediaFile = useCallback(
+    (idx: number) => {
+      const entry = mediaFiles[idx];
+      if (!entry) return;
+      URL.revokeObjectURL(entry.localUrl);
+      if (entry.uploadedUrl) {
+        deleteMedia(entry.uploadedUrl).catch(() => {});
+      }
+      setMediaFiles((prev) => prev.filter((_, i) => i !== idx));
+    },
+    [mediaFiles],
+  );
 
   useEffect(() => {
     if (novelist && !internalSender) {
       setInternalSender(novelistToSender(novelist));
     }
   }, [novelist, internalSender]);
+
+  useEffect(() => {
+    if (!emojiPickerOpen) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest("[data-emoji-toggle]")) return;
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(target)) {
+        setEmojiPickerOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [emojiPickerOpen]);
 
   const activeSender =
     selectedSender !== undefined ? selectedSender : internalSender;
@@ -143,9 +387,20 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
 
   const handleSubmit = async (event?: FormEvent<HTMLFormElement>) => {
     event?.preventDefault();
-    if (!hasValue || sending) return;
+    const hasMedia = mediaFiles.length > 0;
+    if ((!hasValue && !hasMedia) || sending) return;
+    if (mediaFiles.some((mf) => mf.uploading)) return;
+    if (hasMedia) {
+      const uploadedUrls = mediaFiles
+        .filter((mf) => mf.uploadedUrl)
+        .map((mf) => mf.uploadedUrl!);
+      onSendMedia?.(uploadedUrls);
+      mediaFiles.forEach((mf) => URL.revokeObjectURL(mf.localUrl));
+      setMediaFiles([]);
+    } else if (hasValue) {
+      await onSubmit();
+    }
     setMediaToolbarOpen(false);
-    await onSubmit();
   };
 
   const handleSelectSender = (sender: ComposerSender) => {
@@ -163,32 +418,153 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
   return (
     <>
       <S.ComposerWrapper>
-        <S.MediaToolbar $open={mediaToolbarOpen}>
-          {onSendGif && (
-            <S.GifButton
-              type="button"
-              title="Send a GIF"
-              data-active={gifPickerOpen ? "true" : undefined}
-              onClick={() => {
-                setGifPickerOpen((prev) => !prev);
-                setStickerPickerOpen(false);
+        {emojiPickerOpen && (
+          <S.EmojiPickerWrap ref={emojiPickerRef}>
+            <EmojiPicker
+              onEmojiClick={(emojiData: EmojiClickData) => {
+                chatInputRef.current?.insertText(emojiData.emoji);
               }}
-            >
-              <HiGif size={24} />
-            </S.GifButton>
-          )}
-          {onSendSticker && (
-            <S.StickerButton
-              type="button"
-              title="Send a sticker"
-              data-active={stickerPickerOpen ? "true" : undefined}
-              onClick={() => {
-                setStickerPickerOpen((prev) => !prev);
-                setGifPickerOpen(false);
-              }}
-            >
-              <LuSticker size={24} />
-            </S.StickerButton>
+              theme={EmojiTheme.DARK}
+              width={300}
+              height={380}
+              lazyLoadEmojis
+            />
+          </S.EmojiPickerWrap>
+        )}
+        <S.MediaToolbar $open={mediaToolbarOpen || mediaFiles.length > 0}>
+          {mediaFiles.length > 0 ? (
+            <S.MediaToolbarPreviewRow>
+              {mediaFiles.map(
+                ({ file, localUrl, uploading, uploadError }, idx) => (
+                  <S.MediaToolbarThumb key={localUrl}>
+                    {file.type.startsWith("video/") ? (
+                      <S.MediaToolbarThumbVideo
+                        src={localUrl}
+                        muted
+                        playsInline
+                      />
+                    ) : (
+                      <S.MediaToolbarThumbImg src={localUrl} alt={file.name} />
+                    )}
+                    {uploading && (
+                      <S.MediaUploadOverlay>
+                        <S.MediaUploadSpinner />
+                      </S.MediaUploadOverlay>
+                    )}
+                    {uploadError && !uploading && (
+                      <S.MediaUploadErrorBadge>⚠</S.MediaUploadErrorBadge>
+                    )}
+                    <S.MediaToolbarRemoveBtn
+                      type="button"
+                      onClick={() => removeMediaFile(idx)}
+                      aria-label="Remove"
+                    >
+                      ×
+                    </S.MediaToolbarRemoveBtn>
+                  </S.MediaToolbarThumb>
+                ),
+              )}
+              {mediaFiles.length < MAX_MEDIA_FILES && (
+                <>
+                  <S.MediaToolbarAddBtn
+                    type="button"
+                    title="Add more"
+                    onClick={() => toolbarFileInputRef.current?.click()}
+                  >
+                    +
+                  </S.MediaToolbarAddBtn>
+                  <input
+                    ref={toolbarFileInputRef}
+                    type="file"
+                    accept={MEDIA_ACCEPT}
+                    multiple
+                    style={{ display: "none" }}
+                    onChange={(e) => {
+                      const { valid } = validateMediaFiles(
+                        Array.from(e.target.files ?? []),
+                      );
+                      const remaining = MAX_MEDIA_FILES - mediaFiles.length;
+                      const allowed = valid.slice(0, remaining);
+                      if (allowed.length) {
+                        addMediaFiles(allowed);
+                      }
+                      e.target.value = "";
+                    }}
+                  />
+                </>
+              )}
+            </S.MediaToolbarPreviewRow>
+          ) : (
+            <>
+              <Flex justify="space-evenly">
+                {onSendGif && (
+                  <S.GifButton
+                    type="button"
+                    title="Send a GIF"
+                    data-active={gifPickerOpen ? "true" : undefined}
+                    onClick={() => {
+                      setGifPickerOpen((prev) => !prev);
+                      setStickerPickerOpen(false);
+                      setClipPickerOpen(false);
+                    }}
+                  >
+                    <HiGif color="#0394fc" size={28} />
+                  </S.GifButton>
+                )}
+                {onSendSticker && (
+                  <S.StickerButton
+                    type="button"
+                    title="Send a sticker"
+                    data-active={stickerPickerOpen ? "true" : undefined}
+                    onClick={() => {
+                      setStickerPickerOpen((prev) => !prev);
+                      setGifPickerOpen(false);
+                      setClipPickerOpen(false);
+                    }}
+                  >
+                    <RiEmojiStickerLine color="#c9478f" size={28} />
+                  </S.StickerButton>
+                )}
+                {onSendClip && (
+                  <S.ClipButton
+                    type="button"
+                    title="Send a clip"
+                    data-active={clipPickerOpen ? "true" : undefined}
+                    onClick={() => {
+                      setClipPickerOpen((prev) => !prev);
+                      setGifPickerOpen(false);
+                      setStickerPickerOpen(false);
+                    }}
+                  >
+                    <MdOutlineSlowMotionVideo color="#8b5cf6" size={28} />
+                  </S.ClipButton>
+                )}
+                {onSendMedia && (
+                  <S.ImageButton
+                    type="button"
+                    title="Send images / videos"
+                    data-active={imagePickerOpen ? "true" : undefined}
+                    onClick={() => {
+                      setImagePickerOpen(true);
+                      setGifPickerOpen(false);
+                      setStickerPickerOpen(false);
+                      setClipPickerOpen(false);
+                    }}
+                  >
+                    <FcAddImage size={28} />
+                  </S.ImageButton>
+                )}
+                <S.EmojiButton
+                  type="button"
+                  title="Insert emoji"
+                  data-emoji-toggle
+                  data-active={emojiPickerOpen ? "true" : undefined}
+                  onClick={() => setEmojiPickerOpen((prev) => !prev)}
+                >
+                  <HiFaceSmile color="#f59e0b" size={28} />
+                </S.EmojiButton>
+              </Flex>
+            </>
           )}
         </S.MediaToolbar>
 
@@ -208,31 +584,48 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
           </S.SenderButton>
 
           <ChatRichInput
+            ref={chatInputRef}
+            placeholder={`Send message as ${activeSender?.name?.split(" ")[0] ?? ""}...`}
             value={value}
             onChange={onChange}
             onHtmlChange={onHtmlChange ?? (() => {})}
             onSubmit={() => handleSubmit()}
             mentionItems={mentionItems}
             getMentionMuseItems={getMentionMuseItems}
+            trailingAction={
+              <>
+                {(onSendGif || onSendSticker || onSendClip || onSendMedia) &&
+                  mediaFiles.length === 0 && (
+                    <S.MediaToggleButton
+                      type="button"
+                      title="Media"
+                      data-open={mediaToolbarOpen ? "true" : undefined}
+                      onClick={() => setMediaToolbarOpen((prev) => !prev)}
+                    >
+                      <span>+</span>
+                    </S.MediaToggleButton>
+                  )}
+                <S.InlineSendButton
+                  type="submit"
+                  disabled={sending || mediaFiles.some((mf) => mf.uploading)}
+                  title="Send"
+                  style={{
+                    opacity: hasValue || mediaFiles.length > 0 ? 1 : 0,
+                    pointerEvents:
+                      hasValue || mediaFiles.length > 0 ? undefined : "none",
+                    transition: "opacity 0.15s ease, width 0.15s ease",
+                    width: hasValue || mediaFiles.length > 0 ? "28px" : "0",
+                  }}
+                >
+                  {mediaFiles.some((mf) => mf.uploading) ? (
+                    <S.MediaUploadSpinner />
+                  ) : (
+                    <HiPaperAirplane size={15} />
+                  )}
+                </S.InlineSendButton>
+              </>
+            }
           />
-
-          {(onSendGif || onSendSticker) && (
-            <S.MediaToggleButton
-              type="button"
-              title="Media"
-              data-open={mediaToolbarOpen ? "true" : undefined}
-              onClick={() => setMediaToolbarOpen((prev) => !prev)}
-            >
-              <span>+</span>
-            </S.MediaToggleButton>
-          )}
-
-          <S.SendButton type="submit" disabled={sending || !hasValue}>
-            <HiPaperAirplane size={16} />
-            <S.SendButtonText>
-              {sending ? "Sending..." : "Send"}
-            </S.SendButtonText>
-          </S.SendButton>
         </S.Composer>
       </S.ComposerWrapper>
 
@@ -321,6 +714,56 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
                 onSendSticker(stickerUrl);
                 setStickerPickerOpen(false);
                 setMediaToolbarOpen(false);
+              }}
+            />
+          }
+        />
+      )}
+
+      {onSendClip && (
+        <AppAlertDialog
+          heading="Pick a Clip"
+          text=""
+          open={clipPickerOpen}
+          onOpenChange={(open) => {
+            setClipPickerOpen(open);
+            if (!open) setSelectedClipUrl(null);
+          }}
+          onConfirm={() => {
+            if (!selectedClipUrl) return;
+            onSendClip(selectedClipUrl);
+            setClipPickerOpen(false);
+            setMediaToolbarOpen(false);
+            setSelectedClipUrl(null);
+          }}
+          showConfirm
+          actionButtonLabel="Send"
+          closeButtonText="Close"
+          isConfirmDisabled={!selectedClipUrl}
+          actionColor="neutral"
+          body={<ClipPicker onSelect={setSelectedClipUrl} />}
+        />
+      )}
+
+      {onSendMedia && (
+        <AppAlertDialog
+          heading="Add images / videos"
+          text=""
+          open={imagePickerOpen}
+          onOpenChange={(open) => {
+            if (!open) setImagePickerOpen(false);
+          }}
+          showConfirm={false}
+          closeButtonText="Close"
+          isCancelHidden={mediaFiles.length > 0}
+          body={
+            <MediaPickerBody
+              mediaFiles={mediaFiles}
+              onAdd={addMediaFiles}
+              onRemove={removeMediaFile}
+              onSend={() => {
+                setImagePickerOpen(false);
+                setMediaToolbarOpen(true);
               }}
             />
           }

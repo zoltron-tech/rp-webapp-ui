@@ -25,7 +25,7 @@ import type { Song } from "@/types/music";
 import { API_MESSAGE } from "@/utils/constants";
 import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
 import { ErrorBox } from "../error-box";
-import { Spinner } from "../rich-text-editor-input/styled";
+import { Spinner } from "../mention-dropdown/styled";
 import { useMusicState, useMusicStoreSet } from "./music.store";
 import * as S from "./styled";
 

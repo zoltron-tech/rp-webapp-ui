@@ -369,12 +369,24 @@ export default function MuseProfilePage({}) {
                   if={Boolean(aboutSections && aboutSections.length > 0)}
                 >
                   {aboutSections?.map((section, index) => (
-                    <RichTextRenderer
-                      key={section.id ?? `about-section-${index}`}
-                      savedText={section.text || ""}
-                      overlayHidden
-                      disableCollapse
-                    />
+                    <div key={section.id ?? `about-section-${index}`}>
+                      {section.image && (
+                        <AppImageViewer
+                          src={section.image}
+                          alt="Section attachment"
+                        >
+                          <S.AboutSectionImage
+                            src={section.image}
+                            alt="Section attachment"
+                          />
+                        </AppImageViewer>
+                      )}
+                      <RichTextRenderer
+                        savedText={section.text || ""}
+                        overlayHidden
+                        disableCollapse
+                      />
+                    </div>
                   ))}
                 </ShouldRender>
               </S.ScrollableContent>

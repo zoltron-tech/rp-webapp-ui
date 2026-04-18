@@ -2,7 +2,7 @@ import styled from "styled-components";
 
 export const Composer = styled.form`
   display: grid;
-  grid-template-columns: auto 1fr auto auto;
+  grid-template-columns: auto 1fr auto;
   gap: 4px;
   padding: 10px;
   align-items: center;
@@ -74,7 +74,7 @@ export const SenderButton = styled.button`
   gap: 4px;
   height: 44px;
   padding: 0 8px 0 4px;
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--bg-6));
+  border: 1px solid var(--bg-6);
   border-radius: 999px;
   background: var(--bg-2);
   cursor: pointer;
@@ -202,10 +202,9 @@ export const SenderSelectedMark = styled.span`
 const MediaPickerButton = styled.button`
   height: 32px;
   padding-inline: 4px;
-  border: 1px solid var(--bg-6);
+  border: 1px solid transparent;
   border-radius: 4px;
-  background: var(--bg-3);
-  color: var(--text-secondary);
+  background: transparent;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -214,30 +213,321 @@ const MediaPickerButton = styled.button`
   font-size: 11px;
   font-weight: 700;
   letter-spacing: -0.5px;
-  transition: background 0.12s ease, color 0.12s ease;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+
+  @keyframes media-btn-wiggle {
+    0%   { transform: rotate(0deg); }
+    25%  { transform: rotate(-5deg); }
+    50%  { transform: rotate(5deg); }
+    75%  { transform: rotate(-3deg); }
+    100% { transform: rotate(0deg); }
+  }
 
   &:hover {
     background: var(--bg-4);
+    border-color: var(--bg-6);
     color: var(--text);
+
+    > svg,
+    > * > svg {
+      animation: media-btn-wiggle 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+    }
   }
 
   &[data-active="true"] {
     background: color-mix(in srgb, var(--accent) 15%, var(--bg-4));
-    color: var(--accent);
     border-color: color-mix(in srgb, var(--accent) 40%, var(--bg-6));
+    color: var(--accent);
   }
 `;
 
 export const GifButton = MediaPickerButton;
 export const StickerButton = MediaPickerButton;
+export const ClipButton = MediaPickerButton;
+export const ImageButton = MediaPickerButton;
+export const EmojiButton = MediaPickerButton;
+
+export const EmojiPickerWrap = styled.div`
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 20px;
+  z-index: 100;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+`;
+
+export const MediaToolbarPreviewRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--bg-6);
+    border-radius: 2px;
+  }
+`;
+
+export const MediaToolbarThumb = styled.div`
+  position: relative;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--bg-4);
+`;
+
+export const MediaToolbarThumbImg = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+`;
+
+export const MediaToolbarThumbVideo = styled.video`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+`;
+
+export const MediaToolbarRemoveBtn = styled.button`
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  padding: 0;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.85);
+  }
+`;
+
+export const MediaToolbarAddBtn = styled.button`
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border: 2px dashed var(--bg-6);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 22px;
+  font-weight: 300;
+  line-height: 1;
+  transition: border-color 0.12s ease, color 0.12s ease;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--accent) 50%, var(--bg-6));
+    color: var(--text);
+  }
+`;
+
+export const MediaToolbarSendBtn = styled.button`
+  flex-shrink: 0;
+  height: 48px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--text);
+  font-size: var(--font-size-input);
+  font-weight: var(--font-weight-semi-bold);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.12s ease;
+
+  &:hover:not(:disabled) {
+    opacity: 0.85;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+export const MediaPickerDialogBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+export const MediaPickerDropZone = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  border: 2px dashed var(--bg-6);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: center;
+  font-size: var(--font-size-input);
+  transition: border-color 0.12s ease, background 0.12s ease;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--accent) 50%, var(--bg-6));
+    background: color-mix(in srgb, var(--accent) 5%, var(--bg-2));
+    color: var(--text);
+  }
+`;
+
+export const MediaPickerGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+`;
+
+export const MediaPickerThumb = styled.div`
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--bg-4);
+`;
+
+export const MediaPickerThumbImg = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+`;
+
+export const MediaPickerThumbVideo = styled.video`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+`;
+
+export const MediaPickerRemoveBtn = styled.button`
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.85);
+  }
+`;
+
+export const MediaUploadOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: inherit;
+`;
+
+export const MediaUploadSpinner = styled.span`
+  display: block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: media-upload-spin 0.7s linear infinite;
+
+  @keyframes media-upload-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+export const MediaUploadErrorBadge = styled.span`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(229, 62, 62, 0.5);
+  border-radius: inherit;
+  font-size: 18px;
+`;
+
+export const MediaPickerSendBtn = styled.button`
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--text);
+  font-size: var(--font-size-input);
+  font-weight: var(--font-weight-semi-bold);
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+
+  &:hover {
+    opacity: 0.85;
+  }
+`;
+
+export const MediaPickerError = styled.ul`
+  margin: 0;
+  padding: 10px 12px;
+  list-style: none;
+  border-radius: 6px;
+  background: color-mix(in srgb, #e53e3e 12%, var(--bg-4));
+  border: 1px solid color-mix(in srgb, #e53e3e 35%, var(--bg-6));
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  li {
+    font-size: var(--font-size-small);
+    color: #e53e3e;
+    word-break: break-all;
+  }
+`;
 
 export const MediaToggleButton = styled.button`
-  width: 44px;
-  height: 44px;
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
-  border: 1px solid var(--bg-6);
-  border-radius: 4px;
-  background: var(--bg-3);
+  border: none;
+  background: none;
   color: var(--text-secondary);
   display: inline-flex;
   align-items: center;
@@ -246,7 +536,8 @@ export const MediaToggleButton = styled.button`
   font-size: 22px;
   font-weight: 300;
   line-height: 1;
-  transition: background 0.12s ease, color 0.12s ease;
+  transition: color 0.12s ease;
+  padding: 0;
 
   > span {
     display: inline-flex;
@@ -254,9 +545,7 @@ export const MediaToggleButton = styled.button`
   }
 
   &[data-open="true"] {
-    background: color-mix(in srgb, var(--accent) 12%, var(--bg-4));
     color: var(--accent);
-    border-color: color-mix(in srgb, var(--accent) 40%, var(--bg-6));
 
     > span {
       transform: rotate(45deg);
@@ -264,13 +553,39 @@ export const MediaToggleButton = styled.button`
   }
 
   &:hover {
-    background: var(--bg-4);
     color: var(--text);
   }
+`;
 
-  @media (max-width: 680px) {
-    width: 38px;
-    height: 38px;
+export const InlineSendButton = styled.button`
+  flex-shrink: 0;
+  border: none;
+  height: 28px;
+  width: 28px;
+  background-color: var(--accent);
+  padding: 12px 12px;
+  border-radius: 50%;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-regular);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  overflow: hidden;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &:hover:not(:disabled) {
+    opacity: 0.75;
+  }
+
+  svg {
+    transform: rotate(-30deg);
   }
 `;
 

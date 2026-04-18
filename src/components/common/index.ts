@@ -10,6 +10,7 @@ export * from "./input";
 export * from "./modal";
 export * from "./pill";
 export * from "./should-render";
+export * from "./unread-badge";
 export * from "./upload-avatar";
 export * from "./username";
 export * from "./visibility-provider";

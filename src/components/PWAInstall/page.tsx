@@ -54,7 +54,7 @@ export default function PWAInstallButton() {
     setDeferredPrompt(null);
   };
 
-  if (!isMobileOrTablet) {
+  if (isMobileOrTablet) {
     return (
       <S.PageContainer className={classNames([accent, theme])}>
         <S.MainHeading>Novelist World as an App</S.MainHeading>

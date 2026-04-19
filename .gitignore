@@ -11,6 +11,7 @@ public/sw.js
 public/sw.js.map
 public/workbox-*.js
 public/swe-worker-development.js
+public/workbox-fb90b81a.js.map
 
 # yarn 2
 .yarn/*

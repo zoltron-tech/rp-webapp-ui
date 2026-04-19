@@ -8,7 +8,6 @@ import {
 } from "@/theme";
 
 export const Container = styled.div`
-  border: 1px solid ${({ theme }: any) => theme.background};
   box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
   align-items: center;
   position: sticky;

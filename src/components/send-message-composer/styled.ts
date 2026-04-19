@@ -4,7 +4,7 @@ export const Composer = styled.form`
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: 4px;
-  padding: 10px;
+  padding: 10px 20px 20px 20px;
   align-items: center;
   background-color: var(--bg-1);
 `;

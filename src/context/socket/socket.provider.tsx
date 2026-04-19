@@ -10,7 +10,8 @@ import {
   useState,
 } from "react";
 import { useCookies } from "react-cookie";
-import { useGlobalState } from "@/context/store/stores";
+import { getUnreadConversationIdsAction } from "@/app/rp/conversations/actions";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import type { Message } from "@/types";
 import type { WebSocketExt } from "@/types/socket";
 import { JWT_COOKIE_NAME, SOCKET_URL } from "@/utils/constants";
@@ -75,6 +76,7 @@ type SocketProviderProps = {
 export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
   const authState = useGlobalState("authState");
   const novelist = useGlobalState("novelist");
+  const setGlobalState = useGlobalStoreSet();
   const [cookies] = useCookies([JWT_COOKIE_NAME]);
   const jwt: string | undefined = cookies[JWT_COOKIE_NAME];
   const [socket, setSocket] = useState<WebSocketExt | null>(null);
@@ -89,18 +91,10 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
   const jwtRef = useRef(jwt);
   const connectDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastActivityCheckRef = useRef<number>(0);
-
-  useEffect(() => {
-    authStateRef.current = authState;
-  }, [authState]);
-  useEffect(() => {
-    jwtRef.current = jwt;
-  }, [jwt]);
+  const reconnectingRef = useRef(false);
 
   // ─── Core connect logic ──────────────────────────────────────────────────
-
   const connectSocket = useCallback(() => {
-    // Guard: skip if already open/connecting, not logged in, or prerequisites missing
     if (
       socketRef.current ||
       authStateRef.current !== "LOGGED_IN" ||
@@ -108,45 +102,72 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
       !SOCKET_URL
     )
       return;
-
     const params = new URLSearchParams();
     params.append("token", jwtRef.current);
     const webSocketUrl = `${SOCKET_URL}?${params.toString()}`;
-
     const socketInstance = new WebSocket(webSocketUrl) as WebSocketExt;
-
     socketInstance.addEventListener("open", () => {
-      console.log("websocket:open");
       setIsConnected(true);
     });
-
     socketInstance.addEventListener("error", (error) => {
       console.log("websocket:error", error);
     });
-
-    socketInstance.addEventListener("close", (event) => {
-      console.log("websocket:close", event);
+    socketInstance.addEventListener("close", () => {
       if (socketInstance.pingTimeout) clearTimeout(socketInstance.pingTimeout);
       socketRef.current = null;
       setSocket(null);
       setIsConnected(false);
     });
-
     socketRef.current = socketInstance;
     setSocket(socketInstance);
   }, []);
 
   // ─── Debounced ensureConnected ───────────────────────────────────────────
-  // Schedules a connection attempt (if not already open) after a short debounce.
-
   const ensureConnected = useCallback(() => {
     if (authStateRef.current !== "LOGGED_IN" || !jwtRef.current || !SOCKET_URL)
       return;
-    if (socketRef.current) return; // already open or connecting
-
+    if (socketRef.current) return;
     if (connectDebounceRef.current) clearTimeout(connectDebounceRef.current);
     connectDebounceRef.current = setTimeout(connectSocket, CONNECT_DEBOUNCE_MS);
   }, [connectSocket]);
+
+  // Now place the visibilitychange effect after ensureConnected is defined
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        if (!socketRef.current && authStateRef.current === "LOGGED_IN") {
+          ensureConnected();
+        }
+        if (
+          socketRef.current &&
+          socketRef.current.readyState === 1 &&
+          !reconnectingRef.current
+        ) {
+          reconnectingRef.current = true;
+          getUnreadConversationIdsAction().then((result) => {
+            if (Array.isArray(result)) {
+              setGlobalState({ unreadConversationIds: result });
+            }
+            setTimeout(() => {
+              reconnectingRef.current = false;
+            }, 1000);
+          });
+        }
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [setGlobalState, ensureConnected]);
+  // ...rest of the component (existing code follows here)
+
+  useEffect(() => {
+    authStateRef.current = authState;
+  }, [authState]);
+  useEffect(() => {
+    jwtRef.current = jwt;
+  }, [jwt]);
 
   // ─── Auth-change effect ──────────────────────────────────────────────────
   // Connects on login; closes the socket on logout.

@@ -18,7 +18,6 @@ export default function PWAInstallButton() {
   }, []);
 
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [showButton, setShowButton] = useState(false);
 
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
@@ -27,7 +26,6 @@ export default function PWAInstallButton() {
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      setShowButton(true);
     };
 
     window.addEventListener("beforeinstallprompt", handler);
@@ -47,8 +45,6 @@ export default function PWAInstallButton() {
     }
     setDeferredPrompt(null);
   };
-
-  if (!showButton) return null;
 
   if (isMobileOrTablet) {
     return (

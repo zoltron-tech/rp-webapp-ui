@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    background_color: "#ffffff",
+    background_color: "transparent",
     description: "For writers, by writers.",
     display: "standalone",
     icons: [

@@ -16,7 +16,7 @@ export const PageContainer = styled.div`
   text-align: center;
   background: var(--bg-3);
   border: 1px solid var(--bg-6);
-  border-radius: 1.5rem;
+  border-radius: 4px;
   margin: 2rem auto;
   max-width: 480px;
 `;
@@ -25,7 +25,7 @@ export const MainHeading = styled.h1`
   font-size: 2.5rem;
   font-weight: bold;
   margin-bottom: 1rem;
-  background: linear-gradient(90deg, var(--accent), var(--text));
+  background: linear-gradient(90deg, var(--accent), var(--accent-9));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

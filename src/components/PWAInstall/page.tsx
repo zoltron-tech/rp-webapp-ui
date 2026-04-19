@@ -2,6 +2,8 @@
 
 import classNames from "classnames";
 import { useEffect, useState } from "react";
+import { BsPlusSquare } from "react-icons/bs";
+import { IoShareOutline } from "react-icons/io5";
 import { useGlobalState } from "@/context/store/stores";
 import * as S from "./styled";
 
@@ -47,28 +49,31 @@ export default function PWAInstallButton() {
     const { outcome } = await deferredPrompt.userChoice;
 
     if (outcome === "accepted") {
-      // setShowButton(false);
       console.log("App installed successfully");
     }
     setDeferredPrompt(null);
   };
 
-  if (isMobileOrTablet) {
+  if (!isMobileOrTablet) {
     return (
       <S.PageContainer className={classNames([accent, theme])}>
-        <S.MainHeading>Install Novelist World</S.MainHeading>
+        <S.MainHeading>Novelist World as an App</S.MainHeading>
         <S.MainSubtext>
-          To install this app on your iPhone or iPad:
+          To install this app on your device, follow these steps:
           <ol style={{ margin: "1rem auto", maxWidth: 400, textAlign: "left" }}>
             <li>
-              Tap <b>Share</b>{" "}
-              <span role="img" aria-label="Share">
-                &#x1f5d2;
-              </span>{" "}
+              Tap{" "}
+              <b>
+                Share <IoShareOutline />
+              </b>{" "}
               in your browser's toolbar.
             </li>
             <li>
-              Scroll down and tap <b>Add to Home Screen.</b>
+              Scroll down and tap{" "}
+              <b>
+                Add to Home Screen <BsPlusSquare />
+              </b>
+              .
             </li>
             <li>Follow the prompts to add the app.</li>
           </ol>

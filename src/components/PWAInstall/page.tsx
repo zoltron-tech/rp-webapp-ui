@@ -72,7 +72,7 @@ export default function PWAInstallButton() {
             </li>
             <li>Follow the prompts to add the app.</li>
           </ol>
-          <S.AccentText>Enjoy the best experience on iOS!</S.AccentText>
+          {/* <S.AccentText>Enjoy the best experience on iOS!</S.AccentText> */}
         </S.MainSubtext>
       </S.PageContainer>
     );

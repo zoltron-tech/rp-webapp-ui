@@ -1,11 +1,23 @@
 "use client";
 
+import classNames from "classnames";
 import { useEffect, useState } from "react";
+import { useGlobalState } from "@/context/store/stores";
 import * as S from "./styled";
 
 export default function PWAInstallButton() {
+  const [isIOS, setIsIOS] = useState(false);
+
+  useEffect(() => {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const isIOSDevice = /iphone|ipad|ipod/.test(userAgent);
+    setIsIOS(isIOSDevice);
+  }, []);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showButton, setShowButton] = useState(true);
+
+  const accent = useGlobalState("accent");
+  const theme = useGlobalState("theme");
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -33,6 +45,31 @@ export default function PWAInstallButton() {
   };
 
   if (!showButton) return null;
+
+  if (isIOS) {
+    return (
+      <S.PageContainer className={classNames([accent, theme])}>
+        <S.MainHeading>Install Novelist World</S.MainHeading>
+        <S.MainSubtext>
+          To install this app on your iPhone or iPad:
+          <ol style={{ margin: "1rem auto", maxWidth: 400, textAlign: "left" }}>
+            <li>
+              Tap <b>Share</b>{" "}
+              <span role="img" aria-label="Share">
+                &#x1f5d2;
+              </span>{" "}
+              in youtr browser's toolbar.
+            </li>
+            <li>
+              Scroll down and tap <b>Add to Home Screen.</b>
+            </li>
+            <li>Follow the prompts to add the app.</li>
+          </ol>
+          <S.AccentText>Enjoy the best experience on iOS!</S.AccentText>
+        </S.MainSubtext>
+      </S.PageContainer>
+    );
+  }
 
   return (
     <S.PageContainer>

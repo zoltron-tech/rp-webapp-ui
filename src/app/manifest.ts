@@ -39,7 +39,7 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     short_name: "Novelist",
     start_url: "/",
-    theme_color: "#1b5745",
+    theme_color: "#212225",
     // Comment out screenshots for now to test
     // screenshots: [
     //   {

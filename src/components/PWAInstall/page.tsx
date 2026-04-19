@@ -6,18 +6,19 @@ import { useGlobalState } from "@/context/store/stores";
 import * as S from "./styled";
 
 export default function PWAInstallButton() {
-  const [isIOS, setIsIOS] = useState(false);
+  const [isMobileOrTablet, setIsMobileOrTablet] = useState(false);
 
   useEffect(() => {
     const userAgent = window.navigator.userAgent.toLowerCase();
-    const isMobileOrTablet =
+    setIsMobileOrTablet(
       /iphone|ipad|ipod|android|webos|blackberry|windows phone|opera mini|iemobile|mobile|tablet/i.test(
         userAgent,
-      );
-    setIsIOS(isMobileOrTablet && /iphone|ipad|ipod/.test(userAgent));
+      ),
+    );
   }, []);
+
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [showButton, setShowButton] = useState(true);
+  const [showButton, setShowButton] = useState(false);
 
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
@@ -49,7 +50,7 @@ export default function PWAInstallButton() {
 
   if (!showButton) return null;
 
-  if (isIOS) {
+  if (isMobileOrTablet) {
     return (
       <S.PageContainer className={classNames([accent, theme])}>
         <S.MainHeading>Install Novelist World</S.MainHeading>

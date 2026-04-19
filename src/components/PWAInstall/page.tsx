@@ -9,12 +9,19 @@ export default function PWAInstallButton() {
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(false);
 
   useEffect(() => {
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    setIsMobileOrTablet(
-      /iphone|ipad|ipod|android|webos|blackberry|windows phone|opera mini|iemobile|mobile|tablet/i.test(
-        userAgent,
-      ),
-    );
+    const check = () => {
+      const userAgent = window.navigator.userAgent.toLowerCase();
+      const isMobileUA =
+        /iphone|ipad|ipod|android|webos|blackberry|windows phone|opera mini|iemobile|mobile|tablet/i.test(
+          userAgent,
+        );
+      const isMobileWidth = window.innerWidth <= 1024;
+      setIsMobileOrTablet(isMobileUA || isMobileWidth);
+    };
+
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
   }, []);
 
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);

@@ -6,6 +6,12 @@
 .pnp.js
 .yarn/install-state.gz
 
+# PWA generated files
+public/sw.js
+public/sw.js.map
+public/workbox-*.js
+public/swe-worker-development.js
+
 # yarn 2
 .yarn/*
 !.yarn/cache/

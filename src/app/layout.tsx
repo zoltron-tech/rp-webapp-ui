@@ -29,6 +29,7 @@ export const metadata: Metadata = {
     ],
   },
   keywords: ["novelist", "writing", "stories", "community"],
+  manifest: "/manifest.json",
   title: "Novelist World",
 };
 

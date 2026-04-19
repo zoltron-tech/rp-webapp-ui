@@ -10,8 +10,11 @@ export default function PWAInstallButton() {
 
   useEffect(() => {
     const userAgent = window.navigator.userAgent.toLowerCase();
-    const isIOSDevice = /iphone|ipad|ipod/.test(userAgent);
-    setIsIOS(isIOSDevice);
+    const isMobileOrTablet =
+      /iphone|ipad|ipod|android|webos|blackberry|windows phone|opera mini|iemobile|mobile|tablet/i.test(
+        userAgent,
+      );
+    setIsIOS(isMobileOrTablet && /iphone|ipad|ipod/.test(userAgent));
   }, []);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showButton, setShowButton] = useState(true);
@@ -58,7 +61,7 @@ export default function PWAInstallButton() {
               <span role="img" aria-label="Share">
                 &#x1f5d2;
               </span>{" "}
-              in youtr browser's toolbar.
+              in your browser's toolbar.
             </li>
             <li>
               Scroll down and tap <b>Add to Home Screen.</b>
@@ -72,7 +75,7 @@ export default function PWAInstallButton() {
   }
 
   return (
-    <S.PageContainer>
+    <S.PageContainer className={classNames([accent, theme])}>
       <S.MainHeading>Install Novelist World</S.MainHeading>
       <S.MainSubtext>
         Get the best experience by installing our app on your device.

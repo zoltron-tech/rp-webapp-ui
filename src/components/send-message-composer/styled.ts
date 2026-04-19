@@ -1,10 +1,19 @@
+// Override emoji-picker-react search input font size
+import { createGlobalStyle } from "styled-components";
+
+export const EmojiPickerGlobalStyle = createGlobalStyle`
+  .EmojiPickerReact .epr-search input {
+    font-size: 16px !important;
+  }
+`;
+
 import styled from "styled-components";
 
 export const Composer = styled.form`
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: 4px;
-  padding: 10px 20px 20px 20px;
+  padding: 10px 25px 35px 25px;
   align-items: center;
   background-color: var(--bg-1);
 `;

@@ -25,6 +25,7 @@ import type { MentionDataItem, Muse, Novelist } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { Flex } from "../edit-muse-card/styles";
 import * as S from "./styled";
+import { EmojiPickerGlobalStyle } from "./styled";
 
 const EmojiPicker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 
@@ -418,6 +419,7 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
   return (
     <>
       <S.ComposerWrapper>
+        <EmojiPickerGlobalStyle />
         {emojiPickerOpen && (
           <S.EmojiPickerWrap ref={emojiPickerRef}>
             <EmojiPicker

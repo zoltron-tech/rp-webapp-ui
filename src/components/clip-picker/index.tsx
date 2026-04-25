@@ -92,6 +92,15 @@ export const ClipPicker: FC<ClipPickerProps> = ({ onSelect }) => {
 
   return (
     <S.PickerBody>
+      <S.SearchRow>
+        <S.SearchInput
+          autoFocus
+          type="text"
+          placeholder="Search clips..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </S.SearchRow>
       <S.GridScroller>
         {loading ? (
           <S.StatusText>Loading...</S.StatusText>

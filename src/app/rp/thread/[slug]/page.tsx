@@ -920,15 +920,15 @@ export default function ThreadPage({}) {
                         {
                           icon: <FaRegTrashCan />,
                           label: `Delete this reply`,
-                          onClick: () => setShowDeletePromptAlert(true),
+                          onClick: () => setShowDeleteCommentAlert(true),
                           variant: "danger",
                         },
                       ]
                     : [
                         {
                           icon: <RiFlagFill />,
-                          label: `Report this report`,
-                          onClick: () => setShowReportPromptAlert(true),
+                          label: `Report this reply`,
+                          onClick: () => setShowReportCommentAlert(true),
                           variant: "danger",
                         },
                       ]

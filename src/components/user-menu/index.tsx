@@ -20,6 +20,7 @@ import { sendFeedbackMessage } from "@/app/rp/profile/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { unsubscribeFromPush } from "@/lib/push";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { toggleState } from "@/utils/helpers";
@@ -107,12 +108,19 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
 
   const handleLogout = useCallback(async () => {
     toggleState(setOpen)();
-    logoutAction();
+
+    // Clear state first
     setGlobalState({
       authState: "LOGGED_OUT",
       novelist: null,
       user: null,
     });
+
+    // Unsubscribe while JWT cookie still exists
+    await unsubscribeFromPush();
+
+    // Redirect last — after fetch fully completes
+    await logoutAction();
   }, [setGlobalState]);
 
   const toOnboarding = () => {

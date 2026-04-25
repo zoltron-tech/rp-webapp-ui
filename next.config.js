@@ -8,6 +8,7 @@ const withPWA = require('@ducanh2912/next-pwa').default({
   cacheOnFrontEndNav: true,
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
+  customWorkerSrc: 'worker',
   workboxOptions: {
     disableDevLogs: true,
   }
@@ -36,7 +37,8 @@ const nextConfig = {
     RP_CHAT_URL: process.env.RP_CHAT_URL,
     RP_LOGIN_URL: process.env.RP_LOGIN_URL,
     SUPPORT_EMAIL: process.env.SUPPORT_EMAIL,
-      RP_SERVICE_URL: process.env.RP_SERVICE_URL,
+    RP_SERVICE_URL: process.env.RP_SERVICE_URL,
+    VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
   },
 
   serverRuntimeConfig: {

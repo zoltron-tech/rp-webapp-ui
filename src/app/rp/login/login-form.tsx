@@ -13,6 +13,7 @@ import { PasswordField } from "@/components/common/password-field";
 import { ErrorBox } from "@/components/error-box";
 import { useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { initialisePushNotifications } from "@/lib/push";
 import { API_MESSAGE } from "@/utils/constants";
 import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
 import { ROUTES } from "@/utils/constants/routes";
@@ -55,6 +56,15 @@ export const LoginForm: FC = () => {
   const [error, setError] = useState<ErrorKey | null>(null);
   const setGlobalState = useGlobalStoreSet();
   const { routeToPage } = usePageRouter();
+
+  const initialisePush = useCallback(async () => {
+    try {
+      await initialisePushNotifications();
+    } catch (err) {
+      // Push failing must never block login — just log it
+      console.warn("[Push] Init failed silently:", err);
+    }
+  }, []);
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(
     async (event) => {
@@ -103,6 +113,11 @@ export const LoginForm: FC = () => {
         novelist: _novelist,
         user: response.user!,
       });
+
+      if (_novelist.isOnboarded) {
+        initialisePushNotifications(); // fire-and-forget safe — errors are caught inside
+      }
+
       routeToPage(_novelist.isOnboarded ? ROUTES.Home : ROUTES.Onboarding);
     },
     [],

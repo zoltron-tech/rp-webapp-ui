@@ -7,10 +7,12 @@
 .yarn/install-state.gz
 
 # PWA generated files
+public/icons/photothumb.db
 public/sw.js
 public/sw.js.map
 public/workbox-*.js
 public/swe-worker-development.js
+public/worker-development.js
 public/workbox-fb90b81a.js.map
 
 # yarn 2

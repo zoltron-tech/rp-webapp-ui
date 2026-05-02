@@ -1,14 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { MdOutlineSupportAgent } from "react-icons/md";
 import { BreadCrumb } from "@/components/breadcrumb";
+import { AddNewButton } from "@/components/common";
 import { ConversationCard } from "@/components/conversation-card";
 import { LoadMore } from "@/components/load-more/page";
 import { useSocket } from "@/context/socket";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { Conversation } from "@/types";
-import { getConversationsAction } from "./actions";
+import { ROUTES } from "@/utils/constants/routes";
+import {
+  getConversationByUsernameAction,
+  getConversationsAction,
+} from "./actions";
 import * as S from "./styles";
 
 const PAGE_SIZE = 10;
@@ -23,8 +29,20 @@ export default function ConversationsPage() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [contactSupportLoading, setContactSupportLoading] = useState(false);
 
-  const { baseDataLoader } = usePageRouter();
+  const { baseDataLoader, routeToPage } = usePageRouter();
+
+  const handleContactSupport = useCallback(async () => {
+    setContactSupportLoading(true);
+    const conversation = await baseDataLoader(() =>
+      getConversationByUsernameAction("novelistworld"),
+    );
+    setContactSupportLoading(false);
+    if (conversation) {
+      routeToPage(ROUTES.Conversation.View(conversation.id));
+    }
+  }, [baseDataLoader, routeToPage]);
 
   const fetchConversations = useCallback(
     async (pageNumber: number, append = false) => {
@@ -95,6 +113,11 @@ export default function ConversationsPage() {
   return (
     <S.Container>
       <BreadCrumb label="Conversations" username={user?.username ?? ""} />
+      <AddNewButton
+        label={contactSupportLoading ? "Opening..." : "Contact Support"}
+        icon={<MdOutlineSupportAgent size={20} />}
+        onClick={handleContactSupport}
+      />
       <S.ConversationListContainer>
         {conversations && conversations.length > 0 ? (
           <S.ConversationList>

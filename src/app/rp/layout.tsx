@@ -18,9 +18,11 @@ import {
 import { useSocket } from "@/context/socket";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
+import { setBadgeCount } from "@/lib/badge-manager";
 import { THEME_DARK, THEME_LIGHT } from "@/theme";
 import type { StoreState } from "@/types/state";
 import { ACCENT_MAP } from "@/types/theme";
+import { getUnreadReplyCount } from "./outgoing-threads/actions";
 import * as S from "./styles";
 
 const useAccent = () => {
@@ -45,16 +47,31 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
   const theme = useGlobalState("theme");
   const setGlobalState = useGlobalStoreSet();
   const { lastIncomingMessage } = useSocket();
+  const unreadConversationIds = useGlobalState("unreadConversationIds");
+  const unreadReplyCount = useGlobalState("unreadReplyCount");
   const authState = useGlobalState("authState");
 
   useEffect(() => {
     if (!lastIncomingMessage) return;
-    getUnreadConversationIdsAction().then((result) => {
-      if (Array.isArray(result)) {
-        setGlobalState({ unreadConversationIds: result });
-      }
-    });
+    Promise.all([getUnreadConversationIdsAction(), getUnreadReplyCount()]).then(
+      ([unreadIds, unreadReplyCount]) => {
+        setGlobalState({
+          unreadConversationIds: Array.isArray(unreadIds) ? unreadIds : [],
+          unreadReplyCount:
+            typeof unreadReplyCount === "number" ? unreadReplyCount : 0,
+        });
+      },
+    );
   }, [lastIncomingMessage, setGlobalState]);
+
+  // In whatever component/hook owns your global state
+  // e.g. your GlobalStateProvider or root layout
+
+  useEffect(() => {
+    const unreadCount =
+      (unreadConversationIds?.length ?? 0) + (unreadReplyCount ?? 0);
+    setBadgeCount(unreadCount);
+  }, [unreadConversationIds, unreadReplyCount]);
 
   useEffect(() => {
     if (authState !== "LOGGED_IN") return;
@@ -114,6 +131,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           searchBarExpanded: false,
           theme: "dark",
           unreadConversationIds: null,
+          unreadReplyCount: null,
           user: null,
         }}
       >

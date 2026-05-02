@@ -42,3 +42,37 @@ export const getOutgoingThreadsAction = async (
 
   return threads;
 };
+
+export const getUnreadReplyCount = async (): Promise<DataType<number>> => {
+  const jwt = await getJWTIfExists();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (jwt) {
+    headers[AUTH_HEADER_NAME] = jwt;
+  }
+
+  console.log("Fetching unread reply count with JWT:", Boolean(jwt));
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/outgoing/replyCount`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers: headers,
+  });
+
+  Logger.debug("getUnreadReplyCount", response.status);
+
+  console.log("result from api", { status: response.status, URL });
+
+  if (response.status === 404) {
+    return null;
+  } else if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const replyCount: number = await response.json();
+
+  return replyCount;
+};

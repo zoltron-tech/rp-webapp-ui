@@ -13,7 +13,7 @@ import { PasswordField } from "@/components/common/password-field";
 import { ErrorBox } from "@/components/error-box";
 import { useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
-import { initialisePushNotifications } from "@/lib/push";
+import { usePostLogin } from "@/hooks/use-post-login";
 import { API_MESSAGE } from "@/utils/constants";
 import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
 import { ROUTES } from "@/utils/constants/routes";
@@ -56,15 +56,7 @@ export const LoginForm: FC = () => {
   const [error, setError] = useState<ErrorKey | null>(null);
   const setGlobalState = useGlobalStoreSet();
   const { routeToPage } = usePageRouter();
-
-  const initialisePush = useCallback(async () => {
-    try {
-      await initialisePushNotifications();
-    } catch (err) {
-      // Push failing must never block login — just log it
-      console.warn("[Push] Init failed silently:", err);
-    }
-  }, []);
+  const { handlePostLogin } = usePostLogin();
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(
     async (event) => {
@@ -108,17 +100,13 @@ export const LoginForm: FC = () => {
           return;
         }
       }
-      setGlobalState({
-        authState: _novelist.isOnboarded ? "LOGGED_IN" : "UNINITIALIZED",
-        novelist: _novelist,
-        user: response.user!,
-      });
 
-      if (_novelist.isOnboarded) {
-        initialisePushNotifications(); // fire-and-forget safe — errors are caught inside
+      // handlePostLogin sets novelist/user, fetches unread counts, then sets
+      // authState — which triggers LoginPage's useEffect to navigate to Home.
+      const onboarded = await handlePostLogin(_novelist, response.user!);
+      if (!onboarded) {
+        routeToPage(ROUTES.Onboarding);
       }
-
-      routeToPage(_novelist.isOnboarded ? ROUTES.Home : ROUTES.Onboarding);
     },
     [],
   );

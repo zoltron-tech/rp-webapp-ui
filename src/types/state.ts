@@ -29,5 +29,6 @@ export interface StoreState {
   notifications: NovelistWorldNotification[] | null;
   musicPlayer: MusicPlayerState;
   unreadConversationIds: string[] | null;
+  unreadReplyCount: number | null;
   helloStickers: { stickerUrl: string; previewUrl: string }[] | null;
 }

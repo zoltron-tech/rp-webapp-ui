@@ -8,6 +8,7 @@ import { PiSpinnerGapLight } from "react-icons/pi";
 import { getUser, setAuthCookie } from "@/app/actions";
 import { useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { usePostLogin } from "@/hooks/use-post-login";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { validateJWTSync } from "@/utils/helpers";
@@ -48,6 +49,7 @@ export default function LoginOAuthCallbackPage() {
     useState<OperationState>("LOADING");
   const setGlobalState = useGlobalStoreSet();
   const { routeToPage } = usePageRouter();
+  const { handlePostLogin } = usePostLogin();
 
   const content = useMemo(() => {
     return Content[operationState];
@@ -86,14 +88,11 @@ export default function LoginOAuthCallbackPage() {
       }
     }
 
-    setGlobalState({
-      authState: _novelist.isOnboarded ? "LOGGED_IN" : "UNINITIALIZED",
-      novelist: _novelist,
-      user: response.user!,
-    });
-    routeToPage(ROUTES.Home);
-
+    // handlePostLogin sets novelist/user, fetches unread counts, then sets authState.
+    // This page has no authState watcher, so we navigate explicitly after it resolves.
+    const onboarded = await handlePostLogin(_novelist, response.user!);
     setOperationState("SUCCESS");
+    routeToPage(onboarded ? ROUTES.Home : ROUTES.Onboarding);
   }, [token, setOperationState]);
 
   useEffect(() => {

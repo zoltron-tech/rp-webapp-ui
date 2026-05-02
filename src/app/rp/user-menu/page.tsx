@@ -13,7 +13,6 @@ import {
   FcVoicePresentation,
 } from "react-icons/fc";
 import { FiChevronRight, FiEdit2 } from "react-icons/fi";
-import { logoutAction } from "@/app/actions";
 import { sendFeedbackMessage } from "@/app/rp/profile/actions";
 import { ShouldRender } from "@/components/common";
 import { AvatarNew } from "@/components/common/avatar-new";
@@ -23,6 +22,7 @@ import { ContactSupportForm } from "@/components/user-menu";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { usePostLogout } from "@/hooks/use-post-logout";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styles";
@@ -32,7 +32,10 @@ export default function UserMenuPage() {
   const novelist = useGlobalState("novelist");
   const authState = useGlobalState("authState");
   const unreadConversationIds = useGlobalState("unreadConversationIds");
-  const hasUnread = Boolean(unreadConversationIds?.length);
+  const unreadReplyCount = useGlobalState("unreadReplyCount");
+  const hasUnread = Boolean(
+    unreadConversationIds?.length || (unreadReplyCount ?? 0) > 0,
+  );
   const unreadCount = unreadConversationIds?.length ?? 0;
   const setGlobalState = useGlobalStoreSet();
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
@@ -40,6 +43,7 @@ export default function UserMenuPage() {
   const [supportMessage, setSupportMessage] = useState("");
   const { routeToPage, stopPageLoading } = usePageRouter();
   const { successToast, errorToast } = useUIContext();
+  const { handlePostLogout } = usePostLogout();
 
   useEffect(() => {
     if (authState === "LOGGED_IN") {
@@ -59,13 +63,8 @@ export default function UserMenuPage() {
   };
 
   const handleLogout = useCallback(async () => {
-    logoutAction();
-    setGlobalState({
-      authState: "LOGGED_OUT",
-      novelist: null,
-      user: null,
-    });
-  }, [setGlobalState]);
+    await handlePostLogout();
+  }, [handlePostLogout]);
 
   if (!user) return null;
 
@@ -141,6 +140,11 @@ export default function UserMenuPage() {
               <FcCollaboration />
               Interactions
             </Flex>
+            <ShouldRender if={(unreadReplyCount ?? 0) > 0}>
+              <S.UnreadBadge>
+                {(unreadReplyCount ?? 0) > 99 ? "99+" : (unreadReplyCount ?? 0)}
+              </S.UnreadBadge>
+            </ShouldRender>
             <FiChevronRight size={16} color="gray" />
           </S.MenuItem>
         </S.Section>
@@ -162,9 +166,11 @@ export default function UserMenuPage() {
               <FcComments />
               Inbox
             </Flex>
-            <ShouldRender if={hasUnread}>
+            <ShouldRender if={(unreadConversationIds?.length ?? 0) > 0}>
               <S.UnreadBadge>
-                {unreadCount > 99 ? "99+" : unreadCount}
+                {(unreadConversationIds?.length ?? 0) > 99
+                  ? "99+"
+                  : (unreadConversationIds?.length ?? 0)}
               </S.UnreadBadge>
             </ShouldRender>
             <FiChevronRight size={16} color="gray" />

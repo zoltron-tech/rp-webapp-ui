@@ -9,7 +9,9 @@ import {
 } from "@/app/actions";
 import { getUnreadConversationIdsAction } from "@/app/rp/conversations/actions";
 import { getUserNovelist } from "@/app/rp/novelists/actions";
+import { getUnreadReplyCount } from "@/app/rp/outgoing-threads/actions";
 import { useStateMachine } from "@/hooks";
+import { initialisePushNotifications } from "@/lib/push";
 import type { AuthState } from "@/types/state";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
@@ -91,10 +93,16 @@ export const AuthProvider: FC<Props> = ({ children }) => {
       });
 
       if (_novelist.isOnboarded) {
-        const unreadResult = await getUnreadConversationIdsAction();
-        if (Array.isArray(unreadResult)) {
-          setGlobalState({ unreadConversationIds: unreadResult });
-        }
+        const [unreadIds, unreadReplyCount] = await Promise.all([
+          getUnreadConversationIdsAction(),
+          getUnreadReplyCount(),
+        ]);
+        setGlobalState({
+          unreadConversationIds: Array.isArray(unreadIds) ? unreadIds : [],
+          unreadReplyCount:
+            typeof unreadReplyCount === "number" ? unreadReplyCount : 0,
+        });
+        initialisePushNotifications(); // fire-and-forget — errors caught inside
       }
     } catch (_e) {
       transition("LOGGED_OUT");

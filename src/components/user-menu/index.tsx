@@ -15,12 +15,11 @@ import {
   FcVoicePresentation,
 } from "react-icons/fc";
 import { FiChevronRight, FiEdit2 } from "react-icons/fi";
-import { logoutAction } from "@/app/actions";
 import { sendFeedbackMessage } from "@/app/rp/profile/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
-import { unsubscribeFromPush } from "@/lib/push";
+import { usePostLogout } from "@/hooks/use-post-logout";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { toggleState } from "@/utils/helpers";
@@ -75,7 +74,10 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
   const novelist = useGlobalState("novelist");
   const authState = useGlobalState("authState");
   const unreadConversationIds = useGlobalState("unreadConversationIds");
-  const hasUnread = Boolean(unreadConversationIds?.length);
+  const unreadReplyCount = useGlobalState("unreadReplyCount");
+  const hasUnread = Boolean(
+    unreadConversationIds?.length || (unreadReplyCount ?? 0) > 0,
+  );
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
   const [showContactSupportAlert, setShowContactSupportAlert] = useState(false);
   const [supportMessage, setSupportMessage] = useState("");
@@ -83,6 +85,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
   const [open, setOpen] = useState(false);
   const { routeToPage } = usePageRouter();
   const { successToast, errorToast } = useUIContext();
+  const { handlePostLogout } = usePostLogout();
   const isMobile = useMemo(() => checkIsMobile(), []);
   const pathname = usePathname();
 
@@ -108,20 +111,8 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
 
   const handleLogout = useCallback(async () => {
     toggleState(setOpen)();
-
-    // Clear state first
-    setGlobalState({
-      authState: "LOGGED_OUT",
-      novelist: null,
-      user: null,
-    });
-
-    // Unsubscribe while JWT cookie still exists
-    await unsubscribeFromPush();
-
-    // Redirect last — after fetch fully completes
-    await logoutAction();
-  }, [setGlobalState]);
+    await handlePostLogout();
+  }, [handlePostLogout]);
 
   const toOnboarding = () => {
     routeToPage(ROUTES.Onboarding);
@@ -215,9 +206,11 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
           />
           <ShouldRender if={hasUnread}>
             <S.UnreadDot>
-              {(unreadConversationIds?.length ?? 0) > 99
+              {(unreadConversationIds?.length ?? 0) + (unreadReplyCount ?? 0) >
+              99
                 ? "99+"
-                : unreadConversationIds?.length}
+                : (unreadConversationIds?.length ?? 0) +
+                  (unreadReplyCount ?? 0)}
             </S.UnreadDot>
           </ShouldRender>
         </S.AvatarWrapper>
@@ -261,6 +254,13 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                   <FcCollaboration />
                   Interactions
                 </Flex>
+                <ShouldRender if={(unreadReplyCount ?? 0) > 0}>
+                  <S.UnreadBadge>
+                    {(unreadReplyCount ?? 0) > 99
+                      ? "99+"
+                      : (unreadReplyCount ?? 0)}
+                  </S.UnreadBadge>
+                </ShouldRender>
                 <FiChevronRight size={16} color="gray" />
               </S.Element>
               <S.Separator />
@@ -276,7 +276,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                   <FcComments />
                   Inbox
                 </Flex>
-                <ShouldRender if={hasUnread}>
+                <ShouldRender if={(unreadConversationIds?.length ?? 0) > 0}>
                   <S.UnreadBadge>
                     {(unreadConversationIds?.length ?? 0) > 99
                       ? "99+"

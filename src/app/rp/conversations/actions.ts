@@ -74,3 +74,35 @@ export const getUnreadConversationIdsAction = async (): Promise<
 
   return ids;
 };
+
+export const getConversationByUsernameAction = async (
+  username: string,
+): Promise<DataType<Conversation>> => {
+  const jwt = await getJWTIfExists();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (jwt) {
+    headers[AUTH_HEADER_NAME] = jwt;
+  }
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/conversation/byUsername/${username}`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers: headers,
+  });
+
+  Logger.debug("getConversationByUsernameAction", response.status);
+
+  if (response.status === 404) {
+    return null;
+  } else if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const conversation: Conversation = await response.json();
+
+  return conversation;
+};

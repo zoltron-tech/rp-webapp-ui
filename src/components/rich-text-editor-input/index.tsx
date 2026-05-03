@@ -11,7 +11,12 @@ import {
   useRef,
   useState,
 } from "react";
-import { RiArrowDropDownLine, RiDoubleQuotesL } from "react-icons/ri";
+import {
+  RiArrowDropDownLine,
+  RiArrowLeftSLine,
+  RiArrowRightSLine,
+  RiDoubleQuotesL,
+} from "react-icons/ri";
 import { useGlobalState } from "@/context/store/stores";
 import type { MentionDataItem, MentionTab } from "@/types";
 import { MentionDropdown } from "../mention-dropdown";
@@ -96,6 +101,9 @@ export const RichTextEditor = forwardRef<
       useState<boolean>(false);
 
     const editorRef = useRef<HTMLDivElement | null>(null);
+    const toolbarRef = useRef<HTMLDivElement | null>(null);
+    const [showScrollOverlay, setShowScrollOverlay] = useState(false);
+    const [showScrollOverlayLeft, setShowScrollOverlayLeft] = useState(false);
     const savedSelectionRef = useRef<Range | null>(null);
     const isApplyingTextStyleRef = useRef(false);
     const pendingFontRef = useRef<string | null>(null);
@@ -104,6 +112,45 @@ export const RichTextEditor = forwardRef<
     const orderedListStyleRef = useRef<string>(DEFAULT_ORDERED_LIST_STYLE);
     const bulletDropdownPanelRef = useRef<HTMLDivElement | null>(null);
     const quotationDropdownPanelRef = useRef<HTMLDivElement | null>(null);
+
+    const checkToolbarOverflow = useCallback(() => {
+      const toolbar = toolbarRef.current;
+      if (!toolbar) return;
+      const hasRightOverflow =
+        toolbar.scrollWidth > toolbar.clientWidth &&
+        toolbar.scrollLeft + toolbar.clientWidth < toolbar.scrollWidth - 1;
+      const hasLeftOverflow = toolbar.scrollLeft > 1;
+      setShowScrollOverlay(hasRightOverflow);
+      setShowScrollOverlayLeft(hasLeftOverflow);
+    }, []);
+
+    const handleScrollRight = useCallback(() => {
+      const toolbar = toolbarRef.current;
+      if (!toolbar) return;
+      toolbar.scrollBy({ behavior: "smooth", left: 120 });
+    }, []);
+
+    const handleScrollLeft = useCallback(() => {
+      const toolbar = toolbarRef.current;
+      if (!toolbar) return;
+      toolbar.scrollBy({ behavior: "smooth", left: -120 });
+    }, []);
+
+    useEffect(() => {
+      const toolbar = toolbarRef.current;
+      if (!toolbar) return;
+
+      checkToolbarOverflow();
+      toolbar.addEventListener("scroll", checkToolbarOverflow);
+
+      const observer = new ResizeObserver(checkToolbarOverflow);
+      observer.observe(toolbar);
+
+      return () => {
+        toolbar.removeEventListener("scroll", checkToolbarOverflow);
+        observer.disconnect();
+      };
+    }, [checkToolbarOverflow]);
 
     // Initialize the editor content on first render
     useEffect(() => {
@@ -829,154 +876,29 @@ export const RichTextEditor = forwardRef<
 
     return (
       <S.Container $fullPage={fullPage}>
-        <S.ToolbarRoot>
-          {/* Font (language) — Radix Popover */}
-          <Popover.Root
-            open={showFontDropdown}
-            onOpenChange={setShowFontDropdown}
-          >
-            <Popover.Trigger asChild>
-              <S.DropdownTriggerBtn
-                onMouseDown={(e) => e.preventDefault()}
-                title="Font family"
-              >
-                <S.DropdownTriggerValue
-                  style={{
-                    fontFamily: currentFont,
-                    fontSize: "0.9rem",
-                    maxWidth: "7rem",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {currentFont}
-                </S.DropdownTriggerValue>
-                <S.DropdownTriggerChevron>
-                  <RiArrowDropDownLine size={16} />
-                </S.DropdownTriggerChevron>
-              </S.DropdownTriggerBtn>
-            </Popover.Trigger>
-            <Popover.Portal>
-              <S.DropdownPopoverContent
-                side="bottom"
-                sideOffset={6}
-                align="start"
-                onOpenAutoFocus={(e) => e.preventDefault()}
-                onCloseAutoFocus={(e) => e.preventDefault()}
-                style={{ maxHeight: 280, minWidth: "10rem", overflowY: "auto" }}
-                className={classNames("select-content", theme, accent)}
-              >
-                {FONTS.map((f) => (
-                  <S.OrderedListDropdownItem
-                    key={f}
-                    type="button"
-                    $selected={currentFont === f}
-                    onClick={() => {
-                      handleFontChange(f);
-                      setShowFontDropdown(false);
-                    }}
-                    onMouseDown={(e) => e.preventDefault()}
-                    style={{ fontFamily: f }}
-                  >
-                    {f}
-                  </S.OrderedListDropdownItem>
-                ))}
-              </S.DropdownPopoverContent>
-            </Popover.Portal>
-          </Popover.Root>
-
-          {/* Font size — Radix Popover */}
-          <Popover.Root
-            open={showFontSizeDropdown}
-            onOpenChange={setShowFontSizeDropdown}
-          >
-            <Popover.Trigger asChild>
-              <S.DropdownTriggerBtn
-                onMouseDown={(e) => e.preventDefault()}
-                title="Font size"
-              >
-                <S.DropdownTriggerValue style={{ fontSize: "0.9rem" }}>
-                  {FONT_SIZES.find((s) => s.value === currentFontSize)?.label ||
-                    currentFontSize}
-                </S.DropdownTriggerValue>
-                <S.DropdownTriggerChevron>
-                  <RiArrowDropDownLine size={16} />
-                </S.DropdownTriggerChevron>
-              </S.DropdownTriggerBtn>
-            </Popover.Trigger>
-            <Popover.Portal>
-              <S.DropdownPopoverContent
-                side="bottom"
-                sideOffset={6}
-                align="start"
-                onOpenAutoFocus={(e) => e.preventDefault()}
-                onCloseAutoFocus={(e) => e.preventDefault()}
-                style={{ minWidth: "6rem", padding: "0.375rem" }}
-                className={classNames("select-content", theme, accent)}
-              >
-                {FONT_SIZES.map((size) => (
-                  <S.OrderedListDropdownItem
-                    key={size.value}
-                    type="button"
-                    $selected={currentFontSize === size.value}
-                    onClick={() => {
-                      handleFontSizeChange(size.value);
-                      setShowFontSizeDropdown(false);
-                    }}
-                    onMouseDown={(e) => e.preventDefault()}
-                  >
-                    {size.label}
-                  </S.OrderedListDropdownItem>
-                ))}
-              </S.DropdownPopoverContent>
-            </Popover.Portal>
-          </Popover.Root>
-
-          <S.Divider />
-
-          <S.ToolbarSection>
-            <S.ToggleGroup type="multiple">
-              {FORMAT_BUTTONS.map((btn) => {
-                const Icon = btn.icon;
-                return (
-                  <S.ToggleItem
-                    key={btn.id}
-                    value={btn.id}
-                    $active={activeStyles[btn.id]}
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => handleFormatClick(btn.command)}
-                    title={btn.title}
-                  >
-                    <Icon size={20} />
-                  </S.ToggleItem>
-                );
-              })}
-            </S.ToggleGroup>
-
-            <S.Divider />
-
-            {/* Alignment — Radix Popover */}
+        <S.ToolbarWrapper>
+          <S.ToolbarRoot ref={toolbarRef}>
+            {/* Font (language) — Radix Popover */}
             <Popover.Root
-              open={showAlignmentDropdown}
-              onOpenChange={setShowAlignmentDropdown}
+              open={showFontDropdown}
+              onOpenChange={setShowFontDropdown}
             >
               <Popover.Trigger asChild>
                 <S.DropdownTriggerBtn
                   onMouseDown={(e) => e.preventDefault()}
-                  title="Text Alignment"
+                  title="Font family"
                 >
-                  <S.DropdownTriggerValue>
-                    {(() => {
-                      const alignBtn = ALIGNMENT_BUTTONS.find(
-                        (btn) => btn.id === activeAlign,
-                      );
-                      if (alignBtn) {
-                        const Icon = alignBtn.icon;
-                        return <Icon size={20} />;
-                      }
-                      return null;
-                    })()}
+                  <S.DropdownTriggerValue
+                    style={{
+                      fontFamily: currentFont,
+                      fontSize: "0.9rem",
+                      maxWidth: "7rem",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {currentFont}
                   </S.DropdownTriggerValue>
                   <S.DropdownTriggerChevron>
                     <RiArrowDropDownLine size={16} />
@@ -990,263 +912,423 @@ export const RichTextEditor = forwardRef<
                   align="start"
                   onOpenAutoFocus={(e) => e.preventDefault()}
                   onCloseAutoFocus={(e) => e.preventDefault()}
-                  className={classNames("select-content", theme, accent)}
-                  style={{
-                    display: "grid",
-                    gap: "0.375rem",
-                    gridTemplateColumns: "repeat(4, 1fr)",
-                    minWidth: 180,
-                    padding: "0.5rem",
-                  }}
-                >
-                  {ALIGNMENT_BUTTONS.map((btn) => {
-                    const Icon = btn.icon;
-                    return (
-                      <S.AlignmentGridItem
-                        key={btn.id}
-                        type="button"
-                        $selected={activeAlign === btn.id}
-                        onClick={() => {
-                          handleAlignClick(btn.id as AlignId, btn.command);
-                          setShowAlignmentDropdown(false);
-                        }}
-                        onMouseDown={(e) => e.preventDefault()}
-                      >
-                        <Icon size={20} />
-                      </S.AlignmentGridItem>
-                    );
-                  })}
-                </S.DropdownPopoverContent>
-              </Popover.Portal>
-            </Popover.Root>
-
-            <S.Divider />
-
-            {/* Lists */}
-            <S.ToggleGroup type="multiple">
-              {LIST_BUTTONS.map((btn) => {
-                const Icon = btn.icon;
-                return (
-                  <S.ListOptionGroup key={btn.id}>
-                    <S.ListOptionMain>
-                      <S.ToggleItem
-                        value={btn.id}
-                        $active={activeLists[btn.id]}
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() =>
-                          handleListToggle(
-                            btn.command,
-                            btn.id as "unordered" | "ordered",
-                          )
-                        }
-                        title={btn.title}
-                      >
-                        <Icon size={20} />
-                      </S.ToggleItem>
-                    </S.ListOptionMain>
-
-                    {btn.id === "unordered" && activeLists[btn.id] && (
-                      <S.ListOptionSub>
-                        <Popover.Root
-                          open={showBulletDropdown}
-                          onOpenChange={setShowBulletDropdown}
-                        >
-                          <Popover.Trigger asChild>
-                            <S.ListSubTriggerBtn
-                              onMouseDown={(e) => e.preventDefault()}
-                            >
-                              <S.DropdownTriggerValue>
-                                {UNORDERED_LIST_STYLES.find(
-                                  (s) => s.value === currentUnorderedListStyle,
-                                )?.label || "•"}
-                              </S.DropdownTriggerValue>
-                              <S.DropdownTriggerChevron>
-                                <RiArrowDropDownLine size={16} />
-                              </S.DropdownTriggerChevron>
-                            </S.ListSubTriggerBtn>
-                          </Popover.Trigger>
-                          <Popover.Portal>
-                            <S.DropdownPopoverContent
-                              ref={bulletDropdownPanelRef}
-                              side="bottom"
-                              sideOffset={6}
-                              align="start"
-                              onOpenAutoFocus={(e) => e.preventDefault()}
-                              onCloseAutoFocus={(e) => e.preventDefault()}
-                              className={classNames(
-                                "select-content",
-                                theme,
-                                accent,
-                              )}
-                              style={{ maxHeight: 280, overflowY: "auto" }}
-                            >
-                              {Object.entries(BULLET_POINT_CATEGORIES).map(
-                                ([key, category]) => (
-                                  <S.BulletCategoryGroup key={key}>
-                                    <S.BulletCategoryTitle>
-                                      {category.name}
-                                    </S.BulletCategoryTitle>
-                                    <S.BulletGrid>
-                                      {category.symbols.map((symbol) => (
-                                        <S.BulletGridItem
-                                          key={symbol.value}
-                                          type="button"
-                                          data-value={symbol.value}
-                                          $selected={
-                                            currentUnorderedListStyle ===
-                                            symbol.value
-                                          }
-                                          onClick={() => {
-                                            handleUnorderedListStyleChange(
-                                              symbol.value,
-                                            );
-                                            setShowBulletDropdown(false);
-                                          }}
-                                          onMouseDown={(e) =>
-                                            e.preventDefault()
-                                          }
-                                          title={symbol.label}
-                                        >
-                                          {symbol.label}
-                                        </S.BulletGridItem>
-                                      ))}
-                                    </S.BulletGrid>
-                                  </S.BulletCategoryGroup>
-                                ),
-                              )}
-                            </S.DropdownPopoverContent>
-                          </Popover.Portal>
-                        </Popover.Root>
-                      </S.ListOptionSub>
-                    )}
-
-                    {btn.id === "ordered" && activeLists[btn.id] && (
-                      <S.ListOptionSub>
-                        <Popover.Root
-                          open={showOrderedDropdown}
-                          onOpenChange={setShowOrderedDropdown}
-                        >
-                          <Popover.Trigger asChild>
-                            <S.ListSubTriggerBtn
-                              onMouseDown={(e) => e.preventDefault()}
-                            >
-                              <S.DropdownTriggerValue
-                                style={{ fontSize: "0.9rem" }}
-                              >
-                                {ORDERED_LIST_STYLES.find(
-                                  (s) => s.value === currentOrderedListStyle,
-                                )?.label || "1"}
-                              </S.DropdownTriggerValue>
-                              <S.DropdownTriggerChevron>
-                                <RiArrowDropDownLine size={16} />
-                              </S.DropdownTriggerChevron>
-                            </S.ListSubTriggerBtn>
-                          </Popover.Trigger>
-                          <Popover.Portal>
-                            <S.DropdownPopoverContent
-                              side="bottom"
-                              sideOffset={6}
-                              align="start"
-                              onOpenAutoFocus={(e) => e.preventDefault()}
-                              onCloseAutoFocus={(e) => e.preventDefault()}
-                              className={classNames(
-                                "select-content",
-                                theme,
-                                accent,
-                              )}
-                              style={{ minWidth: "8rem", padding: "0.375rem" }}
-                            >
-                              {ORDERED_LIST_STYLES.map((item) => (
-                                <S.OrderedListDropdownItem
-                                  key={item.value}
-                                  type="button"
-                                  $selected={
-                                    currentOrderedListStyle === item.value
-                                  }
-                                  onClick={() => {
-                                    handleOrderedListStyleChange(item.value);
-                                    setShowOrderedDropdown(false);
-                                  }}
-                                  onMouseDown={(e) => e.preventDefault()}
-                                >
-                                  {item.label}
-                                </S.OrderedListDropdownItem>
-                              ))}
-                            </S.DropdownPopoverContent>
-                          </Popover.Portal>
-                        </Popover.Root>
-                      </S.ListOptionSub>
-                    )}
-                  </S.ListOptionGroup>
-                );
-              })}
-            </S.ToggleGroup>
-
-            <S.Divider />
-
-            {/* Quotation — Radix Popover */}
-            <Popover.Root
-              open={showQuotationDropdown}
-              onOpenChange={setShowQuotationDropdown}
-            >
-              <Popover.Trigger asChild>
-                <S.DropdownTriggerBtn
-                  onMouseDown={(e) => e.preventDefault()}
-                  title="Insert quotation mark"
-                >
-                  <S.DropdownTriggerValue>
-                    <RiDoubleQuotesL size={22} />
-                  </S.DropdownTriggerValue>
-                  <S.DropdownTriggerChevron>
-                    <RiArrowDropDownLine size={16} />
-                  </S.DropdownTriggerChevron>
-                </S.DropdownTriggerBtn>
-              </Popover.Trigger>
-              <Popover.Portal>
-                <S.DropdownPopoverContent
-                  ref={quotationDropdownPanelRef}
-                  side="bottom"
-                  sideOffset={6}
-                  align="start"
-                  onOpenAutoFocus={(e) => e.preventDefault()}
-                  onCloseAutoFocus={(e) => e.preventDefault()}
-                  className={classNames("select-content", theme, accent)}
                   style={{
                     maxHeight: 280,
-                    maxWidth: "min(20rem, calc(100vw - 1.5rem))",
+                    minWidth: "10rem",
                     overflowY: "auto",
                   }}
+                  className={classNames("select-content", theme, accent)}
                 >
-                  {Object.entries(QUOTATION_MARK_CATEGORIES).map(
-                    ([key, category]) => (
-                      <S.QuotationCategoryGroup key={key}>
-                        <S.QuotationCategoryTitle>
-                          {category.name}
-                        </S.QuotationCategoryTitle>
-                        <S.QuotationGrid>
-                          {category.symbols.map((symbol) => (
-                            <S.QuotationGridItem
-                              key={symbol.id}
-                              type="button"
-                              onClick={() => {
-                                handleQuotationMarkInsert(symbol.value || "");
-                                setShowQuotationDropdown(false);
-                              }}
-                              onMouseDown={(e) => e.preventDefault()}
-                              title={symbol.id}
-                            >
-                              {symbol.label}
-                            </S.QuotationGridItem>
-                          ))}
-                        </S.QuotationGrid>
-                      </S.QuotationCategoryGroup>
-                    ),
-                  )}
+                  {FONTS.map((f) => (
+                    <S.OrderedListDropdownItem
+                      key={f}
+                      type="button"
+                      $selected={currentFont === f}
+                      onClick={() => {
+                        handleFontChange(f);
+                        setShowFontDropdown(false);
+                      }}
+                      onMouseDown={(e) => e.preventDefault()}
+                      style={{ fontFamily: f }}
+                    >
+                      {f}
+                    </S.OrderedListDropdownItem>
+                  ))}
                 </S.DropdownPopoverContent>
               </Popover.Portal>
             </Popover.Root>
-          </S.ToolbarSection>
-        </S.ToolbarRoot>
+
+            {/* Font size — Radix Popover */}
+            <Popover.Root
+              open={showFontSizeDropdown}
+              onOpenChange={setShowFontSizeDropdown}
+            >
+              <Popover.Trigger asChild>
+                <S.DropdownTriggerBtn
+                  onMouseDown={(e) => e.preventDefault()}
+                  title="Font size"
+                >
+                  <S.DropdownTriggerValue style={{ fontSize: "0.9rem" }}>
+                    {FONT_SIZES.find((s) => s.value === currentFontSize)
+                      ?.label || currentFontSize}
+                  </S.DropdownTriggerValue>
+                  <S.DropdownTriggerChevron>
+                    <RiArrowDropDownLine size={16} />
+                  </S.DropdownTriggerChevron>
+                </S.DropdownTriggerBtn>
+              </Popover.Trigger>
+              <Popover.Portal>
+                <S.DropdownPopoverContent
+                  side="bottom"
+                  sideOffset={6}
+                  align="start"
+                  onOpenAutoFocus={(e) => e.preventDefault()}
+                  onCloseAutoFocus={(e) => e.preventDefault()}
+                  style={{ minWidth: "6rem", padding: "0.375rem" }}
+                  className={classNames("select-content", theme, accent)}
+                >
+                  {FONT_SIZES.map((size) => (
+                    <S.OrderedListDropdownItem
+                      key={size.value}
+                      type="button"
+                      $selected={currentFontSize === size.value}
+                      onClick={() => {
+                        handleFontSizeChange(size.value);
+                        setShowFontSizeDropdown(false);
+                      }}
+                      onMouseDown={(e) => e.preventDefault()}
+                    >
+                      {size.label}
+                    </S.OrderedListDropdownItem>
+                  ))}
+                </S.DropdownPopoverContent>
+              </Popover.Portal>
+            </Popover.Root>
+
+            <S.Divider />
+
+            <S.ToolbarSection>
+              <S.ToggleGroup type="multiple">
+                {FORMAT_BUTTONS.map((btn) => {
+                  const Icon = btn.icon;
+                  return (
+                    <S.ToggleItem
+                      key={btn.id}
+                      value={btn.id}
+                      $active={activeStyles[btn.id]}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => handleFormatClick(btn.command)}
+                      title={btn.title}
+                    >
+                      <Icon size={20} />
+                    </S.ToggleItem>
+                  );
+                })}
+              </S.ToggleGroup>
+
+              <S.Divider />
+
+              {/* Alignment — Radix Popover */}
+              <Popover.Root
+                open={showAlignmentDropdown}
+                onOpenChange={setShowAlignmentDropdown}
+              >
+                <Popover.Trigger asChild>
+                  <S.DropdownTriggerBtn
+                    onMouseDown={(e) => e.preventDefault()}
+                    title="Text Alignment"
+                  >
+                    <S.DropdownTriggerValue>
+                      {(() => {
+                        const alignBtn = ALIGNMENT_BUTTONS.find(
+                          (btn) => btn.id === activeAlign,
+                        );
+                        if (alignBtn) {
+                          const Icon = alignBtn.icon;
+                          return <Icon size={20} />;
+                        }
+                        return null;
+                      })()}
+                    </S.DropdownTriggerValue>
+                    <S.DropdownTriggerChevron>
+                      <RiArrowDropDownLine size={16} />
+                    </S.DropdownTriggerChevron>
+                  </S.DropdownTriggerBtn>
+                </Popover.Trigger>
+                <Popover.Portal>
+                  <S.DropdownPopoverContent
+                    side="bottom"
+                    sideOffset={6}
+                    align="start"
+                    onOpenAutoFocus={(e) => e.preventDefault()}
+                    onCloseAutoFocus={(e) => e.preventDefault()}
+                    className={classNames("select-content", theme, accent)}
+                    style={{
+                      display: "grid",
+                      gap: "0.375rem",
+                      gridTemplateColumns: "repeat(4, 1fr)",
+                      minWidth: 180,
+                      padding: "0.5rem",
+                    }}
+                  >
+                    {ALIGNMENT_BUTTONS.map((btn) => {
+                      const Icon = btn.icon;
+                      return (
+                        <S.AlignmentGridItem
+                          key={btn.id}
+                          type="button"
+                          $selected={activeAlign === btn.id}
+                          onClick={() => {
+                            handleAlignClick(btn.id as AlignId, btn.command);
+                            setShowAlignmentDropdown(false);
+                          }}
+                          onMouseDown={(e) => e.preventDefault()}
+                        >
+                          <Icon size={20} />
+                        </S.AlignmentGridItem>
+                      );
+                    })}
+                  </S.DropdownPopoverContent>
+                </Popover.Portal>
+              </Popover.Root>
+
+              <S.Divider />
+
+              {/* Lists */}
+              <S.ToggleGroup type="multiple">
+                {LIST_BUTTONS.map((btn) => {
+                  const Icon = btn.icon;
+                  return (
+                    <S.ListOptionGroup key={btn.id}>
+                      <S.ListOptionMain>
+                        <S.ToggleItem
+                          value={btn.id}
+                          $active={activeLists[btn.id]}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() =>
+                            handleListToggle(
+                              btn.command,
+                              btn.id as "unordered" | "ordered",
+                            )
+                          }
+                          title={btn.title}
+                        >
+                          <Icon size={20} />
+                        </S.ToggleItem>
+                      </S.ListOptionMain>
+
+                      {btn.id === "unordered" && activeLists[btn.id] && (
+                        <S.ListOptionSub>
+                          <Popover.Root
+                            open={showBulletDropdown}
+                            onOpenChange={setShowBulletDropdown}
+                          >
+                            <Popover.Trigger asChild>
+                              <S.ListSubTriggerBtn
+                                onMouseDown={(e) => e.preventDefault()}
+                              >
+                                <S.DropdownTriggerValue>
+                                  {UNORDERED_LIST_STYLES.find(
+                                    (s) =>
+                                      s.value === currentUnorderedListStyle,
+                                  )?.label || "•"}
+                                </S.DropdownTriggerValue>
+                                <S.DropdownTriggerChevron>
+                                  <RiArrowDropDownLine size={16} />
+                                </S.DropdownTriggerChevron>
+                              </S.ListSubTriggerBtn>
+                            </Popover.Trigger>
+                            <Popover.Portal>
+                              <S.DropdownPopoverContent
+                                ref={bulletDropdownPanelRef}
+                                side="bottom"
+                                sideOffset={6}
+                                align="start"
+                                onOpenAutoFocus={(e) => e.preventDefault()}
+                                onCloseAutoFocus={(e) => e.preventDefault()}
+                                className={classNames(
+                                  "select-content",
+                                  theme,
+                                  accent,
+                                )}
+                                style={{ maxHeight: 280, overflowY: "auto" }}
+                              >
+                                {Object.entries(BULLET_POINT_CATEGORIES).map(
+                                  ([key, category]) => (
+                                    <S.BulletCategoryGroup key={key}>
+                                      <S.BulletCategoryTitle>
+                                        {category.name}
+                                      </S.BulletCategoryTitle>
+                                      <S.BulletGrid>
+                                        {category.symbols.map((symbol) => (
+                                          <S.BulletGridItem
+                                            key={symbol.value}
+                                            type="button"
+                                            data-value={symbol.value}
+                                            $selected={
+                                              currentUnorderedListStyle ===
+                                              symbol.value
+                                            }
+                                            onClick={() => {
+                                              handleUnorderedListStyleChange(
+                                                symbol.value,
+                                              );
+                                              setShowBulletDropdown(false);
+                                            }}
+                                            onMouseDown={(e) =>
+                                              e.preventDefault()
+                                            }
+                                            title={symbol.label}
+                                          >
+                                            {symbol.label}
+                                          </S.BulletGridItem>
+                                        ))}
+                                      </S.BulletGrid>
+                                    </S.BulletCategoryGroup>
+                                  ),
+                                )}
+                              </S.DropdownPopoverContent>
+                            </Popover.Portal>
+                          </Popover.Root>
+                        </S.ListOptionSub>
+                      )}
+
+                      {btn.id === "ordered" && activeLists[btn.id] && (
+                        <S.ListOptionSub>
+                          <Popover.Root
+                            open={showOrderedDropdown}
+                            onOpenChange={setShowOrderedDropdown}
+                          >
+                            <Popover.Trigger asChild>
+                              <S.ListSubTriggerBtn
+                                onMouseDown={(e) => e.preventDefault()}
+                              >
+                                <S.DropdownTriggerValue
+                                  style={{ fontSize: "0.9rem" }}
+                                >
+                                  {ORDERED_LIST_STYLES.find(
+                                    (s) => s.value === currentOrderedListStyle,
+                                  )?.label || "1"}
+                                </S.DropdownTriggerValue>
+                                <S.DropdownTriggerChevron>
+                                  <RiArrowDropDownLine size={16} />
+                                </S.DropdownTriggerChevron>
+                              </S.ListSubTriggerBtn>
+                            </Popover.Trigger>
+                            <Popover.Portal>
+                              <S.DropdownPopoverContent
+                                side="bottom"
+                                sideOffset={6}
+                                align="start"
+                                onOpenAutoFocus={(e) => e.preventDefault()}
+                                onCloseAutoFocus={(e) => e.preventDefault()}
+                                className={classNames(
+                                  "select-content",
+                                  theme,
+                                  accent,
+                                )}
+                                style={{
+                                  minWidth: "8rem",
+                                  padding: "0.375rem",
+                                }}
+                              >
+                                {ORDERED_LIST_STYLES.map((item) => (
+                                  <S.OrderedListDropdownItem
+                                    key={item.value}
+                                    type="button"
+                                    $selected={
+                                      currentOrderedListStyle === item.value
+                                    }
+                                    onClick={() => {
+                                      handleOrderedListStyleChange(item.value);
+                                      setShowOrderedDropdown(false);
+                                    }}
+                                    onMouseDown={(e) => e.preventDefault()}
+                                  >
+                                    {item.label}
+                                  </S.OrderedListDropdownItem>
+                                ))}
+                              </S.DropdownPopoverContent>
+                            </Popover.Portal>
+                          </Popover.Root>
+                        </S.ListOptionSub>
+                      )}
+                    </S.ListOptionGroup>
+                  );
+                })}
+              </S.ToggleGroup>
+
+              <S.Divider />
+
+              {/* Quotation — Radix Popover */}
+              <Popover.Root
+                open={showQuotationDropdown}
+                onOpenChange={setShowQuotationDropdown}
+              >
+                <Popover.Trigger asChild>
+                  <S.DropdownTriggerBtn
+                    onMouseDown={(e) => e.preventDefault()}
+                    title="Insert quotation mark"
+                  >
+                    <S.DropdownTriggerValue>
+                      <RiDoubleQuotesL size={22} />
+                    </S.DropdownTriggerValue>
+                    <S.DropdownTriggerChevron>
+                      <RiArrowDropDownLine size={16} />
+                    </S.DropdownTriggerChevron>
+                  </S.DropdownTriggerBtn>
+                </Popover.Trigger>
+                <Popover.Portal>
+                  <S.DropdownPopoverContent
+                    ref={quotationDropdownPanelRef}
+                    side="bottom"
+                    sideOffset={6}
+                    align="start"
+                    onOpenAutoFocus={(e) => e.preventDefault()}
+                    onCloseAutoFocus={(e) => e.preventDefault()}
+                    className={classNames("select-content", theme, accent)}
+                    style={{
+                      maxHeight: 280,
+                      maxWidth: "min(20rem, calc(100vw - 1.5rem))",
+                      overflowY: "auto",
+                    }}
+                  >
+                    {Object.entries(QUOTATION_MARK_CATEGORIES).map(
+                      ([key, category]) => (
+                        <S.QuotationCategoryGroup key={key}>
+                          <S.QuotationCategoryTitle>
+                            {category.name}
+                          </S.QuotationCategoryTitle>
+                          <S.QuotationGrid>
+                            {category.symbols.map((symbol) => (
+                              <S.QuotationGridItem
+                                key={symbol.id}
+                                type="button"
+                                onClick={() => {
+                                  handleQuotationMarkInsert(symbol.value || "");
+                                  setShowQuotationDropdown(false);
+                                }}
+                                onMouseDown={(e) => e.preventDefault()}
+                                title={symbol.id}
+                              >
+                                {symbol.label}
+                              </S.QuotationGridItem>
+                            ))}
+                          </S.QuotationGrid>
+                        </S.QuotationCategoryGroup>
+                      ),
+                    )}
+                  </S.DropdownPopoverContent>
+                </Popover.Portal>
+              </Popover.Root>
+            </S.ToolbarSection>
+          </S.ToolbarRoot>
+
+          {showScrollOverlayLeft && (
+            <S.ToolbarScrollOverlayLeft>
+              <S.ToolbarScrollBtnLeft
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={handleScrollLeft}
+                title="Scroll toolbar left"
+              >
+                <RiArrowLeftSLine size={18} />
+              </S.ToolbarScrollBtnLeft>
+            </S.ToolbarScrollOverlayLeft>
+          )}
+          {showScrollOverlay && (
+            <S.ToolbarScrollOverlay>
+              <S.ToolbarScrollBtn
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={handleScrollRight}
+                title="Scroll toolbar right"
+              >
+                <RiArrowRightSLine size={18} />
+              </S.ToolbarScrollBtn>
+            </S.ToolbarScrollOverlay>
+          )}
+        </S.ToolbarWrapper>
 
         <S.EditorWrapper $fullPage={fullPage}>
           <S.EditorContent

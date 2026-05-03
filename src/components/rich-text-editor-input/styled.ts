@@ -43,6 +43,12 @@ export const EmptyText = styled.p`
   font-size: 1.125rem;
 `;
 
+export const ToolbarWrapper = styled.div`
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+`;
+
 export const ToolbarRoot = styled(Toolbar.Root)`
   display: flex;
   flex-wrap: nowrap;
@@ -60,22 +66,68 @@ export const ToolbarRoot = styled(Toolbar.Root)`
   flex-shrink: 0;
   box-sizing: border-box;
 
-  scrollbar-width: thin;
-  scrollbar-color: var(--bg-6, #e5e4e7) var(--bg-3, #f9fafb);
+  scrollbar-width: none;
   &::-webkit-scrollbar {
-    height: 8px;
+    display: none;
   }
-  &::-webkit-scrollbar-track {
-    background: var(--bg-3, #f9fafb);
-    border-radius: 0 0 4px 4px;
+`;
+
+export const ToolbarScrollOverlay = styled.div`
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 3.5rem;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  background: linear-gradient(to right, transparent, var(--bg-4) 65%);
+  z-index: 30;
+`;
+
+export const ToolbarScrollOverlayLeft = styled.div`
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3.5rem;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background: linear-gradient(to left, transparent, var(--bg-4) 65%);
+  z-index: 30;
+`;
+
+export const ToolbarScrollBtn = styled.button`
+  pointer-events: all;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  border: 1px solid var(--bg-6);
+  background-color: var(--bg-3);
+  color: var(--text);
+  cursor: pointer;
+  margin-right: 0.3rem;
+  flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+
+  &:hover {
+    background-color: var(--bg-5);
   }
-  &::-webkit-scrollbar-thumb {
-    background: var(--bg-6, #e5e4e7);
-    border-radius: 4px;
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
   }
-  &::-webkit-scrollbar-thumb:hover {
-    background: var(--text-secondary, #6b7280);
-  }
+`;
+
+export const ToolbarScrollBtnLeft = styled(ToolbarScrollBtn)`
+  margin-right: 0;
+  margin-left: 0.3rem;
 `;
 
 export const ToolbarSection = styled.div`

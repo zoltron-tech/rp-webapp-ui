@@ -17,8 +17,11 @@ export const Card = styled.article`
   }
 
   &:hover {
-    border-color: var(--grey-200, #b9c1cc);
-    background: var(--bg-2);
+
+    @media (min-width: 680px) {
+      border-color: var(--grey-200, #b9c1cc);
+      background: var(--bg-2);
+    }
   }
 `;
 

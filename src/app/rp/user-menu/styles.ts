@@ -110,11 +110,6 @@ export const MenuItem = styled.button`
     border-bottom: none;
   }
 
-  &:hover,
-  &:active {
-    background: var(--accent);
-    color: #ffffff;
-  }
 
   svg {
     width: 22px;
@@ -126,7 +121,6 @@ export const MenuItem = styled.button`
 export const DestructiveMenuItem = styled(MenuItem)`
   color: #b23636;
 
-  &:hover,
   &:active {
     background: #8e2a2a;
     color: #ffffff;

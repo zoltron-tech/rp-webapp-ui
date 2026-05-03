@@ -130,16 +130,18 @@ export const ClipPicker: FC<ClipPickerProps> = ({ onSelect }) => {
                       onSelect(clip.clipUrl);
                     }}
                     style={{
-                      aspectRatio: isSelected ? "auto" : "1 / 1",
+                      aspectRatio: "auto",
+                      background: "var(--bg-3)",
                       border: isSelected
                         ? "2px solid var(--accent)"
-                        : "1px solid transparent",
+                        : "1px solid var(--bg-6)",
+                      borderRadius: "10px",
                       display: "flex",
                       flexDirection: "column",
-                      gap: isSelected ? "8px" : undefined,
+                      gap: "8px",
                       minWidth: 0,
                       overflow: "hidden",
-                      padding: isSelected ? "8px" : "4px",
+                      padding: "8px",
                       width: "100%",
                     }}
                   >
@@ -160,34 +162,52 @@ export const ClipPicker: FC<ClipPickerProps> = ({ onSelect }) => {
                         <ChatVideoAttachment src={clip.clipUrl} />
                       </button>
                     ) : isVideoUrl(previewSrc) ? (
-                      <video
-                        src={previewSrc}
-                        muted
-                        playsInline
-                        autoPlay
-                        loop
-                        preload="metadata"
+                      <div
                         style={{
-                          borderRadius: "6px",
-                          display: "block",
-                          height: "100%",
-                          objectFit: "cover",
+                          background: "#000",
+                          border: "1px solid var(--bg-6)",
+                          borderRadius: "10px",
+                          overflow: "hidden",
                           width: "100%",
                         }}
-                      />
+                      >
+                        <video
+                          src={previewSrc}
+                          muted
+                          playsInline
+                          autoPlay
+                          loop
+                          preload="metadata"
+                          style={{
+                            display: "block",
+                            maxHeight: "210px",
+                            objectFit: "contain",
+                            width: "100%",
+                          }}
+                        />
+                      </div>
                     ) : (
-                      <img
-                        src={previewSrc}
-                        alt={clip.title}
-                        loading="lazy"
+                      <div
                         style={{
-                          borderRadius: "6px",
-                          display: "block",
-                          height: "100%",
-                          objectFit: "cover",
+                          background: "#000",
+                          border: "1px solid var(--bg-6)",
+                          borderRadius: "10px",
+                          overflow: "hidden",
                           width: "100%",
                         }}
-                      />
+                      >
+                        <img
+                          src={previewSrc}
+                          alt={clip.title}
+                          loading="lazy"
+                          style={{
+                            display: "block",
+                            maxHeight: "210px",
+                            objectFit: "contain",
+                            width: "100%",
+                          }}
+                        />
+                      </div>
                     )}
                   </S.StickerCell>
                 );

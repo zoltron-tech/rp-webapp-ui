@@ -159,19 +159,19 @@ export const PromptSubheader = styled.time`
 `;
 
 export const PromptTextContainer = styled.div`
-  max-width: 90%;
-  padding-left: 40px;
+  max-width: 95%;
+  /* padding-left: 35px; */
 
   @container (max-width: 700px) {
     & {
-      padding-left: 32px;
+      /* padding-left: 28px; */
     }
   }
 `;
 
 export const PromptContentFooter = styled.footer`
   width: 100%;
-  padding-left: 40px;
+  /* padding-left: 35px; */
   display: flex;
   align-items: flex-start;
   margin-top: 18px;
@@ -179,7 +179,7 @@ export const PromptContentFooter = styled.footer`
 
   @container (max-width: 700px) {
     & {
-      padding-left: 32px;
+      /* padding-left: 28px; */
     }
   }
 `;
@@ -199,50 +199,12 @@ export const AddReplyButton = styled.button`
   color: var(--text-secondary);
   font-family: var(--font);
   font-size: var(--font-size);
+  margin-bottom: 20px;
   cursor: pointer;
 
   &:hover {
     background-color: var(--bg-4);
     color: var(--text);
-  }
-`;
-
-export const LoadMoreContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  margin-bottom: 12px;
-`;
-
-export const LoadMoreButton = styled.button`
-    background: none;
-  border: none;
-  color: var(--accent);
-  font-size: var(--font-size-h6);
-  margin-inline-start: 10px;
-  font-style: italic;
-  font-weight: 700;
-    cursor: pointer;
-      transition: opacity 0.2s ease;
-
-  &:hover {
-    cursor: pointer;
-    color: var(--accent-hover);
-    text-decoration: underline;
-  }
-
-  @container (max-width: 600px) {
-    & {
-      font-size: var(--font-size-input);
-    }
-  }
-
-  &:disabled {
-    cursor: default;
-    opacity: 0.6;
-  }
-
-  &:hover:not(:disabled) {
-    opacity: 0.8;
   }
 `;
 
@@ -371,4 +333,36 @@ export const HeaderDropdownMenuContainer = styled.div`
   position: absolute;
   right: 0px;
   top: 10px
+`;
+
+/**
+ * Wraps the LoadMore component with horizontal rule lines on each side,
+ * matching the AddNewButton divider style used on muses/music pages.
+ */
+export const LoadMoreDivider = styled.div`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-block: 6px;
+
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background-color: var(--bg-6);
+    opacity: 0.8;
+  }
+
+  /* Dissolve the intermediate container so the button sits between the lines */
+  & > div {
+    display: contents;
+  }
+
+  button {
+    width: auto;
+    padding: 4px 8px;
+    font-size: var(--font-size-small);
+  }
 `;

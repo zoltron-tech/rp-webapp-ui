@@ -73,37 +73,6 @@ export const ModeTabButton = styled.button<{ $active: boolean }>`
   }
 `;
 
-export const ScrollToTopButton = styled.button<{ $active: boolean }>`
-  position: fixed;
-  right: 20px;
-  bottom: 20px;
-  min-width: 0;
-  width: 48px;
-  height: 48px;
-  padding: 0;
-  border-radius: 50%;
-  z-index: 20;
-  background-color: var(--bg-3);
-  border: 1px solid
-    ${({ $active }) => ($active ? "var(--accent-hover)" : "var(--accent-4)")};
-  color: var(--accent);
-
-  &:hover {
-    color: var(--accent-hover);
-    border-color: var(--accent-hover);
-    box-shadow: 0 0 8px color-mix(in srgb, var(--accent-hover) 50%, transparent);
-  }
-
-  @media (max-width: 600px) {
-    & {
-      right: 12px;
-      bottom: 12px;
-      width: 44px;
-      height: 44px;
-    }
-  }
-`;
-
 export const PromptListContainer = styled.div`
   ${DEV_MODE_BORDER("red")}
   padding-inline: 10px;

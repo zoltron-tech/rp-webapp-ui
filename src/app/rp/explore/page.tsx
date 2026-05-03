@@ -2,10 +2,10 @@
 
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { FaChevronUp } from "react-icons/fa";
 import { IoIosBookmarks } from "react-icons/io";
 import { SiGhostery } from "react-icons/si";
 import { BreadCrumb } from "@/components/breadcrumb";
+import { ScrollJumpButton } from "@/components/common/scroll-jump-button";
 import { LoadMore } from "@/components/load-more/page";
 import { Prompt as PromptComponent } from "@/components/prompt";
 import { useGlobalState } from "@/context/store/stores";
@@ -152,14 +152,7 @@ export default function ExplorePage() {
           />
         )}
 
-        <S.ScrollToTopButton
-          type="button"
-          $active
-          onClick={scrollToTop}
-          aria-label="Scroll to top"
-        >
-          <FaChevronUp size={18} />
-        </S.ScrollToTopButton>
+        <ScrollJumpButton direction="up" onClick={scrollToTop} />
       </S.PromptListContainer>
     </S.Container>
   );

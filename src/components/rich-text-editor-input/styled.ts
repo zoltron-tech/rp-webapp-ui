@@ -945,12 +945,13 @@ export const Toggle = styled.button`
     border: 1px solid var(--accent);
     border-radius: 999px;
     background: color-mix(in srgb, var(--accent) 12%, transparent);
-    font-size: var(--font-size-h6);
+    font-size: var(--font-size);
     font-weight: 700;
     font-style: italic;
     color: var(--accent);
     white-space: nowrap;
     transition: all 0.2s ease;
+    margin-top: 8px;
 
   &:hover {
     cursor: pointer;
@@ -962,7 +963,7 @@ export const Toggle = styled.button`
 
   @container (max-width: 600px) {
     & {
-      font-size: var(--font-size-input);
+      font-size: var(--font-size-small);
     }
   }
 `;

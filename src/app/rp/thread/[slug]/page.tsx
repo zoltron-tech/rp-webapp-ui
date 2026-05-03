@@ -13,6 +13,7 @@ import { ShouldRender } from "@/components/common";
 import { LikeButton } from "@/components/common/like-button";
 import { MuseAvatar } from "@/components/common/muse-avatar";
 import { NovelistAvatar } from "@/components/common/novelist-avatar";
+import { ScrollJumpButton } from "@/components/common/scroll-jump-button";
 import { AppAlertDialog } from "@/components/dialog";
 import {
   museToSource,
@@ -20,7 +21,7 @@ import {
 } from "@/components/event-thread-input/helpers";
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { InlineMusicPlayer } from "@/components/inline-music-player/page";
-import { Spinner } from "@/components/mention-dropdown/styled";
+import { LoadMore } from "@/components/load-more/page";
 import { AppDropdownMenu } from "@/components/profile-more-dropdown";
 import PromptInput from "@/components/prompt-input";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
@@ -219,6 +220,7 @@ export default function ThreadPage({}) {
     refreshLatestReplies,
   } = useGetReplies(commentId);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const replyAreaRef = useRef<HTMLDivElement | null>(null);
   const [highlightedReplyId, setHighlightedReplyId] = useState<string | null>(
     null,
   );
@@ -1001,49 +1003,53 @@ export default function ThreadPage({}) {
             </S.PromptContentFooter>
           )}
         </Flex>
-        {hasMore && (
-          <S.LoadMoreContainer>
-            {loadingMore ? (
-              <Spinner size={24} />
-            ) : (
-              <S.LoadMoreButton onClick={loadMore}>Load more</S.LoadMoreButton>
-            )}
-          </S.LoadMoreContainer>
-        )}
+        <ShouldRender if={hasMore}>
+          <S.LoadMoreDivider>
+            <LoadMore
+              hasMore={hasMore}
+              loadingMore={loadingMore}
+              onLoadMore={loadMore}
+            />
+          </S.LoadMoreDivider>
+        </ShouldRender>
 
         {loadReplies()}
-        {authState === "LOGGED_IN" &&
-          !initialLoading &&
-          comment?.prompt?.canInteract && (
-            <>
-              <Separator.Root className="separator" orientation="horizontal" />
-              {isMobile ? (
-                <S.AddReplyButton
-                  type="button"
-                  onClick={() =>
-                    routeToPage(
-                      ROUTES.Compose({
-                        dropdownSelection: isOOCPost ? "NOVELIST" : "MUSE",
-                        parentId: commentId,
-                        type: "reply",
-                      }),
-                    )
-                  }
-                >
-                  + Add Reply
-                </S.AddReplyButton>
-              ) : (
-                <PromptInput
-                  parentId={commentId}
-                  type="reply"
-                  initialSelection={initialSelection}
-                  dropdownSelection={isOOCPost ? "NOVELIST" : "MUSE"}
-                  onSend={refreshLatestReplies}
+        <div ref={replyAreaRef}>
+          {authState === "LOGGED_IN" &&
+            !initialLoading &&
+            comment?.prompt?.canInteract && (
+              <>
+                <Separator.Root
+                  className="separator"
+                  orientation="horizontal"
                 />
-              )}
-            </>
-          )}
-        <div ref={bottomRef} />
+                {isMobile ? (
+                  <S.AddReplyButton
+                    type="button"
+                    onClick={() =>
+                      routeToPage(
+                        ROUTES.Compose({
+                          dropdownSelection: isOOCPost ? "NOVELIST" : "MUSE",
+                          parentId: commentId,
+                          type: "reply",
+                        }),
+                      )
+                    }
+                  >
+                    + Add Reply
+                  </S.AddReplyButton>
+                ) : (
+                  <PromptInput
+                    parentId={commentId}
+                    type="reply"
+                    initialSelection={initialSelection}
+                    dropdownSelection={isOOCPost ? "NOVELIST" : "MUSE"}
+                    onSend={refreshLatestReplies}
+                  />
+                )}
+              </>
+            )}
+        </div>
       </S.RepliesContainer>
     </S.ParentContainer>
   );

@@ -663,6 +663,9 @@ export const ChatVideoAttachment: FC<{ src: string }> = ({ src }) => {
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  // True until the user presses play for the first time; used to seek back to
+  // 0 after the thumbnail seek so playback always starts from the beginning.
+  const showingThumbnailRef = useRef(true);
 
   useEffect(() => {
     if (!videoElement) return;
@@ -671,7 +674,13 @@ export const ChatVideoAttachment: FC<{ src: string }> = ({ src }) => {
     registerMediaElement(videoElement);
 
     const onLoadedMetadata = () => {
-      setDuration(videoElement.duration || 0);
+      const dur = videoElement.duration || 0;
+      setDuration(dur);
+      // Seek to 1 s (clamped to the actual duration) to show a meaningful
+      // thumbnail frame instead of the typically-black very first frame.
+      if (dur > 0) {
+        videoElement.currentTime = Math.min(0.5, dur);
+      }
     };
 
     const onTimeUpdate = () => {
@@ -716,6 +725,13 @@ export const ChatVideoAttachment: FC<{ src: string }> = ({ src }) => {
     if (playing) {
       videoElement.pause();
       return;
+    }
+
+    // On first play, reset to the start so the video plays from 0, not from
+    // the thumbnail-seek position.
+    if (showingThumbnailRef.current) {
+      showingThumbnailRef.current = false;
+      videoElement.currentTime = 0;
     }
 
     try {

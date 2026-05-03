@@ -272,6 +272,8 @@ export const AudioAttachmentLabel = styled.span`
 export const AudioProgressRow = styled.div`
   display: flex;
   align-items: center;
+  padding-inline: 4px;
+  padding-bottom: 4px;
   gap: 6px;
   width: 100%;
 `;
@@ -305,8 +307,8 @@ export const AudioProgressFill = styled.div`
 export const VideoAttachmentCard = styled.div`
   width: 100%;
   min-width: 220px;
-  padding: 8px 10px;
-  border-radius: 10px;
+  padding: 0px;
+  border-radius: 8px;
   background-color: var(--bg-3);
   border: 1px solid var(--bg-6);
   display: flex;
@@ -317,7 +319,8 @@ export const VideoAttachmentCard = styled.div`
 export const VideoViewport = styled.div`
   width: 100%;
   max-height: 210px;
-  border-radius: 10px;
+  border-top-right-radius: 8px;
+  border-top-left-radius: 8px;
   overflow: hidden;
   border: 1px solid var(--bg-6);
   background: #000;

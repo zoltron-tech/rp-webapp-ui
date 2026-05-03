@@ -654,7 +654,7 @@ const ChatAudioAttachment: FC<{ src: string }> = ({ src }) => {
   );
 };
 
-const ChatVideoAttachment: FC<{ src: string }> = ({ src }) => {
+export const ChatVideoAttachment: FC<{ src: string }> = ({ src }) => {
   const [videoElement, setVideoElement] = useState<HTMLVideoElement | null>(
     null,
   );
@@ -751,17 +751,14 @@ const ChatVideoAttachment: FC<{ src: string }> = ({ src }) => {
         />
       </S.VideoViewport>
 
-      <S.AudioAttachmentTop>
+      <S.AudioProgressRow>
         <S.AudioPlayButton
           onClick={onTogglePlay}
           aria-label={playing ? "Pause" : "Play"}
         >
           {playing ? <FaPause /> : <FaPlay />}
         </S.AudioPlayButton>
-        <S.AudioAttachmentLabel>Video attachment</S.AudioAttachmentLabel>
-      </S.AudioAttachmentTop>
 
-      <S.AudioProgressRow>
         <S.AudioTime>{formatTime(currentTime)}</S.AudioTime>
         <S.AudioProgressBar onClick={onSeek}>
           <S.AudioProgressFill style={{ width: `${progress}%` }} />

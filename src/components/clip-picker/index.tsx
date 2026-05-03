@@ -1,6 +1,7 @@
 "use client";
 
 import { type FC, useEffect, useState } from "react";
+import { ChatVideoAttachment } from "@/components/common/chat-bubble";
 import * as S from "@/components/sticker-picker/styled";
 import type { ClipItem } from "@/pages/api/klipy-clips";
 
@@ -111,7 +112,7 @@ export const ClipPicker: FC<ClipPickerProps> = ({ onSelect }) => {
             <S.Grid
               style={{
                 alignItems: "start",
-                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                gridTemplateColumns: "1fr",
                 width: "100%",
               }}
             >
@@ -143,49 +144,21 @@ export const ClipPicker: FC<ClipPickerProps> = ({ onSelect }) => {
                     }}
                   >
                     {isSelected ? (
-                      <>
-                        <div
-                          style={{
-                            color: "var(--text-secondary)",
-                            fontSize: "var(--font-size-small)",
-                            textAlign: "left",
-                            width: "100%",
-                          }}
-                        ></div>
-                        {isVideoUrl(clip.clipUrl) ? (
-                          <video
-                            src={clip.clipUrl}
-                            poster={clip.previewUrl || undefined}
-                            controls
-                            playsInline
-                            preload="metadata"
-                            style={{
-                              background: "#000",
-                              borderRadius: "8px",
-                              display: "block",
-                              maxHeight: "180px",
-                              minHeight: "120px",
-                              width: "100%",
-                            }}
-                          >
-                            <track kind="captions" />
-                          </video>
-                        ) : (
-                          <img
-                            src={previewSrc}
-                            alt={clip.title}
-                            loading="lazy"
-                            style={{
-                              borderRadius: "8px",
-                              display: "block",
-                              maxHeight: "180px",
-                              minHeight: "120px",
-                              objectFit: "contain",
-                              width: "100%",
-                            }}
-                          />
-                        )}
-                      </>
+                      // Stop touch/click events reaching the parent <button>
+                      // so that native video controls work on real mobile browsers.
+                      <button
+                        type="button"
+                        onClick={(e) => e.stopPropagation()}
+                        onTouchStart={(e) => e.stopPropagation()}
+                        onTouchEnd={(e) => e.stopPropagation()}
+                        style={{
+                          all: "unset",
+                          display: "block",
+                          width: "100%",
+                        }}
+                      >
+                        <ChatVideoAttachment src={clip.clipUrl} />
+                      </button>
                     ) : isVideoUrl(previewSrc) ? (
                       <video
                         src={previewSrc}

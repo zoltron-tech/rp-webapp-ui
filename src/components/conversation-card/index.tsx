@@ -72,7 +72,7 @@ const AUDIO_EXTS = new Set([
   "weba",
 ]);
 const URL_RE = /^https?:\/\/\S+$/i;
-const HTML_TAG_RE = /<(strong|em|b|i|span)\b/i;
+const HTML_TAG_RE = /<(strong|em|b|i|span|br|div)\b/i;
 
 /** Converts a rich-text HTML string to plain text for use in previews. */
 const htmlToPlainText = (html: string): string => {
@@ -83,6 +83,8 @@ const htmlToPlainText = (html: string): string => {
   );
   // Strip remaining tags and artefacts, then measure clean length for trimming
   return withMentions
+    .replace(/<br\s*\/?>/gi, " ") // line breaks → space in preview
+    .replace(/<div[^>]*>/gi, " ") // div openings → space
     .replace(/<[^>]+>/g, "")
     .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&")

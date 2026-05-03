@@ -250,7 +250,7 @@ const isRepliedImageOnly = (message: Message): boolean => {
 };
 
 /** Detects messages that contain rich-text HTML tags produced by ChatRichInput. */
-const HTML_CONTENT_RE = /<(strong|em|b|i|span)\b/i;
+const HTML_CONTENT_RE = /<(strong|em|b|i|span|br|div)\b/i;
 const EMOJI_ONLY_RE =
   /^(\p{Extended_Pictographic}|\p{Emoji_Modifier}|\uFE0F|\u20E3|\u200D|\s)+$/u;
 
@@ -745,6 +745,8 @@ const ChatVideoAttachment: FC<{ src: string }> = ({ src }) => {
           ref={setVideoElement}
           preload="metadata"
           src={src}
+          playsInline
+          disablePictureInPicture
           onError={() => setVideoError(true)}
         />
       </S.VideoViewport>

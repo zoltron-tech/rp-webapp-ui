@@ -60,6 +60,7 @@ export const ChatRichInput = forwardRef<
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [dynamicMuses, setDynamicMuses] = useState<MentionDataItem[]>([]);
   const mentionAnchorRef = useRef<{ node: Node; offset: number } | null>(null);
+  const savedRangeRef = useRef<Range | null>(null);
 
   useImperativeHandle(ref, () => ({
     insertText(text: string) {
@@ -67,24 +68,31 @@ export const ChatRichInput = forwardRef<
       if (!editor) return;
       editor.focus();
       const sel = window.getSelection();
-      if (sel && sel.rangeCount > 0) {
-        const range = sel.getRangeAt(0);
-        range.deleteContents();
-        const node = document.createTextNode(text);
-        range.insertNode(node);
-        range.setStartAfter(node);
-        range.collapse(true);
+      if (!sel) return;
+
+      // Restore saved range (from before the editor lost focus), or fall back
+      // to placing the cursor at the end of the editor content.
+      let range: Range;
+      if (savedRangeRef.current) {
+        range = savedRangeRef.current;
+        savedRangeRef.current = null;
         sel.removeAllRanges();
         sel.addRange(range);
+      } else if (sel.rangeCount > 0) {
+        range = sel.getRangeAt(0);
       } else {
-        const node = document.createTextNode(text);
-        editor.appendChild(node);
-        const range = document.createRange();
-        range.setStartAfter(node);
-        range.collapse(true);
-        sel?.removeAllRanges();
-        sel?.addRange(range);
+        range = document.createRange();
+        range.selectNodeContents(editor);
+        range.collapse(false); // collapse to end
       }
+
+      range.deleteContents();
+      const node = document.createTextNode(text);
+      range.insertNode(node);
+      range.setStartAfter(node);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
       emitChange(editor);
     },
   }));
@@ -114,9 +122,12 @@ export const ChatRichInput = forwardRef<
       setIsEmpty(text.length === 0);
       onChange(text);
 
-      // Strip trailing browser-injected <br> / <div><br></div> artifacts
+      // Normalize contenteditable <div> line-breaks into <br>, then strip trailing <br>s
       const html = editor.innerHTML
-        .replace(/(<div><br\s*\/?><\/div>|<br\s*\/?>)+$/gi, "")
+        .replace(/<div[^>]*><br\s*\/?>\s*<\/div>/gi, "<br>") // empty div → br
+        .replace(/<div[^>]*>/gi, "<br>") // opening div → br
+        .replace(/<\/div>/gi, "") // remove closing divs
+        .replace(/(<br\s*\/?>\s*)+$/gi, "") // strip trailing brs
         .trim();
       onHtmlChange(html);
     },
@@ -385,6 +396,12 @@ export const ChatRichInput = forwardRef<
         data-placeholder={placeholder}
         onInput={handleInput}
         onKeyDown={handleKeyDown}
+        onBlur={() => {
+          const sel = window.getSelection();
+          if (sel && sel.rangeCount > 0) {
+            savedRangeRef.current = sel.getRangeAt(0).cloneRange();
+          }
+        }}
       />
       {trailingAction ? (
         <S.TrailingAction>{trailingAction}</S.TrailingAction>

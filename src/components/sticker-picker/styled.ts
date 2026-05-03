@@ -50,11 +50,10 @@ export const GridScroller = styled.div`
 
 export const StickerCell = styled.button`
   border: none;
-  padding: 6px;
+  padding: 2px;
   border-radius: 8px;
   cursor: pointer;
   background: var(--bg-3);
-  aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -9,9 +9,6 @@ interface ClipPickerProps {
   onSelect: (clipUrl: string) => void;
 }
 
-const isVideoUrl = (url: string) =>
-  /\.(mp4|webm|mov|m4v|ogv)(?:$|[?#])/i.test(url);
-
 const useDebounce = (value: string, delay: number) => {
   const [debounced, setDebounced] = useState(value);
 
@@ -117,98 +114,31 @@ export const ClipPicker: FC<ClipPickerProps> = ({ onSelect }) => {
               }}
             >
               {clips.map((clip) => {
-                const previewSrc = clip.previewUrl || clip.clipUrl;
                 const isSelected = selectedClip?.id === clip.id;
 
                 return (
                   <S.StickerCell
+                    as="div"
                     key={clip.id}
-                    type="button"
                     title={clip.title}
                     onClick={() => {
                       setSelectedClip(clip);
                       onSelect(clip.clipUrl);
                     }}
                     style={{
-                      aspectRatio: "auto",
                       background: "var(--bg-3)",
                       border: isSelected
                         ? "2px solid var(--accent)"
                         : "1px solid var(--bg-6)",
                       borderRadius: "10px",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "8px",
+                      cursor: "pointer",
                       minWidth: 0,
                       overflow: "hidden",
-                      padding: "8px",
+                      padding: "2px",
                       width: "100%",
                     }}
                   >
-                    {isSelected ? (
-                      // Stop touch/click events reaching the parent <button>
-                      // so that native video controls work on real mobile browsers.
-                      <button
-                        type="button"
-                        onClick={(e) => e.stopPropagation()}
-                        onTouchStart={(e) => e.stopPropagation()}
-                        onTouchEnd={(e) => e.stopPropagation()}
-                        style={{
-                          all: "unset",
-                          display: "block",
-                          width: "100%",
-                        }}
-                      >
-                        <ChatVideoAttachment src={clip.clipUrl} />
-                      </button>
-                    ) : isVideoUrl(previewSrc) ? (
-                      <div
-                        style={{
-                          background: "#000",
-                          border: "1px solid var(--bg-6)",
-                          borderRadius: "10px",
-                          overflow: "hidden",
-                          width: "100%",
-                        }}
-                      >
-                        <video
-                          src={previewSrc}
-                          muted
-                          playsInline
-                          autoPlay
-                          loop
-                          preload="metadata"
-                          style={{
-                            display: "block",
-                            maxHeight: "210px",
-                            objectFit: "contain",
-                            width: "100%",
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      <div
-                        style={{
-                          background: "#000",
-                          border: "1px solid var(--bg-6)",
-                          borderRadius: "10px",
-                          overflow: "hidden",
-                          width: "100%",
-                        }}
-                      >
-                        <img
-                          src={previewSrc}
-                          alt={clip.title}
-                          loading="lazy"
-                          style={{
-                            display: "block",
-                            maxHeight: "210px",
-                            objectFit: "contain",
-                            width: "100%",
-                          }}
-                        />
-                      </div>
-                    )}
+                    <ChatVideoAttachment src={clip.clipUrl} />
                   </S.StickerCell>
                 );
               })}
@@ -219,7 +149,7 @@ export const ClipPicker: FC<ClipPickerProps> = ({ onSelect }) => {
                 style={{
                   display: "flex",
                   justifyContent: "center",
-                  padding: "12px 8px 8px",
+                  padding: "2px",
                 }}
               >
                 <button

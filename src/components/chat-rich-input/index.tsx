@@ -353,7 +353,11 @@ export const ChatRichInput = forwardRef<
       }
 
       // ── Enter submits (Shift+Enter = newline) ────────────────────────────
+      // On mobile/touch devices, Enter should insert a newline, not submit.
       if (e.key === "Enter" && !e.shiftKey) {
+        const isTouchDevice =
+          typeof navigator !== "undefined" && navigator.maxTouchPoints > 0;
+        if (isTouchDevice) return;
         e.preventDefault();
         onSubmit?.();
       }

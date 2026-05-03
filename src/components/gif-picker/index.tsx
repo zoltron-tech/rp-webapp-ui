@@ -1,6 +1,6 @@
 "use client";
 
-import { type FC, useEffect, useState } from "react";
+import { type FC, useEffect, useMemo, useState } from "react";
 import type { GifItem } from "@/pages/api/klipy-gifs";
 import * as S from "./styled";
 
@@ -20,8 +20,11 @@ const useDebounce = (value: string, delay: number) => {
 
 export const GifPicker: FC<GifPickerProps> = ({ onSelect }) => {
   const [query, setQuery] = useState("");
-  const [gifs, setGifs] = useState<GifItem[][]>([]);
+  const [gifItems, setGifItems] = useState<GifItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
   const debouncedQuery = useDebounce(query, 350);
 
   useEffect(() => {
@@ -34,18 +37,11 @@ export const GifPicker: FC<GifPickerProps> = ({ onSelect }) => {
 
     fetch(`/api/klipy-gifs${params}`)
       .then((r) => r.json())
-      .then((data: { items: GifItem[] }) => {
+      .then((data: { items: GifItem[]; next?: string | null }) => {
         if (!cancelled) {
-          const grouped = [];
-          // fill row first, then column
-          const gifsPerColumn = Math.ceil(data.items.length / GIF_COLUMNS);
-
-          for (let i = 0; i < data.items.length; i += gifsPerColumn) {
-            const group = data.items.slice(i, i + gifsPerColumn);
-            grouped.push(group);
-          }
-          setGifs(grouped);
-
+          setGifItems(data.items ?? []);
+          setNextCursor(data.next ?? null);
+          setHasMore(Boolean(data.next));
           setLoading(false);
         }
       })
@@ -57,6 +53,38 @@ export const GifPicker: FC<GifPickerProps> = ({ onSelect }) => {
       cancelled = true;
     };
   }, [debouncedQuery]);
+
+  const handleLoadMore = async () => {
+    if (loadingMore || !hasMore || !nextCursor) return;
+    setLoadingMore(true);
+
+    const params = debouncedQuery.trim()
+      ? `?q=${encodeURIComponent(debouncedQuery.trim())}&limit=30&pos=${encodeURIComponent(nextCursor)}`
+      : `?limit=30&pos=${encodeURIComponent(nextCursor)}`;
+
+    try {
+      const response = await fetch(`/api/klipy-gifs${params}`);
+      const data = (await response.json()) as {
+        items: GifItem[];
+        next?: string | null;
+      };
+      setGifItems((prev) => [...prev, ...(data.items ?? [])]);
+      setNextCursor(data.next ?? null);
+      setHasMore(Boolean(data.next));
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const groupedGifs = useMemo(() => {
+    if (gifItems.length === 0) return [];
+    const gifsPerColumn = Math.ceil(gifItems.length / GIF_COLUMNS);
+    const grouped: GifItem[][] = [];
+    for (let i = 0; i < gifItems.length; i += gifsPerColumn) {
+      grouped.push(gifItems.slice(i, i + gifsPerColumn));
+    }
+    return grouped;
+  }, [gifItems]);
 
   return (
     <S.PickerBody>
@@ -73,27 +101,60 @@ export const GifPicker: FC<GifPickerProps> = ({ onSelect }) => {
       <S.GridOuterScroller>
         {loading ? (
           <S.StatusText>Loading...</S.StatusText>
-        ) : gifs.length === 0 ? (
+        ) : groupedGifs.length === 0 ? (
           <S.StatusText>No GIFs found</S.StatusText>
         ) : (
-          gifs.map((gifcolumn) => (
-            <S.GifGrid key={gifcolumn[0].id}>
-              {gifcolumn.map((gif) => (
-                <S.GifCell
-                  key={gif.id}
-                  type="button"
-                  title={gif.title}
-                  onClick={() => onSelect(gif.gifUrl)}
-                >
-                  <S.GifThumb
-                    src={gif.previewUrl}
-                    alt={gif.title}
-                    loading="lazy"
-                  />
-                </S.GifCell>
+          <div
+            style={{ display: "flex", flexDirection: "column", width: "100%" }}
+          >
+            <div style={{ display: "flex" }}>
+              {groupedGifs.map((gifcolumn) => (
+                <S.GifGrid key={gifcolumn[0].id}>
+                  {gifcolumn.map((gif) => (
+                    <S.GifCell
+                      key={gif.id}
+                      type="button"
+                      title={gif.title}
+                      onClick={() => onSelect(gif.gifUrl)}
+                    >
+                      <S.GifThumb
+                        src={gif.previewUrl}
+                        alt={gif.title}
+                        loading="lazy"
+                      />
+                    </S.GifCell>
+                  ))}
+                </S.GifGrid>
               ))}
-            </S.GifGrid>
-          ))
+            </div>
+            {hasMore && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  padding: "12px 8px 8px",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
+                  style={{
+                    background: "var(--bg-3)",
+                    border: "1px solid var(--bg-6)",
+                    borderRadius: "8px",
+                    color: "var(--text)",
+                    cursor: loadingMore ? "not-allowed" : "pointer",
+                    fontWeight: 700,
+                    opacity: loadingMore ? 0.7 : 1,
+                    padding: "8px 12px",
+                  }}
+                >
+                  {loadingMore ? "Loading..." : "Load more"}
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </S.GridOuterScroller>
     </S.PickerBody>

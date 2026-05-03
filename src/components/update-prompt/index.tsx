@@ -89,7 +89,6 @@ export const UpdatePromptForm: FC<UpdatePromptProps> = ({
   );
 
   const handleClose = useCallback((_newValue: boolean) => {
-    setText("");
     setOpen(false);
   }, []);
 
@@ -112,7 +111,7 @@ export const UpdatePromptForm: FC<UpdatePromptProps> = ({
 
   useEffect(() => {
     setText(payload?.text);
-  }, [payload]);
+  }, [open, payload]);
 
   return (
     <AppAlertDialog
@@ -125,14 +124,12 @@ export const UpdatePromptForm: FC<UpdatePromptProps> = ({
           }}
         >
           <S.FormField name="supportMessage">
-            <S.FormControl asChild>
-              <RichTextEditor
-                placeholder="Enter text"
-                value={text}
-                mentionTabs={MENTION_TABS}
-                onChange={(e) => setText(e)}
-              />
-            </S.FormControl>
+            <RichTextEditor
+              placeholder="Enter text"
+              value={text}
+              mentionTabs={MENTION_TABS}
+              onChange={(e) => setText(e)}
+            />
           </S.FormField>
         </S.FormRoot>
       }

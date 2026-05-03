@@ -2,6 +2,7 @@
 import { createGlobalStyle } from "styled-components";
 
 export const EmojiPickerGlobalStyle = createGlobalStyle`
+  .EmojiPickerReact .epr-search .epr-search-container,
   .EmojiPickerReact .epr-search input {
     font-size: 16px !important;
   }

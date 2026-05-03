@@ -50,6 +50,7 @@ import { ACCENT_MAP, type Accent } from "@/types/theme";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDate } from "@/utils/helpers";
+import { getConversationByUsernameAction } from "../../conversations/actions";
 import { getUserActivities } from "../../home/actions";
 import { getNovelistAction } from "../../novelists/actions";
 import { getAllStoryboardsByUsernameAction } from "../../story/actions";
@@ -197,9 +198,15 @@ export default function UserProfilePage({}) {
     routeToPage(ROUTES.Profile.View(username).Storyboards);
   };
 
-  // TODO: GetConversationId from username and if not exists then open a dialogue to send a message which should create a new conversation in the backend.
-  const toMessagePage = () => {
-    //window.location.replace(`${process.env.RP_CHAT_URL}?id=${username}`);
+  const toMessagePage = async () => {
+    const conversation = await baseDataLoader(() =>
+      getConversationByUsernameAction(username),
+    );
+    if (conversation?.id) {
+      routeToPage(ROUTES.Conversation.View(conversation.id));
+    } else {
+      errorToast("Could not open conversation. Please try again.");
+    }
   };
 
   const handleSendFriendRequest = async () => {
@@ -375,6 +382,7 @@ export default function UserProfilePage({}) {
     connection: string | null | undefined,
     username: string,
   ) => {
+    if (username === "novelistworld") return null; // no dropdown for novelistworld profile
     switch (connection) {
       case "FRIEND":
         return (
@@ -390,7 +398,7 @@ export default function UserProfilePage({}) {
               {
                 icon: <FcComments size={22} />,
                 label: `Message ${username}`,
-                onClick: handleNotImplemented,
+                onClick: toMessagePage,
               },
               {
                 separator: true,
@@ -538,7 +546,7 @@ export default function UserProfilePage({}) {
         actionButtonLabel="Report"
       />
       <AppAlertDialog
-        heading={`Report ${username}?`}
+        heading={`Really Bro?`}
         text={`Really man?`}
         body={
           <Image

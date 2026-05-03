@@ -61,9 +61,7 @@ export const ContactSupportForm = ({
         />
       </S.FormControl>
       <S.FormMessage>
-        {
-          "The team will get back to you ASAP. Check your notifications for updates."
-        }
+        {"The team will get back to you ASAP. Check your inbox for updates."}
       </S.FormMessage>
     </S.FormField>
   </S.FormRoot>

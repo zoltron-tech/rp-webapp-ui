@@ -897,7 +897,7 @@ export const FandomDialogSearch = styled.input`
   border-radius: 4px;
   background-color: var(--bg-3);
   color: var(--text);
-  font-size: var(--font-size);
+  font-size: var(--font-size-input);
   font-family: var(--font);
 
   &::placeholder {
@@ -921,7 +921,7 @@ export const FandomDialogList = styled.div`
 export const FandomDialogMessage = styled.div`
   padding: 16px;
   text-align: center;
-  font-size: var(--font-size);
+  font-size: var(--font-size-input);
   color: var(--text-secondary);
 `;
 
@@ -934,7 +934,7 @@ export const FandomDialogItem = styled.button<{ $selected?: boolean }>`
   box-sizing: border-box;
   padding: 8px 12px;
   border-radius: 4px;
-  font-size: var(--font-size);
+  font-size: var(--font-size-input);
   font-family: var(--font);
   cursor: pointer;
   color: var(--text);
@@ -972,7 +972,7 @@ export const FandomDialogCancelBtn = styled.button`
   background-color: var(--bg-3);
   border: 1px solid var(--bg-6);
   color: var(--text-secondary);
-  font-size: var(--font-size);
+  font-size: var(--font-size-input);
   font-family: var(--font);
   cursor: pointer;
 

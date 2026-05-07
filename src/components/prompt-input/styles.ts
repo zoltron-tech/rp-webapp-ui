@@ -670,3 +670,176 @@ export const SubmitButton = styled.button`
     cursor: not-allowed;
   }
 `;
+
+// ── Muse-select trigger + dialog ─────────────────────────────────────────────
+
+export const MuseSelectTrigger = styled.button`
+  && {
+    all: unset;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px 4px 4px;
+    border: 1px solid var(--bg-6);
+    border-radius: 999px;
+    background: var(--bg-3);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+
+    .avatar {
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      border-radius: 50%;
+    }
+
+    .trigger-name {
+      font-size: var(--font-size-small);
+      font-family: var(--font);
+      font-weight: var(--font-weight-medium);
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 140px;
+    }
+
+    .trigger-caret {
+      display: flex;
+      align-items: center;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+
+    &:hover {
+      background: var(--bg-4);
+      border-color: color-mix(in srgb, var(--accent) 55%, var(--bg-6));
+    }
+
+    &:focus-visible {
+      outline: 1.5px solid var(--accent);
+      outline-offset: 2px;
+    }
+  }
+`;
+
+export const MuseDialogBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+export const MuseDialogSearch = styled.input`
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--bg-6);
+  background: var(--bg-4);
+  color: var(--text);
+  font-size: var(--font-size-input);
+  font-family: var(--font);
+
+  &:focus {
+    outline: none;
+    border-color: color-mix(in srgb, var(--accent) 60%, var(--bg-6));
+  }
+
+  &::placeholder {
+    color: var(--text-secondary);
+  }
+`;
+
+export const MuseDialogList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  height: 260px;
+  overflow-y: auto;
+`;
+
+export const MuseDialogListItem = styled.button<{ $active: boolean }>`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: ${({ $active }) =>
+    $active
+      ? "color-mix(in srgb, var(--accent) 14%, var(--bg-4))"
+      : "transparent"};
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.12s ease;
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 10%, var(--bg-4));
+  }
+`;
+
+export const MuseDialogSourceInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+`;
+
+export const MuseDialogSourceName = styled.span`
+  font-size: var(--font-size-input);
+  color: var(--text);
+  font-weight: var(--font-weight-semi-bold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+export const MuseDialogSourceType = styled.span`
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+`;
+
+export const MuseDialogSelectedMark = styled.span`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  flex-shrink: 0;
+`;
+
+export const MuseDialogDivider = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 2px;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  pointer-events: none;
+
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background-color: var(--bg-6);
+  }
+`;
+
+export const MuseDialogEmptyText = styled.p`
+  margin: 0;
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 16px 0;
+`;

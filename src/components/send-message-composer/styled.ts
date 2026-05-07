@@ -148,7 +148,7 @@ export const SenderList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 2px;
-  max-height: 260px;
+  height: 260px;
   overflow-y: auto;
 `;
 

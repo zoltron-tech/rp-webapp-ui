@@ -528,3 +528,204 @@ export const NoteCharCount = styled.span`
     color: var(--tomato-a9);
   }
 `;
+
+// ── Username row ──────────────────────────────────────────────────────────────
+
+export const UsernameRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 16px;
+
+  .username-label {
+    font-size: var(--font-size);
+    color: var(--accent);
+    font-weight: var(--font-weight-bold);
+  }
+`;
+
+export const EditUsernameButton = styled.button`
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: color 0.15s ease, background 0.15s ease;
+
+  svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  &:hover {
+    color: var(--accent);
+    background: var(--bg-4);
+  }
+
+  &:focus {
+    outline: 1.5px solid var(--accent);
+    outline-offset: 2px;
+  }
+`;
+
+// ── Change-username dialog ────────────────────────────────────────────────────
+
+export {
+  Content,
+  Overlay,
+  Title,
+} from "@/components/dialog/styled";
+
+export const DialogDescription = styled.p`
+  font-size: var(--font-size-input);
+  color: var(--text-secondary);
+  margin: 8px 12px 16px;
+  line-height: 1.5;
+`;
+
+export const DialogForm = styled.form`
+  padding: 8px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  label {
+    display: block;
+    font-size: var(--font-size-small);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+
+  input:not([type="hidden"]) {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid var(--bg-6);
+    background: var(--bg-3);
+    color: var(--text);
+    font-size: var(--font-size-input);
+    font-family: var(--font);
+    box-sizing: border-box;
+
+    &:focus {
+      outline: 2px solid var(--accent);
+    }
+
+    &:disabled {
+      background: var(--bg-2);
+      color: var(--text-secondary);
+      cursor: not-allowed;
+    }
+  }
+`;
+
+export const DialogActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+`;
+
+export const DialogCancelButton = styled.button`
+  all: unset;
+  width: 90px;
+  padding: 8px;
+  text-align: center;
+  background-color: var(--bg-3);
+  color: var(--text-secondary);
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-regular);
+  border: 1px solid var(--bg-6);
+  border-radius: 4px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--bg-4);
+  }
+
+  &:focus {
+    outline: 1.5px solid var(--accent);
+    outline-offset: 2px;
+  }
+`;
+
+export const DialogSubmitButton = styled.button`
+  min-width: 90px;
+  padding: 8px;
+  background-color: var(--accent);
+  color: var(--text);
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-medium);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:not([disabled]):hover {
+    background-color: var(--accent-hover);
+  }
+
+  &:not([disabled]):active {
+    background-color: var(--accent-active);
+  }
+
+  &:focus {
+    outline: 1.5px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  &[disabled] {
+    background-color: var(--bg-6);
+    cursor: not-allowed;
+    color: var(--text-secondary);
+  }
+`;
+
+export const UsernameFieldWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+export const AvailabilityIndicator = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--font-size-small);
+  margin-top: 4px;
+  font-weight: var(--font-weight-medium);
+
+  svg {
+    flex-shrink: 0;
+    width: 13px;
+    height: 13px;
+  }
+
+  &.available {
+    color: var(--grass-9);
+  }
+
+  &.taken {
+    color: var(--tomato-9);
+  }
+
+  &.checking {
+    color: var(--text-secondary);
+  }
+
+  &.invalid {
+    color: var(--amber-9);
+  }
+`;
+
+export const DialogErrorText = styled.p`
+  font-size: var(--font-size-small);
+  color: var(--tomato-9);
+  margin: 0;
+  font-weight: var(--font-weight-medium);
+`;

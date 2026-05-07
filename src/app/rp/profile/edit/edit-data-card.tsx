@@ -38,6 +38,7 @@ import { ROUTES } from "@/utils/constants/routes";
 import { searchMentionMusesAction } from "../../muse/actions";
 import { updateUserNovelist } from "../../novelists/actions";
 import { uploadMedia } from "../actions";
+import { ChangeUsernameDialog, UsernameRow } from "./change-username-dialog";
 import { NoteDialogBody } from "./note-dialog-body";
 import { useProfileState, useProfileStoreSet } from "./profile.store";
 import * as S from "./styled";
@@ -138,6 +139,7 @@ export default function EditDataCard() {
     useState<OperationState>("INITIAL");
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
   const [tempNote, setTempNote] = useState("");
+  const [usernameDialogOpen, setUsernameDialogOpen] = useState(false);
   const setGlobalState = useGlobalStoreSet();
   const { successToast } = useUIContext();
   const { routeToPage } = usePageRouter();
@@ -429,6 +431,11 @@ export default function EditDataCard() {
       </Flex>
       <Separator.Root className="separator" orientation="horizontal" />
 
+      <ChangeUsernameDialog
+        open={usernameDialogOpen}
+        onOpenChange={setUsernameDialogOpen}
+      />
+
       <S.FormContainer>
         <Form.Root onSubmit={handleSubmit} onReset={handleReset}>
           <S.BasicInfoFields>
@@ -453,6 +460,12 @@ export default function EditDataCard() {
                 hidden
               />
             </Form.Field>
+            <ShouldRender if={Boolean(user?.username)}>
+              <UsernameRow
+                username={user?.username ?? ""}
+                onEditClick={() => setUsernameDialogOpen(true)}
+              />
+            </ShouldRender>
             <input type="hidden" name="note" value={note ?? ""} readOnly />
             <AppAlertDialog
               heading="Share a thought..."

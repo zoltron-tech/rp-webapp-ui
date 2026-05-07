@@ -180,7 +180,7 @@ export default function MuseProfilePage({}) {
   const loadPrompts = () => {
     return prompts?.map((prompt) => (
       <>
-        <Flex direction="column">
+        <Flex direction="column" style={{ width: "100%" }}>
           <RichTextRenderer
             savedText={prompt.text ?? ""}
             collapsedHeight={100}

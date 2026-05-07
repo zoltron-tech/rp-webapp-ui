@@ -597,6 +597,7 @@ export const ScrollableContent = styled.div<{ accent?: string | null }>`
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
   height: inherit;
+  width: 100%;
   padding-bottom: 20px;
   padding-inline: 10px;
 

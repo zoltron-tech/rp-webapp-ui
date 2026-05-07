@@ -89,7 +89,11 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
         </Flex>
         <S.StyledDate>{toFormattedDateFromUnix(activity.date)}</S.StyledDate>
       </S.HeaderContainer>
-      <Flex direction="column" align="center" style={{ paddingInline: "10px" }}>
+      <Flex
+        direction="column"
+        align="center"
+        style={{ paddingInline: "10px", width: "100%" }}
+      >
         <ShouldRender
           if={["PROMPT", "COMMENT", "REPLY"].includes(
             activity.target.activityTargetType,

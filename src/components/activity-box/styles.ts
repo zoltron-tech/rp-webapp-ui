@@ -15,7 +15,7 @@ export const ParentContainer = styled.div`
   @container content-container (max-width: 800px) {
     padding-inline: 10px;
     margin-block: 0px;
-    width: 100%;
+    width: 80%;
   }
 
   @container content-container (max-width: 500px) {

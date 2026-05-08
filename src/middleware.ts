@@ -22,7 +22,7 @@ const TRACKING_PARAMS = new Set([
 ]);
 
 export function middleware(request: NextRequest) {
-  const { searchParams, pathname } = request.nextUrl;
+  const { searchParams } = request.nextUrl;
 
   const hasTracking = [...searchParams.keys()].some((key) =>
     TRACKING_PARAMS.has(key),

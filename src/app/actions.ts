@@ -41,7 +41,7 @@ export const setAuthCookie = async (jwt: string) => {
   return (await cookies()).set(JWT_COOKIE_NAME, jwt, {
     ...(USE_LOCAL_DOMAIN ? {} : { domain: "novelist.world" }),
     expires: new Date(Date.now() + 60 * 60 * 24 * 30 * 1000), // 30 days
-    httpOnly: true,
+    httpOnly: false,
     path: "/",
     sameSite: "strict",
     secure: !USE_LOCAL_DOMAIN,
@@ -55,7 +55,7 @@ export const removeAuthCookie = async () => {
   (await cookies()).set(JWT_COOKIE_NAME, "", {
     ...(USE_LOCAL_DOMAIN ? {} : { domain: "novelist.world" }),
     expires: pastDate,
-    httpOnly: true,
+    httpOnly: false,
     path: "/",
     sameSite: "strict",
     secure: !USE_LOCAL_DOMAIN,

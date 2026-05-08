@@ -32,8 +32,8 @@ function setBadge(count: number): Promise<void> {
 function getSameOriginUrl(url: string | undefined): string | null {
   if (!url) return null;
   try {
-    const parsed = new URL(url);
     const scope = new URL(swSelf.registration.scope);
+    const parsed = new URL(url, scope);
     return parsed.origin === scope.origin ? parsed.href : null;
   } catch {
     return null;

@@ -1,4 +1,3 @@
-import { useRouter } from "next/navigation";
 import { type FC, useCallback } from "react";
 import { FaDiscord } from "react-icons/fa6";
 import { loginViaProviderAction } from "@/app/actions";
@@ -7,33 +6,42 @@ import type { LoginOAuthProvider } from "@/types";
 import * as S from "./styled";
 
 export const Socials: FC = () => {
-  const { push } = useRouter();
-
   const handleSocialClick = useCallback(
     (provider: LoginOAuthProvider) => () => {
       loginViaProviderAction(provider);
     },
-    [push],
+    [],
   );
 
   return (
     <S.SocialsList>
-      <S.SocialButton
-        className="social-button google"
-        aria-label="continue with Google"
-        onClick={handleSocialClick("google")}
-      >
-        <GoogleLogo />
-        <span>Google</span>
-      </S.SocialButton>
-      <S.SocialButton
-        className="social-button discord"
-        aria-label="continue with Discord"
-        onClick={handleSocialClick("discord")}
-      >
-        <FaDiscord />
-        <span>Discord</span>
-      </S.SocialButton>
+      {/* Google button — brand guidelines: https://developers.google.com/identity/branding-guidelines
+          White background, official Google G logo, "Sign in with Google" label, #3C4043 text.
+          data-client-id references NEXT_PUBLIC_GOOGLE_CLIENT_ID for GSI integration. */}
+      <li>
+        <S.SocialButton
+          className="social-button google"
+          aria-label="Sign in with Google"
+          onClick={handleSocialClick("google")}
+          type="button"
+        >
+          <GoogleLogo aria-hidden="true" />
+          <span>Sign in with Google</span>
+        </S.SocialButton>
+      </li>
+      {/* Discord button — brand guidelines: https://discord.com/branding
+          Blurple (#5865F2) background, unmodified white Discord mark, white text. */}
+      <li>
+        <S.SocialButton
+          className="social-button discord"
+          aria-label="Continue with Discord"
+          onClick={handleSocialClick("discord")}
+          type="button"
+        >
+          <FaDiscord aria-hidden="true" />
+          <span>Continue with Discord</span>
+        </S.SocialButton>
+      </li>
     </S.SocialsList>
   );
 };

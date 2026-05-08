@@ -7,7 +7,10 @@ export const ParentContainer = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 800px;
+  width: 100%;
+  max-width: 800px;
+  min-width: 0;
+  overflow: hidden;
   padding-inline: 60px;
   margin-block: 5px;
   padding-top: 10px;

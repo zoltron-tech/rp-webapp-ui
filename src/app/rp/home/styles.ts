@@ -30,6 +30,8 @@ export const ParentWrapperContainer = styled.div`
   justify-content: start;
   align-items: flex-start;
   gap: 0.3em;
+  width: 100%;
+  overflow: hidden;
 `;
 
 export const LeftWrapperContainer = styled.div`
@@ -37,6 +39,7 @@ export const LeftWrapperContainer = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  flex-shrink: 0;
   width: 15cqw;
 
   container-name: left_wrapper;
@@ -90,10 +93,11 @@ export const RightWrapperContainer = styled.div`
   flex-direction: column;
   justify-content: start;
   align-items: flex-start;
+  flex: 1;
+  min-width: 0;
   height: 93dvh;
   overflow-y: auto;
   overflow-x: hidden;
-  align-items: flex-start;
 `;
 
 export const ContentContainer = styled.div`

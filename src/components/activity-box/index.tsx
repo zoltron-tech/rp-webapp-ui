@@ -92,7 +92,12 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
       <Flex
         direction="column"
         align="center"
-        style={{ paddingInline: "10px", width: "100%" }}
+        style={{
+          minWidth: 0,
+          overflow: "hidden",
+          paddingInline: "10px",
+          width: "100%",
+        }}
       >
         <ShouldRender
           if={["PROMPT", "COMMENT", "REPLY"].includes(

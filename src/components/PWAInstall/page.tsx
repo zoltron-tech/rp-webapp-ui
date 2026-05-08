@@ -49,7 +49,7 @@ export default function PWAInstallButton() {
     const { outcome } = await deferredPrompt.userChoice;
 
     if (outcome === "accepted") {
-      console.log("App installed successfully");
+      // Install accepted — prompt dismissed, no further action needed
     }
     setDeferredPrompt(null);
   };

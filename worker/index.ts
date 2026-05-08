@@ -24,11 +24,33 @@ function setBadge(count: number): Promise<void> {
   return nav.clearAppBadge?.() ?? Promise.resolve();
 }
 
+/**
+ * Returns a validated same-origin URL string, or null if the URL is invalid
+ * or points to a different origin. Prevents open-redirect attacks where a
+ * crafted push payload could instruct the SW to open a phishing URL.
+ */
+function getSameOriginUrl(url: string | undefined): string | null {
+  if (!url) return null;
+  try {
+    const scope = new URL(swSelf.registration.scope);
+    const parsed = new URL(url, scope);
+    return parsed.origin === scope.origin ? parsed.href : null;
+  } catch {
+    return null;
+  }
+}
+
 swSelf.addEventListener('push', (event: PushEvent) => {
   if (!event.data) return;
 
-  const data = event.data.json();
-  const avatar: string | null = data.data.senderAvatar;
+  let data: { title: string; body: string; data: { senderAvatar?: string; conversationId?: string; url?: string } };
+  try {
+    data = event.data.json();
+  } catch {
+    // Malformed push payload — silently ignore to prevent SW crash
+    return;
+  }
+  const avatar: string | null = data.data.senderAvatar ?? null;
 
   const notificationOptions: SwNotificationOptions = {
     body: data.body,
@@ -52,14 +74,16 @@ swSelf.addEventListener('push', (event: PushEvent) => {
 // Notification click — update badge, then focus existing tab or open new one
 swSelf.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.notification.close();
-  const url: string = event.notification.data?.url;
+  // Validate the URL is same-origin to prevent open-redirect via push payload
+  const url: string | null = getSameOriginUrl(event.notification.data?.url);
 
   event.waitUntil(
     swSelf.registration
       .getNotifications()
       .then((notifications: Notification[]) => setBadge(notifications.length))
-      .then(() =>
-        swSelf.clients
+      .then(() => {
+        if (!url) return;
+        return swSelf.clients
           .matchAll({ type: 'window', includeUncontrolled: true })
           .then((clientList: readonly WindowClient[]) => {
             for (const client of clientList) {
@@ -68,8 +92,8 @@ swSelf.addEventListener('notificationclick', (event: NotificationEvent) => {
               }
             }
             if (swSelf.clients.openWindow) return swSelf.clients.openWindow(url);
-          })
-      )
+          });
+      })
   );
 });
 

@@ -349,63 +349,110 @@ export const OrHelper = styled.div`
 
 export const SocialsList = styled.ul`
   display: flex;
-  justify-content: center;
-  gap: 10px;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
   list-style: none;
-  padding: 20px;
+  padding: 10px 20px 20px;
   width: 100%;
   max-width: 400px;
+
+  li {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
 `;
 
 export const SocialButton = styled.button`
   all: unset;
+  box-sizing: border-box;
   cursor: pointer;
-  padding: 6px 12px;
-  border-radius: 4px;
-  background-color: var(--bg-4);
-  color: var(--text);
-  font-size: var(--font-size);
-  font-family: var(--font);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100px;
-  border: 1px solid var(--bg-6);
+  gap: 12px;
+  height: 40px;
+  min-height: 40px;
+  width: 100%;
+  max-width: 300px;
+  padding: 0 16px;
+  border-radius: 4px;
+  font-family: var(--font);
+  transition: background-color 0.15s ease, box-shadow 0.15s ease,
+    border-color 0.15s ease;
 
-  &:hover {
-    background-color: var(--bg-3);
-  }
-  &:active {
-    background-color: var(--bg-2);
-  }
-  &:focus {
-    outline: 1.5px solid var(--accent);
+  &:focus-visible {
+    outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
 
   span {
-    color: var(--text);
-    font-size: var(--font-size);
-    font-family: var(--font);
-    margin-left: 8px;
+    font-size: 14px;
     font-weight: var(--font-weight-medium);
+    font-family: var(--font);
+    white-space: nowrap;
   }
 
   svg {
-    width: 24px;
-    height: 24px;
+    flex-shrink: 0;
   }
 
+  /* Google — Sign In With Google brand guidelines
+     https://developers.google.com/identity/branding-guidelines
+     White background, 1px #DADCE0 border, official colored Google G logo, #3C4043 text */
   &.google {
+    background-color: #ffffff;
+    border: 1px solid #dadce0;
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.1);
+
+    span {
+      color: #3c4043;
+      letter-spacing: 0.25px;
+    }
+
     svg {
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
+    }
+
+    &:hover {
+      background-color: #eef3fb;
+      border-color: #c6c6c6;
+      box-shadow: 0 1px 3px rgba(60, 64, 67, 0.3);
+    }
+
+    &:active {
+      background-color: #f1f3f4;
+      box-shadow: none;
     }
   }
 
+  /* Discord — Discord brand guidelines (https://discord.com/branding)
+     Blurple (#5865F2) background, unmodified white Discord mark, white text.
+     Do not recolor or distort the Discord logo. */
   &.discord {
+    background-color: #5865f2;
+    border: none;
+
+    span {
+      color: #ffffff;
+    }
+
     svg {
-      fill: #5865f2;
+      width: 20px;
+      height: 20px;
+      fill: #ffffff;
+    }
+
+    &:hover {
+      background-color: #4752c4;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+    }
+
+    &:active {
+      background-color: #3c45a5;
+      box-shadow: none;
     }
   }
 
@@ -420,31 +467,6 @@ export const SocialButton = styled.button`
       fill: #c13584;
     }
   }
-
-  /* &.google {
-    background-color: var(--text);
-  }
-
-  &:not(.google) {
-    svg {
-      fill: var(--text);
-      path {
-        fill: currentColor;
-      }
-    }
-
-    &.discord {
-      background-color: #5865f2;
-    }
-
-    &.facebook {
-      background-color: #1877f2;
-    }
-
-    &.instagram {
-      background-color: #c13584;
-    }
-  } */
 `;
 
 export const TermsAndConditions = styled.div`

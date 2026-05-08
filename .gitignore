@@ -11,9 +11,9 @@ public/icons/photothumb.db
 public/sw.js
 public/sw.js.map
 public/workbox-*.js
-public/swe-worker-development.js
-public/worker-development.js
-public/workbox-fb90b81a.js.map
+public/workbox-*.js.map
+public/swe-worker-*.js
+public/worker-*.js
 
 # yarn 2
 .yarn/*

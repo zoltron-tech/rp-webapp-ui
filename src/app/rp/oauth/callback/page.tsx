@@ -1,17 +1,20 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CgClose } from "react-icons/cg";
 import { IoMdCheckmark } from "react-icons/io";
 import { PiSpinnerGapLight } from "react-icons/pi";
-import { getUser, setAuthCookie } from "@/app/actions";
+import {
+  authenticateAction,
+  getAuthCookie,
+  getUser,
+  setAuthCookie,
+} from "@/app/actions";
 import { useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { usePostLogin } from "@/hooks/use-post-login";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
-import { validateJWTSync } from "@/utils/helpers";
 import { getUserNovelist } from "../../novelists/actions";
 import * as S from "./styled";
 
@@ -43,8 +46,6 @@ const Content: Record<OperationState, ContentType> = {
 };
 
 export default function LoginOAuthCallbackPage() {
-  const searchParams = useSearchParams();
-  const token = searchParams?.get("token") || "";
   const [operationState, setOperationState] =
     useState<OperationState>("LOADING");
   const setGlobalState = useGlobalStoreSet();
@@ -56,17 +57,17 @@ export default function LoginOAuthCallbackPage() {
   }, [operationState]);
 
   const validateToken = useCallback(async () => {
-    if (!token) {
-      setOperationState("ERROR");
-      return;
-    }
-    const _validated = validateJWTSync(token);
-    if (!_validated) {
+    const isValid = await authenticateAction();
+    if (!isValid) {
       setOperationState("ERROR");
       return;
     }
 
-    await setAuthCookie(token);
+    // Re-set the cookie with the correct domain for the current environment.
+    // The backend always issues the cookie scoped to novelist.world; on localhost
+    // that domain won't match, so we promote it to a locally-scoped cookie here.
+    const jwt = await getAuthCookie();
+    await setAuthCookie(jwt);
 
     const response = await getUser();
     if (response.message === API_MESSAGE.Unauthorized) {
@@ -93,11 +94,11 @@ export default function LoginOAuthCallbackPage() {
     const onboarded = await handlePostLogin(_novelist, response.user!);
     setOperationState("SUCCESS");
     routeToPage(onboarded ? ROUTES.Home : ROUTES.Onboarding);
-  }, [token, setOperationState]);
+  }, []);
 
   useEffect(() => {
     validateToken();
-  }, [token]);
+  }, [validateToken]);
 
   return (
     <S.PageRoot>

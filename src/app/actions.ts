@@ -39,12 +39,12 @@ export const getAuthCookie = async () => {
 
 export const setAuthCookie = async (jwt: string) => {
   return (await cookies()).set(JWT_COOKIE_NAME, jwt, {
-    domain: USE_LOCAL_DOMAIN ? "localhost" : "novelist.world",
+    ...(USE_LOCAL_DOMAIN ? {} : { domain: "novelist.world" }),
     expires: new Date(Date.now() + 60 * 60 * 24 * 30 * 1000), // 30 days
     httpOnly: false,
     path: "/",
     sameSite: "strict",
-    secure: false,
+    secure: !USE_LOCAL_DOMAIN,
   });
 };
 
@@ -53,12 +53,12 @@ export const removeAuthCookie = async () => {
   pastDate.setFullYear(pastDate.getFullYear() - 1);
   // Remove the cookie by setting an expired date
   (await cookies()).set(JWT_COOKIE_NAME, "", {
-    domain: USE_LOCAL_DOMAIN ? "localhost" : "novelist.world",
+    ...(USE_LOCAL_DOMAIN ? {} : { domain: "novelist.world" }),
     expires: pastDate,
     httpOnly: false,
     path: "/",
     sameSite: "strict",
-    secure: false,
+    secure: !USE_LOCAL_DOMAIN,
   });
 };
 

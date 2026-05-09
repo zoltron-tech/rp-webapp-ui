@@ -65,12 +65,12 @@ export const AccentBanner = styled.div`
 `;
 
 export const AvatarWrapper = styled.div`
-  margin-top: -54px;
+  margin-top: -60px;
   z-index: 1;
 
   .avatar {
-    width: 108px;
-    height: 108px;
+    width: 120px;
+    height: 120px;
     border: 4px solid var(--bg-2);
   }
 `;
@@ -85,8 +85,8 @@ export const Body = styled.div`
 `;
 
 export const FullName = styled.div`
-  font-size: 22px;
-  font-weight: 700;
+  font-size: var(--font-size-h6);
+  font-weight: var(--font-weight-bold);
   color: var(--text);
   text-align: center;
 `;
@@ -104,7 +104,6 @@ export const MusesRow = styled.div`
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin-top: 12px;
 
   .avatar {
     width: 46px;
@@ -114,18 +113,18 @@ export const MusesRow = styled.div`
 `;
 
 export const MusesLabel = styled.div`
-  font-size: 11px;
+  font-size: var(--font-size-xsmall);
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin-top: 4px;
+  margin-top: 10px;
 `;
 
 export const Divider = styled.div`
-  width: 80%;
+  width: 100%;
   height: 1px;
   background: var(--bg-6);
-  margin: 16px 0 12px;
+  margin: 12px 0 8px;
 `;
 
 export const Footer = styled.div`
@@ -133,7 +132,7 @@ export const Footer = styled.div`
   align-items: flex-end;
   justify-content: flex-start;
   width: 100%;
-  padding: 0 24px 20px;
+  padding: 5px 30px 10px;
   gap: 12px;
 `;
 
@@ -234,7 +233,7 @@ export const BrandText = styled.div`
 
 export const BrandName = styled.span`
   font-size: var(--font-size-small);
-  font-weight: 400;
+  font-weight: var(--font-weight-regular);
   font-style: italic;
   text-transform: uppercase;
   color: var(--text);
@@ -243,8 +242,9 @@ export const BrandName = styled.span`
 
 export const BrandNameSuffix = styled.span`
   font-size: var(--font-size-small);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   font-style: italic;
+  margin-left: 4px;
   text-transform: uppercase;
   color: var(--accent-8);
   letter-spacing: 0.01em;

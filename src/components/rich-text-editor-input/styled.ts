@@ -403,14 +403,13 @@ interface BulletItemProps {
 }
 
 export const BulletGridItem = styled.button<BulletItemProps>`
-  padding: 0.5rem;
-  min-height: 44px;
+  min-height: 20px;
   border: 1px solid ${(props) => (props.$selected ? "var(--accent)" : "var(--bg-6, #e5e4e7)")};
-  border-radius: 0.375rem;
+  border-radius: 4px;
   background-color: ${(props) => (props.$selected ? "var(--accent)" : "var(--bg-4, #f9fafb)")};
   color: ${(props) => (props.$selected ? "var(--text)" : "var(--text-secondary)")};
   cursor: pointer;
-  font-size: 1.35rem;
+  font-size: var(--font-size-small);
   transition: all 0.2s;
   display: flex;
   align-items: center;
@@ -509,14 +508,13 @@ interface QuotationItemProps {
 }
 
 export const QuotationGridItem = styled.button<QuotationItemProps>`
-  padding: 0.5rem;
-  min-height: 44px;
+  min-height: 20px;
   border: 1px solid ${(props) => (props.$selected ? "var(--accent)" : "var(--bg-6, #e5e4e7)")};
-  border-radius: 0.375rem;
+  border-radius: 4px;
   background-color: ${(props) => (props.$selected ? "var(--accent)" : "var(--bg-4, #f9fafb)")};
   color: ${(props) => (props.$selected ? "var(--text)" : "var(--text-secondary)")};
   cursor: pointer;
-  font-size: 1.35rem;
+  font-size: var(--font-size-small);
   transition: all 0.2s;
   display: flex;
   align-items: center;

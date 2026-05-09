@@ -216,7 +216,7 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
 
               {novelist.muses.length > 0 && (
                 <>
-                  <S.MusesLabel>Characters</S.MusesLabel>
+                  <S.MusesLabel>Top Characters</S.MusesLabel>
                   <S.MusesRow>
                     {novelist.muses.slice(0, 3).map((muse) => (
                       // Fix 2 — same ring wrapper for character avatars
@@ -245,7 +245,7 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
 
             <S.Footer>
               <S.ProfileUrlBlock>
-                <S.ProfileUrlLabel>Profile</S.ProfileUrlLabel>
+                <S.ProfileUrlLabel>Profile URL</S.ProfileUrlLabel>
                 <S.ProfileUrl>{profileUrl}</S.ProfileUrl>
               </S.ProfileUrlBlock>
               <S.QrWrapper>

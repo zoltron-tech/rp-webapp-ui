@@ -2,7 +2,7 @@
 
 import classNames from "classnames";
 import { toPng } from "html-to-image";
-import { type FC, useRef, useState } from "react";
+import { type FC, useEffect, useRef, useState } from "react";
 import { FiDownload, FiX } from "react-icons/fi";
 import QRCode from "react-qr-code";
 import logoText from "@/assets/images/Logo text.png";
@@ -114,6 +114,14 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
 
   const profileUrl = `https://novelist.world/rp/profile/${novelist.username}`;
 
+  // Auto-generate the shareable image as soon as the card opens on iOS / PWA
+  useEffect(() => {
+    if (getIsIOS() || getIsPWA()) {
+      handleDownload();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleDownload = async () => {
     if (!cardRef.current) return;
     setExporting(true);
@@ -128,15 +136,9 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
         style: { transform: "translateZ(0)" },
       });
 
-      const isIOS = getIsIOS();
-      const isPWA = getIsPWA();
-
-      if (isPWA) {
-        // Fix 1 — PWA blocks window.open; show image inline so user can long-press → Save
+      if (getIsIOS() || getIsPWA()) {
+        // iOS / PWA — show inline overlay so user can long-press → Save
         setExportedImage(dataUrl);
-      } else if (isIOS) {
-        // Safari / Chrome on iOS — open data URL in new tab; user long-presses to save
-        window.open(dataUrl, "_blank");
       } else {
         // Desktop — standard anchor download
         const link = document.createElement("a");
@@ -186,27 +188,11 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
             <S.AccentBanner />
 
             <S.AvatarWrapper>
-              {/*
-               * Fix 2 — swap box-shadow for a border-ring wrapper.
-               * CSS box-shadow on border-radius elements renders skewed
-               * when html-to-image draws them on an iOS canvas.
-               * A solid-border wrapper div is composited correctly.
-               */}
-              <div
-                style={{
-                  background: "var(--accent-primary, transparent)",
-                  borderRadius: "50%",
-                  display: "inline-flex",
-                  flexShrink: 0,
-                  padding: 2,
-                }}
-              >
-                <AvatarNew
-                  src={novelist.image ?? null}
-                  alt={`${novelist.firstName} ${novelist.lastName}`}
-                  username={novelist.username}
-                />
-              </div>
+              <AvatarNew
+                src={novelist.image ?? null}
+                alt={`${novelist.firstName} ${novelist.lastName}`}
+                username={novelist.username}
+              />
             </S.AvatarWrapper>
 
             <S.Body>

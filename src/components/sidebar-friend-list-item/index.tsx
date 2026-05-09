@@ -34,7 +34,7 @@ export const SideBarFriendListItem: FC<Props> = ({
       ])}
       {...rest}
     >
-      <S.CardBackground banner={novelist?.image || ""} />
+      <S.CardBackground />
       <S.Card
         className={classNames([
           "muse-card",

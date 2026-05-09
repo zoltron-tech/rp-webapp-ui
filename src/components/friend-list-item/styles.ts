@@ -3,11 +3,7 @@ import * as Common from "@/components/common";
 import { CARD_BORDER, Z_INDEX } from "@/theme";
 import { AvatarNew } from "../common/avatar-new";
 
-type CardProps = {
-  banner: string;
-};
-
-export const CardBackground = styled.div<CardProps>`
+export const CardBackground = styled.div`
   position: absolute;
   width: 100%;
   height: 100%;

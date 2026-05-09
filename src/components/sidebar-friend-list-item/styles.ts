@@ -3,11 +3,7 @@ import * as Common from "@/components/common";
 import { Z_INDEX } from "@/theme";
 import { AvatarNew } from "../common/avatar-new";
 
-type CardProps = {
-  banner: string;
-};
-
-export const CardBackground = styled.div<CardProps>`
+export const CardBackground = styled.div`
   position: absolute;
   width: 100%;
   height: 100%;
@@ -48,8 +44,6 @@ export const CardWrapper = styled.div`
 export const Card = styled.div`
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
-  justify-content: space-between;
   position: relative;
   height: 100%;
   contain: paint;

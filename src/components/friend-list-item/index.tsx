@@ -19,9 +19,14 @@ export const FriendListItem: FC<Props> = ({ friend }) => {
     routeToPage(ROUTES.Profile.View(friend.username).Index);
   };
 
+  const onButtonClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onClick();
+  };
+
   return (
     <S.CardWrapper onClick={onClick}>
-      <S.CardBackground banner={friend.image || ""} />
+      <S.CardBackground />
       <S.Card>
         <AvatarNew
           src={friend.image ?? null}
@@ -36,7 +41,7 @@ export const FriendListItem: FC<Props> = ({ friend }) => {
           <S.UsernameStyled username={friend.username} />
         </S.Info>
         <S.ButtonContainer>
-          <Button variant="primary" onClick={onClick}>
+          <Button variant="primary" onClick={onButtonClick}>
             View Profile
           </Button>
         </S.ButtonContainer>

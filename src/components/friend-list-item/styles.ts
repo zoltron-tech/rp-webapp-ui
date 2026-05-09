@@ -3,13 +3,6 @@ import * as Common from "@/components/common";
 import { CARD_BORDER, Z_INDEX } from "@/theme";
 import { AvatarNew } from "../common/avatar-new";
 
-export const CardBackground = styled.div`
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background-color: ${({ theme }: any) => theme.background};
-`;
-
 export const CardWrapper = styled.div`
   position: relative;
   width: 300px;
@@ -29,7 +22,7 @@ export const CardWrapper = styled.div`
     height: 130px;
   }
 
-  @media (max-width: 400px) {
+  @media (max-width: 800px) {
 
     width: 160px;
     min-width: 160px;

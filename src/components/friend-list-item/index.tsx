@@ -26,7 +26,6 @@ export const FriendListItem: FC<Props> = ({ friend }) => {
 
   return (
     <S.CardWrapper onClick={onClick}>
-      <S.CardBackground />
       <S.Card>
         <AvatarNew
           src={friend.image ?? null}
@@ -41,7 +40,7 @@ export const FriendListItem: FC<Props> = ({ friend }) => {
           <S.UsernameStyled username={friend.username} />
         </S.Info>
         <S.ButtonContainer>
-          <Button variant="primary" onClick={onButtonClick}>
+          <Button variant="primary" onClick={() => onButtonClick}>
             View Profile
           </Button>
         </S.ButtonContainer>

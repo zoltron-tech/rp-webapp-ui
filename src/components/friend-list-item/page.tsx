@@ -30,7 +30,6 @@ export const FriendListItem: FC<Props> = ({ novelist, className, ...rest }) => {
       ])}
       {...rest}
     >
-      <S.CardBackground banner={novelist?.image || ""} />
       <S.Card
         className={classNames([
           "muse-card",

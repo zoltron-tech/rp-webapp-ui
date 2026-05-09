@@ -59,88 +59,12 @@ export const Logo = styled.div`
   }
 `;
 
-export const LogoInner = styled.div`
-  height: 100%;
-  width: 100%;
-  margin-inline: auto;
-  border-radius: 5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--accent);
-  border: 1px solid var(--accent-hover);
-  ${NO_USER_SELECT}
-
-  
-  transition-property: width, opacity;
-  transition-duration: 0.2s;
-  transition-timing-function: ease-in-out;
-
-    @media (max-width: 700px) {
-    &.searchBarExpanded {
-      width: -0px;
-      opacity: 0;
-
-      * {
-        display: none;
-      }
-    }
-  }
-
-  & > svg {
-    height: 100%;
-    width: 100%;
-    fill: ${({ theme }: any) => theme.textPrimary};
-  }
-`;
-
 const fadeIn = keyframes`
-  0% {
-    opacity: 0;
-  }
-  15.6% {
-    opacity: 0.279;
-  }
-  27.6% {
-    opacity: 0.99;
-  }
-  38.4% {
-    opacity: 0.45;
-  }
-  48% {
-    opacity: 0.997;
-  }
-  54.8% {
-    opacity: 0.634;
-  }
-  62% {
-    opacity: 0.999;
-  }
-  67.2% {
-    opacity: 0.766;
-  }
-  73.2% {
-    opacity: 0.99;
-  }
-  78% {
-    opacity: 0.865;
-  }
-  83.2% {
-    opacity: 1;
-  }
-  86.8% {
-    opacity: 0.938;
-  }
-  100% {
-    opacity: 1;
-  }
-`;
-
-export const LogoImage = styled.img`
-  height: 100%;
-  width: 100%;
-  opacity: 0;
-  animation: ${fadeIn} 0.7s ease-in-out forwards 0.2s;
+  0% { opacity: 0; }
+  27.6% { opacity: 0.99; }
+  62% { opacity: 0.999; }
+  83.2% { opacity: 1; }
+  100% { opacity: 1; }
 `;
 
 export const LogoText = styled.div`

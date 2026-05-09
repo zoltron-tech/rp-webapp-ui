@@ -4,12 +4,16 @@ import { usePathname } from "next/navigation";
 import { type FC, memo, useCallback, useMemo } from "react";
 import { GoArrowRight } from "react-icons/go";
 import { Search, UserMenu } from "@/components";
-import { Button, ShouldRender, Username } from "@/components/common";
+import {
+  Button,
+  NWLogoInner,
+  ShouldRender,
+  Username,
+} from "@/components/common";
 import { NotificationsMenu } from "@/components/notifications-menu";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
-import logoText from "../../../assets/images/Logo text.png";
 import * as S from "./styles";
 
 type Props = {};
@@ -50,11 +54,9 @@ export const TopBar: FC<Props> = memo(({}) => {
       <S.Bar>
         <S.LogoContainer onClick={onLogoClick}>
           <S.Logo>
-            <S.LogoInner
+            <NWLogoInner
               className={searchBarExpanded ? "searchBarExpanded" : undefined}
-            >
-              <S.LogoImage src={logoText.src} alt="" />
-            </S.LogoInner>
+            />
           </S.Logo>
           <S.LogoText
             className={searchBarExpanded ? "searchBarExpanded" : undefined}

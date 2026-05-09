@@ -3,11 +3,10 @@ import { Flex, ShouldRender } from "@novelist-world/ui";
 import classNames from "classnames";
 import type { FC } from "react";
 import { FiChevronRight } from "react-icons/fi";
-import { VscVerifiedFilled } from "react-icons/vsc";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { Friend } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
-import { Username } from "../common";
+import { EmailVerifiedBadge, Username } from "../common";
 import { AvatarNew } from "../common/avatar-new";
 import * as S from "./styles";
 
@@ -54,7 +53,7 @@ export const ProfileFriendListItem: FC<Props> = ({
                 {friend.firstName} {friend.lastName}
               </S.Name>
               <ShouldRender if={friend?.isVerified === true}>
-                <VscVerifiedFilled size={16} color="rgb(28, 123, 201)" />
+                <EmailVerifiedBadge size={14} />
               </ShouldRender>
             </Flex>
             <Username username={friend.username} className="mini" primary />

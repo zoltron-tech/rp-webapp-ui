@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { ActivityBox } from "@/components/activity-box";
 import { ShouldRender } from "@/components/common";
-import { FriendListItem } from "@/components/friend-list-item/page";
 import HomeTourGuide from "@/components/home-tour-guide";
 import MuseCard from "@/components/muse-card";
 import { Prompt as PromptComponent } from "@/components/prompt";
+import { SideBarFriendListItem } from "@/components/sidebar-friend-list-item";
 import { StrangerCard } from "@/components/stranger-card/page";
 import VideoCard from "@/components/video-card";
 import { useGlobalState } from "@/context/store/stores";
@@ -133,11 +133,11 @@ export default function HomePage() {
                 <S.SubText>No friends yet</S.SubText>
               </ShouldRender>
               {novelist?.friends.map((friend) => (
-                <FriendListItem
+                <SideBarFriendListItem
                   key={friend?.username}
                   novelist={friend}
                   isRequest={false}
-                ></FriendListItem>
+                />
               ))}
             </S.ListContainer>
           </S.ContentContainer>

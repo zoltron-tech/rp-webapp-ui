@@ -30,7 +30,6 @@ export const FriendListItem: FC<Props> = ({ novelist, className, ...rest }) => {
       ])}
       {...rest}
     >
-      <S.CardBackground banner={novelist?.image || ""} />
       <S.Card
         className={classNames([
           "muse-card",
@@ -47,7 +46,7 @@ export const FriendListItem: FC<Props> = ({ novelist, className, ...rest }) => {
           username={novelist?.username}
         />
         <S.Info>
-          <S.username username={novelist?.username} />
+          <S.UsernameStyled username={novelist?.username} />
         </S.Info>
       </S.Card>
     </S.CardWrapper>

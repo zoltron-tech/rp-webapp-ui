@@ -5,8 +5,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { FaChevronDown } from "react-icons/fa";
 import { IoArrowBackOutline } from "react-icons/io5";
-import { VscVerifiedFilled } from "react-icons/vsc";
-import { ChatBubble } from "@/components/common";
+import { ChatBubble, EmailVerifiedBadge } from "@/components/common";
+import { AdminBadge } from "@/components/common/admin-badge";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { AppAlertDialog } from "@/components/dialog";
 import { LoadMore } from "@/components/load-more/page";
@@ -494,9 +494,13 @@ export default function ConversationDetailPage() {
               <S.ChatTitleWrap>
                 <S.ChatTitleRow>
                   <S.ChatTitle>{targetDisplayName}</S.ChatTitle>
-                  {!conversation?.isGroup && targetMember?.isVerified && (
-                    <VscVerifiedFilled size={16} color="rgb(28, 123, 201)" />
-                  )}
+                  {!conversation?.isGroup &&
+                    targetMember?.isVerified &&
+                    (resolvedTargetUserName === "novelistworld" ? (
+                      <AdminBadge size={20} />
+                    ) : (
+                      <EmailVerifiedBadge size={14} />
+                    ))}
                 </S.ChatTitleRow>
                 <S.ChatMeta>
                   @

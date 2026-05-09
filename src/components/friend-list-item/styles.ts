@@ -1,100 +1,85 @@
 import { styled } from "styled-components";
 import * as Common from "@/components/common";
-import { Z_INDEX } from "@/theme";
+import { CARD_BORDER, Z_INDEX } from "@/theme";
 import { AvatarNew } from "../common/avatar-new";
-
-type CardProps = {
-  banner: string;
-};
-
-export const CardBackground = styled.div<CardProps>`
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background-color: ${({ theme }: any) => theme.background};
-`;
 
 export const CardWrapper = styled.div`
   position: relative;
-  min-height: 80px;
-  height: 80px;
-  padding-inline: 10px;
+  width: 300px;
+  min-width: 300px;
+  height: 300px;
+  min-height: 300px;
 
   transition: all 0.3s ease-in-out;
   contain: paint;
   z-index: ${Z_INDEX.CARD};
+  border-radius: 12px;
+  overflow: hidden;
+  ${CARD_BORDER}
 
-  container-name: friend-list-card;
-  container-type: size;
-
-  @container page-container (max-width: 1200px) {
-    & {
-      height: 60px;
-      min-height: 60px;
-    }
+  .avatar {
+    width: 130px;
+    height: 130px;
   }
 
-  @container page-container (max-width: 600px) {
-    & {
+  @media (max-width: 800px) {
+
+    width: 160px;
+    min-width: 160px;
+    height: 220px;
+    min-height: 220px;
+    
+    .avatar {
       width: 80px;
-      height: 60px;
-      min-width: 80px;
-      min-height: 60px;
+      height: 80px;
     }
   }
 `;
 
 export const Card = styled.div`
   display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   position: relative;
   height: 100%;
   contain: paint;
-  gap: 1em;
-  border-bottom: 1px solid var(--bg-6);
-  justify-content: center;
-  align-items: flex-start;
-
-  .avatar {
-    height: 45px;
-    width: 45px;
-  }
+  gap: 8px;
+  padding: 16px;
 `;
 
 export const Avatar = styled(AvatarNew)`
-  margin-top: 15px;
-  @container friend-list-card (max-width: 160px) {
-    & {
-      margin-top: 10px;
-    }
+  .avatar {
+    width: 80px;
+    height: 80px;
   }
 `;
 
 export const Info = styled.div`
   width: 100%;
-  height: 100%;
   display: flex;
   flex-direction: column;
-  align-items: start;
+  align-items: center;
   justify-content: center;
-  font-size: 16px;
-
-  @container friend-list-card (max-width: 100px) {
-    & {
-      font-size: 12px;
-      display: none;
-    }
-  }
+  gap: 4px;
+  text-align: center;
 `;
 
-export const username = styled(Common.Username)`
-  font-size: 16px !important;
+export const Title = styled.span`
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.2;
+`;
 
-  @container friend-list-card (max-width: 400px) {
-    & {
-      font-size: 14px !important;
-    }
-  }
+export const UsernameStyled = styled(Common.Username)`
+  font-size: 14px !important;
+  color: var(--text-secondary);
+`;
+
+export const ButtonContainer = styled.div`
+  margin-top: 12px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
 `;

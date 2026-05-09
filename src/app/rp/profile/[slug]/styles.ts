@@ -477,7 +477,7 @@ export const NameMobile = styled.div`
   ${NameFontStyles};
 
   color: var(--text);
-  margin-top: 50px;
+  margin-top: 70px;
   font-size: 36px;
   width: 100%;
   text-align: center;
@@ -615,4 +615,50 @@ export const MutualFriendsList = styled.div`
   display: flex;
   align-items: center;
   gap: 0.2rem; // space between avatars
+`;
+
+export const FriendsButton = styled.div`
+  width: 95%;
+  align-items: flex-start;
+  padding-block: 8px;
+  padding-inline: 12px;
+  border-radius: 0;
+  background-color: var(--bg-3);
+  border: 1px solid var(--bg-6);
+  height: 60px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-radius: 5px;
+
+  &:hover {
+    background-color: ${({ theme }: any) => theme.hoverGreyAlpha};
+  }
+`;
+
+export const FriendsButtonLabel = styled.span`
+  font-size: var(--font-size-h6);
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+`;
+
+export const FriendsAvatarStack = styled.div`
+  display: flex;
+  align-items: center;
+
+  & > * + * {
+    margin-left: -4px;
+  }
+
+  .avatar {
+    height: 28px;
+    width: 28px;
+  }
+
+  .with-outline .avatar {
+    outline: 4px solid var(--bg-3);
+  }
 `;

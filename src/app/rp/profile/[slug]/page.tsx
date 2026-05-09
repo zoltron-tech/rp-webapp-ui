@@ -3,22 +3,22 @@
 import { Flex } from "@novelist-world/ui";
 import classNames from "classnames";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { BiHide } from "react-icons/bi";
 import { BsPersonFillCheck, BsPersonFillUp, BsThreeDots } from "react-icons/bs";
 import { FaPeopleGroup } from "react-icons/fa6";
 import {
   FcAnswers,
+  FcBusinessContact,
   FcCalendar,
   FcComments,
   FcConferenceCall,
   FcReading,
   FcShare,
-  FcSupport,
   FcTreeStructure,
 } from "react-icons/fc";
 import { GiCheckMark, GiCrossMark } from "react-icons/gi";
-import { GoChevronDown, GoChevronUp } from "react-icons/go";
+import { GoChevronRight } from "react-icons/go";
 import { IoMdPersonAdd } from "react-icons/io";
 import { IoPersonRemove } from "react-icons/io5";
 import {
@@ -26,16 +26,21 @@ import {
   MdOutlineKeyboardDoubleArrowRight,
 } from "react-icons/md";
 import { RiFlagFill } from "react-icons/ri";
-import { VscVerifiedFilled } from "react-icons/vsc";
 import { ContactSupportForm } from "@/components";
 import ActivityBox from "@/components/activity-box";
-import { ShouldRender, Username } from "@/components/common";
+import {
+  EmailVerifiedBadge,
+  ShouldRender,
+  Username,
+} from "@/components/common";
+import { AdminBadge } from "@/components/common/admin-badge";
+import { useIsOnline } from "@/components/common/avatar-new";
 import { NovelistAvatar } from "@/components/common/novelist-avatar";
 import { AppAlertDialog } from "@/components/dialog";
 import { novelistToSource } from "@/components/event-thread-input/helpers";
 import { Image } from "@/components/image-viewer/styled";
+import { MiniProfileCard } from "@/components/mini-profile-card";
 import MuseListItem from "@/components/muse-list-item";
-import ProfileFriendListItem from "@/components/profile-friend-list-item";
 import { AppDropdownMenu } from "@/components/profile-more-dropdown";
 import PromptInput from "@/components/prompt-input";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
@@ -66,6 +71,23 @@ import {
   unfriendNovelist,
 } from "../actions";
 import * as S from "./styles";
+
+function FriendAvatarItem({
+  friend,
+}: {
+  friend: { id: string; image: string; username: string };
+}) {
+  const isOnline = useIsOnline(friend.username);
+  return (
+    <span className={friend.username && !isOnline ? "with-outline" : undefined}>
+      <NovelistAvatar
+        image={friend.image}
+        name={friend.username}
+        username={friend.username}
+      />
+    </span>
+  );
+}
 
 const useGetActivities = (username: string) => {
   const [activities, setActivities] = useState<Activity[]>();
@@ -102,15 +124,14 @@ export default function UserProfilePage({}) {
   const [showReportAlert, setShowReportAlert] = useState(false);
   const [showReportNWAlert, setShowReportNWAlert] = useState(false);
   const [showContactSupportAlert, setShowContactSupportAlert] = useState(false);
+  const [showMiniCard, setShowMiniCard] = useState(false);
   const [supportMessage, setSupportMessage] = useState("");
   const user = useGlobalState("user");
   const userNovelist = useGlobalState("novelist");
   const [novelist, setNovelist] = useState<Novelist | null>(null);
   const username = params?.slug as string;
   const isCurrentUser = username === user?.username;
-  const [showAllFriends, setShowAllFriends] = useState(false);
-  const [maxHeight, setMaxHeight] = useState("0px");
-  const listRef = useRef<HTMLDivElement>(null);
+
   const { activities, refetch: refetchAcitivities } =
     useGetActivities(username);
   const { width } = useWindowDimensions();
@@ -119,18 +140,6 @@ export default function UserProfilePage({}) {
   const setGlobalState = useGlobalStoreSet();
   const { successToast, warningToast, errorToast } = useUIContext();
   const { routeToPage, stopPageLoading, baseDataLoader } = usePageRouter();
-
-  useEffect(() => {
-    if (listRef.current) {
-      if (showAllFriends) {
-        setMaxHeight(`${listRef.current.scrollHeight}px`); // expand
-      } else {
-        const itemHeight = 60; // approx height of 1 friend item including margin
-        const visibleCount = Math.min(3, novelist?.friends.length ?? 0);
-        setMaxHeight(`${itemHeight * visibleCount}px`); // collapse to 3 items
-      }
-    }
-  }, [showAllFriends, novelist?.friends, listRef]);
 
   const mutualFriends = useMemo(() => {
     if (isCurrentUser) return [];
@@ -149,7 +158,9 @@ export default function UserProfilePage({}) {
     return ACCENT_MAP[palette] ?? ACCENT_MAP[0];
   }, [novelist?.palette]);
 
-  const toggleFriends = () => setShowAllFriends((prev) => !prev);
+  const toFriendsPage = () => {
+    routeToPage(ROUTES.Profile.View(username).Friends);
+  };
 
   const handleStartTour = () => {
     setStartTour(true);
@@ -168,6 +179,10 @@ export default function UserProfilePage({}) {
 
   const handleNotImplemented = () => {
     warningToast("This feature is coming soon!");
+  };
+
+  const handleExportMiniProfile = () => {
+    setShowMiniCard(true);
   };
 
   const handleShareProfile = () => {
@@ -529,6 +544,12 @@ export default function UserProfilePage({}) {
           onTourEnd={handleEndTour}
         />
       )} */}
+      {showMiniCard && novelist && (
+        <MiniProfileCard
+          novelist={novelist}
+          onClose={() => setShowMiniCard(false)}
+        />
+      )}
       <AppAlertDialog
         heading={`Unfriend ${username}?`}
         text={`Are you sure you want to remove ${username} from your friends list?`}
@@ -637,6 +658,29 @@ export default function UserProfilePage({}) {
             <ShouldRender if={authState === "LOGGED_IN"}>
               <S.ProfileDropdownMenuContainer>
                 {renderConnectionDropdown(novelist?.connection, username)}
+                <ShouldRender if={isCurrentUser}>
+                  <AppDropdownMenu
+                    variant="bordered"
+                    trigger={<BsThreeDots size={18} />}
+                    items={[
+                      {
+                        icon: <FcAnswers size={22} />,
+                        label: `Copy username`,
+                        onClick: handleCopyUsername,
+                      },
+                      {
+                        icon: <FcShare size={22} />,
+                        label: `Share profile`,
+                        onClick: handleShareProfile,
+                      },
+                      {
+                        icon: <FcBusinessContact size={22} />,
+                        label: `Export novelist card`,
+                        onClick: handleExportMiniProfile,
+                      },
+                    ]}
+                  />
+                </ShouldRender>
                 <ShouldRender
                   if={!isCurrentUser && username !== "novelistworld"}
                 >
@@ -653,6 +697,11 @@ export default function UserProfilePage({}) {
                         icon: <FcShare size={22} />,
                         label: `Share profile`,
                         onClick: handleShareProfile,
+                      },
+                      {
+                        icon: <FcBusinessContact size={22} />,
+                        label: `Export novelist card`,
+                        onClick: handleExportMiniProfile,
                       },
                       {
                         separator: true,
@@ -696,8 +745,13 @@ export default function UserProfilePage({}) {
                         onClick: handleShareProfile,
                       },
                       {
-                        icon: <FcSupport size={22} />,
-                        label: `Contact support`,
+                        icon: <FcBusinessContact size={22} />,
+                        label: `Export novelist card`,
+                        onClick: handleExportMiniProfile,
+                      },
+                      {
+                        icon: <FcComments size={22} />,
+                        label: `Send message`,
                         onClick: () => setShowContactSupportAlert(true),
                       },
                       {
@@ -743,7 +797,11 @@ export default function UserProfilePage({}) {
             <S.UsernameContainer>
               <Username username={username} primary />{" "}
               <ShouldRender if={novelist?.isVerified === true}>
-                <VscVerifiedFilled size={20} color="rgb(28, 123, 201)" />
+                {novelist?.username === "novelistworld" ? (
+                  <AdminBadge size={20} />
+                ) : (
+                  <EmailVerifiedBadge size={14} />
+                )}
               </ShouldRender>
             </S.UsernameContainer>
             <ShouldRender if={username !== "novelistworld"}>
@@ -825,7 +883,7 @@ export default function UserProfilePage({}) {
             <ShouldRender
               if={
                 username !== "novelistworld" &&
-                !!(novelist?.friends && novelist.friends.length > 0)
+                !!(novelist?.friendsCount && novelist.friendsCount > 0)
               }
             >
               <Flex
@@ -833,23 +891,17 @@ export default function UserProfilePage({}) {
                 style={{ width: "100%" }}
                 direction="column"
               >
-                <S.SubText>{`Friends (${novelist?.friends.length})`}</S.SubText>
-
-                <S.FriendList ref={listRef} maxHeight={maxHeight}>
-                  {novelist?.friends.map((friend) => (
-                    <ProfileFriendListItem key={friend.id} friend={friend} />
-                  ))}
-                </S.FriendList>
-
-                {novelist?.friends !== undefined &&
-                  novelist?.friends.length > 3 && (
-                    <S.SeeMoreLink onClick={toggleFriends}>
-                      <span>
-                        {showAllFriends ? "Show less" : "Show all"}{" "}
-                        {showAllFriends ? <GoChevronUp /> : <GoChevronDown />}
-                      </span>
-                    </S.SeeMoreLink>
-                  )}
+                <S.FriendsButton onClick={toFriendsPage}>
+                  <S.FriendsButtonLabel>
+                    {`Friends (${novelist?.friendsCount})`}
+                  </S.FriendsButtonLabel>
+                  <S.FriendsAvatarStack>
+                    {novelist?.friends.slice(0, 5).map((friend) => (
+                      <FriendAvatarItem key={friend.id} friend={friend} />
+                    ))}
+                  </S.FriendsAvatarStack>
+                  <GoChevronRight size={18} color="gray" />
+                </S.FriendsButton>
               </Flex>
             </ShouldRender>
             <ShouldRender if={!!(storyBoards && storyBoards?.length > 0)}>

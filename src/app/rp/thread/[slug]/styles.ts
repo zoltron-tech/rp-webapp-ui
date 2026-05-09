@@ -366,3 +366,53 @@ export const LoadMoreDivider = styled.div`
     font-size: var(--font-size-small);
   }
 `;
+
+export const NotFoundContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px 60px;
+  text-align: center;
+`;
+
+export const NotFoundAnimation = styled.div`
+  width: 280px;
+  height: 280px;
+
+  /* Blend the animation's dominant colors toward the app accent */
+  filter: hue-rotate(
+      calc(var(--animation-hue-shift, 0deg))
+    )
+    saturate(0.85) brightness(0.92);
+
+  @media (max-width: 480px) {
+    width: 200px;
+    height: 200px;
+  }
+`;
+
+export const NotFoundTitle = styled.h2`
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font);
+  font-size: var(--font-size-h5);
+  font-weight: var(--font-weight-bold);
+  color: var(--accent-8);
+  letter-spacing: 0.02em;
+  gap: 12px;
+`;
+
+export const NotFoundMessage = styled.p`
+  all: unset;
+  display: block;
+  font-family: var(--font);
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-regular);
+  color: var(--text-secondary);
+  max-width: 320px;
+  line-height: 1.6;
+`;

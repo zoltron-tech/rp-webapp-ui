@@ -1,8 +1,8 @@
 "use client";
 
 import { Flex, ShouldRender } from "@novelist-world/ui";
-import { VscVerifiedFilled } from "react-icons/vsc";
 import type { Friend } from "@/types";
+import { EmailVerifiedBadge } from "../common";
 import { AvatarNew } from "../common/avatar-new";
 import * as S from "./styled";
 
@@ -25,7 +25,7 @@ export const FriendsList = ({ friends }: FriendsListProps) => {
                     {friend.firstName} {friend.lastName}
                   </S.Name>
                   <ShouldRender if={friend?.isVerified === true}>
-                    <VscVerifiedFilled size={12} color="rgb(28, 123, 201)" />
+                    <EmailVerifiedBadge size={14} />
                   </ShouldRender>
                 </Flex>
               </Flex>

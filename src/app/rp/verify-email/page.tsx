@@ -4,16 +4,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 import { FaFaceSadTear } from "react-icons/fa6";
-import { SiBookstack } from "react-icons/si";
 import { ShouldRender } from "@/components/common";
 import { PageLoaderTypeWriter } from "@/components/layout/loader-2/PageLoaderTypewriter";
-import {
-  Bar,
-  Logo,
-  LogoContainer,
-  LogoInner,
-  LogoText,
-} from "@/components/layout/top-bar/styles";
 import { useAuthContext } from "@/hooks";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styles";

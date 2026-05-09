@@ -6,7 +6,6 @@ export const PageContainer = styled.div`
   justify-content: center;
   align-items: center;
   width: 100%;
-  padding: 0.5em;
   gap: 0.5em;
 `;
 

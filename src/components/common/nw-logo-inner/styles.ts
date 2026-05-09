@@ -18,6 +18,21 @@ export const Inner = styled.div<{ $size?: number }>`
   background-color: var(--accent);
   border: 1px solid var(--accent-hover);
   flex-shrink: 0;
+
+  transition-property: width, opacity;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in-out;
+
+  @media (max-width: 700px) {
+    &.searchBarExpanded {
+      width: 0px;
+      opacity: 0;
+
+      * {
+        display: none;
+      }
+    }
+  }
 `;
 
 export const Img = styled.img`

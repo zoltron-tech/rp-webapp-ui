@@ -72,7 +72,6 @@ export const AvatarWrapper = styled.div`
     width: 108px;
     height: 108px;
     border: 4px solid var(--bg-2);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   }
 `;
 

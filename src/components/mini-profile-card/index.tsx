@@ -129,12 +129,15 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
     try {
       restoreImages = await inlineCardImages(cardRef.current);
 
-      const dataUrl = await toPng(cardRef.current, {
+      const exportOptions = {
         cacheBust: true,
         pixelRatio: 2,
-        // Fix 2 — helps box-shadow / border-radius rendering on iOS canvas
         style: { transform: "translateZ(0)" },
-      });
+      };
+      // html-to-image misses images on the first pass (known bug);
+      // the second call reliably captures everything that's now cached.
+      await toPng(cardRef.current, exportOptions);
+      const dataUrl = await toPng(cardRef.current, exportOptions);
 
       if (getIsIOS() || getIsPWA()) {
         // iOS / PWA — show inline overlay so user can long-press → Save

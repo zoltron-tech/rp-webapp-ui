@@ -344,7 +344,7 @@ export default function EditDataCard() {
           return;
         }
         setGlobalState({
-          novelist: response,
+          novelist: { ...response, isVerified: novelist?.isVerified ?? false },
         });
         setProfileState({
           about: response.about || "",

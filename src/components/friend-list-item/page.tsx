@@ -47,7 +47,7 @@ export const FriendListItem: FC<Props> = ({ novelist, className, ...rest }) => {
           username={novelist?.username}
         />
         <S.Info>
-          <S.username username={novelist?.username} />
+          <S.UsernameStyled username={novelist?.username} />
         </S.Info>
       </S.Card>
     </S.CardWrapper>

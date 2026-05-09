@@ -1,19 +1,20 @@
 "use client";
 
 import { Flex } from "@novelist-world/ui";
+import Lottie from "lottie-react";
 import { useParams } from "next/navigation";
 import { Separator } from "radix-ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
 import { FaRegEdit } from "react-icons/fa";
-import { FaRegTrashCan } from "react-icons/fa6";
+import { FaRegTrashCan, FaTrashCan } from "react-icons/fa6";
 import { IoArrowBackOutline } from "react-icons/io5";
 import { RiFlagFill } from "react-icons/ri";
+import threadDeletedAnimation from "@/../public/animations/thread-deleted.json";
 import { ShouldRender } from "@/components/common";
 import { LikeButton } from "@/components/common/like-button";
 import { MuseAvatar } from "@/components/common/muse-avatar";
 import { NovelistAvatar } from "@/components/common/novelist-avatar";
-import { ScrollJumpButton } from "@/components/common/scroll-jump-button";
 import { AppAlertDialog } from "@/components/dialog";
 import {
   museToSource,
@@ -60,6 +61,7 @@ import * as S from "./styles";
 const useGetComment = (commentId: string) => {
   const [comment, setComment] = useState<Comment | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const { on: onPromptEvent, off: offPromptEvent } = useCustomEvents(
     EVENTS.PROMPT.base,
   );
@@ -112,12 +114,20 @@ const useGetComment = (commentId: string) => {
 
   const fetchComment = useCallback(async () => {
     setLoading(true);
+    setNotFound(false);
     const _comment = await getCommentAction(commentId);
 
-    if (!_comment || "message" in _comment) {
+    if (_comment === null) {
+      setNotFound(true);
       setLoading(false);
       return;
     }
+
+    if ("message" in _comment) {
+      setLoading(false);
+      return;
+    }
+
     setComment(_comment);
     setLoading(false);
   }, [commentId]);
@@ -126,8 +136,29 @@ const useGetComment = (commentId: string) => {
     fetchComment();
   }, [fetchComment]);
 
-  return { comment, loading, refetch: fetchComment };
+  return { comment, loading, notFound, refetch: fetchComment };
 };
+
+function DeletedThreadFallback() {
+  return (
+    <S.NotFoundContainer>
+      <S.NotFoundAnimation>
+        <Lottie
+          animationData={threadDeletedAnimation}
+          loop
+          autoplay
+          style={{ height: "100%", width: "100%" }}
+        />
+      </S.NotFoundAnimation>
+      <S.NotFoundTitle>
+        <FaTrashCan /> Thread Deleted
+      </S.NotFoundTitle>
+      <S.NotFoundMessage>
+        Oops! Looks like the thread has been deleted by the Novelist!
+      </S.NotFoundMessage>
+    </S.NotFoundContainer>
+  );
+}
 
 const PAGE_SIZE = 2;
 
@@ -209,7 +240,11 @@ export default function ThreadPage({}) {
   const authState = useGlobalState("authState");
   const novelist = useGlobalState("novelist");
   const commentId = params?.slug as string;
-  const { comment, loading: loadingComments } = useGetComment(commentId);
+  const {
+    comment,
+    loading: loadingComments,
+    notFound,
+  } = useGetComment(commentId);
   const {
     replies,
     initialLoading,
@@ -700,6 +735,16 @@ export default function ThreadPage({}) {
       .reverse()
       .map((reply) => <ReplyItem key={reply.id} reply={reply} />);
   };
+
+  if (!loadingComments && notFound) {
+    return (
+      <S.ParentContainer>
+        <S.RepliesContainer>
+          <DeletedThreadFallback />
+        </S.RepliesContainer>
+      </S.ParentContainer>
+    );
+  }
 
   return (
     <S.ParentContainer>

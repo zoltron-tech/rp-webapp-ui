@@ -1,11 +1,12 @@
 "use client";
 
 import type { FC } from "react";
-import { VscVerifiedFilled } from "react-icons/vsc";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { Conversation } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
+import { EmailVerifiedBadge } from "../common";
+import { AdminBadge } from "../common/admin-badge";
 import { AvatarNew } from "../common/avatar-new";
 import * as S from "./styles";
 
@@ -189,9 +190,12 @@ export const ConversationCard: FC<ConversationCardProps> = ({
           <S.TopRow>
             <S.Title className={unread ? "unread" : ""}>{displayName}</S.Title>
             {!conversation.isGroup &&
-              conversation.members?.some((m) => m.isVerified) && (
-                <VscVerifiedFilled size={16} color="rgb(28, 123, 201)" />
-              )}
+              conversation.members?.some((m) => m.isVerified) &&
+              (otherMember?.userName === "novelistworld" ? (
+                <AdminBadge size={12} />
+              ) : (
+                <EmailVerifiedBadge size={12} />
+              ))}
           </S.TopRow>
 
           <S.BottomRow>

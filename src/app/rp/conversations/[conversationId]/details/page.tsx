@@ -3,8 +3,9 @@
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { IoArrowBackOutline } from "react-icons/io5";
-import { VscVerifiedFilled } from "react-icons/vsc";
+import { AdminBadge } from "@/components/common/admin-badge";
 import { AvatarNew } from "@/components/common/avatar-new";
+import { EmailVerifiedBadge } from "@/components/common/email-verified-badge";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { Conversation } from "@/types";
@@ -121,9 +122,12 @@ export default function ConversationDetailsPage() {
                       {`${member.firstName} ${member.lastName}`.trim() ||
                         member.userName}
                     </S.MemberName>
-                    {member.isVerified && (
-                      <VscVerifiedFilled size={14} color="rgb(28, 123, 201)" />
-                    )}
+                    {member.isVerified &&
+                      (member.userName === "novelistworld" ? (
+                        <AdminBadge size={20} />
+                      ) : (
+                        <EmailVerifiedBadge size={14} />
+                      ))}
                   </S.MemberNameRow>
                   <S.MemberUsername>@{member.userName}</S.MemberUsername>
                 </S.MemberInfo>

@@ -14,6 +14,16 @@ type AvatarProps = Omit<HTMLProps<HTMLSpanElement>, "src"> & {
   username?: string;
 };
 
+export const useIsOnline = (username: string | undefined): boolean => {
+  const { onlineUsernames, isConnected } = useSocket();
+  const currentUser = useGlobalState("user");
+  return (
+    !!username &&
+    (onlineUsernames.includes(username) ||
+      (isConnected && username === currentUser?.username))
+  );
+};
+
 export const AvatarNew: FC<AvatarProps> = forwardRef(
   (
     { src, alt, className, placeholder = "", username, ...rest },
@@ -24,12 +34,7 @@ export const AvatarNew: FC<AvatarProps> = forwardRef(
       return alt.charAt(0).toUpperCase();
     }, [placeholder, alt]);
 
-    const { onlineUsernames, isConnected } = useSocket();
-    const currentUser = useGlobalState("user");
-    const isOnline =
-      !!username &&
-      (onlineUsernames.includes(username) ||
-        (isConnected && username === currentUser?.username));
+    const isOnline = useIsOnline(username);
 
     return (
       <S.AvatarRoot

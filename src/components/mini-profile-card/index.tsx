@@ -14,6 +14,8 @@ import { ACCENT_MAP } from "@/types/theme";
 import { Flex } from "../edit-muse-card/styles";
 import * as S from "./styles";
 
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
 const toBase64 = (url: string): Promise<string> =>
   fetch(url)
     .then((res) => res.blob())
@@ -26,12 +28,31 @@ const toBase64 = (url: string): Promise<string> =>
           reader.readAsDataURL(blob);
         }),
     )
-    .catch(() => url); // fallback: keep original if fetch fails
+    .catch(() => url); // fallback: keep original src if fetch fails
 
+/**
+ * Waits for every <img> in the card to finish loading, then converts
+ * each src to a base64 data-URL so html-to-image can paint them on
+ * iOS / cross-origin without CORS taint issues.
+ * Returns a cleanup fn that restores the original srcs.
+ */
 const inlineCardImages = async (card: HTMLDivElement): Promise<() => void> => {
   const imgs = Array.from(card.querySelectorAll("img"));
   const originals = imgs.map((img) => img.src);
 
+  // Fix 3 — wait for images that haven't finished loading yet
+  await Promise.all(
+    imgs.map((img) =>
+      img.complete
+        ? Promise.resolve()
+        : new Promise<void>((resolve) => {
+            img.onload = () => resolve();
+            img.onerror = () => resolve(); // don't block on broken images
+          }),
+    ),
+  );
+
+  // Convert every external src to base64
   await Promise.all(
     imgs.map(async (img) => {
       if (!img.src || img.src.startsWith("data:")) return;
@@ -40,7 +61,6 @@ const inlineCardImages = async (card: HTMLDivElement): Promise<() => void> => {
     }),
   );
 
-  // Return a cleanup function to restore the original srcs
   return () => {
     imgs.forEach((img, i) => {
       img.src = originals[i] ?? "";
@@ -59,6 +79,23 @@ const formatJoinDate = (dateStr: string | undefined): string => {
   });
 };
 
+// ─── Platform detection ──────────────────────────────────────────────────────
+
+/**
+ * True on iPhone / iPod / iPad (including iPads that report MacIntel in iOS 13+).
+ * Excludes Windows touch laptops and Macs by checking for absence of a fine pointer.
+ */
+const getIsIOS = () =>
+  /iP(ad|hone|od)/i.test(navigator.userAgent) ||
+  (navigator.platform === "MacIntel" &&
+    navigator.maxTouchPoints > 1 &&
+    !window.matchMedia("(pointer: fine)").matches);
+
+/** True when the app is running as an installed PWA (standalone mode). */
+const getIsPWA = () => window.matchMedia("(display-mode: standalone)").matches;
+
+// ─── Component ───────────────────────────────────────────────────────────────
+
 interface Props {
   novelist: Novelist;
   onClose: () => void;
@@ -69,7 +106,9 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
 
-  // Use the viewed novelist's own palette, not the logged-in user's accent
+  // Fix 1 — exported image state for PWA inline-display fallback
+  const [exportedImage, setExportedImage] = useState<string | null>(null);
+
   const novelistAccent =
     ACCENT_MAP[novelist.palette as keyof typeof ACCENT_MAP] ?? ACCENT_MAP[0];
 
@@ -81,31 +120,25 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
     let restoreImages: (() => void) | undefined;
     try {
       restoreImages = await inlineCardImages(cardRef.current);
+
       const dataUrl = await toPng(cardRef.current, {
         cacheBust: true,
         pixelRatio: 2,
+        // Fix 2 — helps box-shadow / border-radius rendering on iOS canvas
+        style: { transform: "translateZ(0)" },
       });
 
-      const isIOS =
-        /iP(ad|hone|od)/i.test(navigator.userAgent) ||
-        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); // iPad on iOS 13+
+      const isIOS = getIsIOS();
+      const isPWA = getIsPWA();
 
-      if (isIOS) {
+      if (isPWA) {
+        // Fix 1 — PWA blocks window.open; show image inline so user can long-press → Save
+        setExportedImage(dataUrl);
+      } else if (isIOS) {
+        // Safari / Chrome on iOS — open data URL in new tab; user long-presses to save
         window.open(dataUrl, "_blank");
-
-        const isIOS =
-          /iP(ad|hone|od)/i.test(navigator.userAgent) ||
-          // iPad on iOS 13+ masquerades as Mac, but never has a mouse
-          (navigator.platform === "MacIntel" &&
-            navigator.maxTouchPoints > 1 &&
-            !window.matchMedia("(pointer: fine)").matches); // fine pointer = real mouse = not iPad
-
-        console.log("isIOS:", isIOS);
-        console.log("userAgent:", navigator.userAgent);
-        console.log("platform:", navigator.platform);
-        console.log("maxTouchPoints:", navigator.maxTouchPoints);
       } else {
-        // Directly use the dataUrl — no need to re-fetch it as a blob
+        // Desktop — standard anchor download
         const link = document.createElement("a");
         link.download = `${novelist.username}-profile.png`;
         link.href = dataUrl;
@@ -147,16 +180,33 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
               <FiX size={22} />
             </S.CloseButton>
           </Flex>
+
           {/* Card – this element is captured as the exported image */}
           <S.Card ref={cardRef} className={classNames([novelistAccent, theme])}>
             <S.AccentBanner />
 
             <S.AvatarWrapper>
-              <AvatarNew
-                src={novelist.image ?? null}
-                alt={`${novelist.firstName} ${novelist.lastName}`}
-                username={novelist.username}
-              />
+              {/*
+               * Fix 2 — swap box-shadow for a border-ring wrapper.
+               * CSS box-shadow on border-radius elements renders skewed
+               * when html-to-image draws them on an iOS canvas.
+               * A solid-border wrapper div is composited correctly.
+               */}
+              <div
+                style={{
+                  background: "var(--accent-primary, transparent)",
+                  borderRadius: "50%",
+                  display: "inline-flex",
+                  flexShrink: 0,
+                  padding: 2,
+                }}
+              >
+                <AvatarNew
+                  src={novelist.image ?? null}
+                  alt={`${novelist.firstName} ${novelist.lastName}`}
+                  username={novelist.username}
+                />
+              </div>
             </S.AvatarWrapper>
 
             <S.Body>
@@ -189,11 +239,22 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
                   <S.MusesLabel>Characters</S.MusesLabel>
                   <S.MusesRow>
                     {novelist.muses.slice(0, 3).map((muse) => (
-                      <AvatarNew
+                      // Fix 2 — same ring wrapper for character avatars
+                      <div
                         key={muse.id}
-                        src={muse.image ?? null}
-                        alt={`${muse.firstName} ${muse.lastName}`}
-                      />
+                        style={{
+                          background: "var(--accent-primary, transparent)",
+                          borderRadius: "50%",
+                          display: "inline-flex",
+                          flexShrink: 0,
+                          padding: 2,
+                        }}
+                      >
+                        <AvatarNew
+                          src={muse.image ?? null}
+                          alt={`${muse.firstName} ${muse.lastName}`}
+                        />
+                      </div>
                     ))}
                   </S.MusesRow>
                 </>
@@ -216,12 +277,43 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
               <NWLogoInner size={16} />
               <S.BrandText>
                 <S.BrandName>Novelist</S.BrandName>
-                <S.BrandNameSuffix> World</S.BrandNameSuffix>
+                <S.BrandNameSuffix> World</S.BrandNameSuffix>
               </S.BrandText>
             </S.BrandBar>
           </S.Card>
         </div>
       </S.Modal>
+
+      {/* Fix 1 — PWA export overlay: shown instead of window.open */}
+      {exportedImage && (
+        <S.Overlay
+          onClick={() => setExportedImage(null)}
+          style={{
+            alignItems: "center",
+            background: "rgba(0,0,0,0.85)",
+            display: "flex",
+            flexDirection: "column",
+            gap: 12,
+            justifyContent: "center",
+            padding: 24,
+            zIndex: 9999,
+          }}
+        >
+          <p style={{ color: "white", fontSize: 13, margin: 0 }}>
+            Long press the image below to save it
+          </p>
+          <img
+            src={exportedImage}
+            alt="Exported profile card"
+            style={{ borderRadius: 12, maxWidth: "100%" }}
+          />
+          <p
+            style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: 0 }}
+          >
+            Tap anywhere to close
+          </p>
+        </S.Overlay>
+      )}
     </>
   );
 };

@@ -354,7 +354,7 @@ export default function ConversationDetailPage() {
     try {
       socket.send(JSON.stringify({ payload, type: "message" }));
       setReplyingTo(null);
-      successToast("Message sent.");
+      // successToast("Message sent.");
       scrollToBottom();
     } catch {
       errorToast("Unable to send message right now. Please try again.");

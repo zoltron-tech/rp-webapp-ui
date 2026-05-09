@@ -294,6 +294,19 @@ export const QUOTATION_MARK_CATEGORIES = {
       { id: "single-high-reversed", label: "‛", value: "‛" },
     ],
   },
+  symbolic: {
+    name: "Symbolic",
+    symbols: [
+      { id: "diamond", label: "✦", value: "✦" },
+      { id: "plus", label: "⊹", value: "⊹" },
+      { id: "prefix-ring", label: "˚", value: "˚" },
+      { id: "suffix-plus", label: "₊", value: "₊" },
+      { id: "suffix-star", label: "⋆", value: "⋆" },
+      { id: "decor-1", label: "𐙚", value: "𐙚" },
+      { id: "styled-arrow-1", label: "⁀➷", value: "⁀➷" },
+      { id: "styled-arrow-2", label: "╰┈➤", value: "╰┈➤" },
+    ],
+  },
 };
 
 // Flattened list for use in the editor (all symbols in order)

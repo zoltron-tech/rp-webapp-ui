@@ -13,7 +13,7 @@ export const CardWrapper = styled.div`
   transition: all 0.3s ease-in-out;
   contain: paint;
   z-index: ${Z_INDEX.CARD};
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
   ${CARD_BORDER}
 
@@ -66,15 +66,23 @@ export const Info = styled.div`
 `;
 
 export const Title = styled.span`
-  font-size: 18px;
-  font-weight: 600;
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-semi-bold);
   color: var(--text);
   line-height: 1.2;
+
+  @media (max-width: 800px) {
+    font-size: var(--font-size-small);
+  }
 `;
 
 export const UsernameStyled = styled(Common.Username)`
-  font-size: 14px !important;
+  font-size: var(--font-size-small) !important;
   color: var(--text-secondary);
+
+  @media (max-width: 800px) {
+    font-size: var(--font-size-xsmall) !important;
+  }
 `;
 
 export const ButtonContainer = styled.div`

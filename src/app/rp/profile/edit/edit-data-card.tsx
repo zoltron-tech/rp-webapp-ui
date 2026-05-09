@@ -344,7 +344,14 @@ export default function EditDataCard() {
           return;
         }
         setGlobalState({
-          novelist: { ...response, isVerified: novelist?.isVerified ?? false },
+          novelist: {
+            ...response,
+            friends: novelist?.friends ?? [],
+            friendsCount: novelist?.friendsCount ?? 0,
+            isVerified: novelist?.isVerified ?? false,
+            museCount: novelist?.museCount ?? 0,
+            muses: novelist?.muses ?? [],
+          },
         });
         setProfileState({
           about: response.about || "",

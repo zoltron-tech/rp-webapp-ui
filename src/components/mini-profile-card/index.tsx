@@ -2,7 +2,7 @@
 
 import classNames from "classnames";
 import { toPng } from "html-to-image";
-import { type FC, useEffect, useRef, useState } from "react";
+import { type FC, useRef, useState } from "react";
 import { FiDownload, FiX } from "react-icons/fi";
 import QRCode from "react-qr-code";
 import logoText from "@/assets/images/Logo text.png";
@@ -114,14 +114,6 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
 
   const profileUrl = `https://novelist.world/rp/profile/${novelist.username}`;
 
-  // Auto-generate the shareable image as soon as the card opens on iOS / PWA
-  useEffect(() => {
-    if (getIsIOS() || getIsPWA()) {
-      handleDownload();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const handleDownload = async () => {
     if (!cardRef.current) return;
     setExporting(true);
@@ -194,7 +186,6 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
               <AvatarNew
                 src={novelist.image ?? null}
                 alt={`${novelist.firstName} ${novelist.lastName}`}
-                username={novelist.username}
               />
             </S.AvatarWrapper>
 

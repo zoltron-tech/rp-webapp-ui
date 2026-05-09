@@ -14,6 +14,40 @@ import { ACCENT_MAP } from "@/types/theme";
 import { Flex } from "../edit-muse-card/styles";
 import * as S from "./styles";
 
+const toBase64 = (url: string): Promise<string> =>
+  fetch(url)
+    .then((res) => res.blob())
+    .then(
+      (blob) =>
+        new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        }),
+    )
+    .catch(() => url); // fallback: keep original if fetch fails
+
+const inlineCardImages = async (card: HTMLDivElement): Promise<() => void> => {
+  const imgs = Array.from(card.querySelectorAll("img"));
+  const originals = imgs.map((img) => img.src);
+
+  await Promise.all(
+    imgs.map(async (img) => {
+      if (!img.src || img.src.startsWith("data:")) return;
+      const b64 = await toBase64(img.src);
+      img.src = b64;
+    }),
+  );
+
+  // Return a cleanup function to restore the original srcs
+  return () => {
+    imgs.forEach((img, i) => {
+      img.src = originals[i] ?? "";
+    });
+  };
+};
+
 const formatJoinDate = (dateStr: string | undefined): string => {
   if (!dateStr) return "Unknown";
   const d = new Date(dateStr);
@@ -44,16 +78,41 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
   const handleDownload = async () => {
     if (!cardRef.current) return;
     setExporting(true);
+    let restoreImages: (() => void) | undefined;
     try {
+      restoreImages = await inlineCardImages(cardRef.current);
       const dataUrl = await toPng(cardRef.current, {
         cacheBust: true,
         pixelRatio: 2,
       });
-      const link = document.createElement("a");
-      link.download = `${novelist.username}-profile.png`;
-      link.href = dataUrl;
-      link.click();
+
+      const isIOS =
+        /iP(ad|hone|od)/i.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); // iPad on iOS 13+
+
+      if (isIOS) {
+        window.open(dataUrl, "_blank");
+
+        const isIOS =
+          /iP(ad|hone|od)/i.test(navigator.userAgent) ||
+          // iPad on iOS 13+ masquerades as Mac, but never has a mouse
+          (navigator.platform === "MacIntel" &&
+            navigator.maxTouchPoints > 1 &&
+            !window.matchMedia("(pointer: fine)").matches); // fine pointer = real mouse = not iPad
+
+        console.log("isIOS:", isIOS);
+        console.log("userAgent:", navigator.userAgent);
+        console.log("platform:", navigator.platform);
+        console.log("maxTouchPoints:", navigator.maxTouchPoints);
+      } else {
+        // Directly use the dataUrl — no need to re-fetch it as a blob
+        const link = document.createElement("a");
+        link.download = `${novelist.username}-profile.png`;
+        link.href = dataUrl;
+        link.click();
+      }
     } finally {
+      restoreImages?.();
       setExporting(false);
     }
   };

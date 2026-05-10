@@ -920,13 +920,20 @@ export const AccentColorRow = styled.div`
   margin-top: 2px;
 `;
 
-export const AccentColorSwatch = styled.span`
+export const AccentColorSwatch = styled.button`
+  all: unset;
+  cursor: pointer;
   display: inline-block;
   width: 56px;
   height: 26px;
   border-radius: 4px;
   border: 1px solid var(--bg-6);
   flex-shrink: 0;
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
 `;
 
 export const AccentEditButton = styled.button`

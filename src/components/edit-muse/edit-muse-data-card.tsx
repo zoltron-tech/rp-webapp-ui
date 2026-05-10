@@ -801,6 +801,8 @@ export default function EditMuseDataCard() {
               {useAccent && (
                 <S.AccentColorRow>
                   <S.AccentColorSwatch
+                    type="button"
+                    aria-label="Edit accent color"
                     style={{ backgroundColor: accent ?? "var(--accent)" }}
                     onClick={() => {
                       setTempAccent(accent ?? "#ff0000");

@@ -54,7 +54,7 @@ export const Card = styled.div`
   @media screen and (max-width: 800px) {
     margin-block: 0px;
     padding-inline: 10px;
-    padding-block: 30px;
+    /* padding-block: 30px; */
     border: none;
   }
 
@@ -655,6 +655,8 @@ export const FormActions = styled.div`
   gap: 8px;
   margin-top: var(--font-size-small);
   width: 100%;
+  padding-right: 20px;
+  margin-bottom: 20px;
 `;
 
 export const ResetButton = styled.button`
@@ -697,6 +699,7 @@ export const MediaUploadSectionContainer = styled.div`
     flex-wrap: wrap;
     position: relative;
     width: 100%;
+    margin-top: 20px;
     gap: 20px;
 
     .media-label {

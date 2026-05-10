@@ -115,12 +115,24 @@ export const pluralize = (text: string, count: number): string => {
   return `${text}s`; // Default pluralization
 };
 
+/**
+ * Converts a UTC date string or timestamp to a moment object in the user's local timezone.
+ */
+export const toLocalDate = (
+  dateTimeString: string | number | undefined,
+): moment.Moment | null => {
+  if (!dateTimeString) return null;
+  return moment.utc(dateTimeString).local();
+};
+
 export const toFormattedDate = (
   dateTimeString: string | number | undefined,
 ): string => {
   if (!dateTimeString) return "unknown";
 
-  const date = moment(dateTimeString, "YYYY-MM-DD HH:mm:ss.SSSSSS");
+  const date = toLocalDate(dateTimeString);
+  if (!date) return "unknown";
+
   const now = moment();
 
   const units = [
@@ -145,7 +157,9 @@ export const displayDate = (
 ): string => {
   if (!dateTimeString) return "unknown";
 
-  const date = moment(dateTimeString);
+  const date = toLocalDate(dateTimeString);
+  if (!date) return "unknown";
+
   return date.format("MMM D, YYYY [at] h:mm A");
 };
 
@@ -181,6 +195,5 @@ export const toFormattedDateFromUnix = (
   // Normalize to milliseconds (check if timestamp is in seconds)
   const normalizedTimestamp = timestamp < 1e12 ? timestamp * 1000 : timestamp;
 
-  const date = moment(normalizedTimestamp);
-  return toFormattedDate(date.toISOString());
+  return toFormattedDate(normalizedTimestamp);
 };

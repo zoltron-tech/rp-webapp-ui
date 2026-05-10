@@ -5,6 +5,7 @@ import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { Conversation } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
+import { toLocalDate } from "@/utils/helpers";
 import { EmailVerifiedBadge } from "../common";
 import { AdminBadge } from "../common/admin-badge";
 import { AvatarNew } from "../common/avatar-new";
@@ -17,9 +18,10 @@ type ConversationCardProps = {
 const formatInboxTimestamp = (value: string) => {
   if (!value) return "";
 
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
+  const localMoment = toLocalDate(value);
+  if (!localMoment || !localMoment.isValid()) return value;
 
+  const date = localMoment.toDate();
   const now = new Date();
   const isSameDay =
     date.getFullYear() === now.getFullYear() &&

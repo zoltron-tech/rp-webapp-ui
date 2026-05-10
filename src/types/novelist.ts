@@ -35,6 +35,8 @@ export interface Muse {
   connections: MuseConnection[];
   tags: Tag[];
   privacy: PrivacyLevel;
+  useAccent: boolean;
+  useExtraImages: boolean;
 }
 
 export interface MuseAboutSection {
@@ -66,8 +68,10 @@ export interface CreateUpdateMuse {
   nicknames: string[];
   extraAttributes: Record<string, string> | null;
   connections: MuseConnection[];
-  tags: Tag[];
+  tags: Tag[] | null;
   privacy: string;
+  useAccent: boolean;
+  useExtraImages: boolean;
 }
 
 export interface MuseConnection {

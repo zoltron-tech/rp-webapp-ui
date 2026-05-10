@@ -52,6 +52,8 @@ export const ROUTES = {
         `/rp/profile/muses/edit/${museId}/about/edit/${sectionId}`,
       Create: "/rp/profile/muses/create",
       Edit: (museId: string) => `/rp/profile/muses/edit/${museId}`,
+      ExtraAttributes: (museId: string) =>
+        `/rp/profile/muses/edit/${museId}/extra-attributes`,
     },
     Story: {
       Create: "/rp/profile/story/create",

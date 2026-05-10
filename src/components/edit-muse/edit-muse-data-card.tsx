@@ -9,11 +9,13 @@ import {
   useState,
 } from "react";
 import { HexColorPicker } from "react-colorful";
-import { BsArrowLeft, BsInfoLg } from "react-icons/bs";
+import { BsArrowLeft, BsInfoLg, BsPencil } from "react-icons/bs";
+import { FiX } from "react-icons/fi";
 import { ImProfile } from "react-icons/im";
 import { MdDoubleArrow } from "react-icons/md";
 import { updateMuseAction } from "@/app/rp/muse/actions";
 import { deleteMedia } from "@/app/rp/profile/actions";
+import { NoteDialogBody } from "@/app/rp/profile/edit/note-dialog-body";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -70,7 +72,6 @@ const ERROR_MAP: Record<ErrorKey, ReactNode> = {
 
 export default function EditMuseDataCard() {
   const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-  const novelist = useGlobalState("novelist");
   const user = useGlobalState("user");
   const id = useMuseState("id");
   const firstName = useMuseState("firstName");
@@ -86,22 +87,26 @@ export default function EditMuseDataCard() {
   }>({});
 
   const note = useMuseState("note");
+  const nicknames = useMuseState("nicknames");
   const story = useMuseState("story");
   const fandom = useMuseState("fandom");
   const privacy = useMuseState("privacy");
+  const useAccent = useMuseState("useAccent");
+  const useExtraImages = useMuseState("useExtraImages");
   const setMuseState = useMuseStoreSet();
   const [error, setError] = useState<ErrorKey | null>(null);
   const [mediaError, setMediaError] = useState<ErrorKey | null>(null);
   const [mediaTypeError, setMediaTypeError] = useState<ErrorKey | null>(null);
   const [loading, setLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
-  const [showAccentPicker, setShowAccentPicker] = useState(Boolean(accent));
   const [showMediaHelpInfo, setShowMediaHelpInfo] = useState(false);
   const [showBackstoryPrompt, setShowBackstoryPrompt] = useState(false);
   const [savedMuseId, setSavedMuseId] = useState<string | null>(id);
-  const [showMediaFields, setShowMediaFields] = useState(
-    Boolean(wallpaper || cardBackground),
-  );
+  const [noteDialogOpen, setNoteDialogOpen] = useState(false);
+  const [tempNote, setTempNote] = useState("");
+  const [nicknameInput, setNicknameInput] = useState("");
+  const [colorPickerOpen, setColorPickerOpen] = useState(false);
+  const [tempAccent, setTempAccent] = useState<string>("#ff0000");
   const setGlobalState = useGlobalStoreSet();
   const { successToast } = useUIContext();
   const { uploadMedia } = useUploadMedia();
@@ -159,13 +164,6 @@ export default function EditMuseDataCard() {
       setLastname(e.target.value);
     },
     [setLastname],
-  );
-
-  const handleNoteChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setNote(e.target.value);
-    },
-    [setNote],
   );
 
   const checkFileSize = (file: File | undefined): boolean => {
@@ -428,7 +426,7 @@ export default function EditMuseDataCard() {
       const _fandom = target.fandom.value;
 
       // Only include accent if checkbox is ON and accent is non-empty
-      const _accent = showAccentPicker && accent?.trim() ? accent.trim() : null;
+      const _accent = useAccent && accent?.trim() ? accent.trim() : null;
 
       const payload = {
         accent: _accent,
@@ -439,16 +437,19 @@ export default function EditMuseDataCard() {
         firstName: _firstName,
         image: image ?? "",
         lastName: _lastName,
-        nicknames: [],
+        nicknames: nicknames ?? [],
         note: _note ?? "",
         privacy: _privacy,
         song: null,
         story: _story,
-        tags: [],
+        tags: null,
+        useAccent: useAccent,
+        useExtraImages: useExtraImages,
         video: null,
         wallpaper: wallpaper ?? null,
       } satisfies CreateUpdateMuse;
       setLoading(true);
+      console.log("Submitting payload:", payload);
       const response = await updateMuseAction(id, payload);
       setLoading(false);
 
@@ -469,11 +470,14 @@ export default function EditMuseDataCard() {
     },
     [
       story,
+      nicknames,
       image,
       wallpaper,
       cardBackground,
       accent,
       id,
+      useAccent,
+      useExtraImages,
       setMuseState,
       showBackstoryPrompt,
     ],
@@ -546,7 +550,15 @@ export default function EditMuseDataCard() {
             <S.MediaUploadSectionContainer>
               <Form.Field className="avatar-field" name="avatar">
                 <Form.Label className="media-label">
-                  <AvatarUploadField src={image} alt={firstName || "Avatar"} />
+                  <AvatarUploadField
+                    src={image}
+                    alt={firstName || "Avatar"}
+                    note={note}
+                    onNoteClick={() => {
+                      setTempNote(note ?? "");
+                      setNoteDialogOpen(true);
+                    }}
+                  />
                   <span>Avatar</span>
                 </Form.Label>
                 <Form.Control
@@ -559,19 +571,38 @@ export default function EditMuseDataCard() {
                   autoFocus
                 />
               </Form.Field>
+              <input type="hidden" name="note" value={note ?? ""} readOnly />
+              <AppAlertDialog
+                heading="Share a thought..."
+                text=""
+                body={
+                  <NoteDialogBody value={tempNote} onChange={setTempNote} />
+                }
+                open={noteDialogOpen}
+                onOpenChange={setNoteDialogOpen}
+                onConfirm={() => {
+                  setNote(tempNote);
+                  setNoteDialogOpen(false);
+                }}
+                onCancel={() => setNoteDialogOpen(false)}
+                actionButtonLabel="Save"
+                actionColor="neutral"
+              />
               <Form.Field className="field checkbox" name="consent">
                 <Form.Control
                   aria-label="Consent"
                   type="checkbox"
                   disabled={loading}
-                  checked={showMediaFields}
-                  onChange={() => setShowMediaFields((prev) => !prev)}
+                  checked={useExtraImages}
+                  onChange={() =>
+                    setMuseState({ useExtraImages: !useExtraImages })
+                  }
                 />
                 <Form.Label>Set custom card image and wallpaper</Form.Label>
               </Form.Field>
             </S.MediaUploadSectionContainer>
           </S.BasicInfoFields>
-          <ShouldRender if={showMediaFields}>
+          <ShouldRender if={useExtraImages}>
             <S.BasicInfoFields>
               <S.MediaUploadSectionContainer>
                 <Form.Field
@@ -670,66 +701,158 @@ export default function EditMuseDataCard() {
             </div>
           </S.BasicInfoFields>
           <Separator.Root className="separator" orientation="horizontal" />
+          <S.NicknamesSection>
+            <S.FieldHeader>
+              <span
+                style={{
+                  color: "var(--text)",
+                  fontSize: "var(--font-size-small)",
+                  fontWeight: 600,
+                }}
+              >
+                Nicknames
+              </span>
+              <span className="secondary-text">{nicknames.length}/5</span>
+            </S.FieldHeader>
+            <S.NicknamesInputRow>
+              <input
+                type="text"
+                placeholder="Add a nickname"
+                value={nicknameInput}
+                onChange={(e) => setNicknameInput(e.target.value)}
+                maxLength={30}
+                disabled={nicknames.length >= 5}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    const trimmed = nicknameInput.trim();
+                    if (
+                      trimmed &&
+                      nicknames.length < 5 &&
+                      !nicknames.includes(trimmed)
+                    ) {
+                      setMuseState({ nicknames: [...nicknames, trimmed] });
+                      setNicknameInput("");
+                    }
+                  }
+                }}
+              />
+              <S.AddNicknameButton
+                type="button"
+                disabled={
+                  nicknames.length >= 5 ||
+                  !nicknameInput.trim() ||
+                  nicknames.includes(nicknameInput.trim())
+                }
+                onClick={() => {
+                  const trimmed = nicknameInput.trim();
+                  if (
+                    trimmed &&
+                    nicknames.length < 5 &&
+                    !nicknames.includes(trimmed)
+                  ) {
+                    setMuseState({ nicknames: [...nicknames, trimmed] });
+                    setNicknameInput("");
+                  }
+                }}
+              >
+                Add
+              </S.AddNicknameButton>
+            </S.NicknamesInputRow>
+            {nicknames.length > 0 && (
+              <S.NicknameTagsRow>
+                {nicknames.map((name) => (
+                  <S.NicknameTag key={name}>
+                    {name}
+                    <S.NicknameRemove
+                      type="button"
+                      aria-label={`Remove ${name}`}
+                      onClick={() =>
+                        setMuseState({
+                          nicknames: nicknames.filter((n) => n !== name),
+                        })
+                      }
+                    >
+                      <FiX />
+                    </S.NicknameRemove>
+                  </S.NicknameTag>
+                ))}
+              </S.NicknameTagsRow>
+            )}
+            <S.NicknamesHint>
+              {nicknames.length < 5
+                ? "Press Enter or tap Add. Up to 5 nicknames."
+                : "Maximum of 5 nicknames reached."}
+            </S.NicknamesHint>
+          </S.NicknamesSection>
+          <Separator.Root className="separator" orientation="horizontal" />
           <S.FandomSelectWrapper>
             <FandomSelect value={fandom} onChange={setFandom} />
           </S.FandomSelectWrapper>
-          <Separator.Root className="separator" orientation="horizontal" />
-          <S.BasicInfoFields>
-            <div className="note">
-              <Form.Field className="field" name="note">
-                <S.FieldHeader>
-                  <Form.Label>Note</Form.Label>
-                  <span className="secondary-text ">(Optional)</span>
-                </S.FieldHeader>
-                <Form.Control
-                  aria-label="Note"
-                  name="note"
-                  value={note ?? ""}
-                  onChange={handleNoteChange}
-                  asChild
-                >
-                  <textarea
-                    placeholder="What is your muse thinking?"
-                    spellCheck
-                  />
-                </Form.Control>
-              </Form.Field>
-            </div>
-          </S.BasicInfoFields>
           <Separator.Root className="separator" orientation="horizontal" />
           <S.MediaUploadSectionContainer>
             <Form.Field className="field checkbox" name="accentEnabled">
               <Form.Control
                 aria-label="Accent Enabled"
                 type="checkbox"
-                checked={showAccentPicker}
-                onChange={() => setShowAccentPicker((prev) => !prev)}
+                checked={useAccent}
+                onChange={() => setMuseState({ useAccent: !useAccent })}
               />
               <Form.Label>Set custom accent color</Form.Label>
-            </Form.Field>
-
-            {showAccentPicker && (
-              <S.ColorPickerWrapper>
-                <HexColorPicker
-                  color={accent ?? "#ff0000"}
-                  onChange={(value) => setMuseState({ accent: value })}
-                />
-
-                <div className="colorpicker-label">
-                  <span>Selected:</span>
-                  <input
-                    type="text"
-                    value={accent ?? ""}
-                    onChange={(e) => {
-                      let val = e.target.value;
-                      if (val && val[0] !== "#") val = "#" + val;
-                      setMuseState({ accent: val });
+              {useAccent && (
+                <S.AccentColorRow>
+                  <S.AccentColorSwatch
+                    style={{ backgroundColor: accent ?? "var(--accent)" }}
+                    onClick={() => {
+                      setTempAccent(accent ?? "#ff0000");
+                      setColorPickerOpen(true);
                     }}
-                    placeholder="#ff0000"
                   />
-                </div>
-              </S.ColorPickerWrapper>
-            )}
+                  <S.AccentEditButton
+                    type="button"
+                    aria-label="Edit accent color"
+                    onClick={() => {
+                      setTempAccent(accent ?? "#ff0000");
+                      setColorPickerOpen(true);
+                    }}
+                  >
+                    <BsPencil size={14} />
+                  </S.AccentEditButton>
+                </S.AccentColorRow>
+              )}
+            </Form.Field>
+            <AppAlertDialog
+              open={colorPickerOpen}
+              onOpenChange={setColorPickerOpen}
+              heading="Pick an accent color"
+              text=""
+              actionButtonLabel="Select"
+              closeButtonText="Cancel"
+              actionColor="neutral"
+              onConfirm={() => {
+                setMuseState({ accent: tempAccent });
+                setColorPickerOpen(false);
+              }}
+              onCancel={() => setColorPickerOpen(false)}
+              body={
+                <S.AccentPickerDialogBody>
+                  <HexColorPicker color={tempAccent} onChange={setTempAccent} />
+                  <div className="hex-input-row">
+                    <span>Hex:</span>
+                    <input
+                      type="text"
+                      value={tempAccent}
+                      onChange={(e) => {
+                        let val = e.target.value;
+                        if (val && val[0] !== "#") val = "#" + val;
+                        setTempAccent(val);
+                      }}
+                      placeholder="#ff0000"
+                    />
+                  </div>
+                </S.AccentPickerDialogBody>
+              }
+            />
           </S.MediaUploadSectionContainer>
           <ShouldRender if={Boolean(id)}>
             <Separator.Root className="separator" orientation="horizontal" />
@@ -738,6 +861,19 @@ export default function EditMuseDataCard() {
             >
               <span>
                 Edit Character Story
+                <MdDoubleArrow size={20} />
+              </span>
+            </S.AboutSectionsLink>
+          </ShouldRender>
+          <ShouldRender if={Boolean(id)}>
+            <Separator.Root className="separator" orientation="horizontal" />
+            <S.AboutSectionsLink
+              onClick={() =>
+                routeToPage(ROUTES.Profile.Muses.ExtraAttributes(id || ""))
+              }
+            >
+              <span>
+                Edit Extra Attributes
                 <MdDoubleArrow size={20} />
               </span>
             </S.AboutSectionsLink>

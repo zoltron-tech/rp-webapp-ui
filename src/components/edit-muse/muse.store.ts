@@ -10,6 +10,7 @@ export type MuseState = {
   id: string | null;
   firstName: string | null;
   lastName: string | null;
+  nicknames: string[];
   note: string | null;
   gender: string | null;
   story: string | null;
@@ -19,6 +20,8 @@ export type MuseState = {
   cardBackground: NWImage | null;
   fandom: Fandom;
   privacy: PrivacyLevel;
+  useAccent: boolean;
+  useExtraImages: boolean;
 };
 
 export const INITIAL_STATE: MuseState = {
@@ -30,9 +33,12 @@ export const INITIAL_STATE: MuseState = {
   id: null,
   image: null,
   lastName: null,
+  nicknames: [],
   note: null,
   privacy: "ONLY_ME",
   story: null,
+  useAccent: false,
+  useExtraImages: false,
   wallpaper: null,
 };
 

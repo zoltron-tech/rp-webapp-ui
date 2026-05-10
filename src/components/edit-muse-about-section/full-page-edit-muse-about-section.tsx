@@ -28,11 +28,13 @@ import * as S from "./styled";
 export type FullPageEditMuseAboutSectionProps = {
   museId: string;
   sectionId?: string;
+  sectionCount?: number;
 };
 
 export const FullPageEditMuseAboutSection = ({
   museId,
   sectionId,
+  sectionCount,
 }: FullPageEditMuseAboutSectionProps) => {
   const authState = useGlobalState("authState");
   const { stopPageLoading, baseDataLoader, routeToPage } = usePageRouter();
@@ -44,6 +46,13 @@ export const FullPageEditMuseAboutSection = ({
 
   const [text, setText] = useState<string>("");
   const [ordinal, setOrdinal] = useState<number>(0);
+
+  // Once sectionCount resolves from the parent fetch, set the initial ordinal
+  useEffect(() => {
+    if (!sectionId && sectionCount !== undefined) {
+      setOrdinal(sectionCount + 1);
+    }
+  }, [sectionCount, sectionId]);
   const [resolvedSectionId, setResolvedSectionId] = useState<string | null>(
     sectionId ?? null,
   );
@@ -79,21 +88,6 @@ export const FullPageEditMuseAboutSection = ({
 
     fetchData();
   }, [authState]);
-
-  const handleOrdinalChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      if (value === "") {
-        setOrdinal(0);
-        return;
-      }
-      const parsed = parseInt(value, 10);
-      if (!Number.isNaN(parsed) && parsed >= 0) {
-        setOrdinal(parsed);
-      }
-    },
-    [],
-  );
 
   const handleGifSelect = useCallback((gifUrl: string) => {
     setShowGifPicker(false);
@@ -240,15 +234,26 @@ export const FullPageEditMuseAboutSection = ({
 
       {/* Meta row: ordinal + attachment + Klipy GIF button */}
       <S.FPMetaRow>
-        <S.FPOrdinalLabel htmlFor="fp-ordinal">Order</S.FPOrdinalLabel>
-        <S.FPOrdinalInput
-          id="fp-ordinal"
-          type="number"
-          value={ordinal}
-          onChange={handleOrdinalChange}
-          min="0"
-          disabled={loading}
-        />
+        <S.FPOrdinalLabel>Order</S.FPOrdinalLabel>
+        <S.OrdinalStepper>
+          <S.OrdinalStepBtn
+            type="button"
+            aria-label="Decrease order"
+            disabled={loading || ordinal <= 0}
+            onClick={() => setOrdinal((n) => Math.max(0, n - 1))}
+          >
+            −
+          </S.OrdinalStepBtn>
+          <S.OrdinalValue>{ordinal}</S.OrdinalValue>
+          <S.OrdinalStepBtn
+            type="button"
+            aria-label="Increase order"
+            disabled={loading}
+            onClick={() => setOrdinal((n) => n + 1)}
+          >
+            +
+          </S.OrdinalStepBtn>
+        </S.OrdinalStepper>
         <S.FPMetaRight>
           <S.FPAttachButton
             htmlFor="fp-attach-input"

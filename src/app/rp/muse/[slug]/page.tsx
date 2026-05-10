@@ -14,6 +14,7 @@ import { MdClose, MdOutlineSlowMotionVideo } from "react-icons/md";
 import { TiInfoLarge } from "react-icons/ti";
 import { VscUnverified, VscVerifiedFilled } from "react-icons/vsc";
 import { ShouldRender, Username } from "@/components/common";
+import { PrivacyIcon } from "@/components/common/privacy-icon";
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { Quote } from "@/components/novelist-card/styles";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
@@ -221,14 +222,21 @@ export default function MuseProfilePage({}) {
     <S.MuseContainer>
       <S.Banner
         src={
-          getSafeImage(muse?.wallpaper?.src) || getSafeImage(muse?.image || "")
+          (muse?.useExtraImages && getSafeImage(muse?.wallpaper?.src)) ||
+          getSafeImage(muse?.image || "")
         }
         filterValues={
-          muse?.wallpaper?.filterValues ?? {
-            blur: 20,
-            brightness: 50,
-            greyscale: 20,
-          }
+          muse?.useExtraImages
+            ? (muse?.wallpaper?.filterValues ?? {
+                blur: 20,
+                brightness: 50,
+                greyscale: 20,
+              })
+            : {
+                blur: 20,
+                brightness: 50,
+                greyscale: 20,
+              }
         }
       />
       <S.CardWrapper
@@ -237,7 +245,7 @@ export default function MuseProfilePage({}) {
       >
         <S.CardBackground
           banner={
-            getSafeImage(muse?.cardBackground?.src) ||
+            (muse?.useExtraImages && getSafeImage(muse?.cardBackground?.src)) ||
             getSafeImage(muse?.image || "")
           }
         />
@@ -259,7 +267,9 @@ export default function MuseProfilePage({}) {
                   <span className="penned">PENNED BY:</span>
                   <Username
                     username={muse?.pennedBy?.username}
-                    accentOverride={muse?.accent || undefined}
+                    accentOverride={
+                      (muse?.useAccent && muse?.accent) || undefined
+                    }
                     primary
                   />
                 </S.UsernameContainer>
@@ -270,77 +280,91 @@ export default function MuseProfilePage({}) {
       </S.CardWrapper>
       <ShouldRender if={is("MUSE_INFO")}>
         <S.CardExpandedWrapper>
-          <S.CardBack className="muse-card" accent={muse?.accent}>
+          <S.CardBack
+            className="muse-card"
+            accent={muse?.useAccent ? muse?.accent : undefined}
+          >
             <S.InfoCardContent>
-              <S.Title>Information</S.Title>
-              <S.InfoContainer>
-                <S.InfoItem>
-                  <S.InfoLabel>Visibility:</S.InfoLabel>
-                  <S.InfoValue>{muse?.privacy}</S.InfoValue>
-                </S.InfoItem>
-                <S.InfoItem>
-                  <S.InfoLabel>First Name:</S.InfoLabel>
-                  <S.InfoValue>{muse?.firstName}</S.InfoValue>
-                </S.InfoItem>
-                <S.InfoItem>
-                  <S.InfoLabel>Last Name:</S.InfoLabel>
-                  <S.InfoValue>{muse?.lastName}</S.InfoValue>
-                </S.InfoItem>
-                <ShouldRender
-                  if={
-                    muse?.nicknames?.length !== undefined &&
-                    muse?.nicknames?.length > 0
-                  }
-                >
-                  <S.InfoItem>
-                    <S.InfoLabel>Nicknames:</S.InfoLabel>
-                    <Flex direction="column">
-                      {muse?.nicknames?.map((nickname) => (
-                        <S.InfoValue key={nickname}>{nickname}</S.InfoValue>
+              <S.InfoPrivacyCorner>
+                <PrivacyIcon privacy={muse?.privacy ?? "PUBLIC"} />
+              </S.InfoPrivacyCorner>
+              <S.InfoScrollBody
+                accent={muse?.useAccent ? muse?.accent : undefined}
+              >
+                {/* Name + Nicknames */}
+                <S.InfoHeaderSection>
+                  <S.InfoMuseName>
+                    {muse?.firstName}
+                    {muse?.lastName ? ` ${muse.lastName}` : ""}
+                  </S.InfoMuseName>
+                  <ShouldRender if={Boolean(muse?.nicknames?.length)}>
+                    <S.InfoNicknamesRow>
+                      {muse?.nicknames?.map((n) => (
+                        <S.InfoNicknamePill key={n}>{n}</S.InfoNicknamePill>
                       ))}
-                    </Flex>
-                  </S.InfoItem>
-                </ShouldRender>
-                <S.InfoItem>
-                  <S.InfoLabel>Fandom:</S.InfoLabel>
-                  <ShouldRender if={muse?.fandom !== null}>
-                    <S.FandomValue color={muse?.fandom.color || "red"}>
-                      {muse?.fandom.id}
+                    </S.InfoNicknamesRow>
+                  </ShouldRender>
+                </S.InfoHeaderSection>
+
+                {/* Fandom */}
+                <ShouldRender if={muse?.fandom !== null}>
+                  <S.InfoFandomSection>
+                    <S.FandomValue color={muse?.fandom?.color || "#444"}>
+                      {muse?.fandom?.name}
                     </S.FandomValue>
-                  </ShouldRender>
-                  <ShouldRender if={muse?.fandom === null}>
-                    <S.InfoValue>NOT SPECIFIED</S.InfoValue>
-                  </ShouldRender>
-                </S.InfoItem>
-                {muse?.extraAttributes &&
-                  Object.entries(muse.extraAttributes).map(([key, value]) => (
-                    <S.InfoItem key={key}>
-                      <S.InfoLabel>{key}:</S.InfoLabel>
-                      <S.InfoValue>{value}</S.InfoValue>
-                    </S.InfoItem>
-                  ))}
+                  </S.InfoFandomSection>
+                </ShouldRender>
+
+                {/* Extra Attributes */}
                 <ShouldRender
+                  if={Boolean(
+                    muse?.extraAttributes &&
+                      Object.keys(muse.extraAttributes).length > 0,
+                  )}
+                >
+                  <S.InfoAttributesGrid>
+                    {muse?.extraAttributes &&
+                      Object.entries(muse.extraAttributes).map(
+                        ([key, value]) => (
+                          <S.InfoAttributeCard
+                            key={key}
+                            accent={muse?.useAccent ? muse?.accent : undefined}
+                          >
+                            <S.InfoAttributeKey>{key}</S.InfoAttributeKey>
+                            <S.InfoAttributeValue>{value}</S.InfoAttributeValue>
+                          </S.InfoAttributeCard>
+                        ),
+                      )}
+                  </S.InfoAttributesGrid>
+                </ShouldRender>
+
+                {/* Tags */}
+                {/* <ShouldRender
                   if={
                     muse?.tags?.length !== undefined && muse?.tags?.length > 0
                   }
                 >
-                  <S.InfoItem>
-                    <S.InfoLabel>Tags:</S.InfoLabel>
+                  <S.InfoTagsSection>
                     <TagsContainer tags={muse?.tags} />
-                  </S.InfoItem>
-                </ShouldRender>
-              </S.InfoContainer>
+                  </S.InfoTagsSection>
+                </ShouldRender> */}
+              </S.InfoScrollBody>
             </S.InfoCardContent>
           </S.CardBack>
         </S.CardExpandedWrapper>
       </ShouldRender>
       <ShouldRender if={is("CONNECTIONS")}>
         <S.CardExpandedWrapper>
-          <S.CardBack className="muse-card" accent={muse?.accent}>
+          <S.CardBack
+            className="muse-card"
+            accent={muse?.useAccent ? muse?.accent : undefined}
+          >
             <S.InfoCardContent>
               <S.Title>Connections</S.Title>
               <S.ConnectionsContainer>
-                <S.ScrollableContent accent={muse?.accent}>
+                <S.ScrollableContent
+                  accent={muse?.useAccent ? muse?.accent : undefined}
+                >
                   <S.ExpandedContentInner>
                     {loadChonnections(0, "paddington")}
                   </S.ExpandedContentInner>
@@ -352,10 +376,15 @@ export default function MuseProfilePage({}) {
       </ShouldRender>
       <ShouldRender if={is("BACK_STORY")}>
         <S.CardExpandedWrapper>
-          <S.CardBack className="muse-card" accent={muse?.accent}>
+          <S.CardBack
+            className="muse-card"
+            accent={muse?.useAccent ? muse?.accent : undefined}
+          >
             <S.InfoCardContent>
               <S.Title>Story</S.Title>
-              <S.ScrollableContent accent={muse?.accent}>
+              <S.ScrollableContent
+                accent={muse?.useAccent ? muse?.accent : undefined}
+              >
                 <ShouldRender
                   if={
                     muse?.note?.length !== undefined && muse?.note?.length > 0
@@ -394,7 +423,7 @@ export default function MuseProfilePage({}) {
           </S.CardBack>
         </S.CardExpandedWrapper>
       </ShouldRender>
-      <ShouldRender if={is("VIDEO")}>
+      {/* <ShouldRender if={is("VIDEO")}>
         <S.CardExpandedWrapper>
           <ShouldRender
             if={muse?.video !== null && muse?.video.endsWith(".mp4") === true}
@@ -407,13 +436,18 @@ export default function MuseProfilePage({}) {
             </S.VideoCardContent>
           </ShouldRender>
         </S.CardExpandedWrapper>
-      </ShouldRender>
+      </ShouldRender> */}
       <ShouldRender if={is("PROMPTS")}>
         <S.CardExpandedWrapper>
-          <S.CardBack className="muse-card" accent={muse?.accent}>
+          <S.CardBack
+            className="muse-card"
+            accent={muse?.useAccent ? muse?.accent : undefined}
+          >
             <S.InfoCardContent>
               <S.Title>Prompts</S.Title>
-              <S.ScrollableContent accent={muse?.accent}>
+              <S.ScrollableContent
+                accent={muse?.useAccent ? muse?.accent : undefined}
+              >
                 {loadPrompts()}
               </S.ScrollableContent>
             </S.InfoCardContent>
@@ -421,23 +455,23 @@ export default function MuseProfilePage({}) {
         </S.CardExpandedWrapper>
       </ShouldRender>
       <S.SideMenu>
-        <ShouldRender if={muse?.video != null && muse?.video !== ""}>
+        {/* <ShouldRender if={muse?.video != null && muse?.video !== ""}>
           <S.MenuButton>
             <S.MenuButtonIcon
               onClick={() => transition("VIDEO")}
               className={classNames({ selected: is("VIDEO") })}
-              accent={muse?.accent}
+              accent={muse?.useAccent ? muse?.accent : undefined}
             >
               <MdOutlineSlowMotionVideo size={"45%"} />
             </S.MenuButtonIcon>
             <S.MenuText>VIDEO</S.MenuText>
           </S.MenuButton>
-        </ShouldRender>
+        </ShouldRender> */}
         <S.MenuButton>
           <S.MenuButtonIcon
             onClick={() => transition("PROMPTS")}
             className={classNames({ selected: is("PROMPTS") })}
-            accent={muse?.accent}
+            accent={muse?.useAccent ? muse?.accent : undefined}
           >
             <BiSolidMessageEdit size={"45%"} />
           </S.MenuButtonIcon>
@@ -447,7 +481,7 @@ export default function MuseProfilePage({}) {
           <S.MenuButtonIcon
             onClick={() => transition("MUSE_INFO")}
             className={classNames({ selected: is("MUSE_INFO") })}
-            accent={muse?.accent}
+            accent={muse?.useAccent ? muse?.accent : undefined}
           >
             <TiInfoLarge size={"45%"} />
           </S.MenuButtonIcon>
@@ -457,29 +491,29 @@ export default function MuseProfilePage({}) {
           <S.MenuButtonIcon
             onClick={() => transition("BACK_STORY")}
             className={classNames({ selected: is("BACK_STORY") })}
-            accent={muse?.accent}
+            accent={muse?.useAccent ? muse?.accent : undefined}
           >
             <GiBookCover size={"45%"} />
           </S.MenuButtonIcon>
           <S.MenuText>STORY</S.MenuText>
         </S.MenuButton>
-        <S.MenuButton>
+        {/* <S.MenuButton>
           <S.MenuButtonIcon
             onClick={() => transition("CONNECTIONS")}
             className={classNames({ selected: is("CONNECTIONS") })}
-            accent={muse?.accent}
+            accent={muse?.useAccent ? muse?.accent : undefined}
           >
             <BsFillPeopleFill size={"45%"} />
           </S.MenuButtonIcon>
           <S.MenuText>RELATIONS</S.MenuText>
-        </S.MenuButton>
+        </S.MenuButton> */}
         <ShouldRender if={!is("MAIN")}>
           <S.MenuButton className="stick-top">
             <S.MenuButtonIcon
               onClick={() => {
                 transition("MAIN");
               }}
-              accent={muse?.accent}
+              accent={muse?.useAccent ? muse?.accent : undefined}
             >
               <MdClose />
             </S.MenuButtonIcon>
@@ -491,7 +525,7 @@ export default function MuseProfilePage({}) {
               onClick={() => {
                 transition("MAIN");
               }}
-              accent={muse?.accent}
+              accent={muse?.useAccent ? muse?.accent : undefined}
             >
               <FiMoreVertical size={"45%"} />
             </S.MenuButtonIcon>

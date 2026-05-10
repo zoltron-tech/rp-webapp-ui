@@ -441,7 +441,9 @@ export default function EditMuseDataCard() {
         privacy: _privacy,
         song: null,
         story: _story,
-        tags: [],
+        tags: null,
+        useAccent: Boolean(_accent),
+        useExtraImages: Boolean(wallpaper || cardBackground),
         video: null,
         wallpaper: wallpaper ?? null,
       } satisfies CreateUpdateMuse;

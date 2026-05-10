@@ -63,6 +63,8 @@ export const INITIAL_MUSE: Muse = {
   song: null,
   story: '{"type":"doc","content":[{"type":"paragraph"}]}',
   tags: [],
+  useAccent: false,
+  useExtraImages: false,
   video: null,
   wallpaper: null,
 };

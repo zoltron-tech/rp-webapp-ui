@@ -799,3 +799,143 @@ export const AboutSectionImage = styled.img`
   margin-bottom: 0.75rem;
   cursor: zoom-in;
 `;
+
+/* ── Info panel revamp ───────────────────────────────────────────────────── */
+
+export const InfoPrivacyCorner = styled.div`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  z-index: 2;
+`;
+
+export const InfoScrollBody = styled.div<{ accent?: string | null }>`
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px 24px;
+
+  transition: scrollbar-color 0.2s ease;
+
+  &:hover {
+    scrollbar-color: ${({ accent }) =>
+      accent && accent.trim() !== ""
+        ? `color-mix(in srgb, ${accent} 70%, black)`
+        : "var(--accent-6)"} transparent;
+  }
+`;
+
+export const InfoHeaderSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding-top: 6px;
+`;
+
+export const InfoMuseName = styled.h2`
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+`;
+
+export const InfoNicknamesRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+`;
+
+export const InfoNicknamePill = styled.span`
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(4px);
+  font-size: 0.68rem;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.75);
+  letter-spacing: 0.03em;
+`;
+
+export const InfoFandomSection = styled.div`
+  display: flex;
+  justify-content: center;
+  width: 100%;
+`;
+
+export const InfoAttributesGrid = styled.div`
+  display: grid;
+  margin-top: 20px;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+`;
+
+export const InfoAttributeCard = styled.div<{ accent?: string | null }>`
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background-color: ${({ accent }) =>
+    accent && accent.trim() !== ""
+      ? `color-mix(in srgb, ${accent} 12%, rgba(0,0,0,0.35))`
+      : "rgba(255,255,255,0.07)"};
+  border: 1px solid ${({ accent }) =>
+    accent && accent.trim() !== ""
+      ? `color-mix(in srgb, ${accent} 30%, transparent)`
+      : "rgba(255,255,255,0.12)"};
+  backdrop-filter: blur(4px);
+  overflow: hidden;
+`;
+
+export const InfoAttributeKey = styled.span`
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+export const InfoAttributeValue = styled.span`
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  word-break: break-word;
+`;
+
+export const InfoTagsSection = styled.div`
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+  padding-top: 4px;
+`;

@@ -815,6 +815,198 @@ padding-top: 20px;
 width: 100%;
 `;
 
+/* ── Nicknames ───────────────────────────────────────────────────────────── */
+
+export const NicknamesSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 5px;
+`;
+
+export const NicknamesInputRow = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  input {
+    flex: 1;
+    margin-bottom: 0;
+  }
+`;
+
+export const AddNicknameButton = styled.button`
+  all: unset;
+  cursor: pointer;
+  padding: 8px 14px;
+  border-radius: 4px;
+  background-color: var(--accent);
+  color: var(--text);
+  font-size: var(--font-size-small);
+  font-family: var(--font);
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color 0.15s;
+
+  &:hover:not(:disabled) {
+    background-color: var(--accent-hover);
+  }
+
+  &:focus-visible {
+    outline: 1.5px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    background-color: var(--bg-6);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+  }
+`;
+
+export const NicknameTagsRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 28px;
+`;
+
+export const NicknameTag = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px 3px 12px;
+  background-color: color-mix(in srgb, var(--accent) 15%, var(--bg-4));
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--bg-6));
+  border-radius: 999px;
+  font-size: var(--font-size-small);
+  font-family: var(--font);
+  color: var(--text);
+  font-weight: 500;
+`;
+
+export const NicknameRemove = styled.button`
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  color: var(--text-secondary);
+  transition: color 0.12s, background-color 0.12s;
+
+  &:hover {
+    color: #ef4444;
+    background-color: rgba(239, 68, 68, 0.15);
+  }
+
+  svg {
+    width: 10px;
+    height: 10px;
+  }
+`;
+
+export const NicknamesHint = styled.p`
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  font-family: var(--font);
+`;
+
+/* ── Accent color inline row ─────────────────────────────────────────────── */
+
+export const AccentColorRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+`;
+
+export const AccentColorSwatch = styled.button`
+  all: unset;
+  cursor: pointer;
+  display: inline-block;
+  width: 56px;
+  height: 26px;
+  border-radius: 4px;
+  border: 1px solid var(--bg-6);
+  flex-shrink: 0;
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+`;
+
+export const AccentEditButton = styled.button`
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  transition: color 0.15s, background-color 0.15s;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--text);
+    background-color: var(--bg-4);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+`;
+
+export const AccentPickerDialogBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding-top: 4px;
+
+  .react-colorful {
+    width: 100%;
+    max-width: 260px;
+  }
+
+  .hex-input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    span {
+      font-family: var(--font);
+      font-size: var(--font-size-small);
+      color: var(--text-secondary);
+    }
+
+    input {
+      width: 90px;
+      padding: 5px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--bg-6);
+      background: var(--bg-3);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: var(--font-size-small);
+      text-align: center;
+
+      &:focus {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+      }
+    }
+  }
+`;
+
 // ── Fandom picker dialog ─────────────────────────────────────────────────────
 
 const overlayShow = keyframes`

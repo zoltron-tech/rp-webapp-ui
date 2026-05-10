@@ -394,3 +394,60 @@ export const FPMediaUploadingText = styled.span`
   color: var(--text-secondary);
   align-self: center;
 `;
+
+/* ── Ordinal stepper ─────────────────────────────────────────────────────── */
+
+export const OrdinalStepper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid var(--bg-6);
+  border-radius: 6px;
+  overflow: hidden;
+  height: 32px;
+`;
+
+export const OrdinalStepBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 32px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  background-color: var(--bg-4);
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: background-color 0.12s, color 0.12s;
+  user-select: none;
+
+  &:hover:not(:disabled) {
+    background-color: var(--bg-5);
+    color: var(--text);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+`;
+
+export const OrdinalValue = styled.span`
+  min-width: 36px;
+  text-align: center;
+  font-size: var(--font-size-small);
+  font-family: var(--font);
+  color: var(--text);
+  background-color: var(--bg-3);
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 1px solid var(--bg-6);
+  border-right: 1px solid var(--bg-6);
+  padding-inline: 6px;
+  font-weight: 600;
+`;

@@ -13,11 +13,13 @@ import * as S from "./styled";
 export type EditMuseAboutSectionDataCardProps = {
   museId: string;
   sectionId?: string;
+  sectionCount?: number;
 };
 
 export const EditMuseAboutSectionForm = ({
   sectionId,
   museId,
+  sectionCount,
 }: EditMuseAboutSectionDataCardProps) => {
   const authState = useGlobalState("authState");
   const novelist = useGlobalState("novelist");
@@ -47,14 +49,20 @@ export const EditMuseAboutSectionForm = ({
   return (
     <S.Container>
       <ShouldRender
-        if={Boolean(novelist && (sectionData || sectionId == null))}
+        if={Boolean(
+          novelist &&
+            (sectionData || sectionId == null) &&
+            (sectionId != null || sectionCount !== undefined),
+        )}
       >
         <StoreProvider<MuseAboutSection>
           storeId="muse-about-section"
           initial={{
             id: sectionData?.id ?? null,
             image: sectionData?.image ?? null,
-            ordinal: sectionData?.ordinal ?? 0,
+            ordinal:
+              sectionData?.ordinal ??
+              (sectionCount !== undefined ? sectionCount + 1 : 0),
             parentId: sectionData?.parentId ?? museId,
             text: sectionData?.text ?? null,
           }}

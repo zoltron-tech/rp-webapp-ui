@@ -52,26 +52,6 @@ export default function EditMuseAboutSectionDataCard() {
 
   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
-  const handleOrdinalChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-
-      // Allow empty string during editing (defaults to 0)
-      if (value === "") {
-        setSectionState({ ordinal: 0 });
-        setError(null);
-        return;
-      }
-
-      const parsed = parseInt(value, 10);
-      if (!Number.isNaN(parsed) && parsed >= 0) {
-        setSectionState({ ordinal: parsed });
-        setError(null);
-      }
-    },
-    [setSectionState],
-  );
-
   const handleTextChange = useCallback(
     (value: string) => {
       setSectionState({ text: value });
@@ -230,15 +210,26 @@ export default function EditMuseAboutSectionDataCard() {
       <form onSubmit={handleSubmit}>
         <S.FormGroup>
           <div style={{ alignItems: "center", display: "flex", gap: "0.5rem" }}>
-            <S.FPOrdinalLabel htmlFor="dc-ordinal">Order</S.FPOrdinalLabel>
-            <S.FPOrdinalInput
-              id="dc-ordinal"
-              type="number"
-              value={ordinal}
-              onChange={handleOrdinalChange}
-              min="0"
-              disabled={loading}
-            />
+            <S.FPOrdinalLabel>Order</S.FPOrdinalLabel>
+            <S.OrdinalStepper>
+              <S.OrdinalStepBtn
+                type="button"
+                aria-label="Decrease order"
+                disabled={loading || ordinal <= 0}
+                onClick={() => setSectionState({ ordinal: ordinal - 1 })}
+              >
+                −
+              </S.OrdinalStepBtn>
+              <S.OrdinalValue>{ordinal}</S.OrdinalValue>
+              <S.OrdinalStepBtn
+                type="button"
+                aria-label="Increase order"
+                disabled={loading}
+                onClick={() => setSectionState({ ordinal: ordinal + 1 })}
+              >
+                +
+              </S.OrdinalStepBtn>
+            </S.OrdinalStepper>
           </div>
         </S.FormGroup>
 

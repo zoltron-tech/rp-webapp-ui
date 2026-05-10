@@ -51,9 +51,12 @@ export const EditMuseForm: FC<EditMuseCardProps> = ({ id }) => {
             id: muse?.id || "",
             image: muse?.image || "",
             lastName: muse?.lastName || "",
+            nicknames: muse?.nicknames || [],
             note: muse?.note || "",
             privacy: muse?.privacy || "PUBLIC",
             story: muse?.story || "",
+            useAccent: muse?.useAccent || false,
+            useExtraImages: muse?.useExtraImages || false,
             wallpaper: muse?.wallpaper || null,
           }}
         >

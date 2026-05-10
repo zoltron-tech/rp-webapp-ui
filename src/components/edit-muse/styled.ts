@@ -948,7 +948,8 @@ export const AccentEditButton = styled.button`
   color: var(--text-secondary);
   transition: color 0.15s, background-color 0.15s;
 
-  &:hover {
+  &:hover,
+  &:focus-visible {
     color: var(--text);
     background-color: var(--bg-4);
   }
@@ -956,8 +957,6 @@ export const AccentEditButton = styled.button`
   &:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 1px;
-    color: var(--text);
-    background-color: var(--bg-4);
   }
 `;
 

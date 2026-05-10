@@ -375,7 +375,7 @@ export default function EditMuseExtraAttributesDataCard({
                 Cancel
               </S.CancelButton>
               <S.SubmitButton type="submit" disabled={loading}>
-                {loading ? "Savingâ€¦" : "Save"}
+                {loading ? "Saving..." : "Save"}
               </S.SubmitButton>
             </Flex>
           </Flex>

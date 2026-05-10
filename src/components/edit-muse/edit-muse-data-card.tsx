@@ -858,10 +858,12 @@ export default function EditMuseDataCard() {
           <ShouldRender if={Boolean(id)}>
             <Separator.Root className="separator" orientation="horizontal" />
             <S.AboutSectionsLink
-              onClick={() => routeToPage(ROUTES.Profile.Muses.About(id || ""))}
+              onClick={() =>
+                routeToPage(ROUTES.Profile.Muses.ExtraAttributes(id || ""))
+              }
             >
               <span>
-                Edit Character Story
+                Edit Extra Attributes
                 <MdDoubleArrow size={20} />
               </span>
             </S.AboutSectionsLink>
@@ -869,12 +871,10 @@ export default function EditMuseDataCard() {
           <ShouldRender if={Boolean(id)}>
             <Separator.Root className="separator" orientation="horizontal" />
             <S.AboutSectionsLink
-              onClick={() =>
-                routeToPage(ROUTES.Profile.Muses.ExtraAttributes(id || ""))
-              }
+              onClick={() => routeToPage(ROUTES.Profile.Muses.About(id || ""))}
             >
               <span>
-                Edit Extra Attributes
+                Edit Character Story
                 <MdDoubleArrow size={20} />
               </span>
             </S.AboutSectionsLink>

@@ -945,6 +945,13 @@ export const AccentEditButton = styled.button`
     color: var(--text);
     background-color: var(--bg-4);
   }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    color: var(--text);
+    background-color: var(--bg-4);
+  }
 `;
 
 export const AccentPickerDialogBody = styled.div`

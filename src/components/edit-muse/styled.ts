@@ -853,6 +853,11 @@ export const AddNicknameButton = styled.button`
     background-color: var(--accent-hover);
   }
 
+  &:focus-visible {
+    outline: 1.5px solid var(--accent);
+    outline-offset: 2px;
+  }
+
   &:disabled {
     background-color: var(--bg-6);
     color: var(--text-secondary);

@@ -449,7 +449,6 @@ export default function EditMuseDataCard() {
         wallpaper: wallpaper ?? null,
       } satisfies CreateUpdateMuse;
       setLoading(true);
-      console.log("Submitting payload:", payload);
       const response = await updateMuseAction(id, payload);
       setLoading(false);
 

@@ -344,7 +344,7 @@ export const QuoteTextarea = styled.textarea`
   border-radius: 6px;
   padding: 8px 10px;
   font-family: var(--font);
-  font-size: var(--font-size);
+  font-size: var(--font-size-input);
   color: var(--text);
   resize: none;
   line-height: 1.5;

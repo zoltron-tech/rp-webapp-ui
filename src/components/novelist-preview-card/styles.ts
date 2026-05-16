@@ -24,6 +24,11 @@ export const CardWrapper = styled.div`
   @media (max-width: 600px) {
     width: 155px;
     min-width: 155px;
+
+    &:hover {
+      transform: none;
+      box-shadow: none;
+    }
   }
 `;
 
@@ -160,9 +165,14 @@ export const MusesRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: 26px;
   /* overlapping avatars */
   & > * + * {
     margin-left: -8px;
+  }
+
+  @media (max-width: 600px) {
+    min-height: 20px;
   }
 `;
 

@@ -46,6 +46,10 @@ export const CardFrame = styled.div`
   );
   flex-shrink: 0;
   align-self: center;
+  overflow: hidden;
+  /* Force a GPU compositing layer so iOS Safari honours the
+     overflow:hidden + border-radius clip on nested children */
+  transform: translateZ(0);
 `;
 
 export const Card = styled.div`
@@ -58,6 +62,8 @@ export const Card = styled.div`
   flex-direction: column;
   overflow: hidden;
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+  /* Same GPU-layer trick for the inner clip */
+  transform: translateZ(0);
 `;
 
 /* ── Hero banner ─────────────────────────────────────────────────────────── */
@@ -72,6 +78,10 @@ export const HeroBanner = styled.div`
   align-items: flex-end;
   justify-content: center;
   padding-bottom: 28px;
+  border-top-right-radius: 24px;
+  border-top-left-radius: 24px;
+  /* GPU layer so the inset:-20px HeroBg is clipped correctly on iOS Safari */
+  transform: translateZ(0);
 `;
 
 export const HeroBg = styled.div<{ $src: string }>`
@@ -81,6 +91,7 @@ export const HeroBg = styled.div<{ $src: string }>`
   background-size: cover;
   background-position: center top;
   filter: blur(22px) brightness(0.3);
+  border-radius: 24px;
   z-index: 0;
 `;
 
@@ -93,6 +104,8 @@ export const HeroAccentOverlay = styled.div`
     rgba(0, 0, 0, 0.5) 100%
   );
   z-index: 1;
+  border-top-right-radius: 24px;
+  border-top-left-radius: 24px;
 `;
 
 export const HeroInner = styled.div`
@@ -101,6 +114,8 @@ export const HeroInner = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  border-top-right-radius: 24px;
+  border-top-left-radius: 24px;
   gap: 8px;
 `;
 

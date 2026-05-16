@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { NotificcationsList } from "@/components/notification";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { getNotifications } from "../novelists/actions";
 
-const PAGE_SIZE = 30;
+const PAGE_SIZE = 20;
 
 export default function NotifiactionsPage() {
   const authState = useGlobalState("authState");
@@ -17,9 +17,10 @@ export default function NotifiactionsPage() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const initialLoadDone = useRef(false);
 
-  const fetchNotifications = useCallback(
-    async (pageNumber: number, append = false) => {
+  const fetchPage = useCallback(
+    async (pageNumber: number, append: boolean) => {
       const data = await baseDataLoader(() =>
         getNotifications(pageNumber, PAGE_SIZE),
       );
@@ -30,31 +31,38 @@ export default function NotifiactionsPage() {
       }
 
       setHasMore(data.length >= PAGE_SIZE);
-      set({
-        notifications: append ? [...(notifications || []), ...data] : data,
-      });
+
+      // Use functional updater to avoid stale closure on the notifications list.
+      if (append) {
+        set((prev) => ({
+          notifications: [...(prev.notifications ?? []), ...data],
+        }));
+      } else {
+        set({ notifications: data });
+      }
     },
-    [authState, notifications],
+    [baseDataLoader, set],
   );
 
   useEffect(() => {
     if (authState === "LOADING") return;
-    if (notifications) return;
+    // Always (re)fetch page 1 on mount so `hasMore` reflects the current state,
+    // even when the store already holds cached notifications from a previous visit.
+    if (initialLoadDone.current) return;
+    initialLoadDone.current = true;
 
-    fetchNotifications(1);
-  }, [authState]);
+    setPage(1);
+    fetchPage(1, false);
+  }, [authState, fetchPage]);
 
-  const loadMore = async () => {
+  const loadMore = useCallback(async () => {
     if (loadingMore) return;
-
     setLoadingMore(true);
     const nextPage = page + 1;
-
-    await fetchNotifications(nextPage, true);
-
+    await fetchPage(nextPage, true);
     setPage(nextPage);
     setLoadingMore(false);
-  };
+  }, [loadingMore, page, fetchPage]);
 
   return (
     <NotificcationsList

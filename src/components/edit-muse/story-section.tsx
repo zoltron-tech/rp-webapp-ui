@@ -10,7 +10,7 @@ import { useMuseState, useMuseStoreSet } from "./muse.store";
 import * as S from "./styled";
 import { useMuseSave } from "./use-muse-save";
 
-const MAX_QUOTE_LENGTH = 100;
+const MAX_QUOTE_LENGTH = 200;
 
 type Props = {
   isWizard?: boolean;

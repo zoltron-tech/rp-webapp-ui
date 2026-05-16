@@ -77,7 +77,7 @@ export const HeroBanner = styled.div`
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding-bottom: 28px;
+  padding-bottom: 14px;
   border-top-right-radius: 24px;
   border-top-left-radius: 24px;
   /* GPU layer so the inset:-20px HeroBg is clipped correctly on iOS Safari */
@@ -130,8 +130,8 @@ export const AvatarRing = styled.div`
   );
 
   .avatar {
-    width: 130px;
-    height: 130px;
+    width: 148px;
+    height: 148px;
     display: block;
   }
 `;
@@ -163,7 +163,7 @@ export const ContentArea = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 14px 28px 12px;
+  padding: 14px 28px 2px;
   gap: 18px;
   min-height: 0;
   width: 100%;
@@ -201,7 +201,7 @@ export const StatsBar = styled.div`
   background: var(--bg-3);
   border-radius: 16px;
   border: 1px solid var(--bg-6);
-  padding: 16px 0;
+  padding: 11px 0;
 `;
 
 export const StatItem = styled.div`
@@ -213,14 +213,14 @@ export const StatItem = styled.div`
 `;
 
 export const StatValue = styled.div`
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 800;
   color: var(--accent);
   letter-spacing: -0.02em;
 `;
 
 export const StatLabel = styled.div`
-  font-size: 10px;
+  font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--text-secondary);
@@ -229,7 +229,7 @@ export const StatLabel = styled.div`
 
 export const StatSep = styled.div`
   width: 1px;
-  height: 36px;
+  height: 26px;
   background: var(--bg-6);
   flex-shrink: 0;
 `;
@@ -254,7 +254,7 @@ export const CharRow = styled.div`
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  gap: 20px;
+  gap: 12px;
 `;
 
 export const CharItem = styled.div`
@@ -265,8 +265,8 @@ export const CharItem = styled.div`
 `;
 
 export const CharCard = styled.div`
-  width: 76px;
-  height: 135px;
+  width: 96px;
+  height: 168px;
   border-radius: 8px;
   overflow: hidden;
   flex-shrink: 0;
@@ -298,7 +298,7 @@ export const CharName = styled.div`
   color: var(--text);
   text-align: center;
   font-weight: 600;
-  max-width: 72px;
+  max-width: 92px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -344,7 +344,7 @@ export const BottomBar = styled.div`
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 10px 20px 14px;
+  padding: 7px 20px 10px;
   border-top: 1px solid var(--bg-6);
 `;
 
@@ -378,14 +378,16 @@ export const ProfileUrl = styled.div`
   color: var(--accent);
   word-break: break-all;
   line-height: 1.4;
+  width: 100%;
 `;
 
 export const BrandBlock = styled.div`
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-  flex-shrink: 0;
+  align-items: flex-start;
+  gap: 3px;
 `;
 
 export const BrandRow = styled.div`
@@ -400,7 +402,7 @@ export const BrandText = styled.div`
 `;
 
 export const BrandName = styled.span`
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 400;
   font-style: italic;
   text-transform: uppercase;
@@ -409,7 +411,7 @@ export const BrandName = styled.span`
 `;
 
 export const BrandNameSuffix = styled.span`
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 800;
   font-style: italic;
   text-transform: uppercase;

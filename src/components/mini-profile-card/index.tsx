@@ -255,12 +255,8 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
 
               <S.BottomBar>
                 <S.QrWrapper>
-                  <QRCode value={profileUrl} size={38} level="M" />
+                  <QRCode value={profileUrl} size={30} level="M" />
                 </S.QrWrapper>
-                <S.UrlBlock>
-                  <S.ProfileUrlLabel>Profile URL</S.ProfileUrlLabel>
-                  <S.ProfileUrl>{profileUrl}</S.ProfileUrl>
-                </S.UrlBlock>
                 <S.BrandBlock>
                   <S.BrandRow>
                     <NWLogoInner size={15} />
@@ -269,6 +265,7 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
                       <S.BrandNameSuffix> World</S.BrandNameSuffix>
                     </S.BrandText>
                   </S.BrandRow>
+                  <S.ProfileUrl>{profileUrl}</S.ProfileUrl>
                 </S.BrandBlock>
               </S.BottomBar>
             </S.Card>

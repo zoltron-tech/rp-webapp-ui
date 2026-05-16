@@ -45,11 +45,11 @@ export const CardFrame = styled.div`
     color-mix(in srgb, var(--accent) 50%, white)
   );
   flex-shrink: 0;
-  border-radius: 24px;
   align-self: center;
-  /* Clip children at the rounded border on mobile WebKit where nested
-     overflow:hidden + border-radius can leak through corners */
   overflow: hidden;
+  /* Force a GPU compositing layer so iOS Safari honours the
+     overflow:hidden + border-radius clip on nested children */
+  transform: translateZ(0);
 `;
 
 export const Card = styled.div`
@@ -62,6 +62,8 @@ export const Card = styled.div`
   flex-direction: column;
   overflow: hidden;
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+  /* Same GPU-layer trick for the inner clip */
+  transform: translateZ(0);
 `;
 
 /* ── Hero banner ─────────────────────────────────────────────────────────── */
@@ -78,6 +80,8 @@ export const HeroBanner = styled.div`
   padding-bottom: 28px;
   border-top-right-radius: 24px;
   border-top-left-radius: 24px;
+  /* GPU layer so the inset:-20px HeroBg is clipped correctly on iOS Safari */
+  transform: translateZ(0);
 `;
 
 export const HeroBg = styled.div<{ $src: string }>`

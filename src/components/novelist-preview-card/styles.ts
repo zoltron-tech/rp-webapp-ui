@@ -165,9 +165,14 @@ export const MusesRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: 26px;
   /* overlapping avatars */
   & > * + * {
     margin-left: -8px;
+  }
+
+  @media (max-width: 600px) {
+    min-height: 20px;
   }
 `;
 

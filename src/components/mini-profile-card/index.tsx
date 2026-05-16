@@ -107,7 +107,7 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
   const novelistAccent =
     ACCENT_MAP[novelist.palette as keyof typeof ACCENT_MAP] ?? ACCENT_MAP[0];
 
-  const profileUrl = `https://novelist.world/rp/profile/${novelist.username}`;
+  const profileUrl = `https://novelist.world/${novelist.username}`;
 
   const handleDownload = async () => {
     if (!cardRef.current) return;

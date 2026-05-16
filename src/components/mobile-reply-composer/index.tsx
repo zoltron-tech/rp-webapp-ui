@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { GrAttachment } from "react-icons/gr";
 import { HiPaperAirplane, HiPhoto } from "react-icons/hi2";
 import { MdGif } from "react-icons/md";
 import { submitPrompt, uploadMedia } from "@/app/rp/profile/actions";
@@ -246,17 +247,17 @@ const MobileReplyComposerInner: FC<MobileReplyComposerProps> = ({
           <S.MediaWrap>
             <S.MediaIconBtn
               type="button"
+              title="Insert image"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <GrAttachment size={16} />
+            </S.MediaIconBtn>
+            <S.MediaIconBtn
+              type="button"
               title="Insert GIF"
               onClick={() => setShowGifPicker(true)}
             >
               <MdGif size={16} />
-            </S.MediaIconBtn>
-            <S.MediaIconBtn
-              type="button"
-              title="Insert image"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <HiPhoto size={16} />
             </S.MediaIconBtn>
           </S.MediaWrap>
         </S.MetaRow>

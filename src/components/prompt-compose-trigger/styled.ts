@@ -10,7 +10,6 @@ export const Root = styled.button`
   padding: 20px 12px 20px;
   cursor: pointer;
   background-color: var(--bg-2);
-  border-bottom: 1px solid var(--bg-6);
   transition: background-color 0.15s;
 
   .trigger-avatar {

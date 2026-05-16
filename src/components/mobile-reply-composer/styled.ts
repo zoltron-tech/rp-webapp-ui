@@ -8,12 +8,12 @@ export const ComposerRoot = styled.div`
   }
 
   flex-shrink: 0;
-  background: var(--bg-2);
+  background: var(--bg-3);
   border-top: 1px solid var(--bg-6);
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.22);
   /* Respect notch/home-indicator on iOS */
-  /* padding-bottom: env(safe-area-inset-bottom, 0px); */
-  padding-bottom: 20px;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+
   /* Allow the bar itself to scroll if content grows very tall */
   max-height: 65dvh;
   overflow-y: auto;
@@ -89,9 +89,6 @@ export const MediaIconBtn = styled.button`
  */
 export const EditorArea = styled.div`
   position: relative;
-  margin: 8px 12px 4px;
-  border-radius: 12px;
-  border: 1px solid var(--bg-6);
   overflow: hidden;
 
   /* Reserve right-side space for just the send button. */

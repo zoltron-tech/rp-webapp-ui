@@ -58,7 +58,6 @@ export const ToolbarRoot = styled(Toolbar.Root)`
   padding-bottom: 0.625rem;
   margin-bottom: 1px;
   background-color: var(--bg-4);
-  border: 2px solid var(--border, var(--bg-6, #e5e4e7));
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   position: relative;
@@ -938,7 +937,7 @@ interface EditorContentProps {
 export const EditorContent = styled.div<EditorContentProps>`
   box-sizing: border-box;
   width: 100%;
-  min-height: ${(p) => (p.$fullPage ? "0" : p.$compact ? "44px" : "10rem")};
+  min-height: ${(p) => (p.$fullPage ? "0" : p.$compact ? "100px" : "10rem")};
   max-height: ${(p) => (p.$fullPage ? "none" : "20dvh")};
   @media (min-width: 681px) {
     max-height: none;
@@ -946,6 +945,7 @@ export const EditorContent = styled.div<EditorContentProps>`
   ${(p) => p.$fullPage && "flex: 1;"}
   background-color: var(--bg-3);
   padding: 1rem;
+  padding-bottom: 40px;
   outline: none;
   overflow: auto;
   ${richTextContentBase}

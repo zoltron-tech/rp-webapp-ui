@@ -753,34 +753,26 @@ export const InfoLabel = styled.span`
 `;
 
 export const FandomValue = styled.span<{ color: string }>`
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  font-weight: 900;
-  letter-spacing: 1.5px;
-  text-align: center;
-  text-transform: uppercase; /* Title Vibe */
-  vertical-align: middle;
-  background-color: ${(props) => props.color};
-  color: #fff; /* Ensures text stands out */
-  border-radius: 999px; /* Fully rounded pill shape */
-  padding: 6px 16px; /* Better padding for a sleek look */
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  white-space: nowrap;
+  gap: 5px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #fff;
+  background: ${(props) => props.color};
+  padding: 3px 10px 3px 7px;
+  border-radius: 4px;
 
-  /* Elegant text glow for depth */
-  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
-
-  /* Smooth hover effect */
-  &:hover {
-    filter: brightness(1.2); /* Slight brightening effect */
-    transform: translateY(-1px); /* Subtle hover lift */
-  }
-
-  @media (max-width: 1024px) {
-    letter-spacing: 1px;
-    padding: 4px 8px;
-    max-width: 300px;
+  &::before {
+    content: "";
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.8);
+    flex-shrink: 0;
   }
 `;
 
@@ -914,23 +906,12 @@ export const InfoPrivacyCorner = styled.div`
 export const InfoScrollBody = styled.div<{ accent?: string | null }>`
   width: 100%;
   height: 100%;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: transparent transparent;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 14px;
-  padding: 10px 12px 24px;
-
-  transition: scrollbar-color 0.2s ease;
-
-  &:hover {
-    scrollbar-color: ${({ accent }) =>
-      accent && accent.trim() !== ""
-        ? `color-mix(in srgb, ${accent} 70%, black)`
-        : "var(--accent-6)"} transparent;
-  }
+  padding: 10px 12px 0;
+  overflow: hidden;
 `;
 
 export const InfoCardAvatar = styled.div<{ $src: string }>`
@@ -996,13 +977,51 @@ export const InfoNicknamePill = styled.span`
 
 export const InfoFandomSection = styled.div`
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
+`;
+
+export const InfoDivider = styled.div<{ $accent?: string | null }>`
+  width: 100%;
+  height: 1px;
+  flex-shrink: 0;
+  background: ${({ $accent }) =>
+    $accent && $accent.trim() !== ""
+      ? `color-mix(in srgb, ${$accent} 28%, transparent)`
+      : "rgba(255, 255, 255, 0.1)"};
+`;
+
+export const InfoDetailsSection = styled.div<{ $accent?: string | null }>`
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  overflow-y: auto;
+  padding-bottom: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.2s ease;
+
+  &:hover {
+    scrollbar-color: ${({ $accent }) =>
+      $accent && $accent.trim() !== ""
+        ? `color-mix(in srgb, ${$accent} 70%, black)`
+        : "var(--accent-6)"} transparent;
+  }
+`;
+
+export const InfoSectionLabel = styled.div`
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.38);
+  font-weight: 700;
 `;
 
 export const InfoAttributesGrid = styled.div`
   display: grid;
-  margin-top: 20px;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   width: 100%;

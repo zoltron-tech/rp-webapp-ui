@@ -75,6 +75,8 @@ export const HeroBanner = styled.div`
   align-items: flex-end;
   justify-content: center;
   padding-bottom: 28px;
+  border-top-right-radius: 24px;
+  border-top-left-radius: 24px;
 `;
 
 export const HeroBg = styled.div<{ $src: string }>`
@@ -96,6 +98,8 @@ export const HeroAccentOverlay = styled.div`
     rgba(0, 0, 0, 0.5) 100%
   );
   z-index: 1;
+  border-top-right-radius: 24px;
+  border-top-left-radius: 24px;
 `;
 
 export const HeroInner = styled.div`
@@ -104,6 +108,8 @@ export const HeroInner = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  border-top-right-radius: 24px;
+  border-top-left-radius: 24px;
   gap: 8px;
 `;
 

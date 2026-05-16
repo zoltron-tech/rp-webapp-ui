@@ -91,8 +91,11 @@ export const LoginForm: FC = () => {
       if ("message" in _novelist) {
         if (_novelist.message === API_MESSAGE.NotFound) {
           setLoading(false);
-          setGlobalState({ authState: "UNINITIALIZED", user: response.user! });
-          routeToPage(ROUTES.Onboarding);
+          setGlobalState({
+            authState: "UNINITIALIZED",
+            showInstallAppPrompt: true,
+            user: response.user!,
+          });
           return;
         } else {
           setError(API_MESSAGE.UncategorizedError);
@@ -105,7 +108,7 @@ export const LoginForm: FC = () => {
       // authState — which triggers LoginPage's useEffect to navigate to Home.
       const onboarded = await handlePostLogin(_novelist, response.user!);
       if (!onboarded) {
-        routeToPage(ROUTES.Onboarding);
+        setGlobalState({ showInstallAppPrompt: true });
       }
     },
     [],

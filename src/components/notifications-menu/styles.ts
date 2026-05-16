@@ -1,14 +1,31 @@
-import styled from "styled-components";
-import {
-  BACKGROUND_BLUR,
-  BASE_TRANSITION,
-  DEV_MODE_BORDER,
-  Z_INDEX,
-} from "@/theme";
+import { Popover, Separator } from "radix-ui";
+import styled, { keyframes } from "styled-components";
+import { NO_SCROLLBAR, Z_INDEX } from "@/theme";
 import { UnreadBadgeBase } from "../common/unread-badge";
 
+const slideDown = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+`;
+
+const slideUp = keyframes`
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+`;
+
 export const PositionContainer = styled.div`
-  ${DEV_MODE_BORDER("red")}
   position: absolute;
   right: 4.5rem;
 
@@ -21,133 +38,165 @@ export const PositionContainer = styled.div`
   }
 `;
 
-export const IconWrapper = styled.div`
+export const TriggerArea = styled.div`
   position: relative;
-  margin-top: 4px;
-  right: 35px;
-  container-type: inline-size;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+export const TriggerButton = styled.button`
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  transition: background-color 0.15s ease;
+  line-height: 0;
+
+  &:hover {
+    background-color: var(--bg-4);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent-7);
+    outline-offset: 2px;
+  }
 
   .menu-icon {
-    height: 40px;
-    width: 40px;
+    width: 36px;
+    height: 36px;
   }
 
   @media (max-width: 700px) {
     .menu-icon {
-      height: 32px;
-      width: 32px;
-    }
-  }
-`;
-
-export const Menu = styled.div`
-  box-shadow: 0px 0px 10px 4px rgba(0, 0, 0, 0.5);
-  position: absolute;
-  top: 55px;
-  right: 0px;
-
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-3);
-  width: max-content;
-  height: max-content;
-  opacity: 0;
-  pointer-events: none;
-  transition-property: opacity, width, height;
-  ${BASE_TRANSITION}
-  /* ${BACKGROUND_BLUR()} */
-
-  border-radius: 5px;
-
-  &.open {
-    opacity: 1;
-    pointer-events: all;
-  }
-
-  hr {
-    height: 1px;
-    opacity: 0.6;
-  }
-
-  @media (max-width: 700px) {
-    & {
-      top: 45px;
+      width: 28px;
+      height: 28px;
     }
   }
 `;
 
 export const NotificationBadge = styled(UnreadBadgeBase)`
   position: absolute;
-  top: 0;
-  right: 0;
-  transform: translate(10%, -10%);
-  border: 2px solid var(--bg-3);
+  top: -2px;
+  right: -2px;
   z-index: 10;
+  border: 2px solid var(--bg-3);
+  pointer-events: none;
+  font-size: 9px;
+  min-width: 16px;
+  height: 16px;
 `;
 
-export const ContentContainer = styled.div`
-  ${DEV_MODE_BORDER("blue")}
-  position: relative;
-  width: max-content;
-  height: max-content;
-  cursor: pointer;
-`;
-
-export const Text = styled.div`
-  font-size: 14px;
-  color: var(--text);
-`;
-
-export const NotificationBox = styled.div`
-  width: 100%;
-  white-space: nowrap;
+export const PopoverContent = styled(Popover.Content)`
+  width: 360px;
+  background-color: var(--bg-2);
+  border: 1px solid var(--bg-5);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
-  align-items: start;
-  justify-content: center;
-  margin-left: 10px;
-  font-size: 14px;
+  overflow: hidden;
+  z-index: ${Z_INDEX.MODAL};
+
+  &[data-state="open"] {
+    animation: ${slideDown} 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  &[data-state="closed"] {
+    animation: ${slideUp} 0.14s ease forwards;
+  }
 `;
 
-export const CardWrapper = styled.div`
-  position: relative;
-  min-width: 250px;
-  width: max-content;
-  height: 60px;
-  border-radius: var(--border-radius);
-  transition: all 0.3s ease-in-out;
-  z-index: ${Z_INDEX.CARD};
-  padding: 5px;
+export const Header = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 12px;
+  flex-shrink: 0;
+`;
 
-  container-name: muse-card;
-  container-type: size;
+export const Title = styled.h3`
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  font-family: var(--font);
+`;
+
+export const MarkAllButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--accent-11);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px 9px;
+  border-radius: 6px;
+  transition: background-color 0.15s ease;
+  font-family: var(--font);
+  font-weight: 500;
+  white-space: nowrap;
 
   &:hover {
-    background-color: var(--accent);
+    background-color: var(--accent-a3);
   }
 
-  &.end {
-    height: 40px;
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 `;
 
-export const Card = styled.div`
+export const Divider = styled(Separator.Root)`
+  height: 1px;
+  background-color: var(--bg-4);
+  flex-shrink: 0;
+`;
+
+export const ScrollArea = styled.div`
+  overflow-y: auto;
+  max-height: 360px;
+  ${NO_SCROLLBAR}
+`;
+
+export const EmptyState = styled.div`
+  padding: 36px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-family: var(--font);
+`;
+
+export const Footer = styled.button`
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  position: relative;
-  height: 100%;
-
-  &.more-items-box {
-    justify-content: center;
-  }
-`;
-
-export const CardHeader = styled.div`
+  justify-content: center;
+  gap: 6px;
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  position: relative;
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent-11);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: background-color 0.15s ease;
+  flex-shrink: 0;
+
+  &:hover {
+    background-color: var(--bg-3);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent-7);
+    outline-offset: -2px;
+  }
 `;

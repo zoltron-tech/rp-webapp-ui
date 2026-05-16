@@ -22,232 +22,385 @@ export const Modal = styled.div`
 export const CloseButton = styled.button`
   all: unset;
   box-sizing: border-box;
-  position: absolute;
-  top: 12px;
-  right: 12px;
   cursor: pointer;
   color: var(--text);
   opacity: 0.6;
   padding: 4px;
+  display: flex;
+  align-items: center;
 
   &:hover {
     opacity: 1;
   }
 `;
 
-/* ── The card that gets exported as an image ── */
+/* ── Card shell ─────────────────────────────────────────────────────────── */
+
+export const CardFrame = styled.div`
+  padding: 3px;
+  border-radius: 27px;
+  background: linear-gradient(
+    135deg,
+    var(--accent),
+    color-mix(in srgb, var(--accent) 50%, white)
+  );
+  flex-shrink: 0;
+  align-self: center;
+`;
+
 export const Card = styled.div`
   position: relative;
   width: 380px;
-  background: linear-gradient(145deg, var(--bg-2) 0%, var(--bg-3) 100%);
-  border: 1px solid var(--bg-6);
-  border-radius: 20px;
+  height: 676px;
+  background: var(--bg-2);
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+`;
+
+/* ── Hero banner ─────────────────────────────────────────────────────────── */
+
+export const HeroBanner = styled.div`
+  position: relative;
+  width: 100%;
+  height: 240px;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 28px;
+`;
+
+export const HeroBg = styled.div<{ $src: string }>`
+  position: absolute;
+  inset: -20px;
+  background-image: url(${(p) => p.$src});
+  background-size: cover;
+  background-position: center top;
+  filter: blur(22px) brightness(0.3);
+  z-index: 0;
+`;
+
+export const HeroAccentOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 30%, transparent) 0%,
+    rgba(0, 0, 0, 0.5) 100%
+  );
+  z-index: 1;
+`;
+
+export const HeroInner = styled.div`
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0;
-  overflow: hidden;
-  box-shadow:
-    0 24px 48px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(255, 255, 255, 0.04);
+  gap: 8px;
 `;
 
-export const AccentBanner = styled.div`
-  width: 100%;
-  height: 90px;
+export const AvatarRing = styled.div`
+  padding: 3px;
+  border-radius: 50%;
+  overflow: hidden;
   background: linear-gradient(
     135deg,
-    var(--accent) 0%,
-    color-mix(in srgb, var(--accent) 50%, transparent) 100%
+    var(--accent),
+    color-mix(in srgb, var(--accent) 50%, white)
   );
-  opacity: 0.85;
+
+  .avatar {
+    width: 130px;
+    height: 130px;
+    display: block;
+  }
+`;
+
+export const HeroName = styled.div`
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffffff;
+  text-align: center;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+`;
+
+export const HeroUsername = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--accent) 70%, white);
+  letter-spacing: 0.03em;
+`;
+
+/* ── Content area ────────────────────────────────────────────────────────── */
+
+export const ContentArea = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 28px 12px;
+  gap: 18px;
+  min-height: 0;
+  width: 100%;
+  justify-content: flex-start;
+`;
+
+export const NoteQuote = styled.div`
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+`;
+
+export const NoteBar = styled.div`
+  width: 3px;
+  border-radius: 2px;
+  background: var(--accent);
   flex-shrink: 0;
 `;
 
-export const AvatarWrapper = styled.div`
-  margin-top: -60px;
-  z-index: 1;
-
-  .avatar {
-    width: 120px;
-    height: 120px;
-    border: 4px solid var(--bg-2);
-  }
-`;
-
-export const Body = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 12px 24px 0;
-  gap: 4px;
-  width: 100%;
-`;
-
-export const FullName = styled.div`
-  font-size: var(--font-size-h6);
-  font-weight: var(--font-weight-bold);
+export const NoteText = styled.div`
+  font-size: 13px;
   color: var(--text);
-  text-align: center;
+  line-height: 1.65;
+  font-style: italic;
+  opacity: 0.85;
+  word-break: break-word;
 `;
 
-export const UsernameRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-weight: var(--font-weight-bold);
-  color: var(--accent);
-`;
-
-export const MusesRow = styled.div`
+export const StatsBar = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  width: 100%;
+  background: var(--bg-3);
+  border-radius: 16px;
+  border: 1px solid var(--bg-6);
+  padding: 16px 0;
+`;
 
-  .avatar {
-    width: 46px;
-    height: 46px;
-    border: 2px solid var(--bg-4);
+export const StatItem = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+`;
+
+export const StatValue = styled.div`
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+`;
+
+export const StatLabel = styled.div`
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+  font-weight: 600;
+`;
+
+export const StatSep = styled.div`
+  width: 1px;
+  height: 36px;
+  background: var(--bg-6);
+  flex-shrink: 0;
+`;
+
+export const CharSection = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+`;
+
+export const CharLabel = styled.div`
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-secondary);
+  font-weight: 700;
+`;
+
+export const CharRow = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 20px;
+`;
+
+export const CharItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+`;
+
+export const CharCard = styled.div`
+  width: 76px;
+  height: 135px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: linear-gradient(160deg, var(--bg-3) 0%, var(--bg-4) 100%);
+  border: 2px solid var(--accent-3);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
 `;
 
-export const MusesLabel = styled.div`
-  font-size: var(--font-size-xsmall);
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-top: 10px;
-`;
-
-export const Divider = styled.div`
+export const CharCardFallback = styled.div`
   width: 100%;
-  height: 1px;
-  background: var(--bg-6);
-  margin: 12px 0 8px;
-`;
-
-export const Footer = styled.div`
+  height: 100%;
   display: flex;
-  align-items: flex-end;
-  justify-content: flex-start;
-  width: 100%;
-  padding: 5px 30px 10px;
-  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--accent);
+  opacity: 0.5;
 `;
 
-export const ProfileUrlBlock = styled.div`
+export const CharName = styled.div`
+  font-size: var(--font-size-xxsmall);
+  color: var(--text);
+  text-align: center;
+  font-weight: 600;
+  max-width: 72px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+export const EmptyNote = styled.div`
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1.5px dashed var(--bg-6);
+  font-size: 12px;
+  font-style: italic;
+  color: var(--text-secondary);
+  opacity: 0.7;
+  text-align: center;
+`;
+
+export const EmptyChars = styled.div`
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 8px;
+`;
+
+export const EmptyCharsIcon = styled.div`
+  font-size: 28px;
+  opacity: 0.3;
+`;
+
+export const EmptyCharsText = styled.div`
+  font-size: 11px;
+  color: var(--text-secondary);
+  opacity: 0.6;
+  text-align: center;
+`;
+
+/* ── Bottom bar ──────────────────────────────────────────────────────────── */
+
+export const BottomBar = styled.div`
+  flex-shrink: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 20px 14px;
+  border-top: 1px solid var(--bg-6);
+`;
+
+export const QrWrapper = styled.div`
+  padding: 4px;
+  background: white;
+  border-radius: 6px;
+  display: flex;
+  flex-shrink: 0;
+`;
+
+export const UrlBlock = styled.div`
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 `;
 
 export const ProfileUrlLabel = styled.div`
-  font-size: var(--font-size-xsmall);
+  font-size: 9px;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: var(--text-secondary);
+  font-weight: 600;
 `;
 
 export const ProfileUrl = styled.div`
-  font-size: var(--font-size-xsmall);
+  font-size: 10px;
   font-weight: 600;
   color: var(--accent);
   word-break: break-all;
   line-height: 1.4;
 `;
 
-export const QrWrapper = styled.div`
+export const BrandBlock = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
   flex-shrink: 0;
-  padding: 5px;
-  background: white;
-  border-radius: 7px;
-  display: flex;
 `;
 
-export const NoteText = styled.div`
-  font-size: var(--font-size-xsmall);
-  color: var(--text);
-  text-align: center;
-  margin-top: 6px;
-  padding: 5px 12px;
-  line-height: 1.5;
-  border-radius: 20px;
-  border: 1px solid var(--accent);
-  background: linear-gradient(
-    135deg,
-    var(--accent-4) 0%,
-    var(--accent-3) 100%
-  );
-  word-break: break-word;
-  max-width: 90%;
-`;
-
-export const MetaRow = styled.div`
+export const BrandRow = styled.div`
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 10px;
-`;
-
-export const Img = styled.img`
-  height: 18px;
-  width: 18px;
-`;
-export const MetaLabel = styled.div`
-  font-size: var(--font-size-xsmall);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-secondary);
-`;
-
-export const MetaItem = styled.div`
-  font-size: var(--font-size-xxsmall);
-  font-weight: 600;
-  color: var(--text);
-  justify-content: center;
-  align-items: center;
-  display: flex; 
-  letter-spacing: 0.02em;
-`;
-
-export const BrandBar = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  width: 100%;
-  padding: 12px 8px 8px;
-  border-top: 1px solid var(--bg-6);
-  margin-top: 4px;
+  gap: 6px;
 `;
 
 export const BrandText = styled.div`
   display: flex;
   align-items: baseline;
-  gap: 0;
 `;
 
 export const BrandName = styled.span`
-  font-size: var(--font-size-small);
-  font-weight: var(--font-weight-regular);
+  font-size: 13px;
+  font-weight: 400;
   font-style: italic;
   text-transform: uppercase;
   color: var(--text);
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
 `;
 
 export const BrandNameSuffix = styled.span`
-  font-size: var(--font-size-small);
-  font-weight: var(--font-weight-bold);
+  font-size: 13px;
+  font-weight: 800;
   font-style: italic;
-  margin-left: 4px;
   text-transform: uppercase;
   color: var(--accent-8);
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
+  margin-left: 3px;
 `;
 
 export const DownloadButton = styled.button`
@@ -269,14 +422,4 @@ export const DownloadButton = styled.button`
   &:hover {
     background: var(--accent-hover);
   }
-`;
-
-export const BrandMark = styled.div`
-  position: absolute;
-  bottom: 72px;
-  right: 28px;
-  font-size: 9px;
-  color: var(--text-secondary);
-  opacity: 0.4;
-  letter-spacing: 0.06em;
 `;

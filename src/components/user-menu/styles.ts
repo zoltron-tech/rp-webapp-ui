@@ -1,5 +1,5 @@
 import { Form as RadixForm } from "radix-ui";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import {
   BACKGROUND_BLUR,
   BASE_TRANSITION,
@@ -7,6 +7,203 @@ import {
   Z_INDEX,
 } from "@/theme";
 import { UnreadBadgeBase } from "../common/unread-badge";
+
+const slideInRight = keyframes`
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+`;
+
+const slideOutRight = keyframes`
+  from { transform: translateX(0); }
+  to   { transform: translateX(100%); }
+`;
+
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to   { opacity: 1; }
+`;
+
+const fadeOut = keyframes`
+  from { opacity: 1; }
+  to   { opacity: 0; }
+`;
+
+/** Semi-transparent backdrop behind the mobile panel. */
+export const MobileOverlay = styled.div<{ $closing?: boolean }>`
+  position: fixed;
+  inset: 0;
+  z-index: 49;
+  background: rgba(0, 0, 0, 0.45);
+  animation: ${({ $closing }) => ($closing ? fadeOut : fadeIn)} 0.3s ease both;
+`;
+
+/** Full-height slide-in panel on mobile — enters from the right. */
+export const MobilePanel = styled.div<{ $closing?: boolean }>`
+  position: fixed;
+  top: var(--topbar-height, 0px);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-2);
+  overflow-y: auto;
+  animation: ${({ $closing }) => ($closing ? slideOutRight : slideInRight)}
+    0.32s cubic-bezier(0.4, 0, 0.2, 1) both;
+`;
+
+export const MobilePanelHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--bg-6);
+  background: var(--bg-2);
+  flex-shrink: 0;
+`;
+
+export const MobilePanelBackBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--text);
+  transition: background 0.15s;
+  &:hover { background: var(--bg-4); }
+  svg { width: 20px; height: 20px; }
+`;
+
+export const MobilePanelTitle = styled.span`
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text);
+`;
+
+export const MobilePanelBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px;
+  width: 100%;
+  max-width: 600px;
+  margin-inline: auto;
+  flex: 1;
+`;
+
+export const MobilePanelUserHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg-3);
+  border: 1px solid var(--bg-6);
+  border-radius: 4px;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+
+  &:hover,
+  &:active {
+    background: var(--bg-4, var(--bg-6));
+  }
+
+  .avatar {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+  }
+`;
+
+export const MobilePanelUserInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`;
+
+export const MobilePanelUserName = styled.span`
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text);
+`;
+
+export const MobilePanelUserHandle = styled.span`
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+`;
+
+export const MobilePanelEditButton = styled.button`
+  margin-left: auto;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--bg-6);
+  background: var(--bg-2);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+
+  &:hover,
+  &:active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+  }
+
+  svg { width: 15px; height: 15px; }
+`;
+
+export const MobilePanelSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-3);
+  border: 1px solid var(--bg-6);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-block: 5px;
+`;
+
+export const MobilePanelMenuItem = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--bg-6);
+  color: rgba(209, 216, 226, 1);
+  font-size: var(--font-size);
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background 0.2s ease;
+
+  &:last-child { border-bottom: none; }
+
+  svg { width: 22px; height: 22px; flex-shrink: 0; }
+`;
+
+export const MobilePanelDestructiveMenuItem = styled(MobilePanelMenuItem)`
+  color: #b23636;
+
+  &:active {
+    background: #8e2a2a;
+    color: #ffffff;
+  }
+`;
 
 export const PositionContainer = styled.div`
   ${DEV_MODE_BORDER("red")}
@@ -78,7 +275,7 @@ export const Menu = styled.div`
 
   z-index: ${Z_INDEX.MODAL};
 
-  width: 15rem;
+  width: 18rem;
   height: max-content;
   opacity: 0;
   pointer-events: none;
@@ -289,4 +486,182 @@ export const UnreadDot = styled(UnreadBadgeBase)`
 export const UnreadBadge = styled(UnreadBadgeBase)`
   margin-left: auto;
   flex-shrink: 0;
+`;
+
+export const DiscordElement = styled(Element)`
+  color: #5865f2;
+
+  &:hover {
+    background-color: #5865f2;
+    color: #ffffff;
+
+    svg {
+      stroke: #ffffff;
+    }
+  }
+`;
+
+export const MobilePanelDiscordMenuItem = styled(MobilePanelMenuItem)`
+  background-color: #5865f2;
+`;
+
+export const DiscordDialogOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.83);
+  animation: ${fadeIn} 0.2s ease both;
+`;
+
+export const DiscordDialogContent = styled.div`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 201;
+  background: var(--bg-2);
+  border: 1px solid var(--bg-6);
+  border-radius: 12px;
+  padding: 28px 24px 24px;
+  width: min(420px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  animation: ${fadeIn} 0.2s ease both;
+`;
+
+export const DiscordDialogClose = styled.button`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--bg-6);
+  background: var(--bg-3);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover {
+    background: var(--bg-5);
+    color: var(--text);
+  }
+`;
+
+export const DiscordDialogImage = styled.img`
+  width: 100%;
+  max-width: 160px;
+  height: auto;
+  object-fit: contain;
+  border-radius: 8px;
+  margin-top: 20px;
+`;
+
+export const DiscordDialogTitle = styled.h2`
+  font-size: var(--font-size-h4);
+  font-weight: var(--font-weight-bold);
+  background: linear-gradient(45deg, #29a383, #5865f2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin: 0;
+`;
+
+export const DiscordDialogDescription = styled.p`
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  text-align: center;
+  margin: 0;
+  line-height: 1.5;
+`;
+
+export const DiscordInviteLinkBox = styled.div`
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: var(--bg-3);
+  border: 1px solid var(--bg-6);
+  border-radius: 8px;
+  overflow: hidden;
+`;
+
+export const DiscordInviteLinkText = styled.a`
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  font-size: var(--font-size-small);
+  color: #5865f2;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
+export const DiscordInviteCopyButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0 14px;
+  height: 100%;
+  min-height: 40px;
+  border: none;
+  border-left: 1px solid var(--bg-6);
+  background: var(--bg-4);
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover {
+    background: #5865f2;
+    color: #ffffff;
+  }
+
+  svg { width: 15px; height: 15px; }
+`;
+
+export const DiscordJoinButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: none;
+  background: #5865f2;
+  color: #ffffff;
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-semi-bold);
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+
+  svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    background: #4752c4;
+  }
+
+  &:active {
+    background: #3c45a5;
+  }
 `;

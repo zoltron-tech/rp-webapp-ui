@@ -1,14 +1,14 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getNovelistAction } from "@/app/rp/novelists/actions";
 import { BreadCrumb } from "@/components/breadcrumb";
-import { FriendListItem } from "@/components/friend-list-item";
+import { FilterSearch } from "@/components/common";
+import { NovelistPreviewCard } from "@/components/novelist-preview-card";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { Friend } from "@/types";
-import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styles";
 
 export default function FriendsListPage() {
@@ -20,6 +20,19 @@ export default function FriendsListPage() {
   const isCurrentUser = user?.username === username;
   const { baseDataLoader, stopPageLoading } = usePageRouter();
   const [friends, setFriends] = useState<Friend[] | null>(null);
+  const [search, setSearch] = useState("");
+
+  const displayedFriends = useMemo(
+    () =>
+      !search
+        ? friends
+        : (friends?.filter((f) =>
+            `${f.firstName ?? ""} ${f.lastName ?? ""} ${f.username}`
+              .toLowerCase()
+              .includes(search.toLowerCase()),
+          ) ?? null),
+    [friends, search],
+  );
 
   useEffect(() => {
     if (authState === "LOADING" || friends) return;
@@ -42,14 +55,24 @@ export default function FriendsListPage() {
   return (
     <S.Container>
       <BreadCrumb label="Friends" username={username} />
+      <FilterSearch
+        value={search}
+        onChange={setSearch}
+        placeholder="Search friends..."
+      />
       <S.Grid>
-        {friends?.map((friend) => (
-          <FriendListItem key={friend.id} friend={friend} />
+        {displayedFriends?.map((friend) => (
+          <NovelistPreviewCard key={friend.id} novelist={friend} />
         ))}
       </S.Grid>
       {friends !== null && friends.length === 0 && (
         <S.Empty>No friends yet.</S.Empty>
       )}
+      {friends !== null &&
+        friends.length > 0 &&
+        displayedFriends?.length === 0 && (
+          <S.Empty>No friends match your search.</S.Empty>
+        )}
     </S.Container>
   );
 }

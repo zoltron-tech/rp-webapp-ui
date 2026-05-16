@@ -1,134 +1,96 @@
 import styled from "styled-components";
-import { pSBC } from "@/lib/pSBC";
-import { Z_INDEX } from "@/theme";
-import { setOpacity } from "@/utils/helpers";
 
-export const CardWrapper = styled.div`
-  position: relative;
-  min-width: 250px;
-  width: max-content;
-  height: 60px;
-  border-radius: 5px;
-  transition: all 0.3s ease-in-out;
-  z-index: ${Z_INDEX.CARD};
-  padding: 5px;
-
-  container-name: muse-card;
-  container-type: size;
+export const Item = styled.button<{ $unread?: boolean }>`
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 11px 16px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  font-family: var(--font);
+  transition: background-color 0.15s ease;
+  background-color: ${({ $unread }) =>
+    $unread ? "var(--accent-a2)" : "transparent"};
+  border-left: 3px solid
+    ${({ $unread }) => ($unread ? "var(--accent-7)" : "transparent")};
 
   &:hover {
-    background-color: var(--accent);
+    background-color: ${({ $unread }) =>
+      $unread ? "var(--accent-a3)" : "var(--bg-3)"};
   }
-`;
-
-export const Card = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  position: relative;
-  height: 100%;
-`;
-
-export const CardHeader = styled.div`
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  position: relative;
 
   .avatar {
-    height: 40px;
-    width: 40px;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
   }
 `;
 
-export const unReadBadge = styled.div`
-  background-color: ${({ theme }: any) => theme.unreadMark};
-  border-radius: 100%;
-  width: 8px;
-  height: 8px;
-  margin-right: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-`;
-
-export const Button = styled.div`
-  width: 25px;
-  height: 25px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: ${({ theme }: any) => theme.hoverGreyAlpha};
-  border-radius: 50%;
-  box-shadow: 0px 0px 5px 2px rgba(0, 0, 0, 0.4);
-  z-index: ${Z_INDEX.CARD_EXPAND};
-  transition: background-color 0.1s ease-in-out;
-  cursor: pointer;
-
-  & svg {
-    width: 15px;
-    height: 15px;
-    fill: var(--text);
-    transition: transform 0.2s ease-in-out;
-  }
-
-  &:hover {
-    background-color: ${({ theme }: any) => theme.hoverGrey};
-  }
-`;
-
-export const AcceptButton = styled(Button)`
-  &:hover {
-    background-color: ${({ theme }: any) =>
-      pSBC(-0.5, setOpacity(theme.success, 0.8))};
-  }
-`;
-
-export const RemoveButton = styled(Button)`
-  &:hover {
-    background-color: ${({ theme }: any) =>
-      pSBC(-0.5, setOpacity(theme.error, 0.8))};
-  }
-`;
-
-export const Title = styled.div`
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-`;
-
-export const Subtext = styled.div`
-  font-size: 10px;
-  color: var(--text);
-  white-space: normal;
-  word-wrap: break-word;
-`;
-
-export const StyledDate = styled.div`
-  font-size: 8px;
-  align-self: flex-end;
-  justify-self: flex-end;
-`;
-
-export const NotificationBox = styled.div`
-  width: 100%;
-  white-space: nowrap;
+export const Body = styled.div`
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: start;
-  justify-content: center;
-  margin-left: 10px;
-  margin-top: 10px;
+  gap: 2px;
 `;
 
-export const NotificationActions = styled.div`
+export const Name = styled.div`
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+export const Text = styled.div`
+  font-size: 11px;
+  color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.4;
+`;
+
+export const Meta = styled.div`
   display: flex;
-  flex-direction: row;
   align-items: center;
-  justify-content: end;
-  padding-right: 3px;
-  gap: 0.3rem;
+  gap: 6px;
+  margin-top: 2px;
+`;
+
+export const Timestamp = styled.time`
+  font-size: 9px;
+  color: var(--text-secondary);
+  opacity: 0.65;
+`;
+
+export const UnreadDot = styled.div`
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--accent-9);
+  margin-top: 5px;
+`;
+
+export const ButtonRow = styled.div`
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+
+  .button {
+    font-size: 11px !important;
+    padding: 5px 10px !important;
+  }
+
+  .button.messaging {
+    background-color: var(--accent-hover);
+    cursor: wait;
+    pointer-events: none;
+  }
 `;

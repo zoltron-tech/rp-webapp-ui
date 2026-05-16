@@ -6,8 +6,13 @@ import type React from "react";
 import { type FC, type HTMLProps, useEffect, useMemo } from "react";
 import { useCookies } from "react-cookie";
 import { ThemeProvider } from "styled-components";
-import { getUnreadConversationIdsAction } from "@/app/rp/conversations/actions";
+import {
+  getConversationsAction,
+  getUnreadConversationIdsAction,
+} from "@/app/rp/conversations/actions";
 import { GlobalMusicPlayer } from "@/components/global-music-player";
+import { InstallAppPrompt } from "@/components/install-app-prompt";
+import { JoinDiscordPrompt } from "@/components/join-discord-prompt";
 import { ContentContainer, TopBar } from "@/components/layout";
 import {
   AuthProvider,
@@ -51,6 +56,16 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
   const unreadReplyCount = useGlobalState("unreadReplyCount");
   const authState = useGlobalState("authState");
 
+  // Prefetch the first page of conversations after login so the inbox renders instantly
+  useEffect(() => {
+    if (authState !== "LOGGED_IN") return;
+    getConversationsAction(1, 15).then((result) => {
+      if (result && Array.isArray(result)) {
+        setGlobalState({ cachedConversations: result });
+      }
+    });
+  }, [authState, setGlobalState]);
+
   useEffect(() => {
     if (!lastIncomingMessage) return;
     Promise.all([getUnreadConversationIdsAction(), getUnreadReplyCount()]).then(
@@ -62,6 +77,12 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
         });
       },
     );
+    // Refresh the cached conversations list so the inbox stays up to date
+    getConversationsAction(1, 15).then((result) => {
+      if (result && Array.isArray(result)) {
+        setGlobalState({ cachedConversations: result });
+      }
+    });
   }, [lastIncomingMessage, setGlobalState]);
 
   // In whatever component/hook owns your global state
@@ -96,6 +117,8 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
     >
       <TopBar />
       <GlobalMusicPlayer />
+      <InstallAppPrompt />
+      <JoinDiscordPrompt />
       <ContentContainer>{children}</ContentContainer>
     </S.PageContainer>
   );
@@ -113,8 +136,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         storeId="global-store"
         initial={{
           accent: "jade", // Default accent
+          activeConversation: null,
+          activePrompt: null,
           authState: "LOGGED_OUT",
+          cachedConversations: null,
+          conversationNavDirection: null,
+          friendSuggestions: null,
           helloStickers: null,
+          justOnboarded: false,
+          lastReadConversationId: null,
           muses: [],
           musicPlayer: {
             currentTime: 0,
@@ -129,6 +159,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           novelists: [],
           pageLoading: false,
           searchBarExpanded: false,
+          showInstallAppPrompt: false,
+          showJoinDiscordPrompt: false,
           theme: "dark",
           unreadConversationIds: null,
           unreadReplyCount: null,

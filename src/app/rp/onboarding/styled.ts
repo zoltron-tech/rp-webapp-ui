@@ -19,7 +19,7 @@ export const Card = styled.div`
     margin-block: 0px;
     background-color: var(--bg-1);
     padding-inline: 10px;
-    padding-block: 30px;
+    padding-block: 10px;
     border: none;
   }
 
@@ -34,20 +34,28 @@ export const Card = styled.div`
 export const FormHeading = styled.div`
   display: flex;
   align-items: center;
-  margin-bottom: var(--font-size-h4);
+
+  .heading-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
 
   h1 {
     all: unset;
     font-size: var(--font-size-h4);
     font-weight: var(--font-weight-bold);
     color: var(--text);
+    line-height: 1.2;
   }
 
   svg {
-    margin-right: var(--font-size-xsmall);
-    width: var(--font-size-h3);
-    height: var(--font-size-h3);
+    margin-right: var(--font-size-small);
+    width: var(--font-size-h2);
+    height: var(--font-size-h2);
     color: var(--accent-8);
+    flex-shrink: 0;
 
     &.success {
       color: var(--grass-9);
@@ -66,6 +74,61 @@ export const FormHeading = styled.div`
     h1 {
       font-size: var(--font-size-h5);
     }
+
+    svg {
+      width: var(--font-size-h3);
+      height: var(--font-size-h3);
+    }
+  }
+`;
+
+export const OocBadge = styled.span`
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background-color: var(--accent-3);
+  border: 1px solid var(--accent-6);
+  color: var(--accent-11);
+  font-size: var(--font-size-xsmall);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-family: var(--font);
+`;
+
+export const InfoCallout = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: var(--font-size-small);
+  padding: 12px 14px;
+  background-color: var(--accent-2);
+  border: 1px solid var(--accent-6);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: var(--font-size-small);
+  line-height: 1.45;
+
+  strong {
+    color: var(--text);
+    font-weight: var(--font-weight-bold);
+  }
+
+  em {
+    color: var(--accent-11);
+    font-style: italic;
+    font-weight: var(--font-weight-medium);
+  }
+
+  .callout-icon {
+    width: 22px;
+    height: 22px;
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 1px;
   }
 `;
 
@@ -175,7 +238,8 @@ const PreviewRoot = styled.div`
 
   @media screen and (max-width: 800px) {
     margin-inline: auto;
-    max-width: 320px;
+    max-width: 100%;
+    width: 100%;
     padding: 8px;
     border-radius: 4px;
     background-color: var(--bg-2);
@@ -264,6 +328,7 @@ export const Preview = Object.assign(
 
 export const StepContent = styled.section`
   padding: 8px;
+  padding-top: 56px;
   background-color: var(--bg-1);
   border-radius: 4px;
   height: 300px;
@@ -272,6 +337,9 @@ export const StepContent = styled.section`
 
   @media screen and (max-width: 800px) {
     width: 100%;
+    height: 180px;
+    padding: 6px;
+    padding-top: 44px;
     background-color: var(--bg-2);
     border: 1px solid var(--bg-6);
   }
@@ -426,40 +494,117 @@ export const FormContainer = styled.div`
       }
     }
   }
+
+  @media screen and (max-width: 800px) {
+    form {
+      .field {
+        font-size: var(--font-size-small);
+        margin-bottom: 4px;
+
+        label {
+          margin-block: 2px;
+        }
+      }
+
+      input {
+        margin-bottom: 4px;
+        padding: 6px 8px;
+        font-size: var(--font-size-small);
+      }
+
+      .submit-button {
+        padding: 6px 10px;
+        font-size: var(--font-size-small);
+      }
+    }
+  }
 `;
 
 export const BasicInfoFields = styled.div`
-
-    flex-direction: row;
-    width: 100%;
-    display: flex;
-       padding-right: 12px;
-
-
+  flex-direction: row;
+  width: 100%;
+  display: flex;
+  padding-right: 12px;
 
   .avatar-field {
     width: 100px;
     height: 100px;
-        margin-right: 12px;
-
-          .avatar {
-                width: 100px;
-    height: 100px;
+    margin-right: 12px;
     margin-top: 16px;
-    background-color: var(--bg-2);
-    border: 6px solid var(--bg-1);
-    z-index: 1;
-  }
-  }
+    flex-shrink: 0;
 
+    label {
+      position: relative;
+      display: inline-block;
+      width: 100px;
+      height: 100px;
+      cursor: pointer;
+      border-radius: 50%;
 
+      &:focus-within {
+        outline: 2px solid var(--accent);
+        outline-offset: 4px;
+      }
+
+      &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background-color: rgba(0, 0, 0, 0);
+        transition: background-color 0.15s ease;
+        pointer-events: none;
+      }
+
+      &:hover::after {
+        background-color: rgba(0, 0, 0, 0.35);
+      }
+
+      .camera-badge {
+        position: absolute;
+        right: -2px;
+        bottom: -2px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: var(--accent);
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid var(--bg-1);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+        z-index: 2;
+        transition: background-color 0.15s ease, transform 0.15s ease;
+        cursor: pointer;
+
+        svg {
+          width: 16px;
+          height: 16px;
+          pointer-events: none;
+        }
+      }
+
+      &:hover .camera-badge {
+        background-color: var(--accent-hover);
+        transform: scale(1.06);
+      }
+    }
+
+    .avatar {
+      width: 100px;
+      height: 100px;
+      background-color: var(--bg-2);
+      border: 6px solid var(--bg-1);
+      z-index: 1;
+    }
+  }
 
   .name-fields {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    width: 100%;
-  }
+    gap: 0px;
+    width: 100%;  }
 `;
 
 export const FieldHeader = styled.div`
@@ -476,11 +621,13 @@ export const FieldHeader = styled.div`
 `;
 
 export const FormActions = styled.div`
+  position: absolute;
+  top: 8px;
+  right: 8px;
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  margin-top: var(--font-size-small);
-  width: 100%;
+  z-index: 2;
 `;
 
 export const ResetButton = styled.button`
@@ -493,6 +640,11 @@ export const ResetButton = styled.button`
   border: 1px solid var(--bg-6);
   border-radius: 4px;
   cursor: pointer;
+
+  @media screen and (max-width: 800px) {
+    padding: 6px 10px;
+    font-size: var(--font-size-small);
+  }
 
   &:hover {
     background-color: var(--bg-4);
@@ -541,6 +693,88 @@ export const RadioItemContainer = styled.div`
     &[aria-checked="true"] {
       outline: 1.5px solid var(--accent-8);
       outline-offset: 2px;
+    }
+  }
+`;
+
+export const PaletteGroup = styled.div`
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 8px;
+  border-radius: 8px;
+  background-color: var(--bg-2);
+  width: 100%;
+`;
+
+export const PaletteOption = styled.label`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+
+  &:hover .palette-swatch {
+    transform: scale(1.05);
+  }
+
+  .palette-swatch {
+    all: unset;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: var(--accent);
+    cursor: pointer;
+    transition: transform 0.15s ease, outline-color 0.15s ease;
+    box-sizing: border-box;
+
+    &[aria-checked="true"] {
+      outline: 2px solid var(--accent-9);
+      outline-offset: 3px;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent-9);
+      outline-offset: 3px;
+    }
+  }
+
+  .palette-name {
+    font-size: var(--font-size-xsmall);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    font-family: var(--font);
+  }
+
+  &:has(.palette-swatch[aria-checked="true"]) .palette-name {
+    color: var(--text);
+  }
+
+  @media screen and (max-width: 800px) {
+    gap: 6px;
+    padding: 2px;
+
+    .palette-swatch {
+      width: 36px;
+      height: 36px;
+
+      &[aria-checked="true"],
+      &:focus-visible {
+        outline-width: 2px;
+        outline-offset: 2px;
+      }
+    }
+
+    .palette-name {
+      font-size: 10px;
+      letter-spacing: 0.06em;
     }
   }
 `;

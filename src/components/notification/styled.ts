@@ -4,126 +4,159 @@ import { Button } from "../common";
 export const ListRoot = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--bg-2);
-  max-width: 600px;
+  max-width: 580px;
   margin-inline: auto;
-
+  margin-top: 40px;
+  background-color: var(--bg-2);
+  border: 1px solid var(--bg-5);
+  border-radius: 12px;
+  overflow: hidden;
   color: var(--text);
   font-size: var(--font-size);
   font-family: var(--font);
   font-weight: var(--font-weight-regular);
 
-  padding-top: 10px;
-  margin-top: 40px;
-  border: 0.85px solid var(--bg-6);
-
-  .separator[data-orientation="horizontal"] {
-    height: 1px;
-    width: 100%;
-    margin-top: 10px;
-    background-color: var(--bg-6);
-  }
-
   @media screen and (max-width: 600px) {
-    margin-top: 0px;
-    margin-bottom: 0px;
+    margin-top: 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
   }
 `;
 
 export const NotificationsHeaderRoot = styled.header`
   display: flex;
-  width: 100%;
-  align-items: flex-end;
-  justify-content: flex-end;
-  padding: 5px 20px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--bg-4);
+  flex-shrink: 0;
+`;
+
+export const NotificationsHeaderTitle = styled.h2`
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  font-family: var(--font);
 `;
 
 export const NotificationHeaderText = styled(Button)`
   max-width: 150px;
   height: 30px;
+  font-size: 12px;
 `;
 
-export const NotificationsBoxRoot = styled.header`
+export const NotificationsBoxRoot = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  position: relative;
-  padding-inline: 10px;
-  white-space: nowrap;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
   cursor: pointer;
+  transition: background-color 0.15s ease;
+  border-bottom: 1px solid var(--bg-4);
+  position: relative;
 
-  .avatar {
-    width: 64px;
-    height: 64px;
-    cursor: pointer;
-  }
-
-  @media screen and (max-width: 430px) {
-    .avatar {
-      width: 40px;
-      height: 40px;
-      cursor: pointer;
-    }
+  &[data-unread] {
+    background-color: var(--accent-a2);
+    border-left: 3px solid var(--accent-7);
+    padding-left: 13px;
   }
 
   &:hover {
-    background-color: var(--accent);
+    background-color: var(--bg-3);
+  }
+
+  &:last-of-type {
+    border-bottom: none;
+  }
+
+  .avatar {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+  }
+
+  @media screen and (max-width: 430px) {
+    padding: 10px 12px;
+    gap: 10px;
+
+    &[data-unread] {
+      padding-left: 9px;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+    }
   }
 `;
 
 export const Content = styled.div`
+  flex: 1;
+  min-width: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px;
-  gap: 1em;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 2px;
 `;
 
 export const Text = styled.div`
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 0.3em;
+  flex-direction: column;
+  gap: 3px;
 `;
 
 export const Extras = styled.div`
-display: flex;
-flex-direction: column;
-justify-content: center;
-align-items: center;
-gap: 1em;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 6px;
+  padding-top: 2px;
+  flex-shrink: 0;
 `;
 
 export const Title = styled.div`
-  font-size: var(--font-size-small);
+  font-size: 13px;
   font-weight: 600;
   color: var(--text);
 `;
 
 export const Subtext = styled.div`
-  font-size: var(--font-size-xsmall);
-  color: var(--text);
-  white-space: normal;
-  word-wrap: break-word;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
 `;
 
-export const StyledDate = styled.div`
-  font-size: 8px;
-  align-self: flex-end;
-  justify-self: flex-end;
+export const StyledDate = styled.time`
+  font-size: 10px;
+  color: var(--text-secondary);
+  opacity: 0.65;
+  margin-top: 2px;
 `;
 
 export const unReadBadge = styled.div`
-  background-color: ${({ theme }: any) => theme.unreadMark};
-  border-radius: 100%;
+  background-color: var(--accent-9);
+  border-radius: 50%;
   width: 8px;
   height: 8px;
-  margin-right: 4px;
+  flex-shrink: 0;
+`;
+
+export const ButtonRow = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
+  gap: 6px;
+  margin-top: 8px;
+
+  .button {
+    font-size: 12px !important;
+    padding: 6px 12px !important;
+  }
+
+  .button.messaging {
+    background-color: var(--accent-hover);
+    cursor: wait;
+    pointer-events: none;
+  }
 `;

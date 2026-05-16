@@ -5,7 +5,6 @@ import { toPng } from "html-to-image";
 import { type FC, useRef, useState } from "react";
 import { FiDownload, FiX } from "react-icons/fi";
 import QRCode from "react-qr-code";
-import logoText from "@/assets/images/Logo text.png";
 import { EmailVerifiedBadge, NWLogoInner } from "@/components/common";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { useGlobalState } from "@/context/store/stores";
@@ -68,15 +67,11 @@ const inlineCardImages = async (card: HTMLDivElement): Promise<() => void> => {
   };
 };
 
-const formatJoinDate = (dateStr: string | undefined): string => {
-  if (!dateStr) return "Unknown";
+const formatJoinYear = (dateStr: string | undefined): string => {
+  if (!dateStr) return "—";
   const d = new Date(dateStr);
-  if (Number.isNaN(d.getTime())) return "Unknown";
-  return d.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.getFullYear().toString();
 };
 
 // ─── Platform detection ──────────────────────────────────────────────────────
@@ -123,8 +118,10 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
 
       const exportOptions = {
         cacheBust: true,
+        height: 682,
         pixelRatio: 2,
         style: { transform: "translateZ(0)" },
+        width: 386,
       };
       // html-to-image misses images on the first pass (known bug);
       // the second call reliably captures everything that's now cached.
@@ -170,97 +167,112 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
               <FiDownload size={16} />
               {exporting ? "Exporting…" : "Download as Image"}
             </S.DownloadButton>
-            <S.CloseButton
-              onClick={onClose}
-              style={{ alignSelf: "flex-end", position: "static" }}
-            >
+            <S.CloseButton onClick={onClose}>
               <FiX size={22} />
             </S.CloseButton>
           </Flex>
 
           {/* Card – this element is captured as the exported image */}
-          <S.Card ref={cardRef} className={classNames([novelistAccent, theme])}>
-            <S.AccentBanner />
+          <S.CardFrame
+            ref={cardRef}
+            className={classNames([novelistAccent, theme])}
+          >
+            <S.Card>
+              <S.HeroBanner>
+                <S.HeroBg $src={novelist.image ?? ""} />
+                <S.HeroAccentOverlay />
+                <S.HeroInner>
+                  <S.AvatarRing>
+                    <AvatarNew
+                      src={novelist.image ?? null}
+                      alt={`${novelist.firstName} ${novelist.lastName}`}
+                    />
+                  </S.AvatarRing>
+                  <S.HeroName>
+                    {novelist.firstName} {novelist.lastName}
+                  </S.HeroName>
+                  <S.HeroUsername>
+                    @{novelist.username}
+                    {novelist.isVerified && <EmailVerifiedBadge size={13} />}
+                  </S.HeroUsername>
+                </S.HeroInner>
+              </S.HeroBanner>
 
-            <S.AvatarWrapper>
-              <AvatarNew
-                src={novelist.image ?? null}
-                alt={`${novelist.firstName} ${novelist.lastName}`}
-              />
-            </S.AvatarWrapper>
+              <S.ContentArea>
+                {novelist.note && novelist.note.length > 0 ? (
+                  <S.NoteQuote>
+                    <S.NoteBar />
+                    <S.NoteText>{novelist.note}</S.NoteText>
+                  </S.NoteQuote>
+                ) : (
+                  <S.EmptyNote>No note added yet.</S.EmptyNote>
+                )}
 
-            <S.Body>
-              <S.FullName>
-                {novelist.firstName} {novelist.lastName}
-              </S.FullName>
-              <S.UsernameRow>
-                <span style={{ color: "var(--text-secondary)", fontSize: 14 }}>
-                  @{novelist.username}
-                </span>
-                {novelist.isVerified && <EmailVerifiedBadge size={14} />}
-              </S.UsernameRow>
+                <S.StatsBar>
+                  <S.StatItem>
+                    <S.StatValue>{novelist.museCount}</S.StatValue>
+                    <S.StatLabel>Characters</S.StatLabel>
+                  </S.StatItem>
+                  <S.StatSep />
+                  <S.StatItem>
+                    <S.StatValue>
+                      {formatJoinYear(novelist.createdAt)}
+                    </S.StatValue>
+                    <S.StatLabel>Joined</S.StatLabel>
+                  </S.StatItem>
+                </S.StatsBar>
 
-              {novelist.note && novelist.note.length > 0 && (
-                <S.NoteText>{novelist.note}</S.NoteText>
-              )}
+                <S.CharSection>
+                  <S.CharLabel>Top Characters</S.CharLabel>
+                  {novelist.muses.length > 0 ? (
+                    <S.CharRow>
+                      {novelist.muses.slice(0, 3).map((muse) => (
+                        <S.CharItem key={muse.id}>
+                          <S.CharCard>
+                            {muse.image ? (
+                              <img
+                                src={muse.image}
+                                alt={`${muse.firstName} ${muse.lastName}`}
+                              />
+                            ) : (
+                              <S.CharCardFallback>
+                                {muse.firstName[0]}
+                              </S.CharCardFallback>
+                            )}
+                          </S.CharCard>
+                          <S.CharName>{muse.firstName}</S.CharName>
+                        </S.CharItem>
+                      ))}
+                    </S.CharRow>
+                  ) : (
+                    <S.EmptyChars>
+                      <S.EmptyCharsIcon>✦</S.EmptyCharsIcon>
+                      <S.EmptyCharsText>No characters yet.</S.EmptyCharsText>
+                    </S.EmptyChars>
+                  )}
+                </S.CharSection>
+              </S.ContentArea>
 
-              <S.MetaRow>
-                <div>
-                  <Flex gap={"2px"}>
-                    <S.Img src={logoText.src} alt="NW" />
-                    <S.MetaLabel>Member since</S.MetaLabel>
-                  </Flex>
-                  <S.MetaItem>{formatJoinDate(novelist.createdAt)}</S.MetaItem>
-                </div>
-              </S.MetaRow>
-
-              {novelist.muses.length > 0 && (
-                <>
-                  <S.MusesLabel>Top Characters</S.MusesLabel>
-                  <S.MusesRow>
-                    {novelist.muses.slice(0, 3).map((muse) => (
-                      // Fix 2 — same ring wrapper for character avatars
-                      <div
-                        key={muse.id}
-                        style={{
-                          background: "var(--accent-primary, transparent)",
-                          borderRadius: "50%",
-                          display: "inline-flex",
-                          flexShrink: 0,
-                          padding: 2,
-                        }}
-                      >
-                        <AvatarNew
-                          src={muse.image ?? null}
-                          alt={`${muse.firstName} ${muse.lastName}`}
-                        />
-                      </div>
-                    ))}
-                  </S.MusesRow>
-                </>
-              )}
-            </S.Body>
-
-            <S.Divider />
-
-            <S.Footer>
-              <S.ProfileUrlBlock>
-                <S.ProfileUrlLabel>Profile URL</S.ProfileUrlLabel>
-                <S.ProfileUrl>{profileUrl}</S.ProfileUrl>
-              </S.ProfileUrlBlock>
-              <S.QrWrapper>
-                <QRCode value={profileUrl} size={40} level="M" />
-              </S.QrWrapper>
-            </S.Footer>
-
-            <S.BrandBar>
-              <NWLogoInner size={16} />
-              <S.BrandText>
-                <S.BrandName>Novelist</S.BrandName>
-                <S.BrandNameSuffix> World</S.BrandNameSuffix>
-              </S.BrandText>
-            </S.BrandBar>
-          </S.Card>
+              <S.BottomBar>
+                <S.QrWrapper>
+                  <QRCode value={profileUrl} size={38} level="M" />
+                </S.QrWrapper>
+                <S.UrlBlock>
+                  <S.ProfileUrlLabel>Profile URL</S.ProfileUrlLabel>
+                  <S.ProfileUrl>{profileUrl}</S.ProfileUrl>
+                </S.UrlBlock>
+                <S.BrandBlock>
+                  <S.BrandRow>
+                    <NWLogoInner size={15} />
+                    <S.BrandText>
+                      <S.BrandName>Novelist</S.BrandName>
+                      <S.BrandNameSuffix> World</S.BrandNameSuffix>
+                    </S.BrandText>
+                  </S.BrandRow>
+                </S.BrandBlock>
+              </S.BottomBar>
+            </S.Card>
+          </S.CardFrame>
         </div>
       </S.Modal>
 

@@ -1,4 +1,9 @@
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
+
+const slideInFromRight = keyframes`
+  from { transform: translateX(30px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+`;
 
 export const Container = styled.div`
   display: flex;
@@ -7,6 +12,7 @@ export const Container = styled.div`
   margin: 0 auto;
   padding: 8px;
   gap: 24px;
+  animation: ${slideInFromRight} 0.28s ease both;
 `;
 
 export const Header = styled.div`

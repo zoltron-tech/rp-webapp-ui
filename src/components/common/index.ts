@@ -1,3 +1,4 @@
+export * from "../filter-search";
 export * from "./add-new-button";
 export * from "./avatar";
 export * from "./avatar-upload-field";
@@ -7,6 +8,7 @@ export * from "./chat-bubble";
 export * from "./dropdown";
 export * from "./email-verified-badge";
 export * from "./expandable-pill";
+export * from "./inline-message";
 export * from "./input";
 export * from "./modal";
 export * from "./nw-logo-inner";

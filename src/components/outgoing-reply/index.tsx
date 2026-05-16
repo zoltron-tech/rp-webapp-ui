@@ -70,7 +70,11 @@ export const PromptThreadCommentCard: FC<Props> = ({
   if (!promptThreadComment) return null;
 
   return (
-    <S.ThreadRoot>
+    <S.ThreadRoot
+      className={className}
+      {...rest}
+      data-has-replies={promptThreadComment.replyCount > 0 ? "" : undefined}
+    >
       <S.PromptHeaderRoot>
         <MuseAvatar
           museId={promptThreadComment.target.sourceId}

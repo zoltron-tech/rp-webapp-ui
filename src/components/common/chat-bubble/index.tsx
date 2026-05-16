@@ -7,7 +7,7 @@ import { BsForward, BsReply, BsThreeDots } from "react-icons/bs";
 import { FaPause, FaPlay } from "react-icons/fa";
 import { FiCopy, FiDownload, FiExternalLink } from "react-icons/fi";
 import { RiFlagFill } from "react-icons/ri";
-import { TbError404 } from "react-icons/tb";
+import { TbAlertCircle, TbError404 } from "react-icons/tb";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import type { Message } from "@/types/conversation";
@@ -21,6 +21,11 @@ import * as S from "./styles";
 type Props = {
   message: Message;
   currentUsername: string;
+  hideSender?: boolean;
+  hideDate?: boolean;
+  isNew?: boolean;
+  failed?: boolean;
+  onRetry?: () => void;
   onReply?: (message: Message) => void;
   onForward?: (message: Message) => void;
   onReport?: (message: Message) => void;
@@ -788,6 +793,11 @@ export const ChatVideoAttachment: FC<{ src: string }> = ({ src }) => {
 export const ChatBubble: FC<Props> = ({
   message,
   currentUsername,
+  hideSender = false,
+  hideDate = false,
+  isNew = false,
+  failed = false,
+  onRetry,
   onReply,
   onForward,
   onReport,
@@ -838,6 +848,9 @@ export const ChatBubble: FC<Props> = ({
   const onSwipeTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     if (!touch) return;
+    // Stop propagation immediately so no parent (ConversationSheet / MessagesWrapper)
+    // starts tracking this touch as a page-swipe gesture.
+    e.stopPropagation();
     swipeTouchStartX.current = touch.clientX;
     swipeTouchStartY.current = touch.clientY;
     swipeRawDeltaX.current = 0;
@@ -858,6 +871,9 @@ export const ChatBubble: FC<Props> = ({
 
     if (!swipeIsHorizontal.current) return;
 
+    // Prevent the ConversationSheet (or any parent) from also handling this gesture.
+    e.stopPropagation();
+
     swipeRawDeltaX.current = deltaX;
 
     const SOFT_LIMIT = 60;
@@ -874,8 +890,11 @@ export const ChatBubble: FC<Props> = ({
     }
   };
 
-  const onSwipeTouchEnd = () => {
+  const onSwipeTouchEnd = (e: React.TouchEvent) => {
     if (!swipeIsHorizontal.current) return;
+
+    // Prevent the ConversationSheet (or any parent) from also handling this gesture.
+    e.stopPropagation();
 
     const SWIPE_THRESHOLD = 60;
     if (Math.abs(swipeRawDeltaX.current) >= SWIPE_THRESHOLD) {
@@ -990,6 +1009,7 @@ export const ChatBubble: FC<Props> = ({
   return (
     <S.ChatRow
       id={`msg-${message.id}`}
+      $isNew={isNew && isSender}
       className={classNames({
         receiver: !isSender,
         sender: isSender,
@@ -1006,26 +1026,28 @@ export const ChatBubble: FC<Props> = ({
               width: 30,
             }}
           >
-            <div
-              style={{
-                alignItems: "center",
-                display: "flex",
-                height: "100%",
-                justifyContent: "center",
-                left: 0,
-                opacity: 1 - swipeProgress,
-                position: "absolute",
-                top: 0,
-                transition: "opacity 0.18s ease",
-                width: "100%",
-              }}
-            >
-              <AvatarNew
-                src={message.sender.image || null}
-                alt={message.sender.name || message.sender.username || "User"}
-                username={message.sender.username}
-              />
-            </div>
+            {!hideSender && (
+              <div
+                style={{
+                  alignItems: "center",
+                  display: "flex",
+                  height: "100%",
+                  justifyContent: "center",
+                  left: 0,
+                  opacity: 1 - swipeProgress,
+                  position: "absolute",
+                  top: 0,
+                  transition: "opacity 0.18s ease",
+                  width: "100%",
+                }}
+              >
+                <AvatarNew
+                  src={message.sender.image || null}
+                  alt={message.sender.name || message.sender.username || "User"}
+                  username={message.sender.username}
+                />
+              </div>
+            )}
             <div
               style={{
                 alignItems: "center",
@@ -1076,16 +1098,18 @@ export const ChatBubble: FC<Props> = ({
           willChange: "transform",
         }}
       >
-        <S.SenderNameRow>
-          {isSender ? (
-            <AvatarNew
-              src={message.sender.image || null}
-              alt={message.sender.name || message.sender.username || "User"}
-              username={message.sender.username}
-            />
-          ) : null}
-          <S.SenderName>{message.sender.name}</S.SenderName>
-        </S.SenderNameRow>
+        {!hideSender && (
+          <S.SenderNameRow>
+            {isSender ? (
+              <AvatarNew
+                src={message.sender.image || null}
+                alt={message.sender.name || message.sender.username || "User"}
+                username={message.sender.username}
+              />
+            ) : null}
+            <S.SenderName>{message.sender.name}</S.SenderName>
+          </S.SenderNameRow>
+        )}
 
         {message.repliedTo ? (
           <S.RepliedToQuote
@@ -1221,7 +1245,13 @@ export const ChatBubble: FC<Props> = ({
           </S.ReactionsBar>
         ) : null}
 
-        <S.TimeStamp>{formattedDate}</S.TimeStamp>
+        {!hideDate && <S.TimeStamp>{formattedDate}</S.TimeStamp>}
+        {failed && isSender && (
+          <S.RetryRow type="button" onClick={onRetry}>
+            <TbAlertCircle size={13} />
+            Failed · Tap to retry
+          </S.RetryRow>
+        )}
       </S.BubbleStack>
 
       <S.MessageMenuWrapper

@@ -20,8 +20,10 @@ export const ROUTES = {
   explore: "/rp/explore",
   explorePrompts: "/rp/explore?tab=prompts",
   FAQs: "/rp/faqs",
+  Fellows: "/rp/fellows",
   ForgotPassword: "/rp/forgot-password",
   Home: "/rp/home",
+  InstallApp: "/rp/install-app",
   Login: "/rp/login",
   Muse: {
     Index: "/rp/muse",
@@ -73,10 +75,17 @@ export const ROUTES = {
       Index: `/rp/profile/${username}`,
       Muses: `/rp/profile/${username}/muses`,
       Music: `/rp/profile/${username}/music`,
+      Posts: `/rp/profile/${username}/posts`,
       Storyboards: `/rp/profile/${username}/storyboards`,
     }),
   },
   Prompt: {
+    Comment: (promptId: string, params: { dropdownSelection: string }) => {
+      const query = new URLSearchParams({
+        dropdownSelection: params.dropdownSelection,
+      });
+      return `/rp/prompt/${promptId}/comment?${query.toString()}`;
+    },
     Post: "/rp/post-prompt",
     View: (promptId: string) => `/rp/prompt/${promptId}`,
   },
@@ -94,4 +103,5 @@ export const ROUTES = {
   Tiers: "/rp/tiers",
   UserMenu: "/rp/user-menu",
   VerifyEmail: "/rp/verify-email",
+  Welcome: "/rp/welcome",
 } as const;

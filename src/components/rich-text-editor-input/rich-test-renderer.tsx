@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styled";
@@ -27,6 +28,7 @@ export const RichTextRenderer = ({
   const [maxHeight, setMaxHeight] = useState<string>(`${collapsedHeight}px`);
   const [animating, setAnimating] = useState(false);
   const [isOverflowing, setIsOverflowing] = useState(false);
+  const [viewerSrc, setViewerSrc] = useState<string | null>(null);
 
   const onNovelistTagClick = useCallback(
     (novelistId: string) => {
@@ -70,10 +72,25 @@ export const RichTextRenderer = ({
       if (type === "MUSE") onMuseTagClick(id);
     };
 
+    const handleImageClick = (e: Event) => {
+      const target = e.target as HTMLElement;
+      const img =
+        target.tagName === "IMG"
+          ? (target as HTMLImageElement)
+          : (target
+              .closest(".inline-image-container")
+              ?.querySelector("img") as HTMLImageElement | null);
+      if (!img) return;
+      e.stopPropagation();
+      setViewerSrc(img.src);
+    };
+
     container.addEventListener("click", handleMentionClick);
+    container.addEventListener("click", handleImageClick);
 
     return () => {
       container.removeEventListener("click", handleMentionClick);
+      container.removeEventListener("click", handleImageClick);
     };
   }, [savedText, onNovelistTagClick, onMuseTagClick]);
 
@@ -112,6 +129,26 @@ export const RichTextRenderer = ({
     return () => clearTimeout(timeout);
   }, [expanded, savedText, collapsedHeight, disableCollapse]);
 
+  const handleContentClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (disableCollapse || !isOverflowing) return;
+      const target = e.target as HTMLElement;
+      // Let links, images, videos, and mention tags handle their own clicks.
+      if (
+        target.closest("a") ||
+        target.closest(".mention-tag") ||
+        target.tagName === "IMG" ||
+        target.tagName === "VIDEO" ||
+        target.tagName === "AUDIO" ||
+        target.closest(".inline-image-container")
+      ) {
+        return;
+      }
+      setExpanded((v) => !v);
+    },
+    [disableCollapse, isOverflowing],
+  );
+
   if (!savedText.length) {
     return (
       <S.Container>
@@ -126,8 +163,12 @@ export const RichTextRenderer = ({
     <S.Container>
       <S.ContentWrapper
         ref={wrapperRef}
-        style={{ maxHeight }}
+        style={{
+          cursor: !disableCollapse && isOverflowing ? "pointer" : undefined,
+          maxHeight,
+        }}
         $animating={animating}
+        onClick={handleContentClick}
       >
         <S.SavedContent ref={contentRef} />
         {!disableCollapse && !expanded && isOverflowing && !overlayHidden && (
@@ -139,6 +180,16 @@ export const RichTextRenderer = ({
         <S.Toggle onClick={() => setExpanded((v) => !v)}>
           {expanded ? "Show less..." : "Read more..."}
         </S.Toggle>
+      )}
+
+      {viewerSrc && (
+        <AppImageViewer
+          src={viewerSrc}
+          open
+          onOpenChange={(open) => {
+            if (!open) setViewerSrc(null);
+          }}
+        />
       )}
     </S.Container>
   );

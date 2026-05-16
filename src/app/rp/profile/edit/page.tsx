@@ -12,14 +12,13 @@ import * as S from "./styled";
 export default function EditProfilePage() {
   const novelist = useGlobalState("novelist");
   const user = useGlobalState("user");
-  const authState = useGlobalState("authState");
   const { stopPageLoading } = usePageRouter();
 
+  // Stop any lingering full-page loader immediately — data is already in global state
   useEffect(() => {
-    if (authState === "LOGGED_IN") {
-      stopPageLoading();
-    }
-  }, [authState, stopPageLoading]);
+    stopPageLoading();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <S.EditProfilePageRoot>

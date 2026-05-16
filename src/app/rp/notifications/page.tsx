@@ -6,7 +6,7 @@ import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { getNotifications } from "../novelists/actions";
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 30;
 
 export default function NotifiactionsPage() {
   const authState = useGlobalState("authState");
@@ -15,7 +15,7 @@ export default function NotifiactionsPage() {
   const set = useGlobalStoreSet();
 
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
 
   const fetchNotifications = useCallback(
@@ -29,6 +29,7 @@ export default function NotifiactionsPage() {
         return;
       }
 
+      setHasMore(data.length >= PAGE_SIZE);
       set({
         notifications: append ? [...(notifications || []), ...data] : data,
       });

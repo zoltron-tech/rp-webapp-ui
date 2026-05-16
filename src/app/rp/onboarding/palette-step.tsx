@@ -1,6 +1,6 @@
 import { ShouldRender } from "@novelist-world/ui";
 import classNames from "classnames";
-import { Form, Label, RadioGroup } from "radix-ui";
+import { Form, RadioGroup } from "radix-ui";
 import {
   type FC,
   type FormEventHandler,
@@ -95,32 +95,30 @@ export const PaletteStep: FC<BasicInfoStepProps> = ({ handleNext }) => {
   return (
     <S.FormContainer>
       <Form.Root onSubmit={handleSubmit} onReset={handleReset}>
-        <Form.FormField className="field" name="palette" asChild>
+        <Form.FormField name="palette">
           <RadioGroup.Root
             defaultValue={palette.toString()}
             onValueChange={setPalette}
             name="palette"
+            asChild
           >
-            {Object.entries(ACCENT_MAP).map(([key, value]) => (
-              <S.RadioItemContainer
-                key={value}
-                className={classNames(
-                  "radio-item-container",
-                  ACCENT_MAP[Number(key) as Accent],
-                )}
-              >
-                <RadioGroup.Item
-                  id={`pallete-${key}`}
-                  value={key}
-                  className="radio-item"
+            <S.PaletteGroup>
+              {Object.entries(ACCENT_MAP).map(([key, value]) => (
+                <S.PaletteOption
+                  key={value}
+                  htmlFor={`palette-${key}`}
+                  className={classNames(value)}
                 >
-                  <RadioGroup.Indicator className="radio-indicator" />
-                </RadioGroup.Item>
-                <Label.Root htmlFor={`pallete-${key}`} className="radio-label">
-                  {value}
-                </Label.Root>
-              </S.RadioItemContainer>
-            ))}
+                  <RadioGroup.Item
+                    id={`palette-${key}`}
+                    value={key}
+                    className="palette-swatch"
+                    aria-label={value}
+                  />
+                  <span className="palette-name">{value}</span>
+                </S.PaletteOption>
+              ))}
+            </S.PaletteGroup>
           </RadioGroup.Root>
         </Form.FormField>
         <ShouldRender if={Boolean(error)}>
@@ -133,7 +131,7 @@ export const PaletteStep: FC<BasicInfoStepProps> = ({ handleNext }) => {
             Reset
           </S.ResetButton>
           <Form.Submit className="submit-button" disabled={loading}>
-            Next
+            Finish
           </Form.Submit>
         </S.FormActions>
       </Form.Root>

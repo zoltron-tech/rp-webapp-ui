@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { FiSearch } from "react-icons/fi";
 import { ActivityBox } from "@/components/activity-box";
 import { ShouldRender } from "@/components/common";
 import HomeTourGuide from "@/components/home-tour-guide";
 import MuseCard from "@/components/muse-card";
+import { NovelistPreviewCard } from "@/components/novelist-preview-card";
 import { Prompt as PromptComponent } from "@/components/prompt";
 import { SideBarFriendListItem } from "@/components/sidebar-friend-list-item";
-import { StrangerCard } from "@/components/stranger-card/page";
 import VideoCard from "@/components/video-card";
-import { useGlobalState } from "@/context/store/stores";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type {
   Muse,
@@ -19,6 +20,7 @@ import type {
   StoryBoard,
 } from "@/types";
 import type { Activity } from "@/types/activity";
+import { ROUTES } from "@/utils/constants/routes";
 import { getNewPromptsAction } from "../explore-prompts/actions";
 import {
   getFriendActivities,
@@ -33,10 +35,13 @@ export default function HomePage() {
   const [startTour, setStartTour] = useState(false);
   const authState = useGlobalState("authState");
   const novelist = useGlobalState("novelist");
-  const [strangers, setStrangers] = useState<Novelist[]>();
-  const [_friendRequests, _setFriendRequests] = useState<
-    NovelistWorldNotification[] | null
-  >(null);
+  const cachedSuggestions = useGlobalState("friendSuggestions");
+  const notifications = useGlobalState("notifications");
+  const setGlobalState = useGlobalStoreSet();
+  const { baseDataLoader, routeToPage } = usePageRouter();
+  const [strangers, setStrangers] = useState<Novelist[] | undefined>(
+    cachedSuggestions ?? undefined,
+  );
   const [storyboards, setStoryboards] = useState<StoryBoard[]>();
   const [prompts, setPrompts] = useState<Prompt[]>();
   const [unknownMuses, setUnknownMuses] = useState<Muse[]>();
@@ -44,7 +49,26 @@ export default function HomePage() {
   const [friendsMusesWithVideos, setFriendsMusesWithVideos] =
     useState<Muse[]>();
   const [activities, setActivities] = useState<Activity[]>();
-  const { baseDataLoader } = usePageRouter();
+
+  // Derive NovelistPreview-shaped cards from FRIEND_REQUEST notifications.
+  // connection = "FRIEND_REQUEST_RECEIVED" makes the card show Accept/Decline.
+  const friendRequestCards = useMemo(() => {
+    if (!notifications) return [];
+    return notifications
+      .filter((n: NovelistWorldNotification) => n.type === "FRIEND_REQUEST")
+      .map((n: NovelistWorldNotification) => {
+        const nameParts = (n.source.title ?? "").trim().split(" ");
+        return {
+          connection: "FRIEND_REQUEST_RECEIVED" as const,
+          firstName: nameParts[0] ?? "",
+          id: n.source.id,
+          image: n.source.image,
+          isVerified: false,
+          lastName: nameParts.slice(1).join(" ") || null,
+          username: n.source.urlProp,
+        };
+      });
+  }, [notifications]);
 
   const handleStartTour = () => {
     setStartTour(true);
@@ -55,9 +79,13 @@ export default function HomePage() {
   };
 
   const fetchStrangers = async () => {
+    if (cachedSuggestions) return;
     const _strangers = await getStrangerNovelistsAction(1, 20);
 
-    if (_strangers && !("message" in _strangers)) setStrangers(_strangers);
+    if (_strangers && !("message" in _strangers)) {
+      setStrangers(_strangers);
+      setGlobalState({ friendSuggestions: _strangers });
+    }
   };
 
   const fetchStrangerMuses = async () => {
@@ -130,8 +158,15 @@ export default function HomePage() {
               >
                 <S.SubText></S.SubText>
                 <S.SubText></S.SubText>
-                <S.SubText>No friends yet</S.SubText>
+                <S.SubText>Add friends? Maybe...</S.SubText>
               </ShouldRender>
+              <S.AddFriendButton
+                onClick={() => routeToPage(ROUTES.Fellows)}
+                title="Find novelists to connect with"
+                aria-label="Find novelists"
+              >
+                <FiSearch size={18} />
+              </S.AddFriendButton>
               {novelist?.friends.map((friend) => (
                 <SideBarFriendListItem
                   key={friend?.username}
@@ -180,12 +215,14 @@ export default function HomePage() {
           <S.ContentContainer id="home-tour-step-3">
             <S.SubText>Friend Suggestions</S.SubText>
             <S.PartitionContainer>
+              {friendRequestCards.map((card) => (
+                <NovelistPreviewCard key={card.username} novelist={card} />
+              ))}
               {strangers?.map((stranger) => (
-                <StrangerCard
+                <NovelistPreviewCard
                   key={stranger?.username}
                   novelist={stranger}
-                  isRequest={false}
-                ></StrangerCard>
+                ></NovelistPreviewCard>
               ))}
             </S.PartitionContainer>
           </S.ContentContainer>

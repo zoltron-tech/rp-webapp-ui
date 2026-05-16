@@ -15,6 +15,15 @@ export const ThreadRoot = styled.article`
   padding: 10px;
   margin-block: 10px;
   border: 0.85px solid var(--bg-6);
+  border-radius: 8px;
+
+  &[data-has-replies] {
+    border-color: var(--accent);
+  }
+
+  &[data-has-replies] {
+    border-left: 4px solid var(--accent);
+  }
 
   .separator[data-orientation="horizontal"] {
     height: 1px;
@@ -24,7 +33,7 @@ export const ThreadRoot = styled.article`
   }
 
   @media screen and (max-width: 800px) {
-    margin-block: 0px;
+    margin-block: 5px;
     padding-inline: 6px;
   }
 `;
@@ -34,6 +43,7 @@ export const PromptHeaderRoot = styled.header`
   align-items: center;
   width: 100%;
   position: relative;
+  padding-inline: 8px;
 
   .avatar {
     width: 64px;

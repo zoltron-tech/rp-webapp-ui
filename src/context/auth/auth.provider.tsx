@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { type FC, type ReactNode, useCallback, useEffect, useRef } from "react";
 import {
   authenticateAction,
@@ -14,7 +14,6 @@ import { useStateMachine } from "@/hooks";
 import { initialisePushNotifications } from "@/lib/push";
 import type { AuthState } from "@/types/state";
 import { API_MESSAGE } from "@/utils/constants";
-import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import { useGlobalState, useGlobalStoreSet } from "../store/stores";
 import { AuthContext } from "./auth.context";
@@ -26,15 +25,13 @@ interface Props {
 export const AuthProvider: FC<Props> = ({ children }) => {
   const initialRender = useRef(true);
   const pathname = usePathname();
-  const { push } = useRouter();
 
   const authState = useGlobalState("authState");
   const setGlobalState = useGlobalStoreSet();
 
   const pushToCreateProfile = useCallback(() => {
-    setGlobalState({ authState: "UNINITIALIZED" });
-    push(ROUTES.Onboarding);
-  }, [setGlobalState, push]);
+    setGlobalState({ authState: "UNINITIALIZED", showInstallAppPrompt: true });
+  }, [setGlobalState]);
 
   const { state, is, transition } = useStateMachine<AuthState>({
     initial: authState,
@@ -44,6 +41,7 @@ export const AuthProvider: FC<Props> = ({ children }) => {
         LOGGED_OUT: () => {
           setGlobalState({
             authState: "LOGGED_OUT",
+            notifications: null,
             novelist: null,
             user: null,
           });
@@ -55,6 +53,7 @@ export const AuthProvider: FC<Props> = ({ children }) => {
         LOGGED_OUT: () => {
           setGlobalState({
             authState: "LOGGED_OUT",
+            notifications: null,
             novelist: null,
             user: null,
           });

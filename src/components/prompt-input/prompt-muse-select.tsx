@@ -12,6 +12,7 @@ import { IoCheckmark } from "react-icons/io5";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { AppAlertDialog } from "@/components/dialog";
+import { FilterSearch } from "@/components/filter-search";
 import type { PromptSource, SubmitPromptType } from "@/types";
 import { usePromptInputState } from "./prompt-input.store";
 import * as S from "./styles";
@@ -51,11 +52,12 @@ export const PromptMuseSelect: FC<Props> = forwardRef(
     const museSources = sources.filter((s) => s.sourceType === "MUSE");
 
     useEffect(() => {
-      if (initialSelection) {
-        setSource(initialSelection);
-      } else if (sources?.length) {
-        setSource(sources[0]);
-      }
+      setSource((current) => {
+        if (current && sources.some((s) => s.sourceId === current.sourceId)) {
+          return current;
+        }
+        return initialSelection ?? sources?.[0];
+      });
     }, [initialSelection, sources]);
 
     const filteredMuses = useMemo(() => {
@@ -63,7 +65,6 @@ export const PromptMuseSelect: FC<Props> = forwardRef(
       const list = q
         ? museSources.filter((s) => s.name?.toLowerCase().includes(q))
         : museSources;
-      // Promote selected muse to top
       if (!source || source.sourceType !== "MUSE") return list;
       const selected = list.find((s) => s.sourceId === source.sourceId);
       const rest = list.filter((s) => s.sourceId !== source.sourceId);
@@ -79,6 +80,9 @@ export const PromptMuseSelect: FC<Props> = forwardRef(
       );
     }, [novelistSource, search]);
 
+    const showNovelist = dropdownSelection !== "MUSE";
+    const showMuses = dropdownSelection !== "NOVELIST";
+
     const handleSelect = useCallback((selected: PromptSource) => {
       setSource(selected);
       setSearch("");
@@ -90,7 +94,9 @@ export const PromptMuseSelect: FC<Props> = forwardRef(
       setDialogOpen(open);
     }, []);
 
-    const noResults = !novelistMatchesSearch && filteredMuses.length === 0;
+    const noResults =
+      (!showNovelist || !novelistMatchesSearch) &&
+      (!showMuses || filteredMuses.length === 0);
 
     return (
       <S.MuseSelect
@@ -131,17 +137,19 @@ export const PromptMuseSelect: FC<Props> = forwardRef(
           closeButtonText="Done"
           body={
             <S.MuseDialogBody>
-              <S.MuseDialogSearch
-                placeholder="Search…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                autoFocus
-              />
+              <S.MuseDialogSearchWrap>
+                <FilterSearch
+                  value={search}
+                  onChange={setSearch}
+                  placeholder="Search…"
+                />
+              </S.MuseDialogSearchWrap>
+
               <S.MuseDialogList>
                 {/* Novelist row */}
                 <ShouldRender
                   if={
-                    dropdownSelection !== "MUSE" &&
+                    showNovelist &&
                     novelistMatchesSearch &&
                     Boolean(novelistSource)
                   }
@@ -153,17 +161,22 @@ export const PromptMuseSelect: FC<Props> = forwardRef(
                   />
                 </ShouldRender>
 
-                {/* Muse section */}
+                {/* Section divider shown only when both sections are visible */}
                 <ShouldRender
                   if={
-                    dropdownSelection !== "NOVELIST" && filteredMuses.length > 0
+                    showNovelist &&
+                    showMuses &&
+                    novelistMatchesSearch &&
+                    filteredMuses.length > 0
                   }
                 >
-                  <ShouldRender
-                    if={dropdownSelection === "ALL" && novelistMatchesSearch}
-                  >
-                    <S.MuseDialogDivider>Characters</S.MuseDialogDivider>
-                  </ShouldRender>
+                  <S.MuseDialogSectionLabel>
+                    Characters
+                  </S.MuseDialogSectionLabel>
+                </ShouldRender>
+
+                {/* Muse rows */}
+                <ShouldRender if={showMuses && filteredMuses.length > 0}>
                   {filteredMuses.map((s) => (
                     <SourceRow
                       key={s.sourceId}
@@ -176,7 +189,9 @@ export const PromptMuseSelect: FC<Props> = forwardRef(
 
                 <ShouldRender if={noResults}>
                   <S.MuseDialogEmptyText>
-                    No results found.
+                    {search
+                      ? `No results for "${search}".`
+                      : "No sources available."}
                   </S.MuseDialogEmptyText>
                 </ShouldRender>
               </S.MuseDialogList>
@@ -205,13 +220,13 @@ const SourceRow: FC<{
     <AvatarNew src={source.image ?? null} alt={source.name ?? ""} />
     <S.MuseDialogSourceInfo>
       <S.MuseDialogSourceName>{source.name}</S.MuseDialogSourceName>
-      <S.MuseDialogSourceType>
-        {source.sourceType === "NOVELIST" ? "Novelist" : "Muse"}
-      </S.MuseDialogSourceType>
+      <S.MuseDialogTypeBadge $novelist={source.sourceType === "NOVELIST"}>
+        {source.sourceType === "NOVELIST" ? "You" : "Character"}
+      </S.MuseDialogTypeBadge>
     </S.MuseDialogSourceInfo>
     {isActive && (
       <S.MuseDialogSelectedMark>
-        <IoCheckmark size={16} />
+        <IoCheckmark size={12} />
       </S.MuseDialogSelectedMark>
     )}
   </S.MuseDialogListItem>

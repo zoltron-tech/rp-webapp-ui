@@ -57,13 +57,31 @@ export const ParentContainer = styled(Container)`
     padding: 0px;
     border: none;
   }
+
+  /* On mobile the page stops scrolling and becomes a fixed-height flex column.
+     RepliesContainer scrolls internally; MobileReplyComposer sits at the bottom. */
+  @media screen and (max-width: 800px) {
+    position: fixed;
+    top: var(--topbar-height);
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    justify-content: flex-start;
+    align-items: stretch;
+    background-color: var(--bg-2);
+  }
 `;
 
 export const RepliesContainer = styled.div`
   max-width: 800px;
   margin-top: 40px;
   width: 100%;
-  padding: 10px 20px 20px;
+  padding: 0px;
   z-index: ${Z_INDEX.CARD_EXPAND};
   background-color: var(--bg-2);
   border: 0.85px solid var(--bg-6);
@@ -96,6 +114,16 @@ export const RepliesContainer = styled.div`
     border: none;
     border-radius: unset;
   }
+
+  /* On mobile: fill remaining height and scroll internally */
+  @media screen and (max-width: 800px) {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-bottom: 16px;
+    margin-top: 0;
+    padding-top: 0px;
+  }
 `;
 
 export const CommentsHeader = styled.div`
@@ -119,6 +147,17 @@ export const HeaderContainer = styled.div`
   align-items: center;
   position: relative;
   width: 100%;
+  padding-block: 10px;
+  border-bottom: 1px solid var(--bg-6);
+  padding-inline: 20px;
+
+  /* Stick to the top while scrolling on mobile so the "To" info is always visible */
+  @media screen and (max-width: 800px) {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg-2);
+  }
 `;
 
 export const SourceInfo = styled.div`
@@ -160,7 +199,8 @@ export const PromptSubheader = styled.time`
 
 export const PromptTextContainer = styled.div`
   max-width: 95%;
-  /* padding-left: 35px; */
+  margin-top: 20px;
+  padding-inline: 20px;
 
   @container (max-width: 700px) {
     & {
@@ -171,7 +211,7 @@ export const PromptTextContainer = styled.div`
 
 export const PromptContentFooter = styled.footer`
   width: 100%;
-  /* padding-left: 35px; */
+  padding-inline: 20px;
   display: flex;
   align-items: flex-start;
   margin-top: 18px;
@@ -315,6 +355,7 @@ export const ReplyHeaderContainer = styled.div`
   display: flex;
   width: 100%;
   padding-top: 20px;
+  padding-inline: 20px;
 `;
 
 export const DropdownMenuContainer = styled.div`

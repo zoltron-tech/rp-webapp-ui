@@ -1,5 +1,23 @@
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { DEV_MODE_BORDER } from "@/theme";
+
+const spin = keyframes`
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+`;
+
+export const FeedLoader = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px 0 8px;
+
+  svg {
+    font-size: 1.75rem;
+    color: var(--accent);
+    animation: ${spin} 0.8s linear infinite;
+  }
+`;
 
 export const Container = styled.div`
   padding-top: 10px;
@@ -89,5 +107,27 @@ export const PromptListContainer = styled.div`
       padding-inline: 5px;
       gap: 0.5rem;
     }
+  }
+`;
+
+/** Slide-up compose sheet — same pattern as the profile page. */
+export const ComposeSheet = styled.div<{ $open: boolean }>`
+  position: fixed;
+  top: var(--topbar-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  transform: translateY(${(p) => (p.$open ? "0" : "100%")});
+  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: ${(p) => (p.$open ? "auto" : "none")};
+
+  .compose-fp-inner {
+    top: 0 !important;
+    height: 100% !important;
+  }
+
+  @media screen and (min-width: 801px) {
+    display: none;
   }
 `;

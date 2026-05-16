@@ -66,6 +66,97 @@ export const MuseContainer = styled.div`
   }
 `;
 
+export const ImageWrapper = styled.div`
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+`;
+
+export const NSFWOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  color: #fff;
+  text-align: center;
+  font-size: var(--font-size-xsmall);
+  border-radius: var(--border-radius);
+  pointer-events: none;
+`;
+
+export const NSFWLabel = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+
+  @container muse-card (max-width: 120px) {
+    font-size: 9px;
+  }
+`;
+
+export const NSFWRevealButton = styled.button`
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, 14px);
+  z-index: 3;
+  margin-top: 0;
+  padding: 4px 12px;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  border-radius: 20px;
+  background: transparent;
+  color: #fff;
+  font-size: var(--font-size-xsmall);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  &:active {
+    transform: translate(-50%, 14px) scale(0.96);
+  }
+
+  @container muse-card (max-width: 120px) {
+    font-size: 9px;
+    padding: 2px 7px;
+    transform: translate(-50%, -48px);
+
+    &:active {
+      transform: translate(-50%, -48px) scale(0.96);
+    }
+  }
+`;
+
+export const BannerNSFWOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 40px;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  text-align: center;
+  font-size: var(--font-size-xsmall);
+  pointer-events: none;
+`;
+
 export const CardBackground = styled.div<CardProps>`
   position: absolute;
   width: 100%;
@@ -508,6 +599,7 @@ export const Card = styled.div`
   padding: 5px 10px 0px;
   position: relative;
   height: 100%;
+  z-index: 2;
   contain: paint;
 
   @container content-container (max-width: 1000px) {
@@ -841,6 +933,26 @@ export const InfoScrollBody = styled.div<{ accent?: string | null }>`
   }
 `;
 
+export const InfoCardAvatar = styled.div<{ $src: string }>`
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background-image: url(${({ $src }) => $src});
+  background-size: cover;
+  background-position: center;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
+  background-color: rgba(255, 255, 255, 0.08);
+
+  @media (max-width: 600px) {
+    width: 72px;
+    height: 72px;
+  }
+`;
+
 export const InfoHeaderSection = styled.div`
   display: flex;
   flex-direction: column;
@@ -938,4 +1050,174 @@ export const InfoTagsSection = styled.div`
   flex-wrap: wrap;
   width: 100%;
   padding-top: 4px;
+`;
+
+/* ── Gallery ─────────────────────────────────────────────────────────────── */
+
+export const GalleryGrid = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+  padding: 4px 0;
+  align-content: flex-start;
+`;
+
+export const GalleryItem = styled.div`
+  flex-shrink: 0;
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  ${CARD_BORDER};
+  cursor: zoom-in;
+`;
+
+export const GalleryBadge = styled.span`
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+  z-index: 2;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+  user-select: none;
+  line-height: 1.4;
+`;
+
+export const GalleryImage = styled.img`
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+
+  ${GalleryItem}:hover & {
+    transform: scale(1.04);
+  }
+`;
+
+export const GalleryVideo = styled.video`
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  cursor: pointer;
+`;
+
+export const SectionEmptyWrap = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+`;
+
+export const SectionEmpty = styled.div`
+  width: 100%;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.82rem;
+  font-style: italic;
+  padding: 24px 0 8px;
+`;
+
+export const SectionEmptyCta = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.13);
+    border-color: rgba(255, 255, 255, 0.35);
+    color: rgba(255, 255, 255, 0.9);
+  }
+`;
+
+export const GalleryPlayOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.28);
+  transition: background 0.2s ease;
+  pointer-events: none;
+
+  ${GalleryItem}:hover & {
+    background: rgba(0, 0, 0, 0.1);
+  }
+`;
+
+export const GalleryPlayCircle = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  ${GalleryItem}:hover & {
+    transform: scale(1.1);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55);
+  }
+`;
+
+export const MoreMenuList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0;
+  width: 100%;
+`;
+
+export const MoreMenuItem = styled.button<{ $variant?: "danger" | "warn" }>`
+  all: unset;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 8px;
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.05);
+  color: ${({ $variant }) =>
+    $variant === "danger"
+      ? "var(--tomato-9)"
+      : $variant === "warn"
+        ? "var(--amber-9)"
+        : "var(--text)"};
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: ${({ $variant }) =>
+      $variant === "danger"
+        ? "rgba(229,72,77,0.15)"
+        : $variant === "warn"
+          ? "rgba(245,166,35,0.12)"
+          : "rgba(255,255,255,0.1)"};
+  }
 `;

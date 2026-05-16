@@ -45,6 +45,7 @@ export const CardFrame = styled.div`
     color-mix(in srgb, var(--accent) 50%, white)
   );
   flex-shrink: 0;
+  border-radius: 24px;
   align-self: center;
   /* Clip children at the rounded border on mobile WebKit where nested
      overflow:hidden + border-radius can leak through corners */
@@ -86,6 +87,7 @@ export const HeroBg = styled.div<{ $src: string }>`
   background-size: cover;
   background-position: center top;
   filter: blur(22px) brightness(0.3);
+  border-radius: 24px;
   z-index: 0;
 `;
 

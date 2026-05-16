@@ -25,7 +25,7 @@ export function MuseInfoSection({ muse, isOwnMuse }: Props) {
             <PrivacyIcon privacy={muse?.privacy ?? "PUBLIC"} />
           </S.InfoPrivacyCorner>
           <S.InfoScrollBody accent={accent}>
-            {/* Name + Nicknames */}
+            {/* Header: avatar + name + nicknames + fandom */}
             <S.InfoHeaderSection>
               <S.InfoCardAvatar $src={muse?.image ?? ""} />
               <S.InfoMuseName>
@@ -39,57 +39,61 @@ export function MuseInfoSection({ muse, isOwnMuse }: Props) {
                   ))}
                 </S.InfoNicknamesRow>
               </ShouldRender>
-            </S.InfoHeaderSection>
-
-            {/* Fandom */}
-            <ShouldRender if={muse?.fandom !== null}>
-              <S.InfoFandomSection>
+              <ShouldRender
+                if={Boolean(muse?.fandom && muse.fandom.id !== "FANDOMLESS")}
+              >
                 <S.FandomValue color={muse?.fandom?.color || "#444"}>
                   {muse?.fandom?.name}
                 </S.FandomValue>
-              </S.InfoFandomSection>
-            </ShouldRender>
+              </ShouldRender>
+            </S.InfoHeaderSection>
 
-            {/* Extra Attributes */}
-            <ShouldRender
-              if={
-                !muse?.extraAttributes ||
-                Object.keys(muse.extraAttributes).length === 0
-              }
-            >
-              <S.SectionEmptyWrap>
-                <S.SectionEmpty>No information yet.</S.SectionEmpty>
-                <ShouldRender if={isOwnMuse}>
-                  <S.SectionEmptyCta
-                    type="button"
-                    onClick={() =>
-                      routeToPage(
-                        ROUTES.Profile.Muses.ExtraAttributes(muse?.id ?? ""),
-                      )
-                    }
-                  >
-                    <GrEdit size={13} />
-                    Add information
-                  </S.SectionEmptyCta>
-                </ShouldRender>
-              </S.SectionEmptyWrap>
-            </ShouldRender>
-            <ShouldRender
-              if={Boolean(
-                muse?.extraAttributes &&
-                  Object.keys(muse.extraAttributes).length > 0,
-              )}
-            >
-              <S.InfoAttributesGrid>
-                {muse?.extraAttributes &&
-                  Object.entries(muse.extraAttributes).map(([key, value]) => (
-                    <S.InfoAttributeCard key={key} accent={accent}>
-                      <S.InfoAttributeKey>{key}</S.InfoAttributeKey>
-                      <S.InfoAttributeValue>{value}</S.InfoAttributeValue>
-                    </S.InfoAttributeCard>
-                  ))}
-              </S.InfoAttributesGrid>
-            </ShouldRender>
+            <S.InfoDivider $accent={accent ?? null} />
+
+            <S.InfoSectionLabel>Details</S.InfoSectionLabel>
+
+            {/* Details */}
+            <S.InfoDetailsSection $accent={accent ?? null}>
+              <ShouldRender
+                if={
+                  !muse?.extraAttributes ||
+                  Object.keys(muse.extraAttributes).length === 0
+                }
+              >
+                <S.SectionEmptyWrap>
+                  <S.SectionEmpty>No information yet.</S.SectionEmpty>
+                  <ShouldRender if={isOwnMuse}>
+                    <S.SectionEmptyCta
+                      type="button"
+                      onClick={() =>
+                        routeToPage(
+                          ROUTES.Profile.Muses.ExtraAttributes(muse?.id ?? ""),
+                        )
+                      }
+                    >
+                      <GrEdit size={13} />
+                      Add information
+                    </S.SectionEmptyCta>
+                  </ShouldRender>
+                </S.SectionEmptyWrap>
+              </ShouldRender>
+              <ShouldRender
+                if={Boolean(
+                  muse?.extraAttributes &&
+                    Object.keys(muse.extraAttributes).length > 0,
+                )}
+              >
+                <S.InfoAttributesGrid>
+                  {muse?.extraAttributes &&
+                    Object.entries(muse.extraAttributes).map(([key, value]) => (
+                      <S.InfoAttributeCard key={key} accent={accent}>
+                        <S.InfoAttributeKey>{key}</S.InfoAttributeKey>
+                        <S.InfoAttributeValue>{value}</S.InfoAttributeValue>
+                      </S.InfoAttributeCard>
+                    ))}
+                </S.InfoAttributesGrid>
+              </ShouldRender>
+            </S.InfoDetailsSection>
           </S.InfoScrollBody>
         </S.InfoCardContent>
       </S.CardBack>

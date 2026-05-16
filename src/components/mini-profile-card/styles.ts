@@ -46,6 +46,9 @@ export const CardFrame = styled.div`
   );
   flex-shrink: 0;
   align-self: center;
+  /* Clip children at the rounded border on mobile WebKit where nested
+     overflow:hidden + border-radius can leak through corners */
+  overflow: hidden;
 `;
 
 export const Card = styled.div`

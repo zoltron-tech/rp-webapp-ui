@@ -24,6 +24,11 @@ export const CardWrapper = styled.div`
   @media (max-width: 600px) {
     width: 155px;
     min-width: 155px;
+
+    &:hover {
+      transform: none;
+      box-shadow: none;
+    }
   }
 `;
 

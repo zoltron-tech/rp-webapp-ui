@@ -3,7 +3,7 @@
 import { Flex } from "@novelist-world/ui";
 import classNames from "classnames";
 import { type FC, useMemo, useState } from "react";
-import { FaComments, FaStreetView, FaUser } from "react-icons/fa6";
+import { FaComments, FaImage, FaStreetView, FaUser } from "react-icons/fa6";
 import { PiBookOpenUserDuotone } from "react-icons/pi";
 import { useGlobalState } from "@/context/store/stores";
 import { useNsfwCheck } from "@/hooks/use-nsfw-check";
@@ -70,6 +70,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
   };
 
   const [nsfwRevealed, setNsfwRevealed] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   const imageSrc =
     mediaType === "image" ? (activity?.target.url ?? null) : null;
@@ -122,10 +123,17 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
             overlayHidden
           />
         </ShouldRender>
-        <ShouldRender if={Boolean(mediaType)}>
+        <ShouldRender
+          if={
+            Boolean(mediaType) ||
+            !["PROMPT", "COMMENT", "REPLY"].includes(
+              activity.target.activityTargetType,
+            )
+          }
+        >
           <S.CardWrapper>
             <S.ImageWrapper>
-              {mediaType === "image" && (
+              {mediaType === "image" && !imgError && (
                 <S.CardBackground
                   banner={activity.target.url || ""}
                   className="image"
@@ -134,6 +142,19 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
                     transition: "filter 0.3s ease",
                   }}
                 />
+              )}
+              {mediaType === "image" && activity.target.url && (
+                // biome-ignore lint/a11y/useAltText: hidden probe only
+                <img
+                  src={activity.target.url}
+                  style={{ display: "none" }}
+                  onError={() => setImgError(true)}
+                />
+              )}
+              {(!activity.target.url || imgError) && (
+                <S.FallbackImageIcon>
+                  <FaImage size={56} />
+                </S.FallbackImageIcon>
               )}
               {showNsfwOverlay && (
                 <S.NSFWOverlay>

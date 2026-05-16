@@ -1,6 +1,8 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
+import { useState } from "react";
+import { FaUser } from "react-icons/fa6";
 import { GrEdit } from "react-icons/gr";
 import { PrivacyIcon } from "@/components/common/privacy-icon";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -16,6 +18,7 @@ type Props = {
 export function MuseInfoSection({ muse, isOwnMuse }: Props) {
   const accent = muse?.useAccent ? muse.accent : undefined;
   const { routeToPage } = usePageRouter();
+  const [avatarError, setAvatarError] = useState(false);
 
   return (
     <S.CardExpandedWrapper>
@@ -27,7 +30,19 @@ export function MuseInfoSection({ muse, isOwnMuse }: Props) {
           <S.InfoScrollBody accent={accent}>
             {/* Header: avatar + name + nicknames + fandom */}
             <S.InfoHeaderSection>
-              <S.InfoCardAvatar $src={muse?.image ?? ""} />
+              <S.InfoCardAvatar
+                $src={!muse?.image || avatarError ? "" : muse.image}
+              >
+                {muse?.image && (
+                  // biome-ignore lint/a11y/useAltText: hidden probe only
+                  <img
+                    src={muse.image}
+                    style={{ display: "none" }}
+                    onError={() => setAvatarError(true)}
+                  />
+                )}
+                {(!muse?.image || avatarError) && <FaUser size={30} />}
+              </S.InfoCardAvatar>
               <S.InfoMuseName>
                 {muse?.firstName}
                 {muse?.lastName ? ` ${muse.lastName}` : ""}

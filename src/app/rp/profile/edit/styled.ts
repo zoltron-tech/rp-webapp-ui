@@ -18,7 +18,7 @@ export const Card = styled.div`
   @media screen and (max-width: 800px) {
     margin-block: 0px;
     padding-inline: 10px;
-    padding-block: 30px;
+    padding-block: 10px;
     border: none;
   }
 
@@ -318,18 +318,24 @@ export const RadioItemContainer = styled.div`
 
   .radio-item {
     all: unset;
-    width: 60px;
-    height: 30px;
-    border-radius: 4px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
     background-color: var(--accent);
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    transition: transform 0.15s ease, outline-color 0.15s ease;
+
+    &:hover {
+      transform: scale(1.05);
+    }
 
     &[aria-checked="true"] {
-      outline: 1.5px solid var(--accent-8);
-      outline-offset: 2px;
+      outline: 2px solid var(--accent-9);
+      outline-offset: 3px;
     }
   }
 `;
@@ -728,4 +734,591 @@ export const DialogErrorText = styled.p`
   color: var(--tomato-9);
   margin: 0;
   font-weight: var(--font-weight-medium);
+`;
+
+// ── Top bar / wizard shared ──────────────────────────────────────────────────
+
+export const TopBar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  @media screen and (max-width: 600px) {
+    h1 {
+      font-size: var(--font-size-h6);
+    }
+
+    svg {
+      width: var(--font-size-h4);
+      height: var(--font-size-h4);
+    }
+  }
+`;
+
+// ── Landing hero ─────────────────────────────────────────────────────────────
+
+export const LandingHero = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 4px 12px;
+`;
+
+export const LandingHeroAvatarWrap = styled.div`
+  flex-shrink: 0;
+
+  label {
+    cursor: pointer;
+    display: block;
+  }
+
+  label > div {
+    width: 100px;
+    height: 100px;
+  }
+
+  .avatar {
+    height: 150px;
+    width: 150px;
+    border: 3px solid var(--accent-7);
+  }
+`;
+
+export const LandingHeroEditRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+`;
+
+export const LandingHeroNameRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+`;
+
+export const LandingHeroInput = styled.input`
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-bold);
+  color: var(--text);
+  font-family: var(--font);
+  padding: 6px 10px;
+  background: var(--bg-3);
+  border: 1.5px solid var(--bg-6);
+  border-radius: 6px;
+  transition: border-color 0.18s, background 0.18s;
+  cursor: text;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.5;
+    font-weight: var(--font-weight-regular);
+  }
+
+  &:hover {
+    border-color: var(--bg-8);
+    background: var(--bg-4);
+  }
+
+  &:focus {
+    border-color: var(--accent);
+    background: var(--bg-3);
+    outline: none;
+  }
+`;
+
+export const LandingHeroMeta = styled.div`
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+`;
+
+export const LandingMetaPill = styled.span`
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-regular);
+  background: var(--bg-4);
+  color: var(--text-secondary);
+  border: 1px solid var(--bg-5);
+  white-space: nowrap;
+`;
+
+export const LandingHeroResetButton = styled.button`
+  all: unset;
+  padding: 6px 14px;
+  border-radius: 4px;
+  background-color: transparent;
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  font-family: var(--font);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  border: 1px solid var(--bg-6);
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+
+  &:hover:not(:disabled) {
+    background-color: var(--bg-4);
+    color: var(--text);
+    border-color: var(--bg-8);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+`;
+
+export const LandingHeroSaveButton = styled.button`
+  all: unset;
+  padding: 6px 16px;
+  border-radius: 4px;
+  background-color: var(--accent);
+  color: var(--text);
+  font-size: var(--font-size-small);
+  font-family: var(--font);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s;
+
+  &:hover:not(:disabled) {
+    background-color: var(--accent-hover);
+  }
+
+  &:disabled {
+    background-color: var(--bg-6);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+`;
+
+export const LandingErrorBanner = styled.p`
+  margin: 4px 2px 0;
+  font-size: var(--font-size-small);
+  font-family: var(--font);
+  color: var(--tomato-9);
+`;
+
+export const LandingSubtitle = styled.p`
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  margin-block: 12px 14px;
+  margin-inline: 2px;
+`;
+
+export const LandingGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  align-items: stretch;
+
+  @media screen and (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const LandingCard = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  background: var(--bg-3);
+  border: 1px solid var(--bg-5);
+  border-radius: 10px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+
+  &:hover {
+    border-color: var(--accent-7);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+export const LandingCardIconArea = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 20px 22px;
+
+  &.appearance {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.18) 0%, rgba(139, 92, 246, 0.04) 100%);
+    border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+    .section-icon { color: rgb(139, 92, 246); }
+  }
+
+  &.about {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.18) 0%, rgba(59, 130, 246, 0.04) 100%);
+    border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+    .section-icon { color: rgb(59, 130, 246); }
+  }
+
+  &.account {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(16, 185, 129, 0.04) 100%);
+    border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+    .section-icon { color: rgb(16, 185, 129); }
+  }
+
+  .section-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  @media screen and (max-width: 600px) {
+    padding: 14px 16px 12px;
+
+    .section-icon {
+      width: 26px;
+      height: 26px;
+    }
+  }
+`;
+
+export const LandingCardBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px 10px;
+  flex: 1;
+
+  @media screen and (max-width: 600px) {
+    padding: 9px 14px 7px;
+  }
+`;
+
+export const LandingCardTitle = styled.span`
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-bold);
+  color: var(--text);
+`;
+
+export const LandingCardDesc = styled.span`
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  line-height: 1.45;
+`;
+
+export const LandingCardChips = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 10px 12px 14px;
+  border-top: 1px solid var(--bg-5);
+
+  @media screen and (max-width: 600px) {
+    padding: 6px 10px 10px;
+    gap: 4px;
+  }
+`;
+
+export const LandingCardChip = styled.span<{ $active?: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-family: var(--font);
+  font-weight: 500;
+  white-space: nowrap;
+  border: 1px solid ${({ $active }) => ($active ? "var(--grass-9)" : "var(--bg-6)")};
+  color: ${({ $active }) => ($active ? "var(--grass-9)" : "var(--text-secondary)")};
+  background: ${({ $active }) =>
+    $active
+      ? "color-mix(in srgb, var(--grass-9) 10%, transparent)"
+      : "var(--bg-4)"};
+`;
+
+// ── Account section ─────────────────────────────────────────────────────────
+
+export const AccountSectionBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 12px 4px;
+`;
+
+export const AccountRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg-3);
+  border: 1px solid var(--bg-5);
+  border-radius: 8px;
+
+  @media screen and (max-width: 480px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+`;
+
+export const AccountRowMain = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+`;
+
+export const AccountRowLabel = styled.span`
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
+export const AccountRowValue = styled.span`
+  font-size: var(--font-size);
+  color: var(--text);
+  font-weight: var(--font-weight-medium);
+  word-break: break-all;
+`;
+
+export const AccountRowActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+`;
+
+export const AccountActionButton = styled.button`
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  background: var(--bg-4);
+  color: var(--text);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  border: 1px solid var(--bg-6);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+
+  &:hover:not(:disabled) {
+    background: var(--bg-5);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+`;
+
+export const AccountActionButtonPrimary = styled(AccountActionButton)`
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--text);
+
+  &:hover:not(:disabled) {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    color: var(--text);
+  }
+`;
+
+export const VerifiedBadge = styled.span<{ $verified: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid
+    ${({ $verified }) => ($verified ? "var(--grass-9)" : "var(--amber-9)")};
+  color: ${({ $verified }) => ($verified ? "var(--grass-9)" : "var(--amber-9)")};
+  background: ${({ $verified }) =>
+    $verified
+      ? "color-mix(in srgb, var(--grass-9) 10%, transparent)"
+      : "color-mix(in srgb, var(--amber-9) 10%, transparent)"};
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+`;
+
+// ── Blocked novelists list ───────────────────────────────────────────────────
+
+export const BlockedSectionHeading = styled.p`
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 8px 0 4px;
+`;
+
+export const BlockedList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+export const BlockedItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg-3);
+  border: 1px solid var(--bg-5);
+  border-radius: 8px;
+
+  .avatar {
+    width: 38px;
+    height: 38px;
+  }
+`;
+
+export const BlockedItemInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+`;
+
+export const BlockedItemName = styled.span`
+  font-size: var(--font-size);
+  color: var(--text);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+export const BlockedItemUsername = styled.span`
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+`;
+
+export const UnblockButton = styled.button`
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--tomato-9) 10%, transparent);
+  color: var(--tomato-9);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  border: 1px solid var(--tomato-9);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover:not(:disabled) {
+    background: var(--tomato-9);
+    color: var(--text-contrast, #fff);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+`;
+
+// ── About section ───────────────────────────────────────────────────────────
+
+export const AboutSectionBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 0;
+`;
+
+// ── Appearance section ──────────────────────────────────────────────────────
+
+export const AppearanceSectionBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 12px 0;
+`;
+
+/**
+ * Wraps the parts of the Appearance section that should preview the
+ * currently-selected accent (palette swatches + Save button). Adding the
+ * radix accent class ("jade", "cyan", "iris", "crimson") on this wrapper
+ * scopes the new --accent-* variables to its subtree without changing the
+ * global app accent until the user actually saves.
+ */
+export const AppearancePreviewScope = styled.div`
+  display: contents;
+`;
+
+export const AppearanceFieldGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+export const AppearanceFieldLabel = styled.label`
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 `;

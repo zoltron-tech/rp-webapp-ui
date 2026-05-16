@@ -1,7 +1,8 @@
 "use client";
 
-import type { FC } from "react";
-import { useGlobalState } from "@/context/store/stores";
+import { useRouter } from "next/navigation";
+import { type FC, useEffect } from "react";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { Conversation } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
@@ -13,6 +14,8 @@ import * as S from "./styles";
 
 type ConversationCardProps = {
   conversation: Conversation;
+  /** When provided (mobile panel mode), called instead of routing to the conversation page. */
+  onOpen?: (conversationId: string, targetUserName: string) => void;
 };
 
 const formatInboxTimestamp = (value: string) => {
@@ -145,9 +148,17 @@ const isMessageUnread = (isRead?: boolean) => {
 
 export const ConversationCard: FC<ConversationCardProps> = ({
   conversation,
+  onOpen,
 }) => {
   const user = useGlobalState("user");
+  const setGlobalState = useGlobalStoreSet();
   const { routeToPage } = usePageRouter();
+  const router = useRouter();
+
+  // Prefetch the conversation route so the first click is instant
+  useEffect(() => {
+    router.prefetch(ROUTES.Conversation.View(conversation.id));
+  }, [router, conversation.id]);
   const { lastMessage } = conversation;
   const sender =
     lastMessage?.sender?.name || lastMessage?.sender?.username || "";
@@ -171,17 +182,27 @@ export const ConversationCard: FC<ConversationCardProps> = ({
     const targetUserName =
       otherMember?.userName || lastMessage?.sender?.username;
 
+    setGlobalState({ activeConversation: conversation });
+
+    if (onOpen) {
+      onOpen(conversation.id, targetUserName || "");
+      return;
+    }
+
     const conversationRoute = ROUTES.Conversation.View(conversation.id);
     const route = targetUserName
       ? `${conversationRoute}?target=${encodeURIComponent(targetUserName)}`
       : conversationRoute;
 
-    routeToPage(route);
+    // Cache conversation so the detail page can render header immediately
+    setGlobalState({
+      conversationNavDirection: "forward",
+    });
+    routeToPage(route, { skipLoading: true });
   };
 
   return (
     <S.Card className={unread ? "unread" : ""} onClick={openConversation}>
-      <S.Timestamp className={unread ? "unread" : ""}>{timestamp}</S.Timestamp>
       <S.Header>
         <AvatarNew
           src={conversation.image ?? null}
@@ -189,28 +210,34 @@ export const ConversationCard: FC<ConversationCardProps> = ({
           username={otherMember?.userName}
         />
         <S.Content>
-          <S.TopRow>
-            <S.Title className={unread ? "unread" : ""}>{displayName}</S.Title>
-            {!conversation.isGroup &&
-              conversation.members?.some((m) => m.isVerified) &&
-              (otherMember?.userName === "novelistworld" ? (
-                <AdminBadge size={12} />
-              ) : (
-                <EmailVerifiedBadge size={12} />
-              ))}
-          </S.TopRow>
-
-          <S.BottomRow>
+          <S.ContentMain>
+            <S.TopRow>
+              <S.Title className={unread ? "unread" : ""}>
+                {displayName}
+              </S.Title>
+              {!conversation.isGroup &&
+                otherMember?.isVerified &&
+                (otherMember.userName === "novelistworld" ? (
+                  <AdminBadge size={12} />
+                ) : (
+                  <EmailVerifiedBadge size={12} />
+                ))}
+            </S.TopRow>
             <S.MessagePreview className={unread ? "unread" : ""}>
               <S.Sender className={unread ? "unread" : ""}>
                 {sender ? `${sender}: ` : ""}
               </S.Sender>
               {preview}
             </S.MessagePreview>
-          </S.BottomRow>
+          </S.ContentMain>
+          <S.Extras>
+            <S.Timestamp className={unread ? "unread" : ""}>
+              {timestamp}
+            </S.Timestamp>
+            {unread && <S.UnreadDot />}
+          </S.Extras>
         </S.Content>
       </S.Header>
-      {unread ? <S.UnreadBadge>new</S.UnreadBadge> : null}
     </S.Card>
   );
 };

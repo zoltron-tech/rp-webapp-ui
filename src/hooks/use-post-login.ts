@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { getUnreadConversationIdsAction } from "@/app/rp/conversations/actions";
+import { getNotifications } from "@/app/rp/novelists/actions";
 import { getUnreadReplyCount } from "@/app/rp/outgoing-threads/actions";
 import { useGlobalStoreSet } from "@/context/store/stores";
 import { initialisePushNotifications } from "@/lib/push";
@@ -20,27 +21,33 @@ export const usePostLogin = () => {
 
   const handlePostLogin = useCallback(
     async (novelist: Novelist, user: User): Promise<boolean> => {
-      // Set novelist/user WITHOUT authState to prevent premature navigation.
-      setGlobalState({ novelist, user });
+      // Clear stale state from any previous user session.
+      setGlobalState({ notifications: null, novelist, user });
 
       if (!novelist.isOnboarded) {
         setGlobalState({ authState: "UNINITIALIZED" });
         return false;
       }
 
-      // Fetch unread counts before any navigation occurs.
+      // Fetch unread counts and notifications before any navigation occurs.
       try {
-        const [unreadIds, unreadReplyCount] = await Promise.all([
+        const [unreadIds, unreadReplyCount, notifications] = await Promise.all([
           getUnreadConversationIdsAction(),
           getUnreadReplyCount(),
+          getNotifications(1, 30),
         ]);
         setGlobalState({
+          notifications: Array.isArray(notifications) ? notifications : [],
           unreadConversationIds: Array.isArray(unreadIds) ? unreadIds : [],
           unreadReplyCount:
             typeof unreadReplyCount === "number" ? unreadReplyCount : 0,
         });
       } catch {
-        setGlobalState({ unreadConversationIds: [], unreadReplyCount: 0 });
+        setGlobalState({
+          notifications: [],
+          unreadConversationIds: [],
+          unreadReplyCount: 0,
+        });
       }
 
       // Setting authState last — triggers the LoginPage's useEffect to navigate.

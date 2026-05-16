@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 
+const webpack = require('webpack');
 const withPWA = require('@ducanh2912/next-pwa').default({
   dest: 'public',
   register: true,
@@ -77,6 +78,47 @@ const nextConfig = {
         pathname: "**",
       },
     ],
+  },
+
+  webpack: (config, { isServer }) => {
+    // nsfwjs bundles ~25MB of pre-built model shards under nsfwjs/dist/models
+    // that use a non-standard 2-arg require(name, version) JSONP wrapper that
+    // webpack cannot statically analyse. We don't need them bundled — the
+    // model is fetched from a CDN at runtime (see src/lib/nsfw-model.ts).
+    // Strip them from the module graph entirely.
+    const path = require("path");
+    config.plugins.push(
+      new webpack.IgnorePlugin({
+        checkResource(resource, context) {
+          if (!resource || !context) return false;
+          if (!/nsfwjs/.test(context)) return false;
+          try {
+            const resolved = path.resolve(context, resource);
+            return /[\\/]nsfwjs[\\/]dist[\\/]models[\\/]/.test(resolved);
+          } catch {
+            return false;
+          }
+        },
+      }),
+    );
+
+    config.ignoreWarnings = [
+      ...(config.ignoreWarnings || []),
+      { message: /Cannot statically analyse/ },
+      { module: /node_modules[\\/].*nsfwjs/ },
+      { module: /node_modules[\\/].*@tensorflow/ },
+    ];
+
+    // Don't bundle these heavy ML packages on the server — they're client-only.
+    if (isServer) {
+      config.externals = [
+        ...(Array.isArray(config.externals) ? config.externals : []),
+        "nsfwjs",
+        "@tensorflow/tfjs",
+      ];
+    }
+
+    return config;
   },
 };
 

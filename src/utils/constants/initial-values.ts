@@ -10,11 +10,14 @@ export const STANDARD_TIER: NovelistTier = {
 };
 
 export const EMPTY_FRIEND: Friend = {
+  connection: null,
   firstName: "",
   id: "",
   image: "",
   isVerified: false,
   lastName: null,
+  muses: [],
+  mutualFriendCount: 0,
   username: "",
 };
 

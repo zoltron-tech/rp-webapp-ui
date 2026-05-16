@@ -23,6 +23,7 @@ import {
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { InlineMusicPlayer } from "@/components/inline-music-player/page";
 import { LoadMore } from "@/components/load-more/page";
+import { MobileReplyComposer } from "@/components/mobile-reply-composer";
 import { AppDropdownMenu } from "@/components/profile-more-dropdown";
 import PromptInput from "@/components/prompt-input";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
@@ -386,6 +387,21 @@ export default function ThreadPage({}) {
   useBindPageLoader(loadingComments);
   const { width } = useWindowDimensions();
   const isMobile = (width ?? 0) <= 800;
+
+  // Lock the outer PageContainer scroll on mobile so the fixed thread layout
+  // isn't scrollable and doesn't show a top gap from a previous page's scroll
+  // offset carried over via Next.js client-side navigation.
+  useEffect(() => {
+    if (!isMobile) return;
+    const el = document.querySelector(".page-container") as HTMLElement | null;
+    if (!el) return;
+    el.style.overflow = "hidden";
+    el.scrollTop = 0;
+    return () => {
+      el.style.overflow = "";
+    };
+  }, [isMobile]);
+
   const { on: onReplyEvent, off: offReplyEvent } = useCustomEvents(
     EVENTS.REPLY.base,
   );
@@ -482,6 +498,7 @@ export default function ThreadPage({}) {
 
     const response = await reportAction(comment?.prompt?.id, "", "PROMPT");
     if (response?.message === API_MESSAGE.Success) {
+      setShowReportPromptAlert(false);
       successToast(`Reported successfully`);
     } else {
       errorToast("There was an issue while reporting this prompt.");
@@ -493,6 +510,7 @@ export default function ThreadPage({}) {
 
     const response = await reportAction(selectedReplyId, "", "REPLY");
     if (response?.message === API_MESSAGE.Success) {
+      setShowReportAlert(false);
       setSelectedReplyId("");
       successToast(`Reported successfully`);
     } else {
@@ -543,6 +561,7 @@ export default function ThreadPage({}) {
 
     const response = await reportAction(comment?.id, "", "COMMENT");
     if (response?.message === API_MESSAGE.Success) {
+      setShowReportCommentAlert(false);
       successToast(`Reported successfully`);
     } else {
       errorToast("There was an issue while reporting this comment.");
@@ -897,7 +916,6 @@ export default function ThreadPage({}) {
             </ShouldRender>
           </S.HeaderDropdownMenuContainer>
         </S.HeaderContainer>
-        <Separator.Root className="separator" orientation="horizontal" />
         <Flex direction="column">
           <S.PromptTextContainer>
             <RichTextRenderer
@@ -1062,40 +1080,38 @@ export default function ThreadPage({}) {
         <div ref={replyAreaRef}>
           {authState === "LOGGED_IN" &&
             !initialLoading &&
-            comment?.prompt?.canInteract && (
+            comment?.prompt?.canInteract &&
+            !isMobile && (
               <>
                 <Separator.Root
                   className="separator"
                   orientation="horizontal"
                 />
-                {isMobile ? (
-                  <S.AddReplyButton
-                    type="button"
-                    onClick={() =>
-                      routeToPage(
-                        ROUTES.Compose({
-                          dropdownSelection: isOOCPost ? "NOVELIST" : "MUSE",
-                          parentId: commentId,
-                          type: "reply",
-                        }),
-                      )
-                    }
-                  >
-                    + Add Reply
-                  </S.AddReplyButton>
-                ) : (
-                  <PromptInput
-                    parentId={commentId}
-                    type="reply"
-                    initialSelection={initialSelection}
-                    dropdownSelection={isOOCPost ? "NOVELIST" : "MUSE"}
-                    onSend={refreshLatestReplies}
-                  />
-                )}
+                <PromptInput
+                  parentId={commentId}
+                  type="reply"
+                  initialSelection={initialSelection}
+                  dropdownSelection={isOOCPost ? "NOVELIST" : "MUSE"}
+                  onSend={refreshLatestReplies}
+                />
               </>
             )}
         </div>
       </S.RepliesContainer>
+
+      {/* Fixed bottom reply bar — mobile only */}
+      {authState === "LOGGED_IN" &&
+        !initialLoading &&
+        comment?.prompt?.canInteract &&
+        isMobile && (
+          <MobileReplyComposer
+            parentId={commentId}
+            type="reply"
+            initialSelection={initialSelection}
+            dropdownSelection={isOOCPost ? "NOVELIST" : "MUSE"}
+            onSend={refreshLatestReplies}
+          />
+        )}
     </S.ParentContainer>
   );
 }

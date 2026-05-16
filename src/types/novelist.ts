@@ -125,6 +125,9 @@ export interface Friend {
   username: string;
   isVerified: boolean;
   image: string;
+  connection: string | null;
+  muses: Muse[];
+  mutualFriendCount: number;
 }
 
 export interface Fandom {

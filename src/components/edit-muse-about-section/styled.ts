@@ -451,3 +451,44 @@ export const OrdinalValue = styled.span`
   padding-inline: 6px;
   font-weight: 600;
 `;
+
+/* ── Inline / sheet form root ─────────────────────────────────────────────── */
+
+/**
+ * Root container for MuseAboutSectionForm.
+ * On mobile (inside a bottom sheet): fills the sheet with flex column.
+ * On desktop (inline card): has border + rounded corners and a min-height
+ * so the editor is comfortable.
+ */
+export const FormRoot = styled.div`
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-2);
+
+  /* Mobile: fill the sheet */
+  @media (max-width: 768px) {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Desktop: card style with comfortable editor height */
+  @media (min-width: 769px) {
+    border: 1px solid var(--bg-6);
+    border-radius: 10px;
+    overflow: hidden;
+    min-height: 360px;
+  }
+`;
+
+export const FormTitle = styled.span`
+  flex: 1;
+  text-align: center;
+  font-size: var(--font-size-h6, 1rem);
+  font-weight: 700;
+  color: var(--text);
+  font-family: var(--font);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;

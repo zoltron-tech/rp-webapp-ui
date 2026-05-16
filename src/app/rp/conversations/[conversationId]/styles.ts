@@ -1,6 +1,21 @@
-import styled from "styled-components";
+import styled, { css, keyframes } from "styled-components";
+import { UnreadBadgeBase } from "@/components/common/unread-badge";
 
-export const Container = styled.div<{ $playerHeight: number }>`
+const slideInFromRight = keyframes`
+  from { transform: translateX(30px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+`;
+
+const slideInFromLeft = keyframes`
+  from { transform: translateX(-30px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+`;
+
+export const Container = styled.div<{
+  $playerHeight: number;
+  $slideFrom?: "left" | "right";
+  $animate?: boolean;
+}>`
   padding-top: 10px;
   display: flex;
   flex-direction: column;
@@ -8,6 +23,13 @@ export const Container = styled.div<{ $playerHeight: number }>`
   width: 100%;
   height: calc(100dvh - 60px - ${({ $playerHeight }) => $playerHeight}px);
   overflow: hidden;
+  ${({ $slideFrom, $animate = true }) =>
+    $animate &&
+    (
+      $slideFrom === "left"
+        ? css`animation: ${slideInFromLeft} 0.28s ease both;`
+        : css`animation: ${slideInFromRight} 0.28s ease both;`
+    )}
 
   @media (max-width: 680px) {
     padding-top: 0px;
@@ -54,6 +76,22 @@ export const ChatPerson = styled.div`
     height: 42px;
     min-width: 42px;
   }
+`;
+
+export const BackButtonWrap = styled.div`
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+`;
+
+export const BackBadge = styled(UnreadBadgeBase)`
+  position: absolute;
+  bottom: -5px;
+  right: -7px;
+  border: 2px solid var(--bg-3);
 `;
 
 export const ChatTitleWrap = styled.div`
@@ -434,4 +472,43 @@ export const ReplyPreviewDismiss = styled.button`
     color: var(--text);
     background: color-mix(in srgb, var(--accent) 20%, var(--bg-5));
   }
+`;
+
+const shimmer = `
+  background: linear-gradient(
+    90deg,
+    var(--bg-3) 25%,
+    var(--bg-4) 50%,
+    var(--bg-3) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  @keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+`;
+
+export const MessagesLoadingState = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+`;
+
+export const SkeletonBubble = styled.div<{
+  $align?: "left" | "right";
+  $width?: string;
+}>`
+  height: 44px;
+  border-radius: 16px;
+  width: ${({ $width }) => $width ?? "55%"};
+  align-self: ${({ $align }) => ($align === "right" ? "flex-end" : "flex-start")};
+  ${shimmer}
+`;
+
+export const SkeletonRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 `;

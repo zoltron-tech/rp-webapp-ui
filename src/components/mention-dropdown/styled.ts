@@ -7,7 +7,7 @@ const spin = keyframes`
 `;
 
 export const Dropdown = styled.div`
-  position: absolute;
+  position: fixed;
   z-index: 2000;
   background: var(--bg-3);
   border: 1px solid var(--bg-6);

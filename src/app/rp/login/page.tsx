@@ -14,6 +14,7 @@ import { TermsAndConditions } from "./terms-and-conditions";
 
 export default function LoginPage() {
   const authState = useGlobalState("authState");
+  const novelist = useGlobalState("novelist");
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isRegister = searchParams?.get("register") === "1";
@@ -22,7 +23,9 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (authState === "LOGGED_IN") {
-      routeToPage(ROUTES.Home);
+      routeToPage(
+        novelist?.friends?.length === 0 ? ROUTES.Fellows : ROUTES.Home,
+      );
     }
   }, [authState]);
 

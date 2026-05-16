@@ -16,8 +16,8 @@ import { BsPencil } from "react-icons/bs";
 import { FaCircleCheck, FaCircleXmark } from "react-icons/fa6";
 import {
   checkUsernameAvailability,
-  loginAction,
   updateUsernameAction,
+  verifyPasswordAction,
 } from "@/app/actions";
 import { PasswordField } from "@/components/common/password-field";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
@@ -79,10 +79,7 @@ export const ChangeUsernameDialog: FC<ChangeUsernameDialogProps> = ({
       setPasswordError(null);
       setLoading(true);
 
-      const response = await loginAction({
-        password,
-        username: user.username,
-      });
+      const response = await verifyPasswordAction(password);
 
       setLoading(false);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Flex, ShouldRender } from "@novelist-world/ui";
+import { ShouldRender } from "@novelist-world/ui";
 import classNames from "classnames";
 import { Collapsible, Form } from "radix-ui";
 import {
@@ -14,6 +14,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { HiPaperAirplane } from "react-icons/hi2";
 import { IoIosShareAlt } from "react-icons/io";
 import { PiDotsThreeOutlineFill } from "react-icons/pi";
 import { submitPrompt } from "@/app/rp/profile/actions";
@@ -51,7 +52,6 @@ import { PromptMediaInput } from "./prompt-media-input";
 import { PromptMediaPreview } from "./prompt-media-preview";
 import { PromptMuseSelect } from "./prompt-muse-select";
 import { PromptTextField } from "./prompt-text-field";
-import { SendButton } from "./sent-button";
 import * as S from "./styles";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
@@ -60,6 +60,7 @@ type Props = React.HTMLProps<HTMLDivElement> & {
   dropdownSelection: "NOVELIST" | "MUSE" | "ALL";
   initialSelection: PromptSource | undefined;
   onSend?: () => void;
+  defaultOpen?: boolean;
 };
 
 type PromptInputFormProps = Props & {
@@ -198,37 +199,22 @@ export const PromptForm: FC<PromptInputFormProps> = ({
 
   return (
     <Form.Root className="form-content" onSubmit={handleSend}>
-      <Flex
-        style={{
-          alignItems: "center",
-          gap: "2px",
-          justifyContent: "flex-start",
-          marginLeft: "8px",
-          marginTop: "8px",
-        }}
-      >
+      {/* ── Meta row: sender + privacy avatars on left, media buttons on right ─ */}
+      <S.DesktopMetaRow>
         <PromptMuseSelect
           sources={sources}
           dropdownSelection={dropdownSelection}
           initialSelection={initialSelection}
         />
         <ShouldRender if={privacySelectedFriends.length > 0}>
-          <IoIosShareAlt
-            style={{
-              marginLeft: "8px",
-              marginRight: "8px",
-              marginTop: "20px",
-            }}
-          />
+          <IoIosShareAlt style={{ marginLeft: "8px", marginRight: "8px" }} />
           {privacySelectedFriends.slice(0, 2).map((friend) => (
             <>
               <S.PrivacySelectedFriendAvatar
                 key={friend.id}
                 src={friend.image}
                 alt={friend.username}
-                onClick={() => {
-                  setShowCustomPrivacyListSelection(true);
-                }}
+                onClick={() => setShowCustomPrivacyListSelection(true)}
               />
             </>
           ))}
@@ -236,16 +222,33 @@ export const PromptForm: FC<PromptInputFormProps> = ({
             onClick={() => setShowCustomPrivacyListSelection(true)}
           >
             <PiDotsThreeOutlineFill />
-          </S.privacyAvatarMoreIcon>{" "}
+          </S.privacyAvatarMoreIcon>
         </ShouldRender>
-      </Flex>
+        <S.DesktopMediaWrap>
+          <PromptMediaInput />
+        </S.DesktopMediaWrap>
+      </S.DesktopMetaRow>
+
       {type === "prompt" && (
         <PromptPrivacySelect className="prompt-input-privacy-select" />
       )}
-      <PromptTextField />
-      <PromptMediaInput />
+
+      {/* ── Editor with inline send button ─────────────────────────── */}
+      <S.DesktopEditorWrap>
+        <PromptTextField />
+        {promptText?.trim() && (
+          <Form.Submit asChild>
+            <S.DesktopSendIconBtn
+              disabled={sending}
+              title={sending ? "Sending..." : undefined}
+            >
+              <HiPaperAirplane size={16} />
+            </S.DesktopSendIconBtn>
+          </Form.Submit>
+        )}
+      </S.DesktopEditorWrap>
+
       <PromptMediaPreview />
-      <SendButton loading={sending} />
     </Form.Root>
   );
 };
@@ -259,6 +262,7 @@ export const PromptInput: FC<Props> = forwardRef(
       initialSelection,
       onSend,
       className,
+      defaultOpen = true,
       ...rest
     },
     forwardedRef,
@@ -277,7 +281,7 @@ export const PromptInput: FC<Props> = forwardRef(
       setError(null);
     }, []);
 
-    const [open, setOpen] = useState(true);
+    const [open, setOpen] = useState(defaultOpen);
 
     const [error, setError] = useState<API_MESSAGE | null>(null);
 

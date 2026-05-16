@@ -1,5 +1,6 @@
 import { Avatar, Form, Select } from "radix-ui";
 import styled from "styled-components";
+import { Z_INDEX } from "@/theme";
 import { AvatarNew } from "../common/avatar-new";
 
 /* ─── Full-page prompt input layout ─────────────────────────────────────── */
@@ -16,7 +17,7 @@ export const FPRoot = styled.div`
   width: 100%;
   background-color: var(--bg-2);
   overflow: hidden;
-  z-index: 1000;
+  z-index: ${Z_INDEX.PROMPT_OVERLAY};
 `;
 
 export const FPTopBar = styled.div`
@@ -506,8 +507,7 @@ export const MediaActions = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-top: 4px;
-  margin-left: 8px;
+  margin-top: 20px;
 `;
 
 export const ToolButton = styled.button`
@@ -535,6 +535,25 @@ export const ToolButton = styled.button`
 
   &:active {
     background-color: var(--accent-active);
+  }
+`;
+
+export const UploadErrorBanner = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.6rem 0.875rem;
+  border-radius: 0.4rem;
+  background: color-mix(in srgb, var(--error, #e53e3e) 12%, var(--bg-3));
+  border: 1px solid color-mix(in srgb, var(--error, #e53e3e) 35%, transparent);
+  color: var(--error, #e53e3e);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+
+  svg {
+    flex-shrink: 0;
+    margin-top: 1px;
   }
 `;
 
@@ -671,6 +690,69 @@ export const SubmitButton = styled.button`
   }
 `;
 
+/** Top meta row: sender selector on the left, media buttons on the right. */
+export const DesktopMetaRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 4px;
+  border-bottom: 1px solid var(--bg-6);
+  /* background: var(--bg-3); */
+  border-radius: 4px 4px 0 0;
+`;
+
+/** Right side of meta row — media buttons flush right. */
+export const DesktopMediaWrap = styled.div`
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+`;
+
+/** Wraps PromptTextField; position:relative so the inline send btn can anchor. */
+export const DesktopEditorWrap = styled.div`
+  position: relative;
+
+  /* Reserve space for the inline circular send button. */
+  div[contenteditable] {
+    padding-right: 52px;
+  }
+`;
+
+/** Inline send button — absolute bottom-right of the editor content area. */
+export const DesktopSendIconBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  z-index: 5;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--text);
+  transition: background 0.15s ease;
+
+  &:not(:disabled):hover {
+    background: var(--accent-hover);
+  }
+
+  &:not(:disabled):active {
+    background: var(--accent-active);
+  }
+
+  &:disabled {
+    background: var(--bg-4);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+  }
+`;
+
 // ── Muse-select trigger + dialog ─────────────────────────────────────────────
 
 export const MuseSelectTrigger = styled.button`
@@ -727,69 +809,104 @@ export const MuseSelectTrigger = styled.button`
 export const MuseDialogBody = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0;
+  margin-top: 4px;
 `;
 
-export const MuseDialogSearch = styled.input`
-  width: 100%;
-  box-sizing: border-box;
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: 1px solid var(--bg-6);
-  background: var(--bg-4);
-  color: var(--text);
-  font-size: var(--font-size-input);
-  font-family: var(--font);
+/** Wrapper that forces FilterSearch to fill the dialog width. */
+export const MuseDialogSearchWrap = styled.div`
+  padding: 0 2px 10px;
 
-  &:focus {
-    outline: none;
-    border-color: color-mix(in srgb, var(--accent) 60%, var(--bg-6));
-  }
-
-  &::placeholder {
-    color: var(--text-secondary);
+  /* Override FilterSearch's own width / centering constraints */
+  > div {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    border-radius: 8px;
   }
 `;
 
 export const MuseDialogList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  height: 260px;
+  gap: 0;
+  height: 300px;
   overflow-y: auto;
+  padding: 0 2px 4px;
+
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-6) transparent;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--bg-6);
+    border-radius: 4px;
+  }
 `;
 
 export const MuseDialogListItem = styled.button<{ $active: boolean }>`
   all: unset;
   box-sizing: border-box;
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 10px;
-  border-radius: 6px;
+  padding: 8px 10px 8px 14px;
+  border-radius: 8px;
   background: ${({ $active }) =>
     $active
-      ? "color-mix(in srgb, var(--accent) 14%, var(--bg-4))"
+      ? "color-mix(in srgb, var(--accent) 11%, var(--bg-3))"
       : "transparent"};
+  border: 1px solid
+    ${({ $active }) =>
+      $active
+        ? "color-mix(in srgb, var(--accent) 30%, transparent)"
+        : "transparent"};
   cursor: pointer;
   width: 100%;
-  transition: background 0.12s ease;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
+
+  /* Left accent bar */
+  &::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 22%;
+    bottom: 22%;
+    width: 3px;
+    border-radius: 2px;
+    background: ${({ $active }) => ($active ? "var(--accent)" : "transparent")};
+    transition: background 0.12s ease;
+  }
 
   .avatar {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    flex-shrink: 0;
   }
 
   &:hover {
-    background: color-mix(in srgb, var(--accent) 10%, var(--bg-4));
+    background: color-mix(in srgb, var(--accent) 7%, var(--bg-4));
+  }
+
+  &:focus-visible {
+    outline: 1.5px solid var(--accent);
+    outline-offset: 1px;
   }
 `;
 
 export const MuseDialogSourceInfo = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 3px;
   flex: 1;
   min-width: 0;
 `;
@@ -803,43 +920,57 @@ export const MuseDialogSourceName = styled.span`
   white-space: nowrap;
 `;
 
-export const MuseDialogSourceType = styled.span`
-  font-size: var(--font-size-small);
-  color: var(--text-secondary);
+export const MuseDialogTypeBadge = styled.span<{ $novelist?: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-family: var(--font);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: ${({ $novelist }) =>
+    $novelist
+      ? "color-mix(in srgb, var(--accent) 14%, var(--bg-4))"
+      : "var(--bg-5)"};
+  color: ${({ $novelist }) => ($novelist ? "var(--accent-11)" : "var(--text-secondary)")};
+  border: 1px solid
+    ${({ $novelist }) =>
+      $novelist
+        ? "color-mix(in srgb, var(--accent) 35%, transparent)"
+        : "var(--bg-6)"};
 `;
 
 export const MuseDialogSelectedMark = styled.span`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--text);
   flex-shrink: 0;
 `;
 
-export const MuseDialogDivider = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 2px;
-  text-transform: uppercase;
+/** Thin label row separating novelist from muse entries. */
+export const MuseDialogSectionLabel = styled.div`
+  padding: 10px 10px 4px;
   font-size: 10px;
-  letter-spacing: 0.08em;
+  font-family: var(--font);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
   color: var(--text-secondary);
   pointer-events: none;
-
-  &::before,
-  &::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background-color: var(--bg-6);
-  }
 `;
 
 export const MuseDialogEmptyText = styled.p`
   margin: 0;
+  padding: 28px 16px;
   font-size: var(--font-size-small);
   color: var(--text-secondary);
   text-align: center;
-  padding: 16px 0;
 `;

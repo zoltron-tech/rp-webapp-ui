@@ -222,13 +222,14 @@ export const DropdownPopoverContent = styled(Popover.Content)`
   }
 `;
 
-export const DropdownTriggerBtn = styled.button`
+export const DropdownTriggerBtn = styled.button<{ $active?: boolean }>`
   display: flex;
   align-items: center;
   gap: 0;
   border: 1px solid var(--bg-6);
   border-radius: 0.375rem;
-  background-color: var(--bg-3);
+  background-color: ${(p) => (p.$active ? "var(--accent)" : "var(--bg-3)")};
+  color: ${(p) => (p.$active ? "var(--text)" : "inherit")};
   cursor: pointer;
   min-height: 40px;
   padding: 0;
@@ -236,7 +237,7 @@ export const DropdownTriggerBtn = styled.button`
   flex-shrink: 0;
 
   &:hover {
-    background-color: var(--bg-5);
+    background-color: ${(p) => (p.$active ? "var(--accent)" : "var(--bg-5)")};
   }
   &:focus-visible {
     outline: 2px solid var(--accent);
@@ -253,6 +254,20 @@ export const DropdownTriggerValue = styled.span`
   padding: 0 0.375rem;
   color: var(--text);
   font-size: 1.25rem;
+`;
+
+export const FontTriggerValue = styled.span`
+  display: block;
+  width: 80px;
+  min-height: 40px;
+  line-height: 40px;
+  padding: 0 0.5rem;
+  color: var(--text);
+  font-size: 0.9rem;
+  text-align: start;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `;
 
 export const DropdownTriggerChevron = styled.span`
@@ -651,6 +666,15 @@ const richTextContentBase = css`
   white-space: pre-wrap;
   font-size: var(--font-size-input);
 
+  /* Highlighted text spans (color + background-color set inline by the
+     highlight tool). Add vertical padding so that on multi-line selections the
+     background fragments touch and leave no visible gap between lines. */
+  span[style*="background-color"] {
+    padding: 0.18em 0;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+
   ul,
   ol {
     padding-left: 1.25rem;
@@ -858,27 +882,48 @@ const richTextContentBase = css`
     display: inline-block;
     position: relative;
     vertical-align: middle;
-    margin: 0 4px;
+    min-width: 30px;
+  }
+
+  .inline-image-container.uploading .inline-image {
+    filter: blur(4px);
+    opacity: 0.7;
+  }
+
+  .inline-image-container.uploading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-top: -0.75rem;
+    margin-left: -0.75rem;
+    border: 3px solid rgba(255, 255, 255, 0.35);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: inline-image-spin 0.7s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes inline-image-spin {
+    to { transform: rotate(360deg); }
   }
 
   .inline-image {
-    max-width: 300px;
-    max-height: 300px;
-    min-width: 100px;
-    min-height: 100px;
-    width: auto;
+    width: 100%;
     height: auto;
+    max-width: 100%;
     border-radius: 4px;
-    object-fit: contain;
-    display: inline-block;
-    vertical-align: middle;
+    display: block;
     cursor: pointer;
-    transition: all 0.2s ease;
+    border: 2px solid transparent;
+    transition: border-color 0.15s ease;
+    box-sizing: border-box;
 
     &:hover {
       border-color: var(--accent);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      transform: scale(1.02);
     }
   }
 `;
@@ -886,13 +931,18 @@ const richTextContentBase = css`
 interface EditorContentProps {
   $dropdownOpen?: boolean;
   $fullPage?: boolean;
+  /** Start at one-line height and grow with content up to max-height. */
+  $compact?: boolean;
 }
 
 export const EditorContent = styled.div<EditorContentProps>`
   box-sizing: border-box;
   width: 100%;
-  min-height: ${(p) => (p.$fullPage ? "0" : "10rem")};
+  min-height: ${(p) => (p.$fullPage ? "0" : p.$compact ? "44px" : "10rem")};
   max-height: ${(p) => (p.$fullPage ? "none" : "20dvh")};
+  @media (min-width: 681px) {
+    max-height: none;
+  }
   ${(p) => p.$fullPage && "flex: 1;"}
   background-color: var(--bg-3);
   padding: 1rem;
@@ -938,11 +988,77 @@ export const ContentWrapper = styled.div<{ $animating: boolean }>`
   ${({ $animating }) => $animating && "will-change: max-height;"}
 `;
 
+export const ImageResizeBar = styled.div`
+  position: absolute;
+  z-index: 200;
+  left: 5%;
+  width: 90%;
+  transform: translateY(-100%);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: var(--bg-3);
+  border: 1px solid var(--bg-6);
+  border-radius: 0.5rem;
+  padding: 0.3rem 0.75rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  user-select: none;
+  pointer-events: all;
+`;
+
+export const ImageResizeLabel = styled.span`
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  width: 2.75rem;
+  flex-shrink: 0;
+  text-align: center;
+  border-left: 1px solid var(--bg-6);
+  border-right: 1px solid var(--bg-6);
+  padding: 0 0.4rem;
+`;
+
+export const ImageDeleteButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.25rem;
+  border: none;
+  background: transparent;
+  color: var(--error, #e53e3e);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--error, #e53e3e) 15%, transparent);
+  }
+`;
+
+export const ImageAcceptButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.25rem;
+  border: none;
+  background: transparent;
+  color: var(--success, #38a169);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--success, #38a169) 15%, transparent);
+  }
+`;
+
 export const Toggle = styled.button`
     padding: 2px 12px;
-    border: 1px solid var(--accent);
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    border: none;
+    background-color: transparent;
     font-size: var(--font-size);
     font-weight: 700;
     font-style: italic;
@@ -954,9 +1070,6 @@ export const Toggle = styled.button`
   &:hover {
     cursor: pointer;
     color: var(--accent-hover);
-    border-color: var(--accent-hover);
-    background: color-mix(in srgb, var(--accent) 20%, transparent);
-    box-shadow: 0 0 8px color-mix(in srgb, var(--accent-hover) 50%, transparent);
   }
 
   @container (max-width: 600px) {
@@ -1009,5 +1122,66 @@ export const SaveButton = styled.button`
 
   &:hover {
   background-color: var(--accent-hover);
+  }
+`;
+
+/* Highlight color picker — 4×4 grid */
+export const HighlightSwatchGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 4px;
+`;
+
+export const HighlightSwatch = styled.button<{
+  $color: string;
+  $active?: boolean;
+}>`
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: ${(p) => p.$color};
+  border: 2px solid
+    ${(p) => (p.$active ? "var(--text)" : "rgba(255, 255, 255, 0.15)")};
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+
+  &:hover {
+    transform: scale(1.12);
+    border-color: var(--text);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+`;
+
+export const HighlightRemoveSwatch = styled.button`
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background:
+    linear-gradient(
+      45deg,
+      transparent 46%,
+      var(--tomato-9) 46%,
+      var(--tomato-9) 54%,
+      transparent 54%
+    );
+  background-color: var(--bg-4);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+
+  &:hover {
+    transform: scale(1.12);
+    border-color: var(--text);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 `;

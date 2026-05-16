@@ -7,6 +7,7 @@ import {
   useCallback,
   useState,
 } from "react";
+import { TbCameraUp } from "react-icons/tb";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { ErrorBox } from "@/components/error-box";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
@@ -165,6 +166,9 @@ export const BasicInfoStep: FC<BasicInfoStepProps> = ({ handleNext }) => {
                 src={image}
                 alt={firstName || username || ""}
               />
+              <span className="camera-badge" aria-hidden>
+                <TbCameraUp />
+              </span>
             </Form.Label>
             <Form.Control
               aria-label="Avatar"

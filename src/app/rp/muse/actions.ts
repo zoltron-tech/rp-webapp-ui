@@ -366,10 +366,12 @@ export const updateMuseAction = async (
     });
 
     if (!response.ok) {
+      const errorBody = await response.text().catch(() => "(unreadable)");
       Logger.debug(
         "updateMuseAction error",
         response.status,
         response.statusText,
+        errorBody,
       );
       return { message: API_MESSAGE.Error };
     }
@@ -426,5 +428,86 @@ export const deleteMuseAction = async (museId: string) => {
     Logger.error("deleteMuseAction exception", e);
     return { message: API_MESSAGE.Error };
   }
+  return { message: API_MESSAGE.Success };
+};
+
+export const getMuseMediaAction = async (
+  museId: string,
+): Promise<DataType<string[]>> => {
+  const jwt = await getJWTIfExists();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/media`;
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (jwt) {
+    headers[AUTH_HEADER_NAME] = jwt;
+  }
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers,
+  });
+
+  Logger.debug("getMuseMediaAction", response.status);
+
+  if (response.status === 404) {
+    return null;
+  } else if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  return response.json();
+};
+
+export const addMuseMediaAction = async (
+  museId: string,
+  urls: string[],
+): Promise<WithMessage> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/media`;
+
+  const response = await fetch(URL, {
+    body: JSON.stringify({ urls }),
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "POST",
+  });
+
+  Logger.debug("addMuseMediaAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  return { message: API_MESSAGE.Success };
+};
+
+export const deleteMuseMediaAction = async (
+  museId: string,
+  url: string,
+): Promise<WithMessage> => {
+  const jwt = await authenticateAndGetJWT();
+  const endpoint = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/media?url=${encodeURIComponent(url)}`;
+
+  const response = await fetch(endpoint, {
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "DELETE",
+  });
+
+  Logger.debug("deleteMuseMediaAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
   return { message: API_MESSAGE.Success };
 };

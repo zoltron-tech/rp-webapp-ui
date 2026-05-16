@@ -1,4 +1,11 @@
-import type { Muse, Novelist, NovelistWorldNotification, User } from ".";
+import type {
+  Conversation,
+  Muse,
+  Novelist,
+  NovelistWorldNotification,
+  Prompt,
+  User,
+} from ".";
 import type { AccentValue } from "./theme";
 
 export type AuthState =
@@ -31,4 +38,22 @@ export interface StoreState {
   unreadConversationIds: string[] | null;
   unreadReplyCount: number | null;
   helloStickers: { stickerUrl: string; previewUrl: string }[] | null;
+  /** Prompt cached by the prompt-card before navigating to the comment page. */
+  activePrompt: Prompt | null;
+  /** Conversation cached by ConversationCard before navigating to the detail page. */
+  activeConversation: Conversation | null;
+  /** First page of conversations cached after login and refreshed on socket messages. */
+  cachedConversations: Conversation[] | null;
+  /** Direction of the last conversation navigation for slide animations. */
+  conversationNavDirection: "forward" | "back" | null;
+  /** ID of the most recently read conversation — used to sync the list card state. */
+  lastReadConversationId: string | null;
+  /** Cached friend suggestions for /rp/home — fetched once per session. */
+  friendSuggestions: Novelist[] | null;
+  /** When true, shows the install-NW-as-app prompt before routing to onboarding. */
+  showInstallAppPrompt: boolean;
+  /** When true, shows the Join-Discord prompt over the welcome page after onboarding. */
+  showJoinDiscordPrompt: boolean;
+  /** True for the brief window between finishing onboarding and viewing the welcome page. */
+  justOnboarded: boolean;
 }

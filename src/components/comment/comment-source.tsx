@@ -44,11 +44,12 @@ export const CommentSource: FC = () => {
   const handleReportComment = useCallback(async () => {
     const response = await reportAction(commentId, "", "COMMENT");
     if (response?.message === API_MESSAGE.Success) {
+      setCommentState({ commentAlert: null });
       successToast(`Reported successfully`);
     } else {
       errorToast("There was an issue while reporting this comment.");
     }
-  }, [commentId, source, successToast, errorToast]);
+  }, [commentId, source, setCommentState, successToast, errorToast]);
 
   const handleDeleteComment = useCallback(async () => {
     const response = await deleteCommentAction(commentId);

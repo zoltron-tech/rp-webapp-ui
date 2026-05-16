@@ -22,11 +22,13 @@ export type MuseState = {
   privacy: PrivacyLevel;
   useAccent: boolean;
   useExtraImages: boolean;
+  extraAttributes: Record<string, string> | null;
 };
 
 export const INITIAL_STATE: MuseState = {
   accent: null,
   cardBackground: null,
+  extraAttributes: null,
   fandom: FANDOMLESS,
   firstName: null,
   gender: null,

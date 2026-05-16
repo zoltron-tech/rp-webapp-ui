@@ -56,13 +56,10 @@ export const PromptMediaInput: FC = () => {
 
   const handleFileUpload: ChangeEventHandler<HTMLInputElement> = useCallback(
     async (e) => {
-      if (!urlInputRef.current || !fileInputRef.current) return;
-
       const file = e.currentTarget.files?.[0] ?? null;
-      if (file === null) {
-        urlInputRef.current.value = "";
-        return;
-      }
+      // Reset the input so the same file can be re-selected after an error
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (file === null) return;
 
       // 🔴 SIZE CHECK
       if (file.size > MAX_FILE_SIZE) {
@@ -71,23 +68,53 @@ export const PromptMediaInput: FC = () => {
           mediaUploadError: "FILE_TOO_LARGE",
           mediaUploading: false,
         });
-        fileInputRef.current.value = "";
         return;
       }
 
-      set({ media: file, mediaUploading: true });
+      const isImage = file.type.startsWith("image/");
 
-      const formData = new FormData();
-      formData.append("file", file);
-      const uploaded = await uploadMedia(formData);
-      if (uploaded === API_MESSAGE.MediaError) {
-        set({ mediaUploadError: "UPLOAD_FAILED", mediaUploading: false });
-        fileInputRef.current.value = "";
-        return;
+      if (isImage) {
+        // Embed image inline in the editor rather than as a separate attachment
+        const objectUrl = URL.createObjectURL(file);
+        set({ mediaUploading: true, uploadingImage: { objectUrl } });
+
+        const formData = new FormData();
+        formData.append("file", file);
+        const uploaded = await uploadMedia(formData);
+
+        if (uploaded === API_MESSAGE.MediaError) {
+          set({
+            mediaUploadError: "UPLOAD_FAILED",
+            mediaUploading: false,
+            uploadFailedImage: { objectUrl },
+            uploadingImage: null,
+          });
+          return;
+        }
+
+        set({
+          mediaUploadError: null,
+          mediaUploading: false,
+          uploadedImage: { finalUrl: uploaded, objectUrl },
+          uploadingImage: null,
+        });
+      } else {
+        // Non-image (audio / video) — keep existing attachment behaviour
+        if (!urlInputRef.current) return;
+        set({ media: file, mediaUploading: true });
+
+        const formData = new FormData();
+        formData.append("file", file);
+        const uploaded = await uploadMedia(formData);
+
+        if (uploaded === API_MESSAGE.MediaError) {
+          set({ mediaUploadError: "UPLOAD_FAILED", mediaUploading: false });
+          return;
+        }
+
+        urlInputRef.current.value = uploaded;
+        set({ mediaUploadError: null, mediaUploading: false });
       }
-
-      urlInputRef.current.value = uploaded;
-      set({ mediaUploadError: null, mediaUploading: false });
     },
     [urlInputRef, set],
   );
@@ -115,20 +142,6 @@ export const PromptMediaInput: FC = () => {
               <GrAttachment />
             </Form.Label>
           )}
-          <Form.Message
-            className="form-message"
-            forceMatch={Boolean(mediaUploadError)}
-          >
-            {mediaUploadError === "INVALID_FILE_TYPE" && (
-              <span>Invalid file type. Please upload a valid file.</span>
-            )}
-            {mediaUploadError === "UPLOAD_FAILED" && (
-              <span>File upload failed. Please try again.</span>
-            )}
-            {mediaUploadError === "FILE_TOO_LARGE" && (
-              <span>Attachment should not be larger than 10MB.</span>
-            )}
-          </Form.Message>
           <Form.Control asChild>
             <input
               ref={fileInputRef}

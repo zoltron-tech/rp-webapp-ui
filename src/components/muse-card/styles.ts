@@ -19,6 +19,7 @@ export const CardBackground = styled.div<CardProps>`
 export const Title = styled.div`
   position: absolute;
   bottom: -280px;
+  z-index: 6;
   font-size: var(--font-size);
   font-weight: 600;
   max-width: 80%;
@@ -194,6 +195,80 @@ export const DeleteButton = styled(Button)`
   }
 `;
 
+export const ImageWrapper = styled.div`
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+`;
+
+export const NSFWOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  color: #fff;
+  text-align: center;
+  font-size: var(--font-size-xsmall);
+  border-radius: var(--border-radius);
+  pointer-events: none;
+`;
+
+export const NSFWLabel = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+
+  @container muse-card (max-width: 120px) {
+    font-size: 9px;
+  }
+`;
+
+export const NSFWRevealButton = styled.button`
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, 14px);
+  z-index: 3;
+  margin-top: 0;
+  padding: 4px 12px;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  border-radius: 20px;
+  background: transparent;
+  color: #fff;
+  font-size: var(--font-size-xsmall);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  &:active {
+    transform: translate(-50%, 14px) scale(0.96);
+  }
+
+  @container muse-card (max-width: 120px) {
+    font-size: 9px;
+    padding: 2px 7px;
+    transform: translate(-50%, -48px);
+
+    &:active {
+      transform: translate(-50%, -48px) scale(0.96);
+    }
+  }
+`;
+
 export const Card = styled.div`
   display: flex;
   flex-direction: column;
@@ -202,6 +277,7 @@ export const Card = styled.div`
   padding: 5px 10px 0px;
   position: relative;
   height: 100%;
+  z-index: 2;
   contain: paint;
 
   &.new {

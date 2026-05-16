@@ -2,75 +2,86 @@
 
 import classNames from "classnames";
 import { usePathname } from "next/navigation";
+import { Popover } from "radix-ui";
 import { type FC, useCallback, useEffect, useMemo, useState } from "react";
+import { BsCheckAll } from "react-icons/bs";
+import { GoArrowRight } from "react-icons/go";
 import { IoMdNotifications } from "react-icons/io";
-import { getNotifications } from "@/app/rp/novelists/actions";
+import {
+  getNotifications,
+  patchNotifications,
+} from "@/app/rp/novelists/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { NovelistWorldNotification } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
-import { toggleState } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import { FriendRequestNotification } from "../friend-request-notification";
 import * as S from "./styles";
-import { IconWrapper } from "./styles";
-
-type NotificationsMenuProps = {};
 
 function checkIsMobile() {
-  const minWidth = 768; // Minimum width for desktop devices
-  return window.innerWidth < minWidth || screen.width < minWidth;
+  return window.innerWidth < 768 || screen.width < 768;
 }
 
-export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
+export const NotificationsMenu: FC = () => {
   const authState = useGlobalState("authState");
   const notifications = useGlobalState("notifications");
   const user = useGlobalState("user");
+  const accent = useGlobalState("accent");
+  const theme = useGlobalState("theme");
   const { routeToPage, baseDataLoader } = usePageRouter();
   const [open, setOpen] = useState(false);
-  const [_loading, setLoading] = useState(true);
+  const [markingRead, setMarkingRead] = useState(false);
   const isMobile = useMemo(() => checkIsMobile(), []);
   const pathname = usePathname();
   const set = useGlobalStoreSet();
 
   const handleSeeAllClick = useCallback(() => {
+    setOpen(false);
     if (pathname === ROUTES.Notification) return;
     routeToPage(ROUTES.Notification);
   }, [routeToPage, pathname]);
 
-  const handleClick = useCallback(() => {
-    if (isMobile) {
-      handleSeeAllClick();
-      return;
-    }
-
-    toggleState(setOpen)();
-  }, [isMobile, handleSeeAllClick]);
+  const handleOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (nextOpen && isMobile) {
+        handleSeeAllClick();
+        return;
+      }
+      setOpen(nextOpen);
+    },
+    [isMobile, handleSeeAllClick],
+  );
 
   const fetchNotifications = useCallback(async () => {
     if (authState !== "LOGGED_IN") return;
-    setLoading(true);
-    const _notifications = await baseDataLoader(() => getNotifications(1, 5));
-    setLoading(false);
-
+    const _notifications = await baseDataLoader(() => getNotifications(1, 30));
     set({ notifications: _notifications });
-  }, [authState]);
+  }, [authState, baseDataLoader, set]);
 
-  const removeFriendRequestNotification = async (
-    novelistToRemove: NovelistWorldNotification,
-  ) => {
-    if (!notifications) return;
+  const handleMarkAllRead = useCallback(async () => {
+    if (authState !== "LOGGED_IN" || markingRead) return;
+    setMarkingRead(true);
+    await patchNotifications();
+    const _notifications = await baseDataLoader(() => getNotifications(1, 30));
+    set({ notifications: _notifications });
+    setMarkingRead(false);
+  }, [authState, markingRead, baseDataLoader, set]);
 
-    const updatedFriendRequests = notifications.filter(
-      (notification) => notification.id !== novelistToRemove.id,
-    );
-
-    set({ notifications: updatedFriendRequests });
-  };
+  const removeFriendRequestNotification = useCallback(
+    (novelistToRemove: NovelistWorldNotification) => {
+      if (!notifications) return;
+      set({
+        notifications: notifications.filter(
+          (n) => n.id !== novelistToRemove.id,
+        ),
+      });
+    },
+    [notifications, set],
+  );
 
   useEffect(() => {
     if (authState === "LOADING" || notifications) return;
-
     fetchNotifications();
   }, [authState]);
 
@@ -78,34 +89,73 @@ export const NotificationsMenu: FC<NotificationsMenuProps> = ({}) => {
 
   if (!user) return <></>;
 
-  const unreadCount = notifications?.filter((n) => !n.isRead).length || 0;
+  const unreadCount = notifications?.filter((n) => !n.isRead).length ?? 0;
 
   return (
     <S.PositionContainer>
-      <S.ContentContainer onClick={handleClick}>
-        {unreadCount > 0 && (
-          <S.NotificationBadge>{unreadCount}</S.NotificationBadge>
-        )}
-        <IconWrapper>
-          <IoMdNotifications className="menu-icon" />
-        </IconWrapper>
-        <S.Menu className={classNames({ open })}>
-          {notifications?.slice(0, 5).map((request) => (
-            <FriendRequestNotification
-              key={request.id}
-              notification={request}
-              removeMethod={removeFriendRequestNotification}
-            ></FriendRequestNotification>
-          ))}
-          <S.CardWrapper key={"end"} className="end">
-            <S.Card className="more-items-box" onClick={handleSeeAllClick}>
-              <S.CardHeader>
-                <S.Text>See all notifications</S.Text>
-              </S.CardHeader>
-            </S.Card>
-          </S.CardWrapper>
-        </S.Menu>
-      </S.ContentContainer>
+      <Popover.Root open={open} onOpenChange={handleOpenChange}>
+        <S.TriggerArea>
+          {unreadCount > 0 && (
+            <S.NotificationBadge>
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </S.NotificationBadge>
+          )}
+          <Popover.Trigger asChild>
+            <S.TriggerButton aria-label="Notifications">
+              <IoMdNotifications className="menu-icon" />
+            </S.TriggerButton>
+          </Popover.Trigger>
+        </S.TriggerArea>
+
+        <Popover.Portal>
+          <S.PopoverContent
+            align="end"
+            sideOffset={12}
+            className={classNames([accent, theme])}
+            onOpenAutoFocus={(e) => e.preventDefault()}
+          >
+            <S.Header>
+              <S.Title>Notifications</S.Title>
+              {unreadCount > 0 && (
+                <S.MarkAllButton
+                  onClick={handleMarkAllRead}
+                  disabled={markingRead}
+                  aria-label="Mark all as read"
+                >
+                  <BsCheckAll size={14} />
+                  Mark all read
+                </S.MarkAllButton>
+              )}
+            </S.Header>
+
+            <S.Divider orientation="horizontal" />
+
+            <S.ScrollArea>
+              {notifications && notifications.length > 0 ? (
+                notifications
+                  .slice(0, 8)
+                  .map((n) => (
+                    <FriendRequestNotification
+                      key={n.id}
+                      notification={n}
+                      removeMethod={removeFriendRequestNotification}
+                      onClose={() => setOpen(false)}
+                    />
+                  ))
+              ) : (
+                <S.EmptyState>No notifications yet</S.EmptyState>
+              )}
+            </S.ScrollArea>
+
+            <S.Divider orientation="horizontal" />
+
+            <S.Footer onClick={handleSeeAllClick}>
+              See all notifications
+              <GoArrowRight size={13} />
+            </S.Footer>
+          </S.PopoverContent>
+        </Popover.Portal>
+      </Popover.Root>
     </S.PositionContainer>
   );
 };

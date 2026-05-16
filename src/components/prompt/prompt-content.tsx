@@ -17,9 +17,12 @@ import { RichTextRenderer } from "../rich-text-editor-input/rich-test-renderer";
 import { usePromptState, usePromptStateSet } from "./prompt.store";
 import * as S from "./styled";
 
-type PromptContentProps = {};
+type PromptContentProps = {
+  /** When true the text is always fully expanded (no read-more collapse). */
+  disableCollapse?: boolean;
+};
 
-export const PromptContent: FC<PromptContentProps> = ({}) => {
+export const PromptContent: FC<PromptContentProps> = ({ disableCollapse }) => {
   const text = usePromptState("text");
   const media = usePromptState("media");
   const promptId = usePromptState("id");
@@ -91,6 +94,7 @@ export const PromptContent: FC<PromptContentProps> = ({}) => {
         savedText={text ?? ""}
         collapsedHeight={100}
         overlayHidden
+        disableCollapse={disableCollapse}
       />
       {media && (
         <S.PromptMediaContainer>

@@ -2,14 +2,20 @@
 
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { IoIosBookmarks } from "react-icons/io";
 import { SiGhostery } from "react-icons/si";
 import { BreadCrumb } from "@/components/breadcrumb";
 import { ScrollJumpButton } from "@/components/common/scroll-jump-button";
+import { novelistToSource } from "@/components/event-thread-input/helpers";
 import { LoadMore } from "@/components/load-more/page";
 import { Prompt as PromptComponent } from "@/components/prompt";
+import { PromptComposeTrigger } from "@/components/prompt-compose-trigger";
+import PromptInput from "@/components/prompt-input";
+import { FullPagePromptInput } from "@/components/prompt-input/full-page-prompt-input";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import type { Prompt } from "@/types";
 import { getNewPromptsAction } from "../explore-prompts/actions";
 import { getNewsFeed } from "../news-feed/actions";
@@ -29,8 +35,12 @@ const getScrollContainer = () => {
 export default function ExplorePage() {
   const user = useGlobalState("user");
   const authState = useGlobalState("authState");
+  const novelist = useGlobalState("novelist");
   const { baseDataLoader } = usePageRouter();
   const searchParams = useSearchParams();
+  const { width } = useWindowDimensions();
+  const isMobile = (width ?? 0) <= 800;
+  const [composeOpen, setComposeOpen] = useState(false);
 
   const [mode, setMode] = useState<ExploreMode>(
     getModeFromTab(searchParams?.get("tab") ?? null),
@@ -139,6 +149,34 @@ export default function ExplorePage() {
         </S.ModeTabButton>
       </S.ModeSwitcher>
 
+      {isMobile && authState === "LOGGED_IN" && novelist && (
+        <PromptComposeTrigger
+          avatarSrc={novelist.image}
+          avatarAlt={novelist.username}
+          onClick={() => setComposeOpen(true)}
+        />
+      )}
+
+      {!isMobile && authState === "LOGGED_IN" && novelist && (
+        <PromptInput
+          type="prompt"
+          dropdownSelection="ALL"
+          initialSelection={novelistToSource(novelist)}
+          onSend={() => {
+            setNewsFeedPrompts(null);
+            setExplorePrompts(null);
+            setPage(1);
+            setHasMore(true);
+          }}
+        />
+      )}
+
+      {authState === "LOGGED_IN" && prompts === null && (
+        <S.FeedLoader>
+          <AiOutlineLoading3Quarters />
+        </S.FeedLoader>
+      )}
+
       <S.PromptListContainer>
         {prompts?.map((prompt) => (
           <PromptComponent key={prompt.id} prompt={prompt} />
@@ -154,6 +192,17 @@ export default function ExplorePage() {
 
         <ScrollJumpButton direction="up" onClick={scrollToTop} />
       </S.PromptListContainer>
+
+      <S.ComposeSheet $open={composeOpen}>
+        <FullPagePromptInput
+          type="prompt"
+          dropdownSelection="ALL"
+          initialSelection={novelist ? novelistToSource(novelist) : undefined}
+          className="compose-fp-inner"
+          onBack={() => setComposeOpen(false)}
+          onSend={() => setComposeOpen(false)}
+        />
+      </S.ComposeSheet>
     </S.Container>
   );
 }

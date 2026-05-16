@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import { DEV_MODE_BORDER } from "@/theme";
 
 export const Container = styled.div`
   padding-top: 10px;
@@ -12,70 +11,44 @@ export const Container = styled.div`
 `;
 
 export const MessageContainer = styled.div`
-  padding-top: 40px;
+  padding: 32px 16px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  align-items: center;
   max-width: 600px;
-
-    @container (max-width: 600px) {
-        max-width: 300px;
-    }
+  text-align: center;
 `;
 
 export const MessageText = styled.div`
-  font-size: 18px;
-  font-weight: 300;
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-regular);
+  color: var(--text-secondary);
+  line-height: 1.6;
   margin-bottom: 10px;
-  font-style: italic;
-  text-align: center;
-
-  @container (max-width: 600px) {
-    & {
-      font-size: 12px;
-    }
-  }
 `;
 
 export const HyperLink = styled.span`
-  font-size: 20px;
-  margin-block: 20px;
-  font-style: italic;
-  display: flex;
-  justify-content: center;
+  display: inline-flex;
   align-items: center;
-  font-weight: 700;
+  gap: 4px;
+  margin-top: 16px;
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-semi-bold);
   color: var(--accent);
-  gap: 0.3rem;
-
-
+  cursor: pointer;
+  transition: color 0.15s ease;
 
   &:hover {
-    cursor: pointer;
     color: var(--accent-hover);
-  }
-
-  @container (max-width: 600px) {
-    & {
-      font-size: 16px;
-    }
   }
 `;
 
-export const StoryListContainer = styled.div`
-  ${DEV_MODE_BORDER("red")}
-  padding-inline: 30px;
+export const InteractionsListContainer = styled.div`
   display: flex;
   flex-direction: column;
-  flex-wrap: wrap;
   justify-content: center;
   margin-top: 10px;
   width: 100%;
-
-  @container (max-width: 800px) {
-    & {
-      padding-inline: 10px;
-      gap: 0.2rem;
-    }
-  }
+  max-width: 800px;
+  padding-inline: 10px;
 `;

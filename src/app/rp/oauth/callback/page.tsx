@@ -80,8 +80,11 @@ export default function LoginOAuthCallbackPage() {
     if ("message" in _novelist) {
       if (_novelist.message === API_MESSAGE.NotFound) {
         setOperationState("SUCCESS");
-        setGlobalState({ authState: "UNINITIALIZED", user: response.user! });
-        routeToPage(ROUTES.Onboarding);
+        setGlobalState({
+          authState: "UNINITIALIZED",
+          showInstallAppPrompt: true,
+          user: response.user!,
+        });
         return;
       } else {
         setOperationState("ERROR");
@@ -93,7 +96,13 @@ export default function LoginOAuthCallbackPage() {
     // This page has no authState watcher, so we navigate explicitly after it resolves.
     const onboarded = await handlePostLogin(_novelist, response.user!);
     setOperationState("SUCCESS");
-    routeToPage(onboarded ? ROUTES.Home : ROUTES.Onboarding);
+    if (onboarded) {
+      routeToPage(
+        _novelist.friends?.length === 0 ? ROUTES.Fellows : ROUTES.Home,
+      );
+    } else {
+      setGlobalState({ showInstallAppPrompt: true });
+    }
   }, []);
 
   useEffect(() => {

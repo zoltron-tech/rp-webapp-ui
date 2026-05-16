@@ -8,6 +8,7 @@ import type {
   SubmitPromptType,
 } from "@/types";
 import type { WithMessage } from "@/types/common";
+import type { Friend } from "@/types/novelist";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import { Logger } from "@/utils/services";
 
@@ -450,6 +451,61 @@ export const submitPrompt = async (
   const result = await response.json();
 
   return result;
+};
+
+export const getBlockedNovelistsAction = async (
+  pageNumber: number,
+  pageSize: number,
+): Promise<Friend[]> => {
+  const jwt = await authenticateAndGetJWT();
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/blocked?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+  });
+
+  Logger.debug("getBlockedNovelistsAction", response.status);
+
+  if (!response.ok) {
+    return [];
+  }
+
+  return response.json();
+};
+
+export const unblockNovelistAction = async (
+  novelistId: string,
+): Promise<WithMessage> => {
+  const jwt = await authenticateAndGetJWT();
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/connection/delete`;
+  const body = {
+    connectionType: "BLOCKED",
+    targetId: novelistId,
+  };
+
+  const response = await fetch(URL, {
+    body: JSON.stringify(body),
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "POST",
+  });
+
+  Logger.debug("unblockNovelistAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  return { message: API_MESSAGE.Success };
 };
 
 export const submitEventThreadReply = async (

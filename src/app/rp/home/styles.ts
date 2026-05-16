@@ -136,6 +136,41 @@ export const SubText = styled.div`
   }
 `;
 
+export const AddFriendButton = styled.button`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--bg-6);
+  background: var(--bg-3);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+  align-self: center;
+  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease,
+    transform 0.15s ease;
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--bg-4);
+    transform: scale(1.08);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  @media (max-width: 600px) 
+    {
+      margin-left: 10px;
+    }
+`;
+
 export const PartitionContainer = styled.div`
   width: 84cqw;
   display: flex;

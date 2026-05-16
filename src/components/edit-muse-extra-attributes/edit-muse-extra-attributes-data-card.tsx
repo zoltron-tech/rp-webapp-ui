@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { BsArrowLeft } from "react-icons/bs";
 import { FiPlus, FiTrash2 } from "react-icons/fi";
 import { MdOutlineCategory, MdOutlineMedicalInformation } from "react-icons/md";
@@ -12,7 +12,6 @@ import type { Fandom, Muse } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { Flex } from "../edit-muse-card/styles";
 import * as S from "./styled";
-import { type AttributeSuggestion, filterSuggestions } from "./suggestions";
 
 type AttributePair = {
   id: string;
@@ -66,12 +65,6 @@ export default function EditMuseExtraAttributesDataCard({
     Record<string, { key?: string; value?: string }>
   >({});
 
-  // Suggestion state
-  const [focusedRowId, setFocusedRowId] = useState<string | null>(null);
-  const [suggestions, setSuggestions] = useState<AttributeSuggestion[]>([]);
-  const [suggestionIndex, setSuggestionIndex] = useState(0);
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
-
   const handleKeyChange = useCallback((id: string, value: string) => {
     setPairs((prev) =>
       prev.map((p) => (p.id === id ? { ...p, key: value } : p)),
@@ -81,8 +74,6 @@ export default function EditMuseExtraAttributesDataCard({
       if (next[id]) delete next[id].key;
       return next;
     });
-    setSuggestions(filterSuggestions(value));
-    setSuggestionIndex(0);
   }, []);
 
   const handleValueChange = useCallback((id: string, value: string) => {
@@ -106,62 +97,6 @@ export default function EditMuseExtraAttributesDataCard({
   const handleAdd = useCallback(() => {
     setPairs((prev) => [{ id: nextId(), key: "", value: "" }, ...prev]);
   }, []);
-
-  const handleSuggestionSelect = useCallback((id: string, label: string) => {
-    setPairs((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, key: label } : p)),
-    );
-    setRowErrors((prev) => {
-      const next = { ...prev };
-      if (next[id]) delete next[id].key;
-      return next;
-    });
-    setSuggestions([]);
-    setFocusedRowId(null);
-  }, []);
-
-  const handleKeyInputFocus = useCallback(
-    (id: string, currentValue: string) => {
-      setFocusedRowId(id);
-      setSuggestions(filterSuggestions(currentValue));
-      setSuggestionIndex(0);
-    },
-    [],
-  );
-
-  const handleKeyInputBlur = useCallback(() => {
-    setTimeout(() => {
-      setFocusedRowId(null);
-      setSuggestions([]);
-    }, 150);
-  }, []);
-
-  const handleKeyInputKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>, id: string) => {
-      if (!suggestions.length) return;
-
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setSuggestionIndex((prev) =>
-          prev <= 0 ? suggestions.length - 1 : prev - 1,
-        );
-      } else if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setSuggestionIndex((prev) =>
-          prev >= suggestions.length - 1 ? 0 : prev + 1,
-        );
-      } else if (e.key === "Enter" || e.key === "Tab") {
-        if (suggestions[suggestionIndex]) {
-          e.preventDefault();
-          handleSuggestionSelect(id, suggestions[suggestionIndex].label);
-        }
-      } else if (e.key === "Escape") {
-        setSuggestions([]);
-        setFocusedRowId(null);
-      }
-    },
-    [suggestions, suggestionIndex, handleSuggestionSelect],
-  );
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -283,9 +218,6 @@ export default function EditMuseExtraAttributesDataCard({
           )}
 
           {pairs.map((pair) => {
-            const showDropdown =
-              focusedRowId === pair.id && suggestions.length > 0;
-
             return (
               <S.AttributeCard key={pair.id}>
                 <S.CardFields>
@@ -299,32 +231,11 @@ export default function EditMuseExtraAttributesDataCard({
                       value={pair.key}
                       $hasError={Boolean(rowErrors[pair.id]?.key)}
                       onChange={(e) => handleKeyChange(pair.id, e.target.value)}
-                      onFocus={() => handleKeyInputFocus(pair.id, pair.key)}
-                      onBlur={handleKeyInputBlur}
-                      onKeyDown={(e) => handleKeyInputKeyDown(e, pair.id)}
                       autoComplete="off"
                       autoCapitalize="words"
                     />
                     {rowErrors[pair.id]?.key && (
                       <S.FieldError>{rowErrors[pair.id].key}</S.FieldError>
-                    )}
-                    {showDropdown && (
-                      <S.SuggestionsDropdown ref={dropdownRef}>
-                        {suggestions.map((s, index) => (
-                          <S.SuggestionItem
-                            key={s.label}
-                            type="button"
-                            $focused={index === suggestionIndex}
-                            onMouseEnter={() => setSuggestionIndex(index)}
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              handleSuggestionSelect(pair.id, s.label);
-                            }}
-                          >
-                            {s.label}
-                          </S.SuggestionItem>
-                        ))}
-                      </S.SuggestionsDropdown>
                     )}
                   </S.KeyInputWrapper>
 

@@ -3,24 +3,23 @@ import styled from "styled-components";
 export const Card = styled.article`
   position: relative;
   width: 100%;
-  background: var(--bg-3);
-  border: 1px solid var(--bg-6);
+  background: transparent;
   cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: background-color 0.15s ease;
+  border-bottom: 1px solid var(--bg-4);
 
-  &.unread {
-    border-color: color-mix(in srgb, var(--accent) 40%, var(--bg-6));
-    background: color-mix(in srgb, var(--accent) 8%, var(--bg-3));
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent)
-      inset;
+  &:last-of-type {
+    border-bottom: none;
   }
 
-  &:hover {
+  &.unread {
+    background: var(--accent-a2);
+    border-left: 3px solid var(--accent-7);
+  }
 
-    @media (min-width: 680px) {
-      border-color: var(--grey-200, #b9c1cc);
-      background: var(--bg-2);
+  @media (min-width: 680px) {
+    &:hover {
+      background: var(--bg-3);
     }
   }
 `;
@@ -28,36 +27,50 @@ export const Card = styled.article`
 export const Header = styled.div`
   display: flex;
   width: 100%;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
-  padding: 12px 14px;
+  padding: 13px 16px;
+
+  .unread & {
+    padding-left: 13px;
+  }
 
   .avatar {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    margin-top: 1px;
   }
 `;
 
 export const Content = styled.div`
   display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+`;
+
+export const ContentMain = styled.div`
+  display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
   flex: 1;
 `;
 
 export const TopRow = styled.div`
   display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  gap: 6px;
+  align-items: center;
+  gap: 5px;
   min-width: 0;
+  overflow: hidden;
 `;
 
 export const Title = styled.h2`
   margin: 0;
-  font-size: var(--font-size-small);
+  font-size: 13px;
   font-weight: var(--font-weight-medium);
   color: var(--text);
   line-height: 1.2;
@@ -71,41 +84,12 @@ export const Title = styled.h2`
   }
 `;
 
-export const Timestamp = styled.time`
-  position: absolute;
-  bottom: 6px;
-  right: 8px;
-  z-index: 1;
-  font-size: var(--font-size-xsmall);
-  color: var(--text-secondary);
-  white-space: nowrap;
-
-  &.unread {
-    color: color-mix(in srgb, var(--accent) 60%, var(--text));
-    font-weight: var(--font-weight-semi-bold);
-  }
-`;
-
-export const BottomRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-  min-width: 0;
-
-  @media (max-width: 680px) {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 4px;
-  }
-`;
-
 export const MessagePreview = styled.p`
   margin: 0;
   color: var(--text-secondary);
-  font-size: var(--font-size-small);
-  font-weight: var(--font-weight-medium);
-  line-height: 1.3;
+  font-size: 12px;
+  font-weight: var(--font-weight-regular);
+  line-height: 1.4;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -113,7 +97,7 @@ export const MessagePreview = styled.p`
 
   &.unread {
     color: var(--text);
-    font-weight: var(--font-weight-bold);
+    font-weight: var(--font-weight-medium);
   }
 
   @media (max-width: 680px) {
@@ -121,57 +105,46 @@ export const MessagePreview = styled.p`
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 `;
 
 export const Sender = styled.span`
-  color: var(--text);
   font-weight: var(--font-weight-medium);
 
-    &.unread {
-    font-weight: var(--font-weight-bold);
+  &.unread {
+    font-weight: var(--font-weight-semi-bold);
   }
 `;
 
-export const MetaBadge = styled.span`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  padding: 4px 8px;
-  color: var(--text);
-  background: var(--bg-2);
-  border: 1px solid var(--bg-9);
-  white-space: nowrap;
+export const Extras = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 6px;
+  padding-top: 1px;
+  flex-shrink: 0;
 `;
 
-export const UnreadBadge = styled.span`
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  padding: 4px 8px;
-  color: var(--white, #fff);
-  background: var(--accent);
+export const Timestamp = styled.time`
+  font-size: 10px;
+  color: var(--text-secondary);
+  opacity: 0.75;
   white-space: nowrap;
-`;
 
-export const EmptyText = styled.p`
-  margin: 0;
-  font-size: 13px;
-  color: var(--grey-100);
-
-  @media (max-width: 680px) {
-    font-size: 12px;
+  &.unread {
+    color: var(--accent-9);
+    opacity: 1;
+    font-weight: var(--font-weight-semi-bold);
   }
+`;
+
+export const UnreadDot = styled.span`
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-9);
+  flex-shrink: 0;
+  display: block;
 `;

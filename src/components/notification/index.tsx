@@ -1,6 +1,5 @@
 "use client";
 
-import { Separator } from "radix-ui";
 import { useEffect } from "react";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -30,7 +29,6 @@ export const NotificcationsList = ({
   return (
     <S.ListRoot>
       <NotificationHeader />
-      <Separator.Root className="separator" orientation="horizontal" />
 
       {notifications?.map((request) => (
         <NotificationBox key={request.id} notification={request} />

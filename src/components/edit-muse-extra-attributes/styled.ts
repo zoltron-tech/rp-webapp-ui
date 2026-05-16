@@ -235,63 +235,53 @@ export const FieldError = styled.span`
   line-height: 1.3;
 `;
 
-/* â”€â”€â”€ Suggestions dropdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-
 export const KeyInputWrapper = styled.div`
-  position: relative;
   display: flex;
   flex-direction: column;
   gap: 3px;
 `;
 
-export const SuggestionsDropdown = styled.div`
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  z-index: 400;
-  background: var(--bg-3);
-  border: 1px solid var(--bg-6);
-  border-radius: 10px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  overflow: hidden;
-  max-height: 200px;
-  min-width: 160px;
-  width: 100%;
-  max-width: min(260px, calc(100vw - 2rem));
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--bg-6) var(--bg-3);
-
-  &::-webkit-scrollbar {
-    width: 4px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: var(--bg-6);
-    border-radius: 2px;
-  }
-`;
-
-export const SuggestionItem = styled.button<{ $focused: boolean }>`
-  width: 100%;
+export const CardActions = styled.div`
   display: flex;
   align-items: center;
-  padding: 10px 14px;
-  border: none;
-  background: ${({ $focused }) =>
-    $focused
-      ? "color-mix(in srgb, var(--accent) 18%, var(--bg-4))"
-      : "transparent"};
-  color: var(--text);
+  justify-content: space-between;
+  gap: 4px;
+  margin-top: 2px;
+`;
+
+export const OrderButton = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
   cursor: pointer;
-  text-align: left;
-  font-size: var(--font-size-small);
-  font-family: var(--font);
-  font-weight: 500;
-  transition: background 0.1s ease;
+  color: var(--text-secondary);
+  border: 1px solid var(--bg-6);
+  transition: color 0.15s, background-color 0.15s, border-color 0.15s;
   -webkit-tap-highlight-color: transparent;
 
-  &:active {
-    background: color-mix(in srgb, var(--accent) 25%, var(--bg-4));
+  svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  &:hover:not(:disabled) {
+    color: var(--text);
+    background-color: var(--bg-5);
+    border-color: var(--accent);
+  }
+
+  &:active:not(:disabled) {
+    background-color: var(--bg-6);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
   }
 `;
 
@@ -299,7 +289,6 @@ export const SuggestionItem = styled.button<{ $focused: boolean }>`
 
 export const RemoveButton = styled.button`
   all: unset;
-  align-self: flex-end;
   display: flex;
   align-items: center;
   gap: 5px;

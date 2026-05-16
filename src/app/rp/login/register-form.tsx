@@ -112,9 +112,9 @@ export const RegisterForm: FC = () => {
 
       setGlobalState({
         authState: "UNINITIALIZED",
+        showInstallAppPrompt: true,
         user: response.user!,
       });
-      push(ROUTES.Onboarding);
     },
     [],
   );
@@ -133,11 +133,14 @@ export const RegisterForm: FC = () => {
       <Form.Field className="field" name="username">
         <S.FieldHeader>
           <Form.Label>Username</Form.Label>
-          <Form.Message
-            className="label-message"
-            match={(value) => value.length < 3}
-          >
-            must be at least 3 characters long
+          <Form.Message className="label-message" match="valueMissing">
+            username is required
+          </Form.Message>
+          <Form.Message className="label-message" match="tooShort">
+            must be at least 3 characters
+          </Form.Message>
+          <Form.Message className="label-message" match="patternMismatch">
+            only letters, numbers, . _ - allowed
           </Form.Message>
           <Form.Message className="label-message" match={usernameCheck}>
             username is taken
@@ -156,6 +159,9 @@ export const RegisterForm: FC = () => {
           disabled={loading}
           required
           autoFocus
+          minLength={3}
+          maxLength={50}
+          pattern="[a-zA-Z0-9_.\-]+"
         />
       </Form.Field>
       <Form.Field className="field" name="email">

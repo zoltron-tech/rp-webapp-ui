@@ -91,7 +91,7 @@ export default function OutgoingThreadPage() {
         </S.MessageContainer>
       </ShouldRender>
 
-      <S.StoryListContainer>
+      <S.InteractionsListContainer>
         {promptThreadComments?.map((thread) => (
           <PromptThreadCommentCard
             key={thread.id}
@@ -104,7 +104,7 @@ export default function OutgoingThreadPage() {
           loadingMore={loadingMore}
           onLoadMore={loadMore}
         />
-      </S.StoryListContainer>
+      </S.InteractionsListContainer>
     </S.Container>
   );
 }

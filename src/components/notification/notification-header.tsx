@@ -19,13 +19,14 @@ export const NotificationHeader = () => {
     if (authState !== "LOGGED_IN") return;
     setLoading(true);
     await patchNotifications();
-    const _notifications = await baseDataLoader(() => getNotifications(1, 8));
+    const _notifications = await baseDataLoader(() => getNotifications(1, 30));
     set({ notifications: _notifications });
     setLoading(false);
   }, [authState]);
 
   return (
     <S.NotificationsHeaderRoot>
+      <S.NotificationsHeaderTitle>Notifications</S.NotificationsHeaderTitle>
       <S.NotificationHeaderText
         shape="rounded"
         onClick={() => markNotificationsAsRead()}

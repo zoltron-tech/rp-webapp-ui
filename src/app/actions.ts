@@ -130,6 +130,33 @@ export const sendVerificationEmailAction = async (jwt: string) => {
   return result;
 };
 
+export const verifyPasswordAction = async (password: string) => {
+  const URL = `${RP_SERVICE_URL}/rp/user/account/verifyPassword`;
+
+  const jwt = await authenticateAndGetJWT();
+
+  const response = await fetch(URL, {
+    body: JSON.stringify({ password }),
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "POST",
+  });
+
+  if (response.status === 401) {
+    return { message: API_MESSAGE.Unauthorized };
+  }
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.UncategorizedError };
+  }
+
+  const result: WithMessage = await response.json();
+  return result;
+};
+
 export const resetPasswordAction = async (jwt: string, password: string) => {
   const URL = `${RP_SERVICE_URL}/rp/user/account/resetPassword`;
 

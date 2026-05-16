@@ -1,12 +1,12 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IoArrowBackOutline } from "react-icons/io5";
 import { AdminBadge } from "@/components/common/admin-badge";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { EmailVerifiedBadge } from "@/components/common/email-verified-badge";
-import { useGlobalState } from "@/context/store/stores";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { Conversation } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
@@ -16,8 +16,8 @@ import * as S from "./styles";
 export default function ConversationDetailsPage() {
   const params = useParams();
   const user = useGlobalState("user");
-  const authState = useGlobalState("authState");
-  const { baseDataLoader, routeToPage } = usePageRouter();
+  const setGlobalState = useGlobalStoreSet();
+  const { routeToPage, stopPageLoading } = usePageRouter();
 
   const conversationId = useMemo(() => {
     const routeParam = params?.conversationId;
@@ -25,20 +25,25 @@ export default function ConversationDetailsPage() {
     return routeParam || "";
   }, [params]);
 
-  const [conversation, setConversation] = useState<Conversation | null>(null);
+  // Seed immediately from the active conversation (already loaded by the parent page)
+  const activeConversation = useGlobalState("activeConversation");
+  const cachedRef = useRef(
+    activeConversation?.id === conversationId ? activeConversation : null,
+  );
+  const [conversation, setConversation] = useState<Conversation | null>(
+    cachedRef.current,
+  );
 
   const fetchConversation = useCallback(async () => {
     if (!conversationId) return;
-    const result = await baseDataLoader(() =>
-      getConversationByIdAction(conversationId),
-    );
-    if (result) setConversation(result);
-  }, [baseDataLoader, conversationId]);
+    const result = await getConversationByIdAction(conversationId);
+    if (result && "id" in result) setConversation(result as Conversation);
+  }, [conversationId]);
 
   useEffect(() => {
-    if (authState === "LOADING") return;
+    stopPageLoading();
     fetchConversation();
-  }, [authState, fetchConversation]);
+  }, [fetchConversation, stopPageLoading]);
 
   const targetDisplayName = useMemo(() => {
     if (!conversation) return "";
@@ -72,7 +77,12 @@ export default function ConversationDetailsPage() {
     <S.Container>
       <S.Header>
         <S.BackButton
-          onClick={() => routeToPage(ROUTES.Conversation.View(conversationId))}
+          onClick={() => {
+            setGlobalState({ conversationNavDirection: "back" });
+            routeToPage(ROUTES.Conversation.View(conversationId), {
+              skipLoading: true,
+            });
+          }}
           aria-label="Back to conversation"
         >
           <IoArrowBackOutline size={15} />

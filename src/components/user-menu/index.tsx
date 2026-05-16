@@ -1,9 +1,19 @@
 "use client";
 
 import classNames from "classnames";
-import { usePathname } from "next/navigation";
-import { type FC, useCallback, useMemo, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import {
+  type FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { createPortal } from "react-dom";
+import { FaDiscord } from "react-icons/fa6";
+import {
+  FcBusinessman,
   FcCollaboration,
   FcComments,
   FcConferenceCall,
@@ -11,11 +21,21 @@ import {
   FcFaq,
   FcLibrary,
   FcMusic,
+  FcSmartphoneTablet,
   FcSupport,
   FcVoicePresentation,
 } from "react-icons/fc";
-import { FiChevronRight, FiEdit2 } from "react-icons/fi";
+import {
+  FiCheck,
+  FiChevronRight,
+  FiCopy,
+  FiEdit2,
+  FiSmartphone,
+  FiX,
+} from "react-icons/fi";
 import { sendFeedbackMessage } from "@/app/rp/profile/actions";
+import discordLogo from "@/assets/images/NW-Discord-l.ogo.png";
+import appInstallLogo from "@/assets/images/NW-mobile-app-install-logo.png";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -73,28 +93,50 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
   const authState = useGlobalState("authState");
   const unreadConversationIds = useGlobalState("unreadConversationIds");
   const unreadReplyCount = useGlobalState("unreadReplyCount");
+  const accent = useGlobalState("accent");
+  const theme = useGlobalState("theme");
   const hasUnread = Boolean(
     unreadConversationIds?.length || (unreadReplyCount ?? 0) > 0,
   );
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
   const [showContactSupportAlert, setShowContactSupportAlert] = useState(false);
+  const [showDiscordDialog, setShowDiscordDialog] = useState(false);
+  const [showInstallDialog, setShowInstallDialog] = useState(false);
+  const [copiedInvite, setCopiedInvite] = useState(false);
+  const discordInviteUrl = process.env.NEXT_PUBLIC_DISCORD_INVITE_URL ?? "";
   const [supportMessage, setSupportMessage] = useState("");
   const setGlobalState = useGlobalStoreSet();
   const [open, setOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileClosing, setMobileClosing] = useState(false);
+  const swipeStartX = useRef<number | null>(null);
   const { routeToPage } = usePageRouter();
+  const router = useRouter();
   const { successToast, errorToast } = useUIContext();
   const { handlePostLogout } = usePostLogout();
   const isMobile = useMemo(() => checkIsMobile(), []);
   const pathname = usePathname();
 
+  // Prefetch the edit profile page so navigation is instant
+  useEffect(() => {
+    router.prefetch(ROUTES.Profile.Edit);
+  }, [router]);
+
+  const closeMobilePanel = useCallback(() => {
+    setMobileClosing(true);
+    setTimeout(() => {
+      setMobileOpen(false);
+      setMobileClosing(false);
+    }, 310);
+  }, []);
+
   const handleClick = useCallback(() => {
     if (isMobile) {
-      if (pathname === ROUTES.UserMenu) return;
-      routeToPage(ROUTES.UserMenu);
+      setMobileOpen(true);
       return;
     }
     toggleState(setOpen)();
-  }, [isMobile, routeToPage, pathname]);
+  }, [isMobile]);
 
   const handleSendFeedbackMessage = async () => {
     const response = await sendFeedbackMessage(supportMessage.trim());
@@ -109,8 +151,9 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
 
   const handleLogout = useCallback(async () => {
     toggleState(setOpen)();
+    closeMobilePanel();
     await handlePostLogout();
-  }, [handlePostLogout]);
+  }, [handlePostLogout, closeMobilePanel]);
 
   const toOnboarding = () => {
     routeToPage(ROUTES.Onboarding);
@@ -158,187 +201,572 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
     routeToPage(ROUTES.FAQs);
   };
 
+  const handleInstallAppClick = () => {
+    if (isMobile) {
+      setShowInstallDialog(true);
+    } else {
+      routeToPage(ROUTES.InstallApp);
+    }
+  };
+
   Logger.info("UserMenu rendered");
 
   if (!user) return <></>;
 
   return (
-    <S.PositionContainer>
-      <AppAlertDialog
-        heading={`Logout?`}
-        text={`Are you sure you want to logout?`}
-        open={showLogoutAlert}
-        onOpenChange={setShowLogoutAlert}
-        onConfirm={handleLogout}
-        actionButtonLabel="Logout"
-      />
-      <AppAlertDialog
-        heading="Contact Support"
-        text="Send a message to support. We will try to get back to you via in-app notifications."
-        body={
-          <ContactSupportForm
-            message={supportMessage}
-            setMessage={setSupportMessage}
-          />
-        }
-        open={showContactSupportAlert}
-        onOpenChange={setShowContactSupportAlert}
-        onConfirm={async () => {
-          if (!supportMessage.trim()) return; // validation
-          await handleSendFeedbackMessage();
-          setShowContactSupportAlert(false); // close dialog
-          setSupportMessage(""); // reset message
-        }}
-        actionButtonLabel="Send message"
-        actionColor="neutral"
-        isConfirmDisabled={supportMessage.trim() === ""}
-      />
+    <>
+      <S.PositionContainer>
+        {showInstallDialog &&
+          createPortal(
+            <>
+              <S.DiscordDialogOverlay
+                onClick={() => setShowInstallDialog(false)}
+              />
+              <S.DiscordDialogContent
+                role="dialog"
+                aria-modal="true"
+                aria-label="Install Novelist World App"
+                className={classNames([accent, theme])}
+              >
+                <S.DiscordDialogClose
+                  onClick={() => setShowInstallDialog(false)}
+                  aria-label="Close"
+                >
+                  <FiX />
+                </S.DiscordDialogClose>
+                <S.DiscordDialogImage
+                  src={appInstallLogo.src}
+                  alt="Install Novelist World"
+                />
+                <S.DiscordDialogTitle>
+                  Install Novelist World as App
+                </S.DiscordDialogTitle>
+                <S.DiscordDialogDescription>
+                  Add Novelist World to your home screen for the best
+                  experience:
+                </S.DiscordDialogDescription>
+                <ol
+                  style={{
+                    alignSelf: "flex-start",
+                    color: "var(--text-secondary)",
+                    fontSize: "var(--font-size-small)",
+                    lineHeight: 1.8,
+                    margin: "0",
+                    paddingInlineStart: "20px",
+                  }}
+                >
+                  <li>
+                    Tap the <strong>Share</strong> button in your browser
+                    toolbar.
+                  </li>
+                  <li>
+                    Scroll down and tap <strong>Add to Home Screen</strong>.
+                  </li>
+                  <li>
+                    Tap <strong>Add</strong> to confirm.
+                  </li>
+                </ol>
+              </S.DiscordDialogContent>
+            </>,
+            document.body,
+          )}
 
-      <S.ContentContainer onClick={handleClick}>
-        <S.AvatarWrapper>
-          <AvatarNew
-            className="selectable"
-            src={novelist?.image ?? null}
-            alt={user?.username || "User Avatar"}
-            username={user?.username}
-          />
-          <ShouldRender if={hasUnread}>
-            <S.UnreadDot>
-              {(unreadConversationIds?.length ?? 0) + (unreadReplyCount ?? 0) >
-              99
-                ? "99+"
-                : (unreadConversationIds?.length ?? 0) +
-                  (unreadReplyCount ?? 0)}
-            </S.UnreadDot>
-          </ShouldRender>
-        </S.AvatarWrapper>
-        <S.Menu className={classNames({ open })}>
-          <S.MenuUserHeader onClick={toUserProfile}>
+        {showDiscordDialog &&
+          createPortal(
+            <>
+              <S.DiscordDialogOverlay
+                onClick={() => setShowDiscordDialog(false)}
+              />
+              <S.DiscordDialogContent
+                role="dialog"
+                aria-modal="true"
+                aria-label="Join NW Community on Discord"
+                className={classNames([accent, theme])}
+              >
+                <S.DiscordDialogClose
+                  onClick={() => setShowDiscordDialog(false)}
+                  aria-label="Close"
+                >
+                  <FiX />
+                </S.DiscordDialogClose>
+                <S.DiscordDialogImage
+                  src={discordLogo.src}
+                  alt="NW Community Discord"
+                />
+                <S.DiscordDialogTitle>
+                  be a part of NW Community
+                </S.DiscordDialogTitle>
+                <S.DiscordDialogDescription>
+                  Connect & hangout with fellow novelists, get the latest app
+                  updates, share feedback and receive support; all in the
+                  Novelist World Discord server.
+                </S.DiscordDialogDescription>
+                {discordInviteUrl && (
+                  <S.DiscordInviteLinkBox>
+                    <S.DiscordInviteLinkText
+                      href={discordInviteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigator.clipboard.writeText(discordInviteUrl);
+                        setCopiedInvite(true);
+                        setTimeout(() => setCopiedInvite(false), 2000);
+                      }}
+                    >
+                      {discordInviteUrl}
+                    </S.DiscordInviteLinkText>
+                    <S.DiscordInviteCopyButton
+                      type="button"
+                      aria-label="Copy invite link"
+                      onClick={() => {
+                        navigator.clipboard.writeText(discordInviteUrl);
+                        setCopiedInvite(true);
+                        setTimeout(() => setCopiedInvite(false), 2000);
+                      }}
+                    >
+                      {copiedInvite ? <FiCheck /> : <FiCopy />}
+                    </S.DiscordInviteCopyButton>
+                  </S.DiscordInviteLinkBox>
+                )}
+                <S.DiscordJoinButton
+                  type="button"
+                  onClick={() => {
+                    if (discordInviteUrl)
+                      window.open(
+                        discordInviteUrl,
+                        "_blank",
+                        "noopener,noreferrer",
+                      );
+                  }}
+                  disabled={!discordInviteUrl}
+                >
+                  <FaDiscord aria-hidden="true" />
+                  Join Server
+                </S.DiscordJoinButton>
+              </S.DiscordDialogContent>
+            </>,
+            document.body,
+          )}
+
+        <AppAlertDialog
+          heading={`Logout?`}
+          text={`Are you sure you want to logout?`}
+          open={showLogoutAlert}
+          onOpenChange={setShowLogoutAlert}
+          onConfirm={handleLogout}
+          actionButtonLabel="Logout"
+        />
+        <AppAlertDialog
+          heading="Contact Support"
+          text="Send a message to support. We will try to get back to you via in-app notifications."
+          body={
+            <ContactSupportForm
+              message={supportMessage}
+              setMessage={setSupportMessage}
+            />
+          }
+          open={showContactSupportAlert}
+          onOpenChange={setShowContactSupportAlert}
+          onConfirm={async () => {
+            if (!supportMessage.trim()) return; // validation
+            await handleSendFeedbackMessage();
+            setShowContactSupportAlert(false); // close dialog
+            setSupportMessage(""); // reset message
+          }}
+          actionButtonLabel="Send message"
+          actionColor="neutral"
+          isConfirmDisabled={supportMessage.trim() === ""}
+        />
+
+        <S.ContentContainer onClick={handleClick}>
+          <S.AvatarWrapper>
             <AvatarNew
+              className="selectable"
               src={novelist?.image ?? null}
               alt={user?.username || "User Avatar"}
               username={user?.username}
             />
-            <S.MenuUserInfo>
-              <S.MenuUserName>
-                {novelist
-                  ? `${novelist.firstName} ${novelist.lastName}`.trim() ||
-                    novelist.username
-                  : user.username}
-              </S.MenuUserName>
-              <S.MenuUserHandle>@{user.username}</S.MenuUserHandle>
-            </S.MenuUserInfo>
-            <S.MenuEditButton
-              onClick={(e) => {
-                e.stopPropagation();
-                toEditProfile();
+            <ShouldRender if={hasUnread}>
+              <S.UnreadDot>
+                {(unreadConversationIds?.length ?? 0) +
+                  (unreadReplyCount ?? 0) >
+                99
+                  ? "99+"
+                  : (unreadConversationIds?.length ?? 0) +
+                    (unreadReplyCount ?? 0)}
+              </S.UnreadDot>
+            </ShouldRender>
+          </S.AvatarWrapper>
+          <S.Menu className={classNames({ open })}>
+            <S.MenuUserHeader onClick={toUserProfile}>
+              <AvatarNew
+                src={novelist?.image ?? null}
+                alt={user?.username || "User Avatar"}
+                username={user?.username}
+              />
+              <S.MenuUserInfo>
+                <S.MenuUserName>
+                  {novelist
+                    ? `${novelist.firstName} ${novelist.lastName}`.trim() ||
+                      novelist.username
+                    : user.username}
+                </S.MenuUserName>
+                <S.MenuUserHandle>@{user.username}</S.MenuUserHandle>
+              </S.MenuUserInfo>
+              <S.MenuEditButton
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toEditProfile();
+                }}
+              >
+                <FiEdit2 />
+              </S.MenuEditButton>
+            </S.MenuUserHeader>
+            <S.Separator />
+            <ShouldRender if={authState === "LOGGED_IN"}>
+              <S.List>
+                <S.Element onClick={toExplorePage}>
+                  <Flex justify="flex-start" align="center" gap="12px">
+                    <FcVoicePresentation />
+                    Explore
+                  </Flex>
+                  <FiChevronRight size={16} color="gray" />
+                </S.Element>
+                <S.Element onClick={toOutgoingThreadsPage}>
+                  <Flex justify="flex-start" align="center" gap="12px">
+                    <FcCollaboration />
+                    Interactions
+                  </Flex>
+                  <ShouldRender if={(unreadReplyCount ?? 0) > 0}>
+                    <S.UnreadBadge>
+                      {(unreadReplyCount ?? 0) > 99
+                        ? "99+"
+                        : (unreadReplyCount ?? 0)}
+                    </S.UnreadBadge>
+                  </ShouldRender>
+                  <FiChevronRight size={16} color="gray" />
+                </S.Element>
+                <S.Separator />
+                <S.Element onClick={toMusesPage}>
+                  <Flex justify="flex-start" align="center" gap="12px">
+                    <FcConferenceCall />
+                    Characters
+                  </Flex>
+                  <FiChevronRight size={16} color="gray" />
+                </S.Element>
+                <S.Element onClick={toConversationsPage}>
+                  <Flex justify="flex-start" align="center" gap="12px">
+                    <FcComments />
+                    Inbox
+                  </Flex>
+                  <ShouldRender if={(unreadConversationIds?.length ?? 0) > 0}>
+                    <S.UnreadBadge>
+                      {(unreadConversationIds?.length ?? 0) > 99
+                        ? "99+"
+                        : unreadConversationIds?.length}
+                    </S.UnreadBadge>
+                  </ShouldRender>
+                  <FiChevronRight size={16} color="gray" />
+                </S.Element>
+                <S.Element onClick={toMusicPage}>
+                  <Flex justify="flex-start" align="center" gap="12px">
+                    <FcMusic />
+                    Music
+                  </Flex>
+                  <FiChevronRight size={16} color="gray" />
+                </S.Element>
+              </S.List>
+            </ShouldRender>
+            <ShouldRender if={authState === "UNINITIALIZED"}>
+              <S.List onClick={toOnboarding}>
+                <S.Element>
+                  <Flex justify="flex-start" align="center" gap="12px">
+                    <FcBusinessman />
+                    Onboarding
+                  </Flex>
+                  <FiChevronRight size={16} color="gray" />
+                </S.Element>
+              </S.List>
+            </ShouldRender>
+
+            <S.List>
+              <S.Separator />
+              <S.DiscordElement onClick={() => setShowDiscordDialog(true)}>
+                <Flex justify="flex-start" align="center" gap="12px">
+                  <FaDiscord />
+                  Join NW Community
+                </Flex>
+                <FiChevronRight size={16} color="gray" />
+              </S.DiscordElement>
+              <S.Element onClick={handleInstallAppClick}>
+                <Flex justify="flex-start" align="center" gap="12px">
+                  <FcSmartphoneTablet />
+                  Install NW App
+                </Flex>
+                <FiChevronRight size={16} color="gray" />
+              </S.Element>
+              <S.Element onClick={toTermsAndConditionsPage}>
+                <Flex justify="flex-start" align="center" gap="12px">
+                  <FcLibrary />
+                  Terms & conditions
+                </Flex>
+                <FiChevronRight size={16} color="gray" />
+              </S.Element>
+              <S.Element onClick={toFAQsPage}>
+                <Flex justify="flex-start" align="center" gap="12px">
+                  <FcFaq />
+                  FAQs
+                </Flex>
+                <FiChevronRight size={16} color="gray" />
+              </S.Element>
+              <S.Element onClick={() => setShowContactSupportAlert(true)}>
+                <Flex justify="flex-start" align="center" gap="12px">
+                  <FcSupport />
+                  Help & support
+                </Flex>
+                <FiChevronRight size={16} color="gray" />
+              </S.Element>
+            </S.List>
+            <S.Separator />
+            <S.List>
+              <S.DeleteElement onClick={() => setShowLogoutAlert(true)}>
+                <Flex justify="flex-start" align="center" gap="12px">
+                  <FcExport />
+                  Log out
+                </Flex>
+                <FiChevronRight size={16} color="gray" />
+              </S.DeleteElement>
+            </S.List>
+          </S.Menu>
+        </S.ContentContainer>
+      </S.PositionContainer>
+
+      {mobileOpen &&
+        createPortal(
+          <>
+            <S.MobileOverlay
+              $closing={mobileClosing}
+              onClick={closeMobilePanel}
+            />
+            <S.MobilePanel
+              $closing={mobileClosing}
+              onTouchStart={(e) => {
+                swipeStartX.current = e.touches[0].clientX;
+              }}
+              onTouchEnd={(e) => {
+                if (swipeStartX.current === null) return;
+                const delta = e.changedTouches[0].clientX - swipeStartX.current;
+                swipeStartX.current = null;
+                if (delta > 60) closeMobilePanel();
               }}
             >
-              <FiEdit2 />
-            </S.MenuEditButton>
-          </S.MenuUserHeader>
-          <S.Separator />
-          <ShouldRender if={authState === "LOGGED_IN"}>
-            <S.List>
-              <S.Element onClick={toExplorePage}>
-                <Flex justify="flex-start" align="center" gap="12px">
-                  <FcVoicePresentation />
-                  Explore
-                </Flex>
-                <FiChevronRight size={16} color="gray" />
-              </S.Element>
-              <S.Element onClick={toOutgoingThreadsPage}>
-                <Flex justify="flex-start" align="center" gap="12px">
-                  <FcCollaboration />
-                  Interactions
-                </Flex>
-                <ShouldRender if={(unreadReplyCount ?? 0) > 0}>
-                  <S.UnreadBadge>
-                    {(unreadReplyCount ?? 0) > 99
-                      ? "99+"
-                      : (unreadReplyCount ?? 0)}
-                  </S.UnreadBadge>
+              <S.MobilePanelBody>
+                <S.MobilePanelUserHeader
+                  onClick={() => {
+                    closeMobilePanel();
+                    toUserProfile();
+                  }}
+                >
+                  <AvatarNew
+                    src={novelist?.image ?? null}
+                    alt={user?.username || "User Avatar"}
+                    username={user?.username}
+                  />
+                  <S.MobilePanelUserInfo>
+                    <S.MobilePanelUserName>
+                      {novelist
+                        ? `${novelist.firstName} ${novelist.lastName}`.trim() ||
+                          novelist.username
+                        : user.username}
+                    </S.MobilePanelUserName>
+                    <S.MobilePanelUserHandle>
+                      @{user.username}
+                    </S.MobilePanelUserHandle>
+                  </S.MobilePanelUserInfo>
+                  <S.MobilePanelEditButton
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      closeMobilePanel();
+                      toEditProfile();
+                    }}
+                  >
+                    <FiEdit2 />
+                  </S.MobilePanelEditButton>
+                </S.MobilePanelUserHeader>
+                <ShouldRender if={authState === "LOGGED_IN"}>
+                  <S.MobilePanelSection>
+                    <S.MobilePanelMenuItem
+                      onClick={() => {
+                        closeMobilePanel();
+                        toExplorePage();
+                      }}
+                    >
+                      <Flex justify="flex-start" align="center" gap="12px">
+                        <FcVoicePresentation />
+                        Explore
+                      </Flex>
+                      <FiChevronRight size={16} color="gray" />
+                    </S.MobilePanelMenuItem>
+                    <S.MobilePanelMenuItem
+                      onClick={() => {
+                        closeMobilePanel();
+                        toOutgoingThreadsPage();
+                      }}
+                    >
+                      <Flex justify="flex-start" align="center" gap="12px">
+                        <FcCollaboration />
+                        Interactions
+                      </Flex>
+                      <ShouldRender if={(unreadReplyCount ?? 0) > 0}>
+                        <S.UnreadBadge>
+                          {(unreadReplyCount ?? 0) > 99
+                            ? "99+"
+                            : (unreadReplyCount ?? 0)}
+                        </S.UnreadBadge>
+                      </ShouldRender>
+                      <FiChevronRight size={16} color="gray" />
+                    </S.MobilePanelMenuItem>
+                  </S.MobilePanelSection>
+                  <S.MobilePanelSection>
+                    <S.MobilePanelMenuItem
+                      onClick={() => {
+                        closeMobilePanel();
+                        toMusesPage();
+                      }}
+                    >
+                      <Flex justify="flex-start" align="center" gap="12px">
+                        <FcConferenceCall />
+                        Characters
+                      </Flex>
+                      <FiChevronRight size={16} color="gray" />
+                    </S.MobilePanelMenuItem>
+                    <S.MobilePanelMenuItem
+                      onClick={() => {
+                        closeMobilePanel();
+                        toConversationsPage();
+                      }}
+                    >
+                      <Flex justify="flex-start" align="center" gap="12px">
+                        <FcComments />
+                        Inbox
+                      </Flex>
+                      <ShouldRender
+                        if={(unreadConversationIds?.length ?? 0) > 0}
+                      >
+                        <S.UnreadBadge>
+                          {(unreadConversationIds?.length ?? 0) > 99
+                            ? "99+"
+                            : unreadConversationIds?.length}
+                        </S.UnreadBadge>
+                      </ShouldRender>
+                      <FiChevronRight size={16} color="gray" />
+                    </S.MobilePanelMenuItem>
+                    <S.MobilePanelMenuItem
+                      onClick={() => {
+                        closeMobilePanel();
+                        toMusicPage();
+                      }}
+                    >
+                      <Flex justify="flex-start" align="center" gap="12px">
+                        <FcMusic />
+                        Music
+                      </Flex>
+                      <FiChevronRight size={16} color="gray" />
+                    </S.MobilePanelMenuItem>
+                  </S.MobilePanelSection>
                 </ShouldRender>
-                <FiChevronRight size={16} color="gray" />
-              </S.Element>
-              <S.Separator />
-              <S.Element onClick={toMusesPage}>
-                <Flex justify="flex-start" align="center" gap="12px">
-                  <FcConferenceCall />
-                  Characters
-                </Flex>
-                <FiChevronRight size={16} color="gray" />
-              </S.Element>
-              <S.Element onClick={toConversationsPage}>
-                <Flex justify="flex-start" align="center" gap="12px">
-                  <FcComments />
-                  Inbox
-                </Flex>
-                <ShouldRender if={(unreadConversationIds?.length ?? 0) > 0}>
-                  <S.UnreadBadge>
-                    {(unreadConversationIds?.length ?? 0) > 99
-                      ? "99+"
-                      : unreadConversationIds?.length}
-                  </S.UnreadBadge>
+                <ShouldRender if={authState === "UNINITIALIZED"}>
+                  <S.MobilePanelSection>
+                    <S.MobilePanelMenuItem
+                      onClick={() => {
+                        closeMobilePanel();
+                        toOnboarding();
+                      }}
+                    >
+                      <Flex justify="flex-start" align="center" gap="12px">
+                        <FcBusinessman />
+                        Onboarding
+                      </Flex>
+                      <FiChevronRight size={16} color="gray" />
+                    </S.MobilePanelMenuItem>
+                  </S.MobilePanelSection>
                 </ShouldRender>
-                <FiChevronRight size={16} color="gray" />
-              </S.Element>
-              <S.Element onClick={toMusicPage}>
-                <Flex justify="flex-start" align="center" gap="12px">
-                  <FcMusic />
-                  Music
-                </Flex>
-                <FiChevronRight size={16} color="gray" />
-              </S.Element>
-            </S.List>
-          </ShouldRender>
-          <ShouldRender if={authState === "UNINITIALIZED"}>
-            <S.List onClick={toOnboarding}>
-              <S.Element>
-                <Flex justify="flex-start" align="center" gap="12px">
-                  Onboarding
-                </Flex>
-                <FiChevronRight size={16} color="gray" />
-              </S.Element>
-            </S.List>
-          </ShouldRender>
-
-          <S.List>
-            <S.Separator />
-            <S.Element onClick={toTermsAndConditionsPage}>
-              <Flex justify="flex-start" align="center" gap="12px">
-                <FcLibrary />
-                Terms & conditions
-              </Flex>
-              <FiChevronRight size={16} color="gray" />
-            </S.Element>
-            <S.Element onClick={toFAQsPage}>
-              <Flex justify="flex-start" align="center" gap="12px">
-                <FcFaq />
-                FAQs
-              </Flex>
-              <FiChevronRight size={16} color="gray" />
-            </S.Element>
-            <S.Element onClick={() => setShowContactSupportAlert(true)}>
-              <Flex justify="flex-start" align="center" gap="12px">
-                <FcSupport />
-                Help & support
-              </Flex>
-              <FiChevronRight size={16} color="gray" />
-            </S.Element>
-          </S.List>
-          <S.Separator />
-          <S.List>
-            <S.DeleteElement onClick={() => setShowLogoutAlert(true)}>
-              <Flex justify="flex-start" align="center" gap="12px">
-                <FcExport />
-                Log out
-              </Flex>
-              <FiChevronRight size={16} color="gray" />
-            </S.DeleteElement>
-          </S.List>
-        </S.Menu>
-      </S.ContentContainer>
-    </S.PositionContainer>
+                <S.MobilePanelSection>
+                  <S.MobilePanelDiscordMenuItem
+                    onClick={() => {
+                      closeMobilePanel();
+                      setShowDiscordDialog(true);
+                    }}
+                  >
+                    <Flex justify="flex-start" align="center" gap="12px">
+                      <FaDiscord />
+                      Join NW Community
+                    </Flex>
+                    <FiChevronRight size={16} color="white" />
+                  </S.MobilePanelDiscordMenuItem>
+                  <S.MobilePanelMenuItem
+                    onClick={() => {
+                      closeMobilePanel();
+                      handleInstallAppClick();
+                    }}
+                  >
+                    <Flex justify="flex-start" align="center" gap="12px">
+                      <FcSmartphoneTablet />
+                      Install NW App
+                    </Flex>
+                    <FiChevronRight size={16} color="gray" />
+                  </S.MobilePanelMenuItem>
+                  <S.MobilePanelMenuItem
+                    onClick={() => {
+                      closeMobilePanel();
+                      toTermsAndConditionsPage();
+                    }}
+                  >
+                    <Flex justify="flex-start" align="center" gap="12px">
+                      <FcLibrary />
+                      Terms & conditions
+                    </Flex>
+                    <FiChevronRight size={16} color="gray" />
+                  </S.MobilePanelMenuItem>
+                  <S.MobilePanelMenuItem
+                    onClick={() => {
+                      closeMobilePanel();
+                      toFAQsPage();
+                    }}
+                  >
+                    <Flex justify="flex-start" align="center" gap="12px">
+                      <FcFaq />
+                      FAQs
+                    </Flex>
+                    <FiChevronRight size={16} color="gray" />
+                  </S.MobilePanelMenuItem>
+                  <S.MobilePanelMenuItem
+                    onClick={() => setShowContactSupportAlert(true)}
+                  >
+                    <Flex justify="flex-start" align="center" gap="12px">
+                      <FcSupport />
+                      Help & support
+                    </Flex>
+                    <FiChevronRight size={16} color="gray" />
+                  </S.MobilePanelMenuItem>
+                </S.MobilePanelSection>
+                <S.MobilePanelSection>
+                  <S.MobilePanelDestructiveMenuItem
+                    onClick={() => setShowLogoutAlert(true)}
+                  >
+                    <Flex justify="flex-start" align="center" gap="12px">
+                      <FcExport />
+                      Log out
+                    </Flex>
+                    <FiChevronRight size={16} color="gray" />
+                  </S.MobilePanelDestructiveMenuItem>
+                </S.MobilePanelSection>
+              </S.MobilePanelBody>
+            </S.MobilePanel>
+          </>,
+          document.querySelector(".page-container") ?? document.body,
+        )}
+    </>
   );
 };

@@ -2,11 +2,10 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { FiSearch } from "react-icons/fi";
 import { HiUserAdd } from "react-icons/hi";
 import { getAllMusesByUsernameAction } from "@/app/rp/muse/actions";
 import { BreadCrumb } from "@/components/breadcrumb";
-import { AddNewButton } from "@/components/common";
+import { AddNewButton, FilterSearch } from "@/components/common";
 import { MuseCard } from "@/components/muse-card";
 import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents, useUIContext } from "@/hooks";
@@ -32,11 +31,11 @@ export default function MusesListPage({}) {
   const { on, off } = useCustomEvents(EVENTS.MUSE.base);
   const { successToast } = useUIContext();
   const { routeToPage } = usePageRouter();
-  const [visibility, setVisibility] = useState({
-    FRIENDS: true,
-    ONLY_ME: true,
-    PUBLIC: true,
-  });
+  const [visibility, setVisibility] = useState<string[]>([
+    "PUBLIC",
+    "FRIENDS",
+    "ONLY_ME",
+  ]);
   const [search, setSearch] = useState("");
 
   const backgroundTiles = useMemo(
@@ -59,9 +58,9 @@ export default function MusesListPage({}) {
         .includes(search.toLowerCase())
     )
       return false;
-    if (m.privacy === "PUBLIC") return visibility.PUBLIC;
-    if (m.privacy === "FRIENDS") return visibility.FRIENDS;
-    if (m.privacy === "ONLY_ME") return visibility.ONLY_ME;
+    if (m.privacy === "PUBLIC") return visibility.includes("PUBLIC");
+    if (m.privacy === "FRIENDS") return visibility.includes("FRIENDS");
+    if (m.privacy === "ONLY_ME") return visibility.includes("ONLY_ME");
     return true;
   });
 
@@ -109,68 +108,34 @@ export default function MusesListPage({}) {
           />
         ))}
       </S.BackgroundContainer>
-      <BreadCrumb label="Characters" username={username} />
-      {isCurrentUser && (
-        <AddNewButton
-          label="Add a new character"
-          icon={<HiUserAdd size={18} />}
-          onClick={() => routeToPage(ROUTES.Profile.Muses.Create)}
-        />
-      )}
-      <S.SearchWrapper>
-        <S.SearchInput
-          type="search"
-          placeholder="Search characters..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <S.SearchIcon>
-          <FiSearch size={16} />
-        </S.SearchIcon>
-      </S.SearchWrapper>
-      {isCurrentUser && (
-        <S.FilterRow>
-          <label>
-            <input
-              type="checkbox"
-              checked={visibility.PUBLIC}
-              onChange={(e) =>
-                setVisibility((prev) => ({
-                  ...prev,
-                  PUBLIC: e.target.checked,
-                }))
-              }
-            />
-            Public
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={visibility.FRIENDS}
-              onChange={(e) =>
-                setVisibility((prev) => ({
-                  ...prev,
-                  FRIENDS: e.target.checked,
-                }))
-              }
-            />
-            Friends
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={visibility.ONLY_ME}
-              onChange={(e) =>
-                setVisibility((prev) => ({
-                  ...prev,
-                  ONLY_ME: e.target.checked,
-                }))
-              }
-            />
-            Only me
-          </label>
-        </S.FilterRow>
-      )}
+      <BreadCrumb
+        label={`Characters ${isCurrentUser ? `(${muses?.length ?? 0} / ${novelist?.tier.museLimit ?? 0})` : ""}`}
+        username={username}
+      />
+      {isCurrentUser &&
+        (muses?.length ?? 0) < (novelist?.tier.museLimit ?? 0) && (
+          <AddNewButton
+            label="Add a new character"
+            icon={<HiUserAdd size={18} />}
+            onClick={() => routeToPage(ROUTES.Profile.Muses.Create)}
+          />
+        )}
+      <FilterSearch
+        value={search}
+        onChange={setSearch}
+        placeholder="Search characters..."
+        filters={
+          isCurrentUser
+            ? [
+                { id: "PUBLIC", label: "Public" },
+                { id: "FRIENDS", label: "Friends" },
+                { id: "ONLY_ME", label: "Only me" },
+              ]
+            : undefined
+        }
+        activeFilters={visibility}
+        onFilterChange={isCurrentUser ? setVisibility : undefined}
+      />
       <S.MuseListContainer>
         {displayedMuses?.map((muse) => (
           <MuseCard key={muse?.id} muse={muse}></MuseCard>

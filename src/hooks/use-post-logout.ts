@@ -17,6 +17,7 @@ export const usePostLogout = () => {
   const handlePostLogout = useCallback(async () => {
     setGlobalState({
       authState: "LOGGED_OUT",
+      notifications: null,
       novelist: null,
       unreadConversationIds: null,
       unreadReplyCount: null,

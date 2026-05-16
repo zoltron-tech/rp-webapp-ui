@@ -670,7 +670,7 @@ export default function EditMuseDataCard() {
                 checked={showAccentPicker}
                 onChange={() => setShowAccentPicker((prev) => !prev)}
               />
-              <Form.Label>Set custom accent color</Form.Label>
+              <Form.Label>Set custom profile color</Form.Label>
             </Form.Field>
 
             {showAccentPicker && (

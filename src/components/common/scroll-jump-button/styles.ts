@@ -10,7 +10,7 @@ export const Button = styled.button<{ $visible?: boolean }>`
   height: 48px;
   padding: 0;
   border-radius: 50%;
-  z-index: ${Z_INDEX.MODAL - 1};
+  z-index: ${Z_INDEX.SCROLL_JUMP};
   background-color: var(--bg-3);
   border: 1px solid var(--accent-4);
   color: var(--accent);

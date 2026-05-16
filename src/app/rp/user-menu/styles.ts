@@ -1,5 +1,78 @@
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { UnreadBadgeBase } from "@/components/common/unread-badge";
+
+const slideInRight = keyframes`
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+`;
+
+const slideOutRight = keyframes`
+  from { transform: translateX(0); }
+  to   { transform: translateX(100%); }
+`;
+
+/**
+ * Full-viewport slide panel on mobile — enters from the right, exits to the right.
+ * On desktop it's just a transparent wrapper with no positioning.
+ */
+export const SlidePanel = styled.div<{ $closing?: boolean }>`
+  @media screen and (max-width: 800px) {
+    position: fixed;
+    top: var(--topbar-height);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    background: var(--bg-2);
+    overflow-y: auto;
+    animation: ${({ $closing }) => ($closing ? slideOutRight : slideInRight)}
+      0.32s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+`;
+
+/** Back-arrow bar shown only on mobile at the top of the panel. */
+export const BackBar = styled.div`
+  display: none;
+
+  @media screen and (max-width: 800px) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--bg-6);
+    background: var(--bg-2);
+    flex-shrink: 0;
+  }
+`;
+
+export const BackButton = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--text);
+  transition: background 0.15s;
+
+  &:hover {
+    background: var(--bg-4);
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+`;
+
+export const BackBarTitle = styled.span`
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text);
+`;
 
 export const Container = styled.div`
   display: flex;

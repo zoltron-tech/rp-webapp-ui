@@ -3,7 +3,8 @@
 import { ShouldRender } from "@novelist-world/ui";
 import { Separator, Tabs } from "radix-ui";
 import { useCallback, useEffect, useState } from "react";
-import { ImProfile } from "react-icons/im";
+import { HiOutlineUserCircle } from "react-icons/hi2";
+import { PiMaskHappyBold } from "react-icons/pi";
 import { finishOnboardingAction } from "@/app/actions";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
@@ -56,10 +57,12 @@ export default function OnboardingPage() {
 
     setGlobalState({
       authState: "LOGGED_IN",
+      justOnboarded: true,
       novelist: updatedNovelist,
+      showJoinDiscordPrompt: true,
     });
 
-    routeToPage(ROUTES.Profile.View(user?.username || "").Index);
+    routeToPage(ROUTES.Welcome);
   }, [routeToPage, novelist, user]);
 
   useEffect(() => {
@@ -70,19 +73,22 @@ export default function OnboardingPage() {
     <S.OnboardingPageRoot>
       <S.Card>
         <S.FormHeading>
-          <ImProfile />
-          <h1>Complete your profile</h1>
+          <HiOutlineUserCircle />
+          <div className="heading-text">
+            <S.OocBadge>Out-of-Character · Author Profile</S.OocBadge>
+            <h1>Set up your profile</h1>
+          </div>
         </S.FormHeading>
-        <S.FormDescription>
-          <p>
-            Please fill in your profile details to help us understand you
-            better.
-          </p>
-          <p>
-            This information will be used to personalize your experience on our
-            platform.
-          </p>
-        </S.FormDescription>
+
+        <S.InfoCallout>
+          <PiMaskHappyBold className="callout-icon" aria-hidden />
+          <div>
+            This is <strong>you, the author</strong> &mdash; not a character.
+            You&apos;ll create <em>Characters</em> to roleplay as after
+            finishing this profile.
+          </div>
+        </S.InfoCallout>
+
         <Separator.Root className="separator" orientation="horizontal" />
 
         <ShouldRender if={authState === "UNINITIALIZED"}>

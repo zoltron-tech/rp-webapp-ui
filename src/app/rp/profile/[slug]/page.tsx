@@ -26,6 +26,7 @@ import {
   MdOutlineKeyboardDoubleArrowRight,
 } from "react-icons/md";
 import { RiFlagFill } from "react-icons/ri";
+import { TfiLayoutListPost } from "react-icons/tfi";
 import { ContactSupportForm } from "@/components";
 import ActivityBox from "@/components/activity-box";
 import {
@@ -42,7 +43,9 @@ import { Image } from "@/components/image-viewer/styled";
 import { MiniProfileCard } from "@/components/mini-profile-card";
 import MuseListItem from "@/components/muse-list-item";
 import { AppDropdownMenu } from "@/components/profile-more-dropdown";
+import { PromptComposeTrigger } from "@/components/prompt-compose-trigger";
 import PromptInput from "@/components/prompt-input";
+import { FullPagePromptInput } from "@/components/prompt-input/full-page-prompt-input";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
 import StoryCard from "@/components/story-card";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
@@ -128,14 +131,17 @@ export default function UserProfilePage({}) {
   const [supportMessage, setSupportMessage] = useState("");
   const user = useGlobalState("user");
   const userNovelist = useGlobalState("novelist");
-  const [novelist, setNovelist] = useState<Novelist | null>(null);
   const username = params?.slug as string;
   const isCurrentUser = username === user?.username;
+  const [novelist, setNovelist] = useState<Novelist | null>(
+    username === user?.username ? userNovelist : null,
+  );
 
   const { activities, refetch: refetchAcitivities } =
     useGetActivities(username);
   const { width } = useWindowDimensions();
   const isMobile = (width ?? 0) <= 800;
+  const [composeOpen, setComposeOpen] = useState(false);
   const [storyBoards, setStories] = useState<StoryBoard[] | null>(null);
   const setGlobalState = useGlobalStoreSet();
   const { successToast, warningToast, errorToast } = useUIContext();
@@ -207,6 +213,10 @@ export default function UserProfilePage({}) {
 
   const toMusesPage = () => {
     routeToPage(ROUTES.Profile.View(username).Muses);
+  };
+
+  const toPostsPage = () => {
+    routeToPage(ROUTES.Profile.View(username).Posts);
   };
 
   const toStoryBoardsPage = () => {
@@ -361,6 +371,7 @@ export default function UserProfilePage({}) {
 
     const response = await reportProfile(novelist.id, "");
     if (response?.message === API_MESSAGE.Success) {
+      setShowReportAlert(false);
       successToast(`Reported ${novelist.username}`);
     } else {
       errorToast("There was an issue while reporting this profile.");
@@ -497,19 +508,29 @@ export default function UserProfilePage({}) {
     setNovelist(_novelist);
   };
 
+  // Keep local novelist in sync when global store updates (current user only)
+  useEffect(() => {
+    if (isCurrentUser && userNovelist) {
+      setNovelist(userNovelist);
+    }
+  }, [userNovelist, isCurrentUser]);
+
   useEffect(() => {
     if (authState === "UNINITIALIZED") {
       routeToPage(ROUTES.Onboarding);
       return;
     }
 
-    if (authState === "LOADING" || novelist) return;
+    if (authState === "LOADING") return;
 
     if (isCurrentUser) {
-      setNovelist(userNovelist);
+      // Data already in global store — no fetch needed
+      if (!novelist) setNovelist(userNovelist);
       stopPageLoading();
       return;
     }
+
+    if (novelist) return;
 
     fetchNovelist(username);
     //fetchStoryboards();
@@ -888,11 +909,12 @@ export default function UserProfilePage({}) {
             >
               <Flex
                 id="profile-tour-step-7"
-                style={{ width: "100%" }}
+                style={{ marginBottom: "20px", width: "100%" }}
                 direction="column"
               >
                 <S.FriendsButton onClick={toFriendsPage}>
                   <S.FriendsButtonLabel>
+                    {" "}
                     {`Friends (${novelist?.friendsCount})`}
                   </S.FriendsButtonLabel>
                   <S.FriendsAvatarStack>
@@ -921,52 +943,73 @@ export default function UserProfilePage({}) {
                 see all...
               </S.SeeMoreLink>
             </ShouldRender>
+            {authState === "LOGGED_IN" &&
+              username === user?.username &&
+              novelist !== null && (
+                <>
+                  {isMobile ? (
+                    <PromptComposeTrigger
+                      avatarSrc={userNovelist?.image}
+                      avatarAlt={userNovelist?.username ?? "You"}
+                      onClick={() => setComposeOpen(true)}
+                    />
+                  ) : (
+                    <PromptInput
+                      type="prompt"
+                      onSend={refetchAcitivities}
+                      dropdownSelection="ALL"
+                      initialSelection={novelistToSource(novelist)}
+                      defaultOpen={true}
+                    />
+                  )}
+                </>
+              )}
+            <S.SeeMoreLink onClick={toPostsPage}>
+              <span>
+                <TfiLayoutListPost />
+                See posts by {username}
+                <MdOutlineKeyboardDoubleArrowRight />
+              </span>
+            </S.SeeMoreLink>
             <S.SubText>
               {activities?.length === 0
-                ? "No Updates"
+                ? ""
                 : authState === "LOGGED_IN" && username === user?.username
                   ? "Your Updates"
                   : `Updates by ${username}`}
             </S.SubText>
-            <S.ActivitiesContainer>
-              {authState === "LOGGED_IN" &&
-                username === user?.username &&
-                novelist !== null && (
-                  <>
-                    {isMobile ? (
-                      <S.AddPromptButton
-                        type="button"
-                        onClick={() =>
-                          routeToPage(
-                            ROUTES.Compose({
-                              dropdownSelection: "ALL",
-                              type: "prompt",
-                            }),
-                          )
-                        }
-                      >
-                        + Add Prompt
-                      </S.AddPromptButton>
-                    ) : (
-                      <PromptInput
-                        type="prompt"
-                        onSend={refetchAcitivities}
-                        dropdownSelection="ALL"
-                        initialSelection={novelistToSource(novelist)}
-                      />
-                    )}
-                  </>
-                )}
-              {activities?.map((activity) => (
-                <ActivityBox
-                  key={activity?.id}
-                  activity={activity}
-                ></ActivityBox>
-              ))}
-            </S.ActivitiesContainer>
+            <ShouldRender
+              if={activities !== undefined && activities?.length > 0}
+            >
+              <S.ActivitiesContainer>
+                {activities?.map((activity) => (
+                  <ActivityBox
+                    key={activity?.id}
+                    activity={activity}
+                  ></ActivityBox>
+                ))}
+              </S.ActivitiesContainer>
+            </ShouldRender>
           </S.ContentInner>
         </S.ContentRight>
       </S.Content>
+
+      {/* ── Mobile slide-up compose overlay ─────────────────────── */}
+      <S.ComposeSheet $open={composeOpen}>
+        <FullPagePromptInput
+          type="prompt"
+          dropdownSelection="ALL"
+          initialSelection={
+            userNovelist ? novelistToSource(userNovelist) : undefined
+          }
+          className="compose-fp-inner"
+          onBack={() => setComposeOpen(false)}
+          onSend={() => {
+            refetchAcitivities();
+            setComposeOpen(false);
+          }}
+        />
+      </S.ComposeSheet>
     </>
   );
 }

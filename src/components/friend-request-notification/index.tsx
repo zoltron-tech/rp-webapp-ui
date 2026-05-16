@@ -1,58 +1,63 @@
 "use client";
-import { useRouter } from "next/navigation";
-import type { FC, HTMLProps } from "react";
+import { type FC, useState } from "react";
 import {
   acceptFriendRequest,
   deleteFriendRequest,
 } from "@/app/rp/profile/actions";
+import { Button } from "@/components/common";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { useUIContext } from "@/hooks/use-ui-context";
 import type { NovelistWorldNotification } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDateFromUnix } from "@/utils/helpers";
-import { Logger } from "@/utils/services";
-import { ShouldRender } from "../common";
 import { AvatarNew } from "../common/avatar-new";
 import * as S from "./styles";
 
-type Props = HTMLProps<HTMLDivElement> & {
+type Props = {
   notification?: NovelistWorldNotification | null;
   removeMethod: (notification: NovelistWorldNotification) => void;
+  onClose?: () => void;
 };
 
 export const FriendRequestNotification: FC<Props> = ({
   notification,
   removeMethod,
-  ...rest
+  onClose,
 }) => {
   const { routeToPage } = usePageRouter();
+  const { errorToast, successToast } = useUIContext();
+  const [loading, setLoading] = useState(false);
 
   const _handleAcceptFriendRequest = async () => {
-    if (!notification?.id) return;
-
-    const response = await acceptFriendRequest(notification.id);
-
+    if (!notification?.source?.id || loading) return;
+    setLoading(true);
+    const response = await acceptFriendRequest(notification.source.id);
+    setLoading(false);
     if (response?.message === API_MESSAGE.Success) {
+      successToast("Friend request accepted");
       removeMethod(notification);
+    } else {
+      errorToast("Could not accept friend request. Please try again.");
     }
   };
 
   const _handleDeleteFriendRequest = async () => {
-    if (!notification?.id) return;
-
-    const response = await deleteFriendRequest(notification.id);
-
+    if (!notification?.source?.id || loading) return;
+    setLoading(true);
+    const response = await deleteFriendRequest(notification.source.id);
+    setLoading(false);
     if (response?.message === API_MESSAGE.Success) {
+      successToast("Friend request declined");
       removeMethod(notification);
+    } else {
+      errorToast("Could not decline friend request. Please try again.");
     }
   };
 
-  const handleCardClick = (
-    e: React.MouseEvent<HTMLDivElement>,
-    notification: NovelistWorldNotification,
-  ) => {
-    const target = e.target as HTMLDivElement;
-    if (target.classList.contains("button")) return;
+  const handleClick = () => {
+    if (!notification) return;
+    onClose?.();
 
     if (notification.type === "MUSE_CONNECTION_REQUEST")
       routeToPage(ROUTES.Muse.View(notification.target.urlProp));
@@ -64,54 +69,52 @@ export const FriendRequestNotification: FC<Props> = ({
       routeToPage(ROUTES.Thread.View(notification.target.urlProp));
     else if (notification.type === "FRIEND_REQUEST")
       routeToPage(ROUTES.Profile.View(notification.source.urlProp).Index);
-    else if (notification.type === "REACTION")
+    else if (notification.type === "REACTION") {
       if (["COMMENT", "REPLY"].includes(notification.target.targetType))
         routeToPage(ROUTES.Thread.View(notification.target.urlProp));
-      else if (notification.target.targetType === "PROMPT") {
-        console.log("Here");
+      else if (notification.target.targetType === "PROMPT")
         routeToPage(ROUTES.Prompt.View(notification.target.urlProp));
-      }
+    }
   };
 
-  Logger.info("FriendRequestNotification rendered");
-
-  if (!notification) return <></>;
+  if (!notification) return null;
 
   return (
-    <S.CardWrapper {...rest}>
-      <S.Card
-        className="muse-card"
-        onClick={(e) => handleCardClick(e, notification)}
-      >
-        <S.CardHeader>
-          <AvatarNew
-            src={notification.source.image || ""}
-            alt={notification.source.title || "Avatar"}
-            name={"open"}
-          />
-          <S.NotificationBox>
-            <S.Title>{notification.source.title}</S.Title>
-            <S.Subtext>{notification.notificationText}</S.Subtext>
-            <S.StyledDate>
-              {notification.date
-                ? toFormattedDateFromUnix(notification.date)
-                : ""}
-            </S.StyledDate>
-          </S.NotificationBox>
-          <S.NotificationActions>
-            {/* <S.AcceptButton onClick={handleAcceptFriendRequest}>
-              <FaCheck />
-            </S.AcceptButton>
-            <S.RemoveButton onClick={handleDeleteFriendRequest}>
-              <RxCross2 />
-            </S.RemoveButton> */}
-
-            <ShouldRender preserveSpace if={!notification.isRead}>
-              <S.unReadBadge />
-            </ShouldRender>
-          </S.NotificationActions>
-        </S.CardHeader>
-      </S.Card>
-    </S.CardWrapper>
+    <S.Item $unread={!notification.isRead} onClick={handleClick}>
+      <AvatarNew
+        src={notification.source.image || ""}
+        alt={notification.source.title || "Avatar"}
+      />
+      <S.Body>
+        <S.Name>{notification.source.title}</S.Name>
+        <S.Text>{notification.notificationText}</S.Text>
+        <S.Meta>
+          <S.Timestamp>
+            {notification.date
+              ? toFormattedDateFromUnix(notification.date)
+              : ""}
+          </S.Timestamp>
+        </S.Meta>
+        {notification.type === "FRIEND_REQUEST" && (
+          <S.ButtonRow onClick={(e) => e.stopPropagation()}>
+            <Button
+              variant="positive"
+              className={loading ? "messaging" : undefined}
+              onClick={_handleAcceptFriendRequest}
+            >
+              {loading ? "…" : "Accept"}
+            </Button>
+            <Button
+              variant="negative"
+              className={loading ? "messaging" : undefined}
+              onClick={_handleDeleteFriendRequest}
+            >
+              {loading ? "…" : "Decline"}
+            </Button>
+          </S.ButtonRow>
+        )}
+      </S.Body>
+      {!notification.isRead && <S.UnreadDot aria-label="Unread" />}
+    </S.Item>
   );
 };

@@ -13,7 +13,7 @@ export const AttachmentFallback = styled.div`
   gap: 8px;
 `;
 
-import { keyframes, styled } from "styled-components";
+import { css, keyframes, styled } from "styled-components";
 import { savedMentionTagCss } from "@/components/rich-text-editor-input/mention-chip";
 import { Pill } from "../pill";
 
@@ -41,7 +41,18 @@ const flash = keyframes`
   }
 `;
 
-export const ChatRow = styled.div`
+const newMessageIn = keyframes`
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+`;
+
+export const ChatRow = styled.div<{ $isNew?: boolean }>`
   display: flex;
   width: 100%;
   align-items: flex-start;
@@ -62,6 +73,14 @@ export const ChatRow = styled.div`
   &.highlighted {
     animation: ${flash} 1.4s ease-out forwards;
   }
+
+  ${({ $isNew }) =>
+    $isNew &&
+    css`
+      &.sender {
+        animation: ${newMessageIn} 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+    `}
 `;
 
 export const SenderAvatarWrap = styled.div`
@@ -629,6 +648,29 @@ export const TimeStamp = styled.span`
   opacity: 0.7;
   margin-inline: 2px;
   color: var(--text-secondary);
+`;
+
+export const RetryRow = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  margin-inline: 2px;
+  color: #e05252;
+  font-size: 11px;
+  opacity: 0.9;
+
+  &:hover {
+    opacity: 1;
+    text-decoration: underline;
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
 `;
 
 export const ReactionsBar = styled.div`

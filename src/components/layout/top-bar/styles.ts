@@ -1,5 +1,5 @@
 import styled, { keyframes } from "styled-components";
-import { Avatar } from "@/components/common";
+import { AvatarNew } from "@/components/common/avatar-new";
 import {
   BASE_TRANSITION,
   DEV_MODE_BORDER,
@@ -157,6 +157,11 @@ export const AvatarContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 20px;
+
+  .avatar {
+    width: 50px;
+    height: 50px;
+  }
 `;
 
 export const NameContainer = styled.div`
@@ -177,22 +182,18 @@ export const NameContainer = styled.div`
   }
 `;
 
-export const SearchAvatar = styled(Avatar)`
-  --size: 50px;
-`;
+export const SearchAvatar = styled(AvatarNew)``;
 
 export const ActionsContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 28px;
   margin-right: 0.5rem;
 
-  transition-property: gap, margin-right;
-  transition-duration: 0.2s;
-  transition-timing-function: ease-in-out;
+  @media (max-width: 700px) {
+    gap: 10px;
 
-    @media (max-width: 700px) {
     &.searchBarExpanded {
       gap: 0px;
       margin-right: 0rem;

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
+  FcBusinessman,
   FcCollaboration,
   FcComments,
   FcConferenceCall,
@@ -13,6 +14,7 @@ import {
   FcVoicePresentation,
 } from "react-icons/fc";
 import { FiChevronRight, FiEdit2 } from "react-icons/fi";
+import { IoArrowBack } from "react-icons/io5";
 import { sendFeedbackMessage } from "@/app/rp/profile/actions";
 import { ShouldRender } from "@/components/common";
 import { AvatarNew } from "@/components/common/avatar-new";
@@ -44,6 +46,12 @@ export default function UserMenuPage() {
   const { routeToPage, stopPageLoading } = usePageRouter();
   const { successToast, errorToast } = useUIContext();
   const { handlePostLogout } = usePostLogout();
+  const [closing, setClosing] = useState(false);
+
+  const goBack = useCallback(() => {
+    setClosing(true);
+    setTimeout(() => window.history.back(), 310);
+  }, []);
 
   useEffect(() => {
     if (authState === "LOGGED_IN") {
@@ -73,166 +81,178 @@ export default function UserMenuPage() {
     : user.username;
 
   return (
-    <S.Container>
-      <AppAlertDialog
-        heading="Logout?"
-        text="Are you sure you want to logout?"
-        open={showLogoutAlert}
-        onOpenChange={setShowLogoutAlert}
-        onConfirm={handleLogout}
-        actionButtonLabel="Logout"
-      />
-      <AppAlertDialog
-        heading="Contact Support"
-        text="Send a message to support. We will try to get back to you via in-app notifications."
-        body={
-          <ContactSupportForm
-            message={supportMessage}
-            setMessage={setSupportMessage}
-          />
-        }
-        open={showContactSupportAlert}
-        onOpenChange={setShowContactSupportAlert}
-        onConfirm={async () => {
-          if (!supportMessage.trim()) return;
-          await handleSendFeedbackMessage();
-          setShowContactSupportAlert(false);
-          setSupportMessage("");
-        }}
-        actionButtonLabel="Send message"
-        actionColor="neutral"
-        isConfirmDisabled={supportMessage.trim() === ""}
-      />
+    <S.SlidePanel $closing={closing}>
+      <S.BackBar>
+        <S.BackButton type="button" aria-label="Go back" onClick={goBack}>
+          <IoArrowBack />
+        </S.BackButton>
+        <S.BackBarTitle>Menu</S.BackBarTitle>
+      </S.BackBar>
 
-      <S.UserHeader
-        onClick={() => routeToPage(ROUTES.Profile.View(user.username).Index)}
-      >
-        <AvatarNew
-          src={novelist?.image ?? null}
-          alt={user.username}
-          username={user.username}
+      <S.Container>
+        <AppAlertDialog
+          heading="Logout?"
+          text="Are you sure you want to logout?"
+          open={showLogoutAlert}
+          onOpenChange={setShowLogoutAlert}
+          onConfirm={handleLogout}
+          actionButtonLabel="Logout"
         />
-        <S.UserInfo>
-          <S.UserName>{displayName}</S.UserName>
-          <S.UserHandle>@{user.username}</S.UserHandle>
-        </S.UserInfo>
-        <S.EditButton
-          onClick={(e) => {
-            e.stopPropagation();
-            routeToPage(ROUTES.Profile.Edit);
+        <AppAlertDialog
+          heading="Contact Support"
+          text="Send a message to support. We will try to get back to you via in-app notifications."
+          body={
+            <ContactSupportForm
+              message={supportMessage}
+              setMessage={setSupportMessage}
+            />
+          }
+          open={showContactSupportAlert}
+          onOpenChange={setShowContactSupportAlert}
+          onConfirm={async () => {
+            if (!supportMessage.trim()) return;
+            await handleSendFeedbackMessage();
+            setShowContactSupportAlert(false);
+            setSupportMessage("");
           }}
+          actionButtonLabel="Send message"
+          actionColor="neutral"
+          isConfirmDisabled={supportMessage.trim() === ""}
+        />
+
+        <S.UserHeader
+          onClick={() => routeToPage(ROUTES.Profile.View(user.username).Index)}
         >
-          <FiEdit2 />
-        </S.EditButton>
-      </S.UserHeader>
-
-      <ShouldRender if={authState === "LOGGED_IN"}>
-        <S.Section>
-          <S.MenuItem onClick={() => routeToPage(ROUTES.explore)}>
-            <Flex justify="flex-start" align="center" gap="12px">
-              <FcVoicePresentation />
-              Explore
-            </Flex>
-            <FiChevronRight size={16} color="gray" />
-          </S.MenuItem>
-          <S.MenuItem onClick={() => routeToPage(ROUTES.outgoingThreads)}>
-            <Flex justify="flex-start" align="center" gap="12px">
-              <FcCollaboration />
-              Interactions
-            </Flex>
-            <ShouldRender if={(unreadReplyCount ?? 0) > 0}>
-              <S.UnreadBadge>
-                {(unreadReplyCount ?? 0) > 99 ? "99+" : (unreadReplyCount ?? 0)}
-              </S.UnreadBadge>
-            </ShouldRender>
-            <FiChevronRight size={16} color="gray" />
-          </S.MenuItem>
-        </S.Section>
-
-        <S.Section>
-          <S.MenuItem
-            onClick={() =>
-              routeToPage(ROUTES.Profile.View(novelist?.username || "").Muses)
-            }
+          <AvatarNew
+            src={novelist?.image ?? null}
+            alt={user.username}
+            username={user.username}
+          />
+          <S.UserInfo>
+            <S.UserName>{displayName}</S.UserName>
+            <S.UserHandle>@{user.username}</S.UserHandle>
+          </S.UserInfo>
+          <S.EditButton
+            onClick={(e) => {
+              e.stopPropagation();
+              routeToPage(ROUTES.Profile.Edit);
+            }}
           >
-            <Flex justify="flex-start" align="center" gap="12px">
-              <FcConferenceCall />
-              Characters
-            </Flex>
-            <FiChevronRight size={16} color="gray" />
-          </S.MenuItem>
-          <S.MenuItem onClick={() => routeToPage(ROUTES.conversations)}>
-            <Flex justify="flex-start" align="center" gap="12px">
-              <FcComments />
-              Inbox
-            </Flex>
-            <ShouldRender if={(unreadConversationIds?.length ?? 0) > 0}>
-              <S.UnreadBadge>
-                {(unreadConversationIds?.length ?? 0) > 99
-                  ? "99+"
-                  : (unreadConversationIds?.length ?? 0)}
-              </S.UnreadBadge>
-            </ShouldRender>
-            <FiChevronRight size={16} color="gray" />
-          </S.MenuItem>
-          <S.MenuItem
-            onClick={() =>
-              routeToPage(ROUTES.Profile.View(novelist?.username || "").Music)
-            }
-          >
-            <Flex justify="flex-start" align="center" gap="12px">
-              <FcMusic />
-              Music
-            </Flex>
-            <FiChevronRight size={16} color="gray" />
-          </S.MenuItem>
-        </S.Section>
-      </ShouldRender>
+            <FiEdit2 />
+          </S.EditButton>
+        </S.UserHeader>
 
-      <ShouldRender if={authState === "UNINITIALIZED"}>
+        <ShouldRender if={authState === "LOGGED_IN"}>
+          <S.Section>
+            <S.MenuItem onClick={() => routeToPage(ROUTES.explore)}>
+              <Flex justify="flex-start" align="center" gap="12px">
+                <FcVoicePresentation />
+                Explore
+              </Flex>
+              <FiChevronRight size={16} color="gray" />
+            </S.MenuItem>
+            <S.MenuItem onClick={() => routeToPage(ROUTES.outgoingThreads)}>
+              <Flex justify="flex-start" align="center" gap="12px">
+                <FcCollaboration />
+                Interactions
+              </Flex>
+              <ShouldRender if={(unreadReplyCount ?? 0) > 0}>
+                <S.UnreadBadge>
+                  {(unreadReplyCount ?? 0) > 99
+                    ? "99+"
+                    : (unreadReplyCount ?? 0)}
+                </S.UnreadBadge>
+              </ShouldRender>
+              <FiChevronRight size={16} color="gray" />
+            </S.MenuItem>
+          </S.Section>
+
+          <S.Section>
+            <S.MenuItem
+              onClick={() =>
+                routeToPage(ROUTES.Profile.View(novelist?.username || "").Muses)
+              }
+            >
+              <Flex justify="flex-start" align="center" gap="12px">
+                <FcConferenceCall />
+                Characters
+              </Flex>
+              <FiChevronRight size={16} color="gray" />
+            </S.MenuItem>
+            <S.MenuItem onClick={() => routeToPage(ROUTES.conversations)}>
+              <Flex justify="flex-start" align="center" gap="12px">
+                <FcComments />
+                Inbox
+              </Flex>
+              <ShouldRender if={(unreadConversationIds?.length ?? 0) > 0}>
+                <S.UnreadBadge>
+                  {(unreadConversationIds?.length ?? 0) > 99
+                    ? "99+"
+                    : (unreadConversationIds?.length ?? 0)}
+                </S.UnreadBadge>
+              </ShouldRender>
+              <FiChevronRight size={16} color="gray" />
+            </S.MenuItem>
+            <S.MenuItem
+              onClick={() =>
+                routeToPage(ROUTES.Profile.View(novelist?.username || "").Music)
+              }
+            >
+              <Flex justify="flex-start" align="center" gap="12px">
+                <FcMusic />
+                Music
+              </Flex>
+              <FiChevronRight size={16} color="gray" />
+            </S.MenuItem>
+          </S.Section>
+        </ShouldRender>
+
+        <ShouldRender if={authState === "UNINITIALIZED"}>
+          <S.Section>
+            <S.MenuItem onClick={() => routeToPage(ROUTES.Onboarding)}>
+              <Flex justify="flex-start" align="center" gap="12px">
+                <FcBusinessman />
+                Onboarding
+              </Flex>
+              <FiChevronRight size={16} color="gray" />
+            </S.MenuItem>
+          </S.Section>
+        </ShouldRender>
+
         <S.Section>
-          <S.MenuItem onClick={() => routeToPage(ROUTES.Onboarding)}>
+          <S.MenuItem onClick={() => routeToPage(ROUTES.Terms)}>
             <Flex justify="flex-start" align="center" gap="12px">
-              Onboarding
+              <FcLibrary />
+              Terms & conditions
+            </Flex>
+            <FiChevronRight size={16} color="gray" />
+          </S.MenuItem>
+          <S.MenuItem onClick={() => routeToPage(ROUTES.FAQs)}>
+            <Flex justify="flex-start" align="center" gap="12px">
+              <FcFaq />
+              FAQs
+            </Flex>
+            <FiChevronRight size={16} color="gray" />
+          </S.MenuItem>
+          <S.MenuItem onClick={() => setShowContactSupportAlert(true)}>
+            <Flex justify="flex-start" align="center" gap="12px">
+              <FcSupport />
+              Help & support
             </Flex>
             <FiChevronRight size={16} color="gray" />
           </S.MenuItem>
         </S.Section>
-      </ShouldRender>
 
-      <S.Section>
-        <S.MenuItem onClick={() => routeToPage(ROUTES.Terms)}>
-          <Flex justify="flex-start" align="center" gap="12px">
-            <FcLibrary />
-            Terms & conditions
-          </Flex>
-          <FiChevronRight size={16} color="gray" />
-        </S.MenuItem>
-        <S.MenuItem onClick={() => routeToPage(ROUTES.FAQs)}>
-          <Flex justify="flex-start" align="center" gap="12px">
-            <FcFaq />
-            FAQs
-          </Flex>
-          <FiChevronRight size={16} color="gray" />
-        </S.MenuItem>
-        <S.MenuItem onClick={() => setShowContactSupportAlert(true)}>
-          <Flex justify="flex-start" align="center" gap="12px">
-            <FcSupport />
-            Help & support
-          </Flex>
-          <FiChevronRight size={16} color="gray" />
-        </S.MenuItem>
-      </S.Section>
-
-      <S.Section>
-        <S.DestructiveMenuItem onClick={() => setShowLogoutAlert(true)}>
-          <Flex justify="flex-start" align="center" gap="12px">
-            <FcExport />
-            Log out
-          </Flex>
-          <FiChevronRight size={16} color="gray" />
-        </S.DestructiveMenuItem>
-      </S.Section>
-    </S.Container>
+        <S.Section>
+          <S.DestructiveMenuItem onClick={() => setShowLogoutAlert(true)}>
+            <Flex justify="flex-start" align="center" gap="12px">
+              <FcExport />
+              Log out
+            </Flex>
+            <FiChevronRight size={16} color="gray" />
+          </S.DestructiveMenuItem>
+        </S.Section>
+      </S.Container>
+    </S.SlidePanel>
   );
 }

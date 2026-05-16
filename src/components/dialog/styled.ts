@@ -20,6 +20,7 @@ export const Overlay = styled(AlertDialog.Overlay)`
 background-color: rgba(0, 0, 0, 0.66);
 position: fixed;
 inset: 0;
+z-index: 200;
 animation: ${overlayShow} 150ms ease-out;
 `;
 
@@ -35,6 +36,7 @@ transform: translate(-50%, -50%);
 width: 95vw;
 max-width: 450px;
 padding: 8px;
+z-index: 201;
 animation: ${contentShow} 150ms ease-out;
 color: var(--text);
 font-family: var(--font);

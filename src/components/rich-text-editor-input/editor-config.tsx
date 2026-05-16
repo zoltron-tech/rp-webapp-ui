@@ -25,13 +25,9 @@ export const FONTS = [
 export const DEFAULT_FONT = "Arial";
 
 export const FONT_SIZES = [
-  { label: "H1", value: "var(--font-size-h1)" },
-  { label: "H2", value: "var(--font-size-h2)" },
-  { label: "H3", value: "var(--font-size-h3)" },
-  { label: "H4", value: "var(--font-size-h4)" },
-  { label: "H5", value: "var(--font-size-h5)" },
-  { label: "H6", value: "var(--font-size-h6)" },
-  { label: "16", value: "var(--font-size-input)" },
+  { label: "Heading", shortLabel: "43pt", value: "var(--font-size-h2)" },
+  { label: "Subheading", shortLabel: "27pt", value: "var(--font-size-h4)" },
+  { label: "Normal", shortLabel: "16pt", value: "var(--font-size-input)" },
 ];
 
 export const DEFAULT_FONT_SIZE = "var(--font-size-input)";
@@ -45,6 +41,25 @@ export const FORMAT_BUTTONS = [
     id: "underline",
     title: "Underline",
   },
+];
+
+// 15 preset highlight colors arranged in a 4×4 grid (last cell reserved for "remove")
+export const HIGHLIGHT_COLORS = [
+  { name: "Red", value: "#ef4444" },
+  { name: "Orange", value: "#f97316" },
+  { name: "Amber", value: "#f59e0b" },
+  { name: "Yellow", value: "#eab308" },
+  { name: "Lime", value: "#84cc16" },
+  { name: "Green", value: "#22c55e" },
+  { name: "Emerald", value: "#10b981" },
+  { name: "Teal", value: "#14b8a6" },
+  { name: "Cyan", value: "#06b6d4" },
+  { name: "Sky", value: "#0ea5e9" },
+  { name: "Blue", value: "#3b82f6" },
+  { name: "Indigo", value: "#6366f1" },
+  { name: "Violet", value: "#8b5cf6" },
+  { name: "Pink", value: "#ec4899" },
+  { name: "Rose", value: "#f43f5e" },
 ];
 
 export const ALIGNMENT_BUTTONS = [

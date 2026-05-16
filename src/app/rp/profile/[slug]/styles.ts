@@ -10,6 +10,35 @@ interface BannerProps {
   src: string;
 }
 
+/**
+ * Slide-up compose overlay for mobile "Add Prompt" flow.
+ * The `transform` on this element makes it the containing block for the
+ * fixed-positioned FPRoot inside FullPagePromptInput.
+ */
+export const ComposeSheet = styled.div<{ $open: boolean }>`
+  position: fixed;
+  top: var(--topbar-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  transform: translateY(${(p) => (p.$open ? "0" : "100%")});
+  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: ${(p) => (p.$open ? "auto" : "none")};
+
+  /* Since FPRoot is position:fixed relative to this element (transform
+     creates a new containing block), reset its top to 0. */
+  .compose-fp-inner {
+    top: 0 !important;
+    height: 100% !important;
+  }
+
+  /* Not needed on desktop — inline PromptInput is used there. */
+  @media screen and (min-width: 801px) {
+    display: none;
+  }
+`;
+
 export const AddPromptButton = styled.button`
   all: unset;
   box-sizing: border-box;
@@ -620,18 +649,16 @@ export const MutualFriendsList = styled.div`
 export const FriendsButton = styled.div`
   width: 95%;
   align-items: flex-start;
-  padding-block: 8px;
-  padding-inline: 12px;
-  border-radius: 0;
+  padding-inline: 20px;
   background-color: var(--bg-3);
   border: 1px solid var(--bg-6);
-  height: 60px;
+  height: 50px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  border-radius: 5px;
+  border-radius: 50px;
 
   &:hover {
     background-color: ${({ theme }: any) => theme.hoverGreyAlpha};
@@ -643,6 +670,16 @@ export const FriendsButtonLabel = styled.span`
   font-weight: 500;
   color: var(--text);
   flex: 1;
+  /* full label width, but border is short */
+  &::after {
+    content: "";
+    display: block;
+    margin-top: 2px;
+    width: 120px;
+    height: 2px;
+    background: linear-gradient(to right, var(--accent), transparent);
+    border-radius: 1px;
+  }
 `;
 
 export const FriendsAvatarStack = styled.div`

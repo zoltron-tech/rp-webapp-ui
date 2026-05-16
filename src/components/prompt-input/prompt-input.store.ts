@@ -19,6 +19,9 @@ export type PromptInputState = {
   media: File | null;
   promptText: string | null;
   gifToInsert: string | null;
+  uploadingImage: { objectUrl: string } | null;
+  uploadedImage: { objectUrl: string; finalUrl: string } | null;
+  uploadFailedImage: { objectUrl: string } | null;
 };
 
 export const INITIAL_STATE: PromptInputState = {
@@ -29,6 +32,9 @@ export const INITIAL_STATE: PromptInputState = {
   parentId: "",
   promptText: "",
   type: "prompt",
+  uploadedImage: null,
+  uploadFailedImage: null,
+  uploadingImage: null,
 };
 
 type PromptInputStoreKey = keyof PromptInputState;

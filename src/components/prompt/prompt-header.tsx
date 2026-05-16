@@ -63,11 +63,12 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
 
     const response = await reportAction(promptId, "", "PROMPT");
     if (response?.message === API_MESSAGE.Success) {
+      setPromptState({ promptAlert: null });
       successToast(`Reported successfully`);
     } else {
       errorToast("There was an issue while reporting this prompt.");
     }
-  }, [promptId, successToast, errorToast]);
+  }, [promptId, setPromptState, successToast, errorToast]);
 
   const handleDeletePrompt = useCallback(async () => {
     if (!promptId) return;

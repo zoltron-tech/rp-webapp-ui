@@ -919,6 +919,10 @@ export const InfoCardAvatar = styled.div<{ $src: string }>`
   height: 82px;
   border-radius: 50%;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.35);
   background-image: url(${({ $src }) => $src});
   background-size: cover;
   background-position: center;
@@ -1119,6 +1123,39 @@ export const GalleryImage = styled.img`
 
   ${GalleryItem}:hover & {
     transform: scale(1.04);
+  }
+`;
+
+export const GalleryDeleteBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  z-index: 4;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s;
+
+  ${GalleryItem}:hover & {
+    opacity: 1;
+  }
+
+  @media (max-width: 600px) {
+    opacity: 1;
+  }
+
+  &:hover {
+    background: rgb(185, 28, 28);
+    color: #fff;
   }
 `;
 

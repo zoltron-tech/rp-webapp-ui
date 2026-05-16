@@ -2,7 +2,7 @@
 import classNames from "classnames";
 import { useParams } from "next/navigation";
 import { type FC, useState } from "react";
-import { FaRegTrashCan } from "react-icons/fa6";
+import { FaRegTrashCan, FaUser } from "react-icons/fa6";
 import { GrEdit } from "react-icons/gr";
 import { deleteMuseAction } from "@/app/rp/muse/actions";
 import { useGlobalState } from "@/context/store/stores";
@@ -26,6 +26,7 @@ export const MuseCard: FC<Props> = ({ muse, className, ...rest }) => {
   const params = useParams();
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [nsfwRevealed, setNsfwRevealed] = useState(false);
+  const [coverError, setCoverError] = useState(false);
   const { emit } = useCustomEvents(EVENTS.MUSE.base);
 
   const user = useGlobalState("user");
@@ -123,6 +124,19 @@ export const MuseCard: FC<Props> = ({ muse, className, ...rest }) => {
               transition: "filter 0.3s ease",
             }}
           />
+          {coverSrc && (
+            // biome-ignore lint/a11y/useAltText: hidden probe only
+            <img
+              src={coverSrc}
+              style={{ display: "none" }}
+              onError={() => setCoverError(true)}
+            />
+          )}
+          {(!coverSrc || coverError) && (
+            <S.FallbackImageIcon>
+              <FaUser size={56} />
+            </S.FallbackImageIcon>
+          )}
           {showNsfwOverlay && (
             <S.NSFWOverlay>
               <S.NSFWLabel>⚠️ Sensitive content</S.NSFWLabel>

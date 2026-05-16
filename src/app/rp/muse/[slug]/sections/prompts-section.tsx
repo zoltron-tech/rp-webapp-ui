@@ -42,12 +42,12 @@ export function PromptsSection({ muse, prompts }: Props) {
                 {prompt.media && (
                   <S.PromptMedia>
                     <ShouldRender
-                      if={prompt.media.toLowerCase().endsWith("mp4")}
+                      if={/\.(mp4|mov|quicktime)$/i.test(prompt.media)}
                     >
                       <S.PromptVideo src={`${prompt.media}#t=0.3`} controls />
                     </ShouldRender>
                     <ShouldRender
-                      if={!prompt.media.toLowerCase().endsWith("mp4")}
+                      if={!/\.(mp4|mov|quicktime)$/i.test(prompt.media)}
                     >
                       <AppImageViewer src={prompt.media} alt="Prompt media">
                         <S.CardBackground

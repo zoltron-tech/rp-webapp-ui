@@ -90,7 +90,21 @@ export const VideoViewer = ({
   useEffect(() => {
     const onChange = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", onChange);
-    return () => document.removeEventListener("fullscreenchange", onChange);
+    document.addEventListener("webkitfullscreenchange", onChange);
+
+    // iOS Safari fires these events on the video element itself
+    const v = videoRef.current;
+    const onBegin = () => setIsFullscreen(true);
+    const onEnd = () => setIsFullscreen(false);
+    v?.addEventListener("webkitbeginfullscreen", onBegin);
+    v?.addEventListener("webkitendfullscreen", onEnd);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", onChange);
+      document.removeEventListener("webkitfullscreenchange", onChange);
+      v?.removeEventListener("webkitbeginfullscreen", onBegin);
+      v?.removeEventListener("webkitendfullscreen", onEnd);
+    };
   }, []);
 
   /* ── Prevent PIP (standard + iOS WebKit) ──────────────────────────── */
@@ -197,6 +211,24 @@ export const VideoViewer = ({
 
   /* ── Fullscreen ─────────────────────────────────────────────────────────── */
   const toggleFullscreen = useCallback(() => {
+    type IOSVideo = HTMLVideoElement & {
+      webkitEnterFullscreen?: () => void;
+      webkitExitFullscreen?: () => void;
+      webkitDisplayingFullscreen?: boolean;
+    };
+    const v = videoRef.current as IOSVideo | null;
+
+    // iOS Safari: requestFullscreen is unsupported; use the video element API
+    if (v?.webkitEnterFullscreen) {
+      if (v.webkitDisplayingFullscreen) {
+        v.webkitExitFullscreen?.();
+      } else {
+        v.webkitEnterFullscreen();
+      }
+      return;
+    }
+
+    // Standard browsers
     if (!containerRef.current) return;
     if (document.fullscreenElement) {
       document.exitFullscreen();

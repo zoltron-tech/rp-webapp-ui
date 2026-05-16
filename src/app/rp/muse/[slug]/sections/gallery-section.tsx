@@ -10,7 +10,11 @@ import {
   FiUploadCloud,
 } from "react-icons/fi";
 import styled from "styled-components";
-import { addMuseMediaAction } from "@/app/rp/muse/actions";
+import {
+  addMuseMediaAction,
+  deleteMuseMediaAction,
+} from "@/app/rp/muse/actions";
+import { deleteMedia } from "@/app/rp/profile/actions";
 import { AppAlertDialog } from "@/components/dialog";
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { VideoViewer } from "@/components/image-viewer/VideoViewer";
@@ -25,6 +29,12 @@ import * as S from "../styles";
 const GALLERY_GAP = 10;
 const GALLERY_TARGET_HEIGHT = 300;
 
+const VIDEO_EXTENSIONS = [".mp4", ".mov", ".quicktime"];
+function isVideoUrl(url: string) {
+  const lower = url.toLowerCase();
+  return VIDEO_EXTENSIONS.some((ext) => lower.endsWith(ext));
+}
+
 function GalleryImageItem({
   url,
   width,
@@ -33,6 +43,8 @@ function GalleryImageItem({
   onItemClick,
   isCardBg,
   isWallpaper,
+  isOwner,
+  onDelete,
 }: {
   url: string;
   width: number;
@@ -41,6 +53,8 @@ function GalleryImageItem({
   onItemClick: () => void;
   isCardBg: boolean;
   isWallpaper: boolean;
+  isOwner: boolean;
+  onDelete: () => void;
 }) {
   const [revealed, setRevealed] = useState(false);
   const isNsfw = useNsfwCheck(url, skipNsfw);
@@ -80,6 +94,18 @@ function GalleryImageItem({
           </GalleryNsfwReveal>
         </GalleryNsfwOverlay>
       )}
+      {isOwner && (
+        <S.GalleryDeleteBtn
+          type="button"
+          aria-label="Delete media"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+        >
+          <FaRegTrashCan size={11} />
+        </S.GalleryDeleteBtn>
+      )}
     </S.GalleryItem>
   );
 }
@@ -90,12 +116,16 @@ function JustifiedGallery({
   cardBgSrc,
   wallpaperSrc,
   skipNsfw,
+  isOwner,
+  onDeleteItem,
 }: {
   mediaUrls: string[];
   onItemClick: (idx: number) => void;
   cardBgSrc?: string;
   wallpaperSrc?: string;
   skipNsfw: boolean;
+  isOwner: boolean;
+  onDeleteItem: (url: string) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -113,7 +143,7 @@ function JustifiedGallery({
 
   useEffect(() => {
     for (const url of mediaUrls) {
-      if (url.toLowerCase().endsWith(".mp4")) {
+      if (isVideoUrl(url)) {
         const video = document.createElement("video");
         video.preload = "metadata";
         video.onloadedmetadata = () => {
@@ -145,8 +175,8 @@ function JustifiedGallery({
     if (!containerWidth) return [];
     type Item = { url: string; isVideo: boolean; ratio: number };
     const items: Item[] = mediaUrls.map((url) => ({
-      isVideo: url.toLowerCase().endsWith(".mp4"),
-      ratio: ratios[url] ?? (url.toLowerCase().endsWith(".mp4") ? 16 / 9 : 1),
+      isVideo: isVideoUrl(url),
+      ratio: ratios[url] ?? (isVideoUrl(url) ? 16 / 9 : 1),
       url,
     }));
 
@@ -229,6 +259,18 @@ function JustifiedGallery({
                     <FaPlay size={18} />
                   </S.GalleryPlayCircle>
                 </S.GalleryPlayOverlay>
+                {isOwner && (
+                  <S.GalleryDeleteBtn
+                    type="button"
+                    aria-label="Delete media"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteItem(item.url);
+                    }}
+                  >
+                    <FaRegTrashCan size={11} />
+                  </S.GalleryDeleteBtn>
+                )}
               </S.GalleryItem>
             ) : (
               <GalleryImageItem
@@ -240,6 +282,8 @@ function JustifiedGallery({
                 onItemClick={() => onItemClick(mediaUrls.indexOf(item.url))}
                 isCardBg={item.url === cardBgSrc}
                 isWallpaper={item.url === wallpaperSrc}
+                isOwner={isOwner}
+                onDelete={() => onDeleteItem(item.url)}
               />
             ),
           )}
@@ -261,6 +305,7 @@ const VALID_TYPES = [
   "image/gif",
   "image/webp",
   "video/mp4",
+  "video/quicktime",
 ];
 const MAX_FILE_SIZE = 30 * 1024 * 1024;
 
@@ -276,7 +321,7 @@ function UploadPanel({
   onUploaded: (urls: string[]) => void;
 }) {
   const { uploadMedia } = useUploadMedia();
-  const { successToast } = useUIContext();
+  const { successToast, errorToast } = useUIContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -301,7 +346,7 @@ function UploadPanel({
       const accepted: PendingFile[] = [];
       for (const file of files.slice(0, remaining)) {
         if (!VALID_TYPES.includes(file.type)) {
-          setError("Unsupported type. Allowed: PNG, JPG, GIF, WEBP, MP4.");
+          setError("Unsupported type. Allowed: PNG, JPG, GIF, WEBP, MP4, MOV.");
           continue;
         }
         if (file.size > MAX_FILE_SIZE) {
@@ -310,7 +355,7 @@ function UploadPanel({
         }
         accepted.push({
           file,
-          isVideo: file.type === "video/mp4",
+          isVideo: file.type === "video/mp4" || file.type === "video/quicktime",
           previewUrl: URL.createObjectURL(file),
         });
       }
@@ -433,7 +478,7 @@ function UploadPanel({
 
       <UploadHint>
         {existingCount < MAX_TOTAL
-          ? `You can add up to ${MAX_TOTAL - existingCount} more file${MAX_TOTAL - existingCount === 1 ? "" : "s"} · PNG, JPG, GIF, WEBP, MP4 · max 30 MB each`
+          ? `You can add up to ${MAX_TOTAL - existingCount} more file${MAX_TOTAL - existingCount === 1 ? "" : "s"} · PNG, JPG, GIF, WEBP, MP4, MOV · max 30 MB each`
           : `Gallery full — ${MAX_TOTAL} files maximum.`}
       </UploadHint>
 
@@ -466,7 +511,7 @@ function UploadPanel({
         ref={fileInputRef}
         type="file"
         multiple
-        accept="image/png,image/jpeg,image/gif,image/webp,video/mp4"
+        accept="image/png,image/jpeg,image/gif,image/webp,video/mp4,video/quicktime"
         hidden
         onChange={handleFileSelect}
         disabled={uploading}
@@ -477,8 +522,10 @@ function UploadPanel({
 
 export function GallerySection({ muse, media }: Props) {
   const user = useGlobalState("user");
+  const { successToast } = useUIContext();
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [confirmDeleteUrl, setConfirmDeleteUrl] = useState<string | null>(null);
   const [localMedia, setLocalMedia] = useState<string[]>(media ?? []);
   const accent = muse?.useAccent ? muse.accent : undefined;
 
@@ -490,7 +537,7 @@ export function GallerySection({ muse, media }: Props) {
   const isOwner = user?.username === muse?.pennedBy?.username;
 
   const currentItem = galleryIndex !== null ? localMedia[galleryIndex] : null;
-  const currentIsVideo = currentItem?.toLowerCase().endsWith(".mp4") ?? false;
+  const currentIsVideo = currentItem ? isVideoUrl(currentItem) : false;
 
   const goPrev =
     galleryIndex !== null && galleryIndex > 0
@@ -506,6 +553,21 @@ export function GallerySection({ muse, media }: Props) {
     setLocalMedia((prev) => [...prev, ...urls]);
     setUploadOpen(false);
   }, []);
+
+  const handleDeleteMedia = useCallback((url: string) => {
+    setConfirmDeleteUrl(url);
+  }, []);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!muse?.id || !confirmDeleteUrl) return;
+    const url = confirmDeleteUrl;
+    setConfirmDeleteUrl(null);
+    setLocalMedia((prev) => prev.filter((u) => u !== url));
+    setGalleryIndex(null);
+    successToast?.("Media deleted.");
+    await deleteMuseMediaAction(muse.id, url);
+    await deleteMedia(url);
+  }, [muse?.id, confirmDeleteUrl, successToast]);
 
   return (
     <S.CardExpandedWrapper>
@@ -553,6 +615,8 @@ export function GallerySection({ muse, media }: Props) {
                 mediaUrls={localMedia}
                 onItemClick={setGalleryIndex}
                 skipNsfw={isOwner}
+                isOwner={isOwner}
+                onDeleteItem={handleDeleteMedia}
                 cardBgSrc={
                   isOwner && muse?.useExtraImages
                     ? (muse?.cardBackground?.src ?? undefined)
@@ -586,6 +650,20 @@ export function GallerySection({ muse, media }: Props) {
             />
           ) : null
         }
+      />
+
+      {/* Delete confirmation */}
+      <AppAlertDialog
+        open={confirmDeleteUrl !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmDeleteUrl(null);
+        }}
+        heading="Delete media?"
+        text="This will permanently remove the file from your gallery. This action cannot be undone."
+        actionButtonLabel="Delete"
+        actionColor="negative"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmDeleteUrl(null)}
       />
     </S.CardExpandedWrapper>
   );

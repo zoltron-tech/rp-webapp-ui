@@ -260,6 +260,16 @@ export const ImageWrapper = styled.div`
   overflow: hidden;
 `;
 
+export const FallbackImageIcon = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.18);
+  pointer-events: none;
+`;
+
 export const NSFWOverlay = styled.div`
   position: absolute;
   inset: 0;

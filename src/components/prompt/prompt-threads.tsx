@@ -160,16 +160,38 @@ export const PromptThreads: FC = () => {
 
   return (
     <>
+      {authState === "LOGGED_IN" && canInteract && (
+        <>
+          {isMobile ? (
+            <PromptComposeTrigger
+              avatarSrc={initialSelection?.image ?? novelist?.image ?? null}
+              avatarAlt={initialSelection?.name ?? novelist?.username ?? "You"}
+              onClick={handleAddCommentClick}
+              placeholders={
+                isOOCPost ? COMMENT_OOC_PLACEHOLDERS : COMMENT_PLACEHOLDERS
+              }
+            />
+          ) : (
+            <PromptInput
+              className="comment-action"
+              initialSelection={initialSelection}
+              dropdownSelection={isOOCPost ? "NOVELIST" : "MUSE"}
+              parentId={promptId}
+              type="comment"
+              onSend={refetchComments}
+            />
+          )}
+        </>
+      )}
       <Collapsible.Root open={open} onOpenChange={setOpen} asChild>
         <S.PromptThreads.Root className={classNames({ open })}>
-          <S.PromptThreads.Header>
-            <S.PromptThreads.LeftPre />
-            <ShouldRender if={comments.length > 0}>
+          {comments.length > 0 && (
+            <S.PromptThreads.Header>
+              <S.PromptThreads.LeftPre />
               <S.PromptThreads.Avatars>
                 {comments.slice(0, 2).map((comment) => {
                   const source = comment.source;
                   if (!source) return null;
-
                   return (
                     <AvatarNew
                       key={comment.id}
@@ -183,51 +205,17 @@ export const PromptThreads: FC = () => {
               <ShouldRender if={comments.length === 1}>
                 <S.PromptThreads.LeftPlaceholder />
               </ShouldRender>
-            </ShouldRender>
-            <ShouldRender if={comments.length === 0}>
-              <S.PromptThreads.LeftMid />
-            </ShouldRender>
-            <S.PromptThreads.LeftPost />
-            <Collapsible.Trigger asChild>
-              <S.PromptThreads.Toggle $active={open}>
-                {buttonText}{" "}
-                <ShouldRender if={comments.length > 0}>
+              <S.PromptThreads.LeftPost />
+              <Collapsible.Trigger asChild>
+                <S.PromptThreads.Toggle $active={open}>
+                  {buttonText}{" "}
                   <S.ThreadsCounter>{comments.length}</S.ThreadsCounter>
-                </ShouldRender>
-              </S.PromptThreads.Toggle>
-            </Collapsible.Trigger>
-            <S.PromptThreads.Right />
-          </S.PromptThreads.Header>
+                </S.PromptThreads.Toggle>
+              </Collapsible.Trigger>
+              <S.PromptThreads.Right />
+            </S.PromptThreads.Header>
+          )}
           <S.PromptThreads.Content>
-            {authState === "LOGGED_IN" && canInteract && (
-              <>
-                {isMobile ? (
-                  <PromptComposeTrigger
-                    avatarSrc={
-                      initialSelection?.image ?? novelist?.image ?? null
-                    }
-                    avatarAlt={
-                      initialSelection?.name ?? novelist?.username ?? "You"
-                    }
-                    onClick={handleAddCommentClick}
-                    placeholders={
-                      isOOCPost
-                        ? COMMENT_OOC_PLACEHOLDERS
-                        : COMMENT_PLACEHOLDERS
-                    }
-                  />
-                ) : (
-                  <PromptInput
-                    className="comment-action"
-                    initialSelection={initialSelection}
-                    dropdownSelection={isOOCPost ? "NOVELIST" : "MUSE"}
-                    parentId={promptId}
-                    type="comment"
-                    onSend={refetchComments}
-                  />
-                )}
-              </>
-            )}
             {comments.map((comment, index) => (
               <Comment
                 key={comment.id}

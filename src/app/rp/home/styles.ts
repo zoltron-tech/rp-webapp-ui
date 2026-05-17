@@ -97,6 +97,9 @@ export const RightWrapperContainer = styled.div`
   height: 93dvh;
   overflow-y: auto;
   overflow-x: hidden;
+  /* Prevent scroll chaining to the body when the mixed feed scroll reaches
+     its end — otherwise the whole page scrolls and scroll-to-top breaks. */
+  overscroll-behavior: contain;
 `;
 
 export const ContentContainer = styled.div`
@@ -106,6 +109,17 @@ export const ContentContainer = styled.div`
   justify-content: center;
   align-items: center;
   margin-top: 10px;
+`;
+
+export const ActivityContainer = styled.div`
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+  padding-block: 20px;
+  background-color: var(--bg-2);
 `;
 
 export const SubText = styled.div`
@@ -239,5 +253,64 @@ export const PartitionContainer = styled.div`
       width: 75cqw;
       font-size: 18px;
     }
+  }
+`;
+
+/** Placeholder card at the end of a horizontal carousel that loads the next page. */
+export const NextPageCard = styled.button<{ $height?: string }>`
+  all: unset;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  width: 169px;
+  min-width: 169px;
+  height: ${({ $height }) => $height ?? "300px"};
+  border-radius: var(--border-radius, 8px);
+  border: 1.5px dashed var(--bg-6);
+  background: var(--bg-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  font-family: var(--font);
+  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--bg-3);
+    }
+  }
+
+  &:active:not(:disabled) {
+    background: var(--bg-4);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+
+  @media (max-width: 600px) {
+    width: 113px;
+    min-width: 113px;
+    height: ${({ $height }) => $height ?? "200px"};
+  }
+`;
+
+/** Same shape as NovelistPreviewCard (~220 × 280 px). */
+export const NextPageNovelistCard = styled(NextPageCard)`
+  width: 220px;
+  min-width: 220px;
+  height: 280px;
+
+  @media (max-width: 600px) {
+    width: 155px;
+    min-width: 155px;
+    height: 230px;
   }
 `;

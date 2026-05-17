@@ -6,6 +6,11 @@ import type { Muse, Novelist, StoryBoard } from "@/types";
 import type { Activity } from "@/types/activity";
 import type { DataType } from "@/types/common";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
+import {
+  transformActivity,
+  transformMuse,
+  transformNovelist,
+} from "@/utils/image";
 import { Logger } from "@/utils/services";
 
 const { serverRuntimeConfig } = getConfig();
@@ -36,6 +41,8 @@ export const getStrangerNovelistsAction = async (
 
   const novelists: Novelist[] = await response.json();
 
+  for (const n of novelists) transformNovelist(n, "feed");
+
   return novelists;
 };
 
@@ -64,6 +71,8 @@ export const getMusesAction = async (
   }
 
   const muses: Muse[] = await response.json();
+
+  for (const m of muses) transformMuse(m, "feed");
 
   return muses;
 };
@@ -94,6 +103,8 @@ export const getMusesWithVideosAction = async (
 
   const muses: Muse[] = await response.json();
 
+  for (const m of muses) transformMuse(m, "feed");
+
   return muses;
 };
 
@@ -114,6 +125,8 @@ export const getUserActivities = async (
   }
 
   const activities: Activity[] = await response.json();
+
+  for (const a of activities) transformActivity(a, "feed");
 
   return activities;
 };
@@ -143,6 +156,8 @@ export const getFriendActivities = async (
   }
 
   const activities: Activity[] = await response.json();
+
+  for (const a of activities) transformActivity(a, "feed");
 
   return activities;
 };

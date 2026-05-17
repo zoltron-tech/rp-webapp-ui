@@ -1564,7 +1564,7 @@ export const LandingHeroInput = styled.input`
   flex: 1;
   width: 80%;
   min-width: 0;
-  font-size: var(--font-size);
+  font-size: var(--font-size-input);
   font-weight: var(--font-weight-bold);
   color: var(--text);
   font-family: var(--font);
@@ -1638,7 +1638,7 @@ export const LandingHeroResetButton = styled.button`
   border-radius: 4px;
   background-color: transparent;
   color: var(--text-secondary);
-  font-size: var(--font-size-small);
+  font-size: var(--font-size);
   font-family: var(--font);
   font-weight: 600;
   cursor: pointer;

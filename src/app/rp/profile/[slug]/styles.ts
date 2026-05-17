@@ -153,10 +153,11 @@ export const ContentInner = styled.div`
   position: relative;
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--bg-4);
+  border: 1px solid var(--bg-5);
   align-items: center;
   background-color: var(--bg-2);
   width: 800px;
+  border-radius: 12px;
 
   @container (max-width: 800px) {
     width: 100%;
@@ -279,28 +280,41 @@ export const ContentContainer = styled(Container)`
 
 export const ActivitiesContainer = styled.div`
   width: 95%;
-  border-radius: 5px;
   display: flex;
-  border: 1px solid var(--bg-6);
   flex-direction: column;
   justify-content: center;
   align-items: center;
   background-color: var(--bg-2);
   margin-top: 10px;
+  gap: 10px;
+
+  @media (max-width: 600px) {
+    gap: 12px;
+  }
 `;
 
 export const AboutContainer = styled(Container)`
   width: 95%;
   margin-top: 4px;
-  border-radius: 5px;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--bg-5);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
   background-color: var(--bg-3);
-  white-space: pre-wrap; /* preserve line breaks + spaces */
-  word-break: break-word; /* prevent overflow on long words */
+  white-space: pre-wrap;
+  word-break: break-word;
   font-family: inherit;
+
+  @media screen and (max-width: 800px) {
+    border: none;
+    border-radius: 0;
+    border-top: 1px solid var(--bg-4);
+    border-bottom: 1px solid var(--bg-4);
+    width: 100%;
+  }
 `;
 
 export const Wrapper = styled.div<{ $animating: boolean }>`
@@ -311,58 +325,48 @@ export const Wrapper = styled.div<{ $animating: boolean }>`
 `;
 
 export const Toggle = styled.span`
-  font-size: var(--font-size-h6);
-  font-weight: 300;
+  font-size: var(--font-size-small);
   margin-top: 10px;
   margin-inline-start: 10px;
   font-style: italic;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--accent);
+  cursor: pointer;
+  transition: color 0.15s ease;
 
-  &:hover {
-    cursor: pointer;
-    color: var(--accent-hover);
+  @media (hover: hover) {
+    &:hover {
+      color: var(--accent-hover);
+    }
   }
 
-  @container (max-width: 600px) {
-    & {
-      font-size: var(--font-size-input);
-    }
+  &:active {
+    color: var(--accent-active);
   }
 `;
 
 export const SubText = styled.div`
-  font-size: 20px;
-  margin-left: 28px;
-  align-self: flex-start;
-  font-weight: var(--font-weight-medium);
-  margin-top: 8px;
-  margin-bottom: 4px;
-  border-bottom: 2px solid;
-  border-image: linear-gradient(
-    to right,
-    var(--accent),
-    transparent
-  ) 1;
+  width: 95%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--font-size-xsmall);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 20px;
+  margin-bottom: 8px;
 
-  @container (max-width: 1000px) {
-    & {
-      font-size: 18px;
-    }
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background-color: var(--bg-5);
   }
 
-  @container (max-width: 600px) {
-    & {
-      margin-left: 18px;
-      font-size: 16px;
-    }
-  }
-
-  @container (max-width: 300px) {
-    & {
-      margin-left: 14px;
-      font-size: 12px;
-    }
+  @media screen and (max-width: 800px) {
+    width: 92%;
   }
 `;
 
@@ -379,71 +383,61 @@ export const SeeMoreLink = styled.div`
     content: "";
     flex: 1;
     height: 1px;
-    background-color: var(--bg-6);
-    opacity: 0.8;
+    background-color: var(--bg-5);
   }
 
   span {
-    display: inline-flex; /* ✅ important */
-    align-items: center;  /* ✅ vertical alignment */
-    gap: 6px;             /* space between text and icon */
-
-    padding: 6px 16px;
-    border: 1px solid var(--accent);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 18px;
+    border: 1px solid var(--bg-6);
     border-radius: 50px;
-    background: color-mix(in srgb, var(--accent) 12%, transparent);
-    font-size: var(--font-size-h6);
-    font-weight: 700;
-    font-style: italic;
-    color: var(--accent);
+    background: var(--bg-3);
+    font-size: var(--font-size-small);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-secondary);
     white-space: nowrap;
-    transition: all 0.2s ease;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    cursor: default;
 
     svg {
-      display: block;     /* prevents baseline misalignment */
+      display: block;
     }
   }
 
-  span:hover {
-    cursor: pointer;
-    color: var(--accent-hover);
-    border-color: var(--accent-hover);
-    background: color-mix(in srgb, var(--accent) 20%, transparent);
-    box-shadow: 0 0 8px color-mix(in srgb, var(--accent-hover) 50%, transparent);
+  @media (hover: hover) {
+    span:hover {
+      cursor: pointer;
+      color: var(--accent);
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 10%, var(--bg-3));
+    }
+  }
+
+  span:active {
+    background: color-mix(in srgb, var(--accent) 18%, var(--bg-3));
   }
 
   @container (max-width: 600px) {
     span {
-      font-size: var(--font-size-input);
+      font-size: var(--font-size-xsmall);
+      padding: 6px 14px;
     }
   }
 `;
 
 export const InfoTextBold = styled.div`
-  font-size: 14px;
-  font-weight: 600;
-  font-style: italic;
-  text-align: center;
-
-  @container (max-width: 300px) {
-    & {
-      font-size: 12px;
-    }
-  }
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-bold);
+  color: var(--text);
 `;
 
 export const InfoText = styled.div`
-  font-size: 14px;
-  font-weight: 300;
-  font-style: italic;
-  text-align: center;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-regular);
+  color: var(--text-secondary);
   margin-block: 8px;
-
-  @container (max-width: 700px) {
-    & {
-      font-size: 11px;
-    }
-  }
 `;
 
 export const Avatar = styled(AvatarNew)`
@@ -619,12 +613,22 @@ export const MusePillContainer = styled.div`
 `;
 
 export const MuseList = styled.div`
-  width: 100%;
-  border-radius: 5px;
+  width: 95%;
+  border-radius: 10px;
+  border: 1px solid var(--bg-5);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   justify-content: flex-start;
+
+  @media screen and (max-width: 800px) {
+    border: none;
+    border-radius: 0;
+    border-top: 1px solid var(--bg-4);
+    border-bottom: 1px solid var(--bg-4);
+    width: 100%;
+  }
 `;
 
 export const FriendList = styled.div<{ maxHeight: string }>`
@@ -648,10 +652,7 @@ export const MutualFriendsList = styled.div`
 
 export const FriendsButton = styled.div`
   width: 95%;
-  align-items: flex-start;
   padding-inline: 20px;
-  background-color: var(--bg-3);
-  border: 1px solid var(--bg-6);
   height: 50px;
   cursor: pointer;
   display: flex;
@@ -659,27 +660,29 @@ export const FriendsButton = styled.div`
   justify-content: space-between;
   gap: 0.5rem;
   border-radius: 50px;
+  background-color: var(--bg-3);
+  border: 1px solid var(--bg-5);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 
-  &:hover {
-    background-color: ${({ theme }: any) => theme.hoverGreyAlpha};
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--bg-4);
+      border-color: var(--bg-6);
+    }
+  }
+
+  &:active {
+    background-color: var(--bg-5);
   }
 `;
 
 export const FriendsButtonLabel = styled.span`
-  font-size: var(--font-size-h6);
-  font-weight: 500;
-  color: var(--text);
+  font-size: var(--font-size-xsmall);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   flex: 1;
-  /* full label width, but border is short */
-  &::after {
-    content: "";
-    display: block;
-    margin-top: 2px;
-    width: 120px;
-    height: 2px;
-    background: linear-gradient(to right, var(--accent), transparent);
-    border-radius: 1px;
-  }
 `;
 
 export const FriendsAvatarStack = styled.div`

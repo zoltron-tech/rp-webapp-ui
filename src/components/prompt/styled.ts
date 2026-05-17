@@ -15,6 +15,7 @@ export const PromptRoot = styled.article`
   padding: 10px;
   padding-bottom: 20px;
   margin-top: 20px;
+  border-radius: 8px;
   border: 0.85px solid var(--bg-6);
 
   .separator[data-orientation="horizontal"] {
@@ -85,7 +86,7 @@ export const SourceInfo = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  margin-left: 10px;
+  margin-left: 6px;
 `;
 
 export const SourceName = styled.h1`
@@ -96,15 +97,20 @@ export const SourceName = styled.h1`
   font-weight: var(--font-weight-bold);
   color: var(--text);
   font-family: var(--font);
+
+  @media screen and (max-width: 430px) {
+    font-size: var(--font-size);
+    font-weight: var(--font-weight-semi-bold);
+  }
 `;
 
 export const HeaderDropdownMenuContainer = styled.div`
-
   display: flex;
   gap: 6px;
   position: absolute;
-  right: 0px;
-  top: 10px;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
 `;
 
 export const PromptSubheader = styled.time`
@@ -121,8 +127,10 @@ export const PromptSubheader = styled.time`
 const PromptContentFooter = styled.footer`
   display: flex;
   align-items: center;
-  margin-top: 18px;
-  padding-bottom: 8px;
+  gap: 4px;
+  border-top: 1px solid var(--bg-4);
+  padding: 6px 16px;
+  margin-top: 12px;
 `;
 
 const PromptContentRoot = styled.section`
@@ -217,36 +225,38 @@ export const PromptThreadsSeparatorPartialLast = styled(Separator.Root)`
 const PromptThreadsToggle = styled.button<{ $active: boolean }>`
   all: unset;
   cursor: pointer;
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 
-  min-width: 120px;  
-  color: ${({ $active }) => ($active ? "var(--accent-hover)" : "var(--accent)")};
-  font-size: var(--font-size);
-  font-weight: var(--font-weight-semi-bold);
-  padding: 2px 12px;
-  min-height: 32px;
+  color: ${({ $active }) => ($active ? "var(--accent)" : "var(--text-secondary)")};
+  font-family: var(--font);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-bold);
+  padding: 7px 18px;
   border-radius: 50px;
-  border: 1.5px solid ${({ $active }) => ($active ? "var(--accent-hover)" : "var(--accent)")};
+  border: 1px solid ${({ $active }) => ($active ? "var(--accent)" : "var(--bg-6)")};
   background: ${({ $active }) =>
     $active
-      ? "color-mix(in srgb, var(--accent) 30%, transparent)"
-      : "color-mix(in srgb, var(--accent) 10%, transparent)"};
-  transition: all 0.2s ease;
+      ? "color-mix(in srgb, var(--accent) 10%, var(--bg-3))"
+      : "var(--bg-3)"};
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
   white-space: nowrap;
 
-  &:hover {
-    background-color: color-mix(in srgb, var(--accent) 10%, transparent);
-    color: var(--accent-hover);
+  @media (hover: hover) {
+    &:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 10%, var(--bg-3));
+    }
   }
 
   &:active {
-    background-color: color-mix(in srgb, var(--accent) 30%, transparent);
-    color: var(--accent-hover);
+    background: color-mix(in srgb, var(--accent) 18%, var(--bg-3));
   }
 
-  &:focus {
+  &:focus-visible {
     outline: 1.5px solid var(--accent);
     outline-offset: 2px;
   }

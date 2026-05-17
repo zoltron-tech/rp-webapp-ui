@@ -824,11 +824,13 @@ export default function ThreadPage({}) {
       <S.RepliesContainer>
         <S.HeaderContainer>
           <Flex>
-            <IoArrowBackOutline
-              size={15}
+            <S.BackButton
+              type="button"
               onClick={() => onBackClick()}
-              style={{ cursor: "pointer" }}
-            />
+              aria-label="Go back"
+            >
+              <IoArrowBackOutline size={22} />
+            </S.BackButton>
             <ShouldRender if={comment?.prompt?.source.sourceType === "MUSE"}>
               <MuseAvatar
                 museId={comment?.prompt?.source.sourceId || ""}

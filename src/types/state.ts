@@ -6,6 +6,7 @@ import type {
   Prompt,
   User,
 } from ".";
+import type { Activity } from "./activity";
 import type { AccentValue } from "./theme";
 
 export type AuthState =
@@ -50,6 +51,12 @@ export interface StoreState {
   lastReadConversationId: string | null;
   /** Cached friend suggestions for /rp/home — fetched once per session. */
   friendSuggestions: Novelist[] | null;
+  /** First page of explore prompts — prefetched on login, shared by /rp/home and /rp/explore. */
+  cachedExplorePrompts: Prompt[] | null;
+  /** First page of OOC posts (news feed) — prefetched on login, shared by /rp/home and /rp/explore. */
+  cachedOOCPosts: Prompt[] | null;
+  /** First page of friend activities — prefetched on login, shared by /rp/home and /rp/explore. */
+  cachedHomeActivities: Activity[] | null;
   /** When true, shows the install-NW-as-app prompt before routing to onboarding. */
   showInstallAppPrompt: boolean;
   /** When true, shows the Join-Discord prompt over the welcome page after onboarding. */

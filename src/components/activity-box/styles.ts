@@ -2,164 +2,148 @@ import styled from "styled-components";
 import { BORDER_RADIUS, CARD_BORDER, Z_INDEX } from "@/theme";
 import { AvatarNew } from "../common/avatar-new";
 
-export const ParentContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+export const ParentContainer = styled.article`
+  background-color: var(--bg-2);
   width: 100%;
   max-width: 800px;
-  min-width: 0;
+  margin-inline: auto;
+  margin-block: 8px;
+  border: 1px solid var(--bg-5);
+  border-radius: 8px;
   overflow: hidden;
-  padding-inline: 60px;
-  margin-block: 5px;
-  padding-top: 10px;
+  color: var(--text);
+  font-size: var(--font-size);
+  font-family: var(--font);
+  font-weight: var(--font-weight-regular);
 
-  @container content-container (max-width: 800px) {
-    padding-inline: 10px;
-    margin-block: 0px;
-    width: 80%;
-  }
-
-  @container content-container (max-width: 500px) {
-    padding-inline: 0px;
-    margin-block: 0px;
-    width: 100%;
+  @media screen and (max-width: 600px) {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    margin-block: 4px;
+    border: none;
   }
 `;
 
-export const HeaderContainer = styled.div`
+export const HeaderContainer = styled.header`
   display: flex;
-  flex-direction: row;
-  justify-content: space-between;
   align-items: center;
-  width: 100%;
-  border-bottom: 1px solid var(--bg-6);
-  gap: 0.3em;
-
-  @container content-container (max-width: 1000px) {
-    margin-bottom: 10px;
-  }
-
-  @container content-container (max-width: 600px) {
-    width: 98%;
-    padding-inline: 5px;
-    margin-bottom: 5px;
-  }
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--bg-4);
+  gap: 0;
 `;
 
 export const Avatar = styled(AvatarNew)`
-  margin-block: 10px;
-  height: 50px;
-  width: 50px;
-
-  @container (max-width: 500px) {
-    & {
-        margin-inline: unset;
-        height: 30px;
-        width: 30px;
-    }
-  }
-`;
-
-export const FooterContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  gap: 0.5em;
-  margin-top: 5px;
-  border-top: 1px solid var(--bg-6);
-
-  @container content-container (max-width: 1000px) {
-    margin-bottom: 5px;
-  }
-`;
-
-export const SourceName = styled.div`
-  text-transform: uppercase;
-  font-size: 18px;
-  font-weight: 500;
-  font-style: italic;
-  text-align: center;
-  margin-left: 3px;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
   cursor: pointer;
 
-  @container (max-width: 1000px) {
-    & {
-      font-size: 14px;
-    }
-  }
-
-  @container (max-width: 800px) {
-    & {
-      font-size: 12px;
-    }
+  @media screen and (max-width: 430px) {
+    width: 36px;
+    height: 36px;
   }
 `;
 
-export const ActivityText = styled.div`
-  font-size: 14px;
-  font-weight: 200;
-  font-style: italic;
-  text-align: left;
-  margin-left: 3px;
+/** Wraps SourceName + ActivityText in a vertical stack beside the avatar. */
+export const SourceInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-left: 10px;
+  flex: 1;
+  min-width: 0;
+`;
 
-  @container (max-width: 800px) {
-    & {
-      font-size: 10px;
-      font-weight: 400;
-    }
+export const SourceName = styled.h2`
+  all: unset;
+  font-size: var(--font-size-h5);
+  font-weight: var(--font-weight-bold);
+  color: var(--text);
+  line-height: 1.4;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+
+  @media screen and (max-width: 600px) {
+    font-size: var(--font-size-input);
   }
+`;
+
+export const ActivityText = styled.span`
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-top: 1px;
 `;
 
 export const ViewMoreText = styled(ActivityText)`
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
 `;
 
 export const PromptText = styled(ActivityText)`
-  text-transform: unset;
-  font-style: unset;
-  text-align: unset;
-  margin-top: 30px;
+  display: block;
   white-space: pre-wrap;
 `;
 
-export const PromptFooterText = styled.div`
-  text-transform: uppercase;
-  font-size: 14px;
-  font-weight: 400;
-  font-style: italic;
-  text-align: center;
-  margin-block: 20px;
+export const StyledDate = styled.time`
+  font-size: var(--font-size-xsmall);
+  color: var(--text-secondary);
+  opacity: 0.65;
+  margin-left: auto;
+  flex-shrink: 0;
+  align-self: flex-start;
+  padding-top: 2px;
+`;
+
+/** Main content area between header and footer. */
+export const Body = styled.div`
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
+`;
+
+export const FooterContainer = styled.footer`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 16px;
+  border-top: 1px solid var(--bg-4);
   cursor: pointer;
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  transition: background-color 0.15s ease, color 0.15s ease;
 
-  @container (max-width: 800px) {
-    & {
-      font-size: 10px;
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--bg-3);
+      color: var(--accent);
     }
+  }
+
+  @media screen and (max-width: 600px) {
+    padding: 14px 8px;
   }
 `;
 
-export const StyledDate = styled.div`
-  font-size: 14px;
-  font-weight: 200;
-
-  @container (max-width: 1400px) {
-    & {
-      font-size: 12px;
-    }
-  }
-
-  @container (max-width: 800px) {
-    & {
-      font-weight: 400;
-      font-size: 8px;
-    }
-  }
+export const PromptFooterText = styled.span`
+  font-size: var(--font-size-small);
+  font-weight: 600;
 `;
+
+type CardProps = {
+  banner: string;
+};
 
 export const CardBackground = styled.div<CardProps>`
   position: absolute;
@@ -176,78 +160,49 @@ export const CardBackground = styled.div<CardProps>`
 `;
 
 export const Title = styled.div`
-  font-size: 24px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
   word-wrap: break-word;
-  white-space: wrap;
-  max-width: 80%;
+  white-space: pre-wrap;
+  max-width: 85%;
   color: white;
   text-align: center;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
 
-  @container content-container (max-width: 800px) {
-    font-size: 20px;
-  }
-
-  @container content-container (max-width: 600px) {
-    font-size: 18px;
-  }
-
-  @container content-container (max-width: 500px) {
+  @container muse-card (max-width: 400px) {
     font-size: 16px;
   }
 
-  @container content-container (max-width: 400px) {
-    font-size: 14px;
+  @container muse-card (max-width: 280px) {
+    font-size: 13px;
   }
 `;
 
 export const CardWrapper = styled.div`
   position: relative;
-  width: 500px;
-  height: 500px;
-  margin-inline: 10px;
-  border-radius: 5px;
-  margin-block: 10px;
+  width: min(480px, 100%);
+  aspect-ratio: 1;
+  border-radius: 8px;
   ${CARD_BORDER};
 
-  transition: all 0.3s ease-in-out;
+  transition: transform 0.25s ease-in-out;
   contain: paint;
   z-index: ${Z_INDEX.CARD};
 
   container-name: muse-card;
   container-type: size;
 
-  @container content-container (max-width: 800px) {
-    & {
-      width: 400px;
-      height: 400px;
-    }
+  @media screen and (max-width: 520px) {
+    width: 100%;
   }
 
-  @container content-container (max-width: 600px) {
-    & {
-      width: 350px;
-      height: 350px;
-    }
-  }
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-2px);
 
-  @container content-container (max-width: 500px) {
-    & {
-      width: 300px;
-      height: 300px;
-    }
-  }
-
-  @container content-container (max-width: 400px) {
-    & {
-      width: 200px;
-      height: 200px;
-    }
-  }
-
-  &:hover {
-    & ${CardBackground} {
-      scale: 1.03;
+      & ${CardBackground} {
+        scale: 1.03;
+      }
     }
   }
 `;
@@ -256,7 +211,7 @@ export const ImageWrapper = styled.div`
   position: absolute;
   inset: 0;
   z-index: 1;
-  border-radius: 5px;
+  border-radius: 8px;
   overflow: hidden;
 `;
 
@@ -285,7 +240,7 @@ export const NSFWOverlay = styled.div`
   color: #fff;
   text-align: center;
   font-size: var(--font-size-xsmall);
-  border-radius: 5px;
+  border-radius: 8px;
   pointer-events: none;
 `;
 
@@ -335,10 +290,6 @@ export const NSFWRevealButton = styled.button`
     }
   }
 `;
-
-type CardProps = {
-  banner: string;
-};
 
 export const Card = styled.div`
   display: flex;

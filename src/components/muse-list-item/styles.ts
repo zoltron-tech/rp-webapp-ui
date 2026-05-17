@@ -1,60 +1,57 @@
-import { Container } from "@novelist-world/ui";
 import { styled } from "styled-components";
-import { DEV_MODE_BORDER } from "@/theme";
 
-export const MuseContainer = styled(Container)`
-  ${DEV_MODE_BORDER("blue")}
-  width: 95%;
-  align-items: flex-start;
-  padding-block: 5px;
-  border-radius: 0;
-  background-color: var(--bg-3);
-
-  &:first-child {
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
-  }
+export const MuseContainer = styled.div`
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 12px 16px;
+  gap: 12px;
+  border-bottom: 1px solid var(--bg-4);
+  background-color: var(--bg-2);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
 
   &:last-child {
-    border-bottom-left-radius: 5px;
-    border-bottom-right-radius: 5px;
+    border-bottom: none;
   }
 
-  &:hover {
-    cursor: pointer;
-    background-color: ${({ theme }: any) => theme.hoverGreyAlpha};
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--bg-3);
+    }
+  }
+
+  &:active {
+    background-color: var(--bg-4);
   }
 
   .avatar {
-    height: 50px;
-    width: 50px;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
   }
 `;
 
-export const MuseName = styled.div`
-  font-size: 18px;
-  font-weight: 500;
+export const MuseInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+`;
+
+export const MuseName = styled.span`
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-bold);
   color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
 
-  @container (max-width: 400px) {
-    & {
-      font-size: 14px;
-    }
-  }
-
-  @container (max-width: 300px) {
-    & {
-      font-size: 10px;
-      text-align: end;
-    }
-  }
-
-  @container (max-width: 200px) {
-    font-size: 8px;
-    text-align: center;
-    width: calc(100% - 30px);
-    & .muse-last-name {
-      display: none;
-    }
-  }
+export const MuseSubname = styled.span`
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;

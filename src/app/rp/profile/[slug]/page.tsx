@@ -922,7 +922,7 @@ export default function UserProfilePage({}) {
                       <FriendAvatarItem key={friend.id} friend={friend} />
                     ))}
                   </S.FriendsAvatarStack>
-                  <GoChevronRight size={18} color="gray" />
+                  <GoChevronRight size={18} color="var(--text-secondary)" />
                 </S.FriendsButton>
               </Flex>
             </ShouldRender>

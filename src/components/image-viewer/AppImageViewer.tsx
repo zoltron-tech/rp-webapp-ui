@@ -6,12 +6,20 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
+  useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
 import { useGlobalState } from "@/context/store/stores";
 import { useNsfwCheck } from "@/hooks/use-nsfw-check";
 import * as S from "./styled";
+
+const VIDEO_EXTENSIONS = [".mp4", ".mov", ".quicktime"];
+const isVideoUrl = (url: string) => {
+  const lower = url.toLowerCase();
+  return VIDEO_EXTENSIONS.some((ext) => lower.endsWith(ext));
+};
 
 interface ImageViewerProps {
   src: string;
@@ -20,6 +28,10 @@ interface ImageViewerProps {
   onOpenChange?: (open: boolean) => void;
   onNext?: () => void;
   onPrev?: () => void;
+  /** Source of the next image — rendered off-screen so it slides in during swipe */
+  nextSrc?: string;
+  /** Source of the previous image — rendered off-screen so it slides in during swipe */
+  prevSrc?: string;
   children?: ReactNode;
   skipNsfwCheck?: boolean;
 }
@@ -31,6 +43,8 @@ export const AppImageViewer = ({
   onOpenChange,
   onNext,
   onPrev,
+  nextSrc,
+  prevSrc,
   children,
   skipNsfwCheck,
 }: ImageViewerProps) => {
@@ -59,6 +73,31 @@ export const AppImageViewer = ({
   const switchToCardTimer = useRef<number>(0);
 
   const SWIPE_THRESHOLD = 50;
+  const SLIDE_MS = 300;
+  // Visual gap between the current image and its adjacent neighbors
+  const SLIDE_GAP = 16;
+
+  // Card-mode carousel drag
+  // cardImgX is the shared translateX applied to ALL three image slots simultaneously.
+  // prev sits at `right: calc(100% + GAP)`, current at center, next at `left: calc(100% + GAP)`
+  // — they all translate together so the user sees adjacent images peeking in during drag.
+  const [cardImgX, setCardImgX] = useState(0);
+  const [cardImgTransition, setCardImgTransition] = useState(false);
+  const cardAnimating = useRef(false);
+  // Width of the ImageCardArea, captured on touch-start for accurate snap math
+  const cardContainerWidth = useRef(0);
+
+  // Internal mirror of the three image sources. Normally tracks props 1:1, but
+  // on snap completion we atomically swap these in the SAME React batch as the
+  // parent's src update so the painted frame is always consistent (no flicker).
+  const [displayed, setDisplayed] = useState<{
+    current: string;
+    prev?: string;
+    next?: string;
+  }>({ current: src, next: nextSrc, prev: prevSrc });
+  // Snapshot of the last props we synced from — lets us detect external prop
+  // changes (e.g. keyboard nav) vs. our own optimistic swap.
+  const lastPropsRef = useRef({ nextSrc, prevSrc, src });
 
   const minScale = 1;
   const maxScale = 4;
@@ -175,33 +214,138 @@ export const AppImageViewer = ({
 
   /* ── Card mode touch swipe (next/prev) ──────────────────────────────────── */
   const onCardTouchStart = useCallback((e: React.TouchEvent) => {
+    if (cardAnimating.current) return;
+    cardContainerWidth.current =
+      (e.currentTarget as HTMLElement).offsetWidth || window.innerWidth;
     cardSwipeStart.current = {
       x: e.touches[0].clientX,
       y: e.touches[0].clientY,
     };
+    setCardImgTransition(false);
+  }, []);
+
+  const onCardTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!cardSwipeStart.current || cardAnimating.current) return;
+    const dx = e.touches[0].clientX - cardSwipeStart.current.x;
+    const dy = e.touches[0].clientY - cardSwipeStart.current.y;
+    // Only drag horizontally; let the browser handle vertical scrolling
+    if (Math.abs(dx) > Math.abs(dy)) {
+      setCardImgX(dx);
+    }
   }, []);
 
   const onCardTouchEnd = useCallback(
     (e: React.TouchEvent) => {
-      if (!cardSwipeStart.current) return;
+      if (!cardSwipeStart.current || cardAnimating.current) return;
       const dx = e.changedTouches[0].clientX - cardSwipeStart.current.x;
       const dy = e.changedTouches[0].clientY - cardSwipeStart.current.y;
-      if (Math.abs(dx) >= SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
-        if (dx < 0) onNext?.();
-        else onPrev?.();
-      }
       cardSwipeStart.current = null;
+
+      const cw = cardContainerWidth.current || window.innerWidth;
+      const isHorizontal = Math.abs(dx) > Math.abs(dy);
+      const goingNext = dx < 0;
+
+      // "Most in frame" rule: snap to neighbor only when that image occupies
+      // more than half the container width (i.e. |dx| > cw/2).
+      const snapToNeighbor =
+        isHorizontal &&
+        Math.abs(dx) > cw / 2 &&
+        (goingNext ? !!onNext : !!onPrev);
+
+      if (!snapToNeighbor) {
+        // Spring back to center
+        setCardImgTransition(true);
+        setCardImgX(0);
+        setTimeout(() => setCardImgTransition(false), SLIDE_MS);
+        return;
+      }
+
+      // Slide the whole track to reveal the neighbor image, then swap src
+      cardAnimating.current = true;
+      const snapX = goingNext ? -(cw + SLIDE_GAP) : cw + SLIDE_GAP;
+
+      setCardImgTransition(true);
+      setCardImgX(snapX);
+
+      setTimeout(() => {
+        // Atomically: swap the internal displayed snapshot to reflect the
+        // post-snap layout AND reset the track to 0 with no transition, all
+        // batched with the parent's src update below. React 18 batches every
+        // setState call in this tick (ours + parent's) into a single commit,
+        // so the rendered output already shows the new image at center —
+        // there is no intermediate frame where stale slot positions can paint.
+        setDisplayed((d) =>
+          goingNext
+            ? { current: d.next ?? d.current, next: undefined, prev: d.current }
+            : {
+                current: d.prev ?? d.current,
+                next: d.current,
+                prev: undefined,
+              },
+        );
+        setCardImgTransition(false);
+        setCardImgX(0);
+        cardAnimating.current = false;
+
+        // Inform parent — its setState batches with ours into one commit.
+        if (goingNext) onNext?.();
+        else onPrev?.();
+      }, SLIDE_MS);
     },
     [onNext, onPrev],
   );
 
+  // Keep the internal displayed snapshot in sync with incoming props.
+  // Runs on every render where props differ from the last seen props. Fires
+  // for both external nav (keyboard / nav-button click) and the parent
+  // catching up after our optimistic swap. In the latter case the props
+  // already match `displayed.current`, so the setDisplayed below is a no-op.
+  useLayoutEffect(() => {
+    const last = lastPropsRef.current;
+    if (
+      last.src === src &&
+      last.prevSrc === prevSrc &&
+      last.nextSrc === nextSrc
+    ) {
+      return;
+    }
+    lastPropsRef.current = { nextSrc, prevSrc, src };
+    setDisplayed((d) => {
+      // Parent caught up to our optimistic swap — just fill in any missing neighbor.
+      if (d.current === src) {
+        return { current: src, next: nextSrc, prev: prevSrc };
+      }
+      // External nav (or first render) — fully resync
+      return { current: src, next: nextSrc, prev: prevSrc };
+    });
+  }, [src, prevSrc, nextSrc]);
+
   useEffect(() => () => window.clearTimeout(switchToCardTimer.current), []);
+
+  // Build the rendered slot list. Each slot is keyed by its image URL so
+  // React preserves the underlying <img> element when its role changes
+  // (e.g. "next" → "current" after a swipe). The IMG never unmounts and
+  // its `src` attribute never changes, so the browser never reloads or
+  // re-paints the image — making any flicker frame impossible.
+  type SlotPosition = "prev" | "current" | "next";
+  const slotList = useMemo<
+    Array<{ src: string; position: SlotPosition }>
+  >(() => {
+    const list: Array<{ src: string; position: SlotPosition }> = [];
+    if (displayed.prev) list.push({ position: "prev", src: displayed.prev });
+    list.push({ position: "current", src: displayed.current });
+    if (displayed.next) list.push({ position: "next", src: displayed.next });
+    return list;
+  }, [displayed]);
 
   useEffect(() => {
     if (!open) {
       reset();
       setViewMode("card");
       setNsfwRevealed(false);
+      setCardImgX(0);
+      setCardImgTransition(false);
+      cardAnimating.current = false;
     }
   }, [open, reset]);
 
@@ -245,21 +389,105 @@ export const AppImageViewer = ({
                 </S.ImageCardHeader>
                 <S.ImageCardArea
                   onTouchStart={onCardTouchStart}
+                  onTouchMove={onCardTouchMove}
                   onTouchEnd={onCardTouchEnd}
                 >
-                  <S.Image
-                    src={src}
-                    alt={alt}
-                    draggable={false}
-                    onClick={() => !showNsfwOverlay && setViewMode("zoom")}
-                    style={{
-                      borderRadius: "8px",
-                      cursor: showNsfwOverlay ? "default" : "zoom-in",
-                      filter: showBlur ? "blur(24px)" : undefined,
-                      transform: "none",
-                      transition: "filter 0.3s ease",
-                    }}
-                  />
+                  {slotList.map(({ src: slotSrc, position }) => {
+                    const isCurrent = position === "current";
+                    const slotIsVideo = isVideoUrl(slotSrc);
+                    const positionStyle: React.CSSProperties =
+                      position === "prev"
+                        ? {
+                            bottom: 0,
+                            right: `calc(100% + ${SLIDE_GAP}px)`,
+                            top: 0,
+                            width: "100%",
+                          }
+                        : position === "next"
+                          ? {
+                              bottom: 0,
+                              left: `calc(100% + ${SLIDE_GAP}px)`,
+                              top: 0,
+                              width: "100%",
+                            }
+                          : { inset: 0 };
+
+                    return (
+                      <div
+                        key={slotSrc}
+                        aria-hidden={!isCurrent}
+                        onClick={
+                          isCurrent && !slotIsVideo
+                            ? () =>
+                                !cardAnimating.current &&
+                                !showNsfwOverlay &&
+                                setViewMode("zoom")
+                            : undefined
+                        }
+                        style={{
+                          alignItems: "center",
+                          cursor:
+                            isCurrent && !showNsfwOverlay && !slotIsVideo
+                              ? "zoom-in"
+                              : "default",
+                          display: "flex",
+                          justifyContent: "center",
+                          pointerEvents: isCurrent ? undefined : "none",
+                          position: "absolute",
+                          ...positionStyle,
+                          transform: `translateX(${cardImgX}px)`,
+                          transition: cardImgTransition
+                            ? `transform ${SLIDE_MS}ms ease-in-out`
+                            : "none",
+                          willChange: cardAnimating.current
+                            ? "transform"
+                            : "auto",
+                        }}
+                      >
+                        {slotIsVideo ? (
+                          // Video peek — muted, paused, shows first frame
+                          // while sliding in. When this slot becomes the
+                          // "current" after a snap, the parent will close
+                          // this viewer and open VideoViewer with the same
+                          // URL (cached by the browser from this preload).
+                          <video
+                            src={slotSrc}
+                            muted
+                            playsInline
+                            preload="metadata"
+                            draggable={false}
+                            style={{
+                              borderRadius: "8px",
+                              maxHeight: "100%",
+                              maxWidth: "100%",
+                              objectFit: "contain",
+                              pointerEvents: "none",
+                            }}
+                          >
+                            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                            <track kind="captions" />
+                          </video>
+                        ) : (
+                          <img
+                            src={slotSrc}
+                            alt={isCurrent ? alt : ""}
+                            draggable={false}
+                            style={{
+                              borderRadius: "8px",
+                              filter:
+                                isCurrent && showBlur
+                                  ? "blur(24px)"
+                                  : undefined,
+                              maxHeight: "100%",
+                              maxWidth: "100%",
+                              objectFit: "contain",
+                              transition: "filter 0.3s ease",
+                            }}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
                   {showNsfwOverlay && (
                     <S.NsfwOverlay>
                       <S.NsfwLabel>⚠️ Sensitive content</S.NsfwLabel>

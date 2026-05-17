@@ -65,7 +65,8 @@ const CommentContentRoot = styled.div`
   padding-bottom: 8px;
   margin-left: 48px;
   background-color: var(--bg-3);
-  border-radius: 4px;
+  border: 1px solid var(--bg-5);
+  border-radius: 8px;
 `;
 
 const TextLine = styled.span`
@@ -107,7 +108,8 @@ const CommentFooterRoot = styled.footer`
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  margin-block: 10px;
+  padding-top: 2px;
+  padding-bottom: 4px;
   gap: 8px;
 
   @media screen and (max-width: 430px) {
@@ -167,40 +169,43 @@ const ReplyCount = styled.a`
 
 const OpenThreadButton = styled.button`
   all: unset;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 4px;
   cursor: pointer;
+  font-family: var(--font);
   font-size: var(--font-size-small);
-  color: var(--text);
-  font-weight: var(--font-weight-medium);
-  padding: 6px;
-  border-radius: 4px;
-  background-color: var(--accent);
-  transition: background-color 0.1s;
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-bold);
+  padding: 7px 12px;
+  border-radius: 50px;
+  border: 1px solid var(--bg-6);
+  background-color: var(--bg-3);
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 
   .icon {
-    width: 14px;
-    height: 14px;
-    margin-left: 2px;
-    position: relative;
-    transition-property: transform;
-    transition-duration: 0.1s;
-    transition-timing-function: ease-in-out;
+    width: 13px;
+    height: 13px;
+    transition: transform 0.1s ease;
   }
 
-  &:hover {
-    background-color: var(--accent-hover);
-    .icon {
-      transform: translateX(2px);
+  @media (hover: hover) {
+    &:hover {
+      color: var(--text);
+      background-color: var(--bg-4);
+      .icon {
+        transform: translateX(2px);
+      }
     }
   }
 
   &:active {
-    background-color: var(--accent-active);
+    background-color: var(--bg-5);
   }
 
-  &:focus {
+  &:focus-visible {
     outline: 1.5px solid var(--accent);
     outline-offset: 2px;
   }

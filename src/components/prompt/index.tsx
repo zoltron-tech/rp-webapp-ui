@@ -13,16 +13,18 @@ import * as S from "./styled";
 type PromptProps = HTMLProps<HTMLElement> & {
   prompt: PromptType;
   threadOpen?: boolean;
+  $noBorder?: boolean;
 };
 
 export const Prompt: FC<PromptProps> = ({
   prompt,
   threadOpen = false,
+  $noBorder,
   ...props
 }) => {
   return (
     <StoreProvider storeId="prompt" initial={{ ...prompt, threadOpen }}>
-      <S.PromptRoot {...props}>
+      <S.PromptRoot $noBorder={$noBorder} {...props}>
         <PromptHeader />
         <Separator.Root className="separator" orientation="horizontal" />
         <PromptContent />

@@ -1,4 +1,79 @@
-import { styled } from "styled-components";
+import { css, keyframes, styled } from "styled-components";
+
+// ─── Feed shimmer ─────────────────────────────────────────────────────────────
+
+const shimmerMove = keyframes`
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+`;
+
+const shimmer = css`
+  background: linear-gradient(
+    90deg,
+    var(--bg-3) 25%,
+    var(--bg-4) 50%,
+    var(--bg-3) 75%
+  );
+  background-size: 200% 100%;
+  animation: ${shimmerMove} 1.4s infinite;
+`;
+
+export const FeedShimmerList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(480px, 100%);
+`;
+
+export const FeedShimmerItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--bg-4);
+`;
+
+export const ShimmerRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+`;
+
+export const ShimmerAvatar = styled.div`
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  ${shimmer}
+
+  @media (max-width: 430px) {
+    width: 36px;
+    height: 36px;
+  }
+`;
+
+export const ShimmerLines = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+`;
+
+export const ShimmerLine = styled.div<{ $width?: string; $height?: string }>`
+  height: ${({ $height }) => $height ?? "12px"};
+  width: ${({ $width }) => $width ?? "100%"};
+  border-radius: 6px;
+  ${shimmer}
+`;
+
+export const ShimmerBlock = styled.div<{ $height?: string }>`
+  height: ${({ $height }) => $height ?? "120px"};
+  width: 100%;
+  border-radius: 8px;
+  ${shimmer}
+`;
 
 export const PageContainer = styled.div`
   display: flex;
@@ -302,15 +377,15 @@ export const NextPageCard = styled.button<{ $height?: string }>`
   }
 `;
 
-/** Same shape as NovelistPreviewCard (~220 × 280 px). */
+/** Same shape as NovelistPreviewCard (220px wide; height = AccentStrip + Body min-height). */
 export const NextPageNovelistCard = styled(NextPageCard)`
   width: 220px;
   min-width: 220px;
-  height: 280px;
+  height: 246px;
 
   @media (max-width: 600px) {
     width: 155px;
     min-width: 155px;
-    height: 230px;
+    height: 188px;
   }
 `;

@@ -1,7 +1,7 @@
 import { Collapsible, Separator } from "radix-ui";
 import { keyframes, styled } from "styled-components";
 
-export const PromptRoot = styled.article`
+export const PromptRoot = styled.article<{ $noBorder?: boolean }>`
   background-color: var(--bg-2);
   width: 100%;
   max-width: 800px;
@@ -28,6 +28,7 @@ export const PromptRoot = styled.article`
   @media screen and (max-width: 800px) {
     margin-block: 0px;
     padding-inline: 6px;
+    ${({ $noBorder }) => $noBorder && "border: none;"}
   }
 `;
 

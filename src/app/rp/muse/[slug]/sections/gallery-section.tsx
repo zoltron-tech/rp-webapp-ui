@@ -549,6 +549,22 @@ export function GallerySection({ muse, media }: Props) {
           setGalleryIndex((i) => Math.min(localMedia.length - 1, (i ?? 0) + 1))
       : undefined;
 
+  // Adjacent media sources for the live-drag carousel — passed to both
+  // viewers regardless of media type. Each viewer renders neighbor slots as
+  // either <img> or <video> based on the URL, so cross-type swipes (image ↔
+  // video) slide in the correct element type. When the snap completes, the
+  // gallery's index update flips `currentIsVideo` and the dialogs swap; the
+  // destination viewer mounts with the same URL the source already had
+  // pre-loaded as a peek, making the swap visually near-seamless.
+  const galleryPrevSrc =
+    galleryIndex !== null && galleryIndex > 0
+      ? localMedia[galleryIndex - 1]
+      : undefined;
+  const galleryNextSrc =
+    galleryIndex !== null && galleryIndex < localMedia.length - 1
+      ? localMedia[galleryIndex + 1]
+      : undefined;
+
   const handleUploaded = useCallback((urls: string[]) => {
     setLocalMedia((prev) => [...prev, ...urls]);
     setUploadOpen(false);
@@ -598,6 +614,8 @@ export function GallerySection({ muse, media }: Props) {
                 onOpenChange={(o) => {
                   if (!o) setGalleryIndex(null);
                 }}
+                prevSrc={galleryPrevSrc}
+                nextSrc={galleryNextSrc}
                 onPrev={goPrev}
                 onNext={goNext}
                 skipNsfwCheck={isOwner}
@@ -608,6 +626,8 @@ export function GallerySection({ muse, media }: Props) {
                 onOpenChange={(o) => {
                   if (!o) setGalleryIndex(null);
                 }}
+                prevSrc={galleryPrevSrc}
+                nextSrc={galleryNextSrc}
                 onPrev={goPrev}
                 onNext={goNext}
               />

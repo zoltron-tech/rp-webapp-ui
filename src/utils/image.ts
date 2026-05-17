@@ -19,10 +19,24 @@ import type { Comment, Prompt, PromptSource, Reply } from "@/types/prompt";
 // Bucket prefix — single source of truth.
 // ──────────────────────────────────────────────────────────────────────────
 
-const getS3Prefix = (): string | null => {
+/**
+ * Returns true when `url` is a virtual-hosted-style S3 URL belonging to our
+ * bucket.  Accepts both the global endpoint and any regional variant:
+ *   https://<bucket>.s3.amazonaws.com/…
+ *   https://<bucket>.s3.<region>.amazonaws.com/…
+ */
+const isOurS3Url = (url: string): boolean => {
   const bucket = process.env.RP_BUCKET_NAME;
-  if (!bucket) return null;
-  return `https://${bucket}.s3.eu-central-1.amazonaws.com/`;
+  if (!bucket) return false;
+  const afterHttps = url.startsWith("https://") ? url.slice(8) : null;
+  if (!afterHttps?.startsWith(`${bucket}.s3`)) return false;
+  const rest = afterHttps.slice(bucket.length + 3); // past "<bucket>.s3"
+  // global:   .amazonaws.com/…
+  // regional: .<region>.amazonaws.com/…
+  return (
+    rest.startsWith(".amazonaws.com/") ||
+    /^\.[a-z0-9-]+\.amazonaws\.com\//.test(rest)
+  );
 };
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -44,6 +58,8 @@ export const IMAGE_SIZES = {
   AVATAR_SMALL: { fit: "cover" as const, h: 96, w: 96 },
   BANNER_LARGE: { fit: "cover" as const, h: 400, w: 1200 },
   BANNER_MEDIUM: { fit: "cover" as const, h: 300, w: 600 },
+  CARD_BG: { fit: "cover" as const, h: 800, w: 450 },
+  CARD_BG_MINI: { fit: "cover" as const, h: 400, w: 225 },
   COVER_LARGE: { fit: "cover" as const, h: 400, w: 400 },
   COVER_MEDIUM: { fit: "cover" as const, h: 300, w: 300 },
 };
@@ -64,12 +80,20 @@ export function wsrvImage<T extends string | null | undefined>(
   opts: WsrvOptions = {},
 ): T {
   if (!s3Url) return s3Url;
-  const prefix = getS3Prefix();
-  if (!prefix) return s3Url; // env not configured → no-op
-  if (!s3Url.startsWith(prefix)) return s3Url; // foreign URL → untouched
+  if (!process.env.RP_BUCKET_NAME) return s3Url; // env not configured → no-op
+  if (!isOurS3Url(s3Url as string)) return s3Url; // foreign URL → untouched
 
   const { fit = "cover", h, q = 80, w } = opts;
-  const stripped = (s3Url as string).replace("https://", "");
+  // Normalise to the global S3 endpoint (no region) so both
+  // s3.amazonaws.com and s3.<region>.amazonaws.com produce the same
+  // wsrv.nl cache key.
+  const bucket = process.env.RP_BUCKET_NAME as string;
+  const stripped = (s3Url as string)
+    .replace("https://", "")
+    .replace(
+      new RegExp(`^${bucket}\\.s3\\.[a-z0-9-]+\\.amazonaws\\.com/`),
+      `${bucket}.s3.amazonaws.com/`,
+    );
   const params = new URLSearchParams({
     fit,
     output: "webp",
@@ -89,20 +113,31 @@ export function wsrvImage<T extends string | null | undefined>(
 // "feed"    — /rp/home & /rp/explore cards: smaller, denser layouts.
 // ──────────────────────────────────────────────────────────────────────────
 
-type Context = "profile" | "feed";
+type Context = "profile" | "feed" | "hero";
 
-const sizesFor = (ctx: Context) =>
-  ctx === "profile"
-    ? {
-        avatar: IMAGE_SIZES.AVATAR_MEDIUM, // 120 — matches profile-card avatar
-        banner: IMAGE_SIZES.BANNER_LARGE, // 1200x400
-        cover: IMAGE_SIZES.COVER_LARGE, // 400x400 — muse cards on profile
-      }
-    : {
-        avatar: IMAGE_SIZES.AVATAR_SMALL, // 96 — feed source/avatar
-        banner: IMAGE_SIZES.BANNER_MEDIUM, // 600x300
-        cover: IMAGE_SIZES.COVER_MEDIUM, // 300x300
-      };
+const sizesFor = (ctx: Context) => {
+  if (ctx === "profile")
+    return {
+      avatar: IMAGE_SIZES.AVATAR_MEDIUM, // 120 — matches profile-card avatar
+      banner: IMAGE_SIZES.BANNER_LARGE, // 1200x400
+      cardBg: IMAGE_SIZES.CARD_BG, // 500x800
+      cover: IMAGE_SIZES.COVER_LARGE, // 400x400 — muse cards on profile
+    };
+  if (ctx === "hero")
+    return {
+      avatar: IMAGE_SIZES.AVATAR_SMALL, // 96 — carousel avatars
+      banner: IMAGE_SIZES.BANNER_MEDIUM, // 600x300
+      cardBg: IMAGE_SIZES.CARD_BG_MINI, // 250x400 — compact carousel cards
+      cover: IMAGE_SIZES.COVER_MEDIUM, // 300x300
+    };
+  // "feed"
+  return {
+    avatar: IMAGE_SIZES.AVATAR_SMALL, // 96 — feed source/avatar
+    banner: IMAGE_SIZES.BANNER_MEDIUM, // 600x300
+    cardBg: IMAGE_SIZES.CARD_BG, // 500x800
+    cover: IMAGE_SIZES.COVER_MEDIUM, // 300x300
+  };
+};
 
 // ──────────────────────────────────────────────────────────────────────────
 // Domain-object transforms — mutate in place.
@@ -145,19 +180,38 @@ export function transformMuse(
   const sizes = sizesFor(ctx);
 
   // Plain string fields.
-  muse.image = wsrvImage(muse.image, sizes.cover);
+  // When there's no cardBackground, muse.image fills the card banner slot
+  // and should be sized to CARD_BG proportions rather than a square cover.
+  muse.image = wsrvImage(
+    muse.image,
+    muse.cardBackground ? sizes.cover : sizes.cardBg,
+  );
 
-  // NWImage wrappers — the user-facing URL is `.src`. Crop coords stay valid
-  // because wsrv preserves the source dimensions when we don't pass `w`/`h`
-  // alongside cropping; we apply our own sizing on top.
+  // NWImage wrappers — transform both the main `.src` and the pre-cropped
+  // `.crop.src` variant (stored separately in S3) through wsrv.
   if (muse.wallpaper) {
     muse.wallpaper.src = wsrvImage(muse.wallpaper.src, sizes.banner);
+    if (muse.wallpaper.crop?.src) {
+      muse.wallpaper.crop.src = wsrvImage(
+        muse.wallpaper.crop.src,
+        sizes.banner,
+      );
+    }
   }
   if (muse.avatar) {
     muse.avatar.src = wsrvImage(muse.avatar.src, sizes.avatar);
+    if (muse.avatar.crop?.src) {
+      muse.avatar.crop.src = wsrvImage(muse.avatar.crop.src, sizes.avatar);
+    }
   }
   if (muse.cardBackground) {
-    muse.cardBackground.src = wsrvImage(muse.cardBackground.src, sizes.banner);
+    muse.cardBackground.src = wsrvImage(muse.cardBackground.src, sizes.cardBg);
+    if (muse.cardBackground.crop?.src) {
+      muse.cardBackground.crop.src = wsrvImage(
+        muse.cardBackground.crop.src,
+        sizes.cardBg,
+      );
+    }
   }
 
   if (muse.pennedBy) {

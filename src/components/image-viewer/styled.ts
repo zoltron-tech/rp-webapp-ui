@@ -1,10 +1,5 @@
 import { Dialog } from "radix-ui";
-import { keyframes, styled } from "styled-components";
-
-const overlayShow = keyframes`
-  from { opacity: 0; }
-  to { opacity: 1; }
-`;
+import { styled } from "styled-components";
 
 export const Root = styled.div`
   position: fixed;
@@ -19,7 +14,8 @@ export const Overlay = styled(Dialog.Overlay)`
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 1);
-  animation: ${overlayShow} 150ms ease-out;
+  /* No fade-in: when swiping crosses media type, dialogs swap and a fade
+     would briefly expose the page behind. Snap to full opacity on mount. */
 `;
 
 export const Content = styled.div`
@@ -198,6 +194,7 @@ export const ImageCardArea = styled.div`
   justify-content: center;
   overflow: hidden;
   background: #000;
+  touch-action: pan-y;
 `;
 
 export const NsfwOverlay = styled.div`
@@ -252,7 +249,7 @@ export const VideoDialog = styled.div`
   align-items: stretch;
 
   width: min(92vw, 900px);
-  max-height: 84vh;
+  height: min(84vh, 84svh);
 
   background: #0d0d0d;
   border-radius: 12px;
@@ -334,6 +331,7 @@ export const VideoArea = styled.div`
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  touch-action: pan-y;
 `;
 
 export const VideoControlsBar = styled.div`

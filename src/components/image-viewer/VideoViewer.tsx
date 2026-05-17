@@ -2,7 +2,14 @@
 
 import classNames from "classnames";
 import { Dialog } from "radix-ui";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   FaCompress,
   FaExpand,
@@ -15,12 +22,22 @@ import {
 import { useGlobalState } from "@/context/store/stores";
 import * as S from "./styled";
 
+const VIDEO_EXTENSIONS = [".mp4", ".mov", ".quicktime"];
+const isVideoUrl = (url: string) => {
+  const lower = url.toLowerCase();
+  return VIDEO_EXTENSIONS.some((ext) => lower.endsWith(ext));
+};
+
 interface VideoViewerProps {
   src: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onNext?: () => void;
   onPrev?: () => void;
+  /** Source of the next media (image or video) — rendered off-screen so it slides in during swipe */
+  nextSrc?: string;
+  /** Source of the previous media (image or video) — rendered off-screen so it slides in during swipe */
+  prevSrc?: string;
 }
 
 const formatTime = (s: number) => {
@@ -36,6 +53,8 @@ export const VideoViewer = ({
   onOpenChange,
   onNext,
   onPrev,
+  nextSrc,
+  prevSrc,
 }: VideoViewerProps) => {
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
@@ -44,7 +63,7 @@ export const VideoViewer = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const hideTimer = useRef<number>(0);
   const playingRef = useRef(false);
-  const swipeStart = useRef<{ x: number; y: number } | null>(null);
+  const cardSwipeStart = useRef<{ x: number; y: number } | null>(null);
 
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -55,7 +74,53 @@ export const VideoViewer = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [controlsVisible, setControlsVisible] = useState(true);
 
-  const SWIPE_THRESHOLD = 60;
+  const SLIDE_MS = 300;
+  // Visual gap between the current media and its adjacent neighbors
+  const SLIDE_GAP = 16;
+
+  // Card-mode carousel drag — same model as AppImageViewer.
+  // cardImgX is a shared translateX applied to all three slots; prev sits at
+  // `right: calc(100% + GAP)`, current at center, next at `left: calc(100% + GAP)`.
+  const [cardImgX, setCardImgX] = useState(0);
+  const [cardImgTransition, setCardImgTransition] = useState(false);
+  const cardAnimating = useRef(false);
+  const cardContainerWidth = useRef(0);
+
+  // Internal mirror of the three media sources, swapped atomically with the
+  // parent's src update on snap completion so React commits a consistent frame.
+  const [displayed, setDisplayed] = useState<{
+    current: string;
+    prev?: string;
+    next?: string;
+  }>({ current: src, next: nextSrc, prev: prevSrc });
+  const lastPropsRef = useRef({ nextSrc, prevSrc, src });
+
+  type SlotPosition = "prev" | "current" | "next";
+  const slotList = useMemo<
+    Array<{ src: string; position: SlotPosition }>
+  >(() => {
+    const list: Array<{ src: string; position: SlotPosition }> = [];
+    if (displayed.prev) list.push({ position: "prev", src: displayed.prev });
+    list.push({ position: "current", src: displayed.current });
+    if (displayed.next) list.push({ position: "next", src: displayed.next });
+    return list;
+  }, [displayed]);
+
+  // Sync internal displayed to incoming props when they change externally
+  // (keyboard nav, button click) or to fill in a missing neighbor after our
+  // optimistic post-snap swap.
+  useLayoutEffect(() => {
+    const last = lastPropsRef.current;
+    if (
+      last.src === src &&
+      last.prevSrc === prevSrc &&
+      last.nextSrc === nextSrc
+    ) {
+      return;
+    }
+    lastPropsRef.current = { nextSrc, prevSrc, src };
+    setDisplayed({ current: src, next: nextSrc, prev: prevSrc });
+  }, [src, prevSrc, nextSrc]);
 
   /* ── Auto-play / reset on open or src change ───────────────────────────── */
   useEffect(() => {
@@ -69,6 +134,10 @@ export const VideoViewer = ({
       setCurrentTime(0);
       window.clearTimeout(hideTimer.current);
       setControlsVisible(true);
+      // Reset carousel transform so the next open starts cleanly
+      setCardImgX(0);
+      setCardImgTransition(false);
+      cardAnimating.current = false;
       return;
     }
     if (!v) return;
@@ -310,28 +379,91 @@ export const VideoViewer = ({
     showControls,
   ]);
 
-  /* ── Swipe (mobile next/prev) ───────────────────────────────────────────── */
-  const onTouchStart = useCallback(
+  /* ── Card-mode carousel touch swipe (next/prev with live drag) ──────── */
+  const onCardTouchStart = useCallback(
     (e: React.TouchEvent) => {
-      swipeStart.current = {
+      if (cardAnimating.current) return;
+      cardContainerWidth.current =
+        (e.currentTarget as HTMLElement).offsetWidth || window.innerWidth;
+      cardSwipeStart.current = {
         x: e.touches[0].clientX,
         y: e.touches[0].clientY,
       };
+      setCardImgTransition(false);
       showControls();
     },
     [showControls],
   );
 
-  const onTouchEnd = useCallback(
+  const onCardTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!cardSwipeStart.current || cardAnimating.current) return;
+    const dx = e.touches[0].clientX - cardSwipeStart.current.x;
+    const dy = e.touches[0].clientY - cardSwipeStart.current.y;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      setCardImgX(dx);
+    }
+  }, []);
+
+  const onCardTouchEnd = useCallback(
     (e: React.TouchEvent) => {
-      if (!swipeStart.current) return;
-      const dx = e.changedTouches[0].clientX - swipeStart.current.x;
-      const dy = e.changedTouches[0].clientY - swipeStart.current.y;
-      if (Math.abs(dx) >= SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
-        if (dx < 0) onNext?.();
-        else onPrev?.();
+      if (!cardSwipeStart.current || cardAnimating.current) return;
+      const dx = e.changedTouches[0].clientX - cardSwipeStart.current.x;
+      const dy = e.changedTouches[0].clientY - cardSwipeStart.current.y;
+      cardSwipeStart.current = null;
+
+      const cw = cardContainerWidth.current || window.innerWidth;
+      const isHorizontal = Math.abs(dx) > Math.abs(dy);
+      const goingNext = dx < 0;
+
+      // "Most in frame" rule: snap only when the neighbor occupies more than
+      // half the container width.
+      const snapToNeighbor =
+        isHorizontal &&
+        Math.abs(dx) > cw / 2 &&
+        (goingNext ? !!onNext : !!onPrev);
+
+      if (!snapToNeighbor) {
+        setCardImgTransition(true);
+        setCardImgX(0);
+        setTimeout(() => setCardImgTransition(false), SLIDE_MS);
+        return;
       }
-      swipeStart.current = null;
+
+      // Pause current video before sliding away — it may unmount on snap
+      const v = videoRef.current;
+      if (v && !v.paused) {
+        v.pause();
+        setPlaying(false);
+        playingRef.current = false;
+      }
+
+      cardAnimating.current = true;
+      const snapX = goingNext ? -(cw + SLIDE_GAP) : cw + SLIDE_GAP;
+
+      setCardImgTransition(true);
+      setCardImgX(snapX);
+
+      setTimeout(() => {
+        // Atomically swap internal displayed snapshot + reset track + parent
+        // src update — all batched into one React commit. The new "current"
+        // slot reuses the keyed wrapper that was previously at "next"/"prev",
+        // so its underlying <img>/<video> element is preserved (no reload).
+        setDisplayed((d) =>
+          goingNext
+            ? { current: d.next ?? d.current, next: undefined, prev: d.current }
+            : {
+                current: d.prev ?? d.current,
+                next: d.current,
+                prev: undefined,
+              },
+        );
+        setCardImgTransition(false);
+        setCardImgX(0);
+        cardAnimating.current = false;
+
+        if (goingNext) onNext?.();
+        else onPrev?.();
+      }, SLIDE_MS);
     },
     [onNext, onPrev],
   );
@@ -364,8 +496,6 @@ export const VideoViewer = ({
                 );
               }
             }}
-            onTouchStart={onTouchStart}
-            onTouchEnd={onTouchEnd}
             onClick={() => onOpenChange(false)}
           >
             <S.VideoDialog
@@ -386,30 +516,116 @@ export const VideoViewer = ({
               </S.VideoDialogHeader>
 
               {/* ── Video + overlays ────────────────────────────────────── */}
-              <S.VideoArea>
-                {/* ── Video element ────────────────────────────────────────── */}
-                <video
-                  ref={videoRef}
-                  src={src}
-                  disablePictureInPicture
-                  playsInline
-                  draggable={false}
-                  onTimeUpdate={onTimeUpdate}
-                  onLoadedMetadata={onLoadedMetadata}
-                  onEnded={onEnded}
-                  onClick={togglePlay}
-                  onContextMenu={(e) => e.preventDefault()}
-                  style={{
-                    cursor: "pointer",
-                    display: "block",
-                    maxHeight: "100%",
-                    objectFit: "contain",
-                    width: "100%",
-                  }}
-                >
-                  {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-                  <track kind="captions" />
-                </video>
+              <S.VideoArea
+                onTouchStart={onCardTouchStart}
+                onTouchMove={onCardTouchMove}
+                onTouchEnd={onCardTouchEnd}
+              >
+                {/* Slotted carousel — current slot is the live video; prev/next
+                    slots are static peeks (img or muted video preloads). Each
+                    slot is keyed by URL so React preserves the underlying
+                    media element across role changes. */}
+                {slotList.map(({ src: slotSrc, position }) => {
+                  const isCurrent = position === "current";
+                  const slotIsVideo = isVideoUrl(slotSrc);
+                  const positionStyle: React.CSSProperties =
+                    position === "prev"
+                      ? {
+                          bottom: 0,
+                          right: `calc(100% + ${SLIDE_GAP}px)`,
+                          top: 0,
+                          width: "100%",
+                        }
+                      : position === "next"
+                        ? {
+                            bottom: 0,
+                            left: `calc(100% + ${SLIDE_GAP}px)`,
+                            top: 0,
+                            width: "100%",
+                          }
+                        : { inset: 0 };
+
+                  return (
+                    <div
+                      key={slotSrc}
+                      aria-hidden={!isCurrent}
+                      style={{
+                        alignItems: "center",
+                        display: "flex",
+                        justifyContent: "center",
+                        pointerEvents: isCurrent ? undefined : "none",
+                        position: "absolute",
+                        ...positionStyle,
+                        transform: `translateX(${cardImgX}px)`,
+                        transition: cardImgTransition
+                          ? `transform ${SLIDE_MS}ms ease-in-out`
+                          : "none",
+                        willChange: cardAnimating.current
+                          ? "transform"
+                          : "auto",
+                      }}
+                    >
+                      {slotIsVideo ? (
+                        isCurrent ? (
+                          // Live video — controls + ref attached
+                          <video
+                            ref={videoRef}
+                            src={slotSrc}
+                            disablePictureInPicture
+                            playsInline
+                            draggable={false}
+                            onTimeUpdate={onTimeUpdate}
+                            onLoadedMetadata={onLoadedMetadata}
+                            onEnded={onEnded}
+                            onClick={togglePlay}
+                            onContextMenu={(e) => e.preventDefault()}
+                            style={{
+                              cursor: "pointer",
+                              display: "block",
+                              maxHeight: "100%",
+                              objectFit: "contain",
+                              width: "100%",
+                            }}
+                          >
+                            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                            <track kind="captions" />
+                          </video>
+                        ) : (
+                          // Peek video — muted, paused, preloaded
+                          <video
+                            src={slotSrc}
+                            muted
+                            playsInline
+                            preload="metadata"
+                            draggable={false}
+                            style={{
+                              borderRadius: "8px",
+                              maxHeight: "100%",
+                              maxWidth: "100%",
+                              objectFit: "contain",
+                              pointerEvents: "none",
+                            }}
+                          >
+                            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                            <track kind="captions" />
+                          </video>
+                        )
+                      ) : (
+                        <img
+                          src={slotSrc}
+                          alt=""
+                          draggable={false}
+                          style={{
+                            borderRadius: "8px",
+                            maxHeight: "100%",
+                            maxWidth: "100%",
+                            objectFit: "contain",
+                          }}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
 
                 {/* ── Controls bar ───────────────────────────────────────── */}
                 <S.VideoControlsBar

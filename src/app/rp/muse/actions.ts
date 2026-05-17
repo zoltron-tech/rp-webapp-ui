@@ -10,6 +10,7 @@ import type {
 } from "@/types";
 import type { DataType, WithMessage } from "@/types/common";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
+import { transformMuse } from "@/utils/image";
 import { Logger } from "@/utils/services";
 
 const { serverRuntimeConfig } = getConfig();
@@ -43,6 +44,8 @@ export const getMuseAction = async (
   }
 
   const muse: Muse = await response.json();
+
+  transformMuse(muse, "profile");
 
   return muse;
 };
@@ -234,6 +237,8 @@ export const getAllMusesByUsernameAction = async (
 
   const muse: Muse[] = await response.json();
 
+  for (const m of muse) transformMuse(m, "hero");
+
   return muse;
 };
 
@@ -314,6 +319,8 @@ export const getAllMusesAction = async () => {
 
   const muse: Muse[] = await response.json();
 
+  for (const m of muse) transformMuse(m, "feed");
+
   return muse;
 };
 
@@ -336,6 +343,8 @@ export const getHeroPageMusesAction = async (): Promise<DataType<Muse[]>> => {
   }
 
   const muse: Muse[] = await response.json();
+
+  for (const m of muse) transformMuse(m, "hero");
 
   return muse;
 };

@@ -12,6 +12,26 @@ const withPWA = require('@ducanh2912/next-pwa').default({
   customWorkerSrc: 'worker',
   workboxOptions: {
     disableDevLogs: true,
+    runtimeCaching: [
+      {
+        // Cache proxied images from wsrv.nl with CacheFirst — the URL already
+        // encodes dimensions/quality so the same URL always yields the same
+        // image. Status 0 covers opaque (no-cors) responses from background-image
+        // fetches so they are cached correctly by the service worker.
+        urlPattern: /^https:\/\/wsrv\.nl\//,
+        handler: 'CacheFirst',
+        options: {
+          cacheName: 'wsrv-image-cache',
+          expiration: {
+            maxEntries: 500,
+            maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+          },
+          cacheableResponse: {
+            statuses: [0, 200],
+          },
+        },
+      },
+    ],
   }
 });
 

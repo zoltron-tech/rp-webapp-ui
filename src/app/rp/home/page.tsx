@@ -43,8 +43,8 @@ import * as S from "./styles";
 
 const ACTIVITIES_PAGE_SIZE = FEED_PAGE_SIZES.homeActivities;
 const EXPLORE_PROMPTS_PAGE_SIZE = FEED_PAGE_SIZES.explorePrompts;
-const MUSES_PAGE_SIZE = 20;
-const STRANGERS_PAGE_SIZE = 20;
+const MUSES_PAGE_SIZE = 8;
+const STRANGERS_PAGE_SIZE = 8;
 
 /**
  * Discriminated feed item — lets us render activities, explore prompts and

@@ -25,8 +25,8 @@ import type { StoreState } from "@/types/state";
 
 /** Per-source page sizes — keep in one place so home and explore stay in sync. */
 export const FEED_PAGE_SIZES = {
-  explorePrompts: 5,
-  homeActivities: 10,
+  explorePrompts: 3,
+  homeActivities: 5,
 } as const;
 
 /** Background polling interval (ms). Used by `useFeedPrefetch`. */

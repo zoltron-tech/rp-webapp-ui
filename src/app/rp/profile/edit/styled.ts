@@ -805,7 +805,7 @@ export const LandingHeroInput = styled.input`
   flex: 1;
   width: 100%;
   min-width: 0;
-  font-size: var(--font-size);
+  font-size: var(--font-size-input);
   font-weight: var(--font-weight-bold);
   color: var(--text);
   font-family: var(--font);

@@ -84,7 +84,22 @@ export const BackButtonWrap = styled.div`
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   cursor: pointer;
+  color: var(--text);
+  transition: background-color 0.15s ease;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--bg-4);
+    }
+  }
+
+  &:active {
+    background-color: var(--bg-5);
+  }
 `;
 
 export const BackBadge = styled(UnreadBadgeBase)`

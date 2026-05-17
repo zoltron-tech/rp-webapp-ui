@@ -98,7 +98,9 @@ export default function LoginOAuthCallbackPage() {
     setOperationState("SUCCESS");
     if (onboarded) {
       routeToPage(
-        _novelist.friends?.length === 0 ? ROUTES.Fellows : ROUTES.Home,
+        _novelist.friends?.length === 0
+          ? ROUTES.Fellows
+          : ROUTES.Profile.View(_novelist.username).Index,
       );
     } else {
       setGlobalState({ showInstallAppPrompt: true });

@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
+import { IoArrowBackOutline } from "react-icons/io5";
 import * as CommentS from "@/app/rp/prompt/[slug]/comment/styles";
 import { MobileReplyComposer } from "@/components/mobile-reply-composer";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
@@ -246,8 +247,11 @@ export const PromptThreads: FC = () => {
           >
             <CommentS.PageContainer $closing={overlayClosing}>
               <CommentS.HeaderContainer>
-                <CommentS.BackButton onClick={closeOverlay} aria-label="Back">
-                  ←
+                <CommentS.BackButton
+                  onClick={closeOverlay}
+                  aria-label="Go back"
+                >
+                  <IoArrowBackOutline size={22} />
                 </CommentS.BackButton>
                 <CommentS.HeaderPromptWrap>
                   <PromptHeader />

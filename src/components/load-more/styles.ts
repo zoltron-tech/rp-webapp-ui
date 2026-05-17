@@ -3,48 +3,55 @@ import styled from "styled-components";
 import { UnreadBadgeBase } from "../common/unread-badge";
 
 export const LoadMoreContainer = styled.div`
+  width: 100%;
   display: flex;
-  min-height: 40px;
-  justify-content: center;
-  margin: 12px 0px 20px 0px;
+  align-items: center;
+  gap: 8px;
+  margin-block: 16px;
+
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background-color: var(--bg-5);
+  }
 `;
 
 export const LoadMoreButton = styled.button`
+  all: unset;
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  width: 160px;
-
-  padding: 2px 12px;
-  border: 1px solid var(--accent);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 30%, transparent);
-
-  font-size: var(--font-size-h6);
-  font-weight: 700;
-  font-style: italic;
-  color: var(--accent-hover);
+  padding: 7px 18px;
+  border: 1px solid var(--bg-6);
+  border-radius: 50px;
+  background: var(--bg-3);
+  font-family: var(--font);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-secondary);
   white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 
-  transition: all 0.2s ease;
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 10%, var(--bg-3));
+    }
+  }
 
-  &:hover:not(:disabled) {
-    cursor: pointer;
-    color: var(--accent-hover);
-    border-color: var(--accent-hover);
-    background: color-mix(in srgb, var(--accent-hover) 20%, transparent);
-    box-shadow: 0 0 8px
-      color-mix(in srgb, var(--accent-hover) 50%, transparent);
+  &:active:not(:disabled) {
+    background: color-mix(in srgb, var(--accent) 18%, var(--bg-3));
   }
 
   &:disabled {
     cursor: default;
-    opacity: 0.8;
-  }
-
-  @container (max-width: 600px) {
-    font-size: var(--font-size-input);
+    opacity: 0.5;
   }
 `;
 

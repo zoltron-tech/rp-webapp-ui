@@ -1599,7 +1599,7 @@ export const LandingHeroInput = styled.input`
   }
 
   @media screen and (max-width: 480px) {
-    font-size: var(--font-size-small);
+    font-size: var(--font-size-input);
   }
 `;
 

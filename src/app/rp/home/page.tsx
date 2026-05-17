@@ -123,9 +123,9 @@ export default function HomePage() {
   const [feedExplorePrompts, setFeedExplorePrompts] = useState<Prompt[]>(
     () => cachedExplorePrompts ?? [],
   );
-  const [feedOOCPosts, setFeedOOCPosts] = useState<Prompt[]>(
-    () => cachedOOCPosts ?? [],
-  );
+  // OOC posts are always fetched fresh on mount (not seeded from cache)
+  // to avoid showing stale data from a previous login-time prefetch.
+  const [feedOOCPosts, setFeedOOCPosts] = useState<Prompt[]>([]);
   // IDs of prompts fetched on the first page — activities whose target.id
   // matches one of these are hidden from the feed to avoid duplicates.
   const [firstPagePromptIds, setFirstPagePromptIds] = useState<Set<string>>(
@@ -140,23 +140,16 @@ export default function HomePage() {
   const [activitiesHasMore, setActivitiesHasMore] = useState(true);
   const [explorePromptsHasMore, setExplorePromptsHasMore] = useState(true);
   const [feedLoadingMore, setFeedLoadingMore] = useState(false);
-  // Derived list for rendering — activities whose target matches a first-page
-  // prompt ID are filtered out to avoid showing duplicate content.
-  const mixedFeed = useMemo(
-    () =>
-      interleaveFeed(
-        feedActivities.filter((a) => !firstPagePromptIds.has(a.target.id)),
-        feedExplorePrompts,
-        feedOOCPosts,
-      ),
-    [feedActivities, feedExplorePrompts, feedOOCPosts, firstPagePromptIds],
-  );
+  // Rendered list — built once after all three sources are ready and appended
+  // to on load-more. Positions are stable because we never re-interleave
+  // existing items; only new pages are appended to the end.
+  const [mixedFeed, setMixedFeed] = useState<FeedItem[]>([]);
   const feedHasMore = activitiesHasMore || explorePromptsHasMore;
-  // True on first visit (no cache) — the activity container shows shimmers
-  // until all three feed sources have completed their initial hydration.
-  const [feedInitializing, setFeedInitializing] = useState(
-    !cachedActivities && !cachedExplorePrompts && !cachedOOCPosts,
-  );
+  // Always true on mount: OOC posts are fetched fresh every visit, so we
+  // always wait for all three sources before rendering the feed.
+  const [feedInitializing, setFeedInitializing] = useState(true);
+  // Prevents rebuilding the initial mixedFeed if the effect re-runs.
+  const feedBuiltRef = useRef(false);
 
   const [friendsMusesPage, setFriendsMusesPage] = useState(1);
   const [friendsMusesHasMore, setFriendsMusesHasMore] = useState(false);
@@ -257,75 +250,55 @@ export default function HomePage() {
   // Hydrate page 1 of each source. Prefer cache → in-flight prefetch → fresh
   // fetch. This dedupes against the login-triggered `prefetchAllFeeds`.
 
-  const hydrateActivities = useCallback(async () => {
-    if (feedActivities.length > 0) return;
+  const hydrateActivities = useCallback(async (): Promise<Activity[]> => {
+    if (feedActivities.length > 0) return feedActivities;
     if (cachedActivities) {
       setFeedActivities(cachedActivities);
       setActivitiesHasMore(cachedActivities.length === ACTIVITIES_PAGE_SIZE);
-      return;
+      return cachedActivities;
     }
     const inflight = getInflightFeed<Activity[] | null>("homeActivities");
     const result = await (inflight ?? prefetchHomeActivities(setGlobalState));
     if (result) {
       setFeedActivities(result);
       setActivitiesHasMore(result.length === ACTIVITIES_PAGE_SIZE);
-    } else {
-      setActivitiesHasMore(false);
+      return result;
     }
+    setActivitiesHasMore(false);
+    return [];
   }, [feedActivities.length, cachedActivities, setGlobalState]);
 
-  const hydrateExplorePrompts = useCallback(async () => {
-    if (feedExplorePrompts.length > 0) return;
+  const hydrateExplorePrompts = useCallback(async (): Promise<Prompt[]> => {
+    if (feedExplorePrompts.length > 0) return feedExplorePrompts;
     if (cachedExplorePrompts) {
       setFeedExplorePrompts(cachedExplorePrompts);
       setExplorePromptsHasMore(
         cachedExplorePrompts.length === EXPLORE_PROMPTS_PAGE_SIZE,
       );
-      setFirstPagePromptIds((prev) => {
-        const next = new Set(prev);
-        cachedExplorePrompts.forEach((p) => next.add(p.id));
-        return next;
-      });
-      return;
+      return cachedExplorePrompts;
     }
     const inflight = getInflightFeed<Prompt[] | null>("explorePrompts");
     const result = await (inflight ?? prefetchExplorePrompts(setGlobalState));
     if (result) {
       setFeedExplorePrompts(result);
       setExplorePromptsHasMore(result.length === EXPLORE_PROMPTS_PAGE_SIZE);
-      setFirstPagePromptIds((prev) => {
-        const next = new Set(prev);
-        result.forEach((p) => next.add(p.id));
-        return next;
-      });
-    } else {
-      setExplorePromptsHasMore(false);
+      return result;
     }
+    setExplorePromptsHasMore(false);
+    return [];
   }, [feedExplorePrompts.length, cachedExplorePrompts, setGlobalState]);
 
-  const hydrateOOCPosts = useCallback(async () => {
-    if (feedOOCPosts.length > 0) return;
-    if (cachedOOCPosts) {
-      setFeedOOCPosts(cachedOOCPosts);
-      setFirstPagePromptIds((prev) => {
-        const next = new Set(prev);
-        cachedOOCPosts.forEach((p) => next.add(p.id));
-        return next;
-      });
-      return;
-    }
+  // OOC posts are always fetched fresh — never use a cached value — because
+  // the cache may be from a previous login-time prefetch and be stale.
+  const hydrateOOCPosts = useCallback(async (): Promise<Prompt[]> => {
     const inflight = getInflightFeed<Prompt[] | null>("oocPosts");
     const result = await (inflight ?? prefetchOOCPosts(setGlobalState));
     if (result) {
       setFeedOOCPosts(result);
-      setFirstPagePromptIds((prev) => {
-        const next = new Set(prev);
-        result.forEach((p) => next.add(p.id));
-        return next;
-      });
+      return result;
     }
-    // OOC posts are unpaginated → no `hasMore` flag.
-  }, [feedOOCPosts.length, cachedOOCPosts, setGlobalState]);
+    return [];
+  }, [setGlobalState]);
 
   /**
    * Load more: fetch next page of each paginated source in parallel and
@@ -348,21 +321,35 @@ export default function HomePage() {
         ? getNewPromptsAction(nextExplorePromptsPage, EXPLORE_PROMPTS_PAGE_SIZE)
         : Promise.resolve(null),
     ]);
-    if (moreActivities && !("message" in moreActivities)) {
-      setFeedActivities((prev) => [...prev, ...moreActivities]);
-      setActivitiesHasMore(moreActivities.length === ACTIVITIES_PAGE_SIZE);
+    const newActivities =
+      moreActivities && !("message" in moreActivities) ? moreActivities : [];
+    const newPrompts =
+      moreExplorePrompts && !("message" in moreExplorePrompts)
+        ? moreExplorePrompts
+        : [];
+
+    if (newActivities.length > 0) {
+      setActivitiesHasMore(newActivities.length === ACTIVITIES_PAGE_SIZE);
       setActivitiesPage(nextActivitiesPage);
     } else if (activitiesHasMore) {
       setActivitiesHasMore(false);
     }
-    if (moreExplorePrompts && !("message" in moreExplorePrompts)) {
-      setFeedExplorePrompts((prev) => [...prev, ...moreExplorePrompts]);
-      setExplorePromptsHasMore(
-        moreExplorePrompts.length === EXPLORE_PROMPTS_PAGE_SIZE,
-      );
+    if (newPrompts.length > 0) {
+      setExplorePromptsHasMore(newPrompts.length === EXPLORE_PROMPTS_PAGE_SIZE);
       setExplorePromptsPage(nextExplorePromptsPage);
     } else if (explorePromptsHasMore) {
       setExplorePromptsHasMore(false);
+    }
+
+    // Interleave ONLY the new-page items and append to the stable list.
+    // OOC posts are unpaginated so they don't grow on load-more.
+    const newItems = interleaveFeed(
+      newActivities.filter((a) => !firstPagePromptIds.has(a.target.id)),
+      newPrompts,
+      [],
+    );
+    if (newItems.length > 0) {
+      setMixedFeed((prev) => [...prev, ...newItems]);
     }
     setFeedLoadingMore(false);
   };
@@ -402,12 +389,31 @@ export default function HomePage() {
       fetchFriendsMuses(),
     ]).then(() => stopPageLoading());
 
-    // Hydrate all three feed sources in parallel; hide the feed skeleton when done.
-    Promise.all([
-      hydrateActivities(),
-      hydrateExplorePrompts(),
-      hydrateOOCPosts(),
-    ]).then(() => setFeedInitializing(false));
+    // Hydrate all three feed sources in parallel; build the feed once from the
+    // returned data so positions are stable and firstPagePromptIds is accurate.
+    if (!feedBuiltRef.current) {
+      Promise.all([
+        hydrateActivities(),
+        hydrateExplorePrompts(),
+        hydrateOOCPosts(),
+      ]).then(([activities, explorePrompts, oocPosts]) => {
+        if (feedBuiltRef.current) return;
+        feedBuiltRef.current = true;
+        const promptIds = new Set([
+          ...explorePrompts.map((p) => p.id),
+          ...oocPosts.map((p) => p.id),
+        ]);
+        setFirstPagePromptIds(promptIds);
+        setMixedFeed(
+          interleaveFeed(
+            activities.filter((a) => !promptIds.has(a.target.id)),
+            explorePrompts,
+            oocPosts,
+          ),
+        );
+        setFeedInitializing(false);
+      });
+    }
   }, [authState, hydrateActivities, hydrateExplorePrompts, hydrateOOCPosts]);
 
   return (

@@ -24,7 +24,9 @@ export default function LoginPage() {
   useEffect(() => {
     if (authState === "LOGGED_IN") {
       routeToPage(
-        novelist?.friends?.length === 0 ? ROUTES.Fellows : ROUTES.Home,
+        novelist?.friends?.length === 0
+          ? ROUTES.Fellows
+          : ROUTES.Profile.View(novelist!.username).Index,
       );
     }
   }, [authState]);

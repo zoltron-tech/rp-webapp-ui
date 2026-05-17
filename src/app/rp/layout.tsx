@@ -23,6 +23,7 @@ import {
 import { useSocket } from "@/context/socket";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
+import { useFeedPrefetch } from "@/hooks/use-feed-prefetch";
 import { setBadgeCount } from "@/lib/badge-manager";
 import { THEME_DARK, THEME_LIGHT } from "@/theme";
 import type { StoreState } from "@/types/state";
@@ -55,6 +56,10 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
   const unreadConversationIds = useGlobalState("unreadConversationIds");
   const unreadReplyCount = useGlobalState("unreadReplyCount");
   const authState = useGlobalState("authState");
+
+  // Silent prefetch of explore prompts, OOC posts and friend activities on
+  // login + background polling while the user is elsewhere in the app.
+  useFeedPrefetch();
 
   // Prefetch the first page of conversations after login so the inbox renders instantly
   useEffect(() => {
@@ -140,6 +145,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           activePrompt: null,
           authState: "LOGGED_OUT",
           cachedConversations: null,
+          cachedExplorePrompts: null,
+          cachedHomeActivities: null,
+          cachedOOCPosts: null,
           conversationNavDirection: null,
           friendSuggestions: null,
           helloStickers: null,

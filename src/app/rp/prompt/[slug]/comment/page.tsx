@@ -3,6 +3,7 @@
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Separator } from "radix-ui";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { IoArrowBackOutline } from "react-icons/io5";
 import { getPromptAction } from "@/app/rp/prompt/actions";
 import {
   museToSource,
@@ -107,7 +108,9 @@ function CommentPageInner() {
       <S.PageContainer>
         {/* ── Sticky header — shows the prompt source/meta ─────────── */}
         <S.HeaderContainer>
-          <S.BackButton onClick={() => router.back()}>←</S.BackButton>
+          <S.BackButton onClick={() => router.back()} aria-label="Go back">
+            <IoArrowBackOutline size={22} />
+          </S.BackButton>
           <S.HeaderPromptWrap>
             <PromptHeader />
           </S.HeaderPromptWrap>

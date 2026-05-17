@@ -4,6 +4,7 @@ import { getJWTIfExists } from "@/app/actions";
 import type { Prompt } from "@/types";
 import type { DataType } from "@/types/common";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
+import { transformPrompt } from "@/utils/image";
 import { Logger } from "@/utils/services";
 
 const { serverRuntimeConfig } = getConfig();
@@ -38,6 +39,8 @@ export const getNewPromptsAction = async (
   }
 
   const prompts: Prompt[] = await response.json();
+
+  for (const p of prompts) transformPrompt(p, "feed");
 
   return prompts;
 };

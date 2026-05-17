@@ -1,5 +1,4 @@
 "use client";
-import { Flex } from "@novelist-world/ui";
 import classNames from "classnames";
 import type { FC } from "react";
 import { FiChevronRight } from "react-icons/fi";
@@ -29,24 +28,19 @@ export const MuseListItem: FC<Props> = ({ muse, className, ...rest }) => {
       className={classNames(["muse-list-item", className])}
       {...rest}
     >
-      <Flex justify="space-between" align="center" style={{ width: "100%" }}>
-        <Flex justify="flex-start" align="center">
-          <AvatarNew
-            src={muse?.image ?? null}
-            alt={muse?.firstName ?? "Muse"}
-            name="open"
-            onClick={onAvatarClick}
-          />
-          <S.MuseName>
-            {muse.firstName}{" "}
-            <span className={classNames(["muse-last-name"])}>
-              {muse.lastName}
-            </span>
-          </S.MuseName>
-        </Flex>
-
-        <FiChevronRight size={20} color="gray" />
-      </Flex>
+      <AvatarNew
+        className="avatar"
+        src={muse?.image ?? null}
+        alt={muse?.firstName ?? "Muse"}
+        name="open"
+        onClick={onAvatarClick}
+      />
+      <S.MuseInfo>
+        <S.MuseName>
+          {muse.firstName} <S.MuseSubname>{muse.lastName}</S.MuseSubname>
+        </S.MuseName>
+      </S.MuseInfo>
+      <FiChevronRight size={18} color="var(--text-secondary)" />
     </S.MuseContainer>
   );
 };

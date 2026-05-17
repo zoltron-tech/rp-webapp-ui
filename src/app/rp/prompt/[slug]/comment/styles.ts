@@ -72,9 +72,12 @@ export const HeaderContainer = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
+  gap: 4px;
   width: 100%;
   background: var(--bg-2);
   border-bottom: 1px solid var(--bg-6);
+  padding-block: 6px;
+  padding-inline: 8px;
 
   @media screen and (max-width: 800px) {
     position: sticky;
@@ -84,33 +87,59 @@ export const HeaderContainer = styled.div`
   }
 `;
 
-/** Left-side back arrow button. */
+/** Left-side back arrow button — prominent circular button. */
 export const BackButton = styled.button`
   all: unset;
   box-sizing: border-box;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   width: 40px;
-  padding-left: 10px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
   color: var(--text);
-  font-size: 1.1rem;
+  transition: background-color 0.15s ease;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--bg-4);
+    }
+  }
+  &:active {
+    background-color: var(--bg-5);
+  }
+  &:focus-visible {
+    outline: 1.5px solid var(--accent);
+    outline-offset: 2px;
+  }
 `;
 
 /**
  * Wraps PromptHeader inside the sticky top bar.
- * Hides the dropdown menu (…) since this is a read-only header view.
+ * Scales down avatars, name and date for the compact overlay header.
  */
 export const HeaderPromptWrap = styled.div`
   flex: 1;
   min-width: 0;
-  padding: 6px 0;
+  padding-block: 2px;
 
-  /* Scale down avatars slightly for the compact header. */
+  /* Compact avatar */
   .avatar {
-    width: 40px !important;
-    height: 40px !important;
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  /* Smaller source name */
+  h1 {
+    font-size: var(--font-size);
+    font-weight: var(--font-weight-semi-bold);
+    line-height: 1.3;
+  }
+
+  /* Slightly smaller date/meta text */
+  time {
+    font-size: var(--font-size-xsmall);
   }
 `;

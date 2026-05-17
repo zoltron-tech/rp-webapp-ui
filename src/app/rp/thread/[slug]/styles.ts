@@ -147,9 +147,10 @@ export const HeaderContainer = styled.div`
   align-items: center;
   position: relative;
   width: 100%;
-  padding-block: 10px;
+  padding-block: 8px;
   border-bottom: 1px solid var(--bg-6);
-  padding-inline: 20px;
+  padding-inline: 10px;
+  gap: 8px;
 
   /* Stick to the top while scrolling on mobile so the "To" info is always visible */
   @media screen and (max-width: 800px) {
@@ -160,11 +161,41 @@ export const HeaderContainer = styled.div`
   }
 `;
 
+export const BackButton = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--text);
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--bg-4);
+    }
+  }
+
+  &:active {
+    background-color: var(--bg-5);
+  }
+
+  &:focus-visible {
+    outline: 1.5px solid var(--accent);
+    outline-offset: 2px;
+  }
+`;
+
 export const SourceInfo = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  margin-left: 10px;
+  margin-left: 6px;
 `;
 
 export const SourceName = styled.h1`

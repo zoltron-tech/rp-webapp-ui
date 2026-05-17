@@ -13,15 +13,20 @@ import { Prompt as PromptComponent } from "@/components/prompt";
 import { PromptComposeTrigger } from "@/components/prompt-compose-trigger";
 import PromptInput from "@/components/prompt-input";
 import { FullPagePromptInput } from "@/components/prompt-input/full-page-prompt-input";
-import { useGlobalState } from "@/context/store/stores";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
+import {
+  FEED_PAGE_SIZES,
+  getInflightFeed,
+  prefetchExplorePrompts,
+  prefetchOOCPosts,
+} from "@/lib/feed-prefetch";
 import type { Prompt } from "@/types";
 import { getNewPromptsAction } from "../explore-prompts/actions";
-import { getNewsFeed } from "../news-feed/actions";
 import * as S from "./styles";
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = FEED_PAGE_SIZES.explorePrompts;
 
 type ExploreMode = "NEWSFEED" | "PROMPTS";
 
@@ -36,7 +41,10 @@ export default function ExplorePage() {
   const user = useGlobalState("user");
   const authState = useGlobalState("authState");
   const novelist = useGlobalState("novelist");
-  const { baseDataLoader } = usePageRouter();
+  const cachedExplorePrompts = useGlobalState("cachedExplorePrompts");
+  const cachedOOCPosts = useGlobalState("cachedOOCPosts");
+  const setGlobalState = useGlobalStoreSet();
+  const { baseDataLoader, stopPageLoading } = usePageRouter();
   const searchParams = useSearchParams();
   const { width } = useWindowDimensions();
   const isMobile = (width ?? 0) <= 800;
@@ -45,20 +53,73 @@ export default function ExplorePage() {
   const [mode, setMode] = useState<ExploreMode>(
     getModeFromTab(searchParams?.get("tab") ?? null),
   );
-  const [newsFeedPrompts, setNewsFeedPrompts] = useState<Prompt[] | null>(null);
-  const [explorePrompts, setExplorePrompts] = useState<Prompt[] | null>(null);
+  // Hydrate from cached page 1 on mount. We snapshot on mount only so that
+  // background polling cannot disrupt the visible feed (requirement #6).
+  const [newsFeedPrompts, setNewsFeedPrompts] = useState<Prompt[] | null>(
+    () => cachedOOCPosts,
+  );
+  const [explorePrompts, setExplorePrompts] = useState<Prompt[] | null>(
+    () => cachedExplorePrompts,
+  );
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
+  // ── Fetchers ──────────────────────────────────────────────────────────────
+  // Both fetchers prefer the shared prefetch service: if a prefetch is in
+  // flight we attach to its promise; if page 1 is already cached we render
+  // it immediately; otherwise we issue a fresh fetch.
+
   const fetchNewsFeedPrompts = useCallback(async () => {
-    const _threads = await baseDataLoader(getNewsFeed);
-    if (!_threads) return;
-    setNewsFeedPrompts(_threads);
-  }, [baseDataLoader]);
+    // Cached → done.
+    if (cachedOOCPosts) {
+      setNewsFeedPrompts(cachedOOCPosts);
+      stopPageLoading();
+      return;
+    }
+    // In-flight → attach.
+    const inflight = getInflightFeed<Prompt[] | null>("oocPosts");
+    if (inflight) {
+      const result = await inflight;
+      if (result) setNewsFeedPrompts(result);
+      stopPageLoading();
+      return;
+    }
+    // Cold → kick off via the shared service so other callers can dedupe.
+    const result = await prefetchOOCPosts(setGlobalState);
+    if (result) setNewsFeedPrompts(result);
+    stopPageLoading();
+  }, [cachedOOCPosts, setGlobalState, stopPageLoading]);
 
   const fetchExplorePrompts = useCallback(
     async (pageNumber: number, append = false) => {
+      // Page 1 has cache + in-flight dedup support; later pages always fetch.
+      if (pageNumber === 1 && !append) {
+        if (cachedExplorePrompts) {
+          setExplorePrompts(cachedExplorePrompts);
+          setHasMore(cachedExplorePrompts.length === PAGE_SIZE);
+          stopPageLoading();
+          return;
+        }
+        const inflight = getInflightFeed<Prompt[] | null>("explorePrompts");
+        if (inflight) {
+          const result = await inflight;
+          if (result) {
+            setExplorePrompts(result);
+            setHasMore(result.length === PAGE_SIZE);
+          }
+          stopPageLoading();
+          return;
+        }
+        const result = await prefetchExplorePrompts(setGlobalState);
+        if (result) {
+          setExplorePrompts(result);
+          setHasMore(result.length === PAGE_SIZE);
+        }
+        stopPageLoading();
+        return;
+      }
+
       const _prompts = await baseDataLoader(() =>
         getNewPromptsAction(pageNumber, PAGE_SIZE),
       );
@@ -72,7 +133,7 @@ export default function ExplorePage() {
         append ? [...(prev || []), ..._prompts] : _prompts,
       );
     },
-    [baseDataLoader],
+    [baseDataLoader, cachedExplorePrompts, setGlobalState, stopPageLoading],
   );
 
   useEffect(() => {
@@ -82,12 +143,21 @@ export default function ExplorePage() {
   useEffect(() => {
     if (authState === "LOADING") return;
 
-    if (mode === "NEWSFEED" && !newsFeedPrompts) {
-      fetchNewsFeedPrompts();
+    if (mode === "NEWSFEED") {
+      if (newsFeedPrompts) {
+        // Already hydrated from cache — clear the page loader set by navigation.
+        stopPageLoading();
+      } else {
+        fetchNewsFeedPrompts();
+      }
     }
 
-    if (mode === "PROMPTS" && !explorePrompts) {
-      fetchExplorePrompts(1);
+    if (mode === "PROMPTS") {
+      if (explorePrompts) {
+        stopPageLoading();
+      } else {
+        fetchExplorePrompts(1);
+      }
     }
   }, [
     authState,
@@ -96,6 +166,7 @@ export default function ExplorePage() {
     explorePrompts,
     fetchNewsFeedPrompts,
     fetchExplorePrompts,
+    stopPageLoading,
   ]);
 
   const loadMore = async () => {

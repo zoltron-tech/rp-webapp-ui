@@ -67,6 +67,7 @@ const nextConfig = {
     RP_SERVICE_URL: process.env.RP_SERVICE_URL,
     USE_LOCAL_DOMAIN: process.env.USE_LOCAL_DOMAIN,
     KLIPY_API_KEY: process.env.KLIPY_API_KEY,
+    RP_BUCKET_NAME: process.env.RP_BUCKET_NAME,
   },
 
   images: {

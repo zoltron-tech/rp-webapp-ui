@@ -53,11 +53,11 @@ export const ToolbarRoot = styled(Toolbar.Root)`
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.5rem;
-  padding-bottom: 0.625rem;
-  margin-bottom: 1px;
-  background-color: var(--bg-4);
+  gap: 0.25rem;
+  padding: 5px 20px;
+  margin-bottom: 0;
+  background-color: var(--bg-3);
+  border-bottom: 1px solid var(--bg-5);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   position: relative;
@@ -144,28 +144,30 @@ interface ToolbarSelectWrapProps {
 export const ToolbarSelectWrap = styled.div<ToolbarSelectWrapProps>`
   display: flex;
   align-items: center;
-  border: ${(p) => (p.$nested ? "none" : "1px solid var(--bg-6, #e5e4e7)")};
-  border-radius: ${(p) => (p.$nested ? "0" : "0.375rem")};
-  background-color: ${(p) => (p.$nested ? "transparent" : "var(--bg-3, #fff)")};
+  border: ${(p) => (p.$nested ? "none" : "1px solid var(--bg-5)")};
+  border-radius: ${(p) => (p.$nested ? "0" : "6px")};
+  background-color: ${(p) => (p.$nested ? "transparent" : "var(--bg-2)")};
   overflow: hidden;
   flex-shrink: 0;
-  min-height: 40px;
+  min-height: 30px;
 
-  &:hover {
-    background-color: ${(p) => (p.$nested ? "transparent" : "var(--bg-5, #f3f4f6)")};
+  @media (hover: hover) {
+    &:hover {
+      background-color: ${(p) => (p.$nested ? "transparent" : "var(--bg-4)")};
+    }
   }
 `;
 
 export const ChevronBox = styled.div`
-  width: 32px;
+  width: 24px;
   flex-shrink: 0;
   height: 100%;
-  min-height: 40px;
+  min-height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-left: 1px solid var(--bg-6, #e5e4e7);
-  color: var(--text);
+  border-left: 1px solid var(--bg-5);
+  color: var(--text-secondary);
   pointer-events: none;
 `;
 
@@ -225,21 +227,24 @@ export const DropdownTriggerBtn = styled.button<{ $active?: boolean }>`
   display: flex;
   align-items: center;
   gap: 0;
-  border: 1px solid var(--bg-6);
-  border-radius: 0.375rem;
-  background-color: ${(p) => (p.$active ? "var(--accent)" : "var(--bg-3)")};
-  color: ${(p) => (p.$active ? "var(--text)" : "inherit")};
+  border: 1px solid var(--bg-5);
+  border-radius: 6px;
+  background-color: ${(p) => (p.$active ? "color-mix(in srgb, var(--accent) 20%, var(--bg-3))" : "var(--bg-2)")};
+  color: ${(p) => (p.$active ? "var(--accent)" : "var(--text)")};
   cursor: pointer;
-  min-height: 40px;
+  min-height: 30px;
   padding: 0;
   overflow: hidden;
   flex-shrink: 0;
+  transition: background-color 0.15s ease;
 
-  &:hover {
-    background-color: ${(p) => (p.$active ? "var(--accent)" : "var(--bg-5)")};
+  @media (hover: hover) {
+    &:hover {
+      background-color: ${(p) => (p.$active ? "color-mix(in srgb, var(--accent) 28%, var(--bg-3))" : "var(--bg-4)")};
+    }
   }
   &:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 1.5px solid var(--accent);
     outline-offset: -2px;
   }
 `;
@@ -248,21 +253,21 @@ export const DropdownTriggerValue = styled.span`
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 40px;
-  min-height: 40px;
-  padding: 0 0.375rem;
+  min-width: 30px;
+  min-height: 30px;
+  padding: 0 0.25rem;
   color: var(--text);
-  font-size: 1.25rem;
+  font-size: 1.1rem;
 `;
 
 export const FontTriggerValue = styled.span`
   display: block;
-  width: 80px;
-  min-height: 40px;
-  line-height: 40px;
-  padding: 0 0.5rem;
+  width: 72px;
+  min-height: 30px;
+  line-height: 30px;
+  padding: 0 0.375rem;
   color: var(--text);
-  font-size: 0.9rem;
+  font-size: var(--font-size-small);
   text-align: start;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -273,10 +278,10 @@ export const DropdownTriggerChevron = styled.span`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  min-height: 40px;
-  border-left: 1px solid var(--bg-6);
-  color: var(--text);
+  width: 22px;
+  min-height: 30px;
+  border-left: 1px solid var(--bg-5);
+  color: var(--text-secondary);
   flex-shrink: 0;
 `;
 
@@ -284,10 +289,10 @@ export const ListOptionGroup = styled.div`
   display: flex;
   align-items: stretch;
   flex-shrink: 0;
-  border: 2px solid var(--bg-6);
-  border-radius: 0.5rem;
+  border: 1px solid var(--bg-5);
+  border-radius: 6px;
   overflow: visible;
-  background-color: var(--bg-4);
+  background-color: var(--bg-2);
 `;
 
 export const ListOptionMain = styled.div`
@@ -313,16 +318,19 @@ export const ListSubTriggerBtn = styled.button`
   border: none;
   background: transparent;
   cursor: pointer;
-  min-height: 40px;
+  min-height: 30px;
   padding: 0;
   color: var(--text);
   flex-shrink: 0;
+  transition: background-color 0.15s ease;
 
-  &:hover {
-    background-color: var(--bg-5);
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--bg-4);
+    }
   }
   &:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 1.5px solid var(--accent);
     outline-offset: -2px;
   }
 `;
@@ -439,9 +447,9 @@ export const BulletGridItem = styled.button<BulletItemProps>`
 export const Divider = styled.div`
   flex-shrink: 0;
   width: 1px;
-  height: 2rem;
-  background-color: var(--bg-6, #e5e4e7);
-  margin: 0 0.125rem;
+  height: 1.25rem;
+  background-color: var(--bg-5);
+  margin: 0 0.1rem;
 `;
 
 // Quotation Mark Selector Styles
@@ -593,23 +601,25 @@ interface AlignmentItemProps {
 }
 
 export const AlignmentGridItem = styled.button<AlignmentItemProps>`
-  padding: 0.5rem;
-  min-height: 44px;
-  border: 1px solid ${(props) => (props.$selected ? "var(--accent)" : "var(--bg-6, #e5e4e7)")};
-  border-radius: 0.375rem;
-  background-color: ${(props) => (props.$selected ? "var(--accent)" : "var(--bg-4, #f9fafb)")};
-  color: ${(props) => (props.$selected ? "var(--text)" : "var(--text-secondary)")};
+  padding: 0.4rem;
+  min-height: 36px;
+  border: 1px solid ${(props) => (props.$selected ? "var(--accent)" : "var(--bg-5)")};
+  border-radius: 6px;
+  background-color: ${(props) => (props.$selected ? "color-mix(in srgb, var(--accent) 20%, var(--bg-3))" : "transparent")};
+  color: ${(props) => (props.$selected ? "var(--accent)" : "var(--text-secondary)")};
   cursor: pointer;
-  font-size: 1.25rem;
-  transition: all 0.2s;
+  font-size: 1.1rem;
+  transition: background-color 0.15s ease, color 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
 
-  &:hover {
-    background-color: ${(props) => (props.$selected ? "var(--accent)" : "var(--bg-5, #f3f4f6)")};
-    border-color: var(--accent);
-    transform: scale(1.05);
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--bg-4);
+      color: var(--text);
+      border-color: var(--accent);
+    }
   }
 `;
 
@@ -620,11 +630,11 @@ export const ToggleGroup = styled(Toolbar.ToggleGroup)`
 `;
 
 const toggleItemBase = css`
-  padding: 0.5rem;
-  min-width: 40px;
-  min-height: 40px;
-  border-radius: 0.375rem;
-  transition: all 0.2s;
+  padding: 0.3rem;
+  min-width: 30px;
+  min-height: 30px;
+  border-radius: 6px;
+  transition: background-color 0.15s ease, color 0.15s ease;
   border: none;
   cursor: pointer;
   display: flex;
@@ -638,11 +648,14 @@ interface ToggleItemProps {
 
 export const ToggleItem = styled(Toolbar.ToggleItem)<ToggleItemProps>`
   ${toggleItemBase}
-  background-color: ${(props) => (props.$active ? "var(--accent)" : "var(--bg-4, #f9fafb)")};
-  color: ${(props) => (props.$active ? "var(--text)" : "var(--text-secondary)")};
+  background-color: ${(props) => (props.$active ? "color-mix(in srgb, var(--accent) 20%, var(--bg-3))" : "transparent")};
+  color: ${(props) => (props.$active ? "var(--accent)" : "var(--text-secondary)")};
 
-  &:hover {
-    background-color: ${(props) => (props.$active ? "var(--accent)" : "var(--bg-5, #f3f4f6)")};
+  @media (hover: hover) {
+    &:hover {
+      background-color: ${(props) => (props.$active ? "color-mix(in srgb, var(--accent) 28%, var(--bg-3))" : "var(--bg-4)")};
+      color: ${(props) => (props.$active ? "var(--accent)" : "var(--text)")};
+    }
   }
 `;
 
@@ -953,8 +966,9 @@ export const EditorContent = styled.div<EditorContentProps>`
 
   &:focus {
     outline: none;
-    box-shadow: ${(p) =>
-      p.$dropdownOpen ? "none" : "inset 0 0 0 2px var(--accent)"};
+    /* box-shadow: ${(p) =>
+      p.$dropdownOpen ? "none" : "inset 0 0 0 2px var(--accent)"}; */
+    border: 0.5px solid var(--accent);
   }
 
   &:empty::before {

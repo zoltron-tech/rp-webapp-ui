@@ -4,6 +4,7 @@ import { getJWTIfExists } from "@/app/actions";
 import type { Prompt } from "@/types";
 import type { DataType } from "@/types/common";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
+import { transformPrompt } from "@/utils/image";
 import { Logger } from "@/utils/services";
 
 const { serverRuntimeConfig } = getConfig();
@@ -34,7 +35,9 @@ export const getNewsFeed = async (): Promise<DataType<Prompt[]>> => {
     return { message: API_MESSAGE.Error };
   }
 
-  const prompts = await response.json();
+  const prompts = (await response.json()) as Prompt[];
+
+  for (const p of prompts) transformPrompt(p, "feed");
 
   return prompts;
 };

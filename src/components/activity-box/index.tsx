@@ -1,6 +1,5 @@
 "use client";
 
-import { Flex } from "@novelist-world/ui";
 import classNames from "classnames";
 import { type FC, useMemo, useState } from "react";
 import { FaComments, FaImage, FaStreetView, FaUser } from "react-icons/fa6";
@@ -42,10 +41,10 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
   );
 
   const handleCardClick = (
-    e: React.MouseEvent<HTMLDivElement>,
+    e: React.MouseEvent<HTMLElement>,
     activity: Activity,
   ) => {
-    const target = e.target as HTMLDivElement;
+    const target = e.target as HTMLElement;
     if (target.classList.contains("button")) return;
 
     if (activity?.target.activityTargetType === "MUSE")
@@ -86,32 +85,21 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
   return (
     <S.ParentContainer>
       <S.HeaderContainer>
-        <Flex style={{ gap: "0.2em" }}>
-          <S.Avatar
-            className="selectable"
-            src={activity.source?.image || ""}
-            alt={activity.source.title || "Avatar"}
-            onClick={() => onAvatarClick(activity)}
-          />
-
+        <S.Avatar
+          className="selectable"
+          src={activity.source?.image || ""}
+          alt={activity.source.title || "Avatar"}
+          onClick={() => onAvatarClick(activity)}
+        />
+        <S.SourceInfo>
           <S.SourceName onClick={() => onAvatarClick(activity)}>
-            {" "}
             {activity.source.title}
           </S.SourceName>
           <S.ActivityText>{activity.activityText}</S.ActivityText>
-        </Flex>
+        </S.SourceInfo>
         <S.StyledDate>{toFormattedDateFromUnix(activity.date)}</S.StyledDate>
       </S.HeaderContainer>
-      <Flex
-        direction="column"
-        align="center"
-        style={{
-          minWidth: 0,
-          overflow: "hidden",
-          paddingInline: "10px",
-          width: "100%",
-        }}
-      >
+      <S.Body>
         <ShouldRender
           if={["PROMPT", "COMMENT", "REPLY"].includes(
             activity.target.activityTargetType,
@@ -223,25 +211,21 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
             </S.Card>
           </S.CardWrapper>
         </ShouldRender>
-      </Flex>
+      </S.Body>
       <ShouldRender
         if={["PROMPT", "COMMENT", "REPLY"].includes(
           activity.target.activityTargetType,
         )}
       >
-        <S.FooterContainer>
+        <S.FooterContainer onClick={(e) => handleCardClick(e, activity)}>
           <FaComments />
-          <S.PromptFooterText onClick={(e) => handleCardClick(e, activity)}>
-            View Threads & Replies.
-          </S.PromptFooterText>
+          <S.PromptFooterText>View Threads &amp; Replies.</S.PromptFooterText>
         </S.FooterContainer>
       </ShouldRender>
       <ShouldRender if={["MUSE"].includes(activity.target.activityTargetType)}>
-        <S.FooterContainer>
+        <S.FooterContainer onClick={(e) => handleCardClick(e, activity)}>
           <FaStreetView />
-          <S.PromptFooterText onClick={(e) => handleCardClick(e, activity)}>
-            View Character.
-          </S.PromptFooterText>
+          <S.PromptFooterText>View Character.</S.PromptFooterText>
         </S.FooterContainer>
       </ShouldRender>
       <ShouldRender
@@ -249,21 +233,17 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
           activity.target.activityTargetType,
         )}
       >
-        <S.FooterContainer>
+        <S.FooterContainer onClick={(e) => handleCardClick(e, activity)}>
           <PiBookOpenUserDuotone />
-          <S.PromptFooterText onClick={(e) => handleCardClick(e, activity)}>
-            View Story.
-          </S.PromptFooterText>
+          <S.PromptFooterText>View Story.</S.PromptFooterText>
         </S.FooterContainer>
       </ShouldRender>
       <ShouldRender
         if={["PROFILE"].includes(activity.target.activityTargetType)}
       >
-        <S.FooterContainer>
+        <S.FooterContainer onClick={(e) => handleCardClick(e, activity)}>
           <FaUser />
-          <S.PromptFooterText onClick={(e) => handleCardClick(e, activity)}>
-            View Profile.
-          </S.PromptFooterText>
+          <S.PromptFooterText>View Profile.</S.PromptFooterText>
         </S.FooterContainer>
       </ShouldRender>
     </S.ParentContainer>

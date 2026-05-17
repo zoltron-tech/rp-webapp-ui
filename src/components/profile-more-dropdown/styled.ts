@@ -24,7 +24,7 @@ export const ActionBadge = styled.div`
 export const TriggerButton = styled.button`
   all: unset;
   padding-inline: 10px;
-  padding-block: 6px;
+  padding-block: 8px;
   text-align: center;
 
   color: var(--text-secondary);
@@ -33,33 +33,37 @@ export const TriggerButton = styled.button`
 
   border-radius: 8px;
   cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
   &.bordered {
-  border: 1px solid var(--bg-6);
+    border: 1px solid var(--bg-6);
     background-color: var(--bg-3);
 
     &:disabled {
-    background-color: var(--bg-2);
-  }
+      background-color: var(--bg-2);
+    }
   }
 
   &.minimal {
-     border: none; 
+    border: none;
   }
 
-  &:hover {
-    background-color: var(--bg-4);
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--bg-4);
+      color: var(--text);
+    }
   }
 
   &:active {
     background-color: var(--bg-5);
   }
 
-  &:focus {
+  &:focus-visible {
     outline: 1.5px solid var(--accent);
     outline-offset: 2px;
   }
@@ -68,20 +72,18 @@ export const TriggerButton = styled.button`
     color: var(--text-secondary);
     cursor: not-allowed;
   }
-
 `;
 
 export const Content = styled(DropdownMenu.Content)`
-  min-width: 160px;
-  background-color: var(--bg-3);
-  border-radius: 4px;
-  padding: 4px;
-  box-shadow: 0px 0px 20px 4px rgba(0, 0, 0, 0.5);
-  border: 1px solid var(--bg-6);
+  min-width: 200px;
+  background-color: var(--bg-2);
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--bg-5);
   animation: ${fadeIn} 120ms ease-out;
   z-index: 99999;
 
-  /* position it below + right aligned */
   &[data-side="bottom"] {
     margin-top: 6px;
     transform-origin: top right;
@@ -93,49 +95,54 @@ export const Content = styled(DropdownMenu.Content)`
 `;
 
 export const Item = styled(DropdownMenu.Item)`
-  padding: 10px 12px;
-  margin-block: 2px;
-  border-radius: 4px;
-  font-size: var(--font-size-input);
+  padding: 9px 12px;
+  margin-block: 1px;
+  border-radius: 6px;
+  font-size: var(--font-size-small);
   font-weight: var(--font-weight-medium);
+  font-family: var(--font);
   cursor: pointer;
-
-  /* default colors */
+  display: flex;
+  align-items: center;
+  gap: 10px;
   color: var(--text);
+  transition: background-color 0.1s ease;
 
-  &:hover {
+  &:hover, &:focus {
     background-color: var(--accent);
     outline: none;
+    color: var(--text);
   }
 
   &[data-variant="danger"] {
-    color: #a93434ff; /* red text */
+    color: var(--tomato-9);
 
-    &:hover {
-      background-color: #8e2a2a;
-      color: white; /* white when hovered */
+    &:hover, &:focus {
+      background-color: var(--tomato-9);
+      color: white;
     }
   }
 
   &[data-variant="positive"] {
-    color: #37a84aff; /* red text */
+    color: var(--grass-9);
 
-    &:hover {
-      background-color: #368e2aff;
-      color: white; /* white when hovered */
+    &:hover, &:focus {
+      background-color: var(--grass-9);
+      color: white;
     }
   }
 `;
 
 export const ItemIcon = styled.span`
   display: inline-flex;
-  margin-right: 8px;
-  vertical-align: middle;
-  color: inherit; // matches text color based on variant
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: inherit;
 `;
 
 export const Separator = styled.div`
   height: 1px;
-  background-color: #42434a;
-  margin: 6px 0;
+  background-color: var(--bg-5);
+  margin: 4px 0;
 `;

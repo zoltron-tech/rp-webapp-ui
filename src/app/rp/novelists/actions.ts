@@ -18,6 +18,7 @@ import {
   CONTENT_TYPE_HEADER_NAME,
   MEDIA_JSON_HEADER_VALUE,
 } from "@/utils/constants";
+import { transformNovelist } from "@/utils/image";
 import { Logger } from "@/utils/services";
 
 const { serverRuntimeConfig } = getConfig();
@@ -36,6 +37,9 @@ export const getNovelists = async () => {
   }
 
   const novelists: Novelist[] = await response.json();
+
+  // Route S3 image URLs through wsrv.nl for resizing (profile-page sizes).
+  for (const n of novelists) transformNovelist(n, "profile");
 
   return novelists;
 };
@@ -66,6 +70,8 @@ export const getNovelistByIdAction = async (
   }
 
   const novelist: Novelist = await response.json();
+
+  transformNovelist(novelist, "profile");
 
   return novelist;
 };
@@ -99,6 +105,8 @@ export const getNovelistAction = async (
     }
 
     const novelist: Novelist = await response.json();
+
+    transformNovelist(novelist, "profile");
 
     return novelist;
   } catch (e) {
@@ -139,6 +147,8 @@ export const getUserNovelist = async () => {
   }
 
   const novelist: Novelist = await response.json();
+
+  transformNovelist(novelist, "profile");
 
   return novelist;
 };

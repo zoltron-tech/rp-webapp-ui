@@ -100,7 +100,7 @@ export default function HomePage() {
   const cachedOOCPosts = useGlobalState("cachedOOCPosts");
   const notifications = useGlobalState("notifications");
   const setGlobalState = useGlobalStoreSet();
-  const { baseDataLoader, routeToPage } = usePageRouter();
+  const { routeToPage, stopPageLoading } = usePageRouter();
   const [strangers, setStrangers] = useState<Novelist[] | undefined>(
     cachedSuggestions ?? undefined,
   );
@@ -126,17 +126,37 @@ export default function HomePage() {
   const [feedOOCPosts, setFeedOOCPosts] = useState<Prompt[]>(
     () => cachedOOCPosts ?? [],
   );
+  // IDs of prompts fetched on the first page — activities whose target.id
+  // matches one of these are hidden from the feed to avoid duplicates.
+  const [firstPagePromptIds, setFirstPagePromptIds] = useState<Set<string>>(
+    () =>
+      new Set([
+        ...(cachedExplorePrompts?.map((p) => p.id) ?? []),
+        ...(cachedOOCPosts?.map((p) => p.id) ?? []),
+      ]),
+  );
   const [activitiesPage, setActivitiesPage] = useState(1);
   const [explorePromptsPage, setExplorePromptsPage] = useState(1);
   const [activitiesHasMore, setActivitiesHasMore] = useState(true);
   const [explorePromptsHasMore, setExplorePromptsHasMore] = useState(true);
   const [feedLoadingMore, setFeedLoadingMore] = useState(false);
-  // Derived list for rendering.
+  // Derived list for rendering — activities whose target matches a first-page
+  // prompt ID are filtered out to avoid showing duplicate content.
   const mixedFeed = useMemo(
-    () => interleaveFeed(feedActivities, feedExplorePrompts, feedOOCPosts),
-    [feedActivities, feedExplorePrompts, feedOOCPosts],
+    () =>
+      interleaveFeed(
+        feedActivities.filter((a) => !firstPagePromptIds.has(a.target.id)),
+        feedExplorePrompts,
+        feedOOCPosts,
+      ),
+    [feedActivities, feedExplorePrompts, feedOOCPosts, firstPagePromptIds],
   );
   const feedHasMore = activitiesHasMore || explorePromptsHasMore;
+  // True on first visit (no cache) — the activity container shows shimmers
+  // until all three feed sources have completed their initial hydration.
+  const [feedInitializing, setFeedInitializing] = useState(
+    !cachedActivities && !cachedExplorePrompts && !cachedOOCPosts,
+  );
 
   const [friendsMusesPage, setFriendsMusesPage] = useState(1);
   const [friendsMusesHasMore, setFriendsMusesHasMore] = useState(false);
@@ -261,6 +281,11 @@ export default function HomePage() {
       setExplorePromptsHasMore(
         cachedExplorePrompts.length === EXPLORE_PROMPTS_PAGE_SIZE,
       );
+      setFirstPagePromptIds((prev) => {
+        const next = new Set(prev);
+        cachedExplorePrompts.forEach((p) => next.add(p.id));
+        return next;
+      });
       return;
     }
     const inflight = getInflightFeed<Prompt[] | null>("explorePrompts");
@@ -268,6 +293,11 @@ export default function HomePage() {
     if (result) {
       setFeedExplorePrompts(result);
       setExplorePromptsHasMore(result.length === EXPLORE_PROMPTS_PAGE_SIZE);
+      setFirstPagePromptIds((prev) => {
+        const next = new Set(prev);
+        result.forEach((p) => next.add(p.id));
+        return next;
+      });
     } else {
       setExplorePromptsHasMore(false);
     }
@@ -277,11 +307,23 @@ export default function HomePage() {
     if (feedOOCPosts.length > 0) return;
     if (cachedOOCPosts) {
       setFeedOOCPosts(cachedOOCPosts);
+      setFirstPagePromptIds((prev) => {
+        const next = new Set(prev);
+        cachedOOCPosts.forEach((p) => next.add(p.id));
+        return next;
+      });
       return;
     }
     const inflight = getInflightFeed<Prompt[] | null>("oocPosts");
     const result = await (inflight ?? prefetchOOCPosts(setGlobalState));
-    if (result) setFeedOOCPosts(result);
+    if (result) {
+      setFeedOOCPosts(result);
+      setFirstPagePromptIds((prev) => {
+        const next = new Set(prev);
+        result.forEach((p) => next.add(p.id));
+        return next;
+      });
+    }
     // OOC posts are unpaginated → no `hasMore` flag.
   }, [feedOOCPosts.length, cachedOOCPosts, setGlobalState]);
 
@@ -349,34 +391,23 @@ export default function HomePage() {
     setUnknownMusesLoading(false);
   };
 
-  const fetchOpenPrompts = async () => {
-    const _prompts = await getNewPromptsAction(1, 5);
-    if (_prompts && !("message" in _prompts)) setPrompts(_prompts);
-  };
-
-  const fetchData = async () =>
-    baseDataLoader(async () => {
-      await Promise.all([
-        fetchStrangers(),
-        fetchStrangerMuses(),
-        fetchFriendsMuses(),
-        // fetchFriendsMusesWithVideos(),
-        //fetchRandomStories(),
-        // fetchOpenPrompts(),
-      ]);
-
-      return {
-        success: true,
-      }; // prevents error
-    });
-
   useEffect(() => {
     if (authState === "LOADING") return;
-    fetchData();
-    // The mixed feed hydrates independently — non-blocking, no spinner if cached.
-    hydrateActivities();
-    hydrateExplorePrompts();
-    hydrateOOCPosts();
+
+    // Stop the page-level loader once the carousel sections are ready.
+    // The activity feed loads independently below with its own skeleton UI.
+    Promise.all([
+      fetchStrangers(),
+      fetchStrangerMuses(),
+      fetchFriendsMuses(),
+    ]).then(() => stopPageLoading());
+
+    // Hydrate all three feed sources in parallel; hide the feed skeleton when done.
+    Promise.all([
+      hydrateActivities(),
+      hydrateExplorePrompts(),
+      hydrateOOCPosts(),
+    ]).then(() => setFeedInitializing(false));
   }, [authState, hydrateActivities, hydrateExplorePrompts, hydrateOOCPosts]);
 
   return (
@@ -517,17 +548,43 @@ export default function HomePage() {
             <S.SubText id="home-tour-step-5">
               Updates from your friends
             </S.SubText>
-            {mixedFeed.map((item) => {
-              if (item.kind === "activity") {
-                return <ActivityBox key={item.key} activity={item.data} />;
-              }
-              return <PromptComponent key={item.key} prompt={item.data} />;
-            })}
-            <LoadMore
-              hasMore={feedHasMore}
-              loadingMore={feedLoadingMore}
-              onLoadMore={loadMoreFeed}
-            />
+            {feedInitializing ? (
+              <S.FeedShimmerList>
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <S.FeedShimmerItem key={i}>
+                    <S.ShimmerRow>
+                      <S.ShimmerAvatar />
+                      <S.ShimmerLines>
+                        <S.ShimmerLine $width="48%" $height="13px" />
+                        <S.ShimmerLine $width="72%" $height="11px" />
+                      </S.ShimmerLines>
+                    </S.ShimmerRow>
+                    <S.ShimmerBlock $height={i % 2 === 0 ? "110px" : "64px"} />
+                    <S.ShimmerLine $width="38%" $height="11px" />
+                  </S.FeedShimmerItem>
+                ))}
+              </S.FeedShimmerList>
+            ) : (
+              <>
+                {mixedFeed.map((item) => {
+                  if (item.kind === "activity") {
+                    return <ActivityBox key={item.key} activity={item.data} />;
+                  }
+                  return (
+                    <PromptComponent
+                      key={item.key}
+                      prompt={item.data}
+                      $noBorder
+                    />
+                  );
+                })}
+                <LoadMore
+                  hasMore={feedHasMore}
+                  loadingMore={feedLoadingMore}
+                  onLoadMore={loadMoreFeed}
+                />
+              </>
+            )}
           </S.ActivityContainer>
           <ScrollJumpButton direction="up" onClick={scrollToTop} />
         </S.RightWrapperContainer>

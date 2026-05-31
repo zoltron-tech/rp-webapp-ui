@@ -28,6 +28,7 @@ import { MoreSection } from "./sections/more-section";
 import { MuseInfoSection } from "./sections/muse-info-section";
 import { PromptsSection } from "./sections/prompts-section";
 import * as S from "./styles";
+import { FaImagePortrait } from "react-icons/fa6";
 
 type CARD_STATE =
   | "CARD_IMAGE"
@@ -254,24 +255,6 @@ export default function MuseProfilePage({}) {
 
       {/* Section navigation */}
       <S.SideMenu>
-        <S.MenuButton
-          style={{
-            display: "none",
-            ...(typeof window !== "undefined" && window.innerWidth < 950
-              ? { display: "flex" }
-              : {}),
-          }}
-          className="card-image-mobile-only"
-        >
-          <S.MenuButtonIcon
-            onClick={() => transition("CARD_IMAGE")}
-            className={is("CARD_IMAGE") ? "selected" : ""}
-            accent={accent}
-          >
-            <MdImage size={"45%"} />
-          </S.MenuButtonIcon>
-          <S.MenuText>CARD</S.MenuText>
-        </S.MenuButton>
         <S.MenuButton>
           <S.MenuButtonIcon
             onClick={() => transition("MUSE_INFO")}
@@ -301,6 +284,24 @@ export default function MuseProfilePage({}) {
             <BiSolidConversation size={"45%"} />
           </S.MenuButtonIcon>
           <S.MenuText>POSTS</S.MenuText>
+        </S.MenuButton>
+        <S.MenuButton
+          style={{
+            display: "none",
+            ...(typeof window !== "undefined" && window.innerWidth < 950
+              ? { display: "flex" }
+              : {}),
+          }}
+          className="card-image-mobile-only"
+        >
+          <S.MenuButtonIcon
+            onClick={() => transition("CARD_IMAGE")}
+            className={is("CARD_IMAGE") ? "selected" : ""}
+            accent={accent}
+          >
+            <FaImagePortrait size={"45%"} />
+          </S.MenuButtonIcon>
+          <S.MenuText>CARD</S.MenuText>
         </S.MenuButton>
         <S.MenuButton>
           <S.MenuButtonIcon

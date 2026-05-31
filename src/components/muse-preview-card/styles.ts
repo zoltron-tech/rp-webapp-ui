@@ -239,7 +239,7 @@ export const EditButton = styled(IconButton)`
 `;
 
 export const DeleteButton = styled(IconButton)`
-  background: rgba(255,99,71,0.85); /* tomato with transparency */
+  background: rgba(138, 49, 34, 0.85); /* tomato with transparency */
   color: #fff;
-  &:hover { background: rgba(255,99,71,0.95); }
+  &:hover { background: rgba(225, 92, 69, 0.95); }
 `;

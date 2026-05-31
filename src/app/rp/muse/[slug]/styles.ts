@@ -224,10 +224,7 @@ export const CardWrapper = styled(Container)`
   width: 326px;
   height: 580px;
   padding: 0px !important;
-  border-top-left-radius: var(--border-radius);
-  border-bottom-left-radius: var(--border-radius);
-  border-top-right-radius: 0px;
-  border-bottom-right-radius: 0px;
+  border-radius: var(--border-radius);
   background: transparent;
   backdrop-filter: unset;
   border: none;
@@ -253,8 +250,7 @@ export const CardExpandedWrapper = styled.div`
   position: relative;
   width: 326px;
   height: 580px;
-  border-top-right-radius: var(--border-radius);
-  border-bottom-right-radius: var(--border-radius);
+  border-radius: var(--border-radius);
   ${CARD_BORDER};
 
   transition: all 0.3s ease-in-out;
@@ -326,7 +322,8 @@ export const NoteContainer = styled.div`
 export const MenuText = styled.div`
   opacity: 1;
   margin-top: 5px;
-  font-size: 12px;
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-semi-bold);
 
   @container (max-height: 100px) {
     display: none;

@@ -224,7 +224,7 @@ export const CardWrapper = styled(Container)`
   width: 326px;
   height: 580px;
   padding: 0px !important;
-  border-radius: var(--border-radius);
+  border-radius: 8px;
   background: transparent;
   backdrop-filter: unset;
   border: none;
@@ -250,7 +250,7 @@ export const CardExpandedWrapper = styled.div`
   position: relative;
   width: 326px;
   height: 580px;
-  border-radius: var(--border-radius);
+  border-radius: 8px;
   ${CARD_BORDER};
 
   transition: all 0.3s ease-in-out;

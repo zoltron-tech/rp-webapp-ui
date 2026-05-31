@@ -25,6 +25,7 @@ import { useUploadMedia } from "@/hooks/use-upload-media";
 import type { Muse } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import * as S from "../styles";
+import SectionMiniHeader from "./SectionMiniHeader";
 
 const GALLERY_GAP = 10;
 const GALLERY_TARGET_HEIGHT = 300;
@@ -589,7 +590,9 @@ export function GallerySection({ muse, media }: Props) {
     <S.CardExpandedWrapper>
       <S.CardBack className="muse-card" accent={accent}>
         <S.InfoCardContent>
-          <S.Title>Gallery</S.Title>
+          <SectionMiniHeader muse={muse} accent={accent ?? null} />
+          <S.InfoDivider $accent={accent ?? null} />
+          <S.InfoSectionLabel>Gallery</S.InfoSectionLabel>
           <S.ScrollableContent accent={accent}>
             {/* Owner: always-visible Add Media button */}
             <ShouldRender if={isOwner}>

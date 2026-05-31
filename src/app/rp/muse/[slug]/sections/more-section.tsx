@@ -15,6 +15,7 @@ import { ROUTES } from "@/utils/constants/routes";
 import { deleteMuseAction } from "../../../muse/actions";
 import { reportAction } from "../../../thread/actions";
 import * as S from "../styles";
+import SectionMiniHeader from "./SectionMiniHeader";
 
 type Props = {
   muse: Muse | null;
@@ -35,7 +36,9 @@ export function MoreSection({ muse, isOwnMuse }: Props) {
       <S.CardExpandedWrapper>
         <S.CardBack className="muse-card" accent={accent}>
           <S.InfoCardContent>
-            <S.Title>Options</S.Title>
+            <SectionMiniHeader muse={muse} accent={accent ?? null} />
+            <S.InfoDivider $accent={accent ?? null} />
+            <S.InfoSectionLabel>Options</S.InfoSectionLabel>
             <S.ScrollableContent accent={accent}>
               {isOwnMuse ? (
                 <S.MoreMenuList>

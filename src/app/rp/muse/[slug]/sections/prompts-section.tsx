@@ -9,6 +9,7 @@ import type { Muse, Prompt } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDate } from "@/utils/helpers";
 import * as S from "../styles";
+import SectionMiniHeader from "./SectionMiniHeader";
 
 type Props = {
   muse: Muse | null;
@@ -23,7 +24,9 @@ export function PromptsSection({ muse, prompts }: Props) {
     <S.CardExpandedWrapper>
       <S.CardBack className="muse-card" accent={accent}>
         <S.InfoCardContent>
-          <S.Title>Interactions</S.Title>
+          <SectionMiniHeader muse={muse} accent={accent ?? null} />
+          <S.InfoDivider $accent={accent ?? null} />
+          <S.InfoSectionLabel>Interactions</S.InfoSectionLabel>
           <S.ScrollableContent accent={accent}>
             <ShouldRender if={!prompts || prompts.length === 0}>
               <S.SectionEmpty>No open starters yet.</S.SectionEmpty>

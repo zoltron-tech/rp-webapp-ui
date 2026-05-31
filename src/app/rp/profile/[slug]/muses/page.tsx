@@ -2,11 +2,13 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { FiGrid, FiList } from "react-icons/fi";
 import { HiUserAdd } from "react-icons/hi";
 import { getAllMusesByUsernameAction } from "@/app/rp/muse/actions";
 import { BreadCrumb } from "@/components/breadcrumb";
 import { AddNewButton, FilterSearch } from "@/components/common";
-import { MuseCard } from "@/components/muse-card";
+import MuseListItem from "@/components/muse-list-item";
+import { MusePreviewCard } from "@/components/muse-preview-card";
 import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents, useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -37,6 +39,7 @@ export default function MusesListPage({}) {
     "ONLY_ME",
   ]);
   const [search, setSearch] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const backgroundTiles = useMemo(
     () =>
@@ -136,10 +139,40 @@ export default function MusesListPage({}) {
         activeFilters={visibility}
         onFilterChange={isCurrentUser ? setVisibility : undefined}
       />
+      {/* View mode toggle (grid / list) */}
+      <S.ViewToggleRow>
+        <S.ToggleButton
+          type="button"
+          $active={viewMode === "grid"}
+          aria-pressed={viewMode === "grid"}
+          title="Grid view"
+          onClick={() => setViewMode("grid")}
+        >
+          <FiGrid size={16} />
+        </S.ToggleButton>
+        <S.ToggleButton
+          type="button"
+          $active={viewMode === "list"}
+          aria-pressed={viewMode === "list"}
+          title="List view"
+          onClick={() => setViewMode("list")}
+        >
+          <FiList size={16} />
+        </S.ToggleButton>
+      </S.ViewToggleRow>
+
       <S.MuseListContainer>
-        {displayedMuses?.map((muse) => (
-          <MuseCard key={muse?.id} muse={muse}></MuseCard>
-        ))}
+        {viewMode === "grid" ? (
+          displayedMuses?.map((muse) => (
+            <MusePreviewCard key={muse?.id} muse={muse} />
+          ))
+        ) : (
+          <S.ListWrapper>
+            {displayedMuses?.map((muse) => (
+              <MuseListItem key={muse?.id} muse={muse} />
+            ))}
+          </S.ListWrapper>
+        )}
       </S.MuseListContainer>
     </S.Container>
   );

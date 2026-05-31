@@ -1,3 +1,52 @@
+export const PennedByAccentLink = styled.a<{ accent?: string | null }>`
+  color: ${({ accent }) => (accent && accent.trim() !== "" ? accent : "var(--accent)")};
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.15s;
+  &:hover {
+    text-decoration: underline;
+    color: ${({ accent }) => (accent && accent.trim() !== "" ? `color-mix(in srgb, ${accent} 70%, black)` : "var(--accent-8)")};
+  }
+`;
+
+export const PennedByChip = styled.button<{ accent?: string | null }>`
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 8px 2px 2px;
+  border-radius: 999px;
+  background: ${({ accent }) =>
+    accent && accent.trim() !== ""
+      ? `color-mix(in srgb, ${accent} 22%, transparent)`
+      : "var(--accent)"};
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+`;
+
+export const PennedByMiniAvatar = styled.div<{ $src?: string }>`
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background-image: url(${({ $src }) => $src});
+  background-size: cover;
+  background-position: center;
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+`;
+
+export const PennedByRow = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 0.85em;
+  font-weight: 400;
+`;
+
 import { Container } from "@novelist-world/ui";
 import styled from "styled-components";
 import { Avatar as AvatarCommon } from "@/components/common";
@@ -163,94 +212,40 @@ export const CardBackground = styled.div<CardProps>`
   height: 100%;
 
   background-image: url(${(props): string => props.banner});
-  background-size: cover;
   transition-timing-function: ease-out;
   transition-duration: 300ms;
   transition-property: scale;
-  background-size: cover;
   background-repeat: no-repeat;
-  background-position: center center;
-  cursor: zoom-in;
+  background-size: ${({ $bgSize }) => $bgSize ?? "cover"};
+  background-position: ${({ $bgPosition }) => $bgPosition ?? "center center"};
 `;
 
 export const CardWrapper = styled(Container)`
   width: 326px;
   height: 580px;
   padding: 0px !important;
-  &.open {
-    border-top-left-radius: var(--border-radius);
-    border-bottom-left-radius: var(--border-radius);
-    border-top-right-radius: 0px;
-    border-bottom-right-radius: 0px;
-  }
-
-  &.closed {
-    border-radius: var(--border-radius);
-  }
+  border-top-left-radius: var(--border-radius);
+  border-bottom-left-radius: var(--border-radius);
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 0px;
+  background: transparent;
+  backdrop-filter: unset;
+  border: none;
 
   transition: all 0.3s ease-in-out;
   z-index: ${Z_INDEX.CARD};
 
   container-name: muse-card;
   container-type: size;
-/* 
-  @media (min-width: 2569px) {
-    margin-top: 40px;
-    width: 652px;
-    height: 1160px;
-
-    &:hover {
-      & ${CardBackground} {
-        scale: 1.03;
-      }
-    }
-  } 
- 
-  @media (min-width: 2047px) and (max-width: 2559px) {
-    margin-top: 40px;
-
-    width: 489px;
-    height: 870px;
-
-    &:hover {
-      & ${CardBackground} {
-        scale: 1.03;
-      }
-    }
-  }  */
 
  @media (min-width: 1024px) and (max-width: 2047px) {
     margin-top: 20px;
     width: 422px;
     height: 750px;
-
-    &:hover {
-      & ${CardBackground} {
-        scale: 1.03;
-      }
-    }
   }
 
-  @media (min-width: 350px) and (max-width: 950px) {
-    &.open {
-      border-radius: 0px;
-      display: none;
-    }
-  }
-
-  @media (max-width: 350px) {
-    margin-top: 0px;
-    width: 100%;
-    height: 70vh;
-
-    &.open {
-      border-radius: 0px;
-      display: none;
-    }
-
-    &.closed {
-      border-radius: 0px;
-    }
+  @media (max-width: 950px) {
+    display: none;
   }
 `;
 
@@ -268,31 +263,6 @@ export const CardExpandedWrapper = styled.div`
 
   container-name: muse-card;
   container-type: size;
-
-  /* @media (min-width: 2559px) {
-    margin-top: 40px;
-    width: 652px;
-    height: 1160px;
-
-    &:hover {
-      & ${CardBackground} {
-        scale: 1.03;
-      }
-    }
-  }
-
-  @container (min-width: 2047px) and (max-width: 2559px) {
-    margin-top: 40px;
-
-    width: 489px;
-    height: 870px;
-
-    &:hover {
-      & ${CardBackground} {
-        scale: 1.03;
-      }
-    }
-  } */
 
   @media (min-width: 1024px) and (max-width: 2047px) {
     margin-top: 20px;
@@ -323,6 +293,10 @@ export const CardExpandedWrapper = styled.div`
 
 type CardProps = {
   banner: string;
+  /** CSS background-size computed from crop data. Falls back to 'cover'. */
+  $bgSize?: string;
+  /** CSS background-position computed from crop data. Falls back to 'center center'. */
+  $bgPosition?: string;
 };
 
 export const Title = styled.div`
@@ -370,8 +344,9 @@ export const SideMenu = styled.div`
   z-index: ${Z_INDEX.CARD};
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: center;
   align-items: center;
+  align-self: center;
   gap: 0.8rem;
 
   container-name: side-menu;
@@ -407,9 +382,12 @@ export const SideMenu = styled.div`
     align-items: center;
     margin-top: 10px;
     flex-direction: row;
-    width: 400px;
-    height: 50px;
+    width: 100%;
+    max-width: 400px;
+    height: 60px;
     margin-left: unset;
+    padding-bottom: 8px;
+    gap: 0.3rem; /* reduced gap between MenuButton items on mobile */
   }
 `;
 
@@ -563,6 +541,17 @@ export const UsernameContainer = styled.div`
   }
 `;
 
+export const CardMainBack = styled.div<{ accent?: string | null }>`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 5px 10px 0px;
+  position: relative;
+  height: 100%;
+  contain: paint;
+`;
+
 export const CardBack = styled.div<{ accent?: string | null }>`
   display: flex;
   flex-direction: column;
@@ -601,30 +590,6 @@ export const Card = styled.div`
   height: 100%;
   z-index: 2;
   contain: paint;
-
-  @container content-container (max-width: 1000px) {
-    background: linear-gradient(
-      ${({ theme }: any): string => theme.cardBackgroundGradient.join(", ")}
-    );
-  }
-
-  @container content-container (min-width: 1000px) {
-    &:hover {
-      background: linear-gradient(
-        ${({ theme }: any): string => theme.cardBackgroundGradient.join(", ")}
-      );
-
-      & ${MuseName} {
-        transform: translateY(0);
-        opacity: 1;
-      }
-
-      & ${AuthorContainer} {
-        transform: translateY(0);
-        opacity: 1;
-      }
-    }
-  }
 `;
 
 export const Video = styled.video`
@@ -643,7 +608,6 @@ export const InfoCardContent = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding-top: 20px;
   height: 100%;
 `;
 
@@ -909,7 +873,6 @@ export const InfoScrollBody = styled.div<{ accent?: string | null }>`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
   padding: 10px 12px 0;
   overflow: hidden;
 `;
@@ -949,13 +912,10 @@ export const InfoHeaderSection = styled.div`
 
 export const InfoMuseName = styled.h2`
   margin: 0;
-  font-size: 1.6rem;
-  font-weight: 700;
+  font-size: var(--font-size-h6);
+  font-weight: var(--font-weight-semi-bold);
   color: var(--text);
   text-align: center;
-  letter-spacing: 0.02em;
-  line-height: 1.15;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
 `;
 
 export const InfoNicknamesRow = styled.div`
@@ -988,6 +948,7 @@ export const InfoFandomSection = styled.div`
 export const InfoDivider = styled.div<{ $accent?: string | null }>`
   width: 100%;
   height: 1px;
+  margin-block: 10px;
   flex-shrink: 0;
   background: ${({ $accent }) =>
     $accent && $accent.trim() !== ""
@@ -1022,6 +983,7 @@ export const InfoSectionLabel = styled.div`
   letter-spacing: 0.14em;
   color: rgba(255, 255, 255, 0.38);
   font-weight: 700;
+  margin-bottom: 10px;
 `;
 
 export const InfoAttributesGrid = styled.div`
@@ -1276,4 +1238,25 @@ export const MoreMenuItem = styled.button<{ $variant?: "danger" | "warn" }>`
           ? "rgba(245,166,35,0.12)"
           : "rgba(255,255,255,0.1)"};
   }
+`;
+
+export const SectionMiniHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px 10px;
+  width: 100%;
+  flex-shrink: 0;
+
+  .avatar {
+    width: 18px;
+    height: 18px;
+  }
+`;
+
+export const SectionMiniName = styled.div`
+  font-size: var(--font-size-medium);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text);
+  margin-bottom: 5px;
 `;

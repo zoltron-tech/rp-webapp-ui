@@ -2,14 +2,20 @@
 
 import { ShouldRender } from "@novelist-world/ui";
 import { Form, Separator } from "radix-ui";
-import { type FormEventHandler, useCallback, useState } from "react";
+import {
+  type FormEventHandler,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { HexColorPicker } from "react-colorful";
 import { BsArrowLeft, BsPencil, BsUpload } from "react-icons/bs";
 import { MdOutlineBrush, MdTune } from "react-icons/md";
 import { getMuseMediaAction } from "@/app/rp/muse/actions";
 import { deleteMedia } from "@/app/rp/profile/actions";
 import { useUploadMedia } from "@/hooks/use-upload-media";
-import type { NWImage } from "@/types";
+import type { ImageCropFilter, NWImage } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { AvatarUploadField } from "../common/avatar-upload-field";
 import { LoaderAction } from "../common/loader-action";
@@ -54,8 +60,6 @@ export function AppearanceSection({
 }: Props) {
   const id = useMuseState("id");
   const firstName = useMuseState("firstName");
-  const lastName = useMuseState("lastName");
-  const fandom = useMuseState("fandom");
   const image = useMuseState("image");
   const wallpaper = useMuseState("wallpaper");
   const cardBackground = useMuseState("cardBackground");
@@ -91,6 +95,18 @@ export function AppearanceSection({
   >(null);
   const [museMedia, setMuseMedia] = useState<string[]>([]);
   const [mediaLoading, setMediaLoading] = useState(false);
+
+  // ── Card crop state ────────────────────────────────────────────────────────
+  const cropViewportRef = useRef<HTMLDivElement>(null);
+  const cropDragStart = useRef<{
+    px: number;
+    py: number;
+    bx: number;
+    by: number;
+  } | null>(null);
+  const [cropBgX, setCropBgX] = useState(50);
+  const [cropBgY, setCropBgY] = useState(50);
+  const [cropScale, setCropScale] = useState(1);
 
   const validateAndUpload = useCallback(
     async (file: File, slot: keyof TempUploads): Promise<string | null> => {
@@ -274,6 +290,74 @@ export function AppearanceSection({
     },
     [pickerTarget, tempFilterValues],
   );
+
+  const handleCardCropChange = useCallback((crop: ImageCropFilter) => {
+    setTempCardBg((prev) =>
+      prev ? { ...prev, crop } : buildNWImage(crop.src ?? ""),
+    );
+  }, []);
+
+  // Sync crop visual state when the card image source changes
+  useEffect(() => {
+    const crop = tempCardBg?.crop;
+    if (crop && crop.width > 0 && crop.width <= 300) {
+      setCropBgX(crop.x);
+      setCropBgY(crop.y);
+      setCropScale(crop.width / 100);
+    } else {
+      setCropBgX(50);
+      setCropBgY(50);
+      setCropScale(1);
+    }
+  }, [tempCardBg?.src]); // only re-seed on src change, not on every crop update
+
+  const emitCropChange = useCallback(
+    (x: number, y: number, s: number) => {
+      const scalePct = Math.round(s * 100);
+      handleCardCropChange({
+        height: scalePct,
+        src: tempCardBg?.src || image || "",
+        width: scalePct,
+        x: Math.round(x),
+        y: Math.round(y),
+      });
+    },
+    [tempCardBg?.src, image, handleCardCropChange],
+  );
+
+  const onCropPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    cropDragStart.current = {
+      bx: cropBgX,
+      by: cropBgY,
+      px: e.clientX,
+      py: e.clientY,
+    };
+  };
+
+  const onCropPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!cropDragStart.current || !cropViewportRef.current) return;
+    const rect = cropViewportRef.current.getBoundingClientRect();
+    const dx = ((e.clientX - cropDragStart.current.px) / rect.width) * 100;
+    const dy = ((e.clientY - cropDragStart.current.py) / rect.height) * 100;
+    const newX = Math.min(100, Math.max(0, cropDragStart.current.bx - dx));
+    const newY = Math.min(100, Math.max(0, cropDragStart.current.by - dy));
+    setCropBgX(newX);
+    setCropBgY(newY);
+    emitCropChange(newX, newY, cropScale);
+  };
+
+  const onCropPointerUp = () => {
+    cropDragStart.current = null;
+  };
+
+  const onCropWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 0.05 : -0.05;
+    const next = Math.min(3, Math.max(1, cropScale + delta));
+    setCropScale(next);
+    emitCropChange(cropBgX, cropBgY, next);
+  };
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(
     async (e) => {
@@ -461,6 +545,7 @@ export function AppearanceSection({
               </S.FilterDialogBody>
             ) : (
               <S.FilterDialogBody>
+                {/* ── Unified preview: wallpaper background + interactive card face ── */}
                 <S.FilterPreviewWrap>
                   <S.FilterPreviewBanner
                     $src={tempWallpaper?.src || image || ""}
@@ -468,20 +553,24 @@ export function AppearanceSection({
                     $brightness={tempFilterValues.brightness}
                     $blur={tempFilterValues.blur}
                   />
-                  {/* Card + expanded info panel */}
                   <S.FilterPreviewLayout>
-                    <S.FilterPreviewCardFace
+                    {/* Drag on the card to reposition; scroll/slider to zoom */}
+                    <S.InteractiveCardFace
+                      ref={cropViewportRef}
                       $src={tempCardBg?.src || image || ""}
+                      $bgSize={`${cropScale * 100}% auto`}
+                      $bgPosition={`${cropBgX}% ${cropBgY}%`}
+                      onPointerDown={onCropPointerDown}
+                      onPointerMove={onCropPointerMove}
+                      onPointerUp={onCropPointerUp}
+                      onPointerLeave={onCropPointerUp}
+                      onWheel={onCropWheel}
                     />
                     <S.FilterPreviewPanel>
                       <S.FilterPreviewAvatar $src={image || ""} />
                       <S.FilterPreviewMuseName>
-                        {[firstName, lastName].filter(Boolean).join(" ") ||
-                          "Character Name"}
+                        {firstName || "Character Name"}
                       </S.FilterPreviewMuseName>
-                      <S.FilterPreviewFandom>
-                        {fandom?.name || ""}
-                      </S.FilterPreviewFandom>
                       <S.FilterPreviewAttrGrid>
                         <S.FilterPreviewAttr />
                         <S.FilterPreviewAttr />
@@ -491,83 +580,129 @@ export function AppearanceSection({
                     </S.FilterPreviewPanel>
                   </S.FilterPreviewLayout>
                 </S.FilterPreviewWrap>
-                <S.PreviewChangeRow>
-                  <S.PaletteButton
-                    type="button"
-                    onClick={() => setPickerTarget("wallpaper")}
-                  >
-                    Change Wallpaper
-                  </S.PaletteButton>
-                  <S.PaletteButton
-                    type="button"
-                    onClick={() => setPickerTarget("cardBackground")}
-                  >
-                    Change Card
-                  </S.PaletteButton>
-                </S.PreviewChangeRow>
-                <S.FilterSliderGroup>
-                  <S.FilterSliderRow>
-                    <label htmlFor="filter-greyscale">
-                      <span>Greyscale</span>
+
+                {/* ── Card Image section ── */}
+                <S.SliderSection>
+                  <S.SliderSectionHeader>
+                    <span>Card Image</span>
+                    <S.PaletteButton
+                      type="button"
+                      onClick={() => setPickerTarget("cardBackground")}
+                    >
+                      <BsUpload size={12} />
+                      Change
+                    </S.PaletteButton>
+                  </S.SliderSectionHeader>
+                  <S.CropScaleRow>
+                    <label htmlFor="card-crop-scale">Zoom</label>
+                    <input
+                      id="card-crop-scale"
+                      type="range"
+                      min={1}
+                      max={3}
+                      step={0.01}
+                      value={cropScale}
+                      style={
+                        {
+                          "--fill": `${((cropScale - 1) / 2) * 100}%`,
+                        } as React.CSSProperties
+                      }
+                      onChange={(e) => {
+                        const next = Number(e.target.value);
+                        setCropScale(next);
+                        emitCropChange(cropBgX, cropBgY, next);
+                      }}
+                    />
+                    <span className="value">{cropScale.toFixed(2)}×</span>
+                  </S.CropScaleRow>
+                </S.SliderSection>
+
+                {/* ── Wallpaper section ── */}
+                <S.SliderSection>
+                  <S.SliderSectionHeader>
+                    <span>Wallpaper</span>
+                    <S.PaletteButton
+                      type="button"
+                      onClick={() => setPickerTarget("wallpaper")}
+                    >
+                      <BsUpload size={12} />
+                      Change
+                    </S.PaletteButton>
+                  </S.SliderSectionHeader>
+                  <S.FilterSliderGroup>
+                    <S.FilterSliderRow>
+                      <label htmlFor="filter-greyscale">Greyscale</label>
+                      <input
+                        id="filter-greyscale"
+                        type="range"
+                        min={0}
+                        max={100}
+                        value={tempFilterValues.greyscale}
+                        style={
+                          {
+                            "--fill": `${tempFilterValues.greyscale}%`,
+                          } as React.CSSProperties
+                        }
+                        onChange={(e) =>
+                          setTempFilterValues((prev) => ({
+                            ...prev,
+                            greyscale: Number(e.target.value),
+                          }))
+                        }
+                      />
                       <span className="value">
                         {tempFilterValues.greyscale}%
                       </span>
-                    </label>
-                    <input
-                      id="filter-greyscale"
-                      type="range"
-                      min={0}
-                      max={100}
-                      value={tempFilterValues.greyscale}
-                      onChange={(e) =>
-                        setTempFilterValues((prev) => ({
-                          ...prev,
-                          greyscale: Number(e.target.value),
-                        }))
-                      }
-                    />
-                  </S.FilterSliderRow>
-                  <S.FilterSliderRow>
-                    <label htmlFor="filter-brightness">
-                      <span>Brightness</span>
+                    </S.FilterSliderRow>
+                    <S.FilterSliderRow>
+                      <label htmlFor="filter-brightness">Brightness</label>
+                      <input
+                        id="filter-brightness"
+                        type="range"
+                        min={0}
+                        max={200}
+                        value={tempFilterValues.brightness}
+                        style={
+                          {
+                            "--fill": `${tempFilterValues.brightness / 2}%`,
+                          } as React.CSSProperties
+                        }
+                        onChange={(e) =>
+                          setTempFilterValues((prev) => ({
+                            ...prev,
+                            brightness: Number(e.target.value),
+                          }))
+                        }
+                      />
                       <span className="value">
                         {tempFilterValues.brightness}%
                       </span>
-                    </label>
-                    <input
-                      id="filter-brightness"
-                      type="range"
-                      min={0}
-                      max={200}
-                      value={tempFilterValues.brightness}
-                      onChange={(e) =>
-                        setTempFilterValues((prev) => ({
-                          ...prev,
-                          brightness: Number(e.target.value),
-                        }))
-                      }
-                    />
-                  </S.FilterSliderRow>
-                  <S.FilterSliderRow>
-                    <label htmlFor="filter-blur">
-                      <span>Blur</span>
+                    </S.FilterSliderRow>
+                    <S.FilterSliderRow>
+                      <label htmlFor="filter-blur">Blur</label>
+                      <input
+                        id="filter-blur"
+                        type="range"
+                        min={0}
+                        max={20}
+                        value={tempFilterValues.blur}
+                        style={
+                          {
+                            "--fill": `${(tempFilterValues.blur / 20) * 100}%`,
+                          } as React.CSSProperties
+                        }
+                        onChange={(e) =>
+                          setTempFilterValues((prev) => ({
+                            ...prev,
+                            blur: Number(e.target.value),
+                          }))
+                        }
+                      />
                       <span className="value">{tempFilterValues.blur}px</span>
-                    </label>
-                    <input
-                      id="filter-blur"
-                      type="range"
-                      min={0}
-                      max={20}
-                      value={tempFilterValues.blur}
-                      onChange={(e) =>
-                        setTempFilterValues((prev) => ({
-                          ...prev,
-                          blur: Number(e.target.value),
-                        }))
-                      }
-                    />
-                  </S.FilterSliderRow>
-                </S.FilterSliderGroup>
+                    </S.FilterSliderRow>
+                  </S.FilterSliderGroup>
+                </S.SliderSection>
+
                 <ShouldRender if={imageUploading}>
                   <S.MediaPickerEmpty style={{ padding: "8px 0" }}>
                     Uploading image…

@@ -336,8 +336,9 @@ export const NextPageCard = styled.button<{ $height?: string }>`
   all: unset;
   box-sizing: border-box;
   flex-shrink: 0;
-  width: 169px;
-  min-width: 169px;
+  /* Match preview card .home variant sizing */
+  width: 180px;
+  min-width: 180px;
   height: ${({ $height }) => $height ?? "300px"};
   border-radius: var(--border-radius, 8px);
   border: 1.5px dashed var(--bg-6);
@@ -371,9 +372,9 @@ export const NextPageCard = styled.button<{ $height?: string }>`
   }
 
   @media (max-width: 600px) {
-    width: 113px;
-    min-width: 113px;
-    height: ${({ $height }) => $height ?? "200px"};
+    width: 120px;
+    min-width: 120px;
+    height: ${({ $height }) => $height ?? "220px"};
   }
 `;
 

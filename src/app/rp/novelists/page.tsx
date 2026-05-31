@@ -4,7 +4,7 @@ import { Carousel } from "@novelist-world/ui";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Footer } from "@/components/layout";
-import { MuseCard } from "@/components/muse-card";
+import { MusePreviewCard } from "@/components/muse-preview-card";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { Muse } from "@/types";
@@ -84,11 +84,11 @@ export default function NovelistsPage() {
               muses
                 .slice(0, Math.floor(muses.length / 2))
                 .map((muse) => (
-                  <MuseCard
+                  <MusePreviewCard
                     key={muse?.id}
                     className="hero"
                     muse={muse}
-                  ></MuseCard>
+                  />
                 ))}
           </Carousel>
           <Carousel direction="to-right">
@@ -96,11 +96,11 @@ export default function NovelistsPage() {
               muses
                 .slice(Math.floor(muses.length / 2))
                 .map((muse) => (
-                  <MuseCard
+                  <MusePreviewCard
                     key={muse?.id}
                     className="hero"
                     muse={muse}
-                  ></MuseCard>
+                  />
                 ))}
           </Carousel>
         </S.MuseCarouselContainer>

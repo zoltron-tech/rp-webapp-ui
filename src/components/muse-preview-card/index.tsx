@@ -34,7 +34,14 @@ export const MusePreviewCard: FC<Props> = ({ muse, className }) => {
   const accent = muse.useAccent ? (muse.accent ?? null) : null;
   const coverSrc = muse.cardBackground?.src || muse.image || "";
 
-  console.log(muse);
+  // Use crop values whenever the data is present and valid (width > 0).
+  // The `useExtraImages` flag is absent on lightweight list responses, so we
+  // fall back to checking the crop payload directly — same encoding as the
+  // muse profile page: width = background-size%, x/y = background-position%.
+  const rawCrop = muse.cardBackground?.crop;
+  const cardCrop = rawCrop && (rawCrop.width ?? 0) > 0 ? rawCrop : null;
+  const bgSize = cardCrop ? `${cardCrop.width}%` : undefined;
+  const bgPosition = cardCrop ? `${cardCrop.x}% ${cardCrop.y}%` : undefined;
 
   const onClick = () => {
     if (!muse.id) return;
@@ -96,7 +103,7 @@ export const MusePreviewCard: FC<Props> = ({ muse, className }) => {
         </S.ControlsOverlay>
       )}
       <S.Card>
-        <S.CoverImage $src={coverSrc}>
+        <S.CoverImage $src={coverSrc} $bgSize={bgSize} $bgPosition={bgPosition}>
           <S.CoverNameBlock>
             {muse.fandom && muse.fandom.id !== "FANDOMLESS" && (
               <S.FandomTag $color={muse.fandom.color}>

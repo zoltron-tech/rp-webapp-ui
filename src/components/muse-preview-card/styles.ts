@@ -75,13 +75,18 @@ export const Card = styled.div`
   position: relative;
 `;
 
-export const CoverImage = styled.div<{ $src: string }>`
+export const CoverImage = styled.div<{
+  $src: string;
+  $bgSize?: string;
+  $bgPosition?: string;
+}>`
   width: 100%;
   height: 100%;
   background-image: ${({ $src }) => ($src ? `url(${$src})` : "none")};
   background-color: var(--bg-3);
-  background-size: cover;
-  background-position: center top;
+  background-size: ${({ $bgSize }) => $bgSize ?? "cover"};
+  background-position: ${({ $bgPosition }) => $bgPosition ?? "center top"};
+  background-repeat: no-repeat;
   position: relative;
   transition: transform 0.22s cubic-bezier(.4,1.4,.6,1);
 

@@ -30,6 +30,17 @@ export const MuseContainer = styled.div`
     height: 44px;
     flex-shrink: 0;
   }
+
+  @media (max-width: 600px) {
+    /* Slim layout on small screens */
+    padding: 8px 12px;
+    gap: 8px;
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+    }
+  }
 `;
 
 export const MuseInfo = styled.div`
@@ -54,4 +65,66 @@ export const MuseSubname = styled.span`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+`;
+
+export const MuseFandom = styled.span<{ $color?: string }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xxsmall);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background: ${(p) => p.$color ?? "var(--bg-4)"};
+  padding: 2px 6px;
+  border-radius: 999px;
+  margin-top: 2px;
+  align-self: flex-start; /* ensure chip sizes to content */
+  width: auto;
+
+  &::before {
+    content: "";
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 600px) {
+    font-size: var(--font-size-xxxsmall);
+    padding: 1px 6px;
+    &::before {
+      width: 4px;
+      height: 4px;
+    }
+  }
+`;
+
+export const Controls = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+`;
+
+export const IconBtn = styled.button`
+  background: var(--bg-3);
+  border: 1px solid var(--bg-5);
+  color: var(--text);
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--bg-4);
+  }
+
+  &:active {
+    background: var(--bg-5);
+  }
 `;

@@ -1056,6 +1056,11 @@ export const FilterDialogBody = styled.div`
   padding-top: 4px;
   width: 100%;
   min-width: min(280px, 100%);
+
+  @media (max-width: 460px) {
+    overflow: hidden;
+    max-height: calc(100dvh - 180px);
+  }
 `;
 
 export const FilterPreviewWrap = styled.div`
@@ -1118,13 +1123,60 @@ export const FilterPreviewLayout = styled.div`
     0 0 0 1px rgba(255, 255, 255, 0.06);
 `;
 
-export const FilterPreviewCardFace = styled.div<{ $src: string }>`
+export const FilterPreviewCardFace = styled.div<{
+  $src: string;
+  $bgSize?: string;
+  $bgPosition?: string;
+}>`
   width: 95px;
-  height: 170px;
+  height: 169px; /* 9:16 ratio (95 * 16/9 ≈ 169) */
   flex-shrink: 0;
   background-image: url(${({ $src }) => $src});
-  background-size: cover;
-  background-position: center;
+  background-repeat: no-repeat;
+  background-color: var(--bg-1);
+  background-size: ${({ $bgSize }) => $bgSize ?? "cover"};
+  background-position: ${({ $bgPosition }) => $bgPosition ?? "center"};
+`;
+
+/** Like FilterPreviewCardFace but interactive — drag to reposition card bg */
+export const InteractiveCardFace = styled.div<{
+  $src: string;
+  $bgSize?: string;
+  $bgPosition?: string;
+}>`
+  width: 95px;
+  height: 169px;
+  flex-shrink: 0;
+  position: relative;
+  background-image: url(${({ $src }) => $src});
+  background-repeat: no-repeat;
+  background-color: var(--bg-1);
+  background-size: ${({ $bgSize }) => $bgSize ?? "cover"};
+  background-position: ${({ $bgPosition }) => $bgPosition ?? "center"};
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &::after {
+    content: "drag · scroll to zoom";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 18px 4px 5px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.72), transparent);
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 7.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-align: center;
+    text-transform: uppercase;
+    pointer-events: none;
+  }
 `;
 
 export const FilterPreviewPanel = styled.div`
@@ -1199,31 +1251,80 @@ export const FilterPreviewAttr = styled.div`
 export const FilterSliderGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 `;
 
 export const FilterSliderRow = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 5px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
 
   label {
-    display: flex;
-    justify-content: space-between;
     font-family: var(--font);
-    font-size: var(--font-size-small);
+    font-size: 11px;
     color: var(--text-secondary);
+    min-width: 62px;
+    flex-shrink: 0;
+  }
 
-    .value {
-      color: var(--text);
-      font-weight: var(--font-weight-bold);
-    }
+  .value {
+    font-family: var(--font);
+    font-size: 11px;
+    font-weight: var(--font-weight-bold);
+    color: var(--text);
+    min-width: 32px;
+    text-align: right;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
   }
 
   input[type="range"] {
-    width: 100%;
-    accent-color: var(--accent);
+    flex: 1;
+    height: 16px;
     cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+
+    &::-webkit-slider-runnable-track {
+      height: 3px;
+      border-radius: 2px;
+      background: linear-gradient(
+        to right,
+        var(--accent) var(--fill, 0%),
+        var(--bg-5) var(--fill, 0%)
+      );
+    }
+    &::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--accent);
+      margin-top: -5px;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+    &::-moz-range-track {
+      height: 3px;
+      border-radius: 2px;
+      background: var(--bg-5);
+    }
+    &::-moz-range-progress {
+      height: 3px;
+      border-radius: 2px;
+      background: var(--accent);
+    }
+    &::-moz-range-thumb {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
   }
 `;
 
@@ -1231,6 +1332,33 @@ export const PreviewChangeRow = styled.div`
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+`;
+
+/* ── Visual settings slider sections ─────────────────────────────────────── */
+
+export const SliderSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-3);
+  border: 1px solid var(--bg-5);
+  border-radius: 8px;
+`;
+
+export const SliderSectionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  > span {
+    font-family: var(--font);
+    font-size: 10px;
+    font-weight: var(--font-weight-bold);
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
 `;
 
 export const MediaPickerHeader = styled.div`
@@ -1328,6 +1456,201 @@ export const MediaPickerEmpty = styled.p`
   font-family: var(--font);
   font-size: var(--font-size-small);
   padding: 20px 0;
+`;
+
+// ── Card crop editor ─────────────────────────────────────────────────────────
+
+export const CropEditorSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+export const CropEditorLabel = styled.div`
+  font-family: var(--font);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+`;
+
+export const CropEditorHint = styled.p`
+  font-family: var(--font);
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin: 0;
+`;
+
+/* The viewport that clips to the 9:16 card preview */
+export const CropViewport = styled.div`
+  position: relative;
+  width: 100%;
+  max-width: 180px;
+  aspect-ratio: 9 / 16;
+
+  @media (max-width: 460px) {
+    max-width: clamp(120px, 40vw, 160px);
+  }
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  background-color: var(--bg-1); /* fills empty space when image doesn't cover full area */
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  align-self: center;
+
+  &:active {
+    cursor: grabbing;
+  }
+`;
+
+/* The actual image layer that moves around inside the viewport */
+export const CropImage = styled.div<{
+  $src: string;
+  $x: number;
+  $y: number;
+  $scale: number;
+}>`
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url(${({ $src }) => $src});
+  background-repeat: no-repeat;
+  /* Two-value size: width% auto — height scales proportionally, never tiles */
+  background-size: ${({ $scale }) => $scale * 100}% auto;
+  background-position: ${({ $x, $y }) => `${$x}% ${$y}%`};
+  pointer-events: none;
+`;
+
+export const CropScaleRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+
+  label {
+    font-family: var(--font);
+    font-size: 11px;
+    color: var(--text-secondary);
+    min-width: 62px;
+    flex-shrink: 0;
+  }
+
+  .value {
+    font-family: var(--font);
+    font-size: 11px;
+    font-weight: var(--font-weight-bold);
+    color: var(--text);
+    min-width: 32px;
+    text-align: right;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  input[type="range"] {
+    flex: 1;
+    height: 16px;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+
+    &::-webkit-slider-runnable-track {
+      height: 3px;
+      border-radius: 2px;
+      background: linear-gradient(
+        to right,
+        var(--accent) var(--fill, 0%),
+        var(--bg-5) var(--fill, 0%)
+      );
+    }
+    &::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--accent);
+      margin-top: -5px;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+    &::-moz-range-track {
+      height: 3px;
+      border-radius: 2px;
+      background: var(--bg-5);
+    }
+    &::-moz-range-progress {
+      height: 3px;
+      border-radius: 2px;
+      background: var(--accent);
+    }
+    &::-moz-range-thumb {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+  }
+`;
+
+// ── Visual settings two-column layout ──────────────────────────────────────
+
+/** Desktop: card on the left, wallpaper+sliders on the right.
+ *  Mobile: stacked vertically. */
+export const VisualSettingsGrid = styled.div`
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 20px;
+  align-items: start;
+
+  @media (max-width: 460px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const VisualPanel = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+export const PanelHeading = styled.p`
+  font-family: var(--font);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+`;
+
+export const PanelHint = styled.p`
+  font-family: var(--font);
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.4;
+`;
+
+/** Container for the wallpaper banner preview (same structure as FilterPreviewWrap) */
+export const WallpaperPreviewBox = styled.div`
+  position: relative;
+  width: 100%;
+  height: clamp(160px, 30vh, 230px);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--bg-6);
+  background: var(--bg-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 // ── Fandom picker dialog ─────────────────────────────────────────────────────

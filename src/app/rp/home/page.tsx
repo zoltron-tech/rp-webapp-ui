@@ -8,7 +8,7 @@ import { ShouldRender } from "@/components/common";
 import { ScrollJumpButton } from "@/components/common/scroll-jump-button";
 import HomeTourGuide from "@/components/home-tour-guide";
 import { LoadMore } from "@/components/load-more/page";
-import MuseCard from "@/components/muse-card";
+import { MusePreviewCard } from "@/components/muse-preview-card";
 import { NovelistPreviewCard } from "@/components/novelist-preview-card";
 import { Prompt as PromptComponent } from "@/components/prompt";
 import { SideBarFriendListItem } from "@/components/sidebar-friend-list-item";
@@ -487,7 +487,7 @@ export default function HomePage() {
               <S.SubText>characters by your friends</S.SubText>
               <S.PartitionContainer>
                 {friendsMuses?.map((knownMuse) => (
-                  <MuseCard key={knownMuse?.id} muse={knownMuse}></MuseCard>
+                  <MusePreviewCard key={knownMuse?.id} muse={knownMuse} />
                 ))}
                 {friendsMusesHasMore && (
                   <S.NextPageCard
@@ -530,7 +530,7 @@ export default function HomePage() {
             <S.SubText>Public Characters out there</S.SubText>
             <S.PartitionContainer>
               {unknownMuses?.map((unknownMuse) => (
-                <MuseCard key={unknownMuse?.id} muse={unknownMuse}></MuseCard>
+                <MusePreviewCard key={unknownMuse?.id} muse={unknownMuse} />
               ))}
               {unknownMusesHasMore && (
                 <S.NextPageCard

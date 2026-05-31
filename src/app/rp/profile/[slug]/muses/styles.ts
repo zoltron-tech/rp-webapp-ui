@@ -173,15 +173,15 @@ export const MuseListContainer = styled.div`
   ${DEV_MODE_BORDER("red")}
   display: flex;
   flex-wrap: wrap;
+  width: 100%;
+  max-width: 800px;
   margin-inline: auto;
   justify-content: center;
   margin-top: 10px;
   gap: 0.3rem;
-  max-width: 800px;
 
   @container (max-width: 800px) {
     & {
-      padding-inline: 10px;
       gap: 0.2rem;
     }
   }
@@ -209,5 +209,49 @@ export const Maintext = styled.span`
       padding-left: 20px;
       text-align: left;
       font-size: 22px;
+  }
+`;
+
+/* View toggle row (grid / list) */
+export const ViewToggleRow = styled.div`
+  width: 100%;
+  max-width: 800px;
+  align-self: center;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+
+  @media screen and (max-width: 800px) {
+    padding-inline: 8px;
+  }
+`;
+
+export const ToggleButton = styled.button<{ $active?: boolean }>`
+  background: ${(p) => (p.$active ? "var(--accent)" : "var(--bg-3)")};
+  color: ${(p) => (p.$active ? "#fff" : "var(--text)")};
+  border: none;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &:focus {
+    outline: 2px solid var(--accent);
+  }
+`;
+
+export const ListWrapper = styled.div`
+  width: 100%;
+  max-width: 800px;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  overflow: hidden;
+
+  @media screen and (max-width: 800px) {
+    border-radius: 0;
   }
 `;

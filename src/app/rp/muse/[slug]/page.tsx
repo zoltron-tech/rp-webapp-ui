@@ -1,14 +1,13 @@
 ﻿"use client";
 
-import classNames from "classnames";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { BiSolidConversation } from "react-icons/bi";
 import { FiMoreVertical } from "react-icons/fi";
 import { GiBookCover } from "react-icons/gi";
-import { MdClose, MdPhotoLibrary } from "react-icons/md";
+import { MdImage, MdPhotoLibrary } from "react-icons/md";
 import { TiInfoLarge } from "react-icons/ti";
-import { ShouldRender, Username } from "@/components/common";
+import { ShouldRender } from "@/components/common";
 import { useGlobalState } from "@/context/store/stores";
 import { useStateMachine } from "@/hooks";
 import { useNsfwCheck } from "@/hooks/use-nsfw-check";
@@ -22,6 +21,7 @@ import {
 } from "../../muse/actions";
 import { getPromptsByMuseAction } from "../../prompt/actions";
 import { BackStorySection } from "./sections/back-story-section";
+import { CardImageSection } from "./sections/card-image-section";
 import { ConnectionsSection } from "./sections/connections-section";
 import { GallerySection } from "./sections/gallery-section";
 import { MoreSection } from "./sections/more-section";
@@ -30,8 +30,7 @@ import { PromptsSection } from "./sections/prompts-section";
 import * as S from "./styles";
 
 type CARD_STATE =
-  | "MAIN"
-  | "VIDEO"
+  | "CARD_IMAGE"
   | "MUSE_INFO"
   | "CONNECTIONS"
   | "BACK_STORY"
@@ -54,79 +53,63 @@ export default function MuseProfilePage({}) {
   const username = params?.slug as string;
   const { baseDataLoader } = usePageRouter();
   const { transition, is } = useStateMachine<CARD_STATE>({
-    initial: "MAIN",
+    initial: "MUSE_INFO",
     transitions: {
       BACK_STORY: {
+        CARD_IMAGE: true,
         CONNECTIONS: true,
         GALLERY: true,
-        MAIN: true,
         MORE: true,
         MUSE_INFO: true,
         PROMPTS: true,
-        VIDEO: true,
+      },
+      CARD_IMAGE: {
+        BACK_STORY: true,
+        CONNECTIONS: true,
+        GALLERY: true,
+        MORE: true,
+        MUSE_INFO: true,
+        PROMPTS: true,
       },
       CONNECTIONS: {
         BACK_STORY: true,
+        CARD_IMAGE: true,
         GALLERY: true,
-        MAIN: true,
         MORE: true,
         MUSE_INFO: true,
         PROMPTS: true,
-        VIDEO: true,
       },
       GALLERY: {
         BACK_STORY: true,
+        CARD_IMAGE: true,
         CONNECTIONS: true,
-        MAIN: true,
         MORE: true,
         MUSE_INFO: true,
         PROMPTS: true,
-        VIDEO: true,
-      },
-      MAIN: {
-        BACK_STORY: true,
-        CONNECTIONS: true,
-        GALLERY: true,
-        MORE: true,
-        MUSE_INFO: true,
-        PROMPTS: true,
-        VIDEO: true,
       },
       MORE: {
         BACK_STORY: true,
+        CARD_IMAGE: true,
         CONNECTIONS: true,
         GALLERY: true,
-        MAIN: true,
         MUSE_INFO: true,
         PROMPTS: true,
-        VIDEO: true,
       },
       MUSE_INFO: {
         BACK_STORY: true,
+        CARD_IMAGE: true,
         CONNECTIONS: true,
         GALLERY: true,
-        MAIN: true,
         MORE: true,
         PROMPTS: true,
-        VIDEO: true,
       },
       PROMPTS: {
         BACK_STORY: true,
+        CARD_IMAGE: true,
         CONNECTIONS: true,
         GALLERY: true,
-        MAIN: true,
         MORE: true,
         MUSE_INFO: true,
-        VIDEO: true,
-      },
-      VIDEO: {
-        BACK_STORY: true,
-        CONNECTIONS: true,
-        GALLERY: true,
-        MAIN: true,
-        MORE: true,
-        MUSE_INFO: true,
-        PROMPTS: true,
       },
     },
   });
@@ -160,6 +143,16 @@ export default function MuseProfilePage({}) {
   const cardBgSrc =
     (muse?.useExtraImages && getSafeImage(muse?.cardBackground?.src)) ||
     getSafeImage(muse?.image || "");
+
+  // Derive CSS background-size / background-position from the stored crop.
+  // crop.x/y = bgPosition percent, crop.width = scale * 100.
+  const cardCrop = muse?.useExtraImages ? muse?.cardBackground?.crop : null;
+  const cardBgCss = cardCrop
+    ? {
+        bgPosition: `${cardCrop.x}% ${cardCrop.y}%`,
+        bgSize: `${cardCrop.width}%`,
+      }
+    : null;
   const isNsfwBanner = useNsfwCheck(bannerSrc || null, isOwnMuse);
   const isNsfwCard = useNsfwCheck(cardBgSrc || null, isOwnMuse);
   const showBannerNsfwOverlay = isNsfwBanner === true && !bannerNsfwRevealed;
@@ -196,12 +189,12 @@ export default function MuseProfilePage({}) {
       )}
 
       {/* Main character card */}
-      <S.CardWrapper
-        className={classNames({ closed: is("MAIN"), open: !is("MAIN") })}
-      >
+      <S.CardWrapper>
         <S.ImageWrapper>
           <S.CardBackground
             banner={cardBgSrc}
+            $bgSize={cardBgCss?.bgSize}
+            $bgPosition={cardBgCss?.bgPosition}
             style={{
               filter: showCardBlur ? "blur(20px)" : undefined,
               transition: "filter 0.3s ease",
@@ -224,29 +217,13 @@ export default function MuseProfilePage({}) {
             See anyway
           </S.NSFWRevealButton>
         )}
-        <S.Card className="muse-card">
-          <S.CardHeader>
-            <S.MuseInfo>
-              <S.MuseName>
-                {muse?.firstName} <br />
-                {muse?.lastName}
-              </S.MuseName>
-              <S.AuthorContainer>
-                <S.UsernameContainer>
-                  <span className="penned">PENNED BY:</span>
-                  <Username
-                    username={muse?.pennedBy?.username}
-                    accentOverride={accent}
-                    primary
-                  />
-                </S.UsernameContainer>
-              </S.AuthorContainer>
-            </S.MuseInfo>
-          </S.CardHeader>
-        </S.Card>
       </S.CardWrapper>
 
-      {/* Expanded sections */}
+      {/* Sections — always show the selected one */}
+      <ShouldRender if={is("CARD_IMAGE")}>
+        <CardImageSection muse={muse} cardBgSrc={cardBgSrc} />
+      </ShouldRender>
+
       <ShouldRender if={is("MUSE_INFO")}>
         <MuseInfoSection muse={muse} isOwnMuse={isOwnMuse} />
       </ShouldRender>
@@ -275,32 +252,30 @@ export default function MuseProfilePage({}) {
         <MoreSection muse={muse} isOwnMuse={isOwnMuse} />
       </ShouldRender>
 
-      {/* Side navigation */}
+      {/* Section navigation */}
       <S.SideMenu>
-        <S.MenuButton>
+        <S.MenuButton
+          style={{
+            display: "none",
+            ...(typeof window !== "undefined" && window.innerWidth < 950
+              ? { display: "flex" }
+              : {}),
+          }}
+          className="card-image-mobile-only"
+        >
           <S.MenuButtonIcon
-            onClick={() => transition("PROMPTS")}
-            className={classNames({ selected: is("PROMPTS") })}
+            onClick={() => transition("CARD_IMAGE")}
+            className={is("CARD_IMAGE") ? "selected" : ""}
             accent={accent}
           >
-            <BiSolidConversation size={"45%"} />
+            <MdImage size={"45%"} />
           </S.MenuButtonIcon>
-          <S.MenuText>INTERACTIONS</S.MenuText>
-        </S.MenuButton>
-        <S.MenuButton>
-          <S.MenuButtonIcon
-            onClick={() => transition("GALLERY")}
-            className={classNames({ selected: is("GALLERY") })}
-            accent={accent}
-          >
-            <MdPhotoLibrary size={"45%"} />
-          </S.MenuButtonIcon>
-          <S.MenuText>GALLERY</S.MenuText>
+          <S.MenuText>CARD</S.MenuText>
         </S.MenuButton>
         <S.MenuButton>
           <S.MenuButtonIcon
             onClick={() => transition("MUSE_INFO")}
-            className={classNames({ selected: is("MUSE_INFO") })}
+            className={is("MUSE_INFO") ? "selected" : ""}
             accent={accent}
           >
             <TiInfoLarge size={"45%"} />
@@ -310,33 +285,43 @@ export default function MuseProfilePage({}) {
         <S.MenuButton>
           <S.MenuButtonIcon
             onClick={() => transition("BACK_STORY")}
-            className={classNames({ selected: is("BACK_STORY") })}
+            className={is("BACK_STORY") ? "selected" : ""}
             accent={accent}
           >
             <GiBookCover size={"45%"} />
           </S.MenuButtonIcon>
           <S.MenuText>STORY</S.MenuText>
         </S.MenuButton>
-        <ShouldRender if={!is("MAIN")}>
-          <S.MenuButton className="stick-top">
-            <S.MenuButtonIcon
-              onClick={() => transition("MAIN")}
-              accent={accent}
-            >
-              <MdClose />
-            </S.MenuButtonIcon>
-          </S.MenuButton>
-        </ShouldRender>
-        <ShouldRender if={is("MAIN")}>
-          <S.MenuButton className="stick-top">
-            <S.MenuButtonIcon
-              onClick={() => transition("MORE")}
-              accent={accent}
-            >
-              <FiMoreVertical size={"45%"} />
-            </S.MenuButtonIcon>
-          </S.MenuButton>
-        </ShouldRender>
+        <S.MenuButton>
+          <S.MenuButtonIcon
+            onClick={() => transition("PROMPTS")}
+            className={is("PROMPTS") ? "selected" : ""}
+            accent={accent}
+          >
+            <BiSolidConversation size={"45%"} />
+          </S.MenuButtonIcon>
+          <S.MenuText>POSTS</S.MenuText>
+        </S.MenuButton>
+        <S.MenuButton>
+          <S.MenuButtonIcon
+            onClick={() => transition("GALLERY")}
+            className={is("GALLERY") ? "selected" : ""}
+            accent={accent}
+          >
+            <MdPhotoLibrary size={"45%"} />
+          </S.MenuButtonIcon>
+          <S.MenuText>GALLERY</S.MenuText>
+        </S.MenuButton>
+        <S.MenuButton>
+          <S.MenuButtonIcon
+            onClick={() => transition("MORE")}
+            className={is("MORE") ? "selected" : ""}
+            accent={accent}
+          >
+            <FiMoreVertical size={"45%"} />
+          </S.MenuButtonIcon>
+          <S.MenuText>MORE</S.MenuText>
+        </S.MenuButton>
       </S.SideMenu>
     </S.MuseContainer>
   );

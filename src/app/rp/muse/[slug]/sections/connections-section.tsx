@@ -7,6 +7,7 @@ import { usePageRouter } from "@/hooks/use-page-router";
 import type { Muse } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "../styles";
+import SectionMiniHeader from "./SectionMiniHeader";
 
 type Props = {
   muse: Muse | null;
@@ -30,7 +31,7 @@ export function ConnectionsSection({ muse }: Props) {
     <S.CardExpandedWrapper>
       <S.CardBack className="muse-card" accent={accent}>
         <S.InfoCardContent>
-          <S.Title>Connections</S.Title>
+          <SectionMiniHeader muse={muse} accent={accent ?? null} />
           <S.ConnectionsContainer>
             <S.ScrollableContent accent={accent}>
               <S.ExpandedContentInner>

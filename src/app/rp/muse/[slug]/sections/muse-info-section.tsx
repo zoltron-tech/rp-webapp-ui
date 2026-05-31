@@ -9,6 +9,7 @@ import { usePageRouter } from "@/hooks/use-page-router";
 import type { Muse } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "../styles";
+import PennedBy from "./PennedBy";
 
 type Props = {
   muse: Muse | null;
@@ -47,6 +48,7 @@ export function MuseInfoSection({ muse, isOwnMuse }: Props) {
                 {muse?.firstName}
                 {muse?.lastName ? ` ${muse.lastName}` : ""}
               </S.InfoMuseName>
+              <PennedBy pennedBy={muse?.pennedBy} accent={accent ?? null} />
               <ShouldRender if={Boolean(muse?.nicknames?.length)}>
                 <S.InfoNicknamesRow>
                   {muse?.nicknames?.map((n) => (

@@ -53,9 +53,9 @@ const isOurS3Url = (url: string): boolean => {
 // ──────────────────────────────────────────────────────────────────────────
 
 export const IMAGE_SIZES = {
-  AVATAR_LARGE: { fit: "cover" as const, h: 240, w: 240 },
-  AVATAR_MEDIUM: { fit: "cover" as const, h: 120, w: 120 },
-  AVATAR_SMALL: { fit: "cover" as const, h: 96, w: 96 },
+  AVATAR_LARGE: { fit: "cover" as const, h: 600, w: 600 },
+  AVATAR_MEDIUM: { fit: "cover" as const, h: 240, w: 240 },
+  AVATAR_SMALL: { fit: "cover" as const, h: 120, w: 120 },
   BANNER_LARGE: { fit: "cover" as const, h: 400, w: 1200 },
   BANNER_MEDIUM: { fit: "cover" as const, h: 300, w: 600 },
   CARD_BG: { fit: "cover" as const, h: 800, w: 450 },

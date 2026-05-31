@@ -5,6 +5,7 @@ import { RadioGroup, Separator } from "radix-ui";
 import { useEffect, useRef, useState } from "react";
 import { BsArrowLeft } from "react-icons/bs";
 import { MdOutlineBrush } from "react-icons/md";
+import { AvatarPickerDialog } from "@/components/avatar-picker-dialog";
 import { AvatarUploadField } from "@/components/common/avatar-upload-field";
 import { AppAlertDialog } from "@/components/dialog";
 import { useGlobalState } from "@/context/store/stores";
@@ -39,6 +40,7 @@ export function AppearanceSection({ onBack }: Props) {
   const [tempUploadedImage, setTempUploadedImage] = useState<string | null>(
     null,
   );
+  const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
   const [tempNote, setTempNote] = useState("");
   const [discardOpen, setDiscardOpen] = useState(false);
@@ -99,6 +101,15 @@ export function AppearanceSection({ onBack }: Props) {
     }
 
     setTempUploadedImage(url);
+    setProfileState({ image: url });
+  };
+
+  const handleMediaSelect = async (url: string) => {
+    setError(null);
+    if (tempUploadedImage) {
+      await deleteMedia(tempUploadedImage);
+      setTempUploadedImage(null);
+    }
     setProfileState({ image: url });
   };
 
@@ -170,17 +181,14 @@ export function AppearanceSection({ onBack }: Props) {
 
       <S.AppearanceSectionBody>
         <S.BasicInfoFields>
-          <div className="avatar-field" style={{ cursor: "pointer" }}>
-            <label htmlFor="appearance-avatar-input">
-              <AvatarUploadField
-                src={image || null}
-                alt="Avatar"
-                note={note || ""}
-                onNoteClick={openNoteDialog}
-              />
-            </label>
+          <div className="avatar-field" style={{ cursor: "pointer" }} onClick={() => setAvatarDialogOpen(true)}>
+            <AvatarUploadField
+              src={image || null}
+              alt="Avatar"
+              note={note || ""}
+              onNoteClick={openNoteDialog}
+            />
             <input
-              id="appearance-avatar-input"
               ref={fileInputRef}
               type="file"
               hidden
@@ -234,6 +242,13 @@ export function AppearanceSection({ onBack }: Props) {
           {loading ? "Saving..." : imageUploading ? "Uploading..." : "Save"}
         </S.LandingHeroSaveButton>
       </S.FormActions>
+
+      <AvatarPickerDialog
+        open={avatarDialogOpen}
+        onOpenChange={setAvatarDialogOpen}
+        onUploadSelect={() => fileInputRef.current?.click()}
+        onMediaSelect={handleMediaSelect}
+      />
 
       <AppAlertDialog
         open={noteDialogOpen}

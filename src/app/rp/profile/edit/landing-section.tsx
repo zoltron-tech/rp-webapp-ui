@@ -10,6 +10,7 @@ import {
   MdOutlineBrush,
   MdOutlineInfo,
 } from "react-icons/md";
+import { AvatarPickerDialog } from "@/components/avatar-picker-dialog";
 import { AvatarUploadField } from "@/components/common/avatar-upload-field";
 import { AppAlertDialog } from "@/components/dialog";
 import { useGlobalState } from "@/context/store/stores";
@@ -49,6 +50,7 @@ export function LandingSection({ onSelect }: Props) {
   const [tempUploadedImage, setTempUploadedImage] = useState<string | null>(
     null,
   );
+  const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
   const [discardDialogOpen, setDiscardDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -73,7 +75,16 @@ export function LandingSection({ onSelect }: Props) {
     (image ?? "") !== originalRef.current.image;
 
   const handleAvatarClick = () => {
-    fileInputRef.current?.click();
+    setAvatarDialogOpen(true);
+  };
+
+  const handleMediaSelect = async (url: string) => {
+    setError(null);
+    if (tempUploadedImage) {
+      await deleteMedia(tempUploadedImage);
+      setTempUploadedImage(null);
+    }
+    setProfileState({ image: url });
   };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -204,6 +215,12 @@ export function LandingSection({ onSelect }: Props) {
           hidden
           accept="image/*"
           onChange={handleAvatarChange}
+        />
+        <AvatarPickerDialog
+          open={avatarDialogOpen}
+          onOpenChange={setAvatarDialogOpen}
+          onUploadSelect={() => fileInputRef.current?.click()}
+          onMediaSelect={handleMediaSelect}
         />
         <S.LandingHeroEditRow>
           <S.LandingHeroNameRow>

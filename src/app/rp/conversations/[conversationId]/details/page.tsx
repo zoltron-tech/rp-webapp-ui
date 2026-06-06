@@ -8,9 +8,12 @@ import { AvatarNew } from "@/components/common/avatar-new";
 import { EmailVerifiedBadge } from "@/components/common/email-verified-badge";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Conversation } from "@/types";
+import type { Conversation, ConversationParticipant } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
-import { getConversationByIdAction } from "../actions";
+import {
+  getConversationByIdAction,
+  getConversationMembersAction,
+} from "../actions";
 import * as S from "./styles";
 
 export default function ConversationDetailsPage() {
@@ -33,6 +36,10 @@ export default function ConversationDetailsPage() {
   const [conversation, setConversation] = useState<Conversation | null>(
     cachedRef.current,
   );
+  const [members, setMembers] = useState<ConversationParticipant[]>(
+    cachedRef.current?.members ?? [],
+  );
+  const [membersLoading, setMembersLoading] = useState(true);
 
   const fetchConversation = useCallback(async () => {
     if (!conversationId) return;
@@ -40,10 +47,19 @@ export default function ConversationDetailsPage() {
     if (result && "id" in result) setConversation(result as Conversation);
   }, [conversationId]);
 
+  const fetchMembers = useCallback(async () => {
+    if (!conversationId) return;
+    setMembersLoading(true);
+    const result = await getConversationMembersAction(conversationId);
+    if (Array.isArray(result)) setMembers(result);
+    setMembersLoading(false);
+  }, [conversationId]);
+
   useEffect(() => {
     stopPageLoading();
     fetchConversation();
-  }, [fetchConversation, stopPageLoading]);
+    fetchMembers();
+  }, [fetchConversation, fetchMembers, stopPageLoading]);
 
   const targetDisplayName = useMemo(() => {
     if (!conversation) return "";
@@ -104,46 +120,57 @@ export default function ConversationDetailsPage() {
         </S.HeaderInfo>
       </S.Header>
 
-      {conversation?.members && conversation.members.length > 0 && (
+      {(membersLoading || members.length > 0) && (
         <S.Section>
           <S.SectionTitle>
-            Members ({conversation.members.length})
+            {membersLoading ? "Members" : `Members (${members.length})`}
           </S.SectionTitle>
           <S.MembersList>
-            {conversation.members.map((member) => (
-              <S.MemberRow
-                key={member.novelistId}
-                type="button"
-                onClick={() =>
-                  routeToPage(ROUTES.Profile.View(member.userName).Index)
-                }
-              >
-                <AvatarNew
-                  src={member.image}
-                  alt={
-                    `${member.firstName} ${member.lastName}`.trim() ||
-                    member.userName
-                  }
-                  username={member.userName}
-                />
-                <S.MemberInfo>
-                  <S.MemberNameRow>
-                    <S.MemberName>
-                      {`${member.firstName} ${member.lastName}`.trim() ||
-                        member.userName}
-                    </S.MemberName>
-                    {member.isVerified &&
-                      (member.userName === "novelistworld" ? (
-                        <AdminBadge size={20} />
-                      ) : (
-                        <EmailVerifiedBadge size={14} />
-                      ))}
-                  </S.MemberNameRow>
-                  <S.MemberUsername>@{member.userName}</S.MemberUsername>
-                </S.MemberInfo>
-                {member.role && <S.MemberRole>{member.role}</S.MemberRole>}
-              </S.MemberRow>
-            ))}
+            {membersLoading
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <S.MemberRowSkeleton key={`member-skeleton-${i}`}>
+                    <S.SkeletonAvatar />
+                    <S.SkeletonLines>
+                      <S.SkeletonLine $width="42%" $height="13px" />
+                      <S.SkeletonLine $width="28%" $height="11px" />
+                    </S.SkeletonLines>
+                  </S.MemberRowSkeleton>
+                ))
+              : members.map((member) => (
+                  <S.MemberRow
+                    key={member.novelistId}
+                    type="button"
+                    onClick={() =>
+                      routeToPage(ROUTES.Profile.View(member.userName).Index)
+                    }
+                  >
+                    <AvatarNew
+                      src={member.image}
+                      alt={
+                        `${member.firstName} ${member.lastName}`.trim() ||
+                        member.userName
+                      }
+                      username={member.userName}
+                      nwImage={member.avatar}
+                    />
+                    <S.MemberInfo>
+                      <S.MemberNameRow>
+                        <S.MemberName>
+                          {`${member.firstName} ${member.lastName}`.trim() ||
+                            member.userName}
+                        </S.MemberName>
+                        {member.isVerified &&
+                          (member.userName === "novelistworld" ? (
+                            <AdminBadge size={20} />
+                          ) : (
+                            <EmailVerifiedBadge size={14} />
+                          ))}
+                      </S.MemberNameRow>
+                      <S.MemberUsername>@{member.userName}</S.MemberUsername>
+                    </S.MemberInfo>
+                    {member.role && <S.MemberRole>{member.role}</S.MemberRole>}
+                  </S.MemberRow>
+                ))}
           </S.MembersList>
         </S.Section>
       )}

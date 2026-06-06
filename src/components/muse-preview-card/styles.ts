@@ -195,8 +195,8 @@ export const PennedByLabel = styled.span`
 `;
 
 export const PennedByUsername = styled.span<{ $accent?: string | null }>`
-  font-size: 0.56rem;
-  font-weight: 600;
+  font-size: var(--font-size-xsmall);
+  font-weight: var(--font-weight-bold);
   color: ${(p) =>
     p.$accent
       ? `color-mix(in srgb, ${p.$accent} 90%, white)`

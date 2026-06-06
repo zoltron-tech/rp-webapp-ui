@@ -15,6 +15,10 @@ import { MdGif } from "react-icons/md";
 import { deleteMedia, uploadMedia } from "@/app/rp/profile/actions";
 import { AppAlertDialog } from "@/components/dialog";
 import { GifPicker } from "@/components/gif-picker";
+import {
+  MediaTray,
+  type TrayTab,
+} from "@/components/send-message-composer/media-tray";
 import { API_MESSAGE } from "@/utils/constants";
 import { PromptEvent, useRunOn } from "./helpers";
 import {
@@ -23,6 +27,19 @@ import {
 } from "./prompt-input.store";
 import * as S from "./styles";
 
+/** Tracks whether the viewport is at a mobile width. */
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return isMobile;
+};
+
 export const PromptMediaInput: FC = () => {
   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
   const mediaUploadError = usePromptInputState("mediaUploadError");
@@ -30,7 +47,27 @@ export const PromptMediaInput: FC = () => {
   const mediaUploading = usePromptInputState("mediaUploading");
   const set = usePromptInputStoreSet();
 
+  const isMobile = useIsMobile();
   const [showGifPicker, setShowGifPicker] = useState(false);
+  const [trayTab, setTrayTab] = useState<TrayTab | null>(null);
+  const keyboardHeightRef = useRef(320);
+  const [keyboardHeight, setKeyboardHeight] = useState(320);
+
+  // Capture the soft-keyboard height so the tray matches it.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const onResize = () => {
+      const gap = window.innerHeight - vv.height;
+      if (gap > 100) {
+        keyboardHeightRef.current = gap;
+        setKeyboardHeight(gap);
+      }
+    };
+    onResize();
+    vv.addEventListener("resize", onResize);
+    return () => vv.removeEventListener("resize", onResize);
+  }, []);
 
   const urlInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -129,9 +166,18 @@ export const PromptMediaInput: FC = () => {
     (gifUrl: string) => {
       set({ gifToInsert: gifUrl });
       setShowGifPicker(false);
+      setTrayTab(null);
     },
     [set],
   );
+
+  const handleGifButtonClick = useCallback(() => {
+    if (isMobile) {
+      setTrayTab((prev) => (prev === "gif" ? null : "gif"));
+    } else {
+      setShowGifPicker(true);
+    }
+  }, [isMobile]);
 
   return (
     <>
@@ -156,21 +202,36 @@ export const PromptMediaInput: FC = () => {
         <S.ToolButton
           type="button"
           aria-label="Insert GIF"
-          onClick={() => setShowGifPicker(true)}
+          onClick={handleGifButtonClick}
         >
           <MdGif />
         </S.ToolButton>
 
-        <AppAlertDialog
-          heading="Insert GIF"
-          text=""
-          body={<GifPicker onSelect={handleGifSelect} />}
-          open={showGifPicker}
-          onOpenChange={setShowGifPicker}
-          showConfirm={false}
-          closeButtonText="Close"
-        />
+        {/* Desktop: dialog */}
+        {!isMobile && (
+          <AppAlertDialog
+            heading="Insert GIF"
+            text=""
+            body={<GifPicker onSelect={handleGifSelect} />}
+            open={showGifPicker}
+            onOpenChange={setShowGifPicker}
+            showConfirm={false}
+            closeButtonText="Close"
+          />
+        )}
       </S.MediaActions>
+
+      {/* Mobile: bottom tray */}
+      {isMobile && (
+        <MediaTray
+          tab={trayTab}
+          tabs={["gif"]}
+          keyboardHeight={keyboardHeight}
+          onTabChange={setTrayTab}
+          onRequestKeyboard={() => setTrayTab(null)}
+          onSelectGif={handleGifSelect}
+        />
+      )}
 
       <Form.Field hidden name="mediaUrl">
         <Form.Control asChild>

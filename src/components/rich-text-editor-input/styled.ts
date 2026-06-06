@@ -1002,22 +1002,60 @@ export const ContentWrapper = styled.div<{ $animating: boolean }>`
   ${({ $animating }) => $animating && "will-change: max-height;"}
 `;
 
-export const ImageResizeBar = styled.div`
+export const ImageControlsWrapper = styled.div`
   position: absolute;
   z-index: 200;
   left: 5%;
   width: 90%;
   transform: translateY(-100%);
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  flex-direction: column;
   background-color: var(--bg-3);
   border: 1px solid var(--bg-6);
   border-radius: 0.5rem;
-  padding: 0.3rem 0.75rem;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
   user-select: none;
   pointer-events: all;
+  overflow: hidden;
+`;
+
+export const ImagePositionBar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-bottom: 1px solid var(--bg-5);
+`;
+
+export const ImageAlignButton = styled.button<{ $active?: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.25rem;
+  border: none;
+  background: ${(p) => (p.$active ? "var(--accent)" : "transparent")};
+  color: ${(p) => (p.$active ? "#fff" : "var(--text-secondary)")};
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: ${(p) =>
+      p.$active
+        ? "var(--accent)"
+        : "var(--bg-5)"};
+    color: ${(p) => (p.$active ? "#fff" : "var(--text)")};
+  }
+`;
+
+export const ImageResizeBar = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.3rem 0.75rem;
 `;
 
 export const ImageResizeLabel = styled.span`

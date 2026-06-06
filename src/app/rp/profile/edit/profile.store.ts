@@ -3,6 +3,7 @@ import {
   useStoreSet,
   useStoreState,
 } from "@/context/store/use-store";
+import type { NWImage } from "@/types";
 import type { Accent, ThemeType } from "@/types/theme";
 
 export type ProfileState = {
@@ -13,10 +14,14 @@ export type ProfileState = {
   theme: ThemeType;
   about: string | null;
   image: string | null;
+  /** Avatar with crop/position data. When set, used for avatar display
+   *  instead of the plain `image` URL. */
+  avatar: NWImage | null;
 };
 
 export const INITIAL_STATE: ProfileState = {
   about: null,
+  avatar: null,
   firstName: null,
   image: null,
   lastName: null,

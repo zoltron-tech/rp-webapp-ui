@@ -20,15 +20,47 @@ type Props = React.HTMLProps<HTMLDivElement> & {
 };
 
 const videoExtensions = ["mp4"];
-const imageExtensions = ["jpg", "jpeg", "png", "gif"];
+const imageExtensions = ["jpg", "jpeg", "png", "gif", "webp", "avif"];
 const audioExtensions = ["mp3", "mpeg", "wav"];
 
-const getMediaTypeFromUrl = (url: string) => {
-  const extension = url.split(".").pop() || "";
-  if (videoExtensions.includes(extension)) return "video";
-  if (imageExtensions.includes(extension)) return "image";
-  if (audioExtensions.includes(extension)) return "audio";
-  return null;
+const getMediaTypeFromUrl = (
+  url: string,
+): "video" | "image" | "audio" | null => {
+  const checkExtension = (path: string) => {
+    const ext = path.split(".").pop()?.toLowerCase() ?? "";
+    if (imageExtensions.includes(ext)) return "image" as const;
+    if (videoExtensions.includes(ext)) return "video" as const;
+    if (audioExtensions.includes(ext)) return "audio" as const;
+    return null;
+  };
+
+  try {
+    const parsed = new URL(url);
+
+    // Proxy URLs (wsrv.nl, imageproxy, etc.) advertise the output format
+    // in an ?output= param (e.g. output=webp). Check that first.
+    const output = parsed.searchParams.get("output");
+    if (output) {
+      const fromOutput = checkExtension(`.${output}`);
+      if (fromOutput) return fromOutput;
+    }
+
+    // Proxy URLs encode the real asset path in a ?url= param.
+    // Decode it and inspect the file extension of the underlying file.
+    const proxied = parsed.searchParams.get("url");
+    if (proxied) {
+      const proxiedPath = decodeURIComponent(proxied).split("?")[0];
+      const fromProxied = checkExtension(proxiedPath);
+      if (fromProxied) return fromProxied;
+    }
+
+    // Direct URL: inspect the pathname, ignoring query string.
+    return checkExtension(parsed.pathname);
+  } catch {
+    // Fallback for non-standard URL strings.
+    const clean = url.split("?")[0].split("#")[0];
+    return checkExtension(clean);
+  }
 };
 
 export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
@@ -86,9 +118,9 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
     <S.ParentContainer>
       <S.HeaderContainer>
         <S.Avatar
-          className="selectable"
           src={activity.source?.image || ""}
           alt={activity.source.title || "Avatar"}
+          nwImage={activity.source?.avatar}
           onClick={() => onAvatarClick(activity)}
         />
         <S.SourceInfo>

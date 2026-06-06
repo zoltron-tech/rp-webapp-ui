@@ -7,8 +7,9 @@ export const PageContainer = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding-bottom: 30px;
-  border-bottom: 1px solid dimgray;
+  padding: 100px 0px 80px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  container-type: inline-size;
   background-image: 
   linear-gradient(
       rgba(0, 0, 0, 0.09),
@@ -135,52 +136,36 @@ export const MainButton = styled.button`
 export const InfoCard = styled(Container)`
   display: flex;
   flex-direction: column;
-  justify-content: space-evenly;
+  justify-content: flex-start;
   align-items: center;
-  border-radius: var(--border-radius);
-  box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.4);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
   background-color: ${({ theme }: any) =>
-    setOpacity(theme.navbar, 0.3)} !important;
+    setOpacity(theme.navbar, 0.2)} !important;
+  padding: 36px 28px !important;
   cursor: default !important;
+  text-align: center;
 
   @-moz-document url-prefix() {
     backdrop-filter: none !important;
   }
-
-  width: 400px;
-  height: 400px;
-
-  @container (max-width: 1000px) {
-    & {
-      padding: 15px;
-      width: 300px;
-      height: 300px;
-    }
-  }
-
-  @container (max-width: 600px) {
-    & {
-      padding: 10px;
-      width: 250px;
-      height: 250px;
-    }
-  }
 `;
 
 export const CardsContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: space-evenly;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
   margin-top: 60px;
-  margin-bottom: 100px;
-  gap: 20px;
+  margin-bottom: 80px;
+  width: 100%;
+  max-width: 1100px;
 
-  @container (max-width: 800px) {
+  @container (max-width: 900px) {
     & {
-        margin-top: 0px;
-        margin-bottom: 20px;
-        flex-direction: column;
+      grid-template-columns: 1fr;
+      margin-top: 32px;
+      margin-bottom: 40px;
     }
   }
 `;
@@ -198,8 +183,9 @@ export const ButtonsGroupContainer = styled.div`
   flex-direction: row;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
   margin-block: 30px;
-  gap: 2rem;
+  gap: 1.5rem;
 `;
 
 export const ButtonContainer = styled.div`
@@ -233,35 +219,23 @@ export const MainHeading = styled.div`
 `;
 
 export const MainSubtext = styled.div`
-  font-size: var(--font-size-h2);
-  font-weight: 600;
-  color: var(--text);
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 800;
+  color: #ffffff;
   text-align: center;
-  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
-
-  @media screen and (max-width: 640px) {
-    font-size: var(--font-size-h5);
-  }
-
-    @media screen and (max-width: 520px) {
-    font-size: var(--font-size-h6);
-  }
+  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.5);
+  letter-spacing: -1px;
+  line-height: 1.15;
 `;
 
 export const Cardheading = styled.div`
-  font-size: var(--font-size-h4);
-  font-weight: 600;
-  color: var(--text);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #ffffff;
   text-align: center;
-  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
-
-  @media screen and (max-width: 640px) {
-    font-size: var(--font-size-h5);
-  }
-
-    @media screen and (max-width: 520px) {
-    font-size: var(--font-size-h6);
-  }
+  margin-bottom: 12px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.2px;
 `;
 
 export const MuseCarouselContainer = styled.div`
@@ -274,19 +248,34 @@ export const MuseCarouselContainer = styled.div`
 `;
 
 export const Story = styled.div`
-  margin-left: 5px;
-  font-size: var(--font-size-h5);
-  color: var(--text);
+  font-size: clamp(0.92rem, 1.4vw, 1.05rem);
+  color: rgba(255, 255, 255, 0.78);
   font-weight: 400;
-  margin-block: 30px;
-  max-width: 800px;
-  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
+  margin-block: 20px;
+  max-width: 580px;
+  text-align: center;
+  line-height: 1.8;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+`;
+
+export const HeroEyebrow = styled.div`
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 16px;
 
   @media screen and (max-width: 640px) {
-    font-size: var(--font-size);
+    font-size: 0.72rem;
+    text-align: center;
   }
+`;
 
-    @media screen and (max-width: 520px) {
-    font-size: var(--font-size-small);
-  }
+export const HeroContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
 `;

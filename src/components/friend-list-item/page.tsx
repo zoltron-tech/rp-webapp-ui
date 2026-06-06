@@ -44,6 +44,7 @@ export const FriendListItem: FC<Props> = ({ novelist, className, ...rest }) => {
           alt={novelist?.username ?? "Avatar"}
           onClick={onAvatarClick}
           username={novelist?.username}
+          nwImage={novelist?.avatar}
         />
         <S.Info>
           <S.UsernameStyled username={novelist?.username} />

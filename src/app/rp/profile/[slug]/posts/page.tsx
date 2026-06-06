@@ -96,6 +96,7 @@ export default function NovelistPostsPage() {
             <PromptComposeTrigger
               avatarSrc={novelist.image}
               avatarAlt={novelist.username}
+              avatarNwImage={novelist.avatar}
               onClick={() => setComposeOpen(true)}
             />
           </S.PromptInputWrapper>

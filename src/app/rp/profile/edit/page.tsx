@@ -27,6 +27,7 @@ export default function EditProfilePage() {
           storeId="profile"
           initial={{
             about: novelist?.about || "",
+            avatar: novelist?.avatar ?? null,
             firstName: novelist?.firstName || "",
             image: novelist?.image || "",
             lastName: novelist?.lastName || "",

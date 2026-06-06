@@ -92,6 +92,8 @@ export interface NovelistTier {
   storyBoardLimit: number;
   eventLimit: number;
   mediaLimit: number;
+  groupLimit: number;
+  musicLimit: number;
 }
 
 export type Novelist = {
@@ -102,6 +104,7 @@ export type Novelist = {
   lastName: string;
   note: string;
   image: string;
+  avatar: NWImage | null;
   museCount: number;
   palette: number;
   muses: Muse[];
@@ -125,6 +128,7 @@ export interface Friend {
   username: string;
   isVerified: boolean;
   image: string;
+  avatar?: NWImage | null;
   connection: string | null;
   muses: Muse[];
   mutualFriendCount: number;

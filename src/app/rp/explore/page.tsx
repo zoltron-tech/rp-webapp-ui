@@ -224,6 +224,7 @@ export default function ExplorePage() {
         <PromptComposeTrigger
           avatarSrc={novelist.image}
           avatarAlt={novelist.username}
+          avatarNwImage={novelist.avatar}
           onClick={() => setComposeOpen(true)}
         />
       )}

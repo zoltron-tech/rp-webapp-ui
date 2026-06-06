@@ -5,16 +5,19 @@ import {
   type FC,
   type FormEventHandler,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
 import { GrAttachment } from "react-icons/gr";
-import { HiPaperAirplane, HiPhoto } from "react-icons/hi2";
+import { HiPaperAirplane } from "react-icons/hi2";
 import { MdGif } from "react-icons/md";
 import { submitPrompt, uploadMedia } from "@/app/rp/profile/actions";
-import { AppAlertDialog } from "@/components/dialog";
-import { GifPicker } from "@/components/gif-picker";
+import {
+  MediaTray,
+  type TrayTab,
+} from "@/components/send-message-composer/media-tray";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
@@ -65,7 +68,9 @@ const MobileReplyComposerInner: FC<MobileReplyComposerProps> = ({
   onSend,
 }) => {
   const [sending, setSending] = useState(false);
-  const [showGifPicker, setShowGifPicker] = useState(false);
+  const [trayTab, setTrayTab] = useState<TrayTab | null>(null);
+  const keyboardHeightRef = useRef(320);
+  const [keyboardHeight, setKeyboardHeight] = useState(320);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const urlInputRef = useRef<HTMLInputElement>(null);
   const novelist = useGlobalState("novelist");
@@ -75,6 +80,22 @@ const MobileReplyComposerInner: FC<MobileReplyComposerProps> = ({
   const { successToast, errorToast } = useUIContext();
   const setPromptInputState = usePromptInputStoreSet();
   const { emit } = usePromptInputEvents();
+
+  // Capture the soft-keyboard height so the tray matches it.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const onResize = () => {
+      const gap = window.innerHeight - vv.height;
+      if (gap > 100) {
+        keyboardHeightRef.current = gap;
+        setKeyboardHeight(gap);
+      }
+    };
+    onResize();
+    vv.addEventListener("resize", onResize);
+    return () => vv.removeEventListener("resize", onResize);
+  }, []);
 
   const sources = useMemo(() => {
     if (!novelist) return [];
@@ -143,7 +164,7 @@ const MobileReplyComposerInner: FC<MobileReplyComposerProps> = ({
   const handleGifSelect = useCallback(
     (gifUrl: string) => {
       setPromptInputState({ gifToInsert: gifUrl });
-      setShowGifPicker(false);
+      setTrayTab(null);
     },
     [setPromptInputState],
   );
@@ -224,17 +245,6 @@ const MobileReplyComposerInner: FC<MobileReplyComposerProps> = ({
           </Form.Control>
         </Form.Field>
 
-        {/* GIF picker dialog */}
-        <AppAlertDialog
-          heading="Insert GIF"
-          text=""
-          body={<GifPicker onSelect={handleGifSelect} />}
-          open={showGifPicker}
-          onOpenChange={setShowGifPicker}
-          showConfirm={false}
-          closeButtonText="Close"
-        />
-
         {/* ── Meta row: sender + GIF + Image buttons ──────────────────── */}
         <S.MetaRow>
           <S.MuseWrap>
@@ -255,7 +265,9 @@ const MobileReplyComposerInner: FC<MobileReplyComposerProps> = ({
             <S.MediaIconBtn
               type="button"
               title="Insert GIF"
-              onClick={() => setShowGifPicker(true)}
+              onClick={() =>
+                setTrayTab((prev) => (prev === "gif" ? null : "gif"))
+              }
             >
               <MdGif size={16} />
             </S.MediaIconBtn>
@@ -280,6 +292,16 @@ const MobileReplyComposerInner: FC<MobileReplyComposerProps> = ({
         {/* Staged media preview (non-image attachments) */}
         <PromptMediaPreview />
       </Form.Root>
+
+      {/* GIF media tray */}
+      <MediaTray
+        tab={trayTab}
+        tabs={["gif"]}
+        keyboardHeight={keyboardHeight}
+        onTabChange={setTrayTab}
+        onRequestKeyboard={() => setTrayTab(null)}
+        onSelectGif={handleGifSelect}
+      />
     </S.ComposerRoot>
   );
 };

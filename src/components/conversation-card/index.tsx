@@ -208,6 +208,7 @@ export const ConversationCard: FC<ConversationCardProps> = ({
           src={conversation.image ?? null}
           alt={displayName}
           username={otherMember?.userName}
+          nwImage={conversation.isGroup ? undefined : otherMember?.avatar}
         />
         <S.Content>
           <S.ContentMain>

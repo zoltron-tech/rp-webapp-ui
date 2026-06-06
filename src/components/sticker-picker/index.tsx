@@ -6,6 +6,12 @@ import * as S from "./styled";
 
 interface StickerPickerProps {
   onSelect: (stickerUrl: string) => void;
+  /** Autofocus the search input. Disable inside the mobile tray so the
+   *  soft keyboard doesn't reopen. Defaults to true. */
+  autoFocus?: boolean;
+  /** Stretch to fill the parent height (tray) instead of the fixed dialog
+   *  height. Defaults to false. */
+  fill?: boolean;
 }
 
 const useDebounce = (value: string, delay: number) => {
@@ -17,7 +23,11 @@ const useDebounce = (value: string, delay: number) => {
   return debounced;
 };
 
-export const StickerPicker: FC<StickerPickerProps> = ({ onSelect }) => {
+export const StickerPicker: FC<StickerPickerProps> = ({
+  onSelect,
+  autoFocus = true,
+  fill = false,
+}) => {
   const [query, setQuery] = useState("");
   const [stickers, setStickers] = useState<StickerItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,10 +88,10 @@ export const StickerPicker: FC<StickerPickerProps> = ({ onSelect }) => {
   };
 
   return (
-    <S.PickerBody>
+    <S.PickerBody $fill={fill}>
       <S.SearchRow>
         <S.SearchInput
-          autoFocus
+          autoFocus={autoFocus}
           type="text"
           placeholder="Search stickers..."
           value={query}

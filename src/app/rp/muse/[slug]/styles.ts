@@ -39,12 +39,13 @@ export const PennedByMiniAvatar = styled.div<{ $src?: string }>`
 `;
 
 export const PennedByRow = styled.span`
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   color: var(--text-secondary);
-  font-size: 0.85em;
-  font-weight: 400;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
 `;
 
 import { Container } from "@novelist-world/ui";

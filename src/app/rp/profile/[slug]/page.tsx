@@ -26,7 +26,6 @@ import {
   MdOutlineKeyboardDoubleArrowRight,
 } from "react-icons/md";
 import { RiFlagFill } from "react-icons/ri";
-import { TfiLayoutListPost } from "react-icons/tfi";
 import { ContactSupportForm } from "@/components";
 import ActivityBox from "@/components/activity-box";
 import {
@@ -40,9 +39,11 @@ import { NovelistAvatar } from "@/components/common/novelist-avatar";
 import { AppAlertDialog } from "@/components/dialog";
 import { novelistToSource } from "@/components/event-thread-input/helpers";
 import { Image } from "@/components/image-viewer/styled";
+import { LoadMore } from "@/components/load-more/page";
 import { MiniProfileCard } from "@/components/mini-profile-card";
 import MuseListItem from "@/components/muse-list-item";
 import { AppDropdownMenu } from "@/components/profile-more-dropdown";
+import { Prompt as PromptComponent } from "@/components/prompt";
 import { PromptComposeTrigger } from "@/components/prompt-compose-trigger";
 import PromptInput from "@/components/prompt-input";
 import { FullPagePromptInput } from "@/components/prompt-input/full-page-prompt-input";
@@ -52,7 +53,7 @@ import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { Novelist, StoryBoard } from "@/types";
+import type { Novelist, NWImage, Prompt, StoryBoard } from "@/types";
 import type { Activity } from "@/types/activity";
 import { ACCENT_MAP, type Accent } from "@/types/theme";
 import { API_MESSAGE } from "@/utils/constants";
@@ -60,6 +61,7 @@ import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDate } from "@/utils/helpers";
 import { getConversationByUsernameAction } from "../../conversations/actions";
 import { getUserActivities } from "../../home/actions";
+import * as HomeS from "../../home/styles";
 import { getNovelistAction } from "../../novelists/actions";
 import { getAllStoryboardsByUsernameAction } from "../../story/actions";
 import {
@@ -73,12 +75,218 @@ import {
   sendFriendRequest,
   unfriendNovelist,
 } from "../actions";
+import { getPostsByNovelistAction } from "./posts/actions";
 import * as S from "./styles";
+
+const POST_PAGE_SIZE = 20;
+
+function FeedShimmer() {
+  return (
+    <HomeS.FeedShimmerList style={{ alignSelf: "center", width: "95%" }}>
+      {Array.from({ length: 4 }).map((_, i) => (
+        <HomeS.FeedShimmerItem key={i}>
+          <HomeS.ShimmerRow>
+            <HomeS.ShimmerAvatar />
+            <HomeS.ShimmerLines>
+              <HomeS.ShimmerLine $width="48%" $height="13px" />
+              <HomeS.ShimmerLine $width="72%" $height="11px" />
+            </HomeS.ShimmerLines>
+          </HomeS.ShimmerRow>
+          <HomeS.ShimmerBlock $height={i % 2 === 0 ? "110px" : "64px"} />
+          <HomeS.ShimmerLine $width="38%" $height="11px" />
+        </HomeS.FeedShimmerItem>
+      ))}
+    </HomeS.FeedShimmerList>
+  );
+}
+
+function EmptyFeed({
+  tab,
+  username,
+}: {
+  tab: "activities" | "posts";
+  username: string;
+}) {
+  return (
+    <S.EmptyFeedContainer>
+      <svg
+        viewBox="0 0 200 160"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{ height: 128, width: 160 }}
+        aria-hidden="true"
+      >
+        {/* Shadow */}
+        <ellipse cx="100" cy="148" rx="52" ry="6" fill="var(--bg-4)" />
+        {/* Left page */}
+        <path
+          d="M35 50 Q35 45 40 45 L95 45 L95 130 L40 130 Q35 130 35 125 Z"
+          fill="var(--bg-3)"
+          stroke="var(--bg-5)"
+          strokeWidth="1.5"
+        />
+        {/* Right page */}
+        <path
+          d="M165 50 Q165 45 160 45 L105 45 L105 130 L160 130 Q165 130 165 125 Z"
+          fill="var(--bg-3)"
+          stroke="var(--bg-5)"
+          strokeWidth="1.5"
+        />
+        {/* Spine */}
+        <line
+          x1="100"
+          y1="44"
+          x2="100"
+          y2="131"
+          stroke="var(--bg-6)"
+          strokeWidth="2"
+        />
+        {/* Lines — left page */}
+        <line
+          x1="48"
+          y1="62"
+          x2="88"
+          y2="62"
+          stroke="var(--bg-5)"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+        />
+        <line
+          x1="48"
+          y1="73"
+          x2="88"
+          y2="73"
+          stroke="var(--bg-5)"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+        />
+        <line
+          x1="48"
+          y1="84"
+          x2="76"
+          y2="84"
+          stroke="var(--bg-5)"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+        />
+        <line
+          x1="48"
+          y1="95"
+          x2="88"
+          y2="95"
+          stroke="var(--bg-5)"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+        />
+        <line
+          x1="48"
+          y1="106"
+          x2="68"
+          y2="106"
+          stroke="var(--bg-5)"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+        />
+        {/* Lines — right page */}
+        <line
+          x1="112"
+          y1="62"
+          x2="152"
+          y2="62"
+          stroke="var(--bg-5)"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+        />
+        <line
+          x1="112"
+          y1="73"
+          x2="152"
+          y2="73"
+          stroke="var(--bg-5)"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+        />
+        <line
+          x1="112"
+          y1="84"
+          x2="140"
+          y2="84"
+          stroke="var(--bg-5)"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+        />
+        <line
+          x1="112"
+          y1="95"
+          x2="152"
+          y2="95"
+          stroke="var(--bg-5)"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+        />
+        {/* Quill feather */}
+        <path
+          d="M150 6 C137 1 117 19 127 36 C132 44 139 46 139 46 C139 46 142 39 147 34 C154 26 160 13 150 6Z"
+          fill="var(--accent)"
+          opacity="0.45"
+        />
+        <path
+          d="M150 6 C147 14 142 24 139 46"
+          stroke="var(--accent)"
+          strokeWidth="1"
+          strokeLinecap="round"
+          opacity="0.55"
+        />
+        <line
+          x1="139"
+          y1="46"
+          x2="127"
+          y2="63"
+          stroke="var(--accent)"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          opacity="0.5"
+        />
+        {/* Ink drop */}
+        <circle cx="125" cy="65" r="2.5" fill="var(--accent)" opacity="0.35" />
+        {/* Sparkles */}
+        <circle cx="26" cy="36" r="2" fill="var(--accent)" opacity="0.25" />
+        <circle cx="42" cy="20" r="1.5" fill="var(--accent)" opacity="0.4" />
+        <circle cx="22" cy="58" r="1" fill="var(--accent)" opacity="0.2" />
+        <circle cx="172" cy="26" r="1.5" fill="var(--accent)" opacity="0.3" />
+        <circle cx="180" cy="46" r="1" fill="var(--accent)" opacity="0.2" />
+        {/* "?" on right page */}
+        <text
+          x="126"
+          y="118"
+          fontSize="22"
+          fill="var(--bg-6)"
+          fontFamily="Georgia, serif"
+        >
+          ?
+        </text>
+      </svg>
+      <S.EmptyFeedTitle>
+        {tab === "activities" ? "No recent activity" : "No posts yet"}
+      </S.EmptyFeedTitle>
+      <S.EmptyFeedSubtitle>
+        {tab === "activities"
+          ? `${username}'s story is still unfolding. Check back soon.`
+          : `${username} hasn't shared any posts yet. Their tale is yet to be written.`}
+      </S.EmptyFeedSubtitle>
+    </S.EmptyFeedContainer>
+  );
+}
 
 function FriendAvatarItem({
   friend,
 }: {
-  friend: { id: string; image: string; username: string };
+  friend: {
+    id: string;
+    image: string;
+    username: string;
+    avatar?: NWImage | null;
+  };
 }) {
   const isOnline = useIsOnline(friend.username);
   return (
@@ -87,6 +295,7 @@ function FriendAvatarItem({
         image={friend.image}
         name={friend.username}
         username={friend.username}
+        avatar={friend.avatar}
       />
     </span>
   );
@@ -142,6 +351,12 @@ export default function UserProfilePage({}) {
   const { width } = useWindowDimensions();
   const isMobile = (width ?? 0) <= 800;
   const [composeOpen, setComposeOpen] = useState(false);
+  const [feedTab, setFeedTab] = useState<"activities" | "posts">("activities");
+  const [posts, setPosts] = useState<Prompt[] | null>(null);
+  const [postsLoading, setPostsLoading] = useState(false);
+  const [postPage, setPostPage] = useState(1);
+  const [hasMorePosts, setHasMorePosts] = useState(false);
+  const [loadingMorePosts, setLoadingMorePosts] = useState(false);
   const [storyBoards, setStories] = useState<StoryBoard[] | null>(null);
   const setGlobalState = useGlobalStoreSet();
   const { successToast, warningToast, errorToast } = useUIContext();
@@ -213,10 +428,6 @@ export default function UserProfilePage({}) {
 
   const toMusesPage = () => {
     routeToPage(ROUTES.Profile.View(username).Muses);
-  };
-
-  const toPostsPage = () => {
-    routeToPage(ROUTES.Profile.View(username).Posts);
   };
 
   const toStoryBoardsPage = () => {
@@ -536,6 +747,44 @@ export default function UserProfilePage({}) {
     //fetchStoryboards();
   }, [authState]);
 
+  // Fetch posts on demand when the Posts tab is first activated
+  useEffect(() => {
+    const id = novelist?.id;
+    if (feedTab !== "posts" || posts !== null || !id) return;
+    let cancelled = false;
+    const load = async () => {
+      setPostsLoading(true);
+      const data = await baseDataLoader(() =>
+        getPostsByNovelistAction(id, 1, POST_PAGE_SIZE),
+      );
+      if (cancelled) return;
+      setPostsLoading(false);
+      if (!data || "message" in data) return;
+      setPosts(data);
+      setHasMorePosts(data.length >= POST_PAGE_SIZE);
+      setPostPage(1);
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [feedTab, novelist?.id, posts]);
+
+  const loadMorePosts = useCallback(async () => {
+    const id = novelist?.id;
+    if (loadingMorePosts || !id) return;
+    setLoadingMorePosts(true);
+    const nextPage = postPage + 1;
+    const data = await baseDataLoader(() =>
+      getPostsByNovelistAction(id, nextPage, POST_PAGE_SIZE),
+    );
+    setLoadingMorePosts(false);
+    if (!data || "message" in data) return;
+    setHasMorePosts(data.length >= POST_PAGE_SIZE);
+    setPosts((prev) => [...(prev ?? []), ...data]);
+    setPostPage(nextPage);
+  }, [loadingMorePosts, novelist?.id, postPage]);
+
   return (
     <>
       {/* {!startTour && (
@@ -663,11 +912,13 @@ export default function UserProfilePage({}) {
               src={novelist?.image ?? null}
               alt={novelist?.firstName ?? "Avatar"}
               username={novelist?.username}
+              nwImage={novelist?.avatar}
             />
             <S.AvatarMobile
               src={novelist?.image ?? null}
               alt="profile-picture"
               username={novelist?.username}
+              nwImage={novelist?.avatar}
             />
             <ShouldRender
               if={novelist?.note !== undefined && novelist?.note?.length > 0}
@@ -863,6 +1114,7 @@ export default function UserProfilePage({}) {
                       image={friend.image}
                       name={friend.username}
                       username={friend.username}
+                      avatar={friend.avatar}
                     />
                   ))}
                 </S.MutualFriendsList>
@@ -951,12 +1203,16 @@ export default function UserProfilePage({}) {
                     <PromptComposeTrigger
                       avatarSrc={userNovelist?.image}
                       avatarAlt={userNovelist?.username ?? "You"}
+                      avatarNwImage={userNovelist?.avatar}
                       onClick={() => setComposeOpen(true)}
                     />
                   ) : (
                     <PromptInput
                       type="prompt"
-                      onSend={refetchAcitivities}
+                      onSend={() => {
+                        if (feedTab === "posts") setPosts(null);
+                        else refetchAcitivities();
+                      }}
                       dropdownSelection="ALL"
                       initialSelection={novelistToSource(novelist)}
                       defaultOpen={true}
@@ -964,32 +1220,56 @@ export default function UserProfilePage({}) {
                   )}
                 </>
               )}
-            <S.SeeMoreLink onClick={toPostsPage}>
-              <span>
-                <TfiLayoutListPost />
-                See posts by {username}
-                <MdOutlineKeyboardDoubleArrowRight />
-              </span>
-            </S.SeeMoreLink>
             <S.SubText>
-              {activities?.length === 0
-                ? ""
-                : authState === "LOGGED_IN" && username === user?.username
-                  ? "Your Updates"
-                  : `Updates by ${username}`}
+              {authState === "LOGGED_IN" && username === user?.username
+                ? "Your Updates"
+                : `Updates by ${username}`}
             </S.SubText>
-            <ShouldRender
-              if={activities !== undefined && activities?.length > 0}
-            >
-              <S.ActivitiesContainer>
-                {activities?.map((activity) => (
-                  <ActivityBox
-                    key={activity?.id}
-                    activity={activity}
-                  ></ActivityBox>
-                ))}
-              </S.ActivitiesContainer>
-            </ShouldRender>
+            <S.FeedTabBar>
+              <S.FeedTab
+                $active={feedTab === "activities"}
+                onClick={() => setFeedTab("activities")}
+              >
+                Activities
+              </S.FeedTab>
+              <S.FeedTab
+                $active={feedTab === "posts"}
+                onClick={() => setFeedTab("posts")}
+              >
+                Posts
+              </S.FeedTab>
+            </S.FeedTabBar>
+            {feedTab === "activities" &&
+              (activities === undefined ? (
+                <FeedShimmer />
+              ) : activities.length > 0 ? (
+                <S.ActivitiesContainer>
+                  {activities.map((activity) => (
+                    <ActivityBox key={activity?.id} activity={activity} />
+                  ))}
+                </S.ActivitiesContainer>
+              ) : (
+                <EmptyFeed tab="activities" username={username} />
+              ))}
+            {feedTab === "posts" &&
+              (postsLoading || posts === null ? (
+                <FeedShimmer />
+              ) : posts.length === 0 ? (
+                <EmptyFeed tab="posts" username={username} />
+              ) : (
+                <>
+                  <S.PostsContainer>
+                    {posts.map((post) => (
+                      <PromptComponent key={post.id} prompt={post} />
+                    ))}
+                  </S.PostsContainer>
+                  <LoadMore
+                    hasMore={hasMorePosts}
+                    loadingMore={loadingMorePosts}
+                    onLoadMore={loadMorePosts}
+                  />
+                </>
+              ))}
           </S.ContentInner>
         </S.ContentRight>
       </S.Content>
@@ -1005,7 +1285,8 @@ export default function UserProfilePage({}) {
           className="compose-fp-inner"
           onBack={() => setComposeOpen(false)}
           onSend={() => {
-            refetchAcitivities();
+            if (feedTab === "posts") setPosts(null);
+            else refetchAcitivities();
             setComposeOpen(false);
           }}
         />

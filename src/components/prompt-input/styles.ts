@@ -830,8 +830,13 @@ export const MuseDialogList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0;
-  height: 300px;
+  height: min(300px, 52dvh);
   overflow-y: auto;
+  /* Explicitly claim vertical touch gestures so the browser starts the
+     scroll immediately without deferring to any parent swipe handler. */
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 0 2px 4px;
 
   scrollbar-width: thin;

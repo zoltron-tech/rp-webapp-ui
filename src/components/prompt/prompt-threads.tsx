@@ -50,7 +50,7 @@ export const PromptThreads: FC = () => {
   const setGlobalState = useGlobalStoreSet();
   const [showCommentOverlay, setShowCommentOverlay] = useState(false);
   const [overlayClosing, setOverlayClosing] = useState(false);
-  const swipeTouchStartX = useRef<number | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   const closeOverlay = useCallback(() => {
     setOverlayClosing(true);
@@ -130,6 +130,39 @@ export const PromptThreads: FC = () => {
     };
   }, [showCommentOverlay]);
 
+  // Swipe-right-to-dismiss, attached as NATIVE listeners on the panel node.
+  // Using native listeners (instead of React synthetic onTouch* props) means
+  // touches inside the muse-select dialog — which Radix portals to
+  // document.body, a DOM sibling of the panel — never reach this handler.
+  // React synthetic events would otherwise bubble across the portal through the
+  // React tree and let the panel intercept the dialog's touch gestures,
+  // breaking its internal scrolling.
+  useEffect(() => {
+    const el = panelRef.current;
+    if (!showCommentOverlay || !el) return;
+    let startX: number | null = null;
+    const onTouchStart = (e: TouchEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest("[data-no-swipe]")) {
+        startX = null;
+        return;
+      }
+      startX = e.touches[0]?.clientX ?? null;
+    };
+    const onTouchEnd = (e: TouchEvent) => {
+      if (startX === null) return;
+      const deltaX = (e.changedTouches[0]?.clientX ?? 0) - startX;
+      startX = null;
+      if (deltaX > 60) closeOverlay();
+    };
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchend", onTouchEnd, { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [showCommentOverlay, closeOverlay]);
+
   const buttonText = useMemo(() => {
     return open
       ? "Hide Threads"
@@ -167,6 +200,7 @@ export const PromptThreads: FC = () => {
             <PromptComposeTrigger
               avatarSrc={initialSelection?.image ?? novelist?.image ?? null}
               avatarAlt={initialSelection?.name ?? novelist?.username ?? "You"}
+              avatarNwImage={initialSelection?.avatar ?? novelist?.avatar}
               onClick={handleAddCommentClick}
               placeholders={
                 isOOCPost ? COMMENT_OOC_PLACEHOLDERS : COMMENT_PLACEHOLDERS
@@ -232,18 +266,9 @@ export const PromptThreads: FC = () => {
         typeof document !== "undefined" &&
         createPortal(
           <div
+            ref={panelRef}
             className={classNames(theme, accent)}
             style={{ display: "contents" }}
-            onTouchStart={(e) => {
-              swipeTouchStartX.current = e.touches[0]?.clientX ?? null;
-            }}
-            onTouchEnd={(e) => {
-              if (swipeTouchStartX.current === null) return;
-              const deltaX =
-                (e.changedTouches[0]?.clientX ?? 0) - swipeTouchStartX.current;
-              swipeTouchStartX.current = null;
-              if (deltaX > 60) closeOverlay();
-            }}
           >
             <CommentS.PageContainer $closing={overlayClosing}>
               <CommentS.HeaderContainer>
@@ -269,7 +294,7 @@ export const PromptThreads: FC = () => {
                 <PromptContent disableCollapse />
               </CommentS.ScrollArea>
               {authState === "LOGGED_IN" && canInteract && (
-                <div onTouchStart={(e) => e.stopPropagation()}>
+                <div data-no-swipe>
                   <MobileReplyComposer
                     parentId={promptId}
                     type="comment"

@@ -83,8 +83,7 @@ export const AvatarWrapper = styled.div`
 export const StyledAvatar = styled(AvatarNew)`
   width: 64px !important;
   height: 64px !important;
-  border: 2px solid var(--bg-2);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 2px var(--bg-2), 0 2px 12px rgba(0, 0, 0, 0.4);
 
   .avatar-image,
   .avatar-fallback {

@@ -33,8 +33,14 @@ interface ChatRichInputProps {
 }
 
 export interface ChatRichInputHandle {
-  /** Insert text at the current cursor position (or append if no selection). */
-  insertText(text: string): void;
+  /** Insert text at the current cursor position (or append if no selection).
+   *  Pass `{ focus: false }` to append at the end without focusing the editor
+   *  (used by the mobile tray so the soft keyboard doesn't pop up). */
+  insertText(text: string, opts?: { focus?: boolean }): void;
+  /** Focus the editor (raises the soft keyboard on mobile). */
+  focus(): void;
+  /** Blur the editor (dismisses the soft keyboard on mobile). */
+  blur(): void;
 }
 
 export const ChatRichInput = forwardRef<
@@ -63,9 +69,23 @@ export const ChatRichInput = forwardRef<
   const savedRangeRef = useRef<Range | null>(null);
 
   useImperativeHandle(ref, () => ({
-    insertText(text: string) {
+    blur() {
+      editorRef.current?.blur();
+    },
+    focus() {
+      editorRef.current?.focus();
+    },
+    insertText(text: string, opts?: { focus?: boolean }) {
       const editor = editorRef.current;
       if (!editor) return;
+
+      // Append-without-focus path: keeps the soft keyboard down (mobile tray).
+      if (opts?.focus === false) {
+        editor.appendChild(document.createTextNode(text));
+        emitChange(editor);
+        return;
+      }
+
       editor.focus();
       const sel = window.getSelection();
       if (!sel) return;

@@ -691,6 +691,7 @@ export default function ThreadPage({}) {
                 museId={reply?.source.sourceId || ""}
                 image={reply?.source.image || ""}
                 name={reply?.source.name || ""}
+                avatar={reply?.source.avatar}
               />
             </ShouldRender>
             <ShouldRender if={reply?.source.sourceType === "NOVELIST"}>
@@ -698,6 +699,7 @@ export default function ThreadPage({}) {
                 username={reply?.source.urlProp || ""}
                 image={reply?.source.image || ""}
                 name={reply?.source.name || ""}
+                avatar={reply?.source.avatar}
               />
             </ShouldRender>
             <S.SourceInfo>
@@ -836,6 +838,7 @@ export default function ThreadPage({}) {
                 museId={comment?.prompt?.source.sourceId || ""}
                 image={comment?.prompt?.source.image || ""}
                 name={comment?.prompt?.source.name || ""}
+                avatar={comment?.prompt?.source.avatar}
               />
             </ShouldRender>
             <ShouldRender
@@ -845,6 +848,7 @@ export default function ThreadPage({}) {
                 username={comment?.prompt?.source.urlProp || ""}
                 image={comment?.prompt?.source.image || ""}
                 name={comment?.prompt?.source.name || ""}
+                avatar={comment?.prompt?.source.avatar}
               />
             </ShouldRender>
             <S.SourceInfo>
@@ -1009,6 +1013,7 @@ export default function ThreadPage({}) {
                 museId={comment?.source.sourceId || ""}
                 image={comment?.source.image || ""}
                 name={comment?.source.name || ""}
+                avatar={comment?.source.avatar}
               />
             </ShouldRender>
             <ShouldRender if={comment?.source.sourceType === "NOVELIST"}>
@@ -1016,6 +1021,7 @@ export default function ThreadPage({}) {
                 username={comment?.source.urlProp || ""}
                 image={comment?.source.image || ""}
                 name={comment?.source.name || ""}
+                avatar={comment?.source.avatar}
               />
             </ShouldRender>
             <S.SourceInfo>

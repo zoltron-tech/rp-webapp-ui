@@ -19,7 +19,11 @@ export const FriendsList = ({ friends }: FriendsListProps) => {
           return (
             <S.Row key={friend.username}>
               <Flex>
-                <AvatarNew src={friend.image} alt={friend.username} />
+                <AvatarNew
+                  src={friend.image}
+                  alt={friend.username}
+                  nwImage={friend.avatar}
+                />
                 <Flex gap={"0.1rem"} justify="center">
                   <S.Name>
                     {friend.firstName} {friend.lastName}

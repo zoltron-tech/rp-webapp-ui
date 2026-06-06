@@ -1,10 +1,10 @@
 import styled from "styled-components";
 
-export const PickerBody = styled.div`
+export const PickerBody = styled.div<{ $fill?: boolean }>`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  height: 480px;
+  height: ${({ $fill }) => ($fill ? "100%" : "480px")};
 `;
 
 export const SearchRow = styled.div`
@@ -36,16 +36,17 @@ export const SearchInput = styled.input`
 `;
 
 export const GifGrid = styled.div`
-  display: flex;
-  flex-direction: column;
-  padding: 0 8px 8px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 4px;
+  padding: 0 8px 8px;
+  width: 100%;
 `;
 
 export const GridOuterScroller = styled.div`
   overflow-y: auto;
-  display: flex;
-  `;
+  flex: 1;
+`;
 
 export const GifCell = styled.button`
   margin-bottom: 6px;
@@ -69,7 +70,40 @@ export const GifCell = styled.button`
 
 export const GifThumb = styled.img`
   width: 100%;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
+  display: block;
+  border-radius: 6px;
+`;
+
+export const LoadMoreRow = styled.div`
+  display: flex;
+  justify-content: center;
+  padding: 12px 8px 8px;
+`;
+
+export const LoadMoreButton = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  background: var(--bg-3);
+  border: 1px solid var(--bg-6);
+  border-radius: 8px;
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 700;
+  font-family: var(--font);
+  font-size: var(--font-size-small);
+  padding: 8px 16px;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--bg-4);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
 `;
 
 export const StatusText = styled.p`

@@ -1,4 +1,4 @@
-import type { Friend } from "./novelist";
+import type { Friend, NWImage } from "./novelist";
 
 export type PrivacyLevel = "PUBLIC" | "FRIENDS" | "ONLY_ME" | "CUSTOM";
 
@@ -60,6 +60,9 @@ export interface PromptSource {
   image: string;
   sourceType: "NOVELIST" | "MUSE";
   urlProp: string;
+  /** Avatar with crop/position data. Present for NOVELIST sources that have
+   *  configured an avatar. Falls back to `image` when absent. */
+  avatar?: NWImage | null;
 }
 
 export type SubmitPromptInput = {

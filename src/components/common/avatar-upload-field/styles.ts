@@ -1,4 +1,10 @@
 import styled from "styled-components";
+import { AvatarNew } from "../avatar-new";
+
+export const Avatar = styled(AvatarNew)`
+  width: 100%;
+  height: 100%;
+`;
 
 export const Wrapper = styled.div`
   position: relative;
@@ -27,6 +33,17 @@ export const CameraOverlay = styled.div`
     width: 16px;
     height: 16px;
   }
+`;
+
+export const AvatarButton = styled.button`
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
 `;
 
 export const NoteBubble = styled.button`

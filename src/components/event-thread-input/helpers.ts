@@ -11,6 +11,7 @@ export enum EventThreadEvent {
 }
 
 export const museToSource = (muse: Muse): PromptSource => ({
+  avatar: muse.avatar,
   image: muse.image || "",
   name: `${muse.firstName} ${muse.lastName}`.trim(),
   sourceId: muse.id || "",
@@ -19,6 +20,7 @@ export const museToSource = (muse: Muse): PromptSource => ({
 });
 
 export const novelistToSource = (novelist: Novelist): PromptSource => ({
+  avatar: novelist.avatar,
   image: novelist.image || "",
   name: `${novelist.firstName} ${novelist.lastName}`.trim(),
   sourceId: novelist.id || "",

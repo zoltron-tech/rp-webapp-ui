@@ -1,3 +1,5 @@
+import type { NWImage } from "./novelist";
+
 export interface Conversation {
   id: string;
   name: string;
@@ -16,6 +18,7 @@ export interface ConversationParticipant {
   lastName: string;
   userName: string;
   image: string;
+  avatar?: NWImage | null;
   role: string;
   isVerified: boolean;
   joinedAt: string;

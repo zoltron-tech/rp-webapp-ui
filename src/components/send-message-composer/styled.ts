@@ -21,6 +21,11 @@ export const Composer = styled.form`
 
 export const ComposerWrapper = styled.div`
   position: relative;
+  /* When the mobile media tray is open we reserve space below the composer
+   * equal to the tray height, lifting the composer to rest just above it.
+   * 0 on desktop / when closed, so there is no visible effect. */
+  margin-bottom: var(--media-tray-height, 0px);
+  transition: margin-bottom 0.28s cubic-bezier(0.32, 0.72, 0, 1);
 `;
 
 export const MediaToolbar = styled.div<{ $open: boolean }>`
@@ -635,4 +640,105 @@ export const SenderSectionLabel = styled.div`
   color: var(--text-secondary);
   pointer-events: none;
   opacity: 0.7;
+`;
+
+/* ─── Mobile media tray (Discord-style bottom sheet) ─────────────────────── */
+
+export const TrayRoot = styled.div<{ $open: boolean; $expanded: boolean }>`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: ${({ $expanded }) =>
+    $expanded
+      ? "calc(100dvh - var(--tray-top-offset, 56px))"
+      : "var(--tray-height, 320px)"};
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-1);
+  border-top: 1px solid var(--bg-6);
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
+  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.32);
+  padding-bottom: env(safe-area-inset-bottom);
+  transform: ${({ $open }) => ($open ? "translateY(0)" : "translateY(100%)")};
+  transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1),
+    height 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform, height;
+`;
+
+export const TrayHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--bg-3);
+`;
+
+export const TrayTabs = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+`;
+
+export const TrayTabPill = styled.button<{ $active: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid
+    ${({ $active }) =>
+      $active
+        ? "color-mix(in srgb, var(--accent) 45%, var(--bg-6))"
+        : "transparent"};
+  background: ${({ $active }) =>
+    $active
+      ? "color-mix(in srgb, var(--accent) 16%, var(--bg-4))"
+      : "var(--bg-3)"};
+  color: ${({ $active }) => ($active ? "var(--accent)" : "var(--text-secondary)")};
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semi-bold);
+  font-family: var(--font);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
+
+export const TrayKeyboardButton = styled.button`
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 10px;
+  background: var(--bg-3);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.12s ease;
+
+  &:hover {
+    background: var(--bg-4);
+  }
+
+  &:active {
+    transform: scale(0.94);
+  }
+`;
+
+export const TrayBody = styled.div`
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 `;

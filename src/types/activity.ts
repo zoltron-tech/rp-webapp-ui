@@ -1,3 +1,5 @@
+import type { NWImage } from "./novelist";
+
 export interface Activity {
   id: string;
   source: ActivitySource;
@@ -18,5 +20,6 @@ export interface ActivitySource {
   title: string;
   sourceType: string;
   image: string;
+  avatar?: NWImage | null;
   urlProp: string;
 }

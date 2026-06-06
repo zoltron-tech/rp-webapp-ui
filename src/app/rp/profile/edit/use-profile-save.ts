@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { updateUserTheme } from "@/app/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
-import type { UpdateNovelistPayload } from "@/types/novelist";
+import type { NWImage, UpdateNovelistPayload } from "@/types/novelist";
 import type { Accent } from "@/types/theme";
 import { updateUserNovelist } from "../../novelists/actions";
 import { useProfileState, useProfileStoreSet } from "./profile.store";
@@ -26,6 +26,7 @@ export function useProfileSave() {
   const firstName = useProfileState("firstName");
   const lastName = useProfileState("lastName");
   const image = useProfileState("image");
+  const avatar = useProfileState("avatar");
   const about = useProfileState("about");
   const note = useProfileState("note");
   const palette = useProfileState("palette");
@@ -35,8 +36,9 @@ export function useProfileSave() {
   const saveNovelist = useCallback(async (): Promise<SaveResult> => {
     const payload: UpdateNovelistPayload = {
       about: about ?? "",
+      avatar: avatar ?? undefined,
       firstName: (firstName ?? "").trim(),
-      image: image ?? undefined,
+      image: avatar?.src ?? image ?? undefined,
       lastName: (lastName ?? "").trim(),
       note: note ?? "",
     };
@@ -62,6 +64,7 @@ export function useProfileSave() {
     });
     setProfileState({
       about: response.about || "",
+      avatar: (response.avatar as NWImage | null) ?? null,
       firstName: response.firstName || "",
       image: response.image || "",
       lastName: response.lastName || "",
@@ -71,6 +74,7 @@ export function useProfileSave() {
     return { ok: true };
   }, [
     about,
+    avatar,
     firstName,
     image,
     lastName,
@@ -114,7 +118,8 @@ export function useProfileSave() {
           (lastName ?? "").trim() !== (novelist?.lastName ?? "") ||
           (about ?? "") !== (novelist?.about ?? "") ||
           (note ?? "") !== (novelist?.note ?? "") ||
-          (image ?? "") !== (novelist?.image ?? ""));
+          (image ?? "") !== (novelist?.image ?? "") ||
+          avatar !== (novelist?.avatar ?? null));
 
       const themeDirty =
         opts.theme && Number(palette) !== Number(user?.palette ?? 0);
@@ -137,6 +142,7 @@ export function useProfileSave() {
     },
     [
       about,
+      avatar,
       firstName,
       image,
       lastName,

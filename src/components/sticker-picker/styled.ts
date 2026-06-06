@@ -1,10 +1,10 @@
 import styled from "styled-components";
 
-export const PickerBody = styled.div`
+export const PickerBody = styled.div<{ $fill?: boolean }>`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  height: 480px;
+  height: ${({ $fill }) => ($fill ? "100%" : "480px")};
 `;
 
 export const SearchRow = styled.div`

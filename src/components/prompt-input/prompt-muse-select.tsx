@@ -121,7 +121,11 @@ export const PromptMuseSelect: FC<Props> = forwardRef(
           title={source?.name.split(" ")[0] ?? "Select"}
           onClick={() => setDialogOpen(true)}
         >
-          <AvatarNew src={source?.image ?? null} alt={source?.name ?? ""} />
+          <AvatarNew
+            src={source?.image ?? null}
+            alt={source?.name ?? ""}
+            nwImage={source?.avatar}
+          />
           <span className="trigger-name">{source?.name.split(" ")[0]}</span>
           <span className="trigger-caret">
             <MdOutlineKeyboardArrowDown size={14} />
@@ -217,7 +221,11 @@ const SourceRow: FC<{
     $active={isActive}
     onClick={() => onSelect(source)}
   >
-    <AvatarNew src={source.image ?? null} alt={source.name ?? ""} />
+    <AvatarNew
+      src={source.image ?? null}
+      alt={source.name ?? ""}
+      nwImage={source.avatar}
+    />
     <S.MuseDialogSourceInfo>
       <S.MuseDialogSourceName>{source.name}</S.MuseDialogSourceName>
       <S.MuseDialogTypeBadge $novelist={source.sourceType === "NOVELIST"}>

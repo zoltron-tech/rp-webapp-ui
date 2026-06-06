@@ -2,7 +2,7 @@
 
 import getConfig from "next/config";
 import { getJWTIfExists } from "@/app/actions";
-import type { Conversation, Message } from "@/types";
+import type { Conversation, ConversationParticipant, Message } from "@/types";
 import type { DataType } from "@/types/common";
 import type { MentionDataItem } from "@/types/novelist";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
@@ -38,6 +38,32 @@ export const getConversationByIdAction = async (
     conversations.find((conversation) => conversation.id === conversationId) ||
     null
   );
+};
+
+export const getConversationMembersAction = async (
+  conversationId: string,
+  page = 1,
+  pageSize = 20,
+): Promise<DataType<ConversationParticipant[]>> => {
+  const headers = await getAuthHeaders();
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/conversation/${encodeURIComponent(conversationId)}/members?pageNumber=${page}&pageSize=${pageSize}`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers,
+  });
+
+  Logger.debug("getConversationMembersAction", response.status);
+
+  if (response.status === 404) {
+    return [];
+  } else if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const members: ConversationParticipant[] = await response.json();
+  return members;
 };
 
 export const getConversationMessagesAction = async (

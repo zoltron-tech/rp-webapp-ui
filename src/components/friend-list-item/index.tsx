@@ -32,6 +32,7 @@ export const FriendListItem: FC<Props> = ({ friend }) => {
           alt={friend.firstName}
           name={`${friend.firstName} ${friend.lastName}`}
           username={friend.username}
+          nwImage={friend.avatar}
         />
         <S.Info>
           <S.Title>

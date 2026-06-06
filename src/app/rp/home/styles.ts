@@ -281,6 +281,10 @@ export const PartitionContainer = styled.div`
     }
   }
 
+  @media screen and (max-width: 800px) {
+    padding-left: 12px;
+  }
+
   @container (max-width: 1200px) {
     & {
       width: 92cqw;

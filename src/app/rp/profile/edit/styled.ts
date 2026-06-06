@@ -1322,3 +1322,94 @@ export const AppearanceFieldLabel = styled.label`
   text-transform: uppercase;
   letter-spacing: 0.5px;
 `;
+
+// ── Avatar crop dialog ───────────────────────────────────────────────────────
+
+export const AvatarCropBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 12px;
+`;
+
+/** Circular viewport that clips the image preview */
+export const AvatarCropViewport = styled.div`
+  position: relative;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  background-color: var(--bg-1);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  align-self: center;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  @media (max-width: 460px) {
+    width: clamp(140px, 44vw, 180px);
+    height: clamp(140px, 44vw, 180px);
+  }
+`;
+
+/** Background-image layer that moves around inside the viewport */
+export const AvatarCropImage = styled.div<{
+  $src: string;
+  $x: number;
+  $y: number;
+  $scale: number;
+}>`
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url(${({ $src }) => $src});
+  background-repeat: no-repeat;
+  background-size: ${({ $scale }) => $scale * 100}% auto;
+  background-position: ${({ $x, $y }) => `${$x}% ${$y}%`};
+  pointer-events: none;
+`;
+
+export const AvatarCropScaleRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+
+  label {
+    font-family: var(--font);
+    font-size: 11px;
+    color: var(--text-secondary);
+    min-width: 62px;
+    flex-shrink: 0;
+    display: flex;
+    gap: 4px;
+  }
+
+  .value {
+    font-family: var(--font);
+    font-size: 11px;
+    font-weight: var(--font-weight-bold);
+    color: var(--text);
+    min-width: 32px;
+    text-align: right;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  input[type="range"] {
+    flex: 1;
+    height: 16px;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+  }
+`;

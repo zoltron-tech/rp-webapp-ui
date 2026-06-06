@@ -12,6 +12,7 @@ import { Button, EmailVerifiedBadge, ShouldRender } from "@/components/common";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
+import type { NWImage } from "@/types/novelist";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styles";
@@ -31,6 +32,7 @@ type NovelistPreview = {
   lastName: string | null;
   username: string;
   image: string;
+  avatar?: NWImage | null;
   isVerified: boolean;
   connection: string | null;
   muses?: MusePreview[];
@@ -227,6 +229,7 @@ export const NovelistPreviewCard: FC<Props> = ({ novelist }) => {
             username={novelist.username}
             className="selectable"
             onClick={onVisitProfile}
+            nwImage={novelist.avatar}
           />
           <ShouldRender if={novelist.isVerified}>
             <S.VerifiedBadgeWrapper>

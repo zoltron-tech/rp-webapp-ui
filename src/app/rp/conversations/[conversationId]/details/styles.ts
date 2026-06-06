@@ -1,8 +1,13 @@
-import styled, { keyframes } from "styled-components";
+import styled, { css, keyframes } from "styled-components";
 
 const slideInFromRight = keyframes`
   from { transform: translateX(30px); opacity: 0; }
   to   { transform: translateX(0);    opacity: 1; }
+`;
+
+const shimmerMove = keyframes`
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 `;
 
 export const Container = styled.div`
@@ -171,4 +176,51 @@ export const MemberRole = styled.span`
   padding: 2px 8px;
   flex-shrink: 0;
   text-transform: capitalize;
+`;
+
+const shimmer = css`
+  background: linear-gradient(
+    90deg,
+    var(--bg-3) 25%,
+    var(--bg-4) 50%,
+    var(--bg-3) 75%
+  );
+  background-size: 200% 100%;
+  animation: ${shimmerMove} 1.4s infinite;
+`;
+
+export const MemberRowSkeleton = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  width: 100%;
+  border-bottom: 1px solid var(--bg-6);
+
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+export const SkeletonAvatar = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  ${shimmer}
+`;
+
+export const SkeletonLines = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+`;
+
+export const SkeletonLine = styled.div<{ $width?: string; $height?: string }>`
+  height: ${({ $height }) => $height ?? "12px"};
+  width: ${({ $width }) => $width ?? "100%"};
+  border-radius: 6px;
+  ${shimmer}
 `;

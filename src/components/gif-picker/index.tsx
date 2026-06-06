@@ -1,14 +1,18 @@
 "use client";
 
-import { type FC, useEffect, useMemo, useState } from "react";
+import { type FC, useEffect, useState } from "react";
 import type { GifItem } from "@/pages/api/klipy-gifs";
 import * as S from "./styled";
 
 interface GifPickerProps {
   onSelect: (gifUrl: string) => void;
+  /** Autofocus the search input. Disable inside the mobile tray so the
+   *  soft keyboard doesn't reopen. Defaults to true. */
+  autoFocus?: boolean;
+  /** Stretch to fill the parent height (tray) instead of the fixed dialog
+   *  height. Defaults to false. */
+  fill?: boolean;
 }
-const GIF_COLUMNS = 3;
-
 const useDebounce = (value: string, delay: number) => {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
@@ -18,7 +22,11 @@ const useDebounce = (value: string, delay: number) => {
   return debounced;
 };
 
-export const GifPicker: FC<GifPickerProps> = ({ onSelect }) => {
+export const GifPicker: FC<GifPickerProps> = ({
+  onSelect,
+  autoFocus = true,
+  fill = false,
+}) => {
   const [query, setQuery] = useState("");
   const [gifItems, setGifItems] = useState<GifItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,21 +84,11 @@ export const GifPicker: FC<GifPickerProps> = ({ onSelect }) => {
     }
   };
 
-  const groupedGifs = useMemo(() => {
-    if (gifItems.length === 0) return [];
-    const gifsPerColumn = Math.ceil(gifItems.length / GIF_COLUMNS);
-    const grouped: GifItem[][] = [];
-    for (let i = 0; i < gifItems.length; i += gifsPerColumn) {
-      grouped.push(gifItems.slice(i, i + gifsPerColumn));
-    }
-    return grouped;
-  }, [gifItems]);
-
   return (
-    <S.PickerBody>
+    <S.PickerBody $fill={fill}>
       <S.SearchRow>
         <S.SearchInput
-          autoFocus
+          autoFocus={autoFocus}
           type="text"
           placeholder="Search GIFs..."
           value={query}
@@ -101,60 +99,38 @@ export const GifPicker: FC<GifPickerProps> = ({ onSelect }) => {
       <S.GridOuterScroller>
         {loading ? (
           <S.StatusText>Loading...</S.StatusText>
-        ) : groupedGifs.length === 0 ? (
+        ) : gifItems.length === 0 ? (
           <S.StatusText>No GIFs found</S.StatusText>
         ) : (
-          <div
-            style={{ display: "flex", flexDirection: "column", width: "100%" }}
-          >
-            <div style={{ display: "flex" }}>
-              {groupedGifs.map((gifcolumn) => (
-                <S.GifGrid key={gifcolumn[0].id}>
-                  {gifcolumn.map((gif) => (
-                    <S.GifCell
-                      key={gif.id}
-                      type="button"
-                      title={gif.title}
-                      onClick={() => onSelect(gif.gifUrl)}
-                    >
-                      <S.GifThumb
-                        src={gif.previewUrl}
-                        alt={gif.title}
-                        loading="lazy"
-                      />
-                    </S.GifCell>
-                  ))}
-                </S.GifGrid>
+          <>
+            <S.GifGrid>
+              {gifItems.map((gif) => (
+                <S.GifCell
+                  key={gif.id}
+                  type="button"
+                  title={gif.title}
+                  onClick={() => onSelect(gif.gifUrl)}
+                >
+                  <S.GifThumb
+                    src={gif.previewUrl}
+                    alt={gif.title}
+                    loading="lazy"
+                  />
+                </S.GifCell>
               ))}
-            </div>
+            </S.GifGrid>
             {hasMore && (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  padding: "12px 8px 8px",
-                }}
-              >
-                <button
+              <S.LoadMoreRow>
+                <S.LoadMoreButton
                   type="button"
                   onClick={handleLoadMore}
                   disabled={loadingMore}
-                  style={{
-                    background: "var(--bg-3)",
-                    border: "1px solid var(--bg-6)",
-                    borderRadius: "8px",
-                    color: "var(--text)",
-                    cursor: loadingMore ? "not-allowed" : "pointer",
-                    fontWeight: 700,
-                    opacity: loadingMore ? 0.7 : 1,
-                    padding: "8px 12px",
-                  }}
                 >
                   {loadingMore ? "Loading..." : "Load more"}
-                </button>
-              </div>
+                </S.LoadMoreButton>
+              </S.LoadMoreRow>
             )}
-          </div>
+          </>
         )}
       </S.GridOuterScroller>
     </S.PickerBody>

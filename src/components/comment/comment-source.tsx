@@ -122,6 +122,7 @@ export const CommentSource: FC = () => {
           museId={source.sourceId}
           image={source.image}
           name={source.name}
+          avatar={source.avatar}
         />
       </ShouldRender>
       <ShouldRender if={source.sourceType === "NOVELIST"}>
@@ -129,6 +130,7 @@ export const CommentSource: FC = () => {
           username={source.urlProp}
           image={source.image}
           name={source.name}
+          avatar={source.avatar}
         />
       </ShouldRender>
       <S.Source.Info>

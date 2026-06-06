@@ -24,6 +24,7 @@ import { useUploadMedia } from "@/hooks/use-upload-media";
 import type { MentionDataItem, Muse, Novelist } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { Flex } from "../edit-muse-card/styles";
+import { MediaTray, type TrayTab } from "./media-tray";
 import * as S from "./styled";
 import { EmojiPickerGlobalStyle } from "./styled";
 
@@ -219,6 +220,20 @@ const museToSender = (m: Muse): ComposerSender => ({
   type: "MUSE",
 });
 
+/** Tracks whether the viewport is at a mobile/tablet width. Used to decide
+ *  between the desktop dialog pickers and the mobile bottom tray. */
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return isMobile;
+};
+
 const SenderRow: FC<{
   sender: ComposerSender;
   isActive: boolean;
@@ -277,6 +292,72 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const chatInputRef = useRef<ChatRichInputHandle>(null);
   const [search, setSearch] = useState("");
+
+  // ── Mobile bottom tray (Discord-style) ─────────────────────────────────────
+  const isMobile = useIsMobile();
+  const [trayTab, setTrayTab] = useState<TrayTab | null>(null);
+  const [trayExpanded, setTrayExpanded] = useState(false);
+  const keyboardHeightRef = useRef(320);
+  const [keyboardHeight, setKeyboardHeight] = useState(320);
+
+  const trayTabs = useMemo<TrayTab[]>(() => {
+    const list: TrayTab[] = [];
+    if (onSendGif) list.push("gif");
+    if (onSendSticker) list.push("sticker");
+    if (onSendClip) list.push("clip");
+    return list;
+  }, [onSendGif, onSendSticker, onSendClip]);
+
+  // Remember the soft-keyboard height so the tray can match it exactly.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const onResize = () => {
+      const gap = window.innerHeight - vv.height;
+      if (gap > 100) {
+        keyboardHeightRef.current = gap;
+        setKeyboardHeight(gap);
+      }
+    };
+    onResize();
+    vv.addEventListener("resize", onResize);
+    return () => vv.removeEventListener("resize", onResize);
+  }, []);
+
+  // While the tray is open reserve matching space below the composer so it
+  // rests just above the tray (see ComposerWrapper `--media-tray-height`).
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty(
+      "--media-tray-height",
+      trayTab ? `${keyboardHeightRef.current}px` : "0px",
+    );
+  }, [trayTab]);
+
+  // Always clear the reserved space when the composer unmounts.
+  useEffect(
+    () => () => {
+      document.documentElement.style.setProperty("--media-tray-height", "0px");
+    },
+    [],
+  );
+
+  const openTray = useCallback((tab: TrayTab) => {
+    // Dismiss the keyboard and any desktop popovers before sliding up.
+    chatInputRef.current?.blur();
+    setEmojiPickerOpen(false);
+    setGifPickerOpen(false);
+    setStickerPickerOpen(false);
+    setClipPickerOpen(false);
+    setTrayTab(tab);
+  }, []);
+
+  // Keyboard button: bring the keyboard back. focus() must run inside the tap
+  // gesture for iOS Safari to honour it.
+  const closeTrayToKeyboard = useCallback(() => {
+    chatInputRef.current?.focus();
+    setTrayTab(null);
+  }, []);
 
   const { uploadMedia } = useUploadMedia();
 
@@ -386,6 +467,16 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
 
   const hasValue = value.trim().length > 0;
 
+  // Hide the media toolbar whenever a picker is open (mobile tray or any of the
+  // desktop popovers/dialogs) so it doesn't show behind/above the open picker.
+  const anyPickerOpen =
+    trayTab !== null ||
+    gifPickerOpen ||
+    stickerPickerOpen ||
+    clipPickerOpen ||
+    imagePickerOpen ||
+    emojiPickerOpen;
+
   const handleSubmit = async (event?: FormEvent<HTMLFormElement>) => {
     event?.preventDefault();
     const hasMedia = mediaFiles.length > 0;
@@ -418,7 +509,13 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
 
   return (
     <>
-      <S.ComposerWrapper>
+      <S.ComposerWrapper
+        style={
+          trayExpanded
+            ? { opacity: 0, pointerEvents: "none", visibility: "hidden" }
+            : undefined
+        }
+      >
         <EmojiPickerGlobalStyle />
         {emojiPickerOpen && (
           <S.EmojiPickerWrap ref={emojiPickerRef}>
@@ -433,7 +530,9 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
             />
           </S.EmojiPickerWrap>
         )}
-        <S.MediaToolbar $open={mediaToolbarOpen || mediaFiles.length > 0}>
+        <S.MediaToolbar
+          $open={(mediaToolbarOpen || mediaFiles.length > 0) && !anyPickerOpen}
+        >
           {mediaFiles.length > 0 ? (
             <S.MediaToolbarPreviewRow>
               {mediaFiles.map(
@@ -503,8 +602,19 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
                   <S.GifButton
                     type="button"
                     title="Send a GIF"
-                    data-active={gifPickerOpen ? "true" : undefined}
+                    data-active={
+                      (isMobile ? trayTab === "gif" : gifPickerOpen)
+                        ? "true"
+                        : undefined
+                    }
+                    onPointerDown={(e) => {
+                      if (isMobile) e.preventDefault();
+                    }}
                     onClick={() => {
+                      if (isMobile) {
+                        openTray("gif");
+                        return;
+                      }
                       setGifPickerOpen((prev) => !prev);
                       setStickerPickerOpen(false);
                       setClipPickerOpen(false);
@@ -517,8 +627,19 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
                   <S.StickerButton
                     type="button"
                     title="Send a sticker"
-                    data-active={stickerPickerOpen ? "true" : undefined}
+                    data-active={
+                      (isMobile ? trayTab === "sticker" : stickerPickerOpen)
+                        ? "true"
+                        : undefined
+                    }
+                    onPointerDown={(e) => {
+                      if (isMobile) e.preventDefault();
+                    }}
                     onClick={() => {
+                      if (isMobile) {
+                        openTray("sticker");
+                        return;
+                      }
                       setStickerPickerOpen((prev) => !prev);
                       setGifPickerOpen(false);
                       setClipPickerOpen(false);
@@ -531,8 +652,19 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
                   <S.ClipButton
                     type="button"
                     title="Send a clip"
-                    data-active={clipPickerOpen ? "true" : undefined}
+                    data-active={
+                      (isMobile ? trayTab === "clip" : clipPickerOpen)
+                        ? "true"
+                        : undefined
+                    }
+                    onPointerDown={(e) => {
+                      if (isMobile) e.preventDefault();
+                    }}
                     onClick={() => {
+                      if (isMobile) {
+                        openTray("clip");
+                        return;
+                      }
                       setClipPickerOpen((prev) => !prev);
                       setGifPickerOpen(false);
                       setStickerPickerOpen(false);
@@ -561,7 +693,9 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
                   title="Insert emoji"
                   data-emoji-toggle
                   data-active={emojiPickerOpen ? "true" : undefined}
-                  onClick={() => setEmojiPickerOpen((prev) => !prev)}
+                  onClick={() => {
+                    setEmojiPickerOpen((prev) => !prev);
+                  }}
                 >
                   <HiFaceSmile color="#f59e0b" size={28} />
                 </S.EmojiButton>
@@ -570,7 +704,14 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
           )}
         </S.MediaToolbar>
 
-        <S.Composer onSubmit={(e) => handleSubmit(e)}>
+        <S.Composer
+          onSubmit={(e) => handleSubmit(e)}
+          onPointerDown={() => {
+            // Tapping the input row closes the tray; the tap itself focuses the
+            // field and raises the keyboard, so we don't focus programmatically.
+            if (trayTab) setTrayTab(null);
+          }}
+        >
           <S.SenderButton
             type="button"
             title={activeSender?.name ?? "Select sender"}
@@ -630,6 +771,44 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
           />
         </S.Composer>
       </S.ComposerWrapper>
+
+      {isMobile && (
+        <MediaTray
+          tab={trayTab}
+          tabs={trayTabs}
+          keyboardHeight={keyboardHeight}
+          onTabChange={(tab) => setTrayTab(tab)}
+          onRequestKeyboard={closeTrayToKeyboard}
+          onSelectGif={
+            onSendGif
+              ? (url) => {
+                  onSendGif(url);
+                  setTrayTab(null);
+                  setMediaToolbarOpen(false);
+                }
+              : undefined
+          }
+          onSelectSticker={
+            onSendSticker
+              ? (url) => {
+                  onSendSticker(url);
+                  setTrayTab(null);
+                  setMediaToolbarOpen(false);
+                }
+              : undefined
+          }
+          onSelectClip={
+            onSendClip
+              ? (url) => {
+                  onSendClip(url);
+                  setTrayTab(null);
+                  setMediaToolbarOpen(false);
+                }
+              : undefined
+          }
+          onExpandedChange={setTrayExpanded}
+        />
+      )}
 
       <AppAlertDialog
         heading="Send as"

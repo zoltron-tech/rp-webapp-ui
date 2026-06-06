@@ -441,7 +441,7 @@ export const InfoText = styled.div`
 `;
 
 export const Avatar = styled(AvatarNew)`
-  border: 8px solid var(--bg-2);
+  box-shadow: 0 0 0 8px var(--bg-2);
   background-color: var(--bg-2);
   margin-top: 30px;
   height: 250px;
@@ -460,7 +460,7 @@ export const Avatar = styled(AvatarNew)`
 `;
 
 export const AvatarMobile = styled(AvatarNew)`
-  border: 5px solid var(--bg-2);
+  box-shadow: 0 0 0 5px var(--bg-2);
   background-color: var(--bg-2);
   margin-top: 20px;
   height: 130px;
@@ -701,4 +701,62 @@ export const FriendsAvatarStack = styled.div`
   .with-outline .avatar {
     outline: 4px solid var(--bg-3);
   }
+`;
+
+export const FeedTabBar = styled.div`
+  display: flex;
+  width: 95%;
+  border-bottom: 1px solid var(--bg-5);
+  margin-top: 8px;
+`;
+
+export const FeedTab = styled.button<{ $active: boolean }>`
+  all: unset;
+  box-sizing: border-box;
+  padding: 10px 20px;
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  color: ${({ $active }) => ($active ? "var(--accent)" : "var(--text-secondary)")};
+  border-bottom: 2px solid ${({ $active }) => ($active ? "var(--accent)" : "transparent")};
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    color: var(--text);
+  }
+`;
+
+export const PostsContainer = styled.div`
+  width: 95%;
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+`;
+
+export const EmptyFeedContainer = styled.div`
+  width: 95%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 20px 44px;
+  gap: 10px;
+`;
+
+export const EmptyFeedTitle = styled.p`
+  margin: 0;
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-bold);
+  color: var(--text);
+  text-align: center;
+`;
+
+export const EmptyFeedSubtitle = styled.p`
+  margin: 0;
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  text-align: center;
+  max-width: 270px;
+  line-height: 1.55;
 `;

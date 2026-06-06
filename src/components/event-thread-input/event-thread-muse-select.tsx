@@ -1,9 +1,10 @@
 import { Flex } from "@novelist-world/ui";
 import classNames from "classnames";
-import { Avatar, Form, Select, Separator } from "radix-ui";
+import { Form, Select } from "radix-ui";
 import { type FC, forwardRef, useState } from "react";
 import { GrRadialSelected } from "react-icons/gr";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
+import { AvatarNew } from "@/components/common/avatar-new";
 import { useGlobalState } from "@/context/store/stores";
 import type { PromptSource } from "@/types";
 import { useEventThreadInputState } from "./event-thread-input.store";
@@ -49,6 +50,7 @@ export const EventThreadMuseSelect: FC<Props> = forwardRef(
                   <MuseAvatar
                     src={source?.image ?? null}
                     alt={`${source?.name}`}
+                    nwImage={source?.avatar}
                   />
                   {source?.name}
                 </div>
@@ -93,26 +95,22 @@ export const EventThreadMuseSelect: FC<Props> = forwardRef(
   },
 );
 
-const MuseAvatar: FC<{ src: string | null; alt: string }> = forwardRef(
-  ({ src, alt, ...rest }, forwardedRef) => {
-    return (
-      <S.MuseAvatarRoot
-        className="muse-avatar"
-        {...rest}
-        ref={forwardedRef as React.ForwardedRef<HTMLSpanElement>}
-      >
-        <Avatar.Image
-          className="avatar-image"
-          src={src ?? undefined}
-          alt={alt}
-        />
-        <Avatar.Fallback className="avatar-fallback" delayMs={600}>
-          {alt.charAt(0).toUpperCase()}
-        </Avatar.Fallback>
-      </S.MuseAvatarRoot>
-    );
-  },
-);
+const MuseAvatar: FC<{
+  src: string | null;
+  alt: string;
+  nwImage?: PromptSource["avatar"];
+}> = forwardRef(({ src, alt, nwImage, ...rest }, forwardedRef) => {
+  return (
+    <AvatarNew
+      className="muse-avatar"
+      src={src}
+      alt={alt}
+      nwImage={nwImage}
+      {...rest}
+      ref={forwardedRef as React.ForwardedRef<HTMLSpanElement>}
+    />
+  );
+});
 
 const SelectItem: FC<{
   source: PromptSource | undefined;
@@ -132,7 +130,11 @@ const SelectItem: FC<{
       </Select.ItemIndicator>
 
       <Select.Icon>
-        <MuseAvatar src={source.image ?? null} alt={source.name} />
+        <MuseAvatar
+          src={source.image ?? null}
+          alt={source.name}
+          nwImage={source.avatar}
+        />
       </Select.Icon>
 
       <Select.ItemText>{labelOverride ?? source.name}</Select.ItemText>

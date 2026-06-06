@@ -11,6 +11,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { FaAlignCenter, FaAlignLeft, FaAlignRight } from "react-icons/fa6";
 import {
   RiArrowDropDownLine,
   RiArrowLeftSLine,
@@ -131,6 +132,9 @@ export const RichTextEditor = forwardRef<
       null,
     );
     const [imageResizePct, setImageResizePct] = useState<number>(100);
+    const [imageAlign, setImageAlign] = useState<"left" | "center" | "right">(
+      "left",
+    );
     const [imageResizeBarPos, setImageResizeBarPos] = useState<{
       top: number;
       left: number;
@@ -750,12 +754,7 @@ export const RichTextEditor = forwardRef<
         // selectionchange (after the popover closes / user types) will sync
         // the indicator from the real DOM.
       },
-      [
-        restoreSelection,
-        saveSelection,
-        onChange,
-        findHighlightAncestor,
-      ],
+      [restoreSelection, saveSelection, onChange, findHighlightAncestor],
     );
 
     // Alignment options
@@ -1053,6 +1052,12 @@ export const RichTextEditor = forwardRef<
       pct = Math.max(10, Math.min(100, pct));
       setSelectedImage(img);
       setImageResizePct(pct);
+      const imageBlock = img.closest(".inline-image-container")
+        ?.parentElement as HTMLElement | null;
+      const raw = imageBlock?.style.textAlign;
+      const align =
+        raw === "left" || raw === "center" || raw === "right" ? raw : "left";
+      setImageAlign(align);
       const wrapperRect =
         editorRef.current?.parentElement?.getBoundingClientRect();
       const imgRect = img.getBoundingClientRect();
@@ -1183,6 +1188,26 @@ export const RichTextEditor = forwardRef<
         }
       },
       [selectImageNode],
+    );
+
+    const handleImageAlignChange = useCallback(
+      (align: "left" | "center" | "right") => {
+        if (!selectedImage) return;
+        const imageBlock = selectedImage.closest(".inline-image-container")
+          ?.parentElement as HTMLElement | null;
+        if (imageBlock) {
+          imageBlock.style.textAlign = align;
+        }
+        setImageAlign(align);
+        const editor = editorRef.current;
+        if (editor) {
+          const content = editor.innerHTML;
+          if (content && content.trim() !== "" && content !== "<br>") {
+            onChange(content);
+          }
+        }
+      },
+      [selectedImage, onChange],
     );
 
     const handleImageResizeChange = useCallback(
@@ -2077,75 +2102,118 @@ export const RichTextEditor = forwardRef<
           )}
 
           {selectedImage && imageResizeBarPos && (
-            <S.ImageResizeBar
+            <S.ImageControlsWrapper
               ref={imageResizeBarRef}
               style={{
                 top: imageResizeBarPos.top,
               }}
             >
-              <S.ImageDeleteButton
-                type="button"
-                title="Remove image"
-                aria-label="Remove image"
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  const src = selectedImage.src;
-                  setSelectedImage(null);
-                  setImageResizeBarPos(null);
-                  removeImageBySrc(src);
-                }}
-              >
-                <RiDeleteBin6Line size={15} />
-              </S.ImageDeleteButton>
-              <input
-                type="range"
-                min={10}
-                max={100}
-                step={1}
-                value={imageResizePct}
-                onChange={(e) =>
-                  handleImageResizeChange(Number(e.target.value))
-                }
-                onMouseDown={(e) => e.stopPropagation()}
-                style={{
-                  accentColor: "var(--accent)",
-                  cursor: "pointer",
-                  flex: 1,
-                  minWidth: 0,
-                }}
-              />
-              <S.ImageResizeLabel>{imageResizePct}%</S.ImageResizeLabel>
-              <S.ImageAcceptButton
-                type="button"
-                title="Accept size"
-                aria-label="Accept size"
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  const imageBlock = selectedImage.closest(
-                    ".inline-image-container",
-                  )?.parentElement;
-                  const afterBlock =
-                    imageBlock?.nextElementSibling as HTMLElement | null;
-                  setSelectedImage(null);
-                  setImageResizeBarPos(null);
-                  if (afterBlock) {
-                    const range = document.createRange();
-                    range.setStart(afterBlock, 0);
-                    range.collapse(true);
-                    const sel = window.getSelection();
-                    if (sel) {
-                      sel.removeAllRanges();
-                      sel.addRange(range);
-                    }
+              <S.ImagePositionBar>
+                <S.ImageAlignButton
+                  type="button"
+                  $active={imageAlign === "left"}
+                  title="Align left"
+                  aria-label="Align left"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleImageAlignChange("left");
+                  }}
+                >
+                  <FaAlignLeft size={13} />
+                </S.ImageAlignButton>
+                <S.ImageAlignButton
+                  type="button"
+                  $active={imageAlign === "center"}
+                  title="Align center"
+                  aria-label="Align center"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleImageAlignChange("center");
+                  }}
+                >
+                  <FaAlignCenter size={13} />
+                </S.ImageAlignButton>
+                <S.ImageAlignButton
+                  type="button"
+                  $active={imageAlign === "right"}
+                  title="Align right"
+                  aria-label="Align right"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleImageAlignChange("right");
+                  }}
+                >
+                  <FaAlignRight size={13} />
+                </S.ImageAlignButton>
+              </S.ImagePositionBar>
+              <S.ImageResizeBar>
+                <S.ImageDeleteButton
+                  type="button"
+                  title="Remove image"
+                  aria-label="Remove image"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const src = selectedImage.src;
+                    setSelectedImage(null);
+                    setImageResizeBarPos(null);
+                    removeImageBySrc(src);
+                  }}
+                >
+                  <RiDeleteBin6Line size={15} />
+                </S.ImageDeleteButton>
+                <input
+                  type="range"
+                  min={10}
+                  max={100}
+                  step={1}
+                  value={imageResizePct}
+                  onChange={(e) =>
+                    handleImageResizeChange(Number(e.target.value))
                   }
-                  editorRef.current?.focus();
-                }}
-              >
-                <RiCheckLine size={15} />
-              </S.ImageAcceptButton>
-            </S.ImageResizeBar>
+                  onMouseDown={(e) => e.stopPropagation()}
+                  style={{
+                    accentColor: "var(--accent)",
+                    cursor: "pointer",
+                    flex: 1,
+                    minWidth: 0,
+                  }}
+                />
+                <S.ImageResizeLabel>{imageResizePct}%</S.ImageResizeLabel>
+                <S.ImageAcceptButton
+                  type="button"
+                  title="Accept size"
+                  aria-label="Accept size"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const imageBlock = selectedImage.closest(
+                      ".inline-image-container",
+                    )?.parentElement;
+                    const afterBlock =
+                      imageBlock?.nextElementSibling as HTMLElement | null;
+                    setSelectedImage(null);
+                    setImageResizeBarPos(null);
+                    if (afterBlock) {
+                      const range = document.createRange();
+                      range.setStart(afterBlock, 0);
+                      range.collapse(true);
+                      const sel = window.getSelection();
+                      if (sel) {
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                      }
+                    }
+                    editorRef.current?.focus();
+                  }}
+                >
+                  <RiCheckLine size={15} />
+                </S.ImageAcceptButton>
+              </S.ImageResizeBar>
+            </S.ImageControlsWrapper>
           )}
         </S.EditorWrapper>
 

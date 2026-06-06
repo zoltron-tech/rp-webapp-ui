@@ -3,8 +3,10 @@ import type { StoryBoard, StoryBoardEvent } from "@/types/story-board";
 
 export const STANDARD_TIER: NovelistTier = {
   eventLimit: 20,
+  groupLimit: 10,
   mediaLimit: 500,
-  museLimit: 20,
+  museLimit: 50,
+  musicLimit: 10,
   name: "STANDARD",
   storyBoardLimit: 10,
 };
@@ -23,6 +25,7 @@ export const EMPTY_FRIEND: Friend = {
 
 export const INITIAL_NOVELIST: Novelist = {
   about: null,
+  avatar: null,
   connection: null,
   createdAt: "",
   firstName: "",

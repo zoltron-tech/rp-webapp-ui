@@ -150,7 +150,7 @@ export const CardBackground = styled.div<CardProps>`
   width: 100%;
   height: 100%;
 
-  background-image: url(${(props): string => props.banner});
+  background-image: url('${(props): string => props.banner}');
   background-size: cover;
   transition-timing-function: ease-out;
   transition-duration: 300ms;

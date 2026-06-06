@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AvatarNew } from "@/components/common/avatar-new";
+import type { NWImage } from "@/types";
 import * as S from "./styled";
 
 const DEFAULT_PLACEHOLDERS = [
@@ -40,6 +41,9 @@ export const COMMENT_OOC_PLACEHOLDERS = [
 interface PromptComposeTriggerProps {
   avatarSrc?: string | null;
   avatarAlt?: string;
+  /** When provided (with valid crop data), positions the avatar using the
+   *  stored crop. Falls back to `avatarSrc` when null/absent. */
+  avatarNwImage?: NWImage | null;
   onClick: () => void;
   className?: string;
   placeholders?: string[];
@@ -48,6 +52,7 @@ interface PromptComposeTriggerProps {
 export const PromptComposeTrigger = ({
   avatarSrc,
   avatarAlt = "You",
+  avatarNwImage,
   onClick,
   className,
   placeholders = DEFAULT_PLACEHOLDERS,
@@ -74,6 +79,7 @@ export const PromptComposeTrigger = ({
         className="trigger-avatar"
         src={avatarSrc ?? null}
         alt={avatarAlt}
+        nwImage={avatarNwImage}
       />
       <S.FakeInput>
         <S.Placeholder $visible={visible}>{placeholders[index]}</S.Placeholder>

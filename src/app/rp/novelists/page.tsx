@@ -2,7 +2,8 @@
 
 import { Carousel } from "@novelist-world/ui";
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { InstallAppDialog } from "@/components/dialog/install-app-dialog";
 import { Footer } from "@/components/layout";
 import { MusePreviewCard } from "@/components/muse-preview-card";
 import { useGlobalState } from "@/context/store/stores";
@@ -21,8 +22,15 @@ const NovelistCarouselDynamic = dynamic(
 export default function NovelistsPage() {
   const initialRender = useRef(true);
   const [muses, set] = useState<Muse[]>([]);
+  const [showInstallDialog, setShowInstallDialog] = useState(false);
   const authState = useGlobalState("authState");
   const { routeToPage, baseDataLoader } = usePageRouter();
+  const isMobile = useMemo(
+    () =>
+      typeof window !== "undefined" &&
+      (window.innerWidth < 768 || screen.width < 768),
+    [],
+  );
 
   const updateMuses = useCallback(async () => {
     const response = await baseDataLoader(() => getHeroPageMusesAction());
@@ -49,15 +57,26 @@ export default function NovelistsPage() {
     routeToPage(ROUTES.Home);
   };
 
+  const handleDownloadAppClick = () => {
+    if (isMobile) {
+      setShowInstallDialog(true);
+    } else {
+      routeToPage(ROUTES.InstallApp);
+    }
+  };
+
   return (
     <>
       <S.PageContainer>
+        <S.HeroEyebrow>Collaborative Storytelling Platform</S.HeroEyebrow>
         <S.MainHeading />
-        <S.MainSubtext>Create live worlds.</S.MainSubtext>
-        <S.MainSubtext>Write stories together.</S.MainSubtext>
+        <S.HeroContent>
+          <S.MainSubtext>Create live worlds.</S.MainSubtext>
+          <S.MainSubtext>Write stories together.</S.MainSubtext>
+        </S.HeroContent>
         <S.Story>
-          Build realms with friends, interact with characters, <br />
-          and watch your stories evolve through collaboration.
+          Build realms with friends, interact with characters, and watch your
+          stories evolve through collaboration.
         </S.Story>
         <S.ButtonsGroupContainer>
           <S.MainButton
@@ -68,6 +87,12 @@ export default function NovelistsPage() {
               <span className="buttonText">
                 {authState === "LOGGED_IN" ? "My Dashboard" : "Get Started"}
               </span>
+            </span>
+          </S.MainButton>
+          <S.MainButton onClick={handleDownloadAppClick}>
+            <span className="buttonLg">
+              <span className="buttonSl" />
+              <span className="buttonText">Download as App</span>
             </span>
           </S.MainButton>
         </S.ButtonsGroupContainer>
@@ -131,6 +156,10 @@ export default function NovelistsPage() {
         </S.CardsContainer>
       </S.PageContainer>
       <Footer />
+      <InstallAppDialog
+        open={showInstallDialog}
+        onClose={() => setShowInstallDialog(false)}
+      />
     </>
   );
 }

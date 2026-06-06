@@ -25,17 +25,9 @@ import {
   FcSupport,
   FcVoicePresentation,
 } from "react-icons/fc";
-import {
-  FiCheck,
-  FiChevronRight,
-  FiCopy,
-  FiEdit2,
-  FiSmartphone,
-  FiX,
-} from "react-icons/fi";
+import { FiCheck, FiChevronRight, FiCopy, FiEdit2, FiX } from "react-icons/fi";
 import { sendFeedbackMessage } from "@/app/rp/profile/actions";
 import discordLogo from "@/assets/images/NW-Discord-l.ogo.png";
-import appInstallLogo from "@/assets/images/NW-mobile-app-install-logo.png";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -47,6 +39,7 @@ import { Logger } from "@/utils/services";
 import { ShouldRender } from "../common";
 import { AvatarNew } from "../common/avatar-new";
 import { AppAlertDialog } from "../dialog";
+import { InstallAppDialog } from "../dialog/install-app-dialog";
 import { Flex } from "../edit-muse-card/styles";
 import * as S from "./styles";
 
@@ -216,60 +209,10 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
   return (
     <>
       <S.PositionContainer>
-        {showInstallDialog &&
-          createPortal(
-            <>
-              <S.DiscordDialogOverlay
-                onClick={() => setShowInstallDialog(false)}
-              />
-              <S.DiscordDialogContent
-                role="dialog"
-                aria-modal="true"
-                aria-label="Install Novelist World App"
-                className={classNames([accent, theme])}
-              >
-                <S.DiscordDialogClose
-                  onClick={() => setShowInstallDialog(false)}
-                  aria-label="Close"
-                >
-                  <FiX />
-                </S.DiscordDialogClose>
-                <S.DiscordDialogImage
-                  src={appInstallLogo.src}
-                  alt="Install Novelist World"
-                />
-                <S.DiscordDialogTitle>
-                  Install Novelist World as App
-                </S.DiscordDialogTitle>
-                <S.DiscordDialogDescription>
-                  Add Novelist World to your home screen for the best
-                  experience:
-                </S.DiscordDialogDescription>
-                <ol
-                  style={{
-                    alignSelf: "flex-start",
-                    color: "var(--text-secondary)",
-                    fontSize: "var(--font-size-small)",
-                    lineHeight: 1.8,
-                    margin: "0",
-                    paddingInlineStart: "20px",
-                  }}
-                >
-                  <li>
-                    Tap the <strong>Share</strong> button in your browser
-                    toolbar.
-                  </li>
-                  <li>
-                    Scroll down and tap <strong>Add to Home Screen</strong>.
-                  </li>
-                  <li>
-                    Tap <strong>Add</strong> to confirm.
-                  </li>
-                </ol>
-              </S.DiscordDialogContent>
-            </>,
-            document.body,
-          )}
+        <InstallAppDialog
+          open={showInstallDialog}
+          onClose={() => setShowInstallDialog(false)}
+        />
 
         {showDiscordDialog &&
           createPortal(
@@ -386,6 +329,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
               src={novelist?.image ?? null}
               alt={user?.username || "User Avatar"}
               username={user?.username}
+              nwImage={novelist?.avatar}
             />
             <ShouldRender if={hasUnread}>
               <S.UnreadDot>
@@ -404,6 +348,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                 src={novelist?.image ?? null}
                 alt={user?.username || "User Avatar"}
                 username={user?.username}
+                nwImage={novelist?.avatar}
               />
               <S.MenuUserInfo>
                 <S.MenuUserName>
@@ -572,6 +517,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                     src={novelist?.image ?? null}
                     alt={user?.username || "User Avatar"}
                     username={user?.username}
+                    nwImage={novelist?.avatar}
                   />
                   <S.MobilePanelUserInfo>
                     <S.MobilePanelUserName>

@@ -2,7 +2,7 @@
 
 import { ShouldRender } from "@novelist-world/ui";
 import { Separator } from "radix-ui";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { BsArrowLeft, BsPersonCircle } from "react-icons/bs";
 import { ImProfile } from "react-icons/im";
 import {
@@ -13,9 +13,11 @@ import {
 import { AvatarPickerDialog } from "@/components/avatar-picker-dialog";
 import { AvatarUploadField } from "@/components/common/avatar-upload-field";
 import { AppAlertDialog } from "@/components/dialog";
+import AvatarCropDialog from "@/components/dialog/avatar-crop-dialog";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUploadMedia } from "@/hooks/use-upload-media";
+import type { ImageCropFilter, NWImage } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { deleteMedia } from "../actions";
@@ -26,6 +28,33 @@ import { useProfileSave } from "./use-profile-save";
 const VALID_IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
+function clamp(v: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, v));
+}
+
+/**
+ * Build an ImageCropFilter from background-position state.
+ * x/y are CSS background-position percentages (0–100, 50 = centered).
+ * width/height encode the zoom as scale*100 (100 = 1×, 300 = 3×).
+ * This mirrors the Muse cardBackground encoding: a fit-by-width display that
+ * is resolution- and aspect-ratio-independent.
+ */
+function toCropFilter(
+  src: string,
+  x: number,
+  y: number,
+  scale: number,
+): ImageCropFilter {
+  const scalePct = Math.round(scale * 100);
+  return {
+    height: scalePct,
+    src,
+    width: scalePct,
+    x: Math.round(x),
+    y: Math.round(y),
+  };
+}
+
 type ProfileView = "landing" | "appearance" | "about" | "account";
 
 type Props = {
@@ -35,6 +64,7 @@ type Props = {
 export function LandingSection({ onSelect }: Props) {
   const novelist = useGlobalState("novelist");
   const user = useGlobalState("user");
+  const avatar = useProfileState("avatar");
   const firstName = useProfileState("firstName");
   const lastName = useProfileState("lastName");
   const image = useProfileState("image");
@@ -54,7 +84,38 @@ export function LandingSection({ onSelect }: Props) {
   const [discardDialogOpen, setDiscardDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Avatar crop dialog state
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [pendingCropSrc, setPendingCropSrc] = useState("");
+  const [cropX, setCropX] = useState(0);
+  const [cropY, setCropY] = useState(0);
+  const [cropScale, setCropScale] = useState(1);
+  const cropViewportRef = useRef<HTMLDivElement>(null);
+  const cropDragStart = useRef<{
+    px: number;
+    py: number;
+    bx: number;
+    by: number;
+  } | null>(null);
+  const lastPinchDist = useRef<number | null>(null);
+
+  // Track whether avatar was changed in this editing session
+  const [avatarChanged, setAvatarChanged] = useState(false);
+
+  // When a GIF/Sticker is picked we stash the URL here and open the crop
+  // dialog only after the avatar picker portal has fully closed.
+  const [pendingMediaUrl, setPendingMediaUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!avatarDialogOpen && pendingMediaUrl) {
+      openCropDialog(pendingMediaUrl);
+      setPendingMediaUrl(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [avatarDialogOpen, pendingMediaUrl]);
+
   const originalRef = useRef({
+    avatar: novelist?.avatar ?? (null as NWImage | null),
     firstName: novelist?.firstName ?? "",
     image: novelist?.image ?? "",
     lastName: novelist?.lastName ?? "",
@@ -63,13 +124,20 @@ export function LandingSection({ onSelect }: Props) {
   // Keep snapshot in sync if novelist refreshes
   useEffect(() => {
     originalRef.current = {
+      avatar: novelist?.avatar ?? null,
       firstName: novelist?.firstName ?? "",
       image: novelist?.image ?? "",
       lastName: novelist?.lastName ?? "",
     };
-  }, [novelist?.firstName, novelist?.lastName, novelist?.image]);
+  }, [
+    novelist?.firstName,
+    novelist?.lastName,
+    novelist?.image,
+    novelist?.avatar,
+  ]);
 
   const isDirty =
+    avatarChanged ||
     (firstName ?? "") !== originalRef.current.firstName ||
     (lastName ?? "") !== originalRef.current.lastName ||
     (image ?? "") !== originalRef.current.image;
@@ -80,11 +148,7 @@ export function LandingSection({ onSelect }: Props) {
 
   const handleMediaSelect = async (url: string) => {
     setError(null);
-    if (tempUploadedImage) {
-      await deleteMedia(tempUploadedImage);
-      setTempUploadedImage(null);
-    }
-    setProfileState({ image: url });
+    setPendingMediaUrl(url);
   };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,8 +167,9 @@ export function LandingSection({ onSelect }: Props) {
     setError(null);
 
     const reader = new FileReader();
-    reader.onloadend = () =>
-      setProfileState({ image: reader.result as string });
+    reader.onloadend = () => {
+      openCropDialog(reader.result as string);
+    };
     reader.readAsDataURL(file);
 
     if (tempUploadedImage) {
@@ -119,12 +184,105 @@ export function LandingSection({ onSelect }: Props) {
 
     if (url === API_MESSAGE.MediaError) {
       setError("Failed to upload image. Please try again.");
+      setCropDialogOpen(false);
       return;
     }
 
     setTempUploadedImage(url);
-    setProfileState({ image: url });
+    setPendingCropSrc(url);
   };
+
+  const openCropDialog = (src: string) => {
+    setPendingCropSrc(src);
+    setCropX(50);
+    setCropY(50);
+    setCropScale(1);
+    setCropDialogOpen(true);
+  };
+
+  const handleCropPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.isPrimary === false) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    cropDragStart.current = {
+      bx: cropX,
+      by: cropY,
+      px: e.clientX,
+      py: e.clientY,
+    };
+  };
+
+  const handleCropPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!cropDragStart.current || !cropViewportRef.current) return;
+    const rect = cropViewportRef.current.getBoundingClientRect();
+    // Convert px drag → background-position percentage. Dragging right reveals
+    // the left of the image, so the position percentage decreases.
+    const dx = ((e.clientX - cropDragStart.current.px) / rect.width) * 100;
+    const dy = ((e.clientY - cropDragStart.current.py) / rect.height) * 100;
+    setCropX(clamp(cropDragStart.current.bx - dx, 0, 100));
+    setCropY(clamp(cropDragStart.current.by - dy, 0, 100));
+  };
+
+  const handleCropPointerUp = () => {
+    cropDragStart.current = null;
+  };
+
+  const handleCropWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 0.05 : -0.05;
+    setCropScale((prev) => clamp(prev + delta, 1, 3));
+  };
+
+  const handleCropTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      lastPinchDist.current = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY,
+      );
+    }
+  };
+
+  const handleCropTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && lastPinchDist.current !== null) {
+      e.preventDefault();
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY,
+      );
+      const delta = (dist - lastPinchDist.current) * 0.01;
+      lastPinchDist.current = dist;
+      setCropScale((prev) => clamp(prev + delta, 1, 3));
+    }
+  };
+
+  const handleCropScaleChange = (v: number) => {
+    setCropScale(clamp(v, 1, 3));
+  };
+
+  const handleCropConfirm = useCallback(() => {
+    const crop = toCropFilter(pendingCropSrc, cropX, cropY, cropScale);
+    const nwImage: NWImage = {
+      crop,
+      filterValues: { blur: 0, brightness: 100, greyscale: 0 },
+      src: pendingCropSrc,
+    };
+    setProfileState({ avatar: nwImage, image: pendingCropSrc });
+    setAvatarChanged(true);
+    setCropDialogOpen(false);
+  }, [pendingCropSrc, cropX, cropY, cropScale, setProfileState]);
+
+  const handleCropCancel = useCallback(async () => {
+    if (tempUploadedImage && tempUploadedImage === pendingCropSrc) {
+      await deleteMedia(tempUploadedImage);
+      setTempUploadedImage(null);
+    }
+    setCropDialogOpen(false);
+  }, [tempUploadedImage, pendingCropSrc]);
+
+  const resetCrop = useCallback(() => {
+    setCropX(50);
+    setCropY(50);
+    setCropScale(1);
+  }, []);
 
   const handleSave = async () => {
     setError(null);
@@ -138,10 +296,12 @@ export function LandingSection({ onSelect }: Props) {
 
   const handleReset = () => {
     setProfileState({
+      avatar: originalRef.current.avatar,
       firstName: originalRef.current.firstName,
       image: originalRef.current.image,
       lastName: originalRef.current.lastName,
     });
+    setAvatarChanged(false);
     setError(null);
   };
 
@@ -202,11 +362,13 @@ export function LandingSection({ onSelect }: Props) {
       <Separator.Root className="separator" orientation="horizontal" />
 
       <S.LandingHero>
-        <S.LandingHeroAvatarWrap onClick={handleAvatarClick}>
+        <S.LandingHeroAvatarWrap>
           <AvatarUploadField
-            src={image || null}
+            src={avatar?.src || image || null}
             note={note || ""}
             alt={firstName || "Avatar"}
+            nwImage={avatar}
+            onAvatarClick={handleAvatarClick}
           />
         </S.LandingHeroAvatarWrap>
         <input
@@ -313,6 +475,42 @@ export function LandingSection({ onSelect }: Props) {
         actionColor="negative"
         onConfirm={handleConfirmDiscard}
         onCancel={() => setDiscardDialogOpen(false)}
+      />
+
+      <AppAlertDialog
+        open={cropDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) handleCropCancel();
+          setCropDialogOpen(open);
+        }}
+        heading="Adjust avatar"
+        text="Drag to reposition. Use the slider or scroll to zoom."
+        showConfirm={false}
+        isCancelHidden={true}
+        body={
+          <S.AvatarCropBody>
+            <AvatarCropDialog
+              open={cropDialogOpen}
+              src={pendingCropSrc}
+              x={cropX}
+              y={cropY}
+              scale={cropScale}
+              onOpenChange={setCropDialogOpen}
+              onPointerDown={handleCropPointerDown}
+              onPointerMove={handleCropPointerMove}
+              onPointerUp={handleCropPointerUp}
+              onTouchStart={handleCropTouchStart}
+              onTouchMove={handleCropTouchMove}
+              onWheel={handleCropWheel}
+              onScaleChange={handleCropScaleChange}
+              onReset={resetCrop}
+              onCancel={handleCropCancel}
+              onConfirm={handleCropConfirm}
+              isUploading={imageUploading}
+              viewportRef={cropViewportRef}
+            />
+          </S.AvatarCropBody>
+        }
       />
     </>
   );

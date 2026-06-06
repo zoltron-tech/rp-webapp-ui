@@ -127,6 +127,7 @@ export default function UserMenuPage() {
             src={novelist?.image ?? null}
             alt={user.username}
             username={user.username}
+            nwImage={novelist?.avatar}
           />
           <S.UserInfo>
             <S.UserName>{displayName}</S.UserName>

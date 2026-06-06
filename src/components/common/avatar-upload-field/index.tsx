@@ -1,6 +1,5 @@
 import { type FC, useMemo } from "react";
 import { HiOutlineCamera, HiOutlinePencilSquare } from "react-icons/hi2";
-import { AvatarNew } from "../avatar-new";
 import * as S from "./styles";
 
 type AvatarUploadFieldProps = {
@@ -8,6 +7,8 @@ type AvatarUploadFieldProps = {
   alt: string;
   note?: string | null;
   onNoteClick?: (e: React.MouseEvent) => void;
+  onAvatarClick?: () => void;
+  nwImage?: any;
 };
 
 const trimNote = (text: string, max = 40) =>
@@ -32,18 +33,35 @@ export const AvatarUploadField: FC<AvatarUploadFieldProps> = ({
   src,
   alt,
   note,
+  nwImage,
   onNoteClick,
+  onAvatarClick,
 }) => {
   const placeholder = useMemo(
     () => NOTE_PROMPTS[Math.floor(Math.random() * NOTE_PROMPTS.length)],
     [],
   );
-  return (
-    <S.Wrapper>
-      <AvatarNew className="selectable" src={src} alt={alt} />
+  const avatarContent = (
+    <>
+      <S.Avatar className="selectable" src={src} alt={alt} nwImage={nwImage} />
       <S.CameraOverlay>
         <HiOutlineCamera />
       </S.CameraOverlay>
+    </>
+  );
+  return (
+    <S.Wrapper>
+      {onAvatarClick ? (
+        <S.AvatarButton
+          type="button"
+          aria-label="Change avatar"
+          onClick={onAvatarClick}
+        >
+          {avatarContent}
+        </S.AvatarButton>
+      ) : (
+        avatarContent
+      )}
       {onNoteClick !== undefined && (
         <S.NoteBubble
           type="button"

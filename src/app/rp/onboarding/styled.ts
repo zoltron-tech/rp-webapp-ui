@@ -509,7 +509,7 @@ export const FormContainer = styled.div`
       input {
         margin-bottom: 4px;
         padding: 6px 8px;
-        font-size: var(--font-size-small);
+        font-size: var(--font-size-input);
       }
 
       .submit-button {

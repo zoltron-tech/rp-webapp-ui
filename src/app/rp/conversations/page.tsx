@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BiSupport } from "react-icons/bi";
+import { MdGroupAdd } from "react-icons/md";
 import { BreadCrumb } from "@/components/breadcrumb";
 import { ConversationCard } from "@/components/conversation-card";
 import { LoadMore } from "@/components/load-more/page";
 import { useSocket } from "@/context/socket";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { useUIContext } from "@/hooks/use-ui-context";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import type { Conversation } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
@@ -15,20 +17,25 @@ import { ConversationPanel } from "./[conversationId]/conversation-panel";
 import {
   getConversationByUsernameAction,
   getConversationsAction,
+  getGroupCountAction,
 } from "./actions";
+import { CreateGroupDialog } from "./create-group-dialog";
 import * as S from "./styles";
 
 const PAGE_SIZE = 15;
 
 export default function ConversationsPage() {
   const user = useGlobalState("user");
+  const novelist = useGlobalState("novelist");
   const unreadConversationIds = useGlobalState("unreadConversationIds");
   const cachedConversations = useGlobalState("cachedConversations");
   const conversationNavDirection = useGlobalState("conversationNavDirection");
   const lastReadConversationId = useGlobalState("lastReadConversationId");
+  const groupCount = useGlobalState("groupCount");
   const setGlobalState = useGlobalStoreSet();
   const { lastIncomingMessage } = useSocket();
   const { baseDataLoader, routeToPage, stopPageLoading } = usePageRouter();
+  const { errorToast } = useUIContext();
   const { width } = useWindowDimensions();
   const isMobile = (width ?? 0) <= 680;
 
@@ -99,6 +106,8 @@ export default function ConversationsPage() {
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [contactSupportLoading, setContactSupportLoading] = useState(false);
+  const [createGroupOpen, setCreateGroupOpen] = useState(false);
+  const [checkingGroupLimit, setCheckingGroupLimit] = useState(false);
   // Capture direction on mount so we can animate even after clearing it
   const slideIn = useRef(conversationNavDirection === "back").current;
 
@@ -164,6 +173,38 @@ export default function ConversationsPage() {
     fetchConversations(1);
   }, [fetchConversations]);
 
+  // Re-check the live group count against the user's tier limit before
+  // letting them open the create-group dialog.
+  const handleCreateGroupClick = useCallback(async () => {
+    setCheckingGroupLimit(true);
+    const count = await getGroupCountAction();
+    setCheckingGroupLimit(false);
+
+    if (typeof count !== "number") {
+      errorToast("Could not verify your group limit. Please try again.");
+      return;
+    }
+
+    setGlobalState({ groupCount: count });
+
+    const groupLimit = novelist?.tier?.groupLimit ?? 0;
+    if (count >= groupLimit) {
+      errorToast(
+        `You've reached your group limit of ${groupLimit}. Upgrade your tier to create more.`,
+      );
+      return;
+    }
+
+    setCreateGroupOpen(true);
+  }, [errorToast, novelist?.tier?.groupLimit, setGlobalState]);
+
+  // After a group is created, refresh the conversations list from the backend
+  // and bump the cached group count.
+  const handleGroupCreated = useCallback(async () => {
+    setGlobalState({ groupCount: (groupCount ?? 0) + 1 });
+    await fetchConversations(1);
+  }, [fetchConversations, groupCount, setGlobalState]);
+
   // Update the matching conversation's lastMessage when a new real-time message arrives,
   // then re-sort so the most recently active conversation floats to the top.
   useEffect(() => {
@@ -228,14 +269,24 @@ export default function ConversationsPage() {
       <S.Container $slideIn={slideIn}>
         <S.BreadcrumbRow>
           <BreadCrumb label="Conversations" username={user?.username ?? ""} />
-          <S.SupportButton
-            onClick={handleContactSupport}
-            disabled={contactSupportLoading}
-            aria-label="Contact Support"
-            title="Contact Support"
-          >
-            <BiSupport size={18} />
-          </S.SupportButton>
+          <S.BreadcrumbActions>
+            <S.SupportButton
+              onClick={handleCreateGroupClick}
+              disabled={checkingGroupLimit}
+              aria-label="Create group"
+              title="Create group"
+            >
+              <MdGroupAdd size={18} />
+            </S.SupportButton>
+            <S.SupportButton
+              onClick={handleContactSupport}
+              disabled={contactSupportLoading}
+              aria-label="Contact Support"
+              title="Contact Support"
+            >
+              <BiSupport size={18} />
+            </S.SupportButton>
+          </S.BreadcrumbActions>
         </S.BreadcrumbRow>
         <S.ConversationListContainer>
           <S.ConversationListRoot>
@@ -397,6 +448,14 @@ export default function ConversationsPage() {
           />
         </S.ConversationSheet>
       )}
+
+      <CreateGroupDialog
+        open={createGroupOpen}
+        onOpenChange={setCreateGroupOpen}
+        groupCount={groupCount ?? 0}
+        groupLimit={novelist?.tier?.groupLimit ?? 0}
+        onCreated={handleGroupCreated}
+      />
     </>
   );
 }

@@ -14,11 +14,14 @@ import * as S from "./styled";
 interface FriendSelectionDropdownProps {
   selectedFriends: Friend[];
   setSelectedFriends: React.Dispatch<SetStateAction<Friend[]>>;
+  /** Optional list of friends to choose from. Defaults to the novelist's friends. */
+  friends?: Friend[];
 }
 
 export const FriendSelectionDropdown = ({
   selectedFriends,
   setSelectedFriends,
+  friends,
 }: FriendSelectionDropdownProps) => {
   const novelist = useGlobalState("novelist");
   const [search, setSearch] = useState("");
@@ -42,11 +45,12 @@ export const FriendSelectionDropdown = ({
   };
 
   const filteredFriends = useMemo(() => {
-    if (!novelist?.friends) return [];
-    return novelist.friends.filter((friend) =>
+    const source = friends ?? novelist?.friends;
+    if (!source) return [];
+    return source.filter((friend) =>
       friend.username.toLowerCase().includes(search.toLowerCase()),
     );
-  }, [novelist?.friends, search]);
+  }, [friends, novelist?.friends, search]);
 
   return (
     <S.PositionContainer>

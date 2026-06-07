@@ -43,6 +43,67 @@ export const getConversationsAction = async (
   return conversations;
 };
 
+export const getGroupCountAction = async (): Promise<DataType<number>> => {
+  const jwt = await getJWTIfExists();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (jwt) {
+    headers[AUTH_HEADER_NAME] = jwt;
+  }
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/group/count`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers: headers,
+  });
+
+  Logger.debug("getGroupCountAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const count: number = await response.json();
+
+  return count;
+};
+
+export const createGroupAction = async (
+  name: string,
+  participantIds: string[],
+): Promise<DataType<Conversation>> => {
+  const jwt = await getJWTIfExists();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (jwt) {
+    headers[AUTH_HEADER_NAME] = jwt;
+  }
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/conversation/createGroup`;
+
+  const response = await fetch(URL, {
+    body: JSON.stringify({ name, participantIds }),
+    cache: "no-store",
+    headers: headers,
+    method: "POST",
+  });
+
+  Logger.debug("createGroupAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const conversation: Conversation = await response.json();
+
+  return conversation;
+};
+
 export const getUnreadConversationIdsAction = async (): Promise<
   DataType<string[]>
 > => {

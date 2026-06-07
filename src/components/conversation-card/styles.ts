@@ -68,6 +68,22 @@ export const TopRow = styled.div`
   overflow: hidden;
 `;
 
+export const GroupTag = styled.span`
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: var(--font-weight-bold);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 9999px;
+  padding: 1px 5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.4;
+`;
+
 export const Title = styled.h2`
   margin: 0;
   font-size: 13px;

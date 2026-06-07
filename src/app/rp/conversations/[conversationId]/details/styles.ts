@@ -58,6 +58,60 @@ export const HeaderInfo = styled.div`
   min-width: 0;
 `;
 
+export const EditButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--bg-6);
+  background: var(--bg-2);
+  color: var(--text);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: var(--bg-4);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+`;
+
+export const LeaveButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--error, #e53e3e) 40%, transparent);
+  background: transparent;
+  color: var(--error, #e53e3e);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--error, #e53e3e) 12%, transparent);
+    border-color: var(--error, #e53e3e);
+  }
+`;
+
+export const DeleteButton = styled(LeaveButton)`
+  margin-left: 0;
+  gap: 5px;
+
+  .delete-label {
+    @media (max-width: 480px) {
+      display: none;
+    }
+  }
+`;
+
 export const ConvName = styled.h1`
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
@@ -79,6 +133,11 @@ export const ConvTypeBadge = styled.span`
   border-radius: 9999px;
   padding: 2px 8px;
   width: fit-content;
+
+  @media (max-width: 480px) {
+    font-size: 10px;
+    padding: 1px 6px;
+  }
 `;
 
 export const Section = styled.section`
@@ -87,12 +146,40 @@ export const Section = styled.section`
   gap: 8px;
 `;
 
+export const SectionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 4px;
+`;
+
+export const AddMembersButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 20%, transparent);
+    border-color: var(--accent);
+  }
+`;
+
 export const SectionTitle = styled.h2`
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   color: var(--text-secondary);
   margin: 0;
-  padding: 0 4px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 `;
@@ -107,24 +194,14 @@ export const MembersList = styled.div`
   overflow: hidden;
 `;
 
-export const MemberRow = styled.button`
+export const MemberRow = styled.div`
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 8px;
+  padding: 0 12px 0 0;
   width: 100%;
-  background: none;
-  border: none;
   border-bottom: 1px solid var(--bg-6);
-  cursor: pointer;
-  text-align: left;
-  color: inherit;
   transition: background 0.15s;
-
-  .avatar {
-    width: 32px;
-    height: 32px;
-  }
 
   &:last-child {
     border-bottom: none;
@@ -132,6 +209,45 @@ export const MemberRow = styled.button`
 
   &:hover {
     background: color-mix(in srgb, var(--accent) 6%, transparent);
+  }
+`;
+
+export const MemberMain = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0 10px 12px;
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+  }
+`;
+
+export const RemoveMemberButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--error, #e53e3e) 35%, transparent);
+  background: transparent;
+  color: var(--error, #e53e3e);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--error, #e53e3e) 14%, transparent);
+    border-color: var(--error, #e53e3e);
   }
 `;
 
@@ -176,6 +292,11 @@ export const MemberRole = styled.span`
   padding: 2px 8px;
   flex-shrink: 0;
   text-transform: capitalize;
+
+  @media (max-width: 480px) {
+    font-size: 10px;
+    padding: 1px 6px;
+  }
 `;
 
 const shimmer = css`

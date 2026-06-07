@@ -38,6 +38,8 @@ export interface StoreState {
   musicPlayer: MusicPlayerState;
   unreadConversationIds: string[] | null;
   unreadReplyCount: number | null;
+  /** Total number of groups the current novelist belongs to. */
+  groupCount: number | null;
   helloStickers: { stickerUrl: string; previewUrl: string }[] | null;
   /** Prompt cached by the prompt-card before navigating to the comment page. */
   activePrompt: Prompt | null;

@@ -66,6 +66,123 @@ export const getConversationMembersAction = async (
   return members;
 };
 
+export const updateGroupAction = async (
+  groupId: string,
+  payload: { name?: string; image?: string },
+): Promise<DataType<Conversation>> => {
+  const headers = await getAuthHeaders();
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/conversation/${encodeURIComponent(groupId)}`;
+
+  const response = await fetch(URL, {
+    body: JSON.stringify(payload),
+    cache: "no-store",
+    headers,
+    method: "PUT",
+  });
+
+  Logger.debug("updateGroupAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const conversation: Conversation = await response.json();
+  return conversation;
+};
+
+export const addGroupMembersAction = async (
+  groupId: string,
+  participantIds: string[],
+): Promise<DataType<boolean>> => {
+  const headers = await getAuthHeaders();
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/conversation/${encodeURIComponent(groupId)}/members`;
+
+  const response = await fetch(URL, {
+    body: JSON.stringify(participantIds),
+    cache: "no-store",
+    headers,
+    method: "POST",
+  });
+
+  Logger.debug("addGroupMembersAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  return true;
+};
+
+export const removeGroupMemberAction = async (
+  groupId: string,
+  novelistId: string,
+): Promise<DataType<boolean>> => {
+  const headers = await getAuthHeaders();
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/conversation/${encodeURIComponent(groupId)}/members/${encodeURIComponent(novelistId)}`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers,
+    method: "DELETE",
+  });
+
+  Logger.debug("removeGroupMemberAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  return true;
+};
+
+export const leaveGroupAction = async (
+  groupId: string,
+): Promise<DataType<boolean>> => {
+  const headers = await getAuthHeaders();
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/conversation/${encodeURIComponent(groupId)}/leave`;
+
+  const response = await fetch(URL, {
+    body: JSON.stringify({}),
+    cache: "no-store",
+    headers,
+    method: "POST",
+  });
+
+  Logger.debug("leaveGroupAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  return true;
+};
+
+export const deleteGroupAction = async (
+  groupId: string,
+): Promise<DataType<boolean>> => {
+  const headers = await getAuthHeaders();
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/conversation/${encodeURIComponent(groupId)}`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers,
+    method: "DELETE",
+  });
+
+  Logger.debug("deleteGroupAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  return true;
+};
+
 export const getConversationMessagesAction = async (
   conversationId: string,
   page = 1,

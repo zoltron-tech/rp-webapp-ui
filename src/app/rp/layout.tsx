@@ -8,6 +8,7 @@ import { useCookies } from "react-cookie";
 import { ThemeProvider } from "styled-components";
 import {
   getConversationsAction,
+  getGroupCountAction,
   getUnreadConversationIdsAction,
 } from "@/app/rp/conversations/actions";
 import { GlobalMusicPlayer } from "@/components/global-music-player";
@@ -67,6 +68,16 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
     getConversationsAction(1, 15).then((result) => {
       if (result && Array.isArray(result)) {
         setGlobalState({ cachedConversations: result });
+      }
+    });
+  }, [authState, setGlobalState]);
+
+  // Prefetch the current group count after login so the create-group gate is ready
+  useEffect(() => {
+    if (authState !== "LOGGED_IN") return;
+    getGroupCountAction().then((result) => {
+      if (typeof result === "number") {
+        setGlobalState({ groupCount: result });
       }
     });
   }, [authState, setGlobalState]);
@@ -150,6 +161,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           cachedOOCPosts: null,
           conversationNavDirection: null,
           friendSuggestions: null,
+          groupCount: null,
           helloStickers: null,
           justOnboarded: false,
           lastReadConversationId: null,

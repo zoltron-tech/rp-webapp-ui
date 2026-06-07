@@ -38,6 +38,12 @@ export const BreadcrumbRow = styled.div`
   padding-block: 5px;
 `;
 
+export const BreadcrumbActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
 export const SupportButton = styled.button`
   display: flex;
   align-items: center;

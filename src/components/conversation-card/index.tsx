@@ -216,6 +216,7 @@ export const ConversationCard: FC<ConversationCardProps> = ({
               <S.Title className={unread ? "unread" : ""}>
                 {displayName}
               </S.Title>
+              {conversation.isGroup && <S.GroupTag>Group</S.GroupTag>}
               {!conversation.isGroup &&
                 otherMember?.isVerified &&
                 (otherMember.userName === "novelistworld" ? (

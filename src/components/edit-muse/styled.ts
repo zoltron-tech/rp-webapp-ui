@@ -1129,7 +1129,7 @@ export const FilterPreviewCardFace = styled.div<{
   $bgPosition?: string;
 }>`
   width: 95px;
-  height: 169px; /* 9:16 ratio (95 * 16/9 ≈ 169) */
+  aspect-ratio: 9 / 16; /* must match the displayed card ratio exactly */
   flex-shrink: 0;
   background-image: url(${({ $src }) => $src});
   background-repeat: no-repeat;
@@ -1145,7 +1145,7 @@ export const InteractiveCardFace = styled.div<{
   $bgPosition?: string;
 }>`
   width: 95px;
-  height: 169px;
+  aspect-ratio: 9 / 16; /* must match the displayed card ratio exactly */
   flex-shrink: 0;
   position: relative;
   background-image: url(${({ $src }) => $src});

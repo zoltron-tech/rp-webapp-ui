@@ -58,8 +58,11 @@ export const IMAGE_SIZES = {
   AVATAR_SMALL: { fit: "cover" as const, h: 120, w: 120 },
   BANNER_LARGE: { fit: "cover" as const, h: 400, w: 1200 },
   BANNER_MEDIUM: { fit: "cover" as const, h: 300, w: 600 },
-  CARD_BG: { fit: "cover" as const, h: 800, w: 450 },
-  CARD_BG_MINI: { fit: "cover" as const, h: 400, w: 225 },
+  // Card backgrounds must preserve the original aspect ratio (no cropping) so
+  // the stored CSS crop (background-size/position) frames the image exactly as
+  // it was set in the editor, which positions against the un-cropped image.
+  CARD_BG: { fit: "inside" as const, h: 800, w: 450 },
+  CARD_BG_MINI: { fit: "inside" as const, h: 400, w: 225 },
   COVER_LARGE: { fit: "cover" as const, h: 400, w: 400 },
   COVER_MEDIUM: { fit: "cover" as const, h: 300, w: 300 },
 };

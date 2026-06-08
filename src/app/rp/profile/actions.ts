@@ -483,20 +483,15 @@ export const unblockNovelistAction = async (
 ): Promise<WithMessage> => {
   const jwt = await authenticateAndGetJWT();
 
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/connection/delete`;
-  const body = {
-    connectionType: "BLOCKED",
-    targetId: novelistId,
-  };
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/connection/${novelistId}/unblock`;
 
   const response = await fetch(URL, {
-    body: JSON.stringify(body),
     cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       [AUTH_HEADER_NAME]: jwt,
     },
-    method: "POST",
+    method: "DELETE",
   });
 
   Logger.debug("unblockNovelistAction", response.status);

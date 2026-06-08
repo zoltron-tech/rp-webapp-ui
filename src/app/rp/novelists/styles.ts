@@ -158,6 +158,7 @@ export const CardsContainer = styled.div`
   gap: 24px;
   margin-top: 60px;
   margin-bottom: 80px;
+  padding-inline: 20px;
   width: 100%;
   max-width: 1100px;
 
@@ -252,6 +253,7 @@ export const Story = styled.div`
   color: rgba(255, 255, 255, 0.78);
   font-weight: 400;
   margin-block: 20px;
+  margin-inline: 20px;
   max-width: 580px;
   text-align: center;
   line-height: 1.8;
@@ -265,6 +267,7 @@ export const HeroEyebrow = styled.div`
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.5);
   margin-bottom: 16px;
+  margin-inline: 20px;
 
   @media screen and (max-width: 640px) {
     font-size: 0.72rem;
@@ -278,4 +281,5 @@ export const HeroContent = styled.div`
   align-items: center;
   gap: 6px;
   margin-bottom: 8px;
+  margin-inline: 20px;
 `;

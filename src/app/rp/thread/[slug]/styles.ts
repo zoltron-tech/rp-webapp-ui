@@ -39,7 +39,7 @@ export const ReplyWrapper = styled.div<{ $highlight?: boolean }>`
       : "transparent"};
 `;
 
-export const ParentContainer = styled(Container)`
+export const ParentContainer = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -59,15 +59,21 @@ export const ParentContainer = styled(Container)`
   }
 
   /* On mobile the page stops scrolling and becomes a fixed-height flex column.
-     RepliesContainer scrolls internally; MobileReplyComposer sits at the bottom. */
+     RepliesContainer scrolls internally; MobileReplyComposer sits at the bottom.
+
+     NOTE: We intentionally do NOT use position: fixed here. Ancestors with
+     a container-type (page-container = size, content-container = inline-size)
+     become the containing block for fixed-positioned descendants, so on real
+     iOS Safari/Chrome a fixed element anchors to content-container (which sits
+     below the sticky top bar) instead of the viewport — causing a top gap and
+     a non-scrollable column. A viewport-relative dvh height in normal flow
+     (the column already renders right below the sticky top bar) is immune to
+     that quirk. */
   @media screen and (max-width: 800px) {
-    position: fixed;
-    top: var(--topbar-height);
-    bottom: 0;
-    left: 0;
-    right: 0;
+    position: relative;
     width: 100%;
     max-width: 100%;
+    height: calc(100dvh - var(--topbar-height));
     margin: 0;
     padding: 0;
     overflow: hidden;

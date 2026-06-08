@@ -223,7 +223,7 @@ export const CardBackground = styled.div<CardProps>`
 
 export const CardWrapper = styled(Container)`
   width: 326px;
-  height: 580px;
+  aspect-ratio: 9 / 16;
   padding: 0px !important;
   border-radius: 8px;
   background: transparent;
@@ -239,7 +239,6 @@ export const CardWrapper = styled(Container)`
  @media (min-width: 1024px) and (max-width: 2047px) {
     margin-top: 20px;
     width: 422px;
-    height: 750px;
   }
 
   @media (max-width: 950px) {
@@ -250,7 +249,7 @@ export const CardWrapper = styled(Container)`
 export const CardExpandedWrapper = styled.div`
   position: relative;
   width: 326px;
-  height: 580px;
+  aspect-ratio: 9 / 16;
   border-radius: 8px;
   ${CARD_BORDER};
 
@@ -264,7 +263,6 @@ export const CardExpandedWrapper = styled.div`
   @media (min-width: 1024px) and (max-width: 2047px) {
     margin-top: 20px;
     width: 422px;
-    height: 750px;
 
     &:hover {
       & ${CardBackground} {

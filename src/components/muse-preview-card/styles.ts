@@ -50,7 +50,9 @@ export const CardFrame = styled.div<{ $accent?: string | null }>`
     & {
       width: 160px;
       min-width: 160px;
-      height: 300px;
+      /* Match the 240×420 desktop aspect ratio (1.75) so the fit-by-width
+         card crop frames identically on mobile. 160 × 420/240 = 280. */
+      height: 280px;
     }
 
     &.home {

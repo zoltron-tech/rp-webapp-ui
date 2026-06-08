@@ -10,7 +10,7 @@ import {
   useState,
 } from "react";
 import { HexColorPicker } from "react-colorful";
-import { BsArrowLeft, BsPencil, BsUpload } from "react-icons/bs";
+import { BsArrowLeft, BsAspectRatio, BsPencil, BsUpload } from "react-icons/bs";
 import { MdOutlineBrush, MdTune } from "react-icons/md";
 import { getMuseMediaAction } from "@/app/rp/muse/actions";
 import { deleteMedia } from "@/app/rp/profile/actions";
@@ -28,6 +28,10 @@ import { useMuseSave } from "./use-muse-save";
 
 const VALID_IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif"];
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
+
+/** Height ÷ width of the muse card (9:16 portrait). Used to compute the
+ *  "fit smaller side" zoom for the card image. */
+const CARD_ASPECT_H_OVER_W = 16 / 9;
 
 const IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif"];
 const isImageUrl = (url: string) => {
@@ -359,6 +363,30 @@ export function AppearanceSection({
     emitCropChange(cropBgX, cropBgY, next);
   };
 
+  // ── Fit card image so the smaller side fills the card ───────────────────────
+  // Loads the image's natural dimensions and zooms so that:
+  //   • wider-than-tall  → height fits the card top/bottom (width overflows)
+  //   • taller-than-wide → width fits the card sides (height overflows)
+  // The result is centered. We reuse the existing `width% auto` encoding, so the
+  // computed scale = cardAspect × (imgWidth / imgHeight) reproduces a height-fit.
+  const handleFitCardImage = useCallback(() => {
+    const src = tempCardBg?.src || image || "";
+    if (!src) return;
+    const img = new Image();
+    img.onload = () => {
+      const iw = img.naturalWidth;
+      const ih = img.naturalHeight;
+      if (!iw || !ih) return;
+      const nextScale = iw >= ih ? CARD_ASPECT_H_OVER_W * (iw / ih) : 1;
+      const clamped = Math.min(6, Math.max(1, nextScale));
+      setCropBgX(50);
+      setCropBgY(50);
+      setCropScale(clamped);
+      emitCropChange(50, 50, clamped);
+    };
+    img.src = src;
+  }, [tempCardBg?.src, image, emitCropChange]);
+
   const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(
     async (e) => {
       e.preventDefault();
@@ -585,13 +613,23 @@ export function AppearanceSection({
                 <S.SliderSection>
                   <S.SliderSectionHeader>
                     <span>Card Image</span>
-                    <S.PaletteButton
-                      type="button"
-                      onClick={() => setPickerTarget("cardBackground")}
-                    >
-                      <BsUpload size={12} />
-                      Change
-                    </S.PaletteButton>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <S.PaletteButton
+                        type="button"
+                        onClick={handleFitCardImage}
+                        title="Scale so the image's smaller side fits the card"
+                      >
+                        <BsAspectRatio size={12} />
+                        Fit
+                      </S.PaletteButton>
+                      <S.PaletteButton
+                        type="button"
+                        onClick={() => setPickerTarget("cardBackground")}
+                      >
+                        <BsUpload size={12} />
+                        Change
+                      </S.PaletteButton>
+                    </div>
                   </S.SliderSectionHeader>
                   <S.CropScaleRow>
                     <label htmlFor="card-crop-scale">Zoom</label>
@@ -601,10 +639,10 @@ export function AppearanceSection({
                       min={1}
                       max={3}
                       step={0.01}
-                      value={cropScale}
+                      value={Math.min(cropScale, 3)}
                       style={
                         {
-                          "--fill": `${((cropScale - 1) / 2) * 100}%`,
+                          "--fill": `${((Math.min(cropScale, 3) - 1) / 2) * 100}%`,
                         } as React.CSSProperties
                       }
                       onChange={(e) => {

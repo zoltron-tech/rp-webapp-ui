@@ -24,7 +24,7 @@ import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { InlineMusicPlayer } from "@/components/inline-music-player/page";
 import { LoadMore } from "@/components/load-more/page";
 import { MobileReplyComposer } from "@/components/mobile-reply-composer";
-import { AppDropdownMenu } from "@/components/profile-more-dropdown";
+import { AppDropdownMenuResponsive } from "@/components/profile-more-dropdown";
 import PromptInput from "@/components/prompt-input";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
 import {
@@ -234,6 +234,186 @@ const useGetReplies = (commentId: string) => {
     replies,
     setReplies,
   };
+};
+
+type ReplyItemProps = {
+  reply: Reply;
+  highlightedReplyId: string | null;
+  onEdit: (reply: Reply) => void;
+  onRequestDelete: (replyId: string) => void;
+  onRequestReport: (replyId: string) => void;
+};
+
+const ReplyItem = ({
+  reply,
+  highlightedReplyId,
+  onEdit,
+  onRequestDelete,
+  onRequestReport,
+}: ReplyItemProps) => {
+  const authState = useGlobalState("authState");
+  const novelist = useGlobalState("novelist");
+
+  const toggleReplyLike = useToggleLike({
+    id: reply.id || "",
+    liked: reply.reacted || false,
+    type: "reply",
+  });
+
+  const [replyState, setReplyState] = useState({
+    reacted: false,
+    reactions: 0,
+  });
+
+  useEffect(() => {
+    if (reply) {
+      setReplyState({
+        reacted: reply.reacted || false,
+        reactions: reply.reactions || 0,
+      });
+    }
+  }, [reply]);
+
+  const handleReplyLikeToggle = useCallback(async () => {
+    setReplyState((prev) => ({
+      ...prev,
+      reacted: !prev.reacted,
+      reactions: prev.reacted ? prev.reactions - 1 : prev.reactions + 1,
+    }));
+
+    const response = await toggleReplyLike.toggleLike();
+
+    if (!response || "message" in response) {
+      setReplyState({
+        reacted: reply.reacted || false,
+        reactions: reply.reactions || 0,
+      });
+      return;
+    }
+
+    setReplyState({
+      reacted: response.reacted,
+      reactions: response.reactions,
+    });
+  }, [toggleReplyLike, reply?.reacted, reply?.reactions]);
+
+  const onReplyLike = useMemo(() => {
+    if (authState !== "LOGGED_IN") return undefined;
+    return handleReplyLikeToggle;
+  }, [authState, handleReplyLikeToggle]);
+
+  return (
+    <S.ReplyWrapper key={reply.id} $highlight={highlightedReplyId === reply.id}>
+      <Flex
+        direction="column"
+        gap={0}
+        style={{ marginBottom: "10px", position: "relative" }}
+        className={highlightedReplyId === reply.id ? "highlight" : ""}
+      >
+        <S.DropdownMenuContainer>
+          <ShouldRender if={authState === "LOGGED_IN"}>
+            <AppDropdownMenuResponsive
+              trigger={<BsThreeDots size={18} />}
+              items={
+                novelist?.muses.some(
+                  (muse) => muse.id === reply.source.sourceId,
+                ) || reply.source.sourceId === novelist?.id
+                  ? [
+                      {
+                        icon: <FaRegEdit />,
+                        label: `Edit reply`,
+                        onClick: () => {
+                          onEdit(reply);
+                        },
+                      },
+                      {
+                        separator: true,
+                      },
+                      {
+                        icon: <FaRegTrashCan />,
+                        label: `Delete this reply`,
+                        onClick: () => {
+                          onRequestDelete(reply.id);
+                        },
+                        variant: "danger",
+                      },
+                    ]
+                  : [
+                      {
+                        icon: <RiFlagFill />,
+                        label: `Report this reply`,
+                        onClick: () => {
+                          onRequestReport(reply.id);
+                        },
+                        variant: "danger",
+                      },
+                    ]
+              }
+            />
+          </ShouldRender>
+        </S.DropdownMenuContainer>
+        <S.ReplyHeaderContainer>
+          <ShouldRender if={reply?.source.sourceType === "MUSE"}>
+            <MuseAvatar
+              museId={reply?.source.sourceId || ""}
+              image={reply?.source.image || ""}
+              name={reply?.source.name || ""}
+              avatar={reply?.source.avatar}
+            />
+          </ShouldRender>
+          <ShouldRender if={reply?.source.sourceType === "NOVELIST"}>
+            <NovelistAvatar
+              username={reply?.source.urlProp || ""}
+              image={reply?.source.image || ""}
+              name={reply?.source.name || ""}
+              avatar={reply?.source.avatar}
+            />
+          </ShouldRender>
+          <S.SourceInfo>
+            <S.SourceName>{reply?.source.name}</S.SourceName>
+            <ShouldRender if={Boolean(reply?.createdOn)}>
+              <S.PromptSubheader
+                title={reply?.createdOn ? displayDate(reply.createdOn) : ""}
+                dateTime={reply?.createdOn}
+              >
+                {reply?.createdOn ? toFormattedDate(reply?.createdOn) : ""}
+              </S.PromptSubheader>
+            </ShouldRender>
+          </S.SourceInfo>
+        </S.ReplyHeaderContainer>
+
+        <S.PromptTextContainer>
+          <RichTextRenderer
+            savedText={reply.text ?? ""}
+            collapsedHeight={100}
+            overlayHidden
+          />
+        </S.PromptTextContainer>
+        {reply.media && (
+          <S.MediaContainer>
+            <ShouldRender if={reply?.media.toLocaleLowerCase().endsWith("mp4")}>
+              <S.PromptVideo src={`${reply?.media}#t=0.3`} controls />
+            </ShouldRender>
+            <ShouldRender
+              if={!reply?.media.toLocaleLowerCase().endsWith("mp4")}
+            >
+              <AppImageViewer src={reply?.media} alt="Reply media">
+                <S.PromptImage src={reply.media || ""} alt="image" />
+              </AppImageViewer>
+            </ShouldRender>
+          </S.MediaContainer>
+        )}
+        <S.PromptContentFooter>
+          <LikeButton
+            onLike={onReplyLike}
+            parentId={reply.id}
+            liked={replyState.reacted}
+            likes={replyState.reactions}
+          />
+        </S.PromptContentFooter>
+      </Flex>
+    </S.ReplyWrapper>
+  );
 };
 
 export default function ThreadPage({}) {
@@ -578,183 +758,28 @@ export default function ThreadPage({}) {
     routeToPage(`${ROUTES.Prompt.View(comment.prompt.id)}?threadOpen=true`);
   };
 
-  const ReplyItem = ({ reply }: { reply: Reply }) => {
-    const toggleReplyLike = useToggleLike({
-      id: reply.id || "",
-      liked: reply.reacted || false,
-      type: "reply",
-    });
-
-    const [replyState, setReplyState] = useState({
-      reacted: false,
-      reactions: 0,
-    });
-
-    useEffect(() => {
-      if (reply) {
-        setReplyState({
-          reacted: reply.reacted || false,
-          reactions: reply.reactions || 0,
-        });
-      }
-    }, [reply]);
-
-    const handleReplyLikeToggle = useCallback(async () => {
-      setReplyState((prev) => ({
-        ...prev,
-        reacted: !prev.reacted,
-        reactions: prev.reacted ? prev.reactions - 1 : prev.reactions + 1,
-      }));
-
-      const response = await toggleReplyLike.toggleLike();
-
-      if (!response || "message" in response) {
-        setReplyState({
-          reacted: reply.reacted || false,
-          reactions: reply.reactions || 0,
-        });
-        return;
-      }
-
-      setReplyState({
-        reacted: response.reacted,
-        reactions: response.reactions,
-      });
-    }, [toggleReplyLike, reply?.reacted, reply?.reactions]);
-
-    const onReplyLike = useMemo(() => {
-      if (authState !== "LOGGED_IN") return undefined;
-      return handleReplyLikeToggle;
-    }, [authState, handleReplyLikeToggle]);
-
-    return (
-      <S.ReplyWrapper
-        key={reply.id}
-        $highlight={highlightedReplyId === reply.id}
-      >
-        <Flex
-          direction="column"
-          gap={0}
-          style={{ marginBottom: "10px", position: "relative" }}
-          className={highlightedReplyId === reply.id ? "highlight" : ""}
-        >
-          <S.DropdownMenuContainer>
-            <ShouldRender if={authState === "LOGGED_IN"}>
-              <AppDropdownMenu
-                trigger={<BsThreeDots size={18} />}
-                items={
-                  novelist?.muses.some(
-                    (muse) => muse.id === reply.source.sourceId,
-                  ) || reply.source.sourceId === novelist?.id
-                    ? [
-                        {
-                          icon: <FaRegEdit />,
-                          label: `Edit reply`,
-                          onClick: () => {
-                            setEditPromptPayload(reply);
-                            setEditPromptType("reply");
-                            setSelectedReplyId(reply.id);
-                            setShowEditPromptAlert(true);
-                          },
-                        },
-                        {
-                          separator: true,
-                        },
-                        {
-                          icon: <FaRegTrashCan />,
-                          label: `Delete this reply`,
-                          onClick: () => {
-                            setShowDeleteAlert(true),
-                              setSelectedReplyId(reply.id);
-                          },
-                          variant: "danger",
-                        },
-                      ]
-                    : [
-                        {
-                          icon: <RiFlagFill />,
-                          label: `Report this reply`,
-                          onClick: () => {
-                            setShowReportAlert(true),
-                              setSelectedReplyId(reply.id);
-                          },
-                          variant: "danger",
-                        },
-                      ]
-                }
-              />
-            </ShouldRender>
-          </S.DropdownMenuContainer>
-          <S.ReplyHeaderContainer>
-            <ShouldRender if={reply?.source.sourceType === "MUSE"}>
-              <MuseAvatar
-                museId={reply?.source.sourceId || ""}
-                image={reply?.source.image || ""}
-                name={reply?.source.name || ""}
-                avatar={reply?.source.avatar}
-              />
-            </ShouldRender>
-            <ShouldRender if={reply?.source.sourceType === "NOVELIST"}>
-              <NovelistAvatar
-                username={reply?.source.urlProp || ""}
-                image={reply?.source.image || ""}
-                name={reply?.source.name || ""}
-                avatar={reply?.source.avatar}
-              />
-            </ShouldRender>
-            <S.SourceInfo>
-              <S.SourceName>{reply?.source.name}</S.SourceName>
-              <ShouldRender if={Boolean(reply?.createdOn)}>
-                <S.PromptSubheader
-                  title={reply?.createdOn ? displayDate(reply.createdOn) : ""}
-                  dateTime={reply?.createdOn}
-                >
-                  {reply?.createdOn ? toFormattedDate(reply?.createdOn) : ""}
-                </S.PromptSubheader>
-              </ShouldRender>
-            </S.SourceInfo>
-          </S.ReplyHeaderContainer>
-
-          <S.PromptTextContainer>
-            <RichTextRenderer
-              savedText={reply.text ?? ""}
-              collapsedHeight={100}
-              overlayHidden
-            />
-          </S.PromptTextContainer>
-          {reply.media && (
-            <S.MediaContainer>
-              <ShouldRender
-                if={reply?.media.toLocaleLowerCase().endsWith("mp4")}
-              >
-                <S.PromptVideo src={`${reply?.media}#t=0.3`} controls />
-              </ShouldRender>
-              <ShouldRender
-                if={!reply?.media.toLocaleLowerCase().endsWith("mp4")}
-              >
-                <AppImageViewer src={reply?.media} alt="Reply media">
-                  <S.PromptImage src={reply.media || ""} alt="image" />
-                </AppImageViewer>
-              </ShouldRender>
-            </S.MediaContainer>
-          )}
-          <S.PromptContentFooter>
-            <LikeButton
-              onLike={onReplyLike}
-              parentId={reply.id}
-              liked={replyState.reacted}
-              likes={replyState.reactions}
-            />
-          </S.PromptContentFooter>
-        </Flex>
-      </S.ReplyWrapper>
-    );
-  };
-
   const loadReplies = () => {
-    return [...replies]
-      .reverse()
-      .map((reply) => <ReplyItem key={reply.id} reply={reply} />);
+    return [...replies].reverse().map((reply) => (
+      <ReplyItem
+        key={reply.id}
+        reply={reply}
+        highlightedReplyId={highlightedReplyId}
+        onEdit={(r) => {
+          setEditPromptPayload(r);
+          setEditPromptType("reply");
+          setSelectedReplyId(r.id);
+          setShowEditPromptAlert(true);
+        }}
+        onRequestDelete={(id) => {
+          setShowDeleteAlert(true);
+          setSelectedReplyId(id);
+        }}
+        onRequestReport={(id) => {
+          setShowReportAlert(true);
+          setSelectedReplyId(id);
+        }}
+      />
+    ));
   };
 
   if (!loadingComments && notFound) {
@@ -885,7 +910,7 @@ export default function ThreadPage({}) {
           </Flex>
           <S.HeaderDropdownMenuContainer>
             <ShouldRender if={authState === "LOGGED_IN"}>
-              <AppDropdownMenu
+              <AppDropdownMenuResponsive
                 trigger={<BsThreeDots size={18} />}
                 items={
                   isPromptOwner
@@ -971,7 +996,7 @@ export default function ThreadPage({}) {
         >
           <S.DropdownMenuContainer>
             <ShouldRender if={authState === "LOGGED_IN"}>
-              <AppDropdownMenu
+              <AppDropdownMenuResponsive
                 trigger={<BsThreeDots size={18} />}
                 items={
                   isCommentOwner

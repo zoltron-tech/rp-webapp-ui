@@ -14,6 +14,7 @@ import { PromptComposeTrigger } from "@/components/prompt-compose-trigger";
 import PromptInput from "@/components/prompt-input";
 import { FullPagePromptInput } from "@/components/prompt-input/full-page-prompt-input";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
+import { useCustomEvents } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import {
@@ -23,6 +24,11 @@ import {
   prefetchOOCPosts,
 } from "@/lib/feed-prefetch";
 import type { Prompt } from "@/types";
+import {
+  type CustomEventType,
+  EVENTS,
+  type PromptReactedPayload,
+} from "@/utils/constants/custom-events";
 import { getNewPromptsAction } from "../explore-prompts/actions";
 import * as S from "./styles";
 
@@ -140,6 +146,36 @@ export default function ExplorePage() {
     setMode(getModeFromTab(searchParams?.get("tab") ?? null));
   }, [searchParams]);
 
+  // Keep both the visible feeds and the global cache in sync when a prompt is
+  // reacted to, so the like persists after navigating away and back (the page
+  // re-hydrates from the global cache on mount).
+  const { on: onPromptEvent, off: offPromptEvent } = useCustomEvents(
+    EVENTS.PROMPT.base,
+  );
+
+  useEffect(() => {
+    const handlePromptReacted = (e: CustomEventType<PromptReactedPayload>) => {
+      const { id, reacted, reactions } = e.detail;
+
+      const applyReaction = (list: Prompt[] | null): Prompt[] | null =>
+        list?.map((p) => (p.id === id ? { ...p, reacted, reactions } : p)) ??
+        list;
+
+      setNewsFeedPrompts((prev) => applyReaction(prev));
+      setExplorePrompts((prev) => applyReaction(prev));
+      setGlobalState((state) => ({
+        cachedExplorePrompts: applyReaction(state.cachedExplorePrompts),
+        cachedOOCPosts: applyReaction(state.cachedOOCPosts),
+      }));
+    };
+
+    onPromptEvent(EVENTS.PROMPT.REACTED, handlePromptReacted);
+
+    return () => {
+      offPromptEvent(EVENTS.PROMPT.REACTED, handlePromptReacted);
+    };
+  }, [onPromptEvent, offPromptEvent, setGlobalState]);
+
   useEffect(() => {
     if (authState === "LOADING") return;
 
@@ -250,17 +286,32 @@ export default function ExplorePage() {
       )}
 
       <S.PromptListContainer>
-        {prompts?.map((prompt) => (
-          <PromptComponent key={prompt.id} prompt={prompt} />
-        ))}
+        {/* Both feeds stay mounted so each prompt's local store (including
+            optimistic reactions) survives tab switches. The inactive feed is
+            hidden via display:none rather than unmounted. */}
+        <div
+          style={{ display: mode === "NEWSFEED" ? "contents" : "none" }}
+          role="tabpanel"
+        >
+          {newsFeedPrompts?.map((prompt) => (
+            <PromptComponent key={prompt.id} prompt={prompt} />
+          ))}
+        </div>
 
-        {mode === "PROMPTS" && (
+        <div
+          style={{ display: mode === "PROMPTS" ? "contents" : "none" }}
+          role="tabpanel"
+        >
+          {explorePrompts?.map((prompt) => (
+            <PromptComponent key={prompt.id} prompt={prompt} />
+          ))}
+
           <LoadMore
             hasMore={hasMore}
             loadingMore={loadingMore}
             onLoadMore={loadMore}
           />
-        )}
+        </div>
 
         <ScrollJumpButton direction="up" onClick={scrollToTop} />
       </S.PromptListContainer>

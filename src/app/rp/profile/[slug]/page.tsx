@@ -42,7 +42,7 @@ import { Image } from "@/components/image-viewer/styled";
 import { LoadMore } from "@/components/load-more/page";
 import { MiniProfileCard } from "@/components/mini-profile-card";
 import MuseListItem from "@/components/muse-list-item";
-import { AppDropdownMenu } from "@/components/profile-more-dropdown";
+import { AppDropdownMenuResponsive } from "@/components/profile-more-dropdown";
 import { Prompt as PromptComponent } from "@/components/prompt";
 import { PromptComposeTrigger } from "@/components/prompt-compose-trigger";
 import PromptInput from "@/components/prompt-input";
@@ -623,7 +623,7 @@ export default function UserProfilePage({}) {
     switch (connection) {
       case "FRIEND":
         return (
-          <AppDropdownMenu
+          <AppDropdownMenuResponsive
             variant="bordered"
             trigger={<BsPersonFillCheck size={18} />}
             items={[
@@ -652,7 +652,7 @@ export default function UserProfilePage({}) {
 
       case "FRIEND_REQUEST_SENT":
         return (
-          <AppDropdownMenu
+          <AppDropdownMenuResponsive
             variant="bordered"
             trigger={<BsPersonFillUp size={18} />}
             items={[
@@ -668,7 +668,7 @@ export default function UserProfilePage({}) {
 
       case "FRIEND_REQUEST_RECEIVED":
         return (
-          <AppDropdownMenu
+          <AppDropdownMenuResponsive
             variant="bordered"
             trigger={<IoMdPersonAdd size={18} />}
             showUnread={true}
@@ -691,7 +691,7 @@ export default function UserProfilePage({}) {
 
       default:
         return !isCurrentUser ? (
-          <AppDropdownMenu
+          <AppDropdownMenuResponsive
             variant="bordered"
             trigger={<IoMdPersonAdd size={18} />}
             items={[
@@ -931,7 +931,7 @@ export default function UserProfilePage({}) {
               <S.ProfileDropdownMenuContainer>
                 {renderConnectionDropdown(novelist?.connection, username)}
                 <ShouldRender if={isCurrentUser}>
-                  <AppDropdownMenu
+                  <AppDropdownMenuResponsive
                     variant="bordered"
                     trigger={<BsThreeDots size={18} />}
                     items={[
@@ -956,7 +956,7 @@ export default function UserProfilePage({}) {
                 <ShouldRender
                   if={!isCurrentUser && username !== "novelistworld"}
                 >
-                  <AppDropdownMenu
+                  <AppDropdownMenuResponsive
                     variant="bordered"
                     trigger={<BsThreeDots size={18} />}
                     items={[
@@ -1002,7 +1002,7 @@ export default function UserProfilePage({}) {
                 <ShouldRender
                   if={!isCurrentUser && username === "novelistworld"}
                 >
-                  <AppDropdownMenu
+                  <AppDropdownMenuResponsive
                     variant="bordered"
                     trigger={<BsThreeDots size={18} />}
                     items={[

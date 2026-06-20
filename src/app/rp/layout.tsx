@@ -32,6 +32,28 @@ import { ACCENT_MAP } from "@/types/theme";
 import { getUnreadReplyCount } from "./outgoing-threads/actions";
 import * as S from "./styles";
 
+/**
+ * Schedule non-critical background work for when the browser is idle so it
+ * never contends with the auth-critical path or the initial render (which is
+ * what makes the app feel "frozen" right after opening). Falls back to a
+ * short timeout where requestIdleCallback is unavailable (e.g. Safari).
+ */
+type IdleWindow = Window & {
+  requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+  cancelIdleCallback?: (id: number) => void;
+};
+
+const runWhenIdle = (cb: () => void): (() => void) => {
+  if (typeof window === "undefined") return () => {};
+  const w = window as IdleWindow;
+  if (typeof w.requestIdleCallback === "function") {
+    const id = w.requestIdleCallback(cb, { timeout: 2000 });
+    return () => w.cancelIdleCallback?.(id);
+  }
+  const id = window.setTimeout(cb, 200);
+  return () => window.clearTimeout(id);
+};
+
 const useAccent = () => {
   const user = useGlobalState("user");
   const setGlobalState = useGlobalStoreSet();
@@ -65,20 +87,24 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
   // Prefetch the first page of conversations after login so the inbox renders instantly
   useEffect(() => {
     if (authState !== "LOGGED_IN") return;
-    getConversationsAction(1, 15).then((result) => {
-      if (result && Array.isArray(result)) {
-        setGlobalState({ cachedConversations: result });
-      }
+    return runWhenIdle(() => {
+      getConversationsAction(1, 15).then((result) => {
+        if (result && Array.isArray(result)) {
+          setGlobalState({ cachedConversations: result });
+        }
+      });
     });
   }, [authState, setGlobalState]);
 
   // Prefetch the current group count after login so the create-group gate is ready
   useEffect(() => {
     if (authState !== "LOGGED_IN") return;
-    getGroupCountAction().then((result) => {
-      if (typeof result === "number") {
-        setGlobalState({ groupCount: result });
-      }
+    return runWhenIdle(() => {
+      getGroupCountAction().then((result) => {
+        if (typeof result === "number") {
+          setGlobalState({ groupCount: result });
+        }
+      });
     });
   }, [authState, setGlobalState]);
 
@@ -112,18 +138,22 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
 
   useEffect(() => {
     if (authState !== "LOGGED_IN") return;
-    const queries = ["hello", "wave"];
-    const q = queries[Math.floor(Math.random() * queries.length)];
-    fetch(`/api/klipy-stickers?q=${encodeURIComponent(q)}&limit=20`)
-      .then((r) => r.json())
-      .then((data: { items: { stickerUrl: string; previewUrl: string }[] }) => {
-        if (data.items?.length) {
-          setGlobalState({ helloStickers: data.items });
-        }
-      })
-      .catch(() => {
-        /* non-critical */
-      });
+    return runWhenIdle(() => {
+      const queries = ["hello", "wave"];
+      const q = queries[Math.floor(Math.random() * queries.length)];
+      fetch(`/api/klipy-stickers?q=${encodeURIComponent(q)}&limit=20`)
+        .then((r) => r.json())
+        .then(
+          (data: { items: { stickerUrl: string; previewUrl: string }[] }) => {
+            if (data.items?.length) {
+              setGlobalState({ helloStickers: data.items });
+            }
+          },
+        )
+        .catch(() => {
+          /* non-critical */
+        });
+    });
   }, [authState, setGlobalState]);
 
   return (

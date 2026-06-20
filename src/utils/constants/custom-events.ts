@@ -20,6 +20,7 @@ export const EVENTS = {
   },
   PROMPT: {
     base: "prompt",
+    REACTED: "reacted",
     UPDATED: "updated",
   },
   REPLY: {
@@ -50,6 +51,12 @@ export type CustomEventType<T> = {
 export type PromptCommentReplyUpdatedPayload = {
   id: string;
   text: string;
+};
+
+export type PromptReactedPayload = {
+  id: string;
+  reacted: boolean;
+  reactions: number;
 };
 
 export type PrivacyCustomAppliedPayload = {

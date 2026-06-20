@@ -15,7 +15,7 @@ import { displayDate, toFormattedDate } from "@/utils/helpers";
 import { MuseAvatar } from "../common/muse-avatar";
 import { NovelistAvatar } from "../common/novelist-avatar";
 import { AppAlertDialog } from "../dialog";
-import { AppDropdownMenu } from "../profile-more-dropdown";
+import { AppDropdownMenuResponsive } from "../profile-more-dropdown";
 import { UpdatePromptForm, type UpdatePromptProps } from "../update-prompt";
 import { useCommentState, useCommentStateSet } from "./comment.store";
 import * as S from "./styled";
@@ -141,7 +141,7 @@ export const CommentSource: FC = () => {
       </S.Source.Info>
       <S.HeaderDropdownMenuContainer>
         <ShouldRender if={authState === "LOGGED_IN"}>
-          <AppDropdownMenu
+          <AppDropdownMenuResponsive
             trigger={<BsThreeDots size={18} />}
             items={dropdownItems}
           />

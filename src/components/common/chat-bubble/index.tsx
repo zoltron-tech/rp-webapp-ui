@@ -14,7 +14,8 @@ import type { Message } from "@/types/conversation";
 import { ROUTES } from "@/utils/constants/routes";
 import { AppAlertDialog } from "../../dialog";
 import { AppImageViewer } from "../../image-viewer/AppImageViewer";
-import { AppDropdownMenu } from "../../profile-more-dropdown";
+import { VideoViewer } from "../../image-viewer/VideoViewer";
+import { AppDropdownMenuResponsive } from "../../profile-more-dropdown";
 import { AvatarNew } from "../avatar-new";
 import * as S from "./styles";
 
@@ -668,6 +669,7 @@ export const ChatVideoAttachment: FC<{ src: string }> = ({ src }) => {
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [viewerOpen, setViewerOpen] = useState(false);
   // True until the user presses play for the first time; used to seek back to
   // 0 after the thumbnail seek so playback always starts from the beginning.
   const showingThumbnailRef = useRef(true);
@@ -761,7 +763,13 @@ export const ChatVideoAttachment: FC<{ src: string }> = ({ src }) => {
   }
   return (
     <S.VideoAttachmentCard>
-      <S.VideoViewport>
+      <S.VideoViewport
+        style={{ cursor: "zoom-in" }}
+        onClick={() => {
+          if (videoElement && !videoElement.paused) videoElement.pause();
+          setViewerOpen(true);
+        }}
+      >
         <S.VideoElement
           ref={setVideoElement}
           preload="metadata"
@@ -786,6 +794,12 @@ export const ChatVideoAttachment: FC<{ src: string }> = ({ src }) => {
         </S.AudioProgressBar>
         <S.AudioTime>{formatTime(duration)}</S.AudioTime>
       </S.AudioProgressRow>
+
+      <VideoViewer
+        src={src}
+        open={viewerOpen}
+        onOpenChange={setViewerOpen}
+      />
     </S.VideoAttachmentCard>
   );
 };
@@ -1080,7 +1094,7 @@ export const ChatBubble: FC<Props> = ({
           width: isSender ? undefined : 0,
         }}
       >
-        <AppDropdownMenu
+        <AppDropdownMenuResponsive
           trigger={<BsThreeDots size={14} />}
           items={menuItems}
         />
@@ -1264,7 +1278,7 @@ export const ChatBubble: FC<Props> = ({
           width: !isSender ? undefined : 0,
         }}
       >
-        <AppDropdownMenu
+        <AppDropdownMenuResponsive
           trigger={<BsThreeDots size={14} />}
           items={menuItems}
         />

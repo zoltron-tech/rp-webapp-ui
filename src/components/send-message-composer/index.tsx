@@ -688,17 +688,19 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
                     <FcAddImage size={28} />
                   </S.ImageButton>
                 )}
-                <S.EmojiButton
-                  type="button"
-                  title="Insert emoji"
-                  data-emoji-toggle
-                  data-active={emojiPickerOpen ? "true" : undefined}
-                  onClick={() => {
-                    setEmojiPickerOpen((prev) => !prev);
-                  }}
-                >
-                  <HiFaceSmile color="#f59e0b" size={28} />
-                </S.EmojiButton>
+                {!isMobile && (
+                  <S.EmojiButton
+                    type="button"
+                    title="Insert emoji"
+                    data-emoji-toggle
+                    data-active={emojiPickerOpen ? "true" : undefined}
+                    onClick={() => {
+                      setEmojiPickerOpen((prev) => !prev);
+                    }}
+                  >
+                    <HiFaceSmile color="#f59e0b" size={28} />
+                  </S.EmojiButton>
+                )}
               </Flex>
             </>
           )}

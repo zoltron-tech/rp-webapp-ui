@@ -5,6 +5,9 @@ import { DropdownMenu } from "radix-ui";
 import { useGlobalState } from "@/context/store/stores";
 import * as S from "./styled";
 
+export { AppDropdownMenuMobile } from "./mobile";
+export { AppDropdownMenuResponsive } from "./responsive";
+
 type Variant = "bordered" | "minimal";
 
 interface DropdownItem {

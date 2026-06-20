@@ -36,9 +36,11 @@ export const PromptContent: FC<PromptContentProps> = ({ disableCollapse }) => {
     liked: reacted,
     type: "prompt",
   });
-  const { on: onPromptEvent, off: offPromptEvent } = useCustomEvents(
-    EVENTS.PROMPT.base,
-  );
+  const {
+    on: onPromptEvent,
+    off: offPromptEvent,
+    emit: emitPromptEvent,
+  } = useCustomEvents(EVENTS.PROMPT.base);
 
   useEffect(() => {
     const handlePromptUpdated = (
@@ -74,7 +76,20 @@ export const PromptContent: FC<PromptContentProps> = ({ disableCollapse }) => {
       reacted: response.reacted,
       reactions: response.reactions,
     });
-  }, [toggleLike, setPromptState, reacted, reactions]);
+
+    emitPromptEvent(EVENTS.PROMPT.REACTED, {
+      id: promptId,
+      reacted: response.reacted,
+      reactions: response.reactions,
+    });
+  }, [
+    toggleLike,
+    setPromptState,
+    reacted,
+    reactions,
+    emitPromptEvent,
+    promptId,
+  ]);
 
   const onLike = useMemo(() => {
     if (authState !== "LOGGED_IN") return undefined;

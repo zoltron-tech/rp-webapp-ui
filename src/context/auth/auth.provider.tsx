@@ -92,14 +92,18 @@ export const AuthProvider: FC<Props> = ({ children }) => {
       });
 
       if (_novelist.isOnboarded) {
-        const [unreadIds, unreadReplyCount] = await Promise.all([
+        // Load unread counts in the background so they never block the app
+        // from becoming interactive. The unread marker stays hidden while
+        // these are null and appears as soon as they resolve.
+        void Promise.all([
           getUnreadConversationIdsAction(),
           getUnreadReplyCount(),
-        ]);
-        setGlobalState({
-          unreadConversationIds: Array.isArray(unreadIds) ? unreadIds : [],
-          unreadReplyCount:
-            typeof unreadReplyCount === "number" ? unreadReplyCount : 0,
+        ]).then(([unreadIds, unreadReplyCount]) => {
+          setGlobalState({
+            unreadConversationIds: Array.isArray(unreadIds) ? unreadIds : [],
+            unreadReplyCount:
+              typeof unreadReplyCount === "number" ? unreadReplyCount : 0,
+          });
         });
         initialisePushNotifications(); // fire-and-forget — errors caught inside
       }

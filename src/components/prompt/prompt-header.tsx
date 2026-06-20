@@ -26,7 +26,7 @@ import { PrivacyIcon } from "../common/privacy-icon";
 import { AppAlertDialog } from "../dialog";
 import { FriendsList } from "../friends-list";
 import { InlineMusicPlayer } from "../inline-music-player/page";
-import { AppDropdownMenu } from "../profile-more-dropdown";
+import { AppDropdownMenuResponsive } from "../profile-more-dropdown";
 import { UpdatePromptForm, type UpdatePromptProps } from "../update-prompt";
 import { usePromptState, usePromptStateSet } from "./prompt.store";
 import * as S from "./styled";
@@ -229,7 +229,7 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
 
       <S.HeaderDropdownMenuContainer>
         <ShouldRender if={authState === "LOGGED_IN"}>
-          <AppDropdownMenu
+          <AppDropdownMenuResponsive
             trigger={<BsThreeDots size={18} />}
             items={dropdownItems}
           />

@@ -10,6 +10,7 @@ import type { Fandom } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { AvatarUploadField } from "../common/avatar-upload-field";
 import { ErrorBox } from "../error-box";
+import { PromptPrivacySelect } from "../prompt-input/privacy-select";
 import { FandomSelect } from "./fandom-select";
 import { useMuseState, useMuseStoreSet } from "./muse.store";
 import * as S from "./styled";
@@ -29,6 +30,7 @@ export function CreateInitialSection({ onContinue, onBack }: Props) {
   const lastName = useMuseState("lastName");
   const image = useMuseState("image");
   const fandom = useMuseState("fandom");
+  const privacy = useMuseState("privacy");
   const setMuseState = useMuseStoreSet();
   const { save, loading } = useMuseSave();
   const { uploadMedia } = useUploadMedia();
@@ -111,7 +113,8 @@ export function CreateInitialSection({ onContinue, onBack }: Props) {
       if (!firstNameValue) return;
       setMuseState({ firstName: firstNameValue, lastName: lastNameValue });
 
-      const result = await save();
+      const privacyValue = (e.target as HTMLFormElement).privacy?.value;
+      const result = await save(privacyValue);
       if (!result.ok) {
         setError("Something went wrong. Please try again.");
         return;
@@ -143,7 +146,11 @@ export function CreateInitialSection({ onContinue, onBack }: Props) {
               <h1>Add a new character</h1>
             </S.FormHeading>
           </Flex>
-          <div style={{ width: 32 }} /> {/* Placeholder for spacing */}
+          <PromptPrivacySelect
+            className="muse-privacy-select"
+            initial={privacy}
+            blockedOptions={["CUSTOM"]}
+          />
         </S.TopBar>
         <Separator.Root className="separator" orientation="horizontal" />
 

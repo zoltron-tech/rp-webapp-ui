@@ -795,11 +795,7 @@ export const ChatVideoAttachment: FC<{ src: string }> = ({ src }) => {
         <S.AudioTime>{formatTime(duration)}</S.AudioTime>
       </S.AudioProgressRow>
 
-      <VideoViewer
-        src={src}
-        open={viewerOpen}
-        onOpenChange={setViewerOpen}
-      />
+      <VideoViewer src={src} open={viewerOpen} onOpenChange={setViewerOpen} />
     </S.VideoAttachmentCard>
   );
 };

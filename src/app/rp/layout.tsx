@@ -189,6 +189,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           cachedExplorePrompts: null,
           cachedHomeActivities: null,
           cachedOOCPosts: null,
+          cachedPromptComments: null,
           conversationNavDirection: null,
           friendSuggestions: null,
           groupCount: null,

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { getPropmptCommentsAction } from "@/app/rp/prompt/actions";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useCustomEvents } from "@/hooks";
 import type { Comment } from "@/types";
 import {
@@ -9,8 +10,15 @@ import {
 } from "@/utils/constants/custom-events";
 
 export const useGetComments = (promptId: string, skipAutoFetch = false) => {
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cachedPromptComments = useGlobalState("cachedPromptComments");
+  const setGlobalState = useGlobalStoreSet();
+
+  const [comments, setComments] = useState<Comment[]>(
+    () => cachedPromptComments?.[promptId] ?? [],
+  );
+  const [loading, setLoading] = useState(
+    () => !cachedPromptComments?.[promptId],
+  );
   const { on, off } = useCustomEvents(EVENTS.COMMENT.base);
 
   const fetchComments = useCallback(async () => {
@@ -22,14 +30,20 @@ export const useGetComments = (promptId: string, skipAutoFetch = false) => {
       return;
     }
     setComments(_comments);
+    setGlobalState((state) => ({
+      cachedPromptComments: {
+        ...(state.cachedPromptComments ?? {}),
+        [promptId]: _comments,
+      },
+    }));
     setLoading(false);
-  }, [promptId]);
+  }, [promptId, setGlobalState]);
 
   useEffect(() => {
-    if (!skipAutoFetch) {
+    if (!skipAutoFetch && !cachedPromptComments?.[promptId]) {
       fetchComments();
     }
-  }, [fetchComments, skipAutoFetch]);
+  }, [fetchComments, skipAutoFetch, cachedPromptComments, promptId]);
 
   useEffect(() => {
     const handleDeleteComment = (
@@ -38,17 +52,21 @@ export const useGetComments = (promptId: string, skipAutoFetch = false) => {
       const commentId = event.detail.id;
 
       setComments((prev) => {
-        const filteredComments = prev.filter(
-          (comment) => comment.id !== commentId,
-        );
-        return filteredComments;
+        const filtered = prev.filter((c) => c.id !== commentId);
+        setGlobalState((state) => ({
+          cachedPromptComments: {
+            ...(state.cachedPromptComments ?? {}),
+            [promptId]: filtered,
+          },
+        }));
+        return filtered;
       });
     };
     on(EVENTS.COMMENT.DELETED, handleDeleteComment);
     return () => {
       off(EVENTS.COMMENT.DELETED, handleDeleteComment);
     };
-  }, [on, off]);
+  }, [on, off, promptId, setGlobalState]);
 
   return { comments, loading, refetch: fetchComments };
 };

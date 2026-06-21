@@ -140,8 +140,10 @@ export const ChatMeta = styled.span`
 export const GroupBadge = styled.span`
   display: inline-flex;
   align-items: center;
-  font-size: var(--font-size-xs, 11px);
-  font-weight: var(--font-weight-medium);
+  width: fit-content;
+  font-size: var(--font-size-small, 11px);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
   color: var(--accent);
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);

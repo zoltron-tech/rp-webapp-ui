@@ -1017,8 +1017,8 @@ export const ChatBubble: FC<Props> = ({
   };
 
   const scrollPicker = (dir: "left" | "right") => {
-    // 38px button + 2px gap = one emoji step
-    pickerRef.current?.scrollBy({ left: dir === "right" ? 40 : -40, behavior: "smooth" });
+    // 44px button + 6px gap = one emoji step
+    pickerRef.current?.scrollBy({ left: dir === "right" ? 50 : -50, behavior: "smooth" });
   };
 
   const reactionPicker = onReact ? (

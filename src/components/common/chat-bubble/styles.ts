@@ -821,8 +821,11 @@ export const ReactionPicker = styled.div`
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 10px;
   overflow-x: auto;
+  /* Only allow horizontal panning — prevents the page from scrolling
+     vertically when the user swipes through reactions. */
+  touch-action: pan-x;
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
@@ -839,12 +842,13 @@ export const ReactionPickerButton = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
   border: none;
   border-radius: 999px;
   background: transparent;
-  font-size: 22px;
+  font-size: 32px;
   line-height: 1;
   cursor: pointer;
   transition: transform 0.12s ease, background-color 0.12s ease;

@@ -977,12 +977,13 @@ export function ConversationPanel({
                       <EmailVerifiedBadge size={14} />
                     ))}
                 </S.ChatTitleRow>
-                <S.ChatMeta>
-                  @
-                  {conversation?.name ||
-                    resolvedTargetUserName ||
-                    conversationId}
-                </S.ChatMeta>
+                {conversation?.isGroup ? (
+                  <S.GroupBadge>Group</S.GroupBadge>
+                ) : (
+                  <S.ChatMeta>
+                    @{resolvedTargetUserName || conversationId}
+                  </S.ChatMeta>
+                )}
               </S.ChatTitleWrap>
             </button>
           </S.ChatPerson>

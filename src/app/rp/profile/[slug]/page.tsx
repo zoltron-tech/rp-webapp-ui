@@ -409,9 +409,9 @@ export default function UserProfilePage({}) {
   const handleShareProfile = () => {
     if (username) {
       navigator.clipboard.writeText(
-        `https://novelist.world/rp/profile/${username}`,
+        `https://novelist.world/${username}`,
       );
-      successToast("Profle link copied to clipboard");
+      successToast("Profile link copied to clipboard");
     }
   };
 

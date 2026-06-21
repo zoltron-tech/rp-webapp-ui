@@ -30,6 +30,7 @@ import {
   type PromptReactedPayload,
 } from "@/utils/constants/custom-events";
 import { getNewPromptsAction } from "../explore-prompts/actions";
+import { getNewsFeedPageAction } from "../news-feed/actions";
 import * as S from "./styles";
 
 const PAGE_SIZE = FEED_PAGE_SIZES.explorePrompts;
@@ -71,31 +72,61 @@ export default function ExplorePage() {
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
+  const [newsFeedPage, setNewsFeedPage] = useState(1);
+  const [newsFeedHasMore, setNewsFeedHasMore] = useState(true);
+  const [newsFeedLoadingMore, setNewsFeedLoadingMore] = useState(false);
+
   // ── Fetchers ──────────────────────────────────────────────────────────────
   // Both fetchers prefer the shared prefetch service: if a prefetch is in
   // flight we attach to its promise; if page 1 is already cached we render
   // it immediately; otherwise we issue a fresh fetch.
 
-  const fetchNewsFeedPrompts = useCallback(async () => {
-    // Cached → done.
-    if (cachedOOCPosts) {
-      setNewsFeedPrompts(cachedOOCPosts);
-      stopPageLoading();
-      return;
-    }
-    // In-flight → attach.
-    const inflight = getInflightFeed<Prompt[] | null>("oocPosts");
-    if (inflight) {
-      const result = await inflight;
-      if (result) setNewsFeedPrompts(result);
-      stopPageLoading();
-      return;
-    }
-    // Cold → kick off via the shared service so other callers can dedupe.
-    const result = await prefetchOOCPosts(setGlobalState);
-    if (result) setNewsFeedPrompts(result);
-    stopPageLoading();
-  }, [cachedOOCPosts, setGlobalState, stopPageLoading]);
+  const fetchNewsFeedPrompts = useCallback(
+    async (pageNumber: number, append = false) => {
+      // Page 1: prefer cache / in-flight dedup, same as explorePrompts.
+      if (pageNumber === 1 && !append) {
+        if (cachedOOCPosts) {
+          setNewsFeedPrompts(cachedOOCPosts);
+          setNewsFeedHasMore(cachedOOCPosts.length === PAGE_SIZE);
+          stopPageLoading();
+          return;
+        }
+        const inflight = getInflightFeed<Prompt[] | null>("oocPosts");
+        if (inflight) {
+          const result = await inflight;
+          if (result) {
+            setNewsFeedPrompts(result);
+            setNewsFeedHasMore(result.length === PAGE_SIZE);
+          }
+          stopPageLoading();
+          return;
+        }
+        const result = await prefetchOOCPosts(setGlobalState);
+        if (result) {
+          setNewsFeedPrompts(result);
+          setNewsFeedHasMore(result.length === PAGE_SIZE);
+        }
+        stopPageLoading();
+        return;
+      }
+
+      // Pages 2+: fetch directly.
+      const _prompts = await baseDataLoader(() =>
+        getNewsFeedPageAction(pageNumber, PAGE_SIZE),
+      );
+
+      if (!_prompts || _prompts.length === 0) {
+        setNewsFeedHasMore(false);
+        return;
+      }
+
+      setNewsFeedHasMore(_prompts.length === PAGE_SIZE);
+      setNewsFeedPrompts((prev) =>
+        append ? [...(prev || []), ..._prompts] : _prompts,
+      );
+    },
+    [baseDataLoader, cachedOOCPosts, setGlobalState, stopPageLoading],
+  );
 
   const fetchExplorePrompts = useCallback(
     async (pageNumber: number, append = false) => {
@@ -184,7 +215,7 @@ export default function ExplorePage() {
         // Already hydrated from cache — clear the page loader set by navigation.
         stopPageLoading();
       } else {
-        fetchNewsFeedPrompts();
+        fetchNewsFeedPrompts(1);
       }
     }
 
@@ -215,6 +246,18 @@ export default function ExplorePage() {
 
     setPage(nextPage);
     setLoadingMore(false);
+  };
+
+  const loadMoreNewsFeed = async () => {
+    if (mode !== "NEWSFEED" || newsFeedLoadingMore) return;
+
+    setNewsFeedLoadingMore(true);
+    const nextPage = newsFeedPage + 1;
+
+    await fetchNewsFeedPrompts(nextPage, true);
+
+    setNewsFeedPage(nextPage);
+    setNewsFeedLoadingMore(false);
   };
 
   const scrollToTop = () => {
@@ -275,6 +318,8 @@ export default function ExplorePage() {
             setExplorePrompts(null);
             setPage(1);
             setHasMore(true);
+            setNewsFeedPage(1);
+            setNewsFeedHasMore(true);
           }}
         />
       )}
@@ -296,6 +341,12 @@ export default function ExplorePage() {
           {newsFeedPrompts?.map((prompt) => (
             <PromptComponent key={prompt.id} prompt={prompt} />
           ))}
+
+          <LoadMore
+            hasMore={newsFeedHasMore}
+            loadingMore={newsFeedLoadingMore}
+            onLoadMore={loadMoreNewsFeed}
+          />
         </div>
 
         <div

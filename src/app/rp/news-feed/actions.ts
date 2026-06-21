@@ -10,6 +10,41 @@ import { Logger } from "@/utils/services";
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
 
+export const getNewsFeedPageAction = async (
+  pageNumber: number,
+  pageSize: number,
+): Promise<DataType<Prompt[]>> => {
+  const jwt = await getJWTIfExists();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (jwt) {
+    headers[AUTH_HEADER_NAME] = jwt;
+  }
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/posts?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers: headers,
+  });
+
+  Logger.debug("getNewsFeedPageAction", response.status);
+
+  if (response.status === 404) {
+    return null;
+  } else if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const prompts = (await response.json()) as Prompt[];
+
+  for (const p of prompts) transformPrompt(p, "feed");
+
+  return prompts;
+};
+
 export const getNewsFeed = async (): Promise<DataType<Prompt[]>> => {
   const jwt = await getJWTIfExists();
   const headers: Record<string, string> = {

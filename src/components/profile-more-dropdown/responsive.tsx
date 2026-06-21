@@ -19,6 +19,7 @@ interface AppDropdownMenuResponsiveProps {
   trigger: React.ReactNode;
   showUnread?: boolean;
   variant?: Variant;
+  headerContent?: React.ReactNode;
 }
 
 /**

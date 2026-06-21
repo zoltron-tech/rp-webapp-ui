@@ -159,6 +159,26 @@ export const MobileSeparator = styled.div`
   margin-block: 20px !important;
 `;
 
+export const HeaderRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 4px 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--bg-5);
+`;
+
+export const MobileHeaderRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 4px;
+  padding: 4px 4px 14px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--bg-5);
+`;
+
 // Mobile Bottom Sheet Styles
 export const MobilePortalRoot = styled.div`
   /* Carries the accent + theme classes so the fixed children below resolve
@@ -195,7 +215,7 @@ export const MobileSheet = styled.div<MobileSheetProps>`
   background-color: var(--bg-2);
   border-radius: 16px 16px 0 0;
   padding-inline: 18px;
-  padding-bottom: 18px;
+  padding-bottom: 60px;
   display: flex;
   flex-direction: column;
   z-index: 99999;
@@ -218,7 +238,7 @@ export const MobileSheet = styled.div<MobileSheetProps>`
 export const DragHandle = styled.div`
   width: 40px;
   height: 4px;
-  background-color: var(--bg-5);
+  background-color: var(--bg-9);
   border-radius: 2px;
   margin: 12px auto;
   flex-shrink: 0;

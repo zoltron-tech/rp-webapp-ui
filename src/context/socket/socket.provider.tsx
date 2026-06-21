@@ -20,6 +20,8 @@ import {
   HEARTBEAT_TIMEOUT_MS,
   isServerMessage,
   isServerPing,
+  isServerReaction,
+  type ReactionSocketPayload,
 } from "@/utils/socket-helpers";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -29,6 +31,7 @@ type SocketContextType = {
   isConnected: boolean;
   onlineUsernames: string[];
   lastIncomingMessage: Message | null;
+  lastIncomingReaction: ReactionSocketPayload | null;
   /** Call before any user action to guarantee the socket is open (no-op if already connected or not logged in). */
   ensureConnected: () => void;
 };
@@ -39,6 +42,7 @@ const SocketContext = createContext<SocketContextType>({
   ensureConnected: () => {},
   isConnected: false,
   lastIncomingMessage: null,
+  lastIncomingReaction: null,
   onlineUsernames: [],
   socket: null,
 });
@@ -84,6 +88,8 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
   const [onlineUsernames, setOnlineUsernames] = useState<string[]>([]);
   const [lastIncomingMessage, setLastIncomingMessage] =
     useState<Message | null>(null);
+  const [lastIncomingReaction, setLastIncomingReaction] =
+    useState<ReactionSocketPayload | null>(null);
 
   // Keep stable refs so callbacks never capture stale values
   const socketRef = useRef<WebSocketExt | null>(null);
@@ -235,6 +241,11 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
         return;
       }
 
+      if (isServerReaction(data)) {
+        setLastIncomingReaction(data.payload);
+        return;
+      }
+
       if (!isServerPing(data)) return;
 
       // Track which users the server reports as online
@@ -289,6 +300,7 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
         ensureConnected,
         isConnected,
         lastIncomingMessage,
+        lastIncomingReaction,
         onlineUsernames,
         socket,
       }}

@@ -63,6 +63,9 @@ export const ChatHeader = styled.div`
 
   @media (max-width: 680px) {
     border-radius: unset;
+    border-top: none;
+    border-right: none;
+    border-left: none;
   }
 `;
 

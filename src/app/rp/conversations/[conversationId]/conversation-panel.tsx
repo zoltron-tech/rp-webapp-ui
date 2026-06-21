@@ -17,7 +17,9 @@ import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import type { Conversation, MentionDataItem, Message } from "@/types";
+import type { MessageSender, Reaction } from "@/types/conversation";
 import { ROUTES } from "@/utils/constants/routes";
+import { createReactionSocketMessage } from "@/utils/socket-helpers";
 import { getUnreadConversationIdsAction } from "../actions";
 import {
   getConversationByIdAction,
@@ -154,7 +156,8 @@ export function ConversationPanel({
   const router = useRouter();
   const musicPlayerHeight =
     musicPlayer?.playingSongId && musicPlayer?.playingSongName ? 53 : 0;
-  const { socket, isConnected, lastIncomingMessage } = useSocket();
+  const { socket, isConnected, lastIncomingMessage, lastIncomingReaction } =
+    useSocket();
   const { routeToPage, stopPageLoading } = usePageRouter();
   const { errorToast, successToast } = useUIContext();
 
@@ -684,6 +687,75 @@ export function ConversationPanel({
     setReportingMessage(null);
   };
 
+  // ── Reactions ───────────────────────────────────────────────────────────────
+
+  // Merge a single reaction into the message list. A novelist may only have one
+  // reaction per message, so any existing reaction from the same sender is
+  // replaced (mirrors the backend composite key messageId + novelistId).
+  const applyReaction = useCallback(
+    (reaction: Reaction) => {
+      setMessages((prev) =>
+        prev.map((m) => {
+          if (m.id !== reaction.messageId) return m;
+          const others = (m.reactions || []).filter(
+            (r) => r.sender?.id !== reaction.sender?.id,
+          );
+          return { ...m, reactions: [...others, reaction] };
+        }),
+      );
+    },
+    [],
+  );
+
+  const handleReact = useCallback(
+    (message: Message, reactionKey: string) => {
+      // Optimistic messages have no server id yet — reactions need a real one.
+      if (message.id.startsWith("optimistic-")) return;
+
+      if (!socket || !isConnected) {
+        errorToast("Not connected. Please wait and try again.");
+        return;
+      }
+
+      const sender: MessageSender = {
+        id: novelist?.id ?? "",
+        image: novelist?.image ?? "",
+        messageSourceType: "NOVELIST",
+        name: novelist?.firstName ?? user?.username ?? "",
+        username: user?.username ?? "",
+      };
+      const reaction: Reaction = {
+        messageId: message.id,
+        reaction: reactionKey,
+        sender,
+      };
+
+      // 1. Optimistically reflect the reaction locally.
+      applyReaction(reaction);
+
+      // 2. Send it over the chat-server socket, which persists the reaction
+      //    and broadcasts it to every other participant in real time.
+      try {
+        socket.send(
+          JSON.stringify(
+            createReactionSocketMessage({ ...reaction, conversationId }),
+          ),
+        );
+      } catch {
+        errorToast("Could not send your reaction. Please try again.");
+      }
+    },
+    [
+      applyReaction,
+      novelist,
+      user?.username,
+      socket,
+      isConnected,
+      conversationId,
+      errorToast,
+    ],
+  );
+
   // ── Socket: incoming real-time messages ────────────────────────────────────
 
   useEffect(() => {
@@ -730,6 +802,16 @@ export function ConversationPanel({
     updateUnreadConversations,
     user?.username,
   ]);
+
+  // ── Socket: incoming real-time reactions ───────────────────────────────────
+
+  useEffect(() => {
+    if (!lastIncomingReaction) return;
+    if (lastIncomingReaction.conversationId !== conversationId) return;
+    // Our own reaction was already applied optimistically.
+    if (lastIncomingReaction.sender?.username === user?.username) return;
+    applyReaction(lastIncomingReaction);
+  }, [lastIncomingReaction, conversationId, applyReaction, user?.username]);
 
   // ── Render helpers ─────────────────────────────────────────────────────────
 
@@ -965,6 +1047,7 @@ export function ConversationPanel({
                         onReply={(msg) => setReplyingTo(msg)}
                         onForward={(msg) => setForwardingMessage(msg)}
                         onReport={(msg) => setReportingMessage(msg)}
+                        onReact={handleReact}
                       />
                     </span>
                   );

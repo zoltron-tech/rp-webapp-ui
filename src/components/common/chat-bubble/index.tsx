@@ -3,7 +3,7 @@
 import classNames from "classnames";
 import moment from "moment";
 import { type FC, useEffect, useMemo, useRef, useState } from "react";
-import { BsForward, BsReply, BsThreeDots } from "react-icons/bs";
+import { BsChevronLeft, BsChevronRight, BsForward, BsReply, BsThreeDots } from "react-icons/bs";
 import { FaPause, FaPlay } from "react-icons/fa";
 import { FiCopy, FiDownload, FiExternalLink } from "react-icons/fi";
 import { RiFlagFill } from "react-icons/ri";
@@ -30,6 +30,7 @@ type Props = {
   onReply?: (message: Message) => void;
   onForward?: (message: Message) => void;
   onReport?: (message: Message) => void;
+  onReact?: (message: Message, reaction: string) => void;
 };
 
 type LinkMeta = {
@@ -44,16 +45,58 @@ const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "gif", "webp", "bmp"];
 const VIDEO_EXTENSIONS = ["mp4", "webm", "mov", "m4v", "ogv"];
 const AUDIO_EXTENSIONS = ["mp3", "mpeg", "wav", "ogg", "m4a", "aac"];
 const REACTION_EMOJI_MAP: Record<string, string> = {
-  angry: "😡",
-  fire: "🔥",
-  haha: "😂",
+  // core (backend-compatible)
   heart: "❤️",
   laugh: "😂",
-  like: "👍",
-  love: "❤️",
   sad: "😢",
+  angry: "😡",
   wow: "😮",
+  // legacy aliases
+  love: "❤️",
+  haha: "😂",
+  // extended
+  like: "👍",
+  dislike: "👎",
+  fire: "🔥",
+  adore: "🥰",
+  amazing: "🤩",
+  cry: "😭",
+  skull: "💀",
+  respect: "🫡",
+  "100": "💯",
+  hundred: "💯",
+  tada: "🎉",
+  celebrate: "🎉",
+  pray: "🙏",
+  clap: "👏",
+  star: "⭐",
+  gem: "💎",
+  strong: "💪",
 };
+
+// Reactions offered in the bubble menu (in display order).
+const REACTION_OPTIONS: { key: string; emoji: string; label: string }[] = [
+  { emoji: "❤️", key: "heart", label: "Love" },
+  { emoji: "😂", key: "laugh", label: "Haha" },
+  { emoji: "😢", key: "sad", label: "Sad" },
+  { emoji: "😡", key: "angry", label: "Angry" },
+  { emoji: "😮", key: "wow", label: "Wow" },
+  { emoji: "🥰", key: "adore", label: "Adore" },
+  { emoji: "🤩", key: "amazing", label: "Amazing" },
+  { emoji: "😭", key: "cry", label: "Cry" },
+  { emoji: "💀", key: "skull", label: "Dead" },
+  { emoji: "👍", key: "like", label: "Like" },
+  { emoji: "👎", key: "dislike", label: "Dislike" },
+  { emoji: "🔥", key: "fire", label: "Fire" },
+  { emoji: "🫡", key: "respect", label: "Respect" },
+  { emoji: "💯", key: "100", label: "100" },
+  { emoji: "🎉", key: "tada", label: "Celebrate" },
+  { emoji: "🙏", key: "pray", label: "Pray" },
+  { emoji: "👏", key: "clap", label: "Clap" },
+  { emoji: "⭐", key: "star", label: "Star" },
+  { emoji: "💎", key: "gem", label: "Diamond" },
+  { emoji: "💪", key: "strong", label: "Strong" },
+];
 
 const mediaElements = new Set<HTMLMediaElement>();
 let mediaListenersAttached = false;
@@ -811,6 +854,7 @@ export const ChatBubble: FC<Props> = ({
   onReply,
   onForward,
   onReport,
+  onReact,
 }) => {
   const { successToast } = useUIContext();
   const today = moment().format("YYYY-MM-DD");
@@ -824,6 +868,9 @@ export const ChatBubble: FC<Props> = ({
   const urls = useMemo(() => extractUrls(messageText), [messageText]);
   const hasAttachments = !!message.attachments?.length;
   const [activeReaction, setActiveReaction] = useState<string | null>(null);
+  const [burstReaction, setBurstReaction] = useState<string | null>(null);
+  const burstTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pickerRef = useRef<HTMLDivElement>(null);
   const isHtmlMessage = HTML_CONTENT_RE.test(messageText);
   const [repliedWiggling, setRepliedWiggling] = useState(false);
 
@@ -953,6 +1000,63 @@ export const ChatBubble: FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [message, onReply, onForward, onReport],
   );
+
+  // Clear any pending burst-animation timer on unmount.
+  useEffect(() => {
+    return () => {
+      if (burstTimeoutRef.current) clearTimeout(burstTimeoutRef.current);
+    };
+  }, []);
+
+  const handleReact = (reactionKey: string) => {
+    // Fire the floating burst animation locally for instant feedback.
+    setBurstReaction(reactionKey);
+    if (burstTimeoutRef.current) clearTimeout(burstTimeoutRef.current);
+    burstTimeoutRef.current = setTimeout(() => setBurstReaction(null), 850);
+    onReact?.(message, reactionKey);
+  };
+
+  const scrollPicker = (dir: "left" | "right") => {
+    // 38px button + 2px gap = one emoji step
+    pickerRef.current?.scrollBy({ left: dir === "right" ? 40 : -40, behavior: "smooth" });
+  };
+
+  const reactionPicker = onReact ? (
+    <S.ReactionPickerWrapper
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
+      onTouchEnd={(e) => e.stopPropagation()}
+    >
+      <S.ReactionPickerArrow
+        type="button"
+        aria-label="Scroll reactions left"
+        onClick={(e) => { e.stopPropagation(); scrollPicker("left"); }}
+      >
+        <BsChevronLeft size={11} />
+      </S.ReactionPickerArrow>
+      <S.ReactionPicker ref={pickerRef}>
+        {REACTION_OPTIONS.map((option) => (
+          <S.ReactionPickerButton
+            key={option.key}
+            type="button"
+            aria-label={option.label}
+            title={option.label}
+            onClick={() => handleReact(option.key)}
+          >
+            <span>{option.emoji}</span>
+          </S.ReactionPickerButton>
+        ))}
+      </S.ReactionPicker>
+      <S.ReactionPickerArrow
+        type="button"
+        aria-label="Scroll reactions right"
+        onClick={(e) => { e.stopPropagation(); scrollPicker("right"); }}
+      >
+        <BsChevronRight size={11} />
+      </S.ReactionPickerArrow>
+    </S.ReactionPickerWrapper>
+  ) : undefined;
+
   const isEmojiOnly = useMemo(
     () =>
       !isHtmlMessage && !!messageText.trim() && EMOJI_ONLY_RE.test(messageText),
@@ -985,18 +1089,6 @@ export const ChatBubble: FC<Props> = ({
       users,
     }));
   }, [message.reactions]);
-
-  const selectedReactionUsers = useMemo(() => {
-    if (!activeReaction) return [];
-    return (
-      groupedReactions.find((item) => item.reaction === activeReaction)
-        ?.users || []
-    );
-  }, [activeReaction, groupedReactions]);
-
-  const activeReactionLabel = activeReaction
-    ? getReactionDisplay(activeReaction)
-    : "";
 
   const isToday = messageDate.isSame(today, "day");
   const formattedDate = isToday
@@ -1093,6 +1185,7 @@ export const ChatBubble: FC<Props> = ({
         <AppDropdownMenuResponsive
           trigger={<BsThreeDots size={14} />}
           items={menuItems}
+          headerContent={reactionPicker}
         />
       </S.MessageMenuWrapper>
 
@@ -1262,6 +1355,11 @@ export const ChatBubble: FC<Props> = ({
             Failed · Tap to retry
           </S.RetryRow>
         )}
+        {burstReaction ? (
+          <S.ReactionBurst aria-hidden="true">
+            {getReactionDisplay(burstReaction)}
+          </S.ReactionBurst>
+        ) : null}
       </S.BubbleStack>
 
       <S.MessageMenuWrapper
@@ -1277,34 +1375,56 @@ export const ChatBubble: FC<Props> = ({
         <AppDropdownMenuResponsive
           trigger={<BsThreeDots size={14} />}
           items={menuItems}
+          headerContent={reactionPicker}
         />
       </S.MessageMenuWrapper>
 
       <AppAlertDialog
-        heading={
-          activeReaction ? `Reaction ${activeReactionLabel}` : "Reactions"
-        }
+        heading="Reactions"
         text=""
         open={!!activeReaction}
         onOpenChange={(open) => {
           if (!open) setActiveReaction(null);
         }}
         body={
-          <S.ReactionUsersList>
-            {selectedReactionUsers.map((reactionUser) => (
-              <S.ReactionUserItem
-                key={`${reactionUser.sender.id}-${reactionUser.reaction}`}
-              >
-                <AvatarNew
-                  src={reactionUser.sender.image || null}
-                  alt={reactionUser.sender.name || reactionUser.sender.username}
-                />
-                <S.ReactionUserName>
-                  {reactionUser.sender.name || reactionUser.sender.username}
-                </S.ReactionUserName>
-              </S.ReactionUserItem>
-            ))}
-          </S.ReactionUsersList>
+          <S.ReactionDialogContent>
+            <S.ReactionTabBar>
+              {groupedReactions.map((reactionGroup) => (
+                <S.ReactionTab
+                  key={reactionGroup.reaction}
+                  $active={activeReaction === reactionGroup.reaction}
+                  onClick={() => setActiveReaction(reactionGroup.reaction)}
+                  type="button"
+                >
+                  <span className="emoji">
+                    {getReactionDisplay(reactionGroup.reaction)}
+                  </span>
+                  <span className="count">{reactionGroup.users.length}</span>
+                </S.ReactionTab>
+              ))}
+            </S.ReactionTabBar>
+            <S.ReactionUsersList style={{ marginTop: 12 }}>
+              {(
+                groupedReactions.find(
+                  (g) => g.reaction === activeReaction,
+                )?.users ?? []
+              ).map((reactionUser) => (
+                <S.ReactionUserItem
+                  key={`${reactionUser.sender.id}-${reactionUser.reaction}`}
+                >
+                  <AvatarNew
+                    src={reactionUser.sender.image || null}
+                    alt={
+                      reactionUser.sender.name || reactionUser.sender.username
+                    }
+                  />
+                  <S.ReactionUserName>
+                    {reactionUser.sender.name || reactionUser.sender.username}
+                  </S.ReactionUserName>
+                </S.ReactionUserItem>
+              ))}
+            </S.ReactionUsersList>
+          </S.ReactionDialogContent>
         }
         showConfirm={false}
         closeButtonText="Close"

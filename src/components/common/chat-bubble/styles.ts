@@ -101,6 +101,7 @@ export const BubbleStack = styled.div`
   flex-direction: column;
   gap: 4px;
   max-width: min(72%, 430px);
+  position: relative;
 
   &.sender {
     align-items: flex-end;
@@ -701,12 +702,19 @@ export const ReactionUsersList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding-inline: 4px;
 `;
 
 export const ReactionUserItem = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  padding: 4px 8px;
+  border-radius: 8px;
+
+  &:hover {
+    background: var(--bg-2);
+  }
 
   .avatar {
     width: 26px;
@@ -719,6 +727,163 @@ export const ReactionUserName = styled.span`
   font-size: 13px;
   color: var(--text);
 `;
+
+export const ReactionDialogContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+`;
+
+export const ReactionTabBar = styled.div`
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  padding: 0 4px 12px;
+  border-bottom: 1px solid var(--bg-6);
+  overflow-x: auto;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+`;
+
+export const ReactionTab = styled.button<{ $active?: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1.5px solid
+    ${({ $active }) =>
+      $active ? "var(--accent)" : "color-mix(in srgb, var(--bg-6) 80%, transparent)"};
+  background: ${({ $active }) =>
+    $active
+      ? "color-mix(in srgb, var(--accent) 14%, transparent)"
+      : "transparent"};
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+
+  .emoji {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .count {
+    font-size: 12px;
+    font-weight: 600;
+    color: ${({ $active }) =>
+      $active ? "var(--accent)" : "color-mix(in srgb, var(--text) 60%, transparent)"};
+  }
+
+  &:hover:not([data-active="true"]) {
+    background: var(--bg-2);
+  }
+`;
+
+export const ReactionPickerWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  /* Desktop: cap at the dropdown's natural inner width so the Content
+     panel never expands beyond its normal size (~200px). */
+  max-width: 276px;
+
+  @media (max-width: 800px) {
+    /* Mobile bottom-sheet is viewport-wide, so fill it instead. */
+    max-width: 100%;
+    width: 100%;
+  }
+`;
+
+export const ReactionPickerArrow = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--bg-6);
+  border-radius: 50%;
+  background: var(--bg-2);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 14%, var(--bg-2));
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--bg-6));
+  }
+`;
+
+export const ReactionPicker = styled.div`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+const reactionPop = keyframes`
+  0% { transform: scale(0.6); }
+  60% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+`;
+
+export const ReactionPickerButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.12s ease, background-color 0.12s ease;
+
+  &:hover,
+  &:focus {
+    outline: none;
+    background: color-mix(in srgb, var(--accent) 16%, var(--bg-2));
+    transform: scale(1.25) translateY(-2px);
+  }
+
+  &:active {
+    transform: scale(1.05);
+  }
+
+  span {
+    display: inline-block;
+    animation: ${reactionPop} 0.25s ease;
+  }
+`;
+
+const reactionBurst = keyframes`
+  0% { transform: scale(0.4) translateY(0); opacity: 0; }
+  25% { transform: scale(1.4) translateY(-6px); opacity: 1; }
+  60% { transform: scale(1) translateY(-26px); opacity: 1; }
+  100% { transform: scale(0.9) translateY(-54px); opacity: 0; }
+`;
+
+export const ReactionBurst = styled.span`
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+  font-size: 30px;
+  pointer-events: none;
+  z-index: 5;
+  animation: ${reactionBurst} 0.85s ease forwards;
+`;
+
 
 export const RepliedToQuote = styled.div<{ $wiggling?: boolean }>`
   display: flex;

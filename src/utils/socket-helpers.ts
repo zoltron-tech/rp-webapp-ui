@@ -21,6 +21,7 @@ export const isServerPing = (data: unknown): data is ServerPing => {
 // ─── Incoming message type guard ─────────────────────────────────────────────
 
 import type { Message } from "@/types";
+import type { Reaction } from "@/types/conversation";
 
 /** Narrows an unknown WS payload to a server-delivered chat Message. */
 export const isServerMessage = (data: unknown): data is Message => {
@@ -34,6 +35,42 @@ export const isServerMessage = (data: unknown): data is Message => {
     d.sender !== null
   );
 };
+
+// ─── Incoming reaction type guard ────────────────────────────────────────────
+
+export type ReactionSocketPayload = Reaction & {
+  conversationId: string;
+};
+
+export type ServerReactionMessage = {
+  type: "reaction";
+  payload: ReactionSocketPayload;
+};
+
+/** Narrows an unknown WS payload to a real-time reaction event. */
+export const isServerReaction = (
+  data: unknown,
+): data is ServerReactionMessage => {
+  if (!data || typeof data !== "object") return false;
+  const d = data as Record<string, unknown>;
+  if (d.type !== "reaction") return false;
+  const p = d.payload as Record<string, unknown> | undefined;
+  return (
+    !!p &&
+    typeof p.messageId === "string" &&
+    typeof p.reaction === "string" &&
+    typeof p.sender === "object" &&
+    p.sender !== null
+  );
+};
+
+/** Builds the outgoing reaction socket frame to propagate to other clients. */
+export const createReactionSocketMessage = (
+  payload: ReactionSocketPayload,
+): ServerReactionMessage => ({
+  payload,
+  type: "reaction",
+});
 
 // ─── Payload builders ─────────────────────────────────────────────────────────
 

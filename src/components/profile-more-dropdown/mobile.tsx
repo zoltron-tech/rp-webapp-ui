@@ -21,6 +21,7 @@ interface AppDropdownMenuMobileProps {
   trigger: React.ReactNode;
   showUnread?: boolean;
   variant?: Variant;
+  headerContent?: React.ReactNode;
 }
 
 export const AppDropdownMenuMobile: FC<AppDropdownMenuMobileProps> = ({
@@ -28,6 +29,7 @@ export const AppDropdownMenuMobile: FC<AppDropdownMenuMobileProps> = ({
   trigger,
   showUnread,
   variant = "minimal",
+  headerContent,
 }) => {
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
@@ -131,6 +133,11 @@ export const AppDropdownMenuMobile: FC<AppDropdownMenuMobileProps> = ({
 
               {/* Content */}
               <S.MobileContent>
+                {headerContent ? (
+                  <S.MobileHeaderRow onClick={handleClose}>
+                    {headerContent}
+                  </S.MobileHeaderRow>
+                ) : null}
                 {items.map((item, i) =>
                   item.separator ? (
                     <S.MobileSeparator key={`sep-${i}`} />

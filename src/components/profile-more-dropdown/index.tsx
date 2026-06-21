@@ -2,6 +2,7 @@
 
 import classNames from "classnames";
 import { DropdownMenu } from "radix-ui";
+import { useState } from "react";
 import { useGlobalState } from "@/context/store/stores";
 import * as S from "./styled";
 
@@ -23,6 +24,7 @@ interface AppDropdownMenuProps {
   trigger: React.ReactNode;
   showUnread?: boolean;
   variant?: Variant;
+  headerContent?: React.ReactNode;
 }
 
 export const AppDropdownMenu = ({
@@ -30,13 +32,15 @@ export const AppDropdownMenu = ({
   trigger,
   showUnread,
   variant = "minimal",
+  headerContent,
   ...rest
 }: AppDropdownMenuProps) => {
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
+  const [open, setOpen] = useState(false);
 
   return (
-    <DropdownMenu.Root>
+    <DropdownMenu.Root open={open} onOpenChange={setOpen}>
       <DropdownMenu.Trigger asChild>
         <S.TriggerWrapper>
           <S.TriggerButton className={classNames([variant])}>
@@ -52,6 +56,14 @@ export const AppDropdownMenu = ({
           align="end"
           className={classNames([accent, theme])}
         >
+          {headerContent ? (
+            <S.HeaderRow
+              onClick={() => setOpen(false)}
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              {headerContent}
+            </S.HeaderRow>
+          ) : null}
           {items.map((item, i) =>
             item.separator ? (
               <S.Separator key={`sep-${i}`} />

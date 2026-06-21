@@ -103,6 +103,17 @@ export const BubbleStack = styled.div`
   max-width: min(72%, 430px);
   position: relative;
 
+  /* Statically disable selection on the whole bubble subtree. iOS samples
+     user-select at gesture start, so a dynamic/JS toggle is too late — only a
+     static rule (like the video viewport already has) reliably stops the
+     long-press from highlighting text, stickers and controls. */
+  &,
+  & * {
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+  }
+
   &.sender {
     align-items: flex-end;
   }
@@ -223,6 +234,9 @@ export const AttachmentImage = styled.img<{ $noBg?: boolean; $grid?: boolean }>`
   cursor: zoom-in;
   background: ${({ $noBg }) => ($noBg ? "transparent" : "var(--bg-1)")};
   object-fit: ${({ $grid }) => ($grid ? "cover" : "contain")};
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 `;
 
 export const AttachmentVideo = styled.video`
@@ -325,8 +339,8 @@ export const AudioProgressFill = styled.div`
 `;
 
 export const VideoAttachmentCard = styled.div`
-  width: 100%;
-  min-width: 220px;
+  width: fit-content;
+  max-width: 100%;
   padding: 0px;
   border-radius: 8px;
   background-color: var(--bg-3);
@@ -338,17 +352,19 @@ export const VideoAttachmentCard = styled.div`
 
 export const VideoViewport = styled.div`
   width: 100%;
-  max-height: 210px;
   border-top-right-radius: 8px;
   border-top-left-radius: 8px;
   overflow: hidden;
   border: 1px solid var(--bg-6);
   background: #000;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 `;
 
 export const VideoElement = styled.video`
   width: 100%;
-  max-height: 210px;
+  height: 100%;
   display: block;
   object-fit: contain;
 `;
@@ -678,6 +694,8 @@ export const ReactionsBar = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  margin-top: -10px;
+  z-index: 2;
 `;
 
 export const ReactionChip = styled.button`
@@ -689,7 +707,7 @@ export const ReactionChip = styled.button`
   border: 1px solid var(--bg-6);
   background: var(--bg-2);
   color: var(--text);
-  font-size: 11px;
+  font-size: var(--font-size);
 
   &:hover {
     cursor: pointer;
@@ -965,6 +983,9 @@ export const MessageMenuWrapper = styled.div`
   opacity: 0;
   transition: opacity 0.15s ease;
   margin-inline: -8px;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 
   ${ChatRow}:hover & {
     opacity: 1;

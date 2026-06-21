@@ -25,6 +25,8 @@ interface AppDropdownMenuProps {
   showUnread?: boolean;
   variant?: Variant;
   headerContent?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export const AppDropdownMenu = ({
@@ -33,11 +35,18 @@ export const AppDropdownMenu = ({
   showUnread,
   variant = "minimal",
   headerContent,
+  open: controlledOpen,
+  onOpenChange,
   ...rest
 }: AppDropdownMenuProps) => {
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = (next: boolean) => {
+    setInternalOpen(next);
+    onOpenChange?.(next);
+  };
 
   return (
     <DropdownMenu.Root open={open} onOpenChange={setOpen}>

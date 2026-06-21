@@ -101,7 +101,28 @@ const REACTION_OPTIONS: { key: string; emoji: string; label: string }[] = [
 const mediaElements = new Set<HTMLMediaElement>();
 let mediaListenersAttached = false;
 
-const pauseAllMedia = (except?: HTMLMediaElement | null) => {
+const SELECTION_LOCK_STYLE_ID = "chat-press-selection-lock";
+
+// Injects (once) a global rule that forces selection off on every element. A
+// plain inline `user-select: none` on <html> is unreliable because any
+// descendant that sets its own `user-select` breaks the inherited value; the
+// `!important` rule below overrides those so nothing in the app can be
+// highlighted while the class is present.
+const ensureSelectionLockStyle = () => {
+  if (typeof document === "undefined") return;
+  if (document.getElementById(SELECTION_LOCK_STYLE_ID)) return;
+  const style = document.createElement("style");
+  style.id = SELECTION_LOCK_STYLE_ID;
+  style.textContent = `
+    html.chat-press-lock,
+    html.chat-press-lock * {
+      -webkit-user-select: none !important;
+      user-select: none !important;
+      -webkit-touch-callout: none !important;
+    }
+  `;
+  document.head.appendChild(style);
+};const pauseAllMedia = (except?: HTMLMediaElement | null) => {
   mediaElements.forEach((element) => {
     if (except && element === except) return;
     if (!element.paused) element.pause();
@@ -712,6 +733,7 @@ export const ChatVideoAttachment: FC<{ src: string }> = ({ src }) => {
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [aspectRatio, setAspectRatio] = useState<number | null>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
   // True until the user presses play for the first time; used to seek back to
   // 0 after the thumbnail seek so playback always starts from the beginning.
@@ -726,6 +748,9 @@ export const ChatVideoAttachment: FC<{ src: string }> = ({ src }) => {
     const onLoadedMetadata = () => {
       const dur = videoElement.duration || 0;
       setDuration(dur);
+      if (videoElement.videoWidth && videoElement.videoHeight) {
+        setAspectRatio(videoElement.videoWidth / videoElement.videoHeight);
+      }
       // Seek to 1 s (clamped to the actual duration) to show a meaningful
       // thumbnail frame instead of the typically-black very first frame.
       if (dur > 0) {
@@ -804,10 +829,20 @@ export const ChatVideoAttachment: FC<{ src: string }> = ({ src }) => {
   if (videoError) {
     return <AttachmentFallback />;
   }
+  const MAX_VIDEO_HEIGHT = 280;
   return (
     <S.VideoAttachmentCard>
       <S.VideoViewport
-        style={{ cursor: "zoom-in" }}
+        style={{
+          cursor: "zoom-in",
+          ...(aspectRatio != null
+            ? {
+                aspectRatio,
+                maxHeight: `${MAX_VIDEO_HEIGHT}px`,
+                maxWidth: `${MAX_VIDEO_HEIGHT * aspectRatio}px`,
+              }
+            : {}),
+        }}
         onClick={() => {
           if (videoElement && !videoElement.paused) videoElement.pause();
           setViewerOpen(true);
@@ -874,6 +909,57 @@ export const ChatBubble: FC<Props> = ({
   const isHtmlMessage = HTML_CONTENT_RE.test(messageText);
   const [repliedWiggling, setRepliedWiggling] = useState(false);
 
+  // ── Long-press → context menu ─────────────────────────────────────────────
+  const [menuOpen, setMenuOpen] = useState(false);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFiredRef = useRef(false);
+  const pressActiveRef = useRef(false);
+  const lastTapRef = useRef(0);
+
+  const clearLongPress = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  // Toggle a document-wide selection lock. `user-select` is inherited, so
+  // setting it on <html> prevents iOS from highlighting *anything* in the app
+  // while a finger is pressing on a bubble — even if the thumb drifts slightly.
+  const setGlobalSelectionLock = (locked: boolean) => {
+    if (typeof document === "undefined") return;
+    ensureSelectionLockStyle();
+    document.documentElement.classList.toggle("chat-press-lock", locked);
+  };
+
+  const fireReaction = (reactionKey: string) => {
+    // Fire the floating burst animation locally for instant feedback.
+    setBurstReaction(reactionKey);
+    if (burstTimeoutRef.current) clearTimeout(burstTimeoutRef.current);
+    burstTimeoutRef.current = setTimeout(() => setBurstReaction(null), 850);
+    onReact?.(message, reactionKey);
+  };
+
+  useEffect(
+    () => () => {
+      clearLongPress();
+      // Ensure the lock is released if we unmount mid-press.
+      setGlobalSelectionLock(false);
+    },
+    [],
+  );
+
+  // While a finger is pressing on a bubble, block the OS from starting a text
+  // selection (which otherwise highlights the page when the menu slides up).
+  useEffect(() => {
+    const onSelectStart = (e: Event) => {
+      if (pressActiveRef.current) e.preventDefault();
+    };
+    document.addEventListener("selectstart", onSelectStart);
+    return () => document.removeEventListener("selectstart", onSelectStart);
+  }, []);
+  // ─────────────────────────────────────────────────────────────────────────
+
   const handleRepliedToClick = () => {
     const targetId = message.repliedTo?.id;
     if (!targetId) return;
@@ -913,6 +999,20 @@ export const ChatBubble: FC<Props> = ({
     swipeRawDeltaX.current = 0;
     swipeIsHorizontal.current = null;
     setSwipeTransitioning(false);
+
+    // Begin long-press detection; fires the context menu if the finger is held
+    // still for the threshold duration.
+    pressActiveRef.current = true;
+    setGlobalSelectionLock(true);
+    longPressFiredRef.current = false;
+    clearLongPress();
+    longPressTimerRef.current = setTimeout(() => {
+      longPressFiredRef.current = true;
+      setSwipeTranslate(0);
+      setMenuOpen(true);
+      // Drop any selection the OS may have started under the finger.
+      window.getSelection?.()?.removeAllRanges();
+    }, 450);
   };
 
   const onSwipeTouchMove = (e: React.TouchEvent) => {
@@ -920,6 +1020,9 @@ export const ChatBubble: FC<Props> = ({
     if (!touch) return;
     const deltaX = touch.clientX - swipeTouchStartX.current;
     const deltaY = touch.clientY - swipeTouchStartY.current;
+
+    // Any meaningful movement cancels the long-press.
+    if (Math.abs(deltaX) > 8 || Math.abs(deltaY) > 8) clearLongPress();
 
     if (swipeIsHorizontal.current === null) {
       if (Math.abs(deltaX) < 5 && Math.abs(deltaY) < 5) return;
@@ -948,6 +1051,22 @@ export const ChatBubble: FC<Props> = ({
   };
 
   const onSwipeTouchEnd = (e: React.TouchEvent) => {
+    clearLongPress();
+    pressActiveRef.current = false;
+    setGlobalSelectionLock(false);
+
+    // Double-tap to react with a heart (genuine taps only — not swipes or
+    // long-press).
+    if (!swipeIsHorizontal.current && !longPressFiredRef.current && onReact) {
+      const now = Date.now();
+      if (now - lastTapRef.current < 300) {
+        fireReaction("heart");
+        lastTapRef.current = 0;
+      } else {
+        lastTapRef.current = now;
+      }
+    }
+
     if (!swipeIsHorizontal.current) return;
 
     // Prevent the ConversationSheet (or any parent) from also handling this gesture.
@@ -1009,11 +1128,7 @@ export const ChatBubble: FC<Props> = ({
   }, []);
 
   const handleReact = (reactionKey: string) => {
-    // Fire the floating burst animation locally for instant feedback.
-    setBurstReaction(reactionKey);
-    if (burstTimeoutRef.current) clearTimeout(burstTimeoutRef.current);
-    burstTimeoutRef.current = setTimeout(() => setBurstReaction(null), 850);
-    onReact?.(message, reactionKey);
+    fireReaction(reactionKey);
   };
 
   const scrollPicker = (dir: "left" | "right") => {
@@ -1186,6 +1301,7 @@ export const ChatBubble: FC<Props> = ({
           trigger={<BsThreeDots size={14} />}
           items={menuItems}
           headerContent={reactionPicker}
+          {...(isSender ? { open: menuOpen, onOpenChange: setMenuOpen } : {})}
         />
       </S.MessageMenuWrapper>
 
@@ -1194,7 +1310,25 @@ export const ChatBubble: FC<Props> = ({
         onTouchStart={onSwipeTouchStart}
         onTouchMove={onSwipeTouchMove}
         onTouchEnd={onSwipeTouchEnd}
+        onTouchCancel={() => {
+          clearLongPress();
+          pressActiveRef.current = false;
+          setGlobalSelectionLock(false);
+        }}
+        onDoubleClick={() => {
+          if (onReact) fireReaction("heart");
+        }}
         onTransitionEnd={() => setSwipeTransitioning(false)}
+        onContextMenu={(e) => e.preventDefault()}
+        onClickCapture={(e) => {
+          // Swallow the click that follows a long-press so it doesn't also
+          // open the image/video viewer.
+          if (longPressFiredRef.current) {
+            e.preventDefault();
+            e.stopPropagation();
+            longPressFiredRef.current = false;
+          }
+        }}
         style={{
           transform: `translateX(${swipeTranslate}px)`,
           transition: swipeTransitioning ? "transform 0.25s ease" : "none",
@@ -1376,6 +1510,7 @@ export const ChatBubble: FC<Props> = ({
           trigger={<BsThreeDots size={14} />}
           items={menuItems}
           headerContent={reactionPicker}
+          {...(!isSender ? { open: menuOpen, onOpenChange: setMenuOpen } : {})}
         />
       </S.MessageMenuWrapper>
 

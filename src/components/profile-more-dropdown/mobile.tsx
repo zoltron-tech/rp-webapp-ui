@@ -22,6 +22,8 @@ interface AppDropdownMenuMobileProps {
   showUnread?: boolean;
   variant?: Variant;
   headerContent?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export const AppDropdownMenuMobile: FC<AppDropdownMenuMobileProps> = ({
@@ -30,6 +32,8 @@ export const AppDropdownMenuMobile: FC<AppDropdownMenuMobileProps> = ({
   showUnread,
   variant = "minimal",
   headerContent,
+  open: controlledOpen,
+  onOpenChange,
 }) => {
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
@@ -39,7 +43,7 @@ export const AppDropdownMenuMobile: FC<AppDropdownMenuMobileProps> = ({
   const sheetRef = useRef<HTMLDivElement>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleOpen = () => {
+  const openSheet = () => {
     if (closeTimerRef.current) {
       clearTimeout(closeTimerRef.current);
       closeTimerRef.current = null;
@@ -52,11 +56,29 @@ export const AppDropdownMenuMobile: FC<AppDropdownMenuMobileProps> = ({
     });
   };
 
-  const handleClose = () => {
+  const closeSheet = () => {
     setOpen(false);
     // Unmount after slide-down animation (300ms) completes
     closeTimerRef.current = setTimeout(() => setVisible(false), 300);
   };
+
+  const handleOpen = () => {
+    onOpenChange?.(true);
+    if (controlledOpen === undefined) openSheet();
+  };
+
+  const handleClose = () => {
+    onOpenChange?.(false);
+    if (controlledOpen === undefined) closeSheet();
+  };
+
+  // Drive the sheet from the controlled `open` prop when provided.
+  useEffect(() => {
+    if (controlledOpen === undefined) return;
+    if (controlledOpen) openSheet();
+    else closeSheet();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [controlledOpen]);
 
   // Cleanup timer on unmount
   useEffect(() => {

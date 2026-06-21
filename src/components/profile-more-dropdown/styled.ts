@@ -23,6 +23,9 @@ export const ActionBadge = styled.div`
 
 export const TriggerButton = styled.button`
   all: unset;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
   padding-inline: 10px;
   padding-block: 8px;
   text-align: center;
@@ -83,6 +86,9 @@ export const Content = styled(DropdownMenu.Content)`
   border: 1px solid var(--bg-5);
   animation: ${fadeIn} 120ms ease-out;
   z-index: 99999;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 
   &[data-side="bottom"] {
     margin-top: 6px;
@@ -142,8 +148,8 @@ export const ItemIcon = styled.span`
   font-size: var(--font-size);
 
   svg {
-    width: 18px;
-    height: 18px;
+    width: 24px;
+    height: 24px;
   }
 `;
 
@@ -220,6 +226,9 @@ export const MobileSheet = styled.div<MobileSheetProps>`
   flex-direction: column;
   z-index: 99999;
   touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 
   transform: translateY(${(p) => (p.$open ? "0" : "100%")});
   opacity: ${(p) => (p.$open ? 1 : 0)};
@@ -304,9 +313,8 @@ export const MobileItem = styled.button`
   padding: 10px 14px;
   border-radius: 0;
   background-color: var(--bg-3);
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-input);
   font-weight: var(--font-weight-medium);
-  font-family: var(--font);
   cursor: pointer;
   display: flex;
   align-items: center;

@@ -7,9 +7,10 @@ import type { FC, FormEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FcAddImage } from "react-icons/fc";
 import { HiFaceSmile, HiGif, HiPaperAirplane } from "react-icons/hi2";
-import { IoCheckmark } from "react-icons/io5";
+import { IoCheckmark, IoClose } from "react-icons/io5";
 import { MdOutlineSlowMotionVideo } from "react-icons/md";
 import { RiEmojiStickerLine } from "react-icons/ri";
+import { BsPencil } from "react-icons/bs";
 import { TiArrowSortedUp } from "react-icons/ti";
 import { deleteMedia } from "@/app/rp/profile/actions";
 import type { ChatRichInputHandle } from "@/components/chat-rich-input";
@@ -22,6 +23,7 @@ import { StickerPicker } from "@/components/sticker-picker";
 import { useGlobalState } from "@/context/store/stores";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import type { MentionDataItem, Muse, Novelist } from "@/types";
+import type { Message } from "@/types/conversation";
 import { API_MESSAGE } from "@/utils/constants";
 import { Flex } from "../edit-muse-card/styles";
 import { MediaTray, type TrayTab } from "./media-tray";
@@ -204,6 +206,8 @@ type SendMessageComposerProps = {
   mentionItems?: MentionDataItem[];
   onHtmlChange?: (html: string) => void;
   getMentionMuseItems?: (prefix: string) => Promise<MentionDataItem[]>;
+  editingMessage?: Message | null;
+  onCancelEdit?: () => void;
 };
 
 const novelistToSender = (n: Novelist): ComposerSender => ({
@@ -274,6 +278,8 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
   mentionItems = [],
   onHtmlChange,
   getMentionMuseItems,
+  editingMessage,
+  onCancelEdit,
 }) => {
   const novelist = useGlobalState("novelist");
   const [internalSender, setInternalSender] = useState<ComposerSender | null>(
@@ -466,6 +472,16 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
   }, [museSenders, search, activeSender]);
 
   const hasValue = value.trim().length > 0;
+  const isEditing = !!editingMessage;
+
+  // While editing an existing message, media attachments and sender switching
+  // are not allowed — close anything that may be open.
+  useEffect(() => {
+    if (isEditing) {
+      setMediaToolbarOpen(false);
+      setTrayTab(null);
+    }
+  }, [isEditing]);
 
   // Hide the media toolbar whenever a picker is open (mobile tray or any of the
   // desktop popovers/dialogs) so it doesn't show behind/above the open picker.
@@ -531,7 +547,11 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
           </S.EmojiPickerWrap>
         )}
         <S.MediaToolbar
-          $open={(mediaToolbarOpen || mediaFiles.length > 0) && !anyPickerOpen}
+          $open={
+            (mediaToolbarOpen || mediaFiles.length > 0) &&
+            !anyPickerOpen &&
+            !isEditing
+          }
         >
           {mediaFiles.length > 0 ? (
             <S.MediaToolbarPreviewRow>
@@ -706,6 +726,25 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
           )}
         </S.MediaToolbar>
 
+        {isEditing && (
+          <S.EditBanner>
+            <S.EditBannerIcon>
+              <BsPencil size={15} />
+            </S.EditBannerIcon>
+            <S.EditBannerInfo>
+              <S.EditBannerLabel>Editing message</S.EditBannerLabel>
+            </S.EditBannerInfo>
+            <S.EditBannerClose
+              type="button"
+              title="Cancel editing"
+              aria-label="Cancel editing"
+              onClick={() => onCancelEdit?.()}
+            >
+              <IoClose size={18} />
+            </S.EditBannerClose>
+          </S.EditBanner>
+        )}
+
         <S.Composer
           onSubmit={(e) => handleSubmit(e)}
           onPointerDown={() => {
@@ -716,7 +755,12 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
         >
           <S.SenderButton
             type="button"
-            title={activeSender?.name ?? "Select sender"}
+            title={
+              isEditing
+                ? "You can't change the sender while editing"
+                : (activeSender?.name ?? "Select sender")
+            }
+            disabled={isEditing}
             onClick={() => setDialogOpen(true)}
           >
             <AvatarNew
@@ -740,7 +784,8 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
             trailingAction={
               <>
                 {(onSendGif || onSendSticker || onSendClip || onSendMedia) &&
-                  mediaFiles.length === 0 && (
+                  mediaFiles.length === 0 &&
+                  !isEditing && (
                     <S.MediaToggleButton
                       type="button"
                       title="Media"
@@ -774,7 +819,7 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
         </S.Composer>
       </S.ComposerWrapper>
 
-      {isMobile && (
+      {isMobile && !isEditing && (
         <MediaTray
           tab={trayTab}
           tabs={trayTabs}

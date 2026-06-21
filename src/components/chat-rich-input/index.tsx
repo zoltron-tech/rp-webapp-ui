@@ -67,6 +67,10 @@ export const ChatRichInput = forwardRef<
   const [dynamicMuses, setDynamicMuses] = useState<MentionDataItem[]>([]);
   const mentionAnchorRef = useRef<{ node: Node; offset: number } | null>(null);
   const savedRangeRef = useRef<Range | null>(null);
+  // Tracks the most recent plain text emitted via onChange so the value-sync
+  // effect below can distinguish echoes of our own typing from genuine external
+  // value changes (e.g. when the parent prefills text for editing a message).
+  const lastEmittedRef = useRef<string>("");
 
   useImperativeHandle(ref, () => ({
     blur() {
@@ -117,18 +121,47 @@ export const ChatRichInput = forwardRef<
     },
   }));
 
-  // Clear the editor when parent sets value to ""
+  // Sync external value changes into the contenteditable editor. Handles two
+  // cases: the parent clearing the field (value === "") after a send, and the
+  // parent programmatically setting text (e.g. prefilling when the user edits an
+  // existing message). Echoes of our own onChange emissions are ignored so live
+  // typing isn't disrupted and the caret position is preserved.
   useEffect(() => {
     const editor = editorRef.current;
     if (!editor) return;
-    const currentContent = editor.innerHTML;
-    if (value === "" && currentContent !== "" && currentContent !== "<br>") {
-      editor.innerHTML = "";
-      setIsEmpty(true);
-      setShowMention(false);
-      mentionAnchorRef.current = null;
-      onChange("");
-      onHtmlChange("");
+    if (value === lastEmittedRef.current) return;
+
+    if (value === "") {
+      const currentContent = editor.innerHTML;
+      if (currentContent !== "" && currentContent !== "<br>") {
+        editor.innerHTML = "";
+        setIsEmpty(true);
+        setShowMention(false);
+        mentionAnchorRef.current = null;
+        onChange("");
+        onHtmlChange("");
+      }
+      lastEmittedRef.current = "";
+      return;
+    }
+
+    // Programmatic text set — populate the editor, sync the HTML, and move the
+    // caret to the end so the user can immediately continue editing.
+    editor.textContent = value;
+    lastEmittedRef.current = value;
+    setIsEmpty(false);
+    setShowMention(false);
+    mentionAnchorRef.current = null;
+    onHtmlChange(value);
+
+    editor.focus();
+    const sel = window.getSelection();
+    if (sel) {
+      const range = document.createRange();
+      range.selectNodeContents(editor);
+      range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
     }
   }, [value, onChange, onHtmlChange]);
 
@@ -140,6 +173,7 @@ export const ChatRichInput = forwardRef<
         .replace(/\u00A0/g, " ") // normalise non-breaking spaces
         .trim();
       setIsEmpty(text.length === 0);
+      lastEmittedRef.current = text;
       onChange(text);
 
       // Normalize contenteditable <div> line-breaks into <br>, then strip trailing <br>s

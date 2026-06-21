@@ -3,7 +3,7 @@
 import classNames from "classnames";
 import moment from "moment";
 import { type FC, useEffect, useMemo, useRef, useState } from "react";
-import { BsChevronLeft, BsChevronRight, BsForward, BsReply, BsThreeDots } from "react-icons/bs";
+import { BsChevronLeft, BsChevronRight, BsForward, BsPencil, BsReply, BsThreeDots } from "react-icons/bs";
 import { FaPause, FaPlay } from "react-icons/fa";
 import { FiCopy, FiDownload, FiExternalLink } from "react-icons/fi";
 import { RiFlagFill } from "react-icons/ri";
@@ -31,6 +31,7 @@ type Props = {
   onForward?: (message: Message) => void;
   onReport?: (message: Message) => void;
   onReact?: (message: Message, reaction: string) => void;
+  onEdit?: (message: Message) => void;
 };
 
 type LinkMeta = {
@@ -45,20 +46,30 @@ const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "gif", "webp", "bmp"];
 const VIDEO_EXTENSIONS = ["mp4", "webm", "mov", "m4v", "ogv"];
 const AUDIO_EXTENSIONS = ["mp3", "mpeg", "wav", "ogg", "m4a", "aac"];
 const REACTION_EMOJI_MAP: Record<string, string> = {
-  // core (backend-compatible)
+  // core (very common / backend-compatible)
   heart: "❤️",
+  broken_heart: "💔",
   laugh: "😂",
   sad: "😢",
   angry: "😡",
   wow: "😮",
+  mind_blown: "🤯",
+
   // legacy aliases
   love: "❤️",
   haha: "😂",
-  // extended
+
+  // common thumbs/affirmations
   like: "👍",
-  dislike: "👎",
-  fire: "🔥",
+  ok: "👌🏼",
+
+  // light / affectionate
   adore: "🥰",
+  kiss: "😘",
+  smile: "🙂",
+  biting_lip: "🫦",
+
+  // high-react / expressive
   amazing: "🤩",
   cry: "😭",
   skull: "💀",
@@ -69,33 +80,60 @@ const REACTION_EMOJI_MAP: Record<string, string> = {
   celebrate: "🎉",
   pray: "🙏",
   clap: "👏",
+  fire: "🔥",
+
+  // utility / celebratory
   star: "⭐",
   gem: "💎",
   strong: "💪",
+  ribbon: "🎀",
 };
 
-// Reactions offered in the bubble menu (in display order).
+// Reactions offered in the bubble menu (ordered by mood / frequency).
 const REACTION_OPTIONS: { key: string; emoji: string; label: string }[] = [
+  // Basic reactions (first six) — common on FB/Discord
   { emoji: "❤️", key: "heart", label: "Love" },
   { emoji: "😂", key: "laugh", label: "Haha" },
   { emoji: "😢", key: "sad", label: "Sad" },
   { emoji: "😡", key: "angry", label: "Angry" },
   { emoji: "😮", key: "wow", label: "Wow" },
+  { emoji: "👍", key: "like", label: "Like" },
+
+  // Strong emotive / negative
+  { emoji: "😭", key: "cry", label: "Cry" },
+  { emoji: "💔", key: "broken_heart", label: "Broken" },
+  { emoji: "💀", key: "skull", label: "Dead" },
+
+  // Surprise / high-salience
+  { emoji: "🤯", key: "mind_blown", label: "Mind blown" },
+
+  // Affirmations / quick responses
+  { emoji: "👌🏼", key: "ok", label: "OK" },
+
+  // Affectionate / positive emotions
   { emoji: "🥰", key: "adore", label: "Adore" },
   { emoji: "🤩", key: "amazing", label: "Amazing" },
-  { emoji: "😭", key: "cry", label: "Cry" },
-  { emoji: "💀", key: "skull", label: "Dead" },
-  { emoji: "👍", key: "like", label: "Like" },
-  { emoji: "👎", key: "dislike", label: "Dislike" },
-  { emoji: "🔥", key: "fire", label: "Fire" },
-  { emoji: "🫡", key: "respect", label: "Respect" },
+  { emoji: "🙂", key: "smile", label: "Smile" },
+
+  // Energetic / celebration
   { emoji: "💯", key: "100", label: "100" },
   { emoji: "🎉", key: "tada", label: "Celebrate" },
   { emoji: "🙏", key: "pray", label: "Pray" },
   { emoji: "👏", key: "clap", label: "Clap" },
+  { emoji: "🔥", key: "fire", label: "Fire" },
+
+  // Respect / acknowledgement
+  { emoji: "🫡", key: "respect", label: "Respect" },
+
+  // Utility / visual
   { emoji: "⭐", key: "star", label: "Star" },
   { emoji: "💎", key: "gem", label: "Diamond" },
   { emoji: "💪", key: "strong", label: "Strong" },
+
+  // Niche / expressive
+  { emoji: "🎀", key: "ribbon", label: "Ribbon" },
+  { emoji: "🫦", key: "biting_lip", label: "Flirty" },
+  { emoji: "😘", key: "kiss", label: "Kiss" },
 ];
 
 const mediaElements = new Set<HTMLMediaElement>();
@@ -890,6 +928,7 @@ export const ChatBubble: FC<Props> = ({
   onForward,
   onReport,
   onReact,
+  onEdit,
 }) => {
   const { successToast } = useUIContext();
   const today = moment().format("YYYY-MM-DD");
@@ -902,6 +941,19 @@ export const ChatBubble: FC<Props> = ({
   const messageText = message.message || "";
   const urls = useMemo(() => extractUrls(messageText), [messageText]);
   const hasAttachments = !!message.attachments?.length;
+
+  // A message can be text-edited only when it carries actual text — not when it
+  // is a bare media/sticker/gif URL or an attachment-only message.
+  const isWholeMessageMedia = useMemo(() => {
+    const trimmed = messageText.trim();
+    if (!trimmed) return false;
+    return (
+      urls.length === 1 &&
+      messageText.replace(URL_REGEX, "").trim().length === 0
+    );
+  }, [messageText, urls]);
+  const canEditMessage =
+    isSender && !hasAttachments && !!messageText.trim() && !isWholeMessageMedia;
   const [activeReaction, setActiveReaction] = useState<string | null>(null);
   const [burstReaction, setBurstReaction] = useState<string | null>(null);
   const burstTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1101,6 +1153,15 @@ export const ChatBubble: FC<Props> = ({
 
   const menuItems = useMemo(
     () => [
+            ...(canEditMessage && onEdit
+        ? [
+            {
+              icon: <BsPencil />,
+              label: "Edit message",
+              onClick: () => onEdit(message),
+            },
+          ]
+        : []),
       { icon: <BsReply />, label: "Reply", onClick: () => onReply?.(message) },
       {
         icon: <BsForward />,
@@ -1117,7 +1178,7 @@ export const ChatBubble: FC<Props> = ({
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [message, onReply, onForward, onReport],
+    [message, onReply, onForward, onReport, onEdit, canEditMessage],
   );
 
   // Clear any pending burst-animation timer on unmount.

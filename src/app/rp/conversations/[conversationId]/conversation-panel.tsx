@@ -19,7 +19,10 @@ import { useUIContext } from "@/hooks/use-ui-context";
 import type { Conversation, MentionDataItem, Message } from "@/types";
 import type { MessageSender, Reaction } from "@/types/conversation";
 import { ROUTES } from "@/utils/constants/routes";
-import { createReactionSocketMessage } from "@/utils/socket-helpers";
+import {
+  createEditSocketMessage,
+  createReactionSocketMessage,
+} from "@/utils/socket-helpers";
 import { getUnreadConversationIdsAction } from "../actions";
 import {
   getConversationByIdAction,
@@ -156,7 +159,7 @@ export function ConversationPanel({
   const router = useRouter();
   const musicPlayerHeight =
     musicPlayer?.playingSongId && musicPlayer?.playingSongName ? 53 : 0;
-  const { socket, isConnected, lastIncomingMessage, lastIncomingReaction } =
+  const { socket, isConnected, lastIncomingMessage, lastIncomingReaction, lastIncomingEdit } =
     useSocket();
   const { routeToPage, stopPageLoading } = usePageRouter();
   const { errorToast, successToast } = useUIContext();
@@ -229,6 +232,7 @@ export function ConversationPanel({
   const [forwardingMessage, setForwardingMessage] = useState<Message | null>(
     null,
   );
+  const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const swipeTouchStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -258,6 +262,7 @@ export function ConversationPanel({
     setReplyingTo(null);
     setReportingMessage(null);
     setForwardingMessage(null);
+    setEditingMessage(null);
     setPage(1);
     setHasMore(true);
     setIsScrolledUp(false);
@@ -645,7 +650,62 @@ export function ConversationPanel({
   const onSendMessage = async () => {
     const text = messageHtml || messageText.trim();
     if (!text || sending) return;
+    if (editingMessage) {
+      await submitEdit(text);
+      return;
+    }
     await sendMessage(text);
+    setMessageText("");
+    setMessageHtml("");
+  };
+
+  // ── Edit message ────────────────────────────────────────────────────────────
+
+  const startEditing = useCallback((message: Message) => {
+    // Editing and replying are mutually exclusive composer states.
+    setReplyingTo(null);
+    setEditingMessage(message);
+    setMessageText(message.message ?? "");
+    setMessageHtml(message.message ?? "");
+  }, []);
+
+  const cancelEditing = useCallback(() => {
+    setEditingMessage(null);
+    setMessageText("");
+    setMessageHtml("");
+  }, []);
+
+  const submitEdit = async (text: string) => {
+    if (!editingMessage) return;
+
+    if (!socket || !isConnected) {
+      errorToast("Not connected. Please wait and try again.");
+      return;
+    }
+
+    const messageId = editingMessage.id;
+
+    // 1. Optimistically reflect the new text locally.
+    setMessages((prev) =>
+      prev.map((m) => (m.id === messageId ? { ...m, message: text } : m)),
+    );
+
+    // 2. Send the edit over the chat-server socket, which persists it via the
+    //    backend and broadcasts the updated message to every participant.
+    setSending(true);
+    try {
+      socket.send(
+        JSON.stringify(
+          createEditSocketMessage({ conversationId, message: text, messageId }),
+        ),
+      );
+    } catch {
+      errorToast("Could not save your changes. Please try again.");
+    } finally {
+      setSending(false);
+    }
+
+    setEditingMessage(null);
     setMessageText("");
     setMessageHtml("");
   };
@@ -812,6 +872,26 @@ export function ConversationPanel({
     if (lastIncomingReaction.sender?.username === user?.username) return;
     applyReaction(lastIncomingReaction);
   }, [lastIncomingReaction, conversationId, applyReaction, user?.username]);
+
+  // ── Socket: incoming real-time message edits ───────────────────────────────
+
+  useEffect(() => {
+    if (!lastIncomingEdit) return;
+    if (lastIncomingEdit.conversationId !== conversationId) return;
+    // The server message is authoritative; patch the text (and attachments) of
+    // the matching message wherever it appears in the open conversation.
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === lastIncomingEdit.id
+          ? {
+              ...m,
+              attachments: lastIncomingEdit.attachments ?? m.attachments,
+              message: lastIncomingEdit.message,
+            }
+          : m,
+      ),
+    );
+  }, [lastIncomingEdit, conversationId]);
 
   // ── Render helpers ─────────────────────────────────────────────────────────
 
@@ -1048,6 +1128,7 @@ export function ConversationPanel({
                         onForward={(msg) => setForwardingMessage(msg)}
                         onReport={(msg) => setReportingMessage(msg)}
                         onReact={handleReact}
+                        onEdit={startEditing}
                       />
                     </span>
                   );
@@ -1105,6 +1186,8 @@ export function ConversationPanel({
           onSenderChange={setSelectedSender}
           mentionItems={mentionItems}
           getMentionMuseItems={getMentionMuseItems}
+          editingMessage={editingMessage}
+          onCancelEdit={cancelEditing}
         />
       </S.ChatWrapper>
 

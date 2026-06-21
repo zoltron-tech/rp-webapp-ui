@@ -44,6 +44,57 @@ export const MediaToolbar = styled.div<{ $open: boolean }>`
   transition: transform 0.2s ease, opacity 0.15s ease;
 `;
 
+export const EditBanner = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 25px;
+  background-color: var(--bg-1);
+  border-top: 1px solid var(--bg-4);
+`;
+
+export const EditBannerIcon = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  flex-shrink: 0;
+`;
+
+export const EditBannerInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+`;
+
+export const EditBannerLabel = styled.span`
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  color: var(--accent);
+`;
+
+export const EditBannerClose = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: var(--bg-3);
+    color: var(--text-primary);
+  }
+`;
+
 export const SendButton = styled.button`
   height: 44px;
   min-width: 120px;
@@ -103,13 +154,18 @@ export const SenderButton = styled.button`
     transition: opacity 0.15s ease;
   }
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: var(--bg-3);
     border-color: color-mix(in srgb, var(--accent) 55%, var(--bg-6));
   }
 
-  &:hover .avatar {
+  &:hover:not(:disabled) .avatar {
     opacity: 0.85;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
   }
 `;
 

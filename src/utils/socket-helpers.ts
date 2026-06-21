@@ -72,6 +72,38 @@ export const createReactionSocketMessage = (
   type: "reaction",
 });
 
+// ─── Incoming edited-message type guard ──────────────────────────────────────
+
+export type ServerEditMessage = {
+  type: "edit";
+  payload: Message;
+};
+
+/** Narrows an unknown WS payload to a real-time message-edit event. */
+export const isServerEdit = (data: unknown): data is ServerEditMessage => {
+  if (!data || typeof data !== "object") return false;
+  const d = data as Record<string, unknown>;
+  if (d.type !== "edit") return false;
+  const p = d.payload as Record<string, unknown> | undefined;
+  return (
+    !!p &&
+    typeof p.id === "string" &&
+    typeof p.conversationId === "string" &&
+    typeof p.sender === "object" &&
+    p.sender !== null
+  );
+};
+
+/** Builds the outgoing edit socket frame sent to the chat-server. */
+export const createEditSocketMessage = (payload: {
+  messageId: string;
+  conversationId: string;
+  message: string;
+}) => ({
+  payload,
+  type: "edit" as const,
+});
+
 // ─── Payload builders ─────────────────────────────────────────────────────────
 
 /** Pong response sent back to the server to reset its heartbeat flag. */

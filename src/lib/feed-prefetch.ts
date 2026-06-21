@@ -1,7 +1,7 @@
 /**
  * Shared prefetch service for the three primary feed sources:
  *   - Explore Prompts (paginated)
- *   - OOC Posts / News Feed (unpaginated, returns full list)
+ *   - OOC Posts / News Feed (paginated, page 1 only for prefetch)
  *   - Home Activities (paginated)
  *
  * Responsibilities:
@@ -18,7 +18,7 @@
 
 import { getNewPromptsAction } from "@/app/rp/explore-prompts/actions";
 import { getFriendActivities } from "@/app/rp/home/actions";
-import { getNewsFeed } from "@/app/rp/news-feed/actions";
+import { getNewsFeedPageAction } from "@/app/rp/news-feed/actions";
 import type { Prompt } from "@/types";
 import type { Activity } from "@/types/activity";
 import type { StoreState } from "@/types/state";
@@ -26,6 +26,7 @@ import type { StoreState } from "@/types/state";
 /** Per-source page sizes — keep in one place so home and explore stay in sync. */
 export const FEED_PAGE_SIZES = {
   explorePrompts: 5,
+  oocPosts: 8,
   homeActivities: 10,
 } as const;
 
@@ -69,12 +70,12 @@ export const prefetchExplorePrompts = (
     return null;
   });
 
-/** Fetch OOC posts (news feed) and cache. Dedupes concurrent callers. */
+/** Fetch page 1 of OOC posts (news feed) and cache. Dedupes concurrent callers. */
 export const prefetchOOCPosts = (
   setGlobalState: SetState,
 ): Promise<Prompt[] | null> =>
   runOnce("oocPosts", async () => {
-    const result = await getNewsFeed();
+    const result = await getNewsFeedPageAction(1, FEED_PAGE_SIZES.oocPosts);
     if (isList<Prompt>(result)) {
       setGlobalState({ cachedOOCPosts: result });
       return result;

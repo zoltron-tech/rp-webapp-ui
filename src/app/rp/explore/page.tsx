@@ -34,6 +34,7 @@ import { getNewsFeedPageAction } from "../news-feed/actions";
 import * as S from "./styles";
 
 const PAGE_SIZE = FEED_PAGE_SIZES.explorePrompts;
+const OOC_PAGE_SIZE = FEED_PAGE_SIZES.oocPosts;
 
 type ExploreMode = "NEWSFEED" | "PROMPTS";
 
@@ -87,7 +88,7 @@ export default function ExplorePage() {
       if (pageNumber === 1 && !append) {
         if (cachedOOCPosts) {
           setNewsFeedPrompts(cachedOOCPosts);
-          setNewsFeedHasMore(cachedOOCPosts.length === PAGE_SIZE);
+          setNewsFeedHasMore(cachedOOCPosts.length === OOC_PAGE_SIZE);
           stopPageLoading();
           return;
         }
@@ -96,7 +97,7 @@ export default function ExplorePage() {
           const result = await inflight;
           if (result) {
             setNewsFeedPrompts(result);
-            setNewsFeedHasMore(result.length === PAGE_SIZE);
+            setNewsFeedHasMore(result.length === OOC_PAGE_SIZE);
           }
           stopPageLoading();
           return;
@@ -104,7 +105,7 @@ export default function ExplorePage() {
         const result = await prefetchOOCPosts(setGlobalState);
         if (result) {
           setNewsFeedPrompts(result);
-          setNewsFeedHasMore(result.length === PAGE_SIZE);
+          setNewsFeedHasMore(result.length === OOC_PAGE_SIZE);
         }
         stopPageLoading();
         return;
@@ -112,7 +113,7 @@ export default function ExplorePage() {
 
       // Pages 2+: fetch directly.
       const _prompts = await baseDataLoader(() =>
-        getNewsFeedPageAction(pageNumber, PAGE_SIZE),
+        getNewsFeedPageAction(pageNumber, OOC_PAGE_SIZE),
       );
 
       if (!_prompts || _prompts.length === 0) {
@@ -120,7 +121,7 @@ export default function ExplorePage() {
         return;
       }
 
-      setNewsFeedHasMore(_prompts.length === PAGE_SIZE);
+      setNewsFeedHasMore(_prompts.length === OOC_PAGE_SIZE);
       setNewsFeedPrompts((prev) =>
         append ? [...(prev || []), ..._prompts] : _prompts,
       );

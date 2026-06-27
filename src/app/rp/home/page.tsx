@@ -528,8 +528,14 @@ export default function HomePage() {
                         disabled={friendsMusesLoading}
                         title="Load more characters"
                       >
-                        <FaChevronRight size={24} />
-                        <span>More</span>
+                        {friendsMusesLoading ? (
+                          <S.SpinnerRing />
+                        ) : (
+                          <>
+                            <FaChevronRight size={24} />
+                            <span>More</span>
+                          </>
+                        )}
                       </S.NextPageCard>
                     )}
                   </>
@@ -559,8 +565,14 @@ export default function HomePage() {
                       disabled={strangersLoading}
                       title="Load more suggestions"
                     >
-                      <FaChevronRight size={24} />
-                      <span>More</span>
+                      {strangersLoading ? (
+                        <S.SpinnerRing />
+                      ) : (
+                        <>
+                          <FaChevronRight size={24} />
+                          <span>More</span>
+                        </>
+                      )}
                     </S.NextPageNovelistCard>
                   )}
                 </>
@@ -583,8 +595,14 @@ export default function HomePage() {
                       disabled={unknownMusesLoading}
                       title="Load more characters"
                     >
-                      <FaChevronRight size={24} />
-                      <span>More</span>
+                      {unknownMusesLoading ? (
+                        <S.SpinnerRing />
+                      ) : (
+                        <>
+                          <FaChevronRight size={24} />
+                          <span>More</span>
+                        </>
+                      )}
                     </S.NextPageCard>
                   )}
                 </>

@@ -7,6 +7,19 @@ const shimmerMove = keyframes`
   100% { background-position: -200% 0; }
 `;
 
+const spin = keyframes`
+  to { transform: rotate(360deg); }
+`;
+
+export const SpinnerRing = styled.div`
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-6);
+  border-top-color: var(--accent);
+  animation: ${spin} 0.7s linear infinite;
+`;
+
 const shimmer = css`
   background: linear-gradient(
     90deg,

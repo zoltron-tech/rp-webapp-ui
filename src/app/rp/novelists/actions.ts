@@ -19,7 +19,7 @@ import {
   CONTENT_TYPE_HEADER_NAME,
   MEDIA_JSON_HEADER_VALUE,
 } from "@/utils/constants";
-import { transformNovelist } from "@/utils/image";
+import { reverseWsrvUrl, transformNovelist } from "@/utils/image";
 import { Logger } from "@/utils/services";
 
 const { serverRuntimeConfig } = getConfig();
@@ -204,10 +204,32 @@ export const updateUserNovelist = async (
   const jwt = await authenticateAndGetJWT();
   const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist`;
 
-  Logger.debug("updateUserNovelist", _novelist);
+  // Strip wsrv.nl proxy URLs back to original S3 URLs before sending to the
+  // backend. The global novelist state is seeded via getUserNovelist which runs
+  // transformNovelist (S3 → wsrv.nl). Sending wsrv.nl URLs causes the backend
+  // to detect a URL change, delete the original S3 file, and persist a proxy
+  // URL in the DB — the same bug that affects updateMuseAction.
+  const novelist: UpdateNovelistPayload = {
+    ..._novelist,
+    image: reverseWsrvUrl(_novelist.image),
+    avatar: _novelist.avatar
+      ? {
+          ..._novelist.avatar,
+          src: reverseWsrvUrl(_novelist.avatar.src),
+          crop: _novelist.avatar.crop
+            ? {
+                ..._novelist.avatar.crop,
+                src: reverseWsrvUrl(_novelist.avatar.crop.src),
+              }
+            : _novelist.avatar.crop,
+        }
+      : _novelist.avatar,
+  };
+
+  Logger.debug("updateUserNovelist", novelist);
 
   const response = await fetch(URL, {
-    body: JSON.stringify(_novelist),
+    body: JSON.stringify(novelist),
     cache: "no-store",
     headers: {
       [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
@@ -223,7 +245,7 @@ export const updateUserNovelist = async (
   const result: WithMessage<Novelist> = await response.json();
   Logger.debug("updateUserNovelist", result);
 
-  const novelist: Novelist = Object.assign(
+  const savedNovelist: Novelist = Object.assign(
     {},
     {
       ...result,
@@ -231,7 +253,7 @@ export const updateUserNovelist = async (
     },
   );
 
-  return novelist;
+  return savedNovelist;
 };
 
 export const searchAction = async (searchTerm: string, type = "novelist") => {

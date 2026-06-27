@@ -78,6 +78,20 @@ type WsrvOptions = {
 // Core URL transform.
 // ──────────────────────────────────────────────────────────────────────────
 
+/**
+ * Reverse a wsrv.nl proxy URL back to the original S3 URL.
+ * Safe to call on any URL — non-wsrv.nl URLs are returned unchanged.
+ * Mirrors the generic signature of wsrvImage so callers preserve null/undefined.
+ */
+export function reverseWsrvUrl<T extends string | null | undefined>(url: T): T {
+  if (!url || !(url as string).startsWith("https://wsrv.nl/?")) return url;
+  const qIndex = (url as string).indexOf("?");
+  if (qIndex === -1) return url;
+  const params = new URLSearchParams((url as string).slice(qIndex + 1));
+  const s3Part = params.get("url");
+  return (s3Part ? `https://${s3Part}` : url) as T;
+}
+
 export function wsrvImage<T extends string | null | undefined>(
   s3Url: T,
   opts: WsrvOptions = {},

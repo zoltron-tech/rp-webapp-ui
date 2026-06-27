@@ -79,18 +79,6 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
   const unreadReplyCount = useGlobalState("unreadReplyCount");
   const authState = useGlobalState("authState");
 
-  // Prefetch the first page of conversations after login so the inbox renders instantly
-  useEffect(() => {
-    if (authState !== "LOGGED_IN") return;
-    return runWhenIdle(() => {
-      getConversationsAction(1, 15).then((result) => {
-        if (result && Array.isArray(result)) {
-          setGlobalState({ cachedConversations: result });
-        }
-      });
-    });
-  }, [authState, setGlobalState]);
-
   // Prefetch the current group count after login so the create-group gate is ready
   useEffect(() => {
     if (authState !== "LOGGED_IN") return;
@@ -182,6 +170,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           authState: "LOGGED_OUT",
           cachedConversations: null,
           cachedExplorePrompts: null,
+          cachedOutgoingThreads: null,
           cachedHomeActivities: null,
           cachedOOCPosts: null,
           cachedPromptComments: null,

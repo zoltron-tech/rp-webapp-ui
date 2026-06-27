@@ -1,5 +1,10 @@
 import styled, { css, keyframes } from "styled-components";
 
+const shimmerSweep = keyframes`
+  0%   { background-position: -800px 0; }
+  100% { background-position:  800px 0; }
+`;
+
 const slideInFromLeft = keyframes`
   from { transform: translateX(-30px); opacity: 0; }
   to   { transform: translateX(0);     opacity: 1; }
@@ -172,6 +177,77 @@ export const EmptyStateButton = styled.button<{ $primary?: boolean }>`
     opacity: 1;
   }
 `;
+
+// ── Shimmer skeletons ─────────────────────────────────────────────────────────
+
+const shimmerPulse = css`
+  background: linear-gradient(
+    90deg,
+    var(--bg-4) 0%,
+    var(--bg-5) 50%,
+    var(--bg-4) 100%
+  );
+  background-size: 800px 100%;
+  animation: ${shimmerSweep} 1.5s ease-in-out infinite;
+`;
+
+export const ShimmerItem = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--bg-4);
+
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+export const ShimmerAvatar = styled.div`
+  ${shimmerPulse}
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  margin-top: 1px;
+`;
+
+export const ShimmerContent = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+`;
+
+export const ShimmerContentMain = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  padding-top: 3px;
+`;
+
+export const ShimmerLine = styled.div<{ $width: string; $height?: number }>`
+  ${shimmerPulse}
+  height: ${({ $height }) => $height ?? 13}px;
+  width: ${({ $width }) => $width};
+  border-radius: 4px;
+`;
+
+export const ShimmerExtras = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  padding-top: 3px;
+  flex-shrink: 0;
+`;
+
+// ── /Shimmer skeletons ────────────────────────────────────────────────────────
 
 /** Full-viewport panel that slides in from the right on mobile. */
 export const ConversationSheet = styled.div<{

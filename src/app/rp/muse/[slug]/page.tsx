@@ -10,7 +10,6 @@ import { TiInfoLarge } from "react-icons/ti";
 import { ShouldRender } from "@/components/common";
 import { useGlobalState } from "@/context/store/stores";
 import { useStateMachine } from "@/hooks";
-import { useNsfwCheck } from "@/hooks/use-nsfw-check";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { Muse, MuseAboutSection, Prompt } from "@/types";
 import { Logger } from "@/utils/services";
@@ -49,8 +48,6 @@ export default function MuseProfilePage({}) {
     null,
   );
   const [media, setMedia] = useState<string[] | null>(null);
-  const [bannerNsfwRevealed, setBannerNsfwRevealed] = useState(false);
-  const [cardNsfwRevealed, setCardNsfwRevealed] = useState(false);
   const username = params?.slug as string;
   const { baseDataLoader } = usePageRouter();
   const { transition, is } = useStateMachine<CARD_STATE>({
@@ -154,40 +151,20 @@ export default function MuseProfilePage({}) {
         bgSize: `${cardCrop.width}%`,
       }
     : null;
-  const isNsfwBanner = useNsfwCheck(bannerSrc || null, isOwnMuse);
-  const isNsfwCard = useNsfwCheck(cardBgSrc || null, isOwnMuse);
-  const showBannerNsfwOverlay = isNsfwBanner === true && !bannerNsfwRevealed;
-  const showCardNsfwOverlay = isNsfwCard === true && !cardNsfwRevealed;
-  const showCardBlur =
-    !!cardBgSrc && (isNsfwCard === null || showCardNsfwOverlay);
-
   return (
     <S.MuseContainer>
       <S.Banner
         src={bannerSrc || null}
         filterValues={
-          showBannerNsfwOverlay
-            ? { blur: 40, brightness: 20, greyscale: 50 }
-            : muse?.useExtraImages
-              ? (muse?.wallpaper?.filterValues ?? {
-                  blur: 20,
-                  brightness: 50,
-                  greyscale: 20,
-                })
-              : { blur: 20, brightness: 50, greyscale: 20 }
+          muse?.useExtraImages
+            ? (muse?.wallpaper?.filterValues ?? {
+                blur: 20,
+                brightness: 50,
+                greyscale: 20,
+              })
+            : { blur: 20, brightness: 50, greyscale: 20 }
         }
       />
-      {showBannerNsfwOverlay && (
-        <S.BannerNSFWOverlay>
-          <S.NSFWLabel>⚠️ Sensitive background content</S.NSFWLabel>
-          <S.NSFWRevealButton
-            type="button"
-            onClick={() => setBannerNsfwRevealed(true)}
-          >
-            See anyway
-          </S.NSFWRevealButton>
-        </S.BannerNSFWOverlay>
-      )}
 
       {/* Main character card */}
       <S.CardWrapper>
@@ -196,28 +173,8 @@ export default function MuseProfilePage({}) {
             banner={cardBgSrc}
             $bgSize={cardBgCss?.bgSize}
             $bgPosition={cardBgCss?.bgPosition}
-            style={{
-              filter: showCardBlur ? "blur(20px)" : undefined,
-              transition: "filter 0.3s ease",
-            }}
           />
-          {showCardNsfwOverlay && (
-            <S.NSFWOverlay>
-              <S.NSFWLabel>⚠️ Sensitive content</S.NSFWLabel>
-            </S.NSFWOverlay>
-          )}
         </S.ImageWrapper>
-        {showCardNsfwOverlay && (
-          <S.NSFWRevealButton
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setCardNsfwRevealed(true);
-            }}
-          >
-            See anyway
-          </S.NSFWRevealButton>
-        )}
       </S.CardWrapper>
 
       {/* Sections — always show the selected one */}

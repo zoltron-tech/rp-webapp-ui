@@ -22,6 +22,21 @@ import {
 import { CreateGroupDialog } from "./create-group-dialog";
 import * as S from "./styles";
 
+const ConversationCardShimmer = () => (
+  <S.ShimmerItem>
+    <S.ShimmerAvatar />
+    <S.ShimmerContent>
+      <S.ShimmerContentMain>
+        <S.ShimmerLine $width="45%" />
+        <S.ShimmerLine $width="70%" $height={11} />
+      </S.ShimmerContentMain>
+      <S.ShimmerExtras>
+        <S.ShimmerLine $width="36px" $height={10} />
+      </S.ShimmerExtras>
+    </S.ShimmerContent>
+  </S.ShimmerItem>
+);
+
 const PAGE_SIZE = 15;
 
 export default function ConversationsPage() {
@@ -99,6 +114,7 @@ export default function ConversationsPage() {
   }, [panelOpen]);
   // ── /Panel state ───────────────────────────────────────────────────────────
 
+  const [isLoading, setIsLoading] = useState(!cachedConversations);
   const [conversations, setConversations] = useState<Conversation[] | null>(
     cachedConversations ?? null,
   );
@@ -111,12 +127,9 @@ export default function ConversationsPage() {
   // Capture direction on mount so we can animate even after clearing it
   const slideIn = useRef(conversationNavDirection === "back").current;
 
-  // If we have cached data, stop the full-page loader immediately
+  // Stop the full-page loader on mount; shimmers handle the loading state.
   useEffect(() => {
-    if (cachedConversations) {
-      stopPageLoading();
-    }
-    // Clear nav direction after capturing it for the animation
+    stopPageLoading();
     setGlobalState({ conversationNavDirection: null });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -136,9 +149,6 @@ export default function ConversationsPage() {
     async (pageNumber: number, append = false) => {
       const rawResult = await getConversationsAction(pageNumber, PAGE_SIZE);
 
-      // Stop the loader here in case it wasn't stopped yet (no cache on first visit)
-      if (!append) stopPageLoading();
-
       const _conversations =
         rawResult && Array.isArray(rawResult)
           ? (rawResult as Conversation[])
@@ -146,32 +156,33 @@ export default function ConversationsPage() {
 
       if (!_conversations || _conversations.length === 0) {
         setHasMore(false);
+        if (!append) setIsLoading(false);
         return false;
       }
 
-      if (_conversations.length < PAGE_SIZE) {
-        setHasMore(false);
-      } else {
-        setHasMore(true);
-      }
+      setHasMore(_conversations.length >= PAGE_SIZE);
 
       setConversations((prev) =>
         append ? [...(prev || []), ..._conversations] : _conversations,
       );
 
-      // Keep the global cache in sync with page 1 data
       if (!append) {
+        setIsLoading(false);
         setGlobalState({ cachedConversations: _conversations });
       }
 
       return true;
     },
-    [stopPageLoading, setGlobalState],
+    [setGlobalState],
   );
 
+  // Load from backend only when the global store has no cached data.
   useEffect(() => {
-    fetchConversations(1);
-  }, [fetchConversations]);
+    if (!cachedConversations) {
+      fetchConversations(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Re-check the live group count against the user's tier limit before
   // letting them open the create-group dialog.
@@ -290,7 +301,11 @@ export default function ConversationsPage() {
         </S.BreadcrumbRow>
         <S.ConversationListContainer>
           <S.ConversationListRoot>
-            {conversations && conversations.length > 0 ? (
+            {isLoading ? (
+              Array.from({ length: 6 }, (_, i) => (
+                <ConversationCardShimmer key={i} />
+              ))
+            ) : conversations && conversations.length > 0 ? (
               <S.ConversationList>
                 {conversations.map((conversation) => (
                   <li key={conversation.id}>

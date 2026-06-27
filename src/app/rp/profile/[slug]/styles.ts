@@ -732,6 +732,11 @@ export const PostsContainer = styled.div`
   display: flex;
   flex-direction: column;
   margin-top: 10px;
+
+  @media (max-width: 600px) {
+      gap: 12px;
+      padding-bottom: 12px;
+  }
 `;
 
 export const EmptyFeedContainer = styled.div`

@@ -12,7 +12,6 @@ import {
   useState,
 } from "react";
 import { useGlobalState } from "@/context/store/stores";
-import { useNsfwCheck } from "@/hooks/use-nsfw-check";
 import * as S from "./styled";
 
 const VIDEO_EXTENSIONS = [".mp4", ".mov", ".quicktime"];
@@ -33,7 +32,6 @@ interface ImageViewerProps {
   /** Source of the previous image — rendered off-screen so it slides in during swipe */
   prevSrc?: string;
   children?: ReactNode;
-  skipNsfwCheck?: boolean;
 }
 
 export const AppImageViewer = ({
@@ -46,15 +44,9 @@ export const AppImageViewer = ({
   nextSrc,
   prevSrc,
   children,
-  skipNsfwCheck,
 }: ImageViewerProps) => {
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
-
-  const [nsfwRevealed, setNsfwRevealed] = useState(false);
-  const isNsfw = useNsfwCheck(src || null, skipNsfwCheck);
-  const showNsfwOverlay = isNsfw === true && !nsfwRevealed;
-  const showBlur = !!src && (isNsfw === null || showNsfwOverlay);
 
   const [viewMode, setViewMode] = useState<"card" | "zoom">("card");
   const [scale, setScale] = useState(1);
@@ -342,7 +334,6 @@ export const AppImageViewer = ({
     if (!open) {
       reset();
       setViewMode("card");
-      setNsfwRevealed(false);
       setCardImgX(0);
       setCardImgTransition(false);
       cardAnimating.current = false;
@@ -419,17 +410,13 @@ export const AppImageViewer = ({
                         onClick={
                           isCurrent && !slotIsVideo
                             ? () =>
-                                !cardAnimating.current &&
-                                !showNsfwOverlay &&
-                                setViewMode("zoom")
+                                !cardAnimating.current && setViewMode("zoom")
                             : undefined
                         }
                         style={{
                           alignItems: "center",
                           cursor:
-                            isCurrent && !showNsfwOverlay && !slotIsVideo
-                              ? "zoom-in"
-                              : "default",
+                            isCurrent && !slotIsVideo ? "zoom-in" : "default",
                           display: "flex",
                           justifyContent: "center",
                           pointerEvents: isCurrent ? undefined : "none",
@@ -474,31 +461,15 @@ export const AppImageViewer = ({
                             draggable={false}
                             style={{
                               borderRadius: "8px",
-                              filter:
-                                isCurrent && showBlur
-                                  ? "blur(24px)"
-                                  : undefined,
                               maxHeight: "100%",
                               maxWidth: "100%",
                               objectFit: "contain",
-                              transition: "filter 0.3s ease",
                             }}
                           />
                         )}
                       </div>
                     );
                   })}
-                  {showNsfwOverlay && (
-                    <S.NsfwOverlay>
-                      <S.NsfwLabel>⚠️ Sensitive content</S.NsfwLabel>
-                      <S.NsfwRevealButton
-                        type="button"
-                        onClick={() => setNsfwRevealed(true)}
-                      >
-                        See anyway
-                      </S.NsfwRevealButton>
-                    </S.NsfwOverlay>
-                  )}
                   {onPrev && (
                     <S.NavButton
                       $side="left"

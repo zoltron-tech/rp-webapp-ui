@@ -9,6 +9,7 @@ import { MdPhotoLibrary } from "react-icons/md";
 import { addMuseMediaAction, getMuseMediaAction } from "@/app/rp/muse/actions";
 import { deleteMedia } from "@/app/rp/profile/actions";
 import { AppAlertDialog } from "@/components/dialog";
+import { classifyUrl } from "@/hooks/use-nsfw-check";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { API_MESSAGE } from "@/utils/constants";
@@ -97,7 +98,7 @@ export function GallerySection({ onBack }: Props) {
   }, [pendingFiles]);
 
   const handleFileSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(e.target.files ?? []);
       e.target.value = "";
       setError(null);
@@ -118,11 +119,17 @@ export function GallerySection({ onBack }: Props) {
           setError("A file exceeds the 30 MB limit.");
           continue;
         }
-        accepted.push({
-          file,
-          isVideo: file.type === "video/mp4",
-          previewUrl: URL.createObjectURL(file),
-        });
+        const isVideo = file.type === "video/mp4";
+        const previewUrl = URL.createObjectURL(file);
+        if (!isVideo) {
+          const isNsfw = await classifyUrl(previewUrl);
+          if (isNsfw) {
+            URL.revokeObjectURL(previewUrl);
+            setError("This image contains sensitive content and cannot be uploaded.");
+            continue;
+          }
+        }
+        accepted.push({ file, isVideo, previewUrl });
       }
 
       setPendingFiles((prev) => [...prev, ...accepted]);

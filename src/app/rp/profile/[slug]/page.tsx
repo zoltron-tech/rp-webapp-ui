@@ -13,6 +13,7 @@ import {
   FcCalendar,
   FcComments,
   FcConferenceCall,
+  FcPortraitMode,
   FcReading,
   FcShare,
   FcTreeStructure,
@@ -935,6 +936,11 @@ export default function UserProfilePage({}) {
                     variant="bordered"
                     trigger={<BsThreeDots size={18} />}
                     items={[
+                      {
+                        icon: <FcPortraitMode size={22} />,
+                        label: "Edit profile",
+                        onClick: () => routeToPage(ROUTES.Profile.Edit),
+                      },
                       {
                         icon: <FcAnswers size={22} />,
                         label: `Copy username`,

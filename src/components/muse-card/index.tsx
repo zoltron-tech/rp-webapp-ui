@@ -7,7 +7,6 @@ import { GrEdit } from "react-icons/gr";
 import { deleteMuseAction } from "@/app/rp/muse/actions";
 import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents } from "@/hooks";
-import { useNsfwCheck } from "@/hooks/use-nsfw-check";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { Muse } from "@/types/novelist";
 import { API_MESSAGE, INITIAL_MUSE } from "@/utils/constants";
@@ -25,7 +24,6 @@ export const MuseCard: FC<Props> = ({ muse, className, ...rest }) => {
   const { routeToPage } = usePageRouter();
   const params = useParams();
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
-  const [nsfwRevealed, setNsfwRevealed] = useState(false);
   const [coverError, setCoverError] = useState(false);
   const { emit } = useCustomEvents(EVENTS.MUSE.base);
 
@@ -71,10 +69,6 @@ export const MuseCard: FC<Props> = ({ muse, className, ...rest }) => {
 
   const coverSrc =
     getSafeImage(muse?.cardBackground?.src) || getSafeImage(muse?.image || "");
-  const isOwnMuse = muse?.pennedBy?.username === user?.username;
-  const isNsfw = useNsfwCheck(coverSrc || null, isOwnMuse);
-  const showNsfwOverlay = isNsfw === true && !nsfwRevealed;
-  const showBlur = !!coverSrc && (isNsfw === null || showNsfwOverlay);
 
   Logger.info("MuseCard rendered");
 
@@ -117,13 +111,7 @@ export const MuseCard: FC<Props> = ({ muse, className, ...rest }) => {
           />
         </ShouldRender>
         <S.ImageWrapper>
-          <S.CardBackground
-            banner={coverSrc}
-            style={{
-              filter: showBlur ? "blur(20px)" : undefined,
-              transition: "filter 0.3s ease",
-            }}
-          />
+          <S.CardBackground banner={coverSrc} />
           {coverSrc && (
             // biome-ignore lint/a11y/useAltText: hidden probe only
             <img
@@ -137,24 +125,7 @@ export const MuseCard: FC<Props> = ({ muse, className, ...rest }) => {
               <FaUser size={56} />
             </S.FallbackImageIcon>
           )}
-          {showNsfwOverlay && (
-            <S.NSFWOverlay>
-              <S.NSFWLabel>⚠️ Sensitive content</S.NSFWLabel>
-            </S.NSFWOverlay>
-          )}
         </S.ImageWrapper>
-        {showNsfwOverlay && (
-          <S.NSFWRevealButton
-            type="button"
-            className="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setNsfwRevealed(true);
-            }}
-          >
-            See anyway
-          </S.NSFWRevealButton>
-        )}
         <S.Card
           className={classNames([
             "muse-card",

@@ -19,7 +19,7 @@ import { AppAlertDialog } from "@/components/dialog";
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { VideoViewer } from "@/components/image-viewer/VideoViewer";
 import { useGlobalState } from "@/context/store/stores";
-import { useNsfwCheck } from "@/hooks/use-nsfw-check";
+import { classifyUrl } from "@/hooks/use-nsfw-check";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import type { Muse } from "@/types";
@@ -40,7 +40,6 @@ function GalleryImageItem({
   url,
   width,
   height,
-  skipNsfw,
   onItemClick,
   isCardBg,
   isWallpaper,
@@ -50,50 +49,20 @@ function GalleryImageItem({
   url: string;
   width: number;
   height: number;
-  skipNsfw: boolean;
   onItemClick: () => void;
   isCardBg: boolean;
   isWallpaper: boolean;
   isOwner: boolean;
   onDelete: () => void;
 }) {
-  const [revealed, setRevealed] = useState(false);
-  const isNsfw = useNsfwCheck(url, skipNsfw);
-  const showOverlay = isNsfw === true && !revealed;
-  const showBlur = isNsfw === null || showOverlay;
-
   return (
-    <S.GalleryItem
-      style={{ height, width }}
-      onClick={showOverlay ? undefined : onItemClick}
-    >
-      <S.GalleryImage
-        src={url}
-        alt="Gallery media"
-        style={{
-          filter: showBlur ? "blur(20px)" : undefined,
-          transition: "filter 0.3s ease",
-        }}
-      />
+    <S.GalleryItem style={{ height, width }} onClick={onItemClick}>
+      <S.GalleryImage src={url} alt="Gallery media" />
       {isCardBg && <S.GalleryBadge>Card BG</S.GalleryBadge>}
       {isWallpaper && (
         <S.GalleryBadge style={{ left: isCardBg ? "70px" : "5px" }}>
           Wallpaper
         </S.GalleryBadge>
-      )}
-      {showOverlay && (
-        <GalleryNsfwOverlay>
-          <GalleryNsfwLabel>⚠️ Sensitive content</GalleryNsfwLabel>
-          <GalleryNsfwReveal
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setRevealed(true);
-            }}
-          >
-            See anyway
-          </GalleryNsfwReveal>
-        </GalleryNsfwOverlay>
       )}
       {isOwner && (
         <S.GalleryDeleteBtn
@@ -116,7 +85,6 @@ function JustifiedGallery({
   onItemClick,
   cardBgSrc,
   wallpaperSrc,
-  skipNsfw,
   isOwner,
   onDeleteItem,
 }: {
@@ -124,7 +92,6 @@ function JustifiedGallery({
   onItemClick: (idx: number) => void;
   cardBgSrc?: string;
   wallpaperSrc?: string;
-  skipNsfw: boolean;
   isOwner: boolean;
   onDeleteItem: (url: string) => void;
 }) {
@@ -279,7 +246,6 @@ function JustifiedGallery({
                 url={item.url}
                 width={item.width}
                 height={item.height}
-                skipNsfw={skipNsfw}
                 onItemClick={() => onItemClick(mediaUrls.indexOf(item.url))}
                 isCardBg={item.url === cardBgSrc}
                 isWallpaper={item.url === wallpaperSrc}
@@ -335,7 +301,7 @@ function UploadPanel({
   }, [pendingFiles]);
 
   const handleFileSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(e.target.files ?? []);
       e.target.value = "";
       setError(null);
@@ -354,11 +320,17 @@ function UploadPanel({
           setError("A file exceeds the 30 MB limit.");
           continue;
         }
-        accepted.push({
-          file,
-          isVideo: file.type === "video/mp4" || file.type === "video/quicktime",
-          previewUrl: URL.createObjectURL(file),
-        });
+        const isVideo = file.type === "video/mp4" || file.type === "video/quicktime";
+        const previewUrl = URL.createObjectURL(file);
+        if (!isVideo) {
+          const isNsfw = await classifyUrl(previewUrl);
+          if (isNsfw) {
+            URL.revokeObjectURL(previewUrl);
+            setError("This image contains sensitive content and cannot be uploaded.");
+            continue;
+          }
+        }
+        accepted.push({ file, isVideo, previewUrl });
       }
       setPendingFiles((prev) => [...prev, ...accepted]);
     },
@@ -621,7 +593,6 @@ export function GallerySection({ muse, media }: Props) {
                 nextSrc={galleryNextSrc}
                 onPrev={goPrev}
                 onNext={goNext}
-                skipNsfwCheck={isOwner}
               />
               <VideoViewer
                 src={currentIsVideo ? (currentItem ?? "") : ""}
@@ -637,7 +608,6 @@ export function GallerySection({ muse, media }: Props) {
               <JustifiedGallery
                 mediaUrls={localMedia}
                 onItemClick={setGalleryIndex}
-                skipNsfw={isOwner}
                 isOwner={isOwner}
                 onDeleteItem={handleDeleteMedia}
                 cardBgSrc={
@@ -693,41 +663,6 @@ export function GallerySection({ muse, media }: Props) {
 }
 
 // ── Inline styled components ───────────────────────────────────────────────
-
-const GalleryNsfwOverlay = styled.div`
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-`;
-
-const GalleryNsfwLabel = styled.span`
-  color: #fff;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-align: center;
-  padding: 0 8px;
-`;
-
-const GalleryNsfwReveal = styled.button`
-  all: unset;
-  box-sizing: border-box;
-  padding: 4px 12px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
-  font-size: 0.7rem;
-  cursor: pointer;
-  &:hover {
-    background: rgba(255, 255, 255, 0.25);
-  }
-`;
 
 const GalleryAddMediaBtn = styled.button`
   all: unset;

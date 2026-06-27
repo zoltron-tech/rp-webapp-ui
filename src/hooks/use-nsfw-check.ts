@@ -65,7 +65,7 @@ const toCanvas = (img: HTMLImageElement): HTMLCanvasElement => {
   return canvas;
 };
 
-const classifyUrl = async (src: string): Promise<boolean> => {
+export const classifyUrl = async (src: string): Promise<boolean> => {
   if (resultCache.has(src)) return resultCache.get(src) as boolean;
   const existing = inflight.get(src);
   if (existing) return existing;

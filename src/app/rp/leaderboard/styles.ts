@@ -141,7 +141,7 @@ export const TopThreeGroup = styled.div`
   flex-direction: column;
   width: 100%;
   max-width: 640px;
-  border-radius: 16px;
+  border-radius: 8px;
   overflow: hidden;
   margin-bottom: 8px;
   /* gradient inner bg + gradient outer border via background-clip */
@@ -162,7 +162,7 @@ export const List = styled.div`
   flex-direction: column;
   width: 100%;
   max-width: 640px;
-  border-radius: 16px;
+  border-radius: 8px;
   border: 1px solid var(--bg-4);
   overflow: hidden;
   background: var(--bg-2);
@@ -383,17 +383,26 @@ export const XPChip = styled.span`
 export const FandomChip = styled.span<{ $color: string }>`
   display: inline-flex;
   align-items: center;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: ${({ $color }) =>
-    `color-mix(in srgb, ${$color} 16%, var(--bg-3))`};
-  border: 1px solid
-    ${({ $color }) => `color-mix(in srgb, ${$color} 40%, var(--bg-5))`};
-  font-size: 0.62rem;
-  font-weight: 600;
-  color: ${({ $color }) => $color};
+  gap: 4px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #fff;
+  background: ${({ $color }) => $color};
+  padding: 2px 7px 2px 5px;
+  border-radius: 3px;
   white-space: nowrap;
-  filter: brightness(1.15);
+
+  &::before {
+    content: "";
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.8);
+    flex-shrink: 0;
+  }
 `;
 
 export const YouBadge = styled.span`
@@ -432,7 +441,7 @@ export const OwnRankCard = styled.div`
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  border-radius: 14px;
+  border-radius: 8px;
   background: color-mix(in srgb, var(--accent) 10%, var(--bg-2));
   border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--bg-5));
   box-shadow:

@@ -71,4 +71,6 @@ export interface StoreState {
   showJoinDiscordPrompt: boolean;
   /** True for the brief window between finishing onboarding and viewing the welcome page. */
   justOnboarded: boolean;
+  /** Leaderboard rank of the currently logged-in novelist — null until fetched, refreshed on profile/edit-profile open. */
+  novelistRank: number | null;
 }

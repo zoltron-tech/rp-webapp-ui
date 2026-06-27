@@ -6,6 +6,7 @@ import {
   logoutAction,
 } from "@/app/actions";
 import type {
+  Friend,
   Novelist,
   NovelistWorldNotification,
   UpdateNovelistPayload,
@@ -283,6 +284,34 @@ export const chatAction = async (targetUserName: string | null) => {
 
   const result = (await response.json()) as Message[];
   return result;
+};
+
+export const getFriendsByUsernameAction = async (
+  username: string,
+  pageNumber: number,
+  pageSize: number,
+): Promise<Friend[]> => {
+  const headers: Record<string, string> = {
+    [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
+  };
+
+  const jwt = await getJWTIfExists();
+  if (jwt) {
+    headers[AUTH_HEADER_NAME] = jwt;
+  }
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/friends?username=${username}&pageNumber=${pageNumber}&pageSize=${pageSize}`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers,
+  });
+
+  if (!response.ok) {
+    return [];
+  }
+
+  return response.json();
 };
 
 export const getConversationsAction = async (

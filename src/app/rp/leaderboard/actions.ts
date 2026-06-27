@@ -1,7 +1,7 @@
 "use server";
 
 import getConfig from "next/config";
-import { authenticateAndGetJWT, getJWTIfExists } from "@/app/actions";
+import { getJWTIfExists } from "@/app/actions";
 import type { Fandom, NWImage } from "@/types";
 import type { WithMessage } from "@/types/common";
 import {
@@ -81,18 +81,14 @@ export const getNovelistLeaderboardAction = async (
   }
 };
 
-export const getMyNovelistRankAction = async (): Promise<
-  NovelistLeaderboardEntry | WithMessage
-> => {
+export const getNovelistRankByIdAction = async (
+  novelistId: string,
+): Promise<NovelistLeaderboardEntry | WithMessage> => {
   try {
-    const jwt = await authenticateAndGetJWT();
-    const url = `${RP_SERVICE_URL}/rp/portfolio/leaderboard/novelists/rank`;
+    const url = `${RP_SERVICE_URL}/rp/portfolio/leaderboard/novelists/${novelistId}/rank`;
     const response = await fetch(url, {
       cache: "no-store",
-      headers: {
-        [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
-        [AUTH_HEADER_NAME]: jwt,
-      },
+      headers: await buildHeaders(),
     });
     if (!response.ok) return { message: API_MESSAGE.Error };
     return (await response.json()) as NovelistLeaderboardEntry;

@@ -20,7 +20,7 @@ import {
   FcShare,
   FcTreeStructure,
 } from "react-icons/fc";
-import { GiCheckMark, GiCrossMark } from "react-icons/gi";
+import { GiCheckMark, GiCrossMark, GiTrophy } from "react-icons/gi";
 import { GoChevronRight } from "react-icons/go";
 import { IoMdPersonAdd } from "react-icons/io";
 import { IoPersonRemove } from "react-icons/io5";
@@ -65,6 +65,7 @@ import { toFormattedDate } from "@/utils/helpers";
 import { getConversationByUsernameAction } from "../../conversations/actions";
 import { getUserActivities } from "../../home/actions";
 import * as HomeS from "../../home/styles";
+import { getNovelistRankByIdAction } from "../../leaderboard/actions";
 import { getNovelistAction } from "../../novelists/actions";
 import { getAllStoryboardsByUsernameAction } from "../../story/actions";
 import {
@@ -343,6 +344,11 @@ export default function UserProfilePage({}) {
   const [supportMessage, setSupportMessage] = useState("");
   const user = useGlobalState("user");
   const userNovelist = useGlobalState("novelist");
+  const novelistRank = useGlobalState("novelistRank");
+  // Rank for the profile being viewed (null = loading, undefined = failed/N/A)
+  const [profileRank, setProfileRank] = useState<number | null | undefined>(
+    undefined,
+  );
   const username = params?.slug as string;
   const isCurrentUser = username === user?.username;
   const [novelist, setNovelist] = useState<Novelist | null>(
@@ -728,6 +734,25 @@ export default function UserProfilePage({}) {
       setNovelist(userNovelist);
     }
   }, [userNovelist, isCurrentUser]);
+
+  // Refresh own rank when viewing own profile
+  useEffect(() => {
+    if (!isCurrentUser || authState !== "LOGGED_IN" || !userNovelist?.id) return;
+    void getNovelistRankByIdAction(userNovelist.id).then((result) => {
+      if (!("message" in result)) {
+        setGlobalState({ novelistRank: result.rank });
+      }
+    });
+  }, [isCurrentUser, authState, userNovelist?.id]);
+
+  // Fetch rank for other novelists once their ID is known
+  useEffect(() => {
+    if (isCurrentUser || !novelist?.id) return;
+    setProfileRank(null);
+    void getNovelistRankByIdAction(novelist.id).then((result) => {
+      setProfileRank("message" in result ? undefined : result.rank);
+    });
+  }, [isCurrentUser, novelist?.id]);
 
   useEffect(() => {
     if (authState === "UNINITIALIZED") {
@@ -1121,6 +1146,21 @@ export default function UserProfilePage({}) {
                     <FcFlashOn size={13} />
                     {novelist?.totalPoints?.toLocaleString()} XP
                   </S.XPChip>
+                  {(() => {
+                    const rank = isCurrentUser ? novelistRank : profileRank;
+                    if (rank === undefined) return null;
+                    if (rank === null) return <S.RankBadgeShimmer />;
+                    return (
+                      <S.RankBadge
+                        onClick={() =>
+                          routeToPage(ROUTES.Leaderboard.Novelists)
+                        }
+                      >
+                        <GiTrophy size={13} />
+                        #{rank.toLocaleString()}
+                      </S.RankBadge>
+                    );
+                  })()}
                 </S.LevelChipRow>
               </ShouldRender>
             </ShouldRender>

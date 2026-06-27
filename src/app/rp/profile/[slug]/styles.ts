@@ -1,5 +1,5 @@
 import { Container, ContainerClasses } from "@novelist-world/ui";
-import styled, { css } from "styled-components";
+import styled, { css, keyframes } from "styled-components";
 import { Avatar as AvatarCommon, Pill } from "@/components/common";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { AppDropdownMenu } from "@/components/profile-more-dropdown";
@@ -873,5 +873,69 @@ export const XPChip = styled.span`
   &:hover {
     background: var(--bg-4);
     border-color: var(--bg-6);
+  }
+`;
+
+const goldShimmer = keyframes`
+  0% { background-position: 200% center; }
+  100% { background-position: -200% center; }
+`;
+
+export const RankBadgeShimmer = styled.span`
+  display: inline-flex;
+  width: 80px;
+  height: 25px;
+  border-radius: 999px;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  overflow: hidden;
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      rgba(251, 191, 36, 0.06) 0%,
+      rgba(251, 191, 36, 0.22) 40%,
+      rgba(255, 236, 153, 0.45) 50%,
+      rgba(251, 191, 36, 0.22) 60%,
+      rgba(251, 191, 36, 0.06) 100%
+    );
+    background-size: 200% 100%;
+    animation: ${goldShimmer} 1.6s ease-in-out infinite;
+  }
+`;
+
+export const RankBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px 4px 8px;
+  border-radius: 999px;
+  background: linear-gradient(
+    135deg,
+    rgba(251, 191, 36, 0.18) 0%,
+    rgba(245, 158, 11, 0.12) 100%
+  );
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  box-shadow:
+    0 0 10px rgba(251, 191, 36, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: linear-gradient(
+      135deg,
+      rgba(251, 191, 36, 0.28) 0%,
+      rgba(245, 158, 11, 0.2) 100%
+    );
+    border-color: rgba(251, 191, 36, 0.65);
   }
 `;

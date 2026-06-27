@@ -9,8 +9,8 @@ import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
 import {
-  getMyNovelistRankAction,
   getNovelistLeaderboardAction,
+  getNovelistRankByIdAction,
   type NovelistLeaderboardEntry,
 } from "../actions";
 import { LeaderboardInfo } from "../leaderboard-info";
@@ -22,6 +22,7 @@ const MAX_TOTAL = 80;
 export default function NovelistLeaderboardPage() {
   const authState = useGlobalState("authState");
   const user = useGlobalState("user");
+  const novelist = useGlobalState("novelist");
   const { routeToPage, stopPageLoading } = usePageRouter();
   const authResolved = useRef(false);
 
@@ -53,7 +54,7 @@ export default function NovelistLeaderboardPage() {
 
     Promise.all([
       getNovelistLeaderboardAction(1, PAGE_SIZE),
-      getMyNovelistRankAction(),
+      novelist?.id ? getNovelistRankByIdAction(novelist.id) : Promise.resolve({ message: "" }),
     ]).then(([listResult, rankResult]) => {
       setLoading(false);
       if ("message" in listResult) {

@@ -763,6 +763,13 @@ export const LandingHero = styled.div`
   align-items: center;
   gap: 16px;
   padding: 20px 4px 12px;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 4px 8px;
+  }
 `;
 
 export const LandingHeroAvatarWrap = styled.div`
@@ -783,6 +790,18 @@ export const LandingHeroAvatarWrap = styled.div`
     width: 150px;
     border: 3px solid var(--accent-7);
   }
+
+  @media (max-width: 600px) {
+    label > div {
+      width: 80px;
+      height: 80px;
+    }
+
+    .avatar {
+      width: 110px;
+      height: 110px;
+    }
+  }
 `;
 
 export const LandingHeroEditRow = styled.div`
@@ -791,6 +810,10 @@ export const LandingHeroEditRow = styled.div`
   align-items: flex-start;
   gap: 12px;
   width: 100%;
+
+  @media (max-width: 600px) {
+    align-items: center;
+  }
 `;
 
 export const LandingHeroNameRow = styled.div`

@@ -153,9 +153,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
   };
 
   const toEditProfile = () => {
-    routeToPage(ROUTES.Profile.Edit, {
-      skipLoading: true,
-    });
+    routeToPage(ROUTES.Profile.Edit);
   };
 
   const toMusesPage = () => {

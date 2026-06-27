@@ -191,6 +191,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           },
           notifications: null,
           novelist: null,
+          novelistRank: null,
           novelists: [],
           pageLoading: false,
           searchBarExpanded: false,

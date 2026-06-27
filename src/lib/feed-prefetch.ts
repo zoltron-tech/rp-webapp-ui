@@ -30,9 +30,6 @@ export const FEED_PAGE_SIZES = {
   homeActivities: 10,
 } as const;
 
-/** Background polling interval (ms). Used by `useFeedPrefetch`. */
-export const FEED_POLL_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
-
 export type FeedKey = "explorePrompts" | "oocPosts" | "homeActivities";
 
 type SetState = (value: Partial<StoreState>) => void;
@@ -100,13 +97,3 @@ export const prefetchHomeActivities = (
     return null;
   });
 
-/**
- * Kick off page-1 prefetch for all three feeds in parallel.
- * Non-blocking — returns a Promise but callers typically don't await it.
- */
-export const prefetchAllFeeds = (setGlobalState: SetState) =>
-  Promise.all([
-    prefetchExplorePrompts(setGlobalState),
-    prefetchOOCPosts(setGlobalState),
-    prefetchHomeActivities(setGlobalState),
-  ]);

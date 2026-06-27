@@ -122,9 +122,9 @@ export default function HomePage() {
   const [feedExplorePrompts, setFeedExplorePrompts] = useState<Prompt[]>(
     () => cachedExplorePrompts ?? [],
   );
-  // OOC posts are always fetched fresh on mount (not seeded from cache)
-  // to avoid showing stale data from a previous login-time prefetch.
-  const [feedOOCPosts, setFeedOOCPosts] = useState<Prompt[]>([]);
+  const [feedOOCPosts, setFeedOOCPosts] = useState<Prompt[]>(
+    () => cachedOOCPosts ?? [],
+  );
   // IDs of prompts fetched on the first page — activities whose target.id
   // matches one of these are hidden from the feed to avoid duplicates.
   const [firstPagePromptIds, setFirstPagePromptIds] = useState<Set<string>>(
@@ -209,51 +209,59 @@ export default function HomePage() {
   };
 
   const fetchStrangers = async (page = 1, append = false) => {
-    if (page === 1 && cachedSuggestions) {
-      setStrangersHasMore(cachedSuggestions.length === STRANGERS_PAGE_SIZE);
-      // strangersInitialLoading was initialised false when cache exists
-      return;
-    }
-    const _strangers = await getStrangerNovelistsAction(
-      page,
-      STRANGERS_PAGE_SIZE,
-    );
-    if (_strangers && !("message" in _strangers)) {
-      setStrangers((prev) =>
-        append ? [...(prev ?? []), ..._strangers] : _strangers,
+    try {
+      if (page === 1 && cachedSuggestions) {
+        setStrangersHasMore(cachedSuggestions.length === STRANGERS_PAGE_SIZE);
+        return;
+      }
+      const _strangers = await getStrangerNovelistsAction(
+        page,
+        STRANGERS_PAGE_SIZE,
       );
-      setStrangersHasMore(_strangers.length === STRANGERS_PAGE_SIZE);
-      if (page === 1) setGlobalState({ friendSuggestions: _strangers });
-    } else {
-      setStrangersHasMore(false);
+      if (_strangers && !("message" in _strangers)) {
+        setStrangers((prev) =>
+          append ? [...(prev ?? []), ..._strangers] : _strangers,
+        );
+        setStrangersHasMore(_strangers.length === STRANGERS_PAGE_SIZE);
+        if (page === 1) setGlobalState({ friendSuggestions: _strangers });
+      } else {
+        setStrangersHasMore(false);
+      }
+    } finally {
+      if (page === 1) setStrangersInitialLoading(false);
     }
-    if (page === 1) setStrangersInitialLoading(false);
   };
 
   const fetchStrangerMuses = async (page = 1, append = false) => {
-    const _muses = await getMusesAction(page, MUSES_PAGE_SIZE, "unknown");
-    if (_muses && !("message" in _muses)) {
-      setUnknownMuses((prev) =>
-        append ? [...(prev ?? []), ..._muses] : _muses,
-      );
-      setUnknownMusesHasMore(_muses.length === MUSES_PAGE_SIZE);
-    } else {
-      setUnknownMusesHasMore(false);
+    try {
+      const _muses = await getMusesAction(page, MUSES_PAGE_SIZE, "unknown");
+      if (_muses && !("message" in _muses)) {
+        setUnknownMuses((prev) =>
+          append ? [...(prev ?? []), ..._muses] : _muses,
+        );
+        setUnknownMusesHasMore(_muses.length === MUSES_PAGE_SIZE);
+      } else {
+        setUnknownMusesHasMore(false);
+      }
+    } finally {
+      if (page === 1) setUnknownMusesInitialLoading(false);
     }
-    if (page === 1) setUnknownMusesInitialLoading(false);
   };
 
   const fetchFriendsMuses = async (page = 1, append = false) => {
-    const _muses = await getMusesAction(page, MUSES_PAGE_SIZE, "friends");
-    if (_muses && !("message" in _muses)) {
-      setFriendsMuses((prev) =>
-        append ? [...(prev ?? []), ..._muses] : _muses,
-      );
-      setFriendsMusesHasMore(_muses.length === MUSES_PAGE_SIZE);
-    } else {
-      setFriendsMusesHasMore(false);
+    try {
+      const _muses = await getMusesAction(page, MUSES_PAGE_SIZE, "friends");
+      if (_muses && !("message" in _muses)) {
+        setFriendsMuses((prev) =>
+          append ? [...(prev ?? []), ..._muses] : _muses,
+        );
+        setFriendsMusesHasMore(_muses.length === MUSES_PAGE_SIZE);
+      } else {
+        setFriendsMusesHasMore(false);
+      }
+    } finally {
+      if (page === 1) setFriendsMusesInitialLoading(false);
     }
-    if (page === 1) setFriendsMusesInitialLoading(false);
   };
 
   const fetchFriendsMusesWithVideos = async () => {
@@ -303,9 +311,12 @@ export default function HomePage() {
     return [];
   }, [feedExplorePrompts.length, cachedExplorePrompts, setGlobalState]);
 
-  // OOC posts are always fetched fresh — never use a cached value — because
-  // the cache may be from a previous login-time prefetch and be stale.
   const hydrateOOCPosts = useCallback(async (): Promise<Prompt[]> => {
+    if (feedOOCPosts.length > 0) return feedOOCPosts;
+    if (cachedOOCPosts) {
+      setFeedOOCPosts(cachedOOCPosts);
+      return cachedOOCPosts;
+    }
     const inflight = getInflightFeed<Prompt[] | null>("oocPosts");
     const result = await (inflight ?? prefetchOOCPosts(setGlobalState));
     if (result) {
@@ -313,7 +324,7 @@ export default function HomePage() {
       return result;
     }
     return [];
-  }, [setGlobalState]);
+  }, [feedOOCPosts.length, cachedOOCPosts, setGlobalState]);
 
   /**
    * Load more: fetch next page of each paginated source in parallel and
@@ -394,7 +405,11 @@ export default function HomePage() {
   };
 
   useEffect(() => {
-    if (authState === "LOADING") return;
+    // Only proceed once the user is fully authenticated. Guarding strictly on
+    // "LOGGED_IN" prevents a premature run during the initial "LOGGED_OUT"
+    // render (before AuthProvider starts its check) from locking feedBuiltRef
+    // and carouselFetchedRef before real data can be fetched.
+    if (authState !== "LOGGED_IN") return;
 
     // Fire each carousel section independently so they populate as soon as
     // their own data arrives — not gated on the slowest sibling.
@@ -411,28 +426,36 @@ export default function HomePage() {
 
     // Hydrate all three feed sources in parallel; build the feed once from the
     // returned data so positions are stable and firstPagePromptIds is accurate.
+    //
+    // feedBuiltRef is set synchronously (before any await) so that concurrent
+    // re-runs of this effect — triggered when hydrateActivities or
+    // hydrateExplorePrompts are recreated after their cache deps update —
+    // cannot start a second parallel chain while the first is still in flight.
     if (!feedBuiltRef.current) {
+      feedBuiltRef.current = true;
       Promise.all([
         hydrateActivities(),
         hydrateExplorePrompts(),
         hydrateOOCPosts(),
-      ]).then(([activities, explorePrompts, oocPosts]) => {
-        if (feedBuiltRef.current) return;
-        feedBuiltRef.current = true;
-        const promptIds = new Set([
-          ...explorePrompts.map((p) => p.id),
-          ...oocPosts.map((p) => p.id),
-        ]);
-        setFirstPagePromptIds(promptIds);
-        setMixedFeed(
-          interleaveFeed(
-            activities.filter((a) => !promptIds.has(a.target.id)),
-            explorePrompts,
-            oocPosts,
-          ),
-        );
-        setFeedInitializing(false);
-      });
+      ])
+        .then(([activities, explorePrompts, oocPosts]) => {
+          const promptIds = new Set([
+            ...explorePrompts.map((p) => p.id),
+            ...oocPosts.map((p) => p.id),
+          ]);
+          setFirstPagePromptIds(promptIds);
+          setMixedFeed(
+            interleaveFeed(
+              activities.filter((a) => !promptIds.has(a.target.id)),
+              explorePrompts,
+              oocPosts,
+            ),
+          );
+          setFeedInitializing(false);
+        })
+        .catch(() => {
+          setFeedInitializing(false);
+        });
     }
   }, [authState, hydrateActivities, hydrateExplorePrompts, hydrateOOCPosts]);
 

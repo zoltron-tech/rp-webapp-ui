@@ -765,3 +765,113 @@ export const EmptyFeedSubtitle = styled.p`
   max-width: 270px;
   line-height: 1.55;
 `;
+
+export const LevelStrip = styled.div`
+  width: 95%;
+  display: flex;
+  align-items: stretch;
+  border-radius: 14px;
+  overflow: hidden;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 12%, var(--bg-3)) 0%,
+    var(--bg-3) 65%
+  );
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--bg-5));
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--accent) 10%, transparent);
+  margin-block: 6px;
+
+  @media screen and (max-width: 800px) {
+    width: 92%;
+  }
+`;
+
+export const LevelTile = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px 10px;
+  gap: 4px;
+`;
+
+export const LevelTileDivider = styled.div`
+  width: 1px;
+  background: color-mix(in srgb, var(--accent) 20%, var(--bg-5));
+  margin-block: 10px;
+  flex-shrink: 0;
+`;
+
+export const LevelTileLabel = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: var(--text-secondary);
+  font-weight: 700;
+`;
+
+export const LevelTileValue = styled.div`
+  font-size: var(--font-size-h4);
+  font-weight: var(--font-weight-bold);
+  color: var(--text);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+`;
+
+export const LevelChipRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-block: 6px;
+  flex-wrap: wrap;
+`;
+
+export const LevelChip = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px 4px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 14%, var(--bg-3));
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--bg-5));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 14%, transparent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 22%, var(--bg-3));
+    border-color: color-mix(in srgb, var(--accent) 56%, var(--bg-5));
+  }
+`;
+
+export const XPChip = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px 4px 8px;
+  border-radius: 999px;
+  background: var(--bg-3);
+  border: 1px solid var(--bg-5);
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: var(--bg-4);
+    border-color: var(--bg-6);
+  }
+`;

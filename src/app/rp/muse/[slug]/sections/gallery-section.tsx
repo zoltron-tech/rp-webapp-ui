@@ -515,6 +515,7 @@ export function GallerySection({ muse, media }: Props) {
   const [confirmDeleteUrl, setConfirmDeleteUrl] = useState<string | null>(null);
   const [localMedia, setLocalMedia] = useState<string[]>(media ?? []);
   const accent = muse?.useAccent ? muse.accent : undefined;
+  const isMediaLoading = media === null;
 
   // Keep localMedia in sync when the parent refreshes the prop
   useEffect(() => {
@@ -580,22 +581,35 @@ export function GallerySection({ muse, media }: Props) {
           <S.InfoDivider $accent={accent ?? null} />
           <S.InfoSectionLabel>Gallery</S.InfoSectionLabel>
           <S.ScrollableContent accent={accent}>
-            {/* Owner: always-visible Add Media button */}
-            <ShouldRender if={isOwner}>
-              <GalleryAddMediaBtn
-                type="button"
-                onClick={() => setUploadOpen(true)}
-              >
-                <FiPlus size={14} />
-                Add Media
-              </GalleryAddMediaBtn>
+            <ShouldRender if={isMediaLoading}>
+              <S.ShimmerGrid>
+                <S.ShimmerBlock $height="130px" />
+                <S.ShimmerBlock $height="130px" />
+                <S.ShimmerBlock $height="100px" />
+                <S.ShimmerBlock $height="100px" />
+                <S.ShimmerBlock $height="115px" />
+                <S.ShimmerBlock $height="115px" />
+              </S.ShimmerGrid>
             </ShouldRender>
 
-            <ShouldRender if={localMedia.length === 0}>
-              <S.SectionEmpty>No media yet.</S.SectionEmpty>
+            <ShouldRender if={!isMediaLoading}>
+              {/* Owner: always-visible Add Media button */}
+              <ShouldRender if={isOwner}>
+                <GalleryAddMediaBtn
+                  type="button"
+                  onClick={() => setUploadOpen(true)}
+                >
+                  <FiPlus size={14} />
+                  Add Media
+                </GalleryAddMediaBtn>
+              </ShouldRender>
+
+              <ShouldRender if={localMedia.length === 0}>
+                <S.SectionEmpty>No media yet.</S.SectionEmpty>
+              </ShouldRender>
             </ShouldRender>
 
-            <ShouldRender if={localMedia.length > 0}>
+            <ShouldRender if={!isMediaLoading && localMedia.length > 0}>
               <AppImageViewer
                 src={!currentIsVideo ? (currentItem ?? "") : ""}
                 alt="Gallery media"

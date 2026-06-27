@@ -23,6 +23,10 @@ export const ROUTES = {
   Fellows: "/rp/fellows",
   ForgotPassword: "/rp/forgot-password",
   Home: "/rp/home",
+  Leaderboard: {
+    Novelists: "/rp/leaderboard/novelists",
+    Muses: "/rp/leaderboard/muses",
+  },
   InstallApp: "/rp/install-app",
   Login: "/rp/login",
   Muse: {

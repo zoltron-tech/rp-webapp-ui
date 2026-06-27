@@ -1197,6 +1197,63 @@ export const GalleryPlayCircle = styled.div`
   }
 `;
 
+/* ── Shimmer loading skeletons ────────────────────────────────────────────── */
+
+export const ShimmerBase = styled.div`
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.08) 40%,
+      rgba(255, 255, 255, 0.15) 50%,
+      rgba(255, 255, 255, 0.08) 60%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmerSlide 1.4s ease-in-out infinite;
+  }
+
+  @keyframes shimmerSlide {
+    0% { background-position: 200% center; }
+    100% { background-position: -200% center; }
+  }
+`;
+
+export const ShimmerLine = styled(ShimmerBase)<{ $width?: string; $height?: string }>`
+  height: ${({ $height }) => $height ?? "12px"};
+  width: ${({ $width }) => $width ?? "100%"};
+  border-radius: 4px;
+`;
+
+export const ShimmerBlock = styled(ShimmerBase)<{ $height?: string; $width?: string }>`
+  width: ${({ $width }) => $width ?? "100%"};
+  height: ${({ $height }) => $height ?? "80px"};
+  border-radius: 8px;
+`;
+
+export const ShimmerGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  padding: 4px 0;
+`;
+
+export const ShimmerGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+`;
+
 export const MoreMenuList = styled.div`
   display: flex;
   flex-direction: column;
@@ -1255,4 +1312,132 @@ export const SectionMiniName = styled.div`
   font-weight: var(--font-weight-semi-bold);
   color: var(--text);
   margin-bottom: 5px;
+`;
+
+export const InfoLevelRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+`;
+
+export const InfoLevelBadge = styled.span<{ accent?: string | null }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px 4px 8px;
+  border-radius: 999px;
+  background: ${({ accent }) =>
+    accent && accent.trim() !== ""
+      ? `color-mix(in srgb, ${accent} 22%, rgba(0,0,0,0.35))`
+      : "rgba(255,255,255,0.1)"};
+  border: 1px solid ${({ accent }) =>
+    accent && accent.trim() !== ""
+      ? `color-mix(in srgb, ${accent} 52%, transparent)`
+      : "rgba(255,255,255,0.28)"};
+  backdrop-filter: blur(8px);
+  box-shadow: ${({ accent }) =>
+    accent && accent.trim() !== ""
+      ? `0 0 12px color-mix(in srgb, ${accent} 22%, transparent), inset 0 1px 0 rgba(255,255,255,0.08)`
+      : "0 0 8px rgba(255,255,255,0.07), inset 0 1px 0 rgba(255,255,255,0.07)"};
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  white-space: nowrap;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 0.8;
+  }
+`;
+
+export const InfoLevelXP = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px 4px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(6px);
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.58);
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 0.75;
+  }
+`;
+
+export const InfoRankBadgeShimmer = styled.span`
+  display: inline-flex;
+  width: 80px;
+  height: 25px;
+  border-radius: 999px;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  overflow: hidden;
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      rgba(251, 191, 36, 0.06) 0%,
+      rgba(251, 191, 36, 0.22) 40%,
+      rgba(255, 236, 153, 0.45) 50%,
+      rgba(251, 191, 36, 0.22) 60%,
+      rgba(251, 191, 36, 0.06) 100%
+    );
+    background-size: 200% 100%;
+    animation: goldShimmer 1.6s ease-in-out infinite;
+  }
+
+  @keyframes goldShimmer {
+    0% { background-position: 200% center; }
+    100% { background-position: -200% center; }
+  }
+`;
+
+export const InfoRankBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px 4px 8px;
+  border-radius: 999px;
+  background: linear-gradient(
+    135deg,
+    rgba(251, 191, 36, 0.18) 0%,
+    rgba(245, 158, 11, 0.12) 100%
+  );
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0 0 10px rgba(251, 191, 36, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(251, 191, 36, 0.95);
+  white-space: nowrap;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.15s, box-shadow 0.15s;
+
+  &:hover {
+    opacity: 0.85;
+    box-shadow:
+      0 0 16px rgba(251, 191, 36, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
 `;

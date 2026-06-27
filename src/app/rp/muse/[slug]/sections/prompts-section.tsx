@@ -28,7 +28,18 @@ export function PromptsSection({ muse, prompts }: Props) {
           <S.InfoDivider $accent={accent ?? null} />
           <S.InfoSectionLabel>Interactions</S.InfoSectionLabel>
           <S.ScrollableContent accent={accent}>
-            <ShouldRender if={!prompts || prompts.length === 0}>
+            <ShouldRender if={prompts === null}>
+              <S.ShimmerGroup>
+                <S.ShimmerBlock $height="80px" />
+                <S.ShimmerLine $width="38%" />
+                <S.ShimmerBlock $height="80px" style={{ marginTop: "16px" }} />
+                <S.ShimmerLine $width="42%" />
+                <S.ShimmerBlock $height="80px" style={{ marginTop: "16px" }} />
+                <S.ShimmerLine $width="30%" />
+              </S.ShimmerGroup>
+            </ShouldRender>
+
+            <ShouldRender if={prompts !== null && prompts.length === 0}>
               <S.SectionEmpty>No open starters yet.</S.SectionEmpty>
             </ShouldRender>
             {prompts?.map((prompt) => (

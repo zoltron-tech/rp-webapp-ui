@@ -37,6 +37,8 @@ export interface Muse {
   privacy: PrivacyLevel;
   useAccent: boolean;
   useExtraImages: boolean;
+  totalPoints: number;
+  level: number;
 }
 
 export interface MuseAboutSection {
@@ -115,6 +117,8 @@ export type Novelist = {
   about: string | null;
   isOnboarded: boolean;
   isVerified: boolean;
+  totalPoints: number;
+  level: number;
 };
 
 export type UpdateNovelistPayload = Omit<Partial<Novelist>, "firstName"> & {

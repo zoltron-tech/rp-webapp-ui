@@ -29,56 +29,70 @@ export function BackStorySection({ muse, aboutSections, isOwnMuse }: Props) {
           <S.InfoDivider $accent={accent ?? null} />
           <S.InfoSectionLabel>Story</S.InfoSectionLabel>
           <S.ScrollableContent accent={accent}>
-            <ShouldRender
-              if={muse?.note?.length !== undefined && muse.note.length > 0}
-            >
-              <S.NoteContainer>
-                <Quote>{muse?.note}</Quote>
-              </S.NoteContainer>
+            <ShouldRender if={aboutSections === null}>
+              <S.ShimmerGroup>
+                <S.ShimmerLine />
+                <S.ShimmerLine $width="88%" />
+                <S.ShimmerLine $width="74%" />
+                <S.ShimmerBlock $height="56px" style={{ marginTop: "12px" }} />
+                <S.ShimmerLine style={{ marginTop: "12px" }} />
+                <S.ShimmerLine $width="92%" />
+                <S.ShimmerLine $width="65%" />
+                <S.ShimmerLine $width="80%" style={{ marginTop: "12px" }} />
+                <S.ShimmerLine $width="55%" />
+              </S.ShimmerGroup>
             </ShouldRender>
 
-            <ShouldRender if={!aboutSections || aboutSections.length === 0}>
-              <S.SectionEmptyWrap>
-                <S.SectionEmpty>No story yet.</S.SectionEmpty>
-                <ShouldRender if={isOwnMuse}>
-                  <S.SectionEmptyCta
-                    type="button"
-                    onClick={() =>
-                      routeToPage(
-                        ROUTES.Profile.Muses.AboutCreate(muse?.id ?? ""),
-                      )
-                    }
-                  >
-                    <GrEdit size={13} />
-                    Add story section
-                  </S.SectionEmptyCta>
-                </ShouldRender>
-              </S.SectionEmptyWrap>
-            </ShouldRender>
+            <ShouldRender if={aboutSections !== null}>
+              <ShouldRender
+                if={muse?.note?.length !== undefined && muse.note.length > 0}
+              >
+                <S.NoteContainer>
+                  <Quote>{muse?.note}</Quote>
+                </S.NoteContainer>
+              </ShouldRender>
 
-            <ShouldRender
-              if={Boolean(aboutSections && aboutSections.length > 0)}
-            >
-              {aboutSections?.map((section, index) => (
-                <div key={section.id ?? `about-section-${index}`}>
-                  {section.image && (
-                    <AppImageViewer
-                      src={section.image}
-                      alt="Section attachment"
+              <ShouldRender if={aboutSections !== null && aboutSections.length === 0}>
+                <S.SectionEmptyWrap>
+                  <S.SectionEmpty>No story yet.</S.SectionEmpty>
+                  <ShouldRender if={isOwnMuse}>
+                    <S.SectionEmptyCta
+                      type="button"
+                      onClick={() =>
+                        routeToPage(
+                          ROUTES.Profile.Muses.AboutCreate(muse?.id ?? ""),
+                        )
+                      }
                     >
-                      <S.AboutSectionImage
+                      <GrEdit size={13} />
+                      Add story section
+                    </S.SectionEmptyCta>
+                  </ShouldRender>
+                </S.SectionEmptyWrap>
+              </ShouldRender>
+
+              <ShouldRender if={Boolean(aboutSections && aboutSections.length > 0)}>
+                {aboutSections?.map((section, index) => (
+                  <div key={section.id ?? `about-section-${index}`}>
+                    {section.image && (
+                      <AppImageViewer
                         src={section.image}
                         alt="Section attachment"
-                      />
-                    </AppImageViewer>
-                  )}
-                  <RichTextRenderer
-                    savedText={section.text || ""}
-                    overlayHidden
-                    disableCollapse
-                  />
-                </div>
-              ))}
+                      >
+                        <S.AboutSectionImage
+                          src={section.image}
+                          alt="Section attachment"
+                        />
+                      </AppImageViewer>
+                    )}
+                    <RichTextRenderer
+                      savedText={section.text || ""}
+                      overlayHidden
+                      disableCollapse
+                    />
+                  </div>
+                ))}
+              </ShouldRender>
             </ShouldRender>
           </S.ScrollableContent>
         </S.InfoCardContent>

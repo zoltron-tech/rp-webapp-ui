@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BiSolidConversation } from "react-icons/bi";
 import { FiMoreVertical } from "react-icons/fi";
 import { GiBookCover } from "react-icons/gi";
@@ -13,6 +13,7 @@ import { useStateMachine } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { Muse, MuseAboutSection, Prompt } from "@/types";
 import { Logger } from "@/utils/services";
+import { getMuseRankAction } from "../../leaderboard/actions";
 import {
   getMuseAboutSectionsAction,
   getMuseAction,
@@ -48,9 +49,11 @@ export default function MuseProfilePage({}) {
     null,
   );
   const [media, setMedia] = useState<string[] | null>(null);
+  const [museRank, setMuseRank] = useState<number | null>(null);
+  const [museRankLoading, setMuseRankLoading] = useState(true);
   const username = params?.slug as string;
   const { baseDataLoader } = usePageRouter();
-  const { transition, is } = useStateMachine<CARD_STATE>({
+  const { transition, is, state } = useStateMachine<CARD_STATE>({
     initial: "MUSE_INFO",
     transitions: {
       BACK_STORY: {
@@ -112,25 +115,52 @@ export default function MuseProfilePage({}) {
     },
   });
 
+  useEffect(() => {
+    if (!muse?.id) return;
+    getMuseRankAction(muse.id).then((result) => {
+      if (result && !("message" in result)) setMuseRank(result.rank);
+      setMuseRankLoading(false);
+    });
+  }, [muse?.id]);
+
   Logger.debug("params are:", params);
 
   const isOwnMuse = Boolean(
     user?.username && muse?.pennedBy?.username === user.username,
   );
 
+  const promptsFetchedRef = useRef(false);
+  const aboutSectionsFetchedRef = useRef(false);
+  const mediaFetchedRef = useRef(false);
+
   useEffect(() => {
     if (authState === "LOADING" || muse) return;
-
-    const slug = username;
-    baseDataLoader(() => getMuseAction(slug)).then(setMuse);
-    baseDataLoader(() => getPromptsByMuseAction(slug)).then(setPrompts);
-    baseDataLoader(() => getMuseAboutSectionsAction(slug)).then(
-      setAboutSections,
-    );
-    baseDataLoader(() => getMuseMediaAction(slug)).then((result) => {
-      if (Array.isArray(result)) setMedia(result);
-    });
+    baseDataLoader(() => getMuseAction(username)).then(setMuse);
   }, [authState]);
+
+  useEffect(() => {
+    if (state !== "PROMPTS" || promptsFetchedRef.current || authState === "LOADING") return;
+    promptsFetchedRef.current = true;
+    baseDataLoader(() => getPromptsByMuseAction(username)).then((data) => {
+      setPrompts(data ?? []);
+    });
+  }, [state, authState]);
+
+  useEffect(() => {
+    if (state !== "BACK_STORY" || aboutSectionsFetchedRef.current || authState === "LOADING") return;
+    aboutSectionsFetchedRef.current = true;
+    baseDataLoader(() => getMuseAboutSectionsAction(username)).then((data) => {
+      setAboutSections(data ?? []);
+    });
+  }, [state, authState]);
+
+  useEffect(() => {
+    if (state !== "GALLERY" || mediaFetchedRef.current || authState === "LOADING") return;
+    mediaFetchedRef.current = true;
+    baseDataLoader(() => getMuseMediaAction(username)).then((result) => {
+      setMedia(Array.isArray(result) ? result : []);
+    });
+  }, [state, authState]);
 
   const getSafeImage = (src?: string) => src || "";
   const accent = muse?.useAccent ? (muse.accent ?? undefined) : undefined;
@@ -183,7 +213,7 @@ export default function MuseProfilePage({}) {
       </ShouldRender>
 
       <ShouldRender if={is("MUSE_INFO")}>
-        <MuseInfoSection muse={muse} isOwnMuse={isOwnMuse} />
+        <MuseInfoSection muse={muse} isOwnMuse={isOwnMuse} museRank={museRank} museRankLoading={museRankLoading} />
       </ShouldRender>
 
       <ShouldRender if={is("CONNECTIONS")}>

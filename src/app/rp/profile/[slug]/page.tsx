@@ -13,7 +13,9 @@ import {
   FcCalendar,
   FcComments,
   FcConferenceCall,
+  FcFlashOn,
   FcPortraitMode,
+  FcRating,
   FcReading,
   FcShare,
   FcTreeStructure,
@@ -1101,6 +1103,26 @@ export default function UserProfilePage({}) {
                   </S.InfoText>
                 </Flex>
               </Flex>
+              <ShouldRender if={typeof novelist?.level === "number"}>
+                <S.LevelChipRow>
+                  <S.LevelChip
+                    onClick={() =>
+                      routeToPage(ROUTES.Leaderboard.Novelists)
+                    }
+                  >
+                    <FcRating size={13} />
+                    Lv. {novelist?.level}
+                  </S.LevelChip>
+                  <S.XPChip
+                    onClick={() =>
+                      routeToPage(ROUTES.Leaderboard.Novelists)
+                    }
+                  >
+                    <FcFlashOn size={13} />
+                    {novelist?.totalPoints?.toLocaleString()} XP
+                  </S.XPChip>
+                </S.LevelChipRow>
+              </ShouldRender>
             </ShouldRender>
             <ShouldRender
               if={mutualFriends !== undefined && mutualFriends?.length > 0}

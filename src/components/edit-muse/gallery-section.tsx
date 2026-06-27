@@ -9,7 +9,7 @@ import { MdPhotoLibrary } from "react-icons/md";
 import { addMuseMediaAction, getMuseMediaAction } from "@/app/rp/muse/actions";
 import { deleteMedia } from "@/app/rp/profile/actions";
 import { AppAlertDialog } from "@/components/dialog";
-import { classifyUrl } from "@/hooks/use-nsfw-check";
+import { classifyUrlForUpload } from "@/hooks/use-nsfw-check";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { API_MESSAGE } from "@/utils/constants";
@@ -56,6 +56,7 @@ type PendingFile = {
   file: File;
   previewUrl: string;
   isVideo: boolean;
+  isChecking: boolean;
 };
 
 type Props = {
@@ -98,7 +99,7 @@ export function GallerySection({ onBack }: Props) {
   }, [pendingFiles]);
 
   const handleFileSelect = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
+    (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(e.target.files ?? []);
       e.target.value = "";
       setError(null);
@@ -109,7 +110,7 @@ export function GallerySection({ onBack }: Props) {
         return;
       }
 
-      const accepted: PendingFile[] = [];
+      const newFiles: PendingFile[] = [];
       for (const file of files.slice(0, remaining)) {
         if (!VALID_TYPES.includes(file.type)) {
           setError("Unsupported file type. Allowed: PNG, JPG, GIF, WEBP, MP4.");
@@ -120,19 +121,26 @@ export function GallerySection({ onBack }: Props) {
           continue;
         }
         const isVideo = file.type === "video/mp4";
-        const previewUrl = URL.createObjectURL(file);
-        if (!isVideo) {
-          const isNsfw = await classifyUrl(previewUrl);
-          if (isNsfw) {
-            URL.revokeObjectURL(previewUrl);
-            setError("This image contains sensitive content and cannot be uploaded.");
-            continue;
-          }
-        }
-        accepted.push({ file, isVideo, previewUrl });
+        newFiles.push({ file, isVideo, previewUrl: URL.createObjectURL(file), isChecking: !isVideo });
       }
 
-      setPendingFiles((prev) => [...prev, ...accepted]);
+      if (newFiles.length === 0) return;
+      setPendingFiles((prev) => [...prev, ...newFiles]);
+
+      for (const pending of newFiles) {
+        if (pending.isVideo) continue;
+        classifyUrlForUpload(pending.previewUrl).then((isNsfw) => {
+          if (isNsfw) {
+            URL.revokeObjectURL(pending.previewUrl);
+            setPendingFiles((prev) => prev.filter((f) => f.previewUrl !== pending.previewUrl));
+            setError("An image contains sensitive content and cannot be uploaded.");
+          } else {
+            setPendingFiles((prev) =>
+              prev.map((f) => f.previewUrl === pending.previewUrl ? { ...f, isChecking: false } : f),
+            );
+          }
+        });
+      }
     },
     [existingMedia.length, pendingFiles.length],
   );
@@ -146,6 +154,7 @@ export function GallerySection({ onBack }: Props) {
 
   const handleUpload = useCallback(async () => {
     if (!id || pendingFiles.length === 0) return;
+    if (pendingFiles.some((f) => f.isChecking)) return;
     setUploading(true);
     setError(null);
 
@@ -180,6 +189,8 @@ export function GallerySection({ onBack }: Props) {
       // silently ignore — files are already on S3 and visible in the gallery
     }
   }, [id, pendingFiles, uploadMedia, successToast]);
+
+  const anyChecking = pendingFiles.some((f) => f.isChecking);
 
   const handleDelete = useCallback(
     async (url: string) => {
@@ -254,9 +265,12 @@ export function GallerySection({ onBack }: Props) {
                     height: "100%",
                     objectFit: "cover",
                     width: "100%",
+                    filter: f.isChecking ? "blur(8px)" : undefined,
+                    transition: "filter 0.3s ease",
                   }}
                 />
               )}
+              {f.isChecking && <GalleryCheckingOverlay>Checking…</GalleryCheckingOverlay>}
               <GalleryThumbDelete
                 type="button"
                 aria-label="Remove"
@@ -297,12 +311,14 @@ export function GallerySection({ onBack }: Props) {
         <GalleryUploadButton
           type="button"
           onClick={handleUpload}
-          disabled={uploading}
+          disabled={uploading || anyChecking}
         >
           <FiUploadCloud size={16} />
           {uploading
             ? `Uploading ${pendingFiles.length} file${pendingFiles.length > 1 ? "s" : ""}…`
-            : `Upload ${pendingFiles.length} file${pendingFiles.length > 1 ? "s" : ""}`}
+            : anyChecking
+              ? "Checking images…"
+              : `Upload ${pendingFiles.length} file${pendingFiles.length > 1 ? "s" : ""}`}
         </GalleryUploadButton>
       )}
 
@@ -467,6 +483,20 @@ const GalleryThumb = styled.div<{ $deleting: boolean }>`
   opacity: ${({ $deleting }) => ($deleting ? 0.5 : 1)};
   transition: opacity 0.2s ease;
   flex-shrink: 0;
+`;
+
+const GalleryCheckingOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  pointer-events: none;
 `;
 
 const GalleryThumbDelete = styled.button`

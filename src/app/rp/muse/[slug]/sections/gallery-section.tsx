@@ -19,7 +19,7 @@ import { AppAlertDialog } from "@/components/dialog";
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { VideoViewer } from "@/components/image-viewer/VideoViewer";
 import { useGlobalState } from "@/context/store/stores";
-import { classifyUrl } from "@/hooks/use-nsfw-check";
+import { classifyUrlForUpload } from "@/hooks/use-nsfw-check";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import type { Muse } from "@/types";
@@ -276,7 +276,7 @@ const VALID_TYPES = [
 ];
 const MAX_FILE_SIZE = 30 * 1024 * 1024;
 
-type PendingFile = { file: File; previewUrl: string; isVideo: boolean };
+type PendingFile = { file: File; previewUrl: string; isVideo: boolean; isChecking: boolean };
 
 function UploadPanel({
   museId,
@@ -301,7 +301,7 @@ function UploadPanel({
   }, [pendingFiles]);
 
   const handleFileSelect = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
+    (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(e.target.files ?? []);
       e.target.value = "";
       setError(null);
@@ -310,7 +310,7 @@ function UploadPanel({
         setError(`Gallery is full (${MAX_TOTAL} files maximum).`);
         return;
       }
-      const accepted: PendingFile[] = [];
+      const newFiles: PendingFile[] = [];
       for (const file of files.slice(0, remaining)) {
         if (!VALID_TYPES.includes(file.type)) {
           setError("Unsupported type. Allowed: PNG, JPG, GIF, WEBP, MP4, MOV.");
@@ -321,18 +321,25 @@ function UploadPanel({
           continue;
         }
         const isVideo = file.type === "video/mp4" || file.type === "video/quicktime";
-        const previewUrl = URL.createObjectURL(file);
-        if (!isVideo) {
-          const isNsfw = await classifyUrl(previewUrl);
-          if (isNsfw) {
-            URL.revokeObjectURL(previewUrl);
-            setError("This image contains sensitive content and cannot be uploaded.");
-            continue;
-          }
-        }
-        accepted.push({ file, isVideo, previewUrl });
+        newFiles.push({ file, isVideo, previewUrl: URL.createObjectURL(file), isChecking: !isVideo });
       }
-      setPendingFiles((prev) => [...prev, ...accepted]);
+      if (newFiles.length === 0) return;
+      setPendingFiles((prev) => [...prev, ...newFiles]);
+
+      for (const pending of newFiles) {
+        if (pending.isVideo) continue;
+        classifyUrlForUpload(pending.previewUrl).then((isNsfw) => {
+          if (isNsfw) {
+            URL.revokeObjectURL(pending.previewUrl);
+            setPendingFiles((prev) => prev.filter((f) => f.previewUrl !== pending.previewUrl));
+            setError("An image contains sensitive content and cannot be uploaded.");
+          } else {
+            setPendingFiles((prev) =>
+              prev.map((f) => f.previewUrl === pending.previewUrl ? { ...f, isChecking: false } : f),
+            );
+          }
+        });
+      }
     },
     [existingCount, pendingFiles.length],
   );
@@ -346,6 +353,7 @@ function UploadPanel({
 
   const handleUpload = useCallback(async () => {
     if (!museId || pendingFiles.length === 0) return;
+    if (pendingFiles.some((f) => f.isChecking)) return;
     setUploading(true);
     setError(null);
     const uploadedUrls: string[] = [];
@@ -375,6 +383,7 @@ function UploadPanel({
   }, [museId, pendingFiles, uploadMedia, successToast, onUploaded]);
 
   const canAddMore = existingCount + pendingFiles.length < MAX_TOTAL;
+  const anyChecking = pendingFiles.some((f) => f.isChecking);
   const scrollRowRef = useRef<HTMLDivElement>(null);
   const SCROLL_STEP = 98; // thumb width (90) + gap (8)
 
@@ -423,9 +432,12 @@ function UploadPanel({
                       height: "100%",
                       objectFit: "cover",
                       width: "100%",
+                      filter: f.isChecking ? "blur(8px)" : undefined,
+                      transition: "filter 0.3s ease",
                     }}
                   />
                 )}
+                {f.isChecking && <UploadCheckingOverlay>Checking…</UploadCheckingOverlay>}
                 <UploadThumbRemove
                   type="button"
                   aria-label="Remove"
@@ -470,12 +482,14 @@ function UploadPanel({
           <UploadSubmitBtn
             type="button"
             onClick={handleUpload}
-            disabled={uploading}
+            disabled={uploading || anyChecking}
           >
             <FiUploadCloud size={15} />
             {uploading
               ? `Uploading ${pendingFiles.length} file${pendingFiles.length > 1 ? "s" : ""}…`
-              : `Upload ${pendingFiles.length} file${pendingFiles.length > 1 ? "s" : ""}`}
+              : anyChecking
+                ? "Checking images…"
+                : `Upload ${pendingFiles.length} file${pendingFiles.length > 1 ? "s" : ""}`}
           </UploadSubmitBtn>
         )}
       </UploadActions>
@@ -754,6 +768,20 @@ const UploadThumb = styled.div`
   border: 1px solid var(--bg-6);
   background: var(--bg-3);
   flex-shrink: 0;
+`;
+
+const UploadCheckingOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  pointer-events: none;
 `;
 
 const UploadThumbRemove = styled.button`

@@ -65,8 +65,10 @@ export function useProfileSave() {
         friends: novelist?.friends ?? [],
         friendsCount: novelist?.friendsCount ?? 0,
         isVerified: novelist?.isVerified ?? false,
+        level: novelist?.level ?? response.level,
         museCount: novelist?.museCount ?? 0,
         muses: novelist?.muses ?? [],
+        totalPoints: novelist?.totalPoints ?? response.totalPoints,
       },
     });
     setProfileState({

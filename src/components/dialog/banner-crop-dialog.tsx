@@ -18,12 +18,12 @@ const ViewportWrap = styled.div`
   justify-content: center;
 `;
 
-/** Wide rectangular viewport matching the profile banner aspect ratio (~4:1). */
+/** Wide rectangular viewport matching the profile banner aspect ratio (5:2). */
 const BannerRect = styled.div`
   position: relative;
   width: 100%;
   max-width: 480px;
-  aspect-ratio: 10 / 3;
+  aspect-ratio: 5 / 2;
   background: var(--bg-1);
   border-radius: 6px;
   overflow: hidden;

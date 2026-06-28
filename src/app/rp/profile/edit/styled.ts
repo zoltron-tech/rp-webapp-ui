@@ -521,6 +521,7 @@ export const NoteDialogBodyWrapper = styled.div`
 
 export const NoteEditableBubble = styled.div<{ $color: string | null }>`
   position: relative;
+  isolation: isolate;
   display: block;
   width: 100%;
   box-sizing: border-box;
@@ -531,7 +532,7 @@ export const NoteEditableBubble = styled.div<{ $color: string | null }>`
       : "linear-gradient(135deg, var(--accent-4) 0%, var(--accent-3) 100%)"};
   color: ${({ $color }) => ($color ? "#ffffff" : "inherit")};
   border-radius: 16px;
-  padding: 10px 14px;
+  padding: 10px 14px 10px 38px;
   cursor: text;
   /* always-visible dashed border signals "editable" */
   border: 1.5px dashed ${({ $color }) =>
@@ -550,10 +551,11 @@ export const NoteEditableBubble = styled.div<{ $color: string | null }>`
           : "color-mix(in srgb, var(--accent) 18%, transparent)"};
   }
 
-  /* Thought bubble tail */
+  /* Thought bubble tail — behind all content */
   &::before {
     content: "";
     position: absolute;
+    z-index: -1;
     top: -18px;
     left: 16px;
     width: 0;
@@ -566,6 +568,7 @@ export const NoteEditableBubble = styled.div<{ $color: string | null }>`
   &::after {
     content: "";
     position: absolute;
+    z-index: -1;
     top: -11px;
     left: 4px;
     width: 0;

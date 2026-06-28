@@ -501,8 +501,46 @@ export const DiscordElement = styled(Element)`
   }
 `;
 
+export const NewBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #ffffff;
+  flex-shrink: 0;
+`;
+
+export const LeaderboardElement = styled(Element)`
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.07);
+
+  &:hover {
+    background-color: #d97706;
+    color: #ffffff;
+
+    svg {
+      stroke: #ffffff;
+    }
+  }
+`;
+
 export const MobilePanelDiscordMenuItem = styled(MobilePanelMenuItem)`
   background-color: #5865f2;
+`;
+
+export const MobilePanelLeaderboardMenuItem = styled(MobilePanelMenuItem)`
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.07);
+
+  &:active {
+    background: #d97706;
+    color: #ffffff;
+  }
 `;
 
 export const DiscordDialogOverlay = styled.div`

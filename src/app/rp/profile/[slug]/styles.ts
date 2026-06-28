@@ -22,7 +22,7 @@ interface BannerProps {
 export const BannerSection = styled.div`
   position: relative;
   width: 800px;
-  aspect-ratio: 10 / 3;
+  aspect-ratio: 5 / 2;
   overflow: visible;
   border-radius: 12px 12px 0 0;
 
@@ -202,16 +202,12 @@ export const ContentInner = styled.div`
   align-items: center;
   background-color: var(--bg-2);
   width: 800px;
-  /* BannerSection sits flush above — only round the bottom corners */
   border-radius: 0 0 12px 12px;
-  /* Desktop: avatar (250 px) sticks 125 px below banner; 16 px gap below that */
-  padding-top: 141px;
+  padding-top: 70px;
 
   @container (max-width: 800px) {
     width: 100%;
     padding-inline: 0px;
-    /* Mobile: avatar (130 px) sticks 65 px below banner; 16 px gap below that */
-    padding-top: 81px;
     margin-top: 0px;
     border-radius: 0px;
     border-right: unset;

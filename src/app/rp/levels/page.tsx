@@ -97,21 +97,17 @@ export default function LevelsPage() {
                     Level {lvl.level}
                   </S.LevelNumber>
                   <S.LevelTitle>{lvl.title}</S.LevelTitle>
-                  <S.XPRange>{lvl.xpRange}</S.XPRange>
+                  {isCurrent && xpToNextLevel !== null && (
+                    <S.XPRange>
+                      {xpToNextLevel.toLocaleString()} XP to next level
+                    </S.XPRange>
+                  )}
+                  {isLocked && !lvl.comingSoon && (
+                    <S.XPRange>
+                      Unlocks at {lvl.xpStart.toLocaleString()} XP
+                    </S.XPRange>
+                  )}
                 </S.LevelCardHead>
-
-                {isCurrent && xpToNextLevel !== null && (
-                  <S.XPToNext>
-                    {xpToNextLevel.toLocaleString()} XP to level{" "}
-                    {lvl.level + 1}
-                  </S.XPToNext>
-                )}
-
-                {isLocked && !lvl.comingSoon && (
-                  <S.XPToNext>
-                    Unlocks at {lvl.xpStart.toLocaleString()} XP
-                  </S.XPToNext>
-                )}
 
                 {isCurrent && (
                   <S.ProgressBar>

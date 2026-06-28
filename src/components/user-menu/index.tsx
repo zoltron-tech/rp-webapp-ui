@@ -21,8 +21,10 @@ import {
   FcFaq,
   FcLibrary,
   FcMusic,
+  FcRatings,
   FcSmartphoneTablet,
   FcSupport,
+  FcTimeline,
   FcVoicePresentation,
 } from "react-icons/fc";
 import { FiCheck, FiChevronRight, FiCopy, FiEdit2, FiX } from "react-icons/fi";
@@ -190,6 +192,14 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
 
   const toFAQsPage = () => {
     routeToPage(ROUTES.FAQs);
+  };
+
+  const toNovelistsLeaderboard = () => {
+    routeToPage(ROUTES.Leaderboard.Novelists);
+  };
+
+  const toMusesLeaderboard = () => {
+    routeToPage(ROUTES.Leaderboard.Muses);
   };
 
   const handleInstallAppClick = () => {
@@ -419,6 +429,27 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                   </Flex>
                   <FiChevronRight size={16} color="gray" />
                 </S.Element>
+                <S.Separator />
+                <S.LeaderboardElement onClick={toNovelistsLeaderboard}>
+                  <Flex justify="flex-start" align="center" gap="12px">
+                    <FcRatings />
+                    Novelists Leaderboard
+                  </Flex>
+                  <Flex justify="flex-end" align="center" gap="8px">
+                    <S.NewBadge>new</S.NewBadge>
+                    <FiChevronRight size={16} color="gray" />
+                  </Flex>
+                </S.LeaderboardElement>
+                <S.LeaderboardElement onClick={toMusesLeaderboard}>
+                  <Flex justify="flex-start" align="center" gap="12px">
+                    <FcTimeline />
+                    Muses Leaderboard
+                  </Flex>
+                  <Flex justify="flex-end" align="center" gap="8px">
+                    <S.NewBadge>new</S.NewBadge>
+                    <FiChevronRight size={16} color="gray" />
+                  </Flex>
+                </S.LeaderboardElement>
               </S.List>
             </ShouldRender>
             <ShouldRender if={authState === "UNINITIALIZED"}>
@@ -618,6 +649,38 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                       </Flex>
                       <FiChevronRight size={16} color="gray" />
                     </S.MobilePanelMenuItem>
+                  </S.MobilePanelSection>
+                  <S.MobilePanelSection>
+                    <S.MobilePanelLeaderboardMenuItem
+                      onClick={() => {
+                        closeMobilePanel();
+                        toNovelistsLeaderboard();
+                      }}
+                    >
+                      <Flex justify="flex-start" align="center" gap="12px">
+                        <FcRatings />
+                        Novelists Leaderboard
+                      </Flex>
+                      <Flex justify="flex-end" align="center" gap="8px">
+                        <S.NewBadge>new</S.NewBadge>
+                        <FiChevronRight size={16} color="gray" />
+                      </Flex>
+                    </S.MobilePanelLeaderboardMenuItem>
+                    <S.MobilePanelLeaderboardMenuItem
+                      onClick={() => {
+                        closeMobilePanel();
+                        toMusesLeaderboard();
+                      }}
+                    >
+                      <Flex justify="flex-start" align="center" gap="12px">
+                        <FcTimeline />
+                        Muses Leaderboard
+                      </Flex>
+                      <Flex justify="flex-end" align="center" gap="8px">
+                        <S.NewBadge>new</S.NewBadge>
+                        <FiChevronRight size={16} color="gray" />
+                      </Flex>
+                    </S.MobilePanelLeaderboardMenuItem>
                   </S.MobilePanelSection>
                 </ShouldRender>
                 <ShouldRender if={authState === "UNINITIALIZED"}>

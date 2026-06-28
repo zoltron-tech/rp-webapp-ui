@@ -3,13 +3,13 @@ import {
   useStoreSet,
   useStoreState,
 } from "@/context/store/use-store";
-import type { NWImage } from "@/types";
+import type { NWImage, NovelistNote } from "@/types";
 import type { Accent, ThemeType } from "@/types/theme";
 
 export type ProfileState = {
   firstName: string | null;
   lastName: string | null;
-  note: string | null;
+  note: NovelistNote | null;
   palette: Accent;
   theme: ThemeType;
   about: string | null;

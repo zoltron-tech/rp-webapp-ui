@@ -948,10 +948,13 @@ export default function UserProfilePage({}) {
               username={novelist?.username}
               nwImage={novelist?.avatar}
             />
-            <ShouldRender
-              if={novelist?.note !== undefined && novelist?.note?.length > 0}
-            >
-              <S.NoteContainer>{novelist?.note}</S.NoteContainer>
+            <ShouldRender if={Boolean(novelist?.note?.text)}>
+              <S.NoteContainer $color={novelist?.note?.color ?? null}>
+                {novelist?.note?.emoji && (
+                  <S.NoteEmoji>{novelist.note.emoji}</S.NoteEmoji>
+                )}
+                {novelist?.note?.text}
+              </S.NoteContainer>
             </ShouldRender>
           </Flex>
           <S.ContentInner>

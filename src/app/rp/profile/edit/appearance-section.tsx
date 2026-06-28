@@ -12,7 +12,7 @@ import AvatarCropDialog from "@/components/dialog/avatar-crop-dialog";
 import { useGlobalState } from "@/context/store/stores";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import type { ImageCropFilter, NWImage } from "@/types";
-import { ACCENT_MAP, type Accent } from "@/types/theme";
+import { ACCENT_LEVEL_REQUIREMENT, ACCENT_MAP, type Accent } from "@/types/theme";
 import { API_MESSAGE } from "@/utils/constants";
 import { deleteMedia } from "../actions";
 import { NoteDialogBody } from "./note-dialog-body";
@@ -64,9 +64,10 @@ export function AppearanceSection({ onBack }: Props) {
   const novelist = useGlobalState("novelist");
   const user = useGlobalState("user");
   const isGifLocked = (novelist?.level ?? 1) < 2;
+  const novelistLevel = novelist?.level ?? 1;
   const image = useProfileState("image");
   const avatar = useProfileState("avatar");
-  const note = useProfileState("note");
+  const noteObj = useProfileState("note");
   const palette = useProfileState("palette");
   const setProfileState = useProfileStoreSet();
   const { saveAll, loading } = useProfileSave();
@@ -80,6 +81,8 @@ export function AppearanceSection({ onBack }: Props) {
   const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
   const [tempNote, setTempNote] = useState("");
+  const [tempNoteColor, setTempNoteColor] = useState<string | null>(null);
+  const [tempNoteEmoji, setTempNoteEmoji] = useState<string | null>(null);
   const [discardOpen, setDiscardOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -117,7 +120,7 @@ export function AppearanceSection({ onBack }: Props) {
   const originalRef = useRef({
     avatar: novelist?.avatar ?? (null as NWImage | null),
     image: novelist?.image ?? "",
-    note: novelist?.note ?? "",
+    note: novelist?.note ?? null,
     palette: user?.palette ?? 0,
   });
 
@@ -125,15 +128,16 @@ export function AppearanceSection({ onBack }: Props) {
     originalRef.current = {
       avatar: novelist?.avatar ?? null,
       image: novelist?.image ?? "",
-      note: novelist?.note ?? "",
+      note: novelist?.note ?? null,
       palette: user?.palette ?? 0,
     };
   }, [novelist?.image, novelist?.note, novelist?.avatar, user?.palette]);
 
+  const noteText = noteObj?.text ?? "";
   const isDirty =
     avatarChanged ||
     (image ?? "") !== originalRef.current.image ||
-    (note ?? "") !== originalRef.current.note ||
+    noteObj !== originalRef.current.note ||
     Number(palette) !== Number(originalRef.current.palette);
 
   // ── Avatar upload from device ───────────────────────────────────────────────
@@ -308,6 +312,7 @@ export function AppearanceSection({ onBack }: Props) {
 
   const handleSave = async () => {
     setError(null);
+    if (isPaletteLocked) return;
     // Defensive gate: block if a GIF/library avatar somehow reached state for a level < 2 novelist
     if (
       isGifLocked &&
@@ -336,6 +341,9 @@ export function AppearanceSection({ onBack }: Props) {
       note: originalRef.current.note,
       palette: originalRef.current.palette as Accent,
     });
+    setTempNote("");
+    setTempNoteColor(null);
+    setTempNoteEmoji(null);
     setAvatarChanged(false);
     setError(null);
   };
@@ -358,17 +366,27 @@ export function AppearanceSection({ onBack }: Props) {
   };
 
   const openNoteDialog = () => {
-    setTempNote(note ?? "");
+    setTempNote(noteObj?.text ?? "");
+    setTempNoteColor(noteObj?.color ?? null);
+    setTempNoteEmoji(noteObj?.emoji ?? null);
     setNoteDialogOpen(true);
   };
 
   const confirmNote = () => {
-    setProfileState({ note: tempNote });
+    setProfileState({
+      note: tempNote.trim()
+        ? { text: tempNote, color: tempNoteColor, emoji: tempNoteEmoji }
+        : null,
+    });
     setNoteDialogOpen(false);
   };
 
   const previewAccentClass =
     ACCENT_MAP[Number(palette) as Accent] ?? ACCENT_MAP[0];
+
+  const selectedPaletteRequiredLevel =
+    ACCENT_LEVEL_REQUIREMENT[Number(palette) as Accent] ?? 0;
+  const isPaletteLocked = selectedPaletteRequiredLevel > novelistLevel;
 
   // The displayed avatar src — use the crop src when an avatar NWImage is set
   const displayAvatarSrc = avatar?.src || image || null;
@@ -395,7 +413,7 @@ export function AppearanceSection({ onBack }: Props) {
             <AvatarUploadField
               src={displayAvatarSrc}
               alt="Avatar"
-              note={note || ""}
+              note={noteText}
               onNoteClick={openNoteDialog}
               onAvatarClick={() => setAvatarDialogOpen(true)}
               nwImage={avatar}
@@ -422,17 +440,51 @@ export function AppearanceSection({ onBack }: Props) {
               setProfileState({ palette: Number(v) as Accent })
             }
           >
-            {Object.entries(ACCENT_MAP).map(([key, color]) => (
-              <S.RadioItemContainer key={key} className={color}>
-                <RadioGroup.Item
-                  className="radio-item"
-                  value={key}
-                  id={`palette-${key}`}
-                  aria-label={`Palette ${color}`}
-                />
-              </S.RadioItemContainer>
+            {[
+              Object.entries(ACCENT_MAP).filter(
+                ([key]) => !ACCENT_LEVEL_REQUIREMENT[Number(key) as Accent],
+              ),
+              Object.entries(ACCENT_MAP).filter(
+                ([key]) => !!ACCENT_LEVEL_REQUIREMENT[Number(key) as Accent],
+              ),
+            ].map((rowEntries, rowIdx) => (
+              <S.PaletteRow key={rowIdx}>
+                {rowEntries.map(([key, color]) => {
+                  const requiredLevel =
+                    ACCENT_LEVEL_REQUIREMENT[Number(key) as Accent];
+                  const isLocked =
+                    requiredLevel !== undefined && novelistLevel < requiredLevel;
+                  return (
+                    <S.RadioItemContainer key={key} className={color}>
+                      <div style={{ position: "relative" }}>
+                        <RadioGroup.Item
+                          className="radio-item"
+                          value={key}
+                          id={`palette-${key}`}
+                          aria-label={
+                            isLocked
+                              ? `${color} (requires Level ${requiredLevel})`
+                              : `Palette ${color}`
+                          }
+                        />
+                        {isLocked && (
+                          <S.PaletteLockBadge>
+                            {requiredLevel}
+                          </S.PaletteLockBadge>
+                        )}
+                      </div>
+                    </S.RadioItemContainer>
+                  );
+                })}
+              </S.PaletteRow>
             ))}
           </S.PaletteGroup>
+          {isPaletteLocked && (
+            <S.PaletteLockNote>
+              ✦ This theme unlocks at Level {selectedPaletteRequiredLevel} —
+              keep writing to earn XP and level up!
+            </S.PaletteLockNote>
+          )}
         </S.AppearanceFieldGroup>
       </S.AppearanceSectionBody>
 
@@ -453,6 +505,7 @@ export function AppearanceSection({ onBack }: Props) {
             !isDirty ||
             loading ||
             imageUploading ||
+            isPaletteLocked ||
             (isGifLocked &&
               avatarChanged &&
               ((image ?? "").includes("klipy.com") ||
@@ -521,7 +574,17 @@ export function AppearanceSection({ onBack }: Props) {
         actionColor="neutral"
         onConfirm={confirmNote}
         onCancel={() => setNoteDialogOpen(false)}
-        body={<NoteDialogBody value={tempNote} onChange={setTempNote} />}
+        body={
+          <NoteDialogBody
+            value={tempNote}
+            onChange={setTempNote}
+            color={tempNoteColor}
+            onColorChange={setTempNoteColor}
+            emoji={tempNoteEmoji}
+            onEmojiChange={setTempNoteEmoji}
+            level={novelistLevel}
+          />
+        }
       />
 
       <AppAlertDialog

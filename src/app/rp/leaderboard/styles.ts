@@ -426,7 +426,7 @@ export const StickyFooter = styled.div`
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 200;
+  z-index: 10;
   display: flex;
   justify-content: center;
   padding: 10px 16px 16px;

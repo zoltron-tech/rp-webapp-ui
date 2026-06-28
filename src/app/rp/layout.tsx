@@ -57,10 +57,7 @@ const useAccent = () => {
   const user = useGlobalState("user");
   const setGlobalState = useGlobalStoreSet();
   const accent = useMemo(() => {
-    if (typeof user?.palette === "undefined" || user.palette > 3)
-      return ACCENT_MAP[0];
-    const _accent = ACCENT_MAP[user.palette] || ACCENT_MAP[0];
-    return _accent;
+    return ACCENT_MAP[user?.palette as keyof typeof ACCENT_MAP] ?? ACCENT_MAP[0];
   }, [user]);
 
   useEffect(() => {

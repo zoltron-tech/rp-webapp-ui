@@ -76,7 +76,7 @@ export function LandingSection({ onSelect }: Props) {
   const lastName = useProfileState("lastName");
   const image = useProfileState("image");
   const about = useProfileState("about");
-  const note = useProfileState("note");
+  const noteObj = useProfileState("note");
   const setProfileState = useProfileStoreSet();
   const { saveNovelist, loading } = useProfileSave();
   const { uploadMedia } = useUploadMedia();
@@ -406,7 +406,7 @@ export function LandingSection({ onSelect }: Props) {
         <S.LandingHeroAvatarWrap>
           <AvatarUploadField
             src={avatar?.src || image || null}
-            note={note || ""}
+            note={noteObj?.text || ""}
             alt={firstName || "Avatar"}
             nwImage={avatar}
             onAvatarClick={handleAvatarClick}
@@ -468,7 +468,7 @@ export function LandingSection({ onSelect }: Props) {
             <S.LandingCardChip $active={Boolean(image)}>
               Avatar
             </S.LandingCardChip>
-            <S.LandingCardChip $active={Boolean(note)}>Note</S.LandingCardChip>
+            <S.LandingCardChip $active={Boolean(noteObj?.text)}>Note</S.LandingCardChip>
             <S.LandingCardChip $active={themeColor != null}>
               Theme
             </S.LandingCardChip>

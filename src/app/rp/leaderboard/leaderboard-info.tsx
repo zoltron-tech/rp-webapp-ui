@@ -251,8 +251,13 @@ const NOVELIST_ACTIONS = [
   { label: "Reply on public prompt (OOC)", xp: "+25" },
   { label: "Reply on friends-only prompt (OOC)", xp: "+15" },
   { label: "Character posts public prompt", xp: "+12" },
+  { label: "Character posts friends-only prompt", xp: "+6" },
   { label: "Character comments on public prompt", xp: "+15" },
+  { label: "Character comments on friends-only prompt", xp: "+8" },
+  { label: "Character comments on custom-privacy prompt", xp: "+5" },
   { label: "Character replies on public prompt", xp: "+18" },
+  { label: "Character replies on friends-only prompt", xp: "+10" },
+  { label: "Character replies on custom-privacy prompt", xp: "+6" },
 ];
 
 const MUSE_ACTIONS = [
@@ -262,8 +267,10 @@ const MUSE_ACTIONS = [
   { label: "Post friends-only prompt", xp: "+10" },
   { label: "Comment on public prompt", xp: "+25" },
   { label: "Comment on friends-only prompt", xp: "+15" },
+  { label: "Comment on custom-privacy prompt", xp: "+10" },
   { label: "Reply on public prompt", xp: "+30" },
   { label: "Reply on friends-only prompt", xp: "+20" },
+  { label: "Reply on custom-privacy prompt", xp: "+13" },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────

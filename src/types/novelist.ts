@@ -98,13 +98,19 @@ export interface NovelistTier {
   musicLimit: number;
 }
 
+export type NovelistNote = {
+  text: string;
+  color: string | null;
+  emoji: string | null;
+};
+
 export type Novelist = {
   id: string;
   username: string;
   tier: NovelistTier;
   firstName: string;
   lastName: string;
-  note: string;
+  note: NovelistNote | null;
   image: string;
   avatar: NWImage | null;
   museCount: number;
@@ -121,7 +127,7 @@ export type Novelist = {
   level: number;
 };
 
-export type UpdateNovelistPayload = Omit<Partial<Novelist>, "firstName"> & {
+export type UpdateNovelistPayload = Omit<Partial<Novelist>, "firstName" | "note"> & {
   firstName: string;
 };
 
@@ -136,6 +142,7 @@ export interface Friend {
   connection: string | null;
   muses: Muse[];
   mutualFriendCount: number;
+  rank?: number;
 }
 
 export interface Fandom {

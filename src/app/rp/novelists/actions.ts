@@ -8,6 +8,7 @@ import {
 import type {
   Friend,
   Novelist,
+  NovelistNote,
   NovelistWorldNotification,
   UpdateNovelistPayload,
 } from "@/types";
@@ -306,6 +307,52 @@ export const chatAction = async (targetUserName: string | null) => {
 
   const result = (await response.json()) as Message[];
   return result;
+};
+
+export const addNoteAction = async (
+  text: string,
+  color: string | null,
+  emoji: string | null,
+): Promise<NovelistNote | { message: string }> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/note`;
+
+  const response = await fetch(URL, {
+    body: JSON.stringify({ text, color, emoji }),
+    cache: "no-store",
+    headers: {
+      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "POST",
+  });
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  return response.json() as Promise<NovelistNote>;
+};
+
+export const deleteNoteAction = async (): Promise<{ message: string }> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/note`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers: {
+      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "DELETE",
+  });
+
+  // 404 means the note didn't exist — still a success state
+  if (!response.ok && response.status !== 404) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  return { message: API_MESSAGE.Success };
 };
 
 export const getFriendsByUsernameAction = async (

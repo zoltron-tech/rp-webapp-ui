@@ -4,9 +4,13 @@ import { useCallback, useState } from "react";
 import { updateUserTheme } from "@/app/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
-import type { NWImage, UpdateNovelistPayload } from "@/types/novelist";
+import type { NWImage, NovelistNote, UpdateNovelistPayload } from "@/types/novelist";
 import type { Accent } from "@/types/theme";
-import { updateUserNovelist } from "../../novelists/actions";
+import {
+  addNoteAction,
+  deleteNoteAction,
+  updateUserNovelist,
+} from "../../novelists/actions";
 import { useProfileState, useProfileStoreSet } from "./profile.store";
 
 type SaveResult = { ok: true } | { ok: false; message: string };
@@ -28,7 +32,7 @@ export function useProfileSave() {
   const image = useProfileState("image");
   const avatar = useProfileState("avatar");
   const about = useProfileState("about");
-  const note = useProfileState("note");
+  const noteObj = useProfileState("note");
   const palette = useProfileState("palette");
 
   const [loading, setLoading] = useState(false);
@@ -40,7 +44,6 @@ export function useProfileSave() {
       firstName: (firstName ?? "").trim(),
       image: avatar?.src ?? image ?? undefined,
       lastName: (lastName ?? "").trim(),
-      note: note ?? "",
     };
 
     setLoading(true);
@@ -68,7 +71,7 @@ export function useProfileSave() {
       firstName: response.firstName || "",
       image: response.image || "",
       lastName: response.lastName || "",
-      note: response.note || "",
+      note: response.note ?? null,
     });
 
     return { ok: true };
@@ -78,11 +81,34 @@ export function useProfileSave() {
     firstName,
     image,
     lastName,
-    note,
     novelist,
     setGlobalState,
     setProfileState,
   ]);
+
+  const saveNote = useCallback(async (): Promise<SaveResult> => {
+    let result: NovelistNote | { message: string };
+    if (noteObj?.text?.trim()) {
+      result = await addNoteAction(
+        noteObj.text.trim(),
+        noteObj.color ?? null,
+        noteObj.emoji ?? null,
+      );
+    } else {
+      result = await deleteNoteAction();
+    }
+
+    if ("message" in result && result.message !== "success") {
+      return { message: result.message, ok: false };
+    }
+
+    const savedNote = "text" in result ? (result as NovelistNote) : null;
+    setGlobalState({
+      novelist: novelist ? { ...novelist, note: savedNote } : undefined,
+    });
+    setProfileState({ note: savedNote });
+    return { ok: true };
+  }, [noteObj, novelist, setGlobalState, setProfileState]);
 
   const saveTheme = useCallback(async (): Promise<SaveResult> => {
     setLoading(true);
@@ -96,10 +122,14 @@ export function useProfileSave() {
       return { message: response.message as string, ok: false };
     }
 
-    setGlobalState({ user: response.user });
-    setProfileState({ palette: Number(palette) as Accent });
+    const newPalette = Number(palette) as Accent;
+    setGlobalState({
+      user: response.user,
+      ...(novelist ? { novelist: { ...novelist, palette: newPalette } } : {}),
+    });
+    setProfileState({ palette: newPalette });
     return { ok: true };
-  }, [palette, setGlobalState, setProfileState]);
+  }, [novelist, palette, setGlobalState, setProfileState]);
 
   /**
    * Save only the fields that actually differ from current global state.
@@ -107,8 +137,9 @@ export function useProfileSave() {
    */
   const saveAll = useCallback(
     async (
-      opts: { novelist?: boolean; theme?: boolean } = {
+      opts: { novelist?: boolean; theme?: boolean; note?: boolean } = {
         novelist: true,
+        note: true,
         theme: true,
       },
     ): Promise<SaveResult> => {
@@ -117,9 +148,14 @@ export function useProfileSave() {
         ((firstName ?? "").trim() !== (novelist?.firstName ?? "") ||
           (lastName ?? "").trim() !== (novelist?.lastName ?? "") ||
           (about ?? "") !== (novelist?.about ?? "") ||
-          (note ?? "") !== (novelist?.note ?? "") ||
           (image ?? "") !== (novelist?.image ?? "") ||
           avatar !== (novelist?.avatar ?? null));
+
+      const noteDirty =
+        opts.note !== false &&
+        ((noteObj?.text ?? "") !== (novelist?.note?.text ?? "") ||
+          (noteObj?.color ?? null) !== (novelist?.note?.color ?? null) ||
+          (noteObj?.emoji ?? null) !== (novelist?.note?.emoji ?? null));
 
       const themeDirty =
         opts.theme && Number(palette) !== Number(user?.palette ?? 0);
@@ -129,12 +165,17 @@ export function useProfileSave() {
         if (!r.ok) return r;
       }
 
+      if (noteDirty) {
+        const r = await saveNote();
+        if (!r.ok) return r;
+      }
+
       if (themeDirty) {
         const r = await saveTheme();
         if (!r.ok) return r;
       }
 
-      if (novelistDirty || themeDirty) {
+      if (novelistDirty || noteDirty || themeDirty) {
         successToast("Profile updated successfully.");
       }
 
@@ -146,15 +187,16 @@ export function useProfileSave() {
       firstName,
       image,
       lastName,
-      note,
+      noteObj,
       novelist,
       palette,
       saveNovelist,
+      saveNote,
       saveTheme,
       successToast,
       user?.palette,
     ],
   );
 
-  return { loading, saveAll, saveNovelist, saveTheme };
+  return { loading, saveAll, saveNote, saveNovelist, saveTheme };
 }

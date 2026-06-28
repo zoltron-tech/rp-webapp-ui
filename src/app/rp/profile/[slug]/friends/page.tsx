@@ -7,6 +7,7 @@ import { BreadCrumb } from "@/components/breadcrumb";
 import { FilterSearch } from "@/components/common";
 import { LoadMore } from "@/components/load-more/page";
 import { NovelistPreviewCard } from "@/components/novelist-preview-card";
+import { usePageRouter } from "@/hooks/use-page-router";
 import type { Friend } from "@/types";
 import * as S from "./styles";
 
@@ -29,6 +30,11 @@ function CardShimmer() {
 export default function FriendsListPage() {
   const params = useParams();
   const username = params?.slug as string;
+  const { stopPageLoading } = usePageRouter();
+
+  useEffect(() => {
+    stopPageLoading();
+  }, [stopPageLoading]);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -87,7 +93,7 @@ export default function FriendsListPage() {
               <CardShimmer key={i} />
             ))
           : displayedFriends.map((friend) => (
-              <NovelistPreviewCard key={friend.id} novelist={friend} />
+              <NovelistPreviewCard key={friend.id} novelist={friend} rank={friend.rank}/>
             ))}
       </S.Grid>
       {!loading && friends.length === 0 && <S.Empty>No friends yet.</S.Empty>}

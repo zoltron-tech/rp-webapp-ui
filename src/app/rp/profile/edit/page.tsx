@@ -44,7 +44,7 @@ export default function EditProfilePage() {
             firstName: novelist?.firstName || "",
             image: novelist?.image || "",
             lastName: novelist?.lastName || "",
-            note: novelist?.note || "",
+            note: novelist?.note ?? null,
             palette: user?.palette ?? 0,
             theme: "dark",
           }}

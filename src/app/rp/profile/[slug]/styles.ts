@@ -521,20 +521,19 @@ export const UsernameContainer = styled.div`
   max-width: 100%;
 `;
 
-export const NoteContainer = styled.div`
+export const NoteContainer = styled.div<{ $color?: string | null }>`
   width: unset;
   right: 50px;
   bottom: -80px;
-  background: linear-gradient(
-    135deg,
-    var(--accent-4) 0%,
-    var(--accent-3) 100%
-  );
-
+  background: ${({ $color }) =>
+    $color
+      ? $color
+      : "linear-gradient(135deg, var(--accent-4) 0%, var(--accent-3) 100%)"};
+  color: ${({ $color }) => ($color ? "#1a1a1a" : "inherit")};
   opacity: 95%;
   word-break: break-word;
   border-radius: 20px;
-  padding: 5px 10px;
+  padding: 5px 14px 5px 10px;
   z-index: 100;
   font-size: var(--font-size);
   position: relative;
@@ -549,8 +548,10 @@ export const NoteContainer = styled.div`
     width: 0;
     height: 0;
     border-radius: 50%;
-    border-left: 20px solid var(--accent-4);
-    border-bottom: 20px solid var(--accent-4);
+    border-left: 20px solid
+      ${({ $color }) => ($color ? $color : "var(--accent-4)")};
+    border-bottom: 20px solid
+      ${({ $color }) => ($color ? $color : "var(--accent-4)")};
   }
 
   &::after {
@@ -561,8 +562,10 @@ export const NoteContainer = styled.div`
     width: 0;
     height: 0;
     border-radius: 50%;
-    border-left: 12px solid var(--accent-3);
-    border-bottom: 12px solid var(--accent-3);
+    border-left: 12px solid
+      ${({ $color }) => ($color ? $color : "var(--accent-3)")};
+    border-bottom: 12px solid
+      ${({ $color }) => ($color ? $color : "var(--accent-3)")};
   }
 
   @container profile-content (max-width: 800px) {
@@ -577,16 +580,20 @@ export const NoteContainer = styled.div`
       top: -14px;
       left: 12px;
       border-radius: 50%;
-      border-left: 12px solid var(--accent-4);
-      border-bottom: 12px solid var(--accent-4);
+      border-left: 12px solid
+        ${({ $color }) => ($color ? $color : "var(--accent-4)")};
+      border-bottom: 12px solid
+        ${({ $color }) => ($color ? $color : "var(--accent-4)")};
     }
 
     &::after {
       top: -10px;
       left: 4px;
-      border-radius: 50%; 
-      border-left: 8px solid var(--accent-3);
-      border-bottom: 8px solid var(--accent-3);
+      border-radius: 50%;
+      border-left: 8px solid
+        ${({ $color }) => ($color ? $color : "var(--accent-3)")};
+      border-bottom: 8px solid
+        ${({ $color }) => ($color ? $color : "var(--accent-3)")};
     }
   }
 
@@ -595,6 +602,17 @@ export const NoteContainer = styled.div`
       display: none;
     }
   }
+`;
+
+export const NoteEmoji = styled.span`
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  font-size: 1rem;
+  display: inline-block;
+  transform: rotate(45deg);
+  line-height: 1;
+  pointer-events: none;
 `;
 
 export const MusePillContainer = styled.div`

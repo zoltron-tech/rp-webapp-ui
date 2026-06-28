@@ -295,12 +295,19 @@ export const FieldHeader = styled.div`
 
 export const PaletteGroup = styled(RadioGroup.Root)`
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px;
+  border-radius: 8px;
+  background-color: var(--bg-2);
+`;
+
+export const PaletteRow = styled.div`
+  display: flex;
   flex-direction: row;
   justify-content: center;
   gap: 8px;
-  padding: 8px; /* container padding */
-  border-radius: 8px;
-  background-color: var(--bg-2);
 `;
 
 export const RadioItemContainer = styled.div`
@@ -532,6 +539,73 @@ export const NoteCharCount = styled.span`
 
   &.warn {
     color: var(--tomato-a9);
+  }
+`;
+
+export const NoteColorSection = styled.div`
+  margin-top: 14px;
+`;
+
+export const NoteEmojiSection = styled.div`
+  margin-top: 12px;
+`;
+
+export const NoteColorLabel = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+`;
+
+export const NoteLevelGate = styled.span`
+  font-size: var(--font-size-xsmall);
+  color: var(--accent);
+  opacity: 0.8;
+`;
+
+export const NoteColorGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+`;
+
+export const NoteColorSwatch = styled.button<{
+  $color: string;
+  $active: boolean;
+  $locked: boolean;
+}>`
+  all: unset;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: ${({ $color }) => $color};
+  cursor: ${({ $locked }) => ($locked ? "not-allowed" : "pointer")};
+  opacity: ${({ $locked }) => ($locked ? 0.4 : 1)};
+  border: 3px solid
+    ${({ $active }) => ($active ? "var(--text)" : "transparent")};
+  transition: transform 0.1s ease, border-color 0.1s ease;
+
+  &:hover:not(:disabled) {
+    transform: scale(1.15);
+  }
+`;
+
+export const NoteEmojiInput = styled.input`
+  width: 60px;
+  background: var(--bg-3);
+  color: var(--text);
+  border: 1px solid var(--bg-6);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 1.2rem;
+  text-align: center;
+  font-family: var(--font);
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 `;
 
@@ -1344,6 +1418,34 @@ export const AppearanceFieldLabel = styled.label`
   font-weight: var(--font-weight-medium);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+`;
+
+export const PaletteLockBadge = styled.span`
+  position: absolute;
+  bottom: -3px;
+  right: -3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--bg-2);
+  border: 1.5px solid var(--amber-9);
+  color: var(--amber-9);
+  font-size: 9px;
+  font-weight: var(--font-weight-bold);
+  font-family: var(--font);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  line-height: 1;
+`;
+
+export const PaletteLockNote = styled.p`
+  font-size: var(--font-size-small);
+  color: var(--amber-9);
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font);
+  margin: 2px 2px 0;
 `;
 
 // ── Avatar crop dialog ───────────────────────────────────────────────────────

@@ -41,6 +41,7 @@ export default function EditProfilePage() {
           initial={{
             about: novelist?.about || "",
             avatar: novelist?.avatar ?? null,
+            banner: novelist?.banner ?? null,
             firstName: novelist?.firstName || "",
             image: novelist?.image || "",
             lastName: novelist?.lastName || "",

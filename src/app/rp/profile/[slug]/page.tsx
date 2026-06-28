@@ -918,45 +918,53 @@ export default function UserProfilePage({}) {
         isConfirmDisabled={supportMessage.trim() === ""}
       />
 
-      <S.Banner
-        src={
-          novelist?.image && !novelist.image.endsWith(".gif")
-            ? novelist.image
-            : ""
-        }
-      />
       <S.Content
         id="profile-tour-step-1"
         className={classNames(profileAccent)}
         data-accent={profileAccent}
       >
         <S.ContentRight>
-          <Flex
-            direction="row"
-            justify="flex-start"
-            style={{ marginBottom: "-70px", overflow: "visible", width: "90%" }}
-          >
-            <S.Avatar
-              src={novelist?.image ?? null}
-              alt={novelist?.firstName ?? "Avatar"}
-              username={novelist?.username}
-              nwImage={novelist?.avatar}
+          <S.BannerSection>
+            <S.Banner
+              src={
+                novelist?.banner?.src
+                  ? novelist.banner.src
+                  : novelist?.image && !novelist.image.endsWith(".gif")
+                    ? novelist.image
+                    : ""
+              }
+              $blurred={!novelist?.banner?.src}
+              $x={novelist?.banner?.crop?.x}
+              $y={novelist?.banner?.crop?.y}
+              $scale={
+                novelist?.banner?.crop && novelist.banner.crop.width > 0
+                  ? novelist.banner.crop.width / 100
+                  : undefined
+              }
             />
-            <S.AvatarMobile
-              src={novelist?.image ?? null}
-              alt="profile-picture"
-              username={novelist?.username}
-              nwImage={novelist?.avatar}
-            />
-            <ShouldRender if={Boolean(novelist?.note?.text)}>
-              <S.NoteContainer $color={novelist?.note?.color ?? null}>
-                {novelist?.note?.emoji && (
-                  <S.NoteEmoji>{novelist.note.emoji}</S.NoteEmoji>
-                )}
-                {novelist?.note?.text}
-              </S.NoteContainer>
-            </ShouldRender>
-          </Flex>
+            <S.BannerAvatarRow>
+              <S.Avatar
+                src={novelist?.image ?? null}
+                alt={novelist?.firstName ?? "Avatar"}
+                username={novelist?.username}
+                nwImage={novelist?.avatar}
+              />
+              <S.AvatarMobile
+                src={novelist?.image ?? null}
+                alt="profile-picture"
+                username={novelist?.username}
+                nwImage={novelist?.avatar}
+              />
+              <ShouldRender if={Boolean(novelist?.note?.text)}>
+                <S.NoteContainer $color={novelist?.note?.color ?? null}>
+                  {novelist?.note?.emoji && (
+                    <S.NoteEmoji>{novelist.note.emoji}</S.NoteEmoji>
+                  )}
+                  {novelist?.note?.text}
+                </S.NoteContainer>
+              </ShouldRender>
+            </S.BannerAvatarRow>
+          </S.BannerSection>
           <S.ContentInner>
             <ShouldRender if={authState === "LOGGED_IN"}>
               <S.ProfileDropdownMenuContainer>

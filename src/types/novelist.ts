@@ -113,6 +113,7 @@ export type Novelist = {
   note: NovelistNote | null;
   image: string;
   avatar: NWImage | null;
+  banner: NWImage | null;
   museCount: number;
   palette: number;
   muses: Muse[];

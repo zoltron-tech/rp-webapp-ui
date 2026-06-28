@@ -225,6 +225,18 @@ export const updateUserNovelist = async (
             : _novelist.avatar.crop,
         }
       : _novelist.avatar,
+    banner: _novelist.banner
+      ? {
+          ..._novelist.banner,
+          src: reverseWsrvUrl(_novelist.banner.src),
+          crop: _novelist.banner.crop
+            ? {
+                ..._novelist.banner.crop,
+                src: reverseWsrvUrl(_novelist.banner.crop.src),
+              }
+            : _novelist.banner.crop,
+        }
+      : _novelist.banner,
   };
 
   Logger.debug("updateUserNovelist", novelist);
@@ -332,6 +344,26 @@ export const addNoteAction = async (
   }
 
   return response.json() as Promise<NovelistNote>;
+};
+
+export const deleteBannerAction = async (): Promise<{ message: string }> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/banner`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers: {
+      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "DELETE",
+  });
+
+  if (!response.ok && response.status !== 404) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  return { message: API_MESSAGE.Success };
 };
 
 export const deleteNoteAction = async (): Promise<{ message: string }> => {

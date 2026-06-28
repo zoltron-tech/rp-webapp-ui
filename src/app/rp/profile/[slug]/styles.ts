@@ -8,7 +8,49 @@ import { Badge } from "../../tiers/styles";
 
 interface BannerProps {
   src: string;
+  $x?: number;
+  $y?: number;
+  $scale?: number;
+  $blurred?: boolean;
 }
+
+/**
+ * In-flow banner container — same width and aspect ratio as the crop dialog
+ * so what the user sees while editing is exactly what renders on the profile.
+ * overflow: visible lets the avatar hang below the bottom edge.
+ */
+export const BannerSection = styled.div`
+  position: relative;
+  width: 800px;
+  aspect-ratio: 10 / 3;
+  overflow: visible;
+  border-radius: 12px 12px 0 0;
+
+  @container profile-content (max-width: 800px) {
+    width: 100%;
+    border-radius: 0;
+  }
+`;
+
+/**
+ * Row anchored to the bottom of BannerSection. BannerSection is now the same
+ * width as ContentInner, so simple padding suffices — no centering math needed.
+ */
+export const BannerAvatarRow = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  overflow: visible;
+  padding-left: 20px;
+  padding-right: 20px;
+  z-index: ${Z_INDEX.AVATAR};
+  pointer-events: none;
+  > * { pointer-events: auto; }
+`;
 
 /**
  * Slide-up compose overlay for mobile "Add Prompt" flow.
@@ -74,21 +116,21 @@ export const AddPromptButton = styled.button`
 `;
 
 export const Banner = styled.div<BannerProps>`
-  width: 100cqw;
-  height: clamp(
-    var(--profile-banner-height-min),
-    30cqw,
-    var(--profile-banner-height-max)
-  );
-  z-index: ${Z_INDEX.BACKGROUND};
   position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
 
   background-image: url(${({ src }) => src});
   background-repeat: no-repeat;
-  background-size: cover;
-  contain: paint;
+  /* When crop data exists use the stored scale/position exactly as the crop
+     dialog set them. Fall back to cover+center only when there is no crop. */
+  background-size: ${({ $scale }) =>
+    $scale != null ? `${$scale * 100}% auto` : "cover"};
+  background-position: ${({ $x, $y, $scale }) =>
+    $scale != null ? `${$x ?? 50}% ${$y ?? 50}%` : "center"};
 
-  ${BLUR_FILTER}
+  ${({ $blurred }) => $blurred && BLUR_FILTER}
 `;
 
 export const EditProfile = styled.div`
@@ -140,7 +182,8 @@ export const ProfileDropdownMenuContainer = styled.div`
   gap: 6px;
   position: absolute;
   right: 10px;
-  top: -80px
+  /* Sits inside the top padding area, visually beside the avatar */
+  top: 8px;
 `;
 
 export const ProfileMoreDropdownMenu = styled.div`
@@ -154,15 +197,21 @@ export const ContentInner = styled.div`
   display: flex;
   flex-direction: column;
   border: 1px solid var(--bg-5);
+  border-top: none;
   align-items: center;
   background-color: var(--bg-2);
   width: 800px;
-  border-radius: 12px;
+  /* BannerSection sits flush above — only round the bottom corners */
+  border-radius: 0 0 12px 12px;
+  /* Desktop: avatar (250 px) sticks 125 px below banner; 16 px gap below that */
+  padding-top: 141px;
 
   @container (max-width: 800px) {
     width: 100%;
     padding-inline: 0px;
-    margin-top: 10px;
+    /* Mobile: avatar (130 px) sticks 65 px below banner; 16 px gap below that */
+    padding-top: 81px;
+    margin-top: 0px;
     border-radius: 0px;
     border-right: unset;
     border-left: unset;
@@ -443,35 +492,35 @@ export const InfoText = styled.div`
 export const Avatar = styled(AvatarNew)`
   box-shadow: 0 0 0 8px var(--bg-2);
   background-color: var(--bg-2);
-  margin-top: 30px;
   height: 250px;
   width: 250px;
-  z-index: 100;
+  flex-shrink: 0;
+  /* Hang 50 % (125 px) below the banner bottom edge */
+  transform: translateY(50%);
+  z-index: 1;
 
-  @container profile-content (max-width: 800px) {
-    & {
-      display: none;
-    }
+  @media (max-width: 800px) {
+    display: none;
   }
 
-    .avatar-fallback {
-    font-size: calc(2*var(--font-size-h1));
+  .avatar-fallback {
+    font-size: calc(2 * var(--font-size-h1));
   }
 `;
 
 export const AvatarMobile = styled(AvatarNew)`
   box-shadow: 0 0 0 5px var(--bg-2);
   background-color: var(--bg-2);
-  margin-top: 20px;
   height: 130px;
   width: 130px;
-  z-index: 100;
+  flex-shrink: 0;
+  /* Hang 50 % (65 px) below the banner bottom edge */
+  transform: translateY(50%);
+  z-index: 1;
   display: none;
 
-  @container profile-content (max-width: 800px) {
-    & {
-      display: block;
-    }
+  @media (max-width: 800px) {
+    display: block;
   }
 `;
 
@@ -522,9 +571,6 @@ export const UsernameContainer = styled.div`
 `;
 
 export const NoteContainer = styled.div<{ $color?: string | null }>`
-  width: unset;
-  right: 50px;
-  bottom: -80px;
   background: ${({ $color }) =>
     $color
       ? $color
@@ -538,6 +584,10 @@ export const NoteContainer = styled.div<{ $color?: string | null }>`
   font-size: var(--font-size);
   position: relative;
   overflow: visible;
+  /* Align vertically with the avatar's lower half */
+  transform: translateY(50%);
+  align-self: flex-end;
+  max-width: 260px;
 
   /* Thought bubble tail */
   &::before {
@@ -568,18 +618,13 @@ export const NoteContainer = styled.div<{ $color?: string | null }>`
       ${({ $color }) => ($color ? $color : "var(--accent-3)")};
   }
 
-  @container profile-content (max-width: 800px) {
-    & {
-      font-size: var(--font-size-xsmall);
-      width: unset;
-      right: 30px;
-      bottom: -40px;
-    }
+  @media (max-width: 800px) {
+    font-size: var(--font-size-xsmall);
+    transform: translateY(50%);
 
     &::before {
       top: -14px;
       left: 12px;
-      border-radius: 50%;
       border-left: 12px solid
         ${({ $color }) => ($color ? $color : "var(--accent-4)")};
       border-bottom: 12px solid
@@ -589,7 +634,6 @@ export const NoteContainer = styled.div<{ $color?: string | null }>`
     &::after {
       top: -10px;
       left: 4px;
-      border-radius: 50%;
       border-left: 8px solid
         ${({ $color }) => ($color ? $color : "var(--accent-3)")};
       border-bottom: 8px solid
@@ -597,10 +641,8 @@ export const NoteContainer = styled.div<{ $color?: string | null }>`
     }
   }
 
-  @container profile-content (max-width: 300px) {
-    & {
-      display: none;
-    }
+  @media (max-width: 300px) {
+    display: none;
   }
 `;
 

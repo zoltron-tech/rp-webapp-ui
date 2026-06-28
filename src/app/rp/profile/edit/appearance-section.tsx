@@ -4,11 +4,12 @@ import { ShouldRender } from "@novelist-world/ui";
 import { RadioGroup, Separator } from "radix-ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BsArrowLeft } from "react-icons/bs";
-import { MdOutlineBrush } from "react-icons/md";
+import { MdClose, MdOutlineBrush } from "react-icons/md";
 import { AvatarPickerDialog } from "@/components/avatar-picker-dialog";
 import { AvatarUploadField } from "@/components/common/avatar-upload-field";
 import { AppAlertDialog } from "@/components/dialog";
 import AvatarCropDialog from "@/components/dialog/avatar-crop-dialog";
+import BannerCropDialog from "@/components/dialog/banner-crop-dialog";
 import { useGlobalState } from "@/context/store/stores";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import type { ImageCropFilter, NWImage } from "@/types";
@@ -67,6 +68,7 @@ export function AppearanceSection({ onBack }: Props) {
   const novelistLevel = novelist?.level ?? 1;
   const image = useProfileState("image");
   const avatar = useProfileState("avatar");
+  const banner = useProfileState("banner");
   const noteObj = useProfileState("note");
   const palette = useProfileState("palette");
   const setProfileState = useProfileStoreSet();
@@ -102,8 +104,26 @@ export function AppearanceSection({ onBack }: Props) {
   } | null>(null);
   const lastPinchDist = useRef<number | null>(null);
 
-  // Track whether avatar was changed in this editing session
+  // Banner crop dialog state
+  const [bannerCropDialogOpen, setBannerCropDialogOpen] = useState(false);
+  const [pendingBannerSrc, setPendingBannerSrc] = useState("");
+  const [bannerCropX, setBannerCropX] = useState(50);
+  const [bannerCropY, setBannerCropY] = useState(50);
+  const [bannerCropScale, setBannerCropScale] = useState(1);
+  const bannerViewportRef = useRef<HTMLDivElement>(null);
+  const bannerDragStart = useRef<{
+    px: number;
+    py: number;
+    bx: number;
+    by: number;
+  } | null>(null);
+  const lastBannerPinchDist = useRef<number | null>(null);
+  const [tempUploadedBanner, setTempUploadedBanner] = useState<string | null>(null);
+  const bannerFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Track whether avatar/banner were changed in this editing session
   const [avatarChanged, setAvatarChanged] = useState(false);
+  const [bannerChanged, setBannerChanged] = useState(false);
 
   // When a GIF/Sticker is picked we stash the URL here and open the crop
   // dialog only after the avatar picker portal has fully closed.
@@ -120,6 +140,7 @@ export function AppearanceSection({ onBack }: Props) {
 
   const originalRef = useRef({
     avatar: novelist?.avatar ?? (null as NWImage | null),
+    banner: novelist?.banner ?? (null as NWImage | null),
     image: novelist?.image ?? "",
     note: novelist?.note ?? null,
     palette: user?.palette ?? 0,
@@ -128,15 +149,17 @@ export function AppearanceSection({ onBack }: Props) {
   useEffect(() => {
     originalRef.current = {
       avatar: novelist?.avatar ?? null,
+      banner: novelist?.banner ?? null,
       image: novelist?.image ?? "",
       note: novelist?.note ?? null,
       palette: user?.palette ?? 0,
     };
-  }, [novelist?.image, novelist?.note, novelist?.avatar, user?.palette]);
+  }, [novelist?.image, novelist?.note, novelist?.avatar, novelist?.banner, user?.palette]);
 
   const noteText = noteObj?.text ?? "";
   const isDirty =
     avatarChanged ||
+    bannerChanged ||
     (image ?? "") !== originalRef.current.image ||
     noteObj !== originalRef.current.note ||
     Number(palette) !== Number(originalRef.current.palette);
@@ -309,6 +332,160 @@ export function AppearanceSection({ onBack }: Props) {
     setCropScale(1);
   }, []);
 
+  // ── Banner upload from device ───────────────────────────────────────────────
+
+  const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+
+    if (!VALID_IMAGE_TYPES.includes(file.type)) {
+      setError("File type not supported. Allowed: .png, .jpg, .gif");
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      setError("File too large (max 10 MB).");
+      return;
+    }
+
+    setError(null);
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      openBannerCropDialog(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    if (tempUploadedBanner) {
+      await deleteMedia(tempUploadedBanner);
+    }
+
+    setImageUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    const url = await uploadMedia(formData);
+    setImageUploading(false);
+
+    if (url === API_MESSAGE.MediaError) {
+      setError("Failed to upload banner. Please try again.");
+      setBannerCropDialogOpen(false);
+      return;
+    }
+
+    setTempUploadedBanner(url);
+    setPendingBannerSrc(url);
+  };
+
+  // ── Banner crop helpers ─────────────────────────────────────────────────────
+
+  const openBannerCropDialog = (src: string) => {
+    setPendingBannerSrc(src);
+    setBannerCropX(50);
+    setBannerCropY(50);
+    setBannerCropScale(1);
+    setBannerCropDialogOpen(true);
+  };
+
+  const openExistingBannerCropDialog = useCallback(() => {
+    if (!banner) return;
+    setPendingBannerSrc(banner.src);
+    setBannerCropX(banner.crop?.x ?? 50);
+    setBannerCropY(banner.crop?.y ?? 50);
+    setBannerCropScale(banner.crop?.width && banner.crop.width > 0 ? banner.crop.width / 100 : 1);
+    setBannerCropDialogOpen(true);
+  }, [banner]);
+
+  const handleBannerPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.isPrimary === false) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    bannerDragStart.current = {
+      bx: bannerCropX,
+      by: bannerCropY,
+      px: e.clientX,
+      py: e.clientY,
+    };
+  };
+
+  const handleBannerPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!bannerDragStart.current || !bannerViewportRef.current) return;
+    const rect = bannerViewportRef.current.getBoundingClientRect();
+    const dx = ((e.clientX - bannerDragStart.current.px) / rect.width) * 100;
+    const dy = ((e.clientY - bannerDragStart.current.py) / rect.height) * 100;
+    setBannerCropX(clamp(bannerDragStart.current.bx - dx, 0, 100));
+    setBannerCropY(clamp(bannerDragStart.current.by - dy, 0, 100));
+  };
+
+  const handleBannerPointerUp = () => {
+    bannerDragStart.current = null;
+  };
+
+  const handleBannerWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 0.05 : -0.05;
+    setBannerCropScale((prev) => clamp(prev + delta, 1, 3));
+  };
+
+  const handleBannerTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      lastBannerPinchDist.current = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY,
+      );
+    }
+  };
+
+  const handleBannerTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && lastBannerPinchDist.current !== null) {
+      e.preventDefault();
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY,
+      );
+      const delta = (dist - lastBannerPinchDist.current) * 0.01;
+      lastBannerPinchDist.current = dist;
+      setBannerCropScale((prev) => clamp(prev + delta, 1, 3));
+    }
+  };
+
+  const handleBannerScaleChange = (v: number) => {
+    setBannerCropScale(clamp(v, 1, 3));
+  };
+
+  const handleBannerCropConfirm = useCallback(() => {
+    const crop = toCropFilter(pendingBannerSrc, bannerCropX, bannerCropY, bannerCropScale);
+    const nwImage: NWImage = {
+      crop,
+      filterValues: { blur: 0, brightness: 100, greyscale: 0 },
+      src: pendingBannerSrc,
+    };
+    setProfileState({ banner: nwImage });
+    setBannerChanged(true);
+    setBannerCropDialogOpen(false);
+  }, [pendingBannerSrc, bannerCropX, bannerCropY, bannerCropScale, setProfileState]);
+
+  const handleBannerCropCancel = useCallback(async () => {
+    if (tempUploadedBanner && tempUploadedBanner === pendingBannerSrc) {
+      await deleteMedia(tempUploadedBanner);
+      setTempUploadedBanner(null);
+    }
+    setBannerCropDialogOpen(false);
+  }, [tempUploadedBanner, pendingBannerSrc]);
+
+  const resetBannerCrop = useCallback(() => {
+    setBannerCropX(50);
+    setBannerCropY(50);
+    setBannerCropScale(1);
+  }, []);
+
+  const handleDeleteBanner = useCallback(async () => {
+    if (tempUploadedBanner) {
+      await deleteMedia(tempUploadedBanner);
+      setTempUploadedBanner(null);
+    }
+    setProfileState({ banner: null });
+    setBannerChanged(originalRef.current.banner !== null);
+  }, [tempUploadedBanner, setProfileState]);
+
   // ── Save / reset / back ─────────────────────────────────────────────────────
 
   const handleSave = async () => {
@@ -331,13 +508,16 @@ export function AppearanceSection({ onBack }: Props) {
       return;
     }
     setTempUploadedImage(null);
+    setTempUploadedBanner(null);
     setAvatarChanged(false);
+    setBannerChanged(false);
     onBack();
   };
 
   const handleReset = () => {
     setProfileState({
       avatar: originalRef.current.avatar,
+      banner: originalRef.current.banner,
       image: originalRef.current.image,
       note: originalRef.current.note,
       palette: originalRef.current.palette as Accent,
@@ -346,6 +526,7 @@ export function AppearanceSection({ onBack }: Props) {
     setTempNoteColor(null);
     setTempNoteEmoji(null);
     setAvatarChanged(false);
+    setBannerChanged(false);
     setError(null);
   };
 
@@ -360,6 +541,9 @@ export function AppearanceSection({ onBack }: Props) {
   const handleConfirmDiscard = async () => {
     if (tempUploadedImage) {
       await deleteMedia(tempUploadedImage);
+    }
+    if (tempUploadedBanner) {
+      await deleteMedia(tempUploadedBanner);
     }
     handleReset();
     setDiscardOpen(false);
@@ -397,6 +581,8 @@ export function AppearanceSection({ onBack }: Props) {
 
   // The displayed avatar src — use the crop src when an avatar NWImage is set
   const displayAvatarSrc = avatar?.src || image || null;
+  // The displayed banner src — use banner NWImage src when set
+  const displayBannerSrc = banner?.src || null;
 
   return (
     <S.AppearancePreviewScope className={previewAccentClass}>
@@ -415,6 +601,46 @@ export function AppearanceSection({ onBack }: Props) {
       <Separator.Root className="separator" orientation="horizontal" />
 
       <S.AppearanceSectionBody>
+        <S.AppearanceFieldGroup>
+          <S.AppearanceFieldLabel>Cover banner</S.AppearanceFieldLabel>
+          <S.BannerEditWrap
+            onClick={() => {
+              if (displayBannerSrc) {
+                openExistingBannerCropDialog();
+              } else {
+                bannerFileInputRef.current?.click();
+              }
+            }}
+            $src={displayBannerSrc}
+            $x={banner?.crop?.x ?? 50}
+            $y={banner?.crop?.y ?? 50}
+            $scale={banner?.crop && banner.crop.width > 0 ? banner.crop.width / 100 : 1}
+          >
+            <S.BannerEditHint>
+              {displayBannerSrc ? "Click to reposition" : "Click to add a banner"}
+            </S.BannerEditHint>
+            {displayBannerSrc && (
+              <S.BannerDeleteButton
+                type="button"
+                aria-label="Remove banner"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void handleDeleteBanner();
+                }}
+              >
+                <MdClose size={14} />
+              </S.BannerDeleteButton>
+            )}
+          </S.BannerEditWrap>
+          <input
+            ref={bannerFileInputRef}
+            type="file"
+            hidden
+            accept="image/*"
+            onChange={handleBannerChange}
+          />
+        </S.AppearanceFieldGroup>
+
         <S.BasicInfoFields>
           <div className="avatar-field">
             <AvatarUploadField
@@ -546,8 +772,6 @@ export function AppearanceSection({ onBack }: Props) {
         isCancelHidden={true}
         body={
           <S.AvatarCropBody>
-            {/* Use the new presentational AvatarCropDialog inside the generic dialog portal */}
-            {/* eslint-disable-next-line @typescript-eslint/no-var-requires */}
             <AvatarCropDialog
               open={cropDialogOpen}
               src={pendingCropSrc}
@@ -567,6 +791,44 @@ export function AppearanceSection({ onBack }: Props) {
               onConfirm={handleCropConfirm}
               isUploading={imageUploading}
               viewportRef={cropViewportRef}
+            />
+          </S.AvatarCropBody>
+        }
+      />
+
+      {/* Banner crop / adjust dialog */}
+      <AppAlertDialog
+        open={bannerCropDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) handleBannerCropCancel();
+          setBannerCropDialogOpen(open);
+        }}
+        heading="Adjust banner"
+        text="Drag to reposition. Use the slider or scroll to zoom."
+        showConfirm={false}
+        isCancelHidden={true}
+        body={
+          <S.AvatarCropBody>
+            <BannerCropDialog
+              open={bannerCropDialogOpen}
+              src={pendingBannerSrc}
+              x={bannerCropX}
+              y={bannerCropY}
+              scale={bannerCropScale}
+              onOpenChange={setBannerCropDialogOpen}
+              onPointerDown={handleBannerPointerDown}
+              onPointerMove={handleBannerPointerMove}
+              onPointerUp={handleBannerPointerUp}
+              onTouchStart={handleBannerTouchStart}
+              onTouchMove={handleBannerTouchMove}
+              onWheel={handleBannerWheel}
+              onScaleChange={handleBannerScaleChange}
+              onReset={resetBannerCrop}
+              onCancel={handleBannerCropCancel}
+              onConfirm={handleBannerCropConfirm}
+              onChangeBanner={() => bannerFileInputRef.current?.click()}
+              isUploading={imageUploading}
+              viewportRef={bannerViewportRef}
             />
           </S.AvatarCropBody>
         }

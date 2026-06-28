@@ -6,8 +6,10 @@ import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import type { NWImage, NovelistNote, UpdateNovelistPayload } from "@/types/novelist";
 import type { Accent } from "@/types/theme";
+import { API_MESSAGE } from "@/utils/constants";
 import {
   addNoteAction,
+  deleteBannerAction,
   deleteNoteAction,
   updateUserNovelist,
 } from "../../novelists/actions";
@@ -31,6 +33,7 @@ export function useProfileSave() {
   const lastName = useProfileState("lastName");
   const image = useProfileState("image");
   const avatar = useProfileState("avatar");
+  const banner = useProfileState("banner");
   const about = useProfileState("about");
   const noteObj = useProfileState("note");
   const palette = useProfileState("palette");
@@ -41,6 +44,7 @@ export function useProfileSave() {
     const payload: UpdateNovelistPayload = {
       about: about ?? "",
       avatar: avatar ?? undefined,
+      banner: banner,
       firstName: (firstName ?? "").trim(),
       image: avatar?.src ?? image ?? undefined,
       lastName: (lastName ?? "").trim(),
@@ -68,6 +72,7 @@ export function useProfileSave() {
     setProfileState({
       about: response.about || "",
       avatar: (response.avatar as NWImage | null) ?? null,
+      banner: (response.banner as NWImage | null) ?? null,
       firstName: response.firstName || "",
       image: response.image || "",
       lastName: response.lastName || "",
@@ -78,6 +83,7 @@ export function useProfileSave() {
   }, [
     about,
     avatar,
+    banner,
     firstName,
     image,
     lastName,
@@ -85,6 +91,22 @@ export function useProfileSave() {
     setGlobalState,
     setProfileState,
   ]);
+
+  const deleteBanner = useCallback(async (): Promise<SaveResult> => {
+    setLoading(true);
+    const result = await deleteBannerAction();
+    setLoading(false);
+
+    if (result.message !== API_MESSAGE.Success) {
+      return { message: result.message, ok: false };
+    }
+
+    setGlobalState({
+      novelist: novelist ? { ...novelist, banner: null } : undefined,
+    });
+    setProfileState({ banner: null });
+    return { ok: true };
+  }, [novelist, setGlobalState, setProfileState]);
 
   const saveNote = useCallback(async (): Promise<SaveResult> => {
     let result: NovelistNote | { message: string };
@@ -143,13 +165,19 @@ export function useProfileSave() {
         theme: true,
       },
     ): Promise<SaveResult> => {
+      const bannerDeleted =
+        opts.novelist &&
+        banner === null &&
+        (novelist?.banner ?? null) !== null;
+
       const novelistDirty =
         opts.novelist &&
         ((firstName ?? "").trim() !== (novelist?.firstName ?? "") ||
           (lastName ?? "").trim() !== (novelist?.lastName ?? "") ||
           (about ?? "") !== (novelist?.about ?? "") ||
           (image ?? "") !== (novelist?.image ?? "") ||
-          avatar !== (novelist?.avatar ?? null));
+          avatar !== (novelist?.avatar ?? null) ||
+          (banner !== null && banner !== (novelist?.banner ?? null)));
 
       const noteDirty =
         opts.note !== false &&
@@ -159,6 +187,11 @@ export function useProfileSave() {
 
       const themeDirty =
         opts.theme && Number(palette) !== Number(user?.palette ?? 0);
+
+      if (bannerDeleted) {
+        const r = await deleteBanner();
+        if (!r.ok) return r;
+      }
 
       if (novelistDirty) {
         const r = await saveNovelist();
@@ -175,7 +208,7 @@ export function useProfileSave() {
         if (!r.ok) return r;
       }
 
-      if (novelistDirty || noteDirty || themeDirty) {
+      if (bannerDeleted || novelistDirty || noteDirty || themeDirty) {
         successToast("Profile updated successfully.");
       }
 
@@ -184,12 +217,14 @@ export function useProfileSave() {
     [
       about,
       avatar,
+      banner,
       firstName,
       image,
       lastName,
       noteObj,
       novelist,
       palette,
+      deleteBanner,
       saveNovelist,
       saveNote,
       saveTheme,

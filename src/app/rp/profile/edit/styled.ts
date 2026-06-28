@@ -1739,6 +1739,86 @@ export const PaletteLockNote = styled.p`
   margin: 2px 2px 0;
 `;
 
+// ── Banner edit field ────────────────────────────────────────────────────────
+
+export const BannerEditWrap = styled.div<{
+  $src: string | null;
+  $x: number;
+  $y: number;
+  $scale: number;
+}>`
+  position: relative;
+  width: 100%;
+  aspect-ratio: 10 / 3;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1.5px dashed var(--bg-7);
+  background-color: var(--bg-3);
+  transition: border-color 0.15s ease;
+
+  ${({ $src, $x, $y, $scale }) =>
+    $src
+      ? `
+        background-image: url(${$src});
+        background-repeat: no-repeat;
+        background-size: ${$scale * 100}% auto;
+        background-position: ${$x}% ${$y}%;
+        border-style: solid;
+        border-color: var(--bg-6);
+      `
+      : ""}
+
+  &:hover {
+    border-color: var(--accent);
+  }
+`;
+
+export const BannerDeleteButton = styled.button`
+  all: unset;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: rgba(220, 38, 38, 0.85);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+`;
+
+export const BannerEditHint = styled.span`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.32);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+
+  ${BannerEditWrap}:hover & {
+    opacity: 1;
+  }
+`;
+
 // ── Avatar crop dialog ───────────────────────────────────────────────────────
 
 export const AvatarCropBody = styled.div`

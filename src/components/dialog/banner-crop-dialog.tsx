@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { FcImageFile } from "react-icons/fc";
+import { MdOutlineImage, MdRefresh } from "react-icons/md";
 import styled from "styled-components";
 
 const Content = styled.div`
@@ -87,55 +88,96 @@ const Seek = styled.input`
   }
 `;
 
-const Footer = styled.div`
+const ActionBar = styled.div`
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  padding: 2px 0;
 `;
 
-const LeftActions = styled.div`
+const ActionBarHint = styled.span`
+  font-size: 11px;
+  color: var(--text-tertiary, var(--text-secondary));
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  opacity: 0.7;
+`;
+
+const ActionBarButtons = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+const ResetPill = styled.button`
+  all: unset;
   display: flex;
   align-items: center;
   gap: 4px;
-`;
-
-const ChangeImageButton = styled.button`
-  all: unset;
+  padding: 4px 10px 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--bg-6);
+  background: var(--bg-2);
   color: var(--text-secondary);
+  font-size: 12px;
+  font-family: var(--font);
+  font-weight: 600;
   cursor: pointer;
-  font-size: var(--font-size-small);
-  font-weight: var(--font-weight-medium);
-  padding: 6px 8px;
-  border-radius: 4px;
-  transition: color 0.15s ease, background 0.15s ease;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
 
   &:hover {
-    color: var(--text);
-    background: var(--bg-4);
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--bg-3);
   }
 
   &:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
+
+  @media (max-width: 768px) {
+    font-size: 10px;
+    svg { width: 15px !important; height: 15px !important; }
+  }
 `;
 
-const RightActions = styled.div`
-  display: flex;
-  gap: 8px;
-`;
-
-const ResetText = styled.button`
+const ChangePill = styled.button`
   all: unset;
-  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px 4px 10px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--text);
+  font-size: var(--font-size-small);
+  font-family: var(--font);
+  font-weight: 600;
   cursor: pointer;
-  font-weight: var(--font-weight-bold);
-  padding: 6px 8px;
+  transition: background 0.15s;
 
   &:hover {
-    color: var(--accent-hover);
+    background: var(--accent-hover);
   }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 768px) {
+    font-size: var(--font-size-xxsmall);
+    svg { width: 15px !important; height: 15px !important; }
+  }
+`;
+
+const Footer = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
 `;
 
 const CancelButton = styled.button`
@@ -242,6 +284,22 @@ export function BannerCropDialog({
 
   return (
     <Content data-open={open}>
+      <ActionBar>
+        <ActionBarHint>Drag · Scroll to zoom</ActionBarHint>
+        <ActionBarButtons>
+          <ResetPill type="button" onClick={onReset}>
+            <MdRefresh size={13} />
+            Reset
+          </ResetPill>
+          {onChangeBanner && (
+            <ChangePill type="button" onClick={onChangeBanner}>
+              <MdOutlineImage size={13} />
+              Change image
+            </ChangePill>
+          )}
+        </ActionBarButtons>
+      </ActionBar>
+
       <ViewportWrap>
         <BannerRect
           ref={viewportRef as any}
@@ -272,38 +330,25 @@ export function BannerCropDialog({
       </ZoomRow>
 
       <Footer>
-        <LeftActions>
-          <ResetText type="button" onClick={onReset}>
-            Reset
-          </ResetText>
-          {onChangeBanner && (
-            <ChangeImageButton type="button" onClick={onChangeBanner}>
-              Change image
-            </ChangeImageButton>
-          )}
-        </LeftActions>
-
-        <RightActions>
-          <CancelButton
-            type="button"
-            onClick={() => {
-              onCancel();
-              handleClose();
-            }}
-          >
-            Cancel
-          </CancelButton>
-          <UpdateButton
-            type="button"
-            onClick={() => {
-              onConfirm();
-              handleClose();
-            }}
-            disabled={Boolean(isUploading)}
-          >
-            {confirmLabel ?? (isUploading ? "Updating…" : "Update")}
-          </UpdateButton>
-        </RightActions>
+        <CancelButton
+          type="button"
+          onClick={() => {
+            onCancel();
+            handleClose();
+          }}
+        >
+          Cancel
+        </CancelButton>
+        <UpdateButton
+          type="button"
+          onClick={() => {
+            onConfirm();
+            handleClose();
+          }}
+          disabled={Boolean(isUploading)}
+        >
+          {confirmLabel ?? (isUploading ? "Updating…" : "Update")}
+        </UpdateButton>
       </Footer>
     </Content>
   );

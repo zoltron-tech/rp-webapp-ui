@@ -28,6 +28,12 @@ import { useProfileSave } from "./use-profile-save";
 const VALID_IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
+/** Detect GIFs by magic bytes (GIF87a / GIF89a) — not by file extension or MIME type. */
+async function isGifFile(file: File): Promise<boolean> {
+  const bytes = new Uint8Array(await file.slice(0, 6).arrayBuffer());
+  return bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46; // G I F
+}
+
 function clamp(v: number, min: number, max: number) {
   return Math.min(max, Math.max(min, v));
 }
@@ -64,12 +70,13 @@ type Props = {
 export function LandingSection({ onSelect }: Props) {
   const novelist = useGlobalState("novelist");
   const user = useGlobalState("user");
+  const isGifLocked = (novelist?.level ?? 1) < 2;
   const avatar = useProfileState("avatar");
   const firstName = useProfileState("firstName");
   const lastName = useProfileState("lastName");
   const image = useProfileState("image");
   const about = useProfileState("about");
-  const note = useProfileState("note");
+  const noteObj = useProfileState("note");
   const setProfileState = useProfileStoreSet();
   const { saveNovelist, loading } = useProfileSave();
   const { uploadMedia } = useUploadMedia();
@@ -147,6 +154,13 @@ export function LandingSection({ onSelect }: Props) {
   };
 
   const handleMediaSelect = async (url: string) => {
+    // Level gate — the dialog already blocks this when isGifLocked, but guard here too
+    if (isGifLocked) {
+      setError(
+        "✦ GIF avatars are a Level 2 perk — keep writing to level up and unlock animated avatars!",
+      );
+      return;
+    }
     setError(null);
     setPendingMediaUrl(url);
   };
@@ -164,6 +178,15 @@ export function LandingSection({ onSelect }: Props) {
       setError("File too large (max 10 MB).");
       return;
     }
+
+    // Level gate — detect GIF by magic bytes, not extension/MIME type
+    if (isGifLocked && (await isGifFile(file))) {
+      setError(
+        "✦ GIF avatars are a Level 2 perk — keep writing to level up and unlock animated avatars!",
+      );
+      return;
+    }
+
     setError(null);
 
     const reader = new FileReader();
@@ -286,6 +309,17 @@ export function LandingSection({ onSelect }: Props) {
 
   const handleSave = async () => {
     setError(null);
+    // Defensive gate: block if a GIF/library avatar somehow reached state for a level < 2 novelist
+    if (
+      isGifLocked &&
+      avatarChanged &&
+      ((image ?? "").includes("klipy.com") || (image ?? "").endsWith(".gif"))
+    ) {
+      setError(
+        "✦ GIF avatars are a Level 2 perk — keep writing to level up and unlock animated avatars!",
+      );
+      return;
+    }
     const result = await saveNovelist();
     if (!result.ok) {
       setError("Failed to save profile. Please try again.");
@@ -349,7 +383,14 @@ export function LandingSection({ onSelect }: Props) {
             <S.LandingHeroSaveButton
               type="button"
               onClick={handleSave}
-              disabled={loading || imageUploading}
+              disabled={
+                loading ||
+                imageUploading ||
+                (isGifLocked &&
+                  avatarChanged &&
+                  ((image ?? "").includes("klipy.com") ||
+                    (image ?? "").endsWith(".gif")))
+              }
             >
               {loading ? "Saving..." : imageUploading ? "Uploading..." : "Save"}
             </S.LandingHeroSaveButton>
@@ -365,7 +406,7 @@ export function LandingSection({ onSelect }: Props) {
         <S.LandingHeroAvatarWrap>
           <AvatarUploadField
             src={avatar?.src || image || null}
-            note={note || ""}
+            note={noteObj?.text || ""}
             alt={firstName || "Avatar"}
             nwImage={avatar}
             onAvatarClick={handleAvatarClick}
@@ -383,6 +424,7 @@ export function LandingSection({ onSelect }: Props) {
           onOpenChange={setAvatarDialogOpen}
           onUploadSelect={() => fileInputRef.current?.click()}
           onMediaSelect={handleMediaSelect}
+          isGifLocked={isGifLocked}
         />
         <S.LandingHeroEditRow>
           <S.LandingHeroNameRow>
@@ -426,7 +468,7 @@ export function LandingSection({ onSelect }: Props) {
             <S.LandingCardChip $active={Boolean(image)}>
               Avatar
             </S.LandingCardChip>
-            <S.LandingCardChip $active={Boolean(note)}>Note</S.LandingCardChip>
+            <S.LandingCardChip $active={Boolean(noteObj?.text)}>Note</S.LandingCardChip>
             <S.LandingCardChip $active={themeColor != null}>
               Theme
             </S.LandingCardChip>

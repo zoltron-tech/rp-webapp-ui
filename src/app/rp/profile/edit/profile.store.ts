@@ -3,13 +3,13 @@ import {
   useStoreSet,
   useStoreState,
 } from "@/context/store/use-store";
-import type { NWImage } from "@/types";
+import type { NWImage, NovelistNote } from "@/types";
 import type { Accent, ThemeType } from "@/types/theme";
 
 export type ProfileState = {
   firstName: string | null;
   lastName: string | null;
-  note: string | null;
+  note: NovelistNote | null;
   palette: Accent;
   theme: ThemeType;
   about: string | null;
@@ -17,11 +17,14 @@ export type ProfileState = {
   /** Avatar with crop/position data. When set, used for avatar display
    *  instead of the plain `image` URL. */
   avatar: NWImage | null;
+  /** Cover banner with crop/position data. Displayed behind the avatar on the profile page. */
+  banner: NWImage | null;
 };
 
 export const INITIAL_STATE: ProfileState = {
   about: null,
   avatar: null,
+  banner: null,
   firstName: null,
   image: null,
   lastName: null,

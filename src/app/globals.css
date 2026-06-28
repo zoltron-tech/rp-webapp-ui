@@ -14,6 +14,13 @@
 /* Mint */
 @import "@radix-ui/colors/mint-dark.css";
 @import "@radix-ui/colors/mint-dark-alpha.css";
+/* Amber (theme accent — also used for warnings) */
+/* Sand (background for amber theme) */
+@import "@radix-ui/colors/sand-dark.css";
+@import "@radix-ui/colors/sand-dark-alpha.css";
+/* Red */
+@import "@radix-ui/colors/red-dark.css";
+@import "@radix-ui/colors/red-dark-alpha.css";
 
 /* Background colors */
 /* Olive */
@@ -346,6 +353,251 @@ textarea {
     --accent-10: var(--mint-10);
     --accent-11: var(--mint-11);
     --accent-12: var(--mint-12);
+
+    --accent: var(--accent-6);
+    --accent-hover: var(--accent-7);
+    --accent-active: var(--accent-5);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  .amber {
+    --bg-1: var(--sand-1);
+    --bg-2: var(--sand-2);
+    --bg-3: var(--sand-3);
+    --bg-4: var(--sand-4);
+    --bg-5: var(--sand-5);
+    --bg-6: var(--sand-6);
+    --bg-7: var(--sand-7);
+    --bg-8: var(--sand-8);
+    --bg-9: var(--sand-9);
+    --bg-10: var(--sand-10);
+    --bg-11: var(--sand-11);
+    --bg-12: var(--sand-12);
+
+    --accent-1: var(--amber-1);
+    --accent-a1: var(--amber-a1);
+    --accent-2: var(--amber-2);
+    --accent-a2: var(--amber-a2);
+    --accent-3: var(--amber-3);
+    --accent-a3: var(--amber-a3);
+    --accent-4: var(--amber-4);
+    --accent-a4: var(--amber-a4);
+    --accent-5: var(--amber-5);
+    --accent-a5: var(--amber-a5);
+    --accent-6: var(--amber-6);
+    --accent-a6: var(--amber-a6);
+    --accent-7: var(--amber-7);
+    --accent-a7: var(--amber-a7);
+    --accent-8: var(--amber-8);
+    --accent-a8: var(--amber-a8);
+    --accent-9: var(--amber-9);
+    --accent-a9: var(--amber-a9);
+    --accent-10: var(--amber-10);
+    --accent-a10: var(--amber-a10);
+    --accent-11: var(--amber-11);
+    --accent-a11: var(--amber-a11);
+    --accent-12: var(--amber-12);
+    --accent-a12: var(--amber-a12);
+
+    --accent: var(--accent-6);
+    --accent-hover: var(--accent-7);
+    --accent-active: var(--accent-5);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  /* Lotus: dusty rose-purple — bg uses mauve-dark (already imported, matches #988B94) */
+  .lotus {
+    --bg-1: var(--mauve-1);
+    --bg-2: var(--mauve-2);
+    --bg-3: var(--mauve-3);
+    --bg-4: var(--mauve-4);
+    --bg-5: var(--mauve-5);
+    --bg-6: var(--mauve-6);
+    --bg-7: var(--mauve-7);
+    --bg-8: var(--mauve-8);
+    --bg-9: var(--mauve-9);
+    --bg-10: var(--mauve-10);
+    --bg-11: var(--mauve-11);
+    --bg-12: var(--mauve-12);
+
+    /* Custom lotus scale — step 9 is the dusty rose #bf7db1 */
+    --lotus-1: #130d12;
+    --lotus-a1: #bf7db107;
+    --lotus-2: #1c1420;
+    --lotus-a2: #bf7db110;
+    --lotus-3: #291d2b;
+    --lotus-a3: #bf7db11e;
+    --lotus-4: #342535;
+    --lotus-a4: #bf7db12b;
+    --lotus-5: #3e2d3f;
+    --lotus-a5: #bf7db139;
+    --lotus-6: #503b4e;
+    --lotus-a6: #bf7db14d;
+    --lotus-7: #684a64;
+    --lotus-a7: #bf7db167;
+    --lotus-8: #8d5e83;
+    --lotus-a8: #bf7db18b;
+    --lotus-9: #bf7db1;
+    --lotus-a9: #bf7db1ee;
+    --lotus-10: #c98ebb;
+    --lotus-a10: #c98ebbee;
+    --lotus-11: #d9a8d0;
+    --lotus-a11: #d9a8d0f5;
+    --lotus-12: #f0dded;
+    --lotus-a12: #f0ddedfb;
+
+    --accent-1: var(--lotus-1);
+    --accent-a1: var(--lotus-a1);
+    --accent-2: var(--lotus-2);
+    --accent-a2: var(--lotus-a2);
+    --accent-3: var(--lotus-3);
+    --accent-a3: var(--lotus-a3);
+    --accent-4: var(--lotus-4);
+    --accent-a4: var(--lotus-a4);
+    --accent-5: var(--lotus-5);
+    --accent-a5: var(--lotus-a5);
+    --accent-6: var(--lotus-6);
+    --accent-a6: var(--lotus-a6);
+    --accent-7: var(--lotus-7);
+    --accent-a7: var(--lotus-a7);
+    --accent-8: var(--lotus-8);
+    --accent-a8: var(--lotus-a8);
+    --accent-9: var(--lotus-9);
+    --accent-a9: var(--lotus-a9);
+    --accent-10: var(--lotus-10);
+    --accent-a10: var(--lotus-a10);
+    --accent-11: var(--lotus-11);
+    --accent-a11: var(--lotus-a11);
+    --accent-12: var(--lotus-12);
+    --accent-a12: var(--lotus-a12);
+
+    --accent: var(--lotus-9);
+    --accent-hover: var(--lotus-10);
+    --accent-active: var(--lotus-8);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  /* Lime: forest green — bg uses olive-dark (already imported, matches #8E988B) */
+  .lime {
+    --bg-1: var(--olive-1);
+    --bg-2: var(--olive-2);
+    --bg-3: var(--olive-3);
+    --bg-4: var(--olive-4);
+    --bg-5: var(--olive-5);
+    --bg-6: var(--olive-6);
+    --bg-7: var(--olive-7);
+    --bg-8: var(--olive-8);
+    --bg-9: var(--olive-9);
+    --bg-10: var(--olive-10);
+    --bg-11: var(--olive-11);
+    --bg-12: var(--olive-12);
+
+    /* Custom lime scale — step 9 is #60b03b */
+    --lime-1: #0b1009;
+    --lime-a1: #60b03b06;
+    --lime-2: #121a0e;
+    --lime-a2: #60b03b0f;
+    --lime-3: #192413;
+    --lime-a3: #60b03b1c;
+    --lime-4: #1f2f19;
+    --lime-a4: #60b03b2a;
+    --lime-5: #263a1f;
+    --lime-a5: #60b03b39;
+    --lime-6: #2e4c26;
+    --lime-a6: #60b03b4d;
+    --lime-7: #3b622f;
+    --lime-a7: #60b03b68;
+    --lime-8: #4b7d3b;
+    --lime-a8: #60b03b8d;
+    --lime-9: #60b03b;
+    --lime-a9: #60b03bec;
+    --lime-10: #72c44b;
+    --lime-a10: #72c44bec;
+    --lime-11: #94d570;
+    --lime-a11: #94d570f5;
+    --lime-12: #c9eeb1;
+    --lime-a12: #c9eeb1fb;
+
+    --accent-1: var(--lime-1);
+    --accent-a1: var(--lime-a1);
+    --accent-2: var(--lime-2);
+    --accent-a2: var(--lime-a2);
+    --accent-3: var(--lime-3);
+    --accent-a3: var(--lime-a3);
+    --accent-4: var(--lime-4);
+    --accent-a4: var(--lime-a4);
+    --accent-5: var(--lime-5);
+    --accent-a5: var(--lime-a5);
+    --accent-6: var(--lime-6);
+    --accent-a6: var(--lime-a6);
+    --accent-7: var(--lime-7);
+    --accent-a7: var(--lime-a7);
+    --accent-8: var(--lime-8);
+    --accent-a8: var(--lime-a8);
+    --accent-9: var(--lime-9);
+    --accent-a9: var(--lime-a9);
+    --accent-10: var(--lime-10);
+    --accent-a10: var(--lime-a10);
+    --accent-11: var(--lime-11);
+    --accent-a11: var(--lime-a11);
+    --accent-12: var(--lime-12);
+    --accent-a12: var(--lime-a12);
+
+    --accent: var(--lime-9);
+    --accent-hover: var(--lime-10);
+    --accent-active: var(--lime-8);
+
+    /* Dark text on bright lime accent surfaces (buttons, badges) */
+    --accent-fg: var(--lime-1);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  .red {
+    --bg-1: var(--mauve-1);
+    --bg-2: var(--mauve-2);
+    --bg-3: var(--mauve-3);
+    --bg-4: var(--mauve-4);
+    --bg-5: var(--mauve-5);
+    --bg-6: var(--mauve-6);
+    --bg-7: var(--mauve-7);
+    --bg-8: var(--mauve-8);
+    --bg-9: var(--mauve-9);
+    --bg-10: var(--mauve-10);
+    --bg-11: var(--mauve-11);
+    --bg-12: var(--mauve-12);
+
+    --accent-1: var(--red-1);
+    --accent-a1: var(--red-a1);
+    --accent-2: var(--red-2);
+    --accent-a2: var(--red-a2);
+    --accent-3: var(--red-3);
+    --accent-a3: var(--red-a3);
+    --accent-4: var(--red-4);
+    --accent-a4: var(--red-a4);
+    --accent-5: var(--red-5);
+    --accent-a5: var(--red-a5);
+    --accent-6: var(--red-6);
+    --accent-a6: var(--red-a6);
+    --accent-7: var(--red-7);
+    --accent-a7: var(--red-a7);
+    --accent-8: var(--red-8);
+    --accent-a8: var(--red-a8);
+    --accent-9: var(--red-9);
+    --accent-a9: var(--red-a9);
+    --accent-10: var(--red-10);
+    --accent-a10: var(--red-a10);
+    --accent-11: var(--red-11);
+    --accent-a11: var(--red-a11);
+    --accent-12: var(--red-12);
+    --accent-a12: var(--red-a12);
 
     --accent: var(--accent-6);
     --accent-hover: var(--accent-7);

@@ -13,11 +13,14 @@ import {
   FcCalendar,
   FcComments,
   FcConferenceCall,
+  FcFlashOn,
+  FcPortraitMode,
+  FcRating,
   FcReading,
   FcShare,
   FcTreeStructure,
 } from "react-icons/fc";
-import { GiCheckMark, GiCrossMark } from "react-icons/gi";
+import { GiCheckMark, GiCrossMark, GiTrophy } from "react-icons/gi";
 import { GoChevronRight } from "react-icons/go";
 import { IoMdPersonAdd } from "react-icons/io";
 import { IoPersonRemove } from "react-icons/io5";
@@ -62,6 +65,7 @@ import { toFormattedDate } from "@/utils/helpers";
 import { getConversationByUsernameAction } from "../../conversations/actions";
 import { getUserActivities } from "../../home/actions";
 import * as HomeS from "../../home/styles";
+import { getNovelistRankByIdAction } from "../../leaderboard/actions";
 import { getNovelistAction } from "../../novelists/actions";
 import { getAllStoryboardsByUsernameAction } from "../../story/actions";
 import {
@@ -340,6 +344,11 @@ export default function UserProfilePage({}) {
   const [supportMessage, setSupportMessage] = useState("");
   const user = useGlobalState("user");
   const userNovelist = useGlobalState("novelist");
+  const novelistRank = useGlobalState("novelistRank");
+  // Rank for the profile being viewed (null = loading, undefined = failed/N/A)
+  const [profileRank, setProfileRank] = useState<number | null | undefined>(
+    undefined,
+  );
   const username = params?.slug as string;
   const isCurrentUser = username === user?.username;
   const [novelist, setNovelist] = useState<Novelist | null>(
@@ -726,6 +735,25 @@ export default function UserProfilePage({}) {
     }
   }, [userNovelist, isCurrentUser]);
 
+  // Refresh own rank when viewing own profile
+  useEffect(() => {
+    if (!isCurrentUser || authState !== "LOGGED_IN" || !userNovelist?.id) return;
+    void getNovelistRankByIdAction(userNovelist.id).then((result) => {
+      if (!("message" in result)) {
+        setGlobalState({ novelistRank: result.rank });
+      }
+    });
+  }, [isCurrentUser, authState, userNovelist?.id]);
+
+  // Fetch rank for other novelists once their ID is known
+  useEffect(() => {
+    if (isCurrentUser || !novelist?.id) return;
+    setProfileRank(null);
+    void getNovelistRankByIdAction(novelist.id).then((result) => {
+      setProfileRank("message" in result ? undefined : result.rank);
+    });
+  }, [isCurrentUser, novelist?.id]);
+
   useEffect(() => {
     if (authState === "UNINITIALIZED") {
       routeToPage(ROUTES.Onboarding);
@@ -890,43 +918,52 @@ export default function UserProfilePage({}) {
         isConfirmDisabled={supportMessage.trim() === ""}
       />
 
-      <S.Banner
-        src={
-          novelist?.image && !novelist.image.endsWith(".gif")
-            ? novelist.image
-            : ""
-        }
-      />
       <S.Content
         id="profile-tour-step-1"
         className={classNames(profileAccent)}
         data-accent={profileAccent}
       >
         <S.ContentRight>
-          <Flex
-            direction="row"
-            justify="flex-start"
-            style={{ marginBottom: "-70px", overflow: "visible", width: "90%" }}
-          >
-            <S.Avatar
-              src={novelist?.image ?? null}
-              alt={novelist?.firstName ?? "Avatar"}
-              username={novelist?.username}
-              nwImage={novelist?.avatar}
+          <S.BannerSection>
+            <S.Banner
+              src={
+                novelist?.banner?.src
+                  ? novelist.banner.src
+                  : novelist?.image && !novelist.image.endsWith(".gif")
+                    ? novelist.image
+                    : ""
+              }
+              $blurred={!novelist?.banner?.src}
+              $x={novelist?.banner?.crop?.x}
+              $y={novelist?.banner?.crop?.y}
+              $scale={
+                novelist?.banner?.crop && novelist.banner.crop.width > 0
+                  ? novelist.banner.crop.width / 100
+                  : undefined
+              }
             />
-            <S.AvatarMobile
-              src={novelist?.image ?? null}
-              alt="profile-picture"
-              username={novelist?.username}
-              nwImage={novelist?.avatar}
-            />
-            <ShouldRender
-              if={novelist?.note?.text !== undefined && novelist?.note?.text?.length > 0}
-            >
-              <S.NoteContainer>{novelist?.note?.text}</S.NoteContainer>
-            </ShouldRender>
-          </Flex>
-          <S.ContentInner>
+            <S.BannerAvatarRow>
+              <S.Avatar
+                src={novelist?.image ?? null}
+                alt={novelist?.firstName ?? "Avatar"}
+                username={novelist?.username}
+                nwImage={novelist?.avatar}
+              />
+              <S.AvatarMobile
+                src={novelist?.image ?? null}
+                alt="profile-picture"
+                username={novelist?.username}
+                nwImage={novelist?.avatar}
+              />
+              <ShouldRender if={Boolean(novelist?.note?.text)}>
+                <S.NoteContainer $color={novelist?.note?.color ?? null}>
+                  {novelist?.note?.emoji && (
+                    <S.NoteEmoji>{novelist.note.emoji}</S.NoteEmoji>
+                  )}
+                  {novelist?.note?.text}
+                </S.NoteContainer>
+              </ShouldRender>
+            </S.BannerAvatarRow>
             <ShouldRender if={authState === "LOGGED_IN"}>
               <S.ProfileDropdownMenuContainer>
                 {renderConnectionDropdown(novelist?.connection, username)}
@@ -935,6 +972,11 @@ export default function UserProfilePage({}) {
                     variant="bordered"
                     trigger={<BsThreeDots size={18} />}
                     items={[
+                      {
+                        icon: <FcPortraitMode size={22} />,
+                        label: "Edit profile",
+                        onClick: () => routeToPage(ROUTES.Profile.Edit),
+                      },
                       {
                         icon: <FcAnswers size={22} />,
                         label: `Copy username`,
@@ -1040,6 +1082,8 @@ export default function UserProfilePage({}) {
                 </ShouldRender>
               </S.ProfileDropdownMenuContainer>
             </ShouldRender>
+          </S.BannerSection>
+          <S.ContentInner>
             <Flex id="profile-tour-step-2">
               <S.NameMobile>
                 {novelist?.firstName} {novelist?.lastName}
@@ -1095,6 +1139,39 @@ export default function UserProfilePage({}) {
                   </S.InfoText>
                 </Flex>
               </Flex>
+              <ShouldRender if={typeof novelist?.level === "number"}>
+                <S.LevelChipRow>
+                  <S.LevelChip
+                    onClick={() => routeToPage(ROUTES.Levels)}
+                  >
+                    <FcRating size={13} />
+                    Lv. {novelist?.level}
+                  </S.LevelChip>
+                  <S.XPChip
+                    onClick={() =>
+                      routeToPage(ROUTES.Leaderboard.Novelists)
+                    }
+                  >
+                    <FcFlashOn size={13} />
+                    {novelist?.totalPoints?.toLocaleString()} XP
+                  </S.XPChip>
+                  {(() => {
+                    const rank = isCurrentUser ? novelistRank : profileRank;
+                    if (rank === undefined) return null;
+                    if (rank === null) return <S.RankBadgeShimmer />;
+                    return (
+                      <S.RankBadge
+                        onClick={() =>
+                          routeToPage(ROUTES.Leaderboard.Novelists)
+                        }
+                      >
+                        <GiTrophy size={13} />
+                        #{rank.toLocaleString()}
+                      </S.RankBadge>
+                    );
+                  })()}
+                </S.LevelChipRow>
+              </ShouldRender>
             </ShouldRender>
             <ShouldRender
               if={mutualFriends !== undefined && mutualFriends?.length > 0}

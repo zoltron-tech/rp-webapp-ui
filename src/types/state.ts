@@ -5,6 +5,7 @@ import type {
   Novelist,
   NovelistWorldNotification,
   Prompt,
+  PromptThreadComment,
   User,
 } from ".";
 import type { Activity } from "./activity";
@@ -62,10 +63,14 @@ export interface StoreState {
   cachedOOCPosts: Prompt[] | null;
   /** First page of friend activities — prefetched on login, shared by /rp/home and /rp/explore. */
   cachedHomeActivities: Activity[] | null;
+  /** First page of outgoing thread interactions — cached per session. */
+  cachedOutgoingThreads: PromptThreadComment[] | null;
   /** When true, shows the install-NW-as-app prompt before routing to onboarding. */
   showInstallAppPrompt: boolean;
   /** When true, shows the Join-Discord prompt over the welcome page after onboarding. */
   showJoinDiscordPrompt: boolean;
   /** True for the brief window between finishing onboarding and viewing the welcome page. */
   justOnboarded: boolean;
+  /** Leaderboard rank of the currently logged-in novelist — null until fetched, refreshed on profile/edit-profile open. */
+  novelistRank: number | null;
 }

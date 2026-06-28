@@ -37,6 +37,8 @@ export interface Muse {
   privacy: PrivacyLevel;
   useAccent: boolean;
   useExtraImages: boolean;
+  totalPoints: number;
+  level: number;
 }
 
 export interface MuseAboutSection {
@@ -111,6 +113,7 @@ export type Novelist = {
   note: NovelistNote | null;
   image: string;
   avatar: NWImage | null;
+  banner: NWImage | null;
   museCount: number;
   palette: number;
   muses: Muse[];
@@ -121,9 +124,11 @@ export type Novelist = {
   about: string | null;
   isOnboarded: boolean;
   isVerified: boolean;
+  totalPoints: number;
+  level: number;
 };
 
-export type UpdateNovelistPayload = Omit<Partial<Novelist>, "firstName"> & {
+export type UpdateNovelistPayload = Omit<Partial<Novelist>, "firstName" | "note"> & {
   firstName: string;
 };
 
@@ -138,6 +143,7 @@ export interface Friend {
   connection: string | null;
   muses: Muse[];
   mutualFriendCount: number;
+  rank?: number;
 }
 
 export interface Fandom {

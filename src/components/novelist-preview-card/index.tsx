@@ -41,9 +41,12 @@ type NovelistPreview = {
 
 type Props = {
   novelist: NovelistPreview;
+  rank?: number;
 };
 
-export const NovelistPreviewCard: FC<Props> = ({ novelist }) => {
+export const NovelistPreviewCard: FC<Props> = ({ novelist, rank }) => {
+  const rankTier =
+    rank === 1 || rank === 2 || rank === 3 ? rank : undefined;
   const { routeToPage, baseDataLoader } = usePageRouter();
   const currentNovelist = useGlobalState("novelist");
   const setGlobalState = useGlobalStoreSet();
@@ -217,9 +220,25 @@ export const NovelistPreviewCard: FC<Props> = ({ novelist }) => {
     );
   };
 
-  return (
-    <S.CardWrapper>
-      <S.AccentStrip />
+  const onGoToLeaderboard = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    routeToPage(ROUTES.Leaderboard.Novelists);
+  };
+
+  const card = (
+    <S.CardWrapper $rank={rankTier}>
+      {rankTier && (
+        <S.RankTag $rank={rankTier} onClick={onGoToLeaderboard}>
+          <S.RankTagEmoji>{S.RANK_EMOJI[rankTier]}</S.RankTagEmoji>
+          <S.RankTagText>
+            <S.RankTagOrdinal $rank={rankTier}>
+              {S.RANK_ORDINAL[rankTier]}
+            </S.RankTagOrdinal>
+            <S.RankTagSub>rank</S.RankTagSub>
+          </S.RankTagText>
+        </S.RankTag>
+      )}
+      <S.AccentStrip $rank={rankTier} />
       <S.Body>
         <S.AvatarWrapper>
           <S.StyledAvatar
@@ -274,4 +293,10 @@ export const NovelistPreviewCard: FC<Props> = ({ novelist }) => {
       </S.Body>
     </S.CardWrapper>
   );
+
+  if (rankTier) {
+    return <S.RankFrame $rank={rankTier}>{card}</S.RankFrame>;
+  }
+
+  return card;
 };

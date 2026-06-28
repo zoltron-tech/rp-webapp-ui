@@ -51,7 +51,7 @@ export const Container = styled.div`
   &.primary {
     background-color: var(--accent);
     border: none;
-    color: var(--text);
+    color: var(--accent-fg, var(--text));
     padding: 10px 20px;
 
     & span {

@@ -938,7 +938,17 @@ export const ChatBubble: FC<Props> = ({
   const isSender = message.sender.username === currentUsername;
   const isActivityMessage = message.type?.toLowerCase() === "activity";
 
-  const messageText = message.message || "";
+  const rawMessageText = message.message || "";
+  // Normalise backend-generated anchor HTML (<a href="URL">URL</a>) to plain
+  // URLs before any rendering so the URL is picked up once by extractUrls and
+  // rendered once by toRenderableMessage instead of leaking tag text.
+  const messageText = useMemo(() => {
+    if (!rawMessageText.includes("<a ")) return rawMessageText;
+    return rawMessageText.replace(
+      /<a\s[^>]*href="([^"]+)"[^>]*>.*?<\/a>/gi,
+      (_, href: string) => href,
+    );
+  }, [rawMessageText]);
   const urls = useMemo(() => extractUrls(messageText), [messageText]);
   const hasAttachments = !!message.attachments?.length;
 

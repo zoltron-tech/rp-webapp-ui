@@ -3,6 +3,8 @@
 import { ShouldRender } from "@novelist-world/ui";
 import { useState } from "react";
 import { FaUser } from "react-icons/fa6";
+import { FcFlashOn, FcRating } from "react-icons/fc";
+import { GiTrophy } from "react-icons/gi";
 import { GrEdit } from "react-icons/gr";
 import { PrivacyIcon } from "@/components/common/privacy-icon";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -14,9 +16,11 @@ import PennedBy from "./PennedBy";
 type Props = {
   muse: Muse | null;
   isOwnMuse: boolean;
+  museRank: number | null;
+  museRankLoading: boolean;
 };
 
-export function MuseInfoSection({ muse, isOwnMuse }: Props) {
+export function MuseInfoSection({ muse, isOwnMuse, museRank, museRankLoading }: Props) {
   const accent = muse?.useAccent ? muse.accent : undefined;
   const { routeToPage } = usePageRouter();
   const [avatarError, setAvatarError] = useState(false);
@@ -62,6 +66,37 @@ export function MuseInfoSection({ muse, isOwnMuse }: Props) {
                 <S.FandomValue color={muse?.fandom?.color || "#444"}>
                   {muse?.fandom?.name}
                 </S.FandomValue>
+              </ShouldRender>
+              <ShouldRender if={typeof muse?.level === "number"}>
+                <S.InfoLevelRow>
+                  <S.InfoLevelBadge
+                    accent={accent ?? null}
+                    onClick={() =>
+                      routeToPage(ROUTES.Leaderboard.Muses)
+                    }
+                  >
+                    <FcRating size={13} />
+                    Lv. {muse?.level}
+                  </S.InfoLevelBadge>
+                  <S.InfoLevelXP
+                    onClick={() =>
+                      routeToPage(ROUTES.Leaderboard.Muses)
+                    }
+                  >
+                    <FcFlashOn size={13} />
+                    {muse?.totalPoints?.toLocaleString()} XP
+                  </S.InfoLevelXP>
+                  {museRankLoading ? (
+                    <S.InfoRankBadgeShimmer />
+                  ) : museRank !== null ? (
+                    <S.InfoRankBadge
+                      onClick={() => routeToPage(ROUTES.Leaderboard.Muses)}
+                    >
+                      <GiTrophy size={13} />
+                      #{museRank.toLocaleString()}
+                    </S.InfoRankBadge>
+                  ) : null}
+                </S.InfoLevelRow>
               </ShouldRender>
             </S.InfoHeaderSection>
 

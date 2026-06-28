@@ -4,9 +4,15 @@ import { useCallback, useState } from "react";
 import { updateUserTheme } from "@/app/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
-import type { NovelistNote, NWImage, UpdateNovelistPayload } from "@/types/novelist";
+import type { NWImage, NovelistNote, UpdateNovelistPayload } from "@/types/novelist";
 import type { Accent } from "@/types/theme";
-import { updateUserNovelist } from "../../novelists/actions";
+import { API_MESSAGE } from "@/utils/constants";
+import {
+  addNoteAction,
+  deleteBannerAction,
+  deleteNoteAction,
+  updateUserNovelist,
+} from "../../novelists/actions";
 import { useProfileState, useProfileStoreSet } from "./profile.store";
 
 type SaveResult = { ok: true } | { ok: false; message: string };
@@ -27,8 +33,9 @@ export function useProfileSave() {
   const lastName = useProfileState("lastName");
   const image = useProfileState("image");
   const avatar = useProfileState("avatar");
+  const banner = useProfileState("banner");
   const about = useProfileState("about");
-  const note = useProfileState("note");
+  const noteObj = useProfileState("note");
   const palette = useProfileState("palette");
 
   const [loading, setLoading] = useState(false);
@@ -37,10 +44,10 @@ export function useProfileSave() {
     const payload: UpdateNovelistPayload = {
       about: about ?? "",
       avatar: avatar ?? undefined,
+      banner: banner,
       firstName: (firstName ?? "").trim(),
       image: avatar?.src ?? image ?? undefined,
       lastName: (lastName ?? "").trim(),
-      note: note != null ? { text: note, color: novelist?.note?.color ?? null, emoji: novelist?.note?.emoji ?? null } : null,
     };
 
     setLoading(true);
@@ -58,31 +65,74 @@ export function useProfileSave() {
         friends: novelist?.friends ?? [],
         friendsCount: novelist?.friendsCount ?? 0,
         isVerified: novelist?.isVerified ?? false,
+        level: novelist?.level ?? response.level,
         museCount: novelist?.museCount ?? 0,
         muses: novelist?.muses ?? [],
+        totalPoints: novelist?.totalPoints ?? response.totalPoints,
       },
     });
     setProfileState({
       about: response.about || "",
       avatar: (response.avatar as NWImage | null) ?? null,
+      banner: (response.banner as NWImage | null) ?? null,
       firstName: response.firstName || "",
       image: response.image || "",
       lastName: response.lastName || "",
-      note: (response.note as NovelistNote | null)?.text ?? null,
+      note: response.note ?? null,
     });
 
     return { ok: true };
   }, [
     about,
     avatar,
+    banner,
     firstName,
     image,
     lastName,
-    note,
     novelist,
     setGlobalState,
     setProfileState,
   ]);
+
+  const deleteBanner = useCallback(async (): Promise<SaveResult> => {
+    setLoading(true);
+    const result = await deleteBannerAction();
+    setLoading(false);
+
+    if (result.message !== API_MESSAGE.Success) {
+      return { message: result.message, ok: false };
+    }
+
+    setGlobalState({
+      novelist: novelist ? { ...novelist, banner: null } : undefined,
+    });
+    setProfileState({ banner: null });
+    return { ok: true };
+  }, [novelist, setGlobalState, setProfileState]);
+
+  const saveNote = useCallback(async (): Promise<SaveResult> => {
+    let result: NovelistNote | { message: string };
+    if (noteObj?.text?.trim()) {
+      result = await addNoteAction(
+        noteObj.text.trim(),
+        noteObj.color ?? null,
+        noteObj.emoji ?? null,
+      );
+    } else {
+      result = await deleteNoteAction();
+    }
+
+    if ("message" in result && result.message !== "success") {
+      return { message: result.message, ok: false };
+    }
+
+    const savedNote = "text" in result ? (result as NovelistNote) : null;
+    setGlobalState({
+      novelist: novelist ? { ...novelist, note: savedNote } : undefined,
+    });
+    setProfileState({ note: savedNote });
+    return { ok: true };
+  }, [noteObj, novelist, setGlobalState, setProfileState]);
 
   const saveTheme = useCallback(async (): Promise<SaveResult> => {
     setLoading(true);
@@ -96,10 +146,14 @@ export function useProfileSave() {
       return { message: response.message as string, ok: false };
     }
 
-    setGlobalState({ user: response.user });
-    setProfileState({ palette: Number(palette) as Accent });
+    const newPalette = Number(palette) as Accent;
+    setGlobalState({
+      user: response.user,
+      ...(novelist ? { novelist: { ...novelist, palette: newPalette } } : {}),
+    });
+    setProfileState({ palette: newPalette });
     return { ok: true };
-  }, [palette, setGlobalState, setProfileState]);
+  }, [novelist, palette, setGlobalState, setProfileState]);
 
   /**
    * Save only the fields that actually differ from current global state.
@@ -107,25 +161,47 @@ export function useProfileSave() {
    */
   const saveAll = useCallback(
     async (
-      opts: { novelist?: boolean; theme?: boolean } = {
+      opts: { novelist?: boolean; theme?: boolean; note?: boolean } = {
         novelist: true,
+        note: true,
         theme: true,
       },
     ): Promise<SaveResult> => {
+      const bannerDeleted =
+        opts.novelist &&
+        banner === null &&
+        (novelist?.banner ?? null) !== null;
+
       const novelistDirty =
         opts.novelist &&
         ((firstName ?? "").trim() !== (novelist?.firstName ?? "") ||
           (lastName ?? "").trim() !== (novelist?.lastName ?? "") ||
           (about ?? "") !== (novelist?.about ?? "") ||
-          (note ?? "") !== (novelist?.note?.text ?? "") ||
           (image ?? "") !== (novelist?.image ?? "") ||
-          avatar !== (novelist?.avatar ?? null));
+          avatar !== (novelist?.avatar ?? null) ||
+          (banner !== null && banner !== (novelist?.banner ?? null)));
+
+      const noteDirty =
+        opts.note !== false &&
+        ((noteObj?.text ?? "") !== (novelist?.note?.text ?? "") ||
+          (noteObj?.color ?? null) !== (novelist?.note?.color ?? null) ||
+          (noteObj?.emoji ?? null) !== (novelist?.note?.emoji ?? null));
 
       const themeDirty =
         opts.theme && Number(palette) !== Number(user?.palette ?? 0);
 
+      if (bannerDeleted) {
+        const r = await deleteBanner();
+        if (!r.ok) return r;
+      }
+
       if (novelistDirty) {
         const r = await saveNovelist();
+        if (!r.ok) return r;
+      }
+
+      if (noteDirty) {
+        const r = await saveNote();
         if (!r.ok) return r;
       }
 
@@ -134,7 +210,7 @@ export function useProfileSave() {
         if (!r.ok) return r;
       }
 
-      if (novelistDirty || themeDirty) {
+      if (bannerDeleted || novelistDirty || noteDirty || themeDirty) {
         successToast("Profile updated successfully.");
       }
 
@@ -143,18 +219,21 @@ export function useProfileSave() {
     [
       about,
       avatar,
+      banner,
       firstName,
       image,
       lastName,
-      note,
+      noteObj,
       novelist,
       palette,
+      deleteBanner,
       saveNovelist,
+      saveNote,
       saveTheme,
       successToast,
       user?.palette,
     ],
   );
 
-  return { loading, saveAll, saveNovelist, saveTheme };
+  return { loading, saveAll, saveNote, saveNovelist, saveTheme };
 }

@@ -19,7 +19,7 @@ import { AppAlertDialog } from "@/components/dialog";
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { VideoViewer } from "@/components/image-viewer/VideoViewer";
 import { useGlobalState } from "@/context/store/stores";
-import { useNsfwCheck } from "@/hooks/use-nsfw-check";
+import { classifyUrlForUpload } from "@/hooks/use-nsfw-check";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import type { Muse } from "@/types";
@@ -40,7 +40,6 @@ function GalleryImageItem({
   url,
   width,
   height,
-  skipNsfw,
   onItemClick,
   isCardBg,
   isWallpaper,
@@ -50,50 +49,20 @@ function GalleryImageItem({
   url: string;
   width: number;
   height: number;
-  skipNsfw: boolean;
   onItemClick: () => void;
   isCardBg: boolean;
   isWallpaper: boolean;
   isOwner: boolean;
   onDelete: () => void;
 }) {
-  const [revealed, setRevealed] = useState(false);
-  const isNsfw = useNsfwCheck(url, skipNsfw);
-  const showOverlay = isNsfw === true && !revealed;
-  const showBlur = isNsfw === null || showOverlay;
-
   return (
-    <S.GalleryItem
-      style={{ height, width }}
-      onClick={showOverlay ? undefined : onItemClick}
-    >
-      <S.GalleryImage
-        src={url}
-        alt="Gallery media"
-        style={{
-          filter: showBlur ? "blur(20px)" : undefined,
-          transition: "filter 0.3s ease",
-        }}
-      />
+    <S.GalleryItem style={{ height, width }} onClick={onItemClick}>
+      <S.GalleryImage src={url} alt="Gallery media" />
       {isCardBg && <S.GalleryBadge>Card BG</S.GalleryBadge>}
       {isWallpaper && (
         <S.GalleryBadge style={{ left: isCardBg ? "70px" : "5px" }}>
           Wallpaper
         </S.GalleryBadge>
-      )}
-      {showOverlay && (
-        <GalleryNsfwOverlay>
-          <GalleryNsfwLabel>⚠️ Sensitive content</GalleryNsfwLabel>
-          <GalleryNsfwReveal
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setRevealed(true);
-            }}
-          >
-            See anyway
-          </GalleryNsfwReveal>
-        </GalleryNsfwOverlay>
       )}
       {isOwner && (
         <S.GalleryDeleteBtn
@@ -116,7 +85,6 @@ function JustifiedGallery({
   onItemClick,
   cardBgSrc,
   wallpaperSrc,
-  skipNsfw,
   isOwner,
   onDeleteItem,
 }: {
@@ -124,7 +92,6 @@ function JustifiedGallery({
   onItemClick: (idx: number) => void;
   cardBgSrc?: string;
   wallpaperSrc?: string;
-  skipNsfw: boolean;
   isOwner: boolean;
   onDeleteItem: (url: string) => void;
 }) {
@@ -279,7 +246,6 @@ function JustifiedGallery({
                 url={item.url}
                 width={item.width}
                 height={item.height}
-                skipNsfw={skipNsfw}
                 onItemClick={() => onItemClick(mediaUrls.indexOf(item.url))}
                 isCardBg={item.url === cardBgSrc}
                 isWallpaper={item.url === wallpaperSrc}
@@ -310,7 +276,7 @@ const VALID_TYPES = [
 ];
 const MAX_FILE_SIZE = 30 * 1024 * 1024;
 
-type PendingFile = { file: File; previewUrl: string; isVideo: boolean };
+type PendingFile = { file: File; previewUrl: string; isVideo: boolean; isChecking: boolean };
 
 function UploadPanel({
   museId,
@@ -344,7 +310,7 @@ function UploadPanel({
         setError(`Gallery is full (${MAX_TOTAL} files maximum).`);
         return;
       }
-      const accepted: PendingFile[] = [];
+      const newFiles: PendingFile[] = [];
       for (const file of files.slice(0, remaining)) {
         if (!VALID_TYPES.includes(file.type)) {
           setError("Unsupported type. Allowed: PNG, JPG, GIF, WEBP, MP4, MOV.");
@@ -354,13 +320,26 @@ function UploadPanel({
           setError("A file exceeds the 30 MB limit.");
           continue;
         }
-        accepted.push({
-          file,
-          isVideo: file.type === "video/mp4" || file.type === "video/quicktime",
-          previewUrl: URL.createObjectURL(file),
+        const isVideo = file.type === "video/mp4" || file.type === "video/quicktime";
+        newFiles.push({ file, isVideo, previewUrl: URL.createObjectURL(file), isChecking: !isVideo });
+      }
+      if (newFiles.length === 0) return;
+      setPendingFiles((prev) => [...prev, ...newFiles]);
+
+      for (const pending of newFiles) {
+        if (pending.isVideo) continue;
+        classifyUrlForUpload(pending.previewUrl).then((isNsfw) => {
+          if (isNsfw) {
+            URL.revokeObjectURL(pending.previewUrl);
+            setPendingFiles((prev) => prev.filter((f) => f.previewUrl !== pending.previewUrl));
+            setError("An image contains sensitive content and cannot be uploaded.");
+          } else {
+            setPendingFiles((prev) =>
+              prev.map((f) => f.previewUrl === pending.previewUrl ? { ...f, isChecking: false } : f),
+            );
+          }
         });
       }
-      setPendingFiles((prev) => [...prev, ...accepted]);
     },
     [existingCount, pendingFiles.length],
   );
@@ -374,6 +353,7 @@ function UploadPanel({
 
   const handleUpload = useCallback(async () => {
     if (!museId || pendingFiles.length === 0) return;
+    if (pendingFiles.some((f) => f.isChecking)) return;
     setUploading(true);
     setError(null);
     const uploadedUrls: string[] = [];
@@ -403,6 +383,7 @@ function UploadPanel({
   }, [museId, pendingFiles, uploadMedia, successToast, onUploaded]);
 
   const canAddMore = existingCount + pendingFiles.length < MAX_TOTAL;
+  const anyChecking = pendingFiles.some((f) => f.isChecking);
   const scrollRowRef = useRef<HTMLDivElement>(null);
   const SCROLL_STEP = 98; // thumb width (90) + gap (8)
 
@@ -451,9 +432,12 @@ function UploadPanel({
                       height: "100%",
                       objectFit: "cover",
                       width: "100%",
+                      filter: f.isChecking ? "blur(8px)" : undefined,
+                      transition: "filter 0.3s ease",
                     }}
                   />
                 )}
+                {f.isChecking && <UploadCheckingOverlay>Checking…</UploadCheckingOverlay>}
                 <UploadThumbRemove
                   type="button"
                   aria-label="Remove"
@@ -498,12 +482,14 @@ function UploadPanel({
           <UploadSubmitBtn
             type="button"
             onClick={handleUpload}
-            disabled={uploading}
+            disabled={uploading || anyChecking}
           >
             <FiUploadCloud size={15} />
             {uploading
               ? `Uploading ${pendingFiles.length} file${pendingFiles.length > 1 ? "s" : ""}…`
-              : `Upload ${pendingFiles.length} file${pendingFiles.length > 1 ? "s" : ""}`}
+              : anyChecking
+                ? "Checking images…"
+                : `Upload ${pendingFiles.length} file${pendingFiles.length > 1 ? "s" : ""}`}
           </UploadSubmitBtn>
         )}
       </UploadActions>
@@ -529,6 +515,7 @@ export function GallerySection({ muse, media }: Props) {
   const [confirmDeleteUrl, setConfirmDeleteUrl] = useState<string | null>(null);
   const [localMedia, setLocalMedia] = useState<string[]>(media ?? []);
   const accent = muse?.useAccent ? muse.accent : undefined;
+  const isMediaLoading = media === null;
 
   // Keep localMedia in sync when the parent refreshes the prop
   useEffect(() => {
@@ -594,22 +581,35 @@ export function GallerySection({ muse, media }: Props) {
           <S.InfoDivider $accent={accent ?? null} />
           <S.InfoSectionLabel>Gallery</S.InfoSectionLabel>
           <S.ScrollableContent accent={accent}>
-            {/* Owner: always-visible Add Media button */}
-            <ShouldRender if={isOwner}>
-              <GalleryAddMediaBtn
-                type="button"
-                onClick={() => setUploadOpen(true)}
-              >
-                <FiPlus size={14} />
-                Add Media
-              </GalleryAddMediaBtn>
+            <ShouldRender if={isMediaLoading}>
+              <S.ShimmerGrid>
+                <S.ShimmerBlock $height="130px" />
+                <S.ShimmerBlock $height="130px" />
+                <S.ShimmerBlock $height="100px" />
+                <S.ShimmerBlock $height="100px" />
+                <S.ShimmerBlock $height="115px" />
+                <S.ShimmerBlock $height="115px" />
+              </S.ShimmerGrid>
             </ShouldRender>
 
-            <ShouldRender if={localMedia.length === 0}>
-              <S.SectionEmpty>No media yet.</S.SectionEmpty>
+            <ShouldRender if={!isMediaLoading}>
+              {/* Owner: always-visible Add Media button */}
+              <ShouldRender if={isOwner}>
+                <GalleryAddMediaBtn
+                  type="button"
+                  onClick={() => setUploadOpen(true)}
+                >
+                  <FiPlus size={14} />
+                  Add Media
+                </GalleryAddMediaBtn>
+              </ShouldRender>
+
+              <ShouldRender if={localMedia.length === 0}>
+                <S.SectionEmpty>No media yet.</S.SectionEmpty>
+              </ShouldRender>
             </ShouldRender>
 
-            <ShouldRender if={localMedia.length > 0}>
+            <ShouldRender if={!isMediaLoading && localMedia.length > 0}>
               <AppImageViewer
                 src={!currentIsVideo ? (currentItem ?? "") : ""}
                 alt="Gallery media"
@@ -621,7 +621,6 @@ export function GallerySection({ muse, media }: Props) {
                 nextSrc={galleryNextSrc}
                 onPrev={goPrev}
                 onNext={goNext}
-                skipNsfwCheck={isOwner}
               />
               <VideoViewer
                 src={currentIsVideo ? (currentItem ?? "") : ""}
@@ -637,7 +636,6 @@ export function GallerySection({ muse, media }: Props) {
               <JustifiedGallery
                 mediaUrls={localMedia}
                 onItemClick={setGalleryIndex}
-                skipNsfw={isOwner}
                 isOwner={isOwner}
                 onDeleteItem={handleDeleteMedia}
                 cardBgSrc={
@@ -693,41 +691,6 @@ export function GallerySection({ muse, media }: Props) {
 }
 
 // ── Inline styled components ───────────────────────────────────────────────
-
-const GalleryNsfwOverlay = styled.div`
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-`;
-
-const GalleryNsfwLabel = styled.span`
-  color: #fff;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-align: center;
-  padding: 0 8px;
-`;
-
-const GalleryNsfwReveal = styled.button`
-  all: unset;
-  box-sizing: border-box;
-  padding: 4px 12px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
-  font-size: 0.7rem;
-  cursor: pointer;
-  &:hover {
-    background: rgba(255, 255, 255, 0.25);
-  }
-`;
 
 const GalleryAddMediaBtn = styled.button`
   all: unset;
@@ -819,6 +782,20 @@ const UploadThumb = styled.div`
   border: 1px solid var(--bg-6);
   background: var(--bg-3);
   flex-shrink: 0;
+`;
+
+const UploadCheckingOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  pointer-events: none;
 `;
 
 const UploadThumbRemove = styled.button`

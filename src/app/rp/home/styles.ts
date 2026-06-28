@@ -7,6 +7,19 @@ const shimmerMove = keyframes`
   100% { background-position: -200% 0; }
 `;
 
+const spin = keyframes`
+  to { transform: rotate(360deg); }
+`;
+
+export const SpinnerRing = styled.div`
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-6);
+  border-top-color: var(--accent);
+  animation: ${spin} 0.7s linear infinite;
+`;
+
 const shimmer = css`
   background: linear-gradient(
     90deg,
@@ -72,6 +85,68 @@ export const ShimmerBlock = styled.div<{ $height?: string }>`
   height: ${({ $height }) => $height ?? "120px"};
   width: 100%;
   border-radius: 8px;
+  ${shimmer}
+`;
+
+// ─── Carousel card shimmers ───────────────────────────────────────────────────
+
+/** Matches MusePreviewCard home-variant dimensions (180 × 300, 120 × 220 mobile). */
+export const MuseCardShimmer = styled.div`
+  flex-shrink: 0;
+  width: 180px;
+  height: 300px;
+  border-radius: 8px;
+  ${shimmer}
+
+  @media (max-width: 600px) {
+    width: 120px;
+    height: 220px;
+  }
+`;
+
+/** Matches NovelistPreviewCard dimensions (220 × 246, 155 × 188 mobile). */
+export const NovelistCardShimmer = styled.div`
+  flex-shrink: 0;
+  width: 220px;
+  height: 246px;
+  border-radius: 8px;
+  ${shimmer}
+
+  @media (max-width: 600px) {
+    width: 155px;
+    height: 188px;
+  }
+`;
+
+// ─── Sidebar friend shimmers ──────────────────────────────────────────────────
+
+export const SidebarShimmerList = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 8px;
+  width: 100%;
+`;
+
+export const SidebarShimmerItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+`;
+
+export const SidebarShimmerAvatar = styled.div`
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  ${shimmer}
+`;
+
+export const SidebarShimmerName = styled.div`
+  height: 8px;
+  width: 44px;
+  border-radius: 4px;
   ${shimmer}
 `;
 

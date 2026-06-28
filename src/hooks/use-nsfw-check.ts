@@ -6,7 +6,7 @@ import { getModel } from "@/lib/nsfw-model";
 // (artistic/suggestive content), so it requires a much higher confidence.
 // "Porn" and "Hentai" are flagged at a lower threshold to catch mixed results.
 const CLASS_THRESHOLDS: Record<string, number> = {
-  Hentai: 0.99,
+  Hentai: 0.80,
   Porn: 0.9,
   Sexy: 0.99,
 };
@@ -65,7 +65,7 @@ const toCanvas = (img: HTMLImageElement): HTMLCanvasElement => {
   return canvas;
 };
 
-const classifyUrl = async (src: string): Promise<boolean> => {
+export const classifyUrl = async (src: string): Promise<boolean> => {
   if (resultCache.has(src)) return resultCache.get(src) as boolean;
   const existing = inflight.get(src);
   if (existing) return existing;
@@ -111,6 +111,38 @@ const classifyUrl = async (src: string): Promise<boolean> => {
 
   inflight.set(src, promise);
   return promise;
+};
+
+/**
+ * Upload-time NSFW classification. Runs a fresh check (no cache), logs all
+ * class probabilities regardless of outcome, and returns whether the image is
+ * unsafe. Use this instead of `classifyUrl` in upload handlers.
+ */
+export const classifyUrlForUpload = async (src: string): Promise<boolean> => {
+  await acquire();
+  try {
+    const img = await loadImage(src);
+    const canvas = toCanvas(img);
+    const model = await getModel();
+    const predictions = await model.classify(canvas);
+    const isNsfw = predictions.some(
+      (p) =>
+        p.className in CLASS_THRESHOLDS &&
+        p.probability > CLASS_THRESHOLDS[p.className],
+    );
+    console.log(
+      `[NSFW] upload-check — ${isNsfw ? "🔴 UNSAFE" : "✅ SAFE"} |`,
+      predictions
+        .map((p) => `${p.className}: ${(p.probability * 100).toFixed(1)}%`)
+        .join(" | "),
+    );
+    return isNsfw;
+  } catch (err) {
+    console.warn("[NSFW] upload-check failed:", err);
+    return false;
+  } finally {
+    release();
+  }
 };
 
 /**

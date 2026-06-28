@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BiSolidConversation } from "react-icons/bi";
 import { FiMoreVertical } from "react-icons/fi";
 import { GiBookCover } from "react-icons/gi";
@@ -10,10 +10,10 @@ import { TiInfoLarge } from "react-icons/ti";
 import { ShouldRender } from "@/components/common";
 import { useGlobalState } from "@/context/store/stores";
 import { useStateMachine } from "@/hooks";
-import { useNsfwCheck } from "@/hooks/use-nsfw-check";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { Muse, MuseAboutSection, Prompt } from "@/types";
 import { Logger } from "@/utils/services";
+import { getMuseRankAction } from "../../leaderboard/actions";
 import {
   getMuseAboutSectionsAction,
   getMuseAction,
@@ -49,11 +49,11 @@ export default function MuseProfilePage({}) {
     null,
   );
   const [media, setMedia] = useState<string[] | null>(null);
-  const [bannerNsfwRevealed, setBannerNsfwRevealed] = useState(false);
-  const [cardNsfwRevealed, setCardNsfwRevealed] = useState(false);
+  const [museRank, setMuseRank] = useState<number | null>(null);
+  const [museRankLoading, setMuseRankLoading] = useState(true);
   const username = params?.slug as string;
   const { baseDataLoader } = usePageRouter();
-  const { transition, is } = useStateMachine<CARD_STATE>({
+  const { transition, is, state } = useStateMachine<CARD_STATE>({
     initial: "MUSE_INFO",
     transitions: {
       BACK_STORY: {
@@ -115,25 +115,52 @@ export default function MuseProfilePage({}) {
     },
   });
 
+  useEffect(() => {
+    if (!muse?.id) return;
+    getMuseRankAction(muse.id).then((result) => {
+      if (result && !("message" in result)) setMuseRank(result.rank);
+      setMuseRankLoading(false);
+    });
+  }, [muse?.id]);
+
   Logger.debug("params are:", params);
 
   const isOwnMuse = Boolean(
     user?.username && muse?.pennedBy?.username === user.username,
   );
 
+  const promptsFetchedRef = useRef(false);
+  const aboutSectionsFetchedRef = useRef(false);
+  const mediaFetchedRef = useRef(false);
+
   useEffect(() => {
     if (authState === "LOADING" || muse) return;
-
-    const slug = username;
-    baseDataLoader(() => getMuseAction(slug)).then(setMuse);
-    baseDataLoader(() => getPromptsByMuseAction(slug)).then(setPrompts);
-    baseDataLoader(() => getMuseAboutSectionsAction(slug)).then(
-      setAboutSections,
-    );
-    baseDataLoader(() => getMuseMediaAction(slug)).then((result) => {
-      if (Array.isArray(result)) setMedia(result);
-    });
+    baseDataLoader(() => getMuseAction(username)).then(setMuse);
   }, [authState]);
+
+  useEffect(() => {
+    if (state !== "PROMPTS" || promptsFetchedRef.current || authState === "LOADING") return;
+    promptsFetchedRef.current = true;
+    baseDataLoader(() => getPromptsByMuseAction(username)).then((data) => {
+      setPrompts(data ?? []);
+    });
+  }, [state, authState]);
+
+  useEffect(() => {
+    if (state !== "BACK_STORY" || aboutSectionsFetchedRef.current || authState === "LOADING") return;
+    aboutSectionsFetchedRef.current = true;
+    baseDataLoader(() => getMuseAboutSectionsAction(username)).then((data) => {
+      setAboutSections(data ?? []);
+    });
+  }, [state, authState]);
+
+  useEffect(() => {
+    if (state !== "GALLERY" || mediaFetchedRef.current || authState === "LOADING") return;
+    mediaFetchedRef.current = true;
+    baseDataLoader(() => getMuseMediaAction(username)).then((result) => {
+      setMedia(Array.isArray(result) ? result : []);
+    });
+  }, [state, authState]);
 
   const getSafeImage = (src?: string) => src || "";
   const accent = muse?.useAccent ? (muse.accent ?? undefined) : undefined;
@@ -154,40 +181,20 @@ export default function MuseProfilePage({}) {
         bgSize: `${cardCrop.width}%`,
       }
     : null;
-  const isNsfwBanner = useNsfwCheck(bannerSrc || null, isOwnMuse);
-  const isNsfwCard = useNsfwCheck(cardBgSrc || null, isOwnMuse);
-  const showBannerNsfwOverlay = isNsfwBanner === true && !bannerNsfwRevealed;
-  const showCardNsfwOverlay = isNsfwCard === true && !cardNsfwRevealed;
-  const showCardBlur =
-    !!cardBgSrc && (isNsfwCard === null || showCardNsfwOverlay);
-
   return (
     <S.MuseContainer>
       <S.Banner
         src={bannerSrc || null}
         filterValues={
-          showBannerNsfwOverlay
-            ? { blur: 40, brightness: 20, greyscale: 50 }
-            : muse?.useExtraImages
-              ? (muse?.wallpaper?.filterValues ?? {
-                  blur: 20,
-                  brightness: 50,
-                  greyscale: 20,
-                })
-              : { blur: 20, brightness: 50, greyscale: 20 }
+          muse?.useExtraImages
+            ? (muse?.wallpaper?.filterValues ?? {
+                blur: 20,
+                brightness: 50,
+                greyscale: 20,
+              })
+            : { blur: 20, brightness: 50, greyscale: 20 }
         }
       />
-      {showBannerNsfwOverlay && (
-        <S.BannerNSFWOverlay>
-          <S.NSFWLabel>⚠️ Sensitive background content</S.NSFWLabel>
-          <S.NSFWRevealButton
-            type="button"
-            onClick={() => setBannerNsfwRevealed(true)}
-          >
-            See anyway
-          </S.NSFWRevealButton>
-        </S.BannerNSFWOverlay>
-      )}
 
       {/* Main character card */}
       <S.CardWrapper>
@@ -196,28 +203,8 @@ export default function MuseProfilePage({}) {
             banner={cardBgSrc}
             $bgSize={cardBgCss?.bgSize}
             $bgPosition={cardBgCss?.bgPosition}
-            style={{
-              filter: showCardBlur ? "blur(20px)" : undefined,
-              transition: "filter 0.3s ease",
-            }}
           />
-          {showCardNsfwOverlay && (
-            <S.NSFWOverlay>
-              <S.NSFWLabel>⚠️ Sensitive content</S.NSFWLabel>
-            </S.NSFWOverlay>
-          )}
         </S.ImageWrapper>
-        {showCardNsfwOverlay && (
-          <S.NSFWRevealButton
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setCardNsfwRevealed(true);
-            }}
-          >
-            See anyway
-          </S.NSFWRevealButton>
-        )}
       </S.CardWrapper>
 
       {/* Sections — always show the selected one */}
@@ -226,7 +213,7 @@ export default function MuseProfilePage({}) {
       </ShouldRender>
 
       <ShouldRender if={is("MUSE_INFO")}>
-        <MuseInfoSection muse={muse} isOwnMuse={isOwnMuse} />
+        <MuseInfoSection muse={muse} isOwnMuse={isOwnMuse} museRank={museRank} museRankLoading={museRankLoading} />
       </ShouldRender>
 
       <ShouldRender if={is("CONNECTIONS")}>

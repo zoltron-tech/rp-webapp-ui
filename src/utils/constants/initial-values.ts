@@ -26,6 +26,7 @@ export const EMPTY_FRIEND: Friend = {
 export const INITIAL_NOVELIST: Novelist = {
   about: null,
   avatar: null,
+  banner: null,
   connection: null,
   createdAt: "",
   firstName: "",
@@ -42,6 +43,8 @@ export const INITIAL_NOVELIST: Novelist = {
   palette: 0,
   tier: STANDARD_TIER,
   username: "",
+  totalPoints: 0,
+  level: 0,
 };
 
 export const FANDOMLESS: Fandom = {
@@ -73,6 +76,8 @@ export const INITIAL_MUSE: Muse = {
   useExtraImages: false,
   video: null,
   wallpaper: null,
+  totalPoints: 0,
+  level: 0,
 };
 
 export const INITIAL_STORY_BOARD: StoryBoard = {

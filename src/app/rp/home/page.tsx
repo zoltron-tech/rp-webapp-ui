@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FaChevronRight } from "react-icons/fa6";
 import { FiSearch } from "react-icons/fi";
 import { ActivityBox } from "@/components/activity-box";
-import { ShouldRender } from "@/components/common";
 import { ScrollJumpButton } from "@/components/common/scroll-jump-button";
 import HomeTourGuide from "@/components/home-tour-guide";
 import { LoadMore } from "@/components/load-more/page";
@@ -123,9 +122,9 @@ export default function HomePage() {
   const [feedExplorePrompts, setFeedExplorePrompts] = useState<Prompt[]>(
     () => cachedExplorePrompts ?? [],
   );
-  // OOC posts are always fetched fresh on mount (not seeded from cache)
-  // to avoid showing stale data from a previous login-time prefetch.
-  const [feedOOCPosts, setFeedOOCPosts] = useState<Prompt[]>([]);
+  const [feedOOCPosts, setFeedOOCPosts] = useState<Prompt[]>(
+    () => cachedOOCPosts ?? [],
+  );
   // IDs of prompts fetched on the first page — activities whose target.id
   // matches one of these are hidden from the feed to avoid duplicates.
   const [firstPagePromptIds, setFirstPagePromptIds] = useState<Set<string>>(
@@ -150,6 +149,8 @@ export default function HomePage() {
   const [feedInitializing, setFeedInitializing] = useState(true);
   // Prevents rebuilding the initial mixedFeed if the effect re-runs.
   const feedBuiltRef = useRef(false);
+  // Prevents re-firing the carousel fetches if the effect dep array changes.
+  const carouselFetchedRef = useRef(false);
 
   const [friendsMusesPage, setFriendsMusesPage] = useState(1);
   const [friendsMusesHasMore, setFriendsMusesHasMore] = useState(false);
@@ -162,6 +163,16 @@ export default function HomePage() {
   const [unknownMusesPage, setUnknownMusesPage] = useState(1);
   const [unknownMusesHasMore, setUnknownMusesHasMore] = useState(false);
   const [unknownMusesLoading, setUnknownMusesLoading] = useState(false);
+
+  // Per-section initial-load flags — each section shows its own shimmer
+  // while waiting for its first page of data, independently of the others.
+  const [strangersInitialLoading, setStrangersInitialLoading] = useState(
+    !cachedSuggestions,
+  );
+  const [unknownMusesInitialLoading, setUnknownMusesInitialLoading] =
+    useState(true);
+  const [friendsMusesInitialLoading, setFriendsMusesInitialLoading] =
+    useState(true);
 
   const rightWrapRef = useRef<HTMLDivElement>(null);
 
@@ -198,46 +209,58 @@ export default function HomePage() {
   };
 
   const fetchStrangers = async (page = 1, append = false) => {
-    if (page === 1 && cachedSuggestions) {
-      setStrangersHasMore(cachedSuggestions.length === STRANGERS_PAGE_SIZE);
-      return;
-    }
-    const _strangers = await getStrangerNovelistsAction(
-      page,
-      STRANGERS_PAGE_SIZE,
-    );
-    if (_strangers && !("message" in _strangers)) {
-      setStrangers((prev) =>
-        append ? [...(prev ?? []), ..._strangers] : _strangers,
+    try {
+      if (page === 1 && cachedSuggestions) {
+        setStrangersHasMore(cachedSuggestions.length === STRANGERS_PAGE_SIZE);
+        return;
+      }
+      const _strangers = await getStrangerNovelistsAction(
+        page,
+        STRANGERS_PAGE_SIZE,
       );
-      setStrangersHasMore(_strangers.length === STRANGERS_PAGE_SIZE);
-      if (page === 1) setGlobalState({ friendSuggestions: _strangers });
-    } else {
-      setStrangersHasMore(false);
+      if (_strangers && !("message" in _strangers)) {
+        setStrangers((prev) =>
+          append ? [...(prev ?? []), ..._strangers] : _strangers,
+        );
+        setStrangersHasMore(_strangers.length === STRANGERS_PAGE_SIZE);
+        if (page === 1) setGlobalState({ friendSuggestions: _strangers });
+      } else {
+        setStrangersHasMore(false);
+      }
+    } finally {
+      if (page === 1) setStrangersInitialLoading(false);
     }
   };
 
   const fetchStrangerMuses = async (page = 1, append = false) => {
-    const _muses = await getMusesAction(page, MUSES_PAGE_SIZE, "unknown");
-    if (_muses && !("message" in _muses)) {
-      setUnknownMuses((prev) =>
-        append ? [...(prev ?? []), ..._muses] : _muses,
-      );
-      setUnknownMusesHasMore(_muses.length === MUSES_PAGE_SIZE);
-    } else {
-      setUnknownMusesHasMore(false);
+    try {
+      const _muses = await getMusesAction(page, MUSES_PAGE_SIZE, "unknown");
+      if (_muses && !("message" in _muses)) {
+        setUnknownMuses((prev) =>
+          append ? [...(prev ?? []), ..._muses] : _muses,
+        );
+        setUnknownMusesHasMore(_muses.length === MUSES_PAGE_SIZE);
+      } else {
+        setUnknownMusesHasMore(false);
+      }
+    } finally {
+      if (page === 1) setUnknownMusesInitialLoading(false);
     }
   };
 
   const fetchFriendsMuses = async (page = 1, append = false) => {
-    const _muses = await getMusesAction(page, MUSES_PAGE_SIZE, "friends");
-    if (_muses && !("message" in _muses)) {
-      setFriendsMuses((prev) =>
-        append ? [...(prev ?? []), ..._muses] : _muses,
-      );
-      setFriendsMusesHasMore(_muses.length === MUSES_PAGE_SIZE);
-    } else {
-      setFriendsMusesHasMore(false);
+    try {
+      const _muses = await getMusesAction(page, MUSES_PAGE_SIZE, "friends");
+      if (_muses && !("message" in _muses)) {
+        setFriendsMuses((prev) =>
+          append ? [...(prev ?? []), ..._muses] : _muses,
+        );
+        setFriendsMusesHasMore(_muses.length === MUSES_PAGE_SIZE);
+      } else {
+        setFriendsMusesHasMore(false);
+      }
+    } finally {
+      if (page === 1) setFriendsMusesInitialLoading(false);
     }
   };
 
@@ -288,9 +311,12 @@ export default function HomePage() {
     return [];
   }, [feedExplorePrompts.length, cachedExplorePrompts, setGlobalState]);
 
-  // OOC posts are always fetched fresh — never use a cached value — because
-  // the cache may be from a previous login-time prefetch and be stale.
   const hydrateOOCPosts = useCallback(async (): Promise<Prompt[]> => {
+    if (feedOOCPosts.length > 0) return feedOOCPosts;
+    if (cachedOOCPosts) {
+      setFeedOOCPosts(cachedOOCPosts);
+      return cachedOOCPosts;
+    }
     const inflight = getInflightFeed<Prompt[] | null>("oocPosts");
     const result = await (inflight ?? prefetchOOCPosts(setGlobalState));
     if (result) {
@@ -298,7 +324,7 @@ export default function HomePage() {
       return result;
     }
     return [];
-  }, [setGlobalState]);
+  }, [feedOOCPosts.length, cachedOOCPosts, setGlobalState]);
 
   /**
    * Load more: fetch next page of each paginated source in parallel and
@@ -379,40 +405,57 @@ export default function HomePage() {
   };
 
   useEffect(() => {
-    if (authState === "LOADING") return;
+    // Only proceed once the user is fully authenticated. Guarding strictly on
+    // "LOGGED_IN" prevents a premature run during the initial "LOGGED_OUT"
+    // render (before AuthProvider starts its check) from locking feedBuiltRef
+    // and carouselFetchedRef before real data can be fetched.
+    if (authState !== "LOGGED_IN") return;
 
-    // Stop the page-level loader once the carousel sections are ready.
-    // The activity feed loads independently below with its own skeleton UI.
-    Promise.all([
-      fetchStrangers(),
-      fetchStrangerMuses(),
-      fetchFriendsMuses(),
-    ]).then(() => stopPageLoading());
+    // Fire each carousel section independently so they populate as soon as
+    // their own data arrives — not gated on the slowest sibling.
+    // The ref prevents re-fetching if the effect re-runs due to dep changes.
+    if (!carouselFetchedRef.current) {
+      carouselFetchedRef.current = true;
+      fetchStrangers();
+      fetchStrangerMuses();
+      fetchFriendsMuses();
+      // Page-level loader can stop immediately — each section now has its
+      // own shimmer that clears when its data arrives.
+      stopPageLoading();
+    }
 
     // Hydrate all three feed sources in parallel; build the feed once from the
     // returned data so positions are stable and firstPagePromptIds is accurate.
+    //
+    // feedBuiltRef is set synchronously (before any await) so that concurrent
+    // re-runs of this effect — triggered when hydrateActivities or
+    // hydrateExplorePrompts are recreated after their cache deps update —
+    // cannot start a second parallel chain while the first is still in flight.
     if (!feedBuiltRef.current) {
+      feedBuiltRef.current = true;
       Promise.all([
         hydrateActivities(),
         hydrateExplorePrompts(),
         hydrateOOCPosts(),
-      ]).then(([activities, explorePrompts, oocPosts]) => {
-        if (feedBuiltRef.current) return;
-        feedBuiltRef.current = true;
-        const promptIds = new Set([
-          ...explorePrompts.map((p) => p.id),
-          ...oocPosts.map((p) => p.id),
-        ]);
-        setFirstPagePromptIds(promptIds);
-        setMixedFeed(
-          interleaveFeed(
-            activities.filter((a) => !promptIds.has(a.target.id)),
-            explorePrompts,
-            oocPosts,
-          ),
-        );
-        setFeedInitializing(false);
-      });
+      ])
+        .then(([activities, explorePrompts, oocPosts]) => {
+          const promptIds = new Set([
+            ...explorePrompts.map((p) => p.id),
+            ...oocPosts.map((p) => p.id),
+          ]);
+          setFirstPagePromptIds(promptIds);
+          setMixedFeed(
+            interleaveFeed(
+              activities.filter((a) => !promptIds.has(a.target.id)),
+              explorePrompts,
+              oocPosts,
+            ),
+          );
+          setFeedInitializing(false);
+        })
+        .catch(() => {
+          setFeedInitializing(false);
+        });
     }
   }, [authState, hydrateActivities, hydrateExplorePrompts, hydrateOOCPosts]);
 
@@ -433,13 +476,6 @@ export default function HomePage() {
           <S.ContentContainer className="friends-container">
             <S.SubText>Friends</S.SubText>
             <S.ListContainer id="home-tour-step-1">
-              <ShouldRender
-                if={friendsMuses === undefined || friendsMuses.length === 0}
-              >
-                <S.SubText></S.SubText>
-                <S.SubText></S.SubText>
-                <S.SubText>Add friends? Maybe...</S.SubText>
-              </ShouldRender>
               <S.AddFriendButton
                 onClick={() => routeToPage(ROUTES.Fellows)}
                 title="Find novelists to connect with"
@@ -447,13 +483,30 @@ export default function HomePage() {
               >
                 <FiSearch size={18} />
               </S.AddFriendButton>
-              {novelist?.friends.map((friend) => (
-                <SideBarFriendListItem
-                  key={friend?.username}
-                  novelist={friend}
-                  isRequest={false}
-                />
-              ))}
+              {novelist === null ? (
+                <S.SidebarShimmerList>
+                  {[0, 1, 2, 3].map((i) => (
+                    <S.SidebarShimmerItem key={i}>
+                      <S.SidebarShimmerAvatar />
+                      <S.SidebarShimmerName />
+                    </S.SidebarShimmerItem>
+                  ))}
+                </S.SidebarShimmerList>
+              ) : novelist.friends.length > 0 ? (
+                novelist.friends.map((friend) => (
+                  <SideBarFriendListItem
+                    key={friend?.username}
+                    novelist={friend}
+                    isRequest={false}
+                  />
+                ))
+              ) : (
+                <>
+                  <S.SubText></S.SubText>
+                  <S.SubText></S.SubText>
+                  <S.SubText>Add friends? Maybe...</S.SubText>
+                </>
+              )}
             </S.ListContainer>
           </S.ContentContainer>
         </S.LeftWrapperContainer>
@@ -480,67 +533,102 @@ export default function HomePage() {
               ))}
             </S.PartitionContainer>
           </S.ContentContainer> */}
-          <ShouldRender
-            if={friendsMuses !== undefined && friendsMuses.length > 0}
-          >
+          {(friendsMusesInitialLoading ||
+            (friendsMuses !== undefined && friendsMuses.length > 0)) && (
             <S.ContentContainer id="home-tour-step-2">
               <S.SubText>characters by your friends</S.SubText>
               <S.PartitionContainer>
-                {friendsMuses?.map((knownMuse) => (
-                  <MusePreviewCard key={knownMuse?.id} muse={knownMuse} />
-                ))}
-                {friendsMusesHasMore && (
-                  <S.NextPageCard
-                    onClick={loadNextFriendsMuses}
-                    disabled={friendsMusesLoading}
-                    title="Load more characters"
-                  >
-                    <FaChevronRight size={24} />
-                    <span>More</span>
-                  </S.NextPageCard>
+                {friendsMusesInitialLoading ? (
+                  [0, 1, 2, 3, 4].map((i) => <S.MuseCardShimmer key={i} />)
+                ) : (
+                  <>
+                    {friendsMuses!.map((knownMuse) => (
+                      <MusePreviewCard key={knownMuse?.id} muse={knownMuse} />
+                    ))}
+                    {friendsMusesHasMore && (
+                      <S.NextPageCard
+                        onClick={loadNextFriendsMuses}
+                        disabled={friendsMusesLoading}
+                        title="Load more characters"
+                      >
+                        {friendsMusesLoading ? (
+                          <S.SpinnerRing />
+                        ) : (
+                          <>
+                            <FaChevronRight size={24} />
+                            <span>More</span>
+                          </>
+                        )}
+                      </S.NextPageCard>
+                    )}
+                  </>
                 )}
               </S.PartitionContainer>
             </S.ContentContainer>
-          </ShouldRender>
+          )}
           <S.ContentContainer id="home-tour-step-3">
             <S.SubText>Friend Suggestions</S.SubText>
             <S.PartitionContainer>
-              {friendRequestCards.map((card) => (
-                <NovelistPreviewCard key={card.username} novelist={card} />
-              ))}
-              {strangers?.map((stranger) => (
-                <NovelistPreviewCard
-                  key={stranger?.username}
-                  novelist={stranger}
-                ></NovelistPreviewCard>
-              ))}
-              {strangersHasMore && (
-                <S.NextPageNovelistCard
-                  onClick={loadNextStrangers}
-                  disabled={strangersLoading}
-                  title="Load more suggestions"
-                >
-                  <FaChevronRight size={24} />
-                  <span>More</span>
-                </S.NextPageNovelistCard>
+              {strangersInitialLoading ? (
+                [0, 1, 2, 3].map((i) => <S.NovelistCardShimmer key={i} />)
+              ) : (
+                <>
+                  {friendRequestCards.map((card) => (
+                    <NovelistPreviewCard key={card.username} novelist={card} />
+                  ))}
+                  {strangers?.map((stranger) => (
+                    <NovelistPreviewCard
+                      key={stranger?.username}
+                      novelist={stranger}
+                    />
+                  ))}
+                  {strangersHasMore && (
+                    <S.NextPageNovelistCard
+                      onClick={loadNextStrangers}
+                      disabled={strangersLoading}
+                      title="Load more suggestions"
+                    >
+                      {strangersLoading ? (
+                        <S.SpinnerRing />
+                      ) : (
+                        <>
+                          <FaChevronRight size={24} />
+                          <span>More</span>
+                        </>
+                      )}
+                    </S.NextPageNovelistCard>
+                  )}
+                </>
               )}
             </S.PartitionContainer>
           </S.ContentContainer>
           <S.ContentContainer id="home-tour-step-4">
             <S.SubText>Public Characters out there</S.SubText>
             <S.PartitionContainer>
-              {unknownMuses?.map((unknownMuse) => (
-                <MusePreviewCard key={unknownMuse?.id} muse={unknownMuse} />
-              ))}
-              {unknownMusesHasMore && (
-                <S.NextPageCard
-                  onClick={loadNextUnknownMuses}
-                  disabled={unknownMusesLoading}
-                  title="Load more characters"
-                >
-                  <FaChevronRight size={24} />
-                  <span>More</span>
-                </S.NextPageCard>
+              {unknownMusesInitialLoading ? (
+                [0, 1, 2, 3, 4].map((i) => <S.MuseCardShimmer key={i} />)
+              ) : (
+                <>
+                  {unknownMuses?.map((unknownMuse) => (
+                    <MusePreviewCard key={unknownMuse?.id} muse={unknownMuse} />
+                  ))}
+                  {unknownMusesHasMore && (
+                    <S.NextPageCard
+                      onClick={loadNextUnknownMuses}
+                      disabled={unknownMusesLoading}
+                      title="Load more characters"
+                    >
+                      {unknownMusesLoading ? (
+                        <S.SpinnerRing />
+                      ) : (
+                        <>
+                          <FaChevronRight size={24} />
+                          <span>More</span>
+                        </>
+                      )}
+                    </S.NextPageCard>
+                  )}
+                </>
               )}
             </S.PartitionContainer>
           </S.ContentContainer>

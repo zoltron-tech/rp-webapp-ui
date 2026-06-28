@@ -5,7 +5,6 @@ import { type FC, useMemo, useState } from "react";
 import { FaComments, FaImage, FaStreetView, FaUser } from "react-icons/fa6";
 import { PiBookOpenUserDuotone } from "react-icons/pi";
 import { useGlobalState } from "@/context/store/stores";
-import { useNsfwCheck } from "@/hooks/use-nsfw-check";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { Activity } from "@/types/activity";
 import { ROUTES } from "@/utils/constants/routes";
@@ -100,15 +99,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
       routeToPage(ROUTES.Profile.View(activity.source.urlProp).Index);
   };
 
-  const [nsfwRevealed, setNsfwRevealed] = useState(false);
   const [imgError, setImgError] = useState(false);
-
-  const imageSrc =
-    mediaType === "image" ? (activity?.target.url ?? null) : null;
-  const isOwnActivity = activity?.source.urlProp === user?.username;
-  const isNsfw = useNsfwCheck(imageSrc, isOwnActivity);
-  const showNsfwOverlay = isNsfw === true && !nsfwRevealed;
-  const showBlur = !!imageSrc && (isNsfw === null || showNsfwOverlay);
 
   Logger.info("activity rendered");
 
@@ -157,10 +148,6 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
                 <S.CardBackground
                   banner={activity.target.url || ""}
                   className="image"
-                  style={{
-                    filter: showBlur ? "blur(20px)" : undefined,
-                    transition: "filter 0.3s ease",
-                  }}
                 />
               )}
               {mediaType === "image" && activity.target.url && (
@@ -176,24 +163,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
                   <FaImage size={56} />
                 </S.FallbackImageIcon>
               )}
-              {showNsfwOverlay && (
-                <S.NSFWOverlay>
-                  <S.NSFWLabel>⚠️ Sensitive content</S.NSFWLabel>
-                </S.NSFWOverlay>
-              )}
             </S.ImageWrapper>
-            {showNsfwOverlay && (
-              <S.NSFWRevealButton
-                type="button"
-                className="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setNsfwRevealed(true);
-                }}
-              >
-                See anyway
-              </S.NSFWRevealButton>
-            )}
             <ShouldRender if={mediaType === "video"}>
               <S.Video
                 className="video"

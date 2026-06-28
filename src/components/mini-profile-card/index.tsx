@@ -199,7 +199,7 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
               </S.HeroBanner>
 
               <S.ContentArea>
-                {novelist.note && novelist.note?.text?.length > 0 ? (
+                {novelist.note && novelist.note.text && novelist.note.text.length > 0 ? (
                   <S.NoteQuote>
                     <S.NoteBar />
                     <S.NoteText>{novelist.note.text}</S.NoteText>

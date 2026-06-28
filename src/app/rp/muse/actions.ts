@@ -10,7 +10,7 @@ import type {
 } from "@/types";
 import type { DataType, WithMessage } from "@/types/common";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
-import { transformMuse } from "@/utils/image";
+import { reverseWsrvUrl, transformMuse } from "@/utils/image";
 import { Logger } from "@/utils/services";
 
 const { serverRuntimeConfig } = getConfig();
@@ -354,6 +354,41 @@ export const updateMuseAction = async (
   _muse: CreateUpdateMuse,
 ) => {
   const jwt = await authenticateAndGetJWT();
+
+  // Strip wsrv.nl proxy URLs back to original S3 URLs before sending to the
+  // backend. getMuseAction transforms S3 URLs → wsrv.nl for display, but the
+  // backend expects the raw S3 URL to correctly detect changes and manage S3
+  // cleanup. Sending wsrv.nl URLs would cause the backend to delete the original
+  // S3 file (URL mismatch) and persist a proxy URL in the DB.
+  const muse: CreateUpdateMuse = {
+    ..._muse,
+    image: reverseWsrvUrl(_muse.image),
+    wallpaper: _muse.wallpaper
+      ? {
+          ..._muse.wallpaper,
+          src: reverseWsrvUrl(_muse.wallpaper.src),
+          crop: _muse.wallpaper.crop
+            ? {
+                ..._muse.wallpaper.crop,
+                src: reverseWsrvUrl(_muse.wallpaper.crop.src),
+              }
+            : _muse.wallpaper.crop,
+        }
+      : _muse.wallpaper,
+    cardBackground: _muse.cardBackground
+      ? {
+          ..._muse.cardBackground,
+          src: reverseWsrvUrl(_muse.cardBackground.src),
+          crop: _muse.cardBackground.crop
+            ? {
+                ..._muse.cardBackground.crop,
+                src: reverseWsrvUrl(_muse.cardBackground.crop.src),
+              }
+            : _muse.cardBackground.crop,
+        }
+      : _muse.cardBackground,
+  };
+
   // Choose URL and HTTP method dynamically
   const isUpdate = !!_museId && _museId.trim() !== "";
   const URL = isUpdate
@@ -361,11 +396,11 @@ export const updateMuseAction = async (
     : `${RP_SERVICE_URL}/rp/portfolio/muse`;
   const method = isUpdate ? "PUT" : "POST";
 
-  Logger.debug("updateMuseAction", { method, muse: _muse, URL });
+  Logger.debug("updateMuseAction", { method, muse, URL });
 
   try {
     const response = await fetch(URL, {
-      body: JSON.stringify(_muse),
+      body: JSON.stringify(muse),
       cache: "no-store",
       headers: {
         "Content-Type": "application/json",
@@ -388,7 +423,7 @@ export const updateMuseAction = async (
     const result: WithMessage<Muse> = await response.json();
     Logger.debug("updateMuseAction result", result);
 
-    const muse: Muse = Object.assign(
+    const savedMuse: Muse = Object.assign(
       {},
       {
         ...result,
@@ -396,7 +431,7 @@ export const updateMuseAction = async (
       },
     );
 
-    return muse;
+    return savedMuse;
   } catch (e) {
     Logger.error("updateMuseAction exception", e);
     return { message: API_MESSAGE.Error };

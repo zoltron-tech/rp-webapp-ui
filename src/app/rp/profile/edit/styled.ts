@@ -1,5 +1,5 @@
 import { RadioGroup } from "radix-ui";
-import styled from "styled-components";
+import styled, { css, keyframes } from "styled-components";
 export const EditProfilePageRoot = styled.div``;
 
 export const Card = styled.div`
@@ -295,12 +295,19 @@ export const FieldHeader = styled.div`
 
 export const PaletteGroup = styled(RadioGroup.Root)`
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px;
+  border-radius: 8px;
+  background-color: var(--bg-2);
+`;
+
+export const PaletteRow = styled.div`
+  display: flex;
   flex-direction: row;
   justify-content: center;
   gap: 8px;
-  padding: 8px; /* container padding */
-  border-radius: 8px;
-  background-color: var(--bg-2);
 `;
 
 export const RadioItemContainer = styled.div`
@@ -502,25 +509,254 @@ padding-top: 20px;
 width: 100%;
 `;
 
-export const NoteDialogTextarea = styled.textarea`
-  width: 100%;
-  min-height: 100px;
-  resize: vertical;
-  background: var(--bg-3);
-  color: var(--text);
-  border: 1px solid var(--bg-6);
-  border-radius: 4px;
-  padding: 8px;
-  font-family: var(--font);
-  font-size: var(--font-size-input);
-  box-sizing: border-box;
-  word-break: break-word;
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
-`;
 
 export const NoteDialogBodyWrapper = styled.div`
   padding: 4px 12px 0;
+  max-height: 62vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+`;
+
+// ── Note editable bubble (preview + input combined) ──────────────────────────
+
+export const NoteEditableBubble = styled.div<{ $color: string | null }>`
+  position: relative;
+  isolation: isolate;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 22px;
+  background: ${({ $color }) =>
+    $color
+      ? $color
+      : "linear-gradient(135deg, var(--accent-4) 0%, var(--accent-3) 100%)"};
+  color: ${({ $color }) => ($color ? "#ffffff" : "inherit")};
+  border-radius: 16px;
+  padding: 10px 14px 10px 38px;
+  cursor: text;
+  /* always-visible dashed border signals "editable" */
+  border: 1.5px dashed ${({ $color }) =>
+    $color ? "rgba(255,255,255,0.35)" : "var(--accent-6)"};
+  transition: background 0.25s ease, color 0.25s ease,
+    border-color 0.18s ease, box-shadow 0.18s ease;
+
+  /* solid border + glow when the inner contenteditable is focused */
+  &:focus-within {
+    border-style: solid;
+    border-color: ${({ $color }) => ($color ? "rgba(255,255,255,0.6)" : "var(--accent)")};
+    box-shadow: 0 0 0 3px
+      ${({ $color }) =>
+        $color
+          ? "rgba(255,255,255,0.12)"
+          : "color-mix(in srgb, var(--accent) 18%, transparent)"};
+  }
+
+  /* Thought bubble tail — behind all content */
+  &::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    top: -18px;
+    left: 16px;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    border-left: 18px solid ${({ $color }) => $color ?? "var(--accent-4)"};
+    border-bottom: 18px solid ${({ $color }) => $color ?? "var(--accent-4)"};
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    top: -11px;
+    left: 4px;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    border-left: 10px solid ${({ $color }) => $color ?? "var(--accent-3)"};
+    border-bottom: 10px solid ${({ $color }) => $color ?? "var(--accent-3)"};
+  }
+`;
+
+export const NoteEditableContent = styled.div`
+  outline: none;
+  min-height: 3.6em;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  font-family: var(--font);
+  font-size: var(--font-size-small);
+  color: inherit;
+  background: transparent;
+  caret-color: currentColor;
+
+  &[data-empty]::before {
+    content: attr(data-placeholder);
+    opacity: 0.5;
+    font-style: italic;
+    pointer-events: none;
+    display: block;
+  }
+`;
+
+const noteEmojiWiggle = keyframes`
+  0%   { transform: rotate(45deg) scale(1); }
+  20%  { transform: rotate(10deg) scale(1.45); }
+  45%  { transform: rotate(75deg) scale(1.2); }
+  70%  { transform: rotate(20deg) scale(1.35); }
+  100% { transform: rotate(45deg) scale(1); }
+`;
+
+const notePickerWiggle = keyframes`
+  0%   { transform: scale(1.18); }
+  20%  { transform: scale(1.5) rotate(-12deg); }
+  45%  { transform: scale(1.25) rotate(10deg); }
+  70%  { transform: scale(1.4) rotate(-6deg); }
+  100% { transform: scale(1.18); }
+`;
+
+export const NotePreviewEmoji = styled.span<{ $wiggling?: boolean }>`
+  position: absolute;
+  top: -18px;
+  right: -12px;
+  font-size: 1.75rem;
+  display: inline-block;
+  transform: rotate(45deg);
+  line-height: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.18));
+  ${({ $wiggling }) =>
+    $wiggling &&
+    css`
+      animation: ${noteEmojiWiggle} 0.5s ease;
+    `}
+`;
+
+// ── Note no-color swatch ──────────────────────────────────────────────────────
+
+export const NoteNoColorSwatch = styled.button<{ $active: boolean }>`
+  all: unset;
+  width: 18px;
+  height: 18px;
+  border-radius: 20%;
+  cursor: pointer;
+  border: ${({ $active }) =>
+    $active ? "3px solid var(--text)" : "2px solid var(--bg-7)"};
+  background: linear-gradient(
+      to bottom right,
+      transparent calc(50% - 1px),
+      #ef4444 calc(50% - 1px),
+      #ef4444 calc(50% + 1px),
+      transparent calc(50% + 1px)
+    ),
+    var(--bg-4);
+  transition: transform 0.1s ease, border-color 0.1s ease;
+
+  &:hover {
+    transform: scale(1.15);
+  }
+`;
+
+// ── Note emoji picker ─────────────────────────────────────────────────────────
+
+export const NoteEmojiPickerWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+export const NoteEmojiPickerArrow = styled.button`
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--bg-6);
+  border-radius: 50%;
+  background: var(--bg-2);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 14%, var(--bg-2));
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--bg-6));
+  }
+`;
+
+export const NoteEmojiPickerRow = styled.div`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  touch-action: pan-x;
+  scrollbar-width: none;
+  /* padding gives selected/scaled buttons room to render their
+     box-shadow and scale without being clipped by the scroll container */
+  padding-block: 8px;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+export const NoteEmojiButton = styled.button<{ $selected: boolean; $wiggling?: boolean }>`
+  all: unset;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  font-size: ${({ $selected }) => ($selected ? "1.25rem" : "1.1rem")};
+  cursor: pointer;
+  transition: background 0.12s ease, transform 0.12s ease, box-shadow 0.12s ease, outline-color 0.12s ease;
+
+  /* Selected state is always red — signals "click to remove" */
+  background: ${({ $selected }) =>
+    $selected ? "color-mix(in srgb, #ef4444 22%, var(--bg-3))" : "transparent"};
+  outline: ${({ $selected }) => ($selected ? "2px solid #ef4444" : "1.5px solid transparent")};
+  box-shadow: ${({ $selected }) =>
+    $selected ? "0 0 0 4px color-mix(in srgb, #ef4444 18%, transparent)" : "none"};
+  transform: ${({ $selected }) => ($selected ? "scale(1.18)" : "scale(1)")};
+
+  /* "×" badge always visible when selected */
+  &[data-selected="true"]::after {
+    content: "✕";
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: #ef4444;
+    color: white;
+    font-size: 7px;
+    text-align: center;
+    line-height: 13px;
+    pointer-events: none;
+  }
+
+  &:not([data-selected="true"]):hover {
+    background: var(--bg-4);
+    transform: scale(1.2);
+  }
+
+  &:active {
+    transform: scale(0.92);
+  }
+
+  ${({ $wiggling }) =>
+    $wiggling &&
+    css`
+      animation: ${notePickerWiggle} 0.5s ease;
+    `}
 `;
 
 export const NoteCharCount = styled.span`
@@ -532,6 +768,207 @@ export const NoteCharCount = styled.span`
 
   &.warn {
     color: var(--tomato-a9);
+  }
+`;
+
+export const NoteColorSection = styled.div`
+  margin-top: 14px;
+`;
+
+export const NoteEmojiSection = styled.div`
+  margin-top: 12px;
+`;
+
+export const NoteColorLabel = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+`;
+
+export const NoteLevelGate = styled.span`
+  font-size: var(--font-size-xsmall);
+  color: var(--accent);
+  opacity: 0.8;
+`;
+
+export const NoteColorGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+`;
+
+const colorRowSlideIn = keyframes`
+  from { opacity: 0; transform: translateY(-5px); }
+  to   { opacity: 1; transform: translateY(0); }
+`;
+
+const colorRowSwapIn = keyframes`
+  0%   { opacity: 0.5; transform: translateX(-5px) scale(0.97); }
+  60%  { transform: translateX(2px) scale(1.01); }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
+`;
+
+export const NoteColorGridExpandWrap = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+export const NoteColorGridRow = styled.div<{
+  $slideIn?: boolean;
+  $delay?: number;
+  $swap?: boolean;
+}>`
+  ${({ $slideIn, $delay }) =>
+    $slideIn &&
+    css`
+      animation: ${colorRowSlideIn} 0.18s ease ${($delay ?? 0) * 45}ms both;
+    `}
+  ${({ $swap }) =>
+    $swap &&
+    css`
+      animation: ${colorRowSwapIn} 0.26s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+    `}
+`;
+
+export const NoteColorToggle = styled.button`
+  all: unset;
+  display: block;
+  margin-top: 6px;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: var(--font);
+  user-select: none;
+  opacity: 0.7;
+  transition: color 0.15s ease, opacity 0.15s ease;
+  letter-spacing: 0.01em;
+
+  &:hover {
+    color: var(--accent);
+    opacity: 1;
+  }
+
+  &:focus-visible {
+    outline: 1.5px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+`;
+
+export const NoteColorSwatch = styled.button<{
+  $color: string;
+  $active: boolean;
+}>`
+  all: unset;
+  width: 18px;
+  height: 18px;
+  border-radius: 20%;
+  background: ${({ $color }) => $color};
+  cursor: pointer;
+  border: 3px solid
+    ${({ $active }) => ($active ? "var(--text)" : "transparent")};
+  transition: transform 0.1s ease, border-color 0.1s ease;
+
+  &:hover {
+    transform: scale(1.15);
+  }
+`;
+
+
+// ── Note level-3 perk box ─────────────────────────────────────────────────────
+
+const noteLockPulse = keyframes`
+  0%   { transform: scale(1);    box-shadow: 0 0 0 0   rgba(251,191,36,0); }
+  30%  { transform: scale(1.02); box-shadow: 0 0 0 4px rgba(251,191,36,0.25); }
+  60%  { transform: scale(0.99); box-shadow: 0 0 0 2px rgba(251,191,36,0.1); }
+  100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(251,191,36,0); }
+`;
+
+export const NotePerksBox = styled.div<{ $unlocked?: boolean }>`
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: ${({ $unlocked }) =>
+    $unlocked
+      ? "linear-gradient(135deg, color-mix(in srgb, var(--grass-9) 9%, transparent) 0%, color-mix(in srgb, var(--grass-9) 5%, transparent) 100%)"
+      : "linear-gradient(135deg, rgba(251, 191, 36, 0.09) 0%, rgba(245, 158, 11, 0.05) 100%)"};
+  border: 1px solid ${({ $unlocked }) =>
+    $unlocked
+      ? "color-mix(in srgb, var(--grass-9) 32%, transparent)"
+      : "rgba(251, 191, 36, 0.32)"};
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+`;
+
+export const NotePerksHeader = styled.div<{ $unlocked?: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: ${({ $unlocked }) => ($unlocked ? "var(--grass-9)" : "rgba(251, 191, 36, 0.85)")};
+`;
+
+export const NoteLockBanner = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: linear-gradient(
+    135deg,
+    rgba(251, 191, 36, 0.14) 0%,
+    rgba(245, 158, 11, 0.08) 100%
+  );
+  border: 1px solid rgba(251, 191, 36, 0.42);
+  animation: ${noteLockPulse} 0.45s ease;
+`;
+
+export const NoteLockBannerIcon = styled.span`
+  font-size: 0.95rem;
+  line-height: 1.4;
+  flex-shrink: 0;
+`;
+
+export const NoteLockBannerBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`;
+
+export const NoteLockBannerTitle = styled.span`
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: rgba(251, 191, 36, 0.95);
+  letter-spacing: 0.02em;
+`;
+
+export const NoteLockBannerDesc = styled.span`
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+`;
+
+export const NoteEditHint = styled.p`
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  margin: 0;
+  margin-left: 222px;
+  margin-top: 4px;
+  text-align: left;
+  opacity: 0.7;
+
+  @media (max-width: 480px) {
+    margin-left: 122px;
   }
 `;
 
@@ -763,6 +1200,13 @@ export const LandingHero = styled.div`
   align-items: center;
   gap: 16px;
   padding: 20px 4px 12px;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 4px 8px;
+  }
 `;
 
 export const LandingHeroAvatarWrap = styled.div`
@@ -783,6 +1227,23 @@ export const LandingHeroAvatarWrap = styled.div`
     width: 150px;
     border: 3px solid var(--accent-7);
   }
+
+  @media (max-width: 600px) {
+    label > div {
+      width: 80px;
+      height: 80px;
+    }
+
+    > div {
+      width: 110px;
+      height: 110px;
+    }
+
+    .avatar {
+      width: 110px;
+      height: 110px;
+    }
+  }
 `;
 
 export const LandingHeroEditRow = styled.div`
@@ -791,6 +1252,10 @@ export const LandingHeroEditRow = styled.div`
   align-items: flex-start;
   gap: 12px;
   width: 100%;
+
+  @media (max-width: 600px) {
+    align-items: center;
+  }
 `;
 
 export const LandingHeroNameRow = styled.div`
@@ -1298,6 +1763,57 @@ export const AppearanceSectionBody = styled.div`
   padding: 12px 0;
 `;
 
+export const BannerAvatarContainer = styled.div`
+  position: relative;
+  overflow: visible;
+`;
+
+export const AvatarHangRow = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  padding-left: 64px;
+  overflow: visible;
+  pointer-events: none;
+
+  > * {
+    pointer-events: auto;
+  }
+
+  @media (max-width: 480px) {
+    padding-left: 24px;
+  }
+`;
+
+export const HangingAvatarWrap = styled.div`
+  transform: translateY(50%);
+  flex-shrink: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 5px var(--bg-2);
+
+  @media (max-width: 480px) {
+    transform: translateY(70%);
+    > div:first-child {
+      width: 90px;
+      height: 90px;
+    }
+  }
+`;
+
+export const AvatarHangSpacer = styled.div`
+  padding-top: 72px;
+  padding-left: 64px;
+
+  @media (max-width: 480px) {
+    padding-top: 54px;
+    padding-left: 24px;
+  }
+`;
+
 /**
  * Wraps the parts of the Appearance section that should preview the
  * currently-selected accent (palette swatches + Save button). Adding the
@@ -1321,6 +1837,218 @@ export const AppearanceFieldLabel = styled.label`
   font-weight: var(--font-weight-medium);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+`;
+
+export const PaletteLockBadge = styled.span`
+  position: absolute;
+  bottom: -3px;
+  right: -3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--bg-2);
+  border: 1.5px solid var(--amber-9);
+  color: var(--amber-9);
+  font-size: 9px;
+  font-weight: var(--font-weight-bold);
+  font-family: var(--font);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  line-height: 1;
+`;
+
+export const PaletteLockNote = styled.p`
+  font-size: var(--font-size-small);
+  color: var(--amber-9);
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font);
+  margin: 2px 2px 0;
+`;
+
+// ── Banner edit field ────────────────────────────────────────────────────────
+
+export const BannerEditWrap = styled.div<{
+  $src: string | null;
+  $x: number;
+  $y: number;
+  $scale: number;
+  $locked?: boolean;
+}>`
+  position: relative;
+  width: 100%;
+  aspect-ratio: 10 / 3;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: ${({ $locked }) => ($locked ? "default" : "pointer")};
+  border: 1.5px dashed var(--bg-7);
+  background-color: var(--bg-3);
+  transition: border-color 0.15s ease;
+
+  ${({ $src, $x, $y, $scale }) =>
+    $src
+      ? `
+        background-image: url(${$src});
+        background-repeat: no-repeat;
+        background-size: ${$scale * 100}% auto;
+        background-position: ${$x}% ${$y}%;
+        border-style: solid;
+        border-color: var(--bg-6);
+      `
+      : ""}
+
+  &:hover {
+    ${({ $locked }) => !$locked && "border-color: var(--accent);"}
+  }
+`;
+
+export const BannerDeleteButton = styled.button`
+  all: unset;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: rgba(220, 38, 38, 0.85);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+`;
+
+export const BannerEditHint = styled.span`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  color: #fff;
+  background: rgba(0, 0, 0, 0.42);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+
+  ${BannerEditWrap}:hover & {
+    opacity: 1;
+  }
+`;
+
+export const BannerEmptyContent = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  pointer-events: none;
+  color: var(--text-secondary);
+  transition: color 0.18s ease;
+
+  ${BannerEditWrap}:hover & {
+    color: var(--accent);
+  }
+
+  @media (max-width: 480px) {
+    justify-content: center;
+    padding-left: 120px;
+  }
+`;
+
+export const BannerLockNote = styled.p`
+  font-size: var(--font-size-small);
+  color: var(--amber-9);
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font);
+  margin: 2px 2px 0;
+`;
+
+export const BannerLockBadge = styled.span`
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(35, 35, 35, 0.82);
+  border: 1px solid rgba(180, 180, 180, 0.2);
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: rgba(251, 191, 36, 1);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+  z-index: 1;
+`;
+
+export const BannerLockedStrip = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 8px 12px;
+  background: linear-gradient(
+    to top,
+    rgba(20, 20, 20, 0.88) 0%,
+    rgba(60, 60, 60, 0.45) 100%
+  );
+  border-top: 1px solid rgba(180, 180, 180, 0.2);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: rgba(251, 191, 36, 1);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+  text-align: right;
+  pointer-events: none;
+  z-index: 1;
+
+  @media (max-width: 480px) {
+    font-size: var(--font-size-xxsmall);
+    padding: 6px 10px;
+  }
+`;
+
+export const BannerEmptyIcon = styled.span`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.45;
+  margin-bottom: 4px;
+  transition: opacity 0.18s ease;
+
+  ${BannerEditWrap}:hover & {
+    opacity: 0.85;
+  }
+`;
+
+export const BannerEmptyLabel = styled.span`
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  color: inherit;
+`;
+
+export const BannerFormatLine = styled.span`
+  font-size: 0.65rem;
+  color: inherit;
+  opacity: 0.65;
+  letter-spacing: 0.02em;
 `;
 
 // ── Avatar crop dialog ───────────────────────────────────────────────────────
@@ -1412,4 +2140,118 @@ export const AvatarCropScaleRow = styled.div`
     appearance: none;
     background: transparent;
   }
+`;
+
+// ── Note edit tray (mobile bottom sheet) ─────────────────────────────────────
+
+const noteTraySlideIn = keyframes`
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+`;
+
+const noteTraySlideOut = keyframes`
+  from { transform: translateY(0); }
+  to   { transform: translateY(100%); }
+`;
+
+const noteTrayOverlayIn = keyframes`
+  from { opacity: 0; }
+  to   { opacity: 1; }
+`;
+
+const noteTrayOverlayOut = keyframes`
+  from { opacity: 1; }
+  to   { opacity: 0; }
+`;
+
+export const NoteTrayOverlay = styled.div<{ $closing: boolean }>`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 200;
+  animation: ${({ $closing }) => ($closing ? noteTrayOverlayOut : noteTrayOverlayIn)} 0.28s ease both;
+`;
+
+export const NoteTraySheet = styled.div<{ $closing: boolean }>`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 201;
+  background: var(--bg-2);
+  border-radius: 16px 16px 0 0;
+  border-top: 1px solid var(--bg-5);
+  box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.3);
+  max-height: 88svh;
+  display: flex;
+  flex-direction: column;
+  animation: ${({ $closing }) => ($closing ? noteTraySlideOut : noteTraySlideIn)} 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+  color: var(--text);
+  font-family: var(--font);
+  padding-bottom: 60px; /* space for safe-area-inset-bottom on iOS 15+ */
+`;
+
+export const NoteTrayHandle = styled.div`
+  flex-shrink: 0;
+  width: 36px;
+  height: 4px;
+  background: var(--bg-6);
+  border-radius: 2px;
+  margin: 10px auto 2px;
+`;
+
+export const NoteTrayHeaderBar = styled.div`
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 6px 12px 8px;
+  border-bottom: 1px solid var(--bg-4);
+`;
+
+export const NoteTrayTitle = styled.span`
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text);
+  flex: 1;
+`;
+
+export const NoteTrayActions = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+`;
+
+export const NoteTrayActionButton = styled.button<{ $variant: "cancel" | "confirm" }>`
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  background: ${({ $variant }) =>
+    $variant === "confirm" ? "var(--accent)" : "var(--bg-3)"};
+  color: ${({ $variant }) =>
+    $variant === "confirm" ? "var(--text-primary)" : "var(--text-secondary)"};
+  border: 1px solid
+    ${({ $variant }) => ($variant === "confirm" ? "transparent" : "var(--bg-5)")};
+
+  &:hover {
+    background: ${({ $variant }) =>
+      $variant === "confirm" ? "var(--accent)" : "var(--bg-4)"};
+    color: var(--text);
+  }
+
+  &:active {
+    transform: scale(0.92);
+  }
+`;
+
+export const NoteTrayBody = styled.div`
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 `;

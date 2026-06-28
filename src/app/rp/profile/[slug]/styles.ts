@@ -1,5 +1,5 @@
 import { Container, ContainerClasses } from "@novelist-world/ui";
-import styled, { css } from "styled-components";
+import styled, { css, keyframes } from "styled-components";
 import { Avatar as AvatarCommon, Pill } from "@/components/common";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { AppDropdownMenu } from "@/components/profile-more-dropdown";
@@ -8,7 +8,49 @@ import { Badge } from "../../tiers/styles";
 
 interface BannerProps {
   src: string;
+  $x?: number;
+  $y?: number;
+  $scale?: number;
+  $blurred?: boolean;
 }
+
+/**
+ * In-flow banner container — same width and aspect ratio as the crop dialog
+ * so what the user sees while editing is exactly what renders on the profile.
+ * overflow: visible lets the avatar hang below the bottom edge.
+ */
+export const BannerSection = styled.div`
+  position: relative;
+  width: 800px;
+  aspect-ratio: 5 / 2;
+  overflow: visible;
+  border-radius: 12px 12px 0 0;
+
+  @container profile-content (max-width: 800px) {
+    width: 100%;
+    border-radius: 0;
+  }
+`;
+
+/**
+ * Row anchored to the bottom of BannerSection. BannerSection is now the same
+ * width as ContentInner, so simple padding suffices — no centering math needed.
+ */
+export const BannerAvatarRow = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  overflow: visible;
+  padding-left: 20px;
+  padding-right: 20px;
+  z-index: ${Z_INDEX.AVATAR};
+  pointer-events: none;
+  > * { pointer-events: auto; }
+`;
 
 /**
  * Slide-up compose overlay for mobile "Add Prompt" flow.
@@ -74,21 +116,21 @@ export const AddPromptButton = styled.button`
 `;
 
 export const Banner = styled.div<BannerProps>`
-  width: 100cqw;
-  height: clamp(
-    var(--profile-banner-height-min),
-    30cqw,
-    var(--profile-banner-height-max)
-  );
-  z-index: ${Z_INDEX.BACKGROUND};
   position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
 
   background-image: url(${({ src }) => src});
   background-repeat: no-repeat;
-  background-size: cover;
-  contain: paint;
+  /* When crop data exists use the stored scale/position exactly as the crop
+     dialog set them. Fall back to cover+center only when there is no crop. */
+  background-size: ${({ $scale }) =>
+    $scale != null ? `${$scale * 100}% auto` : "cover"};
+  background-position: ${({ $x, $y, $scale }) =>
+    $scale != null ? `${$x ?? 50}% ${$y ?? 50}%` : "center"};
 
-  ${BLUR_FILTER}
+  ${({ $blurred }) => $blurred && BLUR_FILTER}
 `;
 
 export const EditProfile = styled.div`
@@ -139,8 +181,10 @@ export const ProfileDropdownMenuContainer = styled.div`
   display: flex;
   gap: 6px;
   position: absolute;
-  right: 10px;
-  top: -80px
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: ${Z_INDEX.AVATAR};
 `;
 
 export const ProfileMoreDropdownMenu = styled.div`
@@ -154,15 +198,17 @@ export const ContentInner = styled.div`
   display: flex;
   flex-direction: column;
   border: 1px solid var(--bg-5);
+  border-top: none;
   align-items: center;
   background-color: var(--bg-2);
   width: 800px;
-  border-radius: 12px;
+  border-radius: 0 0 12px 12px;
+  padding-top: 70px;
 
   @container (max-width: 800px) {
     width: 100%;
     padding-inline: 0px;
-    margin-top: 10px;
+    margin-top: 0px;
     border-radius: 0px;
     border-right: unset;
     border-left: unset;
@@ -443,35 +489,35 @@ export const InfoText = styled.div`
 export const Avatar = styled(AvatarNew)`
   box-shadow: 0 0 0 8px var(--bg-2);
   background-color: var(--bg-2);
-  margin-top: 30px;
   height: 250px;
   width: 250px;
-  z-index: 100;
+  flex-shrink: 0;
+  /* Hang 50 % (125 px) below the banner bottom edge */
+  transform: translateY(50%);
+  z-index: 1;
 
-  @container profile-content (max-width: 800px) {
-    & {
-      display: none;
-    }
+  @media (max-width: 800px) {
+    display: none;
   }
 
-    .avatar-fallback {
-    font-size: calc(2*var(--font-size-h1));
+  .avatar-fallback {
+    font-size: calc(2 * var(--font-size-h1));
   }
 `;
 
 export const AvatarMobile = styled(AvatarNew)`
   box-shadow: 0 0 0 5px var(--bg-2);
   background-color: var(--bg-2);
-  margin-top: 20px;
   height: 130px;
   width: 130px;
-  z-index: 100;
+  flex-shrink: 0;
+  /* Hang 50 % (65 px) below the banner bottom edge */
+  transform: translateY(50%);
+  z-index: 1;
   display: none;
 
-  @container profile-content (max-width: 800px) {
-    & {
-      display: block;
-    }
+  @media (max-width: 800px) {
+    display: block;
   }
 `;
 
@@ -500,7 +546,6 @@ export const NameMobile = styled.div`
   ${NameFontStyles};
 
   color: var(--text);
-  margin-top: 70px;
   font-size: 36px;
   width: 100%;
   text-align: center;
@@ -521,24 +566,24 @@ export const UsernameContainer = styled.div`
   max-width: 100%;
 `;
 
-export const NoteContainer = styled.div`
-  width: unset;
-  right: 50px;
-  bottom: -80px;
-  background: linear-gradient(
-    135deg,
-    var(--accent-4) 0%,
-    var(--accent-3) 100%
-  );
-
+export const NoteContainer = styled.div<{ $color?: string | null }>`
+  background: ${({ $color }) =>
+    $color
+      ? $color
+      : "linear-gradient(135deg, var(--accent-4) 0%, var(--accent-3) 100%)"};
+  color: ${({ $color }) => ($color ? "#ffffff" : "inherit")};
   opacity: 95%;
   word-break: break-word;
   border-radius: 20px;
-  padding: 5px 10px;
+  padding: 5px 14px 5px 10px;
   z-index: 100;
   font-size: var(--font-size);
   position: relative;
   overflow: visible;
+  transform: translateY(65%);
+  align-self: flex-end;
+  margin-left: -30px;
+  max-width: 260px;
 
   /* Thought bubble tail */
   &::before {
@@ -549,8 +594,10 @@ export const NoteContainer = styled.div`
     width: 0;
     height: 0;
     border-radius: 50%;
-    border-left: 20px solid var(--accent-4);
-    border-bottom: 20px solid var(--accent-4);
+    border-left: 20px solid
+      ${({ $color }) => ($color ? $color : "var(--accent-4)")};
+    border-bottom: 20px solid
+      ${({ $color }) => ($color ? $color : "var(--accent-4)")};
   }
 
   &::after {
@@ -561,40 +608,50 @@ export const NoteContainer = styled.div`
     width: 0;
     height: 0;
     border-radius: 50%;
-    border-left: 12px solid var(--accent-3);
-    border-bottom: 12px solid var(--accent-3);
+    border-left: 12px solid
+      ${({ $color }) => ($color ? $color : "var(--accent-3)")};
+    border-bottom: 12px solid
+      ${({ $color }) => ($color ? $color : "var(--accent-3)")};
   }
 
-  @container profile-content (max-width: 800px) {
-    & {
-      font-size: var(--font-size-xsmall);
-      width: unset;
-      right: 30px;
-      bottom: -40px;
-    }
+  @media (max-width: 800px) {
+    font-size: var(--font-size-xsmall);
+    transform: translateY(65%);
+    margin-left: -20px;
 
     &::before {
       top: -14px;
       left: 12px;
-      border-radius: 50%;
-      border-left: 12px solid var(--accent-4);
-      border-bottom: 12px solid var(--accent-4);
+      border-left: 12px solid
+        ${({ $color }) => ($color ? $color : "var(--accent-4)")};
+      border-bottom: 12px solid
+        ${({ $color }) => ($color ? $color : "var(--accent-4)")};
     }
 
     &::after {
       top: -10px;
       left: 4px;
-      border-radius: 50%; 
-      border-left: 8px solid var(--accent-3);
-      border-bottom: 8px solid var(--accent-3);
+      border-left: 8px solid
+        ${({ $color }) => ($color ? $color : "var(--accent-3)")};
+      border-bottom: 8px solid
+        ${({ $color }) => ($color ? $color : "var(--accent-3)")};
     }
   }
 
-  @container profile-content (max-width: 300px) {
-    & {
-      display: none;
-    }
+  @media (max-width: 300px) {
+    display: none;
   }
+`;
+
+export const NoteEmoji = styled.span`
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  font-size: 1rem;
+  display: inline-block;
+  transform: rotate(45deg);
+  line-height: 1;
+  pointer-events: none;
 `;
 
 export const MusePillContainer = styled.div`
@@ -732,6 +789,11 @@ export const PostsContainer = styled.div`
   display: flex;
   flex-direction: column;
   margin-top: 10px;
+
+  @media (max-width: 600px) {
+      gap: 12px;
+      padding-bottom: 12px;
+  }
 `;
 
 export const EmptyFeedContainer = styled.div`
@@ -759,4 +821,178 @@ export const EmptyFeedSubtitle = styled.p`
   text-align: center;
   max-width: 270px;
   line-height: 1.55;
+`;
+
+export const LevelStrip = styled.div`
+  width: 95%;
+  display: flex;
+  align-items: stretch;
+  border-radius: 14px;
+  overflow: hidden;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 12%, var(--bg-3)) 0%,
+    var(--bg-3) 65%
+  );
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--bg-5));
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--accent) 10%, transparent);
+  margin-block: 6px;
+
+  @media screen and (max-width: 800px) {
+    width: 92%;
+  }
+`;
+
+export const LevelTile = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px 10px;
+  gap: 4px;
+`;
+
+export const LevelTileDivider = styled.div`
+  width: 1px;
+  background: color-mix(in srgb, var(--accent) 20%, var(--bg-5));
+  margin-block: 10px;
+  flex-shrink: 0;
+`;
+
+export const LevelTileLabel = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: var(--text-secondary);
+  font-weight: 700;
+`;
+
+export const LevelTileValue = styled.div`
+  font-size: var(--font-size-h4);
+  font-weight: var(--font-weight-bold);
+  color: var(--text);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+`;
+
+export const LevelChipRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-block: 6px;
+  flex-wrap: wrap;
+`;
+
+export const LevelChip = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px 4px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 14%, var(--bg-3));
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--bg-5));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 14%, transparent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 22%, var(--bg-3));
+    border-color: color-mix(in srgb, var(--accent) 56%, var(--bg-5));
+  }
+`;
+
+export const XPChip = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px 4px 8px;
+  border-radius: 999px;
+  background: var(--bg-3);
+  border: 1px solid var(--bg-5);
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: var(--bg-4);
+    border-color: var(--bg-6);
+  }
+`;
+
+const goldShimmer = keyframes`
+  0% { background-position: 200% center; }
+  100% { background-position: -200% center; }
+`;
+
+export const RankBadgeShimmer = styled.span`
+  display: inline-flex;
+  width: 80px;
+  height: 25px;
+  border-radius: 999px;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  overflow: hidden;
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      rgba(251, 191, 36, 0.06) 0%,
+      rgba(251, 191, 36, 0.22) 40%,
+      rgba(255, 236, 153, 0.45) 50%,
+      rgba(251, 191, 36, 0.22) 60%,
+      rgba(251, 191, 36, 0.06) 100%
+    );
+    background-size: 200% 100%;
+    animation: ${goldShimmer} 1.6s ease-in-out infinite;
+  }
+`;
+
+export const RankBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px 4px 8px;
+  border-radius: 999px;
+  background: linear-gradient(
+    135deg,
+    rgba(251, 191, 36, 0.18) 0%,
+    rgba(245, 158, 11, 0.12) 100%
+  );
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  box-shadow:
+    0 0 10px rgba(251, 191, 36, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: linear-gradient(
+      135deg,
+      rgba(251, 191, 36, 0.28) 0%,
+      rgba(245, 158, 11, 0.2) 100%
+    );
+    border-color: rgba(251, 191, 36, 0.65);
+  }
 `;

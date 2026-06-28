@@ -6,6 +6,8 @@ type AvatarUploadFieldProps = {
   src: string | null;
   alt: string;
   note?: string | null;
+  noteColor?: string | null;
+  noteEmoji?: string | null;
   onNoteClick?: (e: React.MouseEvent) => void;
   onAvatarClick?: () => void;
   nwImage?: any;
@@ -33,6 +35,8 @@ export const AvatarUploadField: FC<AvatarUploadFieldProps> = ({
   src,
   alt,
   note,
+  noteColor,
+  noteEmoji,
   nwImage,
   onNoteClick,
   onAvatarClick,
@@ -65,6 +69,7 @@ export const AvatarUploadField: FC<AvatarUploadFieldProps> = ({
       {onNoteClick !== undefined && (
         <S.NoteBubble
           type="button"
+          $color={note ? (noteColor ?? null) : null}
           data-placeholder={!note ? "true" : undefined}
           onClick={(e) => {
             e.stopPropagation();
@@ -72,8 +77,13 @@ export const AvatarUploadField: FC<AvatarUploadFieldProps> = ({
             onNoteClick(e);
           }}
         >
-          <HiOutlinePencilSquare />
           {note ? trimNote(note) : placeholder}
+          <S.NoteEditBadge aria-hidden>
+            <HiOutlinePencilSquare />
+          </S.NoteEditBadge>
+          {note && noteEmoji && (
+            <S.NoteBubbleEmoji aria-hidden>{noteEmoji}</S.NoteBubbleEmoji>
+          )}
         </S.NoteBubble>
       )}
     </S.Wrapper>

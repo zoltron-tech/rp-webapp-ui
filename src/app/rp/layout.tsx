@@ -24,7 +24,6 @@ import {
 import { useSocket } from "@/context/socket";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
-import { useFeedPrefetch } from "@/hooks/use-feed-prefetch";
 import { setBadgeCount } from "@/lib/badge-manager";
 import { THEME_DARK, THEME_LIGHT } from "@/theme";
 import type { StoreState } from "@/types/state";
@@ -58,10 +57,7 @@ const useAccent = () => {
   const user = useGlobalState("user");
   const setGlobalState = useGlobalStoreSet();
   const accent = useMemo(() => {
-    if (typeof user?.palette === "undefined" || user.palette > 3)
-      return ACCENT_MAP[0];
-    const _accent = ACCENT_MAP[user.palette] || ACCENT_MAP[0];
-    return _accent;
+    return ACCENT_MAP[user?.palette as keyof typeof ACCENT_MAP] ?? ACCENT_MAP[0];
   }, [user]);
 
   useEffect(() => {
@@ -79,22 +75,6 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
   const unreadConversationIds = useGlobalState("unreadConversationIds");
   const unreadReplyCount = useGlobalState("unreadReplyCount");
   const authState = useGlobalState("authState");
-
-  // Silent prefetch of explore prompts, OOC posts and friend activities on
-  // login + background polling while the user is elsewhere in the app.
-  useFeedPrefetch();
-
-  // Prefetch the first page of conversations after login so the inbox renders instantly
-  useEffect(() => {
-    if (authState !== "LOGGED_IN") return;
-    return runWhenIdle(() => {
-      getConversationsAction(1, 15).then((result) => {
-        if (result && Array.isArray(result)) {
-          setGlobalState({ cachedConversations: result });
-        }
-      });
-    });
-  }, [authState, setGlobalState]);
 
   // Prefetch the current group count after login so the create-group gate is ready
   useEffect(() => {
@@ -187,6 +167,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           authState: "LOGGED_OUT",
           cachedConversations: null,
           cachedExplorePrompts: null,
+          cachedOutgoingThreads: null,
           cachedHomeActivities: null,
           cachedOOCPosts: null,
           cachedPromptComments: null,
@@ -207,6 +188,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           },
           notifications: null,
           novelist: null,
+          novelistRank: null,
           novelists: [],
           pageLoading: false,
           searchBarExpanded: false,

@@ -8,6 +8,7 @@ import {
   verifyAccountAction,
 } from "@/app/actions";
 import { getUnreadConversationIdsAction } from "@/app/rp/conversations/actions";
+import { getNovelistRankByIdAction } from "@/app/rp/leaderboard/actions";
 import { getUserNovelist } from "@/app/rp/novelists/actions";
 import { getUnreadReplyCount } from "@/app/rp/outgoing-threads/actions";
 import { useStateMachine } from "@/hooks";
@@ -43,6 +44,7 @@ export const AuthProvider: FC<Props> = ({ children }) => {
             authState: "LOGGED_OUT",
             notifications: null,
             novelist: null,
+            novelistRank: null,
             user: null,
           });
         },
@@ -55,6 +57,7 @@ export const AuthProvider: FC<Props> = ({ children }) => {
             authState: "LOGGED_OUT",
             notifications: null,
             novelist: null,
+            novelistRank: null,
             user: null,
           });
         },
@@ -104,6 +107,11 @@ export const AuthProvider: FC<Props> = ({ children }) => {
             unreadReplyCount:
               typeof unreadReplyCount === "number" ? unreadReplyCount : 0,
           });
+        });
+        void getNovelistRankByIdAction(_novelist.id).then((rankResult) => {
+          if (!("message" in rankResult)) {
+            setGlobalState({ novelistRank: rankResult.rank });
+          }
         });
         initialisePushNotifications(); // fire-and-forget — errors caught inside
       }

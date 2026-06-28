@@ -924,7 +924,7 @@ export default function UserProfilePage({}) {
         data-accent={profileAccent}
       >
         <S.ContentRight>
-          <S.BannerSection>
+          <S.BannerSection $compact={!!novelist && !novelist.banner?.src}>
             <S.Banner
               src={
                 novelist?.banner?.src

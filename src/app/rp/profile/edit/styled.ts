@@ -585,7 +585,7 @@ export const NoteEditableContent = styled.div`
   word-break: break-word;
   overflow-wrap: break-word;
   font-family: var(--font);
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-input);
   color: inherit;
   background: transparent;
   caret-color: currentColor;

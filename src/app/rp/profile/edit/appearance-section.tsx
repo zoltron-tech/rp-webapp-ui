@@ -659,7 +659,7 @@ export function AppearanceSection({ onBack }: Props) {
               )}
               {isBannerLocked && displayBannerSrc && (
                 <S.BannerLockedStrip>
-                  ✦ Preview only — Cover banners save at Level 4
+                  ✦ Preview only — Banner unlocks at Level 4
                 </S.BannerLockedStrip>
               )}
               {displayBannerSrc && (

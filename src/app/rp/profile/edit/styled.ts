@@ -1,5 +1,5 @@
 import { RadioGroup } from "radix-ui";
-import styled from "styled-components";
+import styled, { css, keyframes } from "styled-components";
 export const EditProfilePageRoot = styled.div``;
 
 export const Card = styled.div`
@@ -509,25 +509,251 @@ padding-top: 20px;
 width: 100%;
 `;
 
-export const NoteDialogTextarea = styled.textarea`
-  width: 100%;
-  min-height: 100px;
-  resize: vertical;
-  background: var(--bg-3);
-  color: var(--text);
-  border: 1px solid var(--bg-6);
-  border-radius: 4px;
-  padding: 8px;
-  font-family: var(--font);
-  font-size: var(--font-size-input);
-  box-sizing: border-box;
-  word-break: break-word;
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
-`;
 
 export const NoteDialogBodyWrapper = styled.div`
   padding: 4px 12px 0;
+  max-height: 62vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+`;
+
+// ── Note editable bubble (preview + input combined) ──────────────────────────
+
+export const NoteEditableBubble = styled.div<{ $color: string | null }>`
+  position: relative;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 22px;
+  background: ${({ $color }) =>
+    $color
+      ? $color
+      : "linear-gradient(135deg, var(--accent-4) 0%, var(--accent-3) 100%)"};
+  color: ${({ $color }) => ($color ? "#1a1a1a" : "inherit")};
+  border-radius: 16px;
+  padding: 10px 14px;
+  cursor: text;
+  /* always-visible dashed border signals "editable" */
+  border: 1.5px dashed ${({ $color }) =>
+    $color ? "rgba(0,0,0,0.22)" : "var(--accent-6)"};
+  transition: background 0.25s ease, color 0.25s ease,
+    border-color 0.18s ease, box-shadow 0.18s ease;
+
+  /* solid border + glow when the inner contenteditable is focused */
+  &:focus-within {
+    border-style: solid;
+    border-color: ${({ $color }) => ($color ? "rgba(0,0,0,0.38)" : "var(--accent)")};
+    box-shadow: 0 0 0 3px
+      ${({ $color }) =>
+        $color
+          ? "rgba(0,0,0,0.08)"
+          : "color-mix(in srgb, var(--accent) 18%, transparent)"};
+  }
+
+  /* Thought bubble tail */
+  &::before {
+    content: "";
+    position: absolute;
+    top: -18px;
+    left: 16px;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    border-left: 18px solid ${({ $color }) => $color ?? "var(--accent-4)"};
+    border-bottom: 18px solid ${({ $color }) => $color ?? "var(--accent-4)"};
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: -11px;
+    left: 4px;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    border-left: 10px solid ${({ $color }) => $color ?? "var(--accent-3)"};
+    border-bottom: 10px solid ${({ $color }) => $color ?? "var(--accent-3)"};
+  }
+`;
+
+export const NoteEditableContent = styled.div`
+  outline: none;
+  min-height: 3.6em;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  font-family: var(--font);
+  font-size: var(--font-size-small);
+  color: inherit;
+  background: transparent;
+  caret-color: currentColor;
+
+  &[data-empty]::before {
+    content: attr(data-placeholder);
+    opacity: 0.5;
+    font-style: italic;
+    pointer-events: none;
+    display: block;
+  }
+`;
+
+const noteEmojiWiggle = keyframes`
+  0%   { transform: rotate(45deg) scale(1); }
+  20%  { transform: rotate(10deg) scale(1.45); }
+  45%  { transform: rotate(75deg) scale(1.2); }
+  70%  { transform: rotate(20deg) scale(1.35); }
+  100% { transform: rotate(45deg) scale(1); }
+`;
+
+const notePickerWiggle = keyframes`
+  0%   { transform: scale(1.18); }
+  20%  { transform: scale(1.5) rotate(-12deg); }
+  45%  { transform: scale(1.25) rotate(10deg); }
+  70%  { transform: scale(1.4) rotate(-6deg); }
+  100% { transform: scale(1.18); }
+`;
+
+export const NotePreviewEmoji = styled.span<{ $wiggling?: boolean }>`
+  position: absolute;
+  top: -18px;
+  right: -12px;
+  font-size: 1.75rem;
+  display: inline-block;
+  transform: rotate(45deg);
+  line-height: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.18));
+  ${({ $wiggling }) =>
+    $wiggling &&
+    css`
+      animation: ${noteEmojiWiggle} 0.5s ease;
+    `}
+`;
+
+// ── Note no-color swatch ──────────────────────────────────────────────────────
+
+export const NoteNoColorSwatch = styled.button<{ $active: boolean }>`
+  all: unset;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: ${({ $active }) =>
+    $active ? "3px solid var(--text)" : "2px solid var(--bg-7)"};
+  background: linear-gradient(
+      to bottom right,
+      transparent calc(50% - 1px),
+      #ef4444 calc(50% - 1px),
+      #ef4444 calc(50% + 1px),
+      transparent calc(50% + 1px)
+    ),
+    var(--bg-4);
+  transition: transform 0.1s ease, border-color 0.1s ease;
+
+  &:hover {
+    transform: scale(1.15);
+  }
+`;
+
+// ── Note emoji picker ─────────────────────────────────────────────────────────
+
+export const NoteEmojiPickerWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+export const NoteEmojiPickerArrow = styled.button`
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--bg-6);
+  border-radius: 50%;
+  background: var(--bg-2);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 14%, var(--bg-2));
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--bg-6));
+  }
+`;
+
+export const NoteEmojiPickerRow = styled.div`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  touch-action: pan-x;
+  scrollbar-width: none;
+  /* padding gives selected/scaled buttons room to render their
+     box-shadow and scale without being clipped by the scroll container */
+  padding-block: 8px;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+export const NoteEmojiButton = styled.button<{ $selected: boolean; $wiggling?: boolean }>`
+  all: unset;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  font-size: ${({ $selected }) => ($selected ? "1.25rem" : "1.1rem")};
+  cursor: pointer;
+  transition: background 0.12s ease, transform 0.12s ease, box-shadow 0.12s ease, outline-color 0.12s ease;
+
+  /* Selected state is always red — signals "click to remove" */
+  background: ${({ $selected }) =>
+    $selected ? "color-mix(in srgb, #ef4444 22%, var(--bg-3))" : "transparent"};
+  outline: ${({ $selected }) => ($selected ? "2px solid #ef4444" : "1.5px solid transparent")};
+  box-shadow: ${({ $selected }) =>
+    $selected ? "0 0 0 4px color-mix(in srgb, #ef4444 18%, transparent)" : "none"};
+  transform: ${({ $selected }) => ($selected ? "scale(1.18)" : "scale(1)")};
+
+  /* "×" badge always visible when selected */
+  &[data-selected="true"]::after {
+    content: "✕";
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: #ef4444;
+    color: white;
+    font-size: 7px;
+    text-align: center;
+    line-height: 13px;
+    pointer-events: none;
+  }
+
+  &:not([data-selected="true"]):hover {
+    background: var(--bg-4);
+    transform: scale(1.2);
+  }
+
+  &:active {
+    transform: scale(0.92);
+  }
+
+  ${({ $wiggling }) =>
+    $wiggling &&
+    css`
+      animation: ${notePickerWiggle} 0.5s ease;
+    `}
 `;
 
 export const NoteCharCount = styled.span`
@@ -574,39 +800,104 @@ export const NoteColorGrid = styled.div`
 export const NoteColorSwatch = styled.button<{
   $color: string;
   $active: boolean;
-  $locked: boolean;
 }>`
   all: unset;
   width: 28px;
   height: 28px;
   border-radius: 50%;
   background: ${({ $color }) => $color};
-  cursor: ${({ $locked }) => ($locked ? "not-allowed" : "pointer")};
-  opacity: ${({ $locked }) => ($locked ? 0.4 : 1)};
+  cursor: pointer;
   border: 3px solid
     ${({ $active }) => ($active ? "var(--text)" : "transparent")};
   transition: transform 0.1s ease, border-color 0.1s ease;
 
-  &:hover:not(:disabled) {
+  &:hover {
     transform: scale(1.15);
   }
 `;
 
-export const NoteEmojiInput = styled.input`
-  width: 60px;
-  background: var(--bg-3);
-  color: var(--text);
-  border: 1px solid var(--bg-6);
-  border-radius: 4px;
-  padding: 6px 8px;
-  font-size: 1.2rem;
-  text-align: center;
-  font-family: var(--font);
 
-  &:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
+// ── Note level-3 perk box ─────────────────────────────────────────────────────
+
+const noteLockPulse = keyframes`
+  0%   { transform: scale(1);    box-shadow: 0 0 0 0   rgba(251,191,36,0); }
+  30%  { transform: scale(1.02); box-shadow: 0 0 0 4px rgba(251,191,36,0.25); }
+  60%  { transform: scale(0.99); box-shadow: 0 0 0 2px rgba(251,191,36,0.1); }
+  100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(251,191,36,0); }
+`;
+
+export const NotePerksBox = styled.div`
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: linear-gradient(
+    135deg,
+    rgba(251, 191, 36, 0.09) 0%,
+    rgba(245, 158, 11, 0.05) 100%
+  );
+  border: 1px solid rgba(251, 191, 36, 0.32);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+`;
+
+export const NotePerksHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(251, 191, 36, 0.85);
+`;
+
+export const NoteLockBanner = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: linear-gradient(
+    135deg,
+    rgba(251, 191, 36, 0.14) 0%,
+    rgba(245, 158, 11, 0.08) 100%
+  );
+  border: 1px solid rgba(251, 191, 36, 0.42);
+  animation: ${noteLockPulse} 0.45s ease;
+`;
+
+export const NoteLockBannerIcon = styled.span`
+  font-size: 0.95rem;
+  line-height: 1.4;
+  flex-shrink: 0;
+`;
+
+export const NoteLockBannerBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`;
+
+export const NoteLockBannerTitle = styled.span`
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: rgba(251, 191, 36, 0.95);
+  letter-spacing: 0.02em;
+`;
+
+export const NoteLockBannerDesc = styled.span`
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+`;
+
+export const NoteEditHint = styled.p`
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  margin: -12px 0 0;
+  text-align: center;
+  opacity: 0.7;
 `;
 
 // ── Username row ──────────────────────────────────────────────────────────────

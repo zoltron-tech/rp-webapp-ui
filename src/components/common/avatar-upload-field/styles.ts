@@ -53,6 +53,7 @@ export const NoteBubble = styled.button`
   right: -14px;
   width: unset;
   background: linear-gradient(135deg, var(--accent-4) 0%, var(--accent-3) 100%);
+  border: 1.5px dashed var(--accent-6);
   opacity: 95%;
   border-radius: 20px;
   padding: 5px 10px;
@@ -68,10 +69,17 @@ export const NoteBubble = styled.button`
   overflow-wrap: break-word;
   max-width: 160px;
   width: max-content;
-  transition: opacity 0.15s ease;
+  transition: opacity 0.18s ease, border-color 0.18s ease, transform 0.18s ease, background 0.18s ease;
 
   &:hover {
     opacity: 100%;
+    border: 1.5px solid var(--accent);
+    transform: translateY(-2px);
+    background: linear-gradient(135deg, var(--accent-5) 0%, var(--accent-4) 100%);
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 
   /* Thought bubble tail */
@@ -104,13 +112,10 @@ export const NoteBubble = styled.button`
     align-self: center;
     width: 16px;
     height: 16px;
+    color: var(--accent);
   }
 
   &[data-placeholder="true"] {
     color: var(--text-secondary);
-
-    svg {
-      color: var(--text);
-    }
   }
 `;

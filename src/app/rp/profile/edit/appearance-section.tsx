@@ -84,6 +84,7 @@ export function AppearanceSection({ onBack }: Props) {
   const [tempNoteColor, setTempNoteColor] = useState<string | null>(null);
   const [tempNoteEmoji, setTempNoteEmoji] = useState<string | null>(null);
   const [discardOpen, setDiscardOpen] = useState(false);
+  const [lockedPulseKey, setLockedPulseKey] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Avatar crop dialog state
@@ -369,10 +370,16 @@ export function AppearanceSection({ onBack }: Props) {
     setTempNote(noteObj?.text ?? "");
     setTempNoteColor(noteObj?.color ?? null);
     setTempNoteEmoji(noteObj?.emoji ?? null);
+    setLockedPulseKey(0);
     setNoteDialogOpen(true);
   };
 
   const confirmNote = () => {
+    const hasLockedFeatures = Boolean(tempNoteColor || tempNoteEmoji);
+    if (hasLockedFeatures && novelistLevel < 3) {
+      setLockedPulseKey((k) => k + 1);
+      return;
+    }
     setProfileState({
       note: tempNote.trim()
         ? { text: tempNote, color: tempNoteColor, emoji: tempNoteEmoji }
@@ -426,6 +433,7 @@ export function AppearanceSection({ onBack }: Props) {
               onChange={handleAvatarChange}
             />
           </div>
+          <S.NoteEditHint>Click the note to edit it</S.NoteEditHint>
         </S.BasicInfoFields>
 
         <ShouldRender if={Boolean(error)}>
@@ -583,6 +591,7 @@ export function AppearanceSection({ onBack }: Props) {
             emoji={tempNoteEmoji}
             onEmojiChange={setTempNoteEmoji}
             level={novelistLevel}
+            lockedPulseKey={lockedPulseKey}
           />
         }
       />

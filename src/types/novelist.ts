@@ -96,13 +96,19 @@ export interface NovelistTier {
   musicLimit: number;
 }
 
+export type NovelistNote = {
+  text: string;
+  color: string | null;
+  emoji: string | null;
+};
+
 export type Novelist = {
   id: string;
   username: string;
   tier: NovelistTier;
   firstName: string;
   lastName: string;
-  note: string;
+  note: NovelistNote | null;
   image: string;
   avatar: NWImage | null;
   museCount: number;

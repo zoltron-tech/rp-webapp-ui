@@ -38,7 +38,7 @@ export const INITIAL_NOVELIST: Novelist = {
   lastName: "",
   museCount: 0,
   muses: [],
-  note: "",
+  note: null,
   palette: 0,
   tier: STANDARD_TIER,
   username: "",

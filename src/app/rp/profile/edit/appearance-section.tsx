@@ -110,7 +110,7 @@ export function AppearanceSection({ onBack }: Props) {
   const originalRef = useRef({
     avatar: novelist?.avatar ?? (null as NWImage | null),
     image: novelist?.image ?? "",
-    note: novelist?.note ?? "",
+    note: novelist?.note != null ? novelist.note.text : "",
     palette: user?.palette ?? 0,
   });
 
@@ -118,7 +118,7 @@ export function AppearanceSection({ onBack }: Props) {
     originalRef.current = {
       avatar: novelist?.avatar ?? null,
       image: novelist?.image ?? "",
-      note: novelist?.note ?? "",
+      note: novelist?.note != null ? novelist.note.text : "",
       palette: user?.palette ?? 0,
     };
   }, [novelist?.image, novelist?.note, novelist?.avatar, user?.palette]);

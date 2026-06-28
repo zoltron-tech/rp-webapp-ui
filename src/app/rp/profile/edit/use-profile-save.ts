@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { updateUserTheme } from "@/app/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
-import type { NWImage, UpdateNovelistPayload } from "@/types/novelist";
+import type { NovelistNote, NWImage, UpdateNovelistPayload } from "@/types/novelist";
 import type { Accent } from "@/types/theme";
 import { updateUserNovelist } from "../../novelists/actions";
 import { useProfileState, useProfileStoreSet } from "./profile.store";
@@ -40,7 +40,7 @@ export function useProfileSave() {
       firstName: (firstName ?? "").trim(),
       image: avatar?.src ?? image ?? undefined,
       lastName: (lastName ?? "").trim(),
-      note: note ?? "",
+      note: note != null ? { text: note, color: novelist?.note?.color ?? null, emoji: novelist?.note?.emoji ?? null } : null,
     };
 
     setLoading(true);
@@ -68,7 +68,7 @@ export function useProfileSave() {
       firstName: response.firstName || "",
       image: response.image || "",
       lastName: response.lastName || "",
-      note: response.note || "",
+      note: (response.note as NovelistNote | null)?.text ?? null,
     });
 
     return { ok: true };
@@ -117,7 +117,7 @@ export function useProfileSave() {
         ((firstName ?? "").trim() !== (novelist?.firstName ?? "") ||
           (lastName ?? "").trim() !== (novelist?.lastName ?? "") ||
           (about ?? "") !== (novelist?.about ?? "") ||
-          (note ?? "") !== (novelist?.note ?? "") ||
+          (note ?? "") !== (novelist?.note?.text ?? "") ||
           (image ?? "") !== (novelist?.image ?? "") ||
           avatar !== (novelist?.avatar ?? null));
 

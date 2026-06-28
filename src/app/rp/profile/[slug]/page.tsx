@@ -921,9 +921,9 @@ export default function UserProfilePage({}) {
               nwImage={novelist?.avatar}
             />
             <ShouldRender
-              if={novelist?.note !== undefined && novelist?.note?.length > 0}
+              if={novelist?.note?.text !== undefined && novelist?.note?.text?.length > 0}
             >
-              <S.NoteContainer>{novelist?.note}</S.NoteContainer>
+              <S.NoteContainer>{novelist?.note?.text}</S.NoteContainer>
             </ShouldRender>
           </Flex>
           <S.ContentInner>

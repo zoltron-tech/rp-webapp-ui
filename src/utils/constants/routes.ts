@@ -28,6 +28,7 @@ export const ROUTES = {
     Muses: "/rp/leaderboard/muses",
   },
   InstallApp: "/rp/install-app",
+  Levels: "/rp/levels",
   Login: "/rp/login",
   Muse: {
     Index: "/rp/muse",

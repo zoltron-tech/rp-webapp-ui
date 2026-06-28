@@ -265,10 +265,11 @@ export const ChoiceLockCorner = styled.span`
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  background: rgba(251, 191, 36, 0.14);
-  border: 1px solid rgba(251, 191, 36, 0.42);
+  background: rgba(35, 35, 35, 0.82);
+  border: 1px solid rgba(180, 180, 180, 0.2);
   border-radius: 4px;
   padding: 2px 6px;
-  color: rgba(251, 191, 36, 0.92);
+  color: rgba(251, 191, 36, 1);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
   pointer-events: none;
 `;

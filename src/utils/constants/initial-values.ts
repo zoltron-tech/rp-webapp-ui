@@ -26,6 +26,7 @@ export const EMPTY_FRIEND: Friend = {
 export const INITIAL_NOVELIST: Novelist = {
   about: null,
   avatar: null,
+  banner: null,
   connection: null,
   createdAt: "",
   firstName: "",
@@ -38,7 +39,7 @@ export const INITIAL_NOVELIST: Novelist = {
   lastName: "",
   museCount: 0,
   muses: [],
-  note: "",
+  note: null,
   palette: 0,
   tier: STANDARD_TIER,
   username: "",

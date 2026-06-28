@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { FiX } from "react-icons/fi";
 import { useGlobalState } from "@/context/store/stores";
 import styled, { keyframes } from "styled-components";
+import { LEVELS } from "@/lib/rp-levels";
 
 // ─── Animations ───────────────────────────────────────────────────────────────
 
@@ -228,19 +229,6 @@ const Note = styled.p`
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
-const LEVELS = [
-  { level: 1, range: "0 – 99 XP" },
-  { level: 2, range: "100 – 299 XP" },
-  { level: 3, range: "300 – 599 XP" },
-  { level: 4, range: "600 – 999 XP" },
-  { level: 5, range: "1,000 – 1,499 XP" },
-  { level: 6, range: "1,500 – 2,499 XP" },
-  { level: 7, range: "2,500 – 3,999 XP" },
-  { level: 8, range: "4,000 – 5,999 XP" },
-  { level: 9, range: "6,000 – 9,999 XP" },
-  { level: 10, range: "10,000+ XP" },
-];
-
 const NOVELIST_ACTIONS = [
   { label: "Add a character", xp: "+10" },
   { label: "Accept a friend request", xp: "+5" },
@@ -338,10 +326,10 @@ export function LeaderboardInfo({ type, open, onClose }: Props) {
           <Section>
             <SectionTitle>Level progression</SectionTitle>
             <LevelGrid>
-              {LEVELS.map(({ level, range }) => (
+              {LEVELS.map(({ level, xpRange }) => (
                 <LevelCard key={level}>
                   <LevelNum>Level {level}</LevelNum>
-                  <LevelRange>{range}</LevelRange>
+                  <LevelRange>{xpRange}</LevelRange>
                 </LevelCard>
               ))}
             </LevelGrid>

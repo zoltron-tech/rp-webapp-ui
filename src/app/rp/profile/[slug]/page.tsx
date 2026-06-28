@@ -964,8 +964,6 @@ export default function UserProfilePage({}) {
                 </S.NoteContainer>
               </ShouldRender>
             </S.BannerAvatarRow>
-          </S.BannerSection>
-          <S.ContentInner>
             <ShouldRender if={authState === "LOGGED_IN"}>
               <S.ProfileDropdownMenuContainer>
                 {renderConnectionDropdown(novelist?.connection, username)}
@@ -1084,6 +1082,8 @@ export default function UserProfilePage({}) {
                 </ShouldRender>
               </S.ProfileDropdownMenuContainer>
             </ShouldRender>
+          </S.BannerSection>
+          <S.ContentInner>
             <Flex id="profile-tour-step-2">
               <S.NameMobile>
                 {novelist?.firstName} {novelist?.lastName}
@@ -1142,9 +1142,7 @@ export default function UserProfilePage({}) {
               <ShouldRender if={typeof novelist?.level === "number"}>
                 <S.LevelChipRow>
                   <S.LevelChip
-                    onClick={() =>
-                      routeToPage(ROUTES.Leaderboard.Novelists)
-                    }
+                    onClick={() => routeToPage(ROUTES.Levels)}
                   >
                     <FcRating size={13} />
                     Lv. {novelist?.level}

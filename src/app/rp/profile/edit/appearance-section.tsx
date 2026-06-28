@@ -4,7 +4,7 @@ import { ShouldRender } from "@novelist-world/ui";
 import { RadioGroup, Separator } from "radix-ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BsArrowLeft } from "react-icons/bs";
-import { MdClose, MdOutlineBrush } from "react-icons/md";
+import { MdClose, MdOutlineBrush, MdOutlineCameraAlt, MdOutlineImage } from "react-icons/md";
 import { AvatarPickerDialog } from "@/components/avatar-picker-dialog";
 import { AvatarUploadField } from "@/components/common/avatar-upload-field";
 import { AppAlertDialog } from "@/components/dialog";
@@ -12,11 +12,13 @@ import AvatarCropDialog from "@/components/dialog/avatar-crop-dialog";
 import BannerCropDialog from "@/components/dialog/banner-crop-dialog";
 import { useGlobalState } from "@/context/store/stores";
 import { useUploadMedia } from "@/hooks/use-upload-media";
+import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import type { ImageCropFilter, NWImage } from "@/types";
 import { ACCENT_LEVEL_REQUIREMENT, ACCENT_MAP, type Accent } from "@/types/theme";
 import { API_MESSAGE } from "@/utils/constants";
 import { deleteMedia } from "../actions";
 import { NoteDialogBody } from "./note-dialog-body";
+import { NoteEditTray } from "./note-edit-tray";
 import { useProfileState, useProfileStoreSet } from "./profile.store";
 import * as S from "./styled";
 import { useProfileSave } from "./use-profile-save";
@@ -64,8 +66,11 @@ type Props = {
 export function AppearanceSection({ onBack }: Props) {
   const novelist = useGlobalState("novelist");
   const user = useGlobalState("user");
+  const { width } = useWindowDimensions();
+  const isMobile = (width ?? 0) <= 768;
   const isGifLocked = (novelist?.level ?? 1) < 2;
   const novelistLevel = novelist?.level ?? 1;
+  const isBannerLocked = novelistLevel < 4;
   const image = useProfileState("image");
   const avatar = useProfileState("avatar");
   const banner = useProfileState("banner");
@@ -356,6 +361,9 @@ export function AppearanceSection({ onBack }: Props) {
     };
     reader.readAsDataURL(file);
 
+    // Skip CDN upload for locked users — the data URL is sufficient for preview
+    if (isBannerLocked) return;
+
     if (tempUploadedBanner) {
       await deleteMedia(tempUploadedBanner);
     }
@@ -491,6 +499,10 @@ export function AppearanceSection({ onBack }: Props) {
   const handleSave = async () => {
     setError(null);
     if (isPaletteLocked) return;
+    if (isBannerLocked && bannerChanged) {
+      setError("✦ Cover banners are a Level 4 perk — keep writing to earn XP and level up!");
+      return;
+    }
     // Defensive gate: block if a GIF/library avatar somehow reached state for a level < 2 novelist
     if (
       isGifLocked &&
@@ -603,64 +615,99 @@ export function AppearanceSection({ onBack }: Props) {
       <S.AppearanceSectionBody>
         <S.AppearanceFieldGroup>
           <S.AppearanceFieldLabel>Cover banner</S.AppearanceFieldLabel>
-          <S.BannerEditWrap
-            onClick={() => {
-              if (displayBannerSrc) {
-                openExistingBannerCropDialog();
-              } else {
-                bannerFileInputRef.current?.click();
-              }
-            }}
-            $src={displayBannerSrc}
-            $x={banner?.crop?.x ?? 50}
-            $y={banner?.crop?.y ?? 50}
-            $scale={banner?.crop && banner.crop.width > 0 ? banner.crop.width / 100 : 1}
-          >
-            <S.BannerEditHint>
-              {displayBannerSrc ? "Click to reposition" : "Click to add a banner"}
-            </S.BannerEditHint>
-            {displayBannerSrc && (
-              <S.BannerDeleteButton
-                type="button"
-                aria-label="Remove banner"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  void handleDeleteBanner();
-                }}
-              >
-                <MdClose size={14} />
-              </S.BannerDeleteButton>
-            )}
-          </S.BannerEditWrap>
-          <input
-            ref={bannerFileInputRef}
-            type="file"
-            hidden
-            accept="image/*"
-            onChange={handleBannerChange}
-          />
-        </S.AppearanceFieldGroup>
-
-        <S.BasicInfoFields>
-          <div className="avatar-field">
-            <AvatarUploadField
-              src={displayAvatarSrc}
-              alt="Avatar"
-              note={noteText}
-              onNoteClick={openNoteDialog}
-              onAvatarClick={() => setAvatarDialogOpen(true)}
-              nwImage={avatar}
-            />
+          <S.BannerAvatarContainer>
+            <S.BannerEditWrap
+              onClick={() => {
+                if (displayBannerSrc) {
+                  openExistingBannerCropDialog();
+                } else {
+                  bannerFileInputRef.current?.click();
+                }
+              }}
+              $src={displayBannerSrc}
+              $x={banner?.crop?.x ?? 50}
+              $y={banner?.crop?.y ?? 50}
+              $scale={banner?.crop && banner.crop.width > 0 ? banner.crop.width / 100 : 1}
+              aria-label={displayBannerSrc ? "Reposition cover banner" : "Upload cover banner"}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  if (displayBannerSrc) {
+                    openExistingBannerCropDialog();
+                  } else {
+                    bannerFileInputRef.current?.click();
+                  }
+                }
+              }}
+            >
+              {isBannerLocked && <S.BannerLockBadge>Lv. 4</S.BannerLockBadge>}
+              {displayBannerSrc ? (
+                <S.BannerEditHint>
+                  <MdOutlineCameraAlt size={22} />
+                  Click to reposition
+                </S.BannerEditHint>
+              ) : (
+                <S.BannerEmptyContent>
+                  <S.BannerEmptyIcon>
+                    <MdOutlineImage size={32} />
+                  </S.BannerEmptyIcon>
+                  <S.BannerEmptyLabel>Upload a cover banner</S.BannerEmptyLabel>
+                  <S.BannerFormatLine>PNG, JPEG or GIF · Max 10 MB</S.BannerFormatLine>
+                </S.BannerEmptyContent>
+              )}
+              {isBannerLocked && displayBannerSrc && (
+                <S.BannerLockedStrip>
+                  ✦ Preview only — Cover banners save at Level 4
+                </S.BannerLockedStrip>
+              )}
+              {displayBannerSrc && (
+                <S.BannerDeleteButton
+                  type="button"
+                  aria-label="Remove banner"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void handleDeleteBanner();
+                  }}
+                >
+                  <MdClose size={14} />
+                </S.BannerDeleteButton>
+              )}
+            </S.BannerEditWrap>
             <input
-              ref={fileInputRef}
+              ref={bannerFileInputRef}
               type="file"
               hidden
-              accept="image/*"
-              onChange={handleAvatarChange}
+              accept="image/png,image/jpeg,image/gif"
+              onChange={handleBannerChange}
             />
-          </div>
-          <S.NoteEditHint>Click the note to edit it</S.NoteEditHint>
-        </S.BasicInfoFields>
+            <S.AvatarHangRow>
+              <S.HangingAvatarWrap>
+                <AvatarUploadField
+                  src={displayAvatarSrc}
+                  alt="Avatar"
+                  note={noteText}
+                  noteColor={noteObj?.color ?? null}
+                  noteEmoji={noteObj?.emoji ?? null}
+                  onNoteClick={openNoteDialog}
+                  onAvatarClick={() => setAvatarDialogOpen(true)}
+                  nwImage={avatar}
+                />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  hidden
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                />
+              </S.HangingAvatarWrap>
+            </S.AvatarHangRow>
+          </S.BannerAvatarContainer>
+        </S.AppearanceFieldGroup>
+
+        <S.AvatarHangSpacer />
+        <S.NoteEditHint>Click the note to edit it</S.NoteEditHint>
 
         <ShouldRender if={Boolean(error)}>
           <S.LandingErrorBanner>{error}</S.LandingErrorBanner>
@@ -740,6 +787,7 @@ export function AppearanceSection({ onBack }: Props) {
             loading ||
             imageUploading ||
             isPaletteLocked ||
+            (isBannerLocked && bannerChanged) ||
             (isGifLocked &&
               avatarChanged &&
               ((image ?? "").includes("klipy.com") ||
@@ -827,36 +875,53 @@ export function AppearanceSection({ onBack }: Props) {
               onCancel={handleBannerCropCancel}
               onConfirm={handleBannerCropConfirm}
               onChangeBanner={() => bannerFileInputRef.current?.click()}
-              isUploading={imageUploading}
+              isUploading={!isBannerLocked && imageUploading}
+              confirmLabel={isBannerLocked ? "Preview" : undefined}
               viewportRef={bannerViewportRef}
             />
           </S.AvatarCropBody>
         }
       />
 
-      <AppAlertDialog
-        open={noteDialogOpen}
-        onOpenChange={setNoteDialogOpen}
-        heading="Edit your note"
-        text="A short note shown next to your avatar."
-        actionButtonLabel="Save"
-        closeButtonText="Cancel"
-        actionColor="neutral"
-        onConfirm={confirmNote}
-        onCancel={() => setNoteDialogOpen(false)}
-        body={
-          <NoteDialogBody
-            value={tempNote}
-            onChange={setTempNote}
-            color={tempNoteColor}
-            onColorChange={setTempNoteColor}
-            emoji={tempNoteEmoji}
-            onEmojiChange={setTempNoteEmoji}
-            level={novelistLevel}
-            lockedPulseKey={lockedPulseKey}
-          />
-        }
-      />
+      {isMobile ? (
+        <NoteEditTray
+          open={noteDialogOpen}
+          onConfirm={confirmNote}
+          onCancel={() => setNoteDialogOpen(false)}
+          value={tempNote}
+          onChange={setTempNote}
+          color={tempNoteColor}
+          onColorChange={setTempNoteColor}
+          emoji={tempNoteEmoji}
+          onEmojiChange={setTempNoteEmoji}
+          level={novelistLevel}
+          lockedPulseKey={lockedPulseKey}
+        />
+      ) : (
+        <AppAlertDialog
+          open={noteDialogOpen}
+          onOpenChange={setNoteDialogOpen}
+          heading="Edit your note"
+          text="A short note shown next to your avatar."
+          actionButtonLabel="Save"
+          closeButtonText="Cancel"
+          actionColor="neutral"
+          onConfirm={confirmNote}
+          onCancel={() => setNoteDialogOpen(false)}
+          body={
+            <NoteDialogBody
+              value={tempNote}
+              onChange={setTempNote}
+              color={tempNoteColor}
+              onColorChange={setTempNoteColor}
+              emoji={tempNoteEmoji}
+              onEmojiChange={setTempNoteEmoji}
+              level={novelistLevel}
+              lockedPulseKey={lockedPulseKey}
+            />
+          }
+        />
+      )}
 
       <AppAlertDialog
         open={discardOpen}

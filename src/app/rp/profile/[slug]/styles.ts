@@ -181,9 +181,10 @@ export const ProfileDropdownMenuContainer = styled.div`
   display: flex;
   gap: 6px;
   position: absolute;
-  right: 10px;
-  /* Sits inside the top padding area, visually beside the avatar */
-  top: 8px;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: ${Z_INDEX.AVATAR};
 `;
 
 export const ProfileMoreDropdownMenu = styled.div`
@@ -549,7 +550,6 @@ export const NameMobile = styled.div`
   ${NameFontStyles};
 
   color: var(--text);
-  margin-top: 70px;
   font-size: 36px;
   width: 100%;
   text-align: center;
@@ -575,7 +575,7 @@ export const NoteContainer = styled.div<{ $color?: string | null }>`
     $color
       ? $color
       : "linear-gradient(135deg, var(--accent-4) 0%, var(--accent-3) 100%)"};
-  color: ${({ $color }) => ($color ? "#1a1a1a" : "inherit")};
+  color: ${({ $color }) => ($color ? "#ffffff" : "inherit")};
   opacity: 95%;
   word-break: break-word;
   border-radius: 20px;
@@ -584,9 +584,9 @@ export const NoteContainer = styled.div<{ $color?: string | null }>`
   font-size: var(--font-size);
   position: relative;
   overflow: visible;
-  /* Align vertically with the avatar's lower half */
-  transform: translateY(50%);
+  transform: translateY(65%);
   align-self: flex-end;
+  margin-left: -30px;
   max-width: 260px;
 
   /* Thought bubble tail */
@@ -620,7 +620,8 @@ export const NoteContainer = styled.div<{ $color?: string | null }>`
 
   @media (max-width: 800px) {
     font-size: var(--font-size-xsmall);
-    transform: translateY(50%);
+    transform: translateY(65%);
+    margin-left: -20px;
 
     &::before {
       top: -14px;

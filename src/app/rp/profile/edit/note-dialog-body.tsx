@@ -4,19 +4,73 @@ import * as S from "./styled";
 
 const MAX_NOTE_LENGTH = 100;
 const NOTE_COLOR_LEVEL = 3;
+const COLOR_GRID_COLS = 10;
 
-// 9 muted, eye-friendly colors + 1 "no color" swatch = 10 total
+// 40 versatile colors
 export const NOTE_COLORS = [
-  "#f2d5d5", // dusty rose
-  "#f4dcc8", // soft peach
-  "#eadcb0", // warm sand
-  "#d4e8d4", // sage green
-  "#c8e4de", // seafoam
-  "#d0ddf2", // powder blue
-  "#ddd4f0", // soft violet
-  "#e4d0dc", // mauve
-  "#d8cfc4", // warm stone
+  // reds
+  "#6b1f1f", // deep crimson
+  "#8b3a3a", // crimson
+  "#a05252", // muted rose
+
+  // oranges
+  "#7a3210", // deep burnt orange
+  "#a0522d", // sienna
+  "#b5712a", // warm amber
+
+  // yellows
+  "#6b5010", // deep goldenrod
+  "#8b6914", // goldenrod
+  "#a08030", // muted gold
+
+  // greens
+  "#1e4d2b", // deep forest
+  "#2d6e45", // forest green
+  "#4a7c59", // sage green
+  "#5c6b3a", // olive
+  "#3d6b5e", // eucalyptus
+  "#2a5c3f", // moss
+
+  // teals
+  "#0f3d38", // deep teal
+  "#1e6b63", // deep teal
+  "#2c5f6e", // slate teal
+  "#1a5c6b", // dark cyan
+
+  // blues
+  "#0f2d4a", // deep navy
+  "#1a5276", // ocean blue
+  "#2a5a96", // cobalt
+  "#3b5e8a", // steel blue
+  "#2a4a7a", // deep cobalt
+
+  // purples
+  "#2d1f5e", // deep indigo
+  "#4a3f8f", // indigo
+  "#5a4a6b", // dusty purple
+  "#6b3fa0", // violet
+  "#7a3f8f", // deep violet
+
+  // pinks & magentas
+  "#6b1f4a", // deep plum
+  "#8b2d6b", // plum
+  "#a0305a", // raspberry
+  "#8b3a5a", // muted magenta
+  "#7b5e6e", // dusty mauve
+
+  // browns & neutrals
+  "#3b2010", // deep espresso
+  "#6b4c3b", // mocha
+  "#7a4419", // burnt umber
+  "#5a3e2b", // dark walnut
+  "#6b5540", // warm taupe
+  "#4a3728", // dark chocolate
 ] as const;
+
+const GRID_ROWS: string[][] = Array.from(
+  { length: Math.ceil(NOTE_COLORS.length / COLOR_GRID_COLS) },
+  (_, i) => [...NOTE_COLORS].slice(i * COLOR_GRID_COLS, (i + 1) * COLOR_GRID_COLS)
+);
 
 const EMOJI_SET = [
   "✨", "⭐", "🌟", "💫", "🔥", "⚡", "🌙", "☀️",
@@ -53,6 +107,29 @@ export const NoteDialogBody: FC<NoteDialogBodyProps> = ({
   const isPremium = level >= NOTE_COLOR_LEVEL;
   const [previewWiggling, setPreviewWiggling] = useState(false);
   const [pickerWiggling, setPickerWiggling] = useState(false);
+  const [colorGridExpanded, setColorGridExpanded] = useState(false);
+
+  const selectedRowIndex = (() => {
+    if (color === null) return 0;
+    const idx = (NOTE_COLORS as readonly string[]).indexOf(color);
+    return idx === -1 ? 0 : Math.floor(idx / COLOR_GRID_COLS);
+  })();
+
+  const renderColorRow = (row: string[]) =>
+    row.map((c) => (
+      <S.NoteColorSwatch
+        key={c}
+        $color={c}
+        $active={color === c}
+        type="button"
+        onClick={() => {
+          const next = color === c ? null : c;
+          onColorChange(next);
+          if (next === null) setColorGridExpanded(false);
+        }}
+        aria-label={`Note color ${c}`}
+      />
+    ));
 
   useEffect(() => {
     if (!contentRef.current) return;
@@ -146,8 +223,10 @@ export const NoteDialogBody: FC<NoteDialogBodyProps> = ({
         {value.length} / {MAX_NOTE_LENGTH}
       </S.NoteCharCount>
 
-      <S.NotePerksBox>
-        <S.NotePerksHeader>✦ Level {NOTE_COLOR_LEVEL} Perks</S.NotePerksHeader>
+      <S.NotePerksBox $unlocked={isPremium}>
+        <S.NotePerksHeader $unlocked={isPremium}>
+          {isPremium ? "✦ Level 3 Perks — Unlocked" : `✦ Level ${NOTE_COLOR_LEVEL} Perks`}
+        </S.NotePerksHeader>
 
         {!isPremium && (
           <S.NoteLockBanner key={lockedPulseKey}>
@@ -165,26 +244,44 @@ export const NoteDialogBody: FC<NoteDialogBodyProps> = ({
         )}
 
         <div>
-          <S.NoteColorLabel>Note color</S.NoteColorLabel>
-          <S.NoteColorGrid>
-            {NOTE_COLORS.map((c) => (
-              <S.NoteColorSwatch
-                key={c}
-                $color={c}
-                $active={color === c}
-                type="button"
-                onClick={() => onColorChange(color === c ? null : c)}
-                aria-label={`Note color ${c}`}
-              />
-            ))}
+          <S.NoteColorLabel>
+            Note color
             <S.NoteNoColorSwatch
               type="button"
               $active={color === null}
-              onClick={() => onColorChange(null)}
+              onClick={() => { onColorChange(null); setColorGridExpanded(false); }}
               aria-label="No color"
               title="Remove color"
             />
-          </S.NoteColorGrid>
+          </S.NoteColorLabel>
+          <S.NoteColorGridExpandWrap>
+            {colorGridExpanded
+              ? GRID_ROWS.map((row, rowIdx) => (
+                  <S.NoteColorGridRow
+                    key={row[0] ?? "no-color"}
+                    $slideIn={rowIdx !== selectedRowIndex}
+                    $delay={rowIdx}
+                  >
+                    <S.NoteColorGrid>{renderColorRow(row)}</S.NoteColorGrid>
+                  </S.NoteColorGridRow>
+                ))
+              : (
+                  <S.NoteColorGridRow
+                    key={`collapsed-${selectedRowIndex}`}
+                    $swap
+                  >
+                    <S.NoteColorGrid>
+                      {renderColorRow(GRID_ROWS[selectedRowIndex])}
+                    </S.NoteColorGrid>
+                  </S.NoteColorGridRow>
+                )}
+          </S.NoteColorGridExpandWrap>
+          <S.NoteColorToggle
+            type="button"
+            onClick={() => setColorGridExpanded((v) => !v)}
+          >
+            {colorGridExpanded ? "▴ show less" : "▾ show all colors"}
+          </S.NoteColorToggle>
         </div>
 
         <div>

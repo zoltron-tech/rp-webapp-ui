@@ -212,6 +212,7 @@ type Props = {
   onConfirm: () => void;
   onChangeBanner?: () => void;
   isUploading?: boolean;
+  confirmLabel?: string;
   viewportRef?: React.RefObject<HTMLDivElement | null>;
 };
 
@@ -234,6 +235,7 @@ export function BannerCropDialog({
   onConfirm,
   onChangeBanner,
   isUploading,
+  confirmLabel,
   viewportRef,
 }: Props) {
   const handleClose = useCallback(() => onOpenChange(false), [onOpenChange]);
@@ -299,7 +301,7 @@ export function BannerCropDialog({
             }}
             disabled={Boolean(isUploading)}
           >
-            {isUploading ? "Updating…" : "Update"}
+            {confirmLabel ?? (isUploading ? "Updating…" : "Update")}
           </UpdateButton>
         </RightActions>
       </Footer>

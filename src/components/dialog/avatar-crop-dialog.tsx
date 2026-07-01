@@ -10,6 +10,10 @@ const Content = styled.div`
   gap: 12px;
   padding: 8px 12px;
   width: 100%;
+
+  @media (max-width: 480px) {
+    padding: 8px 4px;
+  }
 `;
 
 const ViewportWrap = styled.div`
@@ -19,8 +23,8 @@ const ViewportWrap = styled.div`
 
 const Square = styled.div`
   position: relative;
-  width: 320px;
-  height: 320px;
+  width: min(320px, 100%);
+  aspect-ratio: 1 / 1;
   background: var(--bg-1);
   border-radius: 6px;
   overflow: hidden;

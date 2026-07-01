@@ -180,16 +180,19 @@ export const ParentWrapperContainer = styled.div`
   align-items: flex-start;
   gap: 0.3em;
   width: 100%;
+  height: 93dvh;
   overflow: hidden;
 `;
 
 export const LeftWrapperContainer = styled.div`
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   flex-shrink: 0;
   width: 15cqw;
+  height: 105dvh;
+  overflow: hidden;
 
   container-name: left_wrapper;
   container-type: inline-size;
@@ -259,6 +262,17 @@ export const ContentContainer = styled.div`
   justify-content: center;
   align-items: center;
   margin-top: 10px;
+`;
+
+/** Friends column inside LeftWrapperContainer — fills it and clips its own
+ * overflow so excess below the viewport is hidden instead of pushing the
+ * whole page into a vertical scroll. Top-aligned (not centered) so it
+ * renders flush with the top instead of leaving a gap above. The friend
+ * list itself keeps scrolling via ListContainer's own overflow-y. */
+export const FriendsContentContainer = styled(ContentContainer)`
+  height: 100%;
+  justify-content: flex-start;
+  overflow: hidden;
 `;
 
 export const ActivityContainer = styled.div`

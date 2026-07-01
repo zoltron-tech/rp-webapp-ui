@@ -12,6 +12,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { HiPaperAirplane } from "react-icons/hi2";
@@ -40,6 +41,7 @@ import {
   PromptEvent,
   usePromptInputEvents,
 } from "./helpers";
+import { NovelistConfirm } from "./novelist-confirm";
 import { PromptPrivacySelect } from "./privacy-select";
 import {
   INITIAL_STATE,
@@ -50,7 +52,7 @@ import {
 import { PromptInputTrigger } from "./prompt-input-trigger";
 import { PromptMediaInput } from "./prompt-media-input";
 import { PromptMediaPreview } from "./prompt-media-preview";
-import { PromptMuseSelect } from "./prompt-muse-select";
+import { PromptMuseSelect, type MuseSelectHandle } from "./prompt-muse-select";
 import { PromptTextField } from "./prompt-text-field";
 import * as S from "./styles";
 
@@ -86,8 +88,10 @@ export const PromptForm: FC<PromptInputFormProps> = ({
   const setPromptInputState = usePromptInputStoreSet();
 
   const [open, setOpen] = useState(true);
-
   const [error, setError] = useState<API_MESSAGE | null>(null);
+  const [novelistConfirmOpen, setNovelistConfirmOpen] = useState(false);
+  const pendingSubmitRef = useRef<(() => Promise<void>) | null>(null);
+  const museSelectRef = useRef<MuseSelectHandle | null>(null);
 
   const { emit } = usePromptInputEvents();
 
@@ -130,6 +134,11 @@ export const PromptForm: FC<PromptInputFormProps> = ({
     }
   }, [novelist, dropdownSelection]);
 
+  const novelistDisplayName = useMemo(
+    () => sources.find((s) => s.sourceType === "NOVELIST")?.name ?? "NOVELIST",
+    [sources],
+  );
+
   const handleSend: FormEventHandler<HTMLFormElement> = useCallback(
     async (e) => {
       e.preventDefault();
@@ -170,6 +179,31 @@ export const PromptForm: FC<PromptInputFormProps> = ({
         payload[getParentIdKeyFromPromptType(type)] = parentId;
       }
 
+      const hasMuseOptions = sources.some((s) => s.sourceType === "MUSE");
+      if (selectedSource.sourceType === "NOVELIST" && hasMuseOptions) {
+        pendingSubmitRef.current = async () => {
+          setSending(true);
+          const response = await submitPrompt(payload, type);
+
+          if (response.message !== API_MESSAGE.Success) {
+            setError(response.message);
+            setSending(false);
+            emit(PromptEvent.Error, response.message);
+            return;
+          }
+
+          successToast("Sent successfully");
+          emit(PromptEvent.Sent, { muse: selectedSource, payload, type });
+          setSending(false);
+          setError(null);
+          setOpen(false);
+          setPromptInputState({ media: null, promptText: "" });
+          onSend?.();
+        };
+        setNovelistConfirmOpen(true);
+        return;
+      }
+
       setSending(true);
       const response = await submitPrompt(payload, type);
 
@@ -194,14 +228,34 @@ export const PromptForm: FC<PromptInputFormProps> = ({
       setPromptInputState({ media: null, promptText: "" });
       onSend?.();
     },
-    [sources, promptText, parentId, type, emit, onSend],
+    [sources, promptText, parentId, type, privacySelectedFriends, emit, onSend],
   );
 
+  const handleConfirmNovelist = useCallback(async () => {
+    setNovelistConfirmOpen(false);
+    await pendingSubmitRef.current?.();
+    pendingSubmitRef.current = null;
+  }, []);
+
+  const handleSelectCharacter = useCallback(() => {
+    setNovelistConfirmOpen(false);
+    museSelectRef.current?.openDialog();
+  }, []);
+
   return (
-    <Form.Root className="form-content" onSubmit={handleSend}>
+    <>
+      <NovelistConfirm
+        open={novelistConfirmOpen}
+        onOpenChange={setNovelistConfirmOpen}
+        novelistName={novelistDisplayName}
+        onPostAsNovelist={handleConfirmNovelist}
+        onSelectCharacter={handleSelectCharacter}
+      />
+      <Form.Root className="form-content" onSubmit={handleSend}>
       {/* ── Meta row: sender + privacy avatars on left, media buttons on right ─ */}
       <S.DesktopMetaRow>
         <PromptMuseSelect
+          ref={museSelectRef}
           sources={sources}
           dropdownSelection={dropdownSelection}
           initialSelection={initialSelection}
@@ -250,6 +304,7 @@ export const PromptForm: FC<PromptInputFormProps> = ({
 
       <PromptMediaPreview />
     </Form.Root>
+    </>
   );
 };
 

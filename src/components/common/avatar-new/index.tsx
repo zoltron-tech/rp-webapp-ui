@@ -16,6 +16,10 @@ type AvatarProps = Omit<HTMLProps<HTMLSpanElement>, "src"> & {
   /** When provided (with valid crop data), renders the avatar using
    *  background-image positioning instead of a plain <img> tag. */
   nwImage?: NWImage | null;
+  /** When provided, renders a colored ring around the avatar. For muse sources
+   *  this is the hex accent color; for novelist sources pass `"var(--accent)"`
+   *  within a wrapping element that has the palette class applied. */
+  accentColor?: string | null;
 };
 
 export const useIsOnline = (username: string | undefined): boolean => {
@@ -30,7 +34,7 @@ export const useIsOnline = (username: string | undefined): boolean => {
 
 export const AvatarNew: FC<AvatarProps> = forwardRef(
   (
-    { src, alt, className, placeholder = "", username, nwImage, ...rest },
+    { src, alt, className, placeholder = "", username, nwImage, accentColor, ...rest },
     forwardedRef,
   ) => {
     const fallbackText = useMemo(() => {
@@ -56,6 +60,7 @@ export const AvatarNew: FC<AvatarProps> = forwardRef(
         <S.AvatarRoot
           {...rest}
           $online={isOnline}
+          $accentColor={accentColor}
           className={classNames("avatar", className)}
           ref={forwardedRef as React.ForwardedRef<HTMLSpanElement>}
         >
@@ -73,6 +78,7 @@ export const AvatarNew: FC<AvatarProps> = forwardRef(
       <S.AvatarRoot
         {...rest}
         $online={isOnline}
+        $accentColor={accentColor}
         className={classNames("avatar", className)}
         ref={forwardedRef as React.ForwardedRef<HTMLSpanElement>}
       >

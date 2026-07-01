@@ -1,23 +1,34 @@
 ﻿"use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { BiSolidConversation } from "react-icons/bi";
-import { FiMoreVertical } from "react-icons/fi";
+import { FaImagePortrait } from "react-icons/fa6";
+import { FiCamera, FiMoreVertical } from "react-icons/fi";
 import { GiBookCover } from "react-icons/gi";
 import { MdImage, MdPhotoLibrary } from "react-icons/md";
 import { TiInfoLarge } from "react-icons/ti";
 import { ShouldRender } from "@/components/common";
+import { AppAlertDialog } from "@/components/dialog";
+import BannerCropDialog from "@/components/dialog/banner-crop-dialog";
 import { useGlobalState } from "@/context/store/stores";
 import { useStateMachine } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { useUIContext } from "@/hooks/use-ui-context";
+import { useUploadMedia } from "@/hooks/use-upload-media";
 import type { Muse, MuseAboutSection, Prompt } from "@/types";
+import type { ImageCropFilter, NWImage } from "@/types/novelist";
+import { API_MESSAGE } from "@/utils/constants";
+import { reverseWsrvUrl } from "@/utils/image";
 import { Logger } from "@/utils/services";
+import { deleteMedia } from "../../profile/actions";
 import { getMuseRankAction } from "../../leaderboard/actions";
 import {
   getMuseAboutSectionsAction,
   getMuseAction,
   getMuseMediaAction,
+  removeMuseCardBackgroundAction,
+  setMuseCardBackgroundAction,
 } from "../../muse/actions";
 import { getPromptsByMuseAction } from "../../prompt/actions";
 import { BackStorySection } from "./sections/back-story-section";
@@ -28,7 +39,15 @@ import { MoreSection } from "./sections/more-section";
 import { MuseInfoSection } from "./sections/muse-info-section";
 import { PromptsSection } from "./sections/prompts-section";
 import * as S from "./styles";
-import { FaImagePortrait } from "react-icons/fa6";
+
+function clamp(v: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, v));
+}
+
+function toCropFilter(src: string, x: number, y: number, scale: number): ImageCropFilter {
+  const scalePct = Math.round(scale * 100);
+  return { height: scalePct, src, width: scalePct, x: Math.round(x), y: Math.round(y) };
+}
 
 type CARD_STATE =
   | "CARD_IMAGE"
@@ -43,6 +62,8 @@ export default function MuseProfilePage({}) {
   const params = useParams();
   const authState = useGlobalState("authState");
   const user = useGlobalState("user");
+  const { successToast, errorToast } = useUIContext();
+  const { uploadMedia } = useUploadMedia();
   const [muse, setMuse] = useState<Muse | null>(null);
   const [prompts, setPrompts] = useState<Prompt[] | null>(null);
   const [aboutSections, setAboutSections] = useState<MuseAboutSection[] | null>(
@@ -53,6 +74,167 @@ export default function MuseProfilePage({}) {
   const [museRankLoading, setMuseRankLoading] = useState(true);
   const username = params?.slug as string;
   const { baseDataLoader } = usePageRouter();
+
+  // ── Card background crop ───────────────────────────────────────────────────
+  const [cardBgCropOpen, setCardBgCropOpen] = useState(false);
+  const [pendingCardBgSrc, setPendingCardBgSrc] = useState("");
+  const [cardBgX, setCardBgX] = useState(50);
+  const [cardBgY, setCardBgY] = useState(50);
+  const [cardBgScale, setCardBgScale] = useState(1);
+  const [cardBgImageUploading, setCardBgImageUploading] = useState(false);
+  const [cardBgSaving, setCardBgSaving] = useState(false);
+  const [tempUploadedCardBg, setTempUploadedCardBg] = useState<string | null>(null);
+  const [confirmRemoveCardBg, setConfirmRemoveCardBg] = useState(false);
+  const cardBgViewportRef = useRef<HTMLDivElement>(null);
+  const cardBgDragStart = useRef<{ px: number; py: number; bx: number; by: number } | null>(null);
+  const lastCardBgPinchDist = useRef<number | null>(null);
+  const cardBgFileInputRef = useRef<HTMLInputElement>(null);
+
+  const openNewCardBgCropDialog = (src: string) => {
+    setPendingCardBgSrc(src);
+    setCardBgX(50);
+    setCardBgY(50);
+    setCardBgScale(1);
+    setCardBgCropOpen(true);
+  };
+
+  const openExistingCardBgCropDialog = useCallback(() => {
+    const bg = muse?.cardBackground;
+    if (!bg?.src) {
+      cardBgFileInputRef.current?.click();
+      return;
+    }
+    setPendingCardBgSrc(reverseWsrvUrl(bg.src) ?? bg.src);
+    setCardBgX(bg.crop?.x ?? 50);
+    setCardBgY(bg.crop?.y ?? 50);
+    setCardBgScale(bg.crop?.width ? bg.crop.width / 100 : 1);
+    setCardBgCropOpen(true);
+  }, [muse?.cardBackground]);
+
+  async function handleCardBgFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !muse?.id) return;
+    const reader = new FileReader();
+    reader.onloadend = () => { openNewCardBgCropDialog(reader.result as string); };
+    reader.readAsDataURL(file);
+    if (tempUploadedCardBg) await deleteMedia(tempUploadedCardBg);
+    setCardBgImageUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("contentType", file.type);
+    formData.append("prefix", muse.id);
+    const url = await uploadMedia(formData);
+    setCardBgImageUploading(false);
+    if (!url || url === API_MESSAGE.MediaError) {
+      errorToast("Failed to upload image.");
+      setCardBgCropOpen(false);
+      return;
+    }
+    setTempUploadedCardBg(url);
+    setPendingCardBgSrc(url);
+  }
+
+  const handleCardBgPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.isPrimary === false) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    cardBgDragStart.current = { bx: cardBgX, by: cardBgY, px: e.clientX, py: e.clientY };
+  };
+
+  const handleCardBgPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!cardBgDragStart.current || !cardBgViewportRef.current) return;
+    const rect = cardBgViewportRef.current.getBoundingClientRect();
+    const dx = ((e.clientX - cardBgDragStart.current.px) / rect.width) * 100;
+    const dy = ((e.clientY - cardBgDragStart.current.py) / rect.height) * 100;
+    setCardBgX(clamp(cardBgDragStart.current.bx - dx, 0, 100));
+    setCardBgY(clamp(cardBgDragStart.current.by - dy, 0, 100));
+  };
+
+  const handleCardBgPointerUp = () => { cardBgDragStart.current = null; };
+
+  const handleCardBgWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 0.05 : -0.05;
+    setCardBgScale((prev) => clamp(prev + delta, 1, 3));
+  };
+
+  const handleCardBgTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      lastCardBgPinchDist.current = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY,
+      );
+    }
+  };
+
+  const handleCardBgTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && lastCardBgPinchDist.current !== null) {
+      e.preventDefault();
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY,
+      );
+      const delta = (dist - lastCardBgPinchDist.current) * 0.01;
+      lastCardBgPinchDist.current = dist;
+      setCardBgScale((prev) => clamp(prev + delta, 1, 3));
+    }
+  };
+
+  const handleCardBgScaleChange = (v: number) => { setCardBgScale(clamp(v, 1, 3)); };
+
+  const handleCardBgCropConfirm = useCallback(() => {
+    if (!muse?.id) return;
+    const crop = toCropFilter(pendingCardBgSrc, cardBgX, cardBgY, cardBgScale);
+    const nwImage: NWImage = {
+      crop,
+      filterValues: { blur: 0, brightness: 100, greyscale: 0 },
+      src: pendingCardBgSrc,
+    };
+    setCardBgSaving(true);
+    setMuseCardBackgroundAction(muse.id, nwImage).then((result) => {
+      setCardBgSaving(false);
+      if (result && typeof result === "object" && "message" in result) {
+        errorToast("Failed to update card background.");
+        return;
+      }
+      setTempUploadedCardBg(null);
+      setMuse((prev) =>
+        prev ? { ...prev, cardBackground: result as NWImage, useExtraImages: true } : prev,
+      );
+      successToast("Card background updated.");
+    });
+  }, [muse?.id, pendingCardBgSrc, cardBgX, cardBgY, cardBgScale, errorToast, successToast]);
+
+  const handleCardBgCropCancel = useCallback(async () => {
+    if (tempUploadedCardBg && tempUploadedCardBg === pendingCardBgSrc) {
+      await deleteMedia(tempUploadedCardBg);
+      setTempUploadedCardBg(null);
+    }
+    setCardBgCropOpen(false);
+  }, [tempUploadedCardBg, pendingCardBgSrc]);
+
+  const resetCardBgCrop = useCallback(() => {
+    setCardBgX(50);
+    setCardBgY(50);
+    setCardBgScale(1);
+  }, []);
+
+  const handleCardBgFit = useCallback((fitScale: number) => {
+    setCardBgX(50);
+    setCardBgY(50);
+    setCardBgScale(fitScale);
+  }, []);
+
+  async function handleRemoveCardBg() {
+    if (!muse?.id) return;
+    const result = await removeMuseCardBackgroundAction(muse.id);
+    if (result && typeof result === "object" && "message" in result) {
+      errorToast("Failed to remove card background.");
+      return;
+    }
+    setMuse((prev) => prev ? { ...prev, cardBackground: null, useExtraImages: false } : prev);
+    successToast("Card background removed.");
+  }
   const { transition, is, state } = useStateMachine<CARD_STATE>({
     initial: "MUSE_INFO",
     transitions: {
@@ -205,15 +387,50 @@ export default function MuseProfilePage({}) {
             $bgPosition={cardBgCss?.bgPosition}
           />
         </S.ImageWrapper>
+        {isOwnMuse && (
+          <>
+            <S.CardBgEditBtn
+              type="button"
+              title={cardBgSaving ? "Saving…" : muse?.cardBackground ? "Adjust card image" : "Add card image"}
+              disabled={cardBgSaving || cardBgImageUploading}
+              onClick={openExistingCardBgCropDialog}
+            >
+              {cardBgSaving ? <span style={{ fontSize: "0.45rem" }}>…</span> : <FiCamera size={12} />}
+            </S.CardBgEditBtn>
+            {muse?.cardBackground && (
+              <S.CardBgRemoveBtn
+                className="card-bg-remove"
+                type="button"
+                title="Remove card image"
+                onClick={() => setConfirmRemoveCardBg(true)}
+              >
+                ×
+              </S.CardBgRemoveBtn>
+            )}
+          </>
+        )}
       </S.CardWrapper>
 
       {/* Sections — always show the selected one */}
       <ShouldRender if={is("CARD_IMAGE")}>
-        <CardImageSection muse={muse} cardBgSrc={cardBgSrc} />
+        <CardImageSection
+          muse={muse}
+          cardBgSrc={cardBgSrc}
+          isOwnMuse={isOwnMuse}
+          cardBgSaving={cardBgSaving || cardBgImageUploading}
+          onEditCardBg={openExistingCardBgCropDialog}
+          onRemoveCardBg={() => setConfirmRemoveCardBg(true)}
+        />
       </ShouldRender>
 
       <ShouldRender if={is("MUSE_INFO")}>
-        <MuseInfoSection muse={muse} isOwnMuse={isOwnMuse} museRank={museRank} museRankLoading={museRankLoading} />
+        <MuseInfoSection
+          muse={muse}
+          isOwnMuse={isOwnMuse}
+          museRank={museRank}
+          museRankLoading={museRankLoading}
+          onMuseUpdate={(updates) => setMuse((prev) => (prev ? { ...prev, ...updates } : prev))}
+        />
       </ShouldRender>
 
       <ShouldRender if={is("CONNECTIONS")}>
@@ -225,6 +442,7 @@ export default function MuseProfilePage({}) {
           muse={muse}
           aboutSections={aboutSections}
           isOwnMuse={isOwnMuse}
+          onMuseUpdate={(updates) => setMuse((prev) => (prev ? { ...prev, ...updates } : prev))}
         />
       </ShouldRender>
 
@@ -311,6 +529,68 @@ export default function MuseProfilePage({}) {
           <S.MenuText>MORE</S.MenuText>
         </S.MenuButton>
       </S.SideMenu>
+
+      {/* Card background — hidden file input */}
+      <input
+        ref={cardBgFileInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        style={{ display: "none" }}
+        onChange={handleCardBgFileChange}
+      />
+
+      {/* Card background crop/adjust dialog */}
+      <AppAlertDialog
+        open={cardBgCropOpen}
+        onOpenChange={(open) => {
+          if (!open) handleCardBgCropCancel();
+          setCardBgCropOpen(open);
+        }}
+        heading="Adjust card image"
+        text="Drag to reposition. Scroll or pinch to zoom."
+        showConfirm={false}
+        isCancelHidden={true}
+        body={
+          <S.CardBgCropBody>
+            <BannerCropDialog
+              open={cardBgCropOpen}
+              src={pendingCardBgSrc}
+              x={cardBgX}
+              y={cardBgY}
+              scale={cardBgScale}
+              portrait
+              aspectRatio="9 / 16"
+              onOpenChange={setCardBgCropOpen}
+              onPointerDown={handleCardBgPointerDown}
+              onPointerMove={handleCardBgPointerMove}
+              onPointerUp={handleCardBgPointerUp}
+              onTouchStart={handleCardBgTouchStart}
+              onTouchMove={handleCardBgTouchMove}
+              onWheel={handleCardBgWheel}
+              onScaleChange={handleCardBgScaleChange}
+              onReset={resetCardBgCrop}
+              onFit={handleCardBgFit}
+              onCancel={handleCardBgCropCancel}
+              onConfirm={handleCardBgCropConfirm}
+              onChangeBanner={() => cardBgFileInputRef.current?.click()}
+              isUploading={cardBgImageUploading}
+              viewportRef={cardBgViewportRef}
+            />
+          </S.CardBgCropBody>
+        }
+      />
+
+      {/* Confirm: remove card background */}
+      <AppAlertDialog
+        heading="Remove card image?"
+        text="Remove the custom card background? The main character image will be used instead."
+        open={confirmRemoveCardBg}
+        onOpenChange={(open) => { if (!open) setConfirmRemoveCardBg(false); }}
+        onCancel={() => setConfirmRemoveCardBg(false)}
+        onConfirm={() => { setConfirmRemoveCardBg(false); handleRemoveCardBg(); }}
+        actionButtonLabel="Remove"
+        actionColor="negative"
+      />
     </S.MuseContainer>
   );
 }

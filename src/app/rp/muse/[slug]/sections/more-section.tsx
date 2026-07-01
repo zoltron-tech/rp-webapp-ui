@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { GrEdit } from "react-icons/gr";
-import { MdOutlineDownload, MdOutlineReport } from "react-icons/md";
+import { MdOutlineDownload, MdOutlineReport, MdShare } from "react-icons/md";
 import { AppAlertDialog } from "@/components/dialog";
 import { MiniMuseCard } from "@/components/mini-muse-card";
+import { ShareMuseDialog } from "@/components/share-muse-dialog";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
@@ -29,6 +30,7 @@ export function MoreSection({ muse, isOwnMuse }: Props) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showReportConfirm, setShowReportConfirm] = useState(false);
   const [showExportCard, setShowExportCard] = useState(false);
+  const [showShareMuse, setShowShareMuse] = useState(false);
   const accent = muse?.useAccent ? muse.accent : undefined;
 
   return (
@@ -53,6 +55,13 @@ export function MoreSection({ muse, isOwnMuse }: Props) {
                   </S.MoreMenuItem>
                   <S.MoreMenuItem
                     type="button"
+                    onClick={() => setShowShareMuse(true)}
+                  >
+                    <MdShare size={20} />
+                    Share muse
+                  </S.MoreMenuItem>
+                  <S.MoreMenuItem
+                    type="button"
                     onClick={() => setShowExportCard(true)}
                   >
                     <MdOutlineDownload size={20} />
@@ -69,6 +78,13 @@ export function MoreSection({ muse, isOwnMuse }: Props) {
                 </S.MoreMenuList>
               ) : (
                 <S.MoreMenuList>
+                  <S.MoreMenuItem
+                    type="button"
+                    onClick={() => setShowShareMuse(true)}
+                  >
+                    <MdShare size={20} />
+                    Share muse
+                  </S.MoreMenuItem>
                   <S.MoreMenuItem
                     type="button"
                     onClick={() => setShowExportCard(true)}
@@ -128,6 +144,12 @@ export function MoreSection({ muse, isOwnMuse }: Props) {
       {showExportCard && muse && (
         <MiniMuseCard muse={muse} onClose={() => setShowExportCard(false)} />
       )}
+
+      <ShareMuseDialog
+        muse={muse}
+        open={showShareMuse}
+        onClose={() => setShowShareMuse(false)}
+      />
     </>
   );
 }

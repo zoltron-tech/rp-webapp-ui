@@ -5,6 +5,7 @@ import {
   forwardRef,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useState,
 } from "react";
@@ -23,6 +24,10 @@ type Props = {
   dropdownSelection: "NOVELIST" | "MUSE" | "ALL";
 };
 
+export interface MuseSelectHandle {
+  openDialog: () => void;
+}
+
 const promptTypeToLabel = (type: SubmitPromptType): string => {
   switch (type) {
     case "prompt":
@@ -36,7 +41,7 @@ const promptTypeToLabel = (type: SubmitPromptType): string => {
   }
 };
 
-export const PromptMuseSelect: FC<Props> = forwardRef(
+export const PromptMuseSelect = forwardRef<MuseSelectHandle, Props>(
   (
     { sources, dropdownSelection, initialSelection, ...props },
     forwardedRef,
@@ -98,11 +103,14 @@ export const PromptMuseSelect: FC<Props> = forwardRef(
       (!showNovelist || !novelistMatchesSearch) &&
       (!showMuses || filteredMuses.length === 0);
 
+    useImperativeHandle(forwardedRef, () => ({
+      openDialog: () => setDialogOpen(true),
+    }));
+
     return (
       <S.MuseSelect
         name="muse"
         {...props}
-        ref={forwardedRef as React.ForwardedRef<HTMLDivElement>}
       >
         <Form.Label className="form-label">
           {promptTypeToLabel(promptType)}

@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { FcImageFile } from "react-icons/fc";
-import { MdOutlineImage, MdRefresh } from "react-icons/md";
+import { MdCropFree, MdOutlineImage, MdRefresh } from "react-icons/md";
 import styled from "styled-components";
 
 const Content = styled.div`
@@ -18,12 +18,13 @@ const ViewportWrap = styled.div`
   justify-content: center;
 `;
 
-/** Wide rectangular viewport matching the profile banner aspect ratio (5:2). */
-const BannerRect = styled.div`
+const BannerRect = styled.div<{ $portrait?: boolean; $aspectRatio?: string }>`
   position: relative;
-  width: 100%;
-  max-width: 480px;
-  aspect-ratio: 5 / 2;
+  ${({ $portrait }) =>
+    $portrait
+      ? `height: 240px; width: auto; max-width: none;`
+      : `width: 100%; max-width: 480px;`}
+  aspect-ratio: ${({ $aspectRatio }) => $aspectRatio ?? "5 / 2"};
   background: var(--bg-1);
   border-radius: 6px;
   overflow: hidden;
@@ -31,6 +32,10 @@ const BannerRect = styled.div`
   cursor: grab;
   &:active {
     cursor: grabbing;
+  }
+
+  @media (max-width: 480px) {
+    ${({ $portrait }) => $portrait && `height: 200px;`}
   }
 `;
 
@@ -253,8 +258,11 @@ type Props = {
   onCancel: () => void;
   onConfirm: () => void;
   onChangeBanner?: () => void;
+  onFit?: (fitScale: number) => void;
   isUploading?: boolean;
   confirmLabel?: string;
+  aspectRatio?: string;
+  portrait?: boolean;
   viewportRef?: React.RefObject<HTMLDivElement | null>;
 };
 
@@ -276,11 +284,43 @@ export function BannerCropDialog({
   onCancel,
   onConfirm,
   onChangeBanner,
+  onFit,
   isUploading,
   confirmLabel,
+  aspectRatio,
+  portrait,
   viewportRef,
 }: Props) {
   const handleClose = useCallback(() => onOpenChange(false), [onOpenChange]);
+
+  const computeFit = useCallback(() => {
+    if (!src || !viewportRef?.current) return;
+    const img = new window.Image();
+    img.onload = () => {
+      const rect = viewportRef.current?.getBoundingClientRect();
+      if (!rect || rect.width === 0 || rect.height === 0) return;
+      const { naturalWidth, naturalHeight } = img;
+      // At scale=1 the rendered image height = vpW × (imgH/imgW).
+      // If that's shorter than vpH there's a vertical gap, so zoom until
+      // rendered height = vpH → fitScale = (vpH/vpW) × (imgW/imgH).
+      // When the image is already tall enough, max(1, …) keeps scale at 1.
+      const fitScale = Math.max(
+        1,
+        (rect.height / rect.width) * (naturalWidth / naturalHeight),
+      );
+      onFit?.(Math.min(fitScale, 3));
+    };
+    img.src = src;
+  }, [src, viewportRef, onFit]);
+
+  // Auto-fit once when the dialog opens (only when onFit is wired up)
+  useEffect(() => {
+    if (!open || !onFit) return;
+    // Wait for the dialog animation to settle before reading viewport dimensions
+    const t = setTimeout(computeFit, 160);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   return (
     <Content data-open={open}>
@@ -291,6 +331,12 @@ export function BannerCropDialog({
             <MdRefresh size={13} />
             Reset
           </ResetPill>
+          {onFit && (
+            <ResetPill type="button" onClick={computeFit}>
+              <MdCropFree size={13} />
+              Fit
+            </ResetPill>
+          )}
           {onChangeBanner && (
             <ChangePill type="button" onClick={onChangeBanner}>
               <MdOutlineImage size={13} />
@@ -302,6 +348,8 @@ export function BannerCropDialog({
 
       <ViewportWrap>
         <BannerRect
+          $portrait={portrait}
+          $aspectRatio={aspectRatio}
           ref={viewportRef as any}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}

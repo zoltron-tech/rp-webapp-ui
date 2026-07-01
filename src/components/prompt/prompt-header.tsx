@@ -29,6 +29,7 @@ import { InlineMusicPlayer } from "../inline-music-player/page";
 import { AppDropdownMenuResponsive } from "../profile-more-dropdown";
 import { UpdatePromptForm, type UpdatePromptProps } from "../update-prompt";
 import { usePromptState, usePromptStateSet } from "./prompt.store";
+import { SharePromptDialog } from "./share-prompt-dialog";
 import * as S from "./styled";
 
 type PromptHeaderProps = {};
@@ -36,6 +37,7 @@ type PromptHeaderProps = {};
 export const PromptHeader: FC<PromptHeaderProps> = () => {
   const promptId = usePromptState("id");
   const promptText = usePromptState("text");
+  const promptMedia = usePromptState("media");
   const promptSong = usePromptState("song");
   const createdOn = usePromptState("createdOn");
   const privacy = usePromptState("privacy");
@@ -52,6 +54,7 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
   const { routeToPage } = usePageRouter();
   const { successToast, errorToast, warningToast } = useUIContext();
   const authState = useGlobalState("authState");
+  const [showShareDialog, setShowShareDialog] = useState(false);
   const [showEditPromptAlert, setShowEditPromptAlert] = useState(false);
   const [editPromptPayload, setEditPromptPayload] =
     useState<UpdatePromptProps["payload"]>(null);
@@ -82,8 +85,18 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
     }
   }, [promptId, source, routeToPage, successToast, errorToast]);
 
+  const shareItem = {
+    icon: <IoIosShareAlt />,
+    label: "Share to Community",
+    onClick: () => setShowShareDialog(true),
+  };
+
   const dropdownItems = isOwner
     ? [
+        shareItem,
+        {
+          separator: true,
+        },
         {
           icon: <FaRegEdit />,
           label: "Edit prompt",
@@ -107,6 +120,10 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
         },
       ]
     : [
+        shareItem,
+        {
+          separator: true,
+        },
         {
           icon: <RiFlagFill />,
           label: "Report this prompt",
@@ -146,6 +163,18 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
         isCancelHidden={true}
       />
 
+      <SharePromptDialog
+        promptId={promptId ?? ""}
+        prompt={{
+          source,
+          text: promptText,
+          media: promptMedia,
+          createdOn,
+        }}
+        open={showShareDialog}
+        onClose={() => setShowShareDialog(false)}
+      />
+
       <UpdatePromptForm
         type={editPromptType}
         payload={editPromptPayload}
@@ -158,6 +187,8 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
           image={source.image}
           name={source.name}
           avatar={source.avatar}
+          useAccent={source.useAccent}
+          accent={source.accent}
         />
       </ShouldRender>
       <ShouldRender if={source.sourceType === "NOVELIST"}>
@@ -166,6 +197,8 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
           image={source.image}
           name={source.name}
           avatar={source.avatar}
+          useAccent={source.useAccent}
+          accent={source.accent}
         />
       </ShouldRender>
       <S.SourceInfo>

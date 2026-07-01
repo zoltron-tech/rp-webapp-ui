@@ -1,7 +1,7 @@
 import { Avatar } from "radix-ui";
 import { styled } from "styled-components";
 
-export const AvatarRoot = styled(Avatar.Root)<{ $online?: boolean }>`
+export const AvatarRoot = styled(Avatar.Root)<{ $online?: boolean; $accentColor?: string | null }>`
   position: relative;
   display: inline-flex;
   width: 20px;
@@ -11,7 +11,8 @@ export const AvatarRoot = styled(Avatar.Root)<{ $online?: boolean }>`
   flex-shrink: 0;
   user-select: none;
   background-color: var(--bg-2);
-  box-shadow: ${({ $online }) => ($online ? "0 0 0 2px #22c55e" : "none")};
+  box-shadow: ${({ $online, $accentColor }) =>
+    $online ? "0 0 0 2px #22c55e" : $accentColor ? `0 0 0 2px ${$accentColor}` : "none"};
   transition: box-shadow 0.2s ease;
 
   &.selectable {
@@ -58,6 +59,7 @@ export const NWImageLayer = styled.div<{
   inset: 0;
   width: 100%;
   height: 100%;
+  overflow: hidden;
   background-image: url(${(p) => p.$src});
   background-repeat: no-repeat;
   /* Two-value size: width% auto — height scales proportionally (fit by width). */

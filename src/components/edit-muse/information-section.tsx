@@ -249,7 +249,11 @@ export function InformationSection({
       }
 
       const savedId = result.id ?? id ?? "";
-      setMuseState({ id: savedId });
+      setMuseState({
+        id: savedId,
+        // Keep the store in sync so re-opening this section shows the correct attributes.
+        ...(extraAttributes !== null && { extraAttributes }),
+      });
       successToast("Information saved.");
       onDone(savedId);
     },

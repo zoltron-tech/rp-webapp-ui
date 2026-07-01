@@ -473,7 +473,7 @@ export default function HomePage() {
       )} */}
       <S.ParentWrapperContainer>
         <S.LeftWrapperContainer>
-          <S.ContentContainer className="friends-container">
+          <S.FriendsContentContainer>
             <S.SubText>Friends</S.SubText>
             <S.ListContainer id="home-tour-step-1">
               <S.AddFriendButton
@@ -508,7 +508,7 @@ export default function HomePage() {
                 </>
               )}
             </S.ListContainer>
-          </S.ContentContainer>
+          </S.FriendsContentContainer>
         </S.LeftWrapperContainer>
         <S.RightWrapperContainer ref={rightWrapRef}>
           {/* <S.ContentContainer>

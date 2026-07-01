@@ -25,6 +25,9 @@ interface ChatRichInputProps {
   onHtmlChange: (html: string) => void;
   /** Called when Enter is pressed without Shift. */
   onSubmit?: () => void;
+  /** When false, Enter always inserts a newline instead of calling `onSubmit`
+   *  (Shift+Enter still inserts a newline either way). Defaults to true. */
+  submitOnEnter?: boolean;
   mentionItems?: MentionDataItem[];
   /** When provided, muses are fetched dynamically from the server on each query change. */
   getMentionMuseItems?: (prefix: string) => Promise<MentionDataItem[]>;
@@ -53,6 +56,7 @@ export const ChatRichInput = forwardRef<
     onChange,
     onHtmlChange,
     onSubmit,
+    submitOnEnter = true,
     mentionItems = [],
     getMentionMuseItems,
     trailingAction,
@@ -419,7 +423,10 @@ export const ChatRichInput = forwardRef<
 
       // ── Enter submits (Shift+Enter = newline) ────────────────────────────
       // On mobile/touch devices, Enter should insert a newline, not submit.
+      // Callers that want Enter to always insert a newline (no submit-on-enter
+      // behavior at all) pass `submitOnEnter={false}`.
       if (e.key === "Enter" && !e.shiftKey) {
+        if (!submitOnEnter) return;
         const isTouchDevice =
           typeof navigator !== "undefined" && navigator.maxTouchPoints > 0;
         if (isTouchDevice) return;
@@ -427,7 +434,14 @@ export const ChatRichInput = forwardRef<
         onSubmit?.();
       }
     },
-    [showMention, filteredItems, focusedIndex, insertMention, onSubmit],
+    [
+      showMention,
+      filteredItems,
+      focusedIndex,
+      insertMention,
+      onSubmit,
+      submitOnEnter,
+    ],
   );
 
   return (

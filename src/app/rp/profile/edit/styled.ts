@@ -615,13 +615,13 @@ const notePickerWiggle = keyframes`
   100% { transform: scale(1.18); }
 `;
 
-export const NotePreviewEmoji = styled.span<{ $wiggling?: boolean }>`
+export const NotePreviewEmoji = styled.span<{ $wiggling?: boolean; $rotate?: boolean }>`
   position: absolute;
   top: -18px;
   right: -12px;
   font-size: 1.75rem;
   display: inline-block;
-  transform: rotate(45deg);
+  transform: ${({ $rotate }) => ($rotate ? "rotate(45deg)" : "none")};
   line-height: 1;
   pointer-events: none;
   filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.18));
@@ -699,6 +699,7 @@ export const NoteEmojiPickerRow = styled.div`
   /* padding gives selected/scaled buttons room to render their
      box-shadow and scale without being clipped by the scroll container */
   padding-block: 8px;
+  padding-inline: 6px;
   &::-webkit-scrollbar {
     display: none;
   }
@@ -1878,7 +1879,7 @@ export const BannerEditWrap = styled.div<{
 }>`
   position: relative;
   width: 100%;
-  aspect-ratio: 10 / 3;
+  aspect-ratio: 5 / 2;
   border-radius: 8px;
   overflow: hidden;
   cursor: ${({ $locked }) => ($locked ? "default" : "pointer")};
@@ -2059,6 +2060,10 @@ export const AvatarCropBody = styled.div`
   gap: 12px;
   align-items: center;
   padding: 8px 12px;
+
+  @media (max-width: 480px) {
+    padding: 4px 2px;
+  }
 `;
 
 /** Circular viewport that clips the image preview */

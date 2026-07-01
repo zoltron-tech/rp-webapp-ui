@@ -12,13 +12,14 @@ type Props = {
 
 export default function SectionMiniHeader({ muse, accent }: Props) {
   // routing for penned-by is handled by the PennedBy component
+  const avatarSrc = muse?.avatar?.src || muse?.image || "";
 
   return (
     <S.SectionMiniHeader>
-      <S.InfoCardAvatar $src={!muse?.image ? "" : muse.image}>
-        {muse?.image && (
+      <S.InfoCardAvatar $src={avatarSrc}>
+        {avatarSrc && (
           // biome-ignore lint/a11y/useAltText: hidden probe only
-          <img src={muse.image} style={{ display: "none" }} />
+          <img src={avatarSrc} style={{ display: "none" }} />
         )}
       </S.InfoCardAvatar>
 

@@ -40,6 +40,12 @@ z-index: 201;
 animation: ${contentShow} 150ms ease-out;
 color: var(--text);
 font-family: var(--font);
+
+@media (max-width: 480px) {
+  max-width: 320px;
+  padding: 6px;
+  border-radius: 6px;
+}
 `;
 
 export const Title = styled(AlertDialog.Title)`
@@ -47,6 +53,12 @@ margin-top: 10px;
 margin-left: 12px;
 font-size: var(--font-size-h4);
 font-weight: var(--font-weight-semi-bold);
+
+@media (max-width: 480px) {
+  margin-top: 6px;
+  margin-left: 8px;
+  font-size: var(--font-size-input);
+}
 `;
 
 export const Description = styled(AlertDialog.Description)`
@@ -54,6 +66,12 @@ margin-top: 30px;
 font-size: var(--font-size-input);
 margin-bottom: 20px;
 line-height: 1.5;
+
+@media (max-width: 480px) {
+  margin-top: 14px;
+  margin-bottom: 12px;
+  font-size: var(--font-size-small, 11px);
+}
 `;
 
 export const Actions = styled.div`
@@ -61,6 +79,11 @@ display: flex;
 justify-content: flex-end;
 gap: 12px;
 margin-top: 20px;
+
+@media (max-width: 480px) {
+  gap: 8px;
+  margin-top: 12px;
+}
 `;
 
 export const CancelButton = styled.button`
@@ -94,6 +117,12 @@ export const CancelButton = styled.button`
     color: var(--text-secondary);
     cursor: not-allowed;
   }
+
+  @media (max-width: 480px) {
+    width: 72px;
+    padding: 6px;
+    font-size: var(--font-size-small, 11px);
+  }
 `;
 
 export const ActionButton = styled.button<{
@@ -125,5 +154,11 @@ export const ActionButton = styled.button<{
         : colorVariant === "neutral"
           ? "var(--accent)" // accent hover
           : "#d03c3cff"}; // red hover
+  }
+
+  @media (max-width: 480px) {
+    min-width: 80px;
+    padding: 6px;
+    font-size: var(--font-size-small, 11px);
   }
 `;

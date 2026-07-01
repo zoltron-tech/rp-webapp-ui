@@ -1,5 +1,6 @@
 import { type FC, useEffect, useRef, useState } from "react";
 import { BsChevronLeft, BsChevronRight } from "react-icons/bs";
+import { CUSTOM_EMOJI_SET } from "./note-emoji-set";
 import * as S from "./styled";
 
 const MAX_NOTE_LENGTH = 100;
@@ -72,13 +73,6 @@ const GRID_ROWS: string[][] = Array.from(
   (_, i) => [...NOTE_COLORS].slice(i * COLOR_GRID_COLS, (i + 1) * COLOR_GRID_COLS)
 );
 
-const EMOJI_SET = [
-  "✨", "⭐", "🌟", "💫", "🔥", "⚡", "🌙", "☀️",
-  "🌸", "🍀", "🌊", "🌈", "🌺", "🌷", "🍄", "🌻",
-  "💎", "👑", "🏆", "🎯", "🎭", "🎪", "🎨", "🎵",
-  "🖊️", "📖", "🎲", "💌", "💝", "🦋", "🦄", "🔮",
-  "🧿", "🌿", "🏹", "🦁", "🐉", "🦊", "🌠", "🎬",
-] as const;
 
 type NoteDialogBodyProps = {
   value: string;
@@ -200,14 +194,18 @@ export const NoteDialogBody: FC<NoteDialogBodyProps> = ({
         $color={color}
         onClick={() => contentRef.current?.focus()}
       >
-        {emoji && (
-          <S.NotePreviewEmoji
-            $wiggling={previewWiggling}
-            onAnimationEnd={() => setPreviewWiggling(false)}
-          >
-            {emoji}
-          </S.NotePreviewEmoji>
-        )}
+        {emoji && (() => {
+          const found = CUSTOM_EMOJI_SET.find((e) => e.key === emoji);
+          return found ? (
+            <S.NotePreviewEmoji
+              $wiggling={previewWiggling}
+              $rotate={found.rotate}
+              onAnimationEnd={() => setPreviewWiggling(false)}
+            >
+              <found.Icon size={36} />
+            </S.NotePreviewEmoji>
+          ) : null;
+        })()}
         <S.NoteEditableContent
           ref={contentRef}
           contentEditable
@@ -295,22 +293,22 @@ export const NoteDialogBody: FC<NoteDialogBodyProps> = ({
               <BsChevronLeft size={11} />
             </S.NoteEmojiPickerArrow>
             <S.NoteEmojiPickerRow ref={emojiRowRef}>
-              {EMOJI_SET.map((e) => {
-                const isSelected = emoji === e;
+              {CUSTOM_EMOJI_SET.map((e) => {
+                const isSelected = emoji === e.key;
                 return (
                   <S.NoteEmojiButton
-                    key={e}
+                    key={e.key}
                     type="button"
                     $selected={isSelected}
                     $wiggling={isSelected && pickerWiggling}
                     data-selected={isSelected ? "true" : undefined}
                     data-emoji-selected={isSelected ? "true" : undefined}
-                    onClick={() => onEmojiChange(isSelected ? null : e)}
-                    aria-label={isSelected ? `${e} — click to remove` : `Emoji ${e}`}
-                    title={isSelected ? `${e} — click to remove` : e}
+                    onClick={() => onEmojiChange(isSelected ? null : e.key)}
+                    aria-label={isSelected ? `${e.label} — click to remove` : `Emoji ${e.label}`}
+                    title={isSelected ? `${e.label} — click to remove` : e.label}
                     onAnimationEnd={isSelected ? () => setPickerWiggling(false) : undefined}
                   >
-                    {e}
+                    <e.Icon size={18} />
                   </S.NoteEmojiButton>
                 );
               })}

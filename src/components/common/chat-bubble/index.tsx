@@ -1229,7 +1229,7 @@ export const ChatBubble: FC<Props> = ({
             title={option.label}
             onClick={() => handleReact(option.key)}
           >
-            <span>{option.emoji}</span>
+            {option.emoji}
           </S.ReactionPickerButton>
         ))}
       </S.ReactionPicker>
@@ -1546,7 +1546,7 @@ export const ChatBubble: FC<Props> = ({
                 onClick={() => setActiveReaction(reactionGroup.reaction)}
                 type="button"
               >
-                <span>{getReactionDisplay(reactionGroup.reaction)}</span>
+                {getReactionDisplay(reactionGroup.reaction)}
                 <span>{reactionGroup.users.length}</span>
               </S.ReactionChip>
             ))}

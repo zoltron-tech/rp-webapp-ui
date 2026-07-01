@@ -222,6 +222,7 @@ export const CardBackground = styled.div<CardProps>`
 `;
 
 export const CardWrapper = styled(Container)`
+  position: relative;
   width: 326px;
   aspect-ratio: 9 / 16;
   padding: 0px !important;
@@ -235,6 +236,10 @@ export const CardWrapper = styled(Container)`
 
   container-name: muse-card;
   container-type: size;
+
+  &:hover .card-bg-remove {
+    opacity: 1;
+  }
 
  @media (min-width: 1024px) and (max-width: 2047px) {
     margin-top: 20px;
@@ -259,6 +264,10 @@ export const CardExpandedWrapper = styled.div`
 
   container-name: muse-card;
   container-type: size;
+
+  &:hover .card-bg-remove {
+    opacity: 1;
+  }
 
   @media (min-width: 1024px) and (max-width: 2047px) {
     margin-top: 20px;
@@ -306,16 +315,236 @@ export const Title = styled.div`
 `;
 
 export const NoteContainer = styled.div`
+  position: relative;
   display: flex;
+  flex-direction: column;
   margin-bottom: 10px;
   margin-top: 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 22px 18px 16px 22px;
+  overflow: visible;
+
+  /* Decorative large opening quote */
+  &::before {
+    content: '"';
+    position: absolute;
+    top: -2px;
+    left: 10px;
+    font-size: 4.5rem;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: normal;
+    color: rgba(255, 255, 255, 0.08);
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* Decorative closing quote */
+  &::after {
+    content: '"';
+    position: absolute;
+    bottom: 2px;
+    right: 10px;
+    font-size: 3rem;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: normal;
+    color: rgba(255, 255, 255, 0.05);
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* Reveal action buttons on hover (desktop) */
+  &:hover .note-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+`;
+
+export const NoteQuote = styled.p`
+  margin: 0;
+  font-size: 0.8rem;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.7;
+  letter-spacing: 0.018em;
+  word-break: break-word;
+  text-align: left;
+  position: relative;
+  z-index: 1;
+`;
+
+export const NoteControlRow = styled.div`
+  position: absolute;
+  top: -12px;
+  right: -10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+
+  &.always-visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  @media (hover: none) {
+    opacity: 1;
+    pointer-events: auto;
+  }
+`;
+
+export const NoteControlBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: ${BORDER_RADIUS};
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(18, 18, 18, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: background 0.14s, color 0.14s, border-color 0.14s;
+  &:hover {
+    background: rgba(50, 50, 50, 0.95);
+    color: rgba(255, 255, 255, 0.9);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+  &.danger:hover {
+    background: rgba(140, 20, 20, 0.6);
+    color: rgba(255, 160, 160, 0.95);
+    border-color: rgba(200, 50, 50, 0.4);
+  }
+  &.success {
+    color: rgba(80, 200, 120, 0.85);
+    border-color: rgba(60, 160, 100, 0.28);
+  }
+  &.success:hover {
+    background: rgba(20, 100, 50, 0.55);
+    color: rgba(160, 255, 190, 0.95);
+    border-color: rgba(50, 180, 100, 0.5);
+  }
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+`;
 
-  ${BACKGROUND_BLUR()}
+export const NoteAddBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  margin-top: 8px;
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.75);
+    background: rgba(255, 255, 255, 0.05);
+  }
+`;
 
-  padding: 10px 20px 20px;
+export const NoteEditWrap = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+`;
+
+export const NoteCharCount = styled.span<{ $near: boolean; $atLimit: boolean }>`
+  align-self: flex-end;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  color: ${({ $atLimit, $near }) =>
+    $atLimit
+      ? "rgba(220, 60, 60, 0.9)"
+      : $near
+        ? "rgba(220, 160, 40, 0.85)"
+        : "rgba(255, 255, 255, 0.28)"};
+  transition: color 0.15s;
+`;
+
+export const NoteEditTextarea = styled.textarea`
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 6px 4px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.8rem;
+  font-style: italic;
+  font-family: var(--font);
+  line-height: 1.7;
+  letter-spacing: 0.018em;
+  resize: none;
+  overflow: hidden;
+  display: block;
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.28);
+    font-style: italic;
+  }
+  @media (hover: none) {
+    font-size: var(--font-size-input);
+  }
+`;
+
+export const NoteEditBtnRow = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+`;
+
+export const NoteEditCancelBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.85);
+  }
+`;
+
+export const NoteEditSaveBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  padding: 5px 14px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: background 0.12s;
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
 `;
 
 export const MenuText = styled.div`
@@ -897,6 +1126,89 @@ export const InfoCardAvatar = styled.div<{ $src: string }>`
   }
 `;
 
+export const AvatarWrapper = styled.div`
+  position: relative;
+  width: 82px;
+  height: 82px;
+  flex-shrink: 0;
+
+  &:hover .avatar-remove {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  @media (max-width: 600px) {
+    width: 72px;
+    height: 72px;
+  }
+`;
+
+export const AvatarEditBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(14, 14, 14, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  backdrop-filter: blur(4px);
+  transition: background 0.14s, color 0.14s, border-color 0.14s;
+  &:hover {
+    background: rgba(50, 50, 50, 0.96);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.38);
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+`;
+
+export const AvatarRemoveBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(14, 14, 14, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.75rem;
+  line-height: 1;
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s, background 0.12s, color 0.12s, border-color 0.12s;
+  backdrop-filter: blur(4px);
+
+  &:hover {
+    background: rgba(140, 20, 20, 0.72);
+    color: rgba(255, 160, 160, 0.95);
+    border-color: rgba(200, 50, 50, 0.45);
+  }
+
+  @media (hover: none) {
+    opacity: 1;
+    pointer-events: auto;
+  }
+`;
+
 export const InfoHeaderSection = styled.div`
   display: flex;
   flex-direction: column;
@@ -1025,12 +1337,511 @@ export const InfoAttributeValue = styled.span`
   word-break: break-word;
 `;
 
+export const InfoAttrLabelRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 10px;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.38);
+  font-weight: 700;
+`;
+
+export const InfoAttrAddBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.68rem;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.9);
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+`;
+
+export const InfoAttrCardWrap = styled.div<{ accent?: string | null }>`
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background-color: ${({ accent }) =>
+    accent && accent.trim() !== ""
+      ? `color-mix(in srgb, ${accent} 12%, rgba(0,0,0,0.35))`
+      : "rgba(255,255,255,0.07)"};
+  border: 1px solid
+    ${({ accent }) =>
+      accent && accent.trim() !== ""
+        ? `color-mix(in srgb, ${accent} 30%, transparent)`
+        : "rgba(255,255,255,0.12)"};
+  backdrop-filter: blur(4px);
+  overflow: hidden;
+  .attr-actions {
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  &:hover .attr-actions {
+    opacity: 1;
+  }
+  @media (hover: none) {
+    .attr-actions {
+      opacity: 1;
+    }
+  }
+`;
+
+export const InfoAttrCardActions = styled.div`
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  display: flex;
+  gap: 2px;
+`;
+
+export const InfoAttrIconBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.4);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  &:hover {
+    background: rgba(0, 0, 0, 0.65);
+    color: #fff;
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+`;
+
+export const InfoAttrForm = styled.div`
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+`;
+
+export const InfoAttrInputRow = styled.div`
+  display: flex;
+  gap: 6px;
+`;
+
+export const InfoAttrInput = styled.input`
+  all: unset;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+  padding: 5px 8px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.78rem;
+  width: 100%;
+  transition: border-color 0.15s;
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+  }
+  &:focus {
+    border-color: rgba(255, 255, 255, 0.4);
+    outline: none;
+  }
+  @media (hover: none) {
+    font-size: var(--font-size-input);
+  }
+`;
+
+export const InfoAttrBtnRow = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+`;
+
+export const InfoAttrSaveBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  padding: 4px 12px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  &:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+`;
+
+export const InfoAttrCancelBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  padding: 4px 10px;
+  border-radius: 5px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: color 0.15s;
+  &:hover {
+    color: rgba(255, 255, 255, 0.8);
+  }
+`;
+
 export const InfoTagsSection = styled.div`
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
   width: 100%;
   padding-top: 4px;
+`;
+
+/* ── Fandom inline picker ────────────────────────────────────────────────── */
+
+export const InfoFandomSearchWrap = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  animation: fandomFadeIn 0.2s ease;
+  @keyframes fandomFadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+`;
+
+export const InfoFandomSearchIcon = styled.span`
+  position: absolute;
+  left: 11px;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  color: var(--text-secondary);
+`;
+
+export const InfoFandomInput = styled.input`
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 8px 38px 8px 34px;
+  background: var(--bg-3);
+  border: 1px solid var(--bg-6);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: var(--font-size-input);
+  font-family: var(--font);
+  transition: border-color 0.2s ease;
+  &::placeholder {
+    color: var(--text-secondary);
+  }
+  &:focus {
+    border-color: var(--accent);
+    outline: none;
+  }
+  &::-webkit-search-cancel-button,
+  &::-webkit-search-decoration {
+    appearance: none;
+  }
+`;
+
+export const InfoFandomCancelBtn = styled.button`
+  all: unset;
+  position: absolute;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 1.3rem;
+  line-height: 1;
+  transition: color 0.15s;
+  &:hover {
+    color: var(--text);
+  }
+`;
+
+export const InfoFandomDropdown = styled.div`
+  background: rgba(18, 18, 18, 0.97);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  overflow: hidden;
+  max-height: 180px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+`;
+
+export const InfoFandomOption = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+  transition: background 0.1s;
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+`;
+
+/* ── Nickname owner pills ─────────────────────────────────────────────────── */
+
+/* Defined first so InfoNicknameOwnerPill can reference it via interpolation */
+export const InfoNicknameDeleteBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  max-width: 0;
+  opacity: 0;
+  height: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.56rem;
+  cursor: pointer;
+  transition: max-width 0.18s ease, opacity 0.18s ease, color 0.12s;
+  &:hover {
+    color: rgba(220, 38, 38, 0.9);
+  }
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+`;
+
+export const InfoNicknameDeleteTrash = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  @media (hover: none) {
+    display: none;
+  }
+`;
+
+export const InfoNicknameDeleteCross = styled.span`
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: rgba(220, 38, 38, 0.85);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+  @media (hover: none) {
+    display: inline-flex;
+  }
+`;
+
+export const InfoNicknameOwnerPill = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px 2px 10px;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 0.68rem;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.75);
+  letter-spacing: 0.03em;
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+  user-select: none;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.32);
+  }
+
+  /* Reveal delete button smoothly on hover (desktop) */
+  &:hover ${InfoNicknameDeleteBtn} {
+    max-width: 14px;
+    opacity: 1;
+  }
+
+  /* On mobile: delete always visible, no hover needed */
+  @media (hover: none) {
+    padding-right: 4px;
+
+    ${InfoNicknameDeleteBtn} {
+      max-width: 14px;
+      opacity: 1;
+    }
+  }
+`;
+
+export const InfoNicknameIconBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.5);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.58rem;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  &:hover {
+    background: rgba(0, 0, 0, 0.75);
+    color: #fff;
+  }
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+`;
+
+export const InfoNicknameEditWrap = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+`;
+
+export const InfoNicknameInput = styled.input`
+  all: unset;
+  box-sizing: border-box;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.68rem;
+  width: 88px;
+  transition: border-color 0.15s;
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.38);
+  }
+  &:focus {
+    border-color: rgba(255, 255, 255, 0.5);
+    outline: none;
+  }
+  @media (hover: none) {
+    font-size: var(--font-size-input);
+  }
+`;
+
+export const InfoNicknameAddBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.68rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.48);
+    color: rgba(255, 255, 255, 0.8);
+  }
+`;
+
+/* ── Privacy dropdown ─────────────────────────────────────────────────────── */
+
+export const InfoPrivacyDropdownWrap = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+`;
+
+export const InfoPrivacyBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.15s;
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+`;
+
+export const InfoPrivacyDropdown = styled.div`
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  background: rgba(18, 18, 18, 0.97);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 150px;
+`;
+
+export const InfoPrivacyOption = styled.button<{ $active?: boolean }>`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 0.75rem;
+  font-weight: ${({ $active }) => ($active ? "600" : "400")};
+  color: ${({ $active }) =>
+    $active ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.62)"};
+  background: ${({ $active }) =>
+    $active ? "rgba(255,255,255,0.07)" : "transparent"};
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.95);
+  }
 `;
 
 /* ── Gallery ─────────────────────────────────────────────────────────────── */
@@ -1053,11 +1864,18 @@ export const GalleryItem = styled.div`
   cursor: zoom-in;
 `;
 
-export const GalleryBadge = styled.span`
+export const GalleryBadgeRow = styled.div`
   position: absolute;
   bottom: 5px;
   left: 5px;
   z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  pointer-events: none;
+`;
+
+export const GalleryBadge = styled.span`
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 0.62rem;
@@ -1439,5 +2257,82 @@ export const InfoRankBadge = styled.span`
     box-shadow:
       0 0 16px rgba(251, 191, 36, 0.28),
       inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+`;
+
+export const AvatarCropBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 12px;
+
+  @media (max-width: 480px) {
+    padding: 4px 2px;
+  }
+`;
+
+export const CardBgCropBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 8px;
+`;
+
+export const CardBgEditBtn = styled.button`
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  z-index: 10;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.78);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+export const CardBgRemoveBtn = styled.button`
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: background 0.15s, opacity 0.15s;
+
+  &:hover {
+    background: rgba(180, 30, 30, 0.75);
+  }
+
+  @media (hover: none) {
+    opacity: 1;
   }
 `;

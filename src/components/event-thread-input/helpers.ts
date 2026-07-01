@@ -17,6 +17,8 @@ export const museToSource = (muse: Muse): PromptSource => ({
   sourceId: muse.id || "",
   sourceType: "MUSE",
   urlProp: muse.id || "",
+  useAccent: muse.useAccent,
+  accent: muse.accent,
 });
 
 export const novelistToSource = (novelist: Novelist): PromptSource => ({
@@ -26,6 +28,8 @@ export const novelistToSource = (novelist: Novelist): PromptSource => ({
   sourceId: novelist.id || "",
   sourceType: "NOVELIST",
   urlProp: novelist.username || "",
+  useAccent: true,
+  accent: String(novelist.palette),
 });
 
 const videoExtensions = ["mp4"];

@@ -12,21 +12,21 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { FaDiscord } from "react-icons/fa6";
+import { FcBusinessman } from "react-icons/fc";
 import {
-  FcBusinessman,
-  FcCollaboration,
-  FcComments,
-  FcConferenceCall,
-  FcExport,
-  FcFaq,
-  FcLibrary,
-  FcMusic,
-  FcRatings,
-  FcSmartphoneTablet,
-  FcSupport,
-  FcTimeline,
-  FcVoicePresentation,
-} from "react-icons/fc";
+  CharactersIcon,
+  ExploreIcon,
+  FAQsIcon,
+  HelpSupportIcon,
+  InboxIcon,
+  InstallAppIcon,
+  InteractionsIcon,
+  LogoutIcon,
+  MusicIcon,
+  MusesLeaderboardIcon,
+  NovelistsLeaderboardIcon,
+  TermsIcon,
+} from "./user-menu-icons";
 import { FiCheck, FiChevronRight, FiCopy, FiEdit2, FiX } from "react-icons/fi";
 import { sendFeedbackMessage } from "@/app/rp/profile/actions";
 import discordLogo from "@/assets/images/NW-Discord-l.ogo.png";
@@ -381,14 +381,14 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
               <S.List>
                 <S.Element onClick={toExplorePage}>
                   <Flex justify="flex-start" align="center" gap="12px">
-                    <FcVoicePresentation />
+                    <ExploreIcon size={20} />
                     Explore
                   </Flex>
                   <FiChevronRight size={16} color="gray" />
                 </S.Element>
                 <S.Element onClick={toOutgoingThreadsPage}>
                   <Flex justify="flex-start" align="center" gap="12px">
-                    <FcCollaboration />
+                    <InteractionsIcon size={20} />
                     Interactions
                   </Flex>
                   <ShouldRender if={(unreadReplyCount ?? 0) > 0}>
@@ -403,14 +403,14 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                 <S.Separator />
                 <S.Element onClick={toMusesPage}>
                   <Flex justify="flex-start" align="center" gap="12px">
-                    <FcConferenceCall />
+                    <CharactersIcon size={20} />
                     Characters
                   </Flex>
                   <FiChevronRight size={16} color="gray" />
                 </S.Element>
                 <S.Element onClick={toConversationsPage}>
                   <Flex justify="flex-start" align="center" gap="12px">
-                    <FcComments />
+                    <InboxIcon size={20} />
                     Inbox
                   </Flex>
                   <ShouldRender if={(unreadConversationIds?.length ?? 0) > 0}>
@@ -424,7 +424,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                 </S.Element>
                 <S.Element onClick={toMusicPage}>
                   <Flex justify="flex-start" align="center" gap="12px">
-                    <FcMusic />
+                    <MusicIcon size={20} />
                     Music
                   </Flex>
                   <FiChevronRight size={16} color="gray" />
@@ -432,7 +432,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                 <S.Separator />
                 <S.LeaderboardElement onClick={toNovelistsLeaderboard}>
                   <Flex justify="flex-start" align="center" gap="12px">
-                    <FcRatings />
+                    <NovelistsLeaderboardIcon size={20} />
                     Novelists Leaderboard
                   </Flex>
                   <Flex justify="flex-end" align="center" gap="8px">
@@ -442,7 +442,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                 </S.LeaderboardElement>
                 <S.LeaderboardElement onClick={toMusesLeaderboard}>
                   <Flex justify="flex-start" align="center" gap="12px">
-                    <FcTimeline />
+                    <MusesLeaderboardIcon size={20} />
                     Muses Leaderboard
                   </Flex>
                   <Flex justify="flex-end" align="center" gap="8px">
@@ -475,28 +475,28 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
               </S.DiscordElement>
               <S.Element onClick={handleInstallAppClick}>
                 <Flex justify="flex-start" align="center" gap="12px">
-                  <FcSmartphoneTablet />
+                  <InstallAppIcon size={20} />
                   Install NW App
                 </Flex>
                 <FiChevronRight size={16} color="gray" />
               </S.Element>
               <S.Element onClick={toTermsAndConditionsPage}>
                 <Flex justify="flex-start" align="center" gap="12px">
-                  <FcLibrary />
+                  <TermsIcon size={20} />
                   Terms & conditions
                 </Flex>
                 <FiChevronRight size={16} color="gray" />
               </S.Element>
               <S.Element onClick={toFAQsPage}>
                 <Flex justify="flex-start" align="center" gap="12px">
-                  <FcFaq />
+                  <FAQsIcon size={20} />
                   FAQs
                 </Flex>
                 <FiChevronRight size={16} color="gray" />
               </S.Element>
               <S.Element onClick={() => setShowContactSupportAlert(true)}>
                 <Flex justify="flex-start" align="center" gap="12px">
-                  <FcSupport />
+                  <HelpSupportIcon size={20} />
                   Help & support
                 </Flex>
                 <FiChevronRight size={16} color="gray" />
@@ -506,7 +506,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
             <S.List>
               <S.DeleteElement onClick={() => setShowLogoutAlert(true)}>
                 <Flex justify="flex-start" align="center" gap="12px">
-                  <FcExport />
+                  <LogoutIcon size={20} />
                   Log out
                 </Flex>
                 <FiChevronRight size={16} color="gray" />
@@ -578,7 +578,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                       }}
                     >
                       <Flex justify="flex-start" align="center" gap="12px">
-                        <FcVoicePresentation />
+                        <ExploreIcon size={20} />
                         Explore
                       </Flex>
                       <FiChevronRight size={16} color="gray" />
@@ -590,7 +590,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                       }}
                     >
                       <Flex justify="flex-start" align="center" gap="12px">
-                        <FcCollaboration />
+                        <InteractionsIcon size={20} />
                         Interactions
                       </Flex>
                       <ShouldRender if={(unreadReplyCount ?? 0) > 0}>
@@ -611,7 +611,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                       }}
                     >
                       <Flex justify="flex-start" align="center" gap="12px">
-                        <FcConferenceCall />
+                        <CharactersIcon size={20} />
                         Characters
                       </Flex>
                       <FiChevronRight size={16} color="gray" />
@@ -623,7 +623,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                       }}
                     >
                       <Flex justify="flex-start" align="center" gap="12px">
-                        <FcComments />
+                        <InboxIcon size={20} />
                         Inbox
                       </Flex>
                       <ShouldRender
@@ -644,7 +644,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                       }}
                     >
                       <Flex justify="flex-start" align="center" gap="12px">
-                        <FcMusic />
+                        <MusicIcon size={20} />
                         Music
                       </Flex>
                       <FiChevronRight size={16} color="gray" />
@@ -658,7 +658,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                       }}
                     >
                       <Flex justify="flex-start" align="center" gap="12px">
-                        <FcRatings />
+                        <NovelistsLeaderboardIcon size={20} />
                         Novelists Leaderboard
                       </Flex>
                       <Flex justify="flex-end" align="center" gap="8px">
@@ -673,7 +673,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                       }}
                     >
                       <Flex justify="flex-start" align="center" gap="12px">
-                        <FcTimeline />
+                        <MusesLeaderboardIcon size={20} />
                         Muses Leaderboard
                       </Flex>
                       <Flex justify="flex-end" align="center" gap="8px">
@@ -719,7 +719,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                     }}
                   >
                     <Flex justify="flex-start" align="center" gap="12px">
-                      <FcSmartphoneTablet />
+                      <InstallAppIcon size={20} />
                       Install NW App
                     </Flex>
                     <FiChevronRight size={16} color="gray" />
@@ -731,7 +731,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                     }}
                   >
                     <Flex justify="flex-start" align="center" gap="12px">
-                      <FcLibrary />
+                      <TermsIcon size={20} />
                       Terms & conditions
                     </Flex>
                     <FiChevronRight size={16} color="gray" />
@@ -743,7 +743,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                     }}
                   >
                     <Flex justify="flex-start" align="center" gap="12px">
-                      <FcFaq />
+                      <FAQsIcon size={20} />
                       FAQs
                     </Flex>
                     <FiChevronRight size={16} color="gray" />
@@ -752,7 +752,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                     onClick={() => setShowContactSupportAlert(true)}
                   >
                     <Flex justify="flex-start" align="center" gap="12px">
-                      <FcSupport />
+                      <HelpSupportIcon size={20} />
                       Help & support
                     </Flex>
                     <FiChevronRight size={16} color="gray" />
@@ -763,7 +763,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                     onClick={() => setShowLogoutAlert(true)}
                   >
                     <Flex justify="flex-start" align="center" gap="12px">
-                      <FcExport />
+                      <LogoutIcon size={20} />
                       Log out
                     </Flex>
                     <FiChevronRight size={16} color="gray" />

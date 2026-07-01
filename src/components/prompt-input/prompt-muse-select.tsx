@@ -26,6 +26,7 @@ type Props = {
 
 export interface MuseSelectHandle {
   openDialog: () => void;
+  selectSource: (source: PromptSource) => void;
 }
 
 const promptTypeToLabel = (type: SubmitPromptType): string => {
@@ -105,13 +106,15 @@ export const PromptMuseSelect = forwardRef<MuseSelectHandle, Props>(
 
     useImperativeHandle(forwardedRef, () => ({
       openDialog: () => setDialogOpen(true),
+      selectSource: (selected: PromptSource) => {
+        setSource(selected);
+        setSearch("");
+        setDialogOpen(false);
+      },
     }));
 
     return (
-      <S.MuseSelect
-        name="muse"
-        {...props}
-      >
+      <S.MuseSelect name="muse" {...props}>
         <Form.Label className="form-label">
           {promptTypeToLabel(promptType)}
         </Form.Label>

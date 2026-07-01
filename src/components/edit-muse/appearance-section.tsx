@@ -391,6 +391,7 @@ export function AppearanceSection({
     async (e) => {
       e.preventDefault();
       const privacyValue = (e.target as HTMLFormElement).privacy?.value;
+      setMuseState({ privacy: privacyValue });
       const result = await save(privacyValue);
       if (!result.ok) {
         setError("Something went wrong. Please try again.");

@@ -70,6 +70,7 @@ export function InformationSection({
   const cardBackground = useMuseState("cardBackground");
   const note = useMuseState("note");
   const story = useMuseState("story");
+  const privacy = useMuseState("privacy");
   const accent = useMuseState("accent");
   const useAccent = useMuseState("useAccent");
   const useExtraImages = useMuseState("useExtraImages");
@@ -228,7 +229,7 @@ export function InformationSection({
         lastName: lastName?.trim() ?? "",
         nicknames: nicknames ?? [],
         note: note ?? "",
-        privacy: "PUBLIC",
+        privacy,
         song: null,
         story: story ?? null,
         tags: null,
@@ -267,6 +268,7 @@ export function InformationSection({
       cardBackground,
       note,
       story,
+      privacy,
       accent,
       useAccent,
       useExtraImages,

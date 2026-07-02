@@ -39,6 +39,8 @@ export interface Muse {
   useExtraImages: boolean;
   totalPoints: number;
   level: number;
+  prevId: string | null;
+  nextId: string | null;
 }
 
 export interface MuseAboutSection {

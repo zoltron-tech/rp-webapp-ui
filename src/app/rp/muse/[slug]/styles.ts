@@ -251,6 +251,45 @@ export const CardWrapper = styled(Container)`
   }
 `;
 
+export const MuseNavButton = styled.button<{ $side: "left" | "right" }>`
+  position: fixed;
+  top: 50%;
+  ${({ $side }) => ($side === "left" ? "left: 16px;" : "right: 16px;")}
+  transform: translateY(-50%);
+  z-index: ${Z_INDEX.SCROLL_JUMP};
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.78);
+  }
+
+  &:active {
+    transform: translateY(-50%) scale(0.94);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  @media (max-width: 600px) {
+    width: 36px;
+    height: 36px;
+    ${({ $side }) => ($side === "left" ? "left: 8px;" : "right: 8px;")}
+  }
+`;
+
 export const CardExpandedWrapper = styled.div`
   position: relative;
   width: 326px;
@@ -2070,6 +2109,19 @@ export const ShimmerGrid = styled.div`
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   width: 100%;
+`;
+
+export const ShimmerCircle = styled(ShimmerBase)<{ $size?: string }>`
+  width: ${({ $size }) => $size ?? "40px"};
+  height: ${({ $size }) => $size ?? "40px"};
+  border-radius: 50%;
+  flex-shrink: 0;
+`;
+
+export const CardBackgroundShimmer = styled(ShimmerBase)`
+  position: absolute;
+  inset: 0;
+  border-radius: 0;
 `;
 
 export const MoreMenuList = styled.div`

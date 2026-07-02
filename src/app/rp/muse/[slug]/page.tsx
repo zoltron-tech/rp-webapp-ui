@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BiSolidConversation } from "react-icons/bi";
 import { FaImagePortrait } from "react-icons/fa6";
-import { FiCamera, FiMoreVertical } from "react-icons/fi";
+import { FiCamera, FiChevronLeft, FiChevronRight, FiMoreVertical } from "react-icons/fi";
 import { GiBookCover } from "react-icons/gi";
 import { MdImage, MdPhotoLibrary } from "react-icons/md";
 import { TiInfoLarge } from "react-icons/ti";
@@ -19,6 +19,7 @@ import { useUploadMedia } from "@/hooks/use-upload-media";
 import type { Muse, MuseAboutSection, Prompt } from "@/types";
 import type { ImageCropFilter, NWImage } from "@/types/novelist";
 import { API_MESSAGE } from "@/utils/constants";
+import { ROUTES } from "@/utils/constants/routes";
 import { reverseWsrvUrl } from "@/utils/image";
 import { Logger } from "@/utils/services";
 import { deleteMedia } from "../../profile/actions";
@@ -73,7 +74,8 @@ export default function MuseProfilePage({}) {
   const [museRank, setMuseRank] = useState<number | null>(null);
   const [museRankLoading, setMuseRankLoading] = useState(true);
   const username = params?.slug as string;
-  const { baseDataLoader } = usePageRouter();
+  const { baseDataLoader, routeToPage } = usePageRouter();
+  const fetchedForRef = useRef<string | null>(null);
 
   // ── Card background crop ───────────────────────────────────────────────────
   const [cardBgCropOpen, setCardBgCropOpen] = useState(false);
@@ -310,15 +312,46 @@ export default function MuseProfilePage({}) {
   const isOwnMuse = Boolean(
     user?.username && muse?.pennedBy?.username === user.username,
   );
+  const museLoading = muse === null;
+  // Kept across navigation so the prev/next arrows don't disappear while the
+  // next muse's shimmer is loading in — they're the only thing we can show
+  // before the new muse data arrives.
+  const [navIds, setNavIds] = useState<{ prevId: string | null; nextId: string | null }>({
+    nextId: null,
+    prevId: null,
+  });
 
   const promptsFetchedRef = useRef(false);
   const aboutSectionsFetchedRef = useRef(false);
   const mediaFetchedRef = useRef(false);
 
   useEffect(() => {
-    if (authState === "LOADING" || muse) return;
-    baseDataLoader(() => getMuseAction(username)).then(setMuse);
-  }, [authState]);
+    if (authState === "LOADING" || fetchedForRef.current === username) return;
+    fetchedForRef.current = username;
+    // Navigating between muses via prev/next reuses this component instance
+    // (same route segment), so per-muse state must be reset explicitly.
+    setMuse(null);
+    setPrompts(null);
+    setAboutSections(null);
+    setMedia(null);
+    setMuseRank(null);
+    setMuseRankLoading(true);
+    promptsFetchedRef.current = false;
+    aboutSectionsFetchedRef.current = false;
+    mediaFetchedRef.current = false;
+    baseDataLoader(() => getMuseAction(username)).then((data) => {
+      setMuse(data);
+      if (data) setNavIds({ nextId: data.nextId ?? null, prevId: data.prevId ?? null });
+    });
+  }, [authState, username]);
+
+  const handlePrevMuse = useCallback(() => {
+    if (navIds.prevId) routeToPage(ROUTES.Muse.View(navIds.prevId), { skipLoading: true });
+  }, [navIds.prevId, routeToPage]);
+
+  const handleNextMuse = useCallback(() => {
+    if (navIds.nextId) routeToPage(ROUTES.Muse.View(navIds.nextId), { skipLoading: true });
+  }, [navIds.nextId, routeToPage]);
 
   useEffect(() => {
     if (state !== "PROMPTS" || promptsFetchedRef.current || authState === "LOADING") return;
@@ -326,7 +359,7 @@ export default function MuseProfilePage({}) {
     baseDataLoader(() => getPromptsByMuseAction(username)).then((data) => {
       setPrompts(data ?? []);
     });
-  }, [state, authState]);
+  }, [state, authState, username]);
 
   useEffect(() => {
     if (state !== "BACK_STORY" || aboutSectionsFetchedRef.current || authState === "LOADING") return;
@@ -334,7 +367,7 @@ export default function MuseProfilePage({}) {
     baseDataLoader(() => getMuseAboutSectionsAction(username)).then((data) => {
       setAboutSections(data ?? []);
     });
-  }, [state, authState]);
+  }, [state, authState, username]);
 
   useEffect(() => {
     if (state !== "GALLERY" || mediaFetchedRef.current || authState === "LOADING") return;
@@ -342,7 +375,7 @@ export default function MuseProfilePage({}) {
     baseDataLoader(() => getMuseMediaAction(username)).then((result) => {
       setMedia(Array.isArray(result) ? result : []);
     });
-  }, [state, authState]);
+  }, [state, authState, username]);
 
   const getSafeImage = (src?: string) => src || "";
   const accent = muse?.useAccent ? (muse.accent ?? undefined) : undefined;
@@ -378,14 +411,45 @@ export default function MuseProfilePage({}) {
         }
       />
 
+      {/* Prev/next muse navigation — kept visible (but disabled) while the
+          next muse loads in, using the last-known neighbor ids */}
+      {navIds.prevId && (
+        <S.MuseNavButton
+          type="button"
+          $side="left"
+          title="Previous character"
+          aria-label="Previous character"
+          onClick={handlePrevMuse}
+          disabled={museLoading}
+        >
+          <FiChevronLeft size={22} />
+        </S.MuseNavButton>
+      )}
+      {navIds.nextId && (
+        <S.MuseNavButton
+          type="button"
+          $side="right"
+          title="Next character"
+          aria-label="Next character"
+          onClick={handleNextMuse}
+          disabled={museLoading}
+        >
+          <FiChevronRight size={22} />
+        </S.MuseNavButton>
+      )}
+
       {/* Main character card */}
       <S.CardWrapper>
         <S.ImageWrapper>
-          <S.CardBackground
-            banner={cardBgSrc}
-            $bgSize={cardBgCss?.bgSize}
-            $bgPosition={cardBgCss?.bgPosition}
-          />
+          {museLoading ? (
+            <S.CardBackgroundShimmer />
+          ) : (
+            <S.CardBackground
+              banner={cardBgSrc}
+              $bgSize={cardBgCss?.bgSize}
+              $bgPosition={cardBgCss?.bgPosition}
+            />
+          )}
         </S.ImageWrapper>
         {isOwnMuse && (
           <>

@@ -3,6 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Separator, Tabs } from "radix-ui";
 import { useCallback, useEffect } from "react";
+import { setReferralCookie } from "@/app/actions";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
@@ -17,9 +18,18 @@ export default function LoginPage() {
   const novelist = useGlobalState("novelist");
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const isRegister = searchParams?.get("register") === "1";
+  const referralUser = searchParams?.get("referralUser");
+  const isRegister =
+    searchParams?.get("register") === "1" ||
+    (Boolean(referralUser) && searchParams?.get("register") !== "0");
   const { routeToPage, stopPageLoading } = usePageRouter();
   const { push } = useRouter();
+
+  useEffect(() => {
+    // Persist the referral so it survives both the email/password signup and
+    // the OAuth redirects (Google/Discord) — consumed and cleared on signup.
+    if (referralUser) setReferralCookie(referralUser);
+  }, [referralUser]);
 
   useEffect(() => {
     if (authState === "LOGGED_IN") {

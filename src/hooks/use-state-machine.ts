@@ -33,11 +33,13 @@ export const useStateMachine = <T extends string>({
 
       const nextTransition = next[_state];
 
-      if (nextTransition === true) {
-        return _state;
+      if (typeof nextTransition === "function") {
+        // Updater functions run during render — invoking the callback here
+        // would update other components (via setGlobalState) mid-render.
+        // Defer it to a microtask so it runs after the render phase.
+        queueMicrotask(nextTransition);
       }
 
-      nextTransition?.();
       return _state;
     });
 

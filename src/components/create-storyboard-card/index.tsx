@@ -3,7 +3,6 @@
 import { Flex } from "@novelist-world/ui";
 import { type FC, useEffect, useState } from "react";
 import { GrEdit } from "react-icons/gr";
-import { uploadMedia } from "@/app/rp/profile/actions";
 import {
   getStoryboardAction,
   updateStoryBoardAction,
@@ -21,6 +20,7 @@ import type { StoryBoard } from "@/types";
 import { API_MESSAGE, INITIAL_STORY_BOARD } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
+import { uploadMedia } from "@/utils/upload-media";
 import { MusesPill } from "../muses-pill";
 import * as S from "./styles";
 

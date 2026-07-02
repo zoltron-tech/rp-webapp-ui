@@ -34,6 +34,13 @@ export function ConnectionsSection({ muse }: Props) {
           <SectionMiniHeader muse={muse} accent={accent ?? null} />
           <S.ConnectionsContainer>
             <S.ScrollableContent accent={accent}>
+              {!muse && (
+                <S.ShimmerGroup>
+                  <S.ShimmerBlock $height="56px" />
+                  <S.ShimmerBlock $height="56px" />
+                  <S.ShimmerBlock $height="56px" />
+                </S.ShimmerGroup>
+              )}
               <S.ExpandedContentInner>
                 {muse?.connections?.map((connection) => (
                   <S.ConnectionItem

@@ -435,6 +435,36 @@ export function MuseInfoSection({ muse, isOwnMuse, museRank, museRankLoading, on
   const nicknames = muse?.nicknames ?? [];
   const canAddNickname = nicknames.length < 5;
 
+  if (!muse) {
+    return (
+      <S.CardExpandedWrapper>
+        <S.CardBack className="muse-card">
+          <S.InfoCardContent>
+            <S.InfoScrollBody>
+              <S.InfoHeaderSection>
+                <S.ShimmerCircle $size="82px" />
+                <S.ShimmerLine $width="140px" $height="18px" style={{ marginTop: "6px" }} />
+                <S.ShimmerLine $width="90px" $height="12px" />
+              </S.InfoHeaderSection>
+
+              <S.InfoDivider />
+
+              <S.InfoAttrLabelRow>Details</S.InfoAttrLabelRow>
+              <S.InfoDetailsSection>
+                <S.InfoAttributesGrid>
+                  <S.ShimmerBlock $height="52px" />
+                  <S.ShimmerBlock $height="52px" />
+                  <S.ShimmerBlock $height="52px" />
+                  <S.ShimmerBlock $height="52px" />
+                </S.InfoAttributesGrid>
+              </S.InfoDetailsSection>
+            </S.InfoScrollBody>
+          </S.InfoCardContent>
+        </S.CardBack>
+      </S.CardExpandedWrapper>
+    );
+  }
+
   return (
     <S.CardExpandedWrapper>
       <S.CardBack className="muse-card" accent={accent}>

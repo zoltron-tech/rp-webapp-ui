@@ -24,11 +24,15 @@ export function CardImageSection({ muse, cardBgSrc, isOwnMuse, cardBgSaving, onE
     <S.CardExpandedWrapper>
       <S.CardMainBack className="muse-card" accent={accent}>
         <S.ImageWrapper>
-          <S.CardBackground
-            banner={cardBgSrc}
-            $bgSize={bgSize}
-            $bgPosition={bgPosition}
-          />
+          {!muse ? (
+            <S.CardBackgroundShimmer />
+          ) : (
+            <S.CardBackground
+              banner={cardBgSrc}
+              $bgSize={bgSize}
+              $bgPosition={bgPosition}
+            />
+          )}
         </S.ImageWrapper>
         {isOwnMuse && (
           <>

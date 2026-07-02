@@ -14,8 +14,8 @@ import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import type { UpdateNovelistPayload } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
+import { uploadMedia } from "@/utils/upload-media";
 import { updateUserNovelist } from "../novelists/actions";
-import { uploadMedia } from "../profile/actions";
 import { useOnboardingState, useOnboardingStoreSet } from "./onboarding.store";
 import * as S from "./styled";
 

@@ -14,8 +14,8 @@ export const LoadingTextVariation: FC = memo(() => {
       <div className="loader">
         <p>loading</p>
         <div className="words">
-          {words.concat(words[0]).map((word) => (
-            <span key={word} className="word">
+          {words.concat(words[0]).map((word, index) => (
+            <span key={`${word}-${index}`} className="word">
               {word}
             </span>
           ))}

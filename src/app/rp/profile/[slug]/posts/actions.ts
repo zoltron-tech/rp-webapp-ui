@@ -42,3 +42,37 @@ export const getPostsByNovelistAction = async (
 
   return prompts;
 };
+
+export const getPromptsByNovelistAction = async (
+  novelistId: string,
+  pageNumber: number,
+  pageSize: number,
+): Promise<DataType<Prompt[]>> => {
+  const jwt = await getJWTIfExists();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (jwt) {
+    headers[AUTH_HEADER_NAME] = jwt;
+  }
+
+  const url = `${RP_SERVICE_URL}/rp/portfolio/prompt/posts/muses/by/${novelistId}?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+
+  const response = await fetch(url, {
+    cache: "no-store",
+    headers,
+  });
+
+  Logger.debug("getPromptsByNovelistAction", response.status);
+
+  if (response.status === 404) {
+    return null;
+  } else if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const prompts: Prompt[] = await response.json();
+
+  return prompts;
+};

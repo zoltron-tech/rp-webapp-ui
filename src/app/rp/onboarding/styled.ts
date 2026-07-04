@@ -710,6 +710,18 @@ export const PaletteGroup = styled.div`
   width: 100%;
 `;
 
+export const AvatarCropBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 12px;
+
+  @media (max-width: 480px) {
+    padding: 4px 2px;
+  }
+`;
+
 export const PaletteOption = styled.label`
   display: flex;
   flex-direction: column;

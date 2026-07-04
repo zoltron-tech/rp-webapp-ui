@@ -1139,20 +1139,16 @@ export const FilterPreviewCardFace = styled.div<{
 `;
 
 /** Like FilterPreviewCardFace but interactive — drag to reposition card bg */
-export const InteractiveCardFace = styled.div<{
-  $src: string;
-  $bgSize?: string;
-  $bgPosition?: string;
-}>`
+/* Dynamic background props (image/size/position) are applied via the `style`
+   prop (inline) rather than styled-component props so rapid drag/zoom updates
+   don't regenerate CSS classes. */
+export const InteractiveCardFace = styled.div`
   width: 95px;
   aspect-ratio: 9 / 16; /* must match the displayed card ratio exactly */
   flex-shrink: 0;
   position: relative;
-  background-image: url(${({ $src }) => $src});
   background-repeat: no-repeat;
   background-color: var(--bg-1);
-  background-size: ${({ $bgSize }) => $bgSize ?? "cover"};
-  background-position: ${({ $bgPosition }) => $bgPosition ?? "center"};
   cursor: grab;
   touch-action: none;
   user-select: none;
@@ -2482,4 +2478,16 @@ export const ExtraAttributesDesc = styled.p`
   font-size: var(--font-size-small);
   color: var(--text-secondary);
   line-height: 1.5;
+`;
+
+export const AvatarCropBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 12px;
+
+  @media (max-width: 480px) {
+    padding: 4px 2px;
+  }
 `;

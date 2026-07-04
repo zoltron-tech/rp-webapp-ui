@@ -221,7 +221,7 @@ export function ViewIceBreakerDialog({
           attachments: null,
           conversationId: conversation.id,
           message: replyHtml || trimmed,
-          repliedTo: null,
+          repliedTo: { id: iceBreaker.sourceId, type: "ICE_BREAKER" },
           sender: {
             id: replySource.sourceId,
             image: replySource.image,

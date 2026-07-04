@@ -295,7 +295,6 @@ export function buildDiscordEmbed(
       icon_url: prompt.source.image || undefined,
       url: authorProfileUrl, // makes the author name a clickable link in Discord
     },
-    title: "✦ Open for writers  →",
     description,
     color: resolvePromptColor(prompt.source),
     url: promptUrl,

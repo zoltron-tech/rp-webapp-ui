@@ -96,6 +96,7 @@ export default function OnboardingPage() {
             storeId="onboarding"
             initial={{
               about: novelist?.about || "",
+              avatar: novelist?.avatar ?? null,
               firstName: novelist?.firstName || "",
               image: novelist?.image || "",
               lastName: novelist?.lastName || "",

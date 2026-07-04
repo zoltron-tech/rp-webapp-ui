@@ -12,14 +12,16 @@ import {
 import { HexColorPicker } from "react-colorful";
 import { BsArrowLeft, BsAspectRatio, BsPencil, BsUpload } from "react-icons/bs";
 import { MdOutlineBrush, MdTune } from "react-icons/md";
-import { getMuseMediaAction } from "@/app/rp/muse/actions";
+import { getMuseMediaAction, setMuseAvatarAction } from "@/app/rp/muse/actions";
 import { deleteMedia } from "@/app/rp/profile/actions";
+import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import type { ImageCropFilter, NWImage } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { AvatarUploadField } from "../common/avatar-upload-field";
 import { LoaderAction } from "../common/loader-action";
 import { AppAlertDialog } from "../dialog";
+import AvatarCropDialog from "../dialog/avatar-crop-dialog";
 import { ErrorBox } from "../error-box";
 import { PromptPrivacySelect } from "../prompt-input/privacy-select";
 import { useMuseState, useMuseStoreSet } from "./muse.store";
@@ -38,6 +40,15 @@ const isImageUrl = (url: string) => {
   const lower = url.toLowerCase().split("?")[0];
   return IMAGE_EXTENSIONS.some((ext) => lower.endsWith(ext));
 };
+
+function clamp(v: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, v));
+}
+
+function toCropFilter(src: string, x: number, y: number, scale: number): ImageCropFilter {
+  const scalePct = Math.round(scale * 100);
+  return { height: scalePct, src, width: scalePct, x: Math.round(x), y: Math.round(y) };
+}
 
 type TempUploads = {
   image?: string;
@@ -65,6 +76,7 @@ export function AppearanceSection({
   const id = useMuseState("id");
   const firstName = useMuseState("firstName");
   const image = useMuseState("image");
+  const avatar = useMuseState("avatar");
   const wallpaper = useMuseState("wallpaper");
   const cardBackground = useMuseState("cardBackground");
   const privacy = useMuseState("privacy");
@@ -74,6 +86,7 @@ export function AppearanceSection({
   const setMuseState = useMuseStoreSet();
   const { save, loading } = useMuseSave();
   const { uploadMedia } = useUploadMedia();
+  const { successToast, errorToast } = useUIContext();
 
   const [imageUploading, setImageUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -100,6 +113,16 @@ export function AppearanceSection({
   const [museMedia, setMuseMedia] = useState<string[]>([]);
   const [mediaLoading, setMediaLoading] = useState(false);
 
+  // ── Avatar crop dialog ──────────────────────────────────────────────────────
+  const avatarViewportRef = useRef<HTMLDivElement>(null);
+  const [avatarCropOpen, setAvatarCropOpen] = useState(false);
+  const [pendingAvatarSrc, setPendingAvatarSrc] = useState("");
+  const [avatarX, setAvatarX] = useState(50);
+  const [avatarY, setAvatarY] = useState(50);
+  const [avatarScale, setAvatarScale] = useState(1);
+  const [avatarTempUpload, setAvatarTempUpload] = useState<string | null>(null);
+  const [avatarSaving, setAvatarSaving] = useState(false);
+
   // ── Card crop state ────────────────────────────────────────────────────────
   const cropViewportRef = useRef<HTMLDivElement>(null);
   const cropDragStart = useRef<{
@@ -111,39 +134,9 @@ export function AppearanceSection({
   const [cropBgX, setCropBgX] = useState(50);
   const [cropBgY, setCropBgY] = useState(50);
   const [cropScale, setCropScale] = useState(1);
-
-  const validateAndUpload = useCallback(
-    async (file: File, slot: keyof TempUploads): Promise<string | null> => {
-      if (!VALID_IMAGE_TYPES.includes(file.type)) {
-        setMediaError("File type not supported. Allowed: .png, .jpg, .gif");
-        return null;
-      }
-      if (file.size > MAX_FILE_SIZE) {
-        setMediaError("File too large (max 50 MB).");
-        return null;
-      }
-      setMediaError(null);
-
-      if (tempUploads[slot]) {
-        await deleteMedia(tempUploads[slot] as string);
-      }
-
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("contentType", file.type);
-      if (id) formData.append("prefix", id);
-
-      const url = await uploadMedia(formData);
-      if (url === API_MESSAGE.MediaError) {
-        setError("Failed to upload media. Please try again.");
-        return null;
-      }
-
-      setTempUploads((prev) => ({ ...prev, [slot]: url }));
-      return url;
-    },
-    [id, uploadMedia, tempUploads],
-  );
+  // Live position/zoom applied imperatively to the card face during drag so no
+  // React state churns per frame; committed to state/tempCardBg only on release.
+  const liveCrop = useRef({ x: 50, y: 50, scale: 1 });
 
   const buildNWImage = (
     src: string,
@@ -154,23 +147,101 @@ export function AppearanceSection({
     src,
   });
 
+  const openAvatarCropDialog = (src: string) => {
+    setPendingAvatarSrc(src);
+    setAvatarX(50);
+    setAvatarY(50);
+    setAvatarScale(1);
+    setAvatarCropOpen(true);
+  };
+
   const handleAvatarChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      if (!file) return;
       e.target.value = "";
+      if (!file) return;
 
+      if (!VALID_IMAGE_TYPES.includes(file.type)) {
+        setMediaError("File type not supported. Allowed: .png, .jpg, .gif");
+        return;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        setMediaError("File too large (max 50 MB).");
+        return;
+      }
+      setMediaError(null);
+
+      // Show a data URL immediately in the crop dialog while S3 uploads in parallel
       const reader = new FileReader();
-      reader.onloadend = () => setMuseState({ image: reader.result as string });
+      reader.onloadend = () => openAvatarCropDialog(reader.result as string);
       reader.readAsDataURL(file);
 
+      if (avatarTempUpload) await deleteMedia(avatarTempUpload);
+
       setImageUploading(true);
-      const url = await validateAndUpload(file, "image");
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("contentType", file.type);
+      if (id) formData.append("prefix", id);
+      const url = await uploadMedia(formData);
       setImageUploading(false);
-      if (url) setMuseState({ image: url });
+
+      if (url === API_MESSAGE.MediaError) {
+        setError("Failed to upload avatar. Please try again.");
+        setAvatarCropOpen(false);
+        return;
+      }
+      setAvatarTempUpload(url);
+      setPendingAvatarSrc(url);
     },
-    [setMuseState, validateAndUpload],
+    [id, avatarTempUpload, uploadMedia],
   );
+
+  // Dragging is handled imperatively inside AvatarCropDialog; it commits the
+  // final position here once the gesture settles.
+  const handleAvatarPan = (nx: number, ny: number) => {
+    setAvatarX(clamp(nx, 0, 100));
+    setAvatarY(clamp(ny, 0, 100));
+  };
+
+  const handleAvatarScaleChange = (v: number) => {
+    setAvatarScale(clamp(v, 1, 3));
+  };
+
+  const resetAvatarCrop = useCallback(() => {
+    setAvatarX(50);
+    setAvatarY(50);
+    setAvatarScale(1);
+  }, []);
+
+  const handleAvatarCropConfirm = useCallback(() => {
+    if (!id) return;
+    const crop = toCropFilter(pendingAvatarSrc, avatarX, avatarY, avatarScale);
+    const nwImage: NWImage = {
+      crop,
+      filterValues: { blur: 0, brightness: 100, greyscale: 0 },
+      src: pendingAvatarSrc,
+    };
+    setAvatarSaving(true);
+    setMuseAvatarAction(id, nwImage).then((result) => {
+      setAvatarSaving(false);
+      if (result && typeof result === "object" && "message" in result) {
+        errorToast("Failed to update avatar.");
+        return;
+      }
+      setAvatarTempUpload(null);
+      setMuseState({ avatar: result as NWImage });
+      successToast("Avatar updated.");
+    });
+  }, [id, pendingAvatarSrc, avatarX, avatarY, avatarScale, setMuseState, errorToast, successToast]);
+
+  const handleAvatarCropCancel = useCallback(async () => {
+    if (avatarTempUpload && avatarTempUpload === pendingAvatarSrc) {
+      await deleteMedia(avatarTempUpload);
+      setAvatarTempUpload(null);
+    }
+    setAvatarCropOpen(false);
+  }, [avatarTempUpload, pendingAvatarSrc]);
 
   const openExtraDialog = useCallback(
     (fromCheckbox: boolean) => {
@@ -315,6 +386,14 @@ export function AppearanceSection({
     }
   }, [tempCardBg?.src]); // only re-seed on src change, not on every crop update
 
+  // Keep the live crop in sync with externally-driven changes (re-seed, fit,
+  // slider, wheel) whenever we are not mid-drag.
+  useEffect(() => {
+    if (!cropDragStart.current) {
+      liveCrop.current = { scale: cropScale, x: cropBgX, y: cropBgY };
+    }
+  }, [cropBgX, cropBgY, cropScale]);
+
   const emitCropChange = useCallback(
     (x: number, y: number, s: number) => {
       const scalePct = Math.round(s * 100);
@@ -330,37 +409,48 @@ export function AppearanceSection({
   );
 
   const onCropPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.isPrimary === false) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     cropDragStart.current = {
-      bx: cropBgX,
-      by: cropBgY,
+      bx: liveCrop.current.x,
+      by: liveCrop.current.y,
       px: e.clientX,
       py: e.clientY,
     };
   };
 
   const onCropPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!cropDragStart.current || !cropViewportRef.current) return;
+    const start = cropDragStart.current;
+    if (!start || !cropViewportRef.current) return;
     const rect = cropViewportRef.current.getBoundingClientRect();
-    const dx = ((e.clientX - cropDragStart.current.px) / rect.width) * 100;
-    const dy = ((e.clientY - cropDragStart.current.py) / rect.height) * 100;
-    const newX = Math.min(100, Math.max(0, cropDragStart.current.bx - dx));
-    const newY = Math.min(100, Math.max(0, cropDragStart.current.by - dy));
-    setCropBgX(newX);
-    setCropBgY(newY);
-    emitCropChange(newX, newY, cropScale);
+    if (!rect.width || !rect.height) return;
+    const dx = ((e.clientX - start.px) / rect.width) * 100;
+    const dy = ((e.clientY - start.py) / rect.height) * 100;
+    const newX = Math.min(100, Math.max(0, start.bx - dx));
+    const newY = Math.min(100, Math.max(0, start.by - dy));
+    // Imperative update only — no setState, no styled-component class churn.
+    liveCrop.current = { ...liveCrop.current, x: newX, y: newY };
+    cropViewportRef.current.style.backgroundPosition = `${newX}% ${newY}%`;
   };
 
   const onCropPointerUp = () => {
+    const start = cropDragStart.current;
     cropDragStart.current = null;
+    if (!start) return;
+    // Commit the final position to React state / tempCardBg once.
+    const { x, y, scale } = liveCrop.current;
+    setCropBgX(x);
+    setCropBgY(y);
+    emitCropChange(x, y, scale);
   };
 
   const onCropWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     e.preventDefault();
     const delta = e.deltaY < 0 ? 0.05 : -0.05;
-    const next = Math.min(3, Math.max(1, cropScale + delta));
+    const next = Math.min(3, Math.max(1, liveCrop.current.scale + delta));
+    liveCrop.current = { ...liveCrop.current, scale: next };
     setCropScale(next);
-    emitCropChange(cropBgX, cropBgY, next);
+    emitCropChange(liveCrop.current.x, liveCrop.current.y, next);
   };
 
   // ── Fit card image so the smaller side fills the card ───────────────────────
@@ -458,7 +548,10 @@ export function AppearanceSection({
           <S.MediaUploadSectionContainer>
             <Form.Field className="avatar-field" name="avatar">
               <Form.Label className="media-label">
-                <AvatarUploadField src={image} alt={firstName || "Avatar"} />
+                <AvatarUploadField
+                  src={avatar?.src || image}
+                  alt={firstName || "Avatar"}
+                />
                 <span>Avatar</span>
               </Form.Label>
               <Form.Control
@@ -466,7 +559,8 @@ export function AppearanceSection({
                 name="avatar"
                 type="file"
                 onChange={handleAvatarChange}
-                accept="image/*"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                disabled={imageUploading || avatarSaving}
                 hidden
               />
             </Form.Field>
@@ -497,6 +591,38 @@ export function AppearanceSection({
             </Form.Field>
           </S.MediaUploadSectionContainer>
         </S.BasicInfoFields>
+
+        {/* Avatar crop dialog */}
+        <AppAlertDialog
+          open={avatarCropOpen}
+          onOpenChange={(open) => {
+            if (!open) handleAvatarCropCancel();
+            setAvatarCropOpen(open);
+          }}
+          heading="Adjust avatar"
+          text="Drag to reposition. Use the slider or scroll to zoom."
+          showConfirm={false}
+          isCancelHidden={true}
+          body={
+            <S.AvatarCropBody>
+              <AvatarCropDialog
+                open={avatarCropOpen}
+                src={pendingAvatarSrc}
+                x={avatarX}
+                y={avatarY}
+                scale={avatarScale}
+                onOpenChange={setAvatarCropOpen}
+                onPan={handleAvatarPan}
+                onScaleChange={handleAvatarScaleChange}
+                onReset={resetAvatarCrop}
+                onCancel={handleAvatarCropCancel}
+                onConfirm={handleAvatarCropConfirm}
+                isUploading={imageUploading}
+                viewportRef={avatarViewportRef}
+              />
+            </S.AvatarCropBody>
+          }
+        />
 
         {/* Combined extra-images / visual settings dialog */}
         <AppAlertDialog
@@ -586,17 +712,23 @@ export function AppearanceSection({
                     {/* Drag on the card to reposition; scroll/slider to zoom */}
                     <S.InteractiveCardFace
                       ref={cropViewportRef}
-                      $src={tempCardBg?.src || image || ""}
-                      $bgSize={`${cropScale * 100}% auto`}
-                      $bgPosition={`${cropBgX}% ${cropBgY}%`}
+                      style={{
+                        backgroundImage:
+                          tempCardBg?.src || image
+                            ? `url(${tempCardBg?.src || image})`
+                            : undefined,
+                        backgroundSize: `${cropScale * 100}% auto`,
+                        backgroundPosition: `${cropBgX}% ${cropBgY}%`,
+                      }}
                       onPointerDown={onCropPointerDown}
                       onPointerMove={onCropPointerMove}
                       onPointerUp={onCropPointerUp}
                       onPointerLeave={onCropPointerUp}
+                      onPointerCancel={onCropPointerUp}
                       onWheel={onCropWheel}
                     />
                     <S.FilterPreviewPanel>
-                      <S.FilterPreviewAvatar $src={image || ""} />
+                      <S.FilterPreviewAvatar $src={avatar?.src || image || ""} />
                       <S.FilterPreviewMuseName>
                         {firstName || "Character Name"}
                       </S.FilterPreviewMuseName>

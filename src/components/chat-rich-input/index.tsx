@@ -33,6 +33,10 @@ interface ChatRichInputProps {
   getMentionMuseItems?: (prefix: string) => Promise<MentionDataItem[]>;
   /** Optional node rendered inside the input area on the trailing edge. */
   trailingAction?: ReactNode;
+  /** Drops the default chat-input chrome (background, border, padding) so the
+   *  editor sits flush and transparent inside a differently-styled container
+   *  — e.g. the ice breaker composer's colored speech bubble. */
+  bare?: boolean;
 }
 
 export interface ChatRichInputHandle {
@@ -60,6 +64,7 @@ export const ChatRichInput = forwardRef<
     mentionItems = [],
     getMentionMuseItems,
     trailingAction,
+    bare = false,
   },
   ref,
 ) {
@@ -445,7 +450,7 @@ export const ChatRichInput = forwardRef<
   );
 
   return (
-    <S.InputWrap>
+    <S.InputWrap $bare={bare}>
       {showMention && filteredItems.length > 0 && (
         <MentionDropdown
           items={filteredItems}
@@ -458,6 +463,7 @@ export const ChatRichInput = forwardRef<
       )}
       <S.Editor
         ref={editorRef}
+        $bare={bare}
         contentEditable
         suppressContentEditableWarning
         data-empty={isEmpty ? "true" : undefined}

@@ -109,9 +109,10 @@ export const AuthProvider: FC<Props> = ({ children }) => {
           });
         });
         void getNovelistRankByIdAction(_novelist.id).then((rankResult) => {
-          if (!("message" in rankResult)) {
-            setGlobalState({ novelistRank: rankResult.rank });
-          }
+          setGlobalState({
+            novelistRank:
+              "message" in rankResult ? undefined : rankResult.rank,
+          });
         });
         initialisePushNotifications(); // fire-and-forget — errors caught inside
       }

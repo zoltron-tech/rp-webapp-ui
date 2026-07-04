@@ -11,7 +11,7 @@ interface DiscordMessageResponse {
 
 export async function POST(req: NextRequest) {
   const token = process.env.DISCORD_BOT_TOKEN;
-  const channelId = process.env.DISCORD_SHARE_CHANNEL_ID;
+  const channelId = process.env.DISCORD_PROMPT_SHARE_CHANNEL_ID;
   const guildId = process.env.DISCORD_GUILD_ID;
 
   if (!token || !channelId || !guildId) {

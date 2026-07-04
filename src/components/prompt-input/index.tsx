@@ -25,6 +25,7 @@ import { useCustomEvents, useUIContext } from "@/hooks";
 import type {
   Friend,
   Muse,
+  Prompt,
   PromptSource,
   SubmitPromptInput,
   SubmitPromptType,
@@ -36,6 +37,7 @@ import { FriendSelectionDropdown } from "../friends-selection-dropdown";
 import { InfoModal } from "../info-modal";
 import {
   apiMessageToInfoMessage,
+  buildOptimisticPrompt,
   getParentIdKeyFromPromptType,
   museToSource,
   novelistToSource,
@@ -53,7 +55,7 @@ import {
 import { PromptInputTrigger } from "./prompt-input-trigger";
 import { PromptMediaInput } from "./prompt-media-input";
 import { PromptMediaPreview } from "./prompt-media-preview";
-import { PromptMuseSelect, type MuseSelectHandle } from "./prompt-muse-select";
+import { type MuseSelectHandle, PromptMuseSelect } from "./prompt-muse-select";
 import { PromptTextField } from "./prompt-text-field";
 import * as S from "./styles";
 
@@ -62,7 +64,7 @@ type Props = React.HTMLProps<HTMLDivElement> & {
   parentId?: string;
   dropdownSelection: "NOVELIST" | "MUSE" | "ALL";
   initialSelection: PromptSource | undefined;
-  onSend?: () => void;
+  onSend?: (prompt: Prompt) => void;
   defaultOpen?: boolean;
 };
 
@@ -212,7 +214,9 @@ export const PromptForm: FC<PromptInputFormProps> = ({
           setError(null);
           setOpen(false);
           setPromptInputState({ media: null, promptText: "" });
-          onSend?.();
+          onSend?.(
+            response.prompt ?? buildOptimisticPrompt(selectedSource, payload),
+          );
         };
         setNovelistConfirmOpen(true);
         return;
@@ -240,7 +244,9 @@ export const PromptForm: FC<PromptInputFormProps> = ({
       setError(null);
       setOpen(false);
       setPromptInputState({ media: null, promptText: "" });
-      onSend?.();
+      onSend?.(
+        response.prompt ?? buildOptimisticPrompt(selectedSource, payload),
+      );
     },
     [
       sources,

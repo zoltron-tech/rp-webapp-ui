@@ -39,8 +39,36 @@ export interface Muse {
   useExtraImages: boolean;
   totalPoints: number;
   level: number;
-  prevId: string | null;
-  nextId: string | null;
+  prev: MuseNavItem | null;
+  next: MuseNavItem | null;
+}
+
+/**
+ * Minimal muse payload for prev/next navigation: everything the backend can
+ * populate from the already-loaded muse row (no extra DB/service calls), so
+ * the UI can render a nav card and optimistically show the target muse while
+ * its full data loads. Excludes fandom, pennedBy, connections, tags and
+ * points — those need additional lookups.
+ */
+export interface MuseNavItem {
+  id: string;
+  firstName: string;
+  lastName: string | null;
+  nicknames: string[] | null;
+  gender: string | null;
+  note: string | null;
+  story: string | null;
+  extraAttributes: Record<string, string> | null;
+  image: string | null;
+  avatar: NWImage | null;
+  cardBackground: NWImage | null;
+  wallpaper: NWImage | null;
+  video: string | null;
+  song: string | null;
+  accent: string | null;
+  privacy: PrivacyLevel;
+  useAccent: boolean;
+  useExtraImages: boolean;
 }
 
 export interface MuseAboutSection {
@@ -146,6 +174,8 @@ export interface Friend {
   muses: Muse[];
   mutualFriendCount: number;
   rank?: number;
+  totalPoints: number;
+  level: number;
 }
 
 export interface Fandom {

@@ -4,11 +4,24 @@ import classNames from "classnames";
 import { type FC, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { FaDiscord } from "react-icons/fa6";
-import { FiCheck, FiCopy, FiExternalLink, FiUser, FiX } from "react-icons/fi";
-import type { ShareMuseData, ShareMusePayload, SharePromptResult } from "@/lib/discord";
+import {
+  FiAlertCircle,
+  FiCheck,
+  FiCopy,
+  FiExternalLink,
+  FiLink,
+  FiShare2,
+  FiUser,
+  FiX,
+} from "react-icons/fi";
 import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
+import type {
+  ShareMuseData,
+  ShareMusePayload,
+  SharePromptResult,
+} from "@/lib/discord";
 import type { Muse } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import * as DropS from "../profile-more-dropdown/styled";
@@ -40,11 +53,18 @@ export const ShareMuseDialog: FC<ShareMuseDialogProps> = ({
 
   const [copied, setCopied] = useState(false);
   const [shareState, setShareState] = useState<ShareState>({ status: "idle" });
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
+  // Reset transient state each time the dialog opens
   useEffect(() => {
-    if (open) setShareState({ status: "idle" });
+    if (open) {
+      setShareState({ status: "idle" });
+      setCopied(false);
+    }
   }, [open]);
 
+  // Mobile tray animation state (mirrors AppDropdownMenuMobile pattern)
   const [trayOpen, setTrayOpen] = useState(false);
   const [trayVisible, setTrayVisible] = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -54,6 +74,9 @@ export const ShareMuseDialog: FC<ShareMuseDialogProps> = ({
     typeof window !== "undefined" && muse?.id
       ? `${window.location.origin}${ROUTES.Muse.View(muse.id)}`
       : "";
+  const displayUrl = museUrl.replace(/^https?:\/\//, "");
+  const canNativeShare =
+    typeof navigator !== "undefined" && typeof navigator.share === "function";
 
   const openTray = () => {
     if (closeTimerRef.current) {
@@ -84,23 +107,52 @@ export const ShareMuseDialog: FC<ShareMuseDialogProps> = ({
   useEffect(() => {
     return () => {
       if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
     };
   }, []);
 
+  // Close on Escape
   useEffect(() => {
-    if (!open || isMobile) return;
+    if (!open) return;
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key !== "Escape") return;
+      if (isMobile) closeTray();
+      else onClose();
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, isMobile, onClose]);
 
-  const handleCopyLink = () => {
+  // Move focus into the dialog when it opens (desktop)
+  useEffect(() => {
+    if (open && !isMobile) dialogRef.current?.focus();
+  }, [open, isMobile]);
+
+  const handleCopyLink = async () => {
     if (!museUrl) return;
-    navigator.clipboard.writeText(museUrl);
+    try {
+      await navigator.clipboard.writeText(museUrl);
+    } catch {
+      errorToast("Couldn't copy the link. Please copy it manually.");
+      return;
+    }
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    copyTimerRef.current = setTimeout(() => setCopied(false), 2000);
+  };
+
+  const museName = muse
+    ? [muse.firstName, muse.lastName].filter(Boolean).join(" ")
+    : "";
+
+  const handleNativeShare = async () => {
+    if (!museUrl) return;
+    try {
+      await navigator.share({ title: museName, url: museUrl });
+    } catch {
+      // User dismissed the share sheet — nothing to do.
+    }
   };
 
   const handleShareToDiscord = async () => {
@@ -108,41 +160,44 @@ export const ShareMuseDialog: FC<ShareMuseDialogProps> = ({
     setShareState({ status: "sharing" });
     try {
       const museData: ShareMuseData = {
-        firstName: muse.firstName,
-        lastName: muse.lastName,
-        fandom: { name: muse.fandom.name },
-        tags: muse.tags.map((t) => ({ label: t.label })),
-        note: muse.note,
-        image: muse.image,
+        accent: muse.accent,
         avatarSrc: muse.avatar?.src ?? null,
         cardBackgroundSrc: muse.cardBackground?.src ?? null,
-        nicknames: muse.nicknames,
         extraAttributes: muse.extraAttributes,
+        fandom: { name: muse.fandom.name },
+        firstName: muse.firstName,
+        image: muse.image,
+        lastName: muse.lastName,
         level: muse.level,
-        useAccent: muse.useAccent,
-        accent: muse.accent,
+        nicknames: muse.nicknames,
+        note: muse.note,
         pennedBy: {
-          id: muse.pennedBy.id,
-          username: muse.pennedBy.username,
           firstName: muse.pennedBy.firstName,
-          lastName: muse.pennedBy.lastName,
+          id: muse.pennedBy.id,
           image: muse.pennedBy.image,
+          lastName: muse.pennedBy.lastName,
+          username: muse.pennedBy.username,
         },
+        tags: muse.tags.map((t) => ({ label: t.label })),
+        useAccent: muse.useAccent,
       };
-      const payload: ShareMusePayload = { museUrl, muse: museData, novelistUsername: novelist?.username ?? "" };
+      const payload: ShareMusePayload = {
+        muse: museData,
+        museUrl,
+        novelistUsername: novelist?.username ?? "",
+      };
       const res = await fetch("/api/discord/share-muse", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
       });
       if (res.ok) {
         const data = (await res.json()) as SharePromptResult;
-        setShareState({ status: "success", messageUrl: data.messageUrl });
+        setShareState({ messageUrl: data.messageUrl, status: "success" });
       } else {
         setShareState({ status: "error" });
       }
     } catch {
-      errorToast("Failed to share to Discord. Please try again.");
       setShareState({ status: "error" });
     }
   };
@@ -158,18 +213,16 @@ export const ShareMuseDialog: FC<ShareMuseDialogProps> = ({
 
   if (typeof document === "undefined") return null;
 
-  const museName = muse
-    ? [muse.firstName, muse.lastName].filter(Boolean).join(" ")
-    : "";
   const accentColor = muse?.useAccent ? muse.accent : null;
+  const isSharing = shareState.status === "sharing";
 
-  // ── Content: success / error / idle ─────────────────────────────────────
+  // ── Content: success vs share form (errors show inline in the form) ─────
   let dialogContent: React.ReactNode;
 
   if (shareState.status === "success") {
     dialogContent = (
       <S.ResultState>
-        <S.ResultIconWrap $ok={true}>
+        <S.ResultIconWrap>
           <FiCheck />
         </S.ResultIconWrap>
         <S.ResultTitle>Shared to Discord!</S.ResultTitle>
@@ -184,30 +237,23 @@ export const ShareMuseDialog: FC<ShareMuseDialogProps> = ({
           <FiExternalLink aria-hidden="true" />
           View message
         </S.ViewButton>
-      </S.ResultState>
-    );
-  } else if (shareState.status === "error") {
-    dialogContent = (
-      <S.ResultState>
-        <S.ResultIconWrap $ok={false}>
-          <FiX />
-        </S.ResultIconWrap>
-        <S.ResultTitle>Couldn't share</S.ResultTitle>
-        <S.ResultSubtitle>
-          Something went wrong posting to Discord. Please try again.
-        </S.ResultSubtitle>
-        <S.RetryButton
-          type="button"
-          onClick={() => setShareState({ status: "idle" })}
-        >
-          Try again
-        </S.RetryButton>
+        <S.DoneButton type="button" onClick={isMobile ? closeTray : onClose}>
+          Done
+        </S.DoneButton>
       </S.ResultState>
     );
   } else {
     dialogContent = (
       <>
-        <S.MuseHeader>
+        <S.DialogHeader>
+          <S.DialogTitle>Share muse</S.DialogTitle>
+          <S.DialogDescription>
+            Post {muse?.firstName || "this muse"} to the NW Discord community
+            and invite others to write alongside them.
+          </S.DialogDescription>
+        </S.DialogHeader>
+
+        <S.PreviewCard>
           {muse?.image ? (
             <S.MuseAvatar src={muse.image} alt={museName} />
           ) : (
@@ -219,40 +265,53 @@ export const ShareMuseDialog: FC<ShareMuseDialogProps> = ({
             <S.MuseName $color={accentColor}>{museName}</S.MuseName>
             <S.MuseFandom>{muse?.fandom.name}</S.MuseFandom>
           </S.MuseInfo>
-        </S.MuseHeader>
-        <S.Divider />
-        <S.SubText>
-          Share this muse in the NW Discord community and invite others to write
-          alongside them.
-        </S.SubText>
-        <S.LinkBox>
-          <S.LinkText
-            href={museUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => {
-              e.preventDefault();
-              handleCopyLink();
-            }}
-          >
-            {museUrl}
-          </S.LinkText>
+        </S.PreviewCard>
+
+        <S.LinkRow>
+          <S.LinkBox>
+            <FiLink aria-hidden="true" />
+            <S.LinkUrl title={museUrl}>{displayUrl}</S.LinkUrl>
+          </S.LinkBox>
           <S.CopyButton
             type="button"
-            aria-label="Copy muse link"
+            $copied={copied}
             onClick={handleCopyLink}
+            aria-label={copied ? "Link copied" : "Copy muse link"}
           >
             {copied ? <FiCheck /> : <FiCopy />}
+            {copied ? "Copied" : "Copy"}
           </S.CopyButton>
-        </S.LinkBox>
-        <S.DiscordButton
-          type="button"
-          onClick={handleShareToDiscord}
-          disabled={shareState.status === "sharing"}
-        >
-          <FaDiscord aria-hidden="true" />
-          {shareState.status === "sharing" ? "Sharing..." : "Share in Community"}
-        </S.DiscordButton>
+          <S.SrAnnounce aria-live="polite">
+            {copied ? "Link copied to clipboard" : ""}
+          </S.SrAnnounce>
+        </S.LinkRow>
+
+        <S.Actions>
+          <S.DiscordButton
+            type="button"
+            onClick={handleShareToDiscord}
+            disabled={isSharing}
+          >
+            {isSharing ? (
+              <S.Spinner aria-hidden="true" />
+            ) : (
+              <FaDiscord aria-hidden="true" />
+            )}
+            {isSharing ? "Sharing..." : "Share in Community"}
+          </S.DiscordButton>
+          {canNativeShare && (
+            <S.NativeButton type="button" onClick={handleNativeShare}>
+              <FiShare2 aria-hidden="true" />
+              More options
+            </S.NativeButton>
+          )}
+          {shareState.status === "error" && (
+            <S.ErrorText role="alert">
+              <FiAlertCircle aria-hidden="true" />
+              Couldn't post to Discord. Please try again.
+            </S.ErrorText>
+          )}
+        </S.Actions>
       </>
     );
   }
@@ -282,9 +341,11 @@ export const ShareMuseDialog: FC<ShareMuseDialogProps> = ({
     <>
       <S.DialogOverlay onClick={onClose} />
       <S.DialogContent
+        ref={dialogRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
-        aria-label="Share this Muse"
+        aria-label="Share muse"
         className={classNames([accent, theme])}
       >
         <S.DialogClose onClick={onClose} aria-label="Close">

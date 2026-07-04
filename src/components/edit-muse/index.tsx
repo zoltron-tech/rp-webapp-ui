@@ -44,6 +44,7 @@ export const EditMuseForm: FC<EditMuseCardProps> = ({ id }) => {
           storeId="muse"
           initial={{
             accent: muse?.accent || null,
+            avatar: muse?.avatar || null,
             cardBackground: muse?.cardBackground || null,
             extraAttributes: muse?.extraAttributes || null,
             fandom: muse?.fandom || FANDOMLESS,

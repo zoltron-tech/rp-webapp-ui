@@ -54,11 +54,7 @@ export const AppAlertDialog = ({
         >
           <S.Title>{heading}</S.Title>
 
-          {body ? (
-            <div style={{ marginTop: "4px" }}>{body}</div>
-          ) : (
-            <S.Description>{text}</S.Description>
-          )}
+          {body ? <S.Body>{body}</S.Body> : <S.Description>{text}</S.Description>}
 
           <S.Actions>
             {!isCancelHidden && (

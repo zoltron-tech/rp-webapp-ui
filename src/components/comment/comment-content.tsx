@@ -15,6 +15,7 @@ import * as S from "./styled";
 
 export const CommentContent: FC = () => {
   const text = useCommentState("text");
+  const commentId = useCommentState("id");
   const setCommentState = useCommentStateSet();
   const { on: onCommentEvent, off: offCommentEvent } = useCustomEvents(
     EVENTS.COMMENT.base,
@@ -24,9 +25,11 @@ export const CommentContent: FC = () => {
     const handleCommentUpdated = (
       e: CustomEventType<PromptCommentReplyUpdatedPayload>,
     ) => {
-      const updatedText = e.detail.text;
+      // Every mounted comment listens on the same event bus — only apply
+      // the update meant for this comment.
+      if (e.detail.id !== commentId) return;
 
-      setCommentState({ text: updatedText });
+      setCommentState({ text: e.detail.text });
     };
 
     onCommentEvent(EVENTS.COMMENT.UPDATED, handleCommentUpdated);
@@ -34,15 +37,13 @@ export const CommentContent: FC = () => {
     return () => {
       offCommentEvent(EVENTS.COMMENT.UPDATED, handleCommentUpdated);
     };
-  }, [onCommentEvent]);
+  }, [onCommentEvent, offCommentEvent, commentId, setCommentState]);
 
   const textLines = useMemo(
     () => parseTextContent(text, { maxChars: 200 }),
     [text],
   );
   const media = useCommentState("media");
-
-  console.log({ text });
 
   return (
     <S.CommentContent.Root>

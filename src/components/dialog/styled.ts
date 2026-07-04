@@ -7,158 +7,188 @@ to { opacity: 1; }
 `;
 const contentShow = keyframes`
 from {
-opacity: 0;
-transform: translate(-50%, -48%) scale(0.96);
+  opacity: 0;
+  transform: translate(-50%, -48%) scale(0.97);
 }
 to {
-opacity: 1;
-transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
 }
 `;
 
 export const Overlay = styled(AlertDialog.Overlay)`
-background-color: rgba(0, 0, 0, 0.66);
-position: fixed;
-inset: 0;
-z-index: 200;
-animation: ${overlayShow} 150ms ease-out;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  animation: ${overlayShow} 160ms ease-out;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 `;
 
 export const Content = styled(AlertDialog.Content)`
-background-color: var(--bg-2);
-border: 1px solid var(--bg-6);
-border-radius: 4px;
-box-shadow: 0px 0px 20px 4px rgba(0, 0, 0, 0.5);
-position: fixed;
-top: 50%;
-left: 50%;
-transform: translate(-50%, -50%);
-width: 95vw;
-max-width: 450px;
-padding: 8px;
-z-index: 201;
-animation: ${contentShow} 150ms ease-out;
-color: var(--text);
-font-family: var(--font);
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-2);
+  border: 1px solid var(--bg-6);
+  border-radius: 12px;
+  box-shadow:
+    0 12px 44px rgba(0, 0, 0, 0.55),
+    0 3px 10px rgba(0, 0, 0, 0.35);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(92vw, 440px);
+  max-height: 85vh;
+  padding: 24px;
+  z-index: 201;
+  color: var(--text);
+  font-family: var(--font);
+  animation: ${contentShow} 160ms cubic-bezier(0.16, 1, 0.3, 1);
 
-@media (max-width: 480px) {
-  max-width: 320px;
-  padding: 6px;
-  border-radius: 6px;
-}
+  &:focus {
+    outline: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+
+  @media (max-width: 480px) {
+    width: calc(100vw - 56px);
+    max-width: 300px;
+    padding: 14px;
+    border-radius: 10px;
+  }
 `;
 
 export const Title = styled(AlertDialog.Title)`
-margin-top: 10px;
-margin-left: 12px;
-font-size: var(--font-size-h4);
-font-weight: var(--font-weight-semi-bold);
+  margin: 0;
+  font-size: var(--font-size-h5);
+  font-weight: var(--font-weight-semi-bold);
+  line-height: 1.3;
 
-@media (max-width: 480px) {
-  margin-top: 6px;
-  margin-left: 8px;
-  font-size: var(--font-size-input);
-}
+  @media (max-width: 480px) {
+    font-size: var(--font-size);
+  }
 `;
 
 export const Description = styled(AlertDialog.Description)`
-margin-top: 30px;
-font-size: var(--font-size-input);
-margin-bottom: 20px;
-line-height: 1.5;
+  margin: 10px 0 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-input);
+  line-height: 1.55;
 
-@media (max-width: 480px) {
-  margin-top: 14px;
-  margin-bottom: 12px;
-  font-size: var(--font-size-small, 11px);
-}
+  @media (max-width: 480px) {
+    margin-top: 6px;
+    font-size: var(--font-size-xsmall);
+    line-height: 1.5;
+  }
+`;
+
+/* Wrapper for custom body content — scrolls when content is tall. */
+export const Body = styled.div`
+  margin-top: 16px;
+  overflow-y: auto;
+  min-height: 0;
+
+  @media (max-width: 480px) {
+    margin-top: 10px;
+  }
 `;
 
 export const Actions = styled.div`
-display: flex;
-justify-content: flex-end;
-gap: 12px;
-margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-top: 28px;
 
-@media (max-width: 480px) {
-  gap: 8px;
-  margin-top: 12px;
-}
+  @media (max-width: 480px) {
+    gap: 6px;
+    margin-top: 14px;
+  }
+`;
+
+const buttonBase = `
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 96px;
+  padding: 10px 18px;
+  text-align: center;
+  font-size: var(--font-size-input);
+  font-weight: var(--font-weight-medium);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 480px) {
+    flex: 1;
+    min-width: 0;
+    padding: 7px 8px;
+    font-size: var(--font-size-xsmall);
+    border-radius: 6px;
+  }
 `;
 
 export const CancelButton = styled.button`
-  all: unset;
-  width: 100px;
-  padding: 8px;
-  text-align: center;
-  background-color: var(--bg-3);
+  ${buttonBase}
+  background-color: transparent;
   color: var(--text-secondary);
-  font-size: var(--font-size);
-  font-weight: var(--font-weight-regular);
   border: 1px solid var(--bg-6);
-  border-radius: 4px;
-  cursor: pointer;
 
   &:hover {
     background-color: var(--bg-4);
+    color: var(--text);
   }
 
   &:active {
     background-color: var(--bg-5);
   }
 
-  &:focus {
-    outline: 1.5px solid var(--accent);
-    outline-offset: 2px;
-  }
-
   &:disabled {
-    background-color: var(--bg-2);
-    color: var(--text-secondary);
+    opacity: 0.5;
     cursor: not-allowed;
-  }
-
-  @media (max-width: 480px) {
-    width: 72px;
-    padding: 6px;
-    font-size: var(--font-size-small, 11px);
   }
 `;
 
 export const ActionButton = styled.button<{
   colorVariant?: "negative" | "neutral";
 }>`
-  min-width: 120px;
-  padding: 8px;
-  text-align: center;
+  ${buttonBase}
+  border: 1px solid transparent;
 
-  background-color: ${({ colorVariant, disabled }) =>
-    disabled
-      ? "var(--bg-4)" // or another lighter neutral color for disabled
-      : colorVariant === "neutral"
-        ? "var(--accent)"
-        : "#922a2aff"};
-
-  color: ${({ disabled }) => (disabled ? "var(--text-secondary)" : "var(--text-primary)")};
-  font-size: var(--font-size);
-  font-weight: var(--font-weight-regular);
-  border: none;
-  border-radius: 4px;
-  cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
-  transition: background-color 0.15s ease;
+  background-color: ${({ colorVariant }) =>
+    colorVariant === "neutral" ? "var(--accent)" : "var(--tomato-9)"};
+  color: ${({ colorVariant }) =>
+    colorVariant === "neutral" ? "var(--text)" : "#fff"};
 
   &:hover {
-    background-color: ${({ colorVariant, disabled }) =>
-      disabled
-        ? "var(--bg-4)" // keep same as disabled background
-        : colorVariant === "neutral"
-          ? "var(--accent)" // accent hover
-          : "#d03c3cff"}; // red hover
+    background-color: ${({ colorVariant }) =>
+      colorVariant === "neutral" ? "var(--accent-hover)" : "var(--tomato-10)"};
   }
 
-  @media (max-width: 480px) {
-    min-width: 80px;
-    padding: 6px;
-    font-size: var(--font-size-small, 11px);
+  &:active {
+    background-color: ${({ colorVariant }) =>
+      colorVariant === "neutral" ? "var(--accent-active)" : "var(--tomato-8)"};
+  }
+
+  &:disabled {
+    background-color: var(--bg-4);
+    color: var(--text-secondary);
+    cursor: not-allowed;
   }
 `;

@@ -24,6 +24,7 @@ import { useCustomEvents, useUIContext } from "@/hooks";
 import type {
   Friend,
   Muse,
+  Prompt,
   PromptSource,
   SubmitPromptInput,
   SubmitPromptType,
@@ -35,6 +36,7 @@ import { FriendSelectionDropdown } from "../friends-selection-dropdown";
 import { InfoModal } from "../info-modal";
 import {
   apiMessageToInfoMessage,
+  buildOptimisticPrompt,
   getParentIdKeyFromPromptType,
   museToSource,
   novelistToSource,
@@ -51,7 +53,7 @@ import {
 } from "./prompt-input.store";
 import { PromptMediaInput } from "./prompt-media-input";
 import { PromptMediaPreview } from "./prompt-media-preview";
-import { PromptMuseSelect, type MuseSelectHandle } from "./prompt-muse-select";
+import { type MuseSelectHandle, PromptMuseSelect } from "./prompt-muse-select";
 import { PromptTextField } from "./prompt-text-field";
 import * as S from "./styles";
 
@@ -60,7 +62,7 @@ type FullPagePromptInputProps = {
   parentId?: string;
   dropdownSelection: "NOVELIST" | "MUSE" | "ALL";
   initialSelection?: PromptSource;
-  onSend?: () => void;
+  onSend?: (prompt: Prompt) => void;
   onBack?: () => void;
   className?: string;
 };
@@ -217,7 +219,9 @@ const FullPageForm: FC<InnerFormProps> = ({
           setSending(false);
           setError(null);
           setPromptInputState({ media: null, promptText: "" });
-          onSend?.();
+          onSend?.(
+            response.prompt ?? buildOptimisticPrompt(selectedSource, payload),
+          );
         };
         setNovelistConfirmOpen(true);
         return;
@@ -238,7 +242,9 @@ const FullPageForm: FC<InnerFormProps> = ({
       setSending(false);
       setError(null);
       setPromptInputState({ media: null, promptText: "" });
-      onSend?.();
+      onSend?.(
+        response.prompt ?? buildOptimisticPrompt(selectedSource, payload),
+      );
     },
     [
       sources,

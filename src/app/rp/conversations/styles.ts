@@ -213,8 +213,6 @@ export const IceBreakerBubble = styled.p<{ $color?: string | null }>`
   width: max-content;
   max-width: 90px;
   background: ${({ $color }) => $color ?? "var(--bg-3)"};
-  border: 1.5px solid
-    ${({ $color }) => ($color ? "rgba(255,255,255,0.35)" : "var(--bg-6)")};
   border-radius: 14px;
   padding: 6px 9px;
   color: ${({ $color }) => ($color ? "#ffffff" : "var(--text)")};
@@ -233,8 +231,6 @@ export const IceBreakerBubble = styled.p<{ $color?: string | null }>`
     z-index: -1;
     border-radius: 50%;
     background: ${({ $color }) => $color ?? "var(--bg-3)"};
-    border: 1.5px solid
-      ${({ $color }) => ($color ? "rgba(255,255,255,0.35)" : "var(--bg-6)")};
   }
 
   &::before {
@@ -246,7 +242,7 @@ export const IceBreakerBubble = styled.p<{ $color?: string | null }>`
   }
 
   &::after {
-    bottom: -14px;
+    bottom: -12px;
     left: 50%;
     margin-left: 3.5px;
     width: 5px;
@@ -628,26 +624,6 @@ export const IceBreakerMessageBubble = styled.div<{
     background: ${({ $color }) => $color ?? "var(--accent-3)"};
     border-radius: 3px;
     transform: rotate(45deg);
-  }
-`;
-
-export const IceBreakerMessageTextarea = styled.textarea`
-  display: block;
-  width: 100%;
-  min-height: 3.6em;
-  resize: none;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-family: var(--font);
-  font-size: var(--font-size-input);
-  color: inherit;
-  caret-color: currentColor;
-
-  &::placeholder {
-    color: inherit;
-    opacity: 0.65;
-    font-style: italic;
   }
 `;
 

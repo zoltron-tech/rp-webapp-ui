@@ -51,6 +51,7 @@ export const ROUTES = {
   Profile: {
     Edit: "/rp/profile/edit",
     Index: "/rp/profile",
+    Referrals: "/rp/profile/referrals",
     Muses: {
       About: (museId: string) => `/rp/profile/muses/edit/${museId}/about`,
       AboutCreate: (museId: string) =>

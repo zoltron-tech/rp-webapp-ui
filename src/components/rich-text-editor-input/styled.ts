@@ -17,7 +17,10 @@ const fadeIn = keyframes`
   }
 `;
 
-export const Container = styled.div<{ $fullPage?: boolean }>`
+export const Container = styled.div<{
+  $fullPage?: boolean;
+  $accent?: string | null;
+}>`
   width: 100%;
   box-sizing: border-box;
   ${(p) =>
@@ -27,6 +30,13 @@ export const Container = styled.div<{ $fullPage?: boolean }>`
     flex-direction: column;
     flex: 1;
     min-height: 0;
+  `}
+  ${(p) =>
+    p.$accent &&
+    p.$accent.trim() !== "" &&
+    `
+    --accent: ${p.$accent};
+    --accent-hover: color-mix(in srgb, ${p.$accent} 70%, black);
   `}
 `;
 
@@ -677,6 +687,16 @@ const richTextContentBase = css`
   word-wrap: break-word;
   white-space: pre-wrap;
   font-size: var(--font-size-input);
+
+  a {
+    color: var(--blue-11);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+
+    &:hover {
+      color: var(--blue-12);
+    }
+  }
 
   /* Highlighted text spans (color + background-color set inline by the
      highlight tool). Add vertical padding so that on multi-line selections the

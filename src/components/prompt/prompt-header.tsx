@@ -24,9 +24,9 @@ import { MuseAvatar } from "../common/muse-avatar";
 import { NovelistAvatar } from "../common/novelist-avatar";
 import { PrivacyIcon } from "../common/privacy-icon";
 import { AppAlertDialog } from "../dialog";
-import { FriendsList } from "../friends-list";
 import { InlineMusicPlayer } from "../inline-music-player/page";
 import { AppDropdownMenuResponsive } from "../profile-more-dropdown";
+import { SharedWithDialog } from "../shared-with-dialog";
 import { UpdatePromptForm, type UpdatePromptProps } from "../update-prompt";
 import { usePromptState, usePromptStateSet } from "./prompt.store";
 import { SharePromptDialog } from "./share-prompt-dialog";
@@ -147,20 +147,10 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
 
   return (
     <S.PromptHeaderRoot>
-      <AppAlertDialog
-        heading={`Shared with`}
-        text={`Share with friends`}
-        body={<FriendsList friends={privacySelectedFriends} />}
+      <SharedWithDialog
+        friends={privacySelectedFriends}
         open={showPrivacySelectedFriends}
-        onOpenChange={setShowPrivacySelectedFriends}
-        onCancel={() => setShowPrivacySelectedFriends(false)}
-        onConfirm={() => {
-          setShowPrivacySelectedFriends(false);
-        }}
-        closeButtonText="Cancel"
-        actionButtonLabel="Ok"
-        actionColor="neutral"
-        isCancelHidden={true}
+        onClose={() => setShowPrivacySelectedFriends(false)}
       />
 
       <SharePromptDialog

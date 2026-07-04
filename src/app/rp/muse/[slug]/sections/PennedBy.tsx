@@ -35,9 +35,9 @@ export default function PennedBy({
       <span>Penned by</span>
       <S.PennedByChip accent={accent ?? null} onClick={handleClick}>
         <S.PennedByMiniAvatar $src={pennedBy.image ?? undefined} />
-        <span style={{ color: "var(--text)", fontWeight: 700 }}>
+        <S.PennedByName title={pennedBy.username}>
           {pennedBy.username}
-        </span>
+        </S.PennedByName>
       </S.PennedByChip>
     </S.PennedByRow>
   );

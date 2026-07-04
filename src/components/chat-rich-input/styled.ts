@@ -1,33 +1,42 @@
-import { styled } from "styled-components";
+import { css, styled } from "styled-components";
 import { editorMentionTagCss } from "../rich-text-editor-input/mention-chip";
 
-export const InputWrap = styled.div`
+export const InputWrap = styled.div<{ $bare?: boolean }>`
   position: relative;
   display: flex;
   align-items: flex-end;
-  border-radius: 20px;
-  border: 1px solid var(--bg-6);
-  background: linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--accent) 12%, transparent),
-      transparent 60%
-    ),
-    var(--bg-2);
+
+  ${({ $bare }) =>
+    $bare
+      ? css`
+          border: none;
+          background: transparent;
+        `
+      : css`
+          border-radius: 20px;
+          border: 1px solid var(--bg-6);
+          background: linear-gradient(
+              135deg,
+              color-mix(in srgb, var(--accent) 12%, transparent),
+              transparent 60%
+            ),
+            var(--bg-2);
+        `}
 `;
 
-export const Editor = styled.div`
+export const Editor = styled.div<{ $bare?: boolean }>`
   position: relative;
   z-index: 1;
   flex: 1;
   min-width: 0;
-  min-height: 45px;
+  min-height: ${({ $bare }) => ($bare ? "3.6em" : "45px")};
   max-height: calc(3 * (1.35em + 0px) + 22px);
   height: auto;
   overflow-y: auto;
   border: none;
   background: transparent;
-  color: var(--text);
-  padding: 11px 12px;
+  color: ${({ $bare }) => ($bare ? "inherit" : "var(--text)")};
+  padding: ${({ $bare }) => ($bare ? "0" : "11px 12px")};
   font-size: var(--font-size-input);
   line-height: 1.35;
   outline: none;
@@ -42,13 +51,14 @@ export const Editor = styled.div`
 
   &[data-empty="true"]::before {
     content: attr(data-placeholder);
-    color: var(--text-secondary);
-    opacity: 0.7;
+    color: ${({ $bare }) => ($bare ? "inherit" : "var(--text-secondary)")};
+    opacity: ${({ $bare }) => ($bare ? 0.65 : 0.7)};
+    font-style: ${({ $bare }) => ($bare ? "italic" : "normal")};
     pointer-events: none;
     position: absolute;
-    top: 11px;
-    left: 12px;
-    right: 12px;
+    top: ${({ $bare }) => ($bare ? "0" : "11px")};
+    left: ${({ $bare }) => ($bare ? "0" : "12px")};
+    right: ${({ $bare }) => ($bare ? "0" : "12px")};
     font-size: var(--font-size-input);
     white-space: nowrap;
     overflow: hidden;

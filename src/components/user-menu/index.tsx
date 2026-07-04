@@ -27,9 +27,8 @@ import {
   NovelistsLeaderboardIcon,
   TermsIcon,
 } from "./user-menu-icons";
-import { FiCheck, FiChevronRight, FiCopy, FiEdit2, FiX } from "react-icons/fi";
+import { FiChevronRight, FiEdit2 } from "react-icons/fi";
 import { sendFeedbackMessage } from "@/app/rp/profile/actions";
-import discordLogo from "@/assets/images/NW-Discord-l.ogo.png";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -43,6 +42,7 @@ import { AvatarNew } from "../common/avatar-new";
 import { AppAlertDialog } from "../dialog";
 import { InstallAppDialog } from "../dialog/install-app-dialog";
 import { Flex } from "../edit-muse-card/styles";
+import { DiscordCommunityDialog } from "./discord-community-dialog";
 import * as S from "./styles";
 
 type UserMenuProps = {};
@@ -88,8 +88,6 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
   const authState = useGlobalState("authState");
   const unreadConversationIds = useGlobalState("unreadConversationIds");
   const unreadReplyCount = useGlobalState("unreadReplyCount");
-  const accent = useGlobalState("accent");
-  const theme = useGlobalState("theme");
   const hasUnread = Boolean(
     unreadConversationIds?.length || (unreadReplyCount ?? 0) > 0,
   );
@@ -97,8 +95,6 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
   const [showContactSupportAlert, setShowContactSupportAlert] = useState(false);
   const [showDiscordDialog, setShowDiscordDialog] = useState(false);
   const [showInstallDialog, setShowInstallDialog] = useState(false);
-  const [copiedInvite, setCopiedInvite] = useState(false);
-  const discordInviteUrl = process.env.NEXT_PUBLIC_DISCORD_INVITE_URL ?? "";
   const [supportMessage, setSupportMessage] = useState("");
   const setGlobalState = useGlobalStoreSet();
   const [open, setOpen] = useState(false);
@@ -222,83 +218,10 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
           onClose={() => setShowInstallDialog(false)}
         />
 
-        {showDiscordDialog &&
-          createPortal(
-            <>
-              <S.DiscordDialogOverlay
-                onClick={() => setShowDiscordDialog(false)}
-              />
-              <S.DiscordDialogContent
-                role="dialog"
-                aria-modal="true"
-                aria-label="Join NW Community on Discord"
-                className={classNames([accent, theme])}
-              >
-                <S.DiscordDialogClose
-                  onClick={() => setShowDiscordDialog(false)}
-                  aria-label="Close"
-                >
-                  <FiX />
-                </S.DiscordDialogClose>
-                <S.DiscordDialogImage
-                  src={discordLogo.src}
-                  alt="NW Community Discord"
-                />
-                <S.DiscordDialogTitle>
-                  be a part of NW Community
-                </S.DiscordDialogTitle>
-                <S.DiscordDialogDescription>
-                  Connect & hangout with fellow novelists, get the latest app
-                  updates, share feedback and receive support; all in the
-                  Novelist World Discord server.
-                </S.DiscordDialogDescription>
-                {discordInviteUrl && (
-                  <S.DiscordInviteLinkBox>
-                    <S.DiscordInviteLinkText
-                      href={discordInviteUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        navigator.clipboard.writeText(discordInviteUrl);
-                        setCopiedInvite(true);
-                        setTimeout(() => setCopiedInvite(false), 2000);
-                      }}
-                    >
-                      {discordInviteUrl}
-                    </S.DiscordInviteLinkText>
-                    <S.DiscordInviteCopyButton
-                      type="button"
-                      aria-label="Copy invite link"
-                      onClick={() => {
-                        navigator.clipboard.writeText(discordInviteUrl);
-                        setCopiedInvite(true);
-                        setTimeout(() => setCopiedInvite(false), 2000);
-                      }}
-                    >
-                      {copiedInvite ? <FiCheck /> : <FiCopy />}
-                    </S.DiscordInviteCopyButton>
-                  </S.DiscordInviteLinkBox>
-                )}
-                <S.DiscordJoinButton
-                  type="button"
-                  onClick={() => {
-                    if (discordInviteUrl)
-                      window.open(
-                        discordInviteUrl,
-                        "_blank",
-                        "noopener,noreferrer",
-                      );
-                  }}
-                  disabled={!discordInviteUrl}
-                >
-                  <FaDiscord aria-hidden="true" />
-                  Join Server
-                </S.DiscordJoinButton>
-              </S.DiscordDialogContent>
-            </>,
-            document.body,
-          )}
+        <DiscordCommunityDialog
+          open={showDiscordDialog}
+          onClose={() => setShowDiscordDialog(false)}
+        />
 
         <AppAlertDialog
           heading={`Logout?`}

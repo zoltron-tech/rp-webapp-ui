@@ -3,6 +3,17 @@
 import { Carousel } from "@novelist-world/ui";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  FiArrowRight,
+  FiChevronDown,
+  FiDownload,
+  FiGlobe,
+  FiHeart,
+  FiSmartphone,
+  FiUsers,
+  FiWifiOff,
+} from "react-icons/fi";
+import appInstallLogo from "@/assets/images/NW-mobile-app-install-logo.png";
 import { InstallAppDialog } from "@/components/dialog/install-app-dialog";
 import { Footer } from "@/components/layout";
 import { MusePreviewCard } from "@/components/muse-preview-card";
@@ -19,18 +30,29 @@ const NovelistCarouselDynamic = dynamic(
   { ssr: false },
 );
 
+// Stable keys for the placeholder shimmer cards (avoids index-as-key).
+const MUSE_SHIMMER_KEYS = ["m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7"];
+
 export default function NovelistsPage() {
   const initialRender = useRef(true);
   const [muses, set] = useState<Muse[]>([]);
   const [showInstallDialog, setShowInstallDialog] = useState(false);
   const authState = useGlobalState("authState");
-  const { routeToPage, baseDataLoader } = usePageRouter();
+  const novelists = useGlobalState("novelists");
+  const { routeToPage, baseDataLoader, stopPageLoading } = usePageRouter();
   const isMobile = useMemo(
     () =>
       typeof window !== "undefined" &&
       (window.innerWidth < 768 || screen.width < 768),
     [],
   );
+
+  // Render the landing page immediately — don't keep the full-page loader up
+  // while novelists/muses are still being fetched. The card rows below show
+  // shimmer placeholders until their data streams in.
+  useEffect(() => {
+    stopPageLoading();
+  }, [stopPageLoading]);
 
   const updateMuses = useCallback(async () => {
     const response = await baseDataLoader(() => getHeroPageMusesAction());
@@ -65,101 +87,197 @@ export default function NovelistsPage() {
     }
   };
 
-  return (
-    <>
-      <S.PageContainer>
-        <S.HeroEyebrow>Collaborative Storytelling Platform</S.HeroEyebrow>
-        <S.MainHeading />
-        <S.HeroContent>
-          <S.MainSubtext>Create live worlds.</S.MainSubtext>
-          <S.MainSubtext>Write stories together.</S.MainSubtext>
-        </S.HeroContent>
-        <S.Story>
-          Build realms with friends, interact with characters, and watch your
-          stories evolve through collaboration.
-        </S.Story>
-        <S.ButtonsGroupContainer>
-          <S.MainButton
-            onClick={authState === "LOGGED_IN" ? toHomePage : onLoginClick}
-          >
-            <span className="buttonLg">
-              <span className="buttonSl" />
-              <span className="buttonText">
-                {authState === "LOGGED_IN" ? "My Dashboard" : "Get Started"}
-              </span>
-            </span>
-          </S.MainButton>
-          <S.MainButton onClick={handleDownloadAppClick}>
-            <span className="buttonLg">
-              <span className="buttonSl" />
-              <span className="buttonText">Download as App</span>
-            </span>
-          </S.MainButton>
-        </S.ButtonsGroupContainer>
-      </S.PageContainer>
-      <S.TabContainer>
-        {/* <S.MainSubtext>Collaborate with fellow Novelists</S.MainSubtext> */}
-      </S.TabContainer>
-      <NovelistCarouselDynamic />
-      {/* <S.MainSubtext>Interact with Characters</S.MainSubtext> */}
-      <S.PageContainer>
-        <S.MuseCarouselContainer>
-          <Carousel>
-            {muses.length &&
-              muses
-                .slice(0, Math.floor(muses.length / 2))
-                .map((muse) => (
-                  <MusePreviewCard
-                    key={muse?.id}
-                    className="hero"
-                    muse={muse}
-                  />
-                ))}
-          </Carousel>
-          <Carousel direction="to-right">
-            {muses.length &&
-              muses
-                .slice(Math.floor(muses.length / 2))
-                .map((muse) => (
-                  <MusePreviewCard
-                    key={muse?.id}
-                    className="hero"
-                    muse={muse}
-                  />
-                ))}
-          </Carousel>
-        </S.MuseCarouselContainer>
+  const isLoggedIn = authState === "LOGGED_IN";
+  const museMidpoint = Math.floor(muses.length / 2);
+  const firstMuseRow = muses.slice(0, museMidpoint);
+  const secondMuseRow = muses.slice(museMidpoint);
+  const musesLoading = muses.length === 0;
+  const novelistsLoading = novelists.length === 0;
 
+  return (
+    <S.PageShell>
+      {/* ─── Hero ─────────────────────────────────────────────────────── */}
+      <S.Hero>
+        <S.HeroInner>
+          <S.Eyebrow>Collaborative Storytelling Platform</S.Eyebrow>
+          <S.HeroTitle>
+            Create live worlds.
+            <br />
+            <S.HeroTitleAccent>Write stories together.</S.HeroTitleAccent>
+          </S.HeroTitle>
+          <S.HeroText>
+            Build realms with friends, bring characters to life, and watch your
+            stories evolve through real-time collaboration.
+          </S.HeroText>
+          <S.HeroActions>
+            <S.PrimaryButton onClick={isLoggedIn ? toHomePage : onLoginClick}>
+              {isLoggedIn ? "My Dashboard" : "Get Started"}
+              <FiArrowRight />
+            </S.PrimaryButton>
+            <S.GhostButton onClick={handleDownloadAppClick}>
+              <FiDownload />
+              Download as App
+            </S.GhostButton>
+          </S.HeroActions>
+        </S.HeroInner>
+        <S.ScrollCue>
+          <span>Explore</span>
+          <FiChevronDown />
+        </S.ScrollCue>
+      </S.Hero>
+
+      {/* ─── Novelists ────────────────────────────────────────────────── */}
+      <S.Section>
+        <S.SectionHead>
+          <S.SectionEyebrow>Meet the Novelists</S.SectionEyebrow>
+          <S.SectionTitle>Storytellers shaping living worlds</S.SectionTitle>
+          <S.SectionSubtitle>
+            Discover the writers building the realms, characters, and adventures
+            of Novelist World.
+          </S.SectionSubtitle>
+        </S.SectionHead>
+        {novelistsLoading && (
+          <S.NovelistShimmerRow aria-hidden="true">
+            <S.NovelistShimmerCard className="side" />
+            <S.NovelistShimmerCard />
+            <S.NovelistShimmerCard className="side" />
+          </S.NovelistShimmerRow>
+        )}
+        <NovelistCarouselDynamic />
+      </S.Section>
+
+      {/* ─── Muses ────────────────────────────────────────────────────── */}
+      <S.Section>
+        <S.SectionHead>
+          <S.SectionEyebrow>Living Characters</S.SectionEyebrow>
+          <S.SectionTitle>Interact with the Muses</S.SectionTitle>
+          <S.SectionSubtitle>
+            Meet the characters brought to life by our community — chat with
+            them, and weave them into your own stories.
+          </S.SectionSubtitle>
+        </S.SectionHead>
+        <S.MuseCarouselContainer>
+          {musesLoading ? (
+            <>
+              <S.MuseShimmerRow aria-hidden="true">
+                {MUSE_SHIMMER_KEYS.map((key) => (
+                  <S.MuseShimmerCard key={key} />
+                ))}
+              </S.MuseShimmerRow>
+              <S.MuseShimmerRow aria-hidden="true">
+                {MUSE_SHIMMER_KEYS.map((key) => (
+                  <S.MuseShimmerCard key={`${key}-b`} />
+                ))}
+              </S.MuseShimmerRow>
+            </>
+          ) : (
+            <>
+              <Carousel>
+                {firstMuseRow.map((muse) => (
+                  <MusePreviewCard
+                    key={muse?.id}
+                    className="hero"
+                    muse={muse}
+                  />
+                ))}
+              </Carousel>
+              <Carousel direction="to-right">
+                {secondMuseRow.map((muse) => (
+                  <MusePreviewCard
+                    key={muse?.id}
+                    className="hero"
+                    muse={muse}
+                  />
+                ))}
+              </Carousel>
+            </>
+          )}
+        </S.MuseCarouselContainer>
+      </S.Section>
+
+      {/* ─── Features ─────────────────────────────────────────────────── */}
+      <S.Section>
+        <S.SectionHead>
+          <S.SectionEyebrow>Why Novelist World</S.SectionEyebrow>
+          <S.SectionTitle>
+            Everything you need to tell your story
+          </S.SectionTitle>
+        </S.SectionHead>
         <S.CardsContainer>
           <S.InfoCard tiltOnHover effectStrength={15}>
+            <S.CardIcon>
+              <FiGlobe />
+            </S.CardIcon>
             <S.Cardheading>Create Your Own Realm</S.Cardheading>
-            <S.Story>
+            <S.CardText>
               Create and customize realms, populate them with unique characters,
               and fill them with magical objects. Your imagination is the only
               limit.
-            </S.Story>
+            </S.CardText>
           </S.InfoCard>
           <S.InfoCard tiltOnHover effectStrength={15}>
+            <S.CardIcon>
+              <FiUsers />
+            </S.CardIcon>
             <S.Cardheading>Collaborate and Connect</S.Cardheading>
-            <S.Story>
+            <S.CardText>
               Work with fellow writers to expand your stories. Share ideas,
               develop plots, and create something extraordinary together.
-            </S.Story>
+            </S.CardText>
           </S.InfoCard>
           <S.InfoCard tiltOnHover effectStrength={15}>
+            <S.CardIcon>
+              <FiHeart />
+            </S.CardIcon>
             <S.Cardheading>Join a Thriving Community</S.Cardheading>
-            <S.Story>
+            <S.CardText>
               Whether you are a seasoned writer or just starting, you will find
               inspiration and support in our diverse and welcoming community.
-            </S.Story>
+            </S.CardText>
           </S.InfoCard>
         </S.CardsContainer>
-      </S.PageContainer>
+      </S.Section>
+
+      {/* ─── Download as App ──────────────────────────────────────────── */}
+      <S.AppSection>
+        <S.AppCard>
+          <S.AppIconTile>
+            <img src={appInstallLogo.src} alt="Novelist World app" />
+          </S.AppIconTile>
+          <S.AppBody>
+            <S.AppHeading>Take your worlds anywhere</S.AppHeading>
+            <S.AppText>
+              Install Novelist World on your device for a faster, full-screen
+              experience. It lives right on your home screen — no app store
+              required.
+            </S.AppText>
+            <S.AppBenefits>
+              <S.AppBenefit>
+                <FiSmartphone />
+                Home-screen app
+              </S.AppBenefit>
+              <S.AppBenefit>
+                <FiWifiOff />
+                Works offline
+              </S.AppBenefit>
+              <S.AppBenefit>
+                <FiDownload />
+                No app store needed
+              </S.AppBenefit>
+            </S.AppBenefits>
+            <S.PrimaryButton onClick={handleDownloadAppClick}>
+              <FiDownload />
+              Download as App
+            </S.PrimaryButton>
+          </S.AppBody>
+        </S.AppCard>
+      </S.AppSection>
+
       <Footer />
       <InstallAppDialog
         open={showInstallDialog}
         onClose={() => setShowInstallDialog(false)}
       />
-    </>
+    </S.PageShell>
   );
 }

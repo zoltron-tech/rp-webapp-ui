@@ -1,12 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { FcFlashOn, FcRating } from "react-icons/fc";
-import { AvatarNew } from "@/components/common/avatar-new";
+import { HiUserAdd } from "react-icons/hi";
 import { IoChevronBack } from "react-icons/io5";
+import { AvatarNew } from "@/components/common/avatar-new";
+import { InviteFriendsDialog } from "@/components/invite-friends-dialog";
 import { LoadMore } from "@/components/load-more/page";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
+import {
+  LevelBadgeIcon,
+  RankTrophyIcon,
+  XPBadgeIcon,
+} from "@/utils/badge-icons";
 import { ROUTES } from "@/utils/constants/routes";
 import {
   getNovelistLeaderboardAction,
@@ -34,6 +40,7 @@ export default function NovelistLeaderboardPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [ownRank, setOwnRank] = useState<NovelistLeaderboardEntry | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   useEffect(() => {
     stopPageLoading();
@@ -54,7 +61,9 @@ export default function NovelistLeaderboardPage() {
 
     Promise.all([
       getNovelistLeaderboardAction(1, PAGE_SIZE),
-      novelist?.id ? getNovelistRankByIdAction(novelist.id) : Promise.resolve({ message: "" }),
+      novelist?.id
+        ? getNovelistRankByIdAction(novelist.id)
+        : Promise.resolve({ message: "" }),
     ]).then(([listResult, rankResult]) => {
       setLoading(false);
       if ("message" in listResult) {
@@ -109,6 +118,10 @@ export default function NovelistLeaderboardPage() {
           <S.Subtitle>
             The top writers on Novelist World ranked by XP earned.
           </S.Subtitle>
+          <S.InviteXPButton type="button" onClick={() => setInviteOpen(true)}>
+            <HiUserAdd />
+            Invite friends & earn more XP
+          </S.InviteXPButton>
         </S.Header>
 
         {loading && <S.Spinner aria-label="Loading…" />}
@@ -182,31 +195,31 @@ export default function NovelistLeaderboardPage() {
         <S.StickyFooter>
           <S.OwnRankCard
             onClick={() =>
-              routeToPage(
-                ROUTES.Profile.View(ownRank.novelist.username).Index,
-              )
+              routeToPage(ROUTES.Profile.View(ownRank.novelist.username).Index)
             }
           >
-            <S.RankBadge $rank={ownRank.rank}>{ownRank.rank}</S.RankBadge>
-              <AvatarNew
-                src={ownRank.novelist.image}
-                alt={ownRank.novelist.firstName}
-                username={ownRank.novelist.username}
-                nwImage={ownRank.novelist.avatar}
-              />
+            <RankMarker rank={ownRank.rank} />
+            <AvatarNew
+              src={ownRank.novelist.image}
+              alt={ownRank.novelist.firstName}
+              username={ownRank.novelist.username}
+              nwImage={ownRank.novelist.avatar}
+            />
             <S.RowBody>
               <S.OwnRankLabel>Your Rank</S.OwnRankLabel>
               <S.RowName>
                 {ownRank.novelist.firstName}
-                {ownRank.novelist.lastName ? ` ${ownRank.novelist.lastName}` : ""}
+                {ownRank.novelist.lastName
+                  ? ` ${ownRank.novelist.lastName}`
+                  : ""}
               </S.RowName>
               <S.ChipRow>
                 <S.LevelChip>
-                  <FcRating size={11} />
+                  <LevelBadgeIcon size={13} />
                   Lv. {ownRank.level}
                 </S.LevelChip>
                 <S.XPChip>
-                  <FcFlashOn size={11} />
+                  <XPBadgeIcon size={13} />
                   {ownRank.totalPoints.toLocaleString()} XP
                 </S.XPChip>
               </S.ChipRow>
@@ -214,8 +227,28 @@ export default function NovelistLeaderboardPage() {
           </S.OwnRankCard>
         </S.StickyFooter>
       )}
+
+      <InviteFriendsDialog
+        open={inviteOpen}
+        onClose={() => setInviteOpen(false)}
+      />
     </>
   );
+}
+
+/**
+ * Rank indicator: the detailed tiered trophy for the podium (top three),
+ * the plain numbered medallion for everyone below.
+ */
+function RankMarker({ rank, inGroup }: { rank: number; inGroup?: boolean }) {
+  if (rank <= 3) {
+    return (
+      <S.RankTrophyBadge $big={inGroup}>
+        <RankTrophyIcon rank={rank} size={inGroup ? 38 : 26} />
+      </S.RankTrophyBadge>
+    );
+  }
+  return <S.RankBadge $rank={rank}>{rank}</S.RankBadge>;
 }
 
 function NovelistRow({
@@ -238,13 +271,13 @@ function NovelistRow({
       $inGroup={inGroup}
       onClick={onClick}
     >
-      <S.RankBadge $rank={rank}>{rank}</S.RankBadge>
-        <AvatarNew
-          src={novelist.image}
-          alt={novelist.firstName}
-          username={novelist.username}
-          nwImage={novelist.avatar}
-        />
+      <RankMarker rank={rank} inGroup={inGroup} />
+      <AvatarNew
+        src={novelist.image}
+        alt={novelist.firstName}
+        username={novelist.username}
+        nwImage={novelist.avatar}
+      />
       <S.RowBody>
         <S.ChipRow style={{ marginBottom: 1 }}>
           <S.RowName>
@@ -256,11 +289,11 @@ function NovelistRow({
         <S.RowSub>@{novelist.username}</S.RowSub>
         <S.ChipRow>
           <S.LevelChip>
-            <FcRating size={12} />
+            <LevelBadgeIcon size={13} />
             Lv. {level}
           </S.LevelChip>
           <S.XPChip>
-            <FcFlashOn size={12} />
+            <XPBadgeIcon size={13} />
             {totalPoints.toLocaleString()} XP
           </S.XPChip>
         </S.ChipRow>

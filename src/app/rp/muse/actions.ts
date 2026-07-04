@@ -47,7 +47,9 @@ export const getMuseAction = async (
 
   const muse: Muse = await response.json();
 
-  transformMuse(muse, "profile");
+  // Intentionally no wsrv transform here: the muse profile page renders the
+  // original full-resolution S3 images. Resized variants are only for the
+  // smaller muse cards (feed / hero / novelist-profile lists).
 
   return muse;
 };
@@ -358,10 +360,11 @@ export const updateMuseAction = async (
   const jwt = await authenticateAndGetJWT();
 
   // Strip wsrv.nl proxy URLs back to original S3 URLs before sending to the
-  // backend. getMuseAction transforms S3 URLs → wsrv.nl for display, but the
-  // backend expects the raw S3 URL to correctly detect changes and manage S3
-  // cleanup. Sending wsrv.nl URLs would cause the backend to delete the original
-  // S3 file (URL mismatch) and persist a proxy URL in the DB.
+  // backend. Muse data reaching edit flows may carry wsrv.nl display URLs
+  // (from list/card actions or the store), but the backend expects the raw S3
+  // URL to correctly detect changes and manage S3 cleanup. Sending wsrv.nl
+  // URLs would cause the backend to delete the original S3 file (URL mismatch)
+  // and persist a proxy URL in the DB.
   const muse: CreateUpdateMuse = {
     ..._muse,
     image: reverseWsrvUrl(_muse.image),

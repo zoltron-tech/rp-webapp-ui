@@ -1,18 +1,72 @@
 "use client";
 
-import { useCallback } from "react";
-import { FcImageFile } from "react-icons/fc";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { MdOpenWith, MdRefresh, MdZoomIn, MdZoomOut } from "react-icons/md";
 import styled from "styled-components";
+
+const ZOOM_MIN = 1;
+const ZOOM_MAX = 3;
+const ZOOM_STEP = 0.25;
+
+const clampZoom = (v: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, v));
+const clamp100 = (v: number) => Math.min(100, Math.max(0, v));
 
 const Content = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 8px 12px;
+  gap: 14px;
+  padding: 4px 4px 2px;
   width: 100%;
+`;
+
+const ActionBar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 0;
+`;
+
+const ActionBarHint = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  opacity: 0.75;
 
   @media (max-width: 480px) {
-    padding: 8px 4px;
+    display: none;
+  }
+`;
+
+const ResetPill = styled.button`
+  all: unset;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--bg-6);
+  background: var(--bg-2);
+  color: var(--text-secondary);
+  font-size: var(--font-size-xsmall);
+  font-family: var(--font);
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--bg-3);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 `;
 
@@ -25,36 +79,35 @@ const Square = styled.div`
   position: relative;
   width: min(320px, 100%);
   aspect-ratio: 1 / 1;
-  background: var(--bg-1);
-  border-radius: 6px;
+  background:
+    linear-gradient(var(--bg-1), var(--bg-1)) padding-box,
+    repeating-conic-gradient(var(--bg-3) 0% 25%, var(--bg-2) 0% 50%) 0 / 20px 20px;
+  border-radius: 10px;
   overflow: hidden;
   touch-action: none;
   cursor: grab;
+  box-shadow:
+    inset 0 0 0 1px var(--bg-6),
+    0 6px 20px rgba(0, 0, 0, 0.28);
   &:active {
     cursor: grabbing;
   }
 `;
 
-const ImageEl = styled.div<{
-  $src: string;
-  $x: number;
-  $y: number;
-  $scale: number;
-}>`
+/* Dynamic background props are applied via the `style` prop (inline) rather than
+   styled-component props so rapid drag/zoom updates don't regenerate CSS classes. */
+const ImageEl = styled.div`
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: 92%;
   height: 92%;
-  background-image: url(${(p) => p.$src});
-  background-repeat: no-repeat;
   /* Two-value size: width% auto — height scales proportionally (fit by width),
      so a tall image overflows top/bottom and can be panned vertically.
      background-position selects which slice shows; this is aspect-ratio- and
      resolution-independent and matches the Muse cardBackground model. */
-  background-size: ${(p) => p.$scale * 100}% auto;
-  background-position: ${(p) => `${p.$x}% ${p.$y}%`};
+  background-repeat: no-repeat;
   pointer-events: none;
   user-select: none;
   touch-action: none;
@@ -77,24 +130,68 @@ const ZoomRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
 `;
 
-const Seek = styled.input`
+const ZoomStep = styled.button`
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover:not(:disabled) {
+    background: var(--bg-3);
+    color: var(--text);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+`;
+
+const ZoomBadge = styled.span`
+  min-width: 46px;
+  text-align: center;
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+`;
+
+const Seek = styled.input<{ $pct: number }>`
   appearance: none;
-  height: 8px;
+  height: 6px;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--accent) 0%, var(--accent) 100%);
-  width: 160px;
+  background: linear-gradient(
+    90deg,
+    var(--accent) 0%,
+    var(--accent) ${(p) => p.$pct}%,
+    var(--bg-5) ${(p) => p.$pct}%,
+    var(--bg-5) 100%
+  );
+  width: 150px;
+  cursor: pointer;
 
   &::-webkit-slider-thumb {
     -webkit-appearance: none;
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background: var(--accent-hover);
+    background: #fff;
     border: none;
-    box-shadow: 0 0 0 2px rgba(0,0,0,0.12);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--accent);
     cursor: pointer;
   }
 
@@ -102,35 +199,23 @@ const Seek = styled.input`
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background: var(--accent-hover);
+    background: #fff;
     border: none;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--accent);
     cursor: pointer;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
   }
 `;
 
 const Footer = styled.div`
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
-  gap: 12px;
-`;
-
-const LeftActions = styled.div``;
-const RightActions = styled.div`
-  display: flex;
   gap: 8px;
-`;
-
-const ResetText = styled.button`
-  all: unset;
-  color: var(--accent);
-  cursor: pointer;
-  font-weight: var(--font-weight-bold);
-  padding: 6px 8px;
-
-  &:hover {
-    color: var(--accent-hover);
-  }
 `;
 
 const CancelButton = styled.button`
@@ -195,12 +280,8 @@ type Props = {
   y: number;
   scale: number;
   onOpenChange: (open: boolean) => void;
-  onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => void;
-  onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => void;
-  onPointerUp: (e?: any) => void;
-  onTouchStart: (e: React.TouchEvent) => void;
-  onTouchMove: (e: React.TouchEvent) => void;
-  onWheel: (e: React.WheelEvent<HTMLDivElement>) => void;
+  /** Commits the final pan position once the drag gesture settles. */
+  onPan: (x: number, y: number) => void;
   onScaleChange: (v: number) => void;
   onReset: () => void;
   onCancel: () => void;
@@ -216,12 +297,7 @@ export function AvatarCropDialog({
   y,
   scale,
   onOpenChange,
-  onPointerDown,
-  onPointerMove,
-  onPointerUp,
-  onTouchStart,
-  onTouchMove,
-  onWheel,
+  onPan,
   onScaleChange,
   onReset,
   onCancel,
@@ -231,67 +307,171 @@ export function AvatarCropDialog({
 }: Props) {
   const handleClose = useCallback(() => onOpenChange(false), [onOpenChange]);
 
+  const zoomPct = Math.round(((scale - ZOOM_MIN) / (ZOOM_MAX - ZOOM_MIN)) * 100);
+  const stepZoom = (dir: 1 | -1) => onScaleChange(clampZoom(scale + dir * ZOOM_STEP));
+
+  // ── Imperative pan ──────────────────────────────────────────────────────────
+  // Dragging updates the image's background-position directly on the DOM node so
+  // no React state churns per frame (which would re-render the whole host page and
+  // regenerate styled-components classes). The committed x/y are pushed to the
+  // parent only when the gesture ends, via onPan.
+  const imgRef = useRef<HTMLDivElement>(null);
+  const liveRef = useRef({ x, y });
+  const panStart = useRef<{ px: number; py: number; bx: number; by: number } | null>(null);
+  const pinchDist = useRef<number | null>(null);
+
+  // Keep the live position in sync with externally-driven changes (reset,
+  // opening a new image) whenever we are not mid-drag.
+  useEffect(() => {
+    if (!panStart.current) liveRef.current = { x, y };
+  }, [x, y]);
+
+  const applyPan = (nx: number, ny: number) => {
+    liveRef.current = { x: nx, y: ny };
+    if (imgRef.current) imgRef.current.style.backgroundPosition = `${nx}% ${ny}%`;
+  };
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.isPrimary === false) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    panStart.current = { px: e.clientX, py: e.clientY, bx: liveRef.current.x, by: liveRef.current.y };
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const start = panStart.current;
+    if (!start || !viewportRef?.current) return;
+    const rect = viewportRef.current.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const dx = ((e.clientX - start.px) / rect.width) * 100;
+    const dy = ((e.clientY - start.py) / rect.height) * 100;
+    applyPan(clamp100(start.bx - dx), clamp100(start.by - dy));
+  };
+
+  const endPan = () => {
+    if (!panStart.current) return;
+    panStart.current = null;
+    onPan(liveRef.current.x, liveRef.current.y);
+  };
+
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    onScaleChange(clampZoom(scale + (e.deltaY < 0 ? ZOOM_STEP / 5 : -ZOOM_STEP / 5)));
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      pinchDist.current = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY,
+      );
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && pinchDist.current !== null) {
+      e.preventDefault();
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY,
+      );
+      const delta = (dist - pinchDist.current) * 0.01;
+      pinchDist.current = dist;
+      onScaleChange(clampZoom(scale + delta));
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (e.touches.length < 2) pinchDist.current = null;
+  };
+
   return (
     // Presentational content — parent dialog will control portals
     <Content data-open={open}>
+      <ActionBar>
+        <ActionBarHint>
+          <MdOpenWith size={14} />
+          Drag to reposition · scroll to zoom
+        </ActionBarHint>
+        <ResetPill type="button" onClick={onReset}>
+          <MdRefresh size={13} />
+          Reset
+        </ResetPill>
+      </ActionBar>
+
       <ViewportWrap>
         <Square
           ref={viewportRef as any}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerLeave={onPointerUp}
-          onWheel={onWheel}
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={endPan}
+          onPointerCancel={endPan}
+          onWheel={handleWheel}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
-          <ImageEl $src={src} $x={x} $y={y} $scale={scale} />
+          <ImageEl
+            ref={imgRef}
+            style={{
+              backgroundImage: src ? `url(${src})` : undefined,
+              backgroundSize: `${scale * 100}% auto`,
+              backgroundPosition: `${x}% ${y}%`,
+            }}
+          />
           <CircleBorderMask />
         </Square>
       </ViewportWrap>
 
       <ZoomRow>
-        <FcImageFile size={20} />
+        <ZoomStep
+          type="button"
+          onClick={() => stepZoom(-1)}
+          disabled={scale <= ZOOM_MIN}
+          aria-label="Zoom out"
+        >
+          <MdZoomOut size={20} />
+        </ZoomStep>
         <Seek
           type="range"
-          min={1}
-          max={3}
+          min={ZOOM_MIN}
+          max={ZOOM_MAX}
           step={0.01}
           value={scale}
+          $pct={zoomPct}
           onChange={(e) => onScaleChange(Number(e.target.value))}
           aria-label="Zoom"
         />
-        <FcImageFile size={28} />
+        <ZoomStep
+          type="button"
+          onClick={() => stepZoom(1)}
+          disabled={scale >= ZOOM_MAX}
+          aria-label="Zoom in"
+        >
+          <MdZoomIn size={20} />
+        </ZoomStep>
+        <ZoomBadge>{Math.round(scale * 100)}%</ZoomBadge>
       </ZoomRow>
 
       <Footer>
-        <LeftActions>
-          <ResetText type="button" onClick={onReset}>
-            Reset
-          </ResetText>
-        </LeftActions>
-
-        <RightActions>
-          <CancelButton
-            type="button"
-            onClick={() => {
-              onCancel();
-              handleClose();
-            }}
-          >
-            Cancel
-          </CancelButton>
-          <UpdateButton
-            type="button"
-            onClick={() => {
-              onConfirm();
-              handleClose();
-            }}
-            disabled={Boolean(isUploading)}
-          >
-            {isUploading ? "Updating…" : "Update"}
-          </UpdateButton>
-        </RightActions>
+        <CancelButton
+          type="button"
+          onClick={() => {
+            onCancel();
+            handleClose();
+          }}
+        >
+          Cancel
+        </CancelButton>
+        <UpdateButton
+          type="button"
+          onClick={() => {
+            onConfirm();
+            handleClose();
+          }}
+          disabled={Boolean(isUploading)}
+        >
+          {isUploading ? "Updating…" : "Update"}
+        </UpdateButton>
       </Footer>
     </Content>
   );

@@ -4,9 +4,7 @@ import { ShouldRender } from "@novelist-world/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { FaUser } from "react-icons/fa6";
-import { FcFlashOn, FcRating } from "react-icons/fc";
 import { FiCamera, FiCheck, FiEdit2, FiPlus, FiSearch, FiTrash2, FiX } from "react-icons/fi";
-import { GiTrophy } from "react-icons/gi";
 import {
   addMuseExtraAttributeAction,
   addMuseNicknameAction,
@@ -29,6 +27,11 @@ import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import type { Fandom, Muse } from "@/types";
 import type { ImageCropFilter, NWImage } from "@/types/novelist";
+import {
+  LevelBadgeIcon,
+  RankTrophyIcon,
+  XPBadgeIcon,
+} from "@/utils/badge-icons";
 import { API_MESSAGE } from "@/utils/constants";
 import type { PrivacyLevel } from "@/types/prompt";
 import { ROUTES } from "@/utils/constants/routes";
@@ -78,8 +81,6 @@ export function MuseInfoSection({ muse, isOwnMuse, museRank, museRankLoading, on
   const [imageUploading, setImageUploading] = useState(false);
   const [tempUploadedImage, setTempUploadedImage] = useState<string | null>(null);
   const cropViewportRef = useRef<HTMLDivElement>(null);
-  const cropDragStart = useRef<{ px: number; py: number; bx: number; by: number } | null>(null);
-  const lastPinchDist = useRef<number | null>(null);
 
   const openCropDialog = (src: string) => {
     setPendingCropSrc(src);
@@ -119,49 +120,11 @@ export function MuseInfoSection({ muse, isOwnMuse, museRank, museRankLoading, on
     setPendingCropSrc(url);
   }
 
-  const handleCropPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.isPrimary === false) return;
-    e.currentTarget.setPointerCapture(e.pointerId);
-    cropDragStart.current = { bx: cropX, by: cropY, px: e.clientX, py: e.clientY };
-  };
-
-  const handleCropPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!cropDragStart.current || !cropViewportRef.current) return;
-    const rect = cropViewportRef.current.getBoundingClientRect();
-    const dx = ((e.clientX - cropDragStart.current.px) / rect.width) * 100;
-    const dy = ((e.clientY - cropDragStart.current.py) / rect.height) * 100;
-    setCropX(clamp(cropDragStart.current.bx - dx, 0, 100));
-    setCropY(clamp(cropDragStart.current.by - dy, 0, 100));
-  };
-
-  const handleCropPointerUp = () => { cropDragStart.current = null; };
-
-  const handleCropWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const delta = e.deltaY < 0 ? 0.05 : -0.05;
-    setCropScale((prev) => clamp(prev + delta, 1, 3));
-  };
-
-  const handleCropTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 2) {
-      lastPinchDist.current = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY,
-      );
-    }
-  };
-
-  const handleCropTouchMove = (e: React.TouchEvent) => {
-    if (e.touches.length === 2 && lastPinchDist.current !== null) {
-      e.preventDefault();
-      const dist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY,
-      );
-      const delta = (dist - lastPinchDist.current) * 0.01;
-      lastPinchDist.current = dist;
-      setCropScale((prev) => clamp(prev + delta, 1, 3));
-    }
+  // Dragging is handled imperatively inside AvatarCropDialog; it commits the
+  // final position here once the gesture settles.
+  const handleCropPan = (nx: number, ny: number) => {
+    setCropX(clamp(nx, 0, 100));
+    setCropY(clamp(ny, 0, 100));
   };
 
   const handleCropScaleChange = (v: number) => { setCropScale(clamp(v, 1, 3)); };
@@ -729,18 +692,18 @@ export function MuseInfoSection({ muse, isOwnMuse, museRank, museRankLoading, on
                     accent={accent ?? null}
                     onClick={() => routeToPage(ROUTES.Leaderboard.Muses)}
                   >
-                    <FcRating size={13} />
+                    <LevelBadgeIcon size={15} />
                     Lv. {muse?.level}
                   </S.InfoLevelBadge>
                   <S.InfoLevelXP onClick={() => routeToPage(ROUTES.Leaderboard.Muses)}>
-                    <FcFlashOn size={13} />
+                    <XPBadgeIcon size={15} />
                     {muse?.totalPoints?.toLocaleString()} XP
                   </S.InfoLevelXP>
                   {museRankLoading ? (
                     <S.InfoRankBadgeShimmer />
                   ) : museRank !== null ? (
                     <S.InfoRankBadge onClick={() => routeToPage(ROUTES.Leaderboard.Muses)}>
-                      <GiTrophy size={13} />
+                      <RankTrophyIcon size={18} rank={museRank} />
                       #{museRank.toLocaleString()}
                     </S.InfoRankBadge>
                   ) : null}
@@ -957,12 +920,7 @@ export function MuseInfoSection({ muse, isOwnMuse, museRank, museRankLoading, on
               y={cropY}
               scale={cropScale}
               onOpenChange={setCropDialogOpen}
-              onPointerDown={handleCropPointerDown}
-              onPointerMove={handleCropPointerMove}
-              onPointerUp={handleCropPointerUp}
-              onTouchStart={handleCropTouchStart}
-              onTouchMove={handleCropTouchMove}
-              onWheel={handleCropWheel}
+              onPan={handleCropPan}
               onScaleChange={handleCropScaleChange}
               onReset={resetCrop}
               onCancel={handleCropCancel}

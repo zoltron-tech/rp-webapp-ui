@@ -173,7 +173,7 @@ export function BackStorySection({ muse, aboutSections, isOwnMuse, onMuseUpdate 
               ) : isOwnMuse ? (
                 <S.NoteAddBtn type="button" onClick={startNoteEdit}>
                   <FiPlus size={12} />
-                  Add {muse?.name?.split(" ")[0]}&apos;s favorite quote
+                  Add {muse?.firstName}&apos;s favorite quote
                 </S.NoteAddBtn>
               ) : null}
 
@@ -214,6 +214,7 @@ export function BackStorySection({ muse, aboutSections, isOwnMuse, onMuseUpdate 
                       savedText={section.text || ""}
                       overlayHidden
                       disableCollapse
+                      accent={accent ?? null}
                     />
                   </div>
                 ))}

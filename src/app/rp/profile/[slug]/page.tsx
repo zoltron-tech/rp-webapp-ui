@@ -13,14 +13,12 @@ import {
   FcCalendar,
   FcComments,
   FcConferenceCall,
-  FcFlashOn,
   FcPortraitMode,
-  FcRating,
   FcReading,
   FcShare,
   FcTreeStructure,
 } from "react-icons/fc";
-import { GiCheckMark, GiCrossMark, GiTrophy } from "react-icons/gi";
+import { GiCheckMark, GiCrossMark } from "react-icons/gi";
 import { GoChevronRight } from "react-icons/go";
 import { IoMdPersonAdd } from "react-icons/io";
 import { IoPersonRemove } from "react-icons/io5";
@@ -59,6 +57,11 @@ import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import type { Novelist, NWImage, Prompt, StoryBoard } from "@/types";
 import type { Activity } from "@/types/activity";
 import { ACCENT_MAP, type Accent } from "@/types/theme";
+import {
+  LevelBadgeIcon,
+  RankTrophyIcon,
+  XPBadgeIcon,
+} from "@/utils/badge-icons";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDate } from "@/utils/helpers";
@@ -790,9 +793,9 @@ export default function UserProfilePage({}) {
   useEffect(() => {
     if (!isCurrentUser || authState !== "LOGGED_IN" || !userNovelist?.id) return;
     void getNovelistRankByIdAction(userNovelist.id).then((result) => {
-      if (!("message" in result)) {
-        setGlobalState({ novelistRank: result.rank });
-      }
+      setGlobalState({
+        novelistRank: "message" in result ? undefined : result.rank,
+      });
     });
   }, [isCurrentUser, authState, userNovelist?.id]);
 
@@ -1233,7 +1236,7 @@ export default function UserProfilePage({}) {
                   <S.LevelChip
                     onClick={() => routeToPage(ROUTES.Levels)}
                   >
-                    <FcRating size={13} />
+                    <LevelBadgeIcon size={15} />
                     Lv. {novelist?.level}
                   </S.LevelChip>
                   <S.XPChip
@@ -1241,7 +1244,7 @@ export default function UserProfilePage({}) {
                       routeToPage(ROUTES.Leaderboard.Novelists)
                     }
                   >
-                    <FcFlashOn size={13} />
+                    <XPBadgeIcon size={15} />
                     {novelist?.totalPoints?.toLocaleString()} XP
                   </S.XPChip>
                   {(() => {
@@ -1254,7 +1257,7 @@ export default function UserProfilePage({}) {
                           routeToPage(ROUTES.Leaderboard.Novelists)
                         }
                       >
-                        <GiTrophy size={13} />
+                        <RankTrophyIcon size={18} rank={rank} />
                         #{rank.toLocaleString()}
                       </S.RankBadge>
                     );

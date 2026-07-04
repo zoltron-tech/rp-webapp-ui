@@ -18,8 +18,10 @@ export const EMPTY_FRIEND: Friend = {
   image: "",
   isVerified: false,
   lastName: null,
+  level: 1,
   muses: [],
   mutualFriendCount: 0,
+  totalPoints: 0,
   username: "",
 };
 
@@ -78,6 +80,8 @@ export const INITIAL_MUSE: Muse = {
   wallpaper: null,
   totalPoints: 0,
   level: 0,
+  next: null,
+  prev: null,
 };
 
 export const INITIAL_STORY_BOARD: StoryBoard = {

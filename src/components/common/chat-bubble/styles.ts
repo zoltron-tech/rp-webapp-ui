@@ -975,6 +975,86 @@ export const RepliedToThumbLabel = styled.span`
   font-style: italic;
 `;
 
+/** Reply-quote variant for messages replying to an ice breaker — pill-shaped
+ *  and tinted with the ice breaker's own color (mirroring the "thought
+ *  bubble" look of the ice breaker rail) instead of the neutral accent-tinted
+ *  bar used for replies to regular messages. */
+export const RepliedToIceBreakerQuote = styled.div<{
+  $wiggling?: boolean;
+  $color?: string | null;
+}>`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px 12px 5px;
+  border-radius: 999px;
+  max-width: 100%;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  /* Nudged down and tucked partly behind the message bubble below it (which
+     paints on top since it's the next sibling in normal flow) — reads as a
+     little tab peeking out from behind the reply rather than a separate row. */
+  margin-bottom: -14px;
+  transform: translateY(6px);
+  background: ${({ $color }) =>
+    $color
+      ? `linear-gradient(135deg, ${$color} 0%, color-mix(in srgb, ${$color} 55%, black) 100%)`
+      : "linear-gradient(135deg, var(--accent) 0%, var(--accent-6, var(--accent)) 100%)"};
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  animation: ${({ $wiggling }) => ($wiggling ? wiggle : "none")} 0.4s ease;
+`;
+
+export const RepliedToIceBreakerAvatar = styled.span`
+  flex-shrink: 0;
+  display: flex;
+
+  .avatar {
+    width: 26px;
+    height: 26px;
+    border: 1.5px solid rgba(255, 255, 255, 0.7);
+  }
+`;
+
+export const RepliedToIceBreakerBody = styled.div`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+`;
+
+export const RepliedToIceBreakerTag = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 7px;
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.85);
+
+  @media (max-width: 800px) {
+    gap: 1px;
+    font-size: 5px;
+
+    svg {
+      width: 6px;
+      height: 6px;
+    }
+  }
+`;
+
+export const RepliedToIceBreakerText = styled.span`
+  font-size: var(--font-size-xsmall);
+  font-weight: var(--font-weight-medium, 500);
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
 export const MessageMenuWrapper = styled.div`
   display: flex;
   align-items: center;

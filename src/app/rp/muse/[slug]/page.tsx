@@ -17,7 +17,7 @@ import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import type { Muse, MuseAboutSection, Prompt } from "@/types";
-import type { ImageCropFilter, NWImage } from "@/types/novelist";
+import type { ImageCropFilter, ImageFilter, MuseNavItem, NWImage } from "@/types/novelist";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { reverseWsrvUrl } from "@/utils/image";
@@ -59,6 +59,59 @@ type CARD_STATE =
   | "GALLERY"
   | "MORE";
 
+type NavDirection = "prev" | "next";
+
+interface BannerLayer {
+  dir: NavDirection | null;
+  filters: ImageFilter;
+  id: number;
+  src: string | null;
+}
+
+const DEFAULT_BANNER_FILTERS: ImageFilter = { blur: 20, brightness: 50, greyscale: 20 };
+
+const navName = (m: MuseNavItem) => [m.firstName, m.lastName].filter(Boolean).join(" ");
+
+/**
+ * Full muse → nav item. When navigating next/prev, the muse we're leaving is
+ * by definition the new muse's back-neighbor, so it can be seeded instantly
+ * instead of shimmer-loading until the fetch returns.
+ */
+function museToNavItem(m: Muse): MuseNavItem | null {
+  if (!m.id) return null;
+  return {
+    accent: m.accent,
+    avatar: m.avatar,
+    cardBackground: m.cardBackground,
+    extraAttributes: m.extraAttributes,
+    firstName: m.firstName,
+    gender: null,
+    id: m.id,
+    image: m.image,
+    lastName: m.lastName,
+    nicknames: m.nicknames,
+    note: m.note,
+    privacy: m.privacy,
+    song: m.song,
+    story: m.story,
+    useAccent: m.useAccent,
+    useExtraImages: m.useExtraImages,
+    video: m.video,
+    wallpaper: m.wallpaper,
+  };
+}
+
+/** Card image + crop for a prev/next nav card, same fallback chain as the main card. */
+function navCardVisual(m: MuseNavItem) {
+  const src = (m.useExtraImages && m.cardBackground?.src) || m.image || "";
+  const crop = m.useExtraImages ? m.cardBackground?.crop : null;
+  return {
+    bgPosition: crop ? `${crop.x}% ${crop.y}%` : undefined,
+    bgSize: crop ? `${crop.width}%` : undefined,
+    src,
+  };
+}
+
 export default function MuseProfilePage({}) {
   const params = useParams();
   const authState = useGlobalState("authState");
@@ -83,13 +136,14 @@ export default function MuseProfilePage({}) {
   const [cardBgX, setCardBgX] = useState(50);
   const [cardBgY, setCardBgY] = useState(50);
   const [cardBgScale, setCardBgScale] = useState(1);
+  // Auto-fit only for a freshly uploaded card image, not when re-adjusting an
+  // existing one (which already has a saved crop position).
+  const [cardBgAutoFit, setCardBgAutoFit] = useState(false);
   const [cardBgImageUploading, setCardBgImageUploading] = useState(false);
   const [cardBgSaving, setCardBgSaving] = useState(false);
   const [tempUploadedCardBg, setTempUploadedCardBg] = useState<string | null>(null);
   const [confirmRemoveCardBg, setConfirmRemoveCardBg] = useState(false);
   const cardBgViewportRef = useRef<HTMLDivElement>(null);
-  const cardBgDragStart = useRef<{ px: number; py: number; bx: number; by: number } | null>(null);
-  const lastCardBgPinchDist = useRef<number | null>(null);
   const cardBgFileInputRef = useRef<HTMLInputElement>(null);
 
   const openNewCardBgCropDialog = (src: string) => {
@@ -97,6 +151,7 @@ export default function MuseProfilePage({}) {
     setCardBgX(50);
     setCardBgY(50);
     setCardBgScale(1);
+    setCardBgAutoFit(true);
     setCardBgCropOpen(true);
   };
 
@@ -110,6 +165,7 @@ export default function MuseProfilePage({}) {
     setCardBgX(bg.crop?.x ?? 50);
     setCardBgY(bg.crop?.y ?? 50);
     setCardBgScale(bg.crop?.width ? bg.crop.width / 100 : 1);
+    setCardBgAutoFit(false);
     setCardBgCropOpen(true);
   }, [muse?.cardBackground]);
 
@@ -137,49 +193,11 @@ export default function MuseProfilePage({}) {
     setPendingCardBgSrc(url);
   }
 
-  const handleCardBgPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.isPrimary === false) return;
-    e.currentTarget.setPointerCapture(e.pointerId);
-    cardBgDragStart.current = { bx: cardBgX, by: cardBgY, px: e.clientX, py: e.clientY };
-  };
-
-  const handleCardBgPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!cardBgDragStart.current || !cardBgViewportRef.current) return;
-    const rect = cardBgViewportRef.current.getBoundingClientRect();
-    const dx = ((e.clientX - cardBgDragStart.current.px) / rect.width) * 100;
-    const dy = ((e.clientY - cardBgDragStart.current.py) / rect.height) * 100;
-    setCardBgX(clamp(cardBgDragStart.current.bx - dx, 0, 100));
-    setCardBgY(clamp(cardBgDragStart.current.by - dy, 0, 100));
-  };
-
-  const handleCardBgPointerUp = () => { cardBgDragStart.current = null; };
-
-  const handleCardBgWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const delta = e.deltaY < 0 ? 0.05 : -0.05;
-    setCardBgScale((prev) => clamp(prev + delta, 1, 3));
-  };
-
-  const handleCardBgTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 2) {
-      lastCardBgPinchDist.current = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY,
-      );
-    }
-  };
-
-  const handleCardBgTouchMove = (e: React.TouchEvent) => {
-    if (e.touches.length === 2 && lastCardBgPinchDist.current !== null) {
-      e.preventDefault();
-      const dist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY,
-      );
-      const delta = (dist - lastCardBgPinchDist.current) * 0.01;
-      lastCardBgPinchDist.current = dist;
-      setCardBgScale((prev) => clamp(prev + delta, 1, 3));
-    }
+  // Dragging is handled imperatively inside BannerCropDialog; it commits the
+  // final position here once the gesture settles.
+  const handleCardBgPan = (nx: number, ny: number) => {
+    setCardBgX(clamp(nx, 0, 100));
+    setCardBgY(clamp(ny, 0, 100));
   };
 
   const handleCardBgScaleChange = (v: number) => { setCardBgScale(clamp(v, 1, 3)); };
@@ -313,13 +331,17 @@ export default function MuseProfilePage({}) {
     user?.username && muse?.pennedBy?.username === user.username,
   );
   const museLoading = muse === null;
-  // Kept across navigation so the prev/next arrows don't disappear while the
-  // next muse's shimmer is loading in — they're the only thing we can show
-  // before the new muse data arrives.
-  const [navIds, setNavIds] = useState<{ prevId: string | null; nextId: string | null }>({
-    nextId: null,
-    prevId: null,
+  // Kept across navigation so the prev/next nav stays visible while the next
+  // muse loads in; `navLoading` swaps the cards/buttons to a shimmer/spinner.
+  const [nav, setNav] = useState<{ prev: MuseNavItem | null; next: MuseNavItem | null }>({
+    next: null,
+    prev: null,
   });
+  const [navLoading, setNavLoading] = useState(false);
+  // Minimal data of the muse being navigated to — lets the wallpaper and card
+  // image swap immediately while the full muse loads in the background.
+  const [previewMuse, setPreviewMuse] = useState<MuseNavItem | null>(null);
+  const navDirectionRef = useRef<NavDirection | null>(null);
 
   const promptsFetchedRef = useRef(false);
   const aboutSectionsFetchedRef = useRef(false);
@@ -339,19 +361,63 @@ export default function MuseProfilePage({}) {
     promptsFetchedRef.current = false;
     aboutSectionsFetchedRef.current = false;
     mediaFetchedRef.current = false;
+    // Drop the optimistic preview if this navigation isn't the one that set it
+    // (e.g. a direct link while a prev/next fetch was still in flight).
+    setPreviewMuse((p) => (p?.id === username ? p : null));
     baseDataLoader(() => getMuseAction(username)).then((data) => {
       setMuse(data);
-      if (data) setNavIds({ nextId: data.nextId ?? null, prevId: data.prevId ?? null });
+      setNavLoading(false);
+      setPreviewMuse(null);
+      navDirectionRef.current = null;
+      if (data) setNav({ next: data.next ?? null, prev: data.prev ?? null });
     });
   }, [authState, username]);
 
   const handlePrevMuse = useCallback(() => {
-    if (navIds.prevId) routeToPage(ROUTES.Muse.View(navIds.prevId), { skipLoading: true });
-  }, [navIds.prevId, routeToPage]);
+    if (!nav.prev || navLoading) return;
+    navDirectionRef.current = "prev";
+    setPreviewMuse(nav.prev);
+    setNavLoading(true);
+    // The muse we're leaving is the target's "next" neighbor — seed it so
+    // that side renders instantly; only the unknown side shimmers.
+    setNav({ next: muse ? museToNavItem(muse) : null, prev: null });
+    routeToPage(ROUTES.Muse.View(nav.prev.id), { skipLoading: true });
+  }, [nav.prev, navLoading, muse, routeToPage]);
 
   const handleNextMuse = useCallback(() => {
-    if (navIds.nextId) routeToPage(ROUTES.Muse.View(navIds.nextId), { skipLoading: true });
-  }, [navIds.nextId, routeToPage]);
+    if (!nav.next || navLoading) return;
+    navDirectionRef.current = "next";
+    setPreviewMuse(nav.next);
+    setNavLoading(true);
+    // The muse we're leaving is the target's "prev" neighbor — seed it so
+    // that side renders instantly; only the unknown side shimmers.
+    setNav({ next: null, prev: muse ? museToNavItem(muse) : null });
+    routeToPage(ROUTES.Muse.View(nav.next.id), { skipLoading: true });
+  }, [nav.next, navLoading, muse, routeToPage]);
+
+  // Arrow-key navigation (desktop). Skipped while typing, while a dialog on
+  // this page is open, or when a modifier is held (e.g. Alt+← is browser back).
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      if (cardBgCropOpen || confirmRemoveCardBg) return;
+      const el = document.activeElement as HTMLElement | null;
+      if (
+        el &&
+        (el.tagName === "INPUT" ||
+          el.tagName === "TEXTAREA" ||
+          el.tagName === "SELECT" ||
+          el.isContentEditable)
+      ) {
+        return;
+      }
+      if (e.key === "ArrowLeft") handlePrevMuse();
+      else handleNextMuse();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [handlePrevMuse, handleNextMuse, cardBgCropOpen, confirmRemoveCardBg]);
 
   useEffect(() => {
     if (state !== "PROMPTS" || promptsFetchedRef.current || authState === "LOADING") return;
@@ -380,75 +446,227 @@ export default function MuseProfilePage({}) {
   const getSafeImage = (src?: string) => src || "";
   const accent = muse?.useAccent ? (muse.accent ?? undefined) : undefined;
 
+  // While the full muse loads after prev/next navigation, fall back to the
+  // minimal nav object so the wallpaper and card image swap instantly.
+  const museVisual: Muse | MuseNavItem | null = muse ?? previewMuse;
+
   const bannerSrc =
-    (muse?.useExtraImages && getSafeImage(muse?.wallpaper?.src)) ||
-    getSafeImage(muse?.image || "");
+    (museVisual?.useExtraImages && getSafeImage(museVisual?.wallpaper?.src)) ||
+    getSafeImage(museVisual?.image || "");
   const cardBgSrc =
-    (muse?.useExtraImages && getSafeImage(muse?.cardBackground?.src)) ||
-    getSafeImage(muse?.image || "");
+    (museVisual?.useExtraImages && getSafeImage(museVisual?.cardBackground?.src)) ||
+    getSafeImage(museVisual?.image || "");
 
   // Derive CSS background-size / background-position from the stored crop.
   // crop.x/y = bgPosition percent, crop.width = scale * 100.
-  const cardCrop = muse?.useExtraImages ? muse?.cardBackground?.crop : null;
+  const cardCrop = museVisual?.useExtraImages ? museVisual?.cardBackground?.crop : null;
   const cardBgCss = cardCrop
     ? {
         bgPosition: `${cardCrop.x}% ${cardCrop.y}%`,
         bgSize: `${cardCrop.width}%`,
       }
     : null;
+
+  const bannerFilters = museVisual?.useExtraImages
+    ? (museVisual.wallpaper?.filterValues ?? DEFAULT_BANNER_FILTERS)
+    : DEFAULT_BANNER_FILTERS;
+
+  // Wallpaper layers for the prev/next crossfade: the incoming wallpaper is
+  // stacked on top of the old one and animated in; the old layer is dropped
+  // once the animation finishes.
+  const bannerLayerIdRef = useRef(0);
+  const [bannerLayers, setBannerLayers] = useState<BannerLayer[]>([]);
+  const bannerFilterKey = `${bannerFilters.blur}-${bannerFilters.brightness}-${bannerFilters.greyscale}`;
+
+  useEffect(() => {
+    setBannerLayers((prev) => {
+      const last = prev[prev.length - 1];
+      if (last && last.src === (bannerSrc || null)) {
+        // Same wallpaper, only filters changed — update in place, no animation.
+        const same =
+          last.filters.blur === bannerFilters.blur &&
+          last.filters.brightness === bannerFilters.brightness &&
+          last.filters.greyscale === bannerFilters.greyscale;
+        return same ? prev : [...prev.slice(0, -1), { ...last, filters: bannerFilters }];
+      }
+      bannerLayerIdRef.current += 1;
+      return [
+        ...prev.slice(-1),
+        {
+          dir: navDirectionRef.current,
+          filters: bannerFilters,
+          id: bannerLayerIdRef.current,
+          src: bannerSrc || null,
+        },
+      ];
+    });
+  }, [bannerSrc, bannerFilterKey]);
+
+  const navPrevVisual = nav.prev ? navCardVisual(nav.prev) : null;
+  const navNextVisual = nav.next ? navCardVisual(nav.next) : null;
+
   return (
     <S.MuseContainer>
-      <S.Banner
-        src={bannerSrc || null}
-        filterValues={
-          muse?.useExtraImages
-            ? (muse?.wallpaper?.filterValues ?? {
-                blur: 20,
-                brightness: 50,
-                greyscale: 20,
-              })
-            : { blur: 20, brightness: 50, greyscale: 20 }
-        }
-      />
+      {bannerLayers.map((layer, i) => (
+        <S.Banner
+          key={layer.id}
+          src={layer.src}
+          filterValues={layer.filters}
+          className={
+            i > 0
+              ? layer.dir === "next"
+                ? "banner-enter banner-enter-next"
+                : layer.dir === "prev"
+                  ? "banner-enter banner-enter-prev"
+                  : "banner-enter"
+              : undefined
+          }
+          onAnimationEnd={() => {
+            setBannerLayers((prev) => (prev.length > 1 ? prev.slice(-1) : prev));
+          }}
+        />
+      ))}
 
-      {/* Prev/next muse navigation — kept visible (but disabled) while the
-          next muse loads in, using the last-known neighbor ids */}
-      {navIds.prevId && (
-        <S.MuseNavButton
+      {/* Prev/next muse navigation. Desktop (>950px) shows edge-docked "peek"
+          cards that slide out on hover/focus (arrow keys also navigate);
+          mobile keeps the chevron buttons. Unknown neighbors shimmer while
+          the target muse loads in the background. */}
+      {(nav.prev || navLoading) && (
+        <S.MuseNavCard
           type="button"
           $side="left"
-          title="Previous character"
+          $accent={nav.prev?.useAccent ? nav.prev.accent : undefined}
+          title={nav.prev ? `Previous: ${navName(nav.prev)}` : "Loading…"}
           aria-label="Previous character"
           onClick={handlePrevMuse}
-          disabled={museLoading}
+          disabled={navLoading || museLoading}
         >
-          <FiChevronLeft size={22} />
-        </S.MuseNavButton>
+          {!nav.prev ? (
+            <S.CardBackgroundShimmer />
+          ) : (
+            <>
+              <S.MuseNavCardImage
+                $src={navPrevVisual?.src ?? ""}
+                $bgSize={navPrevVisual?.bgSize}
+                $bgPosition={navPrevVisual?.bgPosition}
+              />
+              <S.MuseNavCardVeil $side="left" />
+              <S.MuseNavCardRail $side="left">
+                <S.MuseNavCardChevron $accent={nav.prev.useAccent ? nav.prev.accent : undefined}>
+                  <FiChevronLeft size={18} />
+                </S.MuseNavCardChevron>
+                <S.MuseNavCardRailName>{nav.prev.firstName}</S.MuseNavCardRailName>
+              </S.MuseNavCardRail>
+              <S.MuseNavCardFooter $side="left">
+                <S.MuseNavCardEyebrow>
+                  <S.MuseNavCardKbd>←</S.MuseNavCardKbd> Previous
+                </S.MuseNavCardEyebrow>
+                <S.MuseNavCardName>{nav.prev.firstName}</S.MuseNavCardName>
+              </S.MuseNavCardFooter>
+            </>
+          )}
+        </S.MuseNavCard>
       )}
-      {navIds.nextId && (
-        <S.MuseNavButton
+      {(nav.next || navLoading) && (
+        <S.MuseNavCard
           type="button"
           $side="right"
-          title="Next character"
+          $accent={nav.next?.useAccent ? nav.next.accent : undefined}
+          title={nav.next ? `Next: ${navName(nav.next)}` : "Loading…"}
           aria-label="Next character"
           onClick={handleNextMuse}
-          disabled={museLoading}
+          disabled={navLoading || museLoading}
         >
-          <FiChevronRight size={22} />
-        </S.MuseNavButton>
+          {!nav.next ? (
+            <S.CardBackgroundShimmer />
+          ) : (
+            <>
+              <S.MuseNavCardImage
+                $src={navNextVisual?.src ?? ""}
+                $bgSize={navNextVisual?.bgSize}
+                $bgPosition={navNextVisual?.bgPosition}
+              />
+              <S.MuseNavCardVeil $side="right" />
+              <S.MuseNavCardRail $side="right">
+                <S.MuseNavCardChevron $accent={nav.next.useAccent ? nav.next.accent : undefined}>
+                  <FiChevronRight size={18} />
+                </S.MuseNavCardChevron>
+                <S.MuseNavCardRailName>{nav.next.firstName}</S.MuseNavCardRailName>
+              </S.MuseNavCardRail>
+              <S.MuseNavCardFooter $side="right">
+                <S.MuseNavCardEyebrow>
+                  Next <S.MuseNavCardKbd>→</S.MuseNavCardKbd>
+                </S.MuseNavCardEyebrow>
+                <S.MuseNavCardName>{nav.next.firstName}</S.MuseNavCardName>
+              </S.MuseNavCardFooter>
+            </>
+          )}
+        </S.MuseNavCard>
+      )}
+      {(nav.prev || navLoading) && (
+        <S.MuseNavTab
+          type="button"
+          $side="left"
+          $accent={nav.prev?.useAccent ? nav.prev.accent : undefined}
+          title={nav.prev ? `Previous: ${navName(nav.prev)}` : "Loading…"}
+          aria-label="Previous character"
+          onClick={handlePrevMuse}
+          disabled={navLoading || museLoading}
+        >
+          {!nav.prev ? (
+            <S.CardBackgroundShimmer />
+          ) : (
+            <>
+              <S.MuseNavTabImage $src={navPrevVisual?.src ?? ""} />
+              <S.MuseNavTabVeil $side="left" />
+              <S.MuseNavTabContent>
+                <S.MuseNavTabChevron $accent={nav.prev.useAccent ? nav.prev.accent : undefined}>
+                  <FiChevronLeft size={14} />
+                </S.MuseNavTabChevron>
+                <S.MuseNavTabName>{nav.prev.firstName}</S.MuseNavTabName>
+              </S.MuseNavTabContent>
+            </>
+          )}
+        </S.MuseNavTab>
+      )}
+      {(nav.next || navLoading) && (
+        <S.MuseNavTab
+          type="button"
+          $side="right"
+          $accent={nav.next?.useAccent ? nav.next.accent : undefined}
+          title={nav.next ? `Next: ${navName(nav.next)}` : "Loading…"}
+          aria-label="Next character"
+          onClick={handleNextMuse}
+          disabled={navLoading || museLoading}
+        >
+          {!nav.next ? (
+            <S.CardBackgroundShimmer />
+          ) : (
+            <>
+              <S.MuseNavTabImage $src={navNextVisual?.src ?? ""} />
+              <S.MuseNavTabVeil $side="right" />
+              <S.MuseNavTabContent>
+                <S.MuseNavTabChevron $accent={nav.next.useAccent ? nav.next.accent : undefined}>
+                  <FiChevronRight size={14} />
+                </S.MuseNavTabChevron>
+                <S.MuseNavTabName>{nav.next.firstName}</S.MuseNavTabName>
+              </S.MuseNavTabContent>
+            </>
+          )}
+        </S.MuseNavTab>
       )}
 
       {/* Main character card */}
       <S.CardWrapper>
         <S.ImageWrapper>
-          {museLoading ? (
-            <S.CardBackgroundShimmer />
-          ) : (
+          {museVisual ? (
             <S.CardBackground
               banner={cardBgSrc}
               $bgSize={cardBgCss?.bgSize}
               $bgPosition={cardBgCss?.bgPosition}
             />
+          ) : (
+            <S.CardBackgroundShimmer />
           )}
         </S.ImageWrapper>
         {isOwnMuse && (
@@ -523,72 +741,70 @@ export default function MuseProfilePage({}) {
       </ShouldRender>
 
       {/* Section navigation */}
-      <S.SideMenu>
-        <S.MenuButton>
-          <S.MenuButtonIcon
-            onClick={() => transition("MUSE_INFO")}
-            className={is("MUSE_INFO") ? "selected" : ""}
-            accent={accent}
-          >
-            <TiInfoLarge size={"45%"} />
+      <S.SideMenu aria-label="Character sections">
+        <S.MenuButton
+          type="button"
+          onClick={() => transition("MUSE_INFO")}
+          className={is("MUSE_INFO") ? "selected" : ""}
+          $accent={accent}
+        >
+          <S.MenuButtonIcon>
+            <TiInfoLarge size={20} />
           </S.MenuButtonIcon>
           <S.MenuText>INFO</S.MenuText>
         </S.MenuButton>
-        <S.MenuButton>
-          <S.MenuButtonIcon
-            onClick={() => transition("BACK_STORY")}
-            className={is("BACK_STORY") ? "selected" : ""}
-            accent={accent}
-          >
-            <GiBookCover size={"45%"} />
+        <S.MenuButton
+          type="button"
+          onClick={() => transition("BACK_STORY")}
+          className={is("BACK_STORY") ? "selected" : ""}
+          $accent={accent}
+        >
+          <S.MenuButtonIcon>
+            <GiBookCover size={20} />
           </S.MenuButtonIcon>
           <S.MenuText>STORY</S.MenuText>
         </S.MenuButton>
-        <S.MenuButton>
-          <S.MenuButtonIcon
-            onClick={() => transition("PROMPTS")}
-            className={is("PROMPTS") ? "selected" : ""}
-            accent={accent}
-          >
-            <BiSolidConversation size={"45%"} />
+        <S.MenuButton
+          type="button"
+          onClick={() => transition("PROMPTS")}
+          className={is("PROMPTS") ? "selected" : ""}
+          $accent={accent}
+        >
+          <S.MenuButtonIcon>
+            <BiSolidConversation size={20} />
           </S.MenuButtonIcon>
           <S.MenuText>POSTS</S.MenuText>
         </S.MenuButton>
         <S.MenuButton
-          style={{
-            display: "none",
-            ...(typeof window !== "undefined" && window.innerWidth < 950
-              ? { display: "flex" }
-              : {}),
-          }}
-          className="card-image-mobile-only"
+          type="button"
+          onClick={() => transition("CARD_IMAGE")}
+          className={`card-image-mobile-only ${is("CARD_IMAGE") ? "selected" : ""}`}
+          $accent={accent}
         >
-          <S.MenuButtonIcon
-            onClick={() => transition("CARD_IMAGE")}
-            className={is("CARD_IMAGE") ? "selected" : ""}
-            accent={accent}
-          >
-            <FaImagePortrait size={"45%"} />
+          <S.MenuButtonIcon>
+            <FaImagePortrait size={20} />
           </S.MenuButtonIcon>
           <S.MenuText>CARD</S.MenuText>
         </S.MenuButton>
-        <S.MenuButton>
-          <S.MenuButtonIcon
-            onClick={() => transition("GALLERY")}
-            className={is("GALLERY") ? "selected" : ""}
-            accent={accent}
-          >
-            <MdPhotoLibrary size={"45%"} />
+        <S.MenuButton
+          type="button"
+          onClick={() => transition("GALLERY")}
+          className={is("GALLERY") ? "selected" : ""}
+          $accent={accent}
+        >
+          <S.MenuButtonIcon>
+            <MdPhotoLibrary size={20} />
           </S.MenuButtonIcon>
           <S.MenuText>GALLERY</S.MenuText>
         </S.MenuButton>
-        <S.MenuButton>
-          <S.MenuButtonIcon
-            onClick={() => transition("MORE")}
-            className={is("MORE") ? "selected" : ""}
-            accent={accent}
-          >
-            <FiMoreVertical size={"45%"} />
+        <S.MenuButton
+          type="button"
+          onClick={() => transition("MORE")}
+          className={is("MORE") ? "selected" : ""}
+          $accent={accent}
+        >
+          <S.MenuButtonIcon>
+            <FiMoreVertical size={20} />
           </S.MenuButtonIcon>
           <S.MenuText>MORE</S.MenuText>
         </S.MenuButton>
@@ -625,15 +841,11 @@ export default function MuseProfilePage({}) {
               portrait
               aspectRatio="9 / 16"
               onOpenChange={setCardBgCropOpen}
-              onPointerDown={handleCardBgPointerDown}
-              onPointerMove={handleCardBgPointerMove}
-              onPointerUp={handleCardBgPointerUp}
-              onTouchStart={handleCardBgTouchStart}
-              onTouchMove={handleCardBgTouchMove}
-              onWheel={handleCardBgWheel}
+              onPan={handleCardBgPan}
               onScaleChange={handleCardBgScaleChange}
               onReset={resetCardBgCrop}
               onFit={handleCardBgFit}
+              autoFit={cardBgAutoFit}
               onCancel={handleCardBgCropCancel}
               onConfirm={handleCardBgCropConfirm}
               onChangeBanner={() => cardBgFileInputRef.current?.click()}

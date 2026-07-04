@@ -47,9 +47,11 @@ export const PromptContent: FC<PromptContentProps> = ({ disableCollapse }) => {
     const handlePromptUpdated = (
       e: CustomEventType<PromptCommentReplyUpdatedPayload>,
     ) => {
-      const updatedText = e.detail.text;
+      // Every mounted prompt listens on the same event bus — only apply
+      // the update meant for this prompt.
+      if (e.detail.id !== promptId) return;
 
-      setPromptState({ text: updatedText });
+      setPromptState({ text: e.detail.text });
     };
 
     onPromptEvent(EVENTS.PROMPT.UPDATED, handlePromptUpdated);
@@ -57,7 +59,7 @@ export const PromptContent: FC<PromptContentProps> = ({ disableCollapse }) => {
     return () => {
       offPromptEvent(EVENTS.PROMPT.UPDATED, handlePromptUpdated);
     };
-  }, [onPromptEvent]);
+  }, [onPromptEvent, offPromptEvent, promptId, setPromptState]);
 
   const handleLikeToggle = useCallback(async () => {
     setPromptState({

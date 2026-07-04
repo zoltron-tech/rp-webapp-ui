@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { BsChevronLeft, BsChevronRight, BsX } from "react-icons/bs";
 import { HiPaperAirplane } from "react-icons/hi2";
 import { IoCheckmark } from "react-icons/io5";
+import { ChatRichInput } from "@/components/chat-rich-input";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { AppAlertDialog } from "@/components/dialog";
 import * as SheetS from "@/components/profile-more-dropdown/styled";
@@ -19,7 +20,10 @@ import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import type { IceBreaker, Muse, Novelist, PromptSource } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { createIceBreakerAction } from "./actions";
-import { truncateIceBreakerSourceName } from "./ice-breaker-helpers";
+import {
+  htmlToIceBreakerMarkdown,
+  truncateIceBreakerSourceName,
+} from "./ice-breaker-helpers";
 import { IceBreakerTrayHeader } from "./ice-breaker-tray-header";
 import {
   QuickAddMuseButton,
@@ -62,6 +66,7 @@ export function CreateIceBreakerDialog({
   const theme = useGlobalState("theme");
 
   const [message, setMessage] = useState("");
+  const [messageHtml, setMessageHtml] = useState("");
   const [messageFocused, setMessageFocused] = useState(false);
   const [color, setColor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -143,6 +148,7 @@ export function CreateIceBreakerDialog({
 
   const reset = () => {
     setMessage("");
+    setMessageHtml("");
     setColor(null);
     setSelectedSourceId(sources[0]?.sourceId);
     quickAddMuse.reset();
@@ -163,12 +169,24 @@ export function CreateIceBreakerDialog({
       errorToast("Select a sender for the ice breaker.");
       return;
     }
+    if (trimmedMessage.length > MAX_MESSAGE_LENGTH) {
+      errorToast(
+        `Ice breaker message must be ${MAX_MESSAGE_LENGTH} characters or fewer.`,
+      );
+      return;
+    }
+
+    // The composer live-converts typed **bold**/*italic* into <strong>/<em>
+    // (same as ChatRichInput does for a reply), so flatten it back to plain
+    // markdown text before saving — ice breakers are stored as plain text.
+    const finalMessage =
+      htmlToIceBreakerMarkdown(messageHtml).trim() || trimmedMessage;
 
     setLoading(true);
     const result = await createIceBreakerAction(
       selectedSource.sourceId,
       selectedSource.sourceType,
-      trimmedMessage,
+      finalMessage,
       color,
     );
     setLoading(false);
@@ -181,7 +199,7 @@ export function CreateIceBreakerDialog({
     onCreated({
       color,
       createdOn: new Date().toISOString(),
-      message: trimmedMessage,
+      message: finalMessage,
       ownerNovelistId: novelist?.id ?? "",
       source: selectedSource,
       sourceId: selectedSource.sourceId,
@@ -191,7 +209,11 @@ export function CreateIceBreakerDialog({
     onOpenChange(false);
   };
 
-  const isConfirmDisabled = loading || !message.trim() || !selectedSource;
+  const isConfirmDisabled =
+    loading ||
+    !message.trim() ||
+    message.trim().length > MAX_MESSAGE_LENGTH ||
+    !selectedSource;
   const remaining = MAX_MESSAGE_LENGTH - message.length;
 
   const renderSourceButton = (source: PromptSource) => {
@@ -271,14 +293,19 @@ export function CreateIceBreakerDialog({
 
       <S.IceBreakerSection>
         <S.IceBreakerSectionLabel>Ice breaker message</S.IceBreakerSectionLabel>
-        <S.IceBreakerMessageBubble $focused={messageFocused} $color={color}>
-          <S.IceBreakerMessageTextarea
+        <S.IceBreakerMessageBubble
+          $focused={messageFocused}
+          $color={color}
+          onFocus={() => setMessageFocused(true)}
+          onBlur={() => setMessageFocused(false)}
+        >
+          <ChatRichInput
+            bare
             placeholder="Say something to break the ice..."
             value={message}
-            maxLength={MAX_MESSAGE_LENGTH}
-            onFocus={() => setMessageFocused(true)}
-            onBlur={() => setMessageFocused(false)}
-            onChange={(event) => setMessage(event.target.value)}
+            onChange={setMessage}
+            onHtmlChange={setMessageHtml}
+            submitOnEnter={false}
           />
           <S.IceBreakerInlineSendButton
             type="button"

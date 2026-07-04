@@ -103,6 +103,32 @@ export const Subtitle = styled.p`
   }
 `;
 
+export const InviteXPButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--bg-5));
+  background: color-mix(in srgb, var(--accent) 14%, var(--bg-2));
+  color: var(--accent);
+  font-size: var(--font-size-small);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 22%, var(--bg-3));
+    border-color: var(--accent);
+  }
+
+  svg {
+    width: 15px;
+    height: 15px;
+  }
+`;
+
 export const TitleRow = styled.div`
   display: flex;
   align-items: center;
@@ -170,9 +196,9 @@ export const List = styled.div`
 
 // medal accent colors shared between Row and RankBadge
 const MEDAL = {
-  1: { border: "#e8b800", bg: "#f5c842", divider: "rgba(232,184,0,0.22)" },
-  2: { border: "#9ab0bc", bg: "#b8ccd4", divider: "rgba(154,176,188,0.22)" },
-  3: { border: "#b5734a", bg: "#c4855a", divider: "rgba(181,115,74,0.22)" },
+  1: { bg: "#f5c842", border: "#e8b800", divider: "rgba(232,184,0,0.22)" },
+  2: { bg: "#b8ccd4", border: "#9ab0bc", divider: "rgba(154,176,188,0.22)" },
+  3: { bg: "#c4855a", border: "#b5734a", divider: "rgba(181,115,74,0.22)" },
 } as const;
 
 function medalBorderColor(rank: number): string {
@@ -296,6 +322,17 @@ export const RankBadge = styled.span<{ $rank: number }>`
         : $rank === 3
           ? "0 0 10px rgba(196,133,90,0.45)"
           : "none"};
+`;
+
+// Podium slot that holds the detailed trophy graphic for the top three ranks.
+export const RankTrophyBadge = styled.span<{ $big?: boolean }>`
+  flex-shrink: 0;
+  width: ${({ $big }) => ($big ? 42 : 30)}px;
+  height: ${({ $big }) => ($big ? 42 : 30)}px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
 `;
 
 export const AvatarWrapper = styled.div<{ $size?: number }>`

@@ -8,6 +8,8 @@ import type {
   Muse,
   MuseAboutSection,
 } from "@/types";
+import type { NWImage } from "@/types/novelist";
+import type { PrivacyLevel } from "@/types/prompt";
 import type { DataType, WithMessage } from "@/types/common";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import { reverseWsrvUrl, transformMuse } from "@/utils/image";
@@ -45,7 +47,9 @@ export const getMuseAction = async (
 
   const muse: Muse = await response.json();
 
-  transformMuse(muse, "profile");
+  // Intentionally no wsrv transform here: the muse profile page renders the
+  // original full-resolution S3 images. Resized variants are only for the
+  // smaller muse cards (feed / hero / novelist-profile lists).
 
   return muse;
 };
@@ -356,10 +360,11 @@ export const updateMuseAction = async (
   const jwt = await authenticateAndGetJWT();
 
   // Strip wsrv.nl proxy URLs back to original S3 URLs before sending to the
-  // backend. getMuseAction transforms S3 URLs → wsrv.nl for display, but the
-  // backend expects the raw S3 URL to correctly detect changes and manage S3
-  // cleanup. Sending wsrv.nl URLs would cause the backend to delete the original
-  // S3 file (URL mismatch) and persist a proxy URL in the DB.
+  // backend. Muse data reaching edit flows may carry wsrv.nl display URLs
+  // (from list/card actions or the store), but the backend expects the raw S3
+  // URL to correctly detect changes and manage S3 cleanup. Sending wsrv.nl
+  // URLs would cause the backend to delete the original S3 file (URL mismatch)
+  // and persist a proxy URL in the DB.
   const muse: CreateUpdateMuse = {
     ..._muse,
     image: reverseWsrvUrl(_muse.image),
@@ -554,4 +559,303 @@ export const deleteMuseMediaAction = async (
   }
 
   return { message: API_MESSAGE.Success };
+};
+
+export const changeMuseFandomAction = async (
+  museId: string,
+  fandomId: string,
+): Promise<Fandom | { message: string }> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/fandom`;
+  try {
+    const response = await fetch(URL, {
+      method: "PUT",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json", [AUTH_HEADER_NAME]: jwt },
+      body: JSON.stringify({ fandomId }),
+    });
+    if (!response.ok) return { message: API_MESSAGE.Error };
+    return response.json();
+  } catch (e) {
+    Logger.error("changeMuseFandomAction exception", e);
+    return { message: API_MESSAGE.Error };
+  }
+};
+
+export const addMuseNicknameAction = async (
+  museId: string,
+  nickname: string,
+): Promise<string[] | { message: string }> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/nickname`;
+  try {
+    const response = await fetch(URL, {
+      method: "POST",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json", [AUTH_HEADER_NAME]: jwt },
+      body: JSON.stringify({ nickname }),
+    });
+    if (!response.ok) return { message: API_MESSAGE.Error };
+    return response.json();
+  } catch (e) {
+    Logger.error("addMuseNicknameAction exception", e);
+    return { message: API_MESSAGE.Error };
+  }
+};
+
+export const editMuseNicknameAction = async (
+  museId: string,
+  oldNickname: string,
+  newNickname: string,
+): Promise<string[] | { message: string }> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/nickname`;
+  try {
+    const response = await fetch(URL, {
+      method: "PUT",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json", [AUTH_HEADER_NAME]: jwt },
+      body: JSON.stringify({ oldNickname, newNickname }),
+    });
+    if (!response.ok) return { message: API_MESSAGE.Error };
+    return response.json();
+  } catch (e) {
+    Logger.error("editMuseNicknameAction exception", e);
+    return { message: API_MESSAGE.Error };
+  }
+};
+
+export const removeMuseNicknameAction = async (
+  museId: string,
+  nickname: string,
+): Promise<string[] | { message: string }> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/nickname?nickname=${encodeURIComponent(nickname)}`;
+  try {
+    const response = await fetch(URL, {
+      method: "DELETE",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json", [AUTH_HEADER_NAME]: jwt },
+    });
+    if (!response.ok) return { message: API_MESSAGE.Error };
+    return response.json();
+  } catch (e) {
+    Logger.error("removeMuseNicknameAction exception", e);
+    return { message: API_MESSAGE.Error };
+  }
+};
+
+export const setMusePrivacyAction = async (
+  museId: string,
+  privacy: PrivacyLevel,
+): Promise<PrivacyLevel | { message: string }> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/privacy`;
+  try {
+    const response = await fetch(URL, {
+      method: "PUT",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json", [AUTH_HEADER_NAME]: jwt },
+      body: JSON.stringify({ privacy }),
+    });
+    if (!response.ok) return { message: API_MESSAGE.Error };
+    return response.json();
+  } catch (e) {
+    Logger.error("setMusePrivacyAction exception", e);
+    return { message: API_MESSAGE.Error };
+  }
+};
+
+export const addMuseExtraAttributeAction = async (
+  museId: string,
+  key: string,
+  value: string,
+): Promise<Record<string, string> | { message: string }> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/extra-attribute`;
+  try {
+    const response = await fetch(URL, {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        [AUTH_HEADER_NAME]: jwt,
+      },
+      body: JSON.stringify({ key, value }),
+    });
+    if (!response.ok) return { message: API_MESSAGE.Error };
+    return response.json();
+  } catch (e) {
+    Logger.error("addMuseExtraAttributeAction exception", e);
+    return { message: API_MESSAGE.Error };
+  }
+};
+
+export const removeMuseExtraAttributeAction = async (
+  museId: string,
+  key: string,
+): Promise<Record<string, string> | { message: string }> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/extra-attribute/${encodeURIComponent(key)}`;
+  try {
+    const response = await fetch(URL, {
+      method: "DELETE",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        [AUTH_HEADER_NAME]: jwt,
+      },
+    });
+    if (!response.ok) return { message: API_MESSAGE.Error };
+    return response.json();
+  } catch (e) {
+    Logger.error("removeMuseExtraAttributeAction exception", e);
+    return { message: API_MESSAGE.Error };
+  }
+};
+
+export const editMuseExtraAttributeAction = async (
+  museId: string,
+  oldKey: string,
+  key: string,
+  value: string,
+): Promise<Record<string, string> | { message: string }> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/extra-attribute/${encodeURIComponent(oldKey)}`;
+  try {
+    const response = await fetch(URL, {
+      method: "PUT",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        [AUTH_HEADER_NAME]: jwt,
+      },
+      body: JSON.stringify({ key, value }),
+    });
+    if (!response.ok) return { message: API_MESSAGE.Error };
+    return response.json();
+  } catch (e) {
+    Logger.error("editMuseExtraAttributeAction exception", e);
+    return { message: API_MESSAGE.Error };
+  }
+};
+
+export const setMuseAvatarAction = async (
+  museId: string,
+  image: NWImage,
+): Promise<NWImage | { message: string }> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/avatar`;
+  try {
+    const response = await fetch(URL, {
+      method: "PUT",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json", [AUTH_HEADER_NAME]: jwt },
+      body: JSON.stringify(image),
+    });
+    if (!response.ok) return { message: API_MESSAGE.Error };
+    return response.json();
+  } catch (e) {
+    Logger.error("setMuseAvatarAction exception", e);
+    return { message: API_MESSAGE.Error };
+  }
+};
+
+export const setMuseCardBackgroundAction = async (
+  museId: string,
+  image: NWImage,
+): Promise<NWImage | { message: string }> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/card-background`;
+  try {
+    const response = await fetch(URL, {
+      method: "PUT",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json", [AUTH_HEADER_NAME]: jwt },
+      body: JSON.stringify(image),
+    });
+    if (!response.ok) return { message: API_MESSAGE.Error };
+    return response.json();
+  } catch (e) {
+    Logger.error("setMuseCardBackgroundAction exception", e);
+    return { message: API_MESSAGE.Error };
+  }
+};
+
+export const removeMuseCardBackgroundAction = async (
+  museId: string,
+): Promise<boolean | { message: string }> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/card-background`;
+  try {
+    const response = await fetch(URL, {
+      method: "DELETE",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json", [AUTH_HEADER_NAME]: jwt },
+    });
+    if (!response.ok) return { message: API_MESSAGE.Error };
+    return true;
+  } catch (e) {
+    Logger.error("removeMuseCardBackgroundAction exception", e);
+    return { message: API_MESSAGE.Error };
+  }
+};
+
+export const removeMuseAvatarAction = async (
+  museId: string,
+): Promise<boolean | { message: string }> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/avatar`;
+  try {
+    const response = await fetch(URL, {
+      method: "DELETE",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json", [AUTH_HEADER_NAME]: jwt },
+    });
+    if (!response.ok) return { message: API_MESSAGE.Error };
+    return true;
+  } catch (e) {
+    Logger.error("removeMuseAvatarAction exception", e);
+    return { message: API_MESSAGE.Error };
+  }
+};
+
+export const setMuseNoteAction = async (
+  museId: string,
+  note: string,
+): Promise<string | { message: string }> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/note`;
+  try {
+    const response = await fetch(URL, {
+      method: "PUT",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json", [AUTH_HEADER_NAME]: jwt },
+      body: JSON.stringify({ note }),
+    });
+    if (!response.ok) return { message: API_MESSAGE.Error };
+    return response.text();
+  } catch (e) {
+    Logger.error("setMuseNoteAction exception", e);
+    return { message: API_MESSAGE.Error };
+  }
+};
+
+export const removeMuseNoteAction = async (
+  museId: string,
+): Promise<boolean | { message: string }> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/note`;
+  try {
+    const response = await fetch(URL, {
+      method: "DELETE",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json", [AUTH_HEADER_NAME]: jwt },
+    });
+    if (!response.ok) return { message: API_MESSAGE.Error };
+    return true;
+  } catch (e) {
+    Logger.error("removeMuseNoteAction exception", e);
+    return { message: API_MESSAGE.Error };
+  }
 };

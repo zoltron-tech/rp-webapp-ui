@@ -543,11 +543,17 @@ export const MobilePanelLeaderboardMenuItem = styled(MobilePanelMenuItem)`
   }
 `;
 
+const discordDialogPopIn = keyframes`
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.96); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+`;
+
 export const DiscordDialogOverlay = styled.div`
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: rgba(0, 0, 0, 0.83);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(2px);
   animation: ${fadeIn} 0.2s ease both;
 `;
 
@@ -559,14 +565,16 @@ export const DiscordDialogContent = styled.div`
   z-index: 201;
   background: var(--bg-2);
   border: 1px solid var(--bg-6);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 28px 24px 24px;
-  width: min(420px, calc(100vw - 32px));
+  width: min(440px, calc(100vw - 32px));
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  animation: ${fadeIn} 0.2s ease both;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+  animation: ${discordDialogPopIn} 0.2s ease both;
+  outline: none;
 `;
 
 export const DiscordDialogClose = styled.button`
@@ -603,12 +611,9 @@ export const DiscordDialogImage = styled.img`
 `;
 
 export const DiscordDialogTitle = styled.h2`
-  font-size: var(--font-size-h4);
+  font-size: var(--font-size-h5);
   font-weight: var(--font-weight-bold);
-  background: linear-gradient(45deg, #29a383, #5865f2);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text);
   text-align: center;
   margin: 0;
 `;
@@ -621,56 +626,90 @@ export const DiscordDialogDescription = styled.p`
   line-height: 1.5;
 `;
 
+export const DiscordInviteLinkRow = styled.div`
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+`;
+
 export const DiscordInviteLinkBox = styled.div`
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
-  width: 100%;
+  gap: 8px;
+  padding: 0 12px;
+  min-height: 38px;
   background: var(--bg-3);
   border: 1px solid var(--bg-6);
   border-radius: 8px;
-  overflow: hidden;
+  color: var(--text-secondary);
+
+  > svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
 `;
 
-export const DiscordInviteLinkText = styled.a`
+export const DiscordInviteLinkUrl = styled.span`
   flex: 1;
   min-width: 0;
-  padding: 10px 12px;
   font-size: var(--font-size-small);
-  color: #5865f2;
-  text-decoration: none;
+  color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  cursor: pointer;
-
-  &:hover {
-    text-decoration: underline;
-  }
 `;
 
-export const DiscordInviteCopyButton = styled.button`
+export const DiscordInviteCopyButton = styled.button<{ $copied: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   flex-shrink: 0;
   padding: 0 14px;
-  height: 100%;
-  min-height: 40px;
-  border: none;
-  border-left: 1px solid var(--bg-6);
-  background: var(--bg-4);
-  color: var(--text-secondary);
+  min-height: 38px;
+  border-radius: 8px;
+  border: 1px solid ${({ $copied }) => ($copied ? "rgba(34, 197, 94, 0.5)" : "var(--bg-6)")};
+  background: ${({ $copied }) => ($copied ? "rgba(34, 197, 94, 0.12)" : "var(--bg-3)")};
+  color: ${({ $copied }) => ($copied ? "#22c55e" : "var(--text)")};
   font-size: var(--font-size-small);
-  font-weight: 600;
+  font-weight: var(--font-weight-semi-bold);
+  font-family: var(--font);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 
   &:hover {
-    background: #5865f2;
-    color: #ffffff;
+    background: ${({ $copied }) => ($copied ? "rgba(34, 197, 94, 0.12)" : "var(--bg-5)")};
   }
 
-  svg { width: 15px; height: 15px; }
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+`;
+
+export const DiscordSrAnnounce = styled.span`
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+`;
+
+export const DiscordTrayContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 4px;
+  width: 100%;
 `;
 
 export const DiscordJoinButton = styled.button`

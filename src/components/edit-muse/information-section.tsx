@@ -70,6 +70,7 @@ export function InformationSection({
   const cardBackground = useMuseState("cardBackground");
   const note = useMuseState("note");
   const story = useMuseState("story");
+  const privacy = useMuseState("privacy");
   const accent = useMuseState("accent");
   const useAccent = useMuseState("useAccent");
   const useExtraImages = useMuseState("useExtraImages");
@@ -228,7 +229,7 @@ export function InformationSection({
         lastName: lastName?.trim() ?? "",
         nicknames: nicknames ?? [],
         note: note ?? "",
-        privacy: "PUBLIC",
+        privacy,
         song: null,
         story: story ?? null,
         tags: null,
@@ -249,7 +250,11 @@ export function InformationSection({
       }
 
       const savedId = result.id ?? id ?? "";
-      setMuseState({ id: savedId });
+      setMuseState({
+        id: savedId,
+        // Keep the store in sync so re-opening this section shows the correct attributes.
+        ...(extraAttributes !== null && { extraAttributes }),
+      });
       successToast("Information saved.");
       onDone(savedId);
     },
@@ -263,6 +268,7 @@ export function InformationSection({
       cardBackground,
       note,
       story,
+      privacy,
       accent,
       useAccent,
       useExtraImages,

@@ -98,13 +98,6 @@ export function LandingSection({ onSelect }: Props) {
   const [cropY, setCropY] = useState(0);
   const [cropScale, setCropScale] = useState(1);
   const cropViewportRef = useRef<HTMLDivElement>(null);
-  const cropDragStart = useRef<{
-    px: number;
-    py: number;
-    bx: number;
-    by: number;
-  } | null>(null);
-  const lastPinchDist = useRef<number | null>(null);
 
   // Track whether avatar was changed in this editing session
   const [avatarChanged, setAvatarChanged] = useState(false);
@@ -121,33 +114,13 @@ export function LandingSection({ onSelect }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [avatarDialogOpen, pendingMediaUrl]);
 
-  const originalRef = useRef({
-    avatar: novelist?.avatar ?? (null as NWImage | null),
-    firstName: novelist?.firstName ?? "",
-    image: novelist?.image ?? "",
-    lastName: novelist?.lastName ?? "",
-  });
-
-  // Keep snapshot in sync if novelist refreshes
-  useEffect(() => {
-    originalRef.current = {
-      avatar: novelist?.avatar ?? null,
-      firstName: novelist?.firstName ?? "",
-      image: novelist?.image ?? "",
-      lastName: novelist?.lastName ?? "",
-    };
-  }, [
-    novelist?.firstName,
-    novelist?.lastName,
-    novelist?.image,
-    novelist?.avatar,
-  ]);
-
+  // Compare against the global novelist directly so a successful save
+  // (which refreshes the global state) re-renders with isDirty === false.
   const isDirty =
     avatarChanged ||
-    (firstName ?? "") !== originalRef.current.firstName ||
-    (lastName ?? "") !== originalRef.current.lastName ||
-    (image ?? "") !== originalRef.current.image;
+    (firstName ?? "") !== (novelist?.firstName ?? "") ||
+    (lastName ?? "") !== (novelist?.lastName ?? "") ||
+    (image ?? "") !== (novelist?.image ?? "");
 
   const handleAvatarClick = () => {
     setAvatarDialogOpen(true);
@@ -223,58 +196,11 @@ export function LandingSection({ onSelect }: Props) {
     setCropDialogOpen(true);
   };
 
-  const handleCropPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.isPrimary === false) return;
-    e.currentTarget.setPointerCapture(e.pointerId);
-    cropDragStart.current = {
-      bx: cropX,
-      by: cropY,
-      px: e.clientX,
-      py: e.clientY,
-    };
-  };
-
-  const handleCropPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!cropDragStart.current || !cropViewportRef.current) return;
-    const rect = cropViewportRef.current.getBoundingClientRect();
-    // Convert px drag → background-position percentage. Dragging right reveals
-    // the left of the image, so the position percentage decreases.
-    const dx = ((e.clientX - cropDragStart.current.px) / rect.width) * 100;
-    const dy = ((e.clientY - cropDragStart.current.py) / rect.height) * 100;
-    setCropX(clamp(cropDragStart.current.bx - dx, 0, 100));
-    setCropY(clamp(cropDragStart.current.by - dy, 0, 100));
-  };
-
-  const handleCropPointerUp = () => {
-    cropDragStart.current = null;
-  };
-
-  const handleCropWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const delta = e.deltaY < 0 ? 0.05 : -0.05;
-    setCropScale((prev) => clamp(prev + delta, 1, 3));
-  };
-
-  const handleCropTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 2) {
-      lastPinchDist.current = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY,
-      );
-    }
-  };
-
-  const handleCropTouchMove = (e: React.TouchEvent) => {
-    if (e.touches.length === 2 && lastPinchDist.current !== null) {
-      e.preventDefault();
-      const dist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY,
-      );
-      const delta = (dist - lastPinchDist.current) * 0.01;
-      lastPinchDist.current = dist;
-      setCropScale((prev) => clamp(prev + delta, 1, 3));
-    }
+  // Dragging is handled imperatively inside AvatarCropDialog; it commits the
+  // final position here once the gesture settles.
+  const handleCropPan = (nx: number, ny: number) => {
+    setCropX(clamp(nx, 0, 100));
+    setCropY(clamp(ny, 0, 100));
   };
 
   const handleCropScaleChange = (v: number) => {
@@ -325,15 +251,16 @@ export function LandingSection({ onSelect }: Props) {
       setError("Failed to save profile. Please try again.");
       return;
     }
+    setAvatarChanged(false);
     setTempUploadedImage(null);
   };
 
   const handleReset = () => {
     setProfileState({
-      avatar: originalRef.current.avatar,
-      firstName: originalRef.current.firstName,
-      image: originalRef.current.image,
-      lastName: originalRef.current.lastName,
+      avatar: novelist?.avatar ?? null,
+      firstName: novelist?.firstName ?? "",
+      image: novelist?.image ?? "",
+      lastName: novelist?.lastName ?? "",
     });
     setAvatarChanged(false);
     setError(null);
@@ -538,12 +465,7 @@ export function LandingSection({ onSelect }: Props) {
               y={cropY}
               scale={cropScale}
               onOpenChange={setCropDialogOpen}
-              onPointerDown={handleCropPointerDown}
-              onPointerMove={handleCropPointerMove}
-              onPointerUp={handleCropPointerUp}
-              onTouchStart={handleCropTouchStart}
-              onTouchMove={handleCropTouchMove}
-              onWheel={handleCropWheel}
+              onPan={handleCropPan}
               onScaleChange={handleCropScaleChange}
               onReset={resetCrop}
               onCancel={handleCropCancel}

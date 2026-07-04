@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { getPresignedFileUploadObject } from "@/app/rp/profile/actions";
 import { API_MESSAGE } from "@/utils/constants";
+import { ensureWebCompatibleVideo } from "@/utils/video-transcode";
 import { useUIContext } from "./use-ui-context";
 
 export const useUploadMedia = () => {
@@ -9,10 +10,21 @@ export const useUploadMedia = () => {
   const uploadMedia = useCallback(
     async (formData: FormData) => {
       const formDataWithoutFile = new FormData();
-      const file = formData.get("file") as Blob;
-      const contentType = formData.get("contentType") as string;
+      const rawFile = formData.get("file") as Blob;
       const prefix = formData.get("prefix") as string | null;
       const mediaBucket = formData.get("mediaBucket") as string | null;
+
+      // iPhones default to HEVC, which Chrome/Firefox can't play in <video>.
+      // Re-encode to H.264 in-browser before it ever reaches S3, falling back
+      // to the original file when transcoding isn't needed or isn't possible.
+      const file =
+        rawFile instanceof File
+          ? await ensureWebCompatibleVideo(rawFile)
+          : rawFile;
+      const contentType =
+        file instanceof File
+          ? file.type
+          : (formData.get("contentType") as string);
 
       formDataWithoutFile.append("contentType", contentType);
       if (prefix) {

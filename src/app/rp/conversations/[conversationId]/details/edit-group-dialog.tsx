@@ -3,12 +3,12 @@
 import type React from "react";
 import { useEffect, useState } from "react";
 import { TbCameraUp } from "react-icons/tb";
-import { uploadMedia } from "@/app/rp/profile/actions";
 import { Input } from "@/components/common";
 import { AppAlertDialog } from "@/components/dialog";
 import { useUIContext } from "@/hooks/use-ui-context";
 import type { Conversation } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
+import { uploadMedia } from "@/utils/upload-media";
 import { updateGroupAction } from "../actions";
 import * as S from "./edit-group-dialog.styles";
 

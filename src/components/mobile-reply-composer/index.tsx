@@ -13,7 +13,7 @@ import {
 import { GrAttachment } from "react-icons/gr";
 import { HiPaperAirplane } from "react-icons/hi2";
 import { MdGif } from "react-icons/md";
-import { submitPrompt, uploadMedia } from "@/app/rp/profile/actions";
+import { submitPrompt } from "@/app/rp/profile/actions";
 import {
   MediaTray,
   type TrayTab,
@@ -27,6 +27,7 @@ import type {
   SubmitPromptType,
 } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
+import { uploadMedia } from "@/utils/upload-media";
 import {
   getParentIdKeyFromPromptType,
   museToSource,

@@ -12,7 +12,7 @@ import {
 } from "react";
 import { GrAttachment } from "react-icons/gr";
 import { MdGif } from "react-icons/md";
-import { deleteMedia, uploadMedia } from "@/app/rp/profile/actions";
+import { deleteMedia } from "@/app/rp/profile/actions";
 import { AppAlertDialog } from "@/components/dialog";
 import { GifPicker } from "@/components/gif-picker";
 import {
@@ -20,6 +20,7 @@ import {
   type TrayTab,
 } from "@/components/send-message-composer/media-tray";
 import { API_MESSAGE } from "@/utils/constants";
+import { uploadMedia } from "@/utils/upload-media";
 import { PromptEvent, useRunOn } from "./helpers";
 import {
   usePromptInputState,

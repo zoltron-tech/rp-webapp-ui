@@ -15,18 +15,31 @@ import {
   MdOutlineBrush,
   MdPhotoLibrary,
 } from "react-icons/md";
+import { setMuseAvatarAction } from "@/app/rp/muse/actions";
 import { deleteMedia } from "@/app/rp/profile/actions";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
+import type { ImageCropFilter, NWImage } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { AvatarUploadField } from "../common/avatar-upload-field";
+import AvatarCropDialog from "../dialog/avatar-crop-dialog";
 import { AppAlertDialog } from "../dialog";
 import { useMuseState, useMuseStoreSet } from "./muse.store";
 import * as S from "./styled";
 import { useMuseSave } from "./use-muse-save";
 
 const VALID_IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif"];
+
+function clamp(v: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, v));
+}
+
+function toCropFilter(src: string, x: number, y: number, scale: number): ImageCropFilter {
+  const scalePct = Math.round(scale * 100);
+  return { height: scalePct, src, width: scalePct, x: Math.round(x), y: Math.round(y) };
+}
 
 type EditView = "appearance" | "information" | "story" | "gallery";
 
@@ -39,6 +52,7 @@ export function LandingSection({ onBack, onSelect }: Props) {
   const firstName = useMuseState("firstName");
   const lastName = useMuseState("lastName");
   const image = useMuseState("image");
+  const avatar = useMuseState("avatar");
   const fandom = useMuseState("fandom");
   const nicknames = useMuseState("nicknames");
   const story = useMuseState("story");
@@ -53,6 +67,7 @@ export function LandingSection({ onBack, onSelect }: Props) {
   const { save, loading: saving } = useMuseSave();
   const { uploadMedia } = useUploadMedia();
   const { routeToPage } = usePageRouter();
+  const { successToast, errorToast } = useUIContext();
 
   // Snapshot values at mount for dirty detection
   const originalRef = useRef({
@@ -68,6 +83,15 @@ export function LandingSection({ onBack, onSelect }: Props) {
   const [tempUpload, setTempUpload] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  // ── Avatar crop dialog ──────────────────────────────────────────────────────
+  const cropViewportRef = useRef<HTMLDivElement>(null);
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [pendingCropSrc, setPendingCropSrc] = useState("");
+  const [cropX, setCropX] = useState(50);
+  const [cropY, setCropY] = useState(50);
+  const [cropScale, setCropScale] = useState(1);
+  const [avatarSaving, setAvatarSaving] = useState(false);
 
   const isDirty =
     (firstName ?? "") !== originalRef.current.firstName ||
@@ -143,27 +167,34 @@ export function LandingSection({ onBack, onSelect }: Props) {
     setDialogOpen(false);
   }, []);
 
+  const openCropDialog = (src: string) => {
+    setPendingCropSrc(src);
+    setCropX(50);
+    setCropY(50);
+    setCropScale(1);
+    setCropDialogOpen(true);
+  };
+
   const handleAvatarChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
+      e.target.value = "";
       if (!file) return;
 
       if (!VALID_IMAGE_TYPES.includes(file.type)) {
         setSaveError("File type not supported. Allowed: .png, .jpg, .gif");
-        e.target.value = "";
         return;
       }
       if (file.size > 50 * 1024 * 1024) {
         setSaveError("File too large (max 50 MB).");
-        e.target.value = "";
         return;
       }
 
       setSaveError(null);
 
-      // Show data-URI preview immediately
+      // Show a data URL immediately in the crop dialog while S3 uploads in parallel
       const reader = new FileReader();
-      reader.onloadend = () => setMuseState({ image: reader.result as string });
+      reader.onloadend = () => openCropDialog(reader.result as string);
       reader.readAsDataURL(file);
 
       if (tempUpload) await deleteMedia(tempUpload);
@@ -172,20 +203,67 @@ export function LandingSection({ onBack, onSelect }: Props) {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("contentType", file.type);
+      if (id) formData.append("prefix", id);
       const s3Url = await uploadMedia(formData);
       setImageUploading(false);
 
       if (s3Url === API_MESSAGE.MediaError) {
         setSaveError("Failed to upload avatar. Please try again.");
+        setCropDialogOpen(false);
         return;
       }
 
       setTempUpload(s3Url);
-      setMuseState({ image: s3Url });
-      e.target.value = "";
+      setPendingCropSrc(s3Url);
     },
-    [setMuseState, tempUpload, uploadMedia],
+    [id, tempUpload, uploadMedia],
   );
+
+  // Dragging is handled imperatively inside AvatarCropDialog; it commits the
+  // final position here once the gesture settles.
+  const handleCropPan = (nx: number, ny: number) => {
+    setCropX(clamp(nx, 0, 100));
+    setCropY(clamp(ny, 0, 100));
+  };
+
+  const handleCropScaleChange = (v: number) => {
+    setCropScale(clamp(v, 1, 3));
+  };
+
+  const resetCrop = useCallback(() => {
+    setCropX(50);
+    setCropY(50);
+    setCropScale(1);
+  }, []);
+
+  const handleCropConfirm = useCallback(() => {
+    if (!id) return;
+    const crop = toCropFilter(pendingCropSrc, cropX, cropY, cropScale);
+    const nwImage: NWImage = {
+      crop,
+      filterValues: { blur: 0, brightness: 100, greyscale: 0 },
+      src: pendingCropSrc,
+    };
+    setAvatarSaving(true);
+    setMuseAvatarAction(id, nwImage).then((result) => {
+      setAvatarSaving(false);
+      if (result && typeof result === "object" && "message" in result) {
+        errorToast("Failed to update avatar.");
+        return;
+      }
+      setTempUpload(null);
+      setMuseState({ avatar: result as NWImage });
+      successToast("Avatar updated.");
+    });
+  }, [id, pendingCropSrc, cropX, cropY, cropScale, setMuseState, errorToast, successToast]);
+
+  const handleCropCancel = useCallback(async () => {
+    if (tempUpload && tempUpload === pendingCropSrc) {
+      await deleteMedia(tempUpload);
+      setTempUpload(null);
+    }
+    setCropDialogOpen(false);
+  }, [tempUpload, pendingCropSrc]);
 
   return (
     <>
@@ -255,15 +333,15 @@ export function LandingSection({ onBack, onSelect }: Props) {
         {/* Clickable avatar upload */}
         <S.LandingHeroAvatarWrap>
           <label htmlFor="landing-avatar-input">
-            <AvatarUploadField src={image} alt={fullName} />
+            <AvatarUploadField src={avatar?.src || image} alt={fullName} />
           </label>
           <input
             id="landing-avatar-input"
             type="file"
-            accept="image/*"
+            accept="image/png,image/jpeg,image/webp,image/gif"
             hidden
             onChange={handleAvatarChange}
-            disabled={imageUploading}
+            disabled={imageUploading || avatarSaving}
           />
         </S.LandingHeroAvatarWrap>
 
@@ -321,8 +399,8 @@ export function LandingSection({ onBack, onSelect }: Props) {
             </S.LandingCardDesc>
           </S.LandingCardBody>
           <S.LandingCardChips>
-            <S.LandingCardChip $active={Boolean(image)}>
-              Avatar {image ? "✓" : "—"}
+            <S.LandingCardChip $active={Boolean(avatar?.src || image)}>
+              Avatar {avatar?.src || image ? "✓" : "—"}
             </S.LandingCardChip>
             <S.LandingCardChip $active={Boolean(wallpaper?.src)}>
               Wallpaper {wallpaper?.src ? "✓" : "—"}
@@ -444,6 +522,38 @@ export function LandingSection({ onBack, onSelect }: Props) {
           </S.LandingCardChips>
         </S.LandingCard>
       </S.LandingGrid>
+
+      {/* Avatar crop dialog */}
+      <AppAlertDialog
+        open={cropDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) handleCropCancel();
+          setCropDialogOpen(open);
+        }}
+        heading="Adjust avatar"
+        text="Drag to reposition. Use the slider or scroll to zoom."
+        showConfirm={false}
+        isCancelHidden={true}
+        body={
+          <S.AvatarCropBody>
+            <AvatarCropDialog
+              open={cropDialogOpen}
+              src={pendingCropSrc}
+              x={cropX}
+              y={cropY}
+              scale={cropScale}
+              onOpenChange={setCropDialogOpen}
+              onPan={handleCropPan}
+              onScaleChange={handleCropScaleChange}
+              onReset={resetCrop}
+              onCancel={handleCropCancel}
+              onConfirm={handleCropConfirm}
+              isUploading={imageUploading}
+              viewportRef={cropViewportRef}
+            />
+          </S.AvatarCropBody>
+        }
+      />
 
       {/* Navigation guard dialog */}
       <AppAlertDialog

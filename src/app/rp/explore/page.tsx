@@ -27,6 +27,7 @@ import type { Prompt } from "@/types";
 import {
   type CustomEventType,
   EVENTS,
+  type PromptCommentReplyUpdatedPayload,
   type PromptReactedPayload,
 } from "@/utils/constants/custom-events";
 import { getNewPromptsAction } from "../explore-prompts/actions";
@@ -43,6 +44,15 @@ const getModeFromTab = (tab: string | null): ExploreMode =>
 
 const getScrollContainer = () => {
   return document.querySelector("main.page-container") as HTMLElement | null;
+};
+
+// Append a page while dropping any prompts already present. Offset pagination
+// can return a row twice at a page boundary when a new prompt has been
+// prepended (which shifts everything down by one), so we guard against
+// duplicate React keys here.
+const appendUnique = (existing: Prompt[] | null, page: Prompt[]): Prompt[] => {
+  const seen = new Set((existing ?? []).map((p) => p.id));
+  return [...(existing ?? []), ...page.filter((p) => !seen.has(p.id))];
 };
 
 export default function ExplorePage() {
@@ -123,7 +133,7 @@ export default function ExplorePage() {
 
       setNewsFeedHasMore(_prompts.length === OOC_PAGE_SIZE);
       setNewsFeedPrompts((prev) =>
-        append ? [...(prev || []), ..._prompts] : _prompts,
+        append ? appendUnique(prev, _prompts) : _prompts,
       );
     },
     [baseDataLoader, cachedOOCPosts, setGlobalState, stopPageLoading],
@@ -168,7 +178,7 @@ export default function ExplorePage() {
       }
 
       setExplorePrompts((prev) =>
-        append ? [...(prev || []), ..._prompts] : _prompts,
+        append ? appendUnique(prev, _prompts) : _prompts,
       );
     },
     [baseDataLoader, cachedExplorePrompts, setGlobalState, stopPageLoading],
@@ -201,10 +211,28 @@ export default function ExplorePage() {
       }));
     };
 
+    const handlePromptUpdated = (
+      e: CustomEventType<PromptCommentReplyUpdatedPayload>,
+    ) => {
+      const { id, text } = e.detail;
+
+      const applyText = (list: Prompt[] | null): Prompt[] | null =>
+        list?.map((p) => (p.id === id ? { ...p, text } : p)) ?? list;
+
+      setNewsFeedPrompts((prev) => applyText(prev));
+      setExplorePrompts((prev) => applyText(prev));
+      setGlobalState((state) => ({
+        cachedExplorePrompts: applyText(state.cachedExplorePrompts),
+        cachedOOCPosts: applyText(state.cachedOOCPosts),
+      }));
+    };
+
     onPromptEvent(EVENTS.PROMPT.REACTED, handlePromptReacted);
+    onPromptEvent(EVENTS.PROMPT.UPDATED, handlePromptUpdated);
 
     return () => {
       offPromptEvent(EVENTS.PROMPT.REACTED, handlePromptReacted);
+      offPromptEvent(EVENTS.PROMPT.UPDATED, handlePromptUpdated);
     };
   }, [onPromptEvent, offPromptEvent, setGlobalState]);
 
@@ -236,6 +264,31 @@ export default function ExplorePage() {
     fetchExplorePrompts,
     stopPageLoading,
   ]);
+
+  // Prepend a freshly posted prompt to the head of its feed (and the shared
+  // cache, so it survives navigation) instead of reloading the whole list.
+  // NOVELIST-sourced posts belong to the OOC/newsfeed; MUSE-sourced ones to
+  // the explore prompts feed. Only lists that are already loaded are touched —
+  // if a feed hasn't hydrated yet, its fetch will include the new post anyway.
+  const handlePromptSent = useCallback(
+    (prompt: Prompt) => {
+      const prepend = (list: Prompt[] | null): Prompt[] | null =>
+        list ? [prompt, ...list] : list;
+
+      if (prompt.source.sourceType === "NOVELIST") {
+        setNewsFeedPrompts((prev) => prepend(prev));
+        setGlobalState((state) => ({
+          cachedOOCPosts: prepend(state.cachedOOCPosts),
+        }));
+      } else {
+        setExplorePrompts((prev) => prepend(prev));
+        setGlobalState((state) => ({
+          cachedExplorePrompts: prepend(state.cachedExplorePrompts),
+        }));
+      }
+    },
+    [setGlobalState],
+  );
 
   const loadMore = async () => {
     if (mode !== "PROMPTS" || loadingMore) return;
@@ -314,14 +367,7 @@ export default function ExplorePage() {
           type="prompt"
           dropdownSelection="ALL"
           initialSelection={novelistToSource(novelist)}
-          onSend={() => {
-            setNewsFeedPrompts(null);
-            setExplorePrompts(null);
-            setPage(1);
-            setHasMore(true);
-            setNewsFeedPage(1);
-            setNewsFeedHasMore(true);
-          }}
+          onSend={handlePromptSent}
         />
       )}
 
@@ -375,7 +421,10 @@ export default function ExplorePage() {
           initialSelection={novelist ? novelistToSource(novelist) : undefined}
           className="compose-fp-inner"
           onBack={() => setComposeOpen(false)}
-          onSend={() => setComposeOpen(false)}
+          onSend={(prompt) => {
+            handlePromptSent(prompt);
+            setComposeOpen(false);
+          }}
         />
       </S.ComposeSheet>
     </S.Container>

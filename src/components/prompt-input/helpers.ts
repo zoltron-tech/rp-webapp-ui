@@ -1,6 +1,13 @@
 import { useEffect } from "react";
 import { useCustomEvents } from "@/hooks";
-import type { Muse, Novelist, PromptSource, SubmitPromptType } from "@/types";
+import type {
+  Muse,
+  Novelist,
+  Prompt,
+  PromptSource,
+  SubmitPromptInput,
+  SubmitPromptType,
+} from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { usePromptInputState } from "./prompt-input.store";
 
@@ -9,6 +16,33 @@ export enum PromptEvent {
   Error = "error",
   MediaDeleted = "media-deleted",
 }
+
+/**
+ * Builds a client-side prompt from a just-submitted payload so a freshly posted
+ * prompt can be prepended to a feed immediately, without waiting for a refetch.
+ * The create endpoint only returns a status message (no persisted row), so the
+ * id/createdOn are synthesised locally and reconciled on the next feed fetch.
+ */
+export const buildOptimisticPrompt = (
+  source: PromptSource,
+  payload: SubmitPromptInput,
+): Prompt => ({
+  canInteract: true,
+  commentCount: 0,
+  createdOn: new Date().toISOString(),
+  id:
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `optimistic-${Date.now()}`,
+  media: payload.media && payload.media !== "null" ? payload.media : "",
+  privacy: payload.privacy ?? "PUBLIC",
+  reacted: false,
+  reactions: 0,
+  sharedWith: payload.sharedWith ?? [],
+  song: "",
+  source,
+  text: payload.text,
+});
 
 export const museToSource = (muse: Muse): PromptSource => ({
   image: muse.image || "",

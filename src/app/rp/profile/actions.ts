@@ -3,6 +3,7 @@
 import getConfig from "next/config";
 import { authenticateAndGetJWT } from "@/app/actions";
 import type {
+  Prompt,
   StoryBoardEventThreadInput,
   SubmitPromptInput,
   SubmitPromptType,
@@ -400,6 +401,9 @@ export const unfriendNovelist = async (novelistId: string) => {
 
 type PromptResponse = {
   message: API_MESSAGE;
+  /** The persisted prompt (with its real id), present on a successful create so
+   *  the client can render it without a follow-up fetch. */
+  prompt?: Prompt;
 };
 
 export const submitPrompt = async (
@@ -470,6 +474,31 @@ export const getBlockedNovelistsAction = async (
   });
 
   Logger.debug("getBlockedNovelistsAction", response.status);
+
+  if (!response.ok) {
+    return [];
+  }
+
+  return response.json();
+};
+
+export const getReferredNovelistsAction = async (
+  pageNumber: number,
+  pageSize: number,
+): Promise<Friend[]> => {
+  const jwt = await authenticateAndGetJWT();
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/referrals?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+  });
+
+  Logger.debug("getReferredNovelistsAction", response.status);
 
   if (!response.ok) {
     return [];

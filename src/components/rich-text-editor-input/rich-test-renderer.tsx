@@ -11,6 +11,9 @@ interface RichTextRendererProps {
   collapsedHeight?: number;
   overlayHidden?: boolean;
   disableCollapse?: boolean;
+  /** Overrides the accent for all accent-colored elements (toggle, mentions,
+      image hover). Falls back to the inherited --accent when unset. */
+  accent?: string | null;
 }
 
 export const RichTextRenderer = ({
@@ -18,6 +21,7 @@ export const RichTextRenderer = ({
   collapsedHeight = 160,
   overlayHidden = false,
   disableCollapse = false,
+  accent = null,
 }: RichTextRendererProps) => {
   const { routeToPage } = usePageRouter();
 
@@ -54,6 +58,52 @@ export const RichTextRenderer = ({
     // Create a temporary DOM element to manipulate the HTML
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = savedText;
+
+    // Strip trailing whitespace / empty lines (blank text nodes, <br>, empty
+    // elements) from the end of the content so it renders without a dangling gap.
+    const hasEmbedded = (el: Element) =>
+      !!el.querySelector("img, video, audio, iframe, canvas, svg");
+
+    const trimTrailing = (parent: Node) => {
+      let last = parent.lastChild;
+      while (last) {
+        if (last.nodeType === Node.TEXT_NODE) {
+          const text = last.textContent ?? "";
+          if (!text.trim()) {
+            const prev = last.previousSibling;
+            parent.removeChild(last);
+            last = prev;
+            continue;
+          }
+          last.textContent = text.replace(/\s+$/, "");
+          break;
+        }
+
+        if (last.nodeType === Node.ELEMENT_NODE) {
+          const el = last as Element;
+          if (el.tagName === "BR") {
+            const prev = last.previousSibling;
+            parent.removeChild(last);
+            last = prev;
+            continue;
+          }
+          if (hasEmbedded(el)) break;
+          if (!el.textContent || !el.textContent.trim()) {
+            const prev = last.previousSibling;
+            parent.removeChild(last);
+            last = prev;
+            continue;
+          }
+          // Element holds real text: descend to trim its trailing whitespace.
+          trimTrailing(el);
+          break;
+        }
+
+        break;
+      }
+    };
+
+    trimTrailing(tempDiv);
 
     // Set the cleaned HTML
     container.innerHTML = tempDiv.innerHTML;
@@ -105,28 +155,94 @@ export const RichTextRenderer = ({
       return;
     }
 
-    const contentHeight = content.scrollHeight;
-    const shouldOverflow = contentHeight > collapsedHeight + 4;
+    let animTimeout: ReturnType<typeof setTimeout> | undefined;
 
-    setIsOverflowing(shouldOverflow);
+    // Bottom edge (relative to content top) of the last piece of meaningful
+    // content, ignoring trailing whitespace / empty lines. Trailing spaces and
+    // newlines add to scrollHeight (white-space: pre-wrap) but shouldn't count
+    // as hidden content worth a "Read more..." toggle.
+    const getMeaningfulBottom = () => {
+      const contentTop = content.getBoundingClientRect().top;
+      let maxBottom = 0;
 
-    // ✅ Short content → no maxHeight restriction at all
-    if (!shouldOverflow) {
-      setMaxHeight("none");
-      setAnimating(false);
-      return;
+      const walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT);
+      const range = document.createRange();
+      let node: Node | null;
+      while ((node = walker.nextNode())) {
+        if (!node.textContent || !node.textContent.trim()) continue;
+        range.selectNodeContents(node);
+        maxBottom = Math.max(
+          maxBottom,
+          range.getBoundingClientRect().bottom - contentTop,
+        );
+      }
+
+      // Embedded content counts as meaningful even without text.
+      content
+        .querySelectorAll("img, video, audio, iframe, canvas, svg")
+        .forEach((el) => {
+          maxBottom = Math.max(
+            maxBottom,
+            el.getBoundingClientRect().bottom - contentTop,
+          );
+        });
+
+      return maxBottom;
+    };
+
+    const measure = () => {
+      const contentHeight = content.scrollHeight;
+
+      // If the content has an image, don't hide the first image when collapsed:
+      // extend the collapsed height down to the bottom edge of that image so it
+      // is fully visible.
+      const firstImg = content.querySelector("img");
+      let effectiveCollapsed = collapsedHeight;
+      if (firstImg) {
+        const imgBottom =
+          firstImg.getBoundingClientRect().bottom -
+          content.getBoundingClientRect().top;
+        effectiveCollapsed = Math.max(collapsedHeight, Math.ceil(imgBottom));
+      }
+
+      // Decide overflow from meaningful content only, so purely trailing
+      // whitespace/newlines don't trigger the "Read more..." toggle.
+      const meaningfulHeight = getMeaningfulBottom() || contentHeight;
+      const shouldOverflow = meaningfulHeight > effectiveCollapsed + 4;
+
+      setIsOverflowing(shouldOverflow);
+
+      // ✅ Short content → no maxHeight restriction at all
+      if (!shouldOverflow) {
+        setMaxHeight("none");
+        setAnimating(false);
+        return;
+      }
+
+      // Long content
+      setMaxHeight(expanded ? `${contentHeight}px` : `${effectiveCollapsed}px`);
+
+      setAnimating(true);
+      animTimeout = setTimeout(() => setAnimating(false), 160);
+    };
+
+    measure();
+
+    // Images may not be measured yet on first render; re-measure once the first
+    // image loads so the collapsed height matches its real size.
+    const firstImg = content.querySelector("img");
+    if (firstImg && !firstImg.complete) {
+      firstImg.addEventListener("load", measure);
+      firstImg.addEventListener("error", measure);
     }
 
-    // Long content
-    if (expanded) {
-      setMaxHeight(`${contentHeight}px`);
-    } else {
-      setMaxHeight(`${collapsedHeight}px`);
-    }
-
-    setAnimating(true);
-    const timeout = setTimeout(() => setAnimating(false), 160);
-    return () => clearTimeout(timeout);
+    return () => {
+      if (animTimeout) clearTimeout(animTimeout);
+      if (firstImg) {
+        firstImg.removeEventListener("load", measure);
+        firstImg.removeEventListener("error", measure);
+      }
+    };
   }, [expanded, savedText, collapsedHeight, disableCollapse]);
 
   const handleContentClick = useCallback(
@@ -151,7 +267,7 @@ export const RichTextRenderer = ({
 
   if (!savedText.length) {
     return (
-      <S.Container>
+      <S.Container $accent={accent}>
         <S.EmptyState>
           <S.EmptyText>Loading</S.EmptyText>
         </S.EmptyState>
@@ -160,7 +276,7 @@ export const RichTextRenderer = ({
   }
 
   return (
-    <S.Container>
+    <S.Container $accent={accent}>
       <S.ContentWrapper
         ref={wrapperRef}
         style={{

@@ -13,14 +13,12 @@ import {
   FcCalendar,
   FcComments,
   FcConferenceCall,
-  FcFlashOn,
   FcPortraitMode,
-  FcRating,
   FcReading,
   FcShare,
   FcTreeStructure,
 } from "react-icons/fc";
-import { GiCheckMark, GiCrossMark, GiTrophy } from "react-icons/gi";
+import { GiCheckMark, GiCrossMark } from "react-icons/gi";
 import { GoChevronRight } from "react-icons/go";
 import { IoMdPersonAdd } from "react-icons/io";
 import { IoPersonRemove } from "react-icons/io5";
@@ -59,6 +57,11 @@ import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import type { Novelist, NWImage, Prompt, StoryBoard } from "@/types";
 import type { Activity } from "@/types/activity";
 import { ACCENT_MAP, type Accent } from "@/types/theme";
+import {
+  LevelBadgeIcon,
+  RankTrophyIcon,
+  XPBadgeIcon,
+} from "@/utils/badge-icons";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDate } from "@/utils/helpers";
@@ -79,10 +82,14 @@ import {
   sendFriendRequest,
   unfriendNovelist,
 } from "../actions";
-import { getPostsByNovelistAction } from "./posts/actions";
+import {
+  getPostsByNovelistAction,
+  getPromptsByNovelistAction,
+} from "./posts/actions";
 import * as S from "./styles";
 
 const POST_PAGE_SIZE = 20;
+const ACTIVITY_PAGE_SIZE = 10;
 
 function FeedShimmer() {
   return (
@@ -108,7 +115,7 @@ function EmptyFeed({
   tab,
   username,
 }: {
-  tab: "activities" | "posts";
+  tab: "activities" | "posts" | "prompts";
   username: string;
 }) {
   return (
@@ -271,12 +278,18 @@ function EmptyFeed({
         </text>
       </svg>
       <S.EmptyFeedTitle>
-        {tab === "activities" ? "No recent activity" : "No posts yet"}
+        {tab === "activities"
+          ? "No recent activity"
+          : tab === "prompts"
+            ? "No prompts yet"
+            : "No posts yet"}
       </S.EmptyFeedTitle>
       <S.EmptyFeedSubtitle>
         {tab === "activities"
           ? `${username}'s story is still unfolding. Check back soon.`
-          : `${username} hasn't shared any posts yet. Their tale is yet to be written.`}
+          : tab === "prompts"
+            ? `${username}'s characters haven't posted any prompts yet.`
+            : `${username} hasn't shared any posts yet. Their tale is yet to be written.`}
       </S.EmptyFeedSubtitle>
     </S.EmptyFeedContainer>
   );
@@ -308,11 +321,16 @@ function FriendAvatarItem({
 const useGetActivities = (username: string) => {
   const [activities, setActivities] = useState<Activity[]>();
   const [error, setError] = useState<boolean>(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const { stopPageLoading, baseDataLoader } = usePageRouter();
 
   const fetchActivities = useCallback(async () => {
     const _activities =
-      (await baseDataLoader(() => getUserActivities(username, 1, 10))) ?? [];
+      (await baseDataLoader(() =>
+        getUserActivities(username, 1, ACTIVITY_PAGE_SIZE),
+      )) ?? [];
 
     if (_activities && "message" in _activities) {
       stopPageLoading();
@@ -321,13 +339,37 @@ const useGetActivities = (username: string) => {
     }
     stopPageLoading();
     setActivities(_activities);
+    setHasMore(_activities.length >= ACTIVITY_PAGE_SIZE);
+    setPage(1);
   }, [username]);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore) return;
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    const data = await baseDataLoader(() =>
+      getUserActivities(username, nextPage, ACTIVITY_PAGE_SIZE),
+    );
+    setLoadingMore(false);
+    if (!data || "message" in data) return;
+    setHasMore(data.length >= ACTIVITY_PAGE_SIZE);
+    setActivities((prev) => [...(prev ?? []), ...data]);
+    setPage(nextPage);
+  }, [username, page, loadingMore]);
 
   useEffect(() => {
     fetchActivities();
   }, [fetchActivities]);
 
-  return { activities, error, refetch: fetchActivities, stopPageLoading };
+  return {
+    activities,
+    error,
+    refetch: fetchActivities,
+    stopPageLoading,
+    hasMore,
+    loadingMore,
+    loadMore,
+  };
 };
 
 export default function UserProfilePage({}) {
@@ -355,17 +397,29 @@ export default function UserProfilePage({}) {
     username === user?.username ? userNovelist : null,
   );
 
-  const { activities, refetch: refetchAcitivities } =
-    useGetActivities(username);
+  const {
+    activities,
+    refetch: refetchAcitivities,
+    hasMore: hasMoreActivities,
+    loadingMore: loadingMoreActivities,
+    loadMore: loadMoreActivities,
+  } = useGetActivities(username);
   const { width } = useWindowDimensions();
   const isMobile = (width ?? 0) <= 800;
   const [composeOpen, setComposeOpen] = useState(false);
-  const [feedTab, setFeedTab] = useState<"activities" | "posts">("activities");
+  const [feedTab, setFeedTab] = useState<"activities" | "posts" | "prompts">(
+    "activities",
+  );
   const [posts, setPosts] = useState<Prompt[] | null>(null);
   const [postsLoading, setPostsLoading] = useState(false);
   const [postPage, setPostPage] = useState(1);
   const [hasMorePosts, setHasMorePosts] = useState(false);
   const [loadingMorePosts, setLoadingMorePosts] = useState(false);
+  const [prompts, setPrompts] = useState<Prompt[] | null>(null);
+  const [promptsLoading, setPromptsLoading] = useState(false);
+  const [promptPage, setPromptPage] = useState(1);
+  const [hasMorePrompts, setHasMorePrompts] = useState(false);
+  const [loadingMorePrompts, setLoadingMorePrompts] = useState(false);
   const [storyBoards, setStories] = useState<StoryBoard[] | null>(null);
   const setGlobalState = useGlobalStoreSet();
   const { successToast, warningToast, errorToast } = useUIContext();
@@ -739,9 +793,9 @@ export default function UserProfilePage({}) {
   useEffect(() => {
     if (!isCurrentUser || authState !== "LOGGED_IN" || !userNovelist?.id) return;
     void getNovelistRankByIdAction(userNovelist.id).then((result) => {
-      if (!("message" in result)) {
-        setGlobalState({ novelistRank: result.rank });
-      }
+      setGlobalState({
+        novelistRank: "message" in result ? undefined : result.rank,
+      });
     });
   }, [isCurrentUser, authState, userNovelist?.id]);
 
@@ -812,6 +866,44 @@ export default function UserProfilePage({}) {
     setPosts((prev) => [...(prev ?? []), ...data]);
     setPostPage(nextPage);
   }, [loadingMorePosts, novelist?.id, postPage]);
+
+  // Fetch prompts (by the novelist's muses) on demand when the Prompts tab is first activated
+  useEffect(() => {
+    const id = novelist?.id;
+    if (feedTab !== "prompts" || prompts !== null || !id) return;
+    let cancelled = false;
+    const load = async () => {
+      setPromptsLoading(true);
+      const data = await baseDataLoader(() =>
+        getPromptsByNovelistAction(id, 1, POST_PAGE_SIZE),
+      );
+      if (cancelled) return;
+      setPromptsLoading(false);
+      if (!data || "message" in data) return;
+      setPrompts(data);
+      setHasMorePrompts(data.length >= POST_PAGE_SIZE);
+      setPromptPage(1);
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [feedTab, novelist?.id, prompts]);
+
+  const loadMorePrompts = useCallback(async () => {
+    const id = novelist?.id;
+    if (loadingMorePrompts || !id) return;
+    setLoadingMorePrompts(true);
+    const nextPage = promptPage + 1;
+    const data = await baseDataLoader(() =>
+      getPromptsByNovelistAction(id, nextPage, POST_PAGE_SIZE),
+    );
+    setLoadingMorePrompts(false);
+    if (!data || "message" in data) return;
+    setHasMorePrompts(data.length >= POST_PAGE_SIZE);
+    setPrompts((prev) => [...(prev ?? []), ...data]);
+    setPromptPage(nextPage);
+  }, [loadingMorePrompts, novelist?.id, promptPage]);
 
   return (
     <>
@@ -1144,7 +1236,7 @@ export default function UserProfilePage({}) {
                   <S.LevelChip
                     onClick={() => routeToPage(ROUTES.Levels)}
                   >
-                    <FcRating size={13} />
+                    <LevelBadgeIcon size={15} />
                     Lv. {novelist?.level}
                   </S.LevelChip>
                   <S.XPChip
@@ -1152,7 +1244,7 @@ export default function UserProfilePage({}) {
                       routeToPage(ROUTES.Leaderboard.Novelists)
                     }
                   >
-                    <FcFlashOn size={13} />
+                    <XPBadgeIcon size={15} />
                     {novelist?.totalPoints?.toLocaleString()} XP
                   </S.XPChip>
                   {(() => {
@@ -1165,7 +1257,7 @@ export default function UserProfilePage({}) {
                           routeToPage(ROUTES.Leaderboard.Novelists)
                         }
                       >
-                        <GiTrophy size={13} />
+                        <RankTrophyIcon size={18} rank={rank} />
                         #{rank.toLocaleString()}
                       </S.RankBadge>
                     );
@@ -1288,6 +1380,7 @@ export default function UserProfilePage({}) {
                       type="prompt"
                       onSend={() => {
                         if (feedTab === "posts") setPosts(null);
+                        else if (feedTab === "prompts") setPrompts(null);
                         else refetchAcitivities();
                       }}
                       dropdownSelection="ALL"
@@ -1315,16 +1408,29 @@ export default function UserProfilePage({}) {
               >
                 Posts
               </S.FeedTab>
+              <S.FeedTab
+                $active={feedTab === "prompts"}
+                onClick={() => setFeedTab("prompts")}
+              >
+                Prompts
+              </S.FeedTab>
             </S.FeedTabBar>
             {feedTab === "activities" &&
               (activities === undefined ? (
                 <FeedShimmer />
               ) : activities.length > 0 ? (
-                <S.ActivitiesContainer>
-                  {activities.map((activity) => (
-                    <ActivityBox key={activity?.id} activity={activity} />
-                  ))}
-                </S.ActivitiesContainer>
+                <>
+                  <S.ActivitiesContainer>
+                    {activities.map((activity) => (
+                      <ActivityBox key={activity?.id} activity={activity} />
+                    ))}
+                  </S.ActivitiesContainer>
+                  <LoadMore
+                    hasMore={hasMoreActivities}
+                    loadingMore={loadingMoreActivities}
+                    onLoadMore={loadMoreActivities}
+                  />
+                </>
               ) : (
                 <EmptyFeed tab="activities" username={username} />
               ))}
@@ -1347,6 +1453,25 @@ export default function UserProfilePage({}) {
                   />
                 </>
               ))}
+            {feedTab === "prompts" &&
+              (promptsLoading || prompts === null ? (
+                <FeedShimmer />
+              ) : prompts.length === 0 ? (
+                <EmptyFeed tab="prompts" username={username} />
+              ) : (
+                <>
+                  <S.PostsContainer>
+                    {prompts.map((prompt) => (
+                      <PromptComponent key={prompt.id} prompt={prompt} />
+                    ))}
+                  </S.PostsContainer>
+                  <LoadMore
+                    hasMore={hasMorePrompts}
+                    loadingMore={loadingMorePrompts}
+                    onLoadMore={loadMorePrompts}
+                  />
+                </>
+              ))}
           </S.ContentInner>
         </S.ContentRight>
       </S.Content>
@@ -1363,6 +1488,7 @@ export default function UserProfilePage({}) {
           onBack={() => setComposeOpen(false)}
           onSend={() => {
             if (feedTab === "posts") setPosts(null);
+            else if (feedTab === "prompts") setPrompts(null);
             else refetchAcitivities();
             setComposeOpen(false);
           }}

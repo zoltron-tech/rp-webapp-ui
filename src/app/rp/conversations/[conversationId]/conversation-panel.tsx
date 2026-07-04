@@ -526,7 +526,9 @@ export function ConversationPanel({
       attachments,
       conversationId,
       message: text,
-      repliedTo: capturedReplyingTo?.id ?? null,
+      repliedTo: capturedReplyingTo
+        ? { id: capturedReplyingTo.id, type: "MESSAGE" }
+        : null,
       sender: {
         id: activeSender?.id ?? novelist?.id ?? "",
         image: activeSender?.image ?? novelist?.image ?? null,
@@ -547,7 +549,9 @@ export function ConversationPanel({
       isRead: false,
       message: text,
       reactions: [],
-      repliedTo: capturedReplyingTo ?? undefined,
+      repliedTo: capturedReplyingTo
+        ? { message: capturedReplyingTo, type: "MESSAGE" }
+        : undefined,
       sender: {
         id: activeSender?.id ?? novelist?.id ?? "",
         image: activeSender?.image ?? novelist?.image ?? "",

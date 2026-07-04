@@ -2,10 +2,18 @@
 
 import classNames from "classnames";
 import moment from "moment";
-import { type FC, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type FC,
+  type ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { BsChevronLeft, BsChevronRight, BsForward, BsPencil, BsReply, BsThreeDots } from "react-icons/bs";
 import { FaPause, FaPlay } from "react-icons/fa";
 import { FiCopy, FiDownload, FiExternalLink } from "react-icons/fi";
+import { HiSparkles } from "react-icons/hi2";
 import { RiFlagFill } from "react-icons/ri";
 import { TbAlertCircle, TbError404 } from "react-icons/tb";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -306,8 +314,44 @@ const getReactionDisplay = (reaction: string) => {
 const REPLIED_URL_RE = /(https?:\/\/[\w\-.~:/?#[\]@!$&'()*+,;=%]+)/i;
 const REPLIED_MENTION_RE = /class="mention-tag"/i;
 
-const getRepliedImageSrc = (message: Message): string | null => {
-  const imgAttachment = message.attachments?.find((att) => {
+/** Ice breaker messages are plain text (typed into a bare textarea, not
+ *  ChatRichInput), so `**bold**`/`*italic*` markers are never converted to
+ *  HTML the way a chat reply's are. Parse them the same way ChatRichInput
+ *  does live as-you-type, so the reply-quote preview renders the same
+ *  stylings instead of showing literal asterisks. */
+const ICE_BREAKER_MARKDOWN_RE = /\*\*([^*\n]+)\*\*|\*([^*\n]+)\*/g;
+
+const renderIceBreakerMessage = (text: string) => {
+  const nodes: ReactNode[] = [];
+  let lastIndex = 0;
+  let key = 0;
+  ICE_BREAKER_MARKDOWN_RE.lastIndex = 0;
+  let match: RegExpExecArray | null = ICE_BREAKER_MARKDOWN_RE.exec(text);
+  while (match) {
+    if (match.index > lastIndex) {
+      nodes.push(text.slice(lastIndex, match.index));
+    }
+    if (match[1] !== undefined) {
+      nodes.push(<strong key={key++}>{match[1]}</strong>);
+    } else if (match[2] !== undefined) {
+      nodes.push(<em key={key++}>{match[2]}</em>);
+    }
+    lastIndex = ICE_BREAKER_MARKDOWN_RE.lastIndex;
+    match = ICE_BREAKER_MARKDOWN_RE.exec(text);
+  }
+  if (lastIndex < text.length) nodes.push(text.slice(lastIndex));
+  return nodes;
+};
+
+/** Minimal shape shared by the two kinds of items a message can reply to
+ *  (a prior message or an ice breaker) — enough for the reply-quote preview. */
+type RepliedPreview = {
+  message?: string | null;
+  attachments?: Message["attachments"];
+};
+
+const getRepliedImageSrc = (preview: RepliedPreview): string | null => {
+  const imgAttachment = preview.attachments?.find((att) => {
     const ext =
       att.url.split("?")[0]?.split("#")[0]?.split(".").pop()?.toLowerCase() ??
       "";
@@ -315,7 +359,7 @@ const getRepliedImageSrc = (message: Message): string | null => {
   });
   if (imgAttachment) return imgAttachment.url;
 
-  const text = message.message || "";
+  const text = preview.message || "";
   const urlMatch = text.match(REPLIED_URL_RE);
   if (urlMatch) {
     const ext =
@@ -330,10 +374,10 @@ const getRepliedImageSrc = (message: Message): string | null => {
   return null;
 };
 
-const isRepliedImageOnly = (message: Message): boolean => {
-  if (REPLIED_MENTION_RE.test(message.message || "")) return false;
-  const hasText = !!message.message?.trim();
-  const hasImageAttachment = message.attachments?.some((att) => {
+const isRepliedImageOnly = (preview: RepliedPreview): boolean => {
+  if (REPLIED_MENTION_RE.test(preview.message || "")) return false;
+  const hasText = !!preview.message?.trim();
+  const hasImageAttachment = preview.attachments?.some((att) => {
     const ext =
       att.url.split("?")[0]?.split("#")[0]?.split(".").pop()?.toLowerCase() ??
       "";
@@ -341,7 +385,7 @@ const isRepliedImageOnly = (message: Message): boolean => {
   });
   if (hasImageAttachment && !hasText) return true;
   if (hasText) {
-    const text = message.message.trim();
+    const text = (preview.message ?? "").trim();
     const urlMatch = text.match(REPLIED_URL_RE);
     if (urlMatch && urlMatch[0] === text) {
       const ext =
@@ -1023,7 +1067,8 @@ export const ChatBubble: FC<Props> = ({
   // ─────────────────────────────────────────────────────────────────────────
 
   const handleRepliedToClick = () => {
-    const targetId = message.repliedTo?.id;
+    if (message.repliedTo?.type !== "MESSAGE") return;
+    const targetId = message.repliedTo.message?.id;
     if (!targetId) return;
     const el = document.getElementById(`msg-${targetId}`);
     if (el) {
@@ -1229,7 +1274,7 @@ export const ChatBubble: FC<Props> = ({
             title={option.label}
             onClick={() => handleReact(option.key)}
           >
-            <span>{option.emoji}</span>
+            {option.emoji}
           </S.ReactionPickerButton>
         ))}
       </S.ReactionPicker>
@@ -1419,38 +1464,84 @@ export const ChatBubble: FC<Props> = ({
           </S.SenderNameRow>
         )}
 
-        {message.repliedTo ? (
-          <S.RepliedToQuote
-            $wiggling={repliedWiggling}
-            onClick={handleRepliedToClick}
-            onAnimationEnd={() => setRepliedWiggling(false)}
-          >
-            <S.RepliedToBody>
-              <S.RepliedToSender>
-                {message.repliedTo.sender.name ||
-                  message.repliedTo.sender.username}
-              </S.RepliedToSender>
-              {isRepliedImageOnly(message.repliedTo) ? (
-                <S.RepliedToThumbLabel>📷 Image</S.RepliedToThumbLabel>
-              ) : (
-                <S.RepliedToText>
-                  {message.repliedTo.message
-                    ? message.repliedTo.message
-                        .replace(/<[^>]+>/g, "")
-                        .trim()
-                        .slice(0, 100)
-                    : "(attachment)"}
-                </S.RepliedToText>
-              )}
-            </S.RepliedToBody>
-            {(() => {
-              const imgSrc = getRepliedImageSrc(message.repliedTo);
-              return imgSrc ? (
-                <S.RepliedToThumb src={imgSrc} alt="Replied image" />
-              ) : null;
-            })()}
-          </S.RepliedToQuote>
-        ) : null}
+        {message.repliedTo
+          ? (() => {
+              if (message.repliedTo.type === "ICE_BREAKER") {
+                const repliedIceBreaker = message.repliedTo.iceBreaker;
+                if (!repliedIceBreaker) return null;
+
+                return (
+                  <S.RepliedToIceBreakerQuote
+                    $wiggling={repliedWiggling}
+                    $color={repliedIceBreaker.color}
+                    onClick={handleRepliedToClick}
+                    onAnimationEnd={() => setRepliedWiggling(false)}
+                  >
+                    <S.RepliedToIceBreakerAvatar>
+                      <AvatarNew
+                        src={repliedIceBreaker.source.image || null}
+                        alt={repliedIceBreaker.source.name}
+                        nwImage={repliedIceBreaker.source.avatar}
+                      />
+                    </S.RepliedToIceBreakerAvatar>
+                    <S.RepliedToIceBreakerBody>
+                      <S.RepliedToIceBreakerTag>
+                        <HiSparkles size={8} />
+                        Ice breaker
+                      </S.RepliedToIceBreakerTag>
+                      <S.RepliedToIceBreakerText>
+                        {renderIceBreakerMessage(
+                          repliedIceBreaker.message
+                            .replace(/<[^>]+>/g, "")
+                            .trim()
+                            .slice(0, 100),
+                        )}
+                      </S.RepliedToIceBreakerText>
+                    </S.RepliedToIceBreakerBody>
+                  </S.RepliedToIceBreakerQuote>
+                );
+              }
+
+              const repliedMessage = message.repliedTo.message;
+              const senderName =
+                repliedMessage?.sender.name || repliedMessage?.sender.username;
+              const previewText = repliedMessage?.message ?? null;
+              const preview: RepliedPreview = {
+                attachments: repliedMessage?.attachments,
+                message: previewText,
+              };
+
+              return (
+                <S.RepliedToQuote
+                  $wiggling={repliedWiggling}
+                  onClick={handleRepliedToClick}
+                  onAnimationEnd={() => setRepliedWiggling(false)}
+                >
+                  <S.RepliedToBody>
+                    <S.RepliedToSender>{senderName}</S.RepliedToSender>
+                    {isRepliedImageOnly(preview) ? (
+                      <S.RepliedToThumbLabel>📷 Image</S.RepliedToThumbLabel>
+                    ) : (
+                      <S.RepliedToText>
+                        {previewText
+                          ? previewText
+                              .replace(/<[^>]+>/g, "")
+                              .trim()
+                              .slice(0, 100)
+                          : "(attachment)"}
+                      </S.RepliedToText>
+                    )}
+                  </S.RepliedToBody>
+                  {(() => {
+                    const imgSrc = getRepliedImageSrc(preview);
+                    return imgSrc ? (
+                      <S.RepliedToThumb src={imgSrc} alt="Replied image" />
+                    ) : null;
+                  })()}
+                </S.RepliedToQuote>
+              );
+            })()
+          : null}
 
         {/* Klipy clip: only render video, not text bubble */}
         {isKlipyClip ? (
@@ -1546,7 +1637,7 @@ export const ChatBubble: FC<Props> = ({
                 onClick={() => setActiveReaction(reactionGroup.reaction)}
                 type="button"
               >
-                <span>{getReactionDisplay(reactionGroup.reaction)}</span>
+                {getReactionDisplay(reactionGroup.reaction)}
                 <span>{reactionGroup.users.length}</span>
               </S.ReactionChip>
             ))}

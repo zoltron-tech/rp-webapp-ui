@@ -18,6 +18,7 @@ import {
   API_MESSAGE,
   AUTH_HEADER_NAME,
   JWT_COOKIE_NAME,
+  REFERRAL_COOKIE_NAME,
   THEME_COOKIE_NAME,
 } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
@@ -58,6 +59,32 @@ export const removeAuthCookie = async () => {
     httpOnly: false,
     path: "/",
     sameSite: "strict",
+    secure: !USE_LOCAL_DOMAIN,
+  });
+};
+
+export const setReferralCookie = async (username: string) => {
+  // SameSite must be "lax" (not "strict") so the cookie is still sent on the
+  // top-level redirect back from Google/Discord to the OAuth2 callback.
+  // No return value: the cookie store is a class instance and this action is
+  // called from client components, which only accept serializable results.
+  (await cookies()).set(REFERRAL_COOKIE_NAME, username, {
+    ...(USE_LOCAL_DOMAIN ? {} : { domain: "novelist.world" }),
+    expires: new Date(Date.now() + 60 * 60 * 24 * 7 * 1000), // 7 days
+    httpOnly: false,
+    path: "/",
+    sameSite: "lax",
+    secure: !USE_LOCAL_DOMAIN,
+  });
+};
+
+export const removeReferralCookie = async () => {
+  (await cookies()).set(REFERRAL_COOKIE_NAME, "", {
+    ...(USE_LOCAL_DOMAIN ? {} : { domain: "novelist.world" }),
+    expires: new Date(0),
+    httpOnly: false,
+    path: "/",
+    sameSite: "lax",
     secure: !USE_LOCAL_DOMAIN,
   });
 };
@@ -228,8 +255,13 @@ export const signupAction = async (
   const URL = `${RP_SERVICE_URL}/rp/user/account`;
 
   try {
+    const referralUser = (await cookies()).get(REFERRAL_COOKIE_NAME)?.value;
+
     const response = await fetch(URL, {
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        ...payload,
+        ...(referralUser ? { referralUser } : {}),
+      }),
       cache: "no-store",
       headers: {
         "Content-Type": "application/json",
@@ -258,6 +290,7 @@ export const signupAction = async (
     }
 
     await setAuthCookie(result.token!);
+    if (referralUser) await removeReferralCookie();
     const clientResponse: LoginResponsePayload = {
       message: API_MESSAGE.Success,
       token: result.token!,

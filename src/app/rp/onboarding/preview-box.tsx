@@ -7,6 +7,7 @@ import * as S from "./styled";
 
 export const PreviewBox: FC = () => {
   const image = useOnboardingState("image");
+  const avatar = useOnboardingState("avatar");
   const firstName = useOnboardingState("firstName");
   const lastName = useOnboardingState("lastName");
   const username = useOnboardingState("username");
@@ -19,8 +20,9 @@ export const PreviewBox: FC = () => {
       <S.Preview.Container className={classNames(ACCENT_MAP[palette])}>
         <S.Preview.Cover />
         <AvatarNew
-          src={image || ""}
+          src={avatar?.src || image || ""}
           alt={firstName || username || "User Avatar"}
+          nwImage={avatar}
         />
         <span>{firstName || "Your Name"}</span>
         <span>{lastName}</span>

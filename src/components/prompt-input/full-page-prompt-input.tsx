@@ -11,6 +11,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { IoIosShareAlt } from "react-icons/io";
@@ -22,6 +23,8 @@ import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents, useUIContext } from "@/hooks";
 import type {
   Friend,
+  Muse,
+  Prompt,
   PromptSource,
   SubmitPromptInput,
   SubmitPromptType,
@@ -33,12 +36,14 @@ import { FriendSelectionDropdown } from "../friends-selection-dropdown";
 import { InfoModal } from "../info-modal";
 import {
   apiMessageToInfoMessage,
+  buildOptimisticPrompt,
   getParentIdKeyFromPromptType,
   museToSource,
   novelistToSource,
   PromptEvent,
   usePromptInputEvents,
 } from "./helpers";
+import { NovelistConfirm } from "./novelist-confirm";
 import { PromptPrivacySelect } from "./privacy-select";
 import {
   INITIAL_STATE,
@@ -48,7 +53,7 @@ import {
 } from "./prompt-input.store";
 import { PromptMediaInput } from "./prompt-media-input";
 import { PromptMediaPreview } from "./prompt-media-preview";
-import { PromptMuseSelect } from "./prompt-muse-select";
+import { type MuseSelectHandle, PromptMuseSelect } from "./prompt-muse-select";
 import { PromptTextField } from "./prompt-text-field";
 import * as S from "./styles";
 
@@ -57,7 +62,7 @@ type FullPagePromptInputProps = {
   parentId?: string;
   dropdownSelection: "NOVELIST" | "MUSE" | "ALL";
   initialSelection?: PromptSource;
-  onSend?: () => void;
+  onSend?: (prompt: Prompt) => void;
   onBack?: () => void;
   className?: string;
 };
@@ -100,6 +105,13 @@ const FullPageForm: FC<InnerFormProps> = ({
   const { successToast, errorToast } = useUIContext();
   const setPromptInputState = usePromptInputStoreSet();
   const [error, setError] = useState<API_MESSAGE | null>(null);
+  const [novelistConfirmOpen, setNovelistConfirmOpen] = useState(false);
+  const pendingSubmitRef = useRef<(() => Promise<void>) | null>(null);
+  const museSelectRef = useRef<MuseSelectHandle | null>(null);
+  // Muses created on the fly from the "who is posting?" dialog — session-local
+  // — merged with the novelist's real muses so a freshly created character is
+  // immediately selectable without requiring a refetch of the novelist.
+  const [addedMuses, setAddedMuses] = useState<Muse[]>([]);
   const { emit } = usePromptInputEvents();
   const { on, off } = useCustomEvents(EVENTS.PRIVACY.CUSTOM.base);
 
@@ -118,7 +130,9 @@ const FullPageForm: FC<InnerFormProps> = ({
   const sources = useMemo(() => {
     if (!novelist) return [];
     const novelistSource = novelistToSource(novelist);
-    const museSources = (novelist.muses ?? []).map(museToSource);
+    const museSources = [...(novelist.muses ?? []), ...addedMuses].map(
+      museToSource,
+    );
     switch (dropdownSelection) {
       case "NOVELIST":
         return [novelistSource];
@@ -127,7 +141,17 @@ const FullPageForm: FC<InnerFormProps> = ({
       default:
         return [novelistSource, ...museSources];
     }
-  }, [novelist, dropdownSelection]);
+  }, [novelist, dropdownSelection, addedMuses]);
+
+  const novelistConfirmSource = useMemo(
+    () => sources.find((s) => s.sourceType === "NOVELIST"),
+    [sources],
+  );
+
+  const hasMuseOptions = useMemo(
+    () => sources.some((s) => s.sourceType === "MUSE"),
+    [sources],
+  );
 
   const submitDisabled = useMemo(
     () => mediaUploading || Boolean(mediaUploadError) || sending,
@@ -175,6 +199,34 @@ const FullPageForm: FC<InnerFormProps> = ({
         payload[getParentIdKeyFromPromptType(type)] = parentId;
       }
 
+      if (
+        dropdownSelection === "ALL" &&
+        selectedSource.sourceType === "NOVELIST"
+      ) {
+        pendingSubmitRef.current = async () => {
+          setSending(true);
+          const response = await submitPrompt(payload, type);
+
+          if (response.message !== API_MESSAGE.Success) {
+            setError(response.message);
+            setSending(false);
+            emit(PromptEvent.Error, response.message);
+            return;
+          }
+
+          successToast("Sent successfully");
+          emit(PromptEvent.Sent, { muse: selectedSource, payload, type });
+          setSending(false);
+          setError(null);
+          setPromptInputState({ media: null, promptText: "" });
+          onSend?.(
+            response.prompt ?? buildOptimisticPrompt(selectedSource, payload),
+          );
+        };
+        setNovelistConfirmOpen(true);
+        return;
+      }
+
       setSending(true);
       const response = await submitPrompt(payload, type);
 
@@ -190,80 +242,119 @@ const FullPageForm: FC<InnerFormProps> = ({
       setSending(false);
       setError(null);
       setPromptInputState({ media: null, promptText: "" });
-      onSend?.();
+      onSend?.(
+        response.prompt ?? buildOptimisticPrompt(selectedSource, payload),
+      );
     },
-    [sources, promptText, parentId, type, privacySelectedFriends, emit, onSend],
+    [
+      sources,
+      promptText,
+      parentId,
+      type,
+      dropdownSelection,
+      privacySelectedFriends,
+      emit,
+      onSend,
+    ],
   );
 
+  const handleConfirmNovelist = useCallback(async () => {
+    setNovelistConfirmOpen(false);
+    await pendingSubmitRef.current?.();
+    pendingSubmitRef.current = null;
+  }, []);
+
+  const handleSelectCharacter = useCallback(() => {
+    setNovelistConfirmOpen(false);
+    museSelectRef.current?.openDialog();
+  }, []);
+
+  const handleCharacterCreated = useCallback((muse: Muse) => {
+    setAddedMuses((prev) => [...prev, muse]);
+    museSelectRef.current?.selectSource(museToSource(muse));
+  }, []);
+
   return (
-    <Form.Root
-      style={{
-        display: "flex",
-        flex: 1,
-        flexDirection: "column",
-        minHeight: 0,
-      }}
-      onSubmit={handleSend}
-    >
-      {/* Top bar */}
-      <S.FPTopBar>
-        <S.FPBackButton type="button" aria-label="Go back" onClick={onBack}>
-          <IoCloseOutline />
-        </S.FPBackButton>
-        <S.FPTopBarRight>
-          {type === "prompt" && <PromptPrivacySelect />}
-          <Form.Submit asChild>
-            <S.FPSubmitButton disabled={submitDisabled}>
-              {submitText}
-            </S.FPSubmitButton>
-          </Form.Submit>
-        </S.FPTopBarRight>
-      </S.FPTopBar>
-
-      {/* Meta row: muse select + shared-with + media buttons */}
-      <S.FPMetaRow>
-        <PromptMuseSelect
-          sources={sources}
-          dropdownSelection={dropdownSelection}
-          initialSelection={initialSelection}
-        />
-        <ShouldRender if={privacySelectedFriends.length > 0}>
-          <S.FPSharedWith>
-            <IoIosShareAlt />
-            {privacySelectedFriends.slice(0, 2).map((friend) => (
-              <S.PrivacySelectedFriendAvatar
-                key={friend.id}
-                src={friend.image}
-                alt={friend.username}
-                onClick={() => setShowCustomPrivacyListSelection(true)}
-              />
-            ))}
-            <S.privacyAvatarMoreIcon
-              onClick={() => setShowCustomPrivacyListSelection(true)}
-            >
-              <PiDotsThreeOutlineFill />
-            </S.privacyAvatarMoreIcon>
-          </S.FPSharedWith>
-        </ShouldRender>
-        <S.FPMetaRight>
-          <PromptMediaInput />
-        </S.FPMetaRight>
-      </S.FPMetaRow>
-
-      {/* Full-height editor area (toolbar + expanding editor) */}
-      <S.FPEditorArea>
-        <PromptTextField fullPage />
-      </S.FPEditorArea>
-
-      <PromptMediaPreview />
-
-      <InfoModal
-        open={Boolean(error)}
-        type="error"
-        description={apiMessageToInfoMessage(error)}
-        onClose={() => setError(null)}
+    <>
+      <NovelistConfirm
+        open={novelistConfirmOpen}
+        onOpenChange={setNovelistConfirmOpen}
+        novelistSource={novelistConfirmSource}
+        hasMuseOptions={hasMuseOptions}
+        onPostAsNovelist={handleConfirmNovelist}
+        onSelectCharacter={handleSelectCharacter}
+        onCharacterCreated={handleCharacterCreated}
       />
-    </Form.Root>
+      <Form.Root
+        style={{
+          display: "flex",
+          flex: 1,
+          flexDirection: "column",
+          minHeight: 0,
+        }}
+        onSubmit={handleSend}
+      >
+        {/* Top bar */}
+        <S.FPTopBar>
+          <S.FPBackButton type="button" aria-label="Go back" onClick={onBack}>
+            <IoCloseOutline />
+          </S.FPBackButton>
+          <S.FPTopBarRight>
+            {type === "prompt" && <PromptPrivacySelect />}
+            <Form.Submit asChild>
+              <S.FPSubmitButton disabled={submitDisabled}>
+                {submitText}
+              </S.FPSubmitButton>
+            </Form.Submit>
+          </S.FPTopBarRight>
+        </S.FPTopBar>
+
+        {/* Meta row: muse select + shared-with + media buttons */}
+        <S.FPMetaRow>
+          <PromptMuseSelect
+            ref={museSelectRef}
+            sources={sources}
+            dropdownSelection={dropdownSelection}
+            initialSelection={initialSelection}
+          />
+          <ShouldRender if={privacySelectedFriends.length > 0}>
+            <S.FPSharedWith>
+              <IoIosShareAlt />
+              {privacySelectedFriends.slice(0, 2).map((friend) => (
+                <S.PrivacySelectedFriendAvatar
+                  key={friend.id}
+                  src={friend.image}
+                  alt={friend.username}
+                  onClick={() => setShowCustomPrivacyListSelection(true)}
+                />
+              ))}
+              <S.privacyAvatarMoreIcon
+                onClick={() => setShowCustomPrivacyListSelection(true)}
+              >
+                <PiDotsThreeOutlineFill />
+              </S.privacyAvatarMoreIcon>
+            </S.FPSharedWith>
+          </ShouldRender>
+          <S.FPMetaRight>
+            <PromptMediaInput />
+          </S.FPMetaRight>
+        </S.FPMetaRow>
+
+        {/* Full-height editor area (toolbar + expanding editor) */}
+        <S.FPEditorArea>
+          <PromptTextField fullPage />
+        </S.FPEditorArea>
+
+        <PromptMediaPreview />
+
+        <InfoModal
+          open={Boolean(error)}
+          type="error"
+          description={apiMessageToInfoMessage(error)}
+          onClose={() => setError(null)}
+        />
+      </Form.Root>
+    </>
   );
 };
 

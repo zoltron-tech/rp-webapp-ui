@@ -10,7 +10,6 @@ import {
   searchFandomsAction,
   updateMuseAction,
 } from "@/app/rp/muse/actions";
-import { uploadMedia } from "@/app/rp/profile/actions";
 import { ShouldRender, UploadAvatar, Username } from "@/components/common";
 import { useGlobalState } from "@/context/store/stores";
 import { useForm, useUIContext } from "@/hooks";
@@ -19,6 +18,7 @@ import type { Fandom, Muse } from "@/types";
 import { API_MESSAGE, INITIAL_MUSE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
+import { uploadMedia } from "@/utils/upload-media";
 import * as S from "./styles";
 
 export type EditMuseCardProps = {

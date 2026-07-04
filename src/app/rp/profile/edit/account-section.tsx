@@ -7,6 +7,7 @@ import {
   BsArrowLeft,
   BsKeyFill,
   BsPencil,
+  BsPeople,
   BsPersonCircle,
 } from "react-icons/bs";
 import { FaCircleCheck, FaCircleXmark } from "react-icons/fa6";
@@ -21,9 +22,11 @@ import {
 import { AvatarNew } from "@/components/common/avatar-new";
 import { InlineMessage } from "@/components/common/inline-message";
 import { useGlobalState } from "@/context/store/stores";
+import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import type { Friend } from "@/types/novelist";
 import { API_MESSAGE } from "@/utils/constants";
+import { ROUTES } from "@/utils/constants/routes";
 import { getBlockedNovelistsAction, unblockNovelistAction } from "../actions";
 import { ChangeUsernameDialog } from "./change-username-dialog";
 import * as S from "./styled";
@@ -40,6 +43,7 @@ export function AccountSection({ onBack }: Props) {
   const novelist = useGlobalState("novelist");
   const user = useGlobalState("user");
   const { successToast, errorToast } = useUIContext();
+  const { routeToPage } = usePageRouter();
 
   const [usernameDialogOpen, setUsernameDialogOpen] = useState(false);
   const [verifyState, setVerifyState] = useState<AsyncState>("idle");
@@ -190,6 +194,25 @@ export function AccountSection({ onBack }: Props) {
             >
               <BsPencil />
               Change
+            </S.AccountActionButton>
+          </S.AccountRowActions>
+        </S.AccountRow>
+
+        {/* Referrals row */}
+        <S.AccountRow>
+          <S.AccountRowMain>
+            <S.AccountRowLabel>Your Circle</S.AccountRowLabel>
+            <S.AccountRowValue>
+              Novelists who joined using your referral link
+            </S.AccountRowValue>
+          </S.AccountRowMain>
+          <S.AccountRowActions>
+            <S.AccountActionButton
+              type="button"
+              onClick={() => routeToPage(ROUTES.Profile.Referrals)}
+            >
+              <BsPeople />
+              View list
             </S.AccountActionButton>
           </S.AccountRowActions>
         </S.AccountRow>

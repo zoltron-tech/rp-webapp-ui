@@ -1,4 +1,5 @@
 export const JWT_COOKIE_NAME = "X-NW-AUTH-TOKEN";
+export const REFERRAL_COOKIE_NAME = "X-NW-REFERRAL-USER";
 export const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL ?? "";
 export const THEME_COOKIE_NAME = "rp_theme";
 export const AUTH_HEADER_NAME = "X-NW-AUTH-TOKEN";

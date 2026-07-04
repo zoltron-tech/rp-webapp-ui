@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { type FC, useEffect, useState } from "react";
-import { uploadMedia } from "@/app/rp/profile/actions";
 import {
   getStoryboardEventAction,
   updateStoryBoardEventAction,
@@ -15,6 +14,7 @@ import type { StoryBoardEvent } from "@/types";
 import { API_MESSAGE, INITIAL_STORY_BOARD_EVENT } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
+import { uploadMedia } from "@/utils/upload-media";
 import * as S from "./styles";
 
 export type CreateStoryBoardEventCardProps = {

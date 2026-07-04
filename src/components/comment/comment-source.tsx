@@ -123,6 +123,8 @@ export const CommentSource: FC = () => {
           image={source.image}
           name={source.name}
           avatar={source.avatar}
+          useAccent={source.useAccent}
+          accent={source.accent}
         />
       </ShouldRender>
       <ShouldRender if={source.sourceType === "NOVELIST"}>
@@ -131,6 +133,8 @@ export const CommentSource: FC = () => {
           image={source.image}
           name={source.name}
           avatar={source.avatar}
+          useAccent={source.useAccent}
+          accent={source.accent}
         />
       </ShouldRender>
       <S.Source.Info>

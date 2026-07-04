@@ -72,6 +72,7 @@ export const AboutStep: FC<BasicInfoStepProps> = ({ handleNext }) => {
       if (_about !== novelist?.about) {
         const payload = {
           about: _about,
+          avatar: novelist?.avatar ?? undefined,
           firstName: novelist?.firstName || "",
           image: novelist?.image || "",
           lastName: novelist?.lastName || "",

@@ -979,3 +979,199 @@ export const MuseDialogEmptyText = styled.p`
   color: var(--text-secondary);
   text-align: center;
 `;
+
+// ── "Who is posting?" confirm dialog ────────────────────────────────────────
+
+export const NovelistConfirmHeaderBar = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+export const NovelistConfirmHeaderTitle = styled.span`
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-size-input);
+  font-weight: var(--font-weight-semi-bold, 600);
+  color: var(--text);
+`;
+
+export const NovelistConfirmCloseButton = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--text-secondary);
+  background: var(--bg-3);
+  border: 1px solid var(--bg-5);
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: var(--bg-4);
+    color: var(--text);
+  }
+
+  &:active {
+    transform: scale(0.92);
+  }
+`;
+
+export const NovelistConfirmBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+  width: 100%;
+`;
+
+export const NovelistConfirmOption = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--bg-3);
+  border: 1px solid var(--bg-6);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 7%, var(--bg-4));
+    border-color: color-mix(in srgb, var(--accent) 30%, var(--bg-6));
+  }
+
+  &:active {
+    transform: scale(0.99);
+  }
+
+  .avatar {
+    width: 42px;
+    height: 42px;
+  }
+`;
+
+export const NovelistConfirmOptionIcon = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 14%, var(--bg-4));
+  color: var(--accent-11, var(--accent));
+  font-size: 20px;
+`;
+
+export const NovelistConfirmOptionText = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+  padding-top: 1px;
+`;
+
+export const NovelistConfirmOptionTitle = styled.span`
+  font-size: var(--font-size-input);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text);
+`;
+
+export const NovelistConfirmOptionDesc = styled.span`
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+`;
+
+export const NovelistConfirmOptionChevron = styled.span`
+  display: flex;
+  align-items: center;
+  align-self: center;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+`;
+
+export const NovelistConfirmCreateWrap = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+  width: 100%;
+`;
+
+export const NovelistConfirmCreateRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+export const NovelistConfirmCreateInput = styled.input`
+  flex: 1;
+  min-width: 0;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--bg-6);
+  background: var(--bg-2);
+  outline: none;
+  font-family: var(--font);
+  font-size: var(--font-size-input);
+  color: var(--text);
+
+  &:focus {
+    border-color: var(--accent);
+  }
+
+  &::placeholder {
+    color: var(--text-secondary);
+  }
+`;
+
+export const NovelistConfirmCreateIconButton = styled.button<{
+  $variant: "cancel" | "confirm";
+}>`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease, transform 0.1s ease;
+  background: ${({ $variant }) =>
+    $variant === "confirm" ? "var(--accent)" : "var(--bg-3)"};
+  color: ${({ $variant }) =>
+    $variant === "confirm"
+      ? "var(--text-on-accent, #fff)"
+      : "var(--text-secondary)"};
+  border: 1px solid
+    ${({ $variant }) => ($variant === "confirm" ? "transparent" : "var(--bg-5)")};
+
+  &:hover {
+    background: ${({ $variant }) =>
+      $variant === "confirm" ? "var(--accent)" : "var(--bg-4)"};
+    opacity: ${({ $variant }) => ($variant === "confirm" ? 0.9 : 1)};
+  }
+
+  &:active {
+    transform: scale(0.92);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+`;

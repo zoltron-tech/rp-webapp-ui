@@ -26,6 +26,23 @@ export const PennedByChip = styled.button<{ accent?: string | null }>`
   cursor: pointer;
 `;
 
+export const PennedByName = styled.span`
+  color: var(--text);
+  font-weight: 700;
+  max-width: 24ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  @container muse-card (max-width: 360px) {
+    max-width: 18ch;
+  }
+
+  @container muse-card (max-width: 300px) {
+    max-width: 12ch;
+  }
+`;
+
 export const PennedByMiniAvatar = styled.div<{ $src?: string }>`
   width: 20px;
   height: 20px;
@@ -49,7 +66,7 @@ export const PennedByRow = styled.span`
 `;
 
 import { Container } from "@novelist-world/ui";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { Avatar as AvatarCommon } from "@/components/common";
 import {
   BACKGROUND_BLUR,
@@ -95,6 +112,32 @@ export const Banner = styled.div<BannerProps>`
     & {
       top: 0px;
     }
+  }
+
+  /* Crossfade/shift-in for prev/next muse navigation. The incoming wallpaper
+     is stacked on top of the previous one and slides in from the direction
+     of navigation; the old layer beneath covers any edge gaps. */
+  &.banner-enter {
+    animation: bannerFadeIn 0.7s ease both;
+  }
+  &.banner-enter-next {
+    animation: bannerShiftNext 0.7s ease both;
+  }
+  &.banner-enter-prev {
+    animation: bannerShiftPrev 0.7s ease both;
+  }
+
+  @keyframes bannerFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes bannerShiftNext {
+    from { opacity: 0; transform: translateX(3%) scale(1.06); }
+    to { opacity: 1; transform: translateX(0) scale(1); }
+  }
+  @keyframes bannerShiftPrev {
+    from { opacity: 0; transform: translateX(-3%) scale(1.06); }
+    to { opacity: 1; transform: translateX(0) scale(1); }
   }
 
   /* ${BLUR_FILTER} */
@@ -222,6 +265,7 @@ export const CardBackground = styled.div<CardProps>`
 `;
 
 export const CardWrapper = styled(Container)`
+  position: relative;
   width: 326px;
   aspect-ratio: 9 / 16;
   padding: 0px !important;
@@ -236,6 +280,10 @@ export const CardWrapper = styled(Container)`
   container-name: muse-card;
   container-type: size;
 
+  &:hover .card-bg-remove {
+    opacity: 1;
+  }
+
  @media (min-width: 1024px) and (max-width: 2047px) {
     margin-top: 20px;
     width: 422px;
@@ -244,6 +292,362 @@ export const CardWrapper = styled(Container)`
   @media (max-width: 950px) {
     display: none;
   }
+`;
+
+/* ── Prev/next muse nav tabs (mobile) ────────────────────────────────────────
+   Touch counterpart of the desktop peek cards: slim edge-docked tabs showing
+   the neighbor's portrait behind a chevron and vertical name; tap navigates.
+   Unknown neighbors show the shimmer inside the tab while loading. */
+
+export const MuseNavTab = styled.button<{
+  $side: "left" | "right";
+  $accent?: string | null;
+}>`
+  all: unset;
+  box-sizing: border-box;
+  position: fixed;
+  top: 50%;
+  ${({ $side }) => ($side === "left" ? "left: 0;" : "right: 0;")}
+  transform: translateY(-50%);
+  z-index: ${Z_INDEX.SCROLL_JUMP};
+  width: 36px;
+  height: 118px;
+  overflow: hidden;
+  cursor: pointer;
+  background: rgba(10, 10, 14, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  ${({ $side }) =>
+    $side === "left"
+      ? "border-left: none; border-radius: 0 12px 12px 0;"
+      : "border-right: none; border-radius: 12px 0 0 12px;"}
+  box-shadow: ${({ $accent }) =>
+    $accent && $accent.trim() !== ""
+      ? `0 6px 20px color-mix(in srgb, ${$accent} 30%, rgba(0, 0, 0, 0.5))`
+      : "0 6px 18px rgba(0, 0, 0, 0.5)"};
+  transition: transform 0.15s ease;
+
+  &:active:not(:disabled) {
+    transform: translateY(-50%) scale(0.94);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.7;
+  }
+
+  /* Desktop shows the peek cards instead */
+  @media (min-width: 951px) {
+    display: none;
+  }
+`;
+
+export const MuseNavTabImage = styled.div<{ $src: string }>`
+  position: absolute;
+  inset: 0;
+  background-image: url(${({ $src }) => $src});
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center top;
+  filter: saturate(0.8) brightness(0.85);
+`;
+
+export const MuseNavTabVeil = styled.div<{ $side: "left" | "right" }>`
+  position: absolute;
+  inset: 0;
+  background: ${({ $side }) =>
+    $side === "left"
+      ? "linear-gradient(to right, rgba(6, 6, 10, 0.35), rgba(6, 6, 10, 0.75))"
+      : "linear-gradient(to left, rgba(6, 6, 10, 0.35), rgba(6, 6, 10, 0.75))"};
+`;
+
+export const MuseNavTabContent = styled.div`
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding-block: 8px;
+`;
+
+export const MuseNavTabChevron = styled.span<{ $accent?: string | null }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: ${({ $accent }) =>
+    $accent && $accent.trim() !== ""
+      ? `color-mix(in srgb, ${$accent} 55%, black)`
+      : "rgba(0, 0, 0, 0.55)"};
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #fff;
+`;
+
+export const MuseNavTabName = styled.span`
+  writing-mode: vertical-rl;
+  max-height: 64px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.8);
+`;
+
+/* ── Prev/next muse nav cards (desktop) ──────────────────────────────────────
+   Edge-docked "peek" cards: at rest only a slim rail with the chevron and the
+   neighbor's name is visible at the screen edge; hovering (or keyboard focus)
+   slides the full portrait card into view. */
+
+const NAV_CARD_PEEK = 44;
+
+export const MuseNavCard = styled.button<{
+  $side: "left" | "right";
+  $accent?: string | null;
+}>`
+  all: unset;
+  box-sizing: border-box;
+  position: fixed;
+  top: 50%;
+  ${({ $side }) => ($side === "left" ? "left: 0;" : "right: 0;")}
+  z-index: ${Z_INDEX.SCROLL_JUMP};
+  width: 150px;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  cursor: pointer;
+  background: rgba(10, 10, 14, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  ${({ $side }) =>
+    $side === "left"
+      ? "border-left: none; border-radius: 0 14px 14px 0;"
+      : "border-right: none; border-radius: 14px 0 0 14px;"}
+  box-shadow: ${({ $accent }) =>
+    $accent && $accent.trim() !== ""
+      ? `0 10px 34px color-mix(in srgb, ${$accent} 30%, rgba(0, 0, 0, 0.55))`
+      : "0 10px 30px rgba(0, 0, 0, 0.55)"};
+  transform: ${({ $side }) =>
+    $side === "left"
+      ? `translateY(-50%) translateX(calc(${NAV_CARD_PEEK}px - 100%))`
+      : `translateY(-50%) translateX(calc(100% - ${NAV_CARD_PEEK}px))`};
+  transition:
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+
+  &:hover:not(:disabled),
+  &:focus-visible:not(:disabled) {
+    transform: translateY(-50%) translateX(0);
+    border-color: ${({ $accent }) =>
+      $accent && $accent.trim() !== ""
+        ? `color-mix(in srgb, ${$accent} 60%, rgba(255, 255, 255, 0.4))`
+        : "rgba(255, 255, 255, 0.42)"};
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(-50%) translateX(0) scale(0.985);
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+
+  @media (max-width: 950px) {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+`;
+
+export const MuseNavCardImage = styled.div<{
+  $src: string;
+  $bgSize?: string;
+  $bgPosition?: string;
+}>`
+  position: absolute;
+  inset: 0;
+  background-image: url(${({ $src }) => $src});
+  background-repeat: no-repeat;
+  background-size: ${({ $bgSize }) => $bgSize ?? "cover"};
+  background-position: ${({ $bgPosition }) => $bgPosition ?? "center center"};
+  transform: scale(1.03);
+  filter: saturate(0.8) brightness(0.9);
+  transition:
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.45s ease;
+
+  ${MuseNavCard}:hover &,
+  ${MuseNavCard}:focus-visible & {
+    transform: scale(1.09);
+    filter: saturate(1) brightness(1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+`;
+
+/* Moody dark veil over the resting sliver; lifts once the card slides out */
+export const MuseNavCardVeil = styled.div<{ $side: "left" | "right" }>`
+  position: absolute;
+  inset: 0;
+  background: ${({ $side }) =>
+    $side === "left"
+      ? "linear-gradient(to right, rgba(6, 6, 10, 0.4) 40%, rgba(6, 6, 10, 0.85))"
+      : "linear-gradient(to left, rgba(6, 6, 10, 0.4) 40%, rgba(6, 6, 10, 0.85))"};
+  transition: opacity 0.4s ease;
+
+  ${MuseNavCard}:hover &,
+  ${MuseNavCard}:focus-visible & {
+    opacity: 0;
+  }
+`;
+
+/* The always-visible strip at the screen edge: chevron + vertical name */
+export const MuseNavCardRail = styled.div<{ $side: "left" | "right" }>`
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  ${({ $side }) => ($side === "left" ? "right: 0;" : "left: 0;")}
+  width: ${NAV_CARD_PEEK}px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding-block: 14px;
+`;
+
+export const MuseNavCardRailName = styled.span`
+  writing-mode: vertical-rl;
+  max-height: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+  transition: opacity 0.3s ease;
+
+  ${MuseNavCard}:hover &,
+  ${MuseNavCard}:focus-visible & {
+    opacity: 0;
+  }
+`;
+
+export const MuseNavCardChevron = styled.span<{ $accent?: string | null }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  backdrop-filter: blur(4px);
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    transform 0.25s ease;
+
+  ${MuseNavCard}:hover &,
+  ${MuseNavCard}:focus-visible & {
+    background: ${({ $accent }) =>
+      $accent && $accent.trim() !== ""
+        ? `color-mix(in srgb, ${$accent} 65%, black)`
+        : "var(--accent)"};
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.08);
+  }
+`;
+
+/* Bottom info revealed once the card slides out */
+export const MuseNavCardFooter = styled.div<{ $side: "left" | "right" }>`
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: ${({ $side }) => ($side === "right" ? "flex-end" : "flex-start")};
+  text-align: ${({ $side }) => ($side === "right" ? "right" : "left")};
+  padding: 26px 12px 12px;
+  background: linear-gradient(
+    to top,
+    rgba(4, 4, 8, 0.92),
+    rgba(4, 4, 8, 0.45) 60%,
+    transparent
+  );
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 0.35s ease 0.08s,
+    transform 0.35s ease 0.08s;
+
+  ${MuseNavCard}:hover &,
+  ${MuseNavCard}:focus-visible & {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: opacity 0.35s ease;
+    transform: none;
+  }
+`;
+
+export const MuseNavCardEyebrow = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+`;
+
+export const MuseNavCardKbd = styled.kbd`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding-inline: 3px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  font-family: inherit;
+  font-size: 0.6rem;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.7);
+`;
+
+export const MuseNavCardName = styled.span`
+  max-width: 100%;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 export const CardExpandedWrapper = styled.div`
@@ -259,6 +663,10 @@ export const CardExpandedWrapper = styled.div`
 
   container-name: muse-card;
   container-type: size;
+
+  &:hover .card-bg-remove {
+    opacity: 1;
+  }
 
   @media (min-width: 1024px) and (max-width: 2047px) {
     margin-top: 20px;
@@ -276,6 +684,12 @@ export const CardExpandedWrapper = styled.div`
       border-radius: 0px;
       display: none;
     }
+  }
+
+  /* Slim phones (down to iPhone SE, 375px): same 9/16 ratio, smaller card so
+     the 36px edge nav tabs on both sides never overlap it */
+  @media (min-width: 350px) and (max-width: 420px) {
+    width: min(288px, calc(100vw - 88px));
   }
 
   @media (max-width: 350px) {
@@ -306,159 +720,402 @@ export const Title = styled.div`
 `;
 
 export const NoteContainer = styled.div`
-  display: flex;
-  margin-bottom: 10px;
-  margin-top: 10px;
-  align-items: center;
-  justify-content: center;
-  border-radius: ${BORDER_RADIUS};
-
-  ${BACKGROUND_BLUR()}
-
-  padding: 10px 20px 20px;
-`;
-
-export const MenuText = styled.div`
-  opacity: 1;
-  margin-top: 5px;
-  font-size: var(--font-size);
-  font-weight: var(--font-weight-semi-bold);
-
-  @container (max-height: 100px) {
-    display: none;
-    margin-top: 0px;
-  }
-`;
-
-export const SideMenu = styled.div`
   position: relative;
-  width: 100px;
-  height: 580px;
-  border-radius: var(--border-radius);
-  transition: all 0.3s ease-in-out;
-  contain: paint;
-  z-index: ${Z_INDEX.CARD};
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  align-self: center;
-  gap: 0.8rem;
+  margin-bottom: 10px;
+  margin-top: 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 22px 18px 16px 22px;
+  overflow: visible;
 
-  container-name: side-menu;
-  container-type: size;
-
-  /* @container (min-width: 2559px) {
-    margin-top: 40px;
-    width: 150px;
-    height: 1160px;
+  /* Decorative large opening quote */
+  &::before {
+    content: '"';
+    position: absolute;
+    top: -2px;
+    left: 10px;
+    font-size: 4.5rem;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: normal;
+    color: rgba(255, 255, 255, 0.08);
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
   }
 
-  @container (min-width: 2047px) and (max-width: 2559px) {
-    margin-top: 40px;
+  /* Decorative closing quote */
+  &::after {
+    content: '"';
+    position: absolute;
+    bottom: 2px;
+    right: 10px;
+    font-size: 3rem;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: normal;
+    color: rgba(255, 255, 255, 0.05);
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
 
-    width: 140px;
-    height: 870px;
-  } */
+  /* Reveal action buttons on hover (desktop) */
+  &:hover .note-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+`;
+
+export const NoteQuote = styled.p`
+  margin: 0;
+  font-size: 0.8rem;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.7;
+  letter-spacing: 0.018em;
+  word-break: break-word;
+  text-align: left;
+  position: relative;
+  z-index: 1;
+`;
+
+export const NoteControlRow = styled.div`
+  position: absolute;
+  top: -12px;
+  right: -10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+
+  &.always-visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  @media (hover: none) {
+    opacity: 1;
+    pointer-events: auto;
+  }
+`;
+
+export const NoteControlBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(18, 18, 18, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: background 0.14s, color 0.14s, border-color 0.14s;
+  &:hover {
+    background: rgba(50, 50, 50, 0.95);
+    color: rgba(255, 255, 255, 0.9);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+  &.danger:hover {
+    background: rgba(140, 20, 20, 0.6);
+    color: rgba(255, 160, 160, 0.95);
+    border-color: rgba(200, 50, 50, 0.4);
+  }
+  &.success {
+    color: rgba(80, 200, 120, 0.85);
+    border-color: rgba(60, 160, 100, 0.28);
+  }
+  &.success:hover {
+    background: rgba(20, 100, 50, 0.55);
+    color: rgba(160, 255, 190, 0.95);
+    border-color: rgba(50, 180, 100, 0.5);
+  }
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+`;
+
+export const NoteAddBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  margin-top: 8px;
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.75);
+    background: rgba(255, 255, 255, 0.05);
+  }
+`;
+
+export const NoteEditWrap = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+`;
+
+export const NoteCharCount = styled.span<{ $near: boolean; $atLimit: boolean }>`
+  align-self: flex-end;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  color: ${({ $atLimit, $near }) =>
+    $atLimit
+      ? "rgba(220, 60, 60, 0.9)"
+      : $near
+        ? "rgba(220, 160, 40, 0.85)"
+        : "rgba(255, 255, 255, 0.28)"};
+  transition: color 0.15s;
+`;
+
+export const NoteEditTextarea = styled.textarea`
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 6px 4px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.8rem;
+  font-style: italic;
+  font-family: var(--font);
+  line-height: 1.7;
+  letter-spacing: 0.018em;
+  resize: none;
+  overflow: hidden;
+  display: block;
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.28);
+    font-style: italic;
+  }
+  @media (hover: none) {
+    font-size: var(--font-size-input);
+  }
+`;
+
+export const NoteEditBtnRow = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+`;
+
+export const NoteEditCancelBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.85);
+  }
+`;
+
+export const NoteEditSaveBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  padding: 5px 14px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: background 0.12s;
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+`;
+
+/* ── Section navigation rail ─────────────────────────────────────────────────
+   Same glass design language as the prev/next peek cards: one docked rail,
+   accent-aware selected pill with an indicator bar. Vertical column beside
+   the card on desktop, horizontal pill bar below the content on mobile. */
+
+export const SideMenu = styled.nav`
+  position: relative;
+  z-index: ${Z_INDEX.CARD};
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  height: max-content;
+  padding: 10px 8px;
+  margin-left: 14px;
+  border-radius: 18px;
+  background: rgba(10, 10, 14, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
 
   @media (min-width: 1024px) and (max-width: 2047px) {
     margin-top: 20px;
-    width: 100px;
-    height: 725px;
-  } 
-
-  @media (min-width: 600px) and (max-width: 1024px) {
-    margin-top: unset;
-    width: 100px;
-    height: 540px;
-  } 
+  }
 
   @media (max-width: 600px) {
-    justify-content: center;
-    align-items: center;
-    margin-top: 10px;
     flex-direction: row;
-    width: 100%;
-    max-width: 400px;
-    height: 60px;
+    align-items: center;
     margin-left: unset;
-    padding-bottom: 8px;
-    gap: 0.3rem; /* reduced gap between MenuButton items on mobile */
+    margin-top: 12px;
+    width: max-content;
+    max-width: calc(100% - 16px);
+    /* Concentric radii: parent radius ≈ item radius (10px) + padding (8px),
+       so the selected/hover pill sits evenly inset inside the bar */
+    padding: 8px;
+    gap: 4px;
+    border-radius: 18px;
   }
 `;
 
-export const MenuButton = styled.div`
+export const MenuButton = styled.button<{ $accent?: string | null }>`
+  all: unset;
+  box-sizing: border-box;
   position: relative;
   display: flex;
   flex-direction: column;
-  width: 50px;
-  height: 70px;
-  transition: all 0.3s ease-in-out;
-  z-index: ${Z_INDEX.CARD};
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 64px;
+  padding: 10px 6px 8px;
+  border-radius: 12px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.6);
+  transition: background 0.25s ease, color 0.25s ease;
 
-  &.stick-top {
+  /* Accent indicator bar: hugs the rail's inner-left edge on desktop,
+     the bottom edge on mobile */
+  &::before {
+    content: "";
     position: absolute;
-    top: 0px;
+    left: -8px;
+    top: 50%;
+    width: 3px;
+    height: 55%;
+    border-radius: 999px;
+    background: ${({ $accent }) =>
+      $accent && $accent.trim() !== ""
+        ? `color-mix(in srgb, ${$accent} 80%, white)`
+        : "var(--accent)"};
+    transform: translateY(-50%) scaleY(0);
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  @container (max-width: 400px) and (max-height: 100px) {
-    justify-content: normal;
-    width: 50px;
-    height: 40px;
+  &:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: rgba(255, 255, 255, 0.92);
+  }
 
-    &.stick-top {
-      position: relative;
+  &.selected {
+    color: #fff;
+    background: ${({ $accent }) =>
+      $accent && $accent.trim() !== ""
+        ? `color-mix(in srgb, ${$accent} 26%, rgba(255, 255, 255, 0.04))`
+        : "color-mix(in srgb, var(--accent) 40%, transparent)"};
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      ${({ $accent }) =>
+        $accent && $accent.trim() !== ""
+          ? `0 0 14px color-mix(in srgb, ${$accent} 25%, transparent)`
+          : "0 0 12px color-mix(in srgb, var(--accent) 30%, transparent)"};
+
+    &::before {
+      transform: translateY(-50%) scaleY(1);
+    }
+  }
+
+  /* CARD section only exists on screens where the main card is hidden */
+  &.card-image-mobile-only {
+    display: none;
+
+    @media (max-width: 950px) {
+      display: flex;
+    }
+  }
+
+  @media (max-width: 600px) {
+    width: auto;
+    flex: 1;
+    padding: 8px 10px 6px;
+    border-radius: 10px;
+
+    &::before {
+      left: 50%;
+      top: auto;
+      bottom: -8px;
+      width: 55%;
+      height: 3px;
+      transform: translateX(-50%) scaleX(0);
+    }
+
+    &.selected::before {
+      transform: translateX(-50%) scaleX(1);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &::before {
+      transition: none;
     }
   }
 `;
 
-export const MenuButtonIcon = styled.div<{
-  accent?: string | null;
-}>`
-  position: relative;
+export const MenuButtonIcon = styled.span`
   display: flex;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  transition: all 0.3s ease-in-out;
-  contain: paint;
-  z-index: ${Z_INDEX.CARD};
-  background-color: ${({ accent }) =>
-    accent && accent.trim() !== ""
-      ? `color-mix(in srgb, ${accent} 10%, var(--bg-2) 90%)`
-      : "var(--bg-2)"};
-
-  cursor: pointer;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 
-  ${CARD_BORDER};
-
-  @container (min-height: 100px) {
-  &:hover {
-      scale: 1.1;
-      background-color: ${({ accent }) =>
-        accent && accent.trim() !== ""
-          ? `color-mix(in srgb, ${accent} 70%, black)` // ~30% darker
-          : "var(--accent)"};
-
-    }
+  ${MenuButton}:hover &,
+  ${MenuButton}.selected & {
+    transform: scale(1.12);
   }
 
-  @container (max-width: 400px) and (max-height: 100px) {
-    width: 40px;
-    height: 40px;
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
   }
+`;
 
-  &.selected {
-    scale: 1.1;
-    background-color: ${({ accent }) =>
-      accent && accent.trim() !== ""
-        ? `color-mix(in srgb, ${accent} 70%, black)` // ~30% darker
-        : "var(--accent)"};
+export const MenuText = styled.span`
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
 
+  @media (max-width: 600px) {
+    font-size: 0.5rem;
+    letter-spacing: 0.1em;
   }
 `;
 
@@ -763,75 +1420,228 @@ export const Avatar = styled(AvatarCommon)`
   }
 `;
 
-export const PromptVideo = styled.video`
+/* ── Prompts (interactions) list ─────────────────────────────────────────────
+   Glass cards in the same design language as the nav rail/cards: hairline
+   border, accent-aware tint, fluid width so they scale from the desktop card
+   down to the slim-phone (iPhone SE) card size. */
+
+export const PromptList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   width: 100%;
-  height: 100%;
+  padding-block: 2px 8px;
+`;
+
+export const PromptCard = styled.article<{ $accent?: string | null }>`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  background: ${({ $accent }) =>
+    $accent && $accent.trim() !== ""
+      ? `color-mix(in srgb, ${$accent} 10%, rgba(0, 0, 0, 0.35))`
+      : "rgba(255, 255, 255, 0.06)"};
+  border: 1px solid
+    ${({ $accent }) =>
+      $accent && $accent.trim() !== ""
+        ? `color-mix(in srgb, ${$accent} 26%, transparent)`
+        : "rgba(255, 255, 255, 0.12)"};
+  backdrop-filter: blur(6px);
+  transition: border-color 0.25s ease;
+
+  &:hover {
+    border-color: ${({ $accent }) =>
+      $accent && $accent.trim() !== ""
+        ? `color-mix(in srgb, ${$accent} 45%, transparent)`
+        : "rgba(255, 255, 255, 0.24)"};
+  }
+`;
+
+export const PromptCardDate = styled.span<{ $accent?: string | null }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+
+  &::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: ${({ $accent }) =>
+      $accent && $accent.trim() !== ""
+        ? `color-mix(in srgb, ${$accent} 80%, white)`
+        : "var(--accent)"};
+  }
+`;
+
+export const PromptCardTopRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+`;
+
+/* Privacy pill in the card's top-right corner. For CUSTOM privacy it becomes
+   an interactive chip holding the shared-with avatar stack; otherwise it's a
+   static icon + label. */
+export const PromptPrivacyChip = styled.button<{
+  $accent?: string | null;
+  $interactive?: boolean;
+}>`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  max-width: 62%;
+  flex-shrink: 0;
+  cursor: ${({ $interactive }) => ($interactive ? "pointer" : "default")};
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+
+  .privacy-icon {
+    font-size: 0.72rem;
+    flex-shrink: 0;
+  }
+
+  .shared-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  ${({ $interactive, $accent }) =>
+    $interactive &&
+    css`
+      &:hover {
+        color: rgba(255, 255, 255, 0.85);
+        background: ${$accent && $accent.trim() !== ""
+          ? `color-mix(in srgb, ${$accent} 30%, rgba(0, 0, 0, 0.3))`
+          : "color-mix(in srgb, var(--accent) 40%, transparent)"};
+        border-color: ${$accent && $accent.trim() !== ""
+          ? `color-mix(in srgb, ${$accent} 55%, transparent)`
+          : "rgba(255, 255, 255, 0.32)"};
+      }
+    `}
+`;
+
+export const PromptSharedAvatars = styled.span`
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+
+  .shared-avatar {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(15, 15, 15, 0.9);
+
+    &:not(:first-child) {
+      margin-left: -7px;
+    }
+  }
+`;
+
+/* Media hugs the image/video's own aspect ratio — never cropped; very tall
+   media is scaled down to fit the max-height, letterboxed on the dark bg */
+export const PromptCardMedia = styled.div`
+  position: relative;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.35);
+  line-height: 0;
+`;
+
+export const PromptCardImage = styled.img`
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 360px;
+  object-fit: contain;
+  cursor: zoom-in;
+  transition: transform 0.25s ease;
+
+  ${PromptCardMedia}:hover & {
+    transform: scale(1.02);
+  }
+`;
+
+export const PromptCardVideo = styled.video`
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 360px;
   object-fit: contain;
 `;
 
-export const StyledDate = styled.div`
-  font-size: 10px;
-  font-weight: 300;
+export const PromptCardFooter = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
 `;
 
-export const PromptMedia = styled.div`
-  position: relative;
-  width: 300px;
-  height: 300px;
-  border-radius: 8px;
-  ${CARD_BORDER};
-
-  transition: all 0.3s ease-in-out;
-  contain: paint;
-  z-index: ${Z_INDEX.CARD};
-
-  container-name: card;
-  container-type: size;
-
-  @container (max-width: 400px) {
-    & {
-      width: 200px;
-      height: 200px;
-    }
-  }
+export const PromptCommentsBtn = styled.button<{ $accent?: string | null }>`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 
   &:hover {
-    & ${CardBackground} {
-      scale: 1.03;
-    }
+    background: ${({ $accent }) =>
+      $accent && $accent.trim() !== ""
+        ? `color-mix(in srgb, ${$accent} 30%, rgba(0, 0, 0, 0.3))`
+        : "color-mix(in srgb, var(--accent) 40%, transparent)"};
+    border-color: ${({ $accent }) =>
+      $accent && $accent.trim() !== ""
+        ? `color-mix(in srgb, ${$accent} 55%, transparent)`
+        : "rgba(255, 255, 255, 0.32)"};
+    color: #fff;
   }
 `;
 
-export const FooterContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
+export const PromptCardStat = styled.span`
+  display: inline-flex;
   align-items: center;
-  width: 100%;
-  border-bottom: 1px solid slategray;
-  gap: 0.2em;
-  padding-bottom: 10px;
-  margin-bottom: 20px;
-  padding-inline: 20px;
-
-  @container content-container (max-width: 1000px) {
-    margin-bottom: 10px;
-  }
-
-  @container content-container (max-width: 400px) {
-    padding-inline: 5px;
-    margin-bottom: 5px;
-  }
-`;
-
-export const PromptFooterText = styled.div`
-  text-transform: uppercase;
-  font-size: 10px;
-  font-weight: 400;
-  max-width: 80%;
-  font-style: italic;
-  text-align: center;
-  cursor: pointer;
+  gap: 4px;
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
 `;
 
 export const AboutSectionImage = styled.img`
@@ -894,6 +1704,89 @@ export const InfoCardAvatar = styled.div<{ $src: string }>`
   @media (max-width: 600px) {
     width: 72px;
     height: 72px;
+  }
+`;
+
+export const AvatarWrapper = styled.div`
+  position: relative;
+  width: 82px;
+  height: 82px;
+  flex-shrink: 0;
+
+  &:hover .avatar-remove {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  @media (max-width: 600px) {
+    width: 72px;
+    height: 72px;
+  }
+`;
+
+export const AvatarEditBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(14, 14, 14, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  backdrop-filter: blur(4px);
+  transition: background 0.14s, color 0.14s, border-color 0.14s;
+  &:hover {
+    background: rgba(50, 50, 50, 0.96);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.38);
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+`;
+
+export const AvatarRemoveBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(14, 14, 14, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.75rem;
+  line-height: 1;
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s, background 0.12s, color 0.12s, border-color 0.12s;
+  backdrop-filter: blur(4px);
+
+  &:hover {
+    background: rgba(140, 20, 20, 0.72);
+    color: rgba(255, 160, 160, 0.95);
+    border-color: rgba(200, 50, 50, 0.45);
+  }
+
+  @media (hover: none) {
+    opacity: 1;
+    pointer-events: auto;
   }
 `;
 
@@ -1025,12 +1918,511 @@ export const InfoAttributeValue = styled.span`
   word-break: break-word;
 `;
 
+export const InfoAttrLabelRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 10px;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.38);
+  font-weight: 700;
+`;
+
+export const InfoAttrAddBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.68rem;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.9);
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+`;
+
+export const InfoAttrCardWrap = styled.div<{ accent?: string | null }>`
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background-color: ${({ accent }) =>
+    accent && accent.trim() !== ""
+      ? `color-mix(in srgb, ${accent} 12%, rgba(0,0,0,0.35))`
+      : "rgba(255,255,255,0.07)"};
+  border: 1px solid
+    ${({ accent }) =>
+      accent && accent.trim() !== ""
+        ? `color-mix(in srgb, ${accent} 30%, transparent)`
+        : "rgba(255,255,255,0.12)"};
+  backdrop-filter: blur(4px);
+  overflow: hidden;
+  .attr-actions {
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  &:hover .attr-actions {
+    opacity: 1;
+  }
+  @media (hover: none) {
+    .attr-actions {
+      opacity: 1;
+    }
+  }
+`;
+
+export const InfoAttrCardActions = styled.div`
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  display: flex;
+  gap: 2px;
+`;
+
+export const InfoAttrIconBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.4);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  &:hover {
+    background: rgba(0, 0, 0, 0.65);
+    color: #fff;
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+`;
+
+export const InfoAttrForm = styled.div`
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+`;
+
+export const InfoAttrInputRow = styled.div`
+  display: flex;
+  gap: 6px;
+`;
+
+export const InfoAttrInput = styled.input`
+  all: unset;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+  padding: 5px 8px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.78rem;
+  width: 100%;
+  transition: border-color 0.15s;
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+  }
+  &:focus {
+    border-color: rgba(255, 255, 255, 0.4);
+    outline: none;
+  }
+  @media (hover: none) {
+    font-size: var(--font-size-input);
+  }
+`;
+
+export const InfoAttrBtnRow = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+`;
+
+export const InfoAttrSaveBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  padding: 4px 12px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  &:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+`;
+
+export const InfoAttrCancelBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  padding: 4px 10px;
+  border-radius: 5px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: color 0.15s;
+  &:hover {
+    color: rgba(255, 255, 255, 0.8);
+  }
+`;
+
 export const InfoTagsSection = styled.div`
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
   width: 100%;
   padding-top: 4px;
+`;
+
+/* ── Fandom inline picker ────────────────────────────────────────────────── */
+
+export const InfoFandomSearchWrap = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  animation: fandomFadeIn 0.2s ease;
+  @keyframes fandomFadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+`;
+
+export const InfoFandomSearchIcon = styled.span`
+  position: absolute;
+  left: 11px;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  color: var(--text-secondary);
+`;
+
+export const InfoFandomInput = styled.input`
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 8px 38px 8px 34px;
+  background: var(--bg-3);
+  border: 1px solid var(--bg-6);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: var(--font-size-input);
+  font-family: var(--font);
+  transition: border-color 0.2s ease;
+  &::placeholder {
+    color: var(--text-secondary);
+  }
+  &:focus {
+    border-color: var(--accent);
+    outline: none;
+  }
+  &::-webkit-search-cancel-button,
+  &::-webkit-search-decoration {
+    appearance: none;
+  }
+`;
+
+export const InfoFandomCancelBtn = styled.button`
+  all: unset;
+  position: absolute;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 1.3rem;
+  line-height: 1;
+  transition: color 0.15s;
+  &:hover {
+    color: var(--text);
+  }
+`;
+
+export const InfoFandomDropdown = styled.div`
+  background: rgba(18, 18, 18, 0.97);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  overflow: hidden;
+  max-height: 180px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+`;
+
+export const InfoFandomOption = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+  transition: background 0.1s;
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+`;
+
+/* ── Nickname owner pills ─────────────────────────────────────────────────── */
+
+/* Defined first so InfoNicknameOwnerPill can reference it via interpolation */
+export const InfoNicknameDeleteBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  max-width: 0;
+  opacity: 0;
+  height: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.56rem;
+  cursor: pointer;
+  transition: max-width 0.18s ease, opacity 0.18s ease, color 0.12s;
+  &:hover {
+    color: rgba(220, 38, 38, 0.9);
+  }
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+`;
+
+export const InfoNicknameDeleteTrash = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  @media (hover: none) {
+    display: none;
+  }
+`;
+
+export const InfoNicknameDeleteCross = styled.span`
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: rgba(220, 38, 38, 0.85);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+  @media (hover: none) {
+    display: inline-flex;
+  }
+`;
+
+export const InfoNicknameOwnerPill = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px 2px 10px;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 0.68rem;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.75);
+  letter-spacing: 0.03em;
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+  user-select: none;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.32);
+  }
+
+  /* Reveal delete button smoothly on hover (desktop) */
+  &:hover ${InfoNicknameDeleteBtn} {
+    max-width: 14px;
+    opacity: 1;
+  }
+
+  /* On mobile: delete always visible, no hover needed */
+  @media (hover: none) {
+    padding-right: 4px;
+
+    ${InfoNicknameDeleteBtn} {
+      max-width: 14px;
+      opacity: 1;
+    }
+  }
+`;
+
+export const InfoNicknameIconBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.5);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.58rem;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  &:hover {
+    background: rgba(0, 0, 0, 0.75);
+    color: #fff;
+  }
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+`;
+
+export const InfoNicknameEditWrap = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+`;
+
+export const InfoNicknameInput = styled.input`
+  all: unset;
+  box-sizing: border-box;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.68rem;
+  width: 88px;
+  transition: border-color 0.15s;
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.38);
+  }
+  &:focus {
+    border-color: rgba(255, 255, 255, 0.5);
+    outline: none;
+  }
+  @media (hover: none) {
+    font-size: var(--font-size-input);
+  }
+`;
+
+export const InfoNicknameAddBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.68rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.48);
+    color: rgba(255, 255, 255, 0.8);
+  }
+`;
+
+/* ── Privacy dropdown ─────────────────────────────────────────────────────── */
+
+export const InfoPrivacyDropdownWrap = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+`;
+
+export const InfoPrivacyBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.15s;
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+`;
+
+export const InfoPrivacyDropdown = styled.div`
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  background: rgba(18, 18, 18, 0.97);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 150px;
+`;
+
+export const InfoPrivacyOption = styled.button<{ $active?: boolean }>`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 0.75rem;
+  font-weight: ${({ $active }) => ($active ? "600" : "400")};
+  color: ${({ $active }) =>
+    $active ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.62)"};
+  background: ${({ $active }) =>
+    $active ? "rgba(255,255,255,0.07)" : "transparent"};
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.95);
+  }
 `;
 
 /* ── Gallery ─────────────────────────────────────────────────────────────── */
@@ -1053,11 +2445,18 @@ export const GalleryItem = styled.div`
   cursor: zoom-in;
 `;
 
-export const GalleryBadge = styled.span`
+export const GalleryBadgeRow = styled.div`
   position: absolute;
   bottom: 5px;
   left: 5px;
   z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  pointer-events: none;
+`;
+
+export const GalleryBadge = styled.span`
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 0.62rem;
@@ -1254,6 +2653,19 @@ export const ShimmerGrid = styled.div`
   width: 100%;
 `;
 
+export const ShimmerCircle = styled(ShimmerBase)<{ $size?: string }>`
+  width: ${({ $size }) => $size ?? "40px"};
+  height: ${({ $size }) => $size ?? "40px"};
+  border-radius: 50%;
+  flex-shrink: 0;
+`;
+
+export const CardBackgroundShimmer = styled(ShimmerBase)`
+  position: absolute;
+  inset: 0;
+  border-radius: 0;
+`;
+
 export const MoreMenuList = styled.div`
   display: flex;
   flex-direction: column;
@@ -1439,5 +2851,81 @@ export const InfoRankBadge = styled.span`
     box-shadow:
       0 0 16px rgba(251, 191, 36, 0.28),
       inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+`;
+
+export const AvatarCropBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 12px;
+
+  @media (max-width: 480px) {
+    padding: 4px 2px;
+  }
+`;
+
+export const CardBgCropBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+export const CardBgEditBtn = styled.button`
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  z-index: 10;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.78);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+export const CardBgRemoveBtn = styled.button`
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: background 0.15s, opacity 0.15s;
+
+  &:hover {
+    background: rgba(180, 30, 30, 0.75);
+  }
+
+  @media (hover: none) {
+    opacity: 1;
   }
 `;

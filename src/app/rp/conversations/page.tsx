@@ -1,9 +1,12 @@
 "use client";
 
+import classNames from "classnames";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BiSupport } from "react-icons/bi";
-import { MdGroupAdd } from "react-icons/md";
+import { HiOutlineSparkles } from "react-icons/hi2";
+import { MdAdd, MdGroupAdd } from "react-icons/md";
 import { BreadCrumb } from "@/components/breadcrumb";
+import { AvatarNew } from "@/components/common/avatar-new";
 import { ConversationCard } from "@/components/conversation-card";
 import { LoadMore } from "@/components/load-more/page";
 import { useSocket } from "@/context/socket";
@@ -11,16 +14,23 @@ import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { Conversation } from "@/types";
+import type { Conversation, IceBreaker } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { ConversationPanel } from "./[conversationId]/conversation-panel";
 import {
   getConversationByUsernameAction,
   getConversationsAction,
   getGroupCountAction,
+  getIceBreakersAction,
 } from "./actions";
 import { CreateGroupDialog } from "./create-group-dialog";
+import { CreateIceBreakerDialog } from "./create-ice-breaker-dialog";
+import {
+  getSourceRingAccent,
+  truncateIceBreakerMessage,
+} from "./ice-breaker-helpers";
 import * as S from "./styles";
+import { ViewIceBreakerDialog } from "./view-ice-breaker-dialog";
 
 const ConversationCardShimmer = () => (
   <S.ShimmerItem>
@@ -35,6 +45,16 @@ const ConversationCardShimmer = () => (
       </S.ShimmerExtras>
     </S.ShimmerContent>
   </S.ShimmerItem>
+);
+
+const IceBreakerCardShimmer = () => (
+  <S.IceBreakerCard>
+    <S.IceBreakerAvatarStack>
+      <S.IceBreakerCardShimmerBubble />
+      <S.IceBreakerCardShimmerAvatar />
+    </S.IceBreakerAvatarStack>
+    <S.IceBreakerCardShimmerName />
+  </S.IceBreakerCard>
 );
 
 const PAGE_SIZE = 15;
@@ -124,6 +144,11 @@ export default function ConversationsPage() {
   const [contactSupportLoading, setContactSupportLoading] = useState(false);
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
   const [checkingGroupLimit, setCheckingGroupLimit] = useState(false);
+  const [iceBreakers, setIceBreakers] = useState<IceBreaker[]>([]);
+  const [iceBreakersLoading, setIceBreakersLoading] = useState(true);
+  const [createIceBreakerOpen, setCreateIceBreakerOpen] = useState(false);
+  const [viewIceBreaker, setViewIceBreaker] = useState<IceBreaker | null>(null);
+  const [viewIceBreakerOpen, setViewIceBreakerOpen] = useState(false);
   // Capture direction on mount so we can animate even after clearing it
   const slideIn = useRef(conversationNavDirection === "back").current;
 
@@ -182,6 +207,31 @@ export default function ConversationsPage() {
       fetchConversations(1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      const result = await getIceBreakersAction();
+      if (result && Array.isArray(result)) {
+        setIceBreakers(result);
+      }
+      setIceBreakersLoading(false);
+    })();
+  }, []);
+
+  const handleIceBreakerCreated = useCallback((iceBreaker: IceBreaker) => {
+    setIceBreakers((prev) => [iceBreaker, ...prev]);
+  }, []);
+
+  const handleOpenIceBreaker = useCallback((iceBreaker: IceBreaker) => {
+    setViewIceBreaker(iceBreaker);
+    setViewIceBreakerOpen(true);
+  }, []);
+
+  const handleIceBreakerDeleted = useCallback((iceBreaker: IceBreaker) => {
+    setIceBreakers((prev) =>
+      prev.filter((ib) => ib.sourceId !== iceBreaker.sourceId),
+    );
   }, []);
 
   // Re-check the live group count against the user's tier limit before
@@ -299,6 +349,66 @@ export default function ConversationsPage() {
             </S.SupportButton>
           </S.BreadcrumbActions>
         </S.BreadcrumbRow>
+        <S.IceBreakerRail>
+          <S.IceBreakerAddButton
+            type="button"
+            onClick={() => setCreateIceBreakerOpen(true)}
+            aria-label="Add ice breaker"
+            title="Share what's on your mind"
+          >
+            <span className="icon">
+              <HiOutlineSparkles size={20} />
+              <span className="plus-badge">
+                <MdAdd size={14} />
+              </span>
+            </span>
+            <span>Add</span>
+          </S.IceBreakerAddButton>
+
+          {iceBreakersLoading &&
+            Array.from({ length: 5 }, (_, i) => (
+              <IceBreakerCardShimmer key={i} />
+            ))}
+
+          {!iceBreakersLoading && iceBreakers.length === 0 && (
+            <S.IceBreakerEmptyState>
+              <HiOutlineSparkles size={20} />
+              <span>Silence is icy. Click the button to break the ice.</span>
+            </S.IceBreakerEmptyState>
+          )}
+
+          {iceBreakers.map((iceBreaker) => {
+            const ringAccent = getSourceRingAccent(iceBreaker.source);
+            return (
+              <S.IceBreakerCard
+                key={iceBreaker.sourceId}
+                onClick={() => handleOpenIceBreaker(iceBreaker)}
+              >
+                <S.IceBreakerAvatarStack>
+                  <S.IceBreakerBubble
+                    $color={iceBreaker.color}
+                    title={iceBreaker.message}
+                  >
+                    {truncateIceBreakerMessage(iceBreaker.message)}
+                  </S.IceBreakerBubble>
+                  <S.IceBreakerAvatarRing
+                    className={classNames(ringAccent.className)}
+                    $ringColor={ringAccent.color}
+                  >
+                    <AvatarNew
+                      src={iceBreaker.source.image ?? null}
+                      alt={iceBreaker.source.name}
+                      nwImage={iceBreaker.source.avatar}
+                    />
+                  </S.IceBreakerAvatarRing>
+                </S.IceBreakerAvatarStack>
+                <S.IceBreakerSenderName>
+                  {iceBreaker.source.name.split(" ")[0]}
+                </S.IceBreakerSenderName>
+              </S.IceBreakerCard>
+            );
+          })}
+        </S.IceBreakerRail>
         <S.ConversationListContainer>
           <S.ConversationListRoot>
             {isLoading ? (
@@ -470,6 +580,21 @@ export default function ConversationsPage() {
         groupCount={groupCount ?? 0}
         groupLimit={novelist?.tier?.groupLimit ?? 0}
         onCreated={handleGroupCreated}
+      />
+
+      <CreateIceBreakerDialog
+        open={createIceBreakerOpen}
+        onOpenChange={setCreateIceBreakerOpen}
+        novelist={novelist}
+        onCreated={handleIceBreakerCreated}
+      />
+
+      <ViewIceBreakerDialog
+        open={viewIceBreakerOpen}
+        onOpenChange={setViewIceBreakerOpen}
+        iceBreaker={viewIceBreaker}
+        novelist={novelist}
+        onDeleted={handleIceBreakerDeleted}
       />
     </>
   );

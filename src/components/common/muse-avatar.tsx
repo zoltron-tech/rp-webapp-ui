@@ -11,6 +11,8 @@ type MuseAvatarProps = {
   /** When provided (with valid crop data), renders using background-image
    *  positioning. Falls back to `image` when null/absent. */
   avatar?: NWImage | null;
+  useAccent?: boolean;
+  accent?: string | null;
 };
 
 export const MuseAvatar: FC<MuseAvatarProps> = ({
@@ -18,6 +20,8 @@ export const MuseAvatar: FC<MuseAvatarProps> = ({
   image,
   name,
   avatar,
+  useAccent,
+  accent,
 }) => {
   const { routeToPage } = usePageRouter();
 
@@ -29,9 +33,11 @@ export const MuseAvatar: FC<MuseAvatarProps> = ({
     [museId, routeToPage],
   );
 
+  const accentColor = useAccent && accent ? accent : null;
+
   return (
     <a onClick={handleClick} href={ROUTES.Muse.View(museId)}>
-      <AvatarNew src={image} alt={name} nwImage={avatar} />
+      <AvatarNew src={image} alt={name} nwImage={avatar} accentColor={accentColor} />
     </a>
   );
 };

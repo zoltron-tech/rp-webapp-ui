@@ -44,14 +44,17 @@ export const AppAlertDialog = ({
     <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
       <AlertDialog.Portal>
         <S.Overlay />
-        <S.Content className={classNames([accent, theme])}>
+        <S.Content
+          className={classNames([accent, theme])}
+          onOpenAutoFocus={(e) => {
+            if (typeof window !== "undefined" && window.matchMedia("(hover: none)").matches) {
+              e.preventDefault();
+            }
+          }}
+        >
           <S.Title>{heading}</S.Title>
 
-          {body ? (
-            <div style={{ marginTop: "4px" }}>{body}</div>
-          ) : (
-            <S.Description>{text}</S.Description>
-          )}
+          {body ? <S.Body>{body}</S.Body> : <S.Description>{text}</S.Description>}
 
           <S.Actions>
             {!isCancelHidden && (

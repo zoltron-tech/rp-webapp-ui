@@ -26,9 +26,9 @@ export default function EditProfilePage() {
   useEffect(() => {
     if (!novelist?.id) return;
     void getNovelistRankByIdAction(novelist.id).then((result) => {
-      if (!("message" in result)) {
-        setGlobalState({ novelistRank: result.rank });
-      }
+      setGlobalState({
+        novelistRank: "message" in result ? undefined : result.rank,
+      });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [novelist?.id]);

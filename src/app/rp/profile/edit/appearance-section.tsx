@@ -101,13 +101,6 @@ export function AppearanceSection({ onBack }: Props) {
   const [cropY, setCropY] = useState(0);
   const [cropScale, setCropScale] = useState(1);
   const cropViewportRef = useRef<HTMLDivElement>(null);
-  const cropDragStart = useRef<{
-    px: number;
-    py: number;
-    bx: number;
-    by: number;
-  } | null>(null);
-  const lastPinchDist = useRef<number | null>(null);
 
   // Banner crop dialog state
   const [bannerCropDialogOpen, setBannerCropDialogOpen] = useState(false);
@@ -116,13 +109,6 @@ export function AppearanceSection({ onBack }: Props) {
   const [bannerCropY, setBannerCropY] = useState(50);
   const [bannerCropScale, setBannerCropScale] = useState(1);
   const bannerViewportRef = useRef<HTMLDivElement>(null);
-  const bannerDragStart = useRef<{
-    px: number;
-    py: number;
-    bx: number;
-    by: number;
-  } | null>(null);
-  const lastBannerPinchDist = useRef<number | null>(null);
   const [tempUploadedBanner, setTempUploadedBanner] = useState<string | null>(null);
   const bannerFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -252,58 +238,11 @@ export function AppearanceSection({ onBack }: Props) {
     setCropDialogOpen(true);
   };
 
-  const handleCropPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.isPrimary === false) return;
-    e.currentTarget.setPointerCapture(e.pointerId);
-    cropDragStart.current = {
-      bx: cropX,
-      by: cropY,
-      px: e.clientX,
-      py: e.clientY,
-    };
-  };
-
-  const handleCropPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!cropDragStart.current || !cropViewportRef.current) return;
-    const rect = cropViewportRef.current.getBoundingClientRect();
-    // Convert px drag → background-position percentage. Dragging right reveals
-    // the left of the image, so the position percentage decreases.
-    const dx = ((e.clientX - cropDragStart.current.px) / rect.width) * 100;
-    const dy = ((e.clientY - cropDragStart.current.py) / rect.height) * 100;
-    setCropX(clamp(cropDragStart.current.bx - dx, 0, 100));
-    setCropY(clamp(cropDragStart.current.by - dy, 0, 100));
-  };
-
-  const handleCropPointerUp = () => {
-    cropDragStart.current = null;
-  };
-
-  const handleCropWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const delta = e.deltaY < 0 ? 0.05 : -0.05;
-    setCropScale((prev) => clamp(prev + delta, 1, 3));
-  };
-
-  const handleCropTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 2) {
-      lastPinchDist.current = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY,
-      );
-    }
-  };
-
-  const handleCropTouchMove = (e: React.TouchEvent) => {
-    if (e.touches.length === 2 && lastPinchDist.current !== null) {
-      e.preventDefault();
-      const dist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY,
-      );
-      const delta = (dist - lastPinchDist.current) * 0.01;
-      lastPinchDist.current = dist;
-      setCropScale((prev) => clamp(prev + delta, 1, 3));
-    }
+  // Dragging is handled imperatively inside AvatarCropDialog; it commits the
+  // final position here once the gesture settles.
+  const handleCropPan = (nx: number, ny: number) => {
+    setCropX(clamp(nx, 0, 100));
+    setCropY(clamp(ny, 0, 100));
   };
 
   const handleCropScaleChange = (v: number) => {
@@ -403,56 +342,11 @@ export function AppearanceSection({ onBack }: Props) {
     setBannerCropDialogOpen(true);
   }, [banner]);
 
-  const handleBannerPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.isPrimary === false) return;
-    e.currentTarget.setPointerCapture(e.pointerId);
-    bannerDragStart.current = {
-      bx: bannerCropX,
-      by: bannerCropY,
-      px: e.clientX,
-      py: e.clientY,
-    };
-  };
-
-  const handleBannerPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!bannerDragStart.current || !bannerViewportRef.current) return;
-    const rect = bannerViewportRef.current.getBoundingClientRect();
-    const dx = ((e.clientX - bannerDragStart.current.px) / rect.width) * 100;
-    const dy = ((e.clientY - bannerDragStart.current.py) / rect.height) * 100;
-    setBannerCropX(clamp(bannerDragStart.current.bx - dx, 0, 100));
-    setBannerCropY(clamp(bannerDragStart.current.by - dy, 0, 100));
-  };
-
-  const handleBannerPointerUp = () => {
-    bannerDragStart.current = null;
-  };
-
-  const handleBannerWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const delta = e.deltaY < 0 ? 0.05 : -0.05;
-    setBannerCropScale((prev) => clamp(prev + delta, 1, 3));
-  };
-
-  const handleBannerTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 2) {
-      lastBannerPinchDist.current = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY,
-      );
-    }
-  };
-
-  const handleBannerTouchMove = (e: React.TouchEvent) => {
-    if (e.touches.length === 2 && lastBannerPinchDist.current !== null) {
-      e.preventDefault();
-      const dist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY,
-      );
-      const delta = (dist - lastBannerPinchDist.current) * 0.01;
-      lastBannerPinchDist.current = dist;
-      setBannerCropScale((prev) => clamp(prev + delta, 1, 3));
-    }
+  // Dragging is handled imperatively inside BannerCropDialog; it commits the
+  // final position here once the gesture settles.
+  const handleBannerPan = (nx: number, ny: number) => {
+    setBannerCropX(clamp(nx, 0, 100));
+    setBannerCropY(clamp(ny, 0, 100));
   };
 
   const handleBannerScaleChange = (v: number) => {
@@ -827,12 +721,7 @@ export function AppearanceSection({ onBack }: Props) {
               y={cropY}
               scale={cropScale}
               onOpenChange={setCropDialogOpen}
-              onPointerDown={handleCropPointerDown}
-              onPointerMove={handleCropPointerMove}
-              onPointerUp={handleCropPointerUp}
-              onTouchStart={handleCropTouchStart}
-              onTouchMove={handleCropTouchMove}
-              onWheel={handleCropWheel}
+              onPan={handleCropPan}
               onScaleChange={handleCropScaleChange}
               onReset={resetCrop}
               onCancel={handleCropCancel}
@@ -864,12 +753,7 @@ export function AppearanceSection({ onBack }: Props) {
               y={bannerCropY}
               scale={bannerCropScale}
               onOpenChange={setBannerCropDialogOpen}
-              onPointerDown={handleBannerPointerDown}
-              onPointerMove={handleBannerPointerMove}
-              onPointerUp={handleBannerPointerUp}
-              onTouchStart={handleBannerTouchStart}
-              onTouchMove={handleBannerTouchMove}
-              onWheel={handleBannerWheel}
+              onPan={handleBannerPan}
               onScaleChange={handleBannerScaleChange}
               onReset={resetBannerCrop}
               onCancel={handleBannerCropCancel}

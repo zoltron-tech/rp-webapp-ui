@@ -1,4 +1,5 @@
 import type { NWImage } from "./novelist";
+import type { IceBreaker } from "./prompt";
 
 export interface Conversation {
   id: string;
@@ -24,6 +25,21 @@ export interface ConversationParticipant {
   joinedAt: string;
 }
 
+export type RepliedToType = "MESSAGE" | "ICE_BREAKER";
+
+/** Reference to the item a new message is replying to, sent to the server. */
+export interface RepliedToReference {
+  id: string;
+  type: RepliedToType;
+}
+
+/** Resolved item a message is replying to, embedded by the server. */
+export interface RepliedTo {
+  type: RepliedToType;
+  message?: Message;
+  iceBreaker?: IceBreaker;
+}
+
 export interface Message {
   id: string;
   senderId: string;
@@ -32,7 +48,7 @@ export interface Message {
   type: string;
   image: string;
   message: string;
-  repliedTo?: Message;
+  repliedTo?: RepliedTo;
   isRead: boolean;
   reactions: Reaction[];
   attachments: Attachment[];

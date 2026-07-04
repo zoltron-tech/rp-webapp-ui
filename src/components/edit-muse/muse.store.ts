@@ -16,6 +16,7 @@ export type MuseState = {
   story: string | null;
   accent: string | null;
   image: string | null;
+  avatar: NWImage | null;
   wallpaper: NWImage | null;
   cardBackground: NWImage | null;
   fandom: Fandom;
@@ -27,6 +28,7 @@ export type MuseState = {
 
 export const INITIAL_STATE: MuseState = {
   accent: null,
+  avatar: null,
   cardBackground: null,
   extraAttributes: null,
   fandom: FANDOMLESS,

@@ -3,6 +3,7 @@ import {
   useStoreSet,
   useStoreState,
 } from "@/context/store/use-store";
+import type { NWImage } from "@/types";
 import type { Accent, ThemeType } from "@/types/theme";
 
 export type OnboardingState = {
@@ -13,10 +14,12 @@ export type OnboardingState = {
   theme: ThemeType;
   about: string | null;
   image: string | null;
+  avatar: NWImage | null;
 };
 
 export const INITIAL_STATE: OnboardingState = {
   about: null,
+  avatar: null,
   firstName: null,
   image: null,
   lastName: null,

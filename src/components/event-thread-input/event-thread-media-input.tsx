@@ -10,8 +10,9 @@ import {
   useRef,
 } from "react";
 import { GrAttachment } from "react-icons/gr";
-import { deleteMedia, uploadMedia } from "@/app/rp/profile/actions";
+import { deleteMedia } from "@/app/rp/profile/actions";
 import { API_MESSAGE } from "@/utils/constants";
+import { uploadMedia } from "@/utils/upload-media";
 import {
   useEventThreadInputState,
   useEventThreadInputStoreSet,

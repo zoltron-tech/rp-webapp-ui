@@ -173,23 +173,30 @@ export const Button = styled.button`
   }
 `;
 
+/* The home viewport: exactly the space under the sticky TopBar. Fixing the
+   height here (instead of letting content dictate it) means the outer page
+   has no extra height to scroll — the two columns can never be dragged
+   off-screen by scrolling empty space. Each column scrolls internally. */
 export const ParentWrapperContainer = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: start;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 0.3em;
   width: 100%;
+  height: calc(100dvh - var(--topbar-height));
   overflow: hidden;
 `;
 
 export const LeftWrapperContainer = styled.div`
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   flex-shrink: 0;
   width: 15cqw;
+  height: 100%;
+  overflow: hidden;
 
   container-name: left_wrapper;
   container-type: inline-size;
@@ -202,12 +209,17 @@ export const LeftWrapperContainer = styled.div`
 `;
 
 export const ListContainer = styled.div`
-  height: 80dvh;
+  flex: 1;
+  min-height: 0;
   width: 100%;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
+  /* Prevent scroll chaining to the body once this list's scroll reaches its
+     end — otherwise the whole page becomes scrollable (see the matching fix
+     on RightWrapperContainer). */
+  overscroll-behavior: contain;
   background-color: ${({ theme }: any) => theme.background};
   border-top-right-radius: 5px;
   border-bottom-right-radius: 5px;
@@ -244,7 +256,7 @@ export const RightWrapperContainer = styled.div`
   align-items: flex-start;
   flex: 1;
   min-width: 0;
-  height: 93dvh;
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   /* Prevent scroll chaining to the body when the mixed feed scroll reaches
@@ -259,6 +271,18 @@ export const ContentContainer = styled.div`
   justify-content: center;
   align-items: center;
   margin-top: 10px;
+`;
+
+/** Friends column inside LeftWrapperContainer — fills the column height and
+ * top-aligns its content (heading + list) so it renders flush with the top.
+ * ListContainer inside it flexes to fill the remaining space and owns the
+ * only vertical scroll for the friends list. */
+export const FriendsContentContainer = styled(ContentContainer)`
+  height: 100%;
+  min-height: 0;
+  margin-top: 0;
+  justify-content: flex-start;
+  overflow: hidden;
 `;
 
 export const ActivityContainer = styled.div`

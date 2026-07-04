@@ -24,6 +24,7 @@ import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import type { Muse } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
+import { reverseWsrvUrl } from "@/utils/image";
 import * as S from "../styles";
 import SectionMiniHeader from "./SectionMiniHeader";
 
@@ -41,6 +42,7 @@ function GalleryImageItem({
   width,
   height,
   onItemClick,
+  isAvatar,
   isCardBg,
   isWallpaper,
   isOwner,
@@ -50,19 +52,22 @@ function GalleryImageItem({
   width: number;
   height: number;
   onItemClick: () => void;
+  isAvatar: boolean;
   isCardBg: boolean;
   isWallpaper: boolean;
   isOwner: boolean;
   onDelete: () => void;
 }) {
+  const hasBadge = isOwner && (isAvatar || isCardBg || isWallpaper);
   return (
     <S.GalleryItem style={{ height, width }} onClick={onItemClick}>
       <S.GalleryImage src={url} alt="Gallery media" />
-      {isCardBg && <S.GalleryBadge>Card BG</S.GalleryBadge>}
-      {isWallpaper && (
-        <S.GalleryBadge style={{ left: isCardBg ? "70px" : "5px" }}>
-          Wallpaper
-        </S.GalleryBadge>
+      {hasBadge && (
+        <S.GalleryBadgeRow>
+          {isAvatar && <S.GalleryBadge>Avatar</S.GalleryBadge>}
+          {isCardBg && <S.GalleryBadge>Card BG</S.GalleryBadge>}
+          {isWallpaper && <S.GalleryBadge>Wallpaper</S.GalleryBadge>}
+        </S.GalleryBadgeRow>
       )}
       {isOwner && (
         <S.GalleryDeleteBtn
@@ -83,6 +88,7 @@ function GalleryImageItem({
 function JustifiedGallery({
   mediaUrls,
   onItemClick,
+  avatarSrc,
   cardBgSrc,
   wallpaperSrc,
   isOwner,
@@ -90,6 +96,7 @@ function JustifiedGallery({
 }: {
   mediaUrls: string[];
   onItemClick: (idx: number) => void;
+  avatarSrc?: string;
   cardBgSrc?: string;
   wallpaperSrc?: string;
   isOwner: boolean;
@@ -247,6 +254,7 @@ function JustifiedGallery({
                 width={item.width}
                 height={item.height}
                 onItemClick={() => onItemClick(mediaUrls.indexOf(item.url))}
+                isAvatar={item.url === avatarSrc}
                 isCardBg={item.url === cardBgSrc}
                 isWallpaper={item.url === wallpaperSrc}
                 isOwner={isOwner}
@@ -638,14 +646,15 @@ export function GallerySection({ muse, media }: Props) {
                 onItemClick={setGalleryIndex}
                 isOwner={isOwner}
                 onDeleteItem={handleDeleteMedia}
+                avatarSrc={isOwner ? reverseWsrvUrl(muse?.avatar?.src) : undefined}
                 cardBgSrc={
                   isOwner && muse?.useExtraImages
-                    ? (muse?.cardBackground?.src ?? undefined)
+                    ? reverseWsrvUrl(muse?.cardBackground?.src)
                     : undefined
                 }
                 wallpaperSrc={
                   isOwner && muse?.useExtraImages
-                    ? (muse?.wallpaper?.src ?? undefined)
+                    ? reverseWsrvUrl(muse?.wallpaper?.src)
                     : undefined
                 }
               />

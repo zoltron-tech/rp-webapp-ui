@@ -68,6 +68,7 @@ const ImageEl = styled.div`
   pointer-events: none;
   user-select: none;
   touch-action: none;
+  will-change: transform;
 `;
 
 /* Rule-of-thirds guides — fade in while the user is composing (dragging). */
@@ -391,25 +392,40 @@ export function BannerCropDialog({
   const stepZoom = (dir: 1 | -1) => onScaleChange(clampZoom(scale + dir * ZOOM_STEP));
 
   // ── Imperative pan ──────────────────────────────────────────────────────────
-  // Dragging updates the image's background-position directly on the DOM node so
-  // no React state churns per frame (which would re-render the whole host page and
-  // regenerate styled-components classes). The committed x/y are pushed to the
-  // parent only when the gesture ends, via onPan.
+  // While dragging we never touch `background-position` — changing it forces a
+  // paint of the whole background image every frame, which is fine on desktop
+  // but visibly laggy on mobile GPUs. Instead we preview the drag with a CSS
+  // `transform` (compositor-only, no repaint) and only commit the real
+  // background-position — via onPan — once the gesture ends. The transform
+  // offset is derived so it lines up exactly with what background-position
+  // would render, so there's no jump when we swap back at drag end.
   const imgRef = useRef<HTMLDivElement>(null);
   const liveRef = useRef({ x, y });
   const panStart = useRef<{ px: number; py: number; bx: number; by: number } | null>(null);
   const pinchDist = useRef<number | null>(null);
+  // Natural size of the current image, used to translate the background's
+  // vertical "auto" sizing into an exact pixel offset while dragging.
+  const naturalSizeRef = useRef<{ w: number; h: number } | null>(null);
+
+  useEffect(() => {
+    naturalSizeRef.current = null;
+    if (!src) return;
+    let cancelled = false;
+    const img = new window.Image();
+    img.onload = () => {
+      if (!cancelled) naturalSizeRef.current = { w: img.naturalWidth, h: img.naturalHeight };
+    };
+    img.src = src;
+    return () => {
+      cancelled = true;
+    };
+  }, [src]);
 
   // Keep the live position in sync with externally-driven changes (reset, fit,
   // opening a new image) whenever we are not mid-drag.
   useEffect(() => {
     if (!panStart.current) liveRef.current = { x, y };
   }, [x, y]);
-
-  const applyPan = (nx: number, ny: number) => {
-    liveRef.current = { x: nx, y: ny };
-    if (imgRef.current) imgRef.current.style.backgroundPosition = `${nx}% ${ny}%`;
-  };
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.isPrimary === false) return;
@@ -420,18 +436,38 @@ export function BannerCropDialog({
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     const start = panStart.current;
-    if (!start || !viewportRef?.current) return;
+    if (!start || !viewportRef?.current || !imgRef.current) return;
     const rect = viewportRef.current.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
+
     const dx = ((e.clientX - start.px) / rect.width) * 100;
     const dy = ((e.clientY - start.py) / rect.height) * 100;
-    applyPan(clamp100(start.bx - dx), clamp100(start.by - dy));
+    const nx = clamp100(start.bx - dx);
+    const ny = clamp100(start.by - dy);
+    liveRef.current = { x: nx, y: ny };
+
+    // background-position formula: px = (containerSize - imageSize) * (pct/100).
+    // We only ever apply the *delta* from the drag's starting position on top
+    // of the (untouched) background-position, so the two composite to the
+    // same result background-position would have produced on its own.
+    const natural = naturalSizeRef.current;
+    const imgWidthPx = rect.width * scale;
+    const imgHeightPx = natural ? imgWidthPx * (natural.h / natural.w) : rect.height * scale;
+    const kx = (rect.width - imgWidthPx) / 100;
+    const ky = (rect.height - imgHeightPx) / 100;
+    const tx = kx * (nx - start.bx);
+    const ty = ky * (ny - start.by);
+    imgRef.current.style.transform = `translate3d(${tx}px, ${ty}px, 0)`;
   };
 
   const endPan = () => {
     if (!panStart.current) return;
     panStart.current = null;
     setDragging(false);
+    if (imgRef.current) {
+      imgRef.current.style.transform = "";
+      imgRef.current.style.backgroundPosition = `${liveRef.current.x}% ${liveRef.current.y}%`;
+    }
     onPan(liveRef.current.x, liveRef.current.y);
   };
 

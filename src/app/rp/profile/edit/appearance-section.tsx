@@ -744,6 +744,7 @@ export function AppearanceSection({ onBack }: Props) {
         text="Drag to reposition. Use the slider or scroll to zoom."
         showConfirm={false}
         isCancelHidden={true}
+        size="lg"
         body={
           <S.AvatarCropBody>
             <BannerCropDialog

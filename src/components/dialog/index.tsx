@@ -20,6 +20,8 @@ interface AlertProps {
   actionColor?: "negative" | "neutral";
   isConfirmDisabled?: boolean;
   isCancelHidden?: boolean;
+  /** "lg" widens the dialog on mobile — use for content that needs more room, e.g. image crop viewports. */
+  size?: "default" | "lg";
 }
 
 export const AppAlertDialog = ({
@@ -36,6 +38,7 @@ export const AppAlertDialog = ({
   actionColor = "negative",
   isConfirmDisabled = false,
   isCancelHidden = false,
+  size = "default",
 }: AlertProps) => {
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
@@ -46,6 +49,7 @@ export const AppAlertDialog = ({
         <S.Overlay />
         <S.Content
           className={classNames([accent, theme])}
+          $size={size}
           onOpenAutoFocus={(e) => {
             if (typeof window !== "undefined" && window.matchMedia("(hover: none)").matches) {
               e.preventDefault();

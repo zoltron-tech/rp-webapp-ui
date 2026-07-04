@@ -30,7 +30,7 @@ export const Overlay = styled(AlertDialog.Overlay)`
   }
 `;
 
-export const Content = styled(AlertDialog.Content)`
+export const Content = styled(AlertDialog.Content)<{ $size?: "default" | "lg" }>`
   display: flex;
   flex-direction: column;
   background-color: var(--bg-2);
@@ -64,6 +64,14 @@ export const Content = styled(AlertDialog.Content)`
     max-width: 300px;
     padding: 14px;
     border-radius: 10px;
+
+    ${({ $size }) =>
+      $size === "lg" &&
+      `
+      width: calc(100vw - 20px);
+      max-width: 460px;
+      padding: 10px;
+    `}
   }
 `;
 

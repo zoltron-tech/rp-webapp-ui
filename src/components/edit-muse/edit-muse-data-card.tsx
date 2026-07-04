@@ -5,6 +5,7 @@ import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
 import { AppearanceSection } from "./appearance-section";
+import { ConnectionsSection } from "./connections-section";
 import { CreateInitialSection } from "./create-initial-section";
 import { GallerySection } from "./gallery-section";
 import { InformationSection } from "./information-section";
@@ -13,7 +14,12 @@ import { useMuseState } from "./muse.store";
 import { StorySection } from "./story-section";
 import * as S from "./styled";
 
-type SectionView = "appearance" | "information" | "story" | "gallery";
+type SectionView =
+  | "appearance"
+  | "information"
+  | "story"
+  | "gallery"
+  | "connections";
 type View = "landing" | "create-initial" | SectionView;
 
 const WIZARD_STEPS: SectionView[] = ["appearance", "information", "story"];
@@ -105,6 +111,10 @@ export default function EditMuseDataCard() {
 
       {view === "gallery" && (
         <GallerySection onBack={() => setView("landing")} />
+      )}
+
+      {view === "connections" && (
+        <ConnectionsSection onBack={() => setView("landing")} />
       )}
 
       {view === "story" && (

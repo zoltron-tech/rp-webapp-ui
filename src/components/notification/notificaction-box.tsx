@@ -1,5 +1,6 @@
 import { ShouldRender } from "@novelist-world/ui";
 import { type FC, type MouseEventHandler, useCallback, useState } from "react";
+import { reactToMuseConnectionAction } from "@/app/rp/muse/connection-actions";
 import {
   acceptFriendRequest,
   deleteFriendRequest,
@@ -58,9 +59,31 @@ export const NotificationBox: FC<NotificationBoxProps> = ({ notification }) => {
     }
   };
 
+  const handleReactToMuseConnection = async (accepted: boolean) => {
+    if (!notification.id || loading) return;
+    setLoading(true);
+    const response = await reactToMuseConnectionAction(
+      notification.id,
+      accepted,
+    );
+    setLoading(false);
+    if (response?.message === API_MESSAGE.Success) {
+      successToast(
+        accepted ? "Muse connection accepted" : "Muse connection declined",
+      );
+      removeFromStore();
+    } else {
+      errorToast("Could not update the muse connection. Please try again.");
+    }
+  };
+
   const handleClick: MouseEventHandler<HTMLElement> = useCallback(
     (_e) => {
-      if (notification.type === "MUSE_CONNECTION_REQUEST")
+      if (
+        ["MUSE_CONNECTION_REQUEST", "MUSE_CONNECTION_UPDATE"].includes(
+          notification.type,
+        )
+      )
         routeToPage(ROUTES.Muse.View(notification.target.urlProp));
       else if (
         ["PROMPT_COMMENT", "PROMPT_COMMENT_REPLY", "REPLY"].includes(
@@ -107,6 +130,24 @@ export const NotificationBox: FC<NotificationBoxProps> = ({ notification }) => {
               variant="negative"
               className={loading ? "messaging" : undefined}
               onClick={handleDecline}
+            >
+              {loading ? "…" : "Decline"}
+            </Button>
+          </S.ButtonRow>
+        )}
+        {notification.type === "MUSE_CONNECTION_REQUEST" && (
+          <S.ButtonRow onClick={(e) => e.stopPropagation()}>
+            <Button
+              variant="positive"
+              className={loading ? "messaging" : undefined}
+              onClick={() => handleReactToMuseConnection(true)}
+            >
+              {loading ? "…" : "Accept"}
+            </Button>
+            <Button
+              variant="negative"
+              className={loading ? "messaging" : undefined}
+              onClick={() => handleReactToMuseConnection(false)}
             >
               {loading ? "…" : "Decline"}
             </Button>

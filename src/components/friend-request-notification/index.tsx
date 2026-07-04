@@ -1,5 +1,6 @@
 "use client";
 import { type FC, useState } from "react";
+import { reactToMuseConnectionAction } from "@/app/rp/muse/connection-actions";
 import {
   acceptFriendRequest,
   deleteFriendRequest,
@@ -55,11 +56,33 @@ export const FriendRequestNotification: FC<Props> = ({
     }
   };
 
+  const _handleReactToMuseConnection = async (accepted: boolean) => {
+    if (!notification?.id || loading) return;
+    setLoading(true);
+    const response = await reactToMuseConnectionAction(
+      notification.id,
+      accepted,
+    );
+    setLoading(false);
+    if (response?.message === API_MESSAGE.Success) {
+      successToast(
+        accepted ? "Muse connection accepted" : "Muse connection declined",
+      );
+      removeMethod(notification);
+    } else {
+      errorToast("Could not update the muse connection. Please try again.");
+    }
+  };
+
   const handleClick = () => {
     if (!notification) return;
     onClose?.();
 
-    if (notification.type === "MUSE_CONNECTION_REQUEST")
+    if (
+      ["MUSE_CONNECTION_REQUEST", "MUSE_CONNECTION_UPDATE"].includes(
+        notification.type,
+      )
+    )
       routeToPage(ROUTES.Muse.View(notification.target.urlProp));
     else if (
       ["PROMPT_COMMENT", "PROMPT_COMMENT_REPLY", "REPLY"].includes(
@@ -108,6 +131,24 @@ export const FriendRequestNotification: FC<Props> = ({
               variant="negative"
               className={loading ? "messaging" : undefined}
               onClick={_handleDeleteFriendRequest}
+            >
+              {loading ? "…" : "Decline"}
+            </Button>
+          </S.ButtonRow>
+        )}
+        {notification.type === "MUSE_CONNECTION_REQUEST" && (
+          <S.ButtonRow onClick={(e) => e.stopPropagation()}>
+            <Button
+              variant="positive"
+              className={loading ? "messaging" : undefined}
+              onClick={() => _handleReactToMuseConnection(true)}
+            >
+              {loading ? "…" : "Accept"}
+            </Button>
+            <Button
+              variant="negative"
+              className={loading ? "messaging" : undefined}
+              onClick={() => _handleReactToMuseConnection(false)}
             >
               {loading ? "…" : "Decline"}
             </Button>

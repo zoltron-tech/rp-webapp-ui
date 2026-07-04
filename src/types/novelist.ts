@@ -118,6 +118,49 @@ export interface MuseConnection {
   createdAt: number;
 }
 
+export type MuseConnectionStatus = "PENDING" | "DONE" | "REJECTED";
+
+/** A muse belonging to a muse connection group. */
+export interface MuseConnectionMuse {
+  museId: string;
+  firstName: string;
+  lastName: string | null;
+  image: string | null;
+  novelistId: string;
+  novelistName: string | null;
+}
+
+export interface MuseConnectionApproval {
+  novelistId: string;
+  novelistName: string | null;
+  approved: boolean;
+}
+
+/**
+ * A titled, rich-text described connection between several muses (own and/or
+ * friends' muses). Stays PENDING until every involved novelist accepts, then
+ * shows on all involved muses' profiles. Distinct from the legacy pairwise
+ * MuseConnection relationship labels above.
+ */
+export interface MuseConnectionGroup {
+  id: string;
+  title: string;
+  description: string | null;
+  status: MuseConnectionStatus;
+  createdBy: string;
+  createdByName: string | null;
+  muses: MuseConnectionMuse[];
+  approvals: MuseConnectionApproval[];
+  /** True when the viewer is one of the involved novelists. */
+  canEdit: boolean;
+  /** The viewer's own approval state; null when they are not involved. */
+  viewerApproved: boolean | null;
+  /** True when the viewer created the connection (may re-request after rejection). */
+  viewerIsCreator: boolean;
+  createdAt: number | null;
+  modifiedAt: number | null;
+}
+
 export interface NovelistTier {
   name: string;
   museLimit: number;
@@ -158,7 +201,10 @@ export type Novelist = {
   level: number;
 };
 
-export type UpdateNovelistPayload = Omit<Partial<Novelist>, "firstName" | "note"> & {
+export type UpdateNovelistPayload = Omit<
+  Partial<Novelist>,
+  "firstName" | "note"
+> & {
   firstName: string;
 };
 

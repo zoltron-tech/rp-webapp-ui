@@ -991,6 +991,11 @@ export const SideMenu = styled.nav`
     gap: 4px;
     border-radius: 18px;
   }
+
+  @media (max-width: 420px) {
+    padding: 6px;
+    gap: 2px;
+  }
 `;
 
 export const MenuButton = styled.button<{ $accent?: string | null }>`
@@ -1079,6 +1084,11 @@ export const MenuButton = styled.button<{ $accent?: string | null }>`
     }
   }
 
+  @media (max-width: 420px) {
+    padding: 6px 6px 4px;
+    gap: 2px;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     transition: none;
 
@@ -1101,6 +1111,11 @@ export const MenuButtonIcon = styled.span`
     transform: scale(1.12);
   }
 
+  @media (max-width: 420px) {
+    width: 16px;
+    height: 16px;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     transition: none;
   }
@@ -1117,16 +1132,29 @@ export const MenuText = styled.span`
     font-size: 0.5rem;
     letter-spacing: 0.1em;
   }
+
+  @media (max-width: 420px) {
+    font-size: 0.4rem;
+    letter-spacing: 0.08em;
+  }
 `;
 
 export const ConnectionsContainer = styled.div`
   display: flex;
+  /* Column so the inner ScrollableContent is a flex-column child: its
+     overflow-y:auto then auto-applies min-height:0 and it shrinks to the
+     remaining space and scrolls — the same pattern the Prompts section uses.
+     The old rigid height:100% ignored SectionMiniHeader above it and pushed
+     the scroll area's bottom below the card's clipped edge, unreachable. */
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
   margin-bottom: 10px;
   margin-top: 10px;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+  justify-content: flex-start;
   border-radius: ${BORDER_RADIUS};
-  height: 100%;
 `;
 
 export const Text = styled.div`
@@ -1303,10 +1331,15 @@ font-size: var(--font-size-small);
 export const ScrollableContent = styled.div<{ accent?: string | null }>`
   margin-bottom: 20px;
   overflow-y: auto;
+  /* Explicitly clip X — with only overflow-y set, the CSS spec promotes the
+     visible X axis to auto, which produced a stray horizontal scrollbar on
+     mobile whenever a child overflowed. These lists only ever scroll on Y. */
+  overflow-x: hidden;
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
   height: inherit;
   width: 100%;
+  box-sizing: border-box;
   padding-bottom: 20px;
   padding-inline: 10px;
 
@@ -1401,11 +1434,13 @@ export const InfoValue = styled.span`
 
 export const ExpandedContentInner = styled.div`
   display: flex;
-  direction: column;
   flex-wrap: wrap;
   margin-inline: auto;
   justify-content: center;
-  width: 90cqw;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 `;
 
 export const Avatar = styled(AvatarCommon)`

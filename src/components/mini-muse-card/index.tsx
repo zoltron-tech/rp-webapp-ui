@@ -57,6 +57,23 @@ const inlineCardImages = async (card: HTMLDivElement): Promise<() => void> => {
   };
 };
 
+const waitForImages = (node: HTMLElement): Promise<void[]> => {
+  const imgs = Array.from(node.querySelectorAll("img"));
+  return Promise.all(
+    imgs.map(
+      (img) =>
+        new Promise<void>((resolve) => {
+          if (img.complete && img.naturalHeight !== 0) {
+            resolve();
+          } else {
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+          }
+        }),
+    ),
+  );
+};
+
 const getIsIOS = () =>
   /iP(ad|hone|od)/i.test(navigator.userAgent) ||
   (navigator.platform === "MacIntel" &&
@@ -207,12 +224,23 @@ export const MiniMuseCard: FC<Props> = ({ muse, onClose }) => {
     let restoreImages: (() => void) | undefined;
     try {
       restoreImages = await inlineCardImages(node);
+      await waitForImages(node);
+      // Let the browser finish decoding the inlined images before capture.
+      await new Promise((resolve) => setTimeout(resolve, 150));
 
       const exportOptions = {
         cacheBust: true,
         canvasHeight: activeDesign.exportHeight,
         canvasWidth: activeDesign.exportWidth,
+        fetchRequestInit: { cache: "no-cache" as RequestCache },
         height: activeDesign.height,
+        // html-to-image's internal resource cache keys images by URL with
+        // the query string stripped by default. Our images are proxied
+        // through wsrv.nl (`https://wsrv.nl/?url=...`), where the query
+        // string is the *only* part that differs between images — without
+        // this flag, every export after the first reuses whichever
+        // wsrv-proxied image its page-lifetime cache saw first.
+        includeQueryParams: true,
         pixelRatio: activeDesign.pixelRatio ?? 2,
         style: { transform: "translateZ(0)" },
         width: activeDesign.width,
@@ -338,13 +366,15 @@ export const MiniMuseCard: FC<Props> = ({ muse, onClose }) => {
 
                 return (
                   <S.CarouselSlide key={design.id}>
-                    {design.id === "square" ? (
-                      <S.SquarePreviewScale>
-                        {designElement}
-                      </S.SquarePreviewScale>
-                    ) : (
-                      designElement
-                    )}
+                    <S.CompactPreviewScale>
+                      {design.id === "square" ? (
+                        <S.SquarePreviewScale>
+                          {designElement}
+                        </S.SquarePreviewScale>
+                      ) : (
+                        designElement
+                      )}
+                    </S.CompactPreviewScale>
                   </S.CarouselSlide>
                 );
               })}

@@ -3358,13 +3358,13 @@ export const VerseCircle = styled.button<{
   position: relative;
   box-sizing: border-box;
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: ${({ $active }) => ($active ? "31px" : "28px")};
+  height: ${({ $active }) => ($active ? "31px" : "28px")};
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
+  font-size: ${({ $active }) => ($active ? "0.78rem" : "0.7rem")};
   font-weight: 800;
   cursor: pointer;
   color: #fff;
@@ -3375,12 +3375,26 @@ export const VerseCircle = styled.button<{
         : "var(--accent)"
       : "rgba(10, 10, 14, 0.55)"};
   backdrop-filter: blur(6px);
-  border: 1.5px solid
+  border: ${({ $active }) => ($active ? "2px" : "1.5px")} solid
     ${({ $active }) =>
-      $active ? "rgba(255, 255, 255, 0.55)" : "rgba(255, 255, 255, 0.2)"};
+      $active ? "rgba(255, 255, 255, 0.9)" : "rgba(255, 255, 255, 0.2)"};
+  /* Halo ring makes the active verse readable at a glance, not just by
+     its (subtle) background-color shift. */
+  box-shadow: ${({ $active, $accent }) =>
+    $active
+      ? `0 0 0 3px ${
+          $accent && $accent.trim() !== ""
+            ? `color-mix(in srgb, ${$accent} 55%, transparent)`
+            : "color-mix(in srgb, var(--accent) 55%, transparent)"
+        }`
+      : "none"};
   transition:
     background 0.15s ease,
     border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    width 0.15s ease,
+    height 0.15s ease,
+    font-size 0.15s ease,
     transform 0.15s ease;
 
   /* Thin connecting track between consecutive circles — a subtle "stepper"

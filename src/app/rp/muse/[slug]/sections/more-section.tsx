@@ -118,7 +118,11 @@ export function MoreSection({ muse, isOwnMuse }: Props) {
           if (!muse?.id) return;
           setShowDeleteConfirm(false);
           await deleteMuseAction(muse.id);
-          routeToPage(ROUTES.Profile.View(user?.username ?? "").Muses);
+          routeToPage(
+            muse.originalVerseId
+              ? ROUTES.Muse.View(muse.originalVerseId)
+              : ROUTES.Profile.View(user?.username ?? "").Muses,
+          );
         }}
         onCancel={() => setShowDeleteConfirm(false)}
       />

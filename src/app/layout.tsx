@@ -30,7 +30,28 @@ export const metadata: Metadata = {
   },
   keywords: ["novelist", "writing", "stories", "community"],
   manifest: "/manifest.json",
+  metadataBase: new URL("https://novelist.world"),
+  openGraph: {
+    description: "A platform for writers to create and share their stories.",
+    images: [
+      {
+        height: 909,
+        url: "/og_image.png",
+        width: 1731,
+      },
+    ],
+    siteName: "Novelist World",
+    title: "Novelist World",
+    type: "website",
+    url: "/",
+  },
   title: "Novelist World",
+  twitter: {
+    card: "summary_large_image",
+    description: "A platform for writers to create and share their stories.",
+    images: ["/og_image.png"],
+    title: "Novelist World",
+  },
 };
 
 export default async function RootLayout({

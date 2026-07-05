@@ -25,14 +25,16 @@ export const Controls = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 360px;
+  width: 100%;
+  max-width: 360px;
 `;
 
 export const PositionSliderRow = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
-  width: 360px;
+  width: 100%;
+  max-width: 360px;
 `;
 
 export const PositionSliderLabel = styled.span`
@@ -105,7 +107,8 @@ export const DesignSwitcher = styled.div`
   align-items: center;
   justify-content: center;
   gap: 10px;
-  width: 360px;
+  width: 100%;
+  max-width: 360px;
 `;
 
 export const NavArrow = styled.button`
@@ -142,6 +145,14 @@ export const DesignLabel = styled.div`
   user-select: none;
 `;
 
+// Short viewports (iPhone SE and similar small phones) can't fit a
+// full-size preview plus the controls/switcher/dots rows above and below
+// it without pushing the download button off-screen. Shrink the reserved
+// box here — matched by the same factor in CompactPreviewScale below, so
+// the (still full-resolution) exported card just renders smaller on
+// screen instead of being clipped by this container's overflow: hidden.
+export const MOBILE_COMPACT_SCALE = 0.7;
+
 export const CarouselViewport = styled.div<{
   $maxWidth: number;
   $maxHeight: number;
@@ -165,6 +176,12 @@ export const CarouselViewport = styled.div<{
         height: 600px;
       }
     `}
+
+  @media (max-height: 700px) {
+    width: ${({ $maxWidth }) => Math.round($maxWidth * MOBILE_COMPACT_SCALE)}px;
+    height: ${({ $maxHeight }) =>
+      Math.round($maxHeight * MOBILE_COMPACT_SCALE)}px;
+  }
 `;
 
 export const CarouselTrack = styled.div<{
@@ -211,6 +228,21 @@ export const SquarePreviewScale = styled.div`
 
   @media (min-width: 769px) {
     transform: scale(1.4);
+  }
+`;
+
+/* Applies to BOTH designs (unlike SquarePreviewScale above, which only
+   handles the square design's own desktop/mobile sizing). Wraps outside
+   the ref'd node for the same reason — html-to-image only clones the
+   ref'd node itself, never an ancestor's transform, so the exported PNG
+   stays full-resolution regardless of this on-screen shrink. */
+export const CompactPreviewScale = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  @media (max-height: 700px) {
+    transform: scale(${MOBILE_COMPACT_SCALE});
   }
 `;
 

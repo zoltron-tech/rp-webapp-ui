@@ -178,6 +178,46 @@ export const CharacterName = styled.div`
   }
 `;
 
+export const VerseBadgeRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+`;
+
+export const VerseBadge = styled.button<{ $active?: boolean }>`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 0.5rem;
+  font-weight: 700;
+  cursor: ${(p) => (p.$active ? "default" : "pointer")};
+  background: ${(p) =>
+    p.$active ? "rgba(255, 255, 255, 0.92)" : "rgba(255, 255, 255, 0.18)"};
+  color: ${(p) => (p.$active ? "#111" : "#fff")};
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  transition: background 0.15s ease, transform 0.15s ease;
+
+  @media (hover: hover) {
+    &:hover {
+      background: ${(p) =>
+        p.$active ? "rgba(255, 255, 255, 0.92)" : "rgba(255, 255, 255, 0.35)"};
+      transform: ${(p) => (p.$active ? "none" : "scale(1.1)")};
+    }
+  }
+
+  @container muse-preview-card (max-width: 120px) {
+    width: 13px;
+    height: 13px;
+    font-size: 0.42rem;
+  }
+`;
+
 export const PennedByRow = styled.div`
   display: flex;
   align-items: center;

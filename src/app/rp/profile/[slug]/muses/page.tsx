@@ -7,6 +7,7 @@ import { HiUserAdd } from "react-icons/hi";
 import { getAllMusesByUsernameAction } from "@/app/rp/muse/actions";
 import { BreadCrumb } from "@/components/breadcrumb";
 import { AddNewButton, FilterSearch } from "@/components/common";
+import { AppAlertDialog } from "@/components/dialog";
 import MuseListItem from "@/components/muse-list-item";
 import { MusePreviewCard } from "@/components/muse-preview-card";
 import { useGlobalState } from "@/context/store/stores";
@@ -40,6 +41,12 @@ export default function MusesListPage({}) {
   ]);
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [limitDialogOpen, setLimitDialogOpen] = useState(false);
+  const museLimit = novelist?.tier.museLimit ?? 0;
+  // Alternate verses count toward the limit just like root characters, so
+  // this uses the raw (unfiltered, un-grouped) fetch count — same figure
+  // shown in the breadcrumb.
+  const atMuseLimit = (muses?.length ?? 0) >= museLimit;
 
   const backgroundTiles = useMemo(
     () =>
@@ -53,10 +60,7 @@ export default function MusesListPage({}) {
     [muses],
   );
 
-  const displayedMuses = muses?.filter((m) => {
-    // Alternative verses never render in the character list; they are reached
-    // through the verse switcher on their main muse's page.
-    if (m.originalVerseId) return false;
+  const filteredMuses = muses?.filter((m) => {
     if (
       search &&
       !`${m.firstName} ${m.lastName}`
@@ -69,6 +73,31 @@ export default function MusesListPage({}) {
     if (m.privacy === "ONLY_ME") return visibility.includes("ONLY_ME");
     return true;
   });
+
+  // A muse's alternate verses are separate rows in the backend response, but
+  // they're the same character to the user — group them under one card so
+  // the list shows one entry per character family, with the verses reachable
+  // from small badges on that card instead of cluttering the grid.
+  const museFamilies = useMemo(() => {
+    if (!filteredMuses) return [];
+    const groups = new Map<string, Muse[]>();
+    for (const m of filteredMuses) {
+      const key = m.originalVerseId ?? m.id;
+      if (!key) continue;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)?.push(m);
+    }
+    return Array.from(groups.values())
+      .map((members) => {
+        const sorted = [...members].sort(
+          (a, b) => (a.verseNumber ?? 1) - (b.verseNumber ?? 1),
+        );
+        const root = sorted.find((m) => !m.originalVerseId) ?? sorted[0];
+        const verses = sorted.filter((m) => m.id !== root.id);
+        return { root, verses };
+      })
+      .sort((a, b) => a.root.firstName.localeCompare(b.root.firstName));
+  }, [filteredMuses]);
 
   const fetchMuses = async () => {
     const _muses = await baseDataLoader(() =>
@@ -118,14 +147,27 @@ export default function MusesListPage({}) {
         label={`Characters ${isCurrentUser ? `(${muses?.length ?? 0} / ${novelist?.tier.museLimit ?? 0})` : ""}`}
         username={username}
       />
-      {isCurrentUser &&
-        (muses?.length ?? 0) < (novelist?.tier.museLimit ?? 0) && (
-          <AddNewButton
-            label="Add a new character"
-            icon={<HiUserAdd size={18} />}
-            onClick={() => routeToPage(ROUTES.Profile.Muses.Create)}
-          />
-        )}
+      {isCurrentUser && (
+        <AddNewButton
+          label="Add a new character"
+          icon={<HiUserAdd size={18} />}
+          onClick={() => {
+            if (atMuseLimit) {
+              setLimitDialogOpen(true);
+              return;
+            }
+            routeToPage(ROUTES.Profile.Muses.Create);
+          }}
+        />
+      )}
+      <AppAlertDialog
+        heading="Character limit reached"
+        text={`You've reached your plan's limit of ${museLimit} characters (alternate verses count toward this too). Upgrade your tier or remove a character to add a new one.`}
+        open={limitDialogOpen}
+        onOpenChange={setLimitDialogOpen}
+        showConfirm={false}
+        closeButtonText="Close"
+      />
       <FilterSearch
         value={search}
         onChange={setSearch}
@@ -166,13 +208,13 @@ export default function MusesListPage({}) {
 
       <S.MuseListContainer>
         {viewMode === "grid" ? (
-          displayedMuses?.map((muse) => (
-            <MusePreviewCard key={muse?.id} muse={muse} />
+          museFamilies.map(({ root, verses }) => (
+            <MusePreviewCard key={root?.id} muse={root} verses={verses} />
           ))
         ) : (
           <S.ListWrapper>
-            {displayedMuses?.map((muse) => (
-              <MuseListItem key={muse?.id} muse={muse} />
+            {museFamilies.map(({ root, verses }) => (
+              <MuseListItem key={root?.id} muse={root} verses={verses} />
             ))}
           </S.ListWrapper>
         )}

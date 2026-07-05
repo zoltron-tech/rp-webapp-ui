@@ -152,6 +152,7 @@ export default function MuseProfilePage({}) {
   const params = useParams();
   const authState = useGlobalState("authState");
   const user = useGlobalState("user");
+  const novelist = useGlobalState("novelist");
   const { successToast, errorToast } = useUIContext();
   const { uploadMedia } = useUploadMedia();
   const [muse, setMuse] = useState<Muse | null>(null);
@@ -523,11 +524,20 @@ export default function MuseProfilePage({}) {
     [muse, navLoading, routeToPage],
   );
 
+  const [museLimitDialogOpen, setMuseLimitDialogOpen] = useState(false);
+  const museLimit = novelist?.tier.museLimit ?? 0;
+  // Alternate verses count toward the limit just like root characters.
+  const atMuseLimit = (novelist?.museCount ?? 0) >= museLimit;
+
   const handleCreateVerse = useCallback(() => {
     if (!muse?.id) return;
+    if (atMuseLimit) {
+      setMuseLimitDialogOpen(true);
+      return;
+    }
     const rootId = muse.originalVerseId ?? muse.id;
     routeToPage(`${ROUTES.Profile.Muses.Create}?originalVerseId=${rootId}`);
-  }, [muse?.id, muse?.originalVerseId, routeToPage]);
+  }, [muse?.id, muse?.originalVerseId, routeToPage, atMuseLimit]);
 
   // Arrow-key navigation (desktop). Skipped while typing, while a dialog on
   // this page is open, or when a modifier is held (e.g. Alt+← is browser back).
@@ -838,9 +848,9 @@ export default function MuseProfilePage({}) {
       <ShouldRender
         preserveSpace
         if={
-          // Once a muse has loaded, the bar always shows: own muses get the
-          // "+" (and any verse circles), others get their verse circles, or
-          // a lone "1" when they have no alternate verses — see below.
+          // Once a muse has loaded, the bar always shows: a lone "1" when
+          // there are no alternate verses (own muses also get the "+" next
+          // to it), otherwise the verse circles for each verse.
           verseHeaderData ? true : museLoading
         }
       >
@@ -851,8 +861,7 @@ export default function MuseProfilePage({}) {
               Verses
             </S.VerseHeaderLabel>
             <S.VerseCircleTrack $fade={(verseHeaderData?.verses.length ?? 0) > 3} $accent={accent}>
-              {(verseHeaderData?.verses.length ?? 0) === 0 &&
-              !verseHeaderData?.canCreate ? (
+              {(verseHeaderData?.verses.length ?? 0) === 0 ? (
                 <S.VerseCircle type="button" $active $accent={accent} disabled title="Verse 1">
                   1
                 </S.VerseCircle>
@@ -1144,6 +1153,16 @@ export default function MuseProfilePage({}) {
         }}
         actionButtonLabel="Remove"
         actionColor="negative"
+      />
+
+      {/* Character limit reached — verse creation blocked */}
+      <AppAlertDialog
+        heading="Character limit reached"
+        text={`You've reached your plan's limit of ${museLimit} characters (alternate verses count toward this too). Upgrade your tier or remove a character to add a new verse.`}
+        open={museLimitDialogOpen}
+        onOpenChange={setMuseLimitDialogOpen}
+        showConfirm={false}
+        closeButtonText="Close"
       />
     </S.MuseContainer>
   );

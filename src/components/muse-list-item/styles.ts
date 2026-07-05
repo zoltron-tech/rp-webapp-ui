@@ -103,6 +103,36 @@ export const MuseFandom = styled.span<{ $color?: string }>`
   }
 `;
 
+export const VerseBadgeRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+`;
+
+export const VerseBadge = styled.button<{ $active?: boolean }>`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: var(--font-size-xxxsmall);
+  font-weight: 700;
+  cursor: ${(p) => (p.$active ? "default" : "pointer")};
+  background: ${(p) => (p.$active ? "var(--accent)" : "var(--bg-4)")};
+  color: ${(p) => (p.$active ? "#fff" : "var(--text-secondary)")};
+  border: 1px solid var(--bg-5);
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background: ${(p) => (p.$active ? "var(--accent)" : "var(--bg-5)")};
+    color: ${(p) => (p.$active ? "#fff" : "var(--text)")};
+  }
+`;
+
 export const Controls = styled.div`
   display: flex;
   gap: 8px;

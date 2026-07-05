@@ -4,7 +4,9 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     background_color: "transparent",
-    description: "For writers, by writers.",
+    categories: ["social", "entertainment", "books"],
+    description:
+      "Create original characters and roleplay in real-time. Build your Muses, collaborate on stories, explore writing prompts, and connect with fellow writers in our live roleplay and creative fiction community.",
     display: "standalone",
     icons: [
       {

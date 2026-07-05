@@ -62,7 +62,7 @@ export const IMAGE_SIZES = {
   // the stored CSS crop (background-size/position) frames the image exactly as
   // it was set in the editor, which positions against the un-cropped image.
   CARD_BG: { fit: "inside" as const, h: 1422, w: 800 },
-  CARD_BG_MINI: { fit: "inside" as const, h: 400, w: 225 },
+  CARD_BG_MINI: { fit: "inside" as const, h: 800, w: 450 },
   COVER_LARGE: { fit: "cover" as const, h: 400, w: 400 },
   COVER_MEDIUM: { fit: "cover" as const, h: 300, w: 300 },
 };

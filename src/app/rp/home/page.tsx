@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { FaChevronRight } from "react-icons/fa6";
 import { FiSearch } from "react-icons/fi";
 import { ActivityBox } from "@/components/activity-box";
@@ -98,6 +105,9 @@ export default function HomePage() {
   const cachedExplorePrompts = useGlobalState("cachedExplorePrompts");
   const cachedOOCPosts = useGlobalState("cachedOOCPosts");
   const notifications = useGlobalState("notifications");
+  // Only read to know when GlobalMusicPlayer mounts/unmounts its 36px bar in
+  // the shared layout above this page — see the measuredHeight effect below.
+  const musicPlayerSongId = useGlobalState("musicPlayer").playingSongId;
   const setGlobalState = useGlobalStoreSet();
   const { routeToPage, stopPageLoading } = usePageRouter();
   const [strangers, setStrangers] = useState<Novelist[] | undefined>(
@@ -175,6 +185,29 @@ export default function HomePage() {
     useState(true);
 
   const rightWrapRef = useRef<HTMLDivElement>(null);
+  const parentWrapperRef = useRef<HTMLDivElement>(null);
+  // The real remaining space below this element down to the viewport
+  // bottom, measured directly instead of assumed via CSS calc(). A pure
+  // calc(100dvh - var(--topbar-height)) only ever accounts for the TopBar —
+  // it goes stale the moment anything else with real height (e.g.
+  // GlobalMusicPlayer's bar while a song is playing) renders above
+  // ContentContainer in the shared layout, letting the outer <main> grow
+  // past one viewport and become scrollable, dragging these columns along
+  // with it. Re-measured on resize and whenever the music player mounts.
+  const [measuredHeight, setMeasuredHeight] = useState<number | undefined>(
+    undefined,
+  );
+
+  useLayoutEffect(() => {
+    const recalc = () => {
+      if (!parentWrapperRef.current) return;
+      const top = parentWrapperRef.current.getBoundingClientRect().top;
+      setMeasuredHeight(Math.max(0, window.innerHeight - top));
+    };
+    recalc();
+    window.addEventListener("resize", recalc);
+    return () => window.removeEventListener("resize", recalc);
+  }, [musicPlayerSongId]);
 
   const scrollToTop = () => {
     rightWrapRef.current?.scrollTo({ behavior: "smooth", top: 0 });
@@ -471,7 +504,10 @@ export default function HomePage() {
           onTourEnd={handleEndTour}
         />
       )} */}
-      <S.ParentWrapperContainer>
+      <S.ParentWrapperContainer
+        ref={parentWrapperRef}
+        $measuredHeight={measuredHeight}
+      >
         <S.LeftWrapperContainer>
           <S.FriendsContentContainer>
             <S.SubText>Friends</S.SubText>

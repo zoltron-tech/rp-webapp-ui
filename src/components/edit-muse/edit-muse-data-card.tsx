@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
+import type { Muse } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { AppearanceSection } from "./appearance-section";
 import { ConnectionsSection } from "./connections-section";
@@ -24,7 +25,12 @@ type View = "landing" | "create-initial" | SectionView;
 
 const WIZARD_STEPS: SectionView[] = ["appearance", "information", "story"];
 
-export default function EditMuseDataCard() {
+type Props = {
+  /** Set while creating a new verse — the muse this one is a verse of. */
+  verseParentMuse?: Muse | null;
+};
+
+export default function EditMuseDataCard({ verseParentMuse }: Props) {
   const id = useMuseState("id");
   const user = useGlobalState("user");
   const novelist = useGlobalState("novelist");
@@ -84,6 +90,7 @@ export default function EditMuseDataCard() {
         <CreateInitialSection
           onContinue={handleCreateContinue}
           onBack={goToMusesList}
+          verseParentMuse={verseParentMuse}
         />
       )}
 

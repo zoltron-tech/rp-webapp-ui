@@ -30,6 +30,7 @@ export function useMuseSave() {
   const useAccent = useMuseState("useAccent");
   const useExtraImages = useMuseState("useExtraImages");
   const extraAttributes = useMuseState("extraAttributes");
+  const originalVerseId = useMuseState("originalVerseId");
   const setMuseState = useMuseStoreSet();
   const { successToast } = useUIContext();
 
@@ -53,6 +54,9 @@ export function useMuseSave() {
         lastName: lastName?.trim() ?? "",
         nicknames: nicknames ?? [],
         note: note ?? "",
+        // Only meaningful on create; the backend keeps verse lineage immutable
+        // on update. Verse numbers are assigned server-side.
+        originalVerseId: originalVerseId ?? null,
         privacy: _privacy,
         song: null,
         story: story ?? null,
@@ -92,6 +96,7 @@ export function useMuseSave() {
       useAccent,
       useExtraImages,
       extraAttributes,
+      originalVerseId,
       setMuseState,
       successToast,
     ],

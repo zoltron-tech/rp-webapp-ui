@@ -20,7 +20,7 @@ import type { Friend } from "@/types";
 import {
   LevelBadgeIcon,
   RankTrophyIcon,
-  XPBadgeIcon,
+  ScoreBadgeIcon,
 } from "@/utils/badge-icons";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styles";
@@ -74,10 +74,10 @@ function ReferralRow({
           <LevelBadgeIcon size={13} />
           Lv. {referral.level}
         </S.LevelChip>
-        <S.XPChip>
-          <XPBadgeIcon size={13} />
-          {referral.totalPoints.toLocaleString()} XP
-        </S.XPChip>
+        <S.ScoreChip>
+          <ScoreBadgeIcon size={13} />
+          {referral.totalPoints.toLocaleString()} Score
+        </S.ScoreChip>
       </S.ChipRow>
     </S.Row>
   );

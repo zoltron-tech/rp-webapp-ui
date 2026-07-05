@@ -176,15 +176,24 @@ export const Button = styled.button`
 /* The home viewport: exactly the space under the sticky TopBar. Fixing the
    height here (instead of letting content dictate it) means the outer page
    has no extra height to scroll — the two columns can never be dragged
-   off-screen by scrolling empty space. Each column scrolls internally. */
-export const ParentWrapperContainer = styled.div`
+   off-screen by scrolling empty space. Each column scrolls internally.
+   The calc() below only accounts for the TopBar and is a fallback for the
+   first paint; anything else that can render above ContentContainer in the
+   shared layout (e.g. GlobalMusicPlayer's 36px bar while a song is playing)
+   would silently make it wrong, so page.tsx measures the real remaining
+   viewport height at runtime (via $measuredHeight) and overrides it —
+   see `useViewportRemainder` usage in page.tsx. */
+export const ParentWrapperContainer = styled.div<{ $measuredHeight?: number }>`
   display: flex;
   flex-direction: row;
   justify-content: start;
   align-items: stretch;
   gap: 0.3em;
   width: 100%;
-  height: calc(100dvh - var(--topbar-height));
+  height: ${({ $measuredHeight }) =>
+    $measuredHeight != null
+      ? `${$measuredHeight}px`
+      : "calc(100dvh - var(--topbar-height))"};
   overflow: hidden;
 `;
 
@@ -353,7 +362,7 @@ export const AddFriendButton = styled.button`
     transform: scale(0.95);
   }
 
-  @media (max-width: 600px) 
+  @media (max-width: 600px)
     {
       margin-left: 10px;
     }

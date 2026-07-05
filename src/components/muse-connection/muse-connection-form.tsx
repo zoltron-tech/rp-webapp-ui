@@ -1,5 +1,6 @@
 "use client";
 
+import classNames from "classnames";
 import {
   forwardRef,
   useCallback,
@@ -9,6 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import { FiChevronDown, FiUser, FiUsers } from "react-icons/fi";
 import { GrAttachment } from "react-icons/gr";
 import { IoCloseOutline } from "react-icons/io5";
@@ -20,6 +22,7 @@ import {
 } from "@/app/rp/muse/connection-actions";
 import { AppAlertDialog } from "@/components/dialog";
 import { GifPicker } from "@/components/gif-picker";
+import * as SheetS from "@/components/profile-more-dropdown/styled";
 import {
   RichTextEditor,
   type RichTextEditorHandle,
@@ -27,9 +30,11 @@ import {
 import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
+import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import type { MuseConnectionGroup } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import * as S from "./styled";
+import { MuseConnectionTrayHeader } from "./tray-header";
 
 export type PickedMuse = {
   museId: string;
@@ -77,6 +82,10 @@ export const MuseConnectionForm = forwardRef<
   const { successToast, errorToast } = useUIContext();
   const { uploadMedia } = useUploadMedia();
   const novelist = useGlobalState("novelist");
+  const theme = useGlobalState("theme");
+  const accent = useGlobalState("accent");
+  const { width } = useWindowDimensions();
+  const isMobile = width !== null && width < 801;
 
   const editorRef = useRef<RichTextEditorHandle>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -105,6 +114,46 @@ export const MuseConnectionForm = forwardRef<
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showGifPicker, setShowGifPicker] = useState(false);
+
+  // ── Mobile GIF-picker tray open/close animation ───────────────────────────
+  // On mobile the form itself already renders inside a bottom sheet (see
+  // connections-section.tsx), and `AppAlertDialog`'s z-index sits well below
+  // that sheet's — opening the GIF picker as a centered dialog put it behind
+  // the tray instead of in front of it. Render it as a second, stacked bottom
+  // sheet instead, same slide-up pattern as the outer one.
+  const [gifSheetVisible, setGifSheetVisible] = useState(false);
+  const [gifSheetOpen, setGifSheetOpen] = useState(false);
+  const [gifStartY, setGifStartY] = useState(0);
+  const gifCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!isMobile) return;
+    if (showGifPicker) {
+      if (gifCloseTimerRef.current) {
+        clearTimeout(gifCloseTimerRef.current);
+        gifCloseTimerRef.current = null;
+      }
+      setGifSheetVisible(true);
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => setGifSheetOpen(true)),
+      );
+    } else {
+      setGifSheetOpen(false);
+      gifCloseTimerRef.current = setTimeout(
+        () => setGifSheetVisible(false),
+        300,
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showGifPicker, isMobile]);
+
+  useEffect(
+    () => () => {
+      if (gifCloseTimerRef.current) clearTimeout(gifCloseTimerRef.current);
+    },
+    [],
+  );
+  // ── /Mobile GIF-picker tray open/close animation ──────────────────────────
 
   // The signed-in novelist's own muses, straight from the global store — no
   // backend round-trip needed to tell "mine" apart from "a friend's".
@@ -138,7 +187,11 @@ export const MuseConnectionForm = forwardRef<
             .includes(term),
       )
       .map((m) => ({
-        displayName: [m.firstName, m.lastName].filter(Boolean).join(" "),
+        // Alternative verses carry the same name as their main muse, so tag
+        // them with the verse number to keep the picker unambiguous.
+        displayName:
+          [m.firstName, m.lastName].filter(Boolean).join(" ") +
+          (m.originalVerseId ? ` (Verse ${m.verseNumber ?? 2})` : ""),
         image: m.image || null,
         museId: m.id as string,
       }));
@@ -469,8 +522,8 @@ export const MuseConnectionForm = forwardRef<
 
       {!isEditMode && (
         <S.DescriptionHint>
-          💡 Once accepted, any novelist bonded here can add a rich description
-          together — no need to write it now
+          You can skip the description for now — once everyone accepts, you
+          and the other novelists involved can add and edit it together.
         </S.DescriptionHint>
       )}
 
@@ -478,8 +531,8 @@ export const MuseConnectionForm = forwardRef<
         <div>
           <S.Label>Description (optional)</S.Label>
           <S.DescriptionHint>
-            💡 Both the title and description can be refined by any novelist
-            whose characters are bonded here
+            You and any novelist whose character is bonded here can edit the
+            title and description at any time.
           </S.DescriptionHint>
           <S.ToolRow>
             <S.ToolButton htmlFor="mc-attach-input" aria-label="Attach image">
@@ -540,15 +593,65 @@ export const MuseConnectionForm = forwardRef<
         </S.ButtonGroup>
       )}
 
-      <AppAlertDialog
-        heading="Insert GIF"
-        text=""
-        body={<GifPicker onSelect={handleGifSelect} />}
-        open={showGifPicker}
-        onOpenChange={setShowGifPicker}
-        showConfirm={false}
-        closeButtonText="Close"
-      />
+      {isMobile ? (
+        gifSheetVisible &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <SheetS.MobilePortalRoot className={classNames([accent, theme])}>
+            <SheetS.MobileBackdrop
+              $open={gifSheetOpen}
+              onClick={(e) => {
+                if (e.target === e.currentTarget) setShowGifPicker(false);
+              }}
+            />
+            <SheetS.MobileSheet
+              $open={gifSheetOpen}
+              onTouchStart={(e) => {
+                // Stop the swipe from also bubbling to the outer connection
+                // tray's own touch handlers — React portals bubble through
+                // the React tree, not the DOM tree, so without this a single
+                // swipe-down closed both stacked sheets at once instead of
+                // just the top one.
+                e.stopPropagation();
+                setGifStartY(e.touches[0].clientY);
+              }}
+              onTouchEnd={(e) => {
+                e.stopPropagation();
+                if (e.changedTouches[0].clientY - gifStartY > 50)
+                  setShowGifPicker(false);
+              }}
+            >
+              <SheetS.DragHandle />
+              <MuseConnectionTrayHeader title="Insert GIF">
+                <S.TrayActionButton
+                  type="button"
+                  $variant="cancel"
+                  aria-label="Close"
+                  onClick={() => setShowGifPicker(false)}
+                >
+                  <IoCloseOutline size={18} />
+                </S.TrayActionButton>
+              </MuseConnectionTrayHeader>
+              <SheetS.MobileContent>
+                {showGifPicker && (
+                  <GifPicker fill autoFocus={false} onSelect={handleGifSelect} />
+                )}
+              </SheetS.MobileContent>
+            </SheetS.MobileSheet>
+          </SheetS.MobilePortalRoot>,
+          document.body,
+        )
+      ) : (
+        <AppAlertDialog
+          heading="Insert GIF"
+          text=""
+          body={<GifPicker onSelect={handleGifSelect} />}
+          open={showGifPicker}
+          onOpenChange={setShowGifPicker}
+          showConfirm={false}
+          closeButtonText="Close"
+        />
+      )}
     </S.FormRoot>
   );
 });

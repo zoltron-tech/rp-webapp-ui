@@ -41,6 +41,15 @@ export interface Muse {
   level: number;
   prev: MuseNavItem | null;
   next: MuseNavItem | null;
+  /** Main muse this one is an alternative verse of; null for the main verse. */
+  originalVerseId?: string | null;
+  /** Ordering within the verse family; the main verse renders as verse 1. */
+  verseNumber?: number | null;
+  /**
+   * All visible verses of this muse's family (main verse included), sorted by
+   * verse number. Only present when alternative verses exist.
+   */
+  verses?: MuseNavItem[] | null;
 }
 
 /**
@@ -69,6 +78,8 @@ export interface MuseNavItem {
   privacy: PrivacyLevel;
   useAccent: boolean;
   useExtraImages: boolean;
+  originalVerseId?: string | null;
+  verseNumber?: number | null;
 }
 
 export interface MuseAboutSection {
@@ -104,6 +115,9 @@ export interface CreateUpdateMuse {
   privacy: string;
   useAccent: boolean;
   useExtraImages: boolean;
+  /** Set on create to make the new muse an alternative verse of an existing muse. */
+  originalVerseId?: string | null;
+  verseNumber?: number | null;
 }
 
 export interface MuseConnection {

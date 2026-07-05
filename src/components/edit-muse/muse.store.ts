@@ -24,6 +24,8 @@ export type MuseState = {
   useAccent: boolean;
   useExtraImages: boolean;
   extraAttributes: Record<string, string> | null;
+  /** When creating an alternative verse: the muse this one is a verse of. */
+  originalVerseId: string | null;
 };
 
 export const INITIAL_STATE: MuseState = {
@@ -39,6 +41,7 @@ export const INITIAL_STATE: MuseState = {
   lastName: null,
   nicknames: [],
   note: null,
+  originalVerseId: null,
   privacy: "ONLY_ME",
   story: null,
   useAccent: false,

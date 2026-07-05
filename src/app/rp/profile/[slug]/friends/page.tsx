@@ -93,7 +93,7 @@ export default function FriendsListPage() {
               <CardShimmer key={i} />
             ))
           : displayedFriends.map((friend) => (
-              <NovelistPreviewCard key={friend.id} novelist={friend} rank={friend.rank}/>
+              <NovelistPreviewCard key={friend.id} novelist={friend} />
             ))}
       </S.Grid>
       {!loading && friends.length === 0 && <S.Empty>No friends yet.</S.Empty>}

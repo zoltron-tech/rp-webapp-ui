@@ -106,21 +106,28 @@ export const Subtitle = styled.p`
 export const InviteXPButton = styled.button`
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   margin-top: 10px;
-  padding: 8px 16px;
+  padding: 9px 18px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--bg-5));
-  background: color-mix(in srgb, var(--accent) 14%, var(--bg-2));
-  color: var(--accent);
+  border: none;
+  background: var(--accent);
+  color: var(--accent-fg, var(--text));
   font-size: var(--font-size-small);
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--accent) 40%, transparent);
+  transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
 
   &:hover {
-    background: color-mix(in srgb, var(--accent) 22%, var(--bg-3));
-    border-color: var(--accent);
+    background: var(--accent-hover);
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 55%, transparent);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 35%, transparent);
   }
 
   svg {
@@ -403,7 +410,7 @@ export const LevelChip = styled.span`
   text-transform: uppercase;
 `;
 
-export const XPChip = styled.span`
+export const ScoreChip = styled.span`
   display: inline-flex;
   align-items: center;
   gap: 4px;

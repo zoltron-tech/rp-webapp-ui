@@ -31,6 +31,9 @@ type Props = {
   onEdit?: () => void;
   /** Suppress the accept/decline buttons when the caller renders them itself. */
   hideReactButtons?: boolean;
+  /** "glass" matches the muse profile page's translucent accent-tinted cards
+   * instead of the flat edit-muse form panel. Same card footprint either way. */
+  variant?: "default" | "glass";
 };
 
 export function MuseConnectionDetail({
@@ -40,6 +43,7 @@ export function MuseConnectionDetail({
   onRerequested,
   onEdit,
   hideReactButtons = false,
+  variant = "default",
 }: Props) {
   const { routeToPage } = usePageRouter();
   const { successToast, errorToast } = useUIContext();
@@ -109,17 +113,21 @@ export function MuseConnectionDetail({
           <S.DetailMuseCard
             key={muse.museId}
             type="button"
+            $variant={variant}
+            $accent={accent}
             onClick={() => routeToPage(ROUTES.Muse.View(muse.museId))}
           >
             <S.MuseChipAvatar $src={muse.image} />
-            <span>
-              <S.DetailMuseName>
-                {[muse.firstName, muse.lastName].filter(Boolean).join(" ")}
+            <S.DetailMuseCardInfo>
+              <S.DetailMuseName title={muse.firstName}>
+                {muse.firstName}
               </S.DetailMuseName>
               {muse.novelistName && (
-                <S.DetailMuseOwner>by {muse.novelistName}</S.DetailMuseOwner>
+                <S.DetailMuseOwner title={`by ${muse.novelistName}`}>
+                  by {muse.novelistName}
+                </S.DetailMuseOwner>
               )}
-            </span>
+            </S.DetailMuseCardInfo>
           </S.DetailMuseCard>
         ))}
       </S.DetailMuseGrid>

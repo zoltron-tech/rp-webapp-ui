@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { BsCheckCircleFill, BsLockFill } from "react-icons/bs";
+import { HiUserAdd } from "react-icons/hi";
+import { InviteFriendsDialog } from "@/components/invite-friends-dialog";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { LEVELS, BEYOND_LEVELS } from "@/lib/rp-levels";
+import { LeaderboardInfo } from "../leaderboard/leaderboard-info";
 import * as S from "./styled";
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -12,6 +15,8 @@ import * as S from "./styled";
 export default function LevelsPage() {
   const novelist = useGlobalState("novelist");
   const { stopPageLoading } = usePageRouter();
+  const [infoOpen, setInfoOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   useEffect(() => {
     stopPageLoading();
@@ -25,21 +30,30 @@ export default function LevelsPage() {
     <S.Root>
       <S.Header>
         <S.HeaderEyebrow>Your progress</S.HeaderEyebrow>
-        <S.HeaderTitle>Level Journey</S.HeaderTitle>
+        <S.TitleRow>
+          <S.HeaderTitle>Level Journey</S.HeaderTitle>
+          <S.InfoButton
+            type="button"
+            aria-label="About levels & XP"
+            onClick={() => setInfoOpen(true)}
+          >
+            i
+          </S.InfoButton>
+        </S.TitleRow>
         <S.HeaderSub>
           Every word you write, every story you share — it all counts. Here is
-          where your XP takes you.
+          where your Score takes you.
         </S.HeaderSub>
 
-        {novelist && (
-          <S.CurrentBadge>
-            <S.CurrentBadgeLevel>Level {currentLevel}</S.CurrentBadgeLevel>
-            <S.CurrentBadgeDivider />
-            <S.CurrentBadgeXP>
-              {currentXP.toLocaleString()} XP total
-            </S.CurrentBadgeXP>
-          </S.CurrentBadge>
-        )}
+        <div>
+          <S.InviteXPButton
+            type="button"
+            onClick={() => setInviteOpen(true)}
+          >
+            <HiUserAdd />
+            Invite friends & earn more XP
+          </S.InviteXPButton>
+        </div>
       </S.Header>
 
       <S.Timeline>
@@ -99,12 +113,12 @@ export default function LevelsPage() {
                   <S.LevelTitle>{lvl.title}</S.LevelTitle>
                   {isCurrent && xpToNextLevel !== null && (
                     <S.XPRange>
-                      {xpToNextLevel.toLocaleString()} XP to next level
+                      {xpToNextLevel.toLocaleString()} Score to next level
                     </S.XPRange>
                   )}
                   {isLocked && !lvl.comingSoon && (
                     <S.XPRange>
-                      Unlocks at {lvl.xpStart.toLocaleString()} XP
+                      Unlocks at {lvl.xpStart.toLocaleString()} Score
                     </S.XPRange>
                   )}
                 </S.LevelCardHead>
@@ -159,7 +173,7 @@ export default function LevelsPage() {
               <S.LevelCardHead>
                 <S.BeyondLevelNumber>Level {n}</S.BeyondLevelNumber>
                 <S.BeyondTitle>???</S.BeyondTitle>
-                <S.XPRange>— XP</S.XPRange>
+                <S.XPRange>— Score</S.XPRange>
               </S.LevelCardHead>
               <S.ComingSoonBody>
                 <S.ComingSoonIcon>
@@ -174,6 +188,17 @@ export default function LevelsPage() {
         <S.BeyondFadeOverlay />
         <S.BeyondFooter>The story continues…</S.BeyondFooter>
       </S.BeyondSection>
+
+      <LeaderboardInfo
+        type="novelist"
+        open={infoOpen}
+        onClose={() => setInfoOpen(false)}
+      />
+
+      <InviteFriendsDialog
+        open={inviteOpen}
+        onClose={() => setInviteOpen(false)}
+      />
     </S.Root>
   );
 }

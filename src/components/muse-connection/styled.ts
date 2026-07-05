@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 
 export const FormRoot = styled.div`
   display: flex;
@@ -247,19 +247,33 @@ export const MuseSearchOption = styled.button`
   }
 `;
 
+/* Compact info box explaining who can edit these fields — an inline-scale
+   version of the InfoBox pattern used elsewhere (e.g. profile/referrals),
+   sized down to sit comfortably inside this form instead of a full page. */
 export const DescriptionHint = styled.p`
-  font-size: 0.8rem;
-  color: var(--text);
-  opacity: 0.8;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   margin: 0.5rem 0;
-  padding: 0.5rem;
-  background-color: var(--bg-2);
-  border-radius: 0.25rem;
-  border-left: 3px solid var(--accent);
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg-2));
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--bg-5));
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  line-height: 1.45;
+
+  &::before {
+    content: "💡";
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
 `;
 
 export const EditorArea = styled.div`
   min-height: 160px;
+  margin-top: 0.5rem;
   display: flex;
   flex-direction: column;
 
@@ -438,33 +452,84 @@ export const DetailMuseGrid = styled.div`
   gap: 0.5rem;
 `;
 
-export const DetailMuseCard = styled.button`
+/* `$variant="glass"` matches the accent-tinted translucent look used by the
+   muse profile page's ConnectionCard (see rp/muse/[slug]/styles.ts) instead
+   of the flat `--bg-3` panel the edit-muse form uses — same footprint
+   (padding/gap/radius) either way, just a different fill/border/text color,
+   so the card's size never changes between contexts. */
+export const DetailMuseCard = styled.button<{
+  $variant?: "default" | "glass";
+  $accent?: string | null;
+}>`
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  width: 160px;
+  flex-shrink: 0;
   padding: 0.35rem 0.6rem 0.35rem 0.35rem;
   border-radius: 0.5rem;
-  border: 1px solid var(--bg-6);
-  background-color: var(--bg-3);
-  color: var(--text);
   cursor: pointer;
   text-align: left;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 
-  &:hover {
-    background-color: var(--bg-4);
-  }
+  ${({ $variant, $accent }) =>
+    $variant === "glass"
+      ? css`
+          border: 1px solid
+            ${$accent && $accent.trim() !== ""
+              ? `color-mix(in srgb, ${$accent} 26%, transparent)`
+              : "rgba(255, 255, 255, 0.14)"};
+          background-color: ${$accent && $accent.trim() !== ""
+            ? `color-mix(in srgb, ${$accent} 10%, rgba(0, 0, 0, 0.3))`
+            : "rgba(255, 255, 255, 0.05)"};
+          color: #fff;
+
+          &:hover {
+            border-color: ${$accent && $accent.trim() !== ""
+              ? `color-mix(in srgb, ${$accent} 45%, transparent)`
+              : "rgba(255, 255, 255, 0.28)"};
+            background-color: ${$accent && $accent.trim() !== ""
+              ? `color-mix(in srgb, ${$accent} 16%, rgba(0, 0, 0, 0.3))`
+              : "rgba(255, 255, 255, 0.09)"};
+          }
+        `
+      : css`
+          border: 1px solid var(--bg-6);
+          background-color: var(--bg-3);
+          color: var(--text);
+
+          &:hover {
+            background-color: var(--bg-4);
+          }
+        `}
+`;
+
+/* Wraps name + owner so they can truncate independently of the fixed-width
+   card — flex items default to min-width:auto, which would otherwise let a
+   long name push the card wider instead of ellipsizing. */
+export const DetailMuseCardInfo = styled.span`
+  display: block;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
 `;
 
 export const DetailMuseName = styled.span`
   font-size: 0.85rem;
   font-weight: 600;
   display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 export const DetailMuseOwner = styled.span`
-  font-size: 0.7rem;
+  font-size: 0.62rem;
   opacity: 0.65;
   display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 export const ApprovalList = styled.div`

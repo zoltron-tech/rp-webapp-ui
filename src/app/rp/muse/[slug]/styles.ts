@@ -24,6 +24,14 @@ export const PennedByChip = styled.button<{ accent?: string | null }>`
   color: var(--text);
   font-weight: 700;
   cursor: pointer;
+
+  /* Matches the muse card's smallest size (e.g. the 240px card at 375px
+     viewports) — tighten the chip so it doesn't crowd the header. */
+  @container muse-card (max-width: 300px) {
+    gap: 5px;
+    padding: 1px 6px 1px 1px;
+    font-size: var(--font-size-xsmall);
+  }
 `;
 
 export const PennedByName = styled.span`
@@ -53,6 +61,11 @@ export const PennedByMiniAvatar = styled.div<{ $src?: string }>`
   background-position: center;
   background-color: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.06);
+
+  @container muse-card (max-width: 300px) {
+    width: 16px;
+    height: 16px;
+  }
 `;
 
 export const PennedByRow = styled.span`
@@ -679,6 +692,10 @@ export const CardExpandedWrapper = styled.div`
     }
   }
 
+  @media (max-width: 1024px) {
+    border: none;
+  }
+
   @media (min-width: 350px) and (max-width: 1024px) {
     &.open {
       border-radius: 0px;
@@ -688,15 +705,21 @@ export const CardExpandedWrapper = styled.div`
 
   /* Slim phones (down to iPhone SE, 375px): same 9/16 ratio, smaller card so
      the 36px edge nav tabs on both sides never overlap it */
-  @media (min-width: 350px) and (max-width: 420px) {
-    width: min(288px, calc(100vw - 88px));
+  @media (min-width: 350px) and (max-width: 380px) {
+    width: min(240px, calc(100vw - 120px));
+  }
+
+  /* Slightly wider phones (e.g. 390px, iPhone 12/13/14): a touch bigger than
+     the smallest variant above rather than hitting the same 240px cap */
+  @media (min-width: 381px) and (max-width: 420px) {
+    width: min(280px, calc(100vw - 110px));
   }
 
   @media (max-width: 350px) {
     margin-top: 0px;
-    width: 100%;
-    height: 70vh;
-    border-radius: 0px;
+    width: 95%;
+    height: 60vh;
+    border-radius: 8px;
   }
 `;
 
@@ -992,9 +1015,14 @@ export const SideMenu = styled.nav`
     border-radius: 18px;
   }
 
-  @media (max-width: 420px) {
+  @media (max-width: 380px) {
     padding: 6px;
     gap: 2px;
+  }
+
+  @media (min-width: 381px) and (max-width: 420px) {
+    padding: 7px;
+    gap: 3px;
   }
 `;
 
@@ -1037,18 +1065,11 @@ export const MenuButton = styled.button<{ $accent?: string | null }>`
     color: rgba(255, 255, 255, 0.92);
   }
 
+  /* Fill/glow live on the sliding MenuHighlight pill behind the buttons (see
+     below) so the active state can animate its position between sections;
+     this class only carries the parts that don't need to move. */
   &.selected {
     color: #fff;
-    background: ${({ $accent }) =>
-      $accent && $accent.trim() !== ""
-        ? `color-mix(in srgb, ${$accent} 26%, rgba(255, 255, 255, 0.04))`
-        : "color-mix(in srgb, var(--accent) 40%, transparent)"};
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.08),
-      ${({ $accent }) =>
-        $accent && $accent.trim() !== ""
-          ? `0 0 14px color-mix(in srgb, ${$accent} 25%, transparent)`
-          : "0 0 12px color-mix(in srgb, var(--accent) 30%, transparent)"};
 
     &::before {
       transform: translateY(-50%) scaleY(1);
@@ -1084,9 +1105,14 @@ export const MenuButton = styled.button<{ $accent?: string | null }>`
     }
   }
 
-  @media (max-width: 420px) {
+  @media (max-width: 380px) {
     padding: 6px 6px 4px;
     gap: 2px;
+  }
+
+  @media (min-width: 381px) and (max-width: 420px) {
+    padding: 7px 8px 5px;
+    gap: 3px;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1095,6 +1121,42 @@ export const MenuButton = styled.button<{ $accent?: string | null }>`
     &::before {
       transition: none;
     }
+  }
+`;
+
+/* Sliding "active section" pill, positioned/sized in JS from the selected
+   MenuButton's own layout box (see page.tsx) and painted behind the buttons
+   (DOM order, not z-index) so it reads as one highlight gliding between
+   them — vertically on desktop, horizontally on mobile — instead of each
+   button just flipping its own background on and off. */
+export const MenuHighlight = styled.div<{ $accent?: string | null }>`
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 12px;
+  background: ${({ $accent }) =>
+    $accent && $accent.trim() !== ""
+      ? `color-mix(in srgb, ${$accent} 26%, rgba(255, 255, 255, 0.04))`
+      : "color-mix(in srgb, var(--accent) 40%, transparent)"};
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    ${({ $accent }) =>
+      $accent && $accent.trim() !== ""
+        ? `0 0 14px color-mix(in srgb, ${$accent} 25%, transparent)`
+        : "0 0 12px color-mix(in srgb, var(--accent) 30%, transparent)"};
+  pointer-events: none;
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.2s ease;
+
+  @media (max-width: 600px) {
+    border-radius: 10px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: opacity 0.2s ease;
   }
 `;
 
@@ -1111,9 +1173,14 @@ export const MenuButtonIcon = styled.span`
     transform: scale(1.12);
   }
 
-  @media (max-width: 420px) {
+  @media (max-width: 380px) {
     width: 16px;
     height: 16px;
+  }
+
+  @media (min-width: 381px) and (max-width: 420px) {
+    width: 19px;
+    height: 19px;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1133,9 +1200,14 @@ export const MenuText = styled.span`
     letter-spacing: 0.1em;
   }
 
-  @media (max-width: 420px) {
+  @media (max-width: 380px) {
     font-size: 0.4rem;
     letter-spacing: 0.08em;
+  }
+
+  @media (min-width: 381px) and (max-width: 420px) {
+    font-size: 0.46rem;
+    letter-spacing: 0.09em;
   }
 `;
 
@@ -1677,6 +1749,237 @@ export const PromptCardStat = styled.span`
   font-weight: 600;
   color: rgba(255, 255, 255, 0.5);
   white-space: nowrap;
+`;
+
+/* ── Muse connection cards ("bonds") ─────────────────────────────────────────
+   Same glass/accent design language as PromptCard above: translucent
+   accent-tinted fill, soft border that brightens on hover, backdrop blur.
+   The header row (avatar stack + title + actions) is squeezed via
+   `@container muse-card` so it still fits on the smallest card (240px) even
+   with a connection at its 10-muse cap — only the first 3 muses ever render
+   as avatars (see connections-section.tsx), so width only grows with the
+   overflow badge, never with the muse count itself. */
+export const ConnectionCard = styled.div<{ $accent?: string | null }>`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: ${({ $accent }) =>
+    $accent && $accent.trim() !== ""
+      ? `color-mix(in srgb, ${$accent} 10%, rgba(0, 0, 0, 0.35))`
+      : "rgba(255, 255, 255, 0.06)"};
+  border: 1px solid
+    ${({ $accent }) =>
+      $accent && $accent.trim() !== ""
+        ? `color-mix(in srgb, ${$accent} 26%, transparent)`
+        : "rgba(255, 255, 255, 0.12)"};
+  backdrop-filter: blur(6px);
+  transition: border-color 0.25s ease;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &:hover {
+    border-color: ${({ $accent }) =>
+      $accent && $accent.trim() !== ""
+        ? `color-mix(in srgb, ${$accent} 45%, transparent)`
+        : "rgba(255, 255, 255, 0.24)"};
+  }
+`;
+
+export const ConnectionCardHeader = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  @container muse-card (max-width: 300px) {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+`;
+
+export const ConnectionAvatarStack = styled.div`
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+
+  & > * {
+    margin-left: -8px;
+    border: 2px solid rgba(10, 10, 14, 0.9);
+  }
+
+  & > *:first-child {
+    margin-left: 0;
+  }
+`;
+
+export const ConnectionAvatar = styled.span<{ $src?: string | null }>`
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background-color: rgba(255, 255, 255, 0.08);
+  background-image: ${({ $src }) => ($src ? `url("${$src}")` : "none")};
+  background-size: cover;
+  background-position: center;
+
+  @container muse-card (max-width: 300px) {
+    width: 20px;
+    height: 20px;
+  }
+`;
+
+export const ConnectionOverflowBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 5px;
+  margin-left: -8px;
+  border: 2px solid rgba(10, 10, 14, 0.9);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+
+  @container muse-card (max-width: 300px) {
+    min-width: 20px;
+    height: 20px;
+    font-size: 0.55rem;
+  }
+`;
+
+export const ConnectionCardTitle = styled.span`
+  flex: 1;
+  min-width: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+
+  @container muse-card (max-width: 300px) {
+    font-size: 0.74rem;
+  }
+`;
+
+export const ConnectionCardActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+
+  @container muse-card (max-width: 300px) {
+    gap: 4px;
+  }
+`;
+
+/* Shared shape for the edit/delete icon buttons — mirrors PromptCommentsBtn's
+   hover treatment (accent-tinted, or red for the destructive variant). */
+export const ConnectionIconButton = styled.button<{ $variant?: "danger" }>`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+
+  &:hover {
+    background: ${({ $variant }) =>
+      $variant === "danger"
+        ? "rgba(239, 68, 68, 0.16)"
+        : "rgba(255, 255, 255, 0.12)"};
+    border-color: ${({ $variant }) =>
+      $variant === "danger"
+        ? "rgba(239, 68, 68, 0.5)"
+        : "rgba(255, 255, 255, 0.32)"};
+    color: ${({ $variant }) =>
+      $variant === "danger" ? "rgb(239, 68, 68)" : "#fff"};
+  }
+
+  @container muse-card (max-width: 300px) {
+    width: 22px;
+    height: 22px;
+  }
+`;
+
+export const ConnectionReactButton = styled.button<{
+  $variant: "accept" | "decline";
+}>`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+  background: ${({ $variant }) =>
+    $variant === "accept" ? "var(--grass-9)" : "rgb(185, 28, 28)"};
+  transition: filter 0.15s ease, transform 0.1s ease, opacity 0.15s ease;
+
+  &:hover {
+    filter: brightness(1.1);
+  }
+
+  &:active {
+    transform: scale(0.9);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  @container muse-card (max-width: 300px) {
+    width: 22px;
+    height: 22px;
+  }
+`;
+
+export const ConnectionChevron = styled.span<{ $expanded: boolean }>`
+  display: inline-flex;
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.5);
+  transform: rotate(${({ $expanded }) => ($expanded ? "180deg" : "0deg")});
+  transition: transform 0.2s ease;
+`;
+
+export const ConnectionCardBody = styled.div`
+  padding: 10px 12px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+`;
+
+export const ConnectionsBottomSpacer = styled.div`
+  flex: 0 0 100%;
+  width: 100%;
+  height: 48px;
 `;
 
 export const AboutSectionImage = styled.img`
@@ -2761,67 +3064,32 @@ export const SectionMiniName = styled.div`
   margin-bottom: 5px;
 `;
 
-export const InfoLevelRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 6px;
-  flex-wrap: wrap;
-  justify-content: center;
-`;
-
-export const InfoLevelBadge = styled.span<{ accent?: string | null }>`
+export const InfoScoreCorner = styled.span<{ accent?: string | null }>`
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 12px 4px 8px;
+  gap: 4px;
+  padding: 3px 10px 3px 6px;
   border-radius: 999px;
-  background: ${({ accent }) =>
-    accent && accent.trim() !== ""
-      ? `color-mix(in srgb, ${accent} 22%, rgba(0,0,0,0.35))`
-      : "rgba(255,255,255,0.1)"};
+  background-color: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
   border: 1px solid ${({ accent }) =>
     accent && accent.trim() !== ""
-      ? `color-mix(in srgb, ${accent} 52%, transparent)`
-      : "rgba(255,255,255,0.28)"};
-  backdrop-filter: blur(8px);
-  box-shadow: ${({ accent }) =>
-    accent && accent.trim() !== ""
-      ? `0 0 12px color-mix(in srgb, ${accent} 22%, transparent), inset 0 1px 0 rgba(255,255,255,0.08)`
-      : "0 0 8px rgba(255,255,255,0.07), inset 0 1px 0 rgba(255,255,255,0.07)"};
-  font-size: 0.72rem;
+      ? `color-mix(in srgb, ${accent} 45%, transparent)`
+      : "rgba(255,255,255,0.2)"};
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.68rem;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.95);
+  letter-spacing: 0.02em;
   white-space: nowrap;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
   cursor: pointer;
   transition: opacity 0.15s;
 
   &:hover {
     opacity: 0.8;
-  }
-`;
-
-export const InfoLevelXP = styled.span`
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 12px 4px 8px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(6px);
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.58);
-  white-space: nowrap;
-  letter-spacing: 0.03em;
-  cursor: pointer;
-  transition: opacity 0.15s;
-
-  &:hover {
-    opacity: 0.75;
   }
 `;
 
@@ -2962,5 +3230,205 @@ export const CardBgRemoveBtn = styled.button`
 
   @media (hover: none) {
     opacity: 1;
+  }
+`;
+
+/* ── Verse header ─────────────────────────────────────────────────────────────
+   Compact bar rendered above the muse card to flip between alternative
+   verses of the same muse (and, for the owner, create a new one). A stylized
+   "Verses" label anchors the left edge; the verse numbers live in small
+   circular badges that scroll horizontally as a single row, so a character
+   with many verses never grows taller than one line — the constraint that
+   matters most on mobile, where vertical space is scarce.
+
+   MuseContainer is a flex-wrap row, and the card (and its section panels)
+   are all narrower than the viewport on desktop — so a narrow verse bar
+   would happily sit *beside* the card instead of above it once there's
+   enough horizontal room. `flex-basis: 100%` on this outer element claims
+   the full row regardless of its own content width, forcing the card onto
+   the next line; `max-width` lives on the inner element instead; combining
+   both on one element would clamp the flex-basis straight back down to
+   `max-width` and defeat the whole trick. */
+export const VerseHeaderBar = styled.nav`
+  position: relative;
+  z-index: ${Z_INDEX.CARD};
+  width: 100%;
+  flex-basis: 100%;
+  display: flex;
+  justify-content: center;
+`;
+
+export const VerseHeaderInner = styled.div`
+  width: 100%;
+  max-width: 326px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 6px 10px;
+
+  @media (min-width: 1024px) and (max-width: 2047px) {
+    max-width: 422px;
+  }
+
+  @media (max-width: 950px) {
+    max-width: 440px;
+    padding-inline: 16px;
+  }
+`;
+
+export const VerseHeaderLabel = styled.span<{ $accent?: string | null }>`
+  position: relative;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding-left: 9px;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.75);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 2px 8px rgba(0, 0, 0, 0.7);
+
+  svg {
+    width: 11px;
+    height: 11px;
+    flex-shrink: 0;
+    color: ${({ $accent }) =>
+      $accent && $accent.trim() !== "" ? $accent : "var(--accent, #fff)"};
+  }
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 1px;
+    bottom: 1px;
+    width: 2px;
+    border-radius: 2px;
+    background: ${({ $accent }) =>
+      $accent && $accent.trim() !== "" ? $accent : "var(--accent, #fff)"};
+  }
+`;
+
+export const VerseCircleTrack = styled.div<{ $fade?: boolean; $accent?: string | null }>`
+  /* Shrink (to scroll) when there's not enough room, but never grow beyond
+     its own content — flex: 1 would keep claiming the row's full remaining
+     width even with only a couple of circles left, leaving empty slack
+     between the last one and the pinned "+" button once verses are deleted. */
+  flex: 0 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 3px 2px;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Connecting track between verse circles — uses muse accent if available */
+  & > button:not(:first-child)::before {
+    background: ${({ $accent }) =>
+      $accent && $accent.trim() !== ""
+        ? `color-mix(in srgb, ${$accent} 45%, rgba(255,255,255,0.22))`
+        : "rgba(255, 255, 255, 0.22)"} !important;
+  }
+
+  /* Soft fade at the trailing edge hints there's more to scroll — the "+"
+     button used to double as that visual stop, but it's now pinned outside
+     the track (see VerseCircleNew) so it's always reachable. */
+  ${({ $fade }) =>
+    $fade &&
+    `
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 22px), transparent 100%);
+    mask-image: linear-gradient(to right, black calc(100% - 22px), transparent 100%);
+  `}
+`;
+
+export const VerseCircle = styled.button<{
+  $active?: boolean;
+  $accent?: string | null;
+}>`
+  all: unset;
+  position: relative;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 800;
+  cursor: pointer;
+  color: #fff;
+  background: ${({ $active, $accent }) =>
+    $active
+      ? $accent && $accent.trim() !== ""
+        ? `color-mix(in srgb, ${$accent} 60%, rgba(10, 10, 14, 0.85))`
+        : "var(--accent)"
+      : "rgba(10, 10, 14, 0.55)"};
+  backdrop-filter: blur(6px);
+  border: 1.5px solid
+    ${({ $active }) =>
+      $active ? "rgba(255, 255, 255, 0.55)" : "rgba(255, 255, 255, 0.2)"};
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+
+  /* Thin connecting track between consecutive circles — a subtle "stepper"
+     read that ties the numbers together as one sequence at a glance. */
+  &:not(:first-child)::before {
+    content: "";
+    position: absolute;
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 1.5px;
+    background: rgba(255, 255, 255, 0.22);
+  }
+
+  &:hover:not(:disabled) {
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0) scale(0.94);
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+`;
+
+/* Pinned beside (not inside) VerseCircleTrack — always one tap away instead
+   of sitting at the tail of a scrollable list. Overrides the connecting
+   "stepper" line it inherits from VerseCircle with its own divider, set a
+   little further off since it now sits across the track's fade/gap rather
+   than flush against a neighboring circle. */
+export const VerseCircleNew = styled(VerseCircle)`
+  flex-shrink: 0;
+  border-style: dashed;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+
+  &::before {
+    right: auto;
+    left: -9px;
+    width: 6px;
+  }
+
+  &:hover {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.55);
   }
 `;

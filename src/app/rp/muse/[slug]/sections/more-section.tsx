@@ -73,7 +73,7 @@ export function MoreSection({ muse, isOwnMuse }: Props) {
                     onClick={() => setShowDeleteConfirm(true)}
                   >
                     <FaRegTrashCan size={18} />
-                    Delete muse
+                    {muse?.originalVerseId ? "Delete verse" : "Delete muse"}
                   </S.MoreMenuItem>
                 </S.MoreMenuList>
               ) : (

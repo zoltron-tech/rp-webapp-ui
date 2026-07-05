@@ -315,13 +315,14 @@ export function ConnectionsSection({ muse, isOwnMuse }: Props) {
                       const busyReacting = reactingId === connection.id;
 
                       return (
-                        <MC.ConnectionCard
+                        <S.ConnectionCard
                           key={connection.id}
+                          $accent={accent ?? null}
                           ref={(el) => {
                             connectionCardRefs.current[connection.id] = el;
                           }}
                         >
-                          <MC.ConnectionCardHeader
+                          <S.ConnectionCardHeader
                             type="button"
                             onClick={() =>
                               setExpandedConnectionId((prev) =>
@@ -329,9 +330,9 @@ export function ConnectionsSection({ muse, isOwnMuse }: Props) {
                               )
                             }
                           >
-                            <MC.ConnectionAvatarStack>
+                            <S.ConnectionAvatarStack>
                               {previewMuses.map((m) => (
-                                <MC.MuseChipAvatar
+                                <S.ConnectionAvatar
                                   key={m.museId}
                                   $src={m.image}
                                   title={[m.firstName, m.lastName]
@@ -340,20 +341,20 @@ export function ConnectionsSection({ muse, isOwnMuse }: Props) {
                                 />
                               ))}
                               {overflowCount > 0 && (
-                                <MC.ConnectionOverflowBadge>
+                                <S.ConnectionOverflowBadge>
                                   +{overflowCount}
-                                </MC.ConnectionOverflowBadge>
+                                </S.ConnectionOverflowBadge>
                               )}
-                            </MC.ConnectionAvatarStack>
+                            </S.ConnectionAvatarStack>
 
-                            <MC.ConnectionCardTitle>
+                            <S.ConnectionCardTitle>
                               {connection.title}
-                            </MC.ConnectionCardTitle>
+                            </S.ConnectionCardTitle>
 
-                            <MC.ConnectionCardActions>
+                            <S.ConnectionCardActions>
                               {awaitingViewer ? (
                                 <>
-                                  <MC.ConnectionReactButton
+                                  <S.ConnectionReactButton
                                     type="button"
                                     $variant="decline"
                                     aria-label="Decline"
@@ -365,8 +366,8 @@ export function ConnectionsSection({ muse, isOwnMuse }: Props) {
                                     }}
                                   >
                                     <FiX size={15} />
-                                  </MC.ConnectionReactButton>
-                                  <MC.ConnectionReactButton
+                                  </S.ConnectionReactButton>
+                                  <S.ConnectionReactButton
                                     type="button"
                                     $variant="accept"
                                     aria-label="Accept"
@@ -378,11 +379,11 @@ export function ConnectionsSection({ muse, isOwnMuse }: Props) {
                                     }}
                                   >
                                     <FiCheck size={15} />
-                                  </MC.ConnectionReactButton>
+                                  </S.ConnectionReactButton>
                                 </>
                               ) : (
                                 connection.canEdit && (
-                                  <MC.ConnectionEditIconButton
+                                  <S.ConnectionIconButton
                                     type="button"
                                     aria-label="Edit connection"
                                     onClick={(e) => {
@@ -392,12 +393,13 @@ export function ConnectionsSection({ muse, isOwnMuse }: Props) {
                                     }}
                                   >
                                     <FiEdit2 size={13} />
-                                  </MC.ConnectionEditIconButton>
+                                  </S.ConnectionIconButton>
                                 )
                               )}
                               {connection.viewerIsCreator && (
-                                <MC.ConnectionDeleteIconButton
+                                <S.ConnectionIconButton
                                   type="button"
+                                  $variant="danger"
                                   aria-label="Delete connection"
                                   title="Delete connection"
                                   onClick={(e) => {
@@ -406,26 +408,27 @@ export function ConnectionsSection({ muse, isOwnMuse }: Props) {
                                   }}
                                 >
                                   <FaRegTrashCan size={12} />
-                                </MC.ConnectionDeleteIconButton>
+                                </S.ConnectionIconButton>
                               )}
-                              <MC.ConnectionChevron $expanded={isExpanded}>
+                              <S.ConnectionChevron $expanded={isExpanded}>
                                 <FiChevronDown size={16} />
-                              </MC.ConnectionChevron>
-                            </MC.ConnectionCardActions>
-                          </MC.ConnectionCardHeader>
+                              </S.ConnectionChevron>
+                            </S.ConnectionCardActions>
+                          </S.ConnectionCardHeader>
 
                           {isExpanded && (
-                            <MC.ConnectionCardBody>
+                            <S.ConnectionCardBody>
                               <MuseConnectionDetail
                                 connection={connection}
                                 accent={accent ?? null}
                                 onReacted={handleReacted}
                                 onRerequested={handleRerequested}
                                 hideReactButtons
+                                variant="glass"
                               />
-                            </MC.ConnectionCardBody>
+                            </S.ConnectionCardBody>
                           )}
-                        </MC.ConnectionCard>
+                        </S.ConnectionCard>
                       );
                     })}
 
@@ -436,7 +439,7 @@ export function ConnectionsSection({ muse, isOwnMuse }: Props) {
                     {/* Guarantees scroll room below the last card so an
                         expanded item (even the last one) can scroll fully
                         into view with margin to spare. */}
-                    {expandedConnectionId && <MC.ConnectionsBottomSpacer />}
+                    {expandedConnectionId && <S.ConnectionsBottomSpacer />}
                   </>
                 )}
               </S.ExpandedContentInner>

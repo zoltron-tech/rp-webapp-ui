@@ -12,9 +12,11 @@ import { ImProfile } from "react-icons/im";
 import { setMuseAvatarAction } from "@/app/rp/muse/actions";
 import { deleteMedia } from "@/app/rp/profile/actions";
 import { useUploadMedia } from "@/hooks/use-upload-media";
-import type { Fandom, NWImage } from "@/types";
+import type { Fandom, Muse, NWImage } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
+import { AvatarNew } from "../common/avatar-new";
 import { AvatarUploadField } from "../common/avatar-upload-field";
+import { PrivacyIcon } from "../common/privacy-icon";
 import { AppAlertDialog } from "../dialog";
 import AvatarCropDialog from "../dialog/avatar-crop-dialog";
 import { ErrorBox } from "../error-box";
@@ -26,6 +28,13 @@ import { useMuseSave } from "./use-muse-save";
 
 const VALID_IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif"];
 
+const PRIVACY_LABELS: Record<string, string> = {
+  CUSTOM: "Custom",
+  FRIENDS: "Friends",
+  ONLY_ME: "Only Me",
+  PUBLIC: "Public",
+};
+
 function clamp(v: number, min: number, max: number) {
   return Math.min(max, Math.max(min, v));
 }
@@ -35,9 +44,15 @@ import { FiArrowLeft } from "react-icons/fi";
 type Props = {
   onContinue: (savedId: string) => void;
   onBack?: () => void;
+  /** Set while creating a new verse — the muse this one is a verse of. */
+  verseParentMuse?: Muse | null;
 };
 
-export function CreateInitialSection({ onContinue, onBack }: Props) {
+export function CreateInitialSection({
+  onContinue,
+  onBack,
+  verseParentMuse,
+}: Props) {
   const firstName = useMuseState("firstName");
   const lastName = useMuseState("lastName");
   const image = useMuseState("image");
@@ -186,8 +201,14 @@ export function CreateInitialSection({ onContinue, onBack }: Props) {
       if (!firstNameValue) return;
       setMuseState({ firstName: firstNameValue, lastName: lastNameValue });
 
-      const privacyValue = (e.target as HTMLFormElement).privacy?.value;
-      setMuseState({ privacy: privacyValue });
+      // Verses inherit privacy from their parent muse — it isn't user-editable
+      // here, so there's no "privacy" field in the form to read; `save()` falls
+      // back to the store value, already seeded from the parent on mount.
+      let privacyValue: any;
+      if (!verseParentMuse) {
+        privacyValue = (e.target as HTMLFormElement).privacy?.value;
+        setMuseState({ privacy: privacyValue });
+      }
       const result = await save(privacyValue);
       if (!result.ok) {
         setError("Something went wrong. Please try again.");
@@ -207,7 +228,7 @@ export function CreateInitialSection({ onContinue, onBack }: Props) {
       setTempUpload(null);
       onContinue(result.id);
     },
-    [save, setMuseState, onContinue, avatar],
+    [save, setMuseState, onContinue, avatar, verseParentMuse],
   );
 
   return (
@@ -227,15 +248,45 @@ export function CreateInitialSection({ onContinue, onBack }: Props) {
             )}
             <S.FormHeading>
               <ImProfile />
-              <h1>Add a new character</h1>
+              <h1>
+                {verseParentMuse ? "Add a new verse" : "Add a new character"}
+              </h1>
             </S.FormHeading>
           </Flex>
-          <PromptPrivacySelect
-            className="muse-privacy-select"
-            initial={privacy}
-            blockedOptions={["CUSTOM"]}
-          />
+          {verseParentMuse ? (
+            <S.InheritedPrivacyBadge
+              title={`Privacy is inherited from ${verseParentMuse.firstName}`}
+            >
+              <PrivacyIcon privacy={privacy} />
+              <span>{PRIVACY_LABELS[privacy] ?? privacy}</span>
+            </S.InheritedPrivacyBadge>
+          ) : (
+            <PromptPrivacySelect
+              className="muse-privacy-select"
+              initial={privacy}
+              blockedOptions={["CUSTOM"]}
+            />
+          )}
         </S.TopBar>
+
+        <ShouldRender if={Boolean(verseParentMuse)}>
+          <S.VerseOfBanner>
+            <AvatarNew
+              src={verseParentMuse?.avatar?.src || verseParentMuse?.image || null}
+              alt={verseParentMuse?.firstName || "Character"}
+              nwImage={verseParentMuse?.avatar}
+            />
+            <div>
+              <S.VerseOfLabel>Creating a new verse of</S.VerseOfLabel>
+              <S.VerseOfName>
+                {[verseParentMuse?.firstName, verseParentMuse?.lastName]
+                  .filter(Boolean)
+                  .join(" ")}
+              </S.VerseOfName>
+            </div>
+          </S.VerseOfBanner>
+        </ShouldRender>
+
         <Separator.Root className="separator" orientation="horizontal" />
 
         <S.BasicInfoFields>

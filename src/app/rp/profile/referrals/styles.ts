@@ -292,7 +292,7 @@ export const LevelChip = styled.span`
   text-transform: uppercase;
 `;
 
-export const XPChip = styled.span`
+export const ScoreChip = styled.span`
   display: inline-flex;
   align-items: center;
   gap: 4px;

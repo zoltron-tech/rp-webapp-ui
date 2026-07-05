@@ -11,7 +11,7 @@ import { usePageRouter } from "@/hooks/use-page-router";
 import {
   LevelBadgeIcon,
   RankTrophyIcon,
-  XPBadgeIcon,
+  ScoreBadgeIcon,
 } from "@/utils/badge-icons";
 import { ROUTES } from "@/utils/constants/routes";
 import {
@@ -243,10 +243,10 @@ function MuseRow({
             <LevelBadgeIcon size={13} />
             Lv. {level}
           </S.LevelChip>
-          <S.XPChip>
-            <XPBadgeIcon size={13} />
-            {totalPoints.toLocaleString()} XP
-          </S.XPChip>
+          <S.ScoreChip>
+            <ScoreBadgeIcon size={13} />
+            {totalPoints.toLocaleString()} Score
+          </S.ScoreChip>
         </S.ChipRow>
         {fandomColor && (
           <S.ChipRow>

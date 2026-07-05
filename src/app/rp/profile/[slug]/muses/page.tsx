@@ -54,6 +54,9 @@ export default function MusesListPage({}) {
   );
 
   const displayedMuses = muses?.filter((m) => {
+    // Alternative verses never render in the character list; they are reached
+    // through the verse switcher on their main muse's page.
+    if (m.originalVerseId) return false;
     if (
       search &&
       !`${m.firstName} ${m.lastName}`

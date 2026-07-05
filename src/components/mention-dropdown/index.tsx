@@ -47,10 +47,25 @@ export const MentionDropdown: React.FC<MentionDropdownProps> = ({
             }}
           >
             <AvatarNew src={item.image} alt={item.displayName} />
-            <S.Name>{item.displayName}</S.Name>
-            {showType && (
-              <S.Type>{item.type === "NOVELIST" ? "Novelist" : "Muse"}</S.Type>
-            )}
+            <S.TextCol>
+              <S.NameRow>
+                <S.Name>{item.displayName}</S.Name>
+                {showType && (
+                  <S.Type>
+                    {item.type === "NOVELIST" ? "Novelist" : "Muse"}
+                  </S.Type>
+                )}
+              </S.NameRow>
+              {item.type === "MUSE" && item.pennedBy && (
+                <S.PennedBy>by {item.pennedBy.username}</S.PennedBy>
+              )}
+              {/* showType already surfaces "Novelist" via S.Type above, so
+                  only add it here when that badge isn't shown (prompt/about
+                  mention lists), otherwise it'd be shown twice. */}
+              {item.type === "NOVELIST" && !showType && (
+                <S.PennedBy>Novelist</S.PennedBy>
+              )}
+            </S.TextCol>
           </S.Item>
         ))
       ) : (

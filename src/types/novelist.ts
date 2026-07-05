@@ -6,6 +6,7 @@ export interface MentionDataItem {
   type: "NOVELIST" | "MUSE";
   displayName: string;
   image: string;
+  pennedBy?: { username: string; image: string | null } | null;
 }
 
 export interface MentionTab {

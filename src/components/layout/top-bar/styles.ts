@@ -182,6 +182,13 @@ export const NameContainer = styled.div`
   }
 `;
 
+export const PennedBy = styled.span`
+  font-size: var(--font-size-xsmall);
+  font-weight: 300;
+  color: var(--text-secondary, inherit);
+  opacity: 0.75;
+`;
+
 export const SearchAvatar = styled(AvatarNew)``;
 
 export const ActionsContainer = styled.div`

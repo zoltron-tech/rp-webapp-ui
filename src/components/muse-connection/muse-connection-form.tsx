@@ -40,6 +40,7 @@ export type PickedMuse = {
   museId: string;
   displayName: string;
   image: string | null;
+  pennedBy?: { username: string; image: string | null } | null;
 };
 
 export type MuseConnectionFormState = {
@@ -220,6 +221,7 @@ export const MuseConnectionForm = forwardRef<
             displayName: r.displayName,
             image: r.image || null,
             museId: r.id,
+            pennedBy: r.pennedBy ?? null,
           })),
       );
       setSearchOpen(true);
@@ -514,7 +516,16 @@ export const MuseConnectionForm = forwardRef<
                         onClick={() => addMuse(result)}
                       >
                         <S.MuseChipAvatar $src={result.image} />
-                        {result.displayName}
+                        <S.MuseSearchOptionText>
+                          <S.MuseSearchOptionName>
+                            {result.displayName}
+                          </S.MuseSearchOptionName>
+                          {result.pennedBy && (
+                            <S.MuseSearchOptionPennedBy>
+                              Penned by {result.pennedBy.username}
+                            </S.MuseSearchOptionPennedBy>
+                          )}
+                        </S.MuseSearchOptionText>
                       </S.MuseSearchOption>
                     ))
                 ) : (

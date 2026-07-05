@@ -278,6 +278,28 @@ export const MuseSearchOption = styled.button`
   }
 `;
 
+export const MuseSearchOptionText = styled.span`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+`;
+
+export const MuseSearchOptionName = styled.span`
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+export const MuseSearchOptionPennedBy = styled.span`
+  font-size: 0.72rem;
+  color: var(--text);
+  opacity: 0.55;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
 /* Compact info box explaining who can edit these fields — an inline-scale
    version of the InfoBox pattern used elsewhere (e.g. profile/referrals),
    sized down to sit comfortably inside this form instead of a full page. */

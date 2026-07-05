@@ -68,6 +68,19 @@ export const Item = styled.button<ItemProps>`
   }
 `;
 
+export const TextCol = styled.span`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+`;
+
+export const NameRow = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
 export const Name = styled.span`
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-semi-bold);
@@ -82,6 +95,15 @@ export const Type = styled.span`
   font-size: var(--font-size-xsmall);
   color: var(--text-secondary);
   flex-shrink: 0;
+`;
+
+export const PennedBy = styled.span`
+  font-size: var(--font-size-xsmall);
+  color: var(--text-secondary);
+  opacity: 0.75;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `;
 
 export const Empty = styled.div`

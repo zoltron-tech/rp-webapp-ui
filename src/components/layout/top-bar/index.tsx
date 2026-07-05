@@ -97,6 +97,11 @@ export const TopBar: FC<Props> = memo(({}) => {
                         {result.username && (
                           <Username username={result.username} />
                         )}
+                        {result.pennedBy && (
+                          <S.PennedBy>
+                            Penned by {result.pennedBy.username}
+                          </S.PennedBy>
+                        )}
                       </S.NameContainer>
                     </S.AvatarContainer>
                     <GoArrowRight />

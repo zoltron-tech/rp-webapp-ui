@@ -17,6 +17,7 @@ export interface SearchResult {
   firstName: string;
   lastName: string;
   image: string;
+  pennedBy?: { username: string; image?: string | null } | null;
 }
 
 export interface Tag {

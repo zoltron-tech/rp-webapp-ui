@@ -43,7 +43,6 @@ export type PickedMuse = {
 };
 
 export type MuseConnectionFormState = {
-  canSubmit: boolean;
   loading: boolean;
   isEditMode: boolean;
   /** True when a friend's muse is involved (needs approval → "request"). */
@@ -113,6 +112,7 @@ export const MuseConnectionForm = forwardRef<
   const [searchOpen, setSearchOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [titleTouched, setTitleTouched] = useState(false);
   const [showGifPicker, setShowGifPicker] = useState(false);
 
   // ── Mobile GIF-picker tray open/close animation ───────────────────────────
@@ -287,21 +287,21 @@ export const MuseConnectionForm = forwardRef<
     [uploadMedia],
   );
 
-  const canSubmit =
-    title.trim().length > 0 &&
-    (!isEditMode ? selectedMuses.length >= MIN_MUSES : true);
-
   // A friend's muse needs approval → "request"; an all-own-muses connection is
   // created outright → "create".
   const involvesFriendMuse = selectedMuses.some((m) => !isOwnMuse(m.museId));
 
   const handleSubmit = useCallback(async () => {
-    if (!title.trim()) {
-      setError("Connection title is required");
-      return;
-    }
-    if (!isEditMode && selectedMuses.length < MIN_MUSES) {
-      setError(`Pick at least ${MIN_MUSES} characters for the connection`);
+    const missingTitle = !title.trim();
+    const missingMuses = !isEditMode && selectedMuses.length < MIN_MUSES;
+    if (missingTitle || missingMuses) {
+      setTitleTouched(missingTitle);
+      const parts: string[] = [];
+      if (missingTitle) parts.push("a title");
+      if (missingMuses) parts.push(`at least ${MIN_MUSES} characters`);
+      setError(
+        `${parts.join(" and ")} ${parts.length > 1 ? "are" : "is"} required`,
+      );
       return;
     }
 
@@ -345,14 +345,15 @@ export const MuseConnectionForm = forwardRef<
   useImperativeHandle(ref, () => ({ submit: handleSubmit }), [handleSubmit]);
 
   useEffect(() => {
-    onStateChange?.({ canSubmit, involvesFriendMuse, isEditMode, loading });
-  }, [onStateChange, canSubmit, involvesFriendMuse, isEditMode, loading]);
+    onStateChange?.({ involvesFriendMuse, isEditMode, loading });
+  }, [onStateChange, involvesFriendMuse, isEditMode, loading]);
 
   return (
     <S.FormRoot>
-      <div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
         <S.Label htmlFor="mc-title">
-          Title ({title.length}/{MAX_TITLE_LENGTH})
+          Title
+          <S.RequiredMark>*</S.RequiredMark> ({title.length}/{MAX_TITLE_LENGTH})
         </S.Label>
         <S.TitleInput
           id="mc-title"
@@ -360,7 +361,14 @@ export const MuseConnectionForm = forwardRef<
           maxLength={MAX_TITLE_LENGTH}
           disabled={loading}
           placeholder="Name this connection…"
-          onChange={(e) => setTitle(e.target.value)}
+          $invalid={titleTouched && !title.trim()}
+          aria-required="true"
+          aria-invalid={titleTouched && !title.trim()}
+          onChange={(e) => {
+            setTitle(e.target.value);
+            if (e.target.value.trim()) setError(null);
+          }}
+          onBlur={() => setTitleTouched(true)}
         />
       </div>
 
@@ -394,7 +402,7 @@ export const MuseConnectionForm = forwardRef<
                 <S.MuseOwnerTag $own={own}>
                   {own ? (
                     <>
-                      <FiUser size={9} /> Yours
+                      <FiUser size={9} /> Your
                     </>
                   ) : (
                     <>
@@ -575,7 +583,7 @@ export const MuseConnectionForm = forwardRef<
           </S.CancelButton>
           <S.SubmitButton
             type="button"
-            disabled={loading || !canSubmit}
+            disabled={loading}
             onClick={handleSubmit}
           >
             {isEditMode

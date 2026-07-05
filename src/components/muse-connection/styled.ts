@@ -21,9 +21,9 @@ export const MaxReachedNote = styled.span`
   color: #ef4444;
 `;
 
-export const TitleInput = styled.input`
+export const TitleInput = styled.input<{ $invalid?: boolean }>`
   padding: 0.5rem;
-  border: 1px solid var(--bg-6);
+  border: 1px solid ${({ $invalid }) => ($invalid ? "#ef4444" : "var(--bg-6)")};
   border-radius: 0.25rem;
   background-color: var(--bg-3);
   color: var(--text);
@@ -32,18 +32,23 @@ export const TitleInput = styled.input`
   width: 100%;
 
   &:hover {
-    border-color: var(--bg-5);
+    border-color: ${({ $invalid }) => ($invalid ? "#ef4444" : "var(--bg-5)")};
   }
 
   &:focus {
     outline: none;
-    border-color: var(--accent);
+    border-color: ${({ $invalid }) => ($invalid ? "#ef4444" : "var(--accent)")};
   }
 
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
+`;
+
+export const RequiredMark = styled.span`
+  color: #ef4444;
+  margin-left: 0.2rem;
 `;
 
 export const MusePickerWrap = styled.div`
@@ -70,7 +75,7 @@ export const MuseChip = styled.span<{ $own?: boolean }>`
     ${({ $own }) =>
       $own ? "rgba(37, 99, 235, 0.45)" : "rgba(147, 51, 234, 0.4)"};
   color: var(--text);
-  font-size: 0.7rem;
+  font-size: var(--font-size-xsmall);
   line-height: 1;
 `;
 
@@ -80,7 +85,7 @@ export const MuseOwnerTag = styled.span<{ $own?: boolean }>`
   gap: 0.2rem;
   padding: 0.05rem 0.35rem;
   border-radius: 999px;
-  font-size: 0.62rem;
+  font-size: var(--font-size-xxsmall);
   font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -91,28 +96,51 @@ export const MuseOwnerTag = styled.span<{ $own?: boolean }>`
 
 export const MuseTabRow = styled.div`
   display: flex;
-  gap: 0.4rem;
+  justify-content: center;
+  width: 100%;
+  gap: 0;
 `;
 
 export const MuseTabButton = styled.button<{ $active: boolean }>`
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  flex: 1;
   gap: 0.3rem;
   padding: 0.35rem 0.65rem;
-  border-radius: 999px;
+  border-radius: 0;
   border: 1px solid ${({ $active }) => ($active ? "var(--accent)" : "var(--bg-6)")};
   background-color: ${({ $active }) =>
     $active
       ? "color-mix(in srgb, var(--accent) 18%, var(--bg-3))"
       : "var(--bg-3)"};
   color: var(--text);
-  font-size: 0.78rem;
+  font-size: var(--font-size-small);
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.15s, border-color 0.15s;
+  position: relative;
+  z-index: ${({ $active }) => ($active ? 1 : 0)};
+
+  &:not(:first-child) {
+    margin-left: -1px;
+  }
+
+  &:first-child {
+    border-radius: 0.5rem 0 0 0;
+  }
+
+  &:last-child {
+    border-radius: 0 0.5rem 0 0;
+  }
 
   &:hover {
     border-color: var(--accent);
+    z-index: 2;
+  }
+
+  @media (max-width: 600px) {
+    font-size: var(--font-size-xsmall);
   }
 `;
 
@@ -157,9 +185,11 @@ export const MuseChipRemove = styled.button`
 `;
 
 export const MuseSearchInput = styled.input`
+  margin-top: -0.5rem;
   padding: 0.5rem;
   border: 1px solid var(--bg-6);
-  border-radius: 0.25rem;
+  border-bottom-left-radius: 0.25rem;
+  border-bottom-right-radius: 0.25rem;
   background-color: var(--bg-3);
   color: var(--text);
   font-size: var(--font-size-input);
@@ -181,7 +211,7 @@ export const MuseSearchDropdown = styled.div`
   background-color: var(--bg-3);
   border: 1px solid var(--bg-6);
   border-radius: 0.375rem;
-  max-height: 200px;
+  max-height: 100px;
   overflow-y: auto;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
 `;
@@ -191,9 +221,11 @@ export const MuseListToggle = styled.button`
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  margin-top: -0.75rem;
   padding: 0.4rem 0.6rem;
   border: 1px solid var(--bg-6);
-  border-radius: 0.375rem;
+  border-bottom-left-radius: 0.375rem;
+  border-bottom-right-radius: 0.375rem;
   background-color: var(--bg-3);
   color: var(--text);
   font-size: 0.78rem;
@@ -213,11 +245,10 @@ export const MuseListToggleIcon = styled.span<{ $expanded: boolean }>`
 
 export const MuseListPanel = styled.div`
   position: static;
-  margin-top: 0.375rem;
   background-color: var(--bg-3);
   border: 1px solid var(--bg-6);
   border-radius: 0.375rem;
-  max-height: 200px;
+  max-height: 100px;
   overflow-y: auto;
 `;
 

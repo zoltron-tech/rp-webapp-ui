@@ -70,7 +70,6 @@ export function ConnectionsSection({ muse, isOwnMuse }: Props) {
 
   const formRef = useRef<MuseConnectionFormHandle>(null);
   const [formState, setFormState] = useState<MuseConnectionFormState>({
-    canSubmit: false,
     involvesFriendMuse: false,
     isEditMode: false,
     loading: false,
@@ -524,7 +523,7 @@ export function ConnectionsSection({ muse, isOwnMuse }: Props) {
                           ? "Request connection"
                           : "Create connection"
                     }
-                    disabled={formState.loading || !formState.canSubmit}
+                    disabled={formState.loading}
                     onClick={() => formRef.current?.submit()}
                   >
                     <FiCheck size={18} />

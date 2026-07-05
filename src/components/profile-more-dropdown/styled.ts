@@ -219,6 +219,11 @@ export const MobileSheet = styled.div<MobileSheetProps>`
   right: 0;
   max-height: 85vh;
   background-color: var(--bg-2);
+  /* Portaled straight to document.body, outside the app's normal color
+     inheritance chain — without this, text with no explicit color (e.g. the
+     rich-text editor's contentEditable) falls back to the browser default
+     (black) instead of the theme's text color. */
+  color: var(--text);
   border-radius: 16px 16px 0 0;
   padding-inline: 18px;
   padding-bottom: 60px;

@@ -20,6 +20,7 @@ import type { ImageCropFilter, NWImage } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { AvatarUploadField } from "../common/avatar-upload-field";
 import { LoaderAction } from "../common/loader-action";
+import { PrivacyIcon } from "../common/privacy-icon";
 import { AppAlertDialog } from "../dialog";
 import AvatarCropDialog from "../dialog/avatar-crop-dialog";
 import { ErrorBox } from "../error-box";
@@ -30,6 +31,13 @@ import { useMuseSave } from "./use-muse-save";
 
 const VALID_IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif"];
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
+
+const PRIVACY_LABELS: Record<string, string> = {
+  CUSTOM: "Custom",
+  FRIENDS: "Friends",
+  ONLY_ME: "Only Me",
+  PUBLIC: "Public",
+};
 
 /** Height ÷ width of the muse card (9:16 portrait). Used to compute the
  *  "fit smaller side" zoom for the card image. */
@@ -80,6 +88,8 @@ export function AppearanceSection({
   const wallpaper = useMuseState("wallpaper");
   const cardBackground = useMuseState("cardBackground");
   const privacy = useMuseState("privacy");
+  // Verses inherit privacy from their parent and can't change it here either.
+  const originalVerseId = useMuseState("originalVerseId");
   const accent = useMuseState("accent");
   const useAccent = useMuseState("useAccent");
   const useExtraImages = useMuseState("useExtraImages");
@@ -480,8 +490,14 @@ export function AppearanceSection({
   const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(
     async (e) => {
       e.preventDefault();
-      const privacyValue = (e.target as HTMLFormElement).privacy?.value;
-      setMuseState({ privacy: privacyValue });
+      // Verses inherit privacy from their parent — no "privacy" field is
+      // rendered for them, so there's nothing to read from the form; `save()`
+      // falls back to the store value already seeded from the parent.
+      let privacyValue: any;
+      if (!originalVerseId) {
+        privacyValue = (e.target as HTMLFormElement).privacy?.value;
+        setMuseState({ privacy: privacyValue });
+      }
       const result = await save(privacyValue);
       if (!result.ok) {
         setError("Something went wrong. Please try again.");
@@ -490,7 +506,7 @@ export function AppearanceSection({
       setTempUploads({});
       onDone(result.id);
     },
-    [save, onDone],
+    [save, onDone, originalVerseId, setMuseState],
   );
 
   const handleCancel = useCallback(async () => {
@@ -521,11 +537,18 @@ export function AppearanceSection({
                 Step {stepIndex + 2} of {totalSteps + 1}
               </S.StepBadge>
             )}
-            <PromptPrivacySelect
-              className="muse-privacy-select"
-              initial={privacy}
-              blockedOptions={["CUSTOM"]}
-            />
+            {originalVerseId ? (
+              <S.InheritedPrivacyBadge title="Privacy is inherited from the original character">
+                <PrivacyIcon privacy={privacy} />
+                <span>{PRIVACY_LABELS[privacy] ?? privacy}</span>
+              </S.InheritedPrivacyBadge>
+            ) : (
+              <PromptPrivacySelect
+                className="muse-privacy-select"
+                initial={privacy}
+                blockedOptions={["CUSTOM"]}
+              />
+            )}
           </div>
         </S.TopBar>
 

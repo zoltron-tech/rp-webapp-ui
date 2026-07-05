@@ -3,6 +3,7 @@ import { usePageRouter } from "@/hooks/use-page-router";
 import type { Muse, Novelist, StoryBoard } from "@/types";
 import type { PillType } from "@/types/pill-type";
 import { ROUTES } from "@/utils/constants/routes";
+import { mainVerseMuses } from "@/utils/muse";
 import { Logger } from "@/utils/services";
 import { ExpandablePill } from "../common";
 import * as S from "./styles";
@@ -38,8 +39,8 @@ export const MusesPill: FC<Props> = ({
   const loadChildren = (slice = 0, className = "") => {
     switch (pillType) {
       case "MUSES":
-        return novelist?.muses
-          ?.slice(0, slice ? slice : novelist?.muses.length)
+        return mainVerseMuses(novelist?.muses)
+          .slice(0, slice ? slice : undefined)
           .map((muse) => (
             <S.Avatar
               src={muse.image ?? null}

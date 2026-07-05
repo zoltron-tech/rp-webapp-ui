@@ -1,6 +1,8 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
+import classNames from "classnames";
+import { Tooltip } from "radix-ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { FaUser } from "react-icons/fa6";
@@ -19,22 +21,17 @@ import {
   setMusePrivacyAction,
 } from "@/app/rp/muse/actions";
 import { deleteMedia } from "@/app/rp/profile/actions";
+import { PrivacyIcon } from "@/components/common/privacy-icon";
 import { AppAlertDialog } from "@/components/dialog";
 import AvatarCropDialog from "@/components/dialog/avatar-crop-dialog";
-import { PrivacyIcon } from "@/components/common/privacy-icon";
-import { usePageRouter } from "@/hooks/use-page-router";
+import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import type { Fandom, Muse } from "@/types";
 import type { ImageCropFilter, NWImage } from "@/types/novelist";
-import {
-  LevelBadgeIcon,
-  RankTrophyIcon,
-  XPBadgeIcon,
-} from "@/utils/badge-icons";
-import { API_MESSAGE } from "@/utils/constants";
 import type { PrivacyLevel } from "@/types/prompt";
-import { ROUTES } from "@/utils/constants/routes";
+import { ScoreBadgeIcon } from "@/utils/badge-icons";
+import { API_MESSAGE } from "@/utils/constants";
 import * as S from "../styles";
 import PennedBy from "./PennedBy";
 
@@ -53,18 +50,22 @@ const PRIVACY_LABELS: Record<string, string> = {
   FRIENDS: "Friends only",
   ONLY_ME: "Only me",
 };
+const PRIVACY_TOOLTIP_TEXT: Record<string, string> = {
+  PUBLIC: "This character is public",
+  FRIENDS: "This character is visible to friends only",
+  ONLY_ME: "This character is private",
+};
 
 type Props = {
   muse: Muse | null;
   isOwnMuse: boolean;
-  museRank: number | null;
-  museRankLoading: boolean;
   onMuseUpdate?: (updates: Partial<Muse>) => void;
 };
 
-export function MuseInfoSection({ muse, isOwnMuse, museRank, museRankLoading, onMuseUpdate }: Props) {
+export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
   const accent = muse?.useAccent ? muse.accent : undefined;
-  const { routeToPage } = usePageRouter();
+  const theme = useGlobalState("theme");
+  const globalAccent = useGlobalState("accent");
   const { successToast, errorToast } = useUIContext();
   const { uploadMedia } = useUploadMedia();
   const [avatarError, setAvatarError] = useState(false);
@@ -207,23 +208,33 @@ export function MuseInfoSection({ muse, isOwnMuse, museRank, museRankLoading, on
   const [nickRemoving, setNickRemoving] = useState<string | null>(null);
   const [confirmRemoveNick, setConfirmRemoveNick] = useState<string | null>(null);
 
-  // ── Privacy ────────────────────────────────────────────────────────────────
+  // ── Privacy & Tooltips ────────────────────────────────────────────────────
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [pendingPrivacy, setPendingPrivacy] = useState<PrivacyLevel | null>(null);
   const [savingPrivacy, setSavingPrivacy] = useState(false);
+  const [scoreTooltipOpen, setScoreTooltipOpen] = useState(false);
+  const [privacyTooltipOpen, setPrivacyTooltipOpen] = useState(false);
   const privacyRef = useRef<HTMLDivElement>(null);
+  const scoreCornerRef = useRef<HTMLSpanElement>(null);
+  const privacyCornerRef = useRef<HTMLDivElement>(null);
 
-  // Close privacy dropdown on outside click
+  // Close privacy dropdown and tooltips on outside click
   useEffect(() => {
-    if (!privacyOpen) return;
+    if (!privacyOpen && !scoreTooltipOpen && !privacyTooltipOpen) return;
     function handler(e: MouseEvent) {
-      if (privacyRef.current && !privacyRef.current.contains(e.target as Node)) {
+      if (privacyOpen && privacyRef.current && !privacyRef.current.contains(e.target as Node)) {
         setPrivacyOpen(false);
+      }
+      if (scoreTooltipOpen && scoreCornerRef.current && !scoreCornerRef.current.contains(e.target as Node)) {
+        setScoreTooltipOpen(false);
+      }
+      if (privacyTooltipOpen && privacyCornerRef.current && !privacyCornerRef.current.contains(e.target as Node)) {
+        setPrivacyTooltipOpen(false);
       }
     }
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [privacyOpen]);
+  }, [privacyOpen, scoreTooltipOpen, privacyTooltipOpen]);
 
   // Fandom search debounce
   useEffect(() => {
@@ -433,9 +444,48 @@ export function MuseInfoSection({ muse, isOwnMuse, museRank, museRankLoading, on
       <S.CardBack className="muse-card" accent={accent}>
         <S.InfoCardContent>
 
+          {/* Score corner */}
+          <ShouldRender if={typeof muse?.totalPoints === "number"}>
+            <Tooltip.Provider delayDuration={200}>
+              <Tooltip.Root open={scoreTooltipOpen} onOpenChange={setScoreTooltipOpen}>
+                <Tooltip.Trigger asChild>
+                  <S.InfoScoreCorner
+                    ref={scoreCornerRef}
+                    accent={accent ?? null}
+                    onClick={() => setScoreTooltipOpen((v) => !v)}
+                  >
+                    <ScoreBadgeIcon size={12} />
+                    {muse?.totalPoints?.toLocaleString()}
+                  </S.InfoScoreCorner>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content
+                    sideOffset={4}
+                    className={classNames([globalAccent, theme])}
+                    style={{
+                      background: "var(--bg-2)",
+                      border: "1px solid var(--bg-6)",
+                      borderRadius: "6px",
+                      color: "var(--text)",
+                      fontSize: "12px",
+                      maxWidth: "220px",
+                      padding: "6px 10px",
+                      userSelect: "none",
+                      zIndex: 9999,
+                    }}
+                  >
+                    Score reflects how active this character is in the
+                    community.
+                    <Tooltip.Arrow style={{ fill: "var(--bg-6)" }} />
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip.Root>
+            </Tooltip.Provider>
+          </ShouldRender>
+
           {/* Privacy corner */}
-          <S.InfoPrivacyCorner>
-            {isOwnMuse ? (
+          <S.InfoPrivacyCorner ref={privacyCornerRef}>
+            {isOwnMuse && !muse?.originalVerseId ? (
               <S.InfoPrivacyDropdownWrap ref={privacyRef}>
                 <S.InfoPrivacyBtn
                   type="button"
@@ -464,7 +514,40 @@ export function MuseInfoSection({ muse, isOwnMuse, museRank, museRankLoading, on
                 )}
               </S.InfoPrivacyDropdownWrap>
             ) : (
-              <PrivacyIcon privacy={muse?.privacy ?? "PUBLIC"} />
+              <Tooltip.Provider delayDuration={200}>
+                <Tooltip.Root open={privacyTooltipOpen} onOpenChange={setPrivacyTooltipOpen}>
+                  <Tooltip.Trigger asChild>
+                    <span
+                      style={{ cursor: "pointer", display: "inline-flex" }}
+                      onClick={() => setPrivacyTooltipOpen((v) => !v)}
+                    >
+                      <PrivacyIcon privacy={muse?.privacy ?? "PUBLIC"} />
+                    </span>
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content
+                      sideOffset={4}
+                      className={classNames([globalAccent, theme])}
+                      style={{
+                        background: "var(--bg-2)",
+                        border: "1px solid var(--bg-6)",
+                        borderRadius: "6px",
+                        color: "var(--text)",
+                        fontSize: "12px",
+                        maxWidth: "200px",
+                        padding: "6px 10px",
+                        userSelect: "none",
+                        zIndex: 9999,
+                      }}
+                    >
+                      {muse?.originalVerseId
+                        ? "Privacy is inherited from the original character"
+                        : PRIVACY_TOOLTIP_TEXT[muse?.privacy ?? "ONLY_ME"]}
+                      <Tooltip.Arrow style={{ fill: "var(--bg-6)" }} />
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              </Tooltip.Provider>
             )}
           </S.InfoPrivacyCorner>
 
@@ -686,29 +769,6 @@ export function MuseInfoSection({ muse, isOwnMuse, museRank, museRankLoading, on
                 </ShouldRender>
               )}
 
-              <ShouldRender if={typeof muse?.level === "number"}>
-                <S.InfoLevelRow>
-                  <S.InfoLevelBadge
-                    accent={accent ?? null}
-                    onClick={() => routeToPage(ROUTES.Leaderboard.Muses)}
-                  >
-                    <LevelBadgeIcon size={15} />
-                    Lv. {muse?.level}
-                  </S.InfoLevelBadge>
-                  <S.InfoLevelXP onClick={() => routeToPage(ROUTES.Leaderboard.Muses)}>
-                    <XPBadgeIcon size={15} />
-                    {muse?.totalPoints?.toLocaleString()} XP
-                  </S.InfoLevelXP>
-                  {museRankLoading ? (
-                    <S.InfoRankBadgeShimmer />
-                  ) : museRank !== null ? (
-                    <S.InfoRankBadge onClick={() => routeToPage(ROUTES.Leaderboard.Muses)}>
-                      <RankTrophyIcon size={18} rank={museRank} />
-                      #{museRank.toLocaleString()}
-                    </S.InfoRankBadge>
-                  ) : null}
-                </S.InfoLevelRow>
-              </ShouldRender>
             </S.InfoHeaderSection>
 
             <S.InfoDivider $accent={accent ?? null} />

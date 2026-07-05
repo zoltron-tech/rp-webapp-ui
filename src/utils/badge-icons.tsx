@@ -87,8 +87,8 @@ export function LevelBadgeIcon({ size = 14, className, style }: BadgeIconProps) 
   );
 }
 
-/** Lightning squircle — used for the XP chip. */
-export function XPBadgeIcon({ size = 14, className, style }: BadgeIconProps) {
+/** Lightning squircle — used for the Score chip. */
+export function ScoreBadgeIcon({ size = 14, className, style }: BadgeIconProps) {
   const id = useId();
   const body = `${id}-body`;
   const bolt = `${id}-bolt`;

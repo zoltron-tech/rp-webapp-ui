@@ -1,10 +1,24 @@
 ﻿"use client";
 
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { BiSolidConversation } from "react-icons/bi";
-import { FaImagePortrait } from "react-icons/fa6";
-import { FiCamera, FiChevronLeft, FiChevronRight, FiMoreVertical } from "react-icons/fi";
+import { FaHandshake, FaImagePortrait } from "react-icons/fa6";
+import {
+  FiCamera,
+  FiChevronLeft,
+  FiChevronRight,
+  FiLayers,
+  FiLink,
+  FiMoreVertical,
+  FiPlus,
+} from "react-icons/fi";
 import { GiBookCover } from "react-icons/gi";
 import { MdImage, MdPhotoLibrary } from "react-icons/md";
 import { TiInfoLarge } from "react-icons/ti";
@@ -17,13 +31,16 @@ import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import type { Muse, MuseAboutSection, Prompt } from "@/types";
-import type { ImageCropFilter, ImageFilter, MuseNavItem, NWImage } from "@/types/novelist";
+import type {
+  ImageCropFilter,
+  ImageFilter,
+  MuseNavItem,
+  NWImage,
+} from "@/types/novelist";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { reverseWsrvUrl } from "@/utils/image";
 import { Logger } from "@/utils/services";
-import { deleteMedia } from "../../profile/actions";
-import { getMuseRankAction } from "../../leaderboard/actions";
 import {
   getMuseAboutSectionsAction,
   getMuseAction,
@@ -31,6 +48,7 @@ import {
   removeMuseCardBackgroundAction,
   setMuseCardBackgroundAction,
 } from "../../muse/actions";
+import { deleteMedia } from "../../profile/actions";
 import { getPromptsByMuseAction } from "../../prompt/actions";
 import { BackStorySection } from "./sections/back-story-section";
 import { CardImageSection } from "./sections/card-image-section";
@@ -45,9 +63,20 @@ function clamp(v: number, min: number, max: number) {
   return Math.min(max, Math.max(min, v));
 }
 
-function toCropFilter(src: string, x: number, y: number, scale: number): ImageCropFilter {
+function toCropFilter(
+  src: string,
+  x: number,
+  y: number,
+  scale: number,
+): ImageCropFilter {
   const scalePct = Math.round(scale * 100);
-  return { height: scalePct, src, width: scalePct, x: Math.round(x), y: Math.round(y) };
+  return {
+    height: scalePct,
+    src,
+    width: scalePct,
+    x: Math.round(x),
+    y: Math.round(y),
+  };
 }
 
 type CARD_STATE =
@@ -68,9 +97,14 @@ interface BannerLayer {
   src: string | null;
 }
 
-const DEFAULT_BANNER_FILTERS: ImageFilter = { blur: 20, brightness: 50, greyscale: 20 };
+const DEFAULT_BANNER_FILTERS: ImageFilter = {
+  blur: 20,
+  brightness: 50,
+  greyscale: 20,
+};
 
-const navName = (m: MuseNavItem) => [m.firstName, m.lastName].filter(Boolean).join(" ");
+const navName = (m: MuseNavItem) =>
+  [m.firstName, m.lastName].filter(Boolean).join(" ");
 
 /**
  * Full muse → nav item. When navigating next/prev, the muse we're leaving is
@@ -91,11 +125,13 @@ function museToNavItem(m: Muse): MuseNavItem | null {
     lastName: m.lastName,
     nicknames: m.nicknames,
     note: m.note,
+    originalVerseId: m.originalVerseId ?? null,
     privacy: m.privacy,
     song: m.song,
     story: m.story,
     useAccent: m.useAccent,
     useExtraImages: m.useExtraImages,
+    verseNumber: m.verseNumber ?? null,
     video: m.video,
     wallpaper: m.wallpaper,
   };
@@ -124,8 +160,6 @@ export default function MuseProfilePage({}) {
     null,
   );
   const [media, setMedia] = useState<string[] | null>(null);
-  const [museRank, setMuseRank] = useState<number | null>(null);
-  const [museRankLoading, setMuseRankLoading] = useState(true);
   const username = params?.slug as string;
   const { baseDataLoader, routeToPage } = usePageRouter();
   const fetchedForRef = useRef<string | null>(null);
@@ -141,7 +175,9 @@ export default function MuseProfilePage({}) {
   const [cardBgAutoFit, setCardBgAutoFit] = useState(false);
   const [cardBgImageUploading, setCardBgImageUploading] = useState(false);
   const [cardBgSaving, setCardBgSaving] = useState(false);
-  const [tempUploadedCardBg, setTempUploadedCardBg] = useState<string | null>(null);
+  const [tempUploadedCardBg, setTempUploadedCardBg] = useState<string | null>(
+    null,
+  );
   const [confirmRemoveCardBg, setConfirmRemoveCardBg] = useState(false);
   const cardBgViewportRef = useRef<HTMLDivElement>(null);
   const cardBgFileInputRef = useRef<HTMLInputElement>(null);
@@ -169,12 +205,16 @@ export default function MuseProfilePage({}) {
     setCardBgCropOpen(true);
   }, [muse?.cardBackground]);
 
-  async function handleCardBgFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleCardBgFileChange(
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file || !muse?.id) return;
     const reader = new FileReader();
-    reader.onloadend = () => { openNewCardBgCropDialog(reader.result as string); };
+    reader.onloadend = () => {
+      openNewCardBgCropDialog(reader.result as string);
+    };
     reader.readAsDataURL(file);
     if (tempUploadedCardBg) await deleteMedia(tempUploadedCardBg);
     setCardBgImageUploading(true);
@@ -200,7 +240,9 @@ export default function MuseProfilePage({}) {
     setCardBgY(clamp(ny, 0, 100));
   };
 
-  const handleCardBgScaleChange = (v: number) => { setCardBgScale(clamp(v, 1, 3)); };
+  const handleCardBgScaleChange = (v: number) => {
+    setCardBgScale(clamp(v, 1, 3));
+  };
 
   const handleCardBgCropConfirm = useCallback(() => {
     if (!muse?.id) return;
@@ -219,11 +261,21 @@ export default function MuseProfilePage({}) {
       }
       setTempUploadedCardBg(null);
       setMuse((prev) =>
-        prev ? { ...prev, cardBackground: result as NWImage, useExtraImages: true } : prev,
+        prev
+          ? { ...prev, cardBackground: result as NWImage, useExtraImages: true }
+          : prev,
       );
       successToast("Card background updated.");
     });
-  }, [muse?.id, pendingCardBgSrc, cardBgX, cardBgY, cardBgScale, errorToast, successToast]);
+  }, [
+    muse?.id,
+    pendingCardBgSrc,
+    cardBgX,
+    cardBgY,
+    cardBgScale,
+    errorToast,
+    successToast,
+  ]);
 
   const handleCardBgCropCancel = useCallback(async () => {
     if (tempUploadedCardBg && tempUploadedCardBg === pendingCardBgSrc) {
@@ -252,7 +304,9 @@ export default function MuseProfilePage({}) {
       errorToast("Failed to remove card background.");
       return;
     }
-    setMuse((prev) => prev ? { ...prev, cardBackground: null, useExtraImages: false } : prev);
+    setMuse((prev) =>
+      prev ? { ...prev, cardBackground: null, useExtraImages: false } : prev,
+    );
     successToast("Card background removed.");
   }
   const { transition, is, state } = useStateMachine<CARD_STATE>({
@@ -317,13 +371,60 @@ export default function MuseProfilePage({}) {
     },
   });
 
-  useEffect(() => {
-    if (!muse?.id) return;
-    getMuseRankAction(muse.id).then((result) => {
-      if (result && !("message" in result)) setMuseRank(result.rank);
-      setMuseRankLoading(false);
+  // Sliding "active section" pill in the SideMenu — measured off the actual
+  // selected MenuButton's layout box, so the same code slides it vertically
+  // on desktop and horizontally on mobile without knowing which axis is live.
+  const menuButtonRefs = useRef<Partial<Record<CARD_STATE, HTMLButtonElement | null>>>(
+    {},
+  );
+  const [menuHighlight, setMenuHighlight] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  } | null>(null);
+
+  const registerMenuButtonRef = useCallback(
+    (key: CARD_STATE) => (el: HTMLButtonElement | null) => {
+      menuButtonRefs.current[key] = el;
+    },
+    [],
+  );
+
+  const updateMenuHighlight = useCallback(() => {
+    const btn = menuButtonRefs.current[state];
+    // Skip while the button is display:none (e.g. CARD_IMAGE measured on
+    // desktop right after a resize) rather than collapsing the pill to 0.
+    if (!btn || !btn.offsetWidth || !btn.offsetHeight) return;
+    setMenuHighlight({
+      height: btn.offsetHeight,
+      left: btn.offsetLeft,
+      top: btn.offsetTop,
+      width: btn.offsetWidth,
     });
-  }, [muse?.id]);
+  }, [state]);
+
+  useLayoutEffect(() => {
+    updateMenuHighlight();
+  }, [updateMenuHighlight]);
+
+  useEffect(() => {
+    window.addEventListener("resize", updateMenuHighlight);
+    return () => window.removeEventListener("resize", updateMenuHighlight);
+  }, [updateMenuHighlight]);
+
+
+  // On mobile, open the card view by default instead of info section.
+  // Runs once on mount only — `transition` is a new function reference on
+  // every render, so depending on it here would re-fire this on every
+  // section switch and snap the user straight back to CARD_IMAGE.
+  useEffect(() => {
+    const isMobile = window.matchMedia("(max-width: 950px)").matches;
+    if (isMobile) {
+      transition("CARD_IMAGE");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   Logger.debug("params are:", params);
 
@@ -333,7 +434,10 @@ export default function MuseProfilePage({}) {
   const museLoading = muse === null;
   // Kept across navigation so the prev/next nav stays visible while the next
   // muse loads in; `navLoading` swaps the cards/buttons to a shimmer/spinner.
-  const [nav, setNav] = useState<{ prev: MuseNavItem | null; next: MuseNavItem | null }>({
+  const [nav, setNav] = useState<{
+    prev: MuseNavItem | null;
+    next: MuseNavItem | null;
+  }>({
     next: null,
     prev: null,
   });
@@ -342,6 +446,20 @@ export default function MuseProfilePage({}) {
   // image swap immediately while the full muse loads in the background.
   const [previewMuse, setPreviewMuse] = useState<MuseNavItem | null>(null);
   const navDirectionRef = useRef<NavDirection | null>(null);
+
+  // Kept across navigation (same reasoning as `nav` above) so the verse
+  // header doesn't collapse and reappear — shifting the card up and down —
+  // while `muse` is briefly null between clicking a verse and its data
+  // loading in. Only updated once a muse actually loads; never reset to null.
+  const [verseHeaderData, setVerseHeaderData] = useState<{
+    verses: MuseNavItem[];
+    canCreate: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!muse) return;
+    setVerseHeaderData({ canCreate: isOwnMuse, verses: muse.verses ?? [] });
+  }, [muse, isOwnMuse]);
 
   const promptsFetchedRef = useRef(false);
   const aboutSectionsFetchedRef = useRef(false);
@@ -356,8 +474,6 @@ export default function MuseProfilePage({}) {
     setPrompts(null);
     setAboutSections(null);
     setMedia(null);
-    setMuseRank(null);
-    setMuseRankLoading(true);
     promptsFetchedRef.current = false;
     aboutSectionsFetchedRef.current = false;
     mediaFetchedRef.current = false;
@@ -395,6 +511,24 @@ export default function MuseProfilePage({}) {
     routeToPage(ROUTES.Muse.View(nav.next.id), { skipLoading: true });
   }, [nav.next, navLoading, muse, routeToPage]);
 
+  // Switch to another verse of this muse. Verses are full muses of their own,
+  // so this is regular muse navigation with the target seeded as a preview.
+  const handleSwitchVerse = useCallback(
+    (verse: MuseNavItem) => {
+      if (!muse || verse.id === muse.id || navLoading) return;
+      setPreviewMuse(verse);
+      setNavLoading(true);
+      routeToPage(ROUTES.Muse.View(verse.id), { skipLoading: true });
+    },
+    [muse, navLoading, routeToPage],
+  );
+
+  const handleCreateVerse = useCallback(() => {
+    if (!muse?.id) return;
+    const rootId = muse.originalVerseId ?? muse.id;
+    routeToPage(`${ROUTES.Profile.Muses.Create}?originalVerseId=${rootId}`);
+  }, [muse?.id, muse?.originalVerseId, routeToPage]);
+
   // Arrow-key navigation (desktop). Skipped while typing, while a dialog on
   // this page is open, or when a modifier is held (e.g. Alt+← is browser back).
   useEffect(() => {
@@ -420,7 +554,12 @@ export default function MuseProfilePage({}) {
   }, [handlePrevMuse, handleNextMuse, cardBgCropOpen, confirmRemoveCardBg]);
 
   useEffect(() => {
-    if (state !== "PROMPTS" || promptsFetchedRef.current || authState === "LOADING") return;
+    if (
+      state !== "PROMPTS" ||
+      promptsFetchedRef.current ||
+      authState === "LOADING"
+    )
+      return;
     promptsFetchedRef.current = true;
     baseDataLoader(() => getPromptsByMuseAction(username)).then((data) => {
       setPrompts(data ?? []);
@@ -428,7 +567,12 @@ export default function MuseProfilePage({}) {
   }, [state, authState, username]);
 
   useEffect(() => {
-    if (state !== "BACK_STORY" || aboutSectionsFetchedRef.current || authState === "LOADING") return;
+    if (
+      state !== "BACK_STORY" ||
+      aboutSectionsFetchedRef.current ||
+      authState === "LOADING"
+    )
+      return;
     aboutSectionsFetchedRef.current = true;
     baseDataLoader(() => getMuseAboutSectionsAction(username)).then((data) => {
       setAboutSections(data ?? []);
@@ -436,7 +580,12 @@ export default function MuseProfilePage({}) {
   }, [state, authState, username]);
 
   useEffect(() => {
-    if (state !== "GALLERY" || mediaFetchedRef.current || authState === "LOADING") return;
+    if (
+      state !== "GALLERY" ||
+      mediaFetchedRef.current ||
+      authState === "LOADING"
+    )
+      return;
     mediaFetchedRef.current = true;
     baseDataLoader(() => getMuseMediaAction(username)).then((result) => {
       setMedia(Array.isArray(result) ? result : []);
@@ -444,22 +593,24 @@ export default function MuseProfilePage({}) {
   }, [state, authState, username]);
 
   const getSafeImage = (src?: string) => src || "";
-  const accent = muse?.useAccent ? (muse.accent ?? undefined) : undefined;
-
   // While the full muse loads after prev/next navigation, fall back to the
   // minimal nav object so the wallpaper and card image swap instantly.
   const museVisual: Muse | MuseNavItem | null = muse ?? previewMuse;
+  const accent = museVisual?.useAccent ? (museVisual.accent ?? undefined) : undefined;
 
   const bannerSrc =
     (museVisual?.useExtraImages && getSafeImage(museVisual?.wallpaper?.src)) ||
     getSafeImage(museVisual?.image || "");
   const cardBgSrc =
-    (museVisual?.useExtraImages && getSafeImage(museVisual?.cardBackground?.src)) ||
+    (museVisual?.useExtraImages &&
+      getSafeImage(museVisual?.cardBackground?.src)) ||
     getSafeImage(museVisual?.image || "");
 
   // Derive CSS background-size / background-position from the stored crop.
   // crop.x/y = bgPosition percent, crop.width = scale * 100.
-  const cardCrop = museVisual?.useExtraImages ? museVisual?.cardBackground?.crop : null;
+  const cardCrop = museVisual?.useExtraImages
+    ? museVisual?.cardBackground?.crop
+    : null;
   const cardBgCss = cardCrop
     ? {
         bgPosition: `${cardCrop.x}% ${cardCrop.y}%`,
@@ -487,7 +638,9 @@ export default function MuseProfilePage({}) {
           last.filters.blur === bannerFilters.blur &&
           last.filters.brightness === bannerFilters.brightness &&
           last.filters.greyscale === bannerFilters.greyscale;
-        return same ? prev : [...prev.slice(0, -1), { ...last, filters: bannerFilters }];
+        return same
+          ? prev
+          : [...prev.slice(0, -1), { ...last, filters: bannerFilters }];
       }
       bannerLayerIdRef.current += 1;
       return [
@@ -522,7 +675,9 @@ export default function MuseProfilePage({}) {
               : undefined
           }
           onAnimationEnd={() => {
-            setBannerLayers((prev) => (prev.length > 1 ? prev.slice(-1) : prev));
+            setBannerLayers((prev) =>
+              prev.length > 1 ? prev.slice(-1) : prev,
+            );
           }}
         />
       ))}
@@ -552,10 +707,14 @@ export default function MuseProfilePage({}) {
               />
               <S.MuseNavCardVeil $side="left" />
               <S.MuseNavCardRail $side="left">
-                <S.MuseNavCardChevron $accent={nav.prev.useAccent ? nav.prev.accent : undefined}>
+                <S.MuseNavCardChevron
+                  $accent={nav.prev.useAccent ? nav.prev.accent : undefined}
+                >
                   <FiChevronLeft size={18} />
                 </S.MuseNavCardChevron>
-                <S.MuseNavCardRailName>{nav.prev.firstName}</S.MuseNavCardRailName>
+                <S.MuseNavCardRailName>
+                  {nav.prev.firstName}
+                </S.MuseNavCardRailName>
               </S.MuseNavCardRail>
               <S.MuseNavCardFooter $side="left">
                 <S.MuseNavCardEyebrow>
@@ -588,10 +747,14 @@ export default function MuseProfilePage({}) {
               />
               <S.MuseNavCardVeil $side="right" />
               <S.MuseNavCardRail $side="right">
-                <S.MuseNavCardChevron $accent={nav.next.useAccent ? nav.next.accent : undefined}>
+                <S.MuseNavCardChevron
+                  $accent={nav.next.useAccent ? nav.next.accent : undefined}
+                >
                   <FiChevronRight size={18} />
                 </S.MuseNavCardChevron>
-                <S.MuseNavCardRailName>{nav.next.firstName}</S.MuseNavCardRailName>
+                <S.MuseNavCardRailName>
+                  {nav.next.firstName}
+                </S.MuseNavCardRailName>
               </S.MuseNavCardRail>
               <S.MuseNavCardFooter $side="right">
                 <S.MuseNavCardEyebrow>
@@ -620,7 +783,9 @@ export default function MuseProfilePage({}) {
               <S.MuseNavTabImage $src={navPrevVisual?.src ?? ""} />
               <S.MuseNavTabVeil $side="left" />
               <S.MuseNavTabContent>
-                <S.MuseNavTabChevron $accent={nav.prev.useAccent ? nav.prev.accent : undefined}>
+                <S.MuseNavTabChevron
+                  $accent={nav.prev.useAccent ? nav.prev.accent : undefined}
+                >
                   <FiChevronLeft size={14} />
                 </S.MuseNavTabChevron>
                 <S.MuseNavTabName>{nav.prev.firstName}</S.MuseNavTabName>
@@ -646,7 +811,9 @@ export default function MuseProfilePage({}) {
               <S.MuseNavTabImage $src={navNextVisual?.src ?? ""} />
               <S.MuseNavTabVeil $side="right" />
               <S.MuseNavTabContent>
-                <S.MuseNavTabChevron $accent={nav.next.useAccent ? nav.next.accent : undefined}>
+                <S.MuseNavTabChevron
+                  $accent={nav.next.useAccent ? nav.next.accent : undefined}
+                >
                   <FiChevronRight size={14} />
                 </S.MuseNavTabChevron>
                 <S.MuseNavTabName>{nav.next.firstName}</S.MuseNavTabName>
@@ -655,6 +822,73 @@ export default function MuseProfilePage({}) {
           )}
         </S.MuseNavTab>
       )}
+
+      {/* Verse header — flip between alternative verses of this muse. Verse
+          numbers live in a horizontally-scrolling row of circles rather than
+          wrapping pills, so a character with many verses stays a single
+          compact line instead of eating vertical space on mobile.
+          `preserveSpace` + the persisted `verseHeaderData` keep this block's
+          height (and its full-row layout claim) constant across a verse
+          switch or prev/next, instead of collapsing to nothing and popping
+          back while `muse` is briefly null — which would otherwise shove the
+          card up and down. `verseHeaderData` is only null before the very
+          first muse has ever loaded on this page, in which case we reserve
+          the space optimistically while the shimmer shows, then settle to
+          the real value once that first load completes. */}
+      <ShouldRender
+        preserveSpace
+        if={
+          // Once a muse has loaded, the bar always shows: own muses get the
+          // "+" (and any verse circles), others get their verse circles, or
+          // a lone "1" when they have no alternate verses — see below.
+          verseHeaderData ? true : museLoading
+        }
+      >
+        <S.VerseHeaderBar aria-label="Character verses">
+          <S.VerseHeaderInner>
+            <S.VerseHeaderLabel $accent={accent}>
+              <FiLayers />
+              Verses
+            </S.VerseHeaderLabel>
+            <S.VerseCircleTrack $fade={(verseHeaderData?.verses.length ?? 0) > 3} $accent={accent}>
+              {(verseHeaderData?.verses.length ?? 0) === 0 &&
+              !verseHeaderData?.canCreate ? (
+                <S.VerseCircle type="button" $active $accent={accent} disabled title="Verse 1">
+                  1
+                </S.VerseCircle>
+              ) : (
+                (verseHeaderData?.verses ?? []).map((verse) => (
+                  <S.VerseCircle
+                    key={verse.id}
+                    type="button"
+                    $active={verse.id === muse?.id}
+                    $accent={verse.useAccent ? verse.accent : undefined}
+                    disabled={verse.id === muse?.id || navLoading}
+                    title={`Verse ${verse.verseNumber ?? 1}: ${navName(verse)}`}
+                    aria-current={verse.id === muse?.id ? "true" : undefined}
+                    onClick={() => handleSwitchVerse(verse)}
+                  >
+                    {verse.verseNumber ?? 1}
+                  </S.VerseCircle>
+                ))
+              )}
+            </S.VerseCircleTrack>
+            {/* Pinned outside the scrollable track — always one tap away, even
+                when there are enough verses that reaching the end requires a
+                scroll. A dedicated "add" action shouldn't be buried at the tail
+                of a scrolling list. */}
+            {verseHeaderData?.canCreate && (
+              <S.VerseCircleNew
+                type="button"
+                title="Create a new verse of this character"
+                onClick={handleCreateVerse}
+              >
+                <FiPlus size={14} />
+              </S.VerseCircleNew>
+            )}
+          </S.VerseHeaderInner>
+        </S.VerseHeaderBar>
+      </ShouldRender>
 
       {/* Main character card */}
       <S.CardWrapper>
@@ -673,11 +907,21 @@ export default function MuseProfilePage({}) {
           <>
             <S.CardBgEditBtn
               type="button"
-              title={cardBgSaving ? "Saving…" : muse?.cardBackground ? "Adjust card image" : "Add card image"}
+              title={
+                cardBgSaving
+                  ? "Saving…"
+                  : muse?.cardBackground
+                    ? "Adjust card image"
+                    : "Add card image"
+              }
               disabled={cardBgSaving || cardBgImageUploading}
               onClick={openExistingCardBgCropDialog}
             >
-              {cardBgSaving ? <span style={{ fontSize: "0.45rem" }}>…</span> : <FiCamera size={12} />}
+              {cardBgSaving ? (
+                <span style={{ fontSize: "0.45rem" }}>…</span>
+              ) : (
+                <FiCamera size={12} />
+              )}
             </S.CardBgEditBtn>
             {muse?.cardBackground && (
               <S.CardBgRemoveBtn
@@ -709,14 +953,14 @@ export default function MuseProfilePage({}) {
         <MuseInfoSection
           muse={muse}
           isOwnMuse={isOwnMuse}
-          museRank={museRank}
-          museRankLoading={museRankLoading}
-          onMuseUpdate={(updates) => setMuse((prev) => (prev ? { ...prev, ...updates } : prev))}
+          onMuseUpdate={(updates) =>
+            setMuse((prev) => (prev ? { ...prev, ...updates } : prev))
+          }
         />
       </ShouldRender>
 
       <ShouldRender if={is("CONNECTIONS")}>
-        <ConnectionsSection muse={muse} />
+        <ConnectionsSection muse={muse} isOwnMuse={isOwnMuse} />
       </ShouldRender>
 
       <ShouldRender if={is("BACK_STORY")}>
@@ -724,7 +968,9 @@ export default function MuseProfilePage({}) {
           muse={muse}
           aboutSections={aboutSections}
           isOwnMuse={isOwnMuse}
-          onMuseUpdate={(updates) => setMuse((prev) => (prev ? { ...prev, ...updates } : prev))}
+          onMuseUpdate={(updates) =>
+            setMuse((prev) => (prev ? { ...prev, ...updates } : prev))
+          }
         />
       </ShouldRender>
 
@@ -742,7 +988,29 @@ export default function MuseProfilePage({}) {
 
       {/* Section navigation */}
       <S.SideMenu aria-label="Character sections">
+        <S.MenuHighlight
+          $accent={accent}
+          style={{
+            height: menuHighlight?.height ?? 0,
+            opacity: menuHighlight ? 1 : 0,
+            transform: `translate(${menuHighlight?.left ?? 0}px, ${menuHighlight?.top ?? 0}px)`,
+            width: menuHighlight?.width ?? 0,
+          }}
+        />
         <S.MenuButton
+          ref={registerMenuButtonRef("CARD_IMAGE")}
+          type="button"
+          onClick={() => transition("CARD_IMAGE")}
+          className={`card-image-mobile-only ${is("CARD_IMAGE") ? "selected" : ""}`}
+          $accent={accent}
+        >
+          <S.MenuButtonIcon>
+            <FaImagePortrait size={14} />
+          </S.MenuButtonIcon>
+          <S.MenuText>CARD</S.MenuText>
+        </S.MenuButton>
+        <S.MenuButton
+          ref={registerMenuButtonRef("MUSE_INFO")}
           type="button"
           onClick={() => transition("MUSE_INFO")}
           className={is("MUSE_INFO") ? "selected" : ""}
@@ -754,6 +1022,7 @@ export default function MuseProfilePage({}) {
           <S.MenuText>INFO</S.MenuText>
         </S.MenuButton>
         <S.MenuButton
+          ref={registerMenuButtonRef("BACK_STORY")}
           type="button"
           onClick={() => transition("BACK_STORY")}
           className={is("BACK_STORY") ? "selected" : ""}
@@ -765,6 +1034,7 @@ export default function MuseProfilePage({}) {
           <S.MenuText>STORY</S.MenuText>
         </S.MenuButton>
         <S.MenuButton
+          ref={registerMenuButtonRef("PROMPTS")}
           type="button"
           onClick={() => transition("PROMPTS")}
           className={is("PROMPTS") ? "selected" : ""}
@@ -776,17 +1046,19 @@ export default function MuseProfilePage({}) {
           <S.MenuText>POSTS</S.MenuText>
         </S.MenuButton>
         <S.MenuButton
+          ref={registerMenuButtonRef("CONNECTIONS")}
           type="button"
-          onClick={() => transition("CARD_IMAGE")}
-          className={`card-image-mobile-only ${is("CARD_IMAGE") ? "selected" : ""}`}
+          onClick={() => transition("CONNECTIONS")}
+          className={is("CONNECTIONS") ? "selected" : ""}
           $accent={accent}
         >
           <S.MenuButtonIcon>
-            <FaImagePortrait size={20} />
+            <FaHandshake size={20} />
           </S.MenuButtonIcon>
-          <S.MenuText>CARD</S.MenuText>
+          <S.MenuText>PEERS</S.MenuText>
         </S.MenuButton>
         <S.MenuButton
+          ref={registerMenuButtonRef("GALLERY")}
           type="button"
           onClick={() => transition("GALLERY")}
           className={is("GALLERY") ? "selected" : ""}
@@ -798,6 +1070,7 @@ export default function MuseProfilePage({}) {
           <S.MenuText>GALLERY</S.MenuText>
         </S.MenuButton>
         <S.MenuButton
+          ref={registerMenuButtonRef("MORE")}
           type="button"
           onClick={() => transition("MORE")}
           className={is("MORE") ? "selected" : ""}
@@ -861,9 +1134,14 @@ export default function MuseProfilePage({}) {
         heading="Remove card image?"
         text="Remove the custom card background? The main character image will be used instead."
         open={confirmRemoveCardBg}
-        onOpenChange={(open) => { if (!open) setConfirmRemoveCardBg(false); }}
+        onOpenChange={(open) => {
+          if (!open) setConfirmRemoveCardBg(false);
+        }}
         onCancel={() => setConfirmRemoveCardBg(false)}
-        onConfirm={() => { setConfirmRemoveCardBg(false); handleRemoveCardBg(); }}
+        onConfirm={() => {
+          setConfirmRemoveCardBg(false);
+          handleRemoveCardBg();
+        }}
         actionButtonLabel="Remove"
         actionColor="negative"
       />

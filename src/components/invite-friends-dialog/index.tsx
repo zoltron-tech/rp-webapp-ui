@@ -9,7 +9,7 @@ import * as DropS from "@/components/profile-more-dropdown/styled";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import { XPBadgeIcon } from "@/utils/badge-icons";
+import { ScoreBadgeIcon } from "@/utils/badge-icons";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styled";
 
@@ -118,9 +118,9 @@ export const InviteFriendsDialog: FC<InviteFriendsDialogProps> = ({
         level up.
       </S.InviteDescription>
       <S.InviteXPNote>
-        <XPBadgeIcon size={16} />
+        <ScoreBadgeIcon size={16} />
         People who join using your link will earn you points whenever they gain
-        XP.
+        Score.
       </S.InviteXPNote>
       <S.InviteLinkBox>
         <S.InviteLinkText

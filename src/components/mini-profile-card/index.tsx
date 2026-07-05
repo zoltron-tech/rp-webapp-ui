@@ -10,6 +10,7 @@ import { AvatarNew } from "@/components/common/avatar-new";
 import { useGlobalState } from "@/context/store/stores";
 import type { Novelist } from "@/types";
 import { ACCENT_MAP } from "@/types/theme";
+import { mainVerseMuses } from "@/utils/muse";
 import { Flex } from "../edit-muse-card/styles";
 import * as S from "./styles";
 
@@ -224,9 +225,11 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
 
                 <S.CharSection>
                   <S.CharLabel>Top Characters</S.CharLabel>
-                  {novelist.muses.length > 0 ? (
+                  {mainVerseMuses(novelist.muses).length > 0 ? (
                     <S.CharRow>
-                      {novelist.muses.slice(0, 3).map((muse) => (
+                      {mainVerseMuses(novelist.muses)
+                        .slice(0, 3)
+                        .map((muse) => (
                         <S.CharItem key={muse.id}>
                           <S.CharCard>
                             {muse.image ? (

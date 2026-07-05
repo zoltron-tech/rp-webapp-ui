@@ -59,16 +59,15 @@ import type { Activity } from "@/types/activity";
 import { ACCENT_MAP, type Accent } from "@/types/theme";
 import {
   LevelBadgeIcon,
-  RankTrophyIcon,
-  XPBadgeIcon,
+  ScoreBadgeIcon,
 } from "@/utils/badge-icons";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDate } from "@/utils/helpers";
+import { mainVerseMuses } from "@/utils/muse";
 import { getConversationByUsernameAction } from "../../conversations/actions";
 import { getUserActivities } from "../../home/actions";
 import * as HomeS from "../../home/styles";
-import { getNovelistRankByIdAction } from "../../leaderboard/actions";
 import { getNovelistAction } from "../../novelists/actions";
 import { getAllStoryboardsByUsernameAction } from "../../story/actions";
 import {
@@ -386,11 +385,6 @@ export default function UserProfilePage({}) {
   const [supportMessage, setSupportMessage] = useState("");
   const user = useGlobalState("user");
   const userNovelist = useGlobalState("novelist");
-  const novelistRank = useGlobalState("novelistRank");
-  // Rank for the profile being viewed (null = loading, undefined = failed/N/A)
-  const [profileRank, setProfileRank] = useState<number | null | undefined>(
-    undefined,
-  );
   const username = params?.slug as string;
   const isCurrentUser = username === user?.username;
   const [novelist, setNovelist] = useState<Novelist | null>(
@@ -789,24 +783,6 @@ export default function UserProfilePage({}) {
     }
   }, [userNovelist, isCurrentUser]);
 
-  // Refresh own rank when viewing own profile
-  useEffect(() => {
-    if (!isCurrentUser || authState !== "LOGGED_IN" || !userNovelist?.id) return;
-    void getNovelistRankByIdAction(userNovelist.id).then((result) => {
-      setGlobalState({
-        novelistRank: "message" in result ? undefined : result.rank,
-      });
-    });
-  }, [isCurrentUser, authState, userNovelist?.id]);
-
-  // Fetch rank for other novelists once their ID is known
-  useEffect(() => {
-    if (isCurrentUser || !novelist?.id) return;
-    setProfileRank(null);
-    void getNovelistRankByIdAction(novelist.id).then((result) => {
-      setProfileRank("message" in result ? undefined : result.rank);
-    });
-  }, [isCurrentUser, novelist?.id]);
 
   useEffect(() => {
     if (authState === "UNINITIALIZED") {
@@ -1239,29 +1215,12 @@ export default function UserProfilePage({}) {
                     <LevelBadgeIcon size={15} />
                     Lv. {novelist?.level}
                   </S.LevelChip>
-                  <S.XPChip
-                    onClick={() =>
-                      routeToPage(ROUTES.Leaderboard.Novelists)
-                    }
+                  <S.ScoreBadge
+                    onClick={() => routeToPage(ROUTES.Levels)}
                   >
-                    <XPBadgeIcon size={15} />
-                    {novelist?.totalPoints?.toLocaleString()} XP
-                  </S.XPChip>
-                  {(() => {
-                    const rank = isCurrentUser ? novelistRank : profileRank;
-                    if (rank === undefined) return null;
-                    if (rank === null) return <S.RankBadgeShimmer />;
-                    return (
-                      <S.RankBadge
-                        onClick={() =>
-                          routeToPage(ROUTES.Leaderboard.Novelists)
-                        }
-                      >
-                        <RankTrophyIcon size={18} rank={rank} />
-                        #{rank.toLocaleString()}
-                      </S.RankBadge>
-                    );
-                  })()}
+                    <ScoreBadgeIcon size={15} />
+                    {novelist?.totalPoints?.toLocaleString()} Score
+                  </S.ScoreBadge>
                 </S.LevelChipRow>
               </ShouldRender>
             </ShouldRender>
@@ -1309,7 +1268,9 @@ export default function UserProfilePage({}) {
               >
                 <S.SubText>{`Characters (${novelist?.museCount})`}</S.SubText>
                 <S.MuseList>
-                  {novelist?.muses.slice(0, 3).map((muse) => (
+                  {mainVerseMuses(novelist?.muses)
+                    .slice(0, 3)
+                    .map((muse) => (
                     <MuseListItem key={muse.id} muse={muse}></MuseListItem>
                   ))}
                 </S.MuseList>

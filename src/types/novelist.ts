@@ -41,6 +41,15 @@ export interface Muse {
   level: number;
   prev: MuseNavItem | null;
   next: MuseNavItem | null;
+  /** Main muse this one is an alternative verse of; null for the main verse. */
+  originalVerseId?: string | null;
+  /** Ordering within the verse family; the main verse renders as verse 1. */
+  verseNumber?: number | null;
+  /**
+   * All visible verses of this muse's family (main verse included), sorted by
+   * verse number. Only present when alternative verses exist.
+   */
+  verses?: MuseNavItem[] | null;
 }
 
 /**
@@ -69,6 +78,8 @@ export interface MuseNavItem {
   privacy: PrivacyLevel;
   useAccent: boolean;
   useExtraImages: boolean;
+  originalVerseId?: string | null;
+  verseNumber?: number | null;
 }
 
 export interface MuseAboutSection {
@@ -104,6 +115,9 @@ export interface CreateUpdateMuse {
   privacy: string;
   useAccent: boolean;
   useExtraImages: boolean;
+  /** Set on create to make the new muse an alternative verse of an existing muse. */
+  originalVerseId?: string | null;
+  verseNumber?: number | null;
 }
 
 export interface MuseConnection {
@@ -116,6 +130,49 @@ export interface MuseConnection {
   connection: string;
   verified: boolean;
   createdAt: number;
+}
+
+export type MuseConnectionStatus = "PENDING" | "DONE" | "REJECTED";
+
+/** A muse belonging to a muse connection group. */
+export interface MuseConnectionMuse {
+  museId: string;
+  firstName: string;
+  lastName: string | null;
+  image: string | null;
+  novelistId: string;
+  novelistName: string | null;
+}
+
+export interface MuseConnectionApproval {
+  novelistId: string;
+  novelistName: string | null;
+  approved: boolean;
+}
+
+/**
+ * A titled, rich-text described connection between several muses (own and/or
+ * friends' muses). Stays PENDING until every involved novelist accepts, then
+ * shows on all involved muses' profiles. Distinct from the legacy pairwise
+ * MuseConnection relationship labels above.
+ */
+export interface MuseConnectionGroup {
+  id: string;
+  title: string;
+  description: string | null;
+  status: MuseConnectionStatus;
+  createdBy: string;
+  createdByName: string | null;
+  muses: MuseConnectionMuse[];
+  approvals: MuseConnectionApproval[];
+  /** True when the viewer is one of the involved novelists. */
+  canEdit: boolean;
+  /** The viewer's own approval state; null when they are not involved. */
+  viewerApproved: boolean | null;
+  /** True when the viewer created the connection (may re-request after rejection). */
+  viewerIsCreator: boolean;
+  createdAt: number | null;
+  modifiedAt: number | null;
 }
 
 export interface NovelistTier {
@@ -158,7 +215,10 @@ export type Novelist = {
   level: number;
 };
 
-export type UpdateNovelistPayload = Omit<Partial<Novelist>, "firstName" | "note"> & {
+export type UpdateNovelistPayload = Omit<
+  Partial<Novelist>,
+  "firstName" | "note"
+> & {
   firstName: string;
 };
 

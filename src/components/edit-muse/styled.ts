@@ -2491,3 +2491,60 @@ export const AvatarCropBody = styled.div`
     padding: 4px 2px;
   }
 `;
+
+/* ── Create-verse visual cue ─────────────────────────────────────────────── */
+
+export const VerseOfBanner = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 2px 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg-3));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--bg-6));
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+  }
+`;
+
+export const VerseOfLabel = styled.p`
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+`;
+
+export const VerseOfName = styled.p`
+  margin: 0;
+  font-size: var(--font-size);
+  font-weight: 700;
+  color: var(--text);
+`;
+
+/* ── Inherited privacy badge (create-verse) ──────────────────────────────── */
+
+export const InheritedPrivacyBadge = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--bg-3);
+  border: 1px solid var(--bg-6);
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  font-family: var(--font);
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  .privacy-icon {
+    width: 13px;
+    height: 13px;
+  }
+`;

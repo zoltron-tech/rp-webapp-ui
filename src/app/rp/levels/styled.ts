@@ -78,31 +78,69 @@ export const HeaderSub = styled.p`
   }
 `;
 
-export const CurrentBadge = styled.div`
+export const TitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+`;
+
+export const InfoButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--accent) 60%, var(--bg-5));
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-3));
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 800;
+  font-style: italic;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  line-height: 1;
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 18%, var(--bg-3));
+    border-color: var(--accent);
+  }
+`;
+
+export const InviteXPButton = styled.button`
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 7px 18px;
-  border: 1px solid var(--accent-6);
-  background: var(--accent-a3);
+  gap: 7px;
+  margin-top: 4px;
+  margin-bottom: 12px;
+  padding: 9px 18px;
   border-radius: 999px;
-`;
-
-export const CurrentBadgeLevel = styled.span`
+  border: none;
+  background: var(--accent);
+  color: var(--accent-fg, var(--text));
   font-size: var(--font-size-small);
-  font-weight: var(--font-weight-bold);
-  color: var(--accent);
-`;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--accent) 40%, transparent);
+  transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
 
-export const CurrentBadgeDivider = styled.span`
-  width: 1px;
-  height: 12px;
-  background: var(--accent-6);
-`;
+  &:hover {
+    background: var(--accent-hover);
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 55%, transparent);
+    transform: translateY(-1px);
+  }
 
-export const CurrentBadgeXP = styled.span`
-  font-size: var(--font-size-small);
-  color: var(--text-secondary);
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+
+  svg {
+    width: 15px;
+    height: 15px;
+  }
 `;
 
 // ─── Timeline ─────────────────────────────────────────────────────────────────

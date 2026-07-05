@@ -15,6 +15,7 @@ import { useUIContext } from "@/hooks/use-ui-context";
 import type { NWImage } from "@/types/novelist";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
+import { mainVerseMuses } from "@/utils/muse";
 import * as S from "./styles";
 
 const MAX_MUSES = 4;
@@ -24,6 +25,7 @@ type MusePreview = {
   firstName: string;
   lastName: string;
   image: string | null;
+  originalVerseId?: string | null;
 };
 
 type NovelistPreview = {
@@ -41,12 +43,9 @@ type NovelistPreview = {
 
 type Props = {
   novelist: NovelistPreview;
-  rank?: number;
 };
 
-export const NovelistPreviewCard: FC<Props> = ({ novelist, rank }) => {
-  const rankTier =
-    rank === 1 || rank === 2 || rank === 3 ? rank : undefined;
+export const NovelistPreviewCard: FC<Props> = ({ novelist }) => {
   const { routeToPage, baseDataLoader } = usePageRouter();
   const currentNovelist = useGlobalState("novelist");
   const setGlobalState = useGlobalStoreSet();
@@ -58,8 +57,9 @@ export const NovelistPreviewCard: FC<Props> = ({ novelist, rank }) => {
   const [requestLoading, setRequestLoading] = useState(false);
 
   const isCurrentUser = currentNovelist?.username === novelist.username;
-  const visibleMuses = novelist.muses?.slice(0, MAX_MUSES) ?? [];
-  const extraMuses = (novelist.muses?.length ?? 0) - MAX_MUSES;
+  const mainMuses = mainVerseMuses(novelist.muses);
+  const visibleMuses = mainMuses.slice(0, MAX_MUSES);
+  const extraMuses = mainMuses.length - MAX_MUSES;
 
   const patchCachedConnection = (newConnection: string | null) => {
     setGlobalState((prev) => ({
@@ -220,25 +220,9 @@ export const NovelistPreviewCard: FC<Props> = ({ novelist, rank }) => {
     );
   };
 
-  const onGoToLeaderboard = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    routeToPage(ROUTES.Leaderboard.Novelists);
-  };
-
-  const card = (
-    <S.CardWrapper $rank={rankTier}>
-      {rankTier && (
-        <S.RankTag $rank={rankTier} onClick={onGoToLeaderboard}>
-          <S.RankTagEmoji>{S.RANK_EMOJI[rankTier]}</S.RankTagEmoji>
-          <S.RankTagText>
-            <S.RankTagOrdinal $rank={rankTier}>
-              {S.RANK_ORDINAL[rankTier]}
-            </S.RankTagOrdinal>
-            <S.RankTagSub>rank</S.RankTagSub>
-          </S.RankTagText>
-        </S.RankTag>
-      )}
-      <S.AccentStrip $rank={rankTier} />
+  return (
+    <S.CardWrapper>
+      <S.AccentStrip />
       <S.Body>
         <S.AvatarWrapper>
           <S.StyledAvatar
@@ -293,10 +277,4 @@ export const NovelistPreviewCard: FC<Props> = ({ novelist, rank }) => {
       </S.Body>
     </S.CardWrapper>
   );
-
-  if (rankTier) {
-    return <S.RankFrame $rank={rankTier}>{card}</S.RankFrame>;
-  }
-
-  return card;
 };

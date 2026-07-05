@@ -8,6 +8,7 @@ import { usePageRouter } from "@/hooks/use-page-router";
 import type { Novelist } from "@/types/novelist";
 import { ROUTES } from "@/utils/constants/routes";
 import { toggleState } from "@/utils/helpers";
+import { mainVerseMuses } from "@/utils/muse";
 import { Logger } from "@/utils/services";
 import * as S from "./styles";
 
@@ -97,7 +98,7 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
           </S.CardHeader>
           <ShouldRender if={expanded}>
             <S.MuseList>
-              {novelist.muses.map((muse) => (
+              {mainVerseMuses(novelist.muses).map((muse) => (
                 <S.Muse
                   key={`${muse.firstName}-${muse.lastName}`}
                   onClick={() => onMuseAvatarClick(muse.id ? muse.id : "")}

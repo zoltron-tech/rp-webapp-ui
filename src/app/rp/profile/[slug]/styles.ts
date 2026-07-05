@@ -911,25 +911,27 @@ export const LevelChip = styled.span`
   }
 `;
 
-export const XPChip = styled.span`
+export const ScoreBadge = styled.span`
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   padding: 4px 12px 4px 8px;
   border-radius: 999px;
-  background: var(--bg-3);
-  border: 1px solid var(--bg-5);
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--accent) 14%, var(--bg-3));
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--bg-5));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 14%, transparent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text);
   white-space: nowrap;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 
   &:hover {
-    background: var(--bg-4);
-    border-color: var(--bg-6);
+    background: color-mix(in srgb, var(--accent) 22%, var(--bg-3));
+    border-color: color-mix(in srgb, var(--accent) 56%, var(--bg-5));
   }
 `;
 

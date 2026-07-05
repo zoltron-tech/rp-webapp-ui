@@ -24,8 +24,8 @@ import type { ImageCropFilter, NWImage } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { AvatarUploadField } from "../common/avatar-upload-field";
-import AvatarCropDialog from "../dialog/avatar-crop-dialog";
 import { AppAlertDialog } from "../dialog";
+import AvatarCropDialog from "../dialog/avatar-crop-dialog";
 import { useMuseState, useMuseStoreSet } from "./muse.store";
 import * as S from "./styled";
 import { useMuseSave } from "./use-muse-save";
@@ -36,12 +36,28 @@ function clamp(v: number, min: number, max: number) {
   return Math.min(max, Math.max(min, v));
 }
 
-function toCropFilter(src: string, x: number, y: number, scale: number): ImageCropFilter {
+function toCropFilter(
+  src: string,
+  x: number,
+  y: number,
+  scale: number,
+): ImageCropFilter {
   const scalePct = Math.round(scale * 100);
-  return { height: scalePct, src, width: scalePct, x: Math.round(x), y: Math.round(y) };
+  return {
+    height: scalePct,
+    src,
+    width: scalePct,
+    x: Math.round(x),
+    y: Math.round(y),
+  };
 }
 
-type EditView = "appearance" | "information" | "story" | "gallery";
+type EditView =
+  | "appearance"
+  | "information"
+  | "story"
+  | "gallery"
+  | "connections";
 
 type Props = {
   onBack: () => void;
@@ -255,7 +271,16 @@ export function LandingSection({ onBack, onSelect }: Props) {
       setMuseState({ avatar: result as NWImage });
       successToast("Avatar updated.");
     });
-  }, [id, pendingCropSrc, cropX, cropY, cropScale, setMuseState, errorToast, successToast]);
+  }, [
+    id,
+    pendingCropSrc,
+    cropX,
+    cropY,
+    cropScale,
+    setMuseState,
+    errorToast,
+    successToast,
+  ]);
 
   const handleCropCancel = useCallback(async () => {
     if (tempUpload && tempUpload === pendingCropSrc) {
@@ -490,8 +515,11 @@ export function LandingSection({ onBack, onSelect }: Props) {
           </S.LandingCardChips>
         </S.LandingCard>
 
-        {/* Connections — coming soon */}
-        <S.LandingCard type="button" disabled>
+        {/* Connections */}
+        <S.LandingCard
+          type="button"
+          onClick={() => guardNav(() => onSelect("connections"))}
+        >
           <S.LandingCardIconArea $hue="connections">
             <BsPeopleFill className="section-icon" />
           </S.LandingCardIconArea>
@@ -502,7 +530,7 @@ export function LandingSection({ onBack, onSelect }: Props) {
             </S.LandingCardDesc>
           </S.LandingCardBody>
           <S.LandingCardChips>
-            <S.LandingCardComingSoon>Coming Soon</S.LandingCardComingSoon>
+            <S.LandingCardChip $active={false}>Bonds</S.LandingCardChip>
           </S.LandingCardChips>
         </S.LandingCard>
 

@@ -257,10 +257,6 @@ export default function NovelistsPage() {
                 Home-screen app
               </S.AppBenefit>
               <S.AppBenefit>
-                <FiWifiOff />
-                Works offline
-              </S.AppBenefit>
-              <S.AppBenefit>
                 <FiDownload />
                 No app store needed
               </S.AppBenefit>

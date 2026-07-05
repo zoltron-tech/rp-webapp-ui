@@ -485,16 +485,16 @@ export const AppIconTile = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: clamp(96px, 14vw, 128px);
-  height: clamp(96px, 14vw, 128px);
-  border-radius: 26px;
+  width: clamp(256px, 18vw, 172px);
+  height: clamp(256px, 18vw, 172px);
+  border-radius: 18px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
 
   img {
-    width: 78%;
-    height: 78%;
+    width: 70%;
+    height: 70%;
     object-fit: contain;
     border-radius: 18px;
   }

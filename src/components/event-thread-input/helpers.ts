@@ -1,16 +1,16 @@
 import { useEffect } from "react";
 import { useCustomEvents } from "@/hooks";
-import type { Muse, Novelist, PromptSource, SubmitPromptType } from "@/types";
+import type { Muse, Novelist, PromptSource } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { useEventThreadInputState } from "./event-thread-input.store";
 
 export enum EventThreadEvent {
   Sent = "sent",
   Error = "error",
-  MediaDeleted = "media-deleted",
 }
 
 export const museToSource = (muse: Muse): PromptSource => ({
+  accent: muse.accent,
   avatar: muse.avatar,
   image: muse.image || "",
   name: `${muse.firstName} ${muse.lastName}`.trim(),
@@ -18,10 +18,10 @@ export const museToSource = (muse: Muse): PromptSource => ({
   sourceType: "MUSE",
   urlProp: muse.id || "",
   useAccent: muse.useAccent,
-  accent: muse.accent,
 });
 
 export const novelistToSource = (novelist: Novelist): PromptSource => ({
+  accent: String(novelist.palette),
   avatar: novelist.avatar,
   image: novelist.image || "",
   name: `${novelist.firstName} ${novelist.lastName}`.trim(),
@@ -29,33 +29,7 @@ export const novelistToSource = (novelist: Novelist): PromptSource => ({
   sourceType: "NOVELIST",
   urlProp: novelist.username || "",
   useAccent: true,
-  accent: String(novelist.palette),
 });
-
-const videoExtensions = ["mp4"];
-const imageExtensions = ["jpg", "jpeg", "png", "gif"];
-const audioExtensions = ["mp3", "mpeg", "wav"];
-
-export const getMediaTypeFromUrl = (url: string) => {
-  const extension = url.split(".").pop() || "";
-  if (videoExtensions.includes(extension)) return "video";
-  if (imageExtensions.includes(extension)) return "image";
-  if (audioExtensions.includes(extension)) return "audio";
-  return "image";
-};
-
-type PromptIdKey = "promptId" | "commentId";
-
-export const getParentIdKeyFromPromptType = (
-  type: Exclude<SubmitPromptType, "prompt">,
-): PromptIdKey => {
-  switch (type) {
-    case "comment":
-      return "promptId";
-    default:
-      return "commentId";
-  }
-};
 
 export const apiMessageToInfoMessage = (
   message: API_MESSAGE | null,

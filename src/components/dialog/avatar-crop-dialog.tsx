@@ -1,7 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { MdOpenWith, MdRefresh, MdZoomIn, MdZoomOut } from "react-icons/md";
+import {
+  MdAddPhotoAlternate,
+  MdCropFree,
+  MdOpenWith,
+  MdRefresh,
+  MdZoomIn,
+  MdZoomOut,
+} from "react-icons/md";
 import styled from "styled-components";
 
 const ZOOM_MIN = 1;
@@ -42,6 +49,12 @@ const ActionBarHint = styled.span`
   }
 `;
 
+const ActionBarButtons = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+
 const ResetPill = styled.button`
   all: unset;
   display: flex;
@@ -75,14 +88,14 @@ const ViewportWrap = styled.div`
   justify-content: center;
 `;
 
-const Square = styled.div`
+const Square = styled.div<{ $aspectRatio: number; $shape: "circle" | "rect" }>`
   position: relative;
-  width: min(320px, 100%);
-  aspect-ratio: 1 / 1;
+  width: ${(p) => (p.$shape === "rect" ? "min(240px, 60vw)" : "min(320px, 100%)")};
+  aspect-ratio: ${(p) => p.$aspectRatio};
   background:
     linear-gradient(var(--bg-1), var(--bg-1)) padding-box,
     repeating-conic-gradient(var(--bg-3) 0% 25%, var(--bg-2) 0% 50%) 0 / 20px 20px;
-  border-radius: 10px;
+  border-radius: ${(p) => (p.$shape === "rect" ? "12px" : "10px")};
   overflow: hidden;
   touch-action: none;
   cursor: grab;
@@ -96,13 +109,13 @@ const Square = styled.div`
 
 /* Dynamic background props are applied via the `style` prop (inline) rather than
    styled-component props so rapid drag/zoom updates don't regenerate CSS classes. */
-const ImageEl = styled.div`
+const ImageEl = styled.div<{ $fill: number }>`
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 92%;
-  height: 92%;
+  width: ${(p) => p.$fill}%;
+  height: ${(p) => p.$fill}%;
   /* Two-value size: width% auto — height scales proportionally (fit by width),
      so a tall image overflows top/bottom and can be panned vertically.
      background-position selects which slice shows; this is aspect-ratio- and
@@ -123,6 +136,14 @@ const CircleBorderMask = styled.div`
   border-radius: 50%;
   border: 4px solid var(--accent);
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+`;
+
+const RectBorderMask = styled.div`
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  border: 3px solid var(--accent);
   pointer-events: none;
 `;
 
@@ -288,6 +309,14 @@ type Props = {
   onConfirm: () => void;
   isUploading?: boolean;
   viewportRef?: React.RefObject<HTMLDivElement | null>;
+  /** Viewport shape — "circle" (default, used for people/muse avatars) or
+   *  "rect" (used for storyboard/event covers). */
+  shape?: "circle" | "rect";
+  /** Width / height ratio for the "rect" shape. Ignored for "circle". */
+  aspectRatio?: number;
+  /** When set, shows a "Replace" action that lets the user pick a different
+   *  source image without leaving the dialog (e.g. re-opens the file picker). */
+  onReplace?: () => void;
 };
 
 export function AvatarCropDialog({
@@ -304,6 +333,9 @@ export function AvatarCropDialog({
   onConfirm,
   isUploading,
   viewportRef,
+  shape = "circle",
+  aspectRatio = 1,
+  onReplace,
 }: Props) {
   const handleClose = useCallback(() => onOpenChange(false), [onOpenChange]);
 
@@ -384,6 +416,31 @@ export function AvatarCropDialog({
     if (e.touches.length < 2) pinchDist.current = null;
   };
 
+  // ── Fit: zoom so the image completely fills the viewport with no gaps ──────
+  // Loads the natural image size and computes the minimum scale (in the
+  // "width% auto" background-size encoding) whose rendered height covers the
+  // viewport's height, then re-centers. Mirrors the Muse card-background
+  // "Fit" behavior so cropping works identically for any target ratio.
+  const computeFit = useCallback(() => {
+    if (!src || !viewportRef?.current) return;
+    const img = new window.Image();
+    img.onload = () => {
+      const rect = viewportRef.current?.getBoundingClientRect();
+      if (!rect || rect.width === 0 || rect.height === 0) return;
+      const { naturalWidth, naturalHeight } = img;
+      if (!naturalWidth || !naturalHeight) return;
+      // At scale=1 the rendered height = vpW × (imgH/imgW). If that's shorter
+      // than vpH there's a vertical gap, so zoom until rendered height = vpH.
+      const fitScale = Math.max(
+        1,
+        (rect.height / rect.width) * (naturalWidth / naturalHeight),
+      );
+      onPan(50, 50);
+      onScaleChange(Math.min(fitScale, ZOOM_MAX));
+    };
+    img.src = src;
+  }, [src, viewportRef, onPan, onScaleChange]);
+
   return (
     // Presentational content — parent dialog will control portals
     <Content data-open={open}>
@@ -392,15 +449,31 @@ export function AvatarCropDialog({
           <MdOpenWith size={14} />
           Drag to reposition · scroll to zoom
         </ActionBarHint>
-        <ResetPill type="button" onClick={onReset}>
-          <MdRefresh size={13} />
-          Reset
-        </ResetPill>
+        <ActionBarButtons>
+          <ResetPill type="button" onClick={onReset}>
+            <MdRefresh size={13} />
+            Reset
+          </ResetPill>
+          {shape === "rect" && (
+            <ResetPill type="button" onClick={computeFit}>
+              <MdCropFree size={13} />
+              Fit
+            </ResetPill>
+          )}
+          {onReplace && (
+            <ResetPill type="button" onClick={onReplace}>
+              <MdAddPhotoAlternate size={13} />
+              Replace
+            </ResetPill>
+          )}
+        </ActionBarButtons>
       </ActionBar>
 
       <ViewportWrap>
         <Square
           ref={viewportRef as any}
+          $aspectRatio={shape === "rect" ? aspectRatio : 1}
+          $shape={shape}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={endPan}
@@ -412,13 +485,14 @@ export function AvatarCropDialog({
         >
           <ImageEl
             ref={imgRef}
+            $fill={shape === "rect" ? 100 : 92}
             style={{
               backgroundImage: src ? `url(${src})` : undefined,
               backgroundSize: `${scale * 100}% auto`,
               backgroundPosition: `${x}% ${y}%`,
             }}
           />
-          <CircleBorderMask />
+          {shape === "circle" ? <CircleBorderMask /> : <RectBorderMask />}
         </Square>
       </ViewportWrap>
 

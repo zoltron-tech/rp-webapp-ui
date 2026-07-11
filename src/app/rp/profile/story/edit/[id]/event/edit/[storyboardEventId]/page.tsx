@@ -8,12 +8,12 @@ import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 
-const DynamicCreateStoryBoardEventCard = dynamic(
-  () => import("@/components/create-storyboard-event-card"),
+const DynamicEditStoryboardEventForm = dynamic(
+  () => import("@/components/edit-storyboard-event-card"),
   { ssr: false },
 );
 
-export default function CreateStoryBoardEventPage({}) {
+export default function EditStoryBoardEventPage({}) {
   const storyboardId = useParams()?.id as string;
   const storyboardEventId = useParams()?.storyboardEventId as string;
   const authState = useGlobalState("authState");
@@ -21,7 +21,7 @@ export default function CreateStoryBoardEventPage({}) {
   const { routeToPage } = usePageRouter();
 
   useEffect(() => {
-    Logger.debug("CreateStoryBoardEventPage", authState);
+    Logger.debug("EditStoryBoardEventPage", authState);
 
     if (authState === "LOGGED_OUT") {
       Logger.debug("pushing to home");
@@ -31,7 +31,7 @@ export default function CreateStoryBoardEventPage({}) {
 
   return (
     <div>
-      <DynamicCreateStoryBoardEventCard
+      <DynamicEditStoryboardEventForm
         storyboardId={storyboardId}
         storyboardEventId={storyboardEventId}
       />

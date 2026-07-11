@@ -1,5 +1,7 @@
 import { Popover, Toolbar } from "radix-ui";
 import styled, { css, keyframes } from "styled-components";
+import { dialogDesignsCss } from "./dialog-designs";
+import { dialogEmbedCss } from "./dialog-embed";
 import {
   editorMentionTagCss,
   mentionChildrenCss,
@@ -983,6 +985,7 @@ export const EditorContent = styled.div<EditorContentProps>`
   overflow: auto;
   ${richTextContentBase}
   ${editorMentionTagCss}
+  ${dialogEmbedCss}
 
   &:focus {
     outline: none;
@@ -1014,9 +1017,15 @@ export const FadeOverlay = styled.div`
   );
 `;
 
-export const ContentWrapper = styled.div<{ $animating: boolean }>`
+export const ContentWrapper = styled.div<{
+  $animating: boolean;
+  $noClip?: boolean;
+}>`
   position: relative;
-  overflow: hidden;
+  /* When collapse is disabled there is no max-height to enforce, so let the
+     content define its own height instead of clipping/establishing a BFC
+     (which would also trap it as a monolith inside the book's columns). */
+  overflow: ${(p) => (p.$noClip ? "visible" : "hidden")};
   transition: max-height 0.4s ease-in-out;
 
   ${({ $animating }) => $animating && "will-change: max-height;"}
@@ -1063,10 +1072,7 @@ export const ImageAlignButton = styled.button<{ $active?: boolean }>`
   transition: background 0.15s ease, color 0.15s ease;
 
   &:hover {
-    background: ${(p) =>
-      p.$active
-        ? "var(--accent)"
-        : "var(--bg-5)"};
+    background: ${(p) => (p.$active ? "var(--accent)" : "var(--bg-5)")};
     color: ${(p) => (p.$active ? "#fff" : "var(--text)")};
   }
 `;
@@ -1127,6 +1133,153 @@ export const ImageAcceptButton = styled.button`
   }
 `;
 
+/* Compact single-row edit toolbar anchored to the selected dialog. Sized to
+   fit a 375px screen without wrapping; horizontal position is set inline. */
+export const DialogControlsBar = styled.div`
+  position: absolute;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  max-width: calc(100% - 8px);
+  padding: 4px;
+  background-color: var(--bg-3);
+  border: 1px solid var(--bg-6);
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+  user-select: none;
+  pointer-events: all;
+  white-space: nowrap;
+`;
+
+/* Transparent circular hit-area laid over the selected dialog's avatar; it is
+   the trigger that opens the sender-selection popover. */
+export const DialogAvatarHit = styled.button`
+  position: absolute;
+  z-index: 201;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: box-shadow 0.15s ease;
+
+  &:hover {
+    box-shadow: 0 0 0 2px var(--accent-hover);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+`;
+
+interface DialogMuseOptionProps {
+  $selected?: boolean;
+}
+
+export const DialogMuseOptionItem = styled.button<DialogMuseOptionProps>`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  border: none;
+  background-color: ${(p) =>
+    p.$selected
+      ? "color-mix(in srgb, var(--accent) 25%, transparent)"
+      : "transparent"};
+  color: var(--text);
+
+  &:hover {
+    background-color: var(--bg-4);
+  }
+
+  .muse-av {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .muse-av.fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-6);
+    font-size: 0.75rem;
+    font-weight: var(--font-weight-bold);
+  }
+`;
+
+export const DialogBarDivider = styled.span`
+  width: 1px;
+  align-self: stretch;
+  min-height: 20px;
+  background-color: var(--bg-6);
+  margin: 0 2px;
+  flex-shrink: 0;
+`;
+
+interface DialogBarButtonProps {
+  $active?: boolean;
+  $danger?: boolean;
+}
+
+export const DialogBarButton = styled.button<DialogBarButtonProps>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  color: ${(p) =>
+    p.$danger
+      ? "var(--tomato-9, #e5484d)"
+      : p.$active
+        ? "var(--accent)"
+        : "var(--text)"};
+  background-color: ${(p) =>
+    p.$active
+      ? "color-mix(in srgb, var(--accent) 20%, var(--bg-3))"
+      : "var(--bg-2)"};
+  transition: background-color 0.15s ease;
+
+  svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .font-glyph {
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.5px;
+  }
+
+  .font-glyph-sm {
+    font-size: 0.72em;
+  }
+
+  &:hover {
+    background-color: ${(p) =>
+      p.$danger
+        ? "color-mix(in srgb, var(--tomato-9, #e5484d) 18%, var(--bg-3))"
+        : p.$active
+          ? "color-mix(in srgb, var(--accent) 28%, var(--bg-3))"
+          : "var(--bg-4)"};
+  }
+`;
+
 export const Toggle = styled.button`
     padding: 2px 12px;
     border: none;
@@ -1154,9 +1307,11 @@ export const Toggle = styled.button`
 export const SavedContent = styled.div`
   width: 100%;
   outline: none;
-  overflow: auto;
+  /* Read-only prose flows in the document; it must not scroll within itself. */
+  overflow: visible;
   ${richTextContentBase}
   ${savedMentionTagCss}
+  ${dialogDesignsCss}
 `;
 
 export const PopoverAnchor = styled(Popover.Anchor)`

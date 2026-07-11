@@ -487,6 +487,10 @@ export default function UserProfilePage({}) {
     routeToPage(ROUTES.Profile.View(username).Muses);
   };
 
+  const toCreateMusePage = () => {
+    routeToPage(ROUTES.Profile.Muses.Create);
+  };
+
   const toStoryBoardsPage = () => {
     routeToPage(ROUTES.Profile.View(username).Storyboards);
   };
@@ -1278,6 +1282,23 @@ export default function UserProfilePage({}) {
                   <span>
                     <FaPeopleGroup />
                     See all characters
+                    <MdOutlineKeyboardDoubleArrowRight />
+                  </span>
+                </S.SeeMoreLink>
+              </Flex>
+            </ShouldRender>
+            <ShouldRender
+              if={
+                isCurrentUser &&
+                novelist !== null &&
+                !(novelist?.museCount && novelist.museCount > 0)
+              }
+            >
+              <Flex style={{ width: "100%" }} direction="column">
+                <S.SeeMoreLink onClick={toCreateMusePage}>
+                  <span>
+                    <IoMdPersonAdd />
+                    Add a character
                     <MdOutlineKeyboardDoubleArrowRight />
                   </span>
                 </S.SeeMoreLink>

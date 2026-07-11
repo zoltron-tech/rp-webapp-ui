@@ -18,6 +18,7 @@ import { MusePreviewCard } from "@/components/muse-preview-card";
 import { NovelistPreviewCard } from "@/components/novelist-preview-card";
 import { Prompt as PromptComponent } from "@/components/prompt";
 import { SideBarFriendListItem } from "@/components/sidebar-friend-list-item";
+import { StoryCard } from "@/components/story-card";
 import VideoCard from "@/components/video-card";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -51,6 +52,7 @@ const ACTIVITIES_PAGE_SIZE = FEED_PAGE_SIZES.homeActivities;
 const EXPLORE_PROMPTS_PAGE_SIZE = FEED_PAGE_SIZES.explorePrompts;
 const MUSES_PAGE_SIZE = 8;
 const STRANGERS_PAGE_SIZE = 8;
+const STORIES_PAGE_SIZE = 16;
 
 /**
  * Discriminated feed item — lets us render activities, explore prompts and
@@ -183,6 +185,7 @@ export default function HomePage() {
     useState(true);
   const [friendsMusesInitialLoading, setFriendsMusesInitialLoading] =
     useState(true);
+  const [storiesInitialLoading, setStoriesInitialLoading] = useState(true);
 
   const rightWrapRef = useRef<HTMLDivElement>(null);
   const parentWrapperRef = useRef<HTMLDivElement>(null);
@@ -294,6 +297,17 @@ export default function HomePage() {
       }
     } finally {
       if (page === 1) setFriendsMusesInitialLoading(false);
+    }
+  };
+
+  const fetchRandomStories = async () => {
+    try {
+      const _stories = await getRandomStories(1, STORIES_PAGE_SIZE);
+      if (_stories && !("message" in _stories)) {
+        setStoryboards(_stories);
+      }
+    } finally {
+      setStoriesInitialLoading(false);
     }
   };
 
@@ -452,6 +466,7 @@ export default function HomePage() {
       fetchStrangers();
       fetchStrangerMuses();
       fetchFriendsMuses();
+      fetchRandomStories();
       // Page-level loader can stop immediately — each section now has its
       // own shimmer that clears when its data arrives.
       stopPageLoading();
@@ -558,17 +573,23 @@ export default function HomePage() {
             ))}
           </S.PartitionContainer>
         </S.ContentContainer> */}
-          {/* <S.ContentContainer>
-            <S.SubText>Dive into the Stories</S.SubText>
-            <S.PartitionContainer>
-              {storyboards?.map((storyBoard) => (
-                <StoryCard
-                  key={storyBoard?.id}
-                  storyBoard={storyBoard}
-                ></StoryCard>
-              ))}
-            </S.PartitionContainer>
-          </S.ContentContainer> */}
+          {(storiesInitialLoading ||
+            (storyboards !== undefined && storyboards.length > 0)) && (
+            <S.ContentContainer>
+              <S.SubText>Dive into the Stories</S.SubText>
+              <S.PartitionContainer>
+                {storiesInitialLoading ? (
+                  [0, 1, 2, 3].map((i) => <S.StoryCardShimmer key={i} />)
+                ) : (
+                  <>
+                    {storyboards!.map((storyBoard) => (
+                      <StoryCard key={storyBoard?.id} storyBoard={storyBoard} />
+                    ))}
+                  </>
+                )}
+              </S.PartitionContainer>
+            </S.ContentContainer>
+          )}
           {(friendsMusesInitialLoading ||
             (friendsMuses !== undefined && friendsMuses.length > 0)) && (
             <S.ContentContainer id="home-tour-step-2">

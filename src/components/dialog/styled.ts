@@ -22,7 +22,10 @@ export const Overlay = styled(AlertDialog.Overlay)`
   -webkit-backdrop-filter: blur(3px);
   position: fixed;
   inset: 0;
-  z-index: 200;
+  /* Must beat every other overlay in the app (mobile trays sit at 99999,
+     some editor toolbars at the int32 max) so confirmation dialogs are
+     never trapped behind whatever triggered them. */
+  z-index: 2147483646;
   animation: ${overlayShow} 160ms ease-out;
 
   @media (prefers-reduced-motion: reduce) {
@@ -46,7 +49,7 @@ export const Content = styled(AlertDialog.Content)<{ $size?: "default" | "lg" }>
   width: min(92vw, 440px);
   max-height: 85vh;
   padding: 24px;
-  z-index: 201;
+  z-index: 2147483647;
   color: var(--text);
   font-family: var(--font);
   animation: ${contentShow} 160ms cubic-bezier(0.16, 1, 0.3, 1);

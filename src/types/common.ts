@@ -26,6 +26,13 @@ export interface Tag {
   color: string;
 }
 
+/** A genre from the curated, read-only catalogue (users pick, never create). */
+export interface Genre {
+  id: number;
+  label: string;
+  color: string;
+}
+
 export type Hook<T, K> = (props: T) => K;
 
 export type ErrorType = {

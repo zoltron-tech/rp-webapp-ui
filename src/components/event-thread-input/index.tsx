@@ -1,37 +1,45 @@
 "use client";
 
-import { Flex } from "@novelist-world/ui";
 import classNames from "classnames";
-import { Collapsible, Form } from "radix-ui";
+import { Form } from "radix-ui";
 import {
   type FC,
   type FormEventHandler,
   forwardRef,
   useCallback,
-  useMemo,
+  useRef,
   useState,
 } from "react";
-import { submitEventThreadReply, submitPrompt } from "@/app/rp/profile/actions";
+import { saveStoryBoardEventThreadAction } from "@/app/rp/story/actions";
 import { StoreProvider } from "@/context/store/context";
-import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
-import type { StoryBoardEventThreadInput, SubmitPromptInput } from "@/types";
+import type {
+  StoryBoardEventThread,
+  StoryBoardEventThreadInput,
+} from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { InfoModal } from "../info-modal";
+import type { RichTextEditorHandle } from "../rich-text-editor-input";
+import {
+  DEFAULT_DIALOG_DESIGN,
+  isDialogDesign,
+} from "../rich-text-editor-input/dialog-designs";
+import { DialogDesignSelect } from "../rich-text-editor-input/dialog-designs/dialog-design-select";
+import {
+  type DialogEmbedData,
+  serializeDialogEmbeds,
+} from "../rich-text-editor-input/dialog-embed";
+import { EventThreadDialogInsert } from "./event-thread-dialog-insert";
 import {
   type EventThreadInputState,
   INITIAL_STATE,
   useEventThreadInputState,
+  useEventThreadInputStoreSet,
 } from "./event-thread-input.store";
-import { EventThreadInputTrigger } from "./event-thread-input-trigger";
 import { EventThreadMediaInput } from "./event-thread-media-input";
-import { EventThreadMediaPreview } from "./event-thread-media-preview";
-import { EventThreadMuseSelect } from "./event-thread-muse-select";
 import {
   apiMessageToInfoMessage,
   EventThreadEvent,
-  museToSource,
-  novelistToSource,
   useEventThreadInputEvents,
 } from "./helpers";
 import { EventThreadTextField } from "./prompt-text-field";
@@ -40,32 +48,31 @@ import * as S from "./styles";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   storyBoardEventId?: string;
+  /** When set, the composer edits this thread instead of creating a new one. */
+  initialThread?: StoryBoardEventThread | null;
   onSend?: () => void;
 };
 
 export const EventThreadForm: FC<Props> = ({
   storyBoardEventId = "",
+  initialThread,
   onSend,
 }) => {
   const [sending, setSending] = useState(false);
-  const novelist = useGlobalState("novelist");
   const promptText = useEventThreadInputState("promptText");
+  const threadId = useEventThreadInputState("threadId");
+  const dialogDesign = useEventThreadInputState("dialogDesign");
+  const setState = useEventThreadInputStoreSet();
   const { successToast, errorToast } = useUIContext();
-
-  const [open, setOpen] = useState(true);
+  const editorRef = useRef<RichTextEditorHandle | null>(null);
 
   const [error, setError] = useState<API_MESSAGE | null>(null);
 
   const { emit } = useEventThreadInputEvents();
 
-  const sources = useMemo(() => {
-    if (!novelist) return [];
-
-    return [
-      novelistToSource(novelist),
-      ...(novelist.muses ?? []).map(museToSource),
-    ];
-  }, [novelist]);
+  const handleInsertDialog = useCallback((dialog: DialogEmbedData) => {
+    editorRef.current?.insertDialog(dialog);
+  }, []);
 
   const handleSend: FormEventHandler<HTMLFormElement> = useCallback(
     async (e) => {
@@ -75,31 +82,20 @@ export const EventThreadForm: FC<Props> = ({
         promptText === null ||
         promptText === ""
       ) {
-        errorToast("Prompt body cannot be empty.");
+        errorToast("Thread body cannot be empty.");
         return;
       }
-      const formData = new FormData(e.currentTarget);
-      const formFields = {
-        media: String(formData.get("mediaUrl")),
-        museId: String(formData.get("muse")),
-        text: String(formData.get("promptText")),
-      };
-      const selectedSource = sources.find(
-        (s) => s.sourceId === formFields.museId,
-      );
-      if (!selectedSource) return;
 
       const payload: StoryBoardEventThreadInput = {
-        attachments: [{ createdAt: null, id: null, url: formFields.media }],
-        message: promptText || "",
-        sender: selectedSource,
+        id: threadId,
+        // Persist dialogs as their style-agnostic data model (chrome stripped).
+        message: serializeDialogEmbeds(promptText),
         storyBoardEventId: storyBoardEventId,
-        type:
-          selectedSource.sourceType === "NOVELIST" ? "NARRATION" : "DIALOGUE",
+        dialogDesign,
       };
 
       setSending(true);
-      const response = await submitEventThreadReply(payload);
+      const response = await saveStoryBoardEventThreadAction(payload);
 
       if (response.message !== API_MESSAGE.Success) {
         setError(response.message);
@@ -108,81 +104,86 @@ export const EventThreadForm: FC<Props> = ({
         return;
       }
 
-      successToast("Sent successfully");
+      successToast(threadId ? "Updated successfully" : "Sent successfully");
 
-      emit(EventThreadEvent.Sent, {
-        muse: selectedSource,
-        payload,
-      });
+      emit(EventThreadEvent.Sent, { payload });
 
+      editorRef.current?.clear();
       setSending(false);
       setError(null);
-      setOpen(false);
       onSend?.();
     },
-    [sources, promptText, storyBoardEventId, emit, onSend],
+    [
+      promptText,
+      threadId,
+      storyBoardEventId,
+      dialogDesign,
+      emit,
+      onSend,
+      successToast,
+      errorToast,
+    ],
   );
 
   return (
-    <Form.Root className="form-content" onSubmit={handleSend}>
-      <Flex
-        style={{
-          alignItems: "center",
-          gap: "4px",
-          justifyContent: "flex-start",
-          marginTop: "8px",
-        }}
-      >
-        <EventThreadMuseSelect sources={sources} />
-      </Flex>
-      <EventThreadTextField />
-      <EventThreadMediaInput />
-      <EventThreadMediaPreview />
-      <SendButton loading={sending} />
-    </Form.Root>
+    <>
+      <InfoModal
+        open={Boolean(error)}
+        type="error"
+        description={apiMessageToInfoMessage(error)}
+        onClose={() => setError(null)}
+      />
+      <Form.Root className="form-content" onSubmit={handleSend}>
+        <S.DialogInsertSlot>
+          <EventThreadMediaInput />
+          <EventThreadDialogInsert onInsert={handleInsertDialog} />
+        </S.DialogInsertSlot>
+        <DialogDesignSelect
+          value={dialogDesign}
+          onChange={(next) => setState({ dialogDesign: next })}
+        />
+        <EventThreadTextField
+          editorRef={editorRef}
+          initialValue={initialThread?.message ?? ""}
+        />
+        <SendButton loading={sending} />
+      </Form.Root>
+    </>
   );
 };
 
 export const EventThreadInput: FC<Props> = forwardRef(
-  ({ storyBoardEventId = "", onSend, className, ...rest }, forwardedRef) => {
-    const handleInfoBoxClose = useCallback(() => {
-      setError(null);
-    }, []);
-
-    const [open, setOpen] = useState(true);
-
-    const [error, setError] = useState<API_MESSAGE | null>(null);
-
+  (
+    { storyBoardEventId = "", initialThread, onSend, className, ...rest },
+    forwardedRef,
+  ) => {
+    const initialDesign = initialThread?.dialogDesign ?? null;
     return (
-      <>
-        <InfoModal
-          open={Boolean(error)}
-          type="error"
-          description={apiMessageToInfoMessage(error)}
-          onClose={handleInfoBoxClose}
-        />
-        <Collapsible.Root open={open} onOpenChange={setOpen} asChild>
-          <StoreProvider<EventThreadInputState>
-            storeId="event-thread-input"
-            initial={{ ...INITIAL_STATE, storyBoardEventId }}
-          >
-            <S.EventThreadInputRoot
-              {...rest}
-              className={classNames([className, { open }])}
-              ref={forwardedRef as React.Ref<HTMLDivElement>}
-            >
-              <EventThreadInputTrigger open={open} />
-              <Collapsible.Content>
-                <EventThreadForm
-                  storyBoardEventId={storyBoardEventId}
-                  onSend={onSend}
-                  className={className}
-                />
-              </Collapsible.Content>
-            </S.EventThreadInputRoot>
-          </StoreProvider>
-        </Collapsible.Root>
-      </>
+      <StoreProvider<EventThreadInputState>
+        storeId="event-thread-input"
+        initial={{
+          ...INITIAL_STATE,
+          dialogDesign: isDialogDesign(initialDesign)
+            ? initialDesign
+            : DEFAULT_DIALOG_DESIGN,
+          promptText: initialThread?.message ?? "",
+          storyBoardEventId,
+          threadId: initialThread?.id ?? null,
+        }}
+      >
+        <S.EventThreadInputRoot
+          {...rest}
+          className={classNames([className])}
+          ref={forwardedRef as React.Ref<HTMLDivElement>}
+        >
+          <EventThreadForm
+            storyBoardEventId={storyBoardEventId}
+            initialThread={initialThread}
+            onSend={onSend}
+            className={className}
+          />
+        </S.EventThreadInputRoot>
+      </StoreProvider>
     );
   },
 );

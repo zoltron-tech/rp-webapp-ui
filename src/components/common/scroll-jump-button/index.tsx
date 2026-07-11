@@ -1,6 +1,6 @@
 "use client";
 
-import { type FC, useEffect, useState } from "react";
+import { type FC, type ReactNode, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import * as S from "./styles";
@@ -12,6 +12,10 @@ type Props = {
   visible?: boolean;
   /** Accessible label — defaults to "Scroll to top" / "Scroll to bottom" */
   label?: string;
+  /** Overrides the default chevron glyph (e.g. a "+" to add). */
+  icon?: ReactNode;
+  /** Where the button is pinned. Defaults to "bottom". */
+  position?: "top" | "bottom";
 };
 
 export const ScrollJumpButton: FC<Props> = ({
@@ -19,6 +23,8 @@ export const ScrollJumpButton: FC<Props> = ({
   onClick,
   label,
   visible = true,
+  icon,
+  position = "bottom",
 }) => {
   const defaultLabel =
     direction === "up" ? "Scroll to top" : "Scroll to bottom";
@@ -36,12 +42,14 @@ export const ScrollJumpButton: FC<Props> = ({
       onClick={onClick}
       aria-label={label ?? defaultLabel}
       $visible={visible}
+      $position={position}
     >
-      {direction === "up" ? (
-        <FaChevronUp size={18} />
-      ) : (
-        <FaChevronDown size={18} />
-      )}
+      {icon ??
+        (direction === "up" ? (
+          <FaChevronUp size={18} />
+        ) : (
+          <FaChevronDown size={18} />
+        ))}
     </S.Button>
   );
 

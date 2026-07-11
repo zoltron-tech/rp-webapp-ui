@@ -1,3 +1,4 @@
+import { DEFAULT_ASTERISM_STYLE } from "@/components/asterism-styles";
 import type { Fandom, Friend, Muse, Novelist, NovelistTier } from "@/types";
 import type { StoryBoard, StoryBoardEvent } from "@/types/story-board";
 
@@ -85,17 +86,19 @@ export const INITIAL_MUSE: Muse = {
 };
 
 export const INITIAL_STORY_BOARD: StoryBoard = {
+  avatar: null,
   createdBy: EMPTY_FRIEND,
   events: [],
   id: null,
   image: null,
+  isPublic: false,
   members: [],
   name: "",
-  privacy: "PUBLIC",
   tags: [],
 };
 
 export const INITIAL_STORY_BOARD_EVENT: StoryBoardEvent = {
+  avatar: null,
   createdAt: null,
   description: "",
   eventTime: null,
@@ -104,5 +107,7 @@ export const INITIAL_STORY_BOARD_EVENT: StoryBoardEvent = {
   location: null,
   name: "",
   ordinal: 1,
+  overtureAsterism: DEFAULT_ASTERISM_STYLE,
+  passageAsterism: DEFAULT_ASTERISM_STYLE,
   storyBoardId: "",
 };

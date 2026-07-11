@@ -14,6 +14,7 @@ import { createPortal } from "react-dom";
 import { FaDiscord } from "react-icons/fa6";
 import { FcBusinessman } from "react-icons/fc";
 import {
+  BookmarksIcon,
   CharactersIcon,
   ExploreIcon,
   FAQsIcon,
@@ -23,6 +24,7 @@ import {
   InteractionsIcon,
   LogoutIcon,
   MusicIcon,
+  StoriesIcon,
   TermsIcon,
 } from "./user-menu-icons";
 import { FiChevronRight, FiEdit2 } from "react-icons/fi";
@@ -162,6 +164,10 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
 
   const toStoryBoardsPage = () => {
     routeToPage(ROUTES.Profile.View(novelist?.username || "").Storyboards);
+  };
+
+  const toBookmarksPage = () => {
+    routeToPage(ROUTES.Bookmarks);
   };
 
   const toOutgoingThreadsPage = () => {
@@ -334,6 +340,20 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                         : unreadConversationIds?.length}
                     </S.UnreadBadge>
                   </ShouldRender>
+                  <FiChevronRight size={16} color="gray" />
+                </S.Element>
+                <S.Element onClick={toStoryBoardsPage}>
+                  <Flex justify="flex-start" align="center" gap="12px">
+                    <StoriesIcon size={20} />
+                    Stories
+                  </Flex>
+                  <FiChevronRight size={16} color="gray" />
+                </S.Element>
+                <S.Element onClick={toBookmarksPage}>
+                  <Flex justify="flex-start" align="center" gap="12px">
+                    <BookmarksIcon size={20} />
+                    Bookmarks
+                  </Flex>
                   <FiChevronRight size={16} color="gray" />
                 </S.Element>
                 <S.Element onClick={toMusicPage}>
@@ -528,6 +548,30 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                             : unreadConversationIds?.length}
                         </S.UnreadBadge>
                       </ShouldRender>
+                      <FiChevronRight size={16} color="gray" />
+                    </S.MobilePanelMenuItem>
+                    <S.MobilePanelMenuItem
+                      onClick={() => {
+                        closeMobilePanel();
+                        toStoryBoardsPage();
+                      }}
+                    >
+                      <Flex justify="flex-start" align="center" gap="12px">
+                        <StoriesIcon size={20} />
+                        Stories
+                      </Flex>
+                      <FiChevronRight size={16} color="gray" />
+                    </S.MobilePanelMenuItem>
+                    <S.MobilePanelMenuItem
+                      onClick={() => {
+                        closeMobilePanel();
+                        toBookmarksPage();
+                      }}
+                    >
+                      <Flex justify="flex-start" align="center" gap="12px">
+                        <BookmarksIcon size={20} />
+                        Bookmarks
+                      </Flex>
                       <FiChevronRight size={16} color="gray" />
                     </S.MobilePanelMenuItem>
                     <S.MobilePanelMenuItem

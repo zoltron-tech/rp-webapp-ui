@@ -1,6 +1,8 @@
+"use client";
+
 import { Form } from "radix-ui";
 import { type FC, type HTMLProps, useMemo } from "react";
-import type { SubmitPromptType } from "@/types";
+import { HiPaperAirplane } from "react-icons/hi2";
 import { useEventThreadInputState } from "./event-thread-input.store";
 import * as S from "./styles";
 
@@ -12,35 +14,29 @@ export const SendButton: FC<PromptInputButtonProps> = ({
   loading,
   ...rest
 }) => {
-  const mediaUploading = useEventThreadInputState("mediaUploading");
-  const mediaUploadError = useEventThreadInputState("mediaUploadError");
-  const promptType = useEventThreadInputState("type");
+  const threadId = useEventThreadInputState("threadId");
+  const promptText = useEventThreadInputState("promptText");
 
-  const disabled = useMemo(() => {
-    return mediaUploading || Boolean(mediaUploadError) || loading;
-  }, [mediaUploading, mediaUploadError, loading]);
+  // Only surface the button once there's something worth submitting.
+  const hasContent = useMemo(() => {
+    const t = (promptText ?? "").trim();
+    return t !== "" && t !== "<br>";
+  }, [promptText]);
 
-  const buttonText = useMemo(() => {
-    if (loading) {
-      return "Sending...";
-    }
-
-    if (mediaUploading) {
-      return "Uploading attachment...";
-    }
-
-    return "Send";
-  }, [promptType, mediaUploading, loading]);
+  const label = loading ? "Sending..." : threadId ? "Update" : "Send";
 
   return (
     <Form.Submit asChild>
       <S.SubmitButton
         className="send-button"
-        disabled={disabled}
+        $visible={hasContent}
+        disabled={loading}
+        title={label}
+        aria-label={label}
         {...rest}
         type="submit"
       >
-        {buttonText}
+        <HiPaperAirplane size={18} />
       </S.SubmitButton>
     </Form.Submit>
   );

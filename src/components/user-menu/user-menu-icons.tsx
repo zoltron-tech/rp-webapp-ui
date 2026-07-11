@@ -655,6 +655,48 @@ export const InstallAppIcon: FC<SvgProps> = ({ size = 20 }) => (
   </svg>
 );
 
+// ── Bookmarks — iOS-style: crimson gradient ribbon, glossy dome, gold star emblem, notched tail ──
+export const BookmarksIcon: FC<SvgProps> = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <defs>
+      {/* Ribbon body: bright rose highlight → rich crimson → deep burgundy shadow */}
+      <linearGradient id="umBkRbn" x1="6" y1="2" x2="18" y2="22" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"   stopColor="#F0486E" />
+        <stop offset="42%"  stopColor="#C81838" />
+        <stop offset="100%" stopColor="#7A0A1E" />
+      </linearGradient>
+      {/* Ribbon gloss dome */}
+      <radialGradient id="umBkGl" cx="34%" cy="26%" r="72%">
+        <stop offset="0%"   stopColor="#FFFFFF" stopOpacity="0.55" />
+        <stop offset="55%"  stopColor="#FFFFFF" stopOpacity="0.10" />
+        <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+      </radialGradient>
+      {/* Star emblem: bright ivory-gold core → warm amber */}
+      <radialGradient id="umBkStar" cx="38%" cy="32%" r="70%">
+        <stop offset="0%"   stopColor="#FFFDE0" />
+        <stop offset="100%" stopColor="#E8C020" />
+      </radialGradient>
+    </defs>
+
+    {/* ── Ribbon body (notched tail at bottom) ── */}
+    <path d="M6 3.5A1.5 1.5 0 0 1 7.5 2H16.5A1.5 1.5 0 0 1 18 3.5V21.2A0.6 0.6 0 0 1 17.05 21.7L12 18.1L6.95 21.7A0.6 0.6 0 0 1 6 21.2Z" fill="url(#umBkRbn)" />
+    {/* Left edge specular */}
+    <path d="M7.6 3.4V19.6" stroke="#FF88A0" strokeWidth="0.8" strokeLinecap="round" opacity="0.42" />
+    {/* Right edge shadow */}
+    <path d="M16.4 3.4V19.6" stroke="#5A0814" strokeWidth="0.7" strokeLinecap="round" opacity="0.30" />
+    {/* Gloss dome overlay */}
+    <path d="M6 3.5A1.5 1.5 0 0 1 7.5 2H16.5A1.5 1.5 0 0 1 18 3.5V21.2A0.6 0.6 0 0 1 17.05 21.7L12 18.1L6.95 21.7A0.6 0.6 0 0 1 6 21.2Z" fill="url(#umBkGl)" />
+
+    {/* ── Star emblem ── */}
+    <path d="M12 6.2L12.85 8.6L15.4 8.7L13.4 10.25L14.1 12.7L12 11.25L9.9 12.7L10.6 10.25L8.6 8.7L11.15 8.6Z" fill="url(#umBkStar)" opacity="0.9" />
+    {/* Star glint */}
+    <circle cx="11.4" cy="9.0" r="0.5" fill="#FFFDE0" opacity="0.62" />
+
+    {/* ── Ribbon outline ── */}
+    <path d="M6 3.5A1.5 1.5 0 0 1 7.5 2H16.5A1.5 1.5 0 0 1 18 3.5V21.2A0.6 0.6 0 0 1 17.05 21.7L12 18.1L6.95 21.7A0.6 0.6 0 0 1 6 21.2Z" stroke="#8A0C1E" strokeWidth="0.55" fill="none" opacity="0.45" />
+  </svg>
+);
+
 // ── Terms — iOS-style: parchment page with folded corner, gold header band, sepia text lines, crimson wax seal ──
 export const TermsIcon: FC<SvgProps> = ({ size = 20 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -922,5 +964,75 @@ export const LogoutIcon: FC<SvgProps> = ({ size = 20 }) => (
 
     {/* ── Exit arrowhead ── */}
     <path d="M17.5 9L21 12L17.5 15" stroke="url(#umLoArr)" strokeWidth="2.0" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+  </svg>
+);
+
+// ── Stories — iOS-style: gradient indigo cover, parchment pages, crimson bookmark ribbon, glass gloss ──
+export const StoriesIcon: FC<SvgProps> = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <defs>
+      {/* Cover: deep indigo shadow → rich violet crest → deep indigo */}
+      <linearGradient id="umStCvr" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"   stopColor="#2A2080" />
+        <stop offset="40%"  stopColor="#5040C0" />
+        <stop offset="70%"  stopColor="#7058E0" />
+        <stop offset="100%" stopColor="#282078" />
+      </linearGradient>
+      {/* Spine: darker vertical band */}
+      <linearGradient id="umStSpn" x1="4" y1="12" x2="8" y2="12" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"   stopColor="#1E1860" />
+        <stop offset="100%" stopColor="#4838A8" stopOpacity="0" />
+      </linearGradient>
+      {/* Pages: bright ivory top → warm cream bottom */}
+      <linearGradient id="umStPgs" x1="12" y1="6" x2="12" y2="18" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"   stopColor="#FFFFFB" />
+        <stop offset="60%"  stopColor="#F6F0DE" />
+        <stop offset="100%" stopColor="#E6D6AE" />
+      </linearGradient>
+      {/* Ribbon: bright coral tip → deep crimson base */}
+      <linearGradient id="umStRbn" x1="16.5" y1="4" x2="16.5" y2="11" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"   stopColor="#FF5048" />
+        <stop offset="100%" stopColor="#A80E20" />
+      </linearGradient>
+      {/* Glass gloss: white core → transparent edge */}
+      <radialGradient id="umStGls" cx="30%" cy="22%" r="75%">
+        <stop offset="0%"   stopColor="#FFFFFF" stopOpacity="0.5" />
+        <stop offset="55%"  stopColor="#FFFFFF" stopOpacity="0.08" />
+        <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+      </radialGradient>
+    </defs>
+
+    {/* ── Book cover ── */}
+    <rect x="4" y="3" width="16" height="18" rx="2.4" fill="url(#umStCvr)" />
+    {/* Spine shading */}
+    <rect x="4" y="3" width="4" height="18" rx="2.4" fill="url(#umStSpn)" />
+    {/* Spine ridge line */}
+    <line x1="7.2" y1="3.4" x2="7.2" y2="20.6" stroke="#1A1450" strokeWidth="0.6" opacity="0.55" />
+
+    {/* ── Page block on fore-edge ── */}
+    <path d="M20 5.2v13.6c0 .9-.7 1.6-1.6 1.6H18V3.6h.4c.9 0 1.6.7 1.6 1.6Z" fill="url(#umStPgs)" />
+    {/* Page separation lines */}
+    <line x1="18.5" y1="4.6" x2="18.5" y2="19.4" stroke="#C8B078" strokeWidth="0.35" opacity="0.6" />
+    <line x1="19.2" y1="4.9" x2="19.2" y2="19.1" stroke="#C8B078" strokeWidth="0.3" opacity="0.45" />
+
+    {/* ── Bookmark ribbon ── */}
+    <path d="M14.6 3h3.6v7.4l-1.8-1.7-1.8 1.7V3Z" fill="url(#umStRbn)" />
+    {/* Ribbon center crease */}
+    <line x1="16.4" y1="3.4" x2="16.4" y2="8.2" stroke="#FF8880" strokeWidth="0.35" opacity="0.5" />
+
+    {/* ── Cover embossing: title bars ── */}
+    <line x1="7"  y1="9"  x2="12.6" y2="9"  stroke="#C8BCFF" strokeWidth="1.15" strokeLinecap="round" opacity="0.85" />
+    <line x1="7"  y1="12" x2="14.8" y2="12" stroke="#A89CF0" strokeWidth="0.85" strokeLinecap="round" opacity="0.6" />
+    <line x1="7"  y1="14.6" x2="13.6" y2="14.6" stroke="#A89CF0" strokeWidth="0.85" strokeLinecap="round" opacity="0.45" />
+    {/* Embossed star accent */}
+    <path d="M9.4 17.4l.5 1 1.1.16-.8.78.19 1.1-.99-.52-.99.52.19-1.1-.8-.78 1.1-.16.5-1Z" fill="#E8C848" opacity="0.9" />
+
+    {/* ── Glass gloss overlay ── */}
+    <rect x="4" y="3" width="16" height="18" rx="2.4" fill="url(#umStGls)" />
+    {/* Specular arc — upper-left corner */}
+    <path d="M5.5 6.5A2.5 2.5 0 0 1 8 4.2" stroke="#FFFFFF" strokeWidth="0.9" strokeLinecap="round" fill="none" opacity="0.5" />
+
+    {/* ── Cover rim outline ── */}
+    <rect x="4" y="3" width="16" height="18" rx="2.4" stroke="#1E1860" strokeWidth="0.5" fill="none" opacity="0.5" />
   </svg>
 );

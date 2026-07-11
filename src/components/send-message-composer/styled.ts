@@ -725,45 +725,69 @@ export const TrayRoot = styled.div<{ $open: boolean; $expanded: boolean }>`
 `;
 
 export const TrayHeader = styled.div`
+  position: relative;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 8px 10px;
+  padding: 7px 10px;
   flex-shrink: 0;
   border-bottom: 1px solid var(--bg-3);
 `;
 
 export const TrayTabs = styled.div`
+  position: relative;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  gap: 6px;
-  flex: 1;
+  align-items: stretch;
+  flex: 0 1 auto;
   min-width: 0;
+  padding: 2px;
+  background: var(--bg-3);
+  border-radius: 999px;
+  isolation: isolate;
+`;
+
+/* The single highlight that slides between the segments. Its width is one
+ * segment (accounting for the 3px inset padding on each side) and it is
+ * translated horizontally by whole multiples of its own width. */
+export const TrayTabsIndicator = styled.span<{
+  $count: number;
+  $index: number;
+}>`
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  width: calc((100% - 4px) / ${({ $count }) => $count});
+  transform: translateX(${({ $index }) => `calc(100% * ${$index})`});
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg-1));
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--bg-6));
+  border-radius: 999px;
+  z-index: 0;
+  pointer-events: none;
+  transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
 `;
 
 export const TrayTabPill = styled.button<{ $active: boolean }>`
+  position: relative;
+  z-index: 1;
+  flex: 1 1 0;
+  min-width: 0;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  border: 1px solid
-    ${({ $active }) =>
-      $active
-        ? "color-mix(in srgb, var(--accent) 45%, var(--bg-6))"
-        : "transparent"};
-  background: ${({ $active }) =>
-    $active
-      ? "color-mix(in srgb, var(--accent) 16%, var(--bg-4))"
-      : "var(--bg-3)"};
+  justify-content: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
   color: ${({ $active }) => ($active ? "var(--accent)" : "var(--text-secondary)")};
   border-radius: 999px;
-  padding: 6px 12px;
-  font-size: var(--font-size-small);
+  padding: 4px 12px;
+  font-size: var(--font-size-xsmall);
   font-weight: var(--font-weight-semi-bold);
   font-family: var(--font);
+  white-space: nowrap;
   cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+  transition: color 0.2s ease;
 
   &:active {
     transform: scale(0.96);
@@ -771,9 +795,13 @@ export const TrayTabPill = styled.button<{ $active: boolean }>`
 `;
 
 export const TrayKeyboardButton = styled.button`
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
   flex-shrink: 0;
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   border: none;
   border-radius: 10px;
   background: var(--bg-3);
@@ -789,7 +817,7 @@ export const TrayKeyboardButton = styled.button`
   }
 
   &:active {
-    transform: scale(0.94);
+    transform: translateY(-50%) scale(0.94);
   }
 `;
 

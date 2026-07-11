@@ -8,19 +8,19 @@ import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 
-const DynamicCreateStoryBoardCard = dynamic(
-  () => import("@/components/create-storyboard-card"),
+const DynamicEditStoryboardForm = dynamic(
+  () => import("@/components/edit-storyboard"),
   { ssr: false },
 );
 
-export default function CreateStoryBoardPage({}) {
+export default function EditStoryBoardPage({}) {
   const id = useParams()?.id as string;
   const authState = useGlobalState("authState");
 
   const { routeToPage } = usePageRouter();
 
   useEffect(() => {
-    Logger.debug("CreateStoryBoardPage", authState);
+    Logger.debug("EditStoryBoardPage", authState);
     if (authState === "LOGGED_OUT") {
       Logger.debug("pushing to home");
       routeToPage(ROUTES.Novelists);
@@ -29,7 +29,7 @@ export default function CreateStoryBoardPage({}) {
 
   return (
     <div>
-      <DynamicCreateStoryBoardCard id={id} />
+      <DynamicEditStoryboardForm id={id} />
     </div>
   );
 }

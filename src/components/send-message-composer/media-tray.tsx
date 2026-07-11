@@ -15,9 +15,9 @@ import * as S from "./styled";
 export type TrayTab = "gif" | "sticker" | "clip";
 
 const TAB_META: Record<TrayTab, { label: string; icon: React.ReactNode }> = {
-  clip: { icon: <MdOutlineVideoLibrary size={18} />, label: "Clips" },
-  gif: { icon: <HiGif size={18} />, label: "GIF" },
-  sticker: { icon: <RiEmojiStickerLine size={18} />, label: "Stickers" },
+  clip: { icon: <MdOutlineVideoLibrary size={14} />, label: "Clips" },
+  gif: { icon: <HiGif size={14} />, label: "GIF" },
+  sticker: { icon: <RiEmojiStickerLine size={14} />, label: "Stickers" },
 };
 
 type MediaTrayProps = {
@@ -168,6 +168,10 @@ export function MediaTray({
     >
       <S.TrayHeader>
         <S.TrayTabs>
+          <S.TrayTabsIndicator
+            $count={tabs.length}
+            $index={Math.max(0, tabs.indexOf(renderTab))}
+          />
           {tabs.map((t) => (
             <S.TrayTabPill
               key={t}

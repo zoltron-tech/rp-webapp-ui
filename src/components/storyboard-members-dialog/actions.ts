@@ -36,6 +36,31 @@ export const addStoryBoardMember = async (
   return { message: API_MESSAGE.Success };
 };
 
+export const setStoryBoardMemberAdmin = async (
+  _storyboardMember: StoryBoardMember,
+) => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/story/member/admin`;
+
+  const response = await fetch(URL, {
+    body: JSON.stringify(_storyboardMember),
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "POST",
+  });
+
+  Logger.debug("setStoryBoardMemberAdmin", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  return { message: API_MESSAGE.Success };
+};
+
 export const removeStoryBoardMember = async (
   _storyboardMember: StoryBoardMember,
 ) => {

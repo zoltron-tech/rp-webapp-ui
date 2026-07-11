@@ -8,8 +8,8 @@ import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 
-const DynamicCreateStoryBoardEventCard = dynamic(
-  () => import("@/components/create-storyboard-event-card"),
+const DynamicEditStoryboardEventForm = dynamic(
+  () => import("@/components/edit-storyboard-event-card"),
   { ssr: false },
 );
 
@@ -29,7 +29,7 @@ export default function CreateStoryBoardEventPage({}) {
 
   return (
     <div>
-      <DynamicCreateStoryBoardEventCard storyboardId={storyboardId} />
+      <DynamicEditStoryboardEventForm storyboardId={storyboardId} />
     </div>
   );
 }

@@ -4,6 +4,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
+import {
+  DEFAULT_DIALOG_DESIGN,
+  type DialogDesign,
+  dialogDesignClass,
+  type MuseDialogAttrs,
+  renderDialogEmbeds,
+} from "./dialog-designs";
 import * as S from "./styled";
 
 interface RichTextRendererProps {
@@ -14,6 +21,10 @@ interface RichTextRendererProps {
   /** Overrides the accent for all accent-colored elements (toggle, mentions,
       image hover). Falls back to the inherited --accent when unset. */
   accent?: string | null;
+  /** How embedded dialogs are presented. Defaults to the card design. */
+  dialogDesign?: DialogDesign;
+  /** Per-thread muse id → sender name/accent, used to inflate dialogs. */
+  museDialogAttrs?: MuseDialogAttrs;
 }
 
 export const RichTextRenderer = ({
@@ -22,6 +33,8 @@ export const RichTextRenderer = ({
   overlayHidden = false,
   disableCollapse = false,
   accent = null,
+  dialogDesign = DEFAULT_DIALOG_DESIGN,
+  museDialogAttrs,
 }: RichTextRendererProps) => {
   const { routeToPage } = usePageRouter();
 
@@ -109,6 +122,10 @@ export const RichTextRenderer = ({
     container.innerHTML = tempDiv.innerHTML;
     // container.innerHTML = savedText;
 
+    // Render any stored dialog embeds using the chosen read-only design,
+    // resolving sender name/accent from the thread's muse map.
+    renderDialogEmbeds(container, dialogDesign, museDialogAttrs);
+
     const handleMentionClick = (e: Event) => {
       const target = e.target as HTMLElement;
       const mentionTag = target.closest(".mention-tag") as HTMLElement | null;
@@ -142,7 +159,13 @@ export const RichTextRenderer = ({
       container.removeEventListener("click", handleMentionClick);
       container.removeEventListener("click", handleImageClick);
     };
-  }, [savedText, onNovelistTagClick, onMuseTagClick]);
+  }, [
+    savedText,
+    dialogDesign,
+    museDialogAttrs,
+    onNovelistTagClick,
+    onMuseTagClick,
+  ]);
 
   useEffect(() => {
     const content = contentRef.current;
@@ -284,9 +307,13 @@ export const RichTextRenderer = ({
           maxHeight,
         }}
         $animating={animating}
+        $noClip={disableCollapse}
         onClick={handleContentClick}
       >
-        <S.SavedContent ref={contentRef} />
+        <S.SavedContent
+          ref={contentRef}
+          className={dialogDesignClass(dialogDesign)}
+        />
         {!disableCollapse && !expanded && isOverflowing && !overlayHidden && (
           <S.FadeOverlay />
         )}

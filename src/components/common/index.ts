@@ -5,6 +5,7 @@ export * from "./avatar-upload-field";
 export * from "./button";
 export * from "./card";
 export * from "./chat-bubble";
+export * from "./cover-image";
 export * from "./dropdown";
 export * from "./email-verified-badge";
 export * from "./expandable-pill";

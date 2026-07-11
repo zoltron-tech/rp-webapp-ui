@@ -1,7 +1,7 @@
 "use server";
 
 import getConfig from "next/config";
-import { authenticateAndGetJWT } from "@/app/actions";
+import { authenticateAndGetJWT, getJWTIfExists } from "@/app/actions";
 import type { Muse, Novelist, StoryBoard } from "@/types";
 import type { Activity } from "@/types/activity";
 import type { DataType } from "@/types/common";
@@ -166,10 +166,19 @@ export const getRandomStories = async (
   pageNumber: number,
   pageSize: number,
 ): Promise<DataType<StoryBoard[]>> => {
+  // Auth is optional: without a token only published (public) stories come
+  // back; with one, the backend also folds in stories the novelist is a
+  // member of (see StoryBoardService.getRandomStoryboards).
+  const jwt = await getJWTIfExists();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (jwt) headers[AUTH_HEADER_NAME] = jwt;
+
   const URL = `${RP_SERVICE_URL}/rp/portfolio/story/random?pageNumber=${pageNumber}&pageSize=${pageSize}`;
 
-  const response = await fetch(URL, { cache: "no-store" });
-  Logger.debug("getNovelists", response.status);
+  const response = await fetch(URL, { cache: "no-store", headers });
+  Logger.debug("getRandomStories", response.status);
 
   if (response.status === 404) {
     return [];

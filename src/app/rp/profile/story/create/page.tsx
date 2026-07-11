@@ -7,8 +7,8 @@ import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 
-const DynamicCreateStoryBoardCard = dynamic(
-  () => import("@/components/create-storyboard-card"),
+const DynamicEditStoryboardForm = dynamic(
+  () => import("@/components/edit-storyboard"),
   { ssr: false },
 );
 
@@ -26,7 +26,7 @@ export default function CreateStoryBoardPage({}) {
 
   return (
     <div>
-      <DynamicCreateStoryBoardCard />
+      <DynamicEditStoryboardForm />
     </div>
   );
 }

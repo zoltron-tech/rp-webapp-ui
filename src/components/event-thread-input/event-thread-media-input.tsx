@@ -6,11 +6,17 @@ import {
   type FC,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
+  useState,
 } from "react";
 import { GrAttachment } from "react-icons/gr";
-import { deleteMedia } from "@/app/rp/profile/actions";
+import { MdGif } from "react-icons/md";
+import { AppAlertDialog } from "@/components/dialog";
+import { GifPicker } from "@/components/gif-picker";
+import {
+  MediaTray,
+  type TrayTab,
+} from "@/components/send-message-composer/media-tray";
 import { API_MESSAGE } from "@/utils/constants";
 import { uploadMedia } from "@/utils/upload-media";
 import {
@@ -20,118 +26,176 @@ import {
 import { EventThreadEvent, useRunOn } from "./helpers";
 import * as S from "./styles";
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+/** Tracks whether the viewport is at a mobile width. */
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return isMobile;
+};
+
+/**
+ * GIF + image-attachment controls for the event thread composer. Mirrors the
+ * prompt composer's media input: selections are queued on the store and the
+ * text field's effects embed them inline into the rich text editor (via the
+ * same editor handle used by the prompt composer). Attachments are images —
+ * they embed inline, exactly like the prompt composer's inline images.
+ */
 export const EventThreadMediaInput: FC = () => {
-  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
   const mediaUploadError = useEventThreadInputState("mediaUploadError");
-  const media = useEventThreadInputState("media");
-  const mediaUploading = useEventThreadInputState("mediaUploading");
   const set = useEventThreadInputStoreSet();
 
-  const urlInputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
+  const [showGifPicker, setShowGifPicker] = useState(false);
+  const [trayTab, setTrayTab] = useState<TrayTab | null>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(320);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const showUploadButton = useMemo(() => {
-    return !media && !mediaUploading;
-  }, [media, mediaUploading]);
+  // Capture the soft-keyboard height so the mobile tray matches it.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const onResize = () => {
+      const gap = window.innerHeight - vv.height;
+      if (gap > 100) setKeyboardHeight(gap);
+    };
+    onResize();
+    vv.addEventListener("resize", onResize);
+    return () => vv.removeEventListener("resize", onResize);
+  }, []);
 
   const handleClear = useCallback(() => {
-    if (urlInputRef.current) urlInputRef.current.value = "";
     if (fileInputRef.current) fileInputRef.current.value = "";
-    set({ media: null, mediaUploadError: null, mediaUploading: false });
+    set({ mediaUploadError: null, mediaUploading: false });
   }, [set]);
 
-  const handleRemoveMedia = useCallback(() => {
-    if (!urlInputRef.current || !fileInputRef.current) return;
-    const url = urlInputRef.current.value;
-    deleteMedia(url);
-    handleClear();
-  }, [handleClear]);
-
   useRunOn([EventThreadEvent.Sent], handleClear);
-  useRunOn([EventThreadEvent.MediaDeleted], handleRemoveMedia);
+
+  useEffect(() => {
+    if (mediaUploadError) {
+      const t = setTimeout(() => set({ mediaUploadError: null }), 2000);
+      return () => clearTimeout(t);
+    }
+  }, [mediaUploadError, set]);
 
   const handleFileUpload: ChangeEventHandler<HTMLInputElement> = useCallback(
     async (e) => {
-      if (!urlInputRef.current || !fileInputRef.current) return;
-
       const file = e.currentTarget.files?.[0] ?? null;
-      if (file === null) {
-        urlInputRef.current.value = "";
-        return;
-      }
+      // Reset the input so the same file can be re-selected after an error.
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (file === null) return;
 
-      // 🔴 SIZE CHECK
       if (file.size > MAX_FILE_SIZE) {
-        set({
-          media: null,
-          mediaUploadError: "FILE_TOO_LARGE",
-          mediaUploading: false,
-        });
-        fileInputRef.current.value = "";
+        set({ mediaUploadError: "FILE_TOO_LARGE", mediaUploading: false });
         return;
       }
 
-      set({ media: file, mediaUploading: true });
+      // Embed the image inline with a local placeholder, then swap in the
+      // final storage URL once the upload resolves.
+      const objectUrl = URL.createObjectURL(file);
+      set({ mediaUploading: true, uploadingImage: { objectUrl } });
 
       const formData = new FormData();
       formData.append("file", file);
       const uploaded = await uploadMedia(formData);
+
       if (uploaded === API_MESSAGE.MediaError) {
-        set({ mediaUploadError: "UPLOAD_FAILED", mediaUploading: false });
-        fileInputRef.current.value = "";
+        set({
+          mediaUploadError: "UPLOAD_FAILED",
+          mediaUploading: false,
+          uploadFailedImage: { objectUrl },
+          uploadingImage: null,
+        });
         return;
       }
 
-      urlInputRef.current.value = uploaded;
-      set({ mediaUploadError: null, mediaUploading: false });
+      set({
+        mediaUploadError: null,
+        mediaUploading: false,
+        uploadedImage: { finalUrl: uploaded, objectUrl },
+        uploadingImage: null,
+      });
     },
-    [urlInputRef, set],
+    [set],
   );
 
-  useEffect(() => {
-    if (mediaUploadError) {
-      setTimeout(() => set({ mediaUploadError: null }), 2000);
+  const handleGifSelect = useCallback(
+    (gifUrl: string) => {
+      set({ gifToInsert: gifUrl });
+      setShowGifPicker(false);
+      setTrayTab(null);
+    },
+    [set],
+  );
+
+  const handleGifButtonClick = useCallback(() => {
+    if (isMobile) {
+      setTrayTab((prev) => (prev === "gif" ? null : "gif"));
+    } else {
+      setShowGifPicker(true);
     }
-  }, [mediaUploadError, set]);
+  }, [isMobile]);
 
   return (
     <>
-      <S.MediaSelect name="media">
-        {showUploadButton && (
-          <Form.Label className="form-label" tabIndex={0}>
+      <S.MediaActions>
+        <S.MediaSelect name="threadMedia">
+          <Form.Label className="form-label" tabIndex={0} title="Attach image">
             <GrAttachment />
-            Add attachment
           </Form.Label>
-        )}
-        <Form.Message
-          className="form-message"
-          forceMatch={Boolean(mediaUploadError)}
+          <Form.Control asChild>
+            <input
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              className="media-input"
+              type="file"
+              accept="image/*"
+            />
+          </Form.Control>
+        </S.MediaSelect>
+
+        <S.ToolButton
+          type="button"
+          aria-label="Insert GIF"
+          title="Insert GIF"
+          onClick={handleGifButtonClick}
         >
-          {mediaUploadError === "INVALID_FILE_TYPE" && (
-            <span>Invalid file type. Please upload a valid file.</span>
-          )}
-          {mediaUploadError === "UPLOAD_FAILED" && (
-            <span>File upload failed. Please try again.</span>
-          )}
-          {mediaUploadError === "FILE_TOO_LARGE" && (
-            <span>Attachment should not be larger than 10MB.</span>
-          )}
-        </Form.Message>
-        <Form.Control asChild>
-          <input
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-            className="media-input"
-            type="file"
-            accept={"audio/*,video/*,image/*"}
+          <MdGif />
+        </S.ToolButton>
+
+        {/* Desktop: dialog */}
+        {!isMobile && (
+          <AppAlertDialog
+            heading="Insert GIF"
+            text=""
+            body={<GifPicker onSelect={handleGifSelect} />}
+            open={showGifPicker}
+            onOpenChange={setShowGifPicker}
+            showConfirm={false}
+            closeButtonText="Close"
           />
-        </Form.Control>
-      </S.MediaSelect>
-      <Form.Field hidden name="mediaUrl">
-        <Form.Control asChild>
-          <input ref={urlInputRef} type="text" />
-        </Form.Control>
-      </Form.Field>
+        )}
+      </S.MediaActions>
+
+      {/* Mobile: bottom tray */}
+      {isMobile && (
+        <MediaTray
+          tab={trayTab}
+          tabs={["gif"]}
+          keyboardHeight={keyboardHeight}
+          onTabChange={setTrayTab}
+          onRequestKeyboard={() => setTrayTab(null)}
+          onSelectGif={handleGifSelect}
+        />
+      )}
     </>
   );
 };

@@ -1,10 +1,18 @@
 import styled from "styled-components";
 import { Z_INDEX } from "@/theme";
 
-export const Button = styled.button<{ $visible?: boolean }>`
+export const Button = styled.button<{
+  $visible?: boolean;
+  $position?: "top" | "bottom";
+}>`
   position: fixed;
   right: 20px;
-  bottom: 20px;
+  /* A top-pinned button must clear the sticky app top bar it is portaled
+     beneath (and, on narrower screens, the page's own sticky header). */
+  ${({ $position }) =>
+    $position === "top"
+      ? "top: calc(var(--topbar-height, 60px) + 16px);"
+      : "bottom: 20px;"}
   min-width: 0;
   width: 48px;
   height: 48px;
@@ -30,7 +38,10 @@ export const Button = styled.button<{ $visible?: boolean }>`
 
   @media (max-width: 600px) {
     right: 22px;
-    bottom: 22px;
+    ${({ $position }) =>
+      $position === "top"
+        ? "top: calc(var(--topbar-height, 45px) + 34px);"
+        : "bottom: 22px;"}
     width: 44px;
     height: 44px;
   }

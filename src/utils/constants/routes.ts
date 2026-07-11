@@ -1,4 +1,5 @@
 export const ROUTES = {
+  Bookmarks: "/rp/bookmarks",
   Compose: (params: {
     type: string;
     parentId?: string;
@@ -72,7 +73,6 @@ export const ROUTES = {
             `/rp/profile/story/edit/${storyId}/event/edit/${eventId}`,
         },
         Index: `/rp/profile/story/edit/${storyId}`,
-        Members: `/rp/profile/story/edit/${storyId}/members`,
       }),
       Index: "/rp/profile/story",
     },

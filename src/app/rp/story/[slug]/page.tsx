@@ -3,36 +3,35 @@
 import { Flex } from "@novelist-world/ui";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { FaGlobeAmericas, FaUserFriends } from "react-icons/fa";
-import { ShouldRender, Username } from "@/components/common";
-import { PageLoaderTypeWriter } from "@/components/layout/loader-2/PageLoaderTypewriter";
-import { MusesPill } from "@/components/muses-pill";
+import { FaGlobeAmericas, FaLock } from "react-icons/fa";
+import { IoMdAdd } from "react-icons/io";
+import { IoArrowBackOutline } from "react-icons/io5";
+import { CoverImage, ShouldRender, Username } from "@/components/common";
+import { Button as AddNewButtonStyle } from "@/components/common/add-new-button/styles";
+import { EditStoryboardEventOverlay } from "@/components/edit-storyboard-event-card/edit-storyboard-event-overlay";
 import StoryCardEvent from "@/components/story-event-card";
-import { TagsContainer } from "@/components/tags-container";
+import { StoryMembers } from "@/components/story-members";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { StoryBoard } from "@/types";
-import { INITIAL_STORY_BOARD_EVENT } from "@/utils/constants";
+import type { StoryBoard, StoryBoardEvent } from "@/types";
+import { ROUTES } from "@/utils/constants/routes";
 import { getStoryboardAction } from "../actions";
 import * as S from "./styles";
 
-const renderPrivacyIcon = (privacy: string | undefined) => {
-  switch (privacy) {
-    case "MEMBERS":
-      return (
-        <S.IconWrapper title="Friends Only">
-          <FaUserFriends size={20} />
-        </S.IconWrapper>
-      );
-    case "PUBLIC":
-      return (
-        <S.IconWrapper title="Public">
-          <FaGlobeAmericas size={20} />
-        </S.IconWrapper>
-      );
-    default:
-      return null;
-  }
+const renderVisibilityChip = (isPublic: boolean | undefined) => {
+  if (isPublic === undefined) return null;
+
+  return isPublic ? (
+    <S.VisibilityChip $public title="Published — anyone can read this story">
+      <FaGlobeAmericas size={14} />
+      Public
+    </S.VisibilityChip>
+  ) : (
+    <S.VisibilityChip title="Members only">
+      <FaLock size={14} />
+      Private
+    </S.VisibilityChip>
+  );
 };
 
 export default function UserProfilePage({}) {
@@ -42,13 +41,49 @@ export default function UserProfilePage({}) {
   const novelist = useGlobalState("novelist");
   const [storyboard, setStoryBoard] = useState<StoryBoard | null>(null);
   const storyboardId = params?.slug as string;
-  const { baseDataLoader } = usePageRouter();
+  const { baseDataLoader, routeToPage } = usePageRouter();
 
-  const isAdmin = () => {
+  // Chapter create/edit renders in place (dialog on desktop, tray on mobile).
+  const [eventEditor, setEventEditor] = useState<{
+    open: boolean;
+    eventId: string | null;
+  }>({ eventId: null, open: false });
+
+  const onBackClick = () => {
+    routeToPage(ROUTES.Profile.View(user?.username || "").Storyboards);
+  };
+
+  const onAddChapterClick = () => {
+    setEventEditor({ eventId: null, open: true });
+  };
+
+  const onEditChapter = (eventId: string) => {
+    setEventEditor({ eventId, open: true });
+  };
+
+  const closeEventEditor = () => {
+    setEventEditor((prev) => ({ ...prev, open: false }));
+  };
+
+  const handleEventSaved = (saved: StoryBoardEvent) => {
+    setStoryBoard((prev) => {
+      if (!prev) return prev;
+      const exists = prev.events.some((e) => e.id === saved.id);
+      return {
+        ...prev,
+        events: exists
+          ? prev.events.map((e) => (e.id === saved.id ? saved : e))
+          : [...prev.events, saved],
+      };
+    });
+  };
+
+  const isMember = () => {
     if (!storyboard || !user?.username) return false;
 
-    return storyboard.members.some(
-      (member) => member.username === user.username && member.isAdmin === true,
+    return (
+      storyboard.createdBy?.username === user.username ||
+      storyboard.members.some((member) => member.username === user.username)
     );
   };
 
@@ -76,44 +111,49 @@ export default function UserProfilePage({}) {
       />
       <S.SolidBackground></S.SolidBackground>
       <S.StoryContainer>
-        <S.Avatar
-          src={storyboard?.image ?? null}
-          alt="profile-picture"
-          size={250}
-        />
-        <S.Name>
-          {storyboard?.name}{" "}
-          <S.VisibilityIcon>
-            {renderPrivacyIcon(storyboard?.privacy)}
-          </S.VisibilityIcon>
-        </S.Name>
-        <span>Created by:</span>{" "}
-        <Username primary username={storyboard?.createdBy.username} />
-        <S.PillContainer>
-          <MusesPill
-            title="Novelists"
-            pillType="MEMBERS"
-            storyboard={storyboard}
-            expandable={true}
-          />
-        </S.PillContainer>
-        <S.SectionName>
+        <S.BackButton type="button" onClick={onBackClick} aria-label="Go back">
+          <IoArrowBackOutline size={22} />
+        </S.BackButton>
+        {renderVisibilityChip(storyboard?.isPublic)}
+        <S.HeroRow>
+          <S.HeroCover>
+            <CoverImage
+              src={storyboard?.image ?? null}
+              nwImage={storyboard?.avatar}
+            />
+          </S.HeroCover>
+          <S.HeroInfo>
+            <S.Name>{storyboard?.name}</S.Name>
+            <S.CreatedByRow>
+              <span>Author:</span>
+              <Username primary className="mini medium" username={storyboard?.createdBy?.username} />
+            </S.CreatedByRow>
+          </S.HeroInfo>
+        </S.HeroRow>
+        <StoryMembers storyboard={storyboard} />
+        <S.SectionHeaderRow>
+          <S.SectionName>
+            <ShouldRender
+              if={storyboard != null && storyboard?.events.length <= 0}
+            >
+              NO{" "}
+            </ShouldRender>
+            CHAPTERS
+          </S.SectionName>
           <ShouldRender
-            if={storyboard != null && storyboard?.events.length <= 0}
+            if={
+              isMember() &&
+              novelist != null &&
+              storyboard != null &&
+              storyboard?.events.length < novelist?.tier.eventLimit
+            }
           >
-            NO{" "}
+            <AddNewButtonStyle type="button" onClick={onAddChapterClick}>
+              Add chapter
+              <IoMdAdd size={18} />
+            </AddNewButtonStyle>
           </ShouldRender>
-          TAGS
-        </S.SectionName>
-        <TagsContainer tags={storyboard?.tags} />
-        <S.SectionName>
-          <ShouldRender
-            if={storyboard != null && storyboard?.events.length <= 0}
-          >
-            NO{" "}
-          </ShouldRender>
-          CHAPTERS
-        </S.SectionName>
+        </S.SectionHeaderRow>
         <Flex
           direction="row"
           gap={"1rem"}
@@ -122,27 +162,24 @@ export default function UserProfilePage({}) {
             marginTop: "25px",
           }}
         >
-          <ShouldRender
-            if={
-              isAdmin() &&
-              novelist != null &&
-              storyboard != null &&
-              storyboard?.events.length < novelist?.tier.eventLimit
-            }
-          >
-            <StoryCardEvent
-              event={INITIAL_STORY_BOARD_EVENT}
-              storyboardId={storyboardId}
-              isCurrentUser={isAdmin()}
-            ></StoryCardEvent>
-          </ShouldRender>
           {storyboard?.events?.map((event) => {
             return (
               <StoryCardEvent
                 key={event.id}
                 event={event}
                 storyboardId={storyboardId}
-                isCurrentUser={isAdmin()}
+                isCurrentUser={isMember()}
+                onEdit={onEditChapter}
+                onDeleted={(deletedId) =>
+                  setStoryBoard((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          events: prev.events.filter((e) => e.id !== deletedId),
+                        }
+                      : prev,
+                  )
+                }
               >
                 {event.name}
               </StoryCardEvent>
@@ -150,6 +187,13 @@ export default function UserProfilePage({}) {
           })}
         </Flex>
       </S.StoryContainer>
+      <EditStoryboardEventOverlay
+        open={eventEditor.open}
+        storyboardId={storyboardId}
+        storyboardEventId={eventEditor.eventId}
+        onClose={closeEventEditor}
+        onSaved={handleEventSaved}
+      />
     </>
   );
 }

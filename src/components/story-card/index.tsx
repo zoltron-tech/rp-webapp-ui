@@ -1,48 +1,217 @@
 "use client";
 import classNames from "classnames";
-import { useParams } from "next/navigation";
-import { type FC, useState } from "react";
-import { FaRegTrashCan } from "react-icons/fa6";
+import {
+  type FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { createPortal } from "react-dom";
+import { FaArrowRight, FaGlobeAmericas, FaLock } from "react-icons/fa";
+import { FaFeatherPointed, FaRegTrashCan } from "react-icons/fa6";
+import { FiPlus, FiX } from "react-icons/fi";
 import { GrEdit } from "react-icons/gr";
+import { HiOutlineBookOpen, HiOutlineUserGroup } from "react-icons/hi2";
+import { IoChevronBack, IoChevronForward } from "react-icons/io5";
+import { MdOutlineTheaters } from "react-icons/md";
+import { deleteStoryBoardAction } from "@/app/rp/story/actions";
 import { useGlobalState } from "@/context/store/stores";
+import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { StoryBoard } from "@/types/story-board";
-import { INITIAL_STORY_BOARD } from "@/utils/constants";
+import { useWindowDimensions } from "@/hooks/use-window-dimentions";
+import type { StoryBoard, StoryBoardEvent } from "@/types/story-board";
+import { API_MESSAGE, INITIAL_STORY_BOARD } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
-import { ShouldRender } from "../common";
+import { CoverImage, ShouldRender } from "../common";
 import { AppAlertDialog } from "../dialog";
+import * as DropS from "../profile-more-dropdown/styled";
 import * as S from "./styles";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   storyBoard?: StoryBoard | null;
+  onDeleted?: (storyBoardId: string) => void;
 };
 
-export const StoryCard: FC<Props> = ({ storyBoard, className, ...rest }) => {
-  const { routeToPage } = usePageRouter();
-  const params = useParams();
-  const user = useGlobalState("user");
-  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
-  const username = params?.slug as string;
-  const isCurrentUser = user?.username && user.username === username;
+const MEMBER_STACK_LIMIT = 5;
 
-  const handleCardClick = (
-    e: React.MouseEvent<HTMLDivElement>,
-    storyBoard: StoryBoard,
-  ) => {
-    const target = e.target as HTMLDivElement;
-    if (target.classList.contains("button")) return;
+/**
+ * Horizontal, scrollable row of chapter cover tiles with left/right nav arrows.
+ * The arrows appear only when there is content to scroll to and are hidden on
+ * touch devices (which scroll the row by swiping).
+ */
+const ChaptersRail: FC<{
+  events: StoryBoardEvent[];
+  onChapterClick: (event: StoryBoardEvent) => void;
+}> = ({ events, onChapterClick }) => {
+  const railRef = useRef<HTMLDivElement>(null);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(false);
 
-    !storyBoard.name ? onAddClick() : onAvatarClick();
+  const updateArrows = useCallback(() => {
+    const el = railRef.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 1);
+    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  }, []);
+
+  useEffect(() => {
+    updateArrows();
+    const el = railRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", updateArrows, { passive: true });
+    window.addEventListener("resize", updateArrows);
+    return () => {
+      el.removeEventListener("scroll", updateArrows);
+      window.removeEventListener("resize", updateArrows);
+    };
+  }, [updateArrows, events.length]);
+
+  const scrollRail = (dir: 1 | -1) => {
+    const el = railRef.current;
+    if (!el) return;
+    el.scrollBy({
+      behavior: "smooth",
+      left: dir * Math.max(el.clientWidth * 0.8, 160),
+    });
   };
 
-  const onAvatarClick = () => {
-    if (!storyBoard) return;
-    routeToPage(ROUTES.Story.View(storyBoard.id || ""));
+  return (
+    <S.ChapterRailWrap>
+      <S.ChapterRailNav
+        type="button"
+        $side="left"
+        $visible={canLeft}
+        aria-label="Scroll chapters left"
+        onClick={() => scrollRail(-1)}
+      >
+        <IoChevronBack />
+      </S.ChapterRailNav>
+      <S.ChapterRail ref={railRef}>
+        {events.map((event, index) => (
+          <S.ChapterTile
+            key={event.id ?? index}
+            type="button"
+            title={event.name}
+            onClick={() => onChapterClick(event)}
+          >
+            <CoverImage src={event.image} nwImage={event.avatar} />
+            <S.ChapterTileScrim />
+            <S.ChapterTileIndex>{index + 1}</S.ChapterTileIndex>
+            <S.ChapterTileName>{event.name}</S.ChapterTileName>
+          </S.ChapterTile>
+        ))}
+      </S.ChapterRail>
+      <S.ChapterRailNav
+        type="button"
+        $side="right"
+        $visible={canRight}
+        aria-label="Scroll chapters right"
+        onClick={() => scrollRail(1)}
+      >
+        <IoChevronForward />
+      </S.ChapterRailNav>
+    </S.ChapterRailWrap>
+  );
+};
+
+export const StoryCard: FC<Props> = ({
+  storyBoard,
+  onDeleted,
+  className,
+  ...rest
+}) => {
+  const { routeToPage } = usePageRouter();
+  const user = useGlobalState("user");
+  const accent = useGlobalState("accent");
+  const theme = useGlobalState("theme");
+  const { successToast, errorToast } = useUIContext();
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const { width } = useWindowDimensions();
+  const isMobile = width !== null && width < 801;
+
+  // Mobile preview tray animation state (mirrors StoryCardEvent).
+  const [trayOpen, setTrayOpen] = useState(false);
+  const [trayVisible, setTrayVisible] = useState(false);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [startY, setStartY] = useState(0);
+
+  // Desktop preview dialog state.
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const isCreator =
+    !!user?.username && storyBoard?.createdBy?.username === user.username;
+  const isMember =
+    isCreator ||
+    (!!user?.username &&
+      !!storyBoard?.members?.some(
+        (member) => member.username === user.username,
+      ));
+
+  // Author + co-authors, de-duplicating the creator out of the member list.
+  const members = useMemo(() => {
+    const creator = storyBoard?.createdBy;
+    return [
+      ...(creator
+        ? [{ image: creator.image, username: creator.username }]
+        : []),
+      ...(storyBoard?.members ?? [])
+        .filter((m) => m.username !== creator?.username)
+        .map((m) => ({ image: m.image, username: m.username })),
+    ];
+  }, [storyBoard]);
+
+  const events = storyBoard?.events ?? [];
+  const tags = storyBoard?.tags ?? [];
+  const genres = storyBoard?.genres ?? [];
+  const fandom = storyBoard?.fandom ?? null;
+
+  const openTray = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    setTrayVisible(true);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setTrayOpen(true));
+    });
+  };
+
+  const closeTray = () => {
+    setTrayOpen(false);
+    closeTimerRef.current = setTimeout(() => setTrayVisible(false), 300);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!trayVisible && !dialogOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (trayVisible) closeTray();
+      if (dialogOpen) setDialogOpen(false);
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trayVisible, dialogOpen]);
+
+  const handleTrayTouchStart = (e: React.TouchEvent) => {
+    setStartY(e.touches[0].clientY);
+  };
+
+  const handleTrayTouchEnd = (e: React.TouchEvent) => {
+    const diff = e.changedTouches[0].clientY - startY;
+    if (diff > 50) closeTray();
   };
 
   const onAddClick = () => {
-    if (!storyBoard) return;
     routeToPage(ROUTES.Profile.Story.Create);
   };
 
@@ -50,67 +219,393 @@ export const StoryCard: FC<Props> = ({ storyBoard, className, ...rest }) => {
     routeToPage(ROUTES.Profile.Story.Edit(storyBoard?.id || "").Index);
   };
 
+  const onViewStory = () => {
+    if (!storyBoard) return;
+    routeToPage(ROUTES.Story.View(storyBoard.id || ""));
+  };
+
+  const onReadMoreClick = () => {
+    closeTray();
+    setDialogOpen(false);
+    onViewStory();
+  };
+
+  const onChapterClick = (event: StoryBoardEvent) => {
+    if (!event.id) return;
+    closeTray();
+    setDialogOpen(false);
+    routeToPage(ROUTES.Story.Event.View(event.id));
+  };
+
+  const handleCardClick = () => {
+    // The "Add New" placeholder keeps its original behaviour: straight to create.
+    if (!storyBoard?.name) {
+      onAddClick();
+      return;
+    }
+
+    if (isMobile) {
+      openTray();
+      return;
+    }
+
+    setDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!storyBoard?.id) return;
+
+    const response = await deleteStoryBoardAction(storyBoard.id);
+
+    if (response.message === API_MESSAGE.Success) {
+      successToast("Story deleted.");
+      onDeleted?.(storyBoard.id);
+    } else {
+      errorToast("Could not delete the story. Please try again.");
+    }
+  };
+
   Logger.info("StoryCard rendered");
 
-  if (!storyBoard) return <></>;
+  if (!storyBoard) return null;
+
+  const isNew = !storyBoard.name;
+  const canManage = storyBoard !== INITIAL_STORY_BOARD && isMember;
+  const canDelete = storyBoard !== INITIAL_STORY_BOARD && isCreator;
+  const stackMembers = members.slice(0, MEMBER_STACK_LIMIT);
+  const memberOverflow = members.length - stackMembers.length;
+
+  // Shared detail body used by both the desktop dialog and the mobile tray.
+  const renderDetails = () => (
+    <>
+      <S.PreviewMeta>
+        <S.VisibilityBadge $public={storyBoard.isPublic}>
+          {storyBoard.isPublic ? (
+            <>
+              <FaGlobeAmericas /> Public
+            </>
+          ) : (
+            <>
+              <FaLock /> Private
+            </>
+          )}
+        </S.VisibilityBadge>
+
+        <ShouldRender if={members.length > 0}>
+          <S.CreatorsRow>
+            <S.MemberStack>
+              {stackMembers.map((member) => (
+                <S.MemberStackAvatar
+                  key={member.username}
+                  src={member.image ?? undefined}
+                  alt={member.username}
+                  title={`@${member.username}`}
+                />
+              ))}
+              {memberOverflow > 0 && (
+                <S.MemberStackOverflow>+{memberOverflow}</S.MemberStackOverflow>
+              )}
+            </S.MemberStack>
+            {/* <S.SectionLabel>
+              {members.length === 1 ? "Creator" : "Creators"}
+            </S.SectionLabel> */}
+          </S.CreatorsRow>
+        </ShouldRender>
+      </S.PreviewMeta>
+
+      <ShouldRender if={!!fandom?.id}>
+        <S.FandomChip title="Fandom">
+          <MdOutlineTheaters />
+          <b>{fandom?.name || fandom?.id?.replaceAll("_", " ")}</b>
+        </S.FandomChip>
+      </ShouldRender>
+
+      <S.StatRow>
+        <S.StatChip title="Chapters">
+          <HiOutlineBookOpen />
+          <b>{events.length}</b>
+          {events.length === 1 ? "chapter" : "chapters"}
+        </S.StatChip>
+        <S.StatChip title="Co-authors">
+          <HiOutlineUserGroup />
+          <b>{members.length}</b>
+          {members.length === 1 ? "author" : "authors"}
+        </S.StatChip>
+      </S.StatRow>
+
+      <ShouldRender if={genres.length > 0}>
+        <S.TagRow>
+          {genres.map((genre) => (
+            <S.GenrePill key={genre.id} $color={genre.color}>
+              {genre.label}
+            </S.GenrePill>
+          ))}
+        </S.TagRow>
+      </ShouldRender>
+
+      <ShouldRender if={tags.length > 0}>
+        <S.TagRow>
+          {tags.slice(0, 6).map((tag) => (
+            <S.TagPill key={tag.id}>{tag.label}</S.TagPill>
+          ))}
+        </S.TagRow>
+      </ShouldRender>
+
+      <div>
+        <S.SectionLabel>Chapters</S.SectionLabel>
+        {events.length > 0 ? (
+          <ChaptersRail events={events} onChapterClick={onChapterClick} />
+        ) : (
+          <S.EmptyNote style={{ marginTop: 6 }}>No chapters yet.</S.EmptyNote>
+        )}
+      </div>
+    </>
+  );
 
   return (
     <S.CardWrapper
-      className={classNames([
-        className,
-        {
-          new: !storyBoard.name,
-        },
-      ])}
+      className={classNames([className, { new: isNew }])}
       {...rest}
     >
-      <ShouldRender if={storyBoard !== INITIAL_STORY_BOARD && !!isCurrentUser}>
+      <ShouldRender if={canDelete}>
         <AppAlertDialog
           heading={`Delete ${storyBoard.name}?`}
-          text="This action is permanent. Are you sure?"
+          text="This permanently removes the story, its events and all threads. Are you sure?"
           open={showDeleteAlert}
           onOpenChange={setShowDeleteAlert}
+          onConfirm={handleDelete}
+          actionButtonLabel="Delete"
         />
       </ShouldRender>
-      <S.CardBackground banner={storyBoard.image || ""} />
       <S.Card
-        className={classNames([
-          "muse-card",
-          {
-            new: !storyBoard.name,
-          },
-        ])}
-        onClick={(e) => handleCardClick(e, storyBoard)}
+        className={classNames(["muse-card", { new: isNew }])}
+        onClick={handleCardClick}
       >
-        <ShouldRender
-          if={storyBoard !== INITIAL_STORY_BOARD && !!isCurrentUser}
-        >
-          <S.EditButton className="button" onClick={onEditClick}>
-            <GrEdit />
-          </S.EditButton>
-          <S.DeleteButton
-            className="button"
-            onClick={() => setShowDeleteAlert(true)}
-          >
-            <FaRegTrashCan />
-          </S.DeleteButton>
-        </ShouldRender>
-        <S.CardHeader>
-          <S.MuseInfo>
-            <S.Title
-              className={classNames([
-                className,
-                {
-                  new: !storyBoard.name,
-                },
-              ])}
-              {...rest}
-            >
-              {storyBoard.name || "Add New"}
-            </S.Title>
-          </S.MuseInfo>
-        </S.CardHeader>
+        {isNew ? (
+          <S.AddTileInner>
+            <FiPlus />
+            Add New
+          </S.AddTileInner>
+        ) : (
+          <>
+            <S.Cover>
+              <CoverImage src={storyBoard.image} nwImage={storyBoard.avatar} />
+              <S.CoverScrim />
+              <S.CoverBadge
+                $public={storyBoard.isPublic}
+                title={storyBoard.isPublic ? "Public" : "Private"}
+              >
+                {storyBoard.isPublic ? <FaGlobeAmericas /> : <FaLock />}
+                <span className="badge-label">
+                  {storyBoard.isPublic ? "Public" : "Private"}
+                </span>
+              </S.CoverBadge>
+
+              <ShouldRender if={!!fandom?.id || genres.length > 0}>
+                <S.CoverFooter>
+                  <ShouldRender if={!!fandom?.id}>
+                    <S.TileFandom
+                      title={fandom?.name || fandom?.id?.replaceAll("_", " ")}
+                    >
+                      <MdOutlineTheaters />
+                      <span>
+                        {fandom?.name || fandom?.id?.replaceAll("_", " ")}
+                      </span>
+                    </S.TileFandom>
+                  </ShouldRender>
+
+                  <ShouldRender if={genres.length > 0}>
+                    <S.GenreDots>
+                      {genres.slice(0, 5).map((genre) => (
+                        <S.GenreDot
+                          key={genre.id}
+                          $color={genre.color}
+                          title={genre.label}
+                        />
+                      ))}
+                    </S.GenreDots>
+                  </ShouldRender>
+                </S.CoverFooter>
+              </ShouldRender>
+            </S.Cover>
+            <S.Info>
+              <S.CardTitle>{storyBoard.name}</S.CardTitle>
+
+              <S.CardMeta>
+                <S.MetaItem
+                  title={`${events.length} ${
+                    events.length === 1 ? "chapter" : "chapters"
+                  }`}
+                >
+                  <HiOutlineBookOpen />
+                  <b>{events.length}</b>
+                </S.MetaItem>
+                <S.MetaItem
+                  title={`${members.length} ${
+                    members.length === 1 ? "author" : "authors"
+                  }`}
+                >
+                  <FaFeatherPointed />
+                  <b>{members.length}</b>
+                </S.MetaItem>
+              </S.CardMeta>
+            </S.Info>
+          </>
+        )}
       </S.Card>
+
+      {/* Mobile: slide-up preview tray */}
+      <ShouldRender if={trayVisible && typeof document !== "undefined"}>
+        {createPortal(
+          <DropS.MobilePortalRoot className={classNames([accent, theme])}>
+            <DropS.MobileBackdrop $open={trayOpen} onClick={closeTray} />
+            <S.TraySheet
+              $open={trayOpen}
+              onTouchStart={handleTrayTouchStart}
+              onTouchEnd={handleTrayTouchEnd}
+            >
+              <S.TrayFrame>
+                <S.TrayFrameGlow aria-hidden="true">
+                  <CoverImage
+                    src={storyBoard.image}
+                    nwImage={storyBoard.avatar}
+                  />
+                </S.TrayFrameGlow>
+                <S.TrayHero>
+                  <CoverImage
+                    src={storyBoard.image}
+                    nwImage={storyBoard.avatar}
+                  />
+                  <S.TrayHeroScrim />
+                  <S.TrayDragHandle />
+                  <S.TrayHeaderActions>
+                    <ShouldRender if={canManage}>
+                      <S.TrayHeaderButton
+                        type="button"
+                        aria-label="Edit story"
+                        title="Edit story"
+                        onClick={() => {
+                          closeTray();
+                          onEditClick();
+                        }}
+                      >
+                        <GrEdit />
+                      </S.TrayHeaderButton>
+                    </ShouldRender>
+                    <ShouldRender if={canDelete}>
+                      <S.TrayDeleteHeaderButton
+                        type="button"
+                        aria-label="Delete story"
+                        title="Delete story"
+                        onClick={() => setShowDeleteAlert(true)}
+                      >
+                        <FaRegTrashCan />
+                      </S.TrayDeleteHeaderButton>
+                    </ShouldRender>
+                    <S.TrayCloseButton
+                      type="button"
+                      aria-label="Close"
+                      onClick={closeTray}
+                    >
+                      <FiX size={18} />
+                    </S.TrayCloseButton>
+                  </S.TrayHeaderActions>
+                  <S.TrayHeroText>
+                    <S.TrayEyebrow>Story</S.TrayEyebrow>
+                    <S.TrayTitle>{storyBoard.name}</S.TrayTitle>
+                  </S.TrayHeroText>
+                </S.TrayHero>
+              </S.TrayFrame>
+              <S.TrayBody>{renderDetails()}</S.TrayBody>
+              <S.TrayFooter>
+                <S.TrayReadMoreButton type="button" onClick={onReadMoreClick}>
+                  Read more
+                  <FaArrowRight />
+                </S.TrayReadMoreButton>
+              </S.TrayFooter>
+            </S.TraySheet>
+          </DropS.MobilePortalRoot>,
+          document.body,
+        )}
+      </ShouldRender>
+
+      {/* Desktop: Netflix-style preview dialog */}
+      <ShouldRender if={dialogOpen && typeof document !== "undefined"}>
+        {createPortal(
+          <div className={classNames([accent, theme])}>
+            <S.DialogOverlay onClick={() => setDialogOpen(false)} />
+            <S.DialogFrame>
+              <S.DialogFrameGlow aria-hidden="true">
+                <CoverImage
+                  src={storyBoard.image}
+                  nwImage={storyBoard.avatar}
+                />
+              </S.DialogFrameGlow>
+              <S.DialogContent
+                role="dialog"
+                aria-modal="true"
+                aria-label={storyBoard.name}
+              >
+                <S.DialogHeaderActions>
+                  <ShouldRender if={canManage}>
+                    <S.DialogHeaderButton
+                      type="button"
+                      title="Edit story"
+                      aria-label="Edit story"
+                      onClick={() => {
+                        setDialogOpen(false);
+                        onEditClick();
+                      }}
+                    >
+                      <GrEdit />
+                    </S.DialogHeaderButton>
+                  </ShouldRender>
+                  <ShouldRender if={canDelete}>
+                    <S.DialogDeleteHeaderButton
+                      type="button"
+                      title="Delete story"
+                      aria-label="Delete story"
+                      onClick={() => setShowDeleteAlert(true)}
+                    >
+                      <FaRegTrashCan />
+                    </S.DialogDeleteHeaderButton>
+                  </ShouldRender>
+                  <S.DialogClose
+                    type="button"
+                    aria-label="Close"
+                    onClick={() => setDialogOpen(false)}
+                  >
+                    <FiX size={18} />
+                  </S.DialogClose>
+                </S.DialogHeaderActions>
+                <S.DialogCover>
+                  <CoverImage
+                    src={storyBoard.image}
+                    nwImage={storyBoard.avatar}
+                  />
+                </S.DialogCover>
+                <S.DialogInfo>
+                  <S.DialogHeading>
+                    <S.DialogEyebrow>Story</S.DialogEyebrow>
+                    <S.DialogTitle>{storyBoard.name}</S.DialogTitle>
+                  </S.DialogHeading>
+                  {renderDetails()}
+                  <S.DialogActions>
+                    <S.DialogReadMoreButton
+                      type="button"
+                      onClick={onReadMoreClick}
+                    >
+                      Read more
+                      <FaArrowRight />
+                    </S.DialogReadMoreButton>
+                  </S.DialogActions>
+                </S.DialogInfo>
+              </S.DialogContent>
+            </S.DialogFrame>
+          </div>,
+          document.body,
+        )}
+      </ShouldRender>
     </S.CardWrapper>
   );
 };

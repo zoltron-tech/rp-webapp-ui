@@ -8,6 +8,7 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -16,14 +17,25 @@ import {
   RiArrowDropDownLine,
   RiArrowLeftSLine,
   RiArrowRightSLine,
+  RiBold,
   RiCheckLine,
   RiDeleteBin6Line,
   RiDoubleQuotesL,
+  RiItalic,
   RiMarkPenLine,
+  RiUnderline,
 } from "react-icons/ri";
 import { useGlobalState } from "@/context/store/stores";
 import type { MentionDataItem, MentionTab } from "@/types";
 import { MentionDropdown } from "../mention-dropdown";
+import {
+  createDialogEmbed,
+  type DialogEmbedData,
+  type DialogMuse,
+  type DialogOrientation,
+  hydrateDialogEmbeds,
+  mountDialogEmbed,
+} from "./dialog-embed";
 import {
   ALIGNMENT_BUTTONS,
   BULLET_POINT_CATEGORIES,
@@ -52,11 +64,14 @@ interface RichTextEditorProps {
   fullPage?: boolean;
   /** Start at one-line height and grow with content. */
   compact?: boolean;
+  /** Muses selectable as the sender of an embedded dialog (inline editing). */
+  dialogMuses?: DialogMuse[];
 }
 
 export interface RichTextEditorHandle {
   insertGif: (url: string) => void;
   insertUploadingImage: (objectUrl: string) => void;
+  insertDialog: (dialog: DialogEmbedData) => void;
   replaceImageSrc: (oldSrc: string, newSrc: string) => void;
   removeImageBySrc: (src: string) => void;
   clear: () => void;
@@ -69,7 +84,15 @@ export const RichTextEditor = forwardRef<
   RichTextEditorProps
 >(
   (
-    { placeholder = "", value, mentionTabs = [], onChange, fullPage, compact },
+    {
+      placeholder = "",
+      value,
+      mentionTabs = [],
+      onChange,
+      fullPage,
+      compact,
+      dialogMuses = [],
+    },
     editorHandleRef,
   ) => {
     const accent = useGlobalState("accent");
@@ -141,6 +164,33 @@ export const RichTextEditor = forwardRef<
     } | null>(null);
     const imageResizeBarRef = useRef<HTMLDivElement | null>(null);
 
+    // Inline dialog editing: the currently-selected embedded dialog gets a
+    // floating control bar (sender muse, font, bold/italic/underline).
+    const [selectedDialog, setSelectedDialog] = useState<HTMLElement | null>(
+      null,
+    );
+    const [dialogBarPos, setDialogBarPos] = useState<{
+      top: number;
+      left: number;
+    } | null>(null);
+    // Rect of the selected dialog's avatar (relative to the editor wrapper),
+    // used to anchor the sender-selection popover to the avatar itself.
+    const [dialogAvatarRect, setDialogAvatarRect] = useState<{
+      top: number;
+      left: number;
+      width: number;
+      height: number;
+    } | null>(null);
+    const [dialogFont, setDialogFont] = useState<string>(DEFAULT_FONT);
+    const [dialogMuseId, setDialogMuseId] = useState<string | null>(null);
+    const [dialogOrientation, setDialogOrientation] =
+      useState<DialogOrientation>("left");
+    const [dialogFormats, setDialogFormats] = useState<ActiveStyles>({});
+    const [showDialogFont, setShowDialogFont] = useState(false);
+    const [showDialogMuse, setShowDialogMuse] = useState(false);
+    const dialogBarRef = useRef<HTMLDivElement | null>(null);
+    const avatarHitRef = useRef<HTMLButtonElement | null>(null);
+
     const checkToolbarOverflow = useCallback(() => {
       const toolbar = toolbarRef.current;
       if (!toolbar) return;
@@ -188,8 +238,20 @@ export const RichTextEditor = forwardRef<
       // Only set initial content if editor is empty
       if (!editor.innerHTML || editor.innerHTML === "<br>") {
         editor.innerHTML = value || ""; // set value if available
+        // Names aren't persisted — restore a transient display name on each
+        // saved dialog from the muse list so the composer shows the sender.
+        editor
+          .querySelectorAll<HTMLElement>(".dialog-embed")
+          .forEach((embed) => {
+            const id = embed.dataset.museId;
+            const muse = id ? dialogMuses.find((m) => m.id === id) : null;
+            if (muse) embed.dataset.museName = muse.name;
+          });
+        // Render editable chrome for any saved (or legacy) dialog embeds in the
+        // loaded content, so they stay inline-editable/deletable when editing.
+        hydrateDialogEmbeds(editor, { editable: true });
       }
-    }, [value]);
+    }, [value, dialogMuses]);
 
     useEffect(() => {
       if (!showMentionPopover || !mentionTabs.length) return;
@@ -549,14 +611,19 @@ export const RichTextEditor = forwardRef<
 
     const execCommand = useCallback(
       (command: string) => {
-        editorRef.current?.focus();
+        // When the selection already lives inside the editor (including inside
+        // an editable dialog embed), don't re-focus the editor root — doing so
+        // would collapse a selection made in a nested contentEditable island.
+        if (!isSelectionInsideEditor()) {
+          editorRef.current?.focus();
+        }
         document.execCommand(command, false);
         // Use rAF so the browser finishes updating queryCommandState before we read it
         requestAnimationFrame(() => {
           updateActiveStyles();
         });
       },
-      [updateActiveStyles],
+      [updateActiveStyles, isSelectionInsideEditor],
     );
 
     const handleFormatClick = useCallback(
@@ -796,7 +863,9 @@ export const RichTextEditor = forwardRef<
         // newly typed characters on this line keep the font even after the
         // browser's typing-style is cleared.
         for (const block of blocks) {
-          if (block !== editor) {
+          // Skip dialog wrapper blocks so the font applies only to the selected
+          // words (via the execCommand span above), not the avatar/sender.
+          if (block !== editor && !block.querySelector(".dialog-embed")) {
             block.style.fontFamily = fontName;
           }
         }
@@ -830,6 +899,9 @@ export const RichTextEditor = forwardRef<
         // the typed .fontSize setter silently ignores them.
         const blocks = ensureBlockWrappers();
         for (const block of blocks) {
+          // Skip dialog wrapper blocks (see handleFontChange) so the size
+          // applies to the selected words, not the avatar/sender chrome.
+          if (block.querySelector(".dialog-embed")) continue;
           block.style.setProperty("font-size", fontSize);
         }
 
@@ -1177,9 +1249,283 @@ export const RichTextEditor = forwardRef<
       [saveSelection, handleInput, selectImageNode],
     );
 
+    // Position the floating edit toolbar relative to the editor wrapper. It
+    // sits just above the dialog, flips below when there's no room above (e.g.
+    // dialog at the top of the scroll area), and is clamped to stay on-screen —
+    // important on a 375px viewport.
+    const updateDialogBarPos = useCallback((embed: HTMLElement) => {
+      const wrapper = editorRef.current?.parentElement;
+      if (!wrapper) return;
+      const wrapperRect = wrapper.getBoundingClientRect();
+      const rect = embed.getBoundingClientRect();
+      const bar = dialogBarRef.current;
+      const barH = bar?.offsetHeight ?? 40;
+      const barW = bar?.offsetWidth ?? 240;
+      const gap = 6;
+
+      let top = rect.top - wrapperRect.top - barH - gap;
+      if (top < 2) top = rect.bottom - wrapperRect.top + gap; // flip below
+
+      let left = rect.left - wrapperRect.left;
+      const maxLeft = wrapper.clientWidth - barW - 4;
+      left = Math.max(4, Math.min(left, Math.max(4, maxLeft)));
+
+      setDialogBarPos({ left, top });
+
+      // Track the avatar so the sender popover can anchor to it.
+      const avatar = embed.querySelector<HTMLElement>(".dialog-avatar-wrap");
+      if (avatar) {
+        const aRect = avatar.getBoundingClientRect();
+        setDialogAvatarRect({
+          height: aRect.height,
+          left: aRect.left - wrapperRect.left,
+          top: aRect.top - wrapperRect.top,
+          width: aRect.width,
+        });
+      } else {
+        setDialogAvatarRect(null);
+      }
+    }, []);
+
+    const refreshDialogFormats = useCallback(() => {
+      setDialogFormats({
+        bold: document.queryCommandState("bold"),
+        italic: document.queryCommandState("italic"),
+        underline: document.queryCommandState("underline"),
+      });
+    }, []);
+
+    // Select an embedded dialog for inline editing: highlight it, show its
+    // control bar and sync the bar's font/muse/format state from the embed.
+    const selectDialogNode = useCallback(
+      (embed: HTMLElement) => {
+        setSelectedImage(null);
+        setImageResizeBarPos(null);
+        editorRef.current
+          ?.querySelectorAll<HTMLElement>(".dialog-embed[data-selected]")
+          .forEach((el) => el.removeAttribute("data-selected"));
+        embed.setAttribute("data-selected", "true");
+        setSelectedDialog(embed);
+        setDialogFont(embed.dataset.font || DEFAULT_FONT);
+        setDialogMuseId(embed.dataset.museId || null);
+        setDialogOrientation(
+          embed.dataset.orientation === "right" ? "right" : "left",
+        );
+        updateDialogBarPos(embed);
+        refreshDialogFormats();
+      },
+      [updateDialogBarPos, refreshDialogFormats],
+    );
+
+    const deselectDialog = useCallback(() => {
+      editorRef.current
+        ?.querySelectorAll<HTMLElement>(".dialog-embed[data-selected]")
+        .forEach((el) => el.removeAttribute("data-selected"));
+      setSelectedDialog(null);
+      setDialogBarPos(null);
+      setDialogAvatarRect(null);
+      setShowDialogFont(false);
+      setShowDialogMuse(false);
+    }, []);
+
+    // Whole-line font for the selected dialog. Stored on data-font (persisted)
+    // and mirrored as presentation on the line (stripped again on serialize).
+    const applyDialogFont = useCallback(
+      (font: string) => {
+        const embed = selectedDialog;
+        const editor = editorRef.current;
+        if (!embed || !editor) return;
+        embed.dataset.font = font;
+        const text = embed.querySelector<HTMLElement>(".dialog-text");
+        if (text) text.style.fontFamily = font;
+        setDialogFont(font);
+        onChange(editor.innerHTML);
+      },
+      [selectedDialog, onChange],
+    );
+
+    // Change the sender muse of the selected dialog and rebuild its chrome
+    // (avatar + name) from the new data.
+    const applyDialogMuse = useCallback(
+      (museId: string | null) => {
+        const embed = selectedDialog;
+        const editor = editorRef.current;
+        if (!embed || !editor) return;
+        const muse = museId
+          ? (dialogMuses.find((m) => m.id === museId) ?? null)
+          : null;
+        embed.dataset.museId = muse?.id ?? "";
+        // Transient display name only (stripped on save); the avatar comes from
+        // the muse endpoint and name/accent are resolved by the reader.
+        embed.dataset.museName = muse?.name ?? "Anonymous";
+        mountDialogEmbed(embed, { editable: true });
+        setDialogMuseId(museId);
+        onChange(editor.innerHTML);
+        requestAnimationFrame(() => updateDialogBarPos(embed));
+      },
+      [selectedDialog, dialogMuses, onChange, updateDialogBarPos],
+    );
+
+    // Which side the selected dialog sits on. Stored on data-orientation
+    // (persisted); the avatar moves with it, so re-anchor the bar afterwards.
+    // Minimal (quote) designs ignore this — they render the same either way.
+    const applyDialogOrientation = useCallback(
+      (orientation: DialogOrientation) => {
+        const embed = selectedDialog;
+        const editor = editorRef.current;
+        if (!embed || !editor) return;
+        if (orientation === "right") embed.dataset.orientation = "right";
+        else delete embed.dataset.orientation;
+        setDialogOrientation(orientation);
+        onChange(editor.innerHTML);
+        requestAnimationFrame(() => updateDialogBarPos(embed));
+      },
+      [selectedDialog, onChange, updateDialogBarPos],
+    );
+
+    // Bold / italic / underline on the current selection inside the dialog
+    // line. The bar buttons preserve the selection via mousedown-preventDefault.
+    const applyDialogFormat = useCallback(
+      (command: string) => {
+        const editor = editorRef.current;
+        if (!editor) return;
+        document.execCommand(command, false);
+        onChange(editor.innerHTML);
+        requestAnimationFrame(() => refreshDialogFormats());
+      },
+      [onChange, refreshDialogFormats],
+    );
+
+    // Inserts an editable dialog block (muse/anonymous quoted line) in its own
+    // block after the cursor's block, mirroring insertImageFromUrl, then
+    // selects it and drops the caret inside the (empty) line for typing.
+    const insertDialogEmbed = useCallback(
+      (dialog: DialogEmbedData) => {
+        const editor = editorRef.current;
+        if (!editor) return;
+
+        // Find the block element the cursor is currently in
+        const selection = window.getSelection();
+        let currentBlock: HTMLElement | null = null;
+        if (selection && selection.rangeCount > 0) {
+          let node: Node | null = selection.getRangeAt(0).startContainer;
+          while (node && node !== editor) {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              const tag = (node as HTMLElement).tagName;
+              if (tag === "DIV" || tag === "P" || tag === "LI") {
+                currentBlock = node as HTMLElement;
+                break;
+              }
+            }
+            node = node.parentNode;
+          }
+        }
+
+        // Never nest a dialog inside another: if the caret is inside an existing
+        // dialog embed, insert the new one after that dialog's top-level block.
+        const insideDialog =
+          currentBlock?.closest<HTMLElement>(".dialog-embed") ?? null;
+        if (insideDialog) {
+          let topBlock: HTMLElement = insideDialog;
+          while (topBlock.parentElement && topBlock.parentElement !== editor) {
+            topBlock = topBlock.parentElement;
+          }
+          currentBlock = topBlock;
+        }
+
+        const dialogBlock = document.createElement("div");
+        dialogBlock.appendChild(createDialogEmbed(dialog));
+
+        // Empty block after the dialog for the cursor
+        const afterBlock = document.createElement("div");
+        afterBlock.appendChild(document.createElement("br"));
+
+        if (currentBlock) {
+          const fs = currentBlock.style.fontSize;
+          const ff = currentBlock.style.fontFamily;
+          if (fs) afterBlock.style.setProperty("font-size", fs);
+          if (ff) afterBlock.style.fontFamily = ff;
+        }
+
+        if (currentBlock?.parentNode) {
+          currentBlock.parentNode?.insertBefore(
+            dialogBlock,
+            currentBlock.nextSibling,
+          );
+          dialogBlock.parentNode?.insertBefore(
+            afterBlock,
+            dialogBlock.nextSibling,
+          );
+        } else {
+          editor.appendChild(dialogBlock);
+          editor.appendChild(afterBlock);
+        }
+
+        // Drop the caret inside the (empty) dialog line so the author can type
+        // immediately; fall back to the trailing block if something's off.
+        const embed = dialogBlock.querySelector<HTMLElement>(".dialog-embed");
+        const text = embed?.querySelector<HTMLElement>(".dialog-text") ?? null;
+        const sel = window.getSelection();
+        if (sel) {
+          const range = document.createRange();
+          if (text) {
+            text.focus();
+            range.selectNodeContents(text);
+          } else {
+            range.setStart(afterBlock, 0);
+          }
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+
+        saveSelection();
+        handleInput();
+
+        requestAnimationFrame(() => {
+          dialogBlock.scrollIntoView({ block: "center", inline: "nearest" });
+          if (embed) selectDialogNode(embed);
+        });
+      },
+      [saveSelection, handleInput, selectDialogNode],
+    );
+
     const handleEditorClick = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
         const target = e.target as HTMLElement;
+
+        // Always-visible delete control on an embedded dialog.
+        const deleteBtn = target.closest(".dialog-delete");
+        if (deleteBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          const editor = editorRef.current;
+          const embed = deleteBtn.closest<HTMLElement>(".dialog-embed");
+          if (editor && embed) {
+            // The embed sits alone in its own wrapper block; remove the block
+            // so no empty container is left behind. Otherwise remove the embed.
+            const block = embed.parentElement;
+            if (block && block !== editor && block.childElementCount === 1) {
+              block.remove();
+            } else {
+              embed.remove();
+            }
+            deselectDialog();
+            handleInput();
+            editor.focus();
+          }
+          return;
+        }
+
+        // Select an embedded dialog for inline editing when clicked; clicking
+        // anywhere else in the editor deselects it.
+        const dialogEmbed = target.closest<HTMLElement>(".dialog-embed");
+        if (dialogEmbed) {
+          selectDialogNode(dialogEmbed);
+        } else {
+          deselectDialog();
+        }
+
         if (target.classList.contains("inline-image")) {
           selectImageNode(target as HTMLImageElement);
         } else if (!imageResizeBarRef.current?.contains(target)) {
@@ -1187,7 +1533,7 @@ export const RichTextEditor = forwardRef<
           setImageResizeBarPos(null);
         }
       },
-      [selectImageNode],
+      [selectImageNode, selectDialogNode, deselectDialog, handleInput],
     );
 
     const handleImageAlignChange = useCallback(
@@ -1291,7 +1637,24 @@ export const RichTextEditor = forwardRef<
           if (editorRef.current) {
             editorRef.current.innerHTML = "";
             onChange("");
+            deselectDialog();
           }
+        },
+        insertDialog: (dialog: DialogEmbedData) => {
+          editorRef.current?.focus();
+          if (savedSelectionRef.current) {
+            restoreSelection();
+          } else if (editorRef.current) {
+            const range = document.createRange();
+            range.setStart(editorRef.current, 0);
+            range.collapse(true);
+            const sel = window.getSelection();
+            if (sel) {
+              sel.removeAllRanges();
+              sel.addRange(range);
+            }
+          }
+          insertDialogEmbed(dialog);
         },
         insertGif: (url: string) => {
           editorRef.current?.focus();
@@ -1332,9 +1695,11 @@ export const RichTextEditor = forwardRef<
       [
         restoreSelection,
         insertImageFromUrl,
+        insertDialogEmbed,
         replaceImageSrc,
         removeImageBySrc,
         onChange,
+        deselectDialog,
       ],
     );
 
@@ -1464,7 +1829,16 @@ export const RichTextEditor = forwardRef<
     );
 
     const handleSelectionChange = useCallback(() => {
-      if (document.activeElement !== editorRef.current) return;
+      // Track the selection whenever the editing host is the editor root OR any
+      // nested editable island inside it (e.g. an editable dialog embed), so
+      // the toolbar stays in sync and saved selections point at the right spot.
+      const editor = editorRef.current;
+      const active = document.activeElement;
+      const withinEditor =
+        !!editor &&
+        (active === editor ||
+          (active instanceof Node && editor.contains(active)));
+      if (!withinEditor) return;
 
       const selection = window.getSelection();
       const currentRange =
@@ -1485,7 +1859,23 @@ export const RichTextEditor = forwardRef<
 
       saveSelection();
       updateActiveStyles();
-    }, [isSameRange, saveSelection, updateActiveStyles]);
+
+      // Keep the selected dialog's bar (bold/italic/underline) in sync as the
+      // caret moves within the dialog line.
+      if (
+        selectedDialog &&
+        selection?.anchorNode &&
+        selectedDialog.contains(selection.anchorNode)
+      ) {
+        refreshDialogFormats();
+      }
+    }, [
+      isSameRange,
+      saveSelection,
+      updateActiveStyles,
+      selectedDialog,
+      refreshDialogFormats,
+    ]);
 
     const handleSave = useCallback(() => {
       const editor = editorRef.current;
@@ -1523,6 +1913,51 @@ export const RichTextEditor = forwardRef<
         document.removeEventListener("keydown", handleEscape);
       };
     }, [selectedImage]);
+
+    // Once the bar is in the DOM its real size is known — reposition so the
+    // flip/clamp math is accurate (also after the font/muse change its size).
+    useLayoutEffect(() => {
+      if (selectedDialog) updateDialogBarPos(selectedDialog);
+    }, [
+      selectedDialog,
+      dialogFont,
+      dialogMuseId,
+      dialogOrientation,
+      updateDialogBarPos,
+    ]);
+
+    // Deselect the dialog when clicking outside the editor and its control bar
+    // (dropdown popovers portal to the body — excluded via the popper wrapper),
+    // or on Escape. Reposition the bar as the editor scrolls.
+    useEffect(() => {
+      if (!selectedDialog) return;
+      const handleOutside = (e: MouseEvent) => {
+        const t = e.target as Node;
+        const insidePopper =
+          t instanceof Element &&
+          !!t.closest("[data-radix-popper-content-wrapper]");
+        if (
+          !editorRef.current?.contains(t) &&
+          !dialogBarRef.current?.contains(t) &&
+          !avatarHitRef.current?.contains(t) &&
+          !insidePopper
+        ) {
+          deselectDialog();
+        }
+      };
+      const handleEscape = (e: KeyboardEvent) => {
+        if (e.key === "Escape") deselectDialog();
+      };
+      const handleScroll = () => updateDialogBarPos(selectedDialog);
+      document.addEventListener("mousedown", handleOutside);
+      document.addEventListener("keydown", handleEscape);
+      editorRef.current?.addEventListener("scroll", handleScroll);
+      return () => {
+        document.removeEventListener("mousedown", handleOutside);
+        document.removeEventListener("keydown", handleEscape);
+        editorRef.current?.removeEventListener("scroll", handleScroll);
+      };
+    }, [selectedDialog, deselectDialog, updateDialogBarPos]);
 
     useEffect(() => {
       document.addEventListener("selectionchange", handleSelectionChange);
@@ -2214,6 +2649,202 @@ export const RichTextEditor = forwardRef<
                 </S.ImageAcceptButton>
               </S.ImageResizeBar>
             </S.ImageControlsWrapper>
+          )}
+
+          {selectedDialog && dialogBarPos && (
+            <S.DialogControlsBar
+              ref={dialogBarRef}
+              style={{ left: dialogBarPos.left, top: dialogBarPos.top }}
+              onMouseDown={(e) => {
+                // Keep the dialog-line selection when tapping the bar chrome.
+                if (e.target === dialogBarRef.current) e.preventDefault();
+              }}
+            >
+              {/* Font — "Ff" rendered in the current font */}
+              <Popover.Root
+                open={showDialogFont}
+                onOpenChange={setShowDialogFont}
+              >
+                <Popover.Trigger asChild>
+                  <S.DialogBarButton
+                    type="button"
+                    title={`Font: ${dialogFont}`}
+                    aria-label={`Font: ${dialogFont}. Change`}
+                    onMouseDown={(e) => e.preventDefault()}
+                  >
+                    <span
+                      className="font-glyph"
+                      style={{ fontFamily: dialogFont }}
+                    >
+                      F<span className="font-glyph-sm">f</span>
+                    </span>
+                  </S.DialogBarButton>
+                </Popover.Trigger>
+                <Popover.Portal>
+                  <S.DropdownPopoverContent
+                    side="bottom"
+                    align="start"
+                    sideOffset={6}
+                    collisionPadding={8}
+                    onOpenAutoFocus={(e) => e.preventDefault()}
+                    onCloseAutoFocus={(e) => e.preventDefault()}
+                    className={classNames("select-content", theme, accent)}
+                    style={{
+                      maxHeight: 280,
+                      minWidth: "10rem",
+                      overflowY: "auto",
+                    }}
+                  >
+                    {FONTS.map((f) => (
+                      <S.OrderedListDropdownItem
+                        key={f}
+                        type="button"
+                        $selected={dialogFont === f}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          applyDialogFont(f);
+                          setShowDialogFont(false);
+                        }}
+                        style={{ fontFamily: f }}
+                      >
+                        {f}
+                      </S.OrderedListDropdownItem>
+                    ))}
+                  </S.DropdownPopoverContent>
+                </Popover.Portal>
+              </Popover.Root>
+
+              <S.DialogBarDivider />
+
+              <S.DialogBarButton
+                type="button"
+                title="Bold"
+                aria-label="Bold"
+                $active={!!dialogFormats.bold}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => applyDialogFormat("bold")}
+              >
+                <RiBold />
+              </S.DialogBarButton>
+              <S.DialogBarButton
+                type="button"
+                title="Italic"
+                aria-label="Italic"
+                $active={!!dialogFormats.italic}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => applyDialogFormat("italic")}
+              >
+                <RiItalic />
+              </S.DialogBarButton>
+              <S.DialogBarButton
+                type="button"
+                title="Underline"
+                aria-label="Underline"
+                $active={!!dialogFormats.underline}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => applyDialogFormat("underline")}
+              >
+                <RiUnderline />
+              </S.DialogBarButton>
+
+              <S.DialogBarDivider />
+
+              {/* Orientation — which side the avatar/dialog sits on. */}
+              <S.DialogBarButton
+                type="button"
+                title="Avatar on the left"
+                aria-label="Avatar on the left"
+                $active={dialogOrientation === "left"}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => applyDialogOrientation("left")}
+              >
+                <FaAlignLeft />
+              </S.DialogBarButton>
+              <S.DialogBarButton
+                type="button"
+                title="Avatar on the right"
+                aria-label="Avatar on the right"
+                $active={dialogOrientation === "right"}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => applyDialogOrientation("right")}
+              >
+                <FaAlignRight />
+              </S.DialogBarButton>
+            </S.DialogControlsBar>
+          )}
+
+          {/* Sender selection — anchored to (and opened by) the dialog avatar */}
+          {selectedDialog && dialogAvatarRect && (
+            <Popover.Root
+              open={showDialogMuse}
+              onOpenChange={setShowDialogMuse}
+            >
+              <Popover.Trigger asChild>
+                <S.DialogAvatarHit
+                  ref={avatarHitRef}
+                  type="button"
+                  title="Change speaker"
+                  aria-label="Change speaker"
+                  onMouseDown={(e) => e.preventDefault()}
+                  style={{
+                    height: dialogAvatarRect.height,
+                    left: dialogAvatarRect.left,
+                    top: dialogAvatarRect.top,
+                    width: dialogAvatarRect.width,
+                  }}
+                />
+              </Popover.Trigger>
+              <Popover.Portal>
+                <S.DropdownPopoverContent
+                  side="bottom"
+                  align="start"
+                  sideOffset={8}
+                  collisionPadding={8}
+                  onOpenAutoFocus={(e) => e.preventDefault()}
+                  onCloseAutoFocus={(e) => e.preventDefault()}
+                  className={classNames("select-content", theme, accent)}
+                  style={{
+                    maxHeight: 240,
+                    minWidth: "11rem",
+                    overflowY: "auto",
+                  }}
+                >
+                  <S.DialogMuseOptionItem
+                    type="button"
+                    $selected={!dialogMuseId}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      applyDialogMuse(null);
+                      setShowDialogMuse(false);
+                    }}
+                  >
+                    <span className="muse-av fallback">?</span>
+                    Anonymous
+                  </S.DialogMuseOptionItem>
+                  {dialogMuses.map((m) => (
+                    <S.DialogMuseOptionItem
+                      key={m.id}
+                      type="button"
+                      $selected={dialogMuseId === m.id}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        applyDialogMuse(m.id);
+                        setShowDialogMuse(false);
+                      }}
+                    >
+                      {m.avatar ? (
+                        <img className="muse-av" src={m.avatar} alt="" />
+                      ) : (
+                        <span className="muse-av fallback">
+                          {m.name.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                      {m.name}
+                    </S.DialogMuseOptionItem>
+                  ))}
+                </S.DropdownPopoverContent>
+              </Popover.Portal>
+            </Popover.Root>
           )}
         </S.EditorWrapper>
 

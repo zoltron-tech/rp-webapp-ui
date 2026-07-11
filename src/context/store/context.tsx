@@ -4,6 +4,8 @@ import type { ProfileState } from "@/app/rp/profile/edit/profile.store";
 import type { MuseState } from "@/components/edit-muse/muse.store";
 import type { MuseAboutSectionState } from "@/components/edit-muse-about-section/muse-about-section.store";
 import type { MusicState } from "@/components/edit-music/music.store";
+import type { StoryboardEventState } from "@/components/edit-storyboard-event-card/storyboard-event.store";
+import type { StoryboardState } from "@/components/edit-storyboard/storyboard.store";
 import type { EventThreadInputState } from "@/components/event-thread-input/event-thread-input.store";
 import type { PromptStoreType } from "@/components/prompt/prompt.store";
 import type { PromptInputState } from "@/components/prompt-input/prompt-input.store";
@@ -42,6 +44,8 @@ const Stores = {
   profile: createStoreContext<ProfileState>("profile"),
   prompt: createStoreContext<PromptStoreType>("prompt"),
   "prompt-input": createStoreContext<PromptInputState>("prompt-input"),
+  storyboard: createStoreContext<StoryboardState>("storyboard"),
+  "storyboard-event": createStoreContext<StoryboardEventState>("storyboard-event"),
 } as const;
 
 export type StoreKey = keyof typeof Stores;

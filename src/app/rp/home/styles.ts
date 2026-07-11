@@ -104,6 +104,26 @@ export const MuseCardShimmer = styled.div`
   }
 `;
 
+/** Matches StoryCard dimensions (240 × 360, 170 × 255 in narrow content, 160 × 240 mobile). */
+export const StoryCardShimmer = styled.div`
+  flex-shrink: 0;
+  /* Cover (2:3 of width) + info panel, matching the redesigned StoryCard. */
+  width: 200px;
+  height: calc(200px * 1.5 + 92px);
+  border-radius: 8px;
+  ${shimmer}
+
+  @container content-container (max-width: 1000px) {
+    width: 165px;
+    height: calc(165px * 1.5 + 84px);
+  }
+
+  @media (max-width: 600px) {
+    width: 158px;
+    height: calc(158px * 1.5 + 84px);
+  }
+`;
+
 /** Matches NovelistPreviewCard dimensions (220 × 246, 155 × 188 mobile). */
 export const NovelistCardShimmer = styled.div`
   flex-shrink: 0;
@@ -289,7 +309,7 @@ export const ContentContainer = styled.div`
 export const FriendsContentContainer = styled(ContentContainer)`
   height: 100%;
   min-height: 0;
-  margin-top: 0;
+  margin-top: 20px;
   justify-content: flex-start;
   overflow: hidden;
 `;

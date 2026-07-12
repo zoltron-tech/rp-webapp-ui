@@ -64,7 +64,7 @@ export const MuseListItem: FC<Props> = ({ muse, className, verses, ...rest }) =>
     >
       <AvatarNew
         className="avatar"
-        src={displayMuse.image ?? null}
+        src={displayMuse.avatar?.src || displayMuse.image || null}
         alt={displayMuse.firstName ?? "Muse"}
         name="open"
         onClick={onAvatarClick}

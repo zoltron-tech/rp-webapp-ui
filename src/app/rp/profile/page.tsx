@@ -21,16 +21,17 @@ export default function ProfilePage({}) {
       return;
     }
 
+    if (authState === "LOGGED_IN") {
+      Logger.debug("rerouteToProfilePage");
+      routeToPage(ROUTES.Profile.View(user?.username || "").Index);
+      return;
+    }
+
     // The store initialises with authState="LOGGED_OUT" before AuthProvider has
     // had a chance to check the cookie. Guard against acting on that initial
     // value by waiting until we have seen at least one LOADING transition.
     if (!hasSeenLoading.current) return;
 
-    if (authState === "LOGGED_IN") {
-      Logger.debug("rerouteToProfilePage");
-      routeToPage(ROUTES.Profile.View(user?.username || "").Index);
-    } else {
-      routeToPage(ROUTES.Novelists);
-    }
+    routeToPage(ROUTES.Novelists);
   }, [authState]);
 }

@@ -52,8 +52,34 @@
 @import "@radix-ui/colors/tomato-dark-alpha.css";
 
 /* Warning color */
-@import "@radix-ui/colors/amber-dark.css";
-@import "@radix-ui/colors/amber-dark-alpha.css";
+/* Custom amber scale — step 9 is the gold #d4bd2c */
+.dark,
+.dark-theme {
+  --amber-1: #15130a;
+  --amber-a1: #d4bd2c07;
+  --amber-2: #201e0e;
+  --amber-a2: #d4bd2c10;
+  --amber-3: #342f14;
+  --amber-a3: #d4bd2c1e;
+  --amber-4: #474015;
+  --amber-a4: #d4bd2c2b;
+  --amber-5: #595018;
+  --amber-a5: #d4bd2c39;
+  --amber-6: #6d621d;
+  --amber-a6: #d4bd2c4d;
+  --amber-7: #857823;
+  --amber-a7: #d4bd2c67;
+  --amber-8: #a39329;
+  --amber-a8: #d4bd2c8b;
+  --amber-9: #d4bd2c;
+  --amber-a9: #d4bd2cee;
+  --amber-10: #dac53e;
+  --amber-a10: #dac53eee;
+  --amber-11: #d7ca75;
+  --amber-a11: #d7ca75f5;
+  --amber-12: #f4f1e1;
+  --amber-a12: #f4f1e1fb;
+}
 
 /* BEGIN: Remove base padding and styling */
 * {

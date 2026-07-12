@@ -294,6 +294,49 @@ export const deleteStoryBoardEventAction = async (
   return { message: API_MESSAGE.Success };
 };
 
+export const reorderStoryBoardEventsAction = async (
+  storyboardId: string,
+  orderedEventIds: string[],
+): Promise<DataType<StoryBoardEvent[]>> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/story/${storyboardId}/events/reorder`;
+
+  const response = await fetch(URL, {
+    body: JSON.stringify({ orderedEventIds }),
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "POST",
+  });
+
+  const rawText = await response.text();
+  Logger.debug(
+    "reorderStoryBoardEventsAction",
+    response.status,
+    response.statusText,
+    rawText,
+  );
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  let events: StoryBoardEvent[];
+  try {
+    events = JSON.parse(rawText);
+  } catch (err) {
+    console.error(
+      "reorderStoryBoardEventsAction: failed to parse response JSON",
+      err,
+    );
+    return { message: API_MESSAGE.Error };
+  }
+
+  return events;
+};
+
 export const saveStoryBoardEventThreadAction = async (
   input: StoryBoardEventThreadInput,
 ) => {

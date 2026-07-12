@@ -11,6 +11,7 @@ import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { Conversation } from "@/types/conversation";
 import { ROUTES } from "@/utils/constants/routes";
+import { decryptConversations } from "@/utils/e2e-crypto";
 import { toFormattedDate, toggleState } from "@/utils/helpers";
 import { Avatar } from "../common";
 import * as S from "./styles";
@@ -81,7 +82,7 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
 
   const fetchConversations = async () => {
     const _muse = await baseDataLoader(() => getConversationsAction(1, 5));
-    if (_muse !== null) setConversations(_muse);
+    if (Array.isArray(_muse)) setConversations(await decryptConversations(_muse));
   };
 
   useEffect(() => {

@@ -51,7 +51,7 @@ export default function MusesListPage({}) {
   const backgroundTiles = useMemo(
     () =>
       muses?.map((muse) => ({
-        image: muse.image || "",
+        image: muse.avatar?.src || muse.image || "",
         left: 5 + Math.random() * 80,
         rotation: -45 + Math.random() * 90,
         scale: 1.5 + Math.random() * 2.5,

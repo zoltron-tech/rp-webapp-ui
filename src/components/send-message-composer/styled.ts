@@ -781,8 +781,8 @@ export const TrayTabPill = styled.button<{ $active: boolean }>`
   background: transparent;
   color: ${({ $active }) => ($active ? "var(--accent)" : "var(--text-secondary)")};
   border-radius: 999px;
-  padding: 4px 12px;
-  font-size: var(--font-size-xsmall);
+  padding: 7px 16px;
+  font-size: var(--font-size-small);
   font-weight: var(--font-weight-semi-bold);
   font-family: var(--font);
   white-space: nowrap;

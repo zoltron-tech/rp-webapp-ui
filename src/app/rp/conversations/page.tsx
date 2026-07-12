@@ -16,6 +16,7 @@ import { useUIContext } from "@/hooks/use-ui-context";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import type { Conversation, IceBreaker } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
+import { decryptConversations } from "@/utils/e2e-crypto";
 import { ConversationPanel } from "./[conversationId]/conversation-panel";
 import {
   getConversationByUsernameAction,
@@ -174,16 +175,18 @@ export default function ConversationsPage() {
     async (pageNumber: number, append = false) => {
       const rawResult = await getConversationsAction(pageNumber, PAGE_SIZE);
 
-      const _conversations =
+      const encryptedConversations =
         rawResult && Array.isArray(rawResult)
           ? (rawResult as Conversation[])
           : null;
 
-      if (!_conversations || _conversations.length === 0) {
+      if (!encryptedConversations || encryptedConversations.length === 0) {
         setHasMore(false);
         if (!append) setIsLoading(false);
         return false;
       }
+
+      const _conversations = await decryptConversations(encryptedConversations);
 
       setHasMore(_conversations.length >= PAGE_SIZE);
 

@@ -32,6 +32,17 @@ type Props = React.HTMLProps<HTMLDivElement> & {
 const truncate = (text: string, max: number) =>
   text.length > max ? `${text.slice(0, max)}...` : text;
 
+// Descriptions are stored as rich-text HTML; preview surfaces (card teaser,
+// tray, dialog) only have room for a plain-text snippet, so strip tags before
+// truncating instead of leaking raw markup like `<div style="...">`.
+const stripHtml = (html: string) => {
+  if (!html) return "";
+  if (typeof document === "undefined") return html.replace(/<[^>]*>/g, "");
+  const container = document.createElement("div");
+  container.innerHTML = html;
+  return (container.textContent ?? "").replace(/\s+/g, " ").trim();
+};
+
 export const StoryCardEvent: FC<Props> = ({
   event,
   storyboardId,
@@ -167,7 +178,9 @@ export const StoryCardEvent: FC<Props> = ({
         <S.CardHeader>
           <S.MuseInfo>
             <S.Title>{event.name}</S.Title>
-            <S.Description>{truncate(event.description, 100)}</S.Description>
+            <S.Description>
+              {truncate(stripHtml(event.description), 100)}
+            </S.Description>
           </S.MuseInfo>
         </S.CardHeader>
         <S.CardFooter>
@@ -232,7 +245,9 @@ export const StoryCardEvent: FC<Props> = ({
               </S.TrayFrame>
               <S.TrayBody>
                 <ShouldRender if={!!event.description}>
-                  <S.TrayDescription>{event.description}</S.TrayDescription>
+                  <S.TrayDescription>
+                    {stripHtml(event.description)}
+                  </S.TrayDescription>
                 </ShouldRender>
                 <S.TrayReadMoreButton
                   type="button"
@@ -302,7 +317,7 @@ export const StoryCardEvent: FC<Props> = ({
                 </S.DialogHeading>
                 <ShouldRender if={!!event.description}>
                   <S.DialogDescription>
-                    {truncate(event.description, 300)}
+                    {truncate(stripHtml(event.description), 300)}
                   </S.DialogDescription>
                 </ShouldRender>
                 <S.DialogActions>

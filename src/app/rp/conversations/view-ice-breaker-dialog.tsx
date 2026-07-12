@@ -22,6 +22,7 @@ import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import type { IceBreaker, Muse, Novelist, PromptSource } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
+import { encryptMessageText } from "@/utils/e2e-crypto";
 import { displayDate, toFormattedDate } from "@/utils/helpers";
 import {
   createConversationIfNotExistAction,
@@ -215,12 +216,17 @@ export function ViewIceBreakerDialog({
       return;
     }
 
+    const wireText = await encryptMessageText(
+      conversation.id,
+      replyHtml || trimmed,
+    );
+
     socket.send(
       JSON.stringify({
         payload: {
           attachments: null,
           conversationId: conversation.id,
-          message: replyHtml || trimmed,
+          message: wireText,
           repliedTo: { id: iceBreaker.sourceId, type: "ICE_BREAKER" },
           sender: {
             id: replySource.sourceId,

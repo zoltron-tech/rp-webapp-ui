@@ -28,6 +28,10 @@ import { setBadgeCount } from "@/lib/badge-manager";
 import { THEME_DARK, THEME_LIGHT } from "@/theme";
 import type { StoreState } from "@/types/state";
 import { ACCENT_MAP } from "@/types/theme";
+import {
+  decryptConversations,
+  ensureE2EIdentityPublished,
+} from "@/utils/e2e-crypto";
 import { getUnreadReplyCount } from "./outgoing-threads/actions";
 import * as S from "./styles";
 
@@ -85,6 +89,9 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
           setGlobalState({ groupCount: result });
         }
       });
+      // Publish this browser's E2E public key so other members can wrap
+      // conversation keys for us before we ever open a conversation.
+      void ensureE2EIdentityPublished();
     });
   }, [authState, setGlobalState]);
 
@@ -100,9 +107,9 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
       },
     );
     // Refresh the cached conversations list so the inbox stays up to date
-    getConversationsAction(1, 15).then((result) => {
+    getConversationsAction(1, 15).then(async (result) => {
       if (result && Array.isArray(result)) {
-        setGlobalState({ cachedConversations: result });
+        setGlobalState({ cachedConversations: await decryptConversations(result) });
       }
     });
   }, [lastIncomingMessage, setGlobalState]);

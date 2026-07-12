@@ -16,8 +16,15 @@ import type { Message } from "@/types";
 import type { WebSocketExt } from "@/types/socket";
 import { JWT_COOKIE_NAME, SOCKET_URL } from "@/utils/constants";
 import {
+  decryptMessage,
+  refreshConversationE2E,
+  setE2ESignalListener,
+} from "@/utils/e2e-crypto";
+import {
+  createE2ERefreshSocketMessage,
   createHeartbeatPong,
   HEARTBEAT_TIMEOUT_MS,
+  isServerE2ERefresh,
   isServerEdit,
   isServerMessage,
   isServerPing,
@@ -34,6 +41,9 @@ type SocketContextType = {
   lastIncomingMessage: Message | null;
   lastIncomingReaction: ReactionSocketPayload | null;
   lastIncomingEdit: Message | null;
+  /** Last E2E envelope re-check nudge received — consumers re-try decryption
+   *  of pending 🔒 messages for that conversation. */
+  lastIncomingE2ERefresh: { conversationId: string; at: number } | null;
   /** Call before any user action to guarantee the socket is open (no-op if already connected or not logged in). */
   ensureConnected: () => void;
 };
@@ -46,6 +56,7 @@ const SocketContext = createContext<SocketContextType>({
   lastIncomingMessage: null,
   lastIncomingReaction: null,
   lastIncomingEdit: null,
+  lastIncomingE2ERefresh: null,
   onlineUsernames: [],
   socket: null,
 });
@@ -96,6 +107,10 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
   const [lastIncomingEdit, setLastIncomingEdit] = useState<Message | null>(
     null,
   );
+  const [lastIncomingE2ERefresh, setLastIncomingE2ERefresh] = useState<{
+    conversationId: string;
+    at: number;
+  } | null>(null);
 
   // Keep stable refs so callbacks never capture stale values
   const socketRef = useRef<WebSocketExt | null>(null);
@@ -104,6 +119,30 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
   const connectDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastActivityCheckRef = useRef<number>(0);
   const reconnectingRef = useRef(false);
+  const e2eNudgeSentAtRef = useRef(new Map<string, number>());
+
+  // ─── E2E nudges ──────────────────────────────────────────────────────────
+  // Relay crypto-layer signals to conversation members over the socket:
+  // "locked-out" (we need someone to wrap the conversation key for us) and
+  // "repaired" (we just wrapped it for someone — re-check now). Throttled per
+  // conversation so signal bursts collapse into one frame.
+  useEffect(() => {
+    setE2ESignalListener((signal) => {
+      const ws = socketRef.current;
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      const lastSent = e2eNudgeSentAtRef.current.get(signal.conversationId);
+      if (lastSent && Date.now() - lastSent < 15_000) return;
+      e2eNudgeSentAtRef.current.set(signal.conversationId, Date.now());
+      try {
+        ws.send(
+          JSON.stringify(createE2ERefreshSocketMessage(signal.conversationId)),
+        );
+      } catch {
+        // Best effort — the next open/send/incoming-message re-check covers it.
+      }
+    });
+    return () => setE2ESignalListener(null);
+  }, []);
 
   // ─── Core connect logic ──────────────────────────────────────────────────
   const connectSocket = useCallback(() => {
@@ -243,7 +282,14 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
       }
 
       if (isServerMessage(data)) {
-        setLastIncomingMessage(data);
+        // Re-check envelopes (throttled): if we hold this conversation's key,
+        // repair members who published theirs after it was created (e.g. the
+        // sender, if this message arrived unencrypted); if we lack the key,
+        // pick up an envelope another member repaired for us.
+        void refreshConversationE2E(data.conversationId);
+        // Messages arrive E2E-encrypted; decrypt once here so every consumer
+        // of lastIncomingMessage sees plaintext.
+        decryptMessage(data).then(setLastIncomingMessage);
         return;
       }
 
@@ -253,7 +299,21 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
       }
 
       if (isServerEdit(data)) {
-        setLastIncomingEdit(data.payload);
+        decryptMessage(data.payload).then(setLastIncomingEdit);
+        return;
+      }
+
+      if (isServerE2ERefresh(data)) {
+        // A member asked for an envelope re-check (they may need our repair)
+        // or just repaired one for us — bypass the throttle: this is an
+        // explicit "server state changed" signal.
+        void refreshConversationE2E(data.payload.conversationId, {
+          force: true,
+        });
+        setLastIncomingE2ERefresh({
+          at: Date.now(),
+          conversationId: data.payload.conversationId,
+        });
         return;
       }
 
@@ -313,6 +373,7 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
         lastIncomingMessage,
         lastIncomingReaction,
         lastIncomingEdit,
+        lastIncomingE2ERefresh,
         onlineUsernames,
         socket,
       }}

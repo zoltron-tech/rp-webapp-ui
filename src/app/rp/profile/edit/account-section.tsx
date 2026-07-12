@@ -9,6 +9,7 @@ import {
   BsPencil,
   BsPeople,
   BsPersonCircle,
+  BsShieldLock,
 } from "react-icons/bs";
 import { FaCircleCheck, FaCircleXmark } from "react-icons/fa6";
 import { MdMailOutline } from "react-icons/md";
@@ -21,12 +22,14 @@ import {
 } from "@/app/actions";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { InlineMessage } from "@/components/common/inline-message";
+import { AppAlertDialog } from "@/components/dialog";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import type { Friend } from "@/types/novelist";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
+import { syncE2EKeyBackup } from "@/utils/e2e-crypto";
 import { getBlockedNovelistsAction, unblockNovelistAction } from "../actions";
 import { ChangeUsernameDialog } from "./change-username-dialog";
 import * as S from "./styled";
@@ -48,6 +51,9 @@ export function AccountSection({ onBack }: Props) {
   const [usernameDialogOpen, setUsernameDialogOpen] = useState(false);
   const [verifyState, setVerifyState] = useState<AsyncState>("idle");
   const [resetState, setResetState] = useState<AsyncState>("idle");
+  const [syncDialogOpen, setSyncDialogOpen] = useState(false);
+  const [syncPassphrase, setSyncPassphrase] = useState("");
+  const [syncLoading, setSyncLoading] = useState(false);
   const [blocked, setBlocked] = useState<Friend[]>([]);
   const [unblockingId, setUnblockingId] = useState<string | null>(null);
   const [blockedPage, setBlockedPage] = useState(0);
@@ -112,6 +118,32 @@ export function AccountSection({ onBack }: Props) {
   };
 
   const isOauth = user?.authApp && user.authApp !== "NOVELIST_WORLD";
+
+  const handleSyncPassphrase = async () => {
+    const passphrase = syncPassphrase.trim();
+    if (passphrase.length < 8 || syncLoading) return;
+    setSyncLoading(true);
+    // No replaceOnMismatch: a typo must not overwrite an existing backup.
+    const result = await syncE2EKeyBackup(passphrase);
+    setSyncLoading(false);
+    if (result === "mismatch") {
+      errorToast(
+        "That passphrase doesn't match your existing chat backup. Enter the one you set before.",
+      );
+      return;
+    }
+    if (result === "unavailable") {
+      errorToast("Could not sync your chat key. Please try again.");
+      return;
+    }
+    setSyncDialogOpen(false);
+    setSyncPassphrase("");
+    successToast(
+      result === "installed"
+        ? "Encrypted chats unlocked on this device."
+        : "Chat sync passphrase saved.",
+    );
+  };
 
   return (
     <>
@@ -261,6 +293,29 @@ export function AccountSection({ onBack }: Props) {
           </InlineMessage>
         </ShouldRender>
 
+        {/* Chat sync passphrase — OAuth accounts have no password, so they
+            need an explicit passphrase to read encrypted chats on any device.
+            Password accounts sync automatically at login. */}
+        <ShouldRender if={Boolean(isOauth)}>
+          <S.AccountRow>
+            <S.AccountRowMain>
+              <S.AccountRowLabel>Secure chat sync</S.AccountRowLabel>
+              <S.AccountRowValue>
+                Use one passphrase to read your encrypted chats on any device
+              </S.AccountRowValue>
+            </S.AccountRowMain>
+            <S.AccountRowActions>
+              <S.AccountActionButton
+                type="button"
+                onClick={() => setSyncDialogOpen(true)}
+              >
+                <BsShieldLock />
+                Passphrase
+              </S.AccountActionButton>
+            </S.AccountRowActions>
+          </S.AccountRow>
+        </ShouldRender>
+
         {/* Blocked novelists */}
         <S.BlockedSectionHeading>
           <RiUserForbidLine
@@ -320,6 +375,58 @@ export function AccountSection({ onBack }: Props) {
       <ChangeUsernameDialog
         open={usernameDialogOpen}
         onOpenChange={setUsernameDialogOpen}
+      />
+
+      <AppAlertDialog
+        heading="Secure chat sync"
+        text=""
+        open={syncDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSyncDialogOpen(false);
+            setSyncPassphrase("");
+          }
+        }}
+        onConfirm={handleSyncPassphrase}
+        actionButtonLabel={syncLoading ? "Syncing…" : "Save"}
+        actionColor="neutral"
+        isConfirmDisabled={syncPassphrase.trim().length < 8 || syncLoading}
+        body={
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <p style={{ margin: 0 }}>
+              Your encrypted chats are locked to this device. Set a passphrase
+              — or enter the one you already use — to read them on every
+              device you sign in to.
+            </p>
+            <input
+              type="password"
+              value={syncPassphrase}
+              onChange={(e) => setSyncPassphrase(e.target.value)}
+              placeholder="At least 8 characters"
+              autoComplete="new-password"
+              disabled={syncLoading}
+              style={{
+                background: "var(--bg-3)",
+                border: "1px solid var(--bg-5)",
+                borderRadius: 8,
+                color: "var(--text)",
+                fontSize: "var(--font-size-small)",
+                padding: "10px 12px",
+                width: "100%",
+              }}
+            />
+            <p
+              style={{
+                color: "var(--text-secondary)",
+                fontSize: "var(--font-size-xsmall)",
+                margin: 0,
+              }}
+            >
+              Keep it safe — without it, a new device can't unlock your
+              message history.
+            </p>
+          </div>
+        }
       />
     </>
   );

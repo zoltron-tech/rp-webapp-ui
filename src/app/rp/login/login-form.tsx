@@ -17,6 +17,7 @@ import { usePostLogin } from "@/hooks/use-post-login";
 import { API_MESSAGE } from "@/utils/constants";
 import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
 import { ROUTES } from "@/utils/constants/routes";
+import { syncE2EKeyBackup } from "@/utils/e2e-crypto";
 import { getUserNovelist } from "../novelists/actions";
 import * as S from "./styled";
 
@@ -81,6 +82,10 @@ export const LoginForm: FC = () => {
         setLoading(false);
         return;
       }
+
+      // Restore (or create) the E2E chat key backup with the password the
+      // user just proved is current. Fire-and-forget — must not block login.
+      void syncE2EKeyBackup(password, { replaceOnMismatch: true });
 
       console.log(response);
 

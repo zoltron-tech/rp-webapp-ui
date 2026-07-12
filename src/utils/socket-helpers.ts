@@ -104,6 +104,35 @@ export const createEditSocketMessage = (payload: {
   type: "edit" as const,
 });
 
+// ─── E2E envelope refresh (nudge) ─────────────────────────────────────────────
+
+export type E2ERefreshPayload = { conversationId: string };
+
+export type ServerE2ERefreshMessage = {
+  type: "e2e-refresh";
+  payload: E2ERefreshPayload;
+};
+
+/** Narrows an unknown WS payload to an E2E envelope re-check request. */
+export const isServerE2ERefresh = (
+  data: unknown,
+): data is ServerE2ERefreshMessage => {
+  if (!data || typeof data !== "object") return false;
+  const d = data as Record<string, unknown>;
+  if (d.type !== "e2e-refresh") return false;
+  const p = d.payload as Record<string, unknown> | undefined;
+  return typeof p?.conversationId === "string";
+};
+
+/** Asks every online member of the conversation to re-check their E2E
+ *  envelope state (broadcast-only; nothing is persisted). */
+export const createE2ERefreshSocketMessage = (
+  conversationId: string,
+): ServerE2ERefreshMessage => ({
+  payload: { conversationId },
+  type: "e2e-refresh",
+});
+
 // ─── Payload builders ─────────────────────────────────────────────────────────
 
 /** Pong response sent back to the server to reset its heartbeat flag. */

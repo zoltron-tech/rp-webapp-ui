@@ -6,9 +6,11 @@ import { useEffect, useState } from "react";
 import { FaGlobeAmericas, FaLock } from "react-icons/fa";
 import { IoMdAdd } from "react-icons/io";
 import { IoArrowBackOutline } from "react-icons/io5";
+import { RxDragHandleDots2 } from "react-icons/rx";
 import { CoverImage, ShouldRender, Username } from "@/components/common";
 import { Button as AddNewButtonStyle } from "@/components/common/add-new-button/styles";
 import { EditStoryboardEventOverlay } from "@/components/edit-storyboard-event-card/edit-storyboard-event-overlay";
+import { ReorderStoryboardEventsOverlay } from "@/components/reorder-storyboard-events";
 import StoryCardEvent from "@/components/story-event-card";
 import { StoryMembers } from "@/components/story-members";
 import { useGlobalState } from "@/context/store/stores";
@@ -48,6 +50,7 @@ export default function UserProfilePage({}) {
     open: boolean;
     eventId: string | null;
   }>({ eventId: null, open: false });
+  const [reorderOpen, setReorderOpen] = useState(false);
 
   const onBackClick = () => {
     routeToPage(ROUTES.Profile.View(user?.username || "").Storyboards);
@@ -66,6 +69,9 @@ export default function UserProfilePage({}) {
   };
 
   const handleEventSaved = (saved: StoryBoardEvent) => {
+    // Only a fresh creation (not an edit) should auto-close the overlay.
+    const wasCreating = eventEditor.eventId === null;
+
     setStoryBoard((prev) => {
       if (!prev) return prev;
       const exists = prev.events.some((e) => e.id === saved.id);
@@ -76,6 +82,8 @@ export default function UserProfilePage({}) {
           : [...prev.events, saved],
       };
     });
+
+    if (wasCreating) closeEventEditor();
   };
 
   const isMember = () => {
@@ -140,6 +148,12 @@ export default function UserProfilePage({}) {
             </ShouldRender>
             CHAPTERS
           </S.SectionName>
+          <ShouldRender if={isMember() && (storyboard?.events.length ?? 0) > 1}>
+            <AddNewButtonStyle type="button" onClick={() => setReorderOpen(true)}>
+              Reorder chapters
+              <RxDragHandleDots2 size={18} />
+            </AddNewButtonStyle>
+          </ShouldRender>
           <ShouldRender
             if={
               isMember() &&
@@ -193,6 +207,15 @@ export default function UserProfilePage({}) {
         storyboardEventId={eventEditor.eventId}
         onClose={closeEventEditor}
         onSaved={handleEventSaved}
+      />
+      <ReorderStoryboardEventsOverlay
+        open={reorderOpen}
+        storyboardId={storyboardId}
+        events={storyboard?.events ?? []}
+        onClose={() => setReorderOpen(false)}
+        onReordered={(events) =>
+          setStoryBoard((prev) => (prev ? { ...prev, events } : prev))
+        }
       />
     </>
   );

@@ -4,15 +4,24 @@ import { ShouldRender } from "@novelist-world/ui";
 import { Separator } from "radix-ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BsArrowLeft } from "react-icons/bs";
-import { MdOutlineInfo } from "react-icons/md";
+import { GrAttachment } from "react-icons/gr";
+import { MdGif, MdOutlineInfo } from "react-icons/md";
 import { AppAlertDialog } from "@/components/dialog";
-import { RichTextEditor } from "@/components/rich-text-editor-input";
+import { GifPicker } from "@/components/gif-picker";
+import {
+  RichTextEditor,
+  type RichTextEditorHandle,
+} from "@/components/rich-text-editor-input";
 import { useGlobalState } from "@/context/store/stores";
+import { useUploadMedia } from "@/hooks/use-upload-media";
 import type { MentionDataItem, MentionTab } from "@/types/novelist";
+import { API_MESSAGE } from "@/utils/constants";
 import { searchMentionMusesAction } from "../../muse/actions";
 import { useProfileState, useProfileStoreSet } from "./profile.store";
 import * as S from "./styled";
 import { useProfileSave } from "./use-profile-save";
+
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
 
 type Props = {
   onBack: () => void;
@@ -23,10 +32,13 @@ export function AboutSection({ onBack }: Props) {
   const about = useProfileState("about");
   const setProfileState = useProfileStoreSet();
   const { saveNovelist, loading } = useProfileSave();
+  const { uploadMedia } = useUploadMedia();
 
   const [error, setError] = useState<string | null>(null);
   const [discardOpen, setDiscardOpen] = useState(false);
+  const [showGifPicker, setShowGifPicker] = useState(false);
 
+  const editorRef = useRef<RichTextEditorHandle>(null);
   const originalRef = useRef(novelist?.about ?? "");
 
   useEffect(() => {
@@ -75,6 +87,46 @@ export function AboutSection({ onBack }: Props) {
     [fetchMentionableFriends, fetchMentionableMuses],
   );
 
+  const handleGifSelect = useCallback((gifUrl: string) => {
+    setShowGifPicker(false);
+    editorRef.current?.insertGif(gifUrl);
+  }, []);
+
+  const handleAttachImage = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const input = e.currentTarget;
+      const file = input.files?.[0] ?? null;
+      input.value = "";
+      if (!file) return;
+
+      if (file.size > MAX_IMAGE_SIZE) {
+        setError("File too large (max 10 MB)");
+        return;
+      }
+      setError(null);
+
+      // Embed inline into the editor, same as prompt-input.
+      const objectUrl = URL.createObjectURL(file);
+      editorRef.current?.insertUploadingImage(objectUrl);
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("contentType", file.type);
+      formData.append("prefix", "profile-about");
+      const url = await uploadMedia(formData);
+
+      if (url === API_MESSAGE.MediaError) {
+        setError("Failed to upload image");
+        editorRef.current?.removeImageBySrc(objectUrl);
+        URL.revokeObjectURL(objectUrl);
+        return;
+      }
+      editorRef.current?.replaceImageSrc(objectUrl, url);
+      URL.revokeObjectURL(objectUrl);
+    },
+    [uploadMedia],
+  );
+
   const handleSave = async () => {
     setError(null);
     const result = await saveNovelist();
@@ -121,7 +173,28 @@ export function AboutSection({ onBack }: Props) {
       <Separator.Root className="separator" orientation="horizontal" />
 
       <S.AboutSectionBody>
+        <S.AboutToolbar>
+          <S.AboutAttachLabel htmlFor="about-attach-input" aria-label="Attach image">
+            <GrAttachment />
+          </S.AboutAttachLabel>
+          <input
+            id="about-attach-input"
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={handleAttachImage}
+          />
+          <S.AboutToolButton
+            type="button"
+            aria-label="Insert GIF"
+            onClick={() => setShowGifPicker(true)}
+          >
+            <MdGif />
+          </S.AboutToolButton>
+        </S.AboutToolbar>
+
         <RichTextEditor
+          ref={editorRef}
           placeholder="Tell people about yourself..."
           value={about ?? ""}
           mentionTabs={mentionTabs}
@@ -161,6 +234,16 @@ export function AboutSection({ onBack }: Props) {
         actionColor="negative"
         onConfirm={handleConfirmDiscard}
         onCancel={() => setDiscardOpen(false)}
+      />
+
+      <AppAlertDialog
+        heading="Insert GIF"
+        text=""
+        body={<GifPicker onSelect={handleGifSelect} />}
+        open={showGifPicker}
+        onOpenChange={setShowGifPicker}
+        showConfirm={false}
+        closeButtonText="Close"
       />
     </>
   );

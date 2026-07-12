@@ -78,7 +78,7 @@ export const PromptThreadCommentCard: FC<Props> = ({
       <S.PromptHeaderRoot>
         <MuseAvatar
           museId={promptThreadComment.target.sourceId}
-          image={promptThreadComment.target.image}
+          image={promptThreadComment.target.avatar?.src || promptThreadComment.target.image}
           name={promptThreadComment.target.name}
           useAccent={promptThreadComment.target.useAccent}
           accent={promptThreadComment.target.accent}
@@ -86,7 +86,7 @@ export const PromptThreadCommentCard: FC<Props> = ({
         <MdArrowLeft size={24} />
         <MuseAvatar
           museId={promptThreadComment.source.sourceId}
-          image={promptThreadComment.source.image}
+          image={promptThreadComment.source.avatar?.src || promptThreadComment.source.image}
           name={promptThreadComment.source.name}
           useAccent={promptThreadComment.source.useAccent}
           accent={promptThreadComment.source.accent}

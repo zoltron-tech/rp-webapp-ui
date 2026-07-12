@@ -20,6 +20,13 @@ import type { Conversation, MentionDataItem, Message } from "@/types";
 import type { MessageSender, Reaction } from "@/types/conversation";
 import { ROUTES } from "@/utils/constants/routes";
 import {
+  decryptConversation,
+  decryptMessages,
+  encryptMessageText,
+  hasUndecryptedContent,
+  refreshConversationE2E,
+} from "@/utils/e2e-crypto";
+import {
   createEditSocketMessage,
   createReactionSocketMessage,
 } from "@/utils/socket-helpers";
@@ -159,8 +166,14 @@ export function ConversationPanel({
   const router = useRouter();
   const musicPlayerHeight =
     musicPlayer?.playingSongId && musicPlayer?.playingSongName ? 53 : 0;
-  const { socket, isConnected, lastIncomingMessage, lastIncomingReaction, lastIncomingEdit } =
-    useSocket();
+  const {
+    socket,
+    isConnected,
+    lastIncomingMessage,
+    lastIncomingReaction,
+    lastIncomingEdit,
+    lastIncomingE2ERefresh,
+  } = useSocket();
   const { routeToPage, stopPageLoading } = usePageRouter();
   const { errorToast, successToast } = useUIContext();
 
@@ -391,7 +404,7 @@ export function ConversationPanel({
       return;
     }
 
-    setConversation(result as Conversation);
+    setConversation(await decryptConversation(result as Conversation));
     await markConversationReadAction(conversationId);
     setGlobalState((prev) => {
       const patched: typeof prev = {
@@ -440,7 +453,7 @@ export function ConversationPanel({
         setHasMore(true);
       }
 
-      const batch = [...result].reverse();
+      const batch = [...(await decryptMessages(result, convId))].reverse();
 
       if (append) {
         const container = messagesContainerRef.current;
@@ -481,7 +494,14 @@ export function ConversationPanel({
 
   useEffect(() => {
     if (!active || !conversationId) return;
-    fetchMessages(conversationId, 1).then(() => scrollToBottom());
+    // Re-check E2E envelopes before loading history: repair members who
+    // published their key after the conversation key was created, and pick up
+    // an envelope another member repaired for us — so the fetched page
+    // decrypts with the freshest key instead of showing 🔒 until a reopen.
+    refreshConversationE2E(conversationId)
+      .catch(() => false)
+      .then(() => fetchMessages(conversationId, 1))
+      .then(() => scrollToBottom());
   }, [active, fetchMessages, conversationId, scrollToBottom]);
 
   // Clear cached conversation when the component unmounts (user leaves the page).
@@ -522,6 +542,14 @@ export function ConversationPanel({
     const activeSender = selectedSender;
     const capturedReplyingTo = replyingTo;
 
+    // Re-check envelopes (throttled) so long-lived tabs still repair members
+    // who published their key after this conversation's key was created.
+    void refreshConversationE2E(conversationId);
+
+    // Built with plaintext; encrypted in place right before the socket send
+    // (see below) so the optimistic bubble renders without waiting on key
+    // resolution. The same object is stored for retrySend, so retries reuse
+    // the encrypted text.
     const socketPayload = {
       attachments,
       conversationId,
@@ -593,6 +621,10 @@ export function ConversationPanel({
 
     setSending(true);
     try {
+      // Encrypt for the wire as late as possible: if we're still waiting for
+      // our envelope, encryptMessageText nudges members and briefly waits for
+      // the repair before falling back to plaintext.
+      socketPayload.message = await encryptMessageText(conversationId, text);
       socket.send(JSON.stringify({ payload: socketPayload, type: "message" }));
     } catch {
       setOptimisticMessages((prev) =>
@@ -698,9 +730,14 @@ export function ConversationPanel({
     //    backend and broadcasts the updated message to every participant.
     setSending(true);
     try {
+      const wireText = await encryptMessageText(conversationId, text);
       socket.send(
         JSON.stringify(
-          createEditSocketMessage({ conversationId, message: text, messageId }),
+          createEditSocketMessage({
+            conversationId,
+            message: wireText,
+            messageId,
+          }),
         ),
       );
     } catch {
@@ -866,6 +903,42 @@ export function ConversationPanel({
     updateUnreadConversations,
     user?.username,
   ]);
+
+  // ── Retry messages that arrived before we had the conversation key ─────────
+  // Incoming messages and e2e-refresh nudges both mean the key may have just
+  // become available — re-decrypt any 🔒 history from the ciphertext each
+  // failed message kept.
+
+  const messagesRef = useRef<Message[]>([]);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  const retryUndecryptedMessages = useCallback(() => {
+    const snapshot = messagesRef.current;
+    if (!snapshot.some(hasUndecryptedContent)) return;
+    decryptMessages(snapshot, conversationId).then((redecrypted) => {
+      // decryptMessages preserves object identity for unchanged messages, so
+      // this is a no-op re-render unless something actually decrypted. The
+      // by-id merge also makes stale results harmless after a conversation
+      // switch — foreign ids simply don't match.
+      if (!redecrypted.some((m, i) => m !== snapshot[i])) return;
+      const byId = new Map(redecrypted.map((m) => [m.id, m]));
+      setMessages((prev) => prev.map((m) => byId.get(m.id) ?? m));
+    });
+  }, [conversationId]);
+
+  useEffect(() => {
+    if (!lastIncomingMessage) return;
+    if (lastIncomingMessage.conversationId !== conversationId) return;
+    retryUndecryptedMessages();
+  }, [lastIncomingMessage, conversationId, retryUndecryptedMessages]);
+
+  useEffect(() => {
+    if (!lastIncomingE2ERefresh) return;
+    if (lastIncomingE2ERefresh.conversationId !== conversationId) return;
+    retryUndecryptedMessages();
+  }, [lastIncomingE2ERefresh, conversationId, retryUndecryptedMessages]);
 
   // ── Socket: incoming real-time reactions ───────────────────────────────────
 

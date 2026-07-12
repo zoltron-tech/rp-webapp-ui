@@ -1769,6 +1769,59 @@ export const AboutSectionBody = styled.div`
   padding: 12px 0;
 `;
 
+export const AboutToolbar = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+`;
+
+const aboutToolButtonStyles = css`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  background: var(--bg-3);
+  border: 1px solid var(--bg-6);
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+
+  svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  &:hover {
+    background: var(--bg-4);
+    color: var(--accent);
+    border-color: var(--accent-7);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* Keep the tap target comfortable at the iPhone SE (375px) baseline. */
+  @media (max-width: 480px) {
+    width: 36px;
+    height: 36px;
+  }
+`;
+
+export const AboutAttachLabel = styled.label`
+  ${aboutToolButtonStyles}
+`;
+
+export const AboutToolButton = styled.button`
+  ${aboutToolButtonStyles}
+`;
+
 // ── Appearance section ──────────────────────────────────────────────────────
 
 export const AppearanceSectionBody = styled.div`

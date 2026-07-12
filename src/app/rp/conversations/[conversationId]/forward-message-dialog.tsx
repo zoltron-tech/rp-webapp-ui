@@ -11,6 +11,10 @@ import { useSocket } from "@/context/socket";
 import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks/use-ui-context";
 import type { Conversation, Message } from "@/types";
+import {
+  decryptConversations,
+  encryptMessageText,
+} from "@/utils/e2e-crypto";
 
 // --- styled components ---
 
@@ -164,7 +168,8 @@ export function ForwardMessageDialog({ message, onClose }: Props) {
     const result = await getConversationsAction(pageNumber, PAGE_SIZE);
     if (!Array.isArray(result)) return;
     if (result.length < PAGE_SIZE) setHasMore(false);
-    setConversations((prev) => (append ? [...prev, ...result] : result));
+    const decrypted = await decryptConversations(result);
+    setConversations((prev) => (append ? [...prev, ...decrypted] : decrypted));
   }, []);
 
   // Reset and load first page whenever a new message is opened
@@ -200,10 +205,12 @@ export function ForwardMessageDialog({ message, onClose }: Props) {
       return;
     }
     setSendingId(conversationId);
+    // Re-encrypt for the target conversation — its key differs from the
+    // source conversation's.
     const payload = {
       attachments: null,
       conversationId,
-      message: text,
+      message: await encryptMessageText(conversationId, text),
       repliedTo: null,
       sender: {
         id: novelist?.id ?? "",

@@ -9,6 +9,9 @@ import type { NWImage } from "@/types";
 export type StoryboardEventState = {
   id: string | null;
   storyBoardId: string;
+  /** Ignored server-side on save — the backend appends new events to the end
+   *  and preserves the position of existing ones; only the dedicated reorder
+   *  endpoint changes it. */
   ordinal: number;
   name: string;
   description: string;

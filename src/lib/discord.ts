@@ -195,7 +195,7 @@ const NOVELIST_PALETTE_HEX: Record<number, string> = {
   1: "#00a2c7", // cyan
   2: "#5b5bd6", // iris
   3: "#e93d82", // crimson
-  4: "#ffc53d", // amber
+  4: "#d4bd2c", // amber
   5: "#e5484d", // red
   6: "#bdee63", // lime
   7: "#bf7db1", // lotus

@@ -53,6 +53,10 @@ export interface Message {
   reactions: Reaction[];
   attachments: Attachment[];
   createdAt: string;
+  /** Client-only: original wire ciphertext kept when decryption failed (no
+   *  conversation key yet), so the message can be retried once the key
+   *  arrives. Never sent by the server. */
+  e2eCiphertext?: string;
 }
 
 export interface Reaction {

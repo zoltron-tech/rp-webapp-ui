@@ -18,7 +18,6 @@ import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { Friend } from "@/types";
 import {
-  LevelBadgeIcon,
   RankTrophyIcon,
   ScoreBadgeIcon,
 } from "@/utils/badge-icons";
@@ -70,10 +69,6 @@ function ReferralRow({
         <S.Username>@{referral.username}</S.Username>
       </S.Info>
       <S.ChipRow>
-        <S.LevelChip>
-          <LevelBadgeIcon size={13} />
-          Lv. {referral.level}
-        </S.LevelChip>
         <S.ScoreChip>
           <ScoreBadgeIcon size={13} />
           {referral.totalPoints.toLocaleString()} Score

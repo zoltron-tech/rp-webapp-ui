@@ -4,7 +4,6 @@ import { CUSTOM_EMOJI_SET } from "./note-emoji-set";
 import * as S from "./styled";
 
 const MAX_NOTE_LENGTH = 100;
-const NOTE_COLOR_LEVEL = 3;
 const COLOR_GRID_COLS = 10;
 
 // 40 versatile colors
@@ -81,8 +80,6 @@ type NoteDialogBodyProps = {
   onColorChange: (color: string | null) => void;
   emoji: string | null;
   onEmojiChange: (emoji: string | null) => void;
-  level: number;
-  lockedPulseKey: number;
 };
 
 export const NoteDialogBody: FC<NoteDialogBodyProps> = ({
@@ -92,15 +89,10 @@ export const NoteDialogBody: FC<NoteDialogBodyProps> = ({
   onColorChange,
   emoji,
   onEmojiChange,
-  level,
-  lockedPulseKey,
 }) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const emojiRowRef = useRef<HTMLDivElement>(null);
   const remaining = MAX_NOTE_LENGTH - value.length;
-  const isPremium = level >= NOTE_COLOR_LEVEL;
-  const [previewWiggling, setPreviewWiggling] = useState(false);
-  const [pickerWiggling, setPickerWiggling] = useState(false);
   const [colorGridExpanded, setColorGridExpanded] = useState(false);
 
   const selectedRowIndex = (() => {
@@ -138,20 +130,6 @@ export const NoteDialogBody: FC<NoteDialogBodyProps> = ({
     const btn = emojiRowRef.current?.querySelector("[data-emoji-selected='true']") as HTMLElement | null;
     btn?.scrollIntoView({ inline: "nearest", block: "nearest", behavior: "smooth" });
   }, [emoji]);
-
-  // On locked-save attempt: scroll selected emoji into view + wiggle both
-  useEffect(() => {
-    if (lockedPulseKey === 0 || !emoji) return;
-    const btn = emojiRowRef.current?.querySelector("[data-emoji-selected='true']") as HTMLElement | null;
-    btn?.scrollIntoView({ inline: "nearest", block: "nearest", behavior: "smooth" });
-    // Reset then replay animations
-    setPreviewWiggling(false);
-    setPickerWiggling(false);
-    requestAnimationFrame(() => {
-      setPreviewWiggling(true);
-      setPickerWiggling(true);
-    });
-  }, [lockedPulseKey]);
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
     const text = e.currentTarget.textContent ?? "";
@@ -197,11 +175,7 @@ export const NoteDialogBody: FC<NoteDialogBodyProps> = ({
         {emoji && (() => {
           const found = CUSTOM_EMOJI_SET.find((e) => e.key === emoji);
           return found ? (
-            <S.NotePreviewEmoji
-              $wiggling={previewWiggling}
-              $rotate={found.rotate}
-              onAnimationEnd={() => setPreviewWiggling(false)}
-            >
+            <S.NotePreviewEmoji $rotate={found.rotate}>
               <found.Icon size={36} />
             </S.NotePreviewEmoji>
           ) : null;
@@ -221,25 +195,10 @@ export const NoteDialogBody: FC<NoteDialogBodyProps> = ({
         {value.length} / {MAX_NOTE_LENGTH}
       </S.NoteCharCount>
 
-      <S.NotePerksBox $unlocked={isPremium}>
-        <S.NotePerksHeader $unlocked={isPremium}>
-          {isPremium ? "✦ Level 3 Perks — Unlocked" : `✦ Level ${NOTE_COLOR_LEVEL} Perks`}
+      <S.NotePerksBox $unlocked>
+        <S.NotePerksHeader $unlocked>
+          ✦ Personalize your note
         </S.NotePerksHeader>
-
-        {!isPremium && (
-          <S.NoteLockBanner key={lockedPulseKey}>
-            <S.NoteLockBannerIcon>🔒</S.NoteLockBannerIcon>
-            <S.NoteLockBannerBody>
-              <S.NoteLockBannerTitle>
-                Color &amp; Emoji — Level {NOTE_COLOR_LEVEL} Perk
-              </S.NoteLockBannerTitle>
-              <S.NoteLockBannerDesc>
-                Keep writing to earn XP and unlock note customization at Level{" "}
-                {NOTE_COLOR_LEVEL}!
-              </S.NoteLockBannerDesc>
-            </S.NoteLockBannerBody>
-          </S.NoteLockBanner>
-        )}
 
         <div>
           <S.NoteColorLabel>
@@ -300,13 +259,11 @@ export const NoteDialogBody: FC<NoteDialogBodyProps> = ({
                     key={e.key}
                     type="button"
                     $selected={isSelected}
-                    $wiggling={isSelected && pickerWiggling}
                     data-selected={isSelected ? "true" : undefined}
                     data-emoji-selected={isSelected ? "true" : undefined}
                     onClick={() => onEmojiChange(isSelected ? null : e.key)}
                     aria-label={isSelected ? `${e.label} — click to remove` : `Emoji ${e.label}`}
                     title={isSelected ? `${e.label} — click to remove` : e.label}
-                    onAnimationEnd={isSelected ? () => setPickerWiggling(false) : undefined}
                   >
                     <e.Icon size={18} />
                   </S.NoteEmojiButton>

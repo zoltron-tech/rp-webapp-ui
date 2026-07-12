@@ -20,12 +20,6 @@ interface AvatarPickerDialogProps {
   onUploadSelect: () => void;
   /** Called when user picks a GIF or Sticker URL from the library. Dialog closes immediately. */
   onMediaSelect: (url: string) => void;
-  /**
-   * When true the novelist is below Level 2 — GIF/Sticker selection and GIF
-   * uploads are locked. The library is still browsable but selecting items
-   * shows the lock banner instead of applying the choice.
-   */
-  isGifLocked?: boolean;
 }
 
 const STEP_HEADING: Record<Step, string> = {
@@ -46,11 +40,8 @@ export function AvatarPickerDialog({
   onOpenChange,
   onUploadSelect,
   onMediaSelect,
-  isGifLocked = false,
 }: AvatarPickerDialogProps) {
   const [step, setStep] = useState<Step>("source");
-  // Incrementing this key re-mounts LockedBanner, replaying its pulse animation
-  const [lockedPulseKey, setLockedPulseKey] = useState(0);
 
   const { width } = useWindowDimensions();
   const isMobile = (width ?? 0) <= 800;
@@ -63,10 +54,6 @@ export function AvatarPickerDialog({
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) setStep("source");
     onOpenChange(nextOpen);
-  };
-
-  const handleLockedSelect = () => {
-    setLockedPulseKey((k) => k + 1);
   };
 
   const handleTrayBack = () => {
@@ -90,20 +77,6 @@ export function AvatarPickerDialog({
   }, [trayVisible]);
 
   const backStep = STEP_BACK[step] ?? null;
-
-  const lockedBanner = isGifLocked ? (
-    <S.LockedBanner key={lockedPulseKey}>
-      <S.LockedBannerIcon>🔒</S.LockedBannerIcon>
-      <S.LockedBannerBody>
-        <S.LockedBannerTitle>Animated Avatars — Level 2 Perk</S.LockedBannerTitle>
-        <S.LockedBannerDesc>
-          Browse freely, but selecting a{" "}
-          {step === "gif" ? "GIF" : "Sticker"} unlocks at Level 2. Keep
-          writing to level up!
-        </S.LockedBannerDesc>
-      </S.LockedBannerBody>
-    </S.LockedBanner>
-  ) : null;
 
   const body = (
     <>
@@ -130,27 +103,15 @@ export function AvatarPickerDialog({
               <TbCameraUp size={24} />
             </S.ChoiceIconWrap>
             <S.ChoiceTitle>Upload</S.ChoiceTitle>
-            <S.ChoiceDesc>
-              {isGifLocked
-                ? "PNG or JPEG from your device"
-                : "Image or GIF from your device"}
-            </S.ChoiceDesc>
-            {isGifLocked && (
-              <S.ChoiceGifHint>🔒 GIFs unlock at Level 2</S.ChoiceGifHint>
-            )}
+            <S.ChoiceDesc>Image or GIF from your device</S.ChoiceDesc>
           </S.ChoiceCard>
 
           <S.ChoiceCard type="button" onClick={() => setStep("type")}>
-            {isGifLocked && <S.ChoiceLockCorner>Lv. 2</S.ChoiceLockCorner>}
             <S.ChoiceIconWrap>
               <HiGif size={28} />
             </S.ChoiceIconWrap>
             <S.ChoiceTitle>From Library</S.ChoiceTitle>
-            <S.ChoiceDesc>
-              {isGifLocked
-                ? "Browse — Level 2 to use"
-                : "GIF or Sticker from our library"}
-            </S.ChoiceDesc>
+            <S.ChoiceDesc>GIF or Sticker from our library</S.ChoiceDesc>
           </S.ChoiceCard>
         </S.ChoiceGrid>
       )}
@@ -159,7 +120,6 @@ export function AvatarPickerDialog({
       {step === "type" && (
         <S.ChoiceGrid>
           <S.ChoiceCard type="button" onClick={() => setStep("gif")}>
-            {isGifLocked && <S.ChoiceLockCorner>Lv. 2</S.ChoiceLockCorner>}
             <S.ChoiceIconWrap>
               <HiGif size={28} />
             </S.ChoiceIconWrap>
@@ -168,7 +128,6 @@ export function AvatarPickerDialog({
           </S.ChoiceCard>
 
           <S.ChoiceCard type="button" onClick={() => setStep("sticker")}>
-            {isGifLocked && <S.ChoiceLockCorner>Lv. 2</S.ChoiceLockCorner>}
             <S.ChoiceIconWrap>
               <RiEmojiStickerLine size={24} />
             </S.ChoiceIconWrap>
@@ -180,36 +139,22 @@ export function AvatarPickerDialog({
 
       {/* ── GIF picker (desktop only — mobile uses tray) ───────────────────── */}
       {step === "gif" && !isMobile && (
-        <>
-          {lockedBanner}
-          <GifPicker
-            onSelect={
-              isGifLocked
-                ? handleLockedSelect
-                : (url) => {
-                    onMediaSelect(url);
-                    handleOpenChange(false);
-                  }
-            }
-          />
-        </>
+        <GifPicker
+          onSelect={(url) => {
+            onMediaSelect(url);
+            handleOpenChange(false);
+          }}
+        />
       )}
 
       {/* ── Sticker picker (desktop only — mobile uses tray) ──────────────── */}
       {step === "sticker" && !isMobile && (
-        <>
-          {lockedBanner}
-          <StickerPicker
-            onSelect={
-              isGifLocked
-                ? handleLockedSelect
-                : (url) => {
-                    onMediaSelect(url);
-                    handleOpenChange(false);
-                  }
-            }
-          />
-        </>
+        <StickerPicker
+          onSelect={(url) => {
+            onMediaSelect(url);
+            handleOpenChange(false);
+          }}
+        />
       )}
     </>
   );
@@ -247,39 +192,25 @@ export function AvatarPickerDialog({
               </S.PickerTrayCloseButton>
             </S.PickerTrayHeader>
 
-            {isGifLocked && (
-              <S.PickerTrayBannerWrap>
-                {lockedBanner}
-              </S.PickerTrayBannerWrap>
-            )}
-
             <S.PickerTrayBody>
               {step === "gif" && (
                 <GifPicker
                   fill
                   autoFocus={false}
-                  onSelect={
-                    isGifLocked
-                      ? handleLockedSelect
-                      : (url) => {
-                          onMediaSelect(url);
-                          handleOpenChange(false);
-                        }
-                  }
+                  onSelect={(url) => {
+                    onMediaSelect(url);
+                    handleOpenChange(false);
+                  }}
                 />
               )}
               {step === "sticker" && (
                 <StickerPicker
                   fill
                   autoFocus={false}
-                  onSelect={
-                    isGifLocked
-                      ? handleLockedSelect
-                      : (url) => {
-                          onMediaSelect(url);
-                          handleOpenChange(false);
-                        }
-                  }
+                  onSelect={(url) => {
+                    onMediaSelect(url);
+                    handleOpenChange(false);
+                  }}
                 />
               )}
             </S.PickerTrayBody>

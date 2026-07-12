@@ -307,12 +307,15 @@ export const PaletteRow = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 8px;
+  width: 100%;
 `;
 
 export const RadioItemContainer = styled.div`
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   padding: 8px;
   border-radius: 4px;
@@ -343,6 +346,17 @@ export const RadioItemContainer = styled.div`
     &[aria-checked="true"] {
       outline: 2px solid var(--accent-9);
       outline-offset: 3px;
+    }
+  }
+
+  /* Mobile: shrink swatches and lay out exactly 4 per row (two rows of 4) */
+  @media (max-width: 768px) {
+    flex: 0 0 calc(25% - 8px);
+    padding: 4px;
+
+    .radio-item {
+      width: 36px;
+      height: 36px;
     }
   }
 `;

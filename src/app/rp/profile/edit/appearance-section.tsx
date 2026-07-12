@@ -14,7 +14,7 @@ import { useGlobalState } from "@/context/store/stores";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import type { ImageCropFilter, NWImage } from "@/types";
-import { ACCENT_LEVEL_REQUIREMENT, ACCENT_MAP, type Accent } from "@/types/theme";
+import { ACCENT_MAP, type Accent } from "@/types/theme";
 import { API_MESSAGE } from "@/utils/constants";
 import { deleteMedia } from "../actions";
 import { NoteDialogBody } from "./note-dialog-body";
@@ -25,12 +25,6 @@ import { useProfileSave } from "./use-profile-save";
 
 const VALID_IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
-
-/** Detect GIFs by magic bytes (GIF87a / GIF89a) — not by file extension or MIME type. */
-async function isGifFile(file: File): Promise<boolean> {
-  const bytes = new Uint8Array(await file.slice(0, 6).arrayBuffer());
-  return bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46; // G I F
-}
 
 function clamp(v: number, min: number, max: number) {
   return Math.min(max, Math.max(min, v));
@@ -68,9 +62,6 @@ export function AppearanceSection({ onBack }: Props) {
   const user = useGlobalState("user");
   const { width } = useWindowDimensions();
   const isMobile = (width ?? 0) <= 768;
-  const isGifLocked = (novelist?.level ?? 1) < 2;
-  const novelistLevel = novelist?.level ?? 1;
-  const isBannerLocked = novelistLevel < 4;
   const image = useProfileState("image");
   const avatar = useProfileState("avatar");
   const banner = useProfileState("banner");
@@ -91,7 +82,6 @@ export function AppearanceSection({ onBack }: Props) {
   const [tempNoteColor, setTempNoteColor] = useState<string | null>(null);
   const [tempNoteEmoji, setTempNoteEmoji] = useState<string | null>(null);
   const [discardOpen, setDiscardOpen] = useState(false);
-  const [lockedPulseKey, setLockedPulseKey] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Avatar crop dialog state
@@ -171,14 +161,6 @@ export function AppearanceSection({ onBack }: Props) {
       return;
     }
 
-    // Level gate — detect GIF by magic bytes, not extension/MIME type
-    if (isGifLocked && (await isGifFile(file))) {
-      setError(
-        "✦ GIF avatars are a Level 2 perk — keep writing to level up and unlock animated avatars!",
-      );
-      return;
-    }
-
     setError(null);
 
     // Show a data URL immediately in the crop dialog so the user can adjust
@@ -216,13 +198,6 @@ export function AppearanceSection({ onBack }: Props) {
   // ── Avatar from GIF / Sticker library ──────────────────────────────────────
 
   const handleMediaSelect = (url: string) => {
-    // Level gate — the dialog already blocks this when isGifLocked, but guard here too
-    if (isGifLocked) {
-      setError(
-        "✦ GIF avatars are a Level 2 perk — keep writing to level up and unlock animated avatars!",
-      );
-      return;
-    }
     setError(null);
     // Defer until AvatarPickerDialog finishes closing (see useEffect above)
     setPendingMediaUrl(url);
@@ -299,9 +274,6 @@ export function AppearanceSection({ onBack }: Props) {
       openBannerCropDialog(reader.result as string);
     };
     reader.readAsDataURL(file);
-
-    // Skip CDN upload for locked users — the data URL is sufficient for preview
-    if (isBannerLocked) return;
 
     if (tempUploadedBanner) {
       await deleteMedia(tempUploadedBanner);
@@ -392,22 +364,6 @@ export function AppearanceSection({ onBack }: Props) {
 
   const handleSave = async () => {
     setError(null);
-    if (isPaletteLocked) return;
-    if (isBannerLocked && bannerChanged) {
-      setError("✦ Cover banners are a Level 4 perk — keep writing to earn XP and level up!");
-      return;
-    }
-    // Defensive gate: block if a GIF/library avatar somehow reached state for a level < 2 novelist
-    if (
-      isGifLocked &&
-      avatarChanged &&
-      ((image ?? "").includes("klipy.com") || (image ?? "").endsWith(".gif"))
-    ) {
-      setError(
-        "✦ GIF avatars are a Level 2 perk — keep writing to level up and unlock animated avatars!",
-      );
-      return;
-    }
     const result = await saveAll();
     if (!result.ok) {
       setError("Failed to save changes. Please try again.");
@@ -460,16 +416,10 @@ export function AppearanceSection({ onBack }: Props) {
     setTempNote(noteObj?.text ?? "");
     setTempNoteColor(noteObj?.color ?? null);
     setTempNoteEmoji(noteObj?.emoji ?? null);
-    setLockedPulseKey(0);
     setNoteDialogOpen(true);
   };
 
   const confirmNote = () => {
-    const hasLockedFeatures = Boolean(tempNoteColor || tempNoteEmoji);
-    if (hasLockedFeatures && novelistLevel < 3) {
-      setLockedPulseKey((k) => k + 1);
-      return;
-    }
     setProfileState({
       note: tempNote.trim()
         ? { text: tempNote, color: tempNoteColor, emoji: tempNoteEmoji }
@@ -480,10 +430,6 @@ export function AppearanceSection({ onBack }: Props) {
 
   const previewAccentClass =
     ACCENT_MAP[Number(palette) as Accent] ?? ACCENT_MAP[0];
-
-  const selectedPaletteRequiredLevel =
-    ACCENT_LEVEL_REQUIREMENT[Number(palette) as Accent] ?? 0;
-  const isPaletteLocked = selectedPaletteRequiredLevel > novelistLevel;
 
   // The displayed avatar src — use the crop src when an avatar NWImage is set
   const displayAvatarSrc = avatar?.src || image || null;
@@ -536,7 +482,6 @@ export function AppearanceSection({ onBack }: Props) {
                 }
               }}
             >
-              {isBannerLocked && <S.BannerLockBadge>Lv. 4</S.BannerLockBadge>}
               {displayBannerSrc ? (
                 <S.BannerEditHint>
                   <MdOutlineCameraAlt size={22} />
@@ -550,11 +495,6 @@ export function AppearanceSection({ onBack }: Props) {
                   <S.BannerEmptyLabel>Upload a cover banner</S.BannerEmptyLabel>
                   <S.BannerFormatLine>PNG, JPEG or GIF · Max 10 MB</S.BannerFormatLine>
                 </S.BannerEmptyContent>
-              )}
-              {isBannerLocked && displayBannerSrc && (
-                <S.BannerLockedStrip>
-                  ✦ Preview only — Banner unlocks at Level 4
-                </S.BannerLockedStrip>
               )}
               {displayBannerSrc && (
                 <S.BannerDeleteButton
@@ -615,51 +555,21 @@ export function AppearanceSection({ onBack }: Props) {
               setProfileState({ palette: Number(v) as Accent })
             }
           >
-            {[
-              Object.entries(ACCENT_MAP).filter(
-                ([key]) => !ACCENT_LEVEL_REQUIREMENT[Number(key) as Accent],
-              ),
-              Object.entries(ACCENT_MAP).filter(
-                ([key]) => !!ACCENT_LEVEL_REQUIREMENT[Number(key) as Accent],
-              ),
-            ].map((rowEntries, rowIdx) => (
-              <S.PaletteRow key={rowIdx}>
-                {rowEntries.map(([key, color]) => {
-                  const requiredLevel =
-                    ACCENT_LEVEL_REQUIREMENT[Number(key) as Accent];
-                  const isLocked =
-                    requiredLevel !== undefined && novelistLevel < requiredLevel;
-                  return (
-                    <S.RadioItemContainer key={key} className={color}>
-                      <div style={{ position: "relative" }}>
-                        <RadioGroup.Item
-                          className="radio-item"
-                          value={key}
-                          id={`palette-${key}`}
-                          aria-label={
-                            isLocked
-                              ? `${color} (requires Level ${requiredLevel})`
-                              : `Palette ${color}`
-                          }
-                        />
-                        {isLocked && (
-                          <S.PaletteLockBadge>
-                            {requiredLevel}
-                          </S.PaletteLockBadge>
-                        )}
-                      </div>
-                    </S.RadioItemContainer>
-                  );
-                })}
-              </S.PaletteRow>
-            ))}
+            <S.PaletteRow>
+              {Object.entries(ACCENT_MAP).map(([key, color]) => (
+                <S.RadioItemContainer key={key} className={color}>
+                  <div style={{ position: "relative" }}>
+                    <RadioGroup.Item
+                      className="radio-item"
+                      value={key}
+                      id={`palette-${key}`}
+                      aria-label={`Palette ${color}`}
+                    />
+                  </div>
+                </S.RadioItemContainer>
+              ))}
+            </S.PaletteRow>
           </S.PaletteGroup>
-          {isPaletteLocked && (
-            <S.PaletteLockNote>
-              ✦ This theme unlocks at Level {selectedPaletteRequiredLevel} —
-              keep writing to earn XP and level up!
-            </S.PaletteLockNote>
-          )}
         </S.AppearanceFieldGroup>
       </S.AppearanceSectionBody>
 
@@ -676,17 +586,7 @@ export function AppearanceSection({ onBack }: Props) {
         <S.LandingHeroSaveButton
           type="button"
           onClick={handleSave}
-          disabled={
-            !isDirty ||
-            loading ||
-            imageUploading ||
-            isPaletteLocked ||
-            (isBannerLocked && bannerChanged) ||
-            (isGifLocked &&
-              avatarChanged &&
-              ((image ?? "").includes("klipy.com") ||
-                (image ?? "").endsWith(".gif")))
-          }
+          disabled={!isDirty || loading || imageUploading}
         >
           {loading ? "Saving..." : imageUploading ? "Uploading..." : "Save"}
         </S.LandingHeroSaveButton>
@@ -698,7 +598,6 @@ export function AppearanceSection({ onBack }: Props) {
         onOpenChange={setAvatarDialogOpen}
         onUploadSelect={() => fileInputRef.current?.click()}
         onMediaSelect={handleMediaSelect}
-        isGifLocked={isGifLocked}
       />
 
       {/* Avatar crop / adjust dialog */}
@@ -760,8 +659,7 @@ export function AppearanceSection({ onBack }: Props) {
               onCancel={handleBannerCropCancel}
               onConfirm={handleBannerCropConfirm}
               onChangeBanner={() => bannerFileInputRef.current?.click()}
-              isUploading={!isBannerLocked && imageUploading}
-              confirmLabel={isBannerLocked ? "Preview" : undefined}
+              isUploading={imageUploading}
               viewportRef={bannerViewportRef}
             />
           </S.AvatarCropBody>
@@ -779,8 +677,6 @@ export function AppearanceSection({ onBack }: Props) {
           onColorChange={setTempNoteColor}
           emoji={tempNoteEmoji}
           onEmojiChange={setTempNoteEmoji}
-          level={novelistLevel}
-          lockedPulseKey={lockedPulseKey}
         />
       ) : (
         <AppAlertDialog
@@ -801,8 +697,6 @@ export function AppearanceSection({ onBack }: Props) {
               onColorChange={setTempNoteColor}
               emoji={tempNoteEmoji}
               onEmojiChange={setTempNoteEmoji}
-              level={novelistLevel}
-              lockedPulseKey={lockedPulseKey}
             />
           }
         />

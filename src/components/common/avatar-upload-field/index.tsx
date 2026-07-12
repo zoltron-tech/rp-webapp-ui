@@ -1,5 +1,6 @@
 import { type FC, useMemo } from "react";
 import { HiOutlineCamera, HiOutlinePencilSquare } from "react-icons/hi2";
+import { NoteEmojiIcon } from "@/app/rp/profile/edit/note-emoji-set";
 import * as S from "./styles";
 
 type AvatarUploadFieldProps = {
@@ -82,7 +83,9 @@ export const AvatarUploadField: FC<AvatarUploadFieldProps> = ({
             <HiOutlinePencilSquare />
           </S.NoteEditBadge>
           {note && noteEmoji && (
-            <S.NoteBubbleEmoji aria-hidden>{noteEmoji}</S.NoteBubbleEmoji>
+            <S.NoteBubbleEmoji aria-hidden>
+              <NoteEmojiIcon emojiKey={noteEmoji} size={22} />
+            </S.NoteBubbleEmoji>
           )}
         </S.NoteBubble>
       )}

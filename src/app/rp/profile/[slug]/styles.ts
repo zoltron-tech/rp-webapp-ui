@@ -19,16 +19,22 @@ interface BannerProps {
  * so what the user sees while editing is exactly what renders on the profile.
  * overflow: visible lets the avatar hang below the bottom edge.
  */
-export const BannerSection = styled.div<{ $compact?: boolean }>`
+export const BannerSection = styled.div<{
+  $compact?: boolean;
+  $hasBanner?: boolean;
+}>`
   position: relative;
   width: 800px;
   aspect-ratio: ${({ $compact }) => ($compact ? "5 / 1" : "5 / 2")};
   overflow: visible;
   border-radius: 12px 12px 0 0;
+  /* Give an uploaded banner some breathing room from the top on desktop. */
+  margin-top: ${({ $hasBanner }) => ($hasBanner ? "24px" : "0")};
 
   @container profile-content (max-width: 800px) {
     width: 100%;
     border-radius: 0;
+    margin-top: 0;
   }
 `;
 

@@ -3,6 +3,7 @@
 import { Flex } from "@novelist-world/ui";
 import classNames from "classnames";
 import { useParams } from "next/navigation";
+import { Tooltip } from "radix-ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BiHide } from "react-icons/bi";
 import { BsPersonFillCheck, BsPersonFillUp, BsThreeDots } from "react-icons/bs";
@@ -49,6 +50,7 @@ import { PromptComposeTrigger } from "@/components/prompt-compose-trigger";
 import PromptInput from "@/components/prompt-input";
 import { FullPagePromptInput } from "@/components/prompt-input/full-page-prompt-input";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
+import { NoteEmojiIcon } from "@/app/rp/profile/edit/note-emoji-set";
 import StoryCard from "@/components/story-card";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -57,10 +59,7 @@ import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import type { Novelist, NWImage, Prompt, StoryBoard } from "@/types";
 import type { Activity } from "@/types/activity";
 import { ACCENT_MAP, type Accent } from "@/types/theme";
-import {
-  LevelBadgeIcon,
-  ScoreBadgeIcon,
-} from "@/utils/badge-icons";
+import { ScoreBadgeIcon } from "@/utils/badge-icons";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDate } from "@/utils/helpers";
@@ -385,6 +384,9 @@ export default function UserProfilePage({}) {
   const [supportMessage, setSupportMessage] = useState("");
   const user = useGlobalState("user");
   const userNovelist = useGlobalState("novelist");
+  const accent = useGlobalState("accent");
+  const theme = useGlobalState("theme");
+  const [scoreTooltipOpen, setScoreTooltipOpen] = useState(false);
   const username = params?.slug as string;
   const isCurrentUser = username === user?.username;
   const [novelist, setNovelist] = useState<Novelist | null>(
@@ -996,7 +998,10 @@ export default function UserProfilePage({}) {
         data-accent={profileAccent}
       >
         <S.ContentRight>
-          <S.BannerSection $compact={!!novelist && !novelist.banner?.src}>
+          <S.BannerSection
+            $compact={!!novelist && !novelist.banner?.src}
+            $hasBanner={!!novelist?.banner?.src}
+          >
             <S.Banner
               src={
                 novelist?.banner?.src
@@ -1030,7 +1035,9 @@ export default function UserProfilePage({}) {
               <ShouldRender if={Boolean(novelist?.note?.text)}>
                 <S.NoteContainer $color={novelist?.note?.color ?? null}>
                   {novelist?.note?.emoji && (
-                    <S.NoteEmoji>{novelist.note.emoji}</S.NoteEmoji>
+                    <S.NoteEmoji>
+                      <NoteEmojiIcon emojiKey={novelist.note.emoji} size={16} />
+                    </S.NoteEmoji>
                   )}
                   {novelist?.note?.text}
                 </S.NoteContainer>
@@ -1211,20 +1218,43 @@ export default function UserProfilePage({}) {
                   </S.InfoText>
                 </Flex>
               </Flex>
-              <ShouldRender if={typeof novelist?.level === "number"}>
+              <ShouldRender if={typeof novelist?.totalPoints === "number"}>
                 <S.LevelChipRow>
-                  <S.LevelChip
-                    onClick={() => routeToPage(ROUTES.Levels)}
-                  >
-                    <LevelBadgeIcon size={15} />
-                    Lv. {novelist?.level}
-                  </S.LevelChip>
-                  <S.ScoreBadge
-                    onClick={() => routeToPage(ROUTES.Levels)}
-                  >
-                    <ScoreBadgeIcon size={15} />
-                    {novelist?.totalPoints?.toLocaleString()} Score
-                  </S.ScoreBadge>
+                  <Tooltip.Provider delayDuration={200}>
+                    <Tooltip.Root
+                      open={scoreTooltipOpen}
+                      onOpenChange={setScoreTooltipOpen}
+                    >
+                      <Tooltip.Trigger asChild>
+                        <S.ScoreBadge
+                          onClick={() => setScoreTooltipOpen((v) => !v)}
+                        >
+                          <ScoreBadgeIcon size={15} />
+                          {novelist?.totalPoints?.toLocaleString()} Score
+                        </S.ScoreBadge>
+                      </Tooltip.Trigger>
+                      <Tooltip.Portal>
+                        <Tooltip.Content
+                          sideOffset={4}
+                          className={classNames([accent, theme])}
+                          style={{
+                            background: "var(--bg-2)",
+                            border: "1px solid var(--bg-6)",
+                            borderRadius: "6px",
+                            color: "var(--text)",
+                            fontSize: "12px",
+                            maxWidth: "220px",
+                            padding: "6px 10px",
+                            userSelect: "none",
+                            zIndex: 9999,
+                          }}
+                        >
+                          Score reflects how active this Novelist is on the app.
+                          <Tooltip.Arrow style={{ fill: "var(--bg-6)" }} />
+                        </Tooltip.Content>
+                      </Tooltip.Portal>
+                    </Tooltip.Root>
+                  </Tooltip.Provider>
                 </S.LevelChipRow>
               </ShouldRender>
             </ShouldRender>

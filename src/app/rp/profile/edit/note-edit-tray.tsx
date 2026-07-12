@@ -17,8 +17,6 @@ type NoteEditTrayProps = {
   onColorChange: (color: string | null) => void;
   emoji: string | null;
   onEmojiChange: (emoji: string | null) => void;
-  level: number;
-  lockedPulseKey: number;
 };
 
 export const NoteEditTray: FC<NoteEditTrayProps> = ({

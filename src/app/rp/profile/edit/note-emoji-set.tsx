@@ -2049,3 +2049,20 @@ export const CUSTOM_EMOJI_SET: CustomEmoji[] = [
   { key: "sword",            label: "Sword",        Icon: SwordIcon,            rotate: true  },
   { key: "scepter",          label: "Scepter",      Icon: ScepterIcon,          rotate: true  },
 ];
+
+const EMOJI_BY_KEY: Record<string, CustomEmoji> = Object.fromEntries(
+  CUSTOM_EMOJI_SET.map((e) => [e.key, e]),
+);
+
+/**
+ * Render a note emoji from its stored key (e.g. "inkwell").
+ * Falls back to rendering the raw value as text so any legacy note that
+ * stored a literal unicode emoji still displays.
+ */
+export const NoteEmojiIcon: FC<{ emojiKey: string; size?: number }> = ({
+  emojiKey,
+  size = 20,
+}) => {
+  const found = EMOJI_BY_KEY[emojiKey];
+  return found ? <found.Icon size={size} /> : <>{emojiKey}</>;
+};

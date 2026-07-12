@@ -9,7 +9,6 @@ import { LoadMore } from "@/components/load-more/page";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import {
-  LevelBadgeIcon,
   RankTrophyIcon,
   ScoreBadgeIcon,
 } from "@/utils/badge-icons";
@@ -214,10 +213,6 @@ export default function NovelistLeaderboardPage() {
                   : ""}
               </S.RowName>
               <S.ChipRow>
-                <S.LevelChip>
-                  <LevelBadgeIcon size={13} />
-                  Lv. {ownRank.level}
-                </S.LevelChip>
                 <S.ScoreChip>
                   <ScoreBadgeIcon size={13} />
                   {ownRank.totalPoints.toLocaleString()} Score
@@ -262,7 +257,7 @@ function NovelistRow({
   inGroup?: boolean;
   onClick: () => void;
 }) {
-  const { novelist, rank, totalPoints, level } = entry;
+  const { novelist, rank, totalPoints } = entry;
 
   return (
     <S.Row
@@ -288,10 +283,6 @@ function NovelistRow({
         </S.ChipRow>
         <S.RowSub>@{novelist.username}</S.RowSub>
         <S.ChipRow>
-          <S.LevelChip>
-            <LevelBadgeIcon size={13} />
-            Lv. {level}
-          </S.LevelChip>
           <S.ScoreChip>
             <ScoreBadgeIcon size={13} />
             {totalPoints.toLocaleString()} Score

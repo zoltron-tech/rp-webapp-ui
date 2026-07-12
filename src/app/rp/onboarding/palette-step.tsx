@@ -11,7 +11,7 @@ import {
 import { updateUserTheme } from "@/app/actions";
 import { ErrorBox } from "@/components/error-box";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
-import { ACCENT_LEVEL_REQUIREMENT, ACCENT_MAP, type Accent } from "@/types/theme";
+import { ACCENT_MAP, type Accent } from "@/types/theme";
 import { API_MESSAGE } from "@/utils/constants";
 import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
 import { useOnboardingState, useOnboardingStoreSet } from "./onboarding.store";
@@ -103,7 +103,7 @@ export const PaletteStep: FC<BasicInfoStepProps> = ({ handleNext }) => {
             asChild
           >
             <S.PaletteGroup>
-              {Object.entries(ACCENT_MAP).filter(([key]) => !(Number(key) in ACCENT_LEVEL_REQUIREMENT)).map(([key, value]) => (
+              {Object.entries(ACCENT_MAP).map(([key, value]) => (
                 <S.PaletteOption
                   key={value}
                   htmlFor={`palette-${key}`}

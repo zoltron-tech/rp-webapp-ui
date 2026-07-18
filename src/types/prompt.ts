@@ -44,6 +44,8 @@ export interface Comment {
   createdOn: string;
   reactions: number;
   reacted: boolean;
+  /** Author-set flag closing the thread: no new replies, hidden reply count. */
+  concluded: boolean;
 }
 
 export interface Reply {

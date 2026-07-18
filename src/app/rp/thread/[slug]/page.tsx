@@ -9,7 +9,7 @@ import { BsThreeDots } from "react-icons/bs";
 import { FaRegEdit } from "react-icons/fa";
 import { FaRegTrashCan, FaTrashCan } from "react-icons/fa6";
 import { IoArrowBackOutline } from "react-icons/io5";
-import { RiFlagFill } from "react-icons/ri";
+import { RiArrowGoBackLine, RiCheckboxCircleLine, RiFlagFill } from "react-icons/ri";
 import threadDeletedAnimation from "@/../public/animations/thread-deleted.json";
 import { ShouldRender } from "@/components/common";
 import { LikeButton } from "@/components/common/like-button";
@@ -50,6 +50,7 @@ import {
   toFormattedDate,
 } from "@/utils/helpers";
 import {
+  concludeCommentAction,
   deleteCommentAction,
   deletePromptAction,
   deleteReplyAction,
@@ -137,7 +138,7 @@ const useGetComment = (commentId: string) => {
     fetchComment();
   }, [fetchComment]);
 
-  return { comment, loading, notFound, refetch: fetchComment };
+  return { comment, loading, notFound, refetch: fetchComment, setComment };
 };
 
 function DeletedThreadFallback() {
@@ -425,6 +426,7 @@ export default function ThreadPage({}) {
     comment,
     loading: loadingComments,
     notFound,
+    setComment,
   } = useGetComment(commentId);
   const {
     replies,
@@ -748,6 +750,21 @@ export default function ThreadPage({}) {
     }
   };
 
+  const handleToggleConcluded = async () => {
+    if (!comment?.id) return;
+
+    const next = !comment.concluded;
+    const response = await concludeCommentAction(comment.id, next);
+    if (response?.message === API_MESSAGE.Success) {
+      setComment((prev) => (prev ? { ...prev, concluded: next } : prev));
+      successToast(
+        next ? `Thread marked as concluded` : `Thread reopened`,
+      );
+    } else {
+      errorToast("There was an issue while updating this thread.");
+    }
+  };
+
   const onAvatarClick = (sourceId: string | undefined) => {
     if (!sourceId) return;
     routeToPage(ROUTES.Muse.View(sourceId));
@@ -1011,6 +1028,17 @@ export default function ThreadPage({}) {
                           },
                         },
                         {
+                          icon: comment?.concluded ? (
+                            <RiArrowGoBackLine />
+                          ) : (
+                            <RiCheckboxCircleLine />
+                          ),
+                          label: comment?.concluded
+                            ? `Reopen thread`
+                            : `Mark as concluded`,
+                          onClick: handleToggleConcluded,
+                        },
+                        {
                           separator: true,
                         },
                         {
@@ -1063,6 +1091,12 @@ export default function ThreadPage({}) {
                     : ""}
                 </S.PromptSubheader>
               </ShouldRender>
+              <ShouldRender if={Boolean(comment?.concluded)}>
+                <S.ConcludedChip>
+                  <RiCheckboxCircleLine size={13} />
+                  Concluded
+                </S.ConcludedChip>
+              </ShouldRender>
             </S.SourceInfo>
           </S.ReplyHeaderContainer>
           <S.PromptTextContainer>
@@ -1110,10 +1144,17 @@ export default function ThreadPage({}) {
         </ShouldRender>
 
         {loadReplies()}
+        <ShouldRender if={Boolean(comment?.concluded)}>
+          <S.ConcludedNotice>
+            <RiCheckboxCircleLine size={16} />
+            This thread has been concluded. No new replies can be added.
+          </S.ConcludedNotice>
+        </ShouldRender>
         <div ref={replyAreaRef}>
           {authState === "LOGGED_IN" &&
             !initialLoading &&
             comment?.prompt?.canInteract &&
+            !comment?.concluded &&
             !isMobile && (
               <>
                 <Separator.Root
@@ -1136,6 +1177,7 @@ export default function ThreadPage({}) {
       {authState === "LOGGED_IN" &&
         !initialLoading &&
         comment?.prompt?.canInteract &&
+        !comment?.concluded &&
         isMobile && (
           <MobileReplyComposer
             parentId={commentId}

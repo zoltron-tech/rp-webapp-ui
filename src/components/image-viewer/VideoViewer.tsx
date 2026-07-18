@@ -3,6 +3,7 @@
 import classNames from "classnames";
 import { Dialog } from "radix-ui";
 import {
+  type ReactNode,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -38,6 +39,8 @@ interface VideoViewerProps {
   nextSrc?: string;
   /** Source of the previous media (image or video) — rendered off-screen so it slides in during swipe */
   prevSrc?: string;
+  /** Optional caption region rendered under the media (e.g. description + reactions). */
+  overlay?: ReactNode;
 }
 
 const formatTime = (s: number) => {
@@ -55,6 +58,7 @@ export const VideoViewer = ({
   onPrev,
   nextSrc,
   prevSrc,
+  overlay,
 }: VideoViewerProps) => {
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
@@ -711,6 +715,7 @@ export const VideoViewer = ({
                   </S.NavButton>
                 )}
               </S.VideoArea>
+              {overlay}
             </S.VideoDialog>
           </S.VideoContent>
         </S.Root>

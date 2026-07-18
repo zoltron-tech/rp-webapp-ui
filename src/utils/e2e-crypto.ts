@@ -53,6 +53,12 @@ export const DECRYPT_FALLBACK_TEXT = "🔒 This message could not be decrypted."
 const LEGACY_SECRET =
   process.env.NEXT_PUBLIC_CHAT_E2E_SECRET || "novelist-world-chat-e2e-v1";
 
+/** Feature flag: outgoing messages are only encrypted when this is set (any
+ *  truthy value). Unset → messages send as plaintext. Key exchange, envelope
+ *  repair, and decryption of already-encrypted messages are unaffected — this
+ *  gates the encrypt step alone so existing E2E traffic still reads. */
+const E2E_ENCRYPT_ENABLED = !!process.env.NEXT_PUBLIC_CHAT_E2E_ENABLED;
+
 const IV_LENGTH = 12;
 const ECDH_PARAMS = { name: "ECDH", namedCurve: "P-256" } as const;
 /** How long to wait before re-attempting key resolution after a failure. */
@@ -698,6 +704,9 @@ export const encryptMessageText = async (
   text: string,
 ): Promise<string> => {
   if (!conversationId || !text || isEncryptedText(text)) return text;
+  // Feature flag off → send plaintext. Everything else (key resolution,
+  // envelope repair, decryption) still runs elsewhere.
+  if (!E2E_ENCRYPT_ENABLED) return text;
   try {
     // Sending is the moment that matters — always attempt a full resolution
     // instead of trusting the retry cooldown, so a just-repaired envelope is

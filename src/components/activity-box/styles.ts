@@ -338,3 +338,49 @@ export const Audio = styled.audio`
   object-fit: contain;
   background-color: black;
 `;
+
+/** Read-only media description shown under the media in the feed card. */
+export const MediaDescription = styled.p`
+  margin: 0;
+  width: min(480px, 100%);
+  font-size: var(--font-size-small);
+  color: var(--text);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+`;
+
+/** Reaction row (heart toggle + count) for MEDIA activities. */
+export const ReactionBar = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--bg-4);
+`;
+
+export const HeartButton = styled.button<{ $active: boolean }>`
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: ${({ $active }): string => ($active ? "var(--tomato-9)" : "var(--text-secondary)")};
+  font-size: var(--font-size-small);
+  transition: color 0.15s ease, transform 0.1s ease;
+
+  &:active {
+    transform: scale(0.92);
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--tomato-9);
+    }
+  }
+`;
+
+export const ReactionCount = styled.span`
+  font-size: var(--font-size-small);
+  font-weight: 600;
+`;

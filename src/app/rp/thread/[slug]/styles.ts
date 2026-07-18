@@ -285,6 +285,38 @@ export const AddReplyButton = styled.button`
   }
 `;
 
+export const ConcludedChip = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background-color: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent-8);
+  font-family: var(--font);
+  font-size: var(--font-size-xsmall);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.02em;
+`;
+
+export const ConcludedNotice = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 16px;
+  margin-block: 12px;
+  border: 1px dashed var(--bg-6);
+  border-radius: var(--border-radius);
+  color: var(--text-secondary);
+  font-family: var(--font);
+  font-size: var(--font-size-small);
+  text-align: center;
+`;
+
 export const MediaContainer = styled.div`
   margin-inline: auto;
   margin-top: 6px;

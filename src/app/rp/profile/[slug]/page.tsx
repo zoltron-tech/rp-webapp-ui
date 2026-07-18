@@ -1307,7 +1307,7 @@ export default function UserProfilePage({}) {
               </Flex>
             </ShouldRender>
             <ShouldRender if={Boolean(profileSong) || hasAbout}>
-              <S.MediaStack>
+              <S.MediaStack $spotify={profileSong?.source === "SPOTIFY"}>
                 {profileSong && (
                   <ProfileSongPlayer
                     song={profileSong}

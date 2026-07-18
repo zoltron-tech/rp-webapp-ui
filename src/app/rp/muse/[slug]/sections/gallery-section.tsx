@@ -2,10 +2,11 @@
 
 import { ShouldRender } from "@novelist-world/ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FaPlay, FaRegTrashCan } from "react-icons/fa6";
+import { FaHeart, FaPlay, FaRegHeart, FaRegTrashCan } from "react-icons/fa6";
 import {
   FiChevronLeft,
   FiChevronRight,
+  FiEdit2,
   FiPlus,
   FiUploadCloud,
 } from "react-icons/fi";
@@ -13,6 +14,8 @@ import styled from "styled-components";
 import {
   addMuseMediaAction,
   deleteMuseMediaAction,
+  editMediaDescriptionAction,
+  getMuseMediaMetadataAction,
 } from "@/app/rp/muse/actions";
 import { deleteMedia } from "@/app/rp/profile/actions";
 import { AppAlertDialog } from "@/components/dialog";
@@ -20,9 +23,11 @@ import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { VideoViewer } from "@/components/image-viewer/VideoViewer";
 import { useGlobalState } from "@/context/store/stores";
 import { classifyUrlForUpload } from "@/hooks/use-nsfw-check";
+import { useToggleLike } from "@/hooks/use-toggle-like";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import type { Muse } from "@/types";
+import type { MediaMetadata } from "@/types/activity";
 import { API_MESSAGE } from "@/utils/constants";
 import { reverseWsrvUrl } from "@/utils/image";
 import * as S from "../styles";
@@ -265,6 +270,141 @@ function JustifiedGallery({
         </div>
       ))}
     </div>
+  );
+}
+
+/**
+ * Caption region rendered inside the gallery image/video viewer: shows the
+ * media description (owner can edit inline) and a heart reaction toggle.
+ */
+function MediaCaption({
+  museId,
+  url,
+  meta,
+  isOwner,
+  onMetaChange,
+}: {
+  museId: string;
+  url: string;
+  meta: MediaMetadata | undefined;
+  isOwner: boolean;
+  onMetaChange: (url: string, meta: MediaMetadata) => void;
+}) {
+  const { successToast, errorToast } = useUIContext();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(meta?.description ?? "");
+  const [saving, setSaving] = useState(false);
+  const [reacted, setReacted] = useState(meta?.reacted ?? false);
+  const [count, setCount] = useState(meta?.reactionCount ?? 0);
+
+  const { toggleLike } = useToggleLike({
+    id: meta?.id ?? "",
+    liked: reacted,
+    type: "media",
+  });
+
+  // Re-sync when the viewer moves to a different item.
+  useEffect(() => {
+    setDraft(meta?.description ?? "");
+    setReacted(meta?.reacted ?? false);
+    setCount(meta?.reactionCount ?? 0);
+    setEditing(false);
+  }, [meta]);
+
+  const handleReact = useCallback(async () => {
+    if (!meta?.id) return; // no metadata row yet — nothing to react to
+    const next = !reacted;
+    setReacted(next);
+    setCount((c) => Math.max(0, c + (next ? 1 : -1)));
+    const result = await toggleLike();
+    if ("reactions" in result) {
+      setReacted(result.reacted);
+      setCount(result.reactions);
+      onMetaChange(url, {
+        ...meta,
+        reacted: result.reacted,
+        reactionCount: result.reactions,
+      });
+    } else {
+      setReacted(!next);
+      setCount((c) => Math.max(0, c + (next ? -1 : 1)));
+    }
+  }, [meta, reacted, toggleLike, onMetaChange, url]);
+
+  const handleSave = useCallback(async () => {
+    setSaving(true);
+    const res = await editMediaDescriptionAction(museId, url, draft.trim());
+    setSaving(false);
+    if (res && "id" in res) {
+      onMetaChange(url, res);
+      setEditing(false);
+      successToast?.("Description saved.");
+    } else {
+      errorToast?.("Couldn't save description.");
+    }
+  }, [museId, url, draft, onMetaChange, successToast, errorToast]);
+
+  const description = meta?.description ?? "";
+
+  return (
+    <MediaCaptionBar>
+      <MediaCaptionRow>
+        <MediaHeartBtn
+          type="button"
+          $active={reacted}
+          aria-label={reacted ? "Remove reaction" : "React"}
+          aria-pressed={reacted}
+          onClick={handleReact}
+          disabled={!meta?.id}
+        >
+          {reacted ? <FaHeart size={16} /> : <FaRegHeart size={16} />}
+          {count > 0 && <span>{count}</span>}
+        </MediaHeartBtn>
+        {isOwner && !editing && (
+          <MediaEditBtn
+            type="button"
+            onClick={() => setEditing(true)}
+            aria-label="Edit description"
+          >
+            <FiEdit2 size={13} />
+            {description ? "Edit" : "Add description"}
+          </MediaEditBtn>
+        )}
+      </MediaCaptionRow>
+
+      {editing ? (
+        <>
+          <MediaCaptionTextarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="Describe this media…"
+            maxLength={1000}
+            rows={3}
+          />
+          <MediaCaptionActions>
+            <MediaCaptionCancel
+              type="button"
+              onClick={() => {
+                setDraft(description);
+                setEditing(false);
+              }}
+              disabled={saving}
+            >
+              Cancel
+            </MediaCaptionCancel>
+            <MediaCaptionSave
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? "Saving…" : "Save"}
+            </MediaCaptionSave>
+          </MediaCaptionActions>
+        </>
+      ) : (
+        description && <MediaCaptionText>{description}</MediaCaptionText>
+      )}
+    </MediaCaptionBar>
   );
 }
 
@@ -522,6 +662,7 @@ export function GallerySection({ muse, media }: Props) {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [confirmDeleteUrl, setConfirmDeleteUrl] = useState<string | null>(null);
   const [localMedia, setLocalMedia] = useState<string[]>(media ?? []);
+  const [metaByUrl, setMetaByUrl] = useState<Record<string, MediaMetadata>>({});
   const accent = muse?.useAccent ? muse.accent : undefined;
   const isMediaLoading = media === null;
 
@@ -529,6 +670,22 @@ export function GallerySection({ muse, media }: Props) {
   useEffect(() => {
     setLocalMedia(media ?? []);
   }, [media]);
+
+  // Load per-media metadata (description + reactions), keyed by media URL.
+  useEffect(() => {
+    if (!muse?.id) return;
+    getMuseMediaMetadataAction(muse.id).then((res) => {
+      if (Array.isArray(res)) {
+        const map: Record<string, MediaMetadata> = {};
+        for (const m of res) map[m.mediaUrl] = m;
+        setMetaByUrl(map);
+      }
+    });
+  }, [muse?.id]);
+
+  const handleMetaChange = useCallback((url: string, m: MediaMetadata) => {
+    setMetaByUrl((prev) => ({ ...prev, [url]: m }));
+  }, []);
 
   const isOwner = user?.username === muse?.pennedBy?.username;
 
@@ -629,6 +786,17 @@ export function GallerySection({ muse, media }: Props) {
                 nextSrc={galleryNextSrc}
                 onPrev={goPrev}
                 onNext={goNext}
+                overlay={
+                  currentItem && !currentIsVideo && muse?.id ? (
+                    <MediaCaption
+                      museId={muse.id}
+                      url={currentItem}
+                      meta={metaByUrl[currentItem]}
+                      isOwner={isOwner}
+                      onMetaChange={handleMetaChange}
+                    />
+                  ) : null
+                }
               />
               <VideoViewer
                 src={currentIsVideo ? (currentItem ?? "") : ""}
@@ -640,6 +808,17 @@ export function GallerySection({ muse, media }: Props) {
                 nextSrc={galleryNextSrc}
                 onPrev={goPrev}
                 onNext={goNext}
+                overlay={
+                  currentItem && currentIsVideo && muse?.id ? (
+                    <MediaCaption
+                      museId={muse.id}
+                      url={currentItem}
+                      meta={metaByUrl[currentItem]}
+                      isOwner={isOwner}
+                      onMetaChange={handleMetaChange}
+                    />
+                  ) : null
+                }
               />
               <JustifiedGallery
                 mediaUrls={localMedia}
@@ -870,4 +1049,122 @@ const UploadSubmitBtn = styled.button`
 
   &:hover:not(:disabled) { background: var(--accent-hover); }
   &:disabled { background: var(--bg-6); color: var(--text-secondary); cursor: not-allowed; }
+`;
+
+// ── Media caption (description + reactions) inside the viewer ───────────────
+
+const MediaCaptionBar = styled.div`
+  box-sizing: border-box;
+  width: min(680px, 92vw);
+  margin: 10px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+`;
+
+const MediaCaptionRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+
+const MediaHeartBtn = styled.button<{ $active: boolean }>`
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  color: ${({ $active }): string => ($active ? "var(--tomato-9)" : "#fff")};
+  transition: color 0.15s, transform 0.1s;
+
+  &:active { transform: scale(0.92); }
+  &:disabled { cursor: default; opacity: 0.6; }
+  @media (hover: hover) {
+    &:hover:not(:disabled) { color: var(--tomato-9); }
+  }
+`;
+
+const MediaEditBtn = styled.button`
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  cursor: pointer;
+  font-size: var(--font-size-small);
+  color: rgba(255, 255, 255, 0.85);
+  transition: color 0.15s;
+
+  @media (hover: hover) {
+    &:hover { color: #fff; }
+  }
+`;
+
+const MediaCaptionText = styled.p`
+  margin: 0;
+  font-size: var(--font-size-small);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: rgba(255, 255, 255, 0.92);
+`;
+
+const MediaCaptionTextarea = styled.textarea`
+  box-sizing: border-box;
+  width: 100%;
+  resize: vertical;
+  min-height: 64px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: var(--font-size-small);
+  font-family: var(--font);
+  line-height: 1.4;
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+`;
+
+const MediaCaptionActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+`;
+
+const MediaCaptionCancel = styled.button`
+  all: unset;
+  cursor: pointer;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: var(--font-size-small);
+  color: rgba(255, 255, 255, 0.8);
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  @media (hover: hover) {
+    &:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); }
+  }
+`;
+
+const MediaCaptionSave = styled.button`
+  all: unset;
+  cursor: pointer;
+  padding: 5px 14px;
+  border-radius: 6px;
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  background: var(--accent);
+  color: #fff;
+
+  &:hover:not(:disabled) { background: var(--accent-hover); }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
 `;

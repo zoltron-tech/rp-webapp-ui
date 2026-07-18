@@ -388,13 +388,15 @@ export const AboutContainer = styled(Container)<{ $attachedTop?: boolean }>`
  * Stacks the song pill flush on top of the About section (single flex column,
  * no gap), width and side margins matching the other 95% content containers.
  */
-export const MediaStack = styled.div`
+export const MediaStack = styled.div<{ $spotify?: boolean }>`
   width: 95%;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   margin-top: 6px;
   margin-bottom: 8px;
+  /* Spotify embeds sit flush against About; other songs get a larger gap. */
+  gap: ${({ $spotify }) => ($spotify ? "0" : "16px")};
 
   @media screen and (max-width: 800px) {
     width: 100%;

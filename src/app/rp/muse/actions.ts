@@ -8,6 +8,7 @@ import type {
   Muse,
   MuseAboutSection,
 } from "@/types";
+import type { MediaMetadata } from "@/types/activity";
 import type { DataType, WithMessage } from "@/types/common";
 import type { ProfileSong } from "@/types/music";
 import type { NWImage } from "@/types/novelist";
@@ -560,6 +561,57 @@ export const deleteMuseMediaAction = async (
   }
 
   return { message: API_MESSAGE.Success };
+};
+
+export const getMuseMediaMetadataAction = async (
+  museId: string,
+): Promise<DataType<MediaMetadata[]>> => {
+  const jwt = await getJWTIfExists();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/media/metadata`;
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (jwt) headers[AUTH_HEADER_NAME] = jwt;
+
+  const response = await fetch(URL, { cache: "no-store", headers });
+
+  Logger.debug("getMuseMediaMetadataAction", response.status);
+
+  if (response.status === 404) {
+    return null;
+  } else if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  return response.json();
+};
+
+export const editMediaDescriptionAction = async (
+  museId: string,
+  mediaUrl: string,
+  description: string,
+): Promise<DataType<MediaMetadata>> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/media/description`;
+
+  const response = await fetch(URL, {
+    body: JSON.stringify({ description, mediaUrl }),
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "PUT",
+  });
+
+  Logger.debug("editMediaDescriptionAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  return response.json();
 };
 
 export const changeMuseFandomAction = async (

@@ -4,7 +4,7 @@ import { API_MESSAGE } from "@/utils/constants";
 
 type Props = {
   id: string;
-  type: "prompt" | "comment" | "reply";
+  type: "prompt" | "comment" | "reply" | "media";
   liked: boolean;
 };
 

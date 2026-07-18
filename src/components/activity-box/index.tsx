@@ -2,15 +2,25 @@
 
 import classNames from "classnames";
 import { type FC, useMemo, useState } from "react";
-import { FaComments, FaImage, FaStreetView, FaUser } from "react-icons/fa6";
+import {
+  FaComments,
+  FaHeart,
+  FaImage,
+  FaRegHeart,
+  FaStreetView,
+  FaUser,
+} from "react-icons/fa6";
 import { PiBookOpenUserDuotone } from "react-icons/pi";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { useToggleLike } from "@/hooks/use-toggle-like";
 import type { Activity } from "@/types/activity";
 import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDateFromUnix } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import { ShouldRender } from "../common";
+import { AppImageViewer } from "../image-viewer/AppImageViewer";
+import { VideoViewer } from "../image-viewer/VideoViewer";
 import { RichTextRenderer } from "../rich-text-editor-input/rich-test-renderer";
 import * as S from "./styles";
 
@@ -71,6 +81,36 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
     [activity],
   );
 
+  const isMedia = activity?.target.activityTargetType === "MEDIA";
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [reacted, setReacted] = useState(Boolean(activity?.reacted));
+  const [reactionCount, setReactionCount] = useState(
+    activity?.reactionCount ?? 0,
+  );
+
+  const { toggleLike } = useToggleLike({
+    id: activity?.target.id ?? "",
+    liked: reacted,
+    type: "media",
+  });
+
+  const handleReact = async () => {
+    // Optimistic flip
+    const nextReacted = !reacted;
+    setReacted(nextReacted);
+    setReactionCount((c) => Math.max(0, c + (nextReacted ? 1 : -1)));
+
+    const result = await toggleLike();
+    if ("reactions" in result) {
+      setReactionCount(result.reactions);
+      setReacted(result.reacted);
+    } else {
+      // Revert on error
+      setReacted(!nextReacted);
+      setReactionCount((c) => Math.max(0, c + (nextReacted ? -1 : 1)));
+    }
+  };
+
   const handleCardClick = (
     e: React.MouseEvent<HTMLElement>,
     activity: Activity,
@@ -78,7 +118,8 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
     const target = e.target as HTMLElement;
     if (target.classList.contains("button")) return;
 
-    if (activity?.target.activityTargetType === "MUSE")
+    if (activity?.target.activityTargetType === "MEDIA") setViewerOpen(true);
+    else if (activity?.target.activityTargetType === "MUSE")
       routeToPage(ROUTES.Muse.View(activity.target.id));
     else if (
       ["PROMPT", "COMMENT", "REPLY"].includes(
@@ -189,7 +230,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
             >
               <ShouldRender
                 if={
-                  !["PROMPT", "COMMENT", "REPLY"].includes(
+                  !["PROMPT", "COMMENT", "REPLY", "MEDIA"].includes(
                     activity.target.activityTargetType,
                   )
                 }
@@ -212,6 +253,9 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
               </ShouldRender>
             </S.Card>
           </S.CardWrapper>
+        </ShouldRender>
+        <ShouldRender if={Boolean(isMedia && activity.target.title)}>
+          <S.MediaDescription>{activity.target.title}</S.MediaDescription>
         </ShouldRender>
       </S.Body>
       <ShouldRender
@@ -247,6 +291,37 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
           <FaUser />
           <S.PromptFooterText>View Profile.</S.PromptFooterText>
         </S.FooterContainer>
+      </ShouldRender>
+      <ShouldRender if={Boolean(isMedia)}>
+        <S.ReactionBar>
+          <S.HeartButton
+            type="button"
+            $active={reacted}
+            aria-label={reacted ? "Remove reaction" : "React"}
+            aria-pressed={reacted}
+            onClick={handleReact}
+          >
+            {reacted ? <FaHeart /> : <FaRegHeart />}
+            <ShouldRender if={reactionCount > 0}>
+              <S.ReactionCount>{reactionCount}</S.ReactionCount>
+            </ShouldRender>
+          </S.HeartButton>
+        </S.ReactionBar>
+      </ShouldRender>
+      <ShouldRender if={Boolean(isMedia && mediaType === "video")}>
+        <VideoViewer
+          src={activity.target.url || ""}
+          open={viewerOpen}
+          onOpenChange={setViewerOpen}
+        />
+      </ShouldRender>
+      <ShouldRender if={Boolean(isMedia && mediaType !== "video")}>
+        <AppImageViewer
+          src={activity.target.url || ""}
+          alt={activity.target.title || "Media"}
+          open={viewerOpen}
+          onOpenChange={setViewerOpen}
+        />
       </ShouldRender>
     </S.ParentContainer>
   );

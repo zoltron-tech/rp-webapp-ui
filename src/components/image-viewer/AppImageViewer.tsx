@@ -32,6 +32,8 @@ interface ImageViewerProps {
   /** Source of the previous image — rendered off-screen so it slides in during swipe */
   prevSrc?: string;
   children?: ReactNode;
+  /** Optional caption region rendered under the image in card mode (e.g. description + reactions). */
+  overlay?: ReactNode;
 }
 
 export const AppImageViewer = ({
@@ -44,6 +46,7 @@ export const AppImageViewer = ({
   nextSrc,
   prevSrc,
   children,
+  overlay,
 }: ImageViewerProps) => {
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
@@ -489,6 +492,7 @@ export const AppImageViewer = ({
                     </S.NavButton>
                   )}
                 </S.ImageCardArea>
+                {overlay}
               </S.ImageCard>
             </S.ImageCardContent>
           ) : (

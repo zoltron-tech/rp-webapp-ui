@@ -124,6 +124,32 @@ export const getCommentsByPromptAction = async (promptId: string) => {
   return comments;
 };
 
+export const concludeCommentAction = async (
+  commentId: string,
+  concluded: boolean,
+) => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/comment/${commentId}/conclude`;
+
+  const response = await fetch(URL, {
+    body: JSON.stringify({ concluded }),
+    cache: "no-store",
+    headers: {
+      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "PUT",
+  });
+
+  Logger.debug("concludeCommentAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+  const result = await response.json();
+  return result;
+};
+
 export const deleteReplyAction = async (replyId: string) => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/reply/${replyId}`;
   const jwt = await authenticateAndGetJWT();

@@ -1290,7 +1290,11 @@ export default function UserProfilePage({}) {
                 align="center"
                 justify="flex-start"
                 gap="0.2rem"
-                style={{ width: "100%", marginLeft: "60px" }}
+                style={{
+                  boxSizing: "border-box",
+                  paddingLeft: "60px",
+                  width: "100%",
+                }}
               >
                 <S.InfoText>{`Mutual friends (${mutualFriends?.length})`}</S.InfoText>
                 <S.MutualFriendsList>

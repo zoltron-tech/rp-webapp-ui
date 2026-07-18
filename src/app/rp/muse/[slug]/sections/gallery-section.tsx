@@ -1125,7 +1125,7 @@ const MediaCaptionTextarea = styled.textarea`
   border: 1px solid rgba(255, 255, 255, 0.25);
   background: rgba(0, 0, 0, 0.35);
   color: #fff;
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-input);
   font-family: var(--font);
   line-height: 1.4;
 

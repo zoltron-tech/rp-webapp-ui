@@ -21,6 +21,7 @@ import { deleteMedia } from "@/app/rp/profile/actions";
 import { AppAlertDialog } from "@/components/dialog";
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { VideoViewer } from "@/components/image-viewer/VideoViewer";
+import { MarkdownLite } from "@/components/markdown-lite";
 import { useGlobalState } from "@/context/store/stores";
 import { classifyUrlForUpload } from "@/hooks/use-nsfw-check";
 import { useToggleLike } from "@/hooks/use-toggle-like";
@@ -296,6 +297,29 @@ function MediaCaption({
   const [saving, setSaving] = useState(false);
   const [reacted, setReacted] = useState(meta?.reacted ?? false);
   const [count, setCount] = useState(meta?.reactionCount ?? 0);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Wrap the current textarea selection (or caret) with `marker` on both sides.
+  const wrapSelection = useCallback((marker: string) => {
+    const el = textareaRef.current;
+    if (!el) return;
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    setDraft((prev) => {
+      const selected = prev.slice(start, end) || "text";
+      const next =
+        prev.slice(0, start) + marker + selected + marker + prev.slice(end);
+      // Restore selection around the wrapped text on the next frame.
+      requestAnimationFrame(() => {
+        el.focus();
+        el.setSelectionRange(
+          start + marker.length,
+          start + marker.length + selected.length,
+        );
+      });
+      return next;
+    });
+  }, []);
 
   const { toggleLike } = useToggleLike({
     id: meta?.id ?? "",
@@ -374,10 +398,31 @@ function MediaCaption({
 
       {editing ? (
         <>
+          <MediaCaptionToolbar>
+            <MediaFormatBtn
+              type="button"
+              aria-label="Bold"
+              title="Bold (**text**)"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => wrapSelection("**")}
+            >
+              <strong>B</strong>
+            </MediaFormatBtn>
+            <MediaFormatBtn
+              type="button"
+              aria-label="Italic"
+              title="Italic (*text*)"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => wrapSelection("*")}
+            >
+              <em>I</em>
+            </MediaFormatBtn>
+          </MediaCaptionToolbar>
           <MediaCaptionTextarea
+            ref={textareaRef}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="Describe this media…"
+            placeholder="Describe this media…  (**bold**, *italic*)"
             maxLength={1000}
             rows={3}
           />
@@ -402,7 +447,11 @@ function MediaCaption({
           </MediaCaptionActions>
         </>
       ) : (
-        description && <MediaCaptionText>{description}</MediaCaptionText>
+        description && (
+          <MediaCaptionText>
+            <MarkdownLite text={description} />
+          </MediaCaptionText>
+        )
       )}
     </MediaCaptionBar>
   );
@@ -1132,6 +1181,30 @@ const MediaCaptionTextarea = styled.textarea`
   &:focus {
     outline: none;
     border-color: var(--accent);
+  }
+`;
+
+const MediaCaptionToolbar = styled.div`
+  display: flex;
+  gap: 6px;
+`;
+
+const MediaFormatBtn = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: var(--font-size-small);
+
+  @media (hover: hover) {
+    &:hover { background: rgba(255, 255, 255, 0.12); }
   }
 `;
 

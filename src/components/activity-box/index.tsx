@@ -19,6 +19,7 @@ import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDateFromUnix } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import { ShouldRender } from "../common";
+import { MarkdownLite } from "../markdown-lite";
 import { AppImageViewer } from "../image-viewer/AppImageViewer";
 import { VideoViewer } from "../image-viewer/VideoViewer";
 import { RichTextRenderer } from "../rich-text-editor-input/rich-test-renderer";
@@ -255,7 +256,9 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
           </S.CardWrapper>
         </ShouldRender>
         <ShouldRender if={Boolean(isMedia && activity.target.title)}>
-          <S.MediaDescription>{activity.target.title}</S.MediaDescription>
+          <S.MediaDescription>
+            <MarkdownLite text={activity.target.title} />
+          </S.MediaDescription>
         </ShouldRender>
       </S.Body>
       <ShouldRender

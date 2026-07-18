@@ -79,6 +79,7 @@ export const EditStoryboardEventForm = forwardRef<
               storyboardEvent?.overtureAsterism ?? DEFAULT_ASTERISM_STYLE,
             passageAsterism:
               storyboardEvent?.passageAsterism ?? DEFAULT_ASTERISM_STYLE,
+            song: storyboardEvent?.song ?? null,
             storyBoardId: storyboardId,
           }}
         >

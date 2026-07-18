@@ -14,17 +14,13 @@ import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
-import {
-  displayDate,
-  getFileNameFromUrl,
-  toFormattedDate,
-} from "@/utils/helpers";
+import { displayDate, toFormattedDate } from "@/utils/helpers";
 import { AvatarNew } from "../common/avatar-new";
 import { MuseAvatar } from "../common/muse-avatar";
 import { NovelistAvatar } from "../common/novelist-avatar";
 import { PrivacyIcon } from "../common/privacy-icon";
 import { AppAlertDialog } from "../dialog";
-import { InlineMusicPlayer } from "../inline-music-player/page";
+import { PromptSongPlayer } from "../prompt-song-player";
 import { AppDropdownMenuResponsive } from "../profile-more-dropdown";
 import { SharedWithDialog } from "../shared-with-dialog";
 import { UpdatePromptForm, type UpdatePromptProps } from "../update-prompt";
@@ -38,7 +34,7 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
   const promptId = usePromptState("id");
   const promptText = usePromptState("text");
   const promptMedia = usePromptState("media");
-  const promptSong = usePromptState("song");
+  const featuredSong = usePromptState("featuredSong");
   const createdOn = usePromptState("createdOn");
   const privacy = usePromptState("privacy");
   const privacySelectedFriends = usePromptState("sharedWith");
@@ -235,17 +231,8 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
               </S.privacyAvatarMoreIcon>
             </ShouldRender>
           </Flex>
-          <ShouldRender
-            if={
-              promptSong !== undefined &&
-              promptSong !== null &&
-              promptSong.length > 0
-            }
-          >
-            <InlineMusicPlayer
-              url={promptSong || ""}
-              name={getFileNameFromUrl(promptSong || "")}
-            />
+          <ShouldRender if={!!featuredSong}>
+            {featuredSong && <PromptSongPlayer song={featuredSong} />}
           </ShouldRender>
         </S.PromptSubheader>
       </S.SourceInfo>

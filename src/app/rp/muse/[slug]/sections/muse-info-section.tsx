@@ -6,7 +6,15 @@ import { Tooltip } from "radix-ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { FaUser } from "react-icons/fa6";
-import { FiCamera, FiCheck, FiEdit2, FiPlus, FiSearch, FiTrash2, FiX } from "react-icons/fi";
+import {
+  FiCamera,
+  FiCheck,
+  FiEdit2,
+  FiPlus,
+  FiSearch,
+  FiTrash2,
+  FiX,
+} from "react-icons/fi";
 import {
   addMuseExtraAttributeAction,
   addMuseNicknameAction,
@@ -39,21 +47,32 @@ function clamp(v: number, min: number, max: number) {
   return Math.min(max, Math.max(min, v));
 }
 
-function toCropFilter(src: string, x: number, y: number, scale: number): ImageCropFilter {
+function toCropFilter(
+  src: string,
+  x: number,
+  y: number,
+  scale: number,
+): ImageCropFilter {
   const scalePct = Math.round(scale * 100);
-  return { height: scalePct, src, width: scalePct, x: Math.round(x), y: Math.round(y) };
+  return {
+    height: scalePct,
+    src,
+    width: scalePct,
+    x: Math.round(x),
+    y: Math.round(y),
+  };
 }
 
 const PRIVACY_OPTIONS: PrivacyLevel[] = ["PUBLIC", "FRIENDS", "ONLY_ME"];
 const PRIVACY_LABELS: Record<string, string> = {
-  PUBLIC: "Public",
   FRIENDS: "Friends only",
   ONLY_ME: "Only me",
+  PUBLIC: "Public",
 };
 const PRIVACY_TOOLTIP_TEXT: Record<string, string> = {
-  PUBLIC: "This character is public",
   FRIENDS: "This character is visible to friends only",
   ONLY_ME: "This character is private",
+  PUBLIC: "This character is public",
 };
 
 type Props = {
@@ -80,7 +99,9 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
   const [cropY, setCropY] = useState(50);
   const [cropScale, setCropScale] = useState(1);
   const [imageUploading, setImageUploading] = useState(false);
-  const [tempUploadedImage, setTempUploadedImage] = useState<string | null>(null);
+  const [tempUploadedImage, setTempUploadedImage] = useState<string | null>(
+    null,
+  );
   const cropViewportRef = useRef<HTMLDivElement>(null);
 
   const openCropDialog = (src: string) => {
@@ -91,14 +112,18 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
     setCropDialogOpen(true);
   };
 
-  async function handleAvatarFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleAvatarFileChange(
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file || !muse?.id) return;
 
     // Show a data URL immediately in the crop dialog while S3 uploads in parallel
     const reader = new FileReader();
-    reader.onloadend = () => { openCropDialog(reader.result as string); };
+    reader.onloadend = () => {
+      openCropDialog(reader.result as string);
+    };
     reader.readAsDataURL(file);
 
     if (tempUploadedImage) await deleteMedia(tempUploadedImage);
@@ -128,7 +153,9 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
     setCropY(clamp(ny, 0, 100));
   };
 
-  const handleCropScaleChange = (v: number) => { setCropScale(clamp(v, 1, 3)); };
+  const handleCropScaleChange = (v: number) => {
+    setCropScale(clamp(v, 1, 3));
+  };
 
   const handleCropConfirm = useCallback(() => {
     if (!muse?.id) return;
@@ -150,7 +177,16 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
       onMuseUpdate?.({ avatar: result as NWImage });
       successToast("Avatar updated.");
     });
-  }, [muse?.id, pendingCropSrc, cropX, cropY, cropScale, onMuseUpdate, errorToast, successToast]);
+  }, [
+    muse?.id,
+    pendingCropSrc,
+    cropX,
+    cropY,
+    cropScale,
+    onMuseUpdate,
+    errorToast,
+    successToast,
+  ]);
 
   const handleCropCancel = useCallback(async () => {
     if (tempUploadedImage && tempUploadedImage === pendingCropSrc) {
@@ -196,7 +232,11 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
   const [fandomSearching, setFandomSearching] = useState(false);
   const [savingFandom, setSavingFandom] = useState(false);
   const fandomSearchWrapRef = useRef<HTMLDivElement>(null);
-  const [fandomDropdownPos, setFandomDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
+  const [fandomDropdownPos, setFandomDropdownPos] = useState<{
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
 
   // ── Nicknames ──────────────────────────────────────────────────────────────
   const [nickAddMode, setNickAddMode] = useState(false);
@@ -206,11 +246,15 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
   const [nickEditDraft, setNickEditDraft] = useState("");
   const [nickSavingEdit, setNickSavingEdit] = useState(false);
   const [nickRemoving, setNickRemoving] = useState<string | null>(null);
-  const [confirmRemoveNick, setConfirmRemoveNick] = useState<string | null>(null);
+  const [confirmRemoveNick, setConfirmRemoveNick] = useState<string | null>(
+    null,
+  );
 
   // ── Privacy & Tooltips ────────────────────────────────────────────────────
   const [privacyOpen, setPrivacyOpen] = useState(false);
-  const [pendingPrivacy, setPendingPrivacy] = useState<PrivacyLevel | null>(null);
+  const [pendingPrivacy, setPendingPrivacy] = useState<PrivacyLevel | null>(
+    null,
+  );
   const [savingPrivacy, setSavingPrivacy] = useState(false);
   const [scoreTooltipOpen, setScoreTooltipOpen] = useState(false);
   const [privacyTooltipOpen, setPrivacyTooltipOpen] = useState(false);
@@ -222,13 +266,25 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
   useEffect(() => {
     if (!privacyOpen && !scoreTooltipOpen && !privacyTooltipOpen) return;
     function handler(e: MouseEvent) {
-      if (privacyOpen && privacyRef.current && !privacyRef.current.contains(e.target as Node)) {
+      if (
+        privacyOpen &&
+        privacyRef.current &&
+        !privacyRef.current.contains(e.target as Node)
+      ) {
         setPrivacyOpen(false);
       }
-      if (scoreTooltipOpen && scoreCornerRef.current && !scoreCornerRef.current.contains(e.target as Node)) {
+      if (
+        scoreTooltipOpen &&
+        scoreCornerRef.current &&
+        !scoreCornerRef.current.contains(e.target as Node)
+      ) {
         setScoreTooltipOpen(false);
       }
-      if (privacyTooltipOpen && privacyCornerRef.current && !privacyCornerRef.current.contains(e.target as Node)) {
+      if (
+        privacyTooltipOpen &&
+        privacyCornerRef.current &&
+        !privacyCornerRef.current.contains(e.target as Node)
+      ) {
         setPrivacyTooltipOpen(false);
       }
     }
@@ -257,9 +313,17 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
 
   // Track fandom search wrap position for the portal dropdown
   useEffect(() => {
-    if ((fandomResults.length > 0 || fandomSearching) && fandomEditing && fandomSearchWrapRef.current) {
+    if (
+      (fandomResults.length > 0 || fandomSearching) &&
+      fandomEditing &&
+      fandomSearchWrapRef.current
+    ) {
       const rect = fandomSearchWrapRef.current.getBoundingClientRect();
-      setFandomDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+      setFandomDropdownPos({
+        left: rect.left,
+        top: rect.bottom + 4,
+        width: rect.width,
+      });
     } else {
       setFandomDropdownPos(null);
     }
@@ -274,7 +338,9 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
     setAddingNew(false);
   }
 
-  function cancelEdit() { setEditingKey(null); }
+  function cancelEdit() {
+    setEditingKey(null);
+  }
 
   function startAdd() {
     setAddingNew(true);
@@ -283,7 +349,9 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
     setEditingKey(null);
   }
 
-  function cancelAdd() { setAddingNew(false); }
+  function cancelAdd() {
+    setAddingNew(false);
+  }
 
   async function handleAdd() {
     if (!muse?.id) return;
@@ -295,8 +363,14 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
     const result = await addMuseExtraAttributeAction(muse.id, key, value);
     setSavingNew(false);
 
-    if ("message" in result) { errorToast("Failed to add attribute."); return; }
-    onMuseUpdate?.({ extraAttributes: result, totalPoints: (muse.totalPoints ?? 0) + 5 });
+    if ("message" in result) {
+      errorToast("Failed to add attribute.");
+      return;
+    }
+    onMuseUpdate?.({
+      extraAttributes: result,
+      totalPoints: (muse.totalPoints ?? 0) + 5,
+    });
     setAddingNew(false);
     successToast("Attribute added.");
   }
@@ -306,8 +380,14 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
     setRemovingKey(key);
     const result = await removeMuseExtraAttributeAction(muse.id, key);
     setRemovingKey(null);
-    if ("message" in result) { errorToast("Failed to remove attribute."); return; }
-    onMuseUpdate?.({ extraAttributes: result, totalPoints: Math.max(0, (muse.totalPoints ?? 0) - 5) });
+    if ("message" in result) {
+      errorToast("Failed to remove attribute.");
+      return;
+    }
+    onMuseUpdate?.({
+      extraAttributes: result,
+      totalPoints: Math.max(0, (muse.totalPoints ?? 0) - 5),
+    });
     successToast("Attribute removed.");
   }
 
@@ -317,9 +397,17 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
     const value = editValueDraft.trim();
     if (!key || !value) return;
     setSavingEdit(true);
-    const result = await editMuseExtraAttributeAction(muse.id, editingKey, key, value);
+    const result = await editMuseExtraAttributeAction(
+      muse.id,
+      editingKey,
+      key,
+      value,
+    );
     setSavingEdit(false);
-    if ("message" in result) { errorToast("Failed to update attribute."); return; }
+    if ("message" in result) {
+      errorToast("Failed to update attribute.");
+      return;
+    }
     onMuseUpdate?.({ extraAttributes: result });
     setEditingKey(null);
     successToast("Attribute updated.");
@@ -332,7 +420,10 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
     setSavingFandom(true);
     const result = await changeMuseFandomAction(muse.id, fandom.id);
     setSavingFandom(false);
-    if ("message" in result) { errorToast("Failed to update fandom."); return; }
+    if ("message" in result) {
+      errorToast("Failed to update fandom.");
+      return;
+    }
     onMuseUpdate?.({ fandom: result as Fandom });
     setFandomEditing(false);
     setFandomQuery("");
@@ -359,7 +450,10 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
     setNickSavingAdd(true);
     const result = await addMuseNicknameAction(muse.id, v);
     setNickSavingAdd(false);
-    if ("message" in result) { errorToast("Failed to add nickname."); return; }
+    if ("message" in result) {
+      errorToast("Failed to add nickname.");
+      return;
+    }
     onMuseUpdate?.({ nicknames: result as string[] });
     setNickAddValue("");
     setNickAddMode(false);
@@ -370,9 +464,16 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
     const newVal = nickEditDraft.trim();
     if (!newVal || !nickEditingValue || !muse?.id) return;
     setNickSavingEdit(true);
-    const result = await editMuseNicknameAction(muse.id, nickEditingValue, newVal);
+    const result = await editMuseNicknameAction(
+      muse.id,
+      nickEditingValue,
+      newVal,
+    );
     setNickSavingEdit(false);
-    if ("message" in result) { errorToast("Failed to update nickname."); return; }
+    if ("message" in result) {
+      errorToast("Failed to update nickname.");
+      return;
+    }
     onMuseUpdate?.({ nicknames: result as string[] });
     setNickEditingValue(null);
     successToast("Nickname updated.");
@@ -383,7 +484,10 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
     setNickRemoving(nickname);
     const result = await removeMuseNicknameAction(muse.id, nickname);
     setNickRemoving(null);
-    if ("message" in result) { errorToast("Failed to remove nickname."); return; }
+    if ("message" in result) {
+      errorToast("Failed to remove nickname.");
+      return;
+    }
     onMuseUpdate?.({ nicknames: result as string[] });
     successToast("Nickname removed.");
   }
@@ -405,7 +509,9 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
     successToast("Privacy updated.");
   }
 
-  const hasAttributes = Boolean(muse?.extraAttributes && Object.keys(muse.extraAttributes).length > 0);
+  const hasAttributes = Boolean(
+    muse?.extraAttributes && Object.keys(muse.extraAttributes).length > 0,
+  );
   const nicknames = muse?.nicknames ?? [];
   const canAddNickname = nicknames.length < 5;
 
@@ -417,7 +523,11 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
             <S.InfoScrollBody>
               <S.InfoHeaderSection>
                 <S.ShimmerCircle $size="82px" />
-                <S.ShimmerLine $width="140px" $height="18px" style={{ marginTop: "6px" }} />
+                <S.ShimmerLine
+                  $width="140px"
+                  $height="18px"
+                  style={{ marginTop: "6px" }}
+                />
                 <S.ShimmerLine $width="90px" $height="12px" />
               </S.InfoHeaderSection>
 
@@ -443,11 +553,13 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
     <S.CardExpandedWrapper>
       <S.CardBack className="muse-card" accent={accent}>
         <S.InfoCardContent>
-
           {/* Score corner */}
           <ShouldRender if={typeof muse?.totalPoints === "number"}>
             <Tooltip.Provider delayDuration={200}>
-              <Tooltip.Root open={scoreTooltipOpen} onOpenChange={setScoreTooltipOpen}>
+              <Tooltip.Root
+                open={scoreTooltipOpen}
+                onOpenChange={setScoreTooltipOpen}
+              >
                 <Tooltip.Trigger asChild>
                   <S.InfoScoreCorner
                     ref={scoreCornerRef}
@@ -515,7 +627,10 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
               </S.InfoPrivacyDropdownWrap>
             ) : (
               <Tooltip.Provider delayDuration={200}>
-                <Tooltip.Root open={privacyTooltipOpen} onOpenChange={setPrivacyTooltipOpen}>
+                <Tooltip.Root
+                  open={privacyTooltipOpen}
+                  onOpenChange={setPrivacyTooltipOpen}
+                >
                   <Tooltip.Trigger asChild>
                     <span
                       style={{ cursor: "pointer", display: "inline-flex" }}
@@ -557,12 +672,13 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
               {isOwnMuse ? (
                 <S.AvatarWrapper>
                   <S.InfoCardAvatar
-                    $src={!avatarError ? (muse?.avatar?.src || muse?.image || "") : ""}
-                    style={{ width: "100%", height: "100%" }}
+                    $src={
+                      !avatarError ? muse?.avatar?.src || muse?.image || "" : ""
+                    }
+                    style={{ height: "100%", width: "100%" }}
                   >
-                    {(!muse?.avatar?.src && !muse?.image || avatarError) && !avatarSaving && (
-                      <FaUser size={30} />
-                    )}
+                    {((!muse?.avatar?.src && !muse?.image) || avatarError) &&
+                      !avatarSaving && <FaUser size={30} />}
                   </S.InfoCardAvatar>
 
                   <S.AvatarEditBtn
@@ -598,8 +714,14 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
                   />
                 </S.AvatarWrapper>
               ) : (
-                <S.InfoCardAvatar $src={!avatarError ? (muse?.avatar?.src || muse?.image || "") : ""}>
-                  {(!muse?.avatar?.src && !muse?.image || avatarError) && <FaUser size={30} />}
+                <S.InfoCardAvatar
+                  $src={
+                    !avatarError ? muse?.avatar?.src || muse?.image || "" : ""
+                  }
+                >
+                  {((!muse?.avatar?.src && !muse?.image) || avatarError) && (
+                    <FaUser size={30} />
+                  )}
                 </S.InfoCardAvatar>
               )}
 
@@ -662,10 +784,16 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
                           }}
                           disabled={nickRemoving === n}
                         >
-                          {nickRemoving === n ? "…" : (
+                          {nickRemoving === n ? (
+                            "…"
+                          ) : (
                             <>
-                              <S.InfoNicknameDeleteTrash><FiTrash2 size={9} /></S.InfoNicknameDeleteTrash>
-                              <S.InfoNicknameDeleteCross>×</S.InfoNicknameDeleteCross>
+                              <S.InfoNicknameDeleteTrash>
+                                <FiTrash2 size={9} />
+                              </S.InfoNicknameDeleteTrash>
+                              <S.InfoNicknameDeleteCross>
+                                ×
+                              </S.InfoNicknameDeleteCross>
                             </>
                           )}
                         </S.InfoNicknameDeleteBtn>
@@ -700,7 +828,10 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
                       <S.InfoNicknameIconBtn
                         type="button"
                         title="Cancel"
-                        onClick={() => { setNickAddMode(false); setNickAddValue(""); }}
+                        onClick={() => {
+                          setNickAddMode(false);
+                          setNickAddValue("");
+                        }}
                       >
                         <FiX size={9} />
                       </S.InfoNicknameIconBtn>
@@ -708,7 +839,10 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
                   ) : canAddNickname ? (
                     <S.InfoNicknameAddBtn
                       type="button"
-                      onClick={() => { setNickAddMode(true); setNickEditingValue(null); }}
+                      onClick={() => {
+                        setNickAddMode(true);
+                        setNickEditingValue(null);
+                      }}
                     >
                       <FiPlus size={9} />
                       {nicknames.length === 0 ? "Add nickname" : "Add"}
@@ -738,7 +872,9 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
                       placeholder="Search fandom…"
                       autoFocus
                       disabled={savingFandom}
-                      onKeyDown={(e) => { if (e.key === "Escape") closeFandomPicker(); }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") closeFandomPicker();
+                      }}
                       onBlur={() => setTimeout(closeFandomPicker, 200)}
                     />
                     <S.InfoFandomCancelBtn
@@ -758,17 +894,18 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
                     title="Change fandom"
                   >
                     {muse?.fandom?.name || "No Fandom"}
-                    <FiEdit2 size={9} style={{ opacity: 0.7, marginLeft: 4 }} />
+                    <FiEdit2 size={9} style={{ marginLeft: 4, opacity: 0.7 }} />
                   </S.FandomValue>
                 )
               ) : (
-                <ShouldRender if={Boolean(muse?.fandom && muse.fandom.id !== "FANDOMLESS")}>
+                <ShouldRender
+                  if={Boolean(muse?.fandom && muse.fandom.id !== "FANDOMLESS")}
+                >
                   <S.FandomValue color={muse?.fandom?.color || "#444"}>
                     {muse?.fandom?.name}
                   </S.FandomValue>
                 </ShouldRender>
               )}
-
             </S.InfoHeaderSection>
 
             <S.InfoDivider $accent={accent ?? null} />
@@ -794,7 +931,11 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
                 <S.SectionEmptyWrap>
                   <S.SectionEmpty>No information yet.</S.SectionEmpty>
                   <ShouldRender if={isOwnMuse}>
-                    <S.InfoAttrAddBtn type="button" onClick={startAdd} disabled={savingNew}>
+                    <S.InfoAttrAddBtn
+                      type="button"
+                      onClick={startAdd}
+                      disabled={savingNew}
+                    >
                       <FiPlus size={10} />
                       Add
                     </S.InfoAttrAddBtn>
@@ -829,13 +970,19 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
                         />
                       </S.InfoAttrInputRow>
                       <S.InfoAttrBtnRow>
-                        <S.InfoAttrCancelBtn type="button" onClick={cancelAdd} disabled={savingNew}>
+                        <S.InfoAttrCancelBtn
+                          type="button"
+                          onClick={cancelAdd}
+                          disabled={savingNew}
+                        >
                           Cancel
                         </S.InfoAttrCancelBtn>
                         <S.InfoAttrSaveBtn
                           type="button"
                           onClick={handleAdd}
-                          disabled={savingNew || !newKey.trim() || !newValue.trim()}
+                          disabled={
+                            savingNew || !newKey.trim() || !newValue.trim()
+                          }
                         >
                           {savingNew ? "Adding…" : "Add"}
                         </S.InfoAttrSaveBtn>
@@ -861,7 +1008,9 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
                               type="text"
                               placeholder="Value"
                               value={editValueDraft}
-                              onChange={(e) => setEditValueDraft(e.target.value)}
+                              onChange={(e) =>
+                                setEditValueDraft(e.target.value)
+                              }
                               autoComplete="off"
                               onKeyDown={(e) => {
                                 if (e.key === "Enter") handleSaveEdit();
@@ -870,13 +1019,21 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
                             />
                           </S.InfoAttrInputRow>
                           <S.InfoAttrBtnRow>
-                            <S.InfoAttrCancelBtn type="button" onClick={cancelEdit} disabled={savingEdit}>
+                            <S.InfoAttrCancelBtn
+                              type="button"
+                              onClick={cancelEdit}
+                              disabled={savingEdit}
+                            >
                               Cancel
                             </S.InfoAttrCancelBtn>
                             <S.InfoAttrSaveBtn
                               type="button"
                               onClick={handleSaveEdit}
-                              disabled={savingEdit || !editKeyDraft.trim() || !editValueDraft.trim()}
+                              disabled={
+                                savingEdit ||
+                                !editKeyDraft.trim() ||
+                                !editValueDraft.trim()
+                              }
                             >
                               {savingEdit ? "Saving…" : "Save"}
                             </S.InfoAttrSaveBtn>
@@ -901,7 +1058,11 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
                               onClick={() => setConfirmDeleteKey(key)}
                               disabled={removingKey === key}
                             >
-                              {removingKey === key ? "…" : <FiTrash2 size={10} />}
+                              {removingKey === key ? (
+                                "…"
+                              ) : (
+                                <FiTrash2 size={10} />
+                              )}
                             </S.InfoAttrIconBtn>
                           </S.InfoAttrCardActions>
                         </S.InfoAttrCardWrap>
@@ -920,45 +1081,49 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
       </S.CardBack>
 
       {/* Fandom results dropdown — portalled to body to escape overflow/contain clipping */}
-      {fandomDropdownPos && createPortal(
-        <S.InfoFandomDropdown
-          style={{
-            position: "fixed",
-            top: fandomDropdownPos.top,
-            left: fandomDropdownPos.left,
-            width: fandomDropdownPos.width,
-            zIndex: 9999,
-          }}
-        >
-          {fandomSearching ? (
-            <S.InfoFandomOption as="div" style={{ color: "rgba(255,255,255,0.4)", cursor: "default" }}>
-              Searching…
-            </S.InfoFandomOption>
-          ) : (
-            fandomResults.map((f) => (
+      {fandomDropdownPos &&
+        createPortal(
+          <S.InfoFandomDropdown
+            style={{
+              left: fandomDropdownPos.left,
+              position: "fixed",
+              top: fandomDropdownPos.top,
+              width: fandomDropdownPos.width,
+              zIndex: 9999,
+            }}
+          >
+            {fandomSearching ? (
               <S.InfoFandomOption
-                key={f.id}
-                type="button"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => handleFandomChange(f)}
+                as="div"
+                style={{ color: "rgba(255,255,255,0.4)", cursor: "default" }}
               >
-                <span
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    background: f.color,
-                    flexShrink: 0,
-                    display: "inline-block",
-                  }}
-                />
-                {f.name}
+                Searching…
               </S.InfoFandomOption>
-            ))
-          )}
-        </S.InfoFandomDropdown>,
-        document.body
-      )}
+            ) : (
+              fandomResults.map((f) => (
+                <S.InfoFandomOption
+                  key={f.id}
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => handleFandomChange(f)}
+                >
+                  <span
+                    style={{
+                      background: f.color,
+                      borderRadius: "50%",
+                      display: "inline-block",
+                      flexShrink: 0,
+                      height: 8,
+                      width: 8,
+                    }}
+                  />
+                  {f.name}
+                </S.InfoFandomOption>
+              ))
+            )}
+          </S.InfoFandomDropdown>,
+          document.body,
+        )}
 
       {/* Avatar crop dialog */}
       <AppAlertDialog
@@ -997,9 +1162,14 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
         heading="Remove avatar?"
         text="Remove this character's avatar photo? The card image will be used as fallback."
         open={confirmRemoveAvatar}
-        onOpenChange={(open) => { if (!open) setConfirmRemoveAvatar(false); }}
+        onOpenChange={(open) => {
+          if (!open) setConfirmRemoveAvatar(false);
+        }}
         onCancel={() => setConfirmRemoveAvatar(false)}
-        onConfirm={() => { setConfirmRemoveAvatar(false); handleRemoveAvatar(); }}
+        onConfirm={() => {
+          setConfirmRemoveAvatar(false);
+          handleRemoveAvatar();
+        }}
         actionButtonLabel="Remove"
         actionColor="negative"
       />
@@ -1009,7 +1179,9 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
         heading="Remove attribute?"
         text={`Are you sure you want to remove "${confirmDeleteKey}"? This cannot be undone.`}
         open={confirmDeleteKey !== null}
-        onOpenChange={(open) => { if (!open) setConfirmDeleteKey(null); }}
+        onOpenChange={(open) => {
+          if (!open) setConfirmDeleteKey(null);
+        }}
         onCancel={() => setConfirmDeleteKey(null)}
         onConfirm={() => {
           const key = confirmDeleteKey;
@@ -1025,7 +1197,9 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
         heading="Remove nickname?"
         text={`Remove "${confirmRemoveNick}"?`}
         open={confirmRemoveNick !== null}
-        onOpenChange={(open) => { if (!open) setConfirmRemoveNick(null); }}
+        onOpenChange={(open) => {
+          if (!open) setConfirmRemoveNick(null);
+        }}
         onCancel={() => setConfirmRemoveNick(null)}
         onConfirm={() => {
           const n = confirmRemoveNick;
@@ -1041,7 +1215,9 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
         heading="Change privacy?"
         text={`Set visibility to "${pendingPrivacy ? PRIVACY_LABELS[pendingPrivacy] : ""}"?`}
         open={pendingPrivacy !== null}
-        onOpenChange={(open) => { if (!open && !savingPrivacy) setPendingPrivacy(null); }}
+        onOpenChange={(open) => {
+          if (!open && !savingPrivacy) setPendingPrivacy(null);
+        }}
         onCancel={() => setPendingPrivacy(null)}
         onConfirm={handlePrivacyChange}
         actionButtonLabel={savingPrivacy ? "Saving…" : "Confirm"}

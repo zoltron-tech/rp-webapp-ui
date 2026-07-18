@@ -1,5 +1,5 @@
 import { Container, ContainerClasses } from "@novelist-world/ui";
-import styled, { css, keyframes } from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { Avatar as AvatarCommon, Pill } from "@/components/common";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { AppDropdownMenu } from "@/components/profile-more-dropdown";
@@ -187,9 +187,8 @@ export const ProfileDropdownMenuContainer = styled.div`
   display: flex;
   gap: 6px;
   position: absolute;
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 12px;
+  top: 12px;
   z-index: ${Z_INDEX.AVATAR};
 `;
 
@@ -209,7 +208,8 @@ export const ContentInner = styled.div`
   background-color: var(--bg-2);
   width: 800px;
   border-radius: 0 0 12px 12px;
-  padding-top: 70px;
+  padding-top: 12px;
+  gap: 2px;
 
   @container (max-width: 800px) {
     width: 100%;
@@ -345,10 +345,9 @@ export const ActivitiesContainer = styled.div`
   }
 `;
 
-export const AboutContainer = styled(Container)`
-  width: 95%;
-  margin-top: 4px;
-  margin-bottom: 8px;
+export const AboutContainer = styled(Container)<{ $attachedTop?: boolean }>`
+  width: 100%;
+  margin: 0;
   border-radius: 10px;
   border: 1px solid var(--bg-5);
   display: flex;
@@ -360,11 +359,44 @@ export const AboutContainer = styled(Container)`
   word-break: break-word;
   font-family: inherit;
 
+  /* When a song pill sits directly on top, merge with it: no top rounding and
+     no doubled border between the two. */
+  ${({ $attachedTop }) =>
+    $attachedTop &&
+    `
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-top: none;
+  `}
+
   @media screen and (max-width: 800px) {
     border: none;
     border-radius: 0;
     border-top: 1px solid var(--bg-4);
     border-bottom: 1px solid var(--bg-4);
+    width: 100%;
+
+    ${({ $attachedTop }) =>
+      $attachedTop &&
+      `
+      border-top: none;
+    `}
+  }
+`;
+
+/**
+ * Stacks the song pill flush on top of the About section (single flex column,
+ * no gap), width and side margins matching the other 95% content containers.
+ */
+export const MediaStack = styled.div`
+  width: 95%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  margin-top: 6px;
+  margin-bottom: 8px;
+
+  @media screen and (max-width: 800px) {
     width: 100%;
   }
 `;
@@ -492,38 +524,109 @@ export const InfoText = styled.div`
   margin-block: 8px;
 `;
 
+/**
+ * Desktop avatar — centered at the top of the content card, pulled up with a
+ * negative margin so it overlaps the banner by ~half. In-flow (no absolute
+ * hang), so everything below simply stacks beneath it with no overlap math.
+ */
 export const Avatar = styled(AvatarNew)`
-  box-shadow: 0 0 0 8px var(--bg-2);
+  box-shadow: 0 0 0 6px var(--bg-2);
   background-color: var(--bg-2);
-  height: 250px;
-  width: 250px;
+  height: 150px;
+  width: 150px;
   flex-shrink: 0;
-  /* Hang 50 % (125 px) below the banner bottom edge */
-  transform: translateY(50%);
-  z-index: 1;
 
   @media (max-width: 800px) {
     display: none;
   }
 
   .avatar-fallback {
-    font-size: calc(2 * var(--font-size-h1));
+    font-size: var(--font-size-h1);
   }
 `;
 
 export const AvatarMobile = styled(AvatarNew)`
   box-shadow: 0 0 0 5px var(--bg-2);
   background-color: var(--bg-2);
-  height: 130px;
-  width: 130px;
+  height: 104px;
+  width: 104px;
   flex-shrink: 0;
-  /* Hang 50 % (65 px) below the banner bottom edge */
-  transform: translateY(50%);
-  z-index: 1;
   display: none;
 
   @media (max-width: 800px) {
     display: block;
+  }
+`;
+
+/**
+ * Header cluster lifted up so the avatar overlaps the banner. Avatar sits on
+ * the left (with margin); the note bubble sits to its right; the XP badge is
+ * pinned to the avatar's bottom-right corner. Width matches the 95% content
+ * containers so the left margin lines up with About/MuseList below.
+ */
+export const AvatarHeader = styled.div`
+  position: relative;
+  z-index: 2;
+  width: 95%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: -84px; /* lift the cluster up into the banner */
+  margin-bottom: 12px;
+
+  @media (max-width: 800px) {
+    width: 100%;
+    padding-inline: 16px;
+    gap: 12px;
+    margin-top: -58px;
+  }
+`;
+
+/** Positioning context for the avatar + its attached XP badge. */
+export const AvatarWrap = styled.div`
+  position: relative;
+  flex-shrink: 0;
+  margin-left: 8px;
+
+  @media (max-width: 800px) {
+    margin-left: 2px;
+  }
+`;
+
+/** XP/Score chip attached to the avatar's bottom-right, clear of the circle. */
+export const AvatarXpBadge = styled.span`
+  position: absolute;
+  right: 0;
+  bottom: 2px;
+  transform: translate(34%, 30%);
+  z-index: 3;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px 3px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 20%, var(--bg-2));
+  border: 1px solid color-mix(in srgb, var(--accent) 48%, var(--bg-5));
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 22%, transparent);
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 28%, var(--bg-2));
+    border-color: color-mix(in srgb, var(--accent) 62%, var(--bg-5));
+  }
+
+  @media (max-width: 800px) {
+    font-size: 0.6rem;
+    padding: 2px 8px 2px 6px;
+    transform: translate(26%, 28%);
   }
 `;
 
@@ -544,17 +647,14 @@ export const ExtendedBadge = styled(Badge)`
   }
 `;
 
-const NameFontStyles = css`
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.498);
-`;
-
 export const NameMobile = styled.div`
-  ${NameFontStyles};
-
   color: var(--text);
-  font-size: 36px;
+  font-size: 30px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
   width: 100%;
   text-align: center;
+  margin-top: 6px;
 
   @container profile-content (max-width: 800px) {
     & {
@@ -572,92 +672,69 @@ export const UsernameContainer = styled.div`
   max-width: 100%;
 `;
 
+/**
+ * Status note — a thought bubble sitting to the right of the avatar. The two
+ * trailing dots (::before / ::after) point left, toward the avatar.
+ */
 export const NoteContainer = styled.div<{ $color?: string | null }>`
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 240px;
+  padding: 8px 14px;
+  border-radius: 16px;
   background: ${({ $color }) =>
     $color
       ? $color
       : "linear-gradient(135deg, var(--accent-4) 0%, var(--accent-3) 100%)"};
   color: ${({ $color }) => ($color ? "#ffffff" : "inherit")};
-  opacity: 95%;
+  font-size: var(--font-size-small);
+  line-height: 1.35;
   word-break: break-word;
-  border-radius: 20px;
-  padding: 5px 14px 5px 10px;
-  z-index: 100;
-  font-size: var(--font-size);
-  position: relative;
-  overflow: visible;
-  transform: translateY(65%);
-  align-self: flex-end;
-  margin-left: -30px;
-  max-width: 260px;
 
-  /* Thought bubble tail */
+  /* Thought-bubble trail pointing left at the avatar */
   &::before {
     content: "";
     position: absolute;
-    top: -20px;
-    left: 18px;
-    width: 0;
-    height: 0;
+    left: -11px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 13px;
+    height: 13px;
     border-radius: 50%;
-    border-left: 20px solid
-      ${({ $color }) => ($color ? $color : "var(--accent-4)")};
-    border-bottom: 20px solid
-      ${({ $color }) => ($color ? $color : "var(--accent-4)")};
+    background: ${({ $color }) => ($color ? $color : "var(--accent-3)")};
   }
 
   &::after {
     content: "";
     position: absolute;
-    top: -12px;
-    left: 5px;
-    width: 0;
-    height: 0;
+    left: -21px;
+    top: calc(50% + 6px);
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
-    border-left: 12px solid
-      ${({ $color }) => ($color ? $color : "var(--accent-3)")};
-    border-bottom: 12px solid
-      ${({ $color }) => ($color ? $color : "var(--accent-3)")};
+    background: ${({ $color }) => ($color ? $color : "var(--accent-3)")};
   }
 
   @media (max-width: 800px) {
     font-size: var(--font-size-xsmall);
-    transform: translateY(65%);
-    margin-left: -20px;
-
-    &::before {
-      top: -14px;
-      left: 12px;
-      border-left: 12px solid
-        ${({ $color }) => ($color ? $color : "var(--accent-4)")};
-      border-bottom: 12px solid
-        ${({ $color }) => ($color ? $color : "var(--accent-4)")};
-    }
-
-    &::after {
-      top: -10px;
-      left: 4px;
-      border-left: 8px solid
-        ${({ $color }) => ($color ? $color : "var(--accent-3)")};
-      border-bottom: 8px solid
-        ${({ $color }) => ($color ? $color : "var(--accent-3)")};
-    }
-  }
-
-  @media (max-width: 300px) {
-    display: none;
+    max-width: 180px;
+    padding: 6px 12px;
   }
 `;
 
-export const NoteEmoji = styled.span`
+export const NoteEmoji = styled.span<{ $rotate?: boolean }>`
   position: absolute;
   top: -8px;
   right: -8px;
-  font-size: 1rem;
-  display: inline-block;
-  transform: rotate(45deg);
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
   line-height: 1;
   pointer-events: none;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.18));
+  transform: ${({ $rotate }) => ($rotate ? "rotate(15deg)" : "none")};
 `;
 
 export const MusePillContainer = styled.div`
@@ -710,6 +787,8 @@ export const FriendList = styled.div<{ maxHeight: string }>`
 export const MutualFriendsList = styled.div`
   display: flex;
   align-items: center;
+  justify-content: center;
+  padding-top: 4px;
   gap: 0.2rem; // space between avatars
 `;
 
@@ -888,9 +967,42 @@ export const LevelTileValue = styled.div`
 export const LevelChipRow = styled.div`
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   margin-block: 6px;
   flex-wrap: wrap;
+`;
+
+/** Centered, wrapping stat row (Friends / Characters / Joined). */
+export const StatsRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2px 18px;
+  width: 100%;
+  padding-inline: 16px;
+  margin-block: 2px;
+
+  @media (max-width: 800px) {
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 0 8px;
+    padding-inline: 10px;
+
+    svg {
+      flex-shrink: 0;
+      width: 13px;
+      height: 13px;
+    }
+
+    ${InfoText},
+    ${InfoTextBold} {
+      font-size: var(--font-size-xsmall);
+      margin-block: 2px;
+      white-space: nowrap;
+    }
+  }
 `;
 
 export const LevelChip = styled.span`

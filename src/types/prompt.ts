@@ -1,3 +1,4 @@
+import type { ProfileSong } from "./music";
 import type { Friend, NWImage } from "./novelist";
 
 export type PrivacyLevel = "PUBLIC" | "FRIENDS" | "ONLY_ME" | "CUSTOM";
@@ -8,6 +9,8 @@ export interface Prompt {
   text: string;
   media: string;
   song: string;
+  /** Optional rich featured song attached to the prompt (NW Library / Spotify). */
+  featuredSong: ProfileSong | null;
   privacy: PrivacyLevel;
   createdOn: string;
   canInteract: boolean;
@@ -89,6 +92,8 @@ export type SubmitPromptInput = {
   commentId?: string;
   privacy?: "PUBLIC" | "FRIENDS" | "ONLY_ME" | "CUSTOM";
   sharedWith?: Friend[];
+  /** Only carried when posting a prompt (never comments/replies). */
+  featuredSong?: ProfileSong | null;
 };
 
 export type SubmitPromptType = "prompt" | "comment" | "reply";

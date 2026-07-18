@@ -58,12 +58,12 @@ export const TopBar = styled.div`
   gap: 14px;
   width: 100%;
   max-width: 780px;
-  margin-bottom: 22px;
+  margin-bottom: 6px;
 
   @container content-container (max-width: 800px) {
     max-width: 100%;
     padding: 14px 16px;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     border-bottom: 1px solid var(--bg-4);
     position: sticky;
     top: 0;
@@ -244,6 +244,21 @@ export const Book = styled.article`
 `;
 
 /* ── Title page (the event) ─────────────────────────────────────────────── */
+
+/* Chapter song pill — sits just under the top bar so it stays available while
+   reading in either mode. Distinct from a novelist's profile-song pill: this
+   one plays the song chosen for this chapter. */
+export const ChapterSong = styled.div`
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 460px;
+  margin-block: 2px 10px;
+
+  & > * {
+    width: 100%;
+  }
+`;
 
 export const TitlePage = styled.header`
   display: flex;

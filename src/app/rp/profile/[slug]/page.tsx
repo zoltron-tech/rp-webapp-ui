@@ -50,13 +50,19 @@ import { PromptComposeTrigger } from "@/components/prompt-compose-trigger";
 import PromptInput from "@/components/prompt-input";
 import { FullPagePromptInput } from "@/components/prompt-input/full-page-prompt-input";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
-import { NoteEmojiIcon } from "@/app/rp/profile/edit/note-emoji-set";
+import {
+  getNoteEmojiRotate,
+  NoteEmojiIcon,
+} from "@/app/rp/profile/edit/note-emoji-set";
+import { getProfileSongAction } from "@/app/rp/profile/edit/profile-song.actions";
+import { ProfileSongPlayer } from "@/components/profile-song";
 import StoryCard from "@/components/story-card";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import type { Novelist, NWImage, Prompt, StoryBoard } from "@/types";
+import type { ProfileSong } from "@/types/music";
 import type { Activity } from "@/types/activity";
 import { ACCENT_MAP, type Accent } from "@/types/theme";
 import { ScoreBadgeIcon } from "@/utils/badge-icons";
@@ -417,9 +423,18 @@ export default function UserProfilePage({}) {
   const [hasMorePrompts, setHasMorePrompts] = useState(false);
   const [loadingMorePrompts, setLoadingMorePrompts] = useState(false);
   const [storyBoards, setStories] = useState<StoryBoard[] | null>(null);
+  const [profileSong, setProfileSong] = useState<ProfileSong | null>(null);
   const setGlobalState = useGlobalStoreSet();
   const { successToast, warningToast, errorToast } = useUIContext();
   const { routeToPage, stopPageLoading, baseDataLoader } = usePageRouter();
+
+  useEffect(() => {
+    if (!novelist?.id) {
+      setProfileSong(null);
+      return;
+    }
+    getProfileSongAction(novelist.id).then(setProfileSong);
+  }, [novelist?.id]);
 
   const mutualFriends = useMemo(() => {
     if (isCurrentUser) return [];
@@ -437,6 +452,8 @@ export default function UserProfilePage({}) {
     console.log("PROFILE ACCENT", { accent: ACCENT_MAP[palette], palette });
     return ACCENT_MAP[palette] ?? ACCENT_MAP[0];
   }, [novelist?.palette]);
+
+  const hasAbout = !!(novelist?.about && novelist.about.length > 0);
 
   const toFriendsPage = () => {
     routeToPage(ROUTES.Profile.View(username).Friends);
@@ -1019,30 +1036,6 @@ export default function UserProfilePage({}) {
                   : undefined
               }
             />
-            <S.BannerAvatarRow>
-              <S.Avatar
-                src={novelist?.image ?? null}
-                alt={novelist?.firstName ?? "Avatar"}
-                username={novelist?.username}
-                nwImage={novelist?.avatar}
-              />
-              <S.AvatarMobile
-                src={novelist?.image ?? null}
-                alt="profile-picture"
-                username={novelist?.username}
-                nwImage={novelist?.avatar}
-              />
-              <ShouldRender if={Boolean(novelist?.note?.text)}>
-                <S.NoteContainer $color={novelist?.note?.color ?? null}>
-                  {novelist?.note?.emoji && (
-                    <S.NoteEmoji>
-                      <NoteEmojiIcon emojiKey={novelist.note.emoji} size={16} />
-                    </S.NoteEmoji>
-                  )}
-                  {novelist?.note?.text}
-                </S.NoteContainer>
-              </ShouldRender>
-            </S.BannerAvatarRow>
             <ShouldRender if={authState === "LOGGED_IN"}>
               <S.ProfileDropdownMenuContainer>
                 {renderConnectionDropdown(novelist?.connection, username)}
@@ -1163,6 +1156,76 @@ export default function UserProfilePage({}) {
             </ShouldRender>
           </S.BannerSection>
           <S.ContentInner>
+            <S.AvatarHeader>
+              <S.AvatarWrap>
+                <S.Avatar
+                  src={novelist?.image ?? null}
+                  alt={novelist?.firstName ?? "Avatar"}
+                  username={novelist?.username}
+                  nwImage={novelist?.avatar}
+                />
+                <S.AvatarMobile
+                  src={novelist?.image ?? null}
+                  alt="profile-picture"
+                  username={novelist?.username}
+                  nwImage={novelist?.avatar}
+                />
+                <ShouldRender
+                  if={
+                    username !== "novelistworld" &&
+                    typeof novelist?.totalPoints === "number"
+                  }
+                >
+                  <Tooltip.Provider delayDuration={200}>
+                    <Tooltip.Root
+                      open={scoreTooltipOpen}
+                      onOpenChange={setScoreTooltipOpen}
+                    >
+                      <Tooltip.Trigger asChild>
+                        <S.AvatarXpBadge
+                          onClick={() => setScoreTooltipOpen((v) => !v)}
+                        >
+                          <ScoreBadgeIcon size={14} />
+                          {novelist?.totalPoints?.toLocaleString()} XP
+                        </S.AvatarXpBadge>
+                      </Tooltip.Trigger>
+                      <Tooltip.Portal>
+                        <Tooltip.Content
+                          sideOffset={4}
+                          className={classNames([accent, theme])}
+                          style={{
+                            background: "var(--bg-2)",
+                            border: "1px solid var(--bg-6)",
+                            borderRadius: "6px",
+                            color: "var(--text)",
+                            fontSize: "12px",
+                            maxWidth: "220px",
+                            padding: "6px 10px",
+                            userSelect: "none",
+                            zIndex: 9999,
+                          }}
+                        >
+                          XP reflects how active this Novelist is on the app.
+                          <Tooltip.Arrow style={{ fill: "var(--bg-6)" }} />
+                        </Tooltip.Content>
+                      </Tooltip.Portal>
+                    </Tooltip.Root>
+                  </Tooltip.Provider>
+                </ShouldRender>
+              </S.AvatarWrap>
+              <ShouldRender if={Boolean(novelist?.note?.text)}>
+                <S.NoteContainer $color={novelist?.note?.color ?? null}>
+                  {novelist?.note?.text}
+                  {novelist?.note?.emoji && (
+                    <S.NoteEmoji
+                      $rotate={getNoteEmojiRotate(novelist.note.emoji)}
+                    >
+                      <NoteEmojiIcon emojiKey={novelist.note.emoji} size={22} />
+                    </S.NoteEmoji>
+                  )}
+                </S.NoteContainer>
+              </ShouldRender>
+            </S.AvatarHeader>
             <Flex id="profile-tour-step-2">
               <S.NameMobile>
                 {novelist?.firstName} {novelist?.lastName}
@@ -1200,7 +1263,7 @@ export default function UserProfilePage({}) {
               </ShouldRender>
             </S.UsernameContainer>
             <ShouldRender if={username !== "novelistworld"}>
-              <Flex id="profile-tour-step-3" align="flex-start">
+              <S.StatsRow id="profile-tour-step-3">
                 <Flex gap={"2px"}>
                   <FcTreeStructure size={"16px"} />
                   <S.InfoTextBold>{novelist?.friendsCount}</S.InfoTextBold>{" "}
@@ -1217,46 +1280,7 @@ export default function UserProfilePage({}) {
                     {` `} Joined {toFormattedDate(novelist?.createdAt)}
                   </S.InfoText>
                 </Flex>
-              </Flex>
-              <ShouldRender if={typeof novelist?.totalPoints === "number"}>
-                <S.LevelChipRow>
-                  <Tooltip.Provider delayDuration={200}>
-                    <Tooltip.Root
-                      open={scoreTooltipOpen}
-                      onOpenChange={setScoreTooltipOpen}
-                    >
-                      <Tooltip.Trigger asChild>
-                        <S.ScoreBadge
-                          onClick={() => setScoreTooltipOpen((v) => !v)}
-                        >
-                          <ScoreBadgeIcon size={15} />
-                          {novelist?.totalPoints?.toLocaleString()} Score
-                        </S.ScoreBadge>
-                      </Tooltip.Trigger>
-                      <Tooltip.Portal>
-                        <Tooltip.Content
-                          sideOffset={4}
-                          className={classNames([accent, theme])}
-                          style={{
-                            background: "var(--bg-2)",
-                            border: "1px solid var(--bg-6)",
-                            borderRadius: "6px",
-                            color: "var(--text)",
-                            fontSize: "12px",
-                            maxWidth: "220px",
-                            padding: "6px 10px",
-                            userSelect: "none",
-                            zIndex: 9999,
-                          }}
-                        >
-                          Score reflects how active this Novelist is on the app.
-                          <Tooltip.Arrow style={{ fill: "var(--bg-6)" }} />
-                        </Tooltip.Content>
-                      </Tooltip.Portal>
-                    </Tooltip.Root>
-                  </Tooltip.Provider>
-                </S.LevelChipRow>
-              </ShouldRender>
+              </S.StatsRow>
             </ShouldRender>
             <ShouldRender
               if={mutualFriends !== undefined && mutualFriends?.length > 0}
@@ -1265,8 +1289,8 @@ export default function UserProfilePage({}) {
                 id="profile-tour-step-4"
                 align="center"
                 justify="flex-start"
-                gap="0.5rem"
-                style={{ paddingLeft: "2rem", width: "100%" }}
+                gap="0.2rem"
+                style={{ width: "100%", marginLeft: "60px" }}
               >
                 <S.InfoText>{`Mutual friends (${mutualFriends?.length})`}</S.InfoText>
                 <S.MutualFriendsList>
@@ -1282,15 +1306,27 @@ export default function UserProfilePage({}) {
                 </S.MutualFriendsList>
               </Flex>
             </ShouldRender>
-            <ShouldRender
-              if={!!(novelist?.about && novelist?.about.length > 0)}
-            >
-              <S.AboutContainer id="profile-tour-step-5">
-                <RichTextRenderer
-                  savedText={novelist?.about ?? ""}
-                  collapsedHeight={100}
-                />
-              </S.AboutContainer>
+            <ShouldRender if={Boolean(profileSong) || hasAbout}>
+              <S.MediaStack>
+                {profileSong && (
+                  <ProfileSongPlayer
+                    song={profileSong}
+                    block
+                    flushBottom={hasAbout}
+                  />
+                )}
+                <ShouldRender if={hasAbout}>
+                  <S.AboutContainer
+                    id="profile-tour-step-5"
+                    $attachedTop={Boolean(profileSong)}
+                  >
+                    <RichTextRenderer
+                      savedText={novelist?.about ?? ""}
+                      collapsedHeight={100}
+                    />
+                  </S.AboutContainer>
+                </ShouldRender>
+              </S.MediaStack>
             </ShouldRender>
             <ShouldRender
               if={!!(novelist?.museCount && novelist.museCount > 0)}

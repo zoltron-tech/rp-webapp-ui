@@ -11,6 +11,7 @@ import { resolveAsterismStyle } from "@/components/asterism-styles";
 import { CoverImage, ScrollJumpButton } from "@/components/common";
 import { AppAlertDialog } from "@/components/dialog";
 import EventThreadInput from "@/components/event-thread-input";
+import { ProfileSongPlayer } from "@/components/profile-song";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
 import { useGlobalState } from "@/context/store/stores";
 import { useUIContext, useWindowDimensions } from "@/hooks";
@@ -35,6 +36,7 @@ import {
 import { BookView } from "./book-view";
 import { EventThread } from "./event-thread";
 import * as S from "./styles";
+import { ShouldRender } from "@novelist-world/ui";
 
 /** Book mode is a desktop-only affordance — it needs the room for two pages. */
 const BOOK_MODE_MIN_WIDTH = 1000;
@@ -556,6 +558,21 @@ export default function StoryboardEventPage({}) {
         )}
       </S.TopBar>
 
+      {storyboardEvent?.song && (
+        <S.ChapterSong>
+          <ProfileSongPlayer
+            key={
+              storyboardEvent.song.spotifyTrackId ??
+              storyboardEvent.song.songId ??
+              storyboardEvent.song.title
+            }
+            song={storyboardEvent.song}
+            slim
+            block
+          />
+        </S.ChapterSong>
+      )}
+
       {effectiveMode === "book" && storyboardEvent ? (
         <BookView
           event={storyboardEvent}
@@ -607,10 +624,12 @@ export default function StoryboardEventPage({}) {
             </S.Asterism>
           )}
           <S.Overture>
+            <ShouldRender if={Boolean(storyboardEvent?.description && storyboardEvent?.description.length > 0)}>
             <RichTextRenderer
               savedText={storyboardEvent?.description ?? ""}
               disableCollapse
             />
+            </ShouldRender>
           </S.Overture>
 
           {/* Passages — one seamless flow of the story */}

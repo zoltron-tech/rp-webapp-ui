@@ -2327,3 +2327,309 @@ export const NoteTrayBody = styled.div`
   overflow: hidden;
   padding-bottom: env(safe-area-inset-bottom, 0px);
 `;
+
+// ─── Profile-song picker dialog ──────────────────────────────────────────────
+
+const songPickerFade = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+export const SongPickerOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 100000;
+  animation: ${songPickerFade} 120ms ease-out;
+`;
+
+export const SongPickerContent = styled.div`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(480px, calc(100vw - 32px));
+  max-height: min(640px, calc(100vh - 48px));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: var(--bg-2);
+  border: 1px solid var(--bg-6);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: var(--font);
+  z-index: 100001;
+  animation: ${songPickerFade} 140ms ease-out;
+`;
+
+export const SongPickerTitle = styled.h2`
+  margin: 0;
+  font-size: var(--font-size-large);
+  font-weight: var(--font-weight-bold);
+`;
+
+export const SongPickerTabs = styled.div`
+  display: flex;
+  gap: 6px;
+`;
+
+export const SongPickerTab = styled.button<{ $active: boolean }>`
+  all: unset;
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: var(--font-size-small);
+  background: ${({ $active }) => ($active ? "var(--bg-4)" : "var(--bg-3)")};
+  color: ${({ $active }) => ($active ? "var(--text)" : "var(--text-secondary)")};
+  border: 1px solid ${({ $active }) => ($active ? "var(--accent)" : "var(--bg-6)")};
+
+  &:hover {
+    background: var(--bg-4);
+  }
+`;
+
+export const SongPickerSearch = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-3);
+  border: 1px solid var(--bg-6);
+  border-radius: 8px;
+  color: var(--text-secondary);
+
+  input {
+    all: unset;
+    flex: 1;
+    color: var(--text);
+    font-size: var(--font-size-small);
+  }
+`;
+
+export const SongPickerList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  min-height: 120px;
+`;
+
+export const SongPickerEmpty = styled.div`
+  padding: 24px 8px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+`;
+
+export const SongPickerRow = styled.div<{
+  $disabled?: boolean;
+  $active?: boolean;
+}>`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    background: var(--bg-3);
+  }
+
+  ${({ $active }) =>
+    $active &&
+    css`
+      background: var(--bg-3);
+      border-color: var(--accent);
+    `}
+
+  ${({ $disabled }) =>
+    $disabled &&
+    css`
+      opacity: 0.6;
+    `}
+
+  /* Top line: art + title + play/pause (or saving). */
+  .row-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .saving {
+    font-size: var(--font-size-xsmall);
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+`;
+
+/** The text area of a row — clicking it plays/pauses the preview. */
+export const SongPickerSelect = styled.button`
+  all: unset;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: default;
+  }
+`;
+
+/** Seek bar + elapsed/total time, shown on the active (selected) row. */
+export const SongPickerSeek = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 2px;
+
+  time {
+    font-size: var(--font-size-xsmall);
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+    min-width: 34px;
+    flex-shrink: 0;
+
+    &.end {
+      text-align: right;
+    }
+  }
+
+  input[type="range"] {
+    flex: 1;
+    min-width: 0;
+    height: 4px;
+    border-radius: 2px;
+    cursor: pointer;
+    accent-color: var(--accent);
+  }
+`;
+
+const songPickerSpin = keyframes`
+  to { transform: rotate(360deg); }
+`;
+
+export const SongPickerArt = styled.div`
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-5);
+  color: var(--text-secondary);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+`;
+
+const songPickerPulse = keyframes`
+  0% { box-shadow: 0 0 0 0 var(--accent); }
+  70% { box-shadow: 0 0 0 6px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+`;
+
+/** Explicit round play/pause button on each row. */
+export const SongPickerPlay = styled.button<{
+  $active?: boolean;
+  $loading?: boolean;
+}>`
+  all: unset;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: ${({ $active }) => ($active ? "#fff" : "var(--accent)")};
+  background: ${({ $active }) => ($active ? "var(--accent)" : "var(--bg-4)")};
+  transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+
+  /* Playing: soft pulsing ring so it reads as live, not just "paused". */
+  ${({ $active }) =>
+    $active &&
+    css`
+      animation: ${songPickerPulse} 1.6s ease-out infinite;
+    `}
+
+  &:hover:not(:disabled) {
+    opacity: 0.85;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid color-mix(in srgb, currentColor 25%, transparent);
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: ${songPickerSpin} 0.7s linear infinite;
+  }
+`;
+
+export const SongPickerMeta = styled.div`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+
+  .title {
+    font-size: var(--font-size-small);
+    font-weight: 600;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sub {
+    font-size: var(--font-size-xsmall);
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+`;
+
+export const SongPickerActions = styled.div`
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+`;
+
+export const ProfileSongCurrent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+`;
+
+export const ProfileSongButtons = styled.div`
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  @media screen and (max-width: 800px) {
+    margin-top: 22px;
+  }
+`;

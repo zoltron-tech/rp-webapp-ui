@@ -20,6 +20,7 @@ import type { StoryBoardEvent, StoryBoardEventThread } from "@/types";
 import { toFormattedDate } from "@/utils/helpers";
 import { EventThread } from "./event-thread";
 import * as S from "./styles";
+import { ShouldRender } from "@novelist-world/ui";
 
 /* ── Fixed design geometry ────────────────────────────────────────────────
    The book is always laid out at these exact pixel dimensions and then the
@@ -112,6 +113,7 @@ export const BookView: FC<Props> = ({
   onPositionChange,
 }) => {
   const stageRef = useRef<HTMLDivElement>(null);
+  const footerRef = useRef<HTMLDivElement>(null);
   const flowRef = useRef<HTMLDivElement>(null);
   const threadColsRef = useRef<ThreadColumn[]>([]);
   const pendingRef = useRef<Pending | null>(
@@ -145,11 +147,24 @@ export const BookView: FC<Props> = ({
     if (!flow || !stage) return;
 
     // Fit the fixed-size page into the available box, preserving its aspect.
+    // The vertical budget is measured, not guessed: everything above the stage
+    // (top bar + chapter song) is whatever sits between the viewport top and
+    // the stage, and everything below is the footer plus the page's own bottom
+    // padding. Reserving the real chrome keeps header + song + book + nav all
+    // on one screen at 100% zoom instead of pushing the footer past the fold.
     const availW = stage.clientWidth || DESIGN_STAGE_WIDTH;
-    const availH = Math.max(420, (winH ?? 800) - 240);
+    const stageTop = Math.max(0, stage.getBoundingClientRect().top);
+    const footer = footerRef.current;
+    const footerH = footer
+      ? footer.offsetHeight +
+        parseFloat(getComputedStyle(footer).marginTop || "0")
+      : 60;
+    // Only a small breathing gap below the footer is reserved (not the page's
+    // full bottom padding), so the book fills as much height as it can.
+    const availH = Math.max(360, (winH ?? 800) - stageTop - footerH - 24);
     setScale(
       Math.min(
-        2,
+        2.6,
         Math.max(
           0.4,
           Math.min(availW / DESIGN_STAGE_WIDTH, availH / DESIGN_STAGE_HEIGHT),
@@ -429,10 +444,12 @@ export const BookView: FC<Props> = ({
                 </S.BookTitleBlock>
 
                 <div className="book-overture">
+                  <ShouldRender if={Boolean(event?.description && event?.description.length > 0)}>
                   <RichTextRenderer
                     savedText={event.description ?? ""}
                     disableCollapse
                   />
+                  </ShouldRender>
                 </div>
               </>
             ) : (
@@ -534,7 +551,7 @@ export const BookView: FC<Props> = ({
         </S.PageEdgeButton>
       </S.Spread>
 
-      <S.BookFooter>
+      <S.BookFooter ref={footerRef}>
         <S.PagerButton
           onClick={() => turn(-1)}
           disabled={atStart || loadingEdge !== null}

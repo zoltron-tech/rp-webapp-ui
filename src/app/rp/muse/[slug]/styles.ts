@@ -2183,6 +2183,18 @@ export const InfoDivider = styled.div<{ $accent?: string | null }>`
       : "rgba(255, 255, 255, 0.1)"};
 `;
 
+export const InfoSongWrap = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 2px;
+
+  & > * {
+    width: 100%;
+    max-width: 340px;
+  }
+`;
+
 export const InfoDetailsSection = styled.div<{ $accent?: string | null }>`
   flex: 1;
   min-height: 0;
@@ -3444,5 +3456,185 @@ export const VerseCircleNew = styled(VerseCircle)`
   &:hover {
     color: #fff;
     border-color: rgba(255, 255, 255, 0.55);
+  }
+`;
+
+/* ── Muse featured song ───────────────────────────────────────────────────────
+   Rendered on its own full-width row between the verse header and the muse
+   card. Same `flex-basis: 100%` trick as the verse bar so it always claims a
+   full row and pushes the card below it, never sitting beside it. */
+export const MuseSongBar = styled.div`
+  position: relative;
+  z-index: ${Z_INDEX.CARD};
+  width: 100%;
+  flex-basis: 100%;
+  display: flex;
+  justify-content: center;
+`;
+
+export const MuseSongInner = styled.div`
+  position: relative;
+  width: 100%;
+  max-width: 340px;
+  padding: 0 6px 0;
+
+  /* Pull the card up close under the player — only a hair of space between the
+     song and the card below it. (Overrides the player Wrapper's own -18px
+     About-section margin with our own tighter value.) */
+  & > div {
+    margin-bottom: -22px;
+  }
+
+  /* Stronger accent-tinted gradient on the pill than the shared default, so the
+     song reads as the muse's own. (Wrapper is the div child; its first child is
+     the pill.) */
+  & > div > *:first-child {
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--accent) 34%, var(--bg-3)) 0%,
+      color-mix(in srgb, var(--accent) 14%, var(--bg-3)) 55%,
+      color-mix(in srgb, var(--accent) 6%, var(--bg-3)) 100%
+    );
+  }
+
+  /* Desktop: pull it in even tighter. */
+  @media (min-width: 951px) {
+    & > div {
+      margin-bottom: -32px;
+    }
+  }
+
+  @media (max-width: 950px) {
+    max-width: 440px;
+    padding-inline: 16px;
+
+    /* A little more breathing room above the card on mobile. */
+    & > div {
+      margin-bottom: -14px;
+    }
+
+    /* The block player squares its corners and drops its side borders on
+       mobile; round the top corners back and restore top/left/right borders so
+       the song pill reads as its own framed element above the card. */
+    & > div > *:first-child {
+      border-radius: 12px;
+      border-top: 1px solid
+        color-mix(in srgb, var(--accent) 40%, var(--bg-5));
+      border-left: 1px solid
+        color-mix(in srgb, var(--accent) 40%, var(--bg-5));
+      border-right: 1px solid
+        color-mix(in srgb, var(--accent) 40%, var(--bg-5));
+    }
+  }
+
+  /* On phones the muse card shrinks (see CardExpandedWrapper) so the edge nav
+     tabs never overlap it. Clamp the song to the same width per breakpoint so
+     it never sticks out wider than the card below it. */
+  @media (min-width: 381px) and (max-width: 420px) {
+    max-width: min(280px, calc(100vw - 110px));
+    padding-inline: 0;
+  }
+
+  @media (min-width: 350px) and (max-width: 380px) {
+    max-width: min(240px, calc(100vw - 120px));
+    padding-inline: 0;
+  }
+
+  @media (max-width: 350px) {
+    max-width: 95%;
+    padding-inline: 0;
+  }
+`;
+
+/* Owner controls: a compact vertical pill parked just off the right edge of the
+   song player, clear of the play/pause button inside it. The two actions stack
+   in one rounded container with a hairline divider so they read as one
+   deliberate toolbar. */
+export const MuseSongControls = styled.div`
+  position: absolute;
+  top: 50%;
+  right: -30px;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(6px);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, rgba(255, 255, 255, 0.28));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+
+  @media (max-width: 420px) {
+    right: -26px;
+  }
+`;
+
+export const MuseSongIconBtn = styled.button`
+  width: 22px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  /* Hairline divider between the stacked segments. */
+  & + & {
+    border-top: 1px solid rgba(255, 255, 255, 0.18);
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 40%, transparent);
+    color: #fff;
+  }
+
+  &.remove:hover {
+    background: rgba(180, 30, 30, 0.72);
+    color: #fff;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+/* Dashed "Add song" pill shown to the owner when no song is set. */
+export const MuseSongAddBtn = styled.button`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1.5px dashed rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(4px);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+
+  svg {
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.55);
+    background: rgba(0, 0, 0, 0.4);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 `;

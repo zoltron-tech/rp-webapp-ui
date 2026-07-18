@@ -16,8 +16,11 @@ import {
 } from "react";
 import { IoIosShareAlt } from "react-icons/io";
 import { IoArrowBack, IoCloseOutline } from "react-icons/io5";
+import { MdDeleteOutline, MdMusicNote } from "react-icons/md";
 import { PiDotsThreeOutlineFill } from "react-icons/pi";
 import { submitPrompt } from "@/app/rp/profile/actions";
+import { SongPickerDialog } from "@/app/rp/profile/edit/song-picker-dialog";
+import { ProfileSongPlayer } from "@/components/profile-song";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents, useUIContext } from "@/hooks";
@@ -29,6 +32,7 @@ import type {
   SubmitPromptInput,
   SubmitPromptType,
 } from "@/types";
+import type { ProfileSong } from "@/types/music";
 import { API_MESSAGE } from "@/utils/constants";
 import { EVENTS } from "@/utils/constants/custom-events";
 import { AppAlertDialog } from "../dialog";
@@ -100,10 +104,12 @@ const FullPageForm: FC<InnerFormProps> = ({
   const [sending, setSending] = useState(false);
   const novelist = useGlobalState("novelist");
   const promptText = usePromptInputState("promptText");
+  const featuredSong = usePromptInputState("featuredSong");
   const mediaUploading = usePromptInputState("mediaUploading");
   const mediaUploadError = usePromptInputState("mediaUploadError");
   const { successToast, errorToast } = useUIContext();
   const setPromptInputState = usePromptInputStoreSet();
+  const [songDialogOpen, setSongDialogOpen] = useState(false);
   const [error, setError] = useState<API_MESSAGE | null>(null);
   const [novelistConfirmOpen, setNovelistConfirmOpen] = useState(false);
   const pendingSubmitRef = useRef<(() => Promise<void>) | null>(null);
@@ -195,6 +201,8 @@ const FullPageForm: FC<InnerFormProps> = ({
       if (type === "prompt") {
         payload.privacy = privacy;
         payload.sharedWith = privacySelectedFriends;
+        // Songs attach to prompts only — never comments or replies.
+        payload.featuredSong = featuredSong;
       } else {
         payload[getParentIdKeyFromPromptType(type)] = parentId;
       }
@@ -218,7 +226,11 @@ const FullPageForm: FC<InnerFormProps> = ({
           emit(PromptEvent.Sent, { muse: selectedSource, payload, type });
           setSending(false);
           setError(null);
-          setPromptInputState({ media: null, promptText: "" });
+          setPromptInputState({
+            featuredSong: null,
+            media: null,
+            promptText: "",
+          });
           onSend?.(
             response.prompt ?? buildOptimisticPrompt(selectedSource, payload),
           );
@@ -249,6 +261,7 @@ const FullPageForm: FC<InnerFormProps> = ({
     [
       sources,
       promptText,
+      featuredSong,
       parentId,
       type,
       dropdownSelection,
@@ -336,6 +349,17 @@ const FullPageForm: FC<InnerFormProps> = ({
             </S.FPSharedWith>
           </ShouldRender>
           <S.FPMetaRight>
+            {type === "prompt" && (
+              <S.ToolButton
+                type="button"
+                style={{ marginTop: 20 }}
+                aria-label={featuredSong ? "Change song" : "Add a song"}
+                title={featuredSong ? "Change song" : "Add a song"}
+                onClick={() => setSongDialogOpen(true)}
+              >
+                <MdMusicNote />
+              </S.ToolButton>
+            )}
             <PromptMediaInput />
           </S.FPMetaRight>
         </S.FPMetaRow>
@@ -346,6 +370,41 @@ const FullPageForm: FC<InnerFormProps> = ({
         </S.FPEditorArea>
 
         <PromptMediaPreview />
+
+        {type === "prompt" && featuredSong && (
+          <S.PromptSongPreview>
+            <ProfileSongPlayer
+              key={
+                featuredSong.spotifyTrackId ??
+                featuredSong.songId ??
+                featuredSong.title
+              }
+              song={featuredSong}
+              slim
+              block
+            />
+            <S.PromptSongRemove
+              type="button"
+              aria-label="Remove song"
+              title="Remove song"
+              onClick={() => setPromptInputState({ featuredSong: null })}
+            >
+              <MdDeleteOutline />
+            </S.PromptSongRemove>
+          </S.PromptSongPreview>
+        )}
+
+        {type === "prompt" && (
+          <SongPickerDialog
+            open={songDialogOpen}
+            onOpenChange={setSongDialogOpen}
+            commit={false}
+            title="Add a song to your prompt"
+            onSelected={(picked: ProfileSong) =>
+              setPromptInputState({ featuredSong: picked })
+            }
+          />
+        )}
 
         <InfoModal
           open={Boolean(error)}

@@ -17,8 +17,11 @@ import {
 } from "react";
 import { HiPaperAirplane } from "react-icons/hi2";
 import { IoIosShareAlt } from "react-icons/io";
+import { MdDeleteOutline, MdMusicNote } from "react-icons/md";
 import { PiDotsThreeOutlineFill } from "react-icons/pi";
 import { submitPrompt } from "@/app/rp/profile/actions";
+import { SongPickerDialog } from "@/app/rp/profile/edit/song-picker-dialog";
+import { ProfileSongPlayer } from "@/components/profile-song";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents, useUIContext } from "@/hooks";
@@ -30,6 +33,7 @@ import type {
   SubmitPromptInput,
   SubmitPromptType,
 } from "@/types";
+import type { ProfileSong } from "@/types/music";
 import { API_MESSAGE } from "@/utils/constants";
 import { EVENTS } from "@/utils/constants/custom-events";
 import { AppAlertDialog } from "../dialog";
@@ -87,9 +91,11 @@ export const PromptForm: FC<PromptInputFormProps> = ({
   const [sending, setSending] = useState(false);
   const novelist = useGlobalState("novelist");
   const promptText = usePromptInputState("promptText");
+  const featuredSong = usePromptInputState("featuredSong");
   const { successToast, errorToast } = useUIContext();
   const setPromptInputState = usePromptInputStoreSet();
 
+  const [songDialogOpen, setSongDialogOpen] = useState(false);
   const [open, setOpen] = useState(true);
   const [error, setError] = useState<API_MESSAGE | null>(null);
   const [novelistConfirmOpen, setNovelistConfirmOpen] = useState(false);
@@ -189,6 +195,8 @@ export const PromptForm: FC<PromptInputFormProps> = ({
       if (type === "prompt") {
         payload.privacy = formFields.privacy;
         payload.sharedWith = privacySelectedFriends;
+        // Songs attach to prompts only — never comments or replies.
+        payload.featuredSong = featuredSong;
       } else {
         payload[getParentIdKeyFromPromptType(type)] = parentId;
       }
@@ -213,7 +221,11 @@ export const PromptForm: FC<PromptInputFormProps> = ({
           setSending(false);
           setError(null);
           setOpen(false);
-          setPromptInputState({ media: null, promptText: "" });
+          setPromptInputState({
+            featuredSong: null,
+            media: null,
+            promptText: "",
+          });
           onSend?.(
             response.prompt ?? buildOptimisticPrompt(selectedSource, payload),
           );
@@ -243,7 +255,7 @@ export const PromptForm: FC<PromptInputFormProps> = ({
       setSending(false);
       setError(null);
       setOpen(false);
-      setPromptInputState({ media: null, promptText: "" });
+      setPromptInputState({ featuredSong: null, media: null, promptText: "" });
       onSend?.(
         response.prompt ?? buildOptimisticPrompt(selectedSource, payload),
       );
@@ -251,12 +263,14 @@ export const PromptForm: FC<PromptInputFormProps> = ({
     [
       sources,
       promptText,
+      featuredSong,
       parentId,
       type,
       dropdownSelection,
       privacySelectedFriends,
       emit,
       onSend,
+      setPromptInputState,
     ],
   );
 
@@ -315,6 +329,17 @@ export const PromptForm: FC<PromptInputFormProps> = ({
             </S.privacyAvatarMoreIcon>
           </ShouldRender>
           <S.DesktopMediaWrap>
+            {type === "prompt" && (
+              <S.ToolButton
+                type="button"
+                style={{ marginTop: 20 }}
+                aria-label={featuredSong ? "Change song" : "Add a song"}
+                title={featuredSong ? "Change song" : "Add a song"}
+                onClick={() => setSongDialogOpen(true)}
+              >
+                <MdMusicNote />
+              </S.ToolButton>
+            )}
             <PromptMediaInput />
           </S.DesktopMediaWrap>
         </S.DesktopMetaRow>
@@ -339,6 +364,41 @@ export const PromptForm: FC<PromptInputFormProps> = ({
         </S.DesktopEditorWrap>
 
         <PromptMediaPreview />
+
+        {type === "prompt" && featuredSong && (
+          <S.PromptSongPreview>
+            <ProfileSongPlayer
+              key={
+                featuredSong.spotifyTrackId ??
+                featuredSong.songId ??
+                featuredSong.title
+              }
+              song={featuredSong}
+              slim
+              block
+            />
+            <S.PromptSongRemove
+              type="button"
+              aria-label="Remove song"
+              title="Remove song"
+              onClick={() => setPromptInputState({ featuredSong: null })}
+            >
+              <MdDeleteOutline />
+            </S.PromptSongRemove>
+          </S.PromptSongPreview>
+        )}
+
+        {type === "prompt" && (
+          <SongPickerDialog
+            open={songDialogOpen}
+            onOpenChange={setSongDialogOpen}
+            commit={false}
+            title="Add a song to your prompt"
+            onSelected={(picked: ProfileSong) =>
+              setPromptInputState({ featuredSong: picked })
+            }
+          />
+        )}
       </Form.Root>
     </>
   );

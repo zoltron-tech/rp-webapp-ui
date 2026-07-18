@@ -4,6 +4,7 @@ import {
   useStoreState,
 } from "@/context/store/use-store";
 import type { Fandom, NWImage, PrivacyLevel } from "@/types";
+import type { ProfileSong } from "@/types/music";
 import { FANDOMLESS } from "@/utils/constants";
 
 export type MuseState = {
@@ -24,6 +25,8 @@ export type MuseState = {
   useAccent: boolean;
   useExtraImages: boolean;
   extraAttributes: Record<string, string> | null;
+  /** Rich featured song for the muse (NW Library / Spotify); null when unset. */
+  featuredSong: ProfileSong | null;
   /** When creating an alternative verse: the muse this one is a verse of. */
   originalVerseId: string | null;
 };
@@ -34,6 +37,7 @@ export const INITIAL_STATE: MuseState = {
   cardBackground: null,
   extraAttributes: null,
   fandom: FANDOMLESS,
+  featuredSong: null,
   firstName: null,
   gender: null,
   id: null,

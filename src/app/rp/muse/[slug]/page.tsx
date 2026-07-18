@@ -14,10 +14,13 @@ import {
   FiCamera,
   FiChevronLeft,
   FiChevronRight,
+  FiEdit2,
   FiLayers,
   FiLink,
   FiMoreVertical,
+  FiMusic,
   FiPlus,
+  FiTrash2,
 } from "react-icons/fi";
 import { GiBookCover } from "react-icons/gi";
 import { MdImage, MdPhotoLibrary } from "react-icons/md";
@@ -25,12 +28,15 @@ import { TiInfoLarge } from "react-icons/ti";
 import { ShouldRender } from "@/components/common";
 import { AppAlertDialog } from "@/components/dialog";
 import BannerCropDialog from "@/components/dialog/banner-crop-dialog";
+import { ProfileSongPlayer } from "@/components/profile-song";
+import { SongPickerDialog } from "@/app/rp/profile/edit/song-picker-dialog";
 import { useGlobalState } from "@/context/store/stores";
 import { useStateMachine } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import type { Muse, MuseAboutSection, Prompt } from "@/types";
+import type { ProfileSong } from "@/types/music";
 import type {
   ImageCropFilter,
   ImageFilter,
@@ -42,11 +48,13 @@ import { ROUTES } from "@/utils/constants/routes";
 import { reverseWsrvUrl } from "@/utils/image";
 import { Logger } from "@/utils/services";
 import {
+  deleteMuseSongAction,
   getMuseAboutSectionsAction,
   getMuseAction,
   getMuseMediaAction,
   removeMuseCardBackgroundAction,
   setMuseCardBackgroundAction,
+  setMuseSongAction,
 } from "../../muse/actions";
 import { deleteMedia } from "../../profile/actions";
 import { getPromptsByMuseAction } from "../../prompt/actions";
@@ -118,6 +126,7 @@ function museToNavItem(m: Muse): MuseNavItem | null {
     avatar: m.avatar,
     cardBackground: m.cardBackground,
     extraAttributes: m.extraAttributes,
+    featuredSong: m.featuredSong,
     firstName: m.firstName,
     gender: null,
     id: m.id,
@@ -375,9 +384,9 @@ export default function MuseProfilePage({}) {
   // Sliding "active section" pill in the SideMenu — measured off the actual
   // selected MenuButton's layout box, so the same code slides it vertically
   // on desktop and horizontally on mobile without knowing which axis is live.
-  const menuButtonRefs = useRef<Partial<Record<CARD_STATE, HTMLButtonElement | null>>>(
-    {},
-  );
+  const menuButtonRefs = useRef<
+    Partial<Record<CARD_STATE, HTMLButtonElement | null>>
+  >({});
   const [menuHighlight, setMenuHighlight] = useState<{
     top: number;
     left: number;
@@ -413,7 +422,6 @@ export default function MuseProfilePage({}) {
     window.addEventListener("resize", updateMenuHighlight);
     return () => window.removeEventListener("resize", updateMenuHighlight);
   }, [updateMenuHighlight]);
-
 
   // On mobile, open the card view by default instead of info section.
   // Runs once on mount only — `transition` is a new function reference on
@@ -524,6 +532,48 @@ export default function MuseProfilePage({}) {
     [muse, navLoading, routeToPage],
   );
 
+  // ── Featured song ──────────────────────────────────────────────────────────
+  const [songPickerOpen, setSongPickerOpen] = useState(false);
+  const [confirmRemoveSong, setConfirmRemoveSong] = useState(false);
+  const [songRemoving, setSongRemoving] = useState(false);
+
+  const handleSongSelected = useCallback(
+    async (song: ProfileSong) => {
+      if (!muse?.id) return;
+      setSongPickerOpen(false);
+      const result = await setMuseSongAction(muse.id, {
+        artist: song.artist ?? undefined,
+        externalUrl: song.externalUrl ?? undefined,
+        imageUrl: song.imageUrl ?? undefined,
+        songId: song.songId ?? undefined,
+        source: song.source,
+        spotifyTrackId: song.spotifyTrackId ?? undefined,
+        title: song.title,
+        url: song.url ?? undefined,
+      });
+      if ("message" in result) {
+        errorToast("Failed to set song.");
+        return;
+      }
+      setMuse((prev) => (prev ? { ...prev, featuredSong: result } : prev));
+      successToast("Song updated.");
+    },
+    [muse?.id, errorToast, successToast],
+  );
+
+  const handleRemoveSong = useCallback(async () => {
+    if (!muse?.id) return;
+    setSongRemoving(true);
+    const result = await deleteMuseSongAction(muse.id);
+    setSongRemoving(false);
+    if (result.message !== API_MESSAGE.Success) {
+      errorToast("Failed to remove song.");
+      return;
+    }
+    setMuse((prev) => (prev ? { ...prev, featuredSong: null } : prev));
+    successToast("Song removed.");
+  }, [muse?.id, errorToast, successToast]);
+
   const [museLimitDialogOpen, setMuseLimitDialogOpen] = useState(false);
   const museLimit = novelist?.tier.museLimit ?? 0;
   // Alternate verses count toward the limit just like root characters.
@@ -606,7 +656,9 @@ export default function MuseProfilePage({}) {
   // While the full muse loads after prev/next navigation, fall back to the
   // minimal nav object so the wallpaper and card image swap instantly.
   const museVisual: Muse | MuseNavItem | null = muse ?? previewMuse;
-  const accent = museVisual?.useAccent ? (museVisual.accent ?? undefined) : undefined;
+  const accent = museVisual?.useAccent
+    ? (museVisual.accent ?? undefined)
+    : undefined;
 
   const bannerSrc =
     (museVisual?.useExtraImages && getSafeImage(museVisual?.wallpaper?.src)) ||
@@ -860,9 +912,18 @@ export default function MuseProfilePage({}) {
               <FiLayers />
               Verses
             </S.VerseHeaderLabel>
-            <S.VerseCircleTrack $fade={(verseHeaderData?.verses.length ?? 0) > 3} $accent={accent}>
+            <S.VerseCircleTrack
+              $fade={(verseHeaderData?.verses.length ?? 0) > 3}
+              $accent={accent}
+            >
               {(verseHeaderData?.verses.length ?? 0) === 0 ? (
-                <S.VerseCircle type="button" $active $accent={accent} disabled title="Verse 1">
+                <S.VerseCircle
+                  type="button"
+                  $active
+                  $accent={accent}
+                  disabled
+                  title="Verse 1"
+                >
                   1
                 </S.VerseCircle>
               ) : (
@@ -897,6 +958,59 @@ export default function MuseProfilePage({}) {
             )}
           </S.VerseHeaderInner>
         </S.VerseHeaderBar>
+      </ShouldRender>
+
+      {/* Featured song — sits between the verse header and the card. Owners can
+          add, change, or remove it inline; visitors just see the player. */}
+      <ShouldRender if={Boolean(muse?.featuredSong) || isOwnMuse}>
+        <S.MuseSongBar>
+          <S.MuseSongInner
+            style={
+              accent ? ({ "--accent": accent } as React.CSSProperties) : undefined
+            }
+          >
+            {muse?.featuredSong ? (
+              <>
+                <ProfileSongPlayer
+                  song={muse.featuredSong}
+                  slim
+                  block
+                  accent={accent}
+                />
+                {isOwnMuse && (
+                  <S.MuseSongControls>
+                    <S.MuseSongIconBtn
+                      type="button"
+                      title="Change song"
+                      onClick={() => setSongPickerOpen(true)}
+                    >
+                      <FiEdit2 size={11} />
+                    </S.MuseSongIconBtn>
+                    <S.MuseSongIconBtn
+                      className="remove"
+                      type="button"
+                      title="Remove song"
+                      disabled={songRemoving}
+                      onClick={() => setConfirmRemoveSong(true)}
+                    >
+                      <FiTrash2 size={11} />
+                    </S.MuseSongIconBtn>
+                  </S.MuseSongControls>
+                )}
+              </>
+            ) : (
+              isOwnMuse && (
+                <S.MuseSongAddBtn
+                  type="button"
+                  onClick={() => setSongPickerOpen(true)}
+                >
+                  <FiMusic size={13} />
+                  Add a song
+                </S.MuseSongAddBtn>
+              )
+            )}
+          </S.MuseSongInner>
+        </S.MuseSongBar>
       </ShouldRender>
 
       {/* Main character card */}
@@ -1163,6 +1277,35 @@ export default function MuseProfilePage({}) {
         onOpenChange={setMuseLimitDialogOpen}
         showConfirm={false}
         closeButtonText="Close"
+      />
+
+      {/* Featured song picker — resolves the pick locally (commit=false), then
+          persists it to this muse via handleSongSelected. */}
+      {isOwnMuse && (
+        <SongPickerDialog
+          open={songPickerOpen}
+          onOpenChange={setSongPickerOpen}
+          onSelected={handleSongSelected}
+          commit={false}
+          title={muse?.featuredSong ? "Change song" : "Add a song"}
+        />
+      )}
+
+      {/* Confirm: remove featured song */}
+      <AppAlertDialog
+        heading="Remove song?"
+        text="Remove this character's featured song?"
+        open={confirmRemoveSong}
+        onOpenChange={(open) => {
+          if (!open) setConfirmRemoveSong(false);
+        }}
+        onCancel={() => setConfirmRemoveSong(false)}
+        onConfirm={() => {
+          setConfirmRemoveSong(false);
+          handleRemoveSong();
+        }}
+        actionButtonLabel="Remove"
+        actionColor="negative"
       />
     </S.MuseContainer>
   );

@@ -33,7 +33,9 @@ export const EditMuseForm: FC<EditMuseCardProps> = ({ id }) => {
   const fetchData = async () => {
     if (!id) {
       if (originalVerseId) {
-        const parent = await baseDataLoader(() => getMuseAction(originalVerseId));
+        const parent = await baseDataLoader(() =>
+          getMuseAction(originalVerseId),
+        );
         if (parent !== null) setVerseParentMuse(parent);
       } else {
         stopPageLoading();
@@ -71,6 +73,7 @@ export const EditMuseForm: FC<EditMuseCardProps> = ({ id }) => {
             // leave it changeable (unlike privacy) — the FandomSelect below
             // still lets the novelist pick a different one.
             fandom: muse?.fandom || verseParentMuse?.fandom || FANDOMLESS,
+            featuredSong: muse?.featuredSong || null,
             // Create-verse only: pre-fill the name from the parent muse so the
             // novelist isn't retyping it; edit mode always uses the loaded muse.
             firstName: muse?.firstName || verseParentMuse?.firstName || "",

@@ -12,11 +12,19 @@ import {
 import { HexColorPicker } from "react-colorful";
 import { BsArrowLeft, BsAspectRatio, BsPencil, BsUpload } from "react-icons/bs";
 import { MdOutlineBrush, MdTune } from "react-icons/md";
-import { getMuseMediaAction, setMuseAvatarAction } from "@/app/rp/muse/actions";
+import {
+  deleteMuseSongAction,
+  getMuseMediaAction,
+  setMuseAvatarAction,
+  setMuseSongAction,
+} from "@/app/rp/muse/actions";
 import { deleteMedia } from "@/app/rp/profile/actions";
+import { SongPickerDialog } from "@/app/rp/profile/edit/song-picker-dialog";
+import { ProfileSongPlayer } from "@/components/profile-song";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import type { ImageCropFilter, NWImage } from "@/types";
+import type { ProfileSong } from "@/types/music";
 import { API_MESSAGE } from "@/utils/constants";
 import { AvatarUploadField } from "../common/avatar-upload-field";
 import { LoaderAction } from "../common/loader-action";
@@ -53,9 +61,20 @@ function clamp(v: number, min: number, max: number) {
   return Math.min(max, Math.max(min, v));
 }
 
-function toCropFilter(src: string, x: number, y: number, scale: number): ImageCropFilter {
+function toCropFilter(
+  src: string,
+  x: number,
+  y: number,
+  scale: number,
+): ImageCropFilter {
   const scalePct = Math.round(scale * 100);
-  return { height: scalePct, src, width: scalePct, x: Math.round(x), y: Math.round(y) };
+  return {
+    height: scalePct,
+    src,
+    width: scalePct,
+    x: Math.round(x),
+    y: Math.round(y),
+  };
 }
 
 type TempUploads = {
@@ -93,10 +112,45 @@ export function AppearanceSection({
   const accent = useMuseState("accent");
   const useAccent = useMuseState("useAccent");
   const useExtraImages = useMuseState("useExtraImages");
+  const featuredSong = useMuseState("featuredSong");
   const setMuseState = useMuseStoreSet();
   const { save, loading } = useMuseSave();
   const { uploadMedia } = useUploadMedia();
   const { successToast, errorToast } = useUIContext();
+
+  const [songDialogOpen, setSongDialogOpen] = useState(false);
+  const [songSaving, setSongSaving] = useState(false);
+
+  // Featured song persists immediately through its own endpoint (like the
+  // profile song), independent of the muse form save.
+  const handleSongSelected = useCallback(
+    async (picked: ProfileSong) => {
+      if (!id) return;
+      setSongSaving(true);
+      const result = await setMuseSongAction(id, picked);
+      setSongSaving(false);
+      if ("source" in result) {
+        setMuseState({ featuredSong: result });
+        successToast("Character song updated.");
+      } else {
+        errorToast("Could not set the song. Please try again.");
+      }
+    },
+    [id, setMuseState, successToast, errorToast],
+  );
+
+  const handleSongRemove = useCallback(async () => {
+    if (!id) return;
+    setSongSaving(true);
+    const result = await deleteMuseSongAction(id);
+    setSongSaving(false);
+    if (result.message === API_MESSAGE.Success) {
+      setMuseState({ featuredSong: null });
+      successToast("Character song removed.");
+    } else {
+      errorToast("Could not remove the song. Please try again.");
+    }
+  }, [id, setMuseState, successToast, errorToast]);
 
   const [imageUploading, setImageUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -146,7 +200,7 @@ export function AppearanceSection({
   const [cropScale, setCropScale] = useState(1);
   // Live position/zoom applied imperatively to the card face during drag so no
   // React state churns per frame; committed to state/tempCardBg only on release.
-  const liveCrop = useRef({ x: 50, y: 50, scale: 1 });
+  const liveCrop = useRef({ scale: 1, x: 50, y: 50 });
 
   const buildNWImage = (
     src: string,
@@ -243,7 +297,16 @@ export function AppearanceSection({
       setMuseState({ avatar: result as NWImage });
       successToast("Avatar updated.");
     });
-  }, [id, pendingAvatarSrc, avatarX, avatarY, avatarScale, setMuseState, errorToast, successToast]);
+  }, [
+    id,
+    pendingAvatarSrc,
+    avatarX,
+    avatarY,
+    avatarScale,
+    setMuseState,
+    errorToast,
+    successToast,
+  ]);
 
   const handleAvatarCropCancel = useCallback(async () => {
     if (avatarTempUpload && avatarTempUpload === pendingAvatarSrc) {
@@ -740,8 +803,8 @@ export function AppearanceSection({
                           tempCardBg?.src || image
                             ? `url(${tempCardBg?.src || image})`
                             : undefined,
-                        backgroundSize: `${cropScale * 100}% auto`,
                         backgroundPosition: `${cropBgX}% ${cropBgY}%`,
+                        backgroundSize: `${cropScale * 100}% auto`,
                       }}
                       onPointerDown={onCropPointerDown}
                       onPointerMove={onCropPointerMove}
@@ -751,7 +814,9 @@ export function AppearanceSection({
                       onWheel={onCropWheel}
                     />
                     <S.FilterPreviewPanel>
-                      <S.FilterPreviewAvatar $src={avatar?.src || image || ""} />
+                      <S.FilterPreviewAvatar
+                        $src={avatar?.src || image || ""}
+                      />
                       <S.FilterPreviewMuseName>
                         {firstName || "Character Name"}
                       </S.FilterPreviewMuseName>
@@ -975,6 +1040,55 @@ export function AppearanceSection({
             }
           />
         </S.MediaUploadSectionContainer>
+
+        {/* Character song — only for an existing muse (needs an id to attach to) */}
+        {id ? (
+          <>
+            <Separator.Root className="separator" orientation="horizontal" />
+            <S.SongSection>
+              <S.SongSectionLabel>Character song</S.SongSectionLabel>
+              {featuredSong && (
+                <S.SongPreview>
+                  <ProfileSongPlayer
+                    key={
+                      featuredSong.spotifyTrackId ??
+                      featuredSong.songId ??
+                      featuredSong.title
+                    }
+                    song={featuredSong}
+                    block
+                  />
+                </S.SongPreview>
+              )}
+              <S.SongButtons>
+                <S.PaletteButton
+                  type="button"
+                  disabled={songSaving}
+                  onClick={() => setSongDialogOpen(true)}
+                >
+                  {featuredSong ? "Change song" : "Add a song"}
+                </S.PaletteButton>
+                {featuredSong && (
+                  <S.PaletteButton
+                    type="button"
+                    disabled={songSaving}
+                    onClick={handleSongRemove}
+                  >
+                    {songSaving ? "Removing…" : "Remove"}
+                  </S.PaletteButton>
+                )}
+              </S.SongButtons>
+            </S.SongSection>
+
+            <SongPickerDialog
+              open={songDialogOpen}
+              onOpenChange={setSongDialogOpen}
+              commit={false}
+              title="Add a character song"
+              onSelected={handleSongSelected}
+            />
+          </>
+        ) : null}
 
         <ShouldRender if={Boolean(error)}>
           <ErrorBox className="error">

@@ -4,6 +4,7 @@ import {
   useStoreState,
 } from "@/context/store/use-store";
 import type { SubmitPromptType } from "@/types";
+import type { ProfileSong } from "@/types/music";
 
 type MediaUploadError =
   | "INVALID_FILE_TYPE"
@@ -22,9 +23,12 @@ export type PromptInputState = {
   uploadingImage: { objectUrl: string } | null;
   uploadedImage: { objectUrl: string; finalUrl: string } | null;
   uploadFailedImage: { objectUrl: string } | null;
+  /** Featured song attached to a prompt (prompt type only). */
+  featuredSong: ProfileSong | null;
 };
 
 export const INITIAL_STATE: PromptInputState = {
+  featuredSong: null,
   gifToInsert: null,
   media: null,
   mediaUploadError: null,

@@ -5,6 +5,8 @@ import { cookies } from "next/headers";
 import { RedirectType, redirect } from "next/navigation";
 import type {
   AuthenticateResponsePayload,
+  DiscordConnection,
+  SpotifyConnection,
   LoginOAuthProvider,
   LoginPayload,
   LoginResponsePayload,
@@ -447,6 +449,116 @@ export const updateUserTheme = async (payload: UpdateThemePayload) => {
 
   const result: UpdateThemeResponse = await response.json();
   return result;
+};
+
+// ─── Connected accounts: Discord ───────────────────────────────────────────
+
+/** Returns the caller's linked Discord account, or null when none is linked. */
+export const getDiscordConnectionAction =
+  async (): Promise<DiscordConnection | null> => {
+    const jwt = await getJWTIfExists();
+    if (!jwt) return null;
+
+    const response = await fetch(
+      `${RP_SERVICE_URL}/rp/user/account/discord`,
+      {
+        cache: "no-store",
+        headers: {
+          "Content-Type": "application/json",
+          [AUTH_HEADER_NAME]: jwt,
+        },
+        method: "GET",
+      },
+    );
+
+    if (!response.ok) return null;
+    return (await response.json()) as DiscordConnection;
+  };
+
+/** Removes the caller's Discord link. */
+export const unlinkDiscordAction = async (): Promise<WithMessage> => {
+  const jwt = await authenticateAndGetJWT();
+
+  const response = await fetch(`${RP_SERVICE_URL}/rp/user/account/discord`, {
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.UncategorizedError };
+  }
+
+  const result: WithMessage = await response.json();
+  return result;
+};
+
+/**
+ * Starts the Discord link flow. Navigates to the backend initiation endpoint,
+ * which authenticates the JWT cookie, stashes the account in the session, and
+ * hands off to Discord's OAuth2 consent screen.
+ */
+export const linkDiscordAction = async () => {
+  redirect(
+    `${RP_SERVICE_URL}/rp/user/account/discord/link/start`,
+    RedirectType.push,
+  );
+};
+
+// ─── Connected accounts: Spotify ───────────────────────────────────────────
+
+/** Returns the caller's linked Spotify account, or null when none is linked. */
+export const getSpotifyConnectionAction =
+  async (): Promise<SpotifyConnection | null> => {
+    const jwt = await getJWTIfExists();
+    if (!jwt) return null;
+
+    const response = await fetch(
+      `${RP_SERVICE_URL}/rp/user/account/spotify`,
+      {
+        cache: "no-store",
+        headers: {
+          "Content-Type": "application/json",
+          [AUTH_HEADER_NAME]: jwt,
+        },
+        method: "GET",
+      },
+    );
+
+    if (!response.ok) return null;
+    return (await response.json()) as SpotifyConnection;
+  };
+
+/** Removes the caller's Spotify link. */
+export const unlinkSpotifyAction = async (): Promise<WithMessage> => {
+  const jwt = await authenticateAndGetJWT();
+
+  const response = await fetch(`${RP_SERVICE_URL}/rp/user/account/spotify`, {
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.UncategorizedError };
+  }
+
+  const result: WithMessage = await response.json();
+  return result;
+};
+
+/** Starts the Spotify link flow (navigates to the backend initiation endpoint). */
+export const linkSpotifyAction = async () => {
+  redirect(
+    `${RP_SERVICE_URL}/rp/user/account/spotify/link/start`,
+    RedirectType.push,
+  );
 };
 
 export const finishOnboardingAction = async () => {

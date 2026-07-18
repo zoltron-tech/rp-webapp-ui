@@ -37,6 +37,25 @@ const withPWA = require('@ducanh2912/next-pwa').default({
 
 
 const nextConfig = {
+  // Local-dev backend proxy: with LOCAL_BACKEND_PROXY=true, Next forwards the
+  // two backend context paths to the local Spring services, so the frontend's
+  // single RP_SERVICE_URL (set to http://127.0.0.1:3000) reaches both without
+  // needing nginx. No-op in production (flag unset → returns []).
+  async rewrites() {
+    if (process.env.LOCAL_BACKEND_PROXY !== 'true') return [];
+    const userService =
+      process.env.LOCAL_USER_SERVICE_URL || 'http://127.0.0.1:50100';
+    const portfolioService =
+      process.env.LOCAL_PORTFOLIO_SERVICE_URL || 'http://127.0.0.1:50200';
+    return [
+      { source: '/rp/user/:path*', destination: `${userService}/rp/user/:path*` },
+      {
+        source: '/rp/portfolio/:path*',
+        destination: `${portfolioService}/rp/portfolio/:path*`,
+      },
+    ];
+  },
+
   async headers() {
     return [
       {

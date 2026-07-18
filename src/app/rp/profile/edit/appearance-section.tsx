@@ -10,16 +10,24 @@ import { AvatarUploadField } from "@/components/common/avatar-upload-field";
 import { AppAlertDialog } from "@/components/dialog";
 import AvatarCropDialog from "@/components/dialog/avatar-crop-dialog";
 import BannerCropDialog from "@/components/dialog/banner-crop-dialog";
+import { ProfileSongPlayer } from "@/components/profile-song";
 import { useGlobalState } from "@/context/store/stores";
+import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import type { ImageCropFilter, NWImage } from "@/types";
+import type { ProfileSong } from "@/types/music";
 import { ACCENT_MAP, type Accent } from "@/types/theme";
 import { API_MESSAGE } from "@/utils/constants";
 import { deleteMedia } from "../actions";
 import { NoteDialogBody } from "./note-dialog-body";
 import { NoteEditTray } from "./note-edit-tray";
 import { useProfileState, useProfileStoreSet } from "./profile.store";
+import {
+  deleteProfileSongAction,
+  getProfileSongAction,
+} from "./profile-song.actions";
+import { SongPickerDialog } from "./song-picker-dialog";
 import * as S from "./styled";
 import { useProfileSave } from "./use-profile-save";
 
@@ -70,6 +78,11 @@ export function AppearanceSection({ onBack }: Props) {
   const setProfileState = useProfileStoreSet();
   const { saveAll, loading } = useProfileSave();
   const { uploadMedia } = useUploadMedia();
+  const { successToast, errorToast } = useUIContext();
+
+  const [profileSong, setProfileSong] = useState<ProfileSong | null>(null);
+  const [songDialogOpen, setSongDialogOpen] = useState(false);
+  const [songRemoving, setSongRemoving] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
   const [imageUploading, setImageUploading] = useState(false);
@@ -118,6 +131,28 @@ export function AppearanceSection({ onBack }: Props) {
     // openCropDialog is stable (only uses setters)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [avatarDialogOpen, pendingMediaUrl]);
+
+  useEffect(() => {
+    if (!novelist?.id) return;
+    getProfileSongAction(novelist.id).then(setProfileSong);
+  }, [novelist?.id]);
+
+  const handleSongSelected = (song: ProfileSong) => {
+    setProfileSong(song);
+    successToast("Profile song updated.");
+  };
+
+  const handleRemoveSong = async () => {
+    setSongRemoving(true);
+    const result = await deleteProfileSongAction();
+    setSongRemoving(false);
+    if (result.message === API_MESSAGE.Success) {
+      setProfileSong(null);
+      successToast("Profile song removed.");
+    } else {
+      errorToast("Could not remove the song. Please try again.");
+    }
+  };
 
   const originalRef = useRef({
     avatar: novelist?.avatar ?? (null as NWImage | null),
@@ -571,6 +606,32 @@ export function AppearanceSection({ onBack }: Props) {
             </S.PaletteRow>
           </S.PaletteGroup>
         </S.AppearanceFieldGroup>
+
+        <S.AppearanceFieldGroup>
+          <S.AppearanceFieldLabel>Profile song</S.AppearanceFieldLabel>
+          <S.ProfileSongCurrent>
+            <ShouldRender if={Boolean(profileSong)}>
+              {profileSong && <ProfileSongPlayer song={profileSong} />}
+            </ShouldRender>
+            <S.ProfileSongButtons>
+              <S.AccountActionButton
+                type="button"
+                onClick={() => setSongDialogOpen(true)}
+              >
+                {profileSong ? "Change song" : "Add a song"}
+              </S.AccountActionButton>
+              <ShouldRender if={Boolean(profileSong)}>
+                <S.AccountActionButton
+                  type="button"
+                  onClick={handleRemoveSong}
+                  disabled={songRemoving}
+                >
+                  {songRemoving ? "Removing…" : "Remove"}
+                </S.AccountActionButton>
+              </ShouldRender>
+            </S.ProfileSongButtons>
+          </S.ProfileSongCurrent>
+        </S.AppearanceFieldGroup>
       </S.AppearanceSectionBody>
 
       <Separator.Root className="separator" orientation="horizontal" />
@@ -712,6 +773,12 @@ export function AppearanceSection({ onBack }: Props) {
         actionColor="negative"
         onConfirm={handleConfirmDiscard}
         onCancel={() => setDiscardOpen(false)}
+      />
+
+      <SongPickerDialog
+        open={songDialogOpen}
+        onOpenChange={setSongDialogOpen}
+        onSelected={handleSongSelected}
       />
     </S.AppearancePreviewScope>
   );

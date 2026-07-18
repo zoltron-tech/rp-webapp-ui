@@ -412,6 +412,49 @@ export const DescriptionEditor = styled.div`
   border: 1.5px solid var(--bg-6);
 `;
 
+// ── Chapter song ───────────────────────────────────────────────────────────
+
+export const SongPreview = styled.div`
+  width: 100%;
+  max-width: 420px;
+`;
+
+export const SongButtons = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+`;
+
+export const SongButton = styled.button`
+  all: unset;
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--bg-6);
+  background-color: var(--bg-3);
+  color: var(--text);
+  font-size: var(--font-size-small);
+  font-family: var(--font);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+
+  &:hover:not(:disabled) {
+    background-color: var(--bg-4);
+    border-color: var(--bg-8);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+`;
+
 // ── Avatar crop dialog body ──────────────────────────────────────────────
 
 export const AvatarCropBody = styled.div`

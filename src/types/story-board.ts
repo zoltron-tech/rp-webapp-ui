@@ -1,4 +1,5 @@
 import type { Genre, Tag } from "./common";
+import type { ProfileSong } from "./music";
 import type { Fandom, Friend, NWImage } from "./novelist";
 import type { PromptSource } from "./prompt";
 
@@ -45,6 +46,8 @@ export interface StoryBoardEvent {
   /** Divider glyph shown before every thread in this event (an
    *  `AsterismStyle` value). */
   passageAsterism: string;
+  /** Optional featured song for the chapter (NW Library or Spotify). */
+  song: ProfileSong | null;
 }
 
 export interface StoryBoardEventThread {

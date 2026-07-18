@@ -1,3 +1,4 @@
+export * from "./connection";
 export * from "./conversation";
 export * from "./login";
 export * from "./notification";

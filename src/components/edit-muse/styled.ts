@@ -1049,6 +1049,33 @@ export const PaletteButton = styled.button`
   }
 `;
 
+export const SongSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 4px 0 2px;
+`;
+
+export const SongSectionLabel = styled.span`
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+`;
+
+export const SongPreview = styled.div`
+  width: 100%;
+  max-width: 420px;
+`;
+
+export const SongButtons = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+`;
+
 export const FilterDialogBody = styled.div`
   display: flex;
   flex-direction: column;

@@ -8,9 +8,10 @@ import type {
   Muse,
   MuseAboutSection,
 } from "@/types";
+import type { DataType, WithMessage } from "@/types/common";
+import type { ProfileSong } from "@/types/music";
 import type { NWImage } from "@/types/novelist";
 import type { PrivacyLevel } from "@/types/prompt";
-import type { DataType, WithMessage } from "@/types/common";
 import { API_MESSAGE, AUTH_HEADER_NAME } from "@/utils/constants";
 import { reverseWsrvUrl, transformMuse } from "@/utils/image";
 import { Logger } from "@/utils/services";
@@ -367,31 +368,31 @@ export const updateMuseAction = async (
   // and persist a proxy URL in the DB.
   const muse: CreateUpdateMuse = {
     ..._muse,
-    image: reverseWsrvUrl(_muse.image),
-    wallpaper: _muse.wallpaper
-      ? {
-          ..._muse.wallpaper,
-          src: reverseWsrvUrl(_muse.wallpaper.src),
-          crop: _muse.wallpaper.crop
-            ? {
-                ..._muse.wallpaper.crop,
-                src: reverseWsrvUrl(_muse.wallpaper.crop.src),
-              }
-            : _muse.wallpaper.crop,
-        }
-      : _muse.wallpaper,
     cardBackground: _muse.cardBackground
       ? {
           ..._muse.cardBackground,
-          src: reverseWsrvUrl(_muse.cardBackground.src),
           crop: _muse.cardBackground.crop
             ? {
                 ..._muse.cardBackground.crop,
                 src: reverseWsrvUrl(_muse.cardBackground.crop.src),
               }
             : _muse.cardBackground.crop,
+          src: reverseWsrvUrl(_muse.cardBackground.src),
         }
       : _muse.cardBackground,
+    image: reverseWsrvUrl(_muse.image),
+    wallpaper: _muse.wallpaper
+      ? {
+          ..._muse.wallpaper,
+          crop: _muse.wallpaper.crop
+            ? {
+                ..._muse.wallpaper.crop,
+                src: reverseWsrvUrl(_muse.wallpaper.crop.src),
+              }
+            : _muse.wallpaper.crop,
+          src: reverseWsrvUrl(_muse.wallpaper.src),
+        }
+      : _muse.wallpaper,
   };
 
   // Choose URL and HTTP method dynamically
@@ -569,10 +570,10 @@ export const changeMuseFandomAction = async (
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/fandom`;
   try {
     const response = await fetch(URL, {
-      method: "PUT",
+      body: JSON.stringify({ fandomId }),
       cache: "no-store",
       headers: { "Content-Type": "application/json", [AUTH_HEADER_NAME]: jwt },
-      body: JSON.stringify({ fandomId }),
+      method: "PUT",
     });
     if (!response.ok) return { message: API_MESSAGE.Error };
     return response.json();
@@ -590,10 +591,10 @@ export const addMuseNicknameAction = async (
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/nickname`;
   try {
     const response = await fetch(URL, {
-      method: "POST",
+      body: JSON.stringify({ nickname }),
       cache: "no-store",
       headers: { "Content-Type": "application/json", [AUTH_HEADER_NAME]: jwt },
-      body: JSON.stringify({ nickname }),
+      method: "POST",
     });
     if (!response.ok) return { message: API_MESSAGE.Error };
     return response.json();
@@ -612,10 +613,10 @@ export const editMuseNicknameAction = async (
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/nickname`;
   try {
     const response = await fetch(URL, {
-      method: "PUT",
+      body: JSON.stringify({ newNickname, oldNickname }),
       cache: "no-store",
       headers: { "Content-Type": "application/json", [AUTH_HEADER_NAME]: jwt },
-      body: JSON.stringify({ oldNickname, newNickname }),
+      method: "PUT",
     });
     if (!response.ok) return { message: API_MESSAGE.Error };
     return response.json();
@@ -633,9 +634,9 @@ export const removeMuseNicknameAction = async (
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/nickname?nickname=${encodeURIComponent(nickname)}`;
   try {
     const response = await fetch(URL, {
-      method: "DELETE",
       cache: "no-store",
       headers: { "Content-Type": "application/json", [AUTH_HEADER_NAME]: jwt },
+      method: "DELETE",
     });
     if (!response.ok) return { message: API_MESSAGE.Error };
     return response.json();
@@ -653,10 +654,10 @@ export const setMusePrivacyAction = async (
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/privacy`;
   try {
     const response = await fetch(URL, {
-      method: "PUT",
+      body: JSON.stringify({ privacy }),
       cache: "no-store",
       headers: { "Content-Type": "application/json", [AUTH_HEADER_NAME]: jwt },
-      body: JSON.stringify({ privacy }),
+      method: "PUT",
     });
     if (!response.ok) return { message: API_MESSAGE.Error };
     return response.json();
@@ -675,13 +676,13 @@ export const addMuseExtraAttributeAction = async (
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/extra-attribute`;
   try {
     const response = await fetch(URL, {
-      method: "POST",
+      body: JSON.stringify({ key, value }),
       cache: "no-store",
       headers: {
         "Content-Type": "application/json",
         [AUTH_HEADER_NAME]: jwt,
       },
-      body: JSON.stringify({ key, value }),
+      method: "POST",
     });
     if (!response.ok) return { message: API_MESSAGE.Error };
     return response.json();
@@ -699,12 +700,12 @@ export const removeMuseExtraAttributeAction = async (
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/extra-attribute/${encodeURIComponent(key)}`;
   try {
     const response = await fetch(URL, {
-      method: "DELETE",
       cache: "no-store",
       headers: {
         "Content-Type": "application/json",
         [AUTH_HEADER_NAME]: jwt,
       },
+      method: "DELETE",
     });
     if (!response.ok) return { message: API_MESSAGE.Error };
     return response.json();
@@ -724,18 +725,64 @@ export const editMuseExtraAttributeAction = async (
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/extra-attribute/${encodeURIComponent(oldKey)}`;
   try {
     const response = await fetch(URL, {
-      method: "PUT",
+      body: JSON.stringify({ key, value }),
       cache: "no-store",
       headers: {
         "Content-Type": "application/json",
         [AUTH_HEADER_NAME]: jwt,
       },
-      body: JSON.stringify({ key, value }),
+      method: "PUT",
     });
     if (!response.ok) return { message: API_MESSAGE.Error };
     return response.json();
   } catch (e) {
     Logger.error("editMuseExtraAttributeAction exception", e);
+    return { message: API_MESSAGE.Error };
+  }
+};
+
+/** Sets/replaces the muse's featured song. Owner only. */
+export const setMuseSongAction = async (
+  museId: string,
+  payload: Partial<ProfileSong> & {
+    source: ProfileSong["source"];
+    title: string;
+  },
+): Promise<ProfileSong | { message: string }> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/song`;
+  try {
+    const response = await fetch(URL, {
+      body: JSON.stringify(payload),
+      cache: "no-store",
+      headers: { "Content-Type": "application/json", [AUTH_HEADER_NAME]: jwt },
+      method: "PUT",
+    });
+    if (!response.ok) return { message: API_MESSAGE.Error };
+    return (await response.json()) as ProfileSong;
+  } catch (e) {
+    Logger.error("setMuseSongAction exception", e);
+    return { message: API_MESSAGE.Error };
+  }
+};
+
+/** Clears the muse's featured song. Owner only. */
+export const deleteMuseSongAction = async (
+  museId: string,
+): Promise<{ message: string }> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/song`;
+  try {
+    const response = await fetch(URL, {
+      cache: "no-store",
+      headers: { "Content-Type": "application/json", [AUTH_HEADER_NAME]: jwt },
+      method: "DELETE",
+    });
+    return response.ok
+      ? { message: API_MESSAGE.Success }
+      : { message: API_MESSAGE.Error };
+  } catch (e) {
+    Logger.error("deleteMuseSongAction exception", e);
     return { message: API_MESSAGE.Error };
   }
 };
@@ -748,10 +795,10 @@ export const setMuseAvatarAction = async (
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/avatar`;
   try {
     const response = await fetch(URL, {
-      method: "PUT",
+      body: JSON.stringify(image),
       cache: "no-store",
       headers: { "Content-Type": "application/json", [AUTH_HEADER_NAME]: jwt },
-      body: JSON.stringify(image),
+      method: "PUT",
     });
     if (!response.ok) return { message: API_MESSAGE.Error };
     return response.json();
@@ -769,10 +816,10 @@ export const setMuseCardBackgroundAction = async (
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/card-background`;
   try {
     const response = await fetch(URL, {
-      method: "PUT",
+      body: JSON.stringify(image),
       cache: "no-store",
       headers: { "Content-Type": "application/json", [AUTH_HEADER_NAME]: jwt },
-      body: JSON.stringify(image),
+      method: "PUT",
     });
     if (!response.ok) return { message: API_MESSAGE.Error };
     return response.json();
@@ -789,9 +836,9 @@ export const removeMuseCardBackgroundAction = async (
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/card-background`;
   try {
     const response = await fetch(URL, {
-      method: "DELETE",
       cache: "no-store",
       headers: { "Content-Type": "application/json", [AUTH_HEADER_NAME]: jwt },
+      method: "DELETE",
     });
     if (!response.ok) return { message: API_MESSAGE.Error };
     return true;
@@ -808,9 +855,9 @@ export const removeMuseAvatarAction = async (
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/avatar`;
   try {
     const response = await fetch(URL, {
-      method: "DELETE",
       cache: "no-store",
       headers: { "Content-Type": "application/json", [AUTH_HEADER_NAME]: jwt },
+      method: "DELETE",
     });
     if (!response.ok) return { message: API_MESSAGE.Error };
     return true;
@@ -828,10 +875,10 @@ export const setMuseNoteAction = async (
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/note`;
   try {
     const response = await fetch(URL, {
-      method: "PUT",
+      body: JSON.stringify({ note }),
       cache: "no-store",
       headers: { "Content-Type": "application/json", [AUTH_HEADER_NAME]: jwt },
-      body: JSON.stringify({ note }),
+      method: "PUT",
     });
     if (!response.ok) return { message: API_MESSAGE.Error };
     return response.text();
@@ -848,9 +895,9 @@ export const removeMuseNoteAction = async (
   const URL = `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/note`;
   try {
     const response = await fetch(URL, {
-      method: "DELETE",
       cache: "no-store",
       headers: { "Content-Type": "application/json", [AUTH_HEADER_NAME]: jwt },
+      method: "DELETE",
     });
     if (!response.ok) return { message: API_MESSAGE.Error };
     return true;

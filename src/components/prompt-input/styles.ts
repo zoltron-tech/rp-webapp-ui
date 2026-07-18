@@ -73,6 +73,7 @@ export const FPMetaRight = styled.div`
   margin-left: auto;
   display: flex;
   align-items: center;
+  gap: 4px;
 `;
 
 export const FPEditorArea = styled.div`
@@ -560,7 +561,6 @@ export const UploadErrorBanner = styled.div`
 export const MediaSelect = styled(Form.Field)`
   display: flex;
   flex-direction: column;
-  margin-left: 8px;
 
   .media-input {
     display: none;
@@ -706,7 +706,61 @@ export const DesktopMediaWrap = styled.div`
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
+`;
+
+/** Preview of the attached prompt song, with a remove control. */
+export const PromptSongPreview = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin: 8px auto 0;
+  width: 100%;
+  max-width: 460px;
+
+  & > *:first-child {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Actual song pill (ProfileSongPlayer's inner Pill element). */
+  & > *:first-child > *:first-child {
+    padding: 8px;
+    border: 1px solid var(--bg-6);
+    border-radius: 12px;
+  }
+`;
+
+export const PromptSongRemove = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--text-secondary);
+  background: var(--bg-3);
+  border: 1px solid var(--bg-5);
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: var(--tomato-5);
+    color: var(--text);
+  }
+
+  &:active {
+    transform: scale(0.92);
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
 `;
 
 /** Wraps PromptTextField; position:relative so the inline send btn can anchor. */

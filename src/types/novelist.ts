@@ -1,4 +1,5 @@
 import type { Tag } from "./common";
+import type { ProfileSong } from "./music";
 import type { PrivacyLevel } from "./prompt";
 
 export interface MentionDataItem {
@@ -31,6 +32,8 @@ export interface Muse {
   cardBackground: NWImage | null;
   video: string | null;
   song: string | null;
+  /** Rich featured song (NW Library / Spotify); null when unset. */
+  featuredSong: ProfileSong | null;
   nicknames: string[] | null;
   extraAttributes: Record<string, string> | null;
   connections: MuseConnection[];
@@ -75,6 +78,7 @@ export interface MuseNavItem {
   wallpaper: NWImage | null;
   video: string | null;
   song: string | null;
+  featuredSong: ProfileSong | null;
   accent: string | null;
   privacy: PrivacyLevel;
   useAccent: boolean;

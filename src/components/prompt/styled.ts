@@ -40,6 +40,7 @@ export const PromptRoot = styled.article<{ $noBorder?: boolean }>`
 export const PromptHeaderRoot = styled.header`
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   width: 100%;
   position: relative;
 
@@ -159,6 +160,15 @@ export const PromptMediaContainer = styled.div`
   height: fit-content;
   display: flex;
   background-color: #000000;
+`;
+
+export const PromptSongContainer = styled.div`
+  margin-top: 10px;
+  max-width: 420px;
+
+  & > * {
+    width: 100%;
+  }
 `;
 
 export const PromptImage = styled.img`

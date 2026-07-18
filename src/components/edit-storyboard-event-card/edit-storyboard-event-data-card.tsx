@@ -10,6 +10,7 @@ import {
 import { BsArrowLeft } from "react-icons/bs";
 import { MdEventNote } from "react-icons/md";
 import { deleteMedia } from "@/app/rp/profile/actions";
+import { SongPickerDialog } from "@/app/rp/profile/edit/song-picker-dialog";
 import { updateStoryBoardEventAction } from "@/app/rp/story/actions";
 import {
   DEFAULT_ASTERISM_STYLE,
@@ -20,6 +21,7 @@ import { CoverUploadField } from "@/components/common/cover-upload-field";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { AppAlertDialog } from "@/components/dialog";
 import AvatarCropDialog from "@/components/dialog/avatar-crop-dialog";
+import { ProfileSongPlayer } from "@/components/profile-song";
 import { RichTextEditor } from "@/components/rich-text-editor-input";
 import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -104,7 +106,10 @@ const EditStoryboardEventDataCard = forwardRef<
   const eventTime = useStoryboardEventState("eventTime");
   const overtureAsterism = useStoryboardEventState("overtureAsterism");
   const passageAsterism = useStoryboardEventState("passageAsterism");
+  const song = useStoryboardEventState("song");
   const setEventState = useStoryboardEventStoreSet();
+
+  const [songDialogOpen, setSongDialogOpen] = useState(false);
 
   const { routeToPage } = usePageRouter();
   const { uploadMedia } = useUploadMedia();
@@ -128,6 +133,7 @@ const EditStoryboardEventDataCard = forwardRef<
     name,
     overtureAsterism,
     passageAsterism,
+    song,
   });
 
   // RichTextEditor only seeds its `value` prop once, on mount, while empty —
@@ -149,7 +155,8 @@ const EditStoryboardEventDataCard = forwardRef<
     location !== initialSnapshot.current.location ||
     eventTime !== initialSnapshot.current.eventTime ||
     overtureAsterism !== initialSnapshot.current.overtureAsterism ||
-    passageAsterism !== initialSnapshot.current.passageAsterism;
+    passageAsterism !== initialSnapshot.current.passageAsterism ||
+    song !== initialSnapshot.current.song;
 
   const handleAvatarClick = () => {
     const existingSrc = avatar?.src || image;
@@ -275,6 +282,7 @@ const EditStoryboardEventDataCard = forwardRef<
       ordinal,
       overtureAsterism,
       passageAsterism,
+      song,
       storyBoardId,
     };
 
@@ -297,6 +305,7 @@ const EditStoryboardEventDataCard = forwardRef<
       ordinal: response.ordinal,
       overtureAsterism: response.overtureAsterism ?? DEFAULT_ASTERISM_STYLE,
       passageAsterism: response.passageAsterism ?? DEFAULT_ASTERISM_STYLE,
+      song: response.song ?? null,
     });
     initialSnapshot.current = {
       avatar: response.avatar ?? null,
@@ -306,6 +315,7 @@ const EditStoryboardEventDataCard = forwardRef<
       name: response.name,
       overtureAsterism: response.overtureAsterism ?? DEFAULT_ASTERISM_STYLE,
       passageAsterism: response.passageAsterism ?? DEFAULT_ASTERISM_STYLE,
+      song: response.song ?? null,
     };
     setAvatarChanged(false);
     setTempUploadedImage(null);
@@ -467,6 +477,42 @@ const EditStoryboardEventDataCard = forwardRef<
           />
         </S.AsterismPickers>
       </S.Section>
+
+      <S.Section>
+        <S.SectionLabel as="span">
+          Chapter song <S.OptionalHint>(optional)</S.OptionalHint>
+        </S.SectionLabel>
+        {song && (
+          <S.SongPreview>
+            <ProfileSongPlayer
+              key={song.spotifyTrackId ?? song.songId ?? song.title}
+              song={song}
+              block
+            />
+          </S.SongPreview>
+        )}
+        <S.SongButtons>
+          <S.SongButton type="button" onClick={() => setSongDialogOpen(true)}>
+            {song ? "Change song" : "Add a song"}
+          </S.SongButton>
+          {song && (
+            <S.SongButton
+              type="button"
+              onClick={() => setEventState({ song: null })}
+            >
+              Remove
+            </S.SongButton>
+          )}
+        </S.SongButtons>
+      </S.Section>
+
+      <SongPickerDialog
+        open={songDialogOpen}
+        onOpenChange={setSongDialogOpen}
+        commit={false}
+        title="Add a chapter song"
+        onSelected={(picked) => setEventState({ song: picked })}
+      />
 
       <AppAlertDialog
         open={discardDialogOpen}

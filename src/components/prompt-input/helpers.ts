@@ -30,6 +30,7 @@ export const buildOptimisticPrompt = (
   canInteract: true,
   commentCount: 0,
   createdOn: new Date().toISOString(),
+  featuredSong: payload.featuredSong ?? null,
   id:
     typeof crypto !== "undefined" && "randomUUID" in crypto
       ? crypto.randomUUID()

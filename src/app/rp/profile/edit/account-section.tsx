@@ -1,31 +1,41 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
+import { useSearchParams } from "next/navigation";
 import { Separator } from "radix-ui";
 import { useEffect, useState } from "react";
 import {
   BsArrowLeft,
+  BsDiscord,
   BsKeyFill,
+  BsLink45Deg,
   BsPencil,
   BsPeople,
   BsPersonCircle,
   BsShieldLock,
 } from "react-icons/bs";
-import { FaCircleCheck, FaCircleXmark } from "react-icons/fa6";
+import { FaCircleCheck, FaCircleXmark, FaSpotify } from "react-icons/fa6";
 import { MdMailOutline } from "react-icons/md";
 import { RiUserForbidLine } from "react-icons/ri";
-import { TbUserOff } from "react-icons/tb";
+import { TbUnlink, TbUserOff } from "react-icons/tb";
 import {
   forgotPasswordAction,
+  getDiscordConnectionAction,
   getJWTIfExists,
+  getSpotifyConnectionAction,
+  linkDiscordAction,
+  linkSpotifyAction,
   sendVerificationEmailAction,
+  unlinkDiscordAction,
+  unlinkSpotifyAction,
 } from "@/app/actions";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { InlineMessage } from "@/components/common/inline-message";
 import { AppAlertDialog } from "@/components/dialog";
-import { useGlobalState } from "@/context/store/stores";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
+import type { DiscordConnection, SpotifyConnection } from "@/types";
 import type { Friend } from "@/types/novelist";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
@@ -47,8 +57,16 @@ export function AccountSection({ onBack }: Props) {
   const user = useGlobalState("user");
   const { successToast, errorToast } = useUIContext();
   const { routeToPage } = usePageRouter();
+  const setGlobalState = useGlobalStoreSet();
+  const searchParams = useSearchParams();
 
   const [usernameDialogOpen, setUsernameDialogOpen] = useState(false);
+  const [discord, setDiscord] = useState<DiscordConnection | null>(null);
+  const [discordLoading, setDiscordLoading] = useState(true);
+  const [discordUnlinking, setDiscordUnlinking] = useState(false);
+  const [spotify, setSpotify] = useState<SpotifyConnection | null>(null);
+  const [spotifyLoading, setSpotifyLoading] = useState(true);
+  const [spotifyUnlinking, setSpotifyUnlinking] = useState(false);
   const [verifyState, setVerifyState] = useState<AsyncState>("idle");
   const [resetState, setResetState] = useState<AsyncState>("idle");
   const [syncDialogOpen, setSyncDialogOpen] = useState(false);
@@ -68,6 +86,64 @@ export function AccountSection({ onBack }: Props) {
       setHasMore(page.length === PAGE_SIZE);
     });
   }, []);
+
+  useEffect(() => {
+    getDiscordConnectionAction().then((conn) => {
+      setDiscord(conn);
+      setDiscordLoading(false);
+    });
+    getSpotifyConnectionAction().then((conn) => {
+      setSpotify(conn);
+      setSpotifyLoading(false);
+    });
+  }, []);
+
+  // Surface the result of a link round-trip (backend redirects back here with
+  // ?discord=… | ?spotify=… = linked | already_linked).
+  useEffect(() => {
+    const discordStatus = searchParams?.get("discord");
+    if (discordStatus === "linked") {
+      successToast("Discord account linked.");
+    } else if (discordStatus === "already_linked") {
+      errorToast(
+        "That Discord account is already linked to another Novelist World profile.",
+      );
+    }
+    const spotifyStatus = searchParams?.get("spotify");
+    if (spotifyStatus === "linked") {
+      successToast("Spotify account linked.");
+    } else if (spotifyStatus === "already_linked") {
+      errorToast(
+        "That Spotify account is already linked to another Novelist World profile.",
+      );
+    }
+    // Toast once per navigation; deps intentionally limited to the param value.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  const handleUnlinkDiscord = async () => {
+    setDiscordUnlinking(true);
+    const response = await unlinkDiscordAction();
+    setDiscordUnlinking(false);
+    if (response.message === API_MESSAGE.Success) {
+      setDiscord(null);
+      successToast("Discord account unlinked.");
+    } else {
+      errorToast("Could not unlink Discord. Please try again.");
+    }
+  };
+
+  const handleUnlinkSpotify = async () => {
+    setSpotifyUnlinking(true);
+    const response = await unlinkSpotifyAction();
+    setSpotifyUnlinking(false);
+    if (response.message === API_MESSAGE.Success) {
+      setSpotify(null);
+      successToast("Spotify account unlinked.");
+    } else {
+      errorToast("Could not unlink Spotify. Please try again.");
+    }
+  };
 
   const handleLoadMore = async () => {
     const nextPage = blockedPage + 1;
@@ -315,6 +391,154 @@ export function AccountSection({ onBack }: Props) {
             </S.AccountRowActions>
           </S.AccountRow>
         </ShouldRender>
+
+        {/* Connected accounts */}
+        <S.BlockedSectionHeading>
+          <BsLink45Deg
+            style={{
+              display: "inline",
+              marginRight: 6,
+              verticalAlign: "middle",
+            }}
+          />
+          Connected accounts
+        </S.BlockedSectionHeading>
+
+        <S.AccountRow>
+          <S.AccountRowMain>
+            <S.AccountRowLabel>
+              <BsDiscord
+                style={{ marginRight: 6, verticalAlign: "middle" }}
+              />
+              Discord
+            </S.AccountRowLabel>
+            <S.AccountRowValue>
+              {discordLoading ? (
+                "…"
+              ) : discord ? (
+                <span
+                  style={{
+                    alignItems: "center",
+                    columnGap: 8,
+                    display: "inline-flex",
+                    flexWrap: "wrap",
+                    rowGap: 6,
+                  }}
+                >
+                  <AvatarNew
+                    src={discord.avatarUrl}
+                    alt={discord.discordUsername}
+                  />
+                  @{discord.discordGlobalName || discord.discordUsername}
+                  {discord.isServerMember === true ? (
+                    <S.VerifiedBadge $verified>
+                      <FaCircleCheck /> In NW server
+                    </S.VerifiedBadge>
+                  ) : (
+                    <S.AccountActionButton
+                      type="button"
+                      onClick={() =>
+                        setGlobalState({ showJoinDiscordPrompt: true })
+                      }
+                    >
+                      <BsDiscord />
+                      Join server
+                    </S.AccountActionButton>
+                  )}
+                </span>
+              ) : (
+                "Not connected"
+              )}
+            </S.AccountRowValue>
+          </S.AccountRowMain>
+          <S.AccountRowActions>
+            <ShouldRender if={Boolean(discord)}>
+              <S.AccountActionButton
+                type="button"
+                onClick={handleUnlinkDiscord}
+                disabled={discordUnlinking}
+              >
+                <TbUnlink />
+                {discordUnlinking ? "Unlinking…" : "Unlink"}
+              </S.AccountActionButton>
+            </ShouldRender>
+            <ShouldRender if={!discord && !discordLoading}>
+              <S.AccountActionButton
+                type="button"
+                onClick={() => linkDiscordAction()}
+              >
+                <BsLink45Deg />
+                Connect
+              </S.AccountActionButton>
+            </ShouldRender>
+          </S.AccountRowActions>
+        </S.AccountRow>
+
+        <S.AccountRow>
+          <S.AccountRowMain>
+            <S.AccountRowLabel>
+              <FaSpotify style={{ marginRight: 6, verticalAlign: "middle" }} />
+              Spotify
+            </S.AccountRowLabel>
+            <S.AccountRowValue>
+              {spotifyLoading ? (
+                "…"
+              ) : spotify ? (
+                <span
+                  style={{
+                    alignItems: "center",
+                    columnGap: 8,
+                    display: "inline-flex",
+                    flexWrap: "wrap",
+                    rowGap: 6,
+                  }}
+                >
+                  <AvatarNew
+                    src={spotify.avatarUrl ?? null}
+                    alt={spotify.displayName ?? spotify.spotifyUserId}
+                  />
+                  {spotify.displayName || spotify.spotifyUserId}
+                  <ShouldRender if={Boolean(spotify.profileUrl)}>
+                    <a
+                      href={spotify.profileUrl ?? undefined}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        color: "var(--text-secondary)",
+                        fontSize: "var(--font-size-xsmall)",
+                      }}
+                    >
+                      Open profile
+                    </a>
+                  </ShouldRender>
+                </span>
+              ) : (
+                "Not connected"
+              )}
+            </S.AccountRowValue>
+          </S.AccountRowMain>
+          <S.AccountRowActions>
+            <ShouldRender if={Boolean(spotify)}>
+              <S.AccountActionButton
+                type="button"
+                onClick={handleUnlinkSpotify}
+                disabled={spotifyUnlinking}
+              >
+                <TbUnlink />
+                {spotifyUnlinking ? "Unlinking…" : "Unlink"}
+              </S.AccountActionButton>
+            </ShouldRender>
+            <ShouldRender if={!spotify && !spotifyLoading}>
+              <S.AccountActionButton
+                type="button"
+                onClick={() => linkSpotifyAction()}
+              >
+                <BsLink45Deg />
+                Connect
+              </S.AccountActionButton>
+            </ShouldRender>
+          </S.AccountRowActions>
+        </S.AccountRow>
 
         {/* Blocked novelists */}
         <S.BlockedSectionHeading>

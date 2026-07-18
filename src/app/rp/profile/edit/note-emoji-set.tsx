@@ -2066,3 +2066,7 @@ export const NoteEmojiIcon: FC<{ emojiKey: string; size?: number }> = ({
   const found = EMOJI_BY_KEY[emojiKey];
   return found ? <found.Icon size={size} /> : <>{emojiKey}</>;
 };
+
+/** Whether a note emoji should be tilted when shown as a corner badge. */
+export const getNoteEmojiRotate = (emojiKey: string): boolean =>
+  EMOJI_BY_KEY[emojiKey]?.rotate ?? false;

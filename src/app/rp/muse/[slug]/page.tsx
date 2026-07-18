@@ -965,6 +965,7 @@ export default function MuseProfilePage({}) {
       <ShouldRender if={Boolean(muse?.featuredSong) || isOwnMuse}>
         <S.MuseSongBar>
           <S.MuseSongInner
+            $spotify={muse?.featuredSong?.source === "SPOTIFY"}
             style={
               accent ? ({ "--accent": accent } as React.CSSProperties) : undefined
             }

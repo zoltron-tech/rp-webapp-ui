@@ -3465,24 +3465,28 @@ export const VerseCircleNew = styled(VerseCircle)`
    full row and pushes the card below it, never sitting beside it. */
 export const MuseSongBar = styled.div`
   position: relative;
-  z-index: ${Z_INDEX.CARD};
+  /* Below the card so the pill's tucked bottom edge (Spotify's negative margin)
+     hides behind the card instead of painting over it. */
+  z-index: ${Z_INDEX.AVATAR};
   width: 100%;
   flex-basis: 100%;
   display: flex;
   justify-content: center;
 `;
 
-export const MuseSongInner = styled.div`
+export const MuseSongInner = styled.div<{ $spotify?: boolean }>`
   position: relative;
   width: 100%;
   max-width: 340px;
   padding: 0 6px 0;
 
-  /* Pull the card up close under the player — only a hair of space between the
-     song and the card below it. (Overrides the player Wrapper's own -18px
-     About-section margin with our own tighter value.) */
+  /* Small real gap between the pill and the card below — no overlap. (Neutralize
+     the player Wrapper's own -18px About-section margin, which would otherwise
+     pull the card up under the pill.)
+     Spotify is the exception: its off-screen IFrame leaves a 1px host pixel at
+     the pill's bottom edge, so tuck that edge a hair behind the card instead. */
   & > div {
-    margin-bottom: -22px;
+    margin-bottom: ${({ $spotify }) => ($spotify ? "-10px" : "8px")};
   }
 
   /* Stronger accent-tinted gradient on the pill than the shared default, so the
@@ -3497,10 +3501,10 @@ export const MuseSongInner = styled.div`
     );
   }
 
-  /* Desktop: pull it in even tighter. */
+  /* Desktop: keep a small gap, still no overlap (Spotify tucks its 1px edge). */
   @media (min-width: 951px) {
     & > div {
-      margin-bottom: -32px;
+      margin-bottom: ${({ $spotify }) => ($spotify ? "-10px" : "8px")};
     }
   }
 
@@ -3508,9 +3512,10 @@ export const MuseSongInner = styled.div`
     max-width: 440px;
     padding-inline: 16px;
 
-    /* A little more breathing room above the card on mobile. */
+    /* A little more breathing room above the card on mobile (Spotify still
+       tucks its 1px edge behind the card). */
     & > div {
-      margin-bottom: -14px;
+      margin-bottom: ${({ $spotify }) => ($spotify ? "-10px" : "10px")};
     }
 
     /* The block player squares its corners and drops its side borders on

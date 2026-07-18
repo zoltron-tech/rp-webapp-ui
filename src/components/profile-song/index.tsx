@@ -164,7 +164,11 @@ export const ProfileSongPlayer: FC<Props> = ({
         <S.Info>
           <S.Title>{song.title}</S.Title>
           {song.artist && <S.Artist>{song.artist}</S.Artist>}
-          {playable && duration > 0 && (
+          {/* Always reserved when playable so the pill height is identical
+              regardless of source — LIBRARY tracks resolve `duration` instantly
+              (preload=metadata) while SPOTIFY stays 0 until play — and so the
+              pill doesn't grow (layout shift) the moment playback starts. */}
+          {playable && (
             <S.Progress onClick={onProgressClick}>
               <S.ProgressFill style={{ width: `${pct}%` }} />
             </S.Progress>

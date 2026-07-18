@@ -2408,7 +2408,7 @@ export const SongPickerSearch = styled.div`
     all: unset;
     flex: 1;
     color: var(--text);
-    font-size: var(--font-size-small);
+    font-size: var(--font-size-input);
   }
 `;
 

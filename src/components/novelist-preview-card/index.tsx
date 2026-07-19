@@ -1,6 +1,16 @@
 "use client";
 
 import { type FC, useState } from "react";
+import {
+  FiCheck,
+  FiClock,
+  FiFeather,
+  FiMessageCircle,
+  FiUser,
+  FiUserPlus,
+  FiUsers,
+  FiX,
+} from "react-icons/fi";
 import { getConversationByUsernameAction } from "@/app/rp/conversations/actions";
 import {
   acceptFriendRequest,
@@ -13,6 +23,7 @@ import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import type { NWImage } from "@/types/novelist";
+import { ACCENT_MAP } from "@/types/theme";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { mainVerseMuses } from "@/utils/muse";
@@ -35,6 +46,8 @@ type NovelistPreview = {
   username: string;
   image: string;
   avatar?: NWImage | null;
+  banner?: NWImage | null;
+  palette?: number;
   isVerified: boolean;
   connection: string | null;
   muses?: MusePreview[];
@@ -57,9 +70,13 @@ export const NovelistPreviewCard: FC<Props> = ({ novelist }) => {
   const [requestLoading, setRequestLoading] = useState(false);
 
   const isCurrentUser = currentNovelist?.username === novelist.username;
+  const accent =
+    ACCENT_MAP[novelist.palette as keyof typeof ACCENT_MAP] ?? ACCENT_MAP[0];
   const mainMuses = mainVerseMuses(novelist.muses);
   const visibleMuses = mainMuses.slice(0, MAX_MUSES);
   const extraMuses = mainMuses.length - MAX_MUSES;
+  const museCount = mainMuses.length;
+  const mutualCount = novelist.mutualFriendCount ?? 0;
 
   const patchCachedConnection = (newConnection: string | null) => {
     setGlobalState((prev) => ({
@@ -151,7 +168,10 @@ export const NovelistPreviewCard: FC<Props> = ({ novelist }) => {
     if (!currentNovelist) {
       return (
         <Button variant="primary" onClick={onVisitProfile}>
-          View Profile
+          <S.BtnContent>
+            <FiUser />
+            View Profile
+          </S.BtnContent>
         </Button>
       );
     }
@@ -159,20 +179,37 @@ export const NovelistPreviewCard: FC<Props> = ({ novelist }) => {
     if (isCurrentUser) {
       return (
         <Button variant="primary" onClick={onVisitProfile}>
-          Open Profile
+          <S.BtnContent>
+            <FiUser />
+            Open Profile
+          </S.BtnContent>
         </Button>
       );
     }
 
     if (connection === "FRIEND") {
       return (
-        <Button
-          variant="primary"
-          className={messaging ? "messaging" : undefined}
-          onClick={onMessage}
-        >
-          {messaging ? "Opening…" : "Message"}
-        </Button>
+        <>
+          <Button
+            variant="primary"
+            className={messaging ? "messaging" : undefined}
+            onClick={onMessage}
+          >
+            <S.BtnContent>
+              <FiMessageCircle />
+              {messaging ? "Opening…" : "Message"}
+            </S.BtnContent>
+          </Button>
+          <Button
+            variant="secondary"
+            className="icon-only"
+            onClick={onVisitProfile}
+          >
+            <S.BtnContent>
+              <FiUser />
+            </S.BtnContent>
+          </Button>
+        </>
       );
     }
 
@@ -180,10 +217,13 @@ export const NovelistPreviewCard: FC<Props> = ({ novelist }) => {
       return (
         <Button
           variant="negative"
-          className={requestLoading ? "messaging" : undefined}
+          className={requestLoading ? "messaging" : "pending"}
           onClick={onCancelRequest}
         >
-          {requestLoading ? "Cancelling…" : "Cancel Request"}
+          <S.BtnContent>
+            <FiClock />
+            {requestLoading ? "Cancelling…" : "Cancel Request"}
+          </S.BtnContent>
         </Button>
       );
     }
@@ -196,14 +236,20 @@ export const NovelistPreviewCard: FC<Props> = ({ novelist }) => {
             className={requestLoading ? "messaging" : undefined}
             onClick={onAcceptRequest}
           >
-            {requestLoading ? "…" : "Accept"}
+            <S.BtnContent>
+              <FiCheck />
+              {requestLoading ? "…" : "Accept"}
+            </S.BtnContent>
           </Button>
           <Button
             variant="negative"
             className={requestLoading ? "messaging" : undefined}
             onClick={onDeclineRequest}
           >
-            {requestLoading ? "…" : "Decline"}
+            <S.BtnContent>
+              <FiX />
+              {requestLoading ? "…" : "Decline"}
+            </S.BtnContent>
           </Button>
         </>
       );
@@ -215,14 +261,26 @@ export const NovelistPreviewCard: FC<Props> = ({ novelist }) => {
         className={requestLoading ? "messaging" : undefined}
         onClick={onAddFriend}
       >
-        {requestLoading ? "Sending…" : "Add Friend"}
+        <S.BtnContent>
+          <FiUserPlus />
+          {requestLoading ? "Sending…" : "Add Friend"}
+        </S.BtnContent>
       </Button>
     );
   };
 
   return (
-    <S.CardWrapper>
-      <S.AccentStrip />
+    <S.CardWrapper className={accent}>
+      <S.Banner
+        $src={novelist.banner?.src ?? null}
+        $x={novelist.banner?.crop?.x}
+        $y={novelist.banner?.crop?.y}
+        $scale={
+          novelist.banner?.crop && novelist.banner.crop.width > 0
+            ? novelist.banner.crop.width / 100
+            : undefined
+        }
+      />
       <S.Body>
         <S.AvatarWrapper>
           <S.StyledAvatar
@@ -236,7 +294,7 @@ export const NovelistPreviewCard: FC<Props> = ({ novelist }) => {
           />
           <ShouldRender if={novelist.isVerified}>
             <S.VerifiedBadgeWrapper>
-              <EmailVerifiedBadge size={12} />
+              <EmailVerifiedBadge size={15} />
             </S.VerifiedBadgeWrapper>
           </ShouldRender>
         </S.AvatarWrapper>
@@ -246,32 +304,49 @@ export const NovelistPreviewCard: FC<Props> = ({ novelist }) => {
             {novelist.firstName} {novelist.lastName}
           </S.Title>
           <S.UsernameStyled username={novelist.username} />
-          <ShouldRender if={(novelist.mutualFriendCount ?? 0) > 0}>
-            <S.MutualCount>
-              {novelist.mutualFriendCount}{" "}
-              {novelist.mutualFriendCount === 1
-                ? "mutual friend"
-                : "mutual friends"}
-            </S.MutualCount>
-          </ShouldRender>
         </S.Info>
 
-        <ShouldRender if={visibleMuses.length > 0} preserveSpace>
-          <S.MusesRow>
-            {visibleMuses.map((muse) => (
-              <S.MuseAvatar
-                key={muse.id ?? muse.firstName}
-                src={muse.image ?? null}
-                alt={muse.firstName}
-                name={`${muse.firstName} ${muse.lastName}`}
-                onClick={() => muse.id && onVisitMuse(muse.id)}
-              />
-            ))}
-            <ShouldRender if={extraMuses > 0}>
-              <S.MuseOverflow>+{extraMuses}</S.MuseOverflow>
-            </ShouldRender>
-          </S.MusesRow>
-        </ShouldRender>
+        <S.StatsRow>
+          <ShouldRender if={museCount > 0}>
+            <S.Stat>
+              <FiFeather />
+              <b>{museCount}</b>&nbsp;muses
+            </S.Stat>
+          </ShouldRender>
+          <ShouldRender if={museCount > 0 && mutualCount > 0}>
+            <S.StatSep />
+          </ShouldRender>
+          <ShouldRender if={mutualCount > 0}>
+            <S.Stat>
+              <FiUsers />
+              <b>{mutualCount}</b>&nbsp;mutual
+            </S.Stat>
+          </ShouldRender>
+        </S.StatsRow>
+
+        <S.MuseBlock>
+          <S.MuseLabel>Muses</S.MuseLabel>
+          <S.MuseContent>
+            {visibleMuses.length > 0 ? (
+              <S.MusesRow>
+                {visibleMuses.map((muse) => (
+                  <S.MuseAvatar
+                    key={muse.id ?? muse.firstName}
+                    src={muse.image ?? null}
+                    alt={muse.firstName}
+                    name={`${muse.firstName} ${muse.lastName}`}
+                    onClick={() => muse.id && onVisitMuse(muse.id)}
+                  />
+                ))}
+                <ShouldRender if={extraMuses > 0}>
+                  <S.MuseOverflow>+{extraMuses}</S.MuseOverflow>
+                </ShouldRender>
+              </S.MusesRow>
+            ) : (
+              <S.MusesEmpty>No muses yet</S.MusesEmpty>
+            )}
+          </S.MuseContent>
+        </S.MuseBlock>
 
         <S.ButtonContainer>{renderButton()}</S.ButtonContainer>
       </S.Body>

@@ -1,7 +1,7 @@
 "use client";
 
 import classNames from "classnames";
-import { type FC, useEffect, useMemo, useState } from "react";
+import { type FC, type ReactNode, useEffect, useMemo, useState } from "react";
 import {
   FaComments,
   FaHeart,
@@ -20,9 +20,9 @@ import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDateFromUnix } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import { ShouldRender } from "../common";
-import { MarkdownLite } from "../markdown-lite";
 import { AppImageViewer } from "../image-viewer/AppImageViewer";
 import { VideoViewer } from "../image-viewer/VideoViewer";
+import { MarkdownLite } from "../markdown-lite";
 import { RichTextRenderer } from "../rich-text-editor-input/rich-test-renderer";
 import * as S from "./styles";
 
@@ -33,6 +33,37 @@ type Props = React.HTMLProps<HTMLDivElement> & {
 const videoExtensions = ["mp4"];
 const imageExtensions = ["jpg", "jpeg", "png", "gif", "webp", "avif"];
 const audioExtensions = ["mp3", "mpeg", "wav"];
+
+const PROMPT_TYPES = ["PROMPT", "COMMENT", "REPLY"];
+
+/** Contextual kind badge + primary action for an activity's target type. */
+const getActivityKind = (
+  activityTargetType: string,
+): { label: string; icon: ReactNode; actionLabel: string } => {
+  if (PROMPT_TYPES.includes(activityTargetType))
+    return {
+      actionLabel: "View threads",
+      icon: <FaComments />,
+      label: "Prompt",
+    };
+  if (activityTargetType === "MEDIA")
+    return { actionLabel: "View media", icon: <FaImage />, label: "Media" };
+  if (activityTargetType === "MUSE")
+    return {
+      actionLabel: "View character",
+      icon: <FaStreetView />,
+      label: "Character",
+    };
+  if (["STORY_BOARD", "STORY_BOARD_EVENT"].includes(activityTargetType))
+    return {
+      actionLabel: "View story",
+      icon: <PiBookOpenUserDuotone />,
+      label: "Story",
+    };
+  if (activityTargetType === "PROFILE")
+    return { actionLabel: "View profile", icon: <FaUser />, label: "Profile" };
+  return { actionLabel: "View", icon: <FaComments />, label: "Activity" };
+};
 
 const getMediaTypeFromUrl = (
   url: string,
@@ -153,22 +184,40 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
 
   if (!activity) return <></>;
 
+  const kind = getActivityKind(activity.target.activityTargetType);
+  const handlePrimaryAction = (e: React.MouseEvent<HTMLElement>) => {
+    if (isMedia) {
+      setViewerOpen(true);
+      return;
+    }
+    handleCardClick(e, activity);
+  };
+
   return (
     <S.ParentContainer>
       <S.HeaderContainer>
-        <S.Avatar
-          src={activity.source?.image || ""}
-          alt={activity.source.title || "Avatar"}
-          nwImage={activity.source?.avatar}
-          onClick={() => onAvatarClick(activity)}
-        />
+        <S.AvatarWrap>
+          <S.Avatar
+            src={activity.source?.image || ""}
+            alt={activity.source.title || "Avatar"}
+            nwImage={activity.source?.avatar}
+            onClick={() => onAvatarClick(activity)}
+          />
+        </S.AvatarWrap>
         <S.SourceInfo>
           <S.SourceName onClick={() => onAvatarClick(activity)}>
             {activity.source.title}
           </S.SourceName>
-          <S.ActivityText>{activity.activityText}</S.ActivityText>
+          <S.MetaLine>
+            <S.MetaVerb>{activity.activityText}</S.MetaVerb>
+            <S.MetaDot />
+            <S.MetaDate>{toFormattedDateFromUnix(activity.date)}</S.MetaDate>
+          </S.MetaLine>
         </S.SourceInfo>
-        <S.StyledDate>{toFormattedDateFromUnix(activity.date)}</S.StyledDate>
+        <S.KindBadge>
+          {kind.icon}
+          <span>{kind.label}</span>
+        </S.KindBadge>
       </S.HeaderContainer>
       <S.Body>
         <ShouldRender
@@ -176,11 +225,13 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
             activity.target.activityTargetType,
           )}
         >
-          <RichTextRenderer
-            savedText={activity.target.title ?? ""}
-            collapsedHeight={100}
-            overlayHidden
-          />
+          <S.PromptBody>
+            <RichTextRenderer
+              savedText={activity.target.title ?? ""}
+              collapsedHeight={100}
+              overlayHidden
+            />
+          </S.PromptBody>
         </ShouldRender>
         {/* MEDIA: full-width media at its natural aspect ratio. Clicking
             opens the fullscreen viewer (never navigates) — signalled by the
@@ -224,8 +275,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
             {mediaType === "audio" && (
               <S.Audio className="audio" src={activity.target.url} controls />
             )}
-            {(!activity.target.url ||
-              (mediaType === "image" && imgError)) && (
+            {(!activity.target.url || (mediaType === "image" && imgError)) && (
               <S.MediaFallback>
                 <FaImage size={48} />
               </S.MediaFallback>
@@ -321,42 +371,13 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
           </S.MediaDescription>
         </ShouldRender>
       </S.Body>
-      <ShouldRender
-        if={["PROMPT", "COMMENT", "REPLY"].includes(
-          activity.target.activityTargetType,
-        )}
-      >
-        <S.FooterContainer onClick={(e) => handleCardClick(e, activity)}>
-          <FaComments />
-          <S.PromptFooterText>View Threads &amp; Replies.</S.PromptFooterText>
-        </S.FooterContainer>
-      </ShouldRender>
-      <ShouldRender if={["MUSE"].includes(activity.target.activityTargetType)}>
-        <S.FooterContainer onClick={(e) => handleCardClick(e, activity)}>
-          <FaStreetView />
-          <S.PromptFooterText>View Character.</S.PromptFooterText>
-        </S.FooterContainer>
-      </ShouldRender>
-      <ShouldRender
-        if={["STORY_BOARD", "STORY_BOARD_EVENT"].includes(
-          activity.target.activityTargetType,
-        )}
-      >
-        <S.FooterContainer onClick={(e) => handleCardClick(e, activity)}>
-          <PiBookOpenUserDuotone />
-          <S.PromptFooterText>View Story.</S.PromptFooterText>
-        </S.FooterContainer>
-      </ShouldRender>
-      <ShouldRender
-        if={["PROFILE"].includes(activity.target.activityTargetType)}
-      >
-        <S.FooterContainer onClick={(e) => handleCardClick(e, activity)}>
-          <FaUser />
-          <S.PromptFooterText>View Profile.</S.PromptFooterText>
-        </S.FooterContainer>
-      </ShouldRender>
-      <ShouldRender if={Boolean(isMedia)}>
-        <S.ReactionBar>
+      <S.ActionRow>
+        <S.PrimaryAction type="button" onClick={handlePrimaryAction}>
+          {kind.icon}
+          {kind.actionLabel}
+        </S.PrimaryAction>
+        <ShouldRender if={Boolean(isMedia)}>
+          <S.ActionSpacer />
           <S.HeartButton
             type="button"
             $active={reacted}
@@ -369,8 +390,8 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
               <S.ReactionCount>{reactionCount}</S.ReactionCount>
             </ShouldRender>
           </S.HeartButton>
-        </S.ReactionBar>
-      </ShouldRender>
+        </ShouldRender>
+      </S.ActionRow>
       <ShouldRender if={Boolean(isMedia && mediaType === "video")}>
         <VideoViewer
           src={activity.target.url || ""}

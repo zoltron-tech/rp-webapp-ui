@@ -20,7 +20,7 @@ import {
   CONTENT_TYPE_HEADER_NAME,
   MEDIA_JSON_HEADER_VALUE,
 } from "@/utils/constants";
-import { reverseWsrvUrl, transformNovelist } from "@/utils/image";
+import { reverseWsrvUrl, transformFriend, transformNovelist } from "@/utils/image";
 import { Logger } from "@/utils/services";
 
 const { serverRuntimeConfig } = getConfig();
@@ -412,7 +412,11 @@ export const getFriendsByUsernameAction = async (
     return [];
   }
 
-  return response.json();
+  const friends: Friend[] = await response.json();
+
+  for (const f of friends) transformFriend(f, "feed");
+
+  return friends;
 };
 
 export const getConversationsAction = async (

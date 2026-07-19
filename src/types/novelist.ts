@@ -235,6 +235,8 @@ export interface Friend {
   isVerified: boolean;
   image: string;
   avatar?: NWImage | null;
+  banner?: NWImage | null;
+  palette?: number;
   connection: string | null;
   muses: Muse[];
   mutualFriendCount: number;

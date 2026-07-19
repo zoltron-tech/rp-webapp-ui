@@ -2,19 +2,22 @@ import styled from "styled-components";
 import { BORDER_RADIUS, CARD_BORDER, Z_INDEX } from "@/theme";
 import { AvatarNew } from "../common/avatar-new";
 
+const DISPLAY_SERIF = `"PlayfairDisplaySC", "BodoniModaSC", Georgia, serif`;
+
 export const ParentContainer = styled.article`
-  background-color: var(--bg-2);
+  background: linear-gradient(180deg, var(--bg-3), var(--bg-2));
   width: 100%;
   max-width: 800px;
   margin-inline: auto;
   margin-block: 8px;
-  border: 1px solid var(--bg-5);
-  border-radius: 8px;
+  border: 1px solid var(--bg-4);
+  border-radius: 16px;
   overflow: hidden;
   color: var(--text);
   font-size: var(--font-size);
   font-family: var(--font);
   font-weight: var(--font-weight-regular);
+  box-shadow: 0 18px 40px -26px rgba(0, 0, 0, 0.55);
 
   @media screen and (max-width: 600px) {
     border-radius: 0;
@@ -22,45 +25,67 @@ export const ParentContainer = styled.article`
     border-right: none;
     margin-block: 4px;
     border: none;
+    box-shadow: none;
   }
 `;
 
 export const HeaderContainer = styled.header`
   display: flex;
   align-items: center;
-  padding: 14px 16px 12px;
-  border-bottom: 1px solid var(--bg-4);
-  gap: 0;
+  gap: 12px;
+  padding: 16px 18px 12px;
+
+  @media screen and (max-width: 400px) {
+    gap: 8px;
+    padding: 12px 12px 10px;
+  }
+`;
+
+export const AvatarWrap = styled.div`
+  position: relative;
+  flex-shrink: 0;
 `;
 
 export const Avatar = styled(AvatarNew)`
-  width: 48px;
-  height: 48px;
+  width: 46px;
+  height: 46px;
   flex-shrink: 0;
   cursor: pointer;
+  box-shadow:
+    0 0 0 2px var(--bg-2),
+    0 0 0 3.5px var(--accent-a8, var(--accent));
 
   @media screen and (max-width: 430px) {
     width: 36px;
     height: 36px;
   }
+
+  @media screen and (max-width: 400px) {
+    width: 32px;
+    height: 32px;
+    box-shadow:
+      0 0 0 1.5px var(--bg-2),
+      0 0 0 2.5px var(--accent-a8, var(--accent));
+  }
 `;
 
-/** Wraps SourceName + ActivityText in a vertical stack beside the avatar. */
+/** Wraps SourceName + meta line in a vertical stack beside the avatar. */
 export const SourceInfo = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  margin-left: 10px;
   flex: 1;
   min-width: 0;
 `;
 
 export const SourceName = styled.h2`
   all: unset;
-  font-size: var(--font-size-h5);
+  display: block;
+  width: 100%;
+  font-size: var(--font-size-h6);
   font-weight: var(--font-weight-bold);
   color: var(--text);
-  line-height: 1.4;
+  line-height: 1.3;
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
@@ -70,38 +95,87 @@ export const SourceName = styled.h2`
   @media screen and (max-width: 600px) {
     font-size: var(--font-size-input);
   }
+
+  @media screen and (max-width: 400px) {
+    font-size: var(--font-size-small);
+  }
 `;
 
-export const ActivityText = styled.span`
+/** Verb + date, e.g. "posted a prompt · Jul 19, 2026". */
+export const MetaLine = styled.div`
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  gap: 6px;
+  margin-top: 2px;
   font-size: var(--font-size-small);
   color: var(--text-secondary);
-  line-height: 1.4;
-  margin-top: 1px;
+
+  @media screen and (max-width: 400px) {
+    font-size: var(--font-size-xsmall);
+  }
 `;
 
-export const ViewMoreText = styled(ActivityText)`
-  font-weight: 600;
-  cursor: pointer;
+export const MetaVerb = styled.span`
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `;
 
-export const PromptText = styled(ActivityText)`
-  display: block;
-  white-space: pre-wrap;
+export const MetaDot = styled.span`
+  flex-shrink: 0;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  opacity: 0.6;
 `;
 
-export const StyledDate = styled.time`
-  font-size: var(--font-size-xsmall);
-  color: var(--text-secondary);
-  opacity: 0.65;
+export const MetaDate = styled.time`
+  flex-shrink: 0;
+  opacity: 0.75;
+`;
+
+/** Kind badge, e.g. "Prompt" / "Character" — replaces the plain corner date. */
+export const KindBadge = styled.span`
   margin-left: auto;
   flex-shrink: 0;
-  align-self: flex-start;
-  padding-top: 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 22%, var(--bg-1));
+  color: var(--accent-12, var(--accent-11, var(--text)));
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--bg-1));
+  font-size: var(--font-size-xsmall);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  @media screen and (max-width: 430px) {
+    span {
+      display: none;
+    }
+  }
+
+  @media screen and (max-width: 400px) {
+    padding: 5px 8px;
+    gap: 0;
+  }
 `;
 
-/** Main content area between header and footer. */
+/** Main content area between header and action row. */
 export const Body = styled.div`
-  padding: 16px;
+  padding: 2px 18px 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -112,33 +186,72 @@ export const Body = styled.div`
   box-sizing: border-box;
 `;
 
-export const FooterContainer = styled.footer`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 16px 16px;
-  border-top: 1px solid var(--bg-4);
-  cursor: pointer;
-  color: var(--text-secondary);
-  font-size: var(--font-size-small);
-  transition: background-color 0.15s ease, color 0.15s ease;
+/** Editorial treatment for prompt/comment/reply text: roomier line-height
+    and a small quote glyph, standing in for a literal drop-cap since the
+    body is arbitrary rich HTML (mentions, embeds) we don't control char-by-char. */
+export const PromptBody = styled.div`
+  align-self: stretch;
+  position: relative;
+  padding-left: 22px;
 
-  @media (hover: hover) {
-    &:hover {
-      background-color: var(--bg-3);
-      color: var(--accent);
-    }
-  }
-
-  @media screen and (max-width: 600px) {
-    padding: 14px 8px;
+  &::before {
+    content: "❛";
+    position: absolute;
+    left: -4px;
+    top: -6px;
+    font-family: ${DISPLAY_SERIF};
+    font-size: 40px;
+    line-height: 1;
+    color: var(--accent-11, var(--accent));
+    opacity: 0.55;
   }
 `;
 
-export const PromptFooterText = styled.span`
+/** Action row: contextual primary button + (when applicable) reaction icons. */
+export const ActionRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px 14px;
+  margin-top: 6px;
+  border-top: 1px solid var(--bg-4);
+`;
+
+export const PrimaryAction = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 15px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 20%, var(--bg-1));
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--bg-1));
+  color: var(--accent-12, var(--accent-11, var(--text)));
   font-size: var(--font-size-small);
-  font-weight: 600;
+  font-weight: var(--font-weight-semi-bold);
+  font-family: var(--font);
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.08s ease;
+
+  svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      background: color-mix(in srgb, var(--accent) 30%, var(--bg-1));
+    }
+  }
+`;
+
+export const ActionSpacer = styled.span`
+  flex: 1;
 `;
 
 type CardProps = {
@@ -160,29 +273,31 @@ export const CardBackground = styled.div<CardProps>`
 `;
 
 export const Title = styled.div`
-  font-size: 20px;
+  font-family: ${DISPLAY_SERIF};
+  font-size: 27px;
+  line-height: 1.1;
   font-weight: 700;
   word-wrap: break-word;
   white-space: pre-wrap;
-  max-width: 85%;
+  max-width: 92%;
   color: white;
-  text-align: center;
+  text-align: left;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
 
   @container muse-card (max-width: 400px) {
-    font-size: 16px;
+    font-size: 20px;
   }
 
   @container muse-card (max-width: 280px) {
-    font-size: 13px;
+    font-size: 15px;
   }
 `;
 
 export const CardWrapper = styled.div`
   position: relative;
   width: min(480px, 100%);
-  aspect-ratio: 1;
-  border-radius: 8px;
+  aspect-ratio: 3 / 4;
+  border-radius: 14px;
   ${CARD_BORDER};
 
   transition: transform 0.25s ease-in-out;
@@ -211,7 +326,7 @@ export const ImageWrapper = styled.div`
   position: absolute;
   inset: 0;
   z-index: 1;
-  border-radius: 8px;
+  border-radius: 14px;
   overflow: hidden;
 `;
 
@@ -240,7 +355,7 @@ export const NSFWOverlay = styled.div`
   color: #fff;
   text-align: center;
   font-size: var(--font-size-xsmall);
-  border-radius: 8px;
+  border-radius: 14px;
   pointer-events: none;
 `;
 
@@ -294,14 +409,17 @@ export const NSFWRevealButton = styled.button`
 export const Card = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-end;
   position: relative;
   height: 100%;
   z-index: 2;
   contain: paint;
   background: linear-gradient(
-    ${({ theme }: any): string => theme.cardBackgroundGradient.join(", ")}
+    to top,
+    rgba(8, 8, 12, 0.9) 4%,
+    rgba(8, 8, 12, 0.15) 46%,
+    transparent 70%
   );
   cursor: pointer;
 `;
@@ -310,16 +428,16 @@ export const CardHeader = styled.div`
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   position: relative;
-  margin-bottom: 10px;
+  padding: 16px 18px;
 `;
 
 export const ActivityInfo = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
 `;
 
@@ -344,7 +462,7 @@ export const Audio = styled.audio`
 // the zoom-in cursor and expand badge make that affordance explicit.
 
 export const MediaFigure = styled.figure`
-  margin: 0;
+  margin: 4px 0 2px;
   width: 100%;
   min-width: 0;
 `;
@@ -356,8 +474,9 @@ export const MediaImageButton = styled.button`
   display: block;
   width: 100%;
   cursor: zoom-in;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
+  border: 1px solid var(--bg-5);
   background: var(--bg-1);
   line-height: 0;
 
@@ -380,14 +499,15 @@ export const MediaImage = styled.img`
 /** Small pill overlay telling the user the media expands in a viewer. */
 export const MediaExpandBadge = styled.span`
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 11px;
+  right: 11px;
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 5px 10px;
-  border-radius: 16px;
-  background: rgba(0, 0, 0, 0.55);
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: rgba(10, 10, 12, 0.6);
+  backdrop-filter: blur(8px);
   color: #fff;
   font-size: var(--font-size-xsmall);
   font-weight: 600;
@@ -398,8 +518,9 @@ export const MediaExpandBadge = styled.span`
 export const MediaVideoWrapper = styled.div`
   position: relative;
   width: 100%;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
+  border: 1px solid var(--bg-5);
   background: black;
   line-height: 0;
 `;
@@ -441,7 +562,7 @@ export const MediaFallback = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--bg-3);
   color: var(--text-secondary);
   opacity: 0.5;
@@ -452,30 +573,31 @@ export const MediaDescription = styled.p`
   margin: 0;
   width: 100%;
   font-size: var(--font-size-small);
-  color: var(--text);
-  line-height: 1.45;
+  color: var(--text-secondary);
+  line-height: 1.55;
   white-space: pre-wrap;
   word-break: break-word;
 `;
 
-/** Reaction row (heart toggle + count) for MEDIA activities. */
-export const ReactionBar = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  border-top: 1px solid var(--bg-4);
-`;
-
 export const HeartButton = styled.button<{ $active: boolean }>`
   all: unset;
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
+  padding: 8px 11px;
+  border-radius: 999px;
   cursor: pointer;
-  color: ${({ $active }): string => ($active ? "var(--tomato-9)" : "var(--text-secondary)")};
+  color: ${({ $active }): string =>
+    $active ? "var(--tomato-9)" : "var(--text-secondary)"};
   font-size: var(--font-size-small);
-  transition: color 0.15s ease, transform 0.1s ease;
+  font-weight: var(--font-weight-semi-bold);
+  transition: color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
 
   &:active {
     transform: scale(0.92);
@@ -484,6 +606,7 @@ export const HeartButton = styled.button<{ $active: boolean }>`
   @media (hover: hover) {
     &:hover {
       color: var(--tomato-9);
+      background-color: rgba(255, 255, 255, 0.05);
     }
   }
 `;

@@ -124,17 +124,18 @@ export const StoryCardShimmer = styled.div`
   }
 `;
 
-/** Matches NovelistPreviewCard dimensions (220 × 246, 155 × 188 mobile). */
+/** Matches NovelistPreviewCard dimensions (240 × 344, 160 × 248 mobile). */
 export const NovelistCardShimmer = styled.div`
   flex-shrink: 0;
-  width: 220px;
-  height: 246px;
-  border-radius: 8px;
+  width: 240px;
+  height: 344px;
+  border-radius: 18px;
   ${shimmer}
 
   @media (max-width: 600px) {
-    width: 155px;
-    height: 188px;
+    width: 160px;
+    height: 248px;
+    border-radius: 14px;
   }
 `;
 
@@ -510,15 +511,17 @@ export const NextPageCard = styled.button<{ $height?: string }>`
   }
 `;
 
-/** Same shape as NovelistPreviewCard (220px wide; height = AccentStrip + Body min-height). */
+/** Same shape as NovelistPreviewCard (240px wide; height = Banner + Body content). */
 export const NextPageNovelistCard = styled(NextPageCard)`
-  width: 220px;
-  min-width: 220px;
-  height: 246px;
+  width: 240px;
+  min-width: 240px;
+  height: 344px;
+  border-radius: 18px;
 
   @media (max-width: 600px) {
-    width: 155px;
-    min-width: 155px;
-    height: 188px;
+    width: 160px;
+    min-width: 160px;
+    height: 248px;
+    border-radius: 14px;
   }
 `;

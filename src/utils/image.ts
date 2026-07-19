@@ -11,7 +11,7 @@
  * the client. Never call it from component templates.
  */
 
-import type { Muse, Novelist } from "@/types";
+import type { Friend, Muse, Novelist } from "@/types";
 import type { Activity } from "@/types/activity";
 import type { Comment, Prompt, PromptSource, Reply } from "@/types/prompt";
 
@@ -237,6 +237,38 @@ export function transformMuse(
 }
 
 /**
+ * Transform every image field on a Friend overview (image, avatar, banner,
+ * and its top muses). Shared by transformNovelist's friends array and by the
+ * standalone friends-list endpoint.
+ */
+export function transformFriend(
+  friend: Friend | null | undefined,
+  ctx: Context = "feed",
+  visited: WeakSet<object> = new WeakSet(),
+): void {
+  if (!friend || visited.has(friend)) return;
+  visited.add(friend);
+  const sizes = sizesFor(ctx);
+
+  friend.image = wsrvImage(friend.image, sizes.avatar);
+  if (friend.avatar) {
+    friend.avatar.src = wsrvImage(friend.avatar.src, sizes.avatar);
+    if (friend.avatar.crop?.src) {
+      friend.avatar.crop.src = wsrvImage(friend.avatar.crop.src, sizes.avatar);
+    }
+  }
+  if (friend.banner) {
+    friend.banner.src = wsrvImage(friend.banner.src, sizes.banner);
+    if (friend.banner.crop?.src) {
+      friend.banner.crop.src = wsrvImage(friend.banner.crop.src, sizes.banner);
+    }
+  }
+  if (Array.isArray(friend.muses)) {
+    for (const muse of friend.muses) transformMuse(muse, ctx, visited);
+  }
+}
+
+/**
  * Transform every image field on a Novelist, including nested muses, friends,
  * and their muses. Cycles are guarded by a `visited` WeakSet.
  */
@@ -251,18 +283,24 @@ export function transformNovelist(
 
   novelist.image = wsrvImage(novelist.image, sizes.avatar);
 
+  if (novelist.avatar) {
+    novelist.avatar.src = wsrvImage(novelist.avatar.src, sizes.avatar);
+    if (novelist.avatar.crop?.src) {
+      novelist.avatar.crop.src = wsrvImage(novelist.avatar.crop.src, sizes.avatar);
+    }
+  }
+  if (novelist.banner) {
+    novelist.banner.src = wsrvImage(novelist.banner.src, sizes.banner);
+    if (novelist.banner.crop?.src) {
+      novelist.banner.crop.src = wsrvImage(novelist.banner.crop.src, sizes.banner);
+    }
+  }
+
   if (Array.isArray(novelist.muses)) {
     for (const muse of novelist.muses) transformMuse(muse, ctx, visited);
   }
   if (Array.isArray(novelist.friends)) {
-    for (const friend of novelist.friends) {
-      if (visited.has(friend)) continue;
-      visited.add(friend);
-      friend.image = wsrvImage(friend.image, sizes.avatar);
-      if (Array.isArray(friend.muses)) {
-        for (const muse of friend.muses) transformMuse(muse, ctx, visited);
-      }
-    }
+    for (const friend of novelist.friends) transformFriend(friend, ctx, visited);
   }
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import classNames from "classnames";
-import { type FC, useMemo, useState } from "react";
+import { type FC, useEffect, useMemo, useState } from "react";
 import {
   FaComments,
   FaHeart,
@@ -10,6 +10,7 @@ import {
   FaStreetView,
   FaUser,
 } from "react-icons/fa6";
+import { FiMaximize2 } from "react-icons/fi";
 import { PiBookOpenUserDuotone } from "react-icons/pi";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -89,6 +90,12 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
     activity?.reactionCount ?? 0,
   );
 
+  // Re-sync when the activity data arrives or refreshes after mount.
+  useEffect(() => {
+    setReacted(Boolean(activity?.reacted));
+    setReactionCount(activity?.reactionCount ?? 0);
+  }, [activity?.reacted, activity?.reactionCount]);
+
   const { toggleLike } = useToggleLike({
     id: activity?.target.id ?? "",
     liked: reacted,
@@ -119,8 +126,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
     const target = e.target as HTMLElement;
     if (target.classList.contains("button")) return;
 
-    if (activity?.target.activityTargetType === "MEDIA") setViewerOpen(true);
-    else if (activity?.target.activityTargetType === "MUSE")
+    if (activity?.target.activityTargetType === "MUSE")
       routeToPage(ROUTES.Muse.View(activity.target.id));
     else if (
       ["PROMPT", "COMMENT", "REPLY"].includes(
@@ -176,12 +182,66 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
             overlayHidden
           />
         </ShouldRender>
+        {/* MEDIA: full-width media at its natural aspect ratio. Clicking
+            opens the fullscreen viewer (never navigates) — signalled by the
+            zoom-in cursor and the expand badge. */}
+        <ShouldRender if={Boolean(isMedia)}>
+          <S.MediaFigure>
+            {mediaType === "image" && !imgError && activity.target.url && (
+              <S.MediaImageButton
+                type="button"
+                aria-label="View media fullscreen"
+                onClick={() => setViewerOpen(true)}
+              >
+                <S.MediaImage
+                  src={activity.target.url}
+                  alt={activity.target.title || "Media"}
+                  loading="lazy"
+                  onError={() => setImgError(true)}
+                />
+                <S.MediaExpandBadge>
+                  <FiMaximize2 size={11} />
+                  View
+                </S.MediaExpandBadge>
+              </S.MediaImageButton>
+            )}
+            {mediaType === "video" && (
+              <S.MediaVideoWrapper>
+                <S.MediaVideo
+                  src={`${activity.target.url}#t=0.3`}
+                  controls
+                  preload="metadata"
+                />
+                <S.MediaExpandButton
+                  type="button"
+                  aria-label="Open fullscreen viewer"
+                  onClick={() => setViewerOpen(true)}
+                >
+                  <FiMaximize2 size={14} />
+                </S.MediaExpandButton>
+              </S.MediaVideoWrapper>
+            )}
+            {mediaType === "audio" && (
+              <S.Audio className="audio" src={activity.target.url} controls />
+            )}
+            {(!activity.target.url ||
+              (mediaType === "image" && imgError)) && (
+              <S.MediaFallback>
+                <FaImage size={48} />
+              </S.MediaFallback>
+            )}
+          </S.MediaFigure>
+        </ShouldRender>
+
+        {/* Non-media targets (muse, profile, story…): navigational card.
+            Prompt-family activities keep it only when they carry media. */}
         <ShouldRender
           if={
-            Boolean(mediaType) ||
-            !["PROMPT", "COMMENT", "REPLY"].includes(
-              activity.target.activityTargetType,
-            )
+            !isMedia &&
+            (Boolean(mediaType) ||
+              !["PROMPT", "COMMENT", "REPLY"].includes(
+                activity.target.activityTargetType,
+              ))
           }
         >
           <S.CardWrapper>
@@ -231,7 +291,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
             >
               <ShouldRender
                 if={
-                  !["PROMPT", "COMMENT", "REPLY", "MEDIA"].includes(
+                  !["PROMPT", "COMMENT", "REPLY"].includes(
                     activity.target.activityTargetType,
                   )
                 }

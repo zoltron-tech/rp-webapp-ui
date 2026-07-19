@@ -339,10 +339,118 @@ export const Audio = styled.audio`
   background-color: black;
 `;
 
+// ── MEDIA activities: full-bleed media rendered at its natural aspect ratio
+// (no muse-card). Clicking opens the fullscreen viewer, never navigates —
+// the zoom-in cursor and expand badge make that affordance explicit.
+
+export const MediaFigure = styled.figure`
+  margin: 0;
+  width: 100%;
+  min-width: 0;
+`;
+
+export const MediaImageButton = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  position: relative;
+  display: block;
+  width: 100%;
+  cursor: zoom-in;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-1);
+  line-height: 0;
+
+  @media (hover: hover) {
+    &:hover img {
+      opacity: 0.92;
+    }
+  }
+`;
+
+export const MediaImage = styled.img`
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 560px;
+  object-fit: contain;
+  transition: opacity 0.15s ease;
+`;
+
+/** Small pill overlay telling the user the media expands in a viewer. */
+export const MediaExpandBadge = styled.span`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: var(--font-size-xsmall);
+  font-weight: 600;
+  line-height: 1;
+  pointer-events: none;
+`;
+
+export const MediaVideoWrapper = styled.div`
+  position: relative;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background: black;
+  line-height: 0;
+`;
+
+export const MediaVideo = styled.video`
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 560px;
+`;
+
+/** Round expand button over videos — inline controls stay usable. */
+export const MediaExpandButton = styled.button`
+  all: unset;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  @media (hover: hover) {
+    &:hover {
+      background: rgba(0, 0, 0, 0.8);
+    }
+  }
+`;
+
+export const MediaFallback = styled.div`
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--bg-3);
+  color: var(--text-secondary);
+  opacity: 0.5;
+`;
+
 /** Read-only media description shown under the media in the feed card. */
 export const MediaDescription = styled.p`
   margin: 0;
-  width: min(480px, 100%);
+  width: 100%;
   font-size: var(--font-size-small);
   color: var(--text);
   line-height: 1.45;

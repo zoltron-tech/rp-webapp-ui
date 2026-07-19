@@ -490,8 +490,27 @@ const doResolveConversationKey = async (
   const identity = await getIdentity();
   await ensureE2EIdentityPublished();
 
-  const bundle = await getE2EBundleAction(conversationId);
+  let bundle = await getE2EBundleAction(conversationId);
   if (!bundle) return null;
+
+  // The "already published" flag only records what THIS browser sent — the
+  // server may hold a different key for us (another device of the same
+  // account published theirs, or server state was replaced). Envelopes and
+  // repairs target the server-side key, so until ours is current there we can
+  // never be enveloped: re-publish past the flag and refetch, so members see
+  // our real key and the stale-envelope repair pass can rewrap for it.
+  if (
+    !bundle.memberPublicKeys.some(
+      (member) => member.publicKey === identity.publicKeyString,
+    )
+  ) {
+    const published = await publishE2EPublicKeyAction(identity.publicKeyString);
+    if (published) {
+      localStorage.setItem(publishedStorageKey(), identity.publicKeyString);
+      bundle = await getE2EBundleAction(conversationId);
+      if (!bundle) return null;
+    }
+  }
 
   if (bundle.myEnvelope) {
     if (bundle.myEnvelope.recipientPublicKey !== identity.publicKeyString) {

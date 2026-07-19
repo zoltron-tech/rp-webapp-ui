@@ -115,7 +115,15 @@ export const getUserActivities = async (
 ): Promise<DataType<Activity[]>> => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/activity/${username}?pageNumber=${pageNumber}&pageSize=${pageSize}`;
 
-  const response = await fetch(URL, { cache: "no-store" });
+  // Auth is optional: with a token the backend marks media activities the
+  // viewer has reacted to (`reacted`), so their heart renders filled.
+  const jwt = await getJWTIfExists();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (jwt) headers[AUTH_HEADER_NAME] = jwt;
+
+  const response = await fetch(URL, { cache: "no-store", headers });
   Logger.debug("getUserActivities", response.status);
 
   if (response.status === 404) {

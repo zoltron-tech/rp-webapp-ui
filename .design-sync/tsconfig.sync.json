@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "baseUrl": "..",
+    "jsx": "preserve",
+    "paths": {
+      "@/*": ["./src/*"],
+      "next/navigation": ["./.design-sync/stubs/next-navigation.ts"],
+      "next/link": ["./.design-sync/stubs/next-link.tsx"],
+      "next/image": ["./.design-sync/stubs/next-image.tsx"],
+      "next/config": ["./.design-sync/stubs/next-config.ts"],
+      "next/headers": ["./.design-sync/stubs/next-headers.ts"],
+      "next/dynamic": ["./.design-sync/stubs/next-dynamic.tsx"],
+      "server-only": ["./.design-sync/stubs/empty.ts"],
+      "jsonwebtoken": ["./.design-sync/stubs/jsonwebtoken.ts"],
+      "@tensorflow/tfjs": ["./.design-sync/stubs/tfjs.ts"],
+      "nsfwjs": ["./.design-sync/stubs/nsfwjs.ts"],
+      "mediabunny": ["./.design-sync/stubs/mediabunny.ts"]
+    }
+  }
+}

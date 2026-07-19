@@ -1,0 +1,2383 @@
+/* ── source: node_modules/toastify-js/src/toastify.css ── */
+/*!
+ * Toastify js 1.12.0
+ * https://github.com/apvarun/toastify-js
+ * @license MIT licensed
+ *
+ * Copyright (C) 2018 Varun A P
+ */
+
+.toastify {
+    padding: 12px 20px;
+    color: #ffffff;
+    display: inline-block;
+    box-shadow: 0 3px 6px -1px rgba(0, 0, 0, 0.12), 0 10px 36px -4px rgba(77, 96, 232, 0.3);
+    background: -webkit-linear-gradient(315deg, #73a5ff, #5477f5);
+    background: linear-gradient(135deg, #73a5ff, #5477f5);
+    position: fixed;
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.215, 0.61, 0.355, 1);
+    border-radius: 2px;
+    cursor: pointer;
+    text-decoration: none;
+    max-width: calc(50% - 20px);
+    z-index: 2147483647;
+}
+
+.toastify.on {
+    opacity: 1;
+}
+
+.toast-close {
+    background: transparent;
+    border: 0;
+    color: white;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 1em;
+    opacity: 0.4;
+    padding: 0 5px;
+}
+
+.toastify-right {
+    right: 15px;
+}
+
+.toastify-left {
+    left: 15px;
+}
+
+.toastify-top {
+    top: -150px;
+}
+
+.toastify-bottom {
+    bottom: -150px;
+}
+
+.toastify-rounded {
+    border-radius: 25px;
+}
+
+.toastify-avatar {
+    width: 1.5em;
+    height: 1.5em;
+    margin: -7px 5px;
+    border-radius: 2px;
+}
+
+.toastify-center {
+    margin-left: auto;
+    margin-right: auto;
+    left: 0;
+    right: 0;
+    max-width: fit-content;
+    max-width: -moz-fit-content;
+}
+
+@media only screen and (max-width: 360px) {
+    .toastify-right, .toastify-left {
+        margin-left: auto;
+        margin-right: auto;
+        left: 0;
+        right: 0;
+        max-width: fit-content;
+    }
+}
+
+
+/* ── source: node_modules/@novelist-world/ui/dist/styles.css ── */
+
+.menubar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-inline: 0.25em;
+    gap: 0.25em;
+    margin-bottom: 1rem;
+    color:#e8e8e8;
+    background-color: black;
+    border-radius: 0.25em;
+    width: max-content;
+    /* visibility: visible; */
+}
+
+.menubar.hidden {
+    /* visibility: hidden; */
+    display: none;
+}
+
+
+.menubar.floating > .pm-menu-item {
+    display: none;
+}
+
+.menubar.floating.hover > .pm-menu-item {
+    display: inline-block;
+}
+
+.menu-burger-icon {
+    display: none;
+}
+
+.menubar.floating:not(.hover) > .menu-burger-icon {
+    cursor: pointer;
+    font-size: 1.5rem;
+    line-height: 1.5;
+    background-color: black;
+    border-radius: 0.25em;
+    display: block;
+    opacity: 0.5;
+    display: inline-block;
+}
+
+.menubar:not(.floating) > .pm-menu-item {
+    display: inline-block;
+}
+
+
+.pm-menu-item {
+    display: inline-block;
+    padding: 0 0.5em;
+    min-width: 1.75em;
+    text-align: center;
+    cursor: pointer;
+    font-size: 1.25rem;
+    line-height: 1.5;
+    border: 1px solid transparent;
+    border-radius: 0.25em;
+    position: relative;
+}
+
+.pm-menu-item-active {
+    background-color: #e8e8e8;
+    color: #222222;
+}
+
+.pm-menu-item-disabled {
+    cursor: not-allowed;
+    color: #999999;
+}
+
+.pm-menu-item.bold {
+    font-weight: bold;
+}
+
+.pm-menu-item.italic {
+    font-style: italic;
+}
+
+.pm-menu-item:hover {
+    border: 1px solid #e8e8e8;
+}
+.tooltip {
+
+    position: absolute;
+    z-index: 1000;
+    padding: 5px 10px;
+    background-color: #000;
+    color: #fff;
+    border-radius: 5px;
+    font-size: 12px;
+    line-height: 1.5;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+
+/* ── source: src/app/globals.css ── */
+/* Accent colors*/
+/* Jade */
+/* inlined: @radix-ui/colors/jade-dark.css */
+.dark, .dark-theme {
+  --jade-1: #0d1512;
+  --jade-2: #121c18;
+  --jade-3: #0f2e22;
+  --jade-4: #0b3b2c;
+  --jade-5: #114837;
+  --jade-6: #1b5745;
+  --jade-7: #246854;
+  --jade-8: #2a7e68;
+  --jade-9: #29a383;
+  --jade-10: #27b08b;
+  --jade-11: #1fd8a4;
+  --jade-12: #adf0d4;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --jade-1: color(display-p3 0.059 0.083 0.071);
+      --jade-2: color(display-p3 0.078 0.11 0.094);
+      --jade-3: color(display-p3 0.091 0.176 0.138);
+      --jade-4: color(display-p3 0.102 0.228 0.177);
+      --jade-5: color(display-p3 0.133 0.279 0.221);
+      --jade-6: color(display-p3 0.174 0.334 0.273);
+      --jade-7: color(display-p3 0.219 0.402 0.335);
+      --jade-8: color(display-p3 0.263 0.488 0.411);
+      --jade-9: color(display-p3 0.319 0.63 0.521);
+      --jade-10: color(display-p3 0.338 0.68 0.555);
+      --jade-11: color(display-p3 0.4 0.835 0.656);
+      --jade-12: color(display-p3 0.734 0.934 0.838);
+    }
+  }
+}
+/* inlined: @radix-ui/colors/jade-dark-alpha.css */
+.dark, .dark-theme {
+  --jade-a1: #00de4505;
+  --jade-a2: #27fba60c;
+  --jade-a3: #02f99920;
+  --jade-a4: #00ffaa2d;
+  --jade-a5: #11ffb63b;
+  --jade-a6: #34ffc24b;
+  --jade-a7: #45fdc75e;
+  --jade-a8: #48ffcf75;
+  --jade-a9: #38feca9d;
+  --jade-a10: #31fec7ab;
+  --jade-a11: #21fec0d6;
+  --jade-a12: #b8ffe1ef;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --jade-a1: color(display-p3 0 0.992 0.298 / 0.017);
+      --jade-a2: color(display-p3 0.318 0.988 0.651 / 0.047);
+      --jade-a3: color(display-p3 0.267 1 0.667 / 0.118);
+      --jade-a4: color(display-p3 0.275 0.996 0.702 / 0.173);
+      --jade-a5: color(display-p3 0.361 1 0.741 / 0.227);
+      --jade-a6: color(display-p3 0.439 1 0.796 / 0.286);
+      --jade-a7: color(display-p3 0.49 1 0.804 / 0.362);
+      --jade-a8: color(display-p3 0.506 1 0.835 / 0.45);
+      --jade-a9: color(display-p3 0.478 0.996 0.816 / 0.606);
+      --jade-a10: color(display-p3 0.478 1 0.816 / 0.656);
+      --jade-a11: color(display-p3 0.4 0.835 0.656);
+      --jade-a12: color(display-p3 0.734 0.934 0.838);
+    }
+  }
+}
+/* Crimson */
+/* inlined: @radix-ui/colors/crimson-dark.css */
+.dark, .dark-theme {
+  --crimson-1: #191114;
+  --crimson-2: #201318;
+  --crimson-3: #381525;
+  --crimson-4: #4d122f;
+  --crimson-5: #5c1839;
+  --crimson-6: #6d2545;
+  --crimson-7: #873356;
+  --crimson-8: #b0436e;
+  --crimson-9: #e93d82;
+  --crimson-10: #ee518a;
+  --crimson-11: #ff92ad;
+  --crimson-12: #fdd3e8;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --crimson-1: color(display-p3 0.093 0.068 0.078);
+      --crimson-2: color(display-p3 0.117 0.078 0.095);
+      --crimson-3: color(display-p3 0.203 0.091 0.143);
+      --crimson-4: color(display-p3 0.277 0.087 0.182);
+      --crimson-5: color(display-p3 0.332 0.115 0.22);
+      --crimson-6: color(display-p3 0.394 0.162 0.268);
+      --crimson-7: color(display-p3 0.489 0.222 0.336);
+      --crimson-8: color(display-p3 0.638 0.289 0.429);
+      --crimson-9: color(display-p3 0.843 0.298 0.507);
+      --crimson-10: color(display-p3 0.864 0.364 0.539);
+      --crimson-11: color(display-p3 1 0.56 0.66);
+      --crimson-12: color(display-p3 0.966 0.834 0.906);
+    }
+  }
+}
+/* inlined: @radix-ui/colors/crimson-dark-alpha.css */
+.dark, .dark-theme {
+  --crimson-a1: #f4126709;
+  --crimson-a2: #f22f7a11;
+  --crimson-a3: #fe2a8b2a;
+  --crimson-a4: #fd158741;
+  --crimson-a5: #fd278f51;
+  --crimson-a6: #fe459763;
+  --crimson-a7: #fd559b7f;
+  --crimson-a8: #fe5b9bab;
+  --crimson-a9: #fe418de8;
+  --crimson-a10: #ff5693ed;
+  --crimson-a11: #ff92ad;
+  --crimson-a12: #ffd5eafd;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --crimson-a1: color(display-p3 0.984 0.071 0.463 / 0.03);
+      --crimson-a2: color(display-p3 0.996 0.282 0.569 / 0.055);
+      --crimson-a3: color(display-p3 0.996 0.227 0.573 / 0.148);
+      --crimson-a4: color(display-p3 1 0.157 0.569 / 0.227);
+      --crimson-a5: color(display-p3 1 0.231 0.604 / 0.286);
+      --crimson-a6: color(display-p3 1 0.337 0.643 / 0.349);
+      --crimson-a7: color(display-p3 1 0.416 0.663 / 0.454);
+      --crimson-a8: color(display-p3 0.996 0.427 0.651 / 0.614);
+      --crimson-a9: color(display-p3 1 0.345 0.596 / 0.832);
+      --crimson-a10: color(display-p3 1 0.42 0.62 / 0.853);
+      --crimson-a11: color(display-p3 1 0.56 0.66);
+      --crimson-a12: color(display-p3 0.966 0.834 0.906);
+    }
+  }
+}
+/* Iris */
+/* inlined: @radix-ui/colors/iris-dark.css */
+.dark, .dark-theme {
+  --iris-1: #13131e;
+  --iris-2: #171625;
+  --iris-3: #202248;
+  --iris-4: #262a65;
+  --iris-5: #303374;
+  --iris-6: #3d3e82;
+  --iris-7: #4a4a95;
+  --iris-8: #5958b1;
+  --iris-9: #5b5bd6;
+  --iris-10: #6e6ade;
+  --iris-11: #b1a9ff;
+  --iris-12: #e0dffe;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --iris-1: color(display-p3 0.075 0.075 0.114);
+      --iris-2: color(display-p3 0.089 0.086 0.14);
+      --iris-3: color(display-p3 0.128 0.134 0.272);
+      --iris-4: color(display-p3 0.153 0.165 0.382);
+      --iris-5: color(display-p3 0.192 0.201 0.44);
+      --iris-6: color(display-p3 0.239 0.241 0.491);
+      --iris-7: color(display-p3 0.291 0.289 0.565);
+      --iris-8: color(display-p3 0.35 0.345 0.673);
+      --iris-9: color(display-p3 0.357 0.357 0.81);
+      --iris-10: color(display-p3 0.428 0.416 0.843);
+      --iris-11: color(display-p3 0.685 0.662 1);
+      --iris-12: color(display-p3 0.878 0.875 0.986);
+    }
+  }
+}
+/* inlined: @radix-ui/colors/iris-dark-alpha.css */
+.dark, .dark-theme {
+  --iris-a1: #3636fe0e;
+  --iris-a2: #564bf916;
+  --iris-a3: #525bff3b;
+  --iris-a4: #4d58ff5a;
+  --iris-a5: #5b62fd6b;
+  --iris-a6: #6d6ffd7a;
+  --iris-a7: #7777fe8e;
+  --iris-a8: #7b7afeac;
+  --iris-a9: #6a6afed4;
+  --iris-a10: #7d79ffdc;
+  --iris-a11: #b1a9ff;
+  --iris-a12: #e1e0fffe;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --iris-a1: color(display-p3 0.224 0.224 0.992 / 0.051);
+      --iris-a2: color(display-p3 0.361 0.314 1 / 0.08);
+      --iris-a3: color(display-p3 0.357 0.373 1 / 0.219);
+      --iris-a4: color(display-p3 0.325 0.361 1 / 0.337);
+      --iris-a5: color(display-p3 0.38 0.4 1 / 0.4);
+      --iris-a6: color(display-p3 0.447 0.447 1 / 0.454);
+      --iris-a7: color(display-p3 0.486 0.486 1 / 0.534);
+      --iris-a8: color(display-p3 0.502 0.494 1 / 0.652);
+      --iris-a9: color(display-p3 0.431 0.431 1 / 0.799);
+      --iris-a10: color(display-p3 0.502 0.486 1 / 0.832);
+      --iris-a11: color(display-p3 0.685 0.662 1);
+      --iris-a12: color(display-p3 0.878 0.875 0.986);
+    }
+  }
+}
+/* Cyan */
+/* inlined: @radix-ui/colors/cyan-dark.css */
+.dark, .dark-theme {
+  --cyan-1: #0b161a;
+  --cyan-2: #101b20;
+  --cyan-3: #082c36;
+  --cyan-4: #003848;
+  --cyan-5: #004558;
+  --cyan-6: #045468;
+  --cyan-7: #12677e;
+  --cyan-8: #11809c;
+  --cyan-9: #00a2c7;
+  --cyan-10: #23afd0;
+  --cyan-11: #4ccce6;
+  --cyan-12: #b6ecf7;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --cyan-1: color(display-p3 0.053 0.085 0.098);
+      --cyan-2: color(display-p3 0.072 0.105 0.122);
+      --cyan-3: color(display-p3 0.073 0.168 0.209);
+      --cyan-4: color(display-p3 0.063 0.216 0.277);
+      --cyan-5: color(display-p3 0.091 0.267 0.336);
+      --cyan-6: color(display-p3 0.137 0.324 0.4);
+      --cyan-7: color(display-p3 0.186 0.398 0.484);
+      --cyan-8: color(display-p3 0.23 0.496 0.6);
+      --cyan-9: color(display-p3 0.282 0.627 0.765);
+      --cyan-10: color(display-p3 0.331 0.675 0.801);
+      --cyan-11: color(display-p3 0.446 0.79 0.887);
+      --cyan-12: color(display-p3 0.757 0.919 0.962);
+    }
+  }
+}
+/* inlined: @radix-ui/colors/cyan-dark-alpha.css */
+.dark, .dark-theme {
+  --cyan-a1: #0091f70a;
+  --cyan-a2: #02a7f211;
+  --cyan-a3: #00befd28;
+  --cyan-a4: #00baff3b;
+  --cyan-a5: #00befd4d;
+  --cyan-a6: #00c7fd5e;
+  --cyan-a7: #14cdff75;
+  --cyan-a8: #11cfff95;
+  --cyan-a9: #00cfffc3;
+  --cyan-a10: #28d6ffcd;
+  --cyan-a11: #52e1fee5;
+  --cyan-a12: #bbf3fef7;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --cyan-a1: color(display-p3 0 0.647 0.992 / 0.034);
+      --cyan-a2: color(display-p3 0.133 0.733 1 / 0.059);
+      --cyan-a3: color(display-p3 0.122 0.741 0.996 / 0.152);
+      --cyan-a4: color(display-p3 0.051 0.725 1 / 0.227);
+      --cyan-a5: color(display-p3 0.149 0.757 1 / 0.29);
+      --cyan-a6: color(display-p3 0.267 0.792 1 / 0.358);
+      --cyan-a7: color(display-p3 0.333 0.808 1 / 0.446);
+      --cyan-a8: color(display-p3 0.357 0.816 1 / 0.572);
+      --cyan-a9: color(display-p3 0.357 0.82 1 / 0.748);
+      --cyan-a10: color(display-p3 0.4 0.839 1 / 0.786);
+      --cyan-a11: color(display-p3 0.446 0.79 0.887);
+      --cyan-a12: color(display-p3 0.757 0.919 0.962);
+    }
+  }
+}
+/* Mint */
+/* inlined: @radix-ui/colors/mint-dark.css */
+.dark, .dark-theme {
+  --mint-1: #0e1515;
+  --mint-2: #0f1b1b;
+  --mint-3: #092c2b;
+  --mint-4: #003a38;
+  --mint-5: #004744;
+  --mint-6: #105650;
+  --mint-7: #1e685f;
+  --mint-8: #277f70;
+  --mint-9: #86ead4;
+  --mint-10: #a8f5e5;
+  --mint-11: #58d5ba;
+  --mint-12: #c4f5e1;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --mint-1: color(display-p3 0.059 0.082 0.081);
+      --mint-2: color(display-p3 0.068 0.104 0.105);
+      --mint-3: color(display-p3 0.077 0.17 0.168);
+      --mint-4: color(display-p3 0.068 0.224 0.22);
+      --mint-5: color(display-p3 0.104 0.275 0.264);
+      --mint-6: color(display-p3 0.154 0.332 0.313);
+      --mint-7: color(display-p3 0.207 0.403 0.373);
+      --mint-8: color(display-p3 0.258 0.49 0.441);
+      --mint-9: color(display-p3 0.62 0.908 0.834);
+      --mint-10: color(display-p3 0.725 0.954 0.898);
+      --mint-11: color(display-p3 0.482 0.825 0.733);
+      --mint-12: color(display-p3 0.807 0.955 0.887);
+    }
+  }
+}
+/* inlined: @radix-ui/colors/mint-dark-alpha.css */
+.dark, .dark-theme {
+  --mint-a1: #00dede05;
+  --mint-a2: #00f9f90b;
+  --mint-a3: #00fff61d;
+  --mint-a4: #00fff42c;
+  --mint-a5: #00fff23a;
+  --mint-a6: #0effeb4a;
+  --mint-a7: #34fde55e;
+  --mint-a8: #41ffdf76;
+  --mint-a9: #92ffe7e9;
+  --mint-a10: #aefeedf5;
+  --mint-a11: #67ffded2;
+  --mint-a12: #cbfee9f5;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --mint-a1: color(display-p3 0 0.992 0.992 / 0.017);
+      --mint-a2: color(display-p3 0.071 0.98 0.98 / 0.043);
+      --mint-a3: color(display-p3 0.176 0.996 0.996 / 0.11);
+      --mint-a4: color(display-p3 0.071 0.996 0.973 / 0.169);
+      --mint-a5: color(display-p3 0.243 1 0.949 / 0.223);
+      --mint-a6: color(display-p3 0.369 1 0.933 / 0.286);
+      --mint-a7: color(display-p3 0.459 1 0.914 / 0.362);
+      --mint-a8: color(display-p3 0.49 1 0.89 / 0.454);
+      --mint-a9: color(display-p3 0.678 0.996 0.914 / 0.904);
+      --mint-a10: color(display-p3 0.761 1 0.941 / 0.95);
+      --mint-a11: color(display-p3 0.482 0.825 0.733);
+      --mint-a12: color(display-p3 0.807 0.955 0.887);
+    }
+  }
+}
+/* Amber (theme accent — also used for warnings) */
+/* Sand (background for amber theme) */
+/* inlined: @radix-ui/colors/sand-dark.css */
+.dark, .dark-theme {
+  --sand-1: #111110;
+  --sand-2: #191918;
+  --sand-3: #222221;
+  --sand-4: #2a2a28;
+  --sand-5: #31312e;
+  --sand-6: #3b3a37;
+  --sand-7: #494844;
+  --sand-8: #62605b;
+  --sand-9: #6f6d66;
+  --sand-10: #7c7b74;
+  --sand-11: #b5b3ad;
+  --sand-12: #eeeeec;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --sand-1: color(display-p3 0.067 0.067 0.063);
+      --sand-2: color(display-p3 0.098 0.098 0.094);
+      --sand-3: color(display-p3 0.135 0.135 0.129);
+      --sand-4: color(display-p3 0.164 0.163 0.156);
+      --sand-5: color(display-p3 0.193 0.192 0.183);
+      --sand-6: color(display-p3 0.23 0.229 0.217);
+      --sand-7: color(display-p3 0.285 0.282 0.267);
+      --sand-8: color(display-p3 0.384 0.378 0.357);
+      --sand-9: color(display-p3 0.434 0.428 0.403);
+      --sand-10: color(display-p3 0.487 0.481 0.456);
+      --sand-11: color(display-p3 0.707 0.703 0.68);
+      --sand-12: color(display-p3 0.933 0.933 0.926);
+    }
+  }
+}
+/* inlined: @radix-ui/colors/sand-dark-alpha.css */
+.dark, .dark-theme {
+  --sand-a1: #00000000;
+  --sand-a2: #f4f4f309;
+  --sand-a3: #f6f6f513;
+  --sand-a4: #fefef31b;
+  --sand-a5: #fbfbeb23;
+  --sand-a6: #fffaed2d;
+  --sand-a7: #fffbed3c;
+  --sand-a8: #fff9eb57;
+  --sand-a9: #fffae965;
+  --sand-a10: #fffdee73;
+  --sand-a11: #fffcf4b0;
+  --sand-a12: #fffffded;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --sand-a1: color(display-p3 0 0 0 / 0);
+      --sand-a2: color(display-p3 0.992 0.992 0.988 / 0.034);
+      --sand-a3: color(display-p3 0.996 0.996 0.992 / 0.072);
+      --sand-a4: color(display-p3 0.992 0.992 0.953 / 0.106);
+      --sand-a5: color(display-p3 1 1 0.965 / 0.135);
+      --sand-a6: color(display-p3 1 0.976 0.929 / 0.177);
+      --sand-a7: color(display-p3 1 0.984 0.929 / 0.236);
+      --sand-a8: color(display-p3 1 0.976 0.925 / 0.341);
+      --sand-a9: color(display-p3 1 0.98 0.925 / 0.395);
+      --sand-a10: color(display-p3 1 0.992 0.933 / 0.45);
+      --sand-a11: color(display-p3 1 0.996 0.961 / 0.685);
+      --sand-a12: color(display-p3 1 1 0.992 / 0.929);
+    }
+  }
+}
+/* Red */
+/* inlined: @radix-ui/colors/red-dark.css */
+.dark, .dark-theme {
+  --red-1: #191111;
+  --red-2: #201314;
+  --red-3: #3b1219;
+  --red-4: #500f1c;
+  --red-5: #611623;
+  --red-6: #72232d;
+  --red-7: #8c333a;
+  --red-8: #b54548;
+  --red-9: #e5484d;
+  --red-10: #ec5d5e;
+  --red-11: #ff9592;
+  --red-12: #ffd1d9;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --red-1: color(display-p3 0.093 0.068 0.067);
+      --red-2: color(display-p3 0.118 0.077 0.079);
+      --red-3: color(display-p3 0.211 0.081 0.099);
+      --red-4: color(display-p3 0.287 0.079 0.113);
+      --red-5: color(display-p3 0.348 0.11 0.142);
+      --red-6: color(display-p3 0.414 0.16 0.183);
+      --red-7: color(display-p3 0.508 0.224 0.236);
+      --red-8: color(display-p3 0.659 0.298 0.297);
+      --red-9: color(display-p3 0.83 0.329 0.324);
+      --red-10: color(display-p3 0.861 0.403 0.387);
+      --red-11: color(display-p3 1 0.57 0.55);
+      --red-12: color(display-p3 0.971 0.826 0.852);
+    }
+  }
+}
+/* inlined: @radix-ui/colors/red-dark-alpha.css */
+.dark, .dark-theme {
+  --red-a1: #f4121209;
+  --red-a2: #f22f3e11;
+  --red-a3: #ff173f2d;
+  --red-a4: #fe0a3b44;
+  --red-a5: #ff204756;
+  --red-a6: #ff3e5668;
+  --red-a7: #ff536184;
+  --red-a8: #ff5d61b0;
+  --red-a9: #fe4e54e4;
+  --red-a10: #ff6465eb;
+  --red-a11: #ff9592;
+  --red-a12: #ffd1d9;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --red-a1: color(display-p3 0.984 0.071 0.071 / 0.03);
+      --red-a2: color(display-p3 0.996 0.282 0.282 / 0.055);
+      --red-a3: color(display-p3 1 0.169 0.271 / 0.156);
+      --red-a4: color(display-p3 1 0.118 0.267 / 0.236);
+      --red-a5: color(display-p3 1 0.212 0.314 / 0.303);
+      --red-a6: color(display-p3 1 0.318 0.38 / 0.374);
+      --red-a7: color(display-p3 1 0.4 0.424 / 0.475);
+      --red-a8: color(display-p3 1 0.431 0.431 / 0.635);
+      --red-a9: color(display-p3 1 0.388 0.384 / 0.82);
+      --red-a10: color(display-p3 1 0.463 0.447 / 0.853);
+      --red-a11: color(display-p3 1 0.57 0.55);
+      --red-a12: color(display-p3 0.971 0.826 0.852);
+    }
+  }
+}
+
+/* Background colors */
+/* Olive */
+/* inlined: @radix-ui/colors/olive-dark.css */
+.dark, .dark-theme {
+  --olive-1: #111210;
+  --olive-2: #181917;
+  --olive-3: #212220;
+  --olive-4: #282a27;
+  --olive-5: #2f312e;
+  --olive-6: #383a36;
+  --olive-7: #454843;
+  --olive-8: #5c625b;
+  --olive-9: #687066;
+  --olive-10: #767d74;
+  --olive-11: #afb5ad;
+  --olive-12: #eceeec;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --olive-1: color(display-p3 0.067 0.07 0.063);
+      --olive-2: color(display-p3 0.095 0.098 0.091);
+      --olive-3: color(display-p3 0.131 0.135 0.126);
+      --olive-4: color(display-p3 0.158 0.163 0.153);
+      --olive-5: color(display-p3 0.186 0.192 0.18);
+      --olive-6: color(display-p3 0.221 0.229 0.215);
+      --olive-7: color(display-p3 0.273 0.284 0.266);
+      --olive-8: color(display-p3 0.365 0.382 0.359);
+      --olive-9: color(display-p3 0.414 0.438 0.404);
+      --olive-10: color(display-p3 0.467 0.49 0.458);
+      --olive-11: color(display-p3 0.69 0.709 0.682);
+      --olive-12: color(display-p3 0.927 0.933 0.926);
+    }
+  }
+}
+/* inlined: @radix-ui/colors/olive-dark-alpha.css */
+.dark, .dark-theme {
+  --olive-a1: #00000000;
+  --olive-a2: #f1f2f008;
+  --olive-a3: #f4f5f312;
+  --olive-a4: #f3fef21a;
+  --olive-a5: #f2fbf122;
+  --olive-a6: #f4faed2c;
+  --olive-a7: #f2fced3b;
+  --olive-a8: #edfdeb57;
+  --olive-a9: #ebfde766;
+  --olive-a10: #f0fdec74;
+  --olive-a11: #f6fef4b0;
+  --olive-a12: #fdfffded;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --olive-a1: color(display-p3 0 0 0 / 0);
+      --olive-a2: color(display-p3 0.984 0.988 0.976 / 0.03);
+      --olive-a3: color(display-p3 0.992 0.996 0.988 / 0.068);
+      --olive-a4: color(display-p3 0.953 0.996 0.949 / 0.102);
+      --olive-a5: color(display-p3 0.969 1 0.965 / 0.131);
+      --olive-a6: color(display-p3 0.973 1 0.969 / 0.169);
+      --olive-a7: color(display-p3 0.98 1 0.961 / 0.228);
+      --olive-a8: color(display-p3 0.961 1 0.957 / 0.334);
+      --olive-a9: color(display-p3 0.949 1 0.922 / 0.397);
+      --olive-a10: color(display-p3 0.953 1 0.941 / 0.452);
+      --olive-a11: color(display-p3 0.976 1 0.965 / 0.688);
+      --olive-a12: color(display-p3 0.992 1 0.992 / 0.929);
+    }
+  }
+}
+/* Muave */
+/* inlined: @radix-ui/colors/mauve-dark.css */
+.dark, .dark-theme {
+  --mauve-1: #121113;
+  --mauve-2: #1a191b;
+  --mauve-3: #232225;
+  --mauve-4: #2b292d;
+  --mauve-5: #323035;
+  --mauve-6: #3c393f;
+  --mauve-7: #49474e;
+  --mauve-8: #625f69;
+  --mauve-9: #6f6d78;
+  --mauve-10: #7c7a85;
+  --mauve-11: #b5b2bc;
+  --mauve-12: #eeeef0;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --mauve-1: color(display-p3 0.07 0.067 0.074);
+      --mauve-2: color(display-p3 0.101 0.098 0.105);
+      --mauve-3: color(display-p3 0.138 0.134 0.144);
+      --mauve-4: color(display-p3 0.167 0.161 0.175);
+      --mauve-5: color(display-p3 0.196 0.189 0.206);
+      --mauve-6: color(display-p3 0.232 0.225 0.245);
+      --mauve-7: color(display-p3 0.286 0.277 0.302);
+      --mauve-8: color(display-p3 0.383 0.373 0.408);
+      --mauve-9: color(display-p3 0.434 0.428 0.467);
+      --mauve-10: color(display-p3 0.487 0.48 0.519);
+      --mauve-11: color(display-p3 0.707 0.7 0.735);
+      --mauve-12: color(display-p3 0.933 0.933 0.94);
+    }
+  }
+}
+/* inlined: @radix-ui/colors/mauve-dark-alpha.css */
+.dark, .dark-theme {
+  --mauve-a1: #00000000;
+  --mauve-a2: #f5f4f609;
+  --mauve-a3: #ebeaf814;
+  --mauve-a4: #eee5f81d;
+  --mauve-a5: #efe6fe25;
+  --mauve-a6: #f1e6fd30;
+  --mauve-a7: #eee9ff40;
+  --mauve-a8: #eee7ff5d;
+  --mauve-a9: #eae6fd6e;
+  --mauve-a10: #ece9fd7c;
+  --mauve-a11: #f5f1ffb7;
+  --mauve-a12: #fdfdffef;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --mauve-a1: color(display-p3 0 0 0 / 0);
+      --mauve-a2: color(display-p3 0.996 0.992 1 / 0.034);
+      --mauve-a3: color(display-p3 0.937 0.933 0.992 / 0.077);
+      --mauve-a4: color(display-p3 0.957 0.918 0.996 / 0.111);
+      --mauve-a5: color(display-p3 0.937 0.906 0.996 / 0.145);
+      --mauve-a6: color(display-p3 0.953 0.925 0.996 / 0.183);
+      --mauve-a7: color(display-p3 0.945 0.929 1 / 0.246);
+      --mauve-a8: color(display-p3 0.937 0.918 1 / 0.361);
+      --mauve-a9: color(display-p3 0.933 0.918 1 / 0.424);
+      --mauve-a10: color(display-p3 0.941 0.925 1 / 0.479);
+      --mauve-a11: color(display-p3 0.965 0.961 1 / 0.712);
+      --mauve-a12: color(display-p3 0.992 0.992 1 / 0.937);
+    }
+  }
+}
+/* Slate */
+/* inlined: @radix-ui/colors/slate-dark.css */
+.dark, .dark-theme {
+  --slate-1: #111113;
+  --slate-2: #18191b;
+  --slate-3: #212225;
+  --slate-4: #272a2d;
+  --slate-5: #2e3135;
+  --slate-6: #363a3f;
+  --slate-7: #43484e;
+  --slate-8: #5a6169;
+  --slate-9: #696e77;
+  --slate-10: #777b84;
+  --slate-11: #b0b4ba;
+  --slate-12: #edeef0;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --slate-1: color(display-p3 0.067 0.067 0.074);
+      --slate-2: color(display-p3 0.095 0.098 0.105);
+      --slate-3: color(display-p3 0.13 0.135 0.145);
+      --slate-4: color(display-p3 0.156 0.163 0.176);
+      --slate-5: color(display-p3 0.183 0.191 0.206);
+      --slate-6: color(display-p3 0.215 0.226 0.244);
+      --slate-7: color(display-p3 0.265 0.28 0.302);
+      --slate-8: color(display-p3 0.357 0.381 0.409);
+      --slate-9: color(display-p3 0.415 0.431 0.463);
+      --slate-10: color(display-p3 0.469 0.483 0.514);
+      --slate-11: color(display-p3 0.692 0.704 0.728);
+      --slate-12: color(display-p3 0.93 0.933 0.94);
+    }
+  }
+}
+/* inlined: @radix-ui/colors/slate-dark-alpha.css */
+.dark, .dark-theme {
+  --slate-a1: #00000000;
+  --slate-a2: #d8f4f609;
+  --slate-a3: #ddeaf814;
+  --slate-a4: #d3edf81d;
+  --slate-a5: #d9edfe25;
+  --slate-a6: #d6ebfd30;
+  --slate-a7: #d9edff40;
+  --slate-a8: #d9edff5d;
+  --slate-a9: #dfebfd6d;
+  --slate-a10: #e5edfd7b;
+  --slate-a11: #f1f7feb5;
+  --slate-a12: #fcfdffef;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --slate-a1: color(display-p3 0 0 0 / 0);
+      --slate-a2: color(display-p3 0.875 0.992 1 / 0.034);
+      --slate-a3: color(display-p3 0.882 0.933 0.992 / 0.077);
+      --slate-a4: color(display-p3 0.882 0.953 0.996 / 0.111);
+      --slate-a5: color(display-p3 0.878 0.929 0.996 / 0.145);
+      --slate-a6: color(display-p3 0.882 0.949 0.996 / 0.183);
+      --slate-a7: color(display-p3 0.882 0.929 1 / 0.246);
+      --slate-a8: color(display-p3 0.871 0.937 1 / 0.361);
+      --slate-a9: color(display-p3 0.898 0.937 1 / 0.42);
+      --slate-a10: color(display-p3 0.918 0.945 1 / 0.475);
+      --slate-a11: color(display-p3 0.949 0.969 0.996 / 0.708);
+      --slate-a12: color(display-p3 0.988 0.992 1 / 0.937);
+    }
+  }
+}
+/* Gray */
+/* inlined: @radix-ui/colors/gray-dark.css */
+.dark, .dark-theme {
+  --gray-1: #111111;
+  --gray-2: #191919;
+  --gray-3: #222222;
+  --gray-4: #2a2a2a;
+  --gray-5: #313131;
+  --gray-6: #3a3a3a;
+  --gray-7: #484848;
+  --gray-8: #606060;
+  --gray-9: #6e6e6e;
+  --gray-10: #7b7b7b;
+  --gray-11: #b4b4b4;
+  --gray-12: #eeeeee;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --gray-1: color(display-p3 0.067 0.067 0.067);
+      --gray-2: color(display-p3 0.098 0.098 0.098);
+      --gray-3: color(display-p3 0.135 0.135 0.135);
+      --gray-4: color(display-p3 0.163 0.163 0.163);
+      --gray-5: color(display-p3 0.192 0.192 0.192);
+      --gray-6: color(display-p3 0.228 0.228 0.228);
+      --gray-7: color(display-p3 0.283 0.283 0.283);
+      --gray-8: color(display-p3 0.375 0.375 0.375);
+      --gray-9: color(display-p3 0.431 0.431 0.431);
+      --gray-10: color(display-p3 0.484 0.484 0.484);
+      --gray-11: color(display-p3 0.706 0.706 0.706);
+      --gray-12: color(display-p3 0.933 0.933 0.933);
+    }
+  }
+}
+/* inlined: @radix-ui/colors/gray-dark-alpha.css */
+.dark, .dark-theme {
+  --gray-a1: #00000000;
+  --gray-a2: #ffffff09;
+  --gray-a3: #ffffff12;
+  --gray-a4: #ffffff1b;
+  --gray-a5: #ffffff22;
+  --gray-a6: #ffffff2c;
+  --gray-a7: #ffffff3b;
+  --gray-a8: #ffffff55;
+  --gray-a9: #ffffff64;
+  --gray-a10: #ffffff72;
+  --gray-a11: #ffffffaf;
+  --gray-a12: #ffffffed;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --gray-a1: color(display-p3 0 0 0 / 0);
+      --gray-a2: color(display-p3 1 1 1 / 0.034);
+      --gray-a3: color(display-p3 1 1 1 / 0.071);
+      --gray-a4: color(display-p3 1 1 1 / 0.105);
+      --gray-a5: color(display-p3 1 1 1 / 0.134);
+      --gray-a6: color(display-p3 1 1 1 / 0.172);
+      --gray-a7: color(display-p3 1 1 1 / 0.231);
+      --gray-a8: color(display-p3 1 1 1 / 0.332);
+      --gray-a9: color(display-p3 1 1 1 / 0.391);
+      --gray-a10: color(display-p3 1 1 1 / 0.445);
+      --gray-a11: color(display-p3 1 1 1 / 0.685);
+      --gray-a12: color(display-p3 1 1 1 / 0.929);
+    }
+  }
+}
+/* Sage */
+/* inlined: @radix-ui/colors/sage-dark.css */
+.dark, .dark-theme {
+  --sage-1: #101211;
+  --sage-2: #171918;
+  --sage-3: #202221;
+  --sage-4: #272a29;
+  --sage-5: #2e3130;
+  --sage-6: #373b39;
+  --sage-7: #444947;
+  --sage-8: #5b625f;
+  --sage-9: #63706b;
+  --sage-10: #717d79;
+  --sage-11: #adb5b2;
+  --sage-12: #eceeed;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --sage-1: color(display-p3 0.064 0.07 0.067);
+      --sage-2: color(display-p3 0.092 0.098 0.094);
+      --sage-3: color(display-p3 0.128 0.135 0.131);
+      --sage-4: color(display-p3 0.155 0.164 0.159);
+      --sage-5: color(display-p3 0.183 0.193 0.188);
+      --sage-6: color(display-p3 0.218 0.23 0.224);
+      --sage-7: color(display-p3 0.269 0.285 0.277);
+      --sage-8: color(display-p3 0.362 0.382 0.373);
+      --sage-9: color(display-p3 0.398 0.438 0.421);
+      --sage-10: color(display-p3 0.453 0.49 0.474);
+      --sage-11: color(display-p3 0.685 0.709 0.697);
+      --sage-12: color(display-p3 0.927 0.933 0.93);
+    }
+  }
+}
+/* inlined: @radix-ui/colors/sage-dark-alpha.css */
+.dark, .dark-theme {
+  --sage-a1: #00000000;
+  --sage-a2: #f0f2f108;
+  --sage-a3: #f3f5f412;
+  --sage-a4: #f2fefd1a;
+  --sage-a5: #f1fbfa22;
+  --sage-a6: #edfbf42d;
+  --sage-a7: #edfcf73c;
+  --sage-a8: #ebfdf657;
+  --sage-a9: #dffdf266;
+  --sage-a10: #e5fdf674;
+  --sage-a11: #f4fefbb0;
+  --sage-a12: #fdfffeed;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --sage-a1: color(display-p3 0 0 0 / 0);
+      --sage-a2: color(display-p3 0.976 0.988 0.984 / 0.03);
+      --sage-a3: color(display-p3 0.992 0.945 0.941 / 0.072);
+      --sage-a4: color(display-p3 0.988 0.996 0.992 / 0.102);
+      --sage-a5: color(display-p3 0.992 1 0.996 / 0.131);
+      --sage-a6: color(display-p3 0.973 1 0.976 / 0.173);
+      --sage-a7: color(display-p3 0.957 1 0.976 / 0.233);
+      --sage-a8: color(display-p3 0.957 1 0.984 / 0.334);
+      --sage-a9: color(display-p3 0.902 1 0.957 / 0.397);
+      --sage-a10: color(display-p3 0.929 1 0.973 / 0.452);
+      --sage-a11: color(display-p3 0.969 1 0.988 / 0.688);
+      --sage-a12: color(display-p3 0.992 1 0.996 / 0.929);
+    }
+  }
+}
+
+/* Success color */
+/* inlined: @radix-ui/colors/grass-dark.css */
+.dark, .dark-theme {
+  --grass-1: #0e1511;
+  --grass-2: #141a15;
+  --grass-3: #1b2a1e;
+  --grass-4: #1d3a24;
+  --grass-5: #25482d;
+  --grass-6: #2d5736;
+  --grass-7: #366740;
+  --grass-8: #3e7949;
+  --grass-9: #46a758;
+  --grass-10: #53b365;
+  --grass-11: #71d083;
+  --grass-12: #c2f0c2;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --grass-1: color(display-p3 0.062 0.083 0.067);
+      --grass-2: color(display-p3 0.083 0.103 0.085);
+      --grass-3: color(display-p3 0.118 0.163 0.122);
+      --grass-4: color(display-p3 0.142 0.225 0.15);
+      --grass-5: color(display-p3 0.178 0.279 0.186);
+      --grass-6: color(display-p3 0.217 0.337 0.224);
+      --grass-7: color(display-p3 0.258 0.4 0.264);
+      --grass-8: color(display-p3 0.302 0.47 0.305);
+      --grass-9: color(display-p3 0.38 0.647 0.378);
+      --grass-10: color(display-p3 0.426 0.694 0.426);
+      --grass-11: color(display-p3 0.535 0.807 0.542);
+      --grass-12: color(display-p3 0.797 0.936 0.776);
+    }
+  }
+}
+/* inlined: @radix-ui/colors/grass-dark-alpha.css */
+.dark, .dark-theme {
+  --grass-a1: #00de1205;
+  --grass-a2: #5ef7780a;
+  --grass-a3: #70fe8c1b;
+  --grass-a4: #57ff802c;
+  --grass-a5: #68ff8b3b;
+  --grass-a6: #71ff8f4b;
+  --grass-a7: #77fd925d;
+  --grass-a8: #77fd9070;
+  --grass-a9: #65ff82a1;
+  --grass-a10: #72ff8dae;
+  --grass-a11: #89ff9fcd;
+  --grass-a12: #ceffceef;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --grass-a1: color(display-p3 0 0.992 0.071 / 0.017);
+      --grass-a2: color(display-p3 0.482 0.996 0.584 / 0.038);
+      --grass-a3: color(display-p3 0.549 0.992 0.588 / 0.106);
+      --grass-a4: color(display-p3 0.51 0.996 0.557 / 0.169);
+      --grass-a5: color(display-p3 0.553 1 0.588 / 0.227);
+      --grass-a6: color(display-p3 0.584 1 0.608 / 0.29);
+      --grass-a7: color(display-p3 0.604 1 0.616 / 0.358);
+      --grass-a8: color(display-p3 0.608 1 0.62 / 0.433);
+      --grass-a9: color(display-p3 0.573 1 0.569 / 0.622);
+      --grass-a10: color(display-p3 0.6 0.996 0.6 / 0.673);
+      --grass-a11: color(display-p3 0.535 0.807 0.542);
+      --grass-a12: color(display-p3 0.797 0.936 0.776);
+    }
+  }
+}
+
+/* Info color */
+/* inlined: @radix-ui/colors/blue-dark.css */
+.dark, .dark-theme {
+  --blue-1: #0d1520;
+  --blue-2: #111927;
+  --blue-3: #0d2847;
+  --blue-4: #003362;
+  --blue-5: #004074;
+  --blue-6: #104d87;
+  --blue-7: #205d9e;
+  --blue-8: #2870bd;
+  --blue-9: #0090ff;
+  --blue-10: #3b9eff;
+  --blue-11: #70b8ff;
+  --blue-12: #c2e6ff;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --blue-1: color(display-p3 0.057 0.081 0.122);
+      --blue-2: color(display-p3 0.072 0.098 0.147);
+      --blue-3: color(display-p3 0.078 0.154 0.27);
+      --blue-4: color(display-p3 0.033 0.197 0.37);
+      --blue-5: color(display-p3 0.08 0.245 0.441);
+      --blue-6: color(display-p3 0.14 0.298 0.511);
+      --blue-7: color(display-p3 0.195 0.361 0.6);
+      --blue-8: color(display-p3 0.239 0.434 0.72);
+      --blue-9: color(display-p3 0.247 0.556 0.969);
+      --blue-10: color(display-p3 0.344 0.612 0.973);
+      --blue-11: color(display-p3 0.49 0.72 1);
+      --blue-12: color(display-p3 0.788 0.898 0.99);
+    }
+  }
+}
+/* inlined: @radix-ui/colors/blue-dark-alpha.css */
+.dark, .dark-theme {
+  --blue-a1: #004df211;
+  --blue-a2: #1166fb18;
+  --blue-a3: #0077ff3a;
+  --blue-a4: #0075ff57;
+  --blue-a5: #0081fd6b;
+  --blue-a6: #0f89fd7f;
+  --blue-a7: #2a91fe98;
+  --blue-a8: #3094feb9;
+  --blue-a9: #0090ff;
+  --blue-a10: #3b9eff;
+  --blue-a11: #70b8ff;
+  --blue-a12: #c2e6ff;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --blue-a1: color(display-p3 0 0.333 1 / 0.059);
+      --blue-a2: color(display-p3 0.114 0.435 0.988 / 0.085);
+      --blue-a3: color(display-p3 0.122 0.463 1 / 0.219);
+      --blue-a4: color(display-p3 0 0.467 1 / 0.324);
+      --blue-a5: color(display-p3 0.098 0.51 1 / 0.4);
+      --blue-a6: color(display-p3 0.224 0.557 1 / 0.475);
+      --blue-a7: color(display-p3 0.294 0.584 1 / 0.572);
+      --blue-a8: color(display-p3 0.314 0.592 1 / 0.702);
+      --blue-a9: color(display-p3 0.251 0.573 0.996 / 0.967);
+      --blue-a10: color(display-p3 0.357 0.631 1 / 0.971);
+      --blue-a11: color(display-p3 0.49 0.72 1);
+      --blue-a12: color(display-p3 0.788 0.898 0.99);
+    }
+  }
+}
+
+/* Error color */
+/* inlined: @radix-ui/colors/tomato-dark.css */
+.dark, .dark-theme {
+  --tomato-1: #181111;
+  --tomato-2: #1f1513;
+  --tomato-3: #391714;
+  --tomato-4: #4e1511;
+  --tomato-5: #5e1c16;
+  --tomato-6: #6e2920;
+  --tomato-7: #853a2d;
+  --tomato-8: #ac4d39;
+  --tomato-9: #e54d2e;
+  --tomato-10: #ec6142;
+  --tomato-11: #ff977d;
+  --tomato-12: #fbd3cb;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --tomato-1: color(display-p3 0.09 0.068 0.067);
+      --tomato-2: color(display-p3 0.115 0.084 0.076);
+      --tomato-3: color(display-p3 0.205 0.097 0.083);
+      --tomato-4: color(display-p3 0.282 0.099 0.077);
+      --tomato-5: color(display-p3 0.339 0.129 0.101);
+      --tomato-6: color(display-p3 0.398 0.179 0.141);
+      --tomato-7: color(display-p3 0.487 0.245 0.194);
+      --tomato-8: color(display-p3 0.629 0.322 0.248);
+      --tomato-9: color(display-p3 0.831 0.345 0.231);
+      --tomato-10: color(display-p3 0.862 0.415 0.298);
+      --tomato-11: color(display-p3 1 0.585 0.455);
+      --tomato-12: color(display-p3 0.959 0.833 0.802);
+    }
+  }
+}
+/* inlined: @radix-ui/colors/tomato-dark-alpha.css */
+.dark, .dark-theme {
+  --tomato-a1: #f1121208;
+  --tomato-a2: #ff55330f;
+  --tomato-a3: #ff35232b;
+  --tomato-a4: #fd201142;
+  --tomato-a5: #fe332153;
+  --tomato-a6: #ff4f3864;
+  --tomato-a7: #fd644a7d;
+  --tomato-a8: #fe6d4ea7;
+  --tomato-a9: #fe5431e4;
+  --tomato-a10: #ff6847eb;
+  --tomato-a11: #ff977d;
+  --tomato-a12: #ffd6cefb;
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --tomato-a1: color(display-p3 0.973 0.071 0.071 / 0.026);
+      --tomato-a2: color(display-p3 0.992 0.376 0.224 / 0.051);
+      --tomato-a3: color(display-p3 0.996 0.282 0.176 / 0.148);
+      --tomato-a4: color(display-p3 1 0.204 0.118 / 0.232);
+      --tomato-a5: color(display-p3 1 0.286 0.192 / 0.29);
+      --tomato-a6: color(display-p3 1 0.392 0.278 / 0.353);
+      --tomato-a7: color(display-p3 1 0.459 0.349 / 0.45);
+      --tomato-a8: color(display-p3 1 0.49 0.369 / 0.601);
+      --tomato-a9: color(display-p3 1 0.408 0.267 / 0.82);
+      --tomato-a10: color(display-p3 1 0.478 0.341 / 0.853);
+      --tomato-a11: color(display-p3 1 0.585 0.455);
+      --tomato-a12: color(display-p3 0.959 0.833 0.802);
+    }
+  }
+}
+
+/* Warning color */
+/* Custom amber scale — step 9 is the gold #d4bd2c */
+.dark,
+.dark-theme {
+  --amber-1: #15130a;
+  --amber-a1: #d4bd2c07;
+  --amber-2: #201e0e;
+  --amber-a2: #d4bd2c10;
+  --amber-3: #342f14;
+  --amber-a3: #d4bd2c1e;
+  --amber-4: #474015;
+  --amber-a4: #d4bd2c2b;
+  --amber-5: #595018;
+  --amber-a5: #d4bd2c39;
+  --amber-6: #6d621d;
+  --amber-a6: #d4bd2c4d;
+  --amber-7: #857823;
+  --amber-a7: #d4bd2c67;
+  --amber-8: #a39329;
+  --amber-a8: #d4bd2c8b;
+  --amber-9: #d4bd2c;
+  --amber-a9: #d4bd2cee;
+  --amber-10: #dac53e;
+  --amber-a10: #dac53eee;
+  --amber-11: #d7ca75;
+  --amber-a11: #d7ca75f5;
+  --amber-12: #f4f1e1;
+  --amber-a12: #f4f1e1fb;
+}
+
+/* BEGIN: Remove base padding and styling */
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: "Montserrat", sans-serif;
+  background-color: #000;
+  /* Scrollbar Styles */
+  scrollbar-width: 0px;
+  contain: paint;
+}
+
+textarea:focus,
+input:focus {
+  outline: none;
+}
+
+body::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+input,
+textarea {
+  min-width: 0;
+}
+
+/* END: Remove base padding and styling */
+
+/* BEGIN: Global variables */
+
+:root {
+  --topbar-height: 60px;
+
+  @media screen and (max-width: 480px) {
+    --topbar-height: 45px;
+  }
+
+  --profile-banner-height-min: 270px;
+  --profile-banner-height-max: 460px;
+  --profile-avatar-size: 340px;
+  --profile-small-avatar-size: 100px;
+
+  --profile-note-width: 460px;
+
+  --border-radius: 0.3rem;
+
+  --font: Montserrat, sans-serif;
+
+  --font-size-h1: 54px;
+  --font-size-h2: 43px;
+  --font-size-h3: 34px;
+  --font-size-h4: 27px;
+  --font-size-h5: 22px;
+  --font-size-h6: 18px;
+  --font-size-input: 16px;
+  --font-size: 14px;
+  --font-size-small: 12px;
+  --font-size-xsmall: 10px;
+  --font-size-xxsmall: 8px;
+  --font-size-xxxsmall: 6px;
+
+  --font-weight-bold: 700;
+  --font-weight-semi-bold: 600;
+  --font-weight-medium: 500;
+  --font-weight-regular: 400;
+
+  .jade {
+    --bg-1: var(--olive-1);
+    --bg-2: var(--olive-2);
+    --bg-3: var(--olive-3);
+    --bg-4: var(--olive-4);
+    --bg-5: var(--olive-5);
+    --bg-6: var(--olive-6);
+    --bg-7: var(--olive-7);
+    --bg-8: var(--olive-8);
+    --bg-9: var(--olive-9);
+    --bg-10: var(--olive-10);
+    --bg-11: var(--olive-11);
+    --bg-12: var(--olive-12);
+
+    --accent-1: var(--jade-1);
+    --accent-a1: var(--jade-a1);
+    --accent-2: var(--jade-2);
+    --accent-a2: var(--jade-a2);
+    --accent-3: var(--jade-3);
+    --accent-a3: var(--jade-a3);
+    --accent-4: var(--jade-4);
+    --accent-a4: var(--jade-a4);
+    --accent-5: var(--jade-5);
+    --accent-a5: var(--jade-a5);
+    --accent-6: var(--jade-6);
+    --accent-a6: var(--jade-a6);
+    --accent-7: var(--jade-7);
+    --accent-a7: var(--jade-a7);
+    --accent-8: var(--jade-8);
+    --accent-a8: var(--jade-a8);
+    --accent-9: var(--jade-9);
+    --accent-a9: var(--jade-a9);
+    --accent-10: var(--jade-10);
+    --accent-a10: var(--jade-a10);
+    --accent-11: var(--jade-11);
+    --accent-a11: var(--jade-a11);
+    --accent-12: var(--jade-12);
+    --accent-a12: var(--jade-a12);
+
+    --accent: var(--accent-6);
+    --accent-hover: var(--accent-7);
+    --accent-active: var(--accent-5);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  .crimson {
+    --bg-1: var(--mauve-1);
+    --bg-2: var(--mauve-2);
+    --bg-3: var(--mauve-3);
+    --bg-4: var(--mauve-4);
+    --bg-5: var(--mauve-5);
+    --bg-6: var(--mauve-6);
+    --bg-7: var(--mauve-7);
+    --bg-8: var(--mauve-8);
+    --bg-9: var(--mauve-9);
+    --bg-10: var(--mauve-10);
+    --bg-11: var(--mauve-11);
+    --bg-12: var(--mauve-12);
+
+    --accent-a1: var(--crimson-a1);
+    --accent-a2: var(--crimson-a2);
+    --accent-a3: var(--crimson-a3);
+    --accent-a4: var(--crimson-a4);
+    --accent-a5: var(--crimson-a5);
+    --accent-a6: var(--crimson-a6);
+    --accent-a7: var(--crimson-a7);
+    --accent-a8: var(--crimson-a8);
+    --accent-a9: var(--crimson-a9);
+    --accent-a10: var(--crimson-a10);
+    --accent-a11: var(--crimson-a11);
+    --accent-a12: var(--crimson-a12);
+    --accent-1: var(--crimson-1);
+    --accent-2: var(--crimson-2);
+    --accent-3: var(--crimson-3);
+    --accent-4: var(--crimson-4);
+    --accent-5: var(--crimson-5);
+    --accent-6: var(--crimson-6);
+    --accent-7: var(--crimson-7);
+    --accent-8: var(--crimson-8);
+    --accent-9: var(--crimson-9);
+    --accent-10: var(--crimson-10);
+    --accent-11: var(--crimson-11);
+    --accent-12: var(--crimson-12);
+
+    --accent: var(--accent-6);
+    --accent-hover: var(--accent-7);
+    --accent-active: var(--accent-5);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  .iris {
+    --bg-1: var(--slate-1);
+    --bg-2: var(--slate-2);
+    --bg-3: var(--slate-3);
+    --bg-4: var(--slate-4);
+    --bg-5: var(--slate-5);
+    --bg-6: var(--slate-6);
+    --bg-7: var(--slate-7);
+    --bg-8: var(--slate-8);
+    --bg-9: var(--slate-9);
+    --bg-10: var(--slate-10);
+    --bg-11: var(--slate-11);
+    --bg-12: var(--slate-12);
+
+    --accent-a1: var(--iris-a1);
+    --accent-a2: var(--iris-a2);
+    --accent-a3: var(--iris-a3);
+    --accent-a4: var(--iris-a4);
+    --accent-a5: var(--iris-a5);
+    --accent-a6: var(--iris-a6);
+    --accent-a7: var(--iris-a7);
+    --accent-a8: var(--iris-a8);
+    --accent-a9: var(--iris-a9);
+    --accent-a10: var(--iris-a10);
+    --accent-a11: var(--iris-a11);
+    --accent-a12: var(--iris-a12);
+    --accent-1: var(--iris-1);
+    --accent-2: var(--iris-2);
+    --accent-3: var(--iris-3);
+    --accent-4: var(--iris-4);
+    --accent-5: var(--iris-5);
+    --accent-6: var(--iris-6);
+    --accent-7: var(--iris-7);
+    --accent-8: var(--iris-8);
+    --accent-9: var(--iris-9);
+    --accent-10: var(--iris-10);
+    --accent-11: var(--iris-11);
+    --accent-12: var(--iris-12);
+
+    --accent: var(--accent-6);
+    --accent-hover: var(--accent-7);
+    --accent-active: var(--accent-5);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  .cyan {
+    --bg-1: var(--gray-1);
+    --bg-2: var(--gray-2);
+    --bg-3: var(--gray-3);
+    --bg-4: var(--gray-4);
+    --bg-5: var(--gray-5);
+    --bg-6: var(--gray-6);
+    --bg-7: var(--gray-7);
+    --bg-8: var(--gray-8);
+    --bg-9: var(--gray-9);
+    --bg-10: var(--gray-10);
+    --bg-11: var(--gray-11);
+    --bg-12: var(--gray-12);
+
+    --accent-a1: var(--cyan-a1);
+    --accent-a2: var(--cyan-a2);
+    --accent-a3: var(--cyan-a3);
+    --accent-a4: var(--cyan-a4);
+    --accent-a5: var(--cyan-a5);
+    --accent-a6: var(--cyan-a6);
+    --accent-a7: var(--cyan-a7);
+    --accent-a8: var(--cyan-a8);
+    --accent-a9: var(--cyan-a9);
+    --accent-a10: var(--cyan-a10);
+    --accent-a11: var(--cyan-a11);
+    --accent-a12: var(--cyan-a12);
+    --accent-1: var(--cyan-1);
+    --accent-2: var(--cyan-2);
+    --accent-3: var(--cyan-3);
+    --accent-4: var(--cyan-4);
+    --accent-5: var(--cyan-5);
+    --accent-6: var(--cyan-6);
+    --accent-7: var(--cyan-7);
+    --accent-8: var(--cyan-8);
+    --accent-9: var(--cyan-9);
+    --accent-10: var(--cyan-10);
+    --accent-11: var(--cyan-11);
+    --accent-12: var(--cyan-12);
+
+    --accent: var(--accent-6);
+    --accent-hover: var(--accent-7);
+    --accent-active: var(--accent-5);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  .mint {
+    --bg-1: var(--sage-1);
+    --bg-2: var(--sage-2);
+    --bg-3: var(--sage-3);
+    --bg-4: var(--sage-4);
+    --bg-5: var(--sage-5);
+    --bg-6: var(--sage-6);
+    --bg-7: var(--sage-7);
+    --bg-8: var(--sage-8);
+    --bg-9: var(--sage-9);
+    --bg-10: var(--sage-10);
+    --bg-11: var(--sage-11);
+    --bg-12: var(--sage-12);
+
+    --accent-a1: var(--mint-a1);
+    --accent-a2: var(--mint-a2);
+    --accent-a3: var(--mint-a3);
+    --accent-a4: var(--mint-a4);
+    --accent-a5: var(--mint-a5);
+    --accent-a6: var(--mint-a6);
+    --accent-a7: var(--mint-a7);
+    --accent-a8: var(--mint-a8);
+    --accent-a9: var(--mint-a9);
+    --accent-a10: var(--mint-a10);
+    --accent-a11: var(--mint-a11);
+    --accent-a12: var(--mint-a12);
+    --accent-1: var(--mint-1);
+    --accent-2: var(--mint-2);
+    --accent-3: var(--mint-3);
+    --accent-4: var(--mint-4);
+    --accent-5: var(--mint-5);
+    --accent-6: var(--mint-6);
+    --accent-7: var(--mint-7);
+    --accent-8: var(--mint-8);
+    --accent-9: var(--mint-9);
+    --accent-10: var(--mint-10);
+    --accent-11: var(--mint-11);
+    --accent-12: var(--mint-12);
+
+    --accent: var(--accent-6);
+    --accent-hover: var(--accent-7);
+    --accent-active: var(--accent-5);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  .amber {
+    --bg-1: var(--sand-1);
+    --bg-2: var(--sand-2);
+    --bg-3: var(--sand-3);
+    --bg-4: var(--sand-4);
+    --bg-5: var(--sand-5);
+    --bg-6: var(--sand-6);
+    --bg-7: var(--sand-7);
+    --bg-8: var(--sand-8);
+    --bg-9: var(--sand-9);
+    --bg-10: var(--sand-10);
+    --bg-11: var(--sand-11);
+    --bg-12: var(--sand-12);
+
+    --accent-1: var(--amber-1);
+    --accent-a1: var(--amber-a1);
+    --accent-2: var(--amber-2);
+    --accent-a2: var(--amber-a2);
+    --accent-3: var(--amber-3);
+    --accent-a3: var(--amber-a3);
+    --accent-4: var(--amber-4);
+    --accent-a4: var(--amber-a4);
+    --accent-5: var(--amber-5);
+    --accent-a5: var(--amber-a5);
+    --accent-6: var(--amber-6);
+    --accent-a6: var(--amber-a6);
+    --accent-7: var(--amber-7);
+    --accent-a7: var(--amber-a7);
+    --accent-8: var(--amber-8);
+    --accent-a8: var(--amber-a8);
+    --accent-9: var(--amber-9);
+    --accent-a9: var(--amber-a9);
+    --accent-10: var(--amber-10);
+    --accent-a10: var(--amber-a10);
+    --accent-11: var(--amber-11);
+    --accent-a11: var(--amber-a11);
+    --accent-12: var(--amber-12);
+    --accent-a12: var(--amber-a12);
+
+    --accent: var(--accent-6);
+    --accent-hover: var(--accent-7);
+    --accent-active: var(--accent-5);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  /* Lotus: dusty rose-purple — bg uses mauve-dark (already imported, matches #988B94) */
+  .lotus {
+    --bg-1: var(--mauve-1);
+    --bg-2: var(--mauve-2);
+    --bg-3: var(--mauve-3);
+    --bg-4: var(--mauve-4);
+    --bg-5: var(--mauve-5);
+    --bg-6: var(--mauve-6);
+    --bg-7: var(--mauve-7);
+    --bg-8: var(--mauve-8);
+    --bg-9: var(--mauve-9);
+    --bg-10: var(--mauve-10);
+    --bg-11: var(--mauve-11);
+    --bg-12: var(--mauve-12);
+
+    /* Custom lotus scale — step 9 is the dusty rose #bf7db1 */
+    --lotus-1: #130d12;
+    --lotus-a1: #bf7db107;
+    --lotus-2: #1c1420;
+    --lotus-a2: #bf7db110;
+    --lotus-3: #291d2b;
+    --lotus-a3: #bf7db11e;
+    --lotus-4: #342535;
+    --lotus-a4: #bf7db12b;
+    --lotus-5: #3e2d3f;
+    --lotus-a5: #bf7db139;
+    --lotus-6: #503b4e;
+    --lotus-a6: #bf7db14d;
+    --lotus-7: #684a64;
+    --lotus-a7: #bf7db167;
+    --lotus-8: #8d5e83;
+    --lotus-a8: #bf7db18b;
+    --lotus-9: #bf7db1;
+    --lotus-a9: #bf7db1ee;
+    --lotus-10: #c98ebb;
+    --lotus-a10: #c98ebbee;
+    --lotus-11: #d9a8d0;
+    --lotus-a11: #d9a8d0f5;
+    --lotus-12: #f0dded;
+    --lotus-a12: #f0ddedfb;
+
+    --accent-1: var(--lotus-1);
+    --accent-a1: var(--lotus-a1);
+    --accent-2: var(--lotus-2);
+    --accent-a2: var(--lotus-a2);
+    --accent-3: var(--lotus-3);
+    --accent-a3: var(--lotus-a3);
+    --accent-4: var(--lotus-4);
+    --accent-a4: var(--lotus-a4);
+    --accent-5: var(--lotus-5);
+    --accent-a5: var(--lotus-a5);
+    --accent-6: var(--lotus-6);
+    --accent-a6: var(--lotus-a6);
+    --accent-7: var(--lotus-7);
+    --accent-a7: var(--lotus-a7);
+    --accent-8: var(--lotus-8);
+    --accent-a8: var(--lotus-a8);
+    --accent-9: var(--lotus-9);
+    --accent-a9: var(--lotus-a9);
+    --accent-10: var(--lotus-10);
+    --accent-a10: var(--lotus-a10);
+    --accent-11: var(--lotus-11);
+    --accent-a11: var(--lotus-a11);
+    --accent-12: var(--lotus-12);
+    --accent-a12: var(--lotus-a12);
+
+    --accent: var(--lotus-9);
+    --accent-hover: var(--lotus-10);
+    --accent-active: var(--lotus-8);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  /* Lime: forest green — bg uses olive-dark (already imported, matches #8E988B) */
+  .lime {
+    --bg-1: var(--olive-1);
+    --bg-2: var(--olive-2);
+    --bg-3: var(--olive-3);
+    --bg-4: var(--olive-4);
+    --bg-5: var(--olive-5);
+    --bg-6: var(--olive-6);
+    --bg-7: var(--olive-7);
+    --bg-8: var(--olive-8);
+    --bg-9: var(--olive-9);
+    --bg-10: var(--olive-10);
+    --bg-11: var(--olive-11);
+    --bg-12: var(--olive-12);
+
+    /* Custom lime scale — step 9 is #60b03b */
+    --lime-1: #0b1009;
+    --lime-a1: #60b03b06;
+    --lime-2: #121a0e;
+    --lime-a2: #60b03b0f;
+    --lime-3: #192413;
+    --lime-a3: #60b03b1c;
+    --lime-4: #1f2f19;
+    --lime-a4: #60b03b2a;
+    --lime-5: #263a1f;
+    --lime-a5: #60b03b39;
+    --lime-6: #2e4c26;
+    --lime-a6: #60b03b4d;
+    --lime-7: #3b622f;
+    --lime-a7: #60b03b68;
+    --lime-8: #4b7d3b;
+    --lime-a8: #60b03b8d;
+    --lime-9: #60b03b;
+    --lime-a9: #60b03bec;
+    --lime-10: #72c44b;
+    --lime-a10: #72c44bec;
+    --lime-11: #94d570;
+    --lime-a11: #94d570f5;
+    --lime-12: #c9eeb1;
+    --lime-a12: #c9eeb1fb;
+
+    --accent-1: var(--lime-1);
+    --accent-a1: var(--lime-a1);
+    --accent-2: var(--lime-2);
+    --accent-a2: var(--lime-a2);
+    --accent-3: var(--lime-3);
+    --accent-a3: var(--lime-a3);
+    --accent-4: var(--lime-4);
+    --accent-a4: var(--lime-a4);
+    --accent-5: var(--lime-5);
+    --accent-a5: var(--lime-a5);
+    --accent-6: var(--lime-6);
+    --accent-a6: var(--lime-a6);
+    --accent-7: var(--lime-7);
+    --accent-a7: var(--lime-a7);
+    --accent-8: var(--lime-8);
+    --accent-a8: var(--lime-a8);
+    --accent-9: var(--lime-9);
+    --accent-a9: var(--lime-a9);
+    --accent-10: var(--lime-10);
+    --accent-a10: var(--lime-a10);
+    --accent-11: var(--lime-11);
+    --accent-a11: var(--lime-a11);
+    --accent-12: var(--lime-12);
+    --accent-a12: var(--lime-a12);
+
+    --accent: var(--lime-9);
+    --accent-hover: var(--lime-10);
+    --accent-active: var(--lime-8);
+
+    /* Dark text on bright lime accent surfaces (buttons, badges) */
+    --accent-fg: var(--lime-1);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  .red {
+    --bg-1: var(--mauve-1);
+    --bg-2: var(--mauve-2);
+    --bg-3: var(--mauve-3);
+    --bg-4: var(--mauve-4);
+    --bg-5: var(--mauve-5);
+    --bg-6: var(--mauve-6);
+    --bg-7: var(--mauve-7);
+    --bg-8: var(--mauve-8);
+    --bg-9: var(--mauve-9);
+    --bg-10: var(--mauve-10);
+    --bg-11: var(--mauve-11);
+    --bg-12: var(--mauve-12);
+
+    --accent-1: var(--red-1);
+    --accent-a1: var(--red-a1);
+    --accent-2: var(--red-2);
+    --accent-a2: var(--red-a2);
+    --accent-3: var(--red-3);
+    --accent-a3: var(--red-a3);
+    --accent-4: var(--red-4);
+    --accent-a4: var(--red-a4);
+    --accent-5: var(--red-5);
+    --accent-a5: var(--red-a5);
+    --accent-6: var(--red-6);
+    --accent-a6: var(--red-a6);
+    --accent-7: var(--red-7);
+    --accent-a7: var(--red-a7);
+    --accent-8: var(--red-8);
+    --accent-a8: var(--red-a8);
+    --accent-9: var(--red-9);
+    --accent-a9: var(--red-a9);
+    --accent-10: var(--red-10);
+    --accent-a10: var(--red-a10);
+    --accent-11: var(--red-11);
+    --accent-a11: var(--red-a11);
+    --accent-12: var(--red-12);
+    --accent-a12: var(--red-a12);
+
+    --accent: var(--accent-6);
+    --accent-hover: var(--accent-7);
+    --accent-active: var(--accent-5);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  ::selection {
+    background-color: var(--accent-a5);
+  }
+
+  ::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background: var(--accent-6);
+  }
+}
+
+/* END: Global variables */
+
+/* BEGIN: Custom classes for global styling */
+
+/* ── Toast redesign: top-center, card style ─────────────────────────── */
+
+/* 1. Reset toastify defaults when our class is present */
+div.toastify.nw-toast {
+  padding: 0;
+  background: none;
+  border-radius: 10px;
+  min-width: 300px;
+  max-width: 460px;
+  overflow: hidden;
+  display: flex;
+  align-items: stretch;
+  font-family: Montserrat, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  cursor: default;
+}
+
+/* 2. Inner layout */
+div.toastify.nw-toast .nw-toast-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 0 14px 16px;
+  flex-shrink: 0;
+}
+
+div.toastify.nw-toast .nw-toast-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+div.toastify.nw-toast .nw-toast-text {
+  flex: 1;
+  padding: 14px 12px;
+}
+
+div.toastify.nw-toast .toast-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px 0 0;
+  margin: 0;
+  font-size: 16px;
+  opacity: 0.45;
+  transition: opacity 0.15s ease;
+  align-self: center;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+div.toastify.nw-toast .toast-close:hover {
+  opacity: 1;
+  scale: 1;
+}
+
+/* 3. Type variants */
+div.toastify.nw-toast-success {
+  background: #141a15;
+  border: 1px solid rgba(98, 189, 114, 0.22);
+  border-left: 4px solid var(--grass-9);
+  color: #cdebd3;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.5),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+div.toastify.nw-toast-success .nw-toast-icon {
+  color: var(--grass-9);
+}
+
+div.toastify.nw-toast-error {
+  background: #1c1313;
+  border: 1px solid rgba(229, 78, 78, 0.22);
+  border-left: 4px solid var(--tomato-9);
+  color: #f0cecc;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.5),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+div.toastify.nw-toast-error .nw-toast-icon {
+  color: var(--tomato-9);
+}
+
+div.toastify.nw-toast-warning {
+  background: #1c1a12;
+  border: 1px solid rgba(224, 180, 60, 0.22);
+  border-left: 4px solid var(--amber-9);
+  color: #f0e5c0;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.5),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+div.toastify.nw-toast-warning .nw-toast-icon {
+  color: var(--amber-9);
+}
+
+div.toastify.nw-toast-info {
+  background: #121620;
+  border: 1px solid rgba(60, 154, 219, 0.22);
+  border-left: 4px solid var(--blue-9);
+  color: #c5d9f0;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.5),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+div.toastify.nw-toast-info .nw-toast-icon {
+  color: var(--blue-9);
+}
+
+/* ─────────────────────────────────────────────────────────────────────── */
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../src/assets/fonts/Montserrat-Black.ttf") format("truetype");
+  font-weight: 900;
+  /* Black weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../src/assets/fonts/Montserrat-BlackItalic.ttf") format("truetype");
+  font-weight: 900;
+  /* Black weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../src/assets/fonts/Montserrat-Bold.ttf") format("truetype");
+  font-weight: 700;
+  /* Bold weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../src/assets/fonts/Montserrat-BoldItalic.ttf") format("truetype");
+  font-weight: 700;
+  /* Bold weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../src/assets/fonts/Montserrat-ExtraBold.ttf") format("truetype");
+  font-weight: 800;
+  /* Extra Bold weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../src/assets/fonts/Montserrat-ExtraBoldItalic.ttf") format("truetype");
+  font-weight: 800;
+  /* Extra Bold weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../src/assets/fonts/Montserrat-ExtraLight.ttf") format("truetype");
+  font-weight: 200;
+  /* Extra Light weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../src/assets/fonts/Montserrat-ExtraLightItalic.ttf") format("truetype");
+  font-weight: 200;
+  /* Extra Light weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../src/assets/fonts/Montserrat-Italic.ttf") format("truetype");
+  font-weight: 400;
+  /* Regular weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../src/assets/fonts/Montserrat-Light.ttf") format("truetype");
+  font-weight: 300;
+  /* Light weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../src/assets/fonts/Montserrat-LightItalic.ttf") format("truetype");
+  font-weight: 300;
+  /* Light weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../src/assets/fonts/Montserrat-Medium.ttf") format("truetype");
+  font-weight: 500;
+  /* Medium weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../src/assets/fonts/Montserrat-MediumItalic.ttf") format("truetype");
+  font-weight: 500;
+  /* Medium weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../src/assets/fonts/Montserrat-Regular.ttf") format("truetype");
+  font-weight: 400;
+  /* Regular weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../src/assets/fonts/Montserrat-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  /* SemiBold weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../src/assets/fonts/Montserrat-SemiBoldItalic.ttf") format("truetype");
+  font-weight: 600;
+  /* SemiBold weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../src/assets/fonts/Montserrat-Thin.ttf") format("truetype");
+  font-weight: 100;
+  /* Thin weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../src/assets/fonts/Montserrat-ThinItalic.ttf") format("truetype");
+  font-weight: 100;
+  /* Thin weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Savate";
+  src: url("../src/assets/fonts/Savate-Black.ttf") format("truetype");
+  font-weight: 900;
+  /* Black weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Savate";
+  src: url("../src/assets/fonts/Savate-BlackItalic.ttf") format("truetype");
+  font-weight: 900;
+  /* Black weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Savate";
+  src: url("../src/assets/fonts/Savate-Bold.ttf") format("truetype");
+  font-weight: 700;
+  /* Bold weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Savate";
+  src: url("../src/assets/fonts/Savate-BoldItalic.ttf") format("truetype");
+  font-weight: 700;
+  /* Bold weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Savate";
+  src: url("../src/assets/fonts/Savate-Italic.ttf") format("truetype");
+  font-weight: 400;
+  /* Regular weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Savate";
+  src: url("../src/assets/fonts/Savate-Regular.ttf") format("truetype");
+  font-weight: 400;
+  /* Regular weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "PlayfairDisplaySC";
+  src: url("../src/assets/fonts/PlayfairDisplaySC-Black.ttf") format("truetype");
+  font-weight: 900;
+  /* Black weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "PlayfairDisplaySC";
+  src: url("../src/assets/fonts/PlayfairDisplaySC-BlackItalic.ttf")
+    format("truetype");
+  font-weight: 900;
+  /* Black weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "PlayfairDisplaySC";
+  src: url("../src/assets/fonts/PlayfairDisplaySC-Bold.ttf") format("truetype");
+  font-weight: 700;
+  /* Bold weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "PlayfairDisplaySC";
+  src: url("../src/assets/fonts/PlayfairDisplaySC-BoldItalic.ttf")
+    format("truetype");
+  font-weight: 700;
+  /* Bold weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "PlayfairDisplaySC";
+  src: url("../src/assets/fonts/PlayfairDisplaySC-Italic.ttf") format("truetype");
+  font-weight: 400;
+  /* Regular weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "PlayfairDisplaySC";
+  src: url("../src/assets/fonts/PlayfairDisplaySC-Regular.ttf") format("truetype");
+  font-weight: 400;
+  /* Regular weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ZillaSlab";
+  src: url("../src/assets/fonts/ZillaSlab-Bold.ttf") format("truetype");
+  font-weight: 700;
+  /* Bold weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ZillaSlab";
+  src: url("../src/assets/fonts/ZillaSlab-BoldItalic.ttf") format("truetype");
+  font-weight: 700;
+  /* Bold weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "ZillaSlab";
+  src: url("../src/assets/fonts/ZillaSlab-Italic.ttf") format("truetype");
+  font-weight: 400;
+  /* Regular weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "ZillaSlab";
+  src: url("../src/assets/fonts/ZillaSlab-Regular.ttf") format("truetype");
+  font-weight: 400;
+  /* Regular weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ShantellSans";
+  src: url("../src/assets/fonts/ShantellSans-Bold.ttf") format("truetype");
+  font-weight: 700;
+  /* Bold weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ShantellSans";
+  src: url("../src/assets/fonts/ShantellSans-BoldItalic.ttf") format("truetype");
+  font-weight: 700;
+  /* Bold weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "ShantellSans";
+  src: url("../src/assets/fonts/ShantellSans-Italic.ttf") format("truetype");
+  font-weight: 400;
+  /* Regular weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "ShantellSans";
+  src: url("../src/assets/fonts/ShantellSans-Regular.ttf") format("truetype");
+  font-weight: 400;
+  /* Regular weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Genos";
+  src: url("../src/assets/fonts/Genos-Bold.ttf") format("truetype");
+  font-weight: 700;
+  /* Bold weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Genos";
+  src: url("../src/assets/fonts/Genos-BoldItalic.ttf") format("truetype");
+  font-weight: 700;
+  /* Bold weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Genos";
+  src: url("../src/assets/fonts/Genos-Italic.ttf") format("truetype");
+  font-weight: 400;
+  /* Regular weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Genos";
+  src: url("../src/assets/fonts/Genos-Regular.ttf") format("truetype");
+  font-weight: 400;
+  /* Regular weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "BodoniModaSC";
+  src: url("../src/assets/fonts/BodoniModaSC_18pt-Bold.ttf") format("truetype");
+  font-weight: 700;
+  /* Bold weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "BodoniModaSC";
+  src: url("../src/assets/fonts/BodoniModaSC_18pt-BoldItalic.ttf")
+    format("truetype");
+  font-weight: 700;
+  /* Bold weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "BodoniModaSC";
+  src: url("../src/assets/fonts/BodoniModaSC_18pt-Italic.ttf") format("truetype");
+  font-weight: 400;
+  /* Regular weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "BodoniModaSC";
+  src: url("../src/assets/fonts/BodoniModaSC_18pt-Regular.ttf") format("truetype");
+  font-weight: 400;
+  /* Regular weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Tourney";
+  src: url("../src/assets/fonts/Tourney-Bold.ttf") format("truetype");
+  font-weight: 700;
+  /* Bold weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Tourney";
+  src: url("../src/assets/fonts/Tourney-BoldItalic.ttf") format("truetype");
+  font-weight: 700;
+  /* Bold weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Tourney";
+  src: url("../src/assets/fonts/Tourney-Italic.ttf") format("truetype");
+  font-weight: 400;
+  /* Regular weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Tourney";
+  src: url("../src/assets/fonts/Tourney-Regular.ttf") format("truetype");
+  font-weight: 400;
+  /* Regular weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "MontserratUnderline";
+  src: url("../src/assets/fonts/MontserratUnderline-Bold.ttf") format("truetype");
+  font-weight: 700;
+  /* Bold weight */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "MontserratUnderline";
+  src: url("../src/assets/fonts/MontserratUnderline-BoldItalic.ttf")
+    format("truetype");
+  font-weight: 700;
+  /* Bold weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "MontserratUnderline";
+  src: url("../src/assets/fonts/MontserratUnderline-Italic.ttf") format("truetype");
+  font-weight: 400;
+  /* Regular weight */
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "MontserratUnderline";
+  src: url("../src/assets/fonts/MontserratUnderline-Regular.ttf") format("truetype");
+  font-weight: 400;
+  /* Regular weight */
+  font-style: normal;
+}

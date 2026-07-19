@@ -1,0 +1,25 @@
+{
+  "projectId": "2a9beed2-203b-4656-be1b-9be66f41013d",
+  "shape": "package",
+  "pkg": "rp-webapp",
+  "globalName": "NovelistWorld",
+  "srcDir": "src/components",
+  "tsconfig": ".design-sync/tsconfig.sync.json",
+  "cssEntry": ".design-sync/flattened.css",
+  "readmeHeader": ".design-sync/conventions.md",
+  "extraEntries": ["./.design-sync/ds-provider.tsx", "./.design-sync/canonical-exports.ts"],
+  "provider": { "component": "DSProvider" },
+  "overrides": {
+    "Dropdown": { "cardMode": "column" },
+    "ButtonGroup": { "cardMode": "column" },
+    "ExpandablePill": { "cardMode": "column" },
+    "Modal": { "cardMode": "single", "primaryStory": "StoryInviteModal" },
+    "MiniMuseCard": { "cardMode": "single", "primaryStory": "ExportModalFullDetails" },
+    "MiniProfileCard": { "cardMode": "single", "primaryStory": "Default" }
+  },
+  "libOverrides": {
+    "bundle.mjs": "tsconfigPathsPlugin: skip directory hits so barrel imports (@/context) fall through to index.ts; browser process shim banner; normalize resolved paths to forward slashes (Windows join() backslashes vs esbuild's own forward-slash resolver was double-bundling @/-aliased singletons)",
+    "source-kit.mjs": "synth entry excludes non-canonical duplicate-export files (ambiguous star re-exports land undefined on the global)",
+    "dts.mjs": "props project also loads src .ts/.tsx with @/* alias — synth-entry repo has no shipped .d.ts, stock lib emitted stub contracts"
+  }
+}

@@ -248,6 +248,28 @@ export function AppearanceSection({ onBack }: Props) {
     setCropDialogOpen(true);
   };
 
+  // Clicking the avatar with an existing image opens the adjust dialog
+  // directly (mirrors the banner's "click to reposition" flow); the picker
+  // (Upload / Library GIF / Sticker) is reached from there via "Replace".
+  const openExistingAvatarCropDialog = useCallback(() => {
+    if (avatar) {
+      setPendingCropSrc(avatar.src);
+      setCropX(avatar.crop?.x ?? 50);
+      setCropY(avatar.crop?.y ?? 50);
+      setCropScale(
+        avatar.crop?.width && avatar.crop.width > 0 ? avatar.crop.width / 100 : 1,
+      );
+      setCropDialogOpen(true);
+    } else if (image) {
+      openCropDialog(image);
+    }
+  }, [avatar, image]);
+
+  const handleAvatarReplace = useCallback(() => {
+    setCropDialogOpen(false);
+    setAvatarDialogOpen(true);
+  }, []);
+
   // Dragging is handled imperatively inside AvatarCropDialog; it commits the
   // final position here once the gesture settles.
   const handleCropPan = (nx: number, ny: number) => {
@@ -560,7 +582,13 @@ export function AppearanceSection({ onBack }: Props) {
                   noteColor={noteObj?.color ?? null}
                   noteEmoji={noteObj?.emoji ?? null}
                   onNoteClick={openNoteDialog}
-                  onAvatarClick={() => setAvatarDialogOpen(true)}
+                  onAvatarClick={() => {
+                    if (displayAvatarSrc) {
+                      openExistingAvatarCropDialog();
+                    } else {
+                      setAvatarDialogOpen(true);
+                    }
+                  }}
                   nwImage={avatar}
                 />
                 <input
@@ -686,6 +714,7 @@ export function AppearanceSection({ onBack }: Props) {
               onReset={resetCrop}
               onCancel={handleCropCancel}
               onConfirm={handleCropConfirm}
+              onReplace={handleAvatarReplace}
               isUploading={imageUploading}
               viewportRef={cropViewportRef}
             />

@@ -33,21 +33,6 @@ export const CoverScrim = styled.div`
   );
 `;
 
-/* Overlay strip pinned to the bottom of the cover, holding the fandom chip and
-   genre swatches. Living on the fixed-ratio cover means their presence never
-   changes the card's overall height. */
-export const CoverFooter = styled.div`
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: 8px;
-  z-index: 1;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 6px;
-`;
-
 export const CoverBadge = styled.span<{ $public?: boolean }>`
   position: absolute;
   top: 8px;
@@ -83,6 +68,106 @@ export const CoverBadge = styled.span<{ $public?: boolean }>`
   }
 `;
 
+/* Chapter count pinned to the cover's bottom-right corner. */
+export const CoverChapterBadge = styled.span`
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  font-size: var(--font-size-xsmall);
+  font-weight: var(--font-weight-semi-bold);
+
+  svg {
+    width: 12px;
+    height: 12px;
+    color: var(--accent);
+  }
+`;
+
+/* Like count + toggle pinned to the cover's bottom-left corner. */
+export const CoverHeartBadge = styled.button<{ $active?: boolean }>`
+  all: unset;
+  box-sizing: border-box;
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  cursor: pointer;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  font-size: var(--font-size-xsmall);
+  font-weight: var(--font-weight-semi-bold);
+  transition: transform 0.1s ease;
+
+  svg {
+    width: 12px;
+    height: 12px;
+    color: ${(p) => (p.$active ? "var(--tomato-9)" : "#fff")};
+  }
+
+  &:active {
+    transform: scale(0.94);
+  }
+`;
+
+/* Vertical, lightly-overlapping stack of author/co-author avatars pinned to
+   the cover's top-left corner. */
+export const CoverAuthorsRail = styled.div`
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+export const CoverAuthorAvatar = styled.img`
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg-4);
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+  margin-top: -6px;
+
+  &:first-child {
+    margin-top: 0;
+  }
+`;
+
+export const CoverAuthorOverflow = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.65);
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  color: #fff;
+  font-size: 9px;
+  font-weight: var(--font-weight-semi-bold);
+`;
+
 export const Info = styled.div`
   display: flex;
   flex: 1 1 auto;
@@ -108,46 +193,35 @@ export const CardTitle = styled.h3`
   }
 `;
 
-/* Compact glass chip naming the story's fandom, overlaid on the cover. */
-export const TileFandom = styled.span`
+/* Fandom chip, shown underneath the title — mirrors the muse profile's
+   solid-color FandomValue chip (color-coded, uppercase, dot marker). */
+export const CardFandom = styled.span<{ $color: string }>`
   display: inline-flex;
+  align-self: flex-start;
   align-items: center;
   gap: 5px;
+  max-width: 100%;
   min-width: 0;
-  padding: 4px 9px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
+  padding: 3px 9px 3px 7px;
+  border-radius: 4px;
+  background: ${(p) => p.$color};
   color: #fff;
-  font-size: var(--font-size-xsmall);
-  font-weight: var(--font-weight-semi-bold);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 
-  svg {
-    width: 12px;
-    height: 12px;
-    color: var(--accent);
+  &::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.8);
     flex-shrink: 0;
   }
-
-  span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-`;
-
-/* Row of tiny genre swatches on a glass backing — a low-clutter genre hint. */
-export const GenreDots = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-  padding: 5px 7px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(4px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 `;
 
 export const GenreDot = styled.span<{ $color: string }>`
@@ -156,35 +230,6 @@ export const GenreDot = styled.span<{ $color: string }>`
   border-radius: 50%;
   background: ${(p) => p.$color};
   box-shadow: 0 0 0 1px color-mix(in srgb, ${(p) => p.$color} 45%, transparent);
-`;
-
-export const CardMeta = styled.div`
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px 12px;
-  margin-top: auto;
-  padding-top: 2px;
-  color: var(--text-secondary);
-  font-size: var(--font-size-small);
-`;
-
-export const MetaItem = styled.span`
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  white-space: nowrap;
-
-  b {
-    color: var(--text);
-    font-weight: var(--font-weight-semi-bold);
-  }
-
-  svg {
-    width: 14px;
-    height: 14px;
-    color: var(--accent);
-  }
 `;
 
 /* Placeholder tile shown for the "Add New" (empty) storyboard. */
@@ -343,6 +388,41 @@ export const StatChip = styled.span`
   }
 `;
 
+/* Heart reaction chip, styled to match StatChip but interactive. */
+export const HeartStatChip = styled.button<{ $active?: boolean }>`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semi-bold);
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+  background: ${(p) =>
+    p.$active
+      ? "color-mix(in srgb, var(--tomato-9) 20%, transparent)"
+      : "color-mix(in srgb, var(--text-secondary) 12%, transparent)"};
+  color: ${(p) => (p.$active ? "var(--tomato-9)" : "var(--text-secondary)")};
+
+  b {
+    color: ${(p) => (p.$active ? "var(--tomato-9)" : "var(--text)")};
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+    color: var(--tomato-9);
+  }
+
+  &:active {
+    transform: scale(0.94);
+  }
+`;
+
 export const TagRow = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -377,6 +457,30 @@ export const GenrePill = styled.span<{ $color: string }>`
     height: 7px;
     border-radius: 50%;
     background: ${(p) => p.$color};
+    flex-shrink: 0;
+  }
+`;
+
+/* Genre row shown underneath the fandom chip: as many genres as fit get a
+   full colored chip, the rest fall back to a small color dot — all confined
+   to a single, non-wrapping row. */
+export const CardGenreRow = styled.div`
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+
+  ${GenrePill} {
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  ${GenreDot} {
     flex-shrink: 0;
   }
 `;

@@ -3,9 +3,8 @@
 import classNames from "classnames";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BiSupport } from "react-icons/bi";
-import { HiOutlineSparkles } from "react-icons/hi2";
+import { HiOutlineChatBubbleLeftRight, HiOutlineSparkles } from "react-icons/hi2";
 import { MdAdd, MdGroupAdd } from "react-icons/md";
-import { BreadCrumb } from "@/components/breadcrumb";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { ConversationCard } from "@/components/conversation-card";
 import { LoadMore } from "@/components/load-more/page";
@@ -17,6 +16,7 @@ import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import type { Conversation, IceBreaker } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { decryptConversations } from "@/utils/e2e-crypto";
+import { pluralize } from "@/utils/helpers";
 import { ConversationPanel } from "./[conversationId]/conversation-panel";
 import {
   getConversationByUsernameAction,
@@ -328,11 +328,31 @@ export default function ConversationsPage() {
     return unreadConversationIds.filter((id) => !fetchedIds.has(id)).length;
   }, [unreadConversationIds, conversations, hasMore]);
 
+  const headerSubtitle = useMemo(() => {
+    if (isLoading) return "Loading your conversations…";
+    if (!conversations || conversations.length === 0) {
+      return "You're all caught up";
+    }
+
+    const unreadCount = unreadConversationIds?.length ?? 0;
+    if (unreadCount === 0) return "No new messages";
+
+    return `${unreadCount} unread ${pluralize("conversation", unreadCount)}`;
+  }, [isLoading, conversations, unreadConversationIds]);
+
   return (
     <>
       <S.Container $slideIn={slideIn}>
         <S.BreadcrumbRow>
-          <BreadCrumb label="Conversations" username={user?.username ?? ""} />
+          <S.PageHeaderLeft>
+            <S.PageHeaderIcon>
+              <HiOutlineChatBubbleLeftRight />
+            </S.PageHeaderIcon>
+            <S.PageHeaderText>
+              <S.PageHeaderTitle>Conversations</S.PageHeaderTitle>
+              <S.PageHeaderSubtitle>{headerSubtitle}</S.PageHeaderSubtitle>
+            </S.PageHeaderText>
+          </S.PageHeaderLeft>
           <S.BreadcrumbActions>
             <S.SupportButton
               onClick={handleCreateGroupClick}

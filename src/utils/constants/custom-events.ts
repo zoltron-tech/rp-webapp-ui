@@ -20,6 +20,7 @@ export const EVENTS = {
   },
   PROMPT: {
     base: "prompt",
+    OPEN_THREADS: "open-threads",
     REACTED: "reacted",
     UPDATED: "updated",
   },
@@ -32,6 +33,10 @@ export const EVENTS = {
     base: "song",
     DELETED: "deleted",
     UPDATED: "updated",
+  },
+  STORY_BOARD: {
+    base: "story-board",
+    REACTED: "reacted",
   },
 } as const;
 
@@ -54,6 +59,12 @@ export type PromptCommentReplyUpdatedPayload = {
 };
 
 export type PromptReactedPayload = {
+  id: string;
+  reacted: boolean;
+  reactions: number;
+};
+
+export type StoryBoardReactedPayload = {
   id: string;
   reacted: boolean;
   reactions: number;

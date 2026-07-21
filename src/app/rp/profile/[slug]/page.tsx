@@ -28,6 +28,11 @@ import {
   MdOutlineKeyboardDoubleArrowRight,
 } from "react-icons/md";
 import { RiFlagFill } from "react-icons/ri";
+import {
+  getNoteEmojiRotate,
+  NoteEmojiIcon,
+} from "@/app/rp/profile/edit/note-emoji-set";
+import { getProfileSongAction } from "@/app/rp/profile/edit/profile-song.actions";
 import { ContactSupportForm } from "@/components";
 import ActivityBox from "@/components/activity-box";
 import {
@@ -45,25 +50,20 @@ import { LoadMore } from "@/components/load-more/page";
 import { MiniProfileCard } from "@/components/mini-profile-card";
 import MuseListItem from "@/components/muse-list-item";
 import { AppDropdownMenuResponsive } from "@/components/profile-more-dropdown";
+import { ProfileSongPlayer } from "@/components/profile-song";
 import { Prompt as PromptComponent } from "@/components/prompt";
 import { PromptComposeTrigger } from "@/components/prompt-compose-trigger";
 import PromptInput from "@/components/prompt-input";
 import { FullPagePromptInput } from "@/components/prompt-input/full-page-prompt-input";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
-import {
-  getNoteEmojiRotate,
-  NoteEmojiIcon,
-} from "@/app/rp/profile/edit/note-emoji-set";
-import { getProfileSongAction } from "@/app/rp/profile/edit/profile-song.actions";
-import { ProfileSongPlayer } from "@/components/profile-song";
 import StoryCard from "@/components/story-card";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import type { Novelist, NWImage, Prompt, StoryBoard } from "@/types";
-import type { ProfileSong } from "@/types/music";
 import type { Activity } from "@/types/activity";
+import type { ProfileSong } from "@/types/music";
 import { ACCENT_MAP, type Accent } from "@/types/theme";
 import { ScoreBadgeIcon } from "@/utils/badge-icons";
 import { API_MESSAGE } from "@/utils/constants";
@@ -368,11 +368,11 @@ const useGetActivities = (username: string) => {
   return {
     activities,
     error,
-    refetch: fetchActivities,
-    stopPageLoading,
     hasMore,
     loadingMore,
     loadMore,
+    refetch: fetchActivities,
+    stopPageLoading,
   };
 };
 
@@ -484,9 +484,7 @@ export default function UserProfilePage({}) {
 
   const handleShareProfile = () => {
     if (username) {
-      navigator.clipboard.writeText(
-        `https://novelist.world/${username}`,
-      );
+      navigator.clipboard.writeText(`https://novelist.world/${username}`);
       successToast("Profile link copied to clipboard");
     }
   };
@@ -805,7 +803,6 @@ export default function UserProfilePage({}) {
       setNovelist(userNovelist);
     }
   }, [userNovelist, isCurrentUser]);
-
 
   useEffect(() => {
     if (authState === "UNINITIALIZED") {
@@ -1345,8 +1342,8 @@ export default function UserProfilePage({}) {
                   {mainVerseMuses(novelist?.muses)
                     .slice(0, 3)
                     .map((muse) => (
-                    <MuseListItem key={muse.id} muse={muse}></MuseListItem>
-                  ))}
+                      <MuseListItem key={muse.id} muse={muse}></MuseListItem>
+                    ))}
                 </S.MuseList>
                 <S.SeeMoreLink onClick={toMusesPage}>
                   <span>
@@ -1430,6 +1427,7 @@ export default function UserProfilePage({}) {
                   ) : (
                     <PromptInput
                       type="prompt"
+                      noShell
                       onSend={() => {
                         if (feedTab === "posts") setPosts(null);
                         else if (feedTab === "prompts") setPrompts(null);

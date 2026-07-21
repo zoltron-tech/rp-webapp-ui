@@ -9,6 +9,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { FaMasksTheater, FaUserPen } from "react-icons/fa6";
 import { IoCheckmark } from "react-icons/io5";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { AvatarNew } from "@/components/common/avatar-new";
@@ -54,8 +55,14 @@ export const PromptMuseSelect = forwardRef<MuseSelectHandle, Props>(
     const [dialogOpen, setDialogOpen] = useState(false);
     const [search, setSearch] = useState("");
 
+    const isNovelist = source?.sourceType === "NOVELIST";
     const novelistSource = sources.find((s) => s.sourceType === "NOVELIST");
     const museSources = sources.filter((s) => s.sourceType === "MUSE");
+    // Replying to an out-of-character post/comment forces the reply to also be
+    // out of character (dropdownSelection narrows sources to just the
+    // novelist) — nothing to switch to, so the control locks instead of
+    // offering a dead "Switch" affordance.
+    const locked = sources.length <= 1;
 
     useEffect(() => {
       setSource((current) => {
@@ -129,23 +136,52 @@ export const PromptMuseSelect = forwardRef<MuseSelectHandle, Props>(
 
         <S.MuseSelectTrigger
           type="button"
-          title={source?.name.split(" ")[0] ?? "Select"}
-          onClick={() => setDialogOpen(true)}
+          $novelist={isNovelist}
+          $locked={locked}
+          disabled={locked}
+          title={
+            locked
+              ? isNovelist
+                ? "Out of character posts get out-of-character replies only — posting as yourself."
+                : "In character posts get in-character replies only — posting as your character."
+              : isNovelist
+                ? `Out of character — posting as ${source?.name ?? "you"}. Tap to switch.`
+                : `In character — posting as ${source?.name ?? ""}. Tap to switch.`
+          }
+          onClick={() => {
+            if (locked) return;
+            setDialogOpen(true);
+          }}
         >
-          <AvatarNew
-            src={source?.image ?? null}
-            alt={source?.name ?? ""}
-            nwImage={source?.avatar}
-          />
-          <span className="trigger-name">{source?.name.split(" ")[0]}</span>
-          <span className="trigger-caret">
-            <MdOutlineKeyboardArrowDown size={14} />
+          <span className="mode-avatar">
+            <AvatarNew
+              src={source?.image ?? null}
+              alt={source?.name ?? ""}
+              nwImage={source?.avatar}
+            />
           </span>
+          <span className="mode-text">
+            <span className="mode-eyebrow">
+              {isNovelist ? <FaUserPen /> : <FaMasksTheater />}
+              {isNovelist ? "Out of character" : "In character"}
+            </span>
+            <span className="mode-name">{source?.name}</span>
+          </span>
+          {locked ? (
+            <span className="mode-switch mode-fixed">
+              <span>{isNovelist ? "OOC only" : "IC only"}</span>
+            </span>
+          ) : (
+            <span className="mode-switch">
+              <MdOutlineKeyboardArrowDown size={14} />
+              <span>Switch</span>
+            </span>
+          )}
         </S.MuseSelectTrigger>
 
         <AppAlertDialog
           heading={promptTypeToLabel(promptType)}
-          text=""
+          text="Your novelist posts out of character; a character posts in character. Pick who this is from."
           open={dialogOpen}
           onOpenChange={handleDialogOpenChange}
           showConfirm={false}
@@ -240,7 +276,7 @@ const SourceRow: FC<{
     <S.MuseDialogSourceInfo>
       <S.MuseDialogSourceName>{source.name}</S.MuseDialogSourceName>
       <S.MuseDialogTypeBadge $novelist={source.sourceType === "NOVELIST"}>
-        {source.sourceType === "NOVELIST" ? "You" : "Character"}
+        {source.sourceType === "NOVELIST" ? "Out of character" : "In character"}
       </S.MuseDialogTypeBadge>
     </S.MuseDialogSourceInfo>
     {isActive && (

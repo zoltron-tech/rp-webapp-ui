@@ -6,6 +6,8 @@ import type { PromptSource } from "./prompt";
 export interface StoryBoard {
   id: string | null;
   name: string;
+  /** Optional rich-text HTML flavor text, up to 400 plain-text characters. */
+  description?: string | null;
   image: string | null;
   /** Croppable cover (position + zoom), rendered at a 6:9 ratio. */
   avatar: NWImage | null;
@@ -19,6 +21,10 @@ export interface StoryBoard {
   /** Curated genre tags, up to 5 per story. */
   genres?: Genre[];
   createdBy?: Friend;
+  /** Heart reaction count and whether the viewer reacted. Shared with any
+   * STORY_BOARD-target activity (editing the story or one of its events). */
+  reactions?: number;
+  reacted?: boolean;
 }
 
 export interface StoryBoardMember {

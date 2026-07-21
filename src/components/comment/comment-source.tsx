@@ -5,8 +5,16 @@ import { type FC, useCallback, useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
 import { FaRegEdit } from "react-icons/fa";
 import { FaRegTrashCan } from "react-icons/fa6";
-import { RiFlagFill } from "react-icons/ri";
-import { deleteCommentAction, reportAction } from "@/app/rp/thread/actions";
+import {
+  RiArrowGoBackLine,
+  RiCheckboxCircleLine,
+  RiFlagFill,
+} from "react-icons/ri";
+import {
+  concludeCommentAction,
+  deleteCommentAction,
+  reportAction,
+} from "@/app/rp/thread/actions";
 import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents, useUIContext } from "@/hooks";
 import { API_MESSAGE } from "@/utils/constants";
@@ -25,6 +33,7 @@ export const CommentSource: FC = () => {
   const commentText = useCommentState("text");
   const source = useCommentState("source");
   const createdOn = useCommentState("createdOn");
+  const concluded = useCommentState("concluded");
   const commentAlert = useCommentState("commentAlert");
   const setCommentState = useCommentStateSet();
   const { successToast, errorToast, warningToast } = useUIContext();
@@ -50,6 +59,17 @@ export const CommentSource: FC = () => {
       errorToast("There was an issue while reporting this comment.");
     }
   }, [commentId, source, setCommentState, successToast, errorToast]);
+
+  const handleToggleConcluded = useCallback(async () => {
+    const next = !concluded;
+    const response = await concludeCommentAction(commentId, next);
+    if (response?.message === API_MESSAGE.Success) {
+      setCommentState({ concluded: next });
+      successToast(next ? `Thread marked as concluded` : `Thread reopened`);
+    } else {
+      errorToast("There was an issue while updating this thread.");
+    }
+  }, [commentId, concluded, setCommentState, successToast, errorToast]);
 
   const handleDeleteComment = useCallback(async () => {
     const response = await deleteCommentAction(commentId);
@@ -89,6 +109,11 @@ export const CommentSource: FC = () => {
             setEditCommentType("comment");
             setShowEditCommentAlert(true);
           },
+        },
+        {
+          icon: concluded ? <RiArrowGoBackLine /> : <RiCheckboxCircleLine />,
+          label: concluded ? "Reopen thread" : "Mark as concluded",
+          onClick: handleToggleConcluded,
         },
         {
           separator: true,
@@ -142,6 +167,12 @@ export const CommentSource: FC = () => {
         <S.Source.Time title={displayDate(createdOn)} dateTime={createdOn}>
           {toFormattedDate(createdOn)}
         </S.Source.Time>
+        <ShouldRender if={concluded}>
+          <S.ConcludedChip>
+            <RiCheckboxCircleLine size={13} />
+            Concluded
+          </S.ConcludedChip>
+        </ShouldRender>
       </S.Source.Info>
       <S.HeaderDropdownMenuContainer>
         <ShouldRender if={authState === "LOGGED_IN"}>

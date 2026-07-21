@@ -25,6 +25,10 @@ export const ThreadRoot = styled.article`
     border-left: 4px solid var(--accent);
   }
 
+  &[data-concluded] {
+    opacity: 0.72;
+  }
+
   .separator[data-orientation="horizontal"] {
     height: 1px;
     width: 100%;
@@ -42,21 +46,54 @@ export const PromptHeaderRoot = styled.header`
   display: flex;
   align-items: center;
   width: 100%;
-  position: relative;
+  gap: 10px;
   padding-inline: 8px;
+`;
+
+export const AvatarGroup = styled.div`
+  position: relative;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+
+  @media screen and (max-width: 430px) {
+    width: 40px;
+    height: 40px;
+  }
+`;
+
+export const PrimaryAvatarSlot = styled.div`
+  width: 100%;
+  height: 100%;
 
   .avatar {
-    width: 64px;
-    height: 64px;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+  }
+`;
+
+export const TargetAvatarSlot = styled.div`
+  position: absolute;
+  bottom: -3px;
+  right: -3px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-2);
+  background-color: var(--bg-2);
+
+  .avatar {
+    width: 100%;
+    height: 100%;
     cursor: pointer;
   }
 
   @media screen and (max-width: 430px) {
-    .avatar {
-      width: 40px;
-      height: 40px;
-      cursor: pointer;
-    }
+    width: 28px;
+    height: 28px;
+    bottom: -2px;
+    right: -2px;
   }
 `;
 
@@ -64,7 +101,15 @@ export const SourceInfo = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  margin-left: 10px;
+  min-width: 0;
+  flex: 1;
+`;
+
+export const SourceNameRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
 `;
 
 export const SourceName = styled.h1`
@@ -75,26 +120,66 @@ export const SourceName = styled.h1`
   font-weight: var(--font-weight-bold);
   color: var(--text);
   font-family: var(--font);
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 
   @media(max-width: 600px) {
-    max-width: 200px;
+    max-width: 140px;
     font-size: var(--font-size-input);
   }
 `;
 
-export const PromptSubheader = styled.time`
-  all: unset;
+export const TypeTag = styled.span`
+  flex-shrink: 0;
+  font-family: var(--font);
+  font-size: 10px;
+  font-weight: var(--font-weight-semi-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+  background-color: var(--bg-3);
+  border: 1px solid var(--bg-6);
+  border-radius: 4px;
+  padding: 2px 6px;
+
+  @media (max-width: 430px) {
+    display: none;
+  }
+`;
+
+export const PromptSubheader = styled.div`
   font-size: var(--font-size-small);
   color: var(--text-secondary);
   cursor: default;
 
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
 
-    @media(max-width: 600px) {
+  time {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  @media(max-width: 600px) {
     font-size: var(--font-size-xsmall);
   }
+`;
+
+export const MetaDivider = styled.span`
+  flex-shrink: 0;
+`;
+
+export const MetaTarget = styled.span`
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `;
 
 export const PromptThreadsSeparator = styled(Separator.Root)`
@@ -168,11 +253,12 @@ const CommentFooterRoot = styled.footer`
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding-top: 2px;
+  padding-top: 14px;
   padding-bottom: 4px;
   gap: 8px;
 
   @media screen and (max-width: 430px) {
+    padding-top: 2px;
     flex-direction: column;
     align-items: flex-start;
   }
@@ -229,22 +315,20 @@ const ReplyCount = styled.a`
 `;
 
 export const UnreadBadge = styled.a`
-  position: absolute;
-  top: 20px;
-  right: 20px;
+  flex-shrink: 0;
+  align-self: flex-start;
   background-color: ${({ theme }: any) => theme.unreadBadge};
   color: var(--text);
   font-family: var(--font);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-semi-bold);
-  border-radius: 12px;
-  padding-inline: 8px;
-  padding-block: 4px;
-  min-width: 22px;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1;
   cursor: pointer;
   transition: all 0.2s ease;
 
@@ -252,9 +336,50 @@ export const UnreadBadge = styled.a`
     box-shadow: 0 0 10px ${({ theme }: any) => theme.unreadBadge};
   }
 
+  @media (max-width: 430px) {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    font-size: var(--font-size-xsmall);
+  }
+`;
+
+export const ConcludedBadge = styled.span`
+  flex-shrink: 0;
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--bg-3);
+  border: 1px solid var(--bg-6);
+  color: var(--text-secondary);
+  font-family: var(--font);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semi-bold);
+  border-radius: 12px;
+  padding-inline: 8px;
+  padding-block: 4px;
+  white-space: nowrap;
+
+  svg {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 430px) {
+    padding-inline: 6px;
+    font-size: var(--font-size-xsmall);
+
+    span {
+      display: none;
+    }
+  }
+
   @media (max-width: 600px) {
     top: 10px;
     right: 5px;
+    font-size: var(--font-size-xsmall);
   }
 `;
 

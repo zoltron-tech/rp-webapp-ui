@@ -37,6 +37,8 @@ export type Hook<T, K> = (props: T) => K;
 
 export type ErrorType = {
   message: API_MESSAGE.Error;
+  /** Human-readable detail from the backend (e.g. tier limit reached), when available. */
+  reason?: string;
 };
 
 export type DataType<T> = ErrorType | T | null;

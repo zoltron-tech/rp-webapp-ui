@@ -222,7 +222,7 @@ export const privacyAvatarMoreIcon = styled.div`
   }
 `;
 
-export const PromptInputRoot = styled.div`
+export const PromptInputRoot = styled.div<{ $noShell?: boolean }>`
   max-width: 800px;
   width: 100%;
   margin: 0 auto;
@@ -233,10 +233,23 @@ export const PromptInputRoot = styled.div`
 
   position: relative;
 
+  /* Matches the Prompt card shell: flat bg-2 surface, soft rounded border.
+     Suppressed via $noShell when embedded (thread list, profile) so the input
+     blends into its container with no border/radius. */
   &.open {
-    padding-top: 28px;
-    padding-bottom: 45px;
+    padding: 28px 16px 20px;
     background-color: var(--bg-2);
+
+    ${({ $noShell }) =>
+      !$noShell &&
+      `
+      border: 1px solid var(--bg-5);
+      box-shadow: 0 18px 40px -26px rgba(0, 0, 0, 0.85);
+
+      @media screen and (max-width: 800px) {
+        padding-inline: 12px;
+      }
+    `}
   }
 
   .form-content {
@@ -295,7 +308,6 @@ export const TextInputContainer = styled(Form.Field)<{ $fullPage?: boolean }>`
   display: flex;
   flex-direction: column;
   ${(p) => p.$fullPage && "flex: 1; min-height: 0;"}
-
 
   textarea {
     background-color: var(--bg-3);
@@ -695,9 +707,7 @@ export const DesktopMetaRow = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px 4px;
-  border-bottom: 1px solid var(--bg-6);
-  /* background: var(--bg-3); */
+  padding: 6px 4px 10px;
   border-radius: 4px 4px 0 0;
 `;
 
@@ -809,53 +819,139 @@ export const DesktopSendIconBtn = styled.button`
 
 // ── Muse-select trigger + dialog ─────────────────────────────────────────────
 
-export const MuseSelectTrigger = styled.button`
+/** Sender control — makes the posting mode explicit. Muse = in character
+ *  (accent), Novelist = out of character (iris), and the "Switch" chip signals
+ *  the whole thing is a dropdown. */
+export const MuseSelectTrigger = styled.button<{
+  $novelist?: boolean;
+  $locked?: boolean;
+}>`
   && {
+    --mode: ${({ $novelist }) => ($novelist ? "#b1a9ff" : "var(--accent)")};
     all: unset;
     box-sizing: border-box;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 4px 10px 4px 4px;
-    border: 1px solid var(--bg-6);
-    border-radius: 999px;
-    background: var(--bg-3);
-    cursor: pointer;
+    gap: 10px;
+    padding: 5px 6px 5px 5px;
+    border: 1px solid
+      ${({ $locked }) =>
+        $locked
+          ? "var(--bg-6)"
+          : "color-mix(in srgb, var(--mode) 34%, var(--bg-6))"};
+    border-radius: 14px;
+    background: ${({ $locked }) =>
+      $locked ? "var(--bg-3)" : "color-mix(in srgb, var(--mode) 8%, var(--bg-3))"};
+    cursor: ${({ $locked }) => ($locked ? "default" : "pointer")};
     transition: background 0.15s ease, border-color 0.15s ease;
 
-    .avatar {
-      width: 28px;
-      height: 28px;
-      min-width: 28px;
-      border-radius: 50%;
+    .mode-fixed {
+      background: transparent;
+      color: var(--text-secondary);
+      font-style: italic;
     }
 
-    .trigger-name {
+    .mode-avatar {
+      position: relative;
+      flex-shrink: 0;
+      display: flex;
+    }
+
+    .mode-avatar .avatar {
+      width: 34px;
+      height: 34px;
+      min-width: 34px;
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px var(--bg-3), 0 0 0 3.5px var(--mode);
+    }
+
+    .mode-text {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      min-width: 0;
+    }
+
+    .mode-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 9.5px;
+      font-weight: var(--font-weight-bold);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--mode);
+      white-space: nowrap;
+    }
+
+    .mode-eyebrow svg {
+      width: 11px;
+      height: 11px;
+    }
+
+    .mode-name {
       font-size: var(--font-size-small);
       font-family: var(--font);
-      font-weight: var(--font-weight-medium);
+      font-weight: var(--font-weight-semi-bold);
       color: var(--text);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 140px;
+      max-width: 150px;
     }
 
-    .trigger-caret {
-      display: flex;
+    .mode-switch {
+      display: inline-flex;
       align-items: center;
+      gap: 3px;
+      margin-left: 2px;
+      padding: 3px 9px 3px 6px;
+      border-radius: 999px;
+      background: var(--bg-4);
       color: var(--text-secondary);
+      font-size: var(--font-size-xsmall);
+      font-weight: var(--font-weight-semi-bold);
       flex-shrink: 0;
     }
 
-    &:hover {
-      background: var(--bg-4);
-      border-color: color-mix(in srgb, var(--accent) 55%, var(--bg-6));
+    .mode-switch svg {
+      width: 13px;
+      height: 13px;
     }
 
-    &:focus-visible {
-      outline: 1.5px solid var(--accent);
+    &:not(:disabled):hover {
+      background: color-mix(in srgb, var(--mode) 14%, var(--bg-3));
+      border-color: color-mix(in srgb, var(--mode) 55%, var(--bg-6));
+    }
+
+    &:not(:disabled):hover .mode-switch {
+      background: var(--bg-5);
+      color: var(--text);
+    }
+
+    &:not(:disabled):focus-visible {
+      outline: 1.5px solid var(--mode);
       outline-offset: 2px;
+    }
+
+    &:disabled {
+      cursor: default;
+    }
+
+    @media screen and (max-width: 600px) {
+      gap: 8px;
+
+      .mode-name {
+        max-width: 108px;
+      }
+
+      .mode-switch span {
+        display: none;
+      }
+
+      .mode-switch {
+        padding: 4px;
+      }
     }
   }
 `;
@@ -992,14 +1088,14 @@ export const MuseDialogTypeBadge = styled.span<{ $novelist?: boolean }>`
   text-transform: uppercase;
   background: ${({ $novelist }) =>
     $novelist
-      ? "color-mix(in srgb, var(--accent) 14%, var(--bg-4))"
-      : "var(--bg-5)"};
-  color: ${({ $novelist }) => ($novelist ? "var(--accent-11)" : "var(--text-secondary)")};
+      ? "color-mix(in srgb, #b1a9ff 16%, var(--bg-4))"
+      : "color-mix(in srgb, var(--accent) 16%, var(--bg-4))"};
+  color: var(--text);
   border: 1px solid
     ${({ $novelist }) =>
       $novelist
-        ? "color-mix(in srgb, var(--accent) 35%, transparent)"
-        : "var(--bg-6)"};
+        ? "color-mix(in srgb, #b1a9ff 35%, transparent)"
+        : "color-mix(in srgb, var(--accent) 35%, transparent)"};
 `;
 
 export const MuseDialogSelectedMark = styled.span`

@@ -56,8 +56,16 @@ export const IMAGE_SIZES = {
   AVATAR_LARGE: { fit: "cover" as const, h: 600, w: 600 },
   AVATAR_MEDIUM: { fit: "cover" as const, h: 240, w: 240 },
   AVATAR_SMALL: { fit: "cover" as const, h: 120, w: 120 },
-  BANNER_LARGE: { fit: "cover" as const, h: 400, w: 1200 },
-  BANNER_MEDIUM: { fit: "cover" as const, h: 300, w: 600 },
+  // Banners, like card backgrounds, must preserve the original aspect ratio
+  // (no cropping) — the crop dialog always frames at 5:2 and stores its
+  // scale/position (banner.crop) as percentages against the un-cropped
+  // source image. `fit: "cover"` with a hard-coded w×h forces a *different*
+  // aspect ratio (e.g. 1200×400 = 3:1) onto that source before the CSS
+  // background-size/position math runs, which visibly distorts/mis-crops
+  // the banner. `inside` + a 5:2 bounding box just downsizes for delivery
+  // without touching the aspect ratio the crop math depends on.
+  BANNER_LARGE: { fit: "inside" as const, h: 480, w: 1200 },
+  BANNER_MEDIUM: { fit: "inside" as const, h: 240, w: 600 },
   // Card backgrounds must preserve the original aspect ratio (no cropping) so
   // the stored CSS crop (background-size/position) frames the image exactly as
   // it was set in the editor, which positions against the un-cropped image.
@@ -94,9 +102,10 @@ export function reverseWsrvUrl<T extends string | null | undefined>(url: T): T {
 
 export function wsrvImage<T extends string | null | undefined>(
   s3Url: T,
-  opts: WsrvOptions = {},
+  opts?: WsrvOptions | null,
 ): T {
   if (!s3Url) return s3Url;
+  if (!opts) return s3Url; // null sizing profile → caller wants the source untouched
   if (!process.env.RP_BUCKET_NAME) return s3Url; // env not configured → no-op
   if (!isOurS3Url(s3Url as string)) return s3Url; // foreign URL → untouched
 
@@ -135,22 +144,27 @@ type Context = "profile" | "feed" | "hero";
 const sizesFor = (ctx: Context) => {
   if (ctx === "profile")
     return {
-      avatar: IMAGE_SIZES.AVATAR_MEDIUM, // 120 — matches profile-card avatar
-      banner: IMAGE_SIZES.BANNER_LARGE, // 1200x400
+      // Untouched: full profile avatar and banner are hero images — skip wsrv
+      // entirely so quality and the stored crop's x/y/scale positioning
+      // (measured against the un-resized source) stay exact. This also keeps
+      // the profile-edit avatar/banner crop dialogs repositioning/zooming
+      // against the real source instead of an already-cropped 240×240 thumb.
+      avatar: null,
+      banner: null,
       cardBg: IMAGE_SIZES.CARD_BG, // 500x800
       cover: IMAGE_SIZES.COVER_LARGE, // 400x400 — muse cards on profile
     };
   if (ctx === "hero")
     return {
       avatar: IMAGE_SIZES.AVATAR_SMALL, // 96 — carousel avatars
-      banner: IMAGE_SIZES.BANNER_MEDIUM, // 600x300
+      banner: IMAGE_SIZES.BANNER_MEDIUM, // bounded to 600x240 (5:2), aspect preserved
       cardBg: IMAGE_SIZES.CARD_BG_MINI, // 250x400 — compact carousel cards
       cover: IMAGE_SIZES.COVER_MEDIUM, // 300x300
     };
   // "feed"
   return {
     avatar: IMAGE_SIZES.AVATAR_SMALL, // 96 — feed source/avatar
-    banner: IMAGE_SIZES.BANNER_MEDIUM, // 600x300
+    banner: IMAGE_SIZES.BANNER_MEDIUM, // bounded to 600x240 (5:2), aspect preserved
     cardBg: IMAGE_SIZES.CARD_BG, // 500x800
     cover: IMAGE_SIZES.COVER_MEDIUM, // 300x300
   };
@@ -206,7 +220,7 @@ export function transformMuse(
 
   // NWImage wrappers — transform both the main `.src` and the pre-cropped
   // `.crop.src` variant (stored separately in S3) through wsrv.
-  if (muse.wallpaper) {
+  if (muse.wallpaper && sizes.banner) {
     muse.wallpaper.src = wsrvImage(muse.wallpaper.src, sizes.banner);
     if (muse.wallpaper.crop?.src) {
       muse.wallpaper.crop.src = wsrvImage(
@@ -257,7 +271,7 @@ export function transformFriend(
       friend.avatar.crop.src = wsrvImage(friend.avatar.crop.src, sizes.avatar);
     }
   }
-  if (friend.banner) {
+  if (friend.banner && sizes.banner) {
     friend.banner.src = wsrvImage(friend.banner.src, sizes.banner);
     if (friend.banner.crop?.src) {
       friend.banner.crop.src = wsrvImage(friend.banner.crop.src, sizes.banner);
@@ -289,7 +303,7 @@ export function transformNovelist(
       novelist.avatar.crop.src = wsrvImage(novelist.avatar.crop.src, sizes.avatar);
     }
   }
-  if (novelist.banner) {
+  if (novelist.banner && sizes.banner) {
     novelist.banner.src = wsrvImage(novelist.banner.src, sizes.banner);
     if (novelist.banner.crop?.src) {
       novelist.banner.crop.src = wsrvImage(novelist.banner.crop.src, sizes.banner);

@@ -188,6 +188,7 @@ export const EventThreadTextField: FC<Props> = ({
         mentionTabs={MENTION_TABS}
         dialogMuses={dialogMuses}
         onChange={handlePromptTextChange}
+        desktopRounded
       />
     </S.TextInputContainer>
   );

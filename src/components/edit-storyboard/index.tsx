@@ -67,6 +67,7 @@ export const EditStoryboardForm = forwardRef<
           initial={{
             avatar: storyboard?.avatar ?? null,
             createdByUsername: storyboard?.createdBy?.username ?? null,
+            description: storyboard?.description ?? "",
             fandom: storyboard?.fandom ?? null,
             genres: storyboard?.genres ?? [],
             id: storyboard?.id ?? null,

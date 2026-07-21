@@ -62,7 +62,7 @@ export const novelistToSource = (novelist: Novelist): PromptSource => ({
 });
 
 const videoExtensions = ["mp4"];
-const imageExtensions = ["jpg", "jpeg", "png", "gif"];
+const imageExtensions = ["jpg", "jpeg", "png", "gif", "webp"];
 const audioExtensions = ["mp3", "mpeg", "wav"];
 
 export const getMediaTypeFromUrl = (url: string) => {

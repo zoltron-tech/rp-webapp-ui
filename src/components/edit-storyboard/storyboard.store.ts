@@ -9,6 +9,7 @@ import type { Genre, Tag } from "@/types/common";
 export type StoryboardState = {
   id: string | null;
   name: string;
+  description: string;
   image: string | null;
   avatar: NWImage | null;
   isPublic: boolean;
@@ -22,6 +23,7 @@ export type StoryboardState = {
 export const INITIAL_STATE: StoryboardState = {
   avatar: null,
   createdByUsername: null,
+  description: "",
   fandom: null,
   genres: [],
   id: null,

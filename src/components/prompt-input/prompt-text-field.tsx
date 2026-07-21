@@ -209,6 +209,7 @@ export const PromptTextField: FC<PromptTextFieldProps> = ({
         onClear={handleClear}
         fullPage={fullPage}
         compact={compact}
+        desktopRounded
       />
     </S.TextInputContainer>
   );

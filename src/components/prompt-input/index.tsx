@@ -70,6 +70,9 @@ type Props = React.HTMLProps<HTMLDivElement> & {
   initialSelection: PromptSource | undefined;
   onSend?: (prompt: Prompt) => void;
   defaultOpen?: boolean;
+  /** Drop the card border/radius/shadow so the input blends into an embedding
+   *  container (thread list, profile feed). */
+  noShell?: boolean;
 };
 
 type PromptInputFormProps = Props & {
@@ -414,6 +417,7 @@ export const PromptInput: FC<Props> = forwardRef(
       onSend,
       className,
       defaultOpen = true,
+      noShell,
       ...rest
     },
     forwardedRef,
@@ -474,6 +478,7 @@ export const PromptInput: FC<Props> = forwardRef(
           >
             <S.PromptInputRoot
               {...rest}
+              $noShell={noShell}
               className={classNames([className, { open }])}
               ref={forwardedRef as React.Ref<HTMLDivElement>}
             >

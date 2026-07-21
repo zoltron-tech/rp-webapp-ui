@@ -104,6 +104,7 @@ export default function NovelistPostsPage() {
           <S.PromptInputWrapper>
             <PromptInput
               type="prompt"
+              noShell
               dropdownSelection="ALL"
               initialSelection={novelistToSource(novelist)}
               onSend={refreshPosts}

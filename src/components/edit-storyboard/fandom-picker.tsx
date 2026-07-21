@@ -11,6 +11,7 @@ import {
   useState,
 } from "react";
 import { GrRadialSelected } from "react-icons/gr";
+import { HiOutlineMagnifyingGlass } from "react-icons/hi2";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { searchFandomsAction } from "@/app/rp/muse/actions";
 import { useGlobalState } from "@/context/store/stores";
@@ -93,6 +94,7 @@ export const FandomPicker: FC<FandomPickerProps> = ({ value, onChange }) => {
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
         <S.PickerTrigger type="button" data-empty={!value?.id}>
+          <HiOutlineMagnifyingGlass className="picker-lead" />
           <span className="picker-value">
             {value?.id
               ? value.name || value.id.replaceAll("_", " ")

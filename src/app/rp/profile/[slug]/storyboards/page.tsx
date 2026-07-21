@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { IoMdAdd } from "react-icons/io";
 import { getAllStoryboardsByUsernameAction } from "@/app/rp/story/actions";
 import { BreadCrumb } from "@/components/breadcrumb";
@@ -10,6 +10,7 @@ import {
   Button as AddNewButtonStyle,
   Wrapper as AddNewButtonWrapper,
 } from "@/components/common/add-new-button/styles";
+import { AppAlertDialog } from "@/components/dialog";
 import { EditStoryboardOverlay } from "@/components/edit-storyboard/edit-storyboard-overlay";
 import StoryCard from "@/components/story-card";
 import { useGlobalState } from "@/context/store/stores";
@@ -22,13 +23,26 @@ export default function MusesListPage({}) {
   const params = useParams();
   const [storyBoards, setStoryBoards] = useState<StoryBoard[] | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [limitDialogOpen, setLimitDialogOpen] = useState(false);
 
   const authState = useGlobalState("authState");
   const user = useGlobalState("user");
+  const novelist = useGlobalState("novelist");
   const username = params?.slug as string;
   const isCurrentUser = user?.username === username;
   const { baseDataLoader } = usePageRouter();
   Logger.debug("params are:", params);
+
+  // Limits are the creator's, not the viewing member's — only count boards
+  // this profile's user actually created, co-authored ones don't count.
+  const ownStoryBoardsCount = useMemo(
+    () =>
+      storyBoards?.filter((s) => s.createdBy?.username === username).length ??
+      0,
+    [storyBoards, username],
+  );
+  const storyBoardLimit = novelist?.tier.storyBoardLimit ?? 0;
+  const atStoryBoardLimit = ownStoryBoardsCount >= storyBoardLimit;
 
   const fetchStoryboards = async () => {
     const _storyboards = await baseDataLoader(() =>
@@ -60,16 +74,36 @@ export default function MusesListPage({}) {
 
   return (
     <S.Container>
-      <BreadCrumb label="Stories" username={username} />
+      <BreadCrumb
+        label={`Stories ${isCurrentUser ? `(${ownStoryBoardsCount} / ${storyBoardLimit})` : ""}`}
+        username={username}
+      />
 
       <ShouldRender if={isCurrentUser}>
         <AddNewButtonWrapper>
-          <AddNewButtonStyle type="button" onClick={() => setCreateOpen(true)}>
+          <AddNewButtonStyle
+            type="button"
+            onClick={() => {
+              if (atStoryBoardLimit) {
+                setLimitDialogOpen(true);
+                return;
+              }
+              setCreateOpen(true);
+            }}
+          >
             Create story
             <IoMdAdd size={18} />
           </AddNewButtonStyle>
         </AddNewButtonWrapper>
       </ShouldRender>
+      <AppAlertDialog
+        heading="Story limit reached"
+        text={`You've reached your plan's limit of ${storyBoardLimit} stories. Upgrade your tier or remove a story to create a new one.`}
+        open={limitDialogOpen}
+        onOpenChange={setLimitDialogOpen}
+        showConfirm={false}
+        closeButtonText="Close"
+      />
 
       <S.StoryListContainer>
         {storyBoards?.map((storyBoard) => {

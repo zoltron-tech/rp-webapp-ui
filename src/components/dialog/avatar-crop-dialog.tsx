@@ -10,12 +10,12 @@ import {
   MdZoomOut,
 } from "react-icons/md";
 import styled from "styled-components";
+import { STORY_COVER_ZOOM_MAX } from "@/utils/constants/common";
 
 const ZOOM_MIN = 1;
 const ZOOM_MAX = 3;
 const ZOOM_STEP = 0.25;
 
-const clampZoom = (v: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, v));
 const clamp100 = (v: number) => Math.min(100, Math.max(0, v));
 
 const Content = styled.div`
@@ -339,7 +339,46 @@ export function AvatarCropDialog({
 }: Props) {
   const handleClose = useCallback(() => onOpenChange(false), [onOpenChange]);
 
-  const zoomPct = Math.round(((scale - ZOOM_MIN) / (ZOOM_MAX - ZOOM_MIN)) * 100);
+  // ── Dynamic zoom ceiling ─────────────────────────────────────────────────────
+  // Under the "width% auto" background-size model, only the width is ever
+  // explicitly scaled — height follows the image's own aspect ratio. So a
+  // wide (landscape) image inside a narrow "rect" frame needs a much bigger
+  // scale than ZOOM_MAX=3 to make the rendered height reach the frame's
+  // height (otherwise a gap is left top/bottom no matter how far the user
+  // zooms). We load the image once per `src` and compute the exact scale
+  // that closes that gap, then extend the zoom ceiling to cover it — capped
+  // at STORY_COVER_ZOOM_MAX so a single pathological image can't zoom forever.
+  const [naturalAspect, setNaturalAspect] = useState<number | null>(null);
+
+  useEffect(() => {
+    setNaturalAspect(null);
+    if (!src) return;
+    let cancelled = false;
+    const img = new window.Image();
+    img.onload = () => {
+      if (cancelled || !img.naturalWidth || !img.naturalHeight) return;
+      setNaturalAspect(img.naturalWidth / img.naturalHeight);
+    };
+    img.src = src;
+    return () => {
+      cancelled = true;
+    };
+  }, [src]);
+
+  // Scale (in the width%-auto encoding) at which the rendered height exactly
+  // matches the frame's height — i.e. the smaller side just fills the frame.
+  const fitScale = naturalAspect
+    ? Math.max(ZOOM_MIN, (1 / aspectRatio) * naturalAspect)
+    : ZOOM_MIN;
+
+  const zoomMax =
+    shape === "rect"
+      ? Math.min(STORY_COVER_ZOOM_MAX, Math.max(ZOOM_MAX, fitScale))
+      : ZOOM_MAX;
+
+  const clampZoom = (v: number) => Math.min(zoomMax, Math.max(ZOOM_MIN, v));
+
+  const zoomPct = Math.round(((scale - ZOOM_MIN) / (zoomMax - ZOOM_MIN)) * 100);
   const stepZoom = (dir: 1 | -1) => onScaleChange(clampZoom(scale + dir * ZOOM_STEP));
 
   // ── Imperative pan ──────────────────────────────────────────────────────────
@@ -417,29 +456,18 @@ export function AvatarCropDialog({
   };
 
   // ── Fit: zoom so the image completely fills the viewport with no gaps ──────
-  // Loads the natural image size and computes the minimum scale (in the
-  // "width% auto" background-size encoding) whose rendered height covers the
-  // viewport's height, then re-centers. Mirrors the Muse card-background
-  // "Fit" behavior so cropping works identically for any target ratio.
+  // Re-centers and zooms to `fitScale` — the scale (in the "width% auto"
+  // background-size encoding) at which the rendered height exactly matches
+  // the frame's height. For a portrait image that's already ≤1 (no zoom
+  // needed, width already fills the frame); for a landscape image it's the
+  // exact zoom that closes the top/bottom gap. Mirrors the Muse
+  // card-background "Fit" behavior so cropping works identically for any
+  // target ratio.
   const computeFit = useCallback(() => {
-    if (!src || !viewportRef?.current) return;
-    const img = new window.Image();
-    img.onload = () => {
-      const rect = viewportRef.current?.getBoundingClientRect();
-      if (!rect || rect.width === 0 || rect.height === 0) return;
-      const { naturalWidth, naturalHeight } = img;
-      if (!naturalWidth || !naturalHeight) return;
-      // At scale=1 the rendered height = vpW × (imgH/imgW). If that's shorter
-      // than vpH there's a vertical gap, so zoom until rendered height = vpH.
-      const fitScale = Math.max(
-        1,
-        (rect.height / rect.width) * (naturalWidth / naturalHeight),
-      );
-      onPan(50, 50);
-      onScaleChange(Math.min(fitScale, ZOOM_MAX));
-    };
-    img.src = src;
-  }, [src, viewportRef, onPan, onScaleChange]);
+    if (!naturalAspect) return;
+    onPan(50, 50);
+    onScaleChange(Math.min(fitScale, zoomMax));
+  }, [naturalAspect, fitScale, zoomMax, onPan, onScaleChange]);
 
   return (
     // Presentational content — parent dialog will control portals
@@ -455,7 +483,11 @@ export function AvatarCropDialog({
             Reset
           </ResetPill>
           {shape === "rect" && (
-            <ResetPill type="button" onClick={computeFit}>
+            <ResetPill
+              type="button"
+              onClick={computeFit}
+              disabled={!naturalAspect}
+            >
               <MdCropFree size={13} />
               Fit
             </ResetPill>
@@ -508,7 +540,7 @@ export function AvatarCropDialog({
         <Seek
           type="range"
           min={ZOOM_MIN}
-          max={ZOOM_MAX}
+          max={zoomMax}
           step={0.01}
           value={scale}
           $pct={zoomPct}
@@ -518,7 +550,7 @@ export function AvatarCropDialog({
         <ZoomStep
           type="button"
           onClick={() => stepZoom(1)}
-          disabled={scale >= ZOOM_MAX}
+          disabled={scale >= zoomMax}
           aria-label="Zoom in"
         >
           <MdZoomIn size={20} />

@@ -39,15 +39,104 @@ export const BreadcrumbRow = styled.div`
   justify-content: space-between;
   width: 100%;
   max-width: 800px;
+  padding-left: 12px;
   padding-right: 20px;
-  padding-block: 5px;
+  padding-block: 14px;
+  border-bottom: 1px solid var(--bg-6);
+  margin-bottom: 6px;
+
+  @media screen and (max-width: 430px) {
+    padding-left: 8px;
+    padding-right: 12px;
+    padding-block: 10px;
+  }
 `;
 
 export const BreadcrumbActions = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 `;
+
+// ── Page header (left side of the breadcrumb row) ──────────────────────────────
+
+export const PageHeaderLeft = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+
+  @media screen and (max-width: 430px) {
+    gap: 10px;
+  }
+`;
+
+export const PageHeaderIcon = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 10px;
+  background-color: var(--bg-3);
+  border: 1px solid var(--bg-6);
+  color: var(--accent);
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  @media screen and (max-width: 430px) {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+
+    svg {
+      width: 17px;
+      height: 17px;
+    }
+  }
+`;
+
+export const PageHeaderText = styled.div`
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+`;
+
+export const PageHeaderTitle = styled.h1`
+  all: unset;
+  font-family: var(--font);
+  font-size: var(--font-size-h4);
+  font-weight: var(--font-weight-bold);
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  @media screen and (max-width: 430px) {
+    font-size: var(--font-size-h5);
+  }
+`;
+
+export const PageHeaderSubtitle = styled.span`
+  font-family: var(--font);
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  @media screen and (max-width: 430px) {
+    font-size: var(--font-size-xsmall);
+  }
+`;
+
+// ── /Page header ──────────────────────────────────────────────────────────────
 
 export const SupportButton = styled.button`
   display: flex;
@@ -612,18 +701,30 @@ export const IceBreakerMessageBubble = styled.div<{
         };
     `}
 
-  /* Speech bubble tail — behind all content */
-  &::before {
+  /* Thought-bubble trailing circles — behind all content, drifting up-left
+     toward the sender row above, mirroring the rail/view bubble language
+     instead of a speech-bubble tail (ice breakers are thought bubbles). */
+  &::before,
+  &::after {
     content: "";
     position: absolute;
     z-index: -1;
-    bottom: -8px;
-    left: 22px;
-    width: 16px;
-    height: 16px;
+    border-radius: 50%;
     background: ${({ $color }) => $color ?? "var(--accent-3)"};
-    border-radius: 3px;
-    transform: rotate(45deg);
+  }
+
+  &::before {
+    top: -13px;
+    left: 28px;
+    width: 13px;
+    height: 13px;
+  }
+
+  &::after {
+    top: -22px;
+    left: 14px;
+    width: 7px;
+    height: 7px;
   }
 `;
 
@@ -711,26 +812,30 @@ export const ViewIceBreakerHeroWrap = styled.div`
 `;
 
 /** Left-aligned "hero" — bigger avatar with the name beside it, sitting just
- *  above and to the left of the message bubble it hangs from. */
+ *  above the message bubble it hangs from. Pulled down over the bubble's top
+ *  edge with a negative margin (not a transform) so the overlap stays in
+ *  normal flow — it can't clip past the dialog/tray edge the way a fixed
+ *  pixel translate could on a narrow (375px) viewport. */
 export const ViewIceBreakerHero = styled.div`
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 12px;
-  padding-top: 2px;
+  gap: 10px;
+  max-width: 100%;
+  margin-bottom: -14px;
 `;
 
 export const ViewIceBreakerHeroAvatarRing = styled.div<{
   $ringColor?: string | null;
 }>`
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   border-radius: 50%;
   padding: 3px;
-  transform: translate(-50px, 26px);
   background: ${({ $ringColor }) =>
     $ringColor ??
     "linear-gradient(135deg, var(--accent) 0%, var(--accent-6, var(--accent)) 100%)"};
@@ -740,17 +845,22 @@ export const ViewIceBreakerHeroAvatarRing = styled.div<{
     height: 84px;
     border: 3px solid var(--bg-1);
   }
+
+  @media (max-width: 480px) {
+    .avatar {
+      width: 68px;
+      height: 68px;
+    }
+  }
 `;
 
 export const ViewIceBreakerName = styled.span`
-  position: relative;
-  z-index: 2;
-  transform: translate(-45px, 40px);
+  min-width: 0;
   font-size: var(--font-size);
   font-weight: var(--font-weight-semi-bold, 600);
   color: var(--text);
   text-align: left;
-  max-width: 260px;
+  max-width: 180px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -779,16 +889,15 @@ export const ViewIceBreakerMeta = styled.span`
   color: var(--text-secondary);
 `;
 
-/** Static (read-only) version of the message bubble used in the create
- *  dialog, redesigned as a thought bubble hanging from the hero avatar above
- *  and to its left — the trailing circles emerge from the bubble's top-left
- *  corner and drift up-left toward the avatar, mirroring the rail's
+/** Static (read-only) version of the message bubble, hanging from the hero
+ *  avatar directly above it — the trailing circles emerge from the bubble's
+ *  top-left corner and drift up behind the avatar, mirroring the rail's
  *  thought-bubble language but anchored to a corner instead of the center. */
 export const ViewIceBreakerBubble = styled.p<{ $color?: string | null }>`
   position: relative;
   isolation: isolate;
   box-sizing: border-box;
-  margin: 10px 0 0;
+  margin: 0;
   min-width: 220px;
   max-width: 285px;
   background: ${({ $color }) =>
@@ -807,6 +916,8 @@ export const ViewIceBreakerBubble = styled.p<{ $color?: string | null }>`
 
   @media (max-width: 480px) {
     min-width: 180px;
+    max-width: 240px;
+    padding: 13px 16px;
   }
 
   &::before,

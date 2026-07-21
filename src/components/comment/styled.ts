@@ -23,19 +23,34 @@ const SourceStyled = styled.div`
     width: 40px;
     height: 40px;
   }
+
+  @media screen and (max-width: 430px) {
+    .avatar {
+      width: 32px;
+      height: 32px;
+    }
+  }
 `;
 
 const SourceName = styled.h2`
   all: unset;
   font-weight: var(--font-weight-medium);
   margin-bottom: 2px;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const SourceInfo = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  min-width: 0;
+  flex: 1;
   margin-left: 8px;
+  /* Keep clear of the absolutely-positioned 3-dot menu on the right. */
+  padding-right: 34px;
 `;
 
 const CommentTime = styled.time`
@@ -50,6 +65,22 @@ export const Source = Object.assign(SourceStyled, {
   Name: SourceName,
   Time: CommentTime,
 });
+
+export const ConcludedChip = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background-color: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent-8);
+  font-family: var(--font);
+  font-size: var(--font-size-xsmall);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.02em;
+`;
 
 export const HeaderDropdownMenuContainer = styled.div`
   display: flex;
@@ -67,6 +98,11 @@ const CommentContentRoot = styled.div`
   background-color: var(--bg-3);
   border: 1px solid var(--bg-5);
   border-radius: 8px;
+
+  @media screen and (max-width: 430px) {
+    margin-left: 36px;
+    padding-inline: 10px;
+  }
 `;
 
 const TextLine = styled.span`
@@ -123,6 +159,10 @@ const CommentFooterLeft = styled.div`
   align-items: center;
   gap: 8px;
   margin-left: 48px;
+
+  @media screen and (max-width: 430px) {
+    margin-left: 36px;
+  }
 `;
 
 const CommentFooterRight = styled.div`
@@ -131,7 +171,7 @@ const CommentFooterRight = styled.div`
   gap: 8px;
 
   @media screen and (max-width: 430px) {
-    padding-left: 48px;
+    padding-left: 36px;
     width: 100%;
     justify-content: space-between;
   }
@@ -208,6 +248,11 @@ const OpenThreadButton = styled.button`
   &:focus-visible {
     outline: 1.5px solid var(--accent);
     outline-offset: 2px;
+  }
+
+  @media screen and (max-width: 430px) {
+    padding: 6px 10px;
+    font-size: var(--font-size-xsmall);
   }
 `;
 

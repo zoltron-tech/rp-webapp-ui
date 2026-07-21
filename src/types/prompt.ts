@@ -22,7 +22,7 @@ export interface Prompt {
 
 export interface PromptThreadComment {
   id: string;
-  tyoe: "COMMENT" | "REPLY";
+  type: "COMMENT" | "REPLY";
   parentId: string;
   source: PromptSource;
   target: PromptSource;
@@ -30,6 +30,7 @@ export interface PromptThreadComment {
   media: string;
   createdOn: number;
   replyCount: number;
+  concluded: boolean;
 }
 
 export interface Comment {

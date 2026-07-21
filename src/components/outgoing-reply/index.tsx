@@ -5,16 +5,11 @@ import { Separator } from "radix-ui";
 import { type FC, type MouseEventHandler, useCallback, useMemo } from "react";
 import { GoCommentDiscussion } from "react-icons/go";
 import { IoMdArrowForward } from "react-icons/io";
-import { MdArrowLeft, MdArrowRight } from "react-icons/md";
+import { RiCheckboxCircleLine } from "react-icons/ri";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { PromptThreadComment } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
-import {
-  displayDate,
-  parseTextContent,
-  pluralize,
-  toFormattedDate,
-} from "@/utils/helpers";
+import { displayDate, pluralize, toFormattedDate } from "@/utils/helpers";
 import { MuseAvatar } from "../common/muse-avatar";
 import { AppImageViewer } from "../image-viewer/AppImageViewer";
 import { RichTextRenderer } from "../rich-text-editor-input/rich-test-renderer";
@@ -34,22 +29,26 @@ export const PromptThreadCommentCard: FC<Props> = ({
     () => ROUTES.Thread.View(promptThreadComment?.parentId || ""),
     [promptThreadComment?.parentId],
   );
-  const textLines = useMemo(
-    () => parseTextContent(promptThreadComment?.text || ""),
-    [promptThreadComment],
-  );
   const replyText = useMemo(() => {
+    if (promptThreadComment?.concluded) return "Thread concluded";
     if (promptThreadComment?.replyCount === 0) return "No new replies";
     return `${promptThreadComment?.replyCount} new ${pluralize("reply", promptThreadComment?.replyCount || 0)}`;
-  }, [promptThreadComment?.replyCount]);
+  }, [promptThreadComment?.concluded, promptThreadComment?.replyCount]);
 
-  const newReplyCount = useMemo(() => {
-    if (!promptThreadComment) return 0;
-    return promptThreadComment?.replyCount < 10
-      ? String(promptThreadComment?.replyCount) +
-          " new " +
-          pluralize("reply", promptThreadComment?.replyCount)
-      : "9+ new " + pluralize("reply", promptThreadComment?.replyCount);
+  const typeLabel = useMemo(() => {
+    return promptThreadComment?.type === "REPLY" ? "Your reply" : "Your comment";
+  }, [promptThreadComment?.type]);
+
+  const unreadCountLabel = useMemo(() => {
+    if (!promptThreadComment) return "0";
+    return promptThreadComment.replyCount > 9
+      ? "9+"
+      : String(promptThreadComment.replyCount);
+  }, [promptThreadComment]);
+
+  const unreadCountTitle = useMemo(() => {
+    if (!promptThreadComment) return "";
+    return `${promptThreadComment.replyCount} new ${pluralize("reply", promptThreadComment.replyCount)}`;
   }, [promptThreadComment]);
 
   const date = useMemo(() => {
@@ -74,41 +73,60 @@ export const PromptThreadCommentCard: FC<Props> = ({
       className={className}
       {...rest}
       data-has-replies={promptThreadComment.replyCount > 0 ? "" : undefined}
+      data-concluded={promptThreadComment.concluded ? "" : undefined}
     >
       <S.PromptHeaderRoot>
-        <MuseAvatar
-          museId={promptThreadComment.target.sourceId}
-          image={promptThreadComment.target.avatar?.src || promptThreadComment.target.image}
-          name={promptThreadComment.target.name}
-          useAccent={promptThreadComment.target.useAccent}
-          accent={promptThreadComment.target.accent}
-        />
-        <MdArrowLeft size={24} />
-        <MuseAvatar
-          museId={promptThreadComment.source.sourceId}
-          image={promptThreadComment.source.avatar?.src || promptThreadComment.source.image}
-          name={promptThreadComment.source.name}
-          useAccent={promptThreadComment.source.useAccent}
-          accent={promptThreadComment.source.accent}
-        />
+        <S.AvatarGroup>
+          <S.PrimaryAvatarSlot>
+            <MuseAvatar
+              museId={promptThreadComment.source.sourceId}
+              image={promptThreadComment.source.avatar?.src || promptThreadComment.source.image}
+              name={promptThreadComment.source.name}
+              useAccent={promptThreadComment.source.useAccent}
+              accent={promptThreadComment.source.accent}
+            />
+          </S.PrimaryAvatarSlot>
+          <S.TargetAvatarSlot>
+            <MuseAvatar
+              museId={promptThreadComment.target.sourceId}
+              image={promptThreadComment.target.avatar?.src || promptThreadComment.target.image}
+              name={promptThreadComment.target.name}
+              useAccent={promptThreadComment.target.useAccent}
+              accent={promptThreadComment.target.accent}
+            />
+          </S.TargetAvatarSlot>
+        </S.AvatarGroup>
+
         <S.SourceInfo>
-          <S.SourceName>
-            {" "}
-            {promptThreadComment.source.name.split(" ")[0]}
-          </S.SourceName>
-          <ShouldRender if={Boolean(date)}>
-            <S.PromptSubheader
-              title={date ? displayDate(date) : ""}
-              dateTime={date}
-            >
-              {date ? toFormattedDate(date) : ""}
-            </S.PromptSubheader>
-          </ShouldRender>
+          <S.SourceNameRow>
+            <S.SourceName>
+              {promptThreadComment.source.name.split(" ")[0]}
+            </S.SourceName>
+            <S.TypeTag>{typeLabel}</S.TypeTag>
+          </S.SourceNameRow>
+          <S.PromptSubheader>
+            <ShouldRender if={Boolean(date)}>
+              <time title={date ? displayDate(date) : ""} dateTime={date}>
+                {date ? toFormattedDate(date) : ""}
+              </time>
+            </ShouldRender>
+            <S.MetaDivider aria-hidden>➺</S.MetaDivider>
+            <S.MetaTarget>
+              with {promptThreadComment.target.name.split(" ")[0]}
+            </S.MetaTarget>
+          </S.PromptSubheader>
         </S.SourceInfo>
+
         <ShouldRender if={promptThreadComment.replyCount > 0}>
-          <S.UnreadBadge onClick={handleOpenThread}>
-            {newReplyCount}
+          <S.UnreadBadge onClick={handleOpenThread} title={unreadCountTitle}>
+            {unreadCountLabel}
           </S.UnreadBadge>
+        </ShouldRender>
+        <ShouldRender if={Boolean(promptThreadComment.concluded)}>
+          <S.ConcludedBadge title="This thread has been concluded">
+            <RiCheckboxCircleLine />
+            <span>Concluded</span>
+          </S.ConcludedBadge>
         </ShouldRender>
       </S.PromptHeaderRoot>
       <Separator.Root className="separator" orientation="horizontal" />

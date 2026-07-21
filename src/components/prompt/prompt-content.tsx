@@ -2,6 +2,8 @@
 
 import { ShouldRender } from "@novelist-world/ui";
 import { type FC, useCallback, useEffect, useMemo, useState } from "react";
+import { IoIosShareAlt } from "react-icons/io";
+import { TbMessageCircle } from "react-icons/tb";
 import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents } from "@/hooks";
 import { useToggleLike } from "@/hooks/use-toggle-like";
@@ -10,12 +12,14 @@ import {
   EVENTS,
   type PromptCommentReplyUpdatedPayload,
 } from "@/utils/constants/custom-events";
-import { parseTextContent } from "@/utils/helpers";
-import { LikeButton } from "../common/like-button";
+import { pluralize } from "@/utils/helpers";
+import { HeartIcon } from "../common/heart-icon";
 import { AppImageViewer } from "../image-viewer/AppImageViewer";
 import { VideoViewer } from "../image-viewer/VideoViewer";
 import { RichTextRenderer } from "../rich-text-editor-input/rich-test-renderer";
 import { usePromptState, usePromptStateSet } from "./prompt.store";
+import { PromptFeaturedSong } from "./prompt-featured-song";
+import { SharePromptDialog } from "./share-prompt-dialog";
 import * as S from "./styled";
 
 type PromptContentProps = {
@@ -29,6 +33,13 @@ export const PromptContent: FC<PromptContentProps> = ({ disableCollapse }) => {
   const promptId = usePromptState("id");
   const reacted = usePromptState("reacted");
   const reactions = usePromptState("reactions");
+  const source = usePromptState("source");
+  const featuredSong = usePromptState("featuredSong");
+  const commentCount = usePromptState("commentCount");
+  const createdOn = usePromptState("createdOn");
+
+  const isOOC = source?.sourceType === "NOVELIST";
+  const [showShareDialog, setShowShareDialog] = useState(false);
 
   const authState = useGlobalState("authState");
   const setPromptState = usePromptStateSet();
@@ -100,20 +111,21 @@ export const PromptContent: FC<PromptContentProps> = ({ disableCollapse }) => {
     return handleLikeToggle;
   }, [authState, handleLikeToggle]);
 
-  const textLines = useMemo(() => parseTextContent(text), [text]);
+  const handleReplyClick = useCallback(() => {
+    emitPromptEvent(EVENTS.PROMPT.OPEN_THREADS, { id: promptId });
+  }, [emitPromptEvent, promptId]);
 
   const [videoOpen, setVideoOpen] = useState(false);
 
   return (
     <S.PromptContent.Root>
-      {/* {textLines.map((line, index) => (
-        <S.TextLine key={index}>{line}</S.TextLine>
-      ))} */}
+      <ShouldRender if={isOOC}>
+        <S.OOCEyebrow>Out of character</S.OOCEyebrow>
+      </ShouldRender>
 
       <RichTextRenderer
         savedText={text ?? ""}
         collapsedHeight={100}
-        overlayHidden
         disableCollapse={disableCollapse}
       />
       {media && (
@@ -147,14 +159,58 @@ export const PromptContent: FC<PromptContentProps> = ({ disableCollapse }) => {
           </ShouldRender>
         </S.PromptMediaContainer>
       )}
+      <ShouldRender if={!!featuredSong}>
+        {featuredSong && <PromptFeaturedSong song={featuredSong} />}
+      </ShouldRender>
+
       <S.PromptContent.Footer>
-        <LikeButton
-          onLike={onLike}
-          parentId={promptId}
-          liked={reacted}
-          likes={reactions}
-        />
+        <S.ActionButton
+          type="button"
+          className="like"
+          $liked={reacted}
+          onClick={onLike}
+          aria-label="Like prompt"
+        >
+          <HeartIcon filled={reacted} />
+          <span className="count-short">{reactions}</span>
+          <span className="label-full">
+            {`${reactions} ${pluralize("novelist", reactions)} ${pluralize(
+              "like",
+              reactions === 1 ? 2 : 1,
+            )} this`}
+          </span>
+        </S.ActionButton>
+        <S.ActionButton type="button" onClick={handleReplyClick}>
+          <TbMessageCircle />
+          <span className="count-short">{commentCount}</span>
+          <span className="label-full">
+            {commentCount > 0
+              ? `${commentCount} ${pluralize("Comment", commentCount)}`
+              : "No Comments"}
+          </span>
+        </S.ActionButton>
+        <S.ActionButton
+          type="button"
+          className="share"
+          $accentHover
+          onClick={() => setShowShareDialog(true)}
+          aria-label="Share prompt"
+        >
+          <IoIosShareAlt />
+        </S.ActionButton>
       </S.PromptContent.Footer>
+
+      <SharePromptDialog
+        promptId={promptId ?? ""}
+        prompt={{
+          createdOn,
+          media,
+          source,
+          text,
+        }}
+        open={showShareDialog}
+        onClose={() => setShowShareDialog(false)}
+      />
     </S.PromptContent.Root>
   );
 };

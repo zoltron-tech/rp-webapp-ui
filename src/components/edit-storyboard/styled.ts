@@ -1,7 +1,13 @@
 import { Dialog } from "radix-ui";
 import styled, { keyframes } from "styled-components";
 
-export const EditStoryboardPageRoot = styled.div``;
+/* display:contents so this wrapper doesn't sit between the dialog/tray
+   shell and Card — Card's flex:1/min-height:0 needs to reach the shell's
+   flex container directly, or the sticky footer and internal body scroll
+   break and content overflows the shell instead. */
+export const EditStoryboardPageRoot = styled.div`
+  display: contents;
+`;
 
 const spin = keyframes`
   to { transform: rotate(360deg); }
@@ -51,7 +57,8 @@ export const Card = styled.div<{ $embedded?: boolean }>`
     background-color: var(--bg-6);
   }
 
-  /* Overlay mode: fill the dialog/tray shell instead of centering as a page. */
+  /* Overlay mode: fill the dialog/tray shell instead of centering as a page.
+     Header/footer stay put; Body (below) owns the internal scrolling. */
   ${({ $embedded }) =>
     $embedded &&
     `
@@ -59,17 +66,16 @@ export const Card = styled.div<{ $embedded?: boolean }>`
     margin-inline: 0;
     max-width: none;
     width: 100%;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
     border: none;
     background-color: transparent;
-    padding: 4px 4px 0;
-
-    @media screen and (max-width: 800px) {
-      padding: 0;
-    }
+    padding: 0;
   `}
 `;
 
-export const TopBar = styled.div`
+export const TopBar = styled.div<{ $embedded?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -77,8 +83,20 @@ export const TopBar = styled.div`
   position: sticky;
   top: 0;
   z-index: 5;
+  flex-shrink: 0;
   background-color: var(--bg-2);
   padding-block: 4px;
+
+  ${({ $embedded }) =>
+    $embedded &&
+    `
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--bg-5);
+
+    @media (min-width: 801px) {
+      padding: 16px 20px;
+    }
+  `}
 
   @media screen and (max-width: 600px) {
     h1 {
@@ -107,27 +125,68 @@ export const BackButton = styled.button`
   width: 36px;
   height: 36px;
   min-width: 36px;
-  border: none;
-  background: var(--bg-2);
+  flex-shrink: 0;
+  border-radius: 10px;
+  border: 1px solid var(--bg-6);
+  background: var(--bg-3);
   color: var(--text);
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 
   &:hover,
   &:active {
     color: var(--accent);
+    border-color: var(--accent-7);
+    background: var(--bg-4);
   }
 
   svg {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
+  }
+`;
+
+/* Compact destructive action surfaced in the header when editing inside the
+   dialog/tray, so deleting doesn't require scrolling to the danger zone. */
+export const HeaderDangerButton = styled.button`
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  border: 1px solid var(--bg-6);
+  background: var(--bg-3);
+  color: var(--tomato-9);
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--tomato-9) 14%, transparent);
+    border-color: var(--tomato-9);
+  }
+
+  svg {
+    width: 15px;
+    height: 15px;
   }
 `;
 
 export const FormHeading = styled.div`
   display: flex;
   align-items: center;
+  gap: 8px;
   min-width: 0;
+
+  .titles {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
 
   h1 {
     all: unset;
@@ -139,9 +198,16 @@ export const FormHeading = styled.div`
     text-overflow: ellipsis;
   }
 
+  .subtitle {
+    font-size: var(--font-size-xsmall);
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   svg {
     flex-shrink: 0;
-    margin-right: var(--font-size-xsmall);
     width: var(--font-size-h3);
     height: var(--font-size-h3);
     color: var(--accent-8);
@@ -240,48 +306,161 @@ export const ErrorBanner = styled.p`
   color: var(--tomato-9);
 `;
 
-// ── Hero ──────────────────────────────────────────────────────────────────
+// ── Scrollable body (embedded mode) / footer ────────────────────────────────
 
-export const Hero = styled.div`
-  display: flex;
-  align-items: flex-end;
-  gap: 14px;
-  padding: 20px 4px 16px;
-  border-bottom: 1px solid var(--bg-5);
-
-  @media (max-width: 600px) {
-    padding: 16px 4px 14px;
-  }
-
-  @media (max-width: 480px) {
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 4px 12px;
-  }
-`;
-
-export const CoverColumn = styled.div`
-  flex-shrink: 0;
-
-  @media (max-width: 480px) {
-    align-self: center;
-  }
-`;
-
-export const VisibilityColumn = styled.div`
+/* Everything between the header and footer. In embedded (dialog/tray) mode
+   this is the only part that scrolls, so the header and footer stay put. */
+export const Body = styled.div<{ $embedded?: boolean }>`
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
+
+  ${({ $embedded }) =>
+    $embedded &&
+    `
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 16px;
+
+    @media (min-width: 801px) {
+      padding: 0 20px;
+    }
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background-color: var(--bg-5);
+      border-radius: 3px;
+    }
+  `}
+`;
+
+export const Footer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--bg-5);
+  background: var(--bg-2);
+
+  @media (min-width: 801px) {
+    padding: 14px 20px;
+  }
+`;
+
+export const FooterCancelBtn = styled.button`
+  all: unset;
+  padding: 11px 14px;
+  border-radius: 9px;
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  font-family: var(--font);
+  font-weight: var(--font-weight-semi-bold);
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    color: var(--text);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+export const FooterPrimaryBtn = styled.button`
+  all: unset;
   flex: 1;
-  min-width: 0;
-  max-width: 400px;
+  text-align: center;
+  padding: 12px 18px;
+  border-radius: 9px;
+  background: var(--accent);
+  color: #fff;
+  font-size: var(--font-size-small);
+  font-family: var(--font);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover:not(:disabled) {
+    background: var(--accent-hover);
+  }
+
+  &:disabled {
+    background: var(--bg-6);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+  }
+`;
+
+// ── Cover ────────────────────────────────────────────────────────────────
+
+export const CoverRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 4px;
+  border-bottom: 1px solid var(--bg-5);
 
   @media (max-width: 480px) {
-    align-items: center;
-    max-width: 100%;
-    text-align: center;
+    gap: 12px;
+    padding: 12px 2px;
+  }
+`;
+
+export const CoverThumb = styled.div`
+  flex-shrink: 0;
+`;
+
+export const CoverMeta = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+
+  .t {
+    font-size: var(--font-size-small);
+    font-weight: var(--font-weight-semi-bold);
+    color: var(--text);
+  }
+
+  .s {
+    font-size: var(--font-size-xsmall);
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+`;
+
+export const CoverMetaButton = styled.button`
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--bg-6);
+  color: var(--text-secondary);
+  font-size: var(--font-size-xsmall);
+  font-weight: var(--font-weight-semi-bold);
+  font-family: var(--font);
+  cursor: pointer;
+  width: fit-content;
+  transition: border-color 0.18s, background 0.18s, color 0.18s;
+
+  &:hover {
+    border-color: var(--accent-7);
+    background: var(--bg-4);
+    color: var(--text);
+  }
+
+  svg {
+    width: 13px;
+    height: 13px;
   }
 `;
 
@@ -351,6 +530,16 @@ export const NameInput = styled.input`
   }
 `;
 
+export const EditorArea = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+
+  & > * {
+    flex: 1;
+  }
+`;
+
 export const CreatorRow = styled.div`
   display: flex;
   align-items: center;
@@ -363,78 +552,52 @@ export const CreatorRow = styled.div`
   }
 `;
 
-// ── Visibility (lock) toggle ─────────────────────────────────────────────
+// ── Visibility segmented control ────────────────────────────────────────
 
-export const VisibilityToggle = styled.button<{ $active: boolean }>`
-  all: unset;
+export const VisibilitySeg = styled.div`
+  display: flex;
+  gap: 4px;
+  width: 100%;
+  padding: 4px;
   box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  max-width: 100%;
-  padding: 6px 16px 6px 6px;
-  border-radius: 999px;
-  font-family: var(--font);
-  cursor: pointer;
-  transition: background 0.18s, border-color 0.18s, box-shadow 0.18s;
-  background: ${({ $active }) =>
-    $active
-      ? "color-mix(in srgb, var(--accent) 14%, var(--bg-3))"
-      : "var(--bg-3)"};
-  border: 1.5px solid
-    ${({ $active }) => ($active ? "var(--accent)" : "var(--bg-6)")};
-  box-shadow: ${({ $active }) =>
-    $active
-      ? "0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent)"
-      : "none"};
-
-  &:hover {
-    border-color: ${({ $active }) => ($active ? "var(--accent)" : "var(--bg-8)")};
-  }
+  border-radius: 10px;
+  border: 1px solid var(--bg-6);
+  background: var(--bg-3);
 `;
 
-export const VisibilityIcon = styled.span<{ $active: boolean }>`
+export const VisibilitySegOption = styled.button<{ $active: boolean }>`
+  all: unset;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  background: ${({ $active }) => ($active ? "var(--accent)" : "var(--bg-5)")};
-  color: ${({ $active }) => ($active ? "#fff" : "var(--text-secondary)")};
+  gap: 7px;
+  padding: 9px 10px;
+  border-radius: 7px;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semi-bold);
+  font-family: var(--font);
+  cursor: pointer;
   transition: background 0.18s, color 0.18s;
+  color: ${({ $active }) =>
+    $active ? "var(--text)" : "var(--text-secondary)"};
+  background: ${({ $active }) => ($active ? "var(--bg-5)" : "transparent")};
+
+  &:hover {
+    color: var(--text);
+  }
 
   svg {
     width: 14px;
     height: 14px;
-    transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 `;
 
-export const VisibilityLabel = styled.span`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1px;
-  min-width: 0;
-
-  .title {
-    font-size: var(--font-size-small);
-    font-weight: var(--font-weight-semi-bold);
-    color: var(--text);
-    white-space: nowrap;
-  }
-
-  .subtitle {
-    font-size: var(--font-size-xsmall);
-    color: var(--text-secondary);
-    white-space: nowrap;
-  }
-
-  @media (max-width: 480px) {
-    align-items: center;
-  }
+export const VisibilityHint = styled.p`
+  margin: 8px 2px 0;
+  font-size: var(--font-size-xsmall);
+  color: var(--text-secondary);
+  line-height: 1.4;
 `;
 
 // ── Members row ──────────────────────────────────────────────────────────
@@ -615,6 +778,13 @@ export const PickerTrigger = styled.button`
     width: 20px;
     height: 20px;
     color: var(--text-secondary);
+  }
+
+  .picker-lead {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    color: var(--text-muted, var(--text-secondary));
   }
 `;
 

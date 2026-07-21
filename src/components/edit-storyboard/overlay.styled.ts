@@ -36,28 +36,20 @@ export const DesktopPanel = styled.div`
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 501;
-  width: min(840px, calc(100vw - 40px));
+  display: flex;
+  flex-direction: column;
+  width: min(520px, calc(100vw - 40px));
   max-height: 90vh;
-  overflow-y: auto;
+  /* The form's own header/body/footer manage scrolling and padding now, so
+     this panel just clips to its rounded corners. */
+  overflow: hidden;
   background: var(--bg-2);
   border: 1px solid var(--bg-6);
   border-radius: 14px;
   box-shadow:
     0 24px 70px rgba(0, 0, 0, 0.6),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  padding: 20px 20px 24px;
   animation: ${dialogPopIn} 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background-color: var(--bg-5);
-    border-radius: 4px;
-  }
-  &::-webkit-scrollbar-thumb:hover {
-    background-color: var(--bg-6);
-  }
 
   @media (max-width: 800px) {
     display: none;
@@ -127,19 +119,12 @@ export const DragHandle = styled.div`
   background-color: var(--bg-9);
 `;
 
-/* Scroll container for the form body inside the tray. */
+/* Passes remaining tray height to the form; the form's own body scrolls
+   internally so its header and footer can stay fixed in view. */
 export const MobileScroll = styled.div`
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding: 0 16px max(20px, env(safe-area-inset-bottom));
-
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background-color: var(--bg-5);
-    border-radius: 3px;
-  }
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 `;

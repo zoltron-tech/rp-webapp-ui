@@ -1,36 +1,72 @@
 "use client";
 
 import classNames from "classnames";
-import { type FC, type ReactNode, useEffect, useMemo, useState } from "react";
+import {
+  type FC,
+  type ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   FaComments,
   FaHeart,
   FaImage,
+  FaPause,
+  FaPlay,
   FaRegHeart,
   FaStreetView,
   FaUser,
 } from "react-icons/fa6";
 import { FiMaximize2 } from "react-icons/fi";
+import { IoIosShareAlt } from "react-icons/io";
 import { PiBookOpenUserDuotone } from "react-icons/pi";
+import { getMuseAction } from "@/app/rp/muse/actions";
+import { getPromptAction } from "@/app/rp/prompt/actions";
+import { getStoryboardAction } from "@/app/rp/story/actions";
 import { useGlobalState } from "@/context/store/stores";
+import { useCustomEvents } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useToggleLike } from "@/hooks/use-toggle-like";
+import type { Muse, Prompt, StoryBoard } from "@/types";
 import type { Activity } from "@/types/activity";
+import {
+  type CustomEventType,
+  EVENTS,
+  type PromptReactedPayload,
+  type StoryBoardReactedPayload,
+} from "@/utils/constants/custom-events";
 import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDateFromUnix } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import { ShouldRender } from "../common";
+import * as ChatPlayerS from "../common/chat-bubble/styles";
 import { AppImageViewer } from "../image-viewer/AppImageViewer";
 import { VideoViewer } from "../image-viewer/VideoViewer";
 import { MarkdownLite } from "../markdown-lite";
+import { SharePromptDialog } from "../prompt/share-prompt-dialog";
 import { RichTextRenderer } from "../rich-text-editor-input/rich-test-renderer";
+import { ShareMuseDialog } from "../share-muse-dialog";
+import { ShareStoryDialog } from "../share-story-dialog";
 import * as S from "./styles";
+
+const STORY_BOARD_TYPES = ["STORY_BOARD", "STORY_BOARD_EVENT"];
+
+const formatTime = (seconds: number) => {
+  if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60)
+    .toString()
+    .padStart(2, "0");
+  return `${mins}:${secs}`;
+};
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   activity?: Activity | null;
 };
 
-const videoExtensions = ["mp4"];
+const videoExtensions = ["mp4", "mov", "quicktime"];
 const imageExtensions = ["jpg", "jpeg", "png", "gif", "webp", "avif"];
 const audioExtensions = ["mp3", "mpeg", "wav"];
 
@@ -106,7 +142,7 @@ const getMediaTypeFromUrl = (
 };
 
 export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
-  const { routeToPage } = usePageRouter();
+  const { routeToPage, baseDataLoader } = usePageRouter();
   const user = useGlobalState("user");
   const mediaType = useMemo(
     () =>
@@ -115,11 +151,47 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
   );
 
   const isMedia = activity?.target.activityTargetType === "MEDIA";
+  // PROMPT/COMMENT/REPLY activities point at the parent prompt's own id (see
+  // backend createActivityTarget), so hearting them hearts that prompt directly
+  // and shares its reaction count instead of keeping a separate activity-level one.
+  const isPromptFamily = PROMPT_TYPES.includes(
+    activity?.target.activityTargetType ?? "",
+  );
+  // STORY_BOARD activities (editing the story or one of its events) point at
+  // the story's own id, so hearting them hearts the story directly and shares
+  // its reaction count, same as the prompt merge above.
+  const isStoryBoard = activity?.target.activityTargetType === "STORY_BOARD";
+  const isMuse = activity?.target.activityTargetType === "MUSE";
+  const isStoryBoardFamily = STORY_BOARD_TYPES.includes(
+    activity?.target.activityTargetType ?? "",
+  );
+  // Share dialogs need the full target object (Discord embed data, tags,
+  // fandom, etc.), which the activity feed doesn't carry — fetched on demand.
+  const canShare = isPromptFamily || isMuse || isStoryBoardFamily;
+  const reactionType = isMedia
+    ? "media"
+    : isPromptFamily
+      ? "prompt"
+      : ((activity?.target.activityTargetType ?? "").toLowerCase() as
+          | "muse"
+          | "profile"
+          | "story_board"
+          | "story_board_event");
+
   const [viewerOpen, setViewerOpen] = useState(false);
   const [reacted, setReacted] = useState(Boolean(activity?.reacted));
   const [reactionCount, setReactionCount] = useState(
     activity?.reactionCount ?? 0,
   );
+
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareMuse, setShareMuse] = useState<Muse | null>(null);
+  const [shareStory, setShareStory] = useState<StoryBoard | null>(null);
+  const [sharePrompt, setSharePrompt] = useState<Pick<
+    Prompt,
+    "source" | "text" | "media" | "createdOn"
+  > | null>(null);
 
   // Re-sync when the activity data arrives or refreshes after mount.
   useEffect(() => {
@@ -130,8 +202,54 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
   const { toggleLike } = useToggleLike({
     id: activity?.target.id ?? "",
     liked: reacted,
-    type: "media",
+    type: reactionType,
   });
+
+  const {
+    on: onPromptEvent,
+    off: offPromptEvent,
+    emit: emitPromptEvent,
+  } = useCustomEvents(EVENTS.PROMPT.base);
+
+  const {
+    on: onStoryBoardEvent,
+    off: offStoryBoardEvent,
+    emit: emitStoryBoardEvent,
+  } = useCustomEvents(EVENTS.STORY_BOARD.base);
+
+  // Stay in sync with the prompt's own like button (feed card, thread view, etc.)
+  // since PROMPT-family activities share the same reaction rows.
+  useEffect(() => {
+    if (!isPromptFamily || !activity?.target.id) return;
+    const targetId = activity.target.id;
+
+    const handlePromptReacted = (e: CustomEventType<PromptReactedPayload>) => {
+      if (e.detail.id !== targetId) return;
+      setReacted(e.detail.reacted);
+      setReactionCount(e.detail.reactions);
+    };
+
+    onPromptEvent(EVENTS.PROMPT.REACTED, handlePromptReacted);
+    return () => offPromptEvent(EVENTS.PROMPT.REACTED, handlePromptReacted);
+  }, [isPromptFamily, activity?.target.id, onPromptEvent, offPromptEvent]);
+
+  // Same sync, for the story's own heart button (story card, dialog/tray).
+  useEffect(() => {
+    if (!isStoryBoard || !activity?.target.id) return;
+    const targetId = activity.target.id;
+
+    const handleStoryBoardReacted = (
+      e: CustomEventType<StoryBoardReactedPayload>,
+    ) => {
+      if (e.detail.id !== targetId) return;
+      setReacted(e.detail.reacted);
+      setReactionCount(e.detail.reactions);
+    };
+
+    onStoryBoardEvent(EVENTS.STORY_BOARD.REACTED, handleStoryBoardReacted);
+    return () =>
+      offStoryBoardEvent(EVENTS.STORY_BOARD.REACTED, handleStoryBoardReacted);
+  }, [isStoryBoard, activity?.target.id, onStoryBoardEvent, offStoryBoardEvent]);
 
   const handleReact = async () => {
     // Optimistic flip
@@ -143,10 +261,55 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
     if ("reactions" in result) {
       setReactionCount(result.reactions);
       setReacted(result.reacted);
+      if (isPromptFamily && activity?.target.id) {
+        emitPromptEvent(EVENTS.PROMPT.REACTED, {
+          id: activity.target.id,
+          reacted: result.reacted,
+          reactions: result.reactions,
+        });
+      }
+      if (isStoryBoard && activity?.target.id) {
+        emitStoryBoardEvent(EVENTS.STORY_BOARD.REACTED, {
+          id: activity.target.id,
+          reacted: result.reacted,
+          reactions: result.reactions,
+        });
+      }
     } else {
       // Revert on error
       setReacted(!nextReacted);
       setReactionCount((c) => Math.max(0, c + (nextReacted ? -1 : 1)));
+    }
+  };
+
+  const handleShare = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    const targetId = activity?.target.id;
+    if (!targetId || shareLoading) return;
+
+    setShareLoading(true);
+    try {
+      if (isPromptFamily) {
+        const prompt = await baseDataLoader(() => getPromptAction(targetId));
+        if (prompt) {
+          setSharePrompt(prompt);
+          setShareOpen(true);
+        }
+      } else if (isMuse) {
+        const muse = await baseDataLoader(() => getMuseAction(targetId));
+        if (muse) {
+          setShareMuse(muse);
+          setShareOpen(true);
+        }
+      } else if (isStoryBoardFamily) {
+        const story = await baseDataLoader(() => getStoryboardAction(targetId));
+        if (story) {
+          setShareStory(story);
+          setShareOpen(true);
+        }
+      }
+    } finally {
+      setShareLoading(false);
     }
   };
 
@@ -179,6 +342,86 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
   };
 
   const [imgError, setImgError] = useState(false);
+
+  const [videoElement, setVideoElement] = useState<HTMLVideoElement | null>(
+    null,
+  );
+  const [videoError, setVideoError] = useState(false);
+  const [videoPlaying, setVideoPlaying] = useState(false);
+  const [videoProgress, setVideoProgress] = useState(0);
+  const [videoCurrentTime, setVideoCurrentTime] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(0);
+  // True until the user presses play for the first time; used to seek back to
+  // 0 after the thumbnail seek so playback always starts from the beginning.
+  const showingThumbnailRef = useRef(true);
+
+  useEffect(() => {
+    if (!videoElement || videoError) return;
+
+    const onLoadedMetadata = () => {
+      const dur = videoElement.duration || 0;
+      setVideoDuration(dur);
+      // Seek to a real frame instead of the typically-black very first one.
+      if (dur > 0) videoElement.currentTime = Math.min(0.5, dur);
+    };
+    const onTimeUpdate = () => {
+      setVideoCurrentTime(videoElement.currentTime || 0);
+      setVideoProgress(
+        videoElement.duration
+          ? (videoElement.currentTime / videoElement.duration) * 100
+          : 0,
+      );
+    };
+    const onEnded = () => setVideoPlaying(false);
+    const onPlay = () => setVideoPlaying(true);
+    const onPause = () => setVideoPlaying(false);
+
+    videoElement.addEventListener("loadedmetadata", onLoadedMetadata);
+    videoElement.addEventListener("timeupdate", onTimeUpdate);
+    videoElement.addEventListener("ended", onEnded);
+    videoElement.addEventListener("play", onPlay);
+    videoElement.addEventListener("pause", onPause);
+
+    return () => {
+      videoElement.removeEventListener("loadedmetadata", onLoadedMetadata);
+      videoElement.removeEventListener("timeupdate", onTimeUpdate);
+      videoElement.removeEventListener("ended", onEnded);
+      videoElement.removeEventListener("play", onPlay);
+      videoElement.removeEventListener("pause", onPause);
+    };
+  }, [videoElement, videoError]);
+
+  const onToggleVideoPlay = async () => {
+    if (!videoElement) return;
+    if (videoPlaying) {
+      videoElement.pause();
+      return;
+    }
+    if (showingThumbnailRef.current) {
+      showingThumbnailRef.current = false;
+      videoElement.currentTime = 0;
+    }
+    try {
+      await videoElement.play();
+      setVideoPlaying(true);
+    } catch {
+      setVideoPlaying(false);
+    }
+  };
+
+  const onSeekVideo = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!videoElement || !videoDuration) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const percentage = Math.min(Math.max(clickX / rect.width, 0), 1);
+    videoElement.currentTime = videoDuration * percentage;
+  };
+
+  const onExpandVideo = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    if (videoElement && !videoElement.paused) videoElement.pause();
+    setViewerOpen(true);
+  };
 
   Logger.info("activity rendered");
 
@@ -256,17 +499,42 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
                 </S.MediaExpandBadge>
               </S.MediaImageButton>
             )}
-            {mediaType === "video" && (
+            {mediaType === "video" && !videoError && (
               <S.MediaVideoWrapper>
-                <S.MediaVideo
-                  src={`${activity.target.url}#t=0.3`}
-                  controls
-                  preload="metadata"
-                />
+                <S.MediaVideoViewport onClick={onToggleVideoPlay}>
+                  <S.MediaVideo
+                    ref={setVideoElement}
+                    src={activity.target.url}
+                    preload="metadata"
+                    playsInline
+                    disablePictureInPicture
+                    onError={() => setVideoError(true)}
+                  />
+                </S.MediaVideoViewport>
+                <ChatPlayerS.AudioProgressRow>
+                  <ChatPlayerS.AudioPlayButton
+                    type="button"
+                    onClick={onToggleVideoPlay}
+                    aria-label={videoPlaying ? "Pause" : "Play"}
+                  >
+                    {videoPlaying ? <FaPause /> : <FaPlay />}
+                  </ChatPlayerS.AudioPlayButton>
+                  <ChatPlayerS.AudioTime>
+                    {formatTime(videoCurrentTime)}
+                  </ChatPlayerS.AudioTime>
+                  <ChatPlayerS.AudioProgressBar onClick={onSeekVideo}>
+                    <ChatPlayerS.AudioProgressFill
+                      style={{ width: `${videoProgress}%` }}
+                    />
+                  </ChatPlayerS.AudioProgressBar>
+                  <ChatPlayerS.AudioTime>
+                    {formatTime(videoDuration)}
+                  </ChatPlayerS.AudioTime>
+                </ChatPlayerS.AudioProgressRow>
                 <S.MediaExpandButton
                   type="button"
                   aria-label="Open fullscreen viewer"
-                  onClick={() => setViewerOpen(true)}
+                  onClick={onExpandVideo}
                 >
                   <FiMaximize2 size={14} />
                 </S.MediaExpandButton>
@@ -275,7 +543,9 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
             {mediaType === "audio" && (
               <S.Audio className="audio" src={activity.target.url} controls />
             )}
-            {(!activity.target.url || (mediaType === "image" && imgError)) && (
+            {(!activity.target.url ||
+              (mediaType === "image" && imgError) ||
+              (mediaType === "video" && videoError)) && (
               <S.MediaFallback>
                 <FaImage size={48} />
               </S.MediaFallback>
@@ -372,12 +642,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
         </ShouldRender>
       </S.Body>
       <S.ActionRow>
-        <S.PrimaryAction type="button" onClick={handlePrimaryAction}>
-          {kind.icon}
-          {kind.actionLabel}
-        </S.PrimaryAction>
-        <ShouldRender if={Boolean(isMedia)}>
-          <S.ActionSpacer />
+        <ShouldRender if={Boolean(activity.target.id)}>
           <S.HeartButton
             type="button"
             $active={reacted}
@@ -390,6 +655,20 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
               <S.ReactionCount>{reactionCount}</S.ReactionCount>
             </ShouldRender>
           </S.HeartButton>
+        </ShouldRender>
+        <S.PrimaryAction type="button" onClick={handlePrimaryAction}>
+          {kind.icon}
+          {kind.actionLabel}
+        </S.PrimaryAction>
+        <ShouldRender if={canShare}>
+          <S.ShareButton
+            type="button"
+            onClick={handleShare}
+            disabled={shareLoading}
+            aria-label="Share"
+          >
+            <IoIosShareAlt />
+          </S.ShareButton>
         </ShouldRender>
       </S.ActionRow>
       <ShouldRender if={Boolean(isMedia && mediaType === "video")}>
@@ -407,6 +686,29 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
           onOpenChange={setViewerOpen}
         />
       </ShouldRender>
+      <ShouldRender if={Boolean(sharePrompt)}>
+        <SharePromptDialog
+          promptId={activity.target.id ?? ""}
+          prompt={
+            sharePrompt as Pick<
+              Prompt,
+              "source" | "text" | "media" | "createdOn"
+            >
+          }
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+        />
+      </ShouldRender>
+      <ShareMuseDialog
+        muse={shareMuse}
+        open={shareOpen && isMuse}
+        onClose={() => setShareOpen(false)}
+      />
+      <ShareStoryDialog
+        storyboard={shareStory}
+        open={shareOpen && isStoryBoardFamily}
+        onClose={() => setShareOpen(false)}
+      />
     </S.ParentContainer>
   );
 };

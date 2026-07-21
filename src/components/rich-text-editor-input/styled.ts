@@ -55,10 +55,16 @@ export const EmptyText = styled.p`
   font-size: 1.125rem;
 `;
 
-export const ToolbarWrapper = styled.div`
+export const ToolbarWrapper = styled.div<{ $rounded?: boolean }>`
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
+  ${(p) =>
+    p.$rounded &&
+    `
+    border-top-right-radius: 12px;
+    border-top-left-radius: 12px;
+  `}
 `;
 
 export const ToolbarRoot = styled(Toolbar.Root)`
@@ -967,6 +973,7 @@ interface EditorContentProps {
   $fullPage?: boolean;
   /** Start at one-line height and grow with content up to max-height. */
   $compact?: boolean;
+  $rounded?: boolean;
 }
 
 export const EditorContent = styled.div<EditorContentProps>`
@@ -986,6 +993,12 @@ export const EditorContent = styled.div<EditorContentProps>`
   ${richTextContentBase}
   ${editorMentionTagCss}
   ${dialogEmbedCss}
+  ${(p) =>
+    p.$rounded &&
+    `
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+  `}
 
   &:focus {
     outline: none;

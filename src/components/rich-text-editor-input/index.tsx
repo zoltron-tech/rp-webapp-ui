@@ -26,6 +26,7 @@ import {
   RiUnderline,
 } from "react-icons/ri";
 import { useGlobalState } from "@/context/store/stores";
+import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import type { MentionDataItem, MentionTab } from "@/types";
 import { MentionDropdown } from "../mention-dropdown";
 import {
@@ -66,6 +67,10 @@ interface RichTextEditorProps {
   compact?: boolean;
   /** Muses selectable as the sender of an embedded dialog (inline editing). */
   dialogMuses?: DialogMuse[];
+  /** Round the toolbar's top corners and the editor's bottom corners on
+   *  desktop. Opt-in per call site — post/comment/reply, storyboard +
+   *  storyboard-event descriptions, and storyboard event threads. */
+  desktopRounded?: boolean;
 }
 
 export interface RichTextEditorHandle {
@@ -92,11 +97,15 @@ export const RichTextEditor = forwardRef<
       fullPage,
       compact,
       dialogMuses = [],
+      desktopRounded,
     },
     editorHandleRef,
   ) => {
     const accent = useGlobalState("accent");
     const theme = useGlobalState("theme");
+    const { width } = useWindowDimensions();
+    const isDesktop = width !== null && width > 800;
+    const rounded = desktopRounded && isDesktop;
 
     const [mentionItems, setMentionItems] = useState<MentionDataItem[]>([]);
     const [isMentionLoading, setIsMentionLoading] = useState(false);
@@ -1983,7 +1992,7 @@ export const RichTextEditor = forwardRef<
 
     return (
       <S.Container $fullPage={fullPage}>
-        <S.ToolbarWrapper>
+        <S.ToolbarWrapper $rounded={rounded}>
           <S.ToolbarRoot ref={toolbarRef}>
             {/* Font (language) — Radix Popover */}
             <Popover.Root
@@ -2508,6 +2517,7 @@ export const RichTextEditor = forwardRef<
             }
             $fullPage={fullPage}
             $compact={compact}
+            $rounded={rounded}
             onClick={handleEditorClick}
             onInput={handleInput}
             onKeyDown={handleKeyDown}

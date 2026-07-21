@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import { BsArrowLeft } from "react-icons/bs";
+import { HiOutlineCamera } from "react-icons/hi2";
 import { MdEventNote } from "react-icons/md";
 import { deleteMedia } from "@/app/rp/profile/actions";
 import { SongPickerDialog } from "@/app/rp/profile/edit/song-picker-dialog";
@@ -28,8 +29,12 @@ import { usePageRouter } from "@/hooks/use-page-router";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import type { ImageCropFilter, NWImage, StoryBoardEvent } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
-import { STORY_COVER_ASPECT_RATIO } from "@/utils/constants/common";
+import {
+  STORY_COVER_ASPECT_RATIO,
+  STORY_COVER_ZOOM_MAX,
+} from "@/utils/constants/common";
 import { ROUTES } from "@/utils/constants/routes";
+import { plainTextLength } from "@/utils/rich-text";
 import {
   useStoryboardEventState,
   useStoryboardEventStoreSet,
@@ -39,6 +44,8 @@ import * as S from "./styled";
 function clamp(v: number, min: number, max: number) {
   return Math.min(max, Math.max(min, v));
 }
+
+const MAX_DESCRIPTION_LENGTH = 4000;
 
 function toCropFilter(
   src: string,
@@ -140,6 +147,8 @@ const EditStoryboardEventDataCard = forwardRef<
   // bump this to force a remount (and re-seed) whenever Reset restores the
   // description to its last-saved snapshot.
   const [descriptionEditorKey, setDescriptionEditorKey] = useState(0);
+  const descriptionLength = plainTextLength(description);
+  const descriptionTooLong = descriptionLength > MAX_DESCRIPTION_LENGTH;
 
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [pendingCropSrc, setPendingCropSrc] = useState("");
@@ -226,7 +235,8 @@ const EditStoryboardEventDataCard = forwardRef<
     setCropY(clamp(ny, 0, 100));
   };
 
-  const handleCropScaleChange = (v: number) => setCropScale(clamp(v, 1, 3));
+  const handleCropScaleChange = (v: number) =>
+    setCropScale(clamp(v, 1, STORY_COVER_ZOOM_MAX));
 
   const handleCropConfirm = useCallback(() => {
     const crop = toCropFilter(pendingCropSrc, cropX, cropY, cropScale);
@@ -267,6 +277,13 @@ const EditStoryboardEventDataCard = forwardRef<
       return;
     }
 
+    if (descriptionTooLong) {
+      setError(
+        `Description must be ${MAX_DESCRIPTION_LENGTH} characters or fewer.`,
+      );
+      return;
+    }
+
     setError(null);
     setLoading(true);
 
@@ -290,7 +307,7 @@ const EditStoryboardEventDataCard = forwardRef<
     setLoading(false);
 
     if ("message" in response) {
-      errorToast("Failed to save. Please try again.");
+      errorToast(response.reason ?? "Failed to save. Please try again.");
       return;
     }
 
@@ -350,19 +367,24 @@ const EditStoryboardEventDataCard = forwardRef<
     leave();
   };
 
+  const headerSubtitle = id ? "Editing chapter" : "New chapter draft";
+
   return (
     <S.Card $embedded={embedded}>
-      <S.TopBar>
+      <S.TopBar $embedded={embedded}>
         <S.TopBarLeft>
           <S.BackButton type="button" onClick={handleBack} title="Back">
             <BsArrowLeft size={18} />
           </S.BackButton>
           <S.FormHeading>
             <MdEventNote />
-            <h1>{id ? "Edit chapter" : "Create a new chapter"}</h1>
+            <div className="titles">
+              <h1>{id ? "Edit chapter" : "Create a new chapter"}</h1>
+              {embedded && <span className="subtitle">{headerSubtitle}</span>}
+            </div>
           </S.FormHeading>
         </S.TopBarLeft>
-        {isDirty && (
+        {!embedded && isDirty && (
           <S.TopBarActions>
             <S.ResetButton
               type="button"
@@ -374,7 +396,7 @@ const EditStoryboardEventDataCard = forwardRef<
             <S.SaveButton
               type="button"
               onClick={handleSave}
-              disabled={loading || imageUploading}
+              disabled={loading || imageUploading || descriptionTooLong}
             >
               {loading ? "Saving..." : imageUploading ? "Uploading..." : "Save"}
             </S.SaveButton>
@@ -382,15 +404,25 @@ const EditStoryboardEventDataCard = forwardRef<
         )}
       </S.TopBar>
 
-      {error && <S.ErrorBanner>{error}</S.ErrorBanner>}
+      <S.Body $embedded={embedded}>
+        {error && <S.ErrorBanner>{error}</S.ErrorBanner>}
 
-      <S.Hero>
-        <S.CoverColumn>
-          <CoverUploadField
-            src={avatar?.src || image || null}
-            nwImage={avatar}
-            onClick={handleAvatarClick}
-          />
+        <S.CoverRow>
+          <S.CoverThumb>
+            <CoverUploadField
+              src={avatar?.src || image || null}
+              nwImage={avatar}
+              onClick={handleAvatarClick}
+            />
+          </S.CoverThumb>
+          <S.CoverMeta>
+            <span className="t">Cover</span>
+            <span className="s">Shown on the chapter card and header</span>
+            <S.CoverMetaButton type="button" onClick={handleAvatarClick}>
+              <HiOutlineCamera />
+              {avatar?.src || image ? "Change cover" : "Upload cover"}
+            </S.CoverMetaButton>
+          </S.CoverMeta>
           <input
             ref={fileInputRef}
             type="file"
@@ -398,113 +430,151 @@ const EditStoryboardEventDataCard = forwardRef<
             accept="image/png,image/jpeg,image/webp,image/avif"
             onChange={handleAvatarChange}
           />
-        </S.CoverColumn>
+        </S.CoverRow>
 
-        <S.DetailsColumn>
-          <S.Field>
-            <S.FieldLabel htmlFor="event-location">
-              Location <S.OptionalHint>(optional)</S.OptionalHint>
-            </S.FieldLabel>
-            <S.TextInput
-              id="event-location"
-              type="text"
-              placeholder="Where does it take place..."
-              value={location ?? ""}
-              onChange={(e) => setEventState({ location: e.target.value })}
-              maxLength={200}
-            />
-          </S.Field>
-          <S.Field>
-            <S.FieldLabel htmlFor="event-time">Date & time</S.FieldLabel>
-            <DateTimePicker
-              id="event-time"
-              value={eventTime}
-              onChange={(value) => setEventState({ eventTime: value })}
-            />
-          </S.Field>
-        </S.DetailsColumn>
-      </S.Hero>
-
-      <S.Section>
-        <S.SectionLabel htmlFor="event-name">Title</S.SectionLabel>
-        <S.NameInput
-          id="event-name"
-          type="text"
-          placeholder="Chapter name"
-          value={name}
-          onChange={(e) => setEventState({ name: e.target.value })}
-          maxLength={50}
-        />
-      </S.Section>
-
-      <S.Section>
-        <S.SectionLabel as="span">Description</S.SectionLabel>
-        <S.DescriptionEditor>
-          <RichTextEditor
-            key={descriptionEditorKey}
-            placeholder="What happens in this chapter..."
-            value={toInitialDescriptionHtml(
-              initialSnapshot.current.description,
-            )}
-            compact
-            onChange={(html) => setEventState({ description: html })}
+        <S.Section>
+          <S.SectionLabel htmlFor="event-name">Title</S.SectionLabel>
+          <S.NameInput
+            id="event-name"
+            type="text"
+            placeholder="Chapter name"
+            value={name}
+            onChange={(e) => setEventState({ name: e.target.value })}
+            maxLength={50}
           />
-        </S.DescriptionEditor>
-      </S.Section>
+        </S.Section>
 
-      <S.Section>
-        <S.SectionLabel as="span">Scene dividers</S.SectionLabel>
-        <S.AsterismPickers>
-          <AsterismStyleSelect
-            id="event-overture-asterism"
-            label="Opening divider"
-            value={
-              isAsterismStyle(overtureAsterism)
-                ? overtureAsterism
-                : DEFAULT_ASTERISM_STYLE
-            }
-            onChange={(next) => setEventState({ overtureAsterism: next })}
-          />
-          <AsterismStyleSelect
-            id="event-passage-asterism"
-            label="Between passages"
-            value={
-              isAsterismStyle(passageAsterism)
-                ? passageAsterism
-                : DEFAULT_ASTERISM_STYLE
-            }
-            onChange={(next) => setEventState({ passageAsterism: next })}
-          />
-        </S.AsterismPickers>
-      </S.Section>
+        <S.Section>
+          <S.DetailsRow>
+            <S.Field>
+              <S.FieldLabel htmlFor="event-location">
+                Location <S.OptionalHint>(optional)</S.OptionalHint>
+              </S.FieldLabel>
+              <S.TextInput
+                id="event-location"
+                type="text"
+                placeholder="Where does it take place..."
+                value={location ?? ""}
+                onChange={(e) => setEventState({ location: e.target.value })}
+                maxLength={200}
+              />
+            </S.Field>
+            <S.Field>
+              <S.FieldLabel htmlFor="event-time">Date & time</S.FieldLabel>
+              <DateTimePicker
+                id="event-time"
+                value={eventTime}
+                onChange={(value) => setEventState({ eventTime: value })}
+              />
+            </S.Field>
+          </S.DetailsRow>
+        </S.Section>
 
-      <S.Section>
-        <S.SectionLabel as="span">
-          Chapter song <S.OptionalHint>(optional)</S.OptionalHint>
-        </S.SectionLabel>
-        {song && (
-          <S.SongPreview>
-            <ProfileSongPlayer
-              key={song.spotifyTrackId ?? song.songId ?? song.title}
-              song={song}
-              block
+        <S.Section>
+          <S.SectionLabelRow>
+            <S.SectionLabel as="span">Description</S.SectionLabel>
+            <S.CharCount $full={descriptionTooLong}>
+              {descriptionLength}/{MAX_DESCRIPTION_LENGTH}
+            </S.CharCount>
+          </S.SectionLabelRow>
+          <S.DescriptionEditor>
+            <RichTextEditor
+              key={descriptionEditorKey}
+              placeholder="What happens in this chapter..."
+              value={toInitialDescriptionHtml(
+                initialSnapshot.current.description,
+              )}
+              compact
+              desktopRounded
+              onChange={(html) => setEventState({ description: html })}
             />
-          </S.SongPreview>
-        )}
-        <S.SongButtons>
-          <S.SongButton type="button" onClick={() => setSongDialogOpen(true)}>
-            {song ? "Change song" : "Add a song"}
-          </S.SongButton>
+          </S.DescriptionEditor>
+        </S.Section>
+
+        <S.Section>
+          <S.SectionLabel as="span">Scene dividers</S.SectionLabel>
+          <S.AsterismPickers>
+            <AsterismStyleSelect
+              id="event-overture-asterism"
+              label="Opening divider"
+              value={
+                isAsterismStyle(overtureAsterism)
+                  ? overtureAsterism
+                  : DEFAULT_ASTERISM_STYLE
+              }
+              onChange={(next) => setEventState({ overtureAsterism: next })}
+            />
+            <AsterismStyleSelect
+              id="event-passage-asterism"
+              label="Between passages"
+              value={
+                isAsterismStyle(passageAsterism)
+                  ? passageAsterism
+                  : DEFAULT_ASTERISM_STYLE
+              }
+              onChange={(next) => setEventState({ passageAsterism: next })}
+            />
+          </S.AsterismPickers>
+        </S.Section>
+
+        <S.Section>
+          <S.SectionLabel as="span">
+            Chapter song <S.OptionalHint>(optional)</S.OptionalHint>
+          </S.SectionLabel>
           {song && (
+            <S.SongPreview>
+              <ProfileSongPlayer
+                key={song.spotifyTrackId ?? song.songId ?? song.title}
+                song={song}
+                block
+              />
+            </S.SongPreview>
+          )}
+          <S.SongButtons>
             <S.SongButton
               type="button"
-              onClick={() => setEventState({ song: null })}
+              onClick={() => setSongDialogOpen(true)}
             >
-              Remove
+              {song ? "Change song" : "Add a song"}
             </S.SongButton>
-          )}
-        </S.SongButtons>
-      </S.Section>
+            {song && (
+              <S.SongButton
+                type="button"
+                onClick={() => setEventState({ song: null })}
+              >
+                Remove
+              </S.SongButton>
+            )}
+          </S.SongButtons>
+        </S.Section>
+      </S.Body>
+
+      {embedded && (
+        <S.Footer>
+          <S.FooterCancelBtn
+            type="button"
+            onClick={handleBack}
+            disabled={loading || imageUploading}
+          >
+            Cancel
+          </S.FooterCancelBtn>
+          <S.FooterPrimaryBtn
+            type="button"
+            onClick={handleSave}
+            disabled={
+              !name.trim() || loading || imageUploading || descriptionTooLong
+            }
+          >
+            {loading
+              ? "Saving…"
+              : imageUploading
+                ? "Uploading…"
+                : id
+                  ? "Save changes"
+                  : "Create chapter"}
+          </S.FooterPrimaryBtn>
+        </S.Footer>
+      )}
 
       <SongPickerDialog
         open={songDialogOpen}

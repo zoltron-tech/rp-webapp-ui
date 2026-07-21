@@ -68,6 +68,89 @@ export const HeroInfo = styled.div`
   min-width: 0;
 `;
 
+/* Stacks fandom, genres and the like chip on their own lines so each group
+   reads as a distinct block instead of blending into one chip soup — still
+   compact down to the 375×667 baseline. */
+export const MetaStack = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 10px;
+
+  @container (max-width: 500px) {
+    gap: 8px;
+    margin-top: 8px;
+  }
+`;
+
+/* Wrapping row for the genre pills only. */
+export const GenreRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+`;
+
+/* Accent-tinted chip announcing the story's fandom. */
+export const FandomChip = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--text);
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  white-space: nowrap;
+
+  svg {
+    width: 13px;
+    height: 13px;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  b {
+    font-weight: 600;
+  }
+
+  @container (max-width: 500px) {
+    padding: 5px 11px;
+    font-size: var(--font-size-xsmall);
+  }
+`;
+
+/* Colored pill for a curated genre; tinted with the genre's own color. */
+export const GenrePill = styled.span<{ $color: string }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, ${(p) => p.$color} 18%, transparent);
+  color: ${(p) => p.$color};
+  border: 1px solid color-mix(in srgb, ${(p) => p.$color} 40%, transparent);
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  white-space: nowrap;
+
+  &::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: ${(p) => p.$color};
+    flex-shrink: 0;
+  }
+
+  @container (max-width: 500px) {
+    padding: 5px 10px;
+    font-size: var(--font-size-xsmall);
+  }
+`;
+
 export const Name = styled.div`
   ${NameFontStyles}
   display: flex;
@@ -80,6 +163,61 @@ export const Name = styled.div`
   color: var(--text);
   word-break: break-word;
   z-index: ${Z_INDEX.DEFAULT};
+`;
+
+/* Heart reaction chip, styled to match VisibilityChip but interactive. */
+export const HeartChip = styled.button<{ $active?: boolean }>`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+  background: ${(p) =>
+    p.$active
+      ? "color-mix(in srgb, var(--tomato-9) 20%, transparent)"
+      : "color-mix(in srgb, var(--text-secondary) 12%, transparent)"};
+  color: ${(p) => (p.$active ? "var(--tomato-9)" : "var(--text-secondary)")};
+
+  b {
+    color: ${(p) => (p.$active ? "var(--tomato-9)" : "var(--text)")};
+  }
+
+  svg {
+    width: 15px;
+    height: 15px;
+    color: var(--tomato-9);
+  }
+
+  &:active {
+    transform: scale(0.94);
+  }
+
+  @container (max-width: 500px) {
+    padding: 5px 11px;
+    font-size: var(--font-size-xsmall);
+  }
+`;
+
+/* Optional story flavor text, rendered below the hero cover/meta and above
+   the engagement row. Matches HeroRow/ActionRow's width and left offset. */
+export const DescriptionSection = styled.div`
+  width: 90%;
+  margin: 16px 0 0 8%;
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  line-height: 1.5;
+
+  @container (max-width: 500px) {
+    width: 100%;
+    margin: 12px 0 0;
+  }
 `;
 
 export const CreatedByRow = styled.div`
@@ -104,6 +242,63 @@ export const SectionName = styled.div`
   font-size: clamp(16px, 4vw, 22px);
   color: var(--text);
   z-index: ${Z_INDEX.DEFAULT};
+`;
+
+/* Engagement row (likes, share, more) sitting just above the co-authors
+   card — a distinct action bar, separate from the fandom/genre meta above. */
+export const ActionRow = styled.div`
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 90%;
+  margin: 20px 0 16px 8%;
+
+  @container (max-width: 500px) {
+    width: 100%;
+    margin: 14px 0 12px;
+    gap: 8px;
+  }
+`;
+
+/* Pushes the more-menu trigger to the row's far edge. */
+export const ActionRowSpacer = styled.div`
+  flex: 1 1 auto;
+`;
+
+export const ShareButton = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--text-secondary) 12%, transparent);
+  transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  &:hover {
+    color: var(--text);
+  }
+
+  &:active {
+    transform: scale(0.94);
+  }
+
+  @container (max-width: 500px) {
+    padding: 5px 11px;
+    font-size: var(--font-size-xsmall);
+  }
 `;
 
 export const SectionHeaderRow = styled.div`

@@ -207,9 +207,10 @@ export const PromptBody = styled.div`
   }
 `;
 
-/** Action row: contextual primary button + (when applicable) reaction icons. */
+/** Action row: heart (left), contextual primary button (center), share (right). */
 export const ActionRow = styled.div`
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 10px;
   padding: 12px 16px 14px;
@@ -220,6 +221,8 @@ export const ActionRow = styled.div`
 export const PrimaryAction = styled.button`
   all: unset;
   box-sizing: border-box;
+  grid-column: 2;
+  justify-self: center;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -232,6 +235,7 @@ export const PrimaryAction = styled.button`
   font-weight: var(--font-weight-semi-bold);
   font-family: var(--font);
   cursor: pointer;
+  white-space: nowrap;
   transition: background-color 0.15s ease, transform 0.08s ease;
 
   svg {
@@ -250,8 +254,41 @@ export const PrimaryAction = styled.button`
   }
 `;
 
-export const ActionSpacer = styled.span`
-  flex: 1;
+export const ShareButton = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  grid-column: 3;
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
+
+  svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  &:active {
+    transform: scale(0.92);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      color: var(--accent-11, var(--accent));
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+  }
 `;
 
 type CardProps = {
@@ -521,8 +558,20 @@ export const MediaVideoWrapper = styled.div`
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid var(--bg-5);
+  background: var(--bg-3);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+export const MediaVideoViewport = styled.div`
+  width: 100%;
   background: black;
   line-height: 0;
+  cursor: pointer;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 `;
 
 export const MediaVideo = styled.video`
@@ -530,6 +579,7 @@ export const MediaVideo = styled.video`
   width: 100%;
   height: auto;
   max-height: 560px;
+  object-fit: contain;
 `;
 
 /** Round expand button over videos — inline controls stay usable. */
@@ -582,6 +632,8 @@ export const MediaDescription = styled.p`
 export const HeartButton = styled.button<{ $active: boolean }>`
   all: unset;
   box-sizing: border-box;
+  grid-column: 1;
+  justify-self: start;
   display: inline-flex;
   align-items: center;
   gap: 7px;

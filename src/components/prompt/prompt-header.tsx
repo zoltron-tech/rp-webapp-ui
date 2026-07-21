@@ -1,12 +1,12 @@
 "use client";
 
 import { Flex, ShouldRender } from "@novelist-world/ui";
-import { type FC, useCallback, useEffect, useState } from "react";
+import { type FC, useCallback, useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
 import { FaRegEdit } from "react-icons/fa";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { IoIosShareAlt } from "react-icons/io";
-import { PiDotsThreeCircleFill, PiDotsThreeOutlineFill } from "react-icons/pi";
+import { PiDotsThreeOutlineFill } from "react-icons/pi";
 import { RiFlagFill } from "react-icons/ri";
 import { deletePromptAction, reportAction } from "@/app/rp/thread/actions";
 import { useGlobalState } from "@/context/store/stores";
@@ -20,7 +20,6 @@ import { MuseAvatar } from "../common/muse-avatar";
 import { NovelistAvatar } from "../common/novelist-avatar";
 import { PrivacyIcon } from "../common/privacy-icon";
 import { AppAlertDialog } from "../dialog";
-import { PromptSongPlayer } from "../prompt-song-player";
 import { AppDropdownMenuResponsive } from "../profile-more-dropdown";
 import { SharedWithDialog } from "../shared-with-dialog";
 import { UpdatePromptForm, type UpdatePromptProps } from "../update-prompt";
@@ -30,11 +29,17 @@ import * as S from "./styled";
 
 type PromptHeaderProps = {};
 
+const PRIVACY_LABEL = {
+  CUSTOM: "Custom",
+  FRIENDS: "Friends",
+  ONLY_ME: "Only me",
+  PUBLIC: "Public",
+} as const;
+
 export const PromptHeader: FC<PromptHeaderProps> = () => {
   const promptId = usePromptState("id");
   const promptText = usePromptState("text");
   const promptMedia = usePromptState("media");
-  const featuredSong = usePromptState("featuredSong");
   const createdOn = usePromptState("createdOn");
   const privacy = usePromptState("privacy");
   const privacySelectedFriends = usePromptState("sharedWith");
@@ -74,12 +79,13 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
 
     const response = await deletePromptAction(promptId);
     if (response?.message === API_MESSAGE.Success) {
+      setPromptState({ promptAlert: null });
       successToast(`Deleted successfully`);
       routeToPage(ROUTES.Muse.View(source.sourceId));
     } else {
       errorToast("There was an issue while deleting this reply.");
     }
-  }, [promptId, source, routeToPage, successToast, errorToast]);
+  }, [promptId, source, routeToPage, successToast, errorToast, setPromptState]);
 
   const shareItem = {
     icon: <IoIosShareAlt />,
@@ -152,10 +158,10 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
       <SharePromptDialog
         promptId={promptId ?? ""}
         prompt={{
+          createdOn,
+          media: promptMedia,
           source,
           text: promptText,
-          media: promptMedia,
-          createdOn,
         }}
         open={showShareDialog}
         onClose={() => setShowShareDialog(false)}
@@ -188,51 +194,46 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
         />
       </ShouldRender>
       <S.SourceInfo>
-        <S.SourceName>{source.name}</S.SourceName>
+        <S.NameRow>
+          <S.SourceName>{source.name}</S.SourceName>
+          <S.RoleTag $muse={source.sourceType === "MUSE"}>
+            {source.sourceType === "MUSE" ? "Muse" : "Novelist"}
+          </S.RoleTag>
+        </S.NameRow>
         <S.PromptSubheader title={displayDate(createdOn)} dateTime={createdOn}>
-          {toFormattedDate(createdOn)}
-          <Flex
-            style={{
-              alignItems: "center",
-              gap: "0.3rem",
-              justifyContent: "flex-start",
-            }}
+          <span>{toFormattedDate(createdOn)}</span>
+          <S.DotSep />
+          <S.PrivacyChip
+            $clickable={privacy === "CUSTOM"}
+            onClick={
+              privacy === "CUSTOM"
+                ? () => setShowPrivacySelectedFriends(true)
+                : undefined
+            }
           >
+            <PrivacyIcon privacy={privacy} />
+            <span className="privacy-label">{PRIVACY_LABEL[privacy]}</span>
+          </S.PrivacyChip>
+          <ShouldRender if={privacy === "CUSTOM"}>
             <Flex
-              onClick={
-                privacy === "CUSTOM"
-                  ? () => setShowPrivacySelectedFriends(true)
-                  : () => {}
-              }
-              style={{ cursor: "pointer" }}
+              style={{ alignItems: "center", gap: "0.25rem" }}
+              onClick={() => setShowPrivacySelectedFriends(true)}
             >
-              <PrivacyIcon privacy={privacy} />
-            </Flex>
-            <ShouldRender if={privacy === "CUSTOM"}>
-              <IoIosShareAlt
-                onClick={() => setShowPrivacySelectedFriends(true)}
-                style={{ cursor: "pointer" }}
-              />
               {privacySelectedFriends.slice(0, 2).map((friend) => (
-                <>
-                  <AvatarNew
-                    className="privacyAvatar"
-                    key={friend.id}
-                    src={friend.image}
-                    alt={friend.username}
-                    onClick={() => setShowPrivacySelectedFriends(true)}
-                  />
-                </>
+                <AvatarNew
+                  className="privacyAvatar"
+                  key={friend.id}
+                  src={friend.image}
+                  alt={friend.username}
+                  onClick={() => setShowPrivacySelectedFriends(true)}
+                />
               ))}
               <S.privacyAvatarMoreIcon
                 onClick={() => setShowPrivacySelectedFriends(true)}
               >
                 <PiDotsThreeOutlineFill />
               </S.privacyAvatarMoreIcon>
-            </ShouldRender>
-          </Flex>
-          <ShouldRender if={!!featuredSong}>
-            {featuredSong && <PromptSongPlayer song={featuredSong} />}
+            </Flex>
           </ShouldRender>
         </S.PromptSubheader>
       </S.SourceInfo>

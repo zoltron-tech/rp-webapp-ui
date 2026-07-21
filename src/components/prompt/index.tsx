@@ -1,6 +1,5 @@
 "use client";
 
-import { Separator } from "radix-ui";
 import type { FC, HTMLProps } from "react";
 import { StoreProvider } from "@/context/store/context";
 import type { Prompt as PromptType } from "@/types";
@@ -26,7 +25,6 @@ export const Prompt: FC<PromptProps> = ({
     <StoreProvider storeId="prompt" initial={{ ...prompt, threadOpen }}>
       <S.PromptRoot $noBorder={$noBorder} {...props}>
         <PromptHeader />
-        <Separator.Root className="separator" orientation="horizontal" />
         <PromptContent />
         <PromptThreads />
       </S.PromptRoot>

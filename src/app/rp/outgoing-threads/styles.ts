@@ -17,14 +17,97 @@ const shimmerPulse = css`
 `;
 
 export const Container = styled.div`
-  padding-top: 10px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   width: 100%;
- 
 `;
+
+// ── Page header ───────────────────────────────────────────────────────────────
+
+export const PageHeader = styled.header`
+  width: 100%;
+  max-width: 800px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--bg-6);
+  margin-bottom: 6px;
+
+  @media screen and (max-width: 430px) {
+    padding: 10px 8px;
+    gap: 10px;
+  }
+`;
+
+export const PageHeaderIcon = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 10px;
+  background-color: var(--bg-3);
+  border: 1px solid var(--bg-6);
+  color: var(--accent);
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  @media screen and (max-width: 430px) {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+
+    svg {
+      width: 17px;
+      height: 17px;
+    }
+  }
+`;
+
+export const PageHeaderText = styled.div`
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+`;
+
+export const PageHeaderTitle = styled.h1`
+  all: unset;
+  font-family: var(--font);
+  font-size: var(--font-size-h4);
+  font-weight: var(--font-weight-bold);
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  @media screen and (max-width: 430px) {
+    font-size: var(--font-size-h5);
+  }
+`;
+
+export const PageHeaderSubtitle = styled.span`
+  font-family: var(--font);
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  @media screen and (max-width: 430px) {
+    font-size: var(--font-size-xsmall);
+  }
+`;
+
+// ── /Page header ──────────────────────────────────────────────────────────────
 
 export const MessageContainer = styled.div`
   padding: 32px 16px;

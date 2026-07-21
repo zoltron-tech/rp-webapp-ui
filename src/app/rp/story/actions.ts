@@ -16,6 +16,16 @@ import { Logger } from "@/utils/services";
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL } = serverRuntimeConfig;
 
+/** Backend validation errors (e.g. tier limit reached) come back as `{ message: string }`. */
+const parseErrorReason = (rawText: string): string | undefined => {
+  try {
+    const parsed = JSON.parse(rawText);
+    return typeof parsed?.message === "string" ? parsed.message : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 /** The curated genre catalogue users pick from (they can't create new ones). */
 export const getAllGenresAction = async (): Promise<DataType<Genre[]>> => {
   const URL = `${RP_SERVICE_URL}/rp/portfolio/genre`;
@@ -153,7 +163,7 @@ export const updateStoryBoardAction = async (_storyboard: StoryBoard) => {
   );
 
   if (!response.ok) {
-    return { message: API_MESSAGE.Error };
+    return { message: API_MESSAGE.Error, reason: parseErrorReason(rawText) };
   }
 
   let result: StoryBoard;
@@ -197,7 +207,7 @@ export const updateStoryBoardEventAction = async (
   );
 
   if (!response.ok) {
-    return { message: API_MESSAGE.Error };
+    return { message: API_MESSAGE.Error, reason: parseErrorReason(rawText) };
   }
 
   let result: StoryBoardEvent;

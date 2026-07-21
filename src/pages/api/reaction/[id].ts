@@ -90,7 +90,16 @@ export default async function handler(
   switch (method) {
     case "PATCH": {
       const { targetType } = req.body;
-      const allowedTargetTypes = ["PROMPT", "COMMENT", "REPLY", "MEDIA"];
+      const allowedTargetTypes = [
+        "PROMPT",
+        "COMMENT",
+        "REPLY",
+        "MEDIA",
+        "MUSE",
+        "PROFILE",
+        "STORY_BOARD",
+        "STORY_BOARD_EVENT",
+      ];
       if (!allowedTargetTypes.includes(targetType)) {
         return res.status(400).json({
           error: `Invalid targetType: ${targetType}, allowed values: ${allowedTargetTypes.join(

@@ -6,7 +6,8 @@ export interface Activity {
   target: ActivityTarget;
   activityText: string;
   date: number;
-  /** MEDIA activities only: heart reaction count and whether the viewer reacted. */
+  /** Heart reaction count and whether the viewer reacted. PROMPT/COMMENT/REPLY share the
+   * underlying prompt's own reactions; every other target type reacts at the activity level. */
   reactionCount?: number;
   reacted?: boolean;
 }

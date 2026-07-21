@@ -9,8 +9,14 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { FaArrowRight, FaGlobeAmericas, FaLock } from "react-icons/fa";
-import { FaFeatherPointed, FaRegTrashCan } from "react-icons/fa6";
+import {
+  FaArrowRight,
+  FaGlobeAmericas,
+  FaHeart,
+  FaLock,
+  FaRegHeart,
+} from "react-icons/fa";
+import { FaRegTrashCan } from "react-icons/fa6";
 import { FiPlus, FiX } from "react-icons/fi";
 import { GrEdit } from "react-icons/gr";
 import { HiOutlineBookOpen, HiOutlineUserGroup } from "react-icons/hi2";
@@ -18,11 +24,17 @@ import { IoChevronBack, IoChevronForward } from "react-icons/io5";
 import { MdOutlineTheaters } from "react-icons/md";
 import { deleteStoryBoardAction } from "@/app/rp/story/actions";
 import { useGlobalState } from "@/context/store/stores";
-import { useUIContext } from "@/hooks";
+import { useCustomEvents, useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { useToggleLike } from "@/hooks/use-toggle-like";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import type { StoryBoard, StoryBoardEvent } from "@/types/story-board";
 import { API_MESSAGE, INITIAL_STORY_BOARD } from "@/utils/constants";
+import {
+  type CustomEventType,
+  EVENTS,
+  type StoryBoardReactedPayload,
+} from "@/utils/constants/custom-events";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import { CoverImage, ShouldRender } from "../common";
@@ -36,6 +48,11 @@ type Props = React.HTMLProps<HTMLDivElement> & {
 };
 
 const MEMBER_STACK_LIMIT = 5;
+
+/* Rough character budget for the genre chip row so multiple short genres
+   (e.g. "Drama", "Action") can share the row as chips before falling back
+   to dots — long labels burn through the budget faster. */
+const GENRE_CHIP_CHAR_BUDGET = 14;
 
 /**
  * Horizontal, scrollable row of chapter cover tiles with left/right nav arrows.
@@ -141,6 +158,72 @@ export const StoryCard: FC<Props> = ({
   // Desktop preview dialog state.
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  // Heart reaction — shared with any STORY_BOARD-target activity (editing
+  // the story or one of its events reacts against this same story id).
+  const [reacted, setReacted] = useState(Boolean(storyBoard?.reacted));
+  const [reactionCount, setReactionCount] = useState(
+    storyBoard?.reactions ?? 0,
+  );
+
+  useEffect(() => {
+    setReacted(Boolean(storyBoard?.reacted));
+    setReactionCount(storyBoard?.reactions ?? 0);
+  }, [storyBoard?.reacted, storyBoard?.reactions]);
+
+  const { toggleLike } = useToggleLike({
+    id: storyBoard?.id ?? "",
+    liked: reacted,
+    type: "story_board",
+  });
+
+  const {
+    on: onStoryBoardEvent,
+    off: offStoryBoardEvent,
+    emit: emitStoryBoardEvent,
+  } = useCustomEvents(EVENTS.STORY_BOARD.base);
+
+  // Stay in sync with other mounted cards for the same story (feed grid,
+  // profile list, dialog/tray) and with the activity feed's heart button.
+  useEffect(() => {
+    const storyId = storyBoard?.id;
+    if (!storyId) return;
+
+    const handleStoryBoardReacted = (
+      e: CustomEventType<StoryBoardReactedPayload>,
+    ) => {
+      if (e.detail.id !== storyId) return;
+      setReacted(e.detail.reacted);
+      setReactionCount(e.detail.reactions);
+    };
+
+    onStoryBoardEvent(EVENTS.STORY_BOARD.REACTED, handleStoryBoardReacted);
+    return () =>
+      offStoryBoardEvent(EVENTS.STORY_BOARD.REACTED, handleStoryBoardReacted);
+  }, [storyBoard?.id, onStoryBoardEvent, offStoryBoardEvent]);
+
+  const handleReact = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!storyBoard?.id) return;
+
+    const nextReacted = !reacted;
+    setReacted(nextReacted);
+    setReactionCount((c) => Math.max(0, c + (nextReacted ? 1 : -1)));
+
+    const result = await toggleLike();
+    if ("reactions" in result) {
+      setReactionCount(result.reactions);
+      setReacted(result.reacted);
+      emitStoryBoardEvent(EVENTS.STORY_BOARD.REACTED, {
+        id: storyBoard.id,
+        reacted: result.reacted,
+        reactions: result.reactions,
+      });
+    } else {
+      setReacted(!nextReacted);
+      setReactionCount((c) => Math.max(0, c + (nextReacted ? -1 : 1)));
+    }
+  };
+
   const isCreator =
     !!user?.username && storyBoard?.createdBy?.username === user.username;
   const isMember =
@@ -167,6 +250,28 @@ export const StoryCard: FC<Props> = ({
   const tags = storyBoard?.tags ?? [];
   const genres = storyBoard?.genres ?? [];
   const fandom = storyBoard?.fandom ?? null;
+  const isFandomless = !fandom?.id || fandom.id === "FANDOMLESS";
+  const fandomLabel = isFandomless
+    ? "Original"
+    : fandom?.name || fandom?.id?.replaceAll("_", " ");
+
+  // As many genres as fit the char budget become chips (first one always
+  // does); the rest fall back to a small color dot.
+  const { genreChips, genreDots } = useMemo(() => {
+    const chips: typeof genres = [];
+    const dots: typeof genres = [];
+    let usedChars = 0;
+    genres.forEach((genre, index) => {
+      const fits = usedChars + genre.label.length <= GENRE_CHIP_CHAR_BUDGET;
+      if (index === 0 || fits) {
+        chips.push(genre);
+        usedChars += genre.label.length;
+      } else {
+        dots.push(genre);
+      }
+    });
+    return { genreChips: chips, genreDots: dots };
+  }, [genres]);
 
   const openTray = () => {
     if (closeTimerRef.current) {
@@ -313,12 +418,10 @@ export const StoryCard: FC<Props> = ({
         </ShouldRender>
       </S.PreviewMeta>
 
-      <ShouldRender if={!!fandom?.id}>
-        <S.FandomChip title="Fandom">
-          <MdOutlineTheaters />
-          <b>{fandom?.name || fandom?.id?.replaceAll("_", " ")}</b>
-        </S.FandomChip>
-      </ShouldRender>
+      <S.FandomChip title="Fandom">
+        <MdOutlineTheaters />
+        <b>{fandomLabel}</b>
+      </S.FandomChip>
 
       <S.StatRow>
         <S.StatChip title="Chapters">
@@ -331,6 +434,17 @@ export const StoryCard: FC<Props> = ({
           <b>{members.length}</b>
           {members.length === 1 ? "author" : "authors"}
         </S.StatChip>
+        <S.HeartStatChip
+          type="button"
+          $active={reacted}
+          aria-label={reacted ? "Remove reaction" : "React"}
+          aria-pressed={reacted}
+          onClick={handleReact}
+        >
+          {reacted ? <FaHeart /> : <FaRegHeart />}
+          <b>{reactionCount}</b>
+          {reactionCount === 1 ? "like" : "likes"}
+        </S.HeartStatChip>
       </S.StatRow>
 
       <ShouldRender if={genres.length > 0}>
@@ -401,54 +515,75 @@ export const StoryCard: FC<Props> = ({
                 </span>
               </S.CoverBadge>
 
-              <ShouldRender if={!!fandom?.id || genres.length > 0}>
-                <S.CoverFooter>
-                  <ShouldRender if={!!fandom?.id}>
-                    <S.TileFandom
-                      title={fandom?.name || fandom?.id?.replaceAll("_", " ")}
-                    >
-                      <MdOutlineTheaters />
-                      <span>
-                        {fandom?.name || fandom?.id?.replaceAll("_", " ")}
-                      </span>
-                    </S.TileFandom>
-                  </ShouldRender>
-
-                  <ShouldRender if={genres.length > 0}>
-                    <S.GenreDots>
-                      {genres.slice(0, 5).map((genre) => (
-                        <S.GenreDot
-                          key={genre.id}
-                          $color={genre.color}
-                          title={genre.label}
-                        />
-                      ))}
-                    </S.GenreDots>
-                  </ShouldRender>
-                </S.CoverFooter>
+              <ShouldRender if={stackMembers.length > 0}>
+                <S.CoverAuthorsRail>
+                  {stackMembers.map((member) => (
+                    <S.CoverAuthorAvatar
+                      key={member.username}
+                      src={member.image ?? undefined}
+                      alt={member.username}
+                      title={`@${member.username}`}
+                    />
+                  ))}
+                  {memberOverflow > 0 && (
+                    <S.CoverAuthorOverflow>
+                      +{memberOverflow}
+                    </S.CoverAuthorOverflow>
+                  )}
+                </S.CoverAuthorsRail>
               </ShouldRender>
-            </S.Cover>
-            <S.Info>
-              <S.CardTitle>{storyBoard.name}</S.CardTitle>
 
-              <S.CardMeta>
-                <S.MetaItem
+              <ShouldRender if={events.length > 0}>
+                <S.CoverChapterBadge
                   title={`${events.length} ${
                     events.length === 1 ? "chapter" : "chapters"
                   }`}
                 >
                   <HiOutlineBookOpen />
-                  <b>{events.length}</b>
-                </S.MetaItem>
-                <S.MetaItem
-                  title={`${members.length} ${
-                    members.length === 1 ? "author" : "authors"
-                  }`}
-                >
-                  <FaFeatherPointed />
-                  <b>{members.length}</b>
-                </S.MetaItem>
-              </S.CardMeta>
+                  <span>{events.length}</span>
+                </S.CoverChapterBadge>
+              </ShouldRender>
+
+              <S.CoverHeartBadge
+                type="button"
+                $active={reacted}
+                aria-label={reacted ? "Remove reaction" : "React"}
+                aria-pressed={reacted}
+                title={`${reactionCount} ${
+                  reactionCount === 1 ? "like" : "likes"
+                }`}
+                onClick={handleReact}
+              >
+                {reacted ? <FaHeart /> : <FaRegHeart />}
+                <span>{reactionCount}</span>
+              </S.CoverHeartBadge>
+            </S.Cover>
+            <S.Info>
+              <S.CardTitle>{storyBoard.name}</S.CardTitle>
+
+              <S.CardFandom
+                $color={isFandomless ? "#555" : fandom?.color || "#555"}
+                title={fandomLabel}
+              >
+                {fandomLabel}
+              </S.CardFandom>
+
+              <ShouldRender if={genres.length > 0}>
+                <S.CardGenreRow>
+                  {genreChips.map((genre) => (
+                    <S.GenrePill key={genre.id} $color={genre.color}>
+                      {genre.label}
+                    </S.GenrePill>
+                  ))}
+                  {genreDots.map((genre) => (
+                    <S.GenreDot
+                      key={genre.id}
+                      $color={genre.color}
+                      title={genre.label}
+                    />
+                  ))}
+                </S.CardGenreRow>
+              </ShouldRender>
             </S.Info>
           </>
         )}

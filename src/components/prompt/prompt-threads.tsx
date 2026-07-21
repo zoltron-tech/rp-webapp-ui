@@ -1,4 +1,3 @@
-import { ShouldRender } from "@novelist-world/ui";
 import classNames from "classnames";
 import { Collapsible, Separator } from "radix-ui";
 import {
@@ -11,12 +10,19 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { IoArrowBackOutline } from "react-icons/io5";
+import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import * as CommentS from "@/app/rp/prompt/[slug]/comment/styles";
 import { MobileReplyComposer } from "@/components/mobile-reply-composer";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
+import { useCustomEvents } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import type { PromptSource, Prompt as PromptType } from "@/types";
+import {
+  type CustomEventType,
+  EVENTS,
+  type ItemDeletedPayload,
+} from "@/utils/constants/custom-events";
 import { ROUTES } from "@/utils/constants/routes";
 import { Comment } from "../comment";
 import { AvatarNew } from "../common/avatar-new";
@@ -163,13 +169,30 @@ export const PromptThreads: FC = () => {
     };
   }, [showCommentOverlay, closeOverlay]);
 
+  // Footer "Reply" action (in PromptContent) opens the thread list for this
+  // prompt by emitting on the shared prompt event bus.
+  const { on: onPromptEvent, off: offPromptEvent } = useCustomEvents(
+    EVENTS.PROMPT.base,
+  );
+  useEffect(() => {
+    const handleOpenThreads = (e: CustomEventType<ItemDeletedPayload>) => {
+      if (e.detail.id !== promptId) return;
+      setOpen(true);
+    };
+    onPromptEvent(EVENTS.PROMPT.OPEN_THREADS, handleOpenThreads);
+    return () => offPromptEvent(EVENTS.PROMPT.OPEN_THREADS, handleOpenThreads);
+  }, [onPromptEvent, offPromptEvent, promptId]);
+
   const buttonText = useMemo(() => {
+    if (isMobile) {
+      return open ? "Hide" : comments.length === 0 ? "New thread" : "Threads";
+    }
     return open
       ? "Hide Threads"
       : comments.length === 0
         ? "Start new thread"
         : "View Threads";
-  }, [open, comments.length]);
+  }, [open, comments.length, isMobile]);
 
   const isOOCPost = promptSource.sourceType === "NOVELIST";
 
@@ -194,35 +217,33 @@ export const PromptThreads: FC = () => {
 
   return (
     <>
-      {authState === "LOGGED_IN" && canInteract && (
-        <>
-          {isMobile ? (
-            <PromptComposeTrigger
-              avatarSrc={initialSelection?.image ?? novelist?.image ?? null}
-              avatarAlt={initialSelection?.name ?? novelist?.username ?? "You"}
-              avatarNwImage={initialSelection?.avatar ?? novelist?.avatar}
-              onClick={handleAddCommentClick}
-              placeholders={
-                isOOCPost ? COMMENT_OOC_PLACEHOLDERS : COMMENT_PLACEHOLDERS
-              }
-            />
-          ) : (
-            <PromptInput
-              className="comment-action"
-              initialSelection={initialSelection}
-              dropdownSelection={isOOCPost ? "NOVELIST" : "MUSE"}
-              parentId={promptId}
-              type="comment"
-              onSend={refetchComments}
-            />
-          )}
-        </>
-      )}
+      {authState === "LOGGED_IN" &&
+        canInteract &&
+        (isMobile ? (
+          <PromptComposeTrigger
+            avatarSrc={initialSelection?.image ?? novelist?.image ?? null}
+            avatarAlt={initialSelection?.name ?? novelist?.username ?? "You"}
+            avatarNwImage={initialSelection?.avatar ?? novelist?.avatar}
+            onClick={handleAddCommentClick}
+            placeholders={
+              isOOCPost ? COMMENT_OOC_PLACEHOLDERS : COMMENT_PLACEHOLDERS
+            }
+          />
+        ) : (
+          <PromptInput
+            className="comment-action"
+            noShell
+            initialSelection={initialSelection}
+            dropdownSelection={isOOCPost ? "NOVELIST" : "MUSE"}
+            parentId={promptId}
+            type="comment"
+            onSend={refetchComments}
+          />
+        ))}
       <Collapsible.Root open={open} onOpenChange={setOpen} asChild>
         <S.PromptThreads.Root className={classNames({ open })}>
           {comments.length > 0 && (
             <S.PromptThreads.Header>
-              <S.PromptThreads.LeftPre />
               <S.PromptThreads.Avatars>
                 {comments.slice(0, 2).map((comment) => {
                   const source = comment.source;
@@ -237,17 +258,16 @@ export const PromptThreads: FC = () => {
                   );
                 })}
               </S.PromptThreads.Avatars>
-              <ShouldRender if={comments.length === 1}>
-                <S.PromptThreads.LeftPlaceholder />
-              </ShouldRender>
-              <S.PromptThreads.LeftPost />
+              <S.PromptThreads.Divider />
               <Collapsible.Trigger asChild>
                 <S.PromptThreads.Toggle $active={open}>
-                  {buttonText}{" "}
+                  {buttonText}
                   <S.ThreadsCounter>{comments.length}</S.ThreadsCounter>
+                  <span className="toggle-caret">
+                    <MdOutlineKeyboardArrowDown size={14} />
+                  </span>
                 </S.PromptThreads.Toggle>
               </Collapsible.Trigger>
-              <S.PromptThreads.Right />
             </S.PromptThreads.Header>
           )}
           <S.PromptThreads.Content>

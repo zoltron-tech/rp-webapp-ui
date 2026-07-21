@@ -4,7 +4,15 @@ import { API_MESSAGE } from "@/utils/constants";
 
 type Props = {
   id: string;
-  type: "prompt" | "comment" | "reply" | "media";
+  type:
+    | "prompt"
+    | "comment"
+    | "reply"
+    | "media"
+    | "muse"
+    | "profile"
+    | "story_board"
+    | "story_board_event";
   liked: boolean;
 };
 

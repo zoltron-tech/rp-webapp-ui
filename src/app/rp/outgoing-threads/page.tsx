@@ -1,15 +1,16 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { FcRight } from "react-icons/fc";
-import { BreadCrumb } from "@/components/breadcrumb";
+import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
 import { LoadMore } from "@/components/load-more/page";
 import { PromptThreadCommentCard } from "@/components/outgoing-reply";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type { PromptThreadComment } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
+import { pluralize } from "@/utils/helpers";
 import { getOutgoingThreadsAction } from "./actions";
 import * as S from "./styles";
 
@@ -40,8 +41,8 @@ const ThreadCardShimmer = () => (
 );
 
 export default function OutgoingThreadPage() {
-  const user = useGlobalState("user");
   const cachedOutgoingThreads = useGlobalState("cachedOutgoingThreads");
+  const unreadReplyCount = useGlobalState("unreadReplyCount");
   const setGlobalState = useGlobalStoreSet();
   const { routeToPage, stopPageLoading } = usePageRouter();
 
@@ -104,9 +105,29 @@ export default function OutgoingThreadPage() {
     setLoadingMore(false);
   };
 
+  const headerSubtitle = useMemo(() => {
+    if (isLoading) return "Loading your threads…";
+    if (!promptThreadComments || promptThreadComments.length === 0) {
+      return "You're all caught up";
+    }
+
+    const activeCount = unreadReplyCount ?? 0;
+    if (activeCount === 0) return "No new replies right now";
+
+    return `${activeCount} active ${pluralize("thread", activeCount)} with new replies`;
+  }, [isLoading, promptThreadComments, unreadReplyCount]);
+
   return (
     <S.Container>
-      <BreadCrumb label="Interactions" username={user?.username ?? ""} />
+      <S.PageHeader>
+        <S.PageHeaderIcon>
+          <HiOutlineChatBubbleLeftRight />
+        </S.PageHeaderIcon>
+        <S.PageHeaderText>
+          <S.PageHeaderTitle>Interactions</S.PageHeaderTitle>
+          <S.PageHeaderSubtitle>{headerSubtitle}</S.PageHeaderSubtitle>
+        </S.PageHeaderText>
+      </S.PageHeader>
 
       {isLoading ? (
         <S.InteractionsListContainer>

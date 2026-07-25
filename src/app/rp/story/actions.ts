@@ -518,3 +518,27 @@ export const saveStoryboardEventBookmarkAction = async (
 
   return saved;
 };
+
+export const deleteStoryboardEventBookmarkAction = async (
+  storyboardEventId: string,
+) => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/story/event/${storyboardEventId}/bookmark`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "DELETE",
+  });
+
+  Logger.debug("deleteStoryboardEventBookmarkAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  return { message: API_MESSAGE.Success };
+};

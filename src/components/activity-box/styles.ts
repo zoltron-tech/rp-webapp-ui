@@ -629,15 +629,23 @@ export const MediaDescription = styled.p`
   word-break: break-word;
 `;
 
-export const HeartButton = styled.button<{ $active: boolean }>`
-  all: unset;
-  box-sizing: border-box;
+/** Wraps the heart tap-target and the count tap-target as separate controls
+    that happen to sit together — they must not nest (a <button> inside a
+    <button> breaks a11y and the count's own click target). */
+export const ReactionGroup = styled.div`
   grid-column: 1;
   justify-self: start;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 8px 11px;
+`;
+
+export const HeartButton = styled.button<{ $active: boolean }>`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
   border-radius: 999px;
   cursor: pointer;
   color: ${({ $active }): string =>
@@ -645,6 +653,11 @@ export const HeartButton = styled.button<{ $active: boolean }>`
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-semi-bold);
   transition: color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
 
   svg {
     width: 18px;
@@ -663,12 +676,42 @@ export const HeartButton = styled.button<{ $active: boolean }>`
   }
 `;
 
-export const ReactionCount = styled.span`
+export const ReactionCount = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  padding: 8px 10px 8px 2px;
+  border-radius: 999px;
+  color: var(--text-secondary);
   font-size: var(--font-size-small);
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
+
+  /* Mobile shows a bare count; desktop has room for the full "N novelists
+     like this" label. */
+  .count-short {
+    display: inline;
+  }
+  .label-full {
+    display: none;
+  }
+
+  @media screen and (min-width: 601px) {
+    .count-short {
+      display: none;
+    }
+    .label-full {
+      display: inline;
+    }
+  }
 
   &:hover {
     text-decoration: underline;
+    color: var(--text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 `;

@@ -9,7 +9,12 @@ import { IoArrowBackOutline } from "react-icons/io5";
 import { LuBookmarkPlus, LuBookOpen, LuScrollText } from "react-icons/lu";
 import { TfiLocationPin } from "react-icons/tfi";
 import { resolveAsterismStyle } from "@/components/asterism-styles";
-import { CoverImage, ScrollJumpButton } from "@/components/common";
+import {
+  BookmarkFAB,
+  CoverImage,
+  ScrollJumpButton,
+  SideControlsToggle,
+} from "@/components/common";
 import { AppAlertDialog } from "@/components/dialog";
 import EventThreadInput from "@/components/event-thread-input";
 import { ProfileSongPlayer } from "@/components/profile-song";
@@ -29,6 +34,7 @@ import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDate } from "@/utils/helpers";
 import {
   deleteStoryBoardEventThreadAction,
+  deleteStoryboardEventBookmarkAction,
   getStoryboardAction,
   getStoryboardEventAction,
   getStoryboardEventBookmarkAction,
@@ -101,6 +107,9 @@ export default function StoryboardEventPage({}) {
   // Whether the scroll reader is scrolled far enough down to warrant the
   // jump-to-top button (hidden once the reader is already near the top).
   const [showScrollToTop, setShowScrollToTop] = useState(false);
+  // Mobile: reader-controlled show/hide for the floating side buttons
+  // (scroll-to-top/bottom, bookmark), so they don't crowd a small screen.
+  const [sideControlsShown, setSideControlsShown] = useState(true);
   const storyboardEventId = params?.slug as string;
   const { routeToPage, baseDataLoader } = usePageRouter();
 
@@ -436,8 +445,7 @@ export default function StoryboardEventPage({}) {
     setMode(next);
   };
 
-  const handleSaveBookmark = async () => {
-    const threadIndex = currentIndexRef.current;
+  const saveBookmarkAt = async (threadIndex: number) => {
     const saved = await saveStoryboardEventBookmarkAction({
       storyBoardEventId: storyboardEventId,
       threadIndex,
@@ -452,6 +460,32 @@ export default function StoryboardEventPage({}) {
       window.history.replaceState(null, "", url.toString());
     } else {
       errorToast("Could not save the bookmark. Please try again.");
+    }
+  };
+
+  const handleSaveBookmark = () => saveBookmarkAt(currentIndexRef.current);
+
+  const handleRemoveBookmark = async () => {
+    const result = await deleteStoryboardEventBookmarkAction(storyboardEventId);
+
+    if (result.message === API_MESSAGE.Success) {
+      setBookmarkIndex(null);
+      successToast("Bookmark removed.");
+      const url = new URL(window.location.href);
+      url.searchParams.delete("t");
+      window.history.replaceState(null, "", url.toString());
+    } else {
+      errorToast("Could not remove the bookmark. Please try again.");
+    }
+  };
+
+  /** Divider badge under a passage: bookmarks it, or clears the bookmark if
+   *  that passage is already the saved spot. */
+  const handleTogglePassageBookmark = (threadIndex: number) => {
+    if (bookmarkIndex === threadIndex) {
+      handleRemoveBookmark();
+    } else {
+      saveBookmarkAt(threadIndex);
     }
   };
 
@@ -678,11 +712,29 @@ export default function StoryboardEventPage({}) {
                       <span className="glyph">{passageAsterism.glyph}</span>
                     </S.Asterism>
                   )}
-                  {bookmarkIndex === windowStart + i && (
-                    <S.BookmarkedMark>
+                  {authState === "LOGGED_IN" && (
+                    <S.PassageBookmarkToggle
+                      type="button"
+                      $active={bookmarkIndex === windowStart + i}
+                      onClick={() =>
+                        handleTogglePassageBookmark(windowStart + i)
+                      }
+                      aria-label={
+                        bookmarkIndex === windowStart + i
+                          ? "Remove bookmark from this passage"
+                          : "Bookmark this passage"
+                      }
+                      title={
+                        bookmarkIndex === windowStart + i
+                          ? "Remove bookmark from this passage"
+                          : "Bookmark this passage"
+                      }
+                    >
                       <FaBookmark />
-                      Bookmarked
-                    </S.BookmarkedMark>
+                      {bookmarkIndex === windowStart + i
+                        ? "Bookmarked"
+                        : "Bookmark"}
+                    </S.PassageBookmarkToggle>
                   )}
                   <EventThread
                     thread={thread}
@@ -737,9 +789,21 @@ export default function StoryboardEventPage({}) {
       )}
 
       {effectiveMode === "scroll" && (
+        <SideControlsToggle
+          shown={sideControlsShown}
+          onClick={() => setSideControlsShown((shown) => !shown)}
+          topOffset={66}
+        />
+      )}
+
+      {effectiveMode === "scroll" && (
         <ScrollJumpButton
           direction="up"
           position="top"
+          topOffset={66}
+          edgeOffset={16}
+          mobileTopOffset={50}
+          slideOut={!sideControlsShown}
           visible={showScrollToTop}
           onClick={scrollToTop}
           label="Jump to the top of the page"
@@ -754,11 +818,24 @@ export default function StoryboardEventPage({}) {
               <FaPlus size={18} />
             ) : undefined
           }
+          edgeOffset={16}
+          slideOut={!sideControlsShown}
           visible={showScrollToBottom}
           onClick={scrollToBottom}
           label="Jump to the latest passage"
         />
       )}
+
+      {/* Always-reachable bookmark control — the header's bookmark icons
+          scroll out of reach on a long passage (mobile especially), so this
+          floats in a fixed corner instead. */}
+      <BookmarkFAB
+        visible={effectiveMode === "scroll" && authState === "LOGGED_IN"}
+        slideOut={!sideControlsShown}
+        hasBookmark={bookmarkIndex !== null}
+        onSave={handleSaveBookmark}
+        onGoToBookmark={goToBookmark}
+      />
 
       <ShareChapterDialog
         event={storyboardEvent}

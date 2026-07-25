@@ -4,28 +4,33 @@ const LikeRoot = styled.div`
   all: unset;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
 `;
 
-const LikeLabel = styled.label`
-  cursor: pointer;
-  display: flex;
+const HeartButton = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 7px;
   border-radius: 50px;
-  border: 1px solid transparent;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
+
+  &:active {
+    transform: scale(0.92);
+  }
 
   @media (hover: hover) {
     &:hover {
-      background-color: var(--bg-4);
-      border-color: var(--bg-5);
+      color: var(--tomato-9);
+      background-color: rgba(255, 255, 255, 0.05);
     }
   }
 
-  &:active {
-    background-color: var(--bg-5);
+  &:focus-visible {
+    outline: 1.5px solid var(--accent);
+    outline-offset: 2px;
   }
 
   .heart-icon {
@@ -88,17 +93,34 @@ const LikeLabel = styled.label`
   }
 `;
 
-const LabelText = styled.span`
+const CountButton = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  padding: 7px 8px 7px 2px;
+  border-radius: 999px;
+  cursor: pointer;
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-medium);
   color: var(--text-secondary);
+  white-space: nowrap;
+  transition: color 0.15s ease;
+
+  &:hover {
+    text-decoration: underline;
+    color: var(--text);
+  }
+
+  &:focus-visible {
+    outline: 1.5px solid var(--accent);
+    outline-offset: 2px;
+  }
 `;
 
 export const LikeButton = Object.assign(
   {},
   {
-    Label: LikeLabel,
+    CountButton,
+    HeartButton,
     Root: LikeRoot,
-    Text: LabelText,
   },
 );

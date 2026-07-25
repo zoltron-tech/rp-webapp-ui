@@ -16,6 +16,18 @@ type Props = {
   icon?: ReactNode;
   /** Where the button is pinned. Defaults to "bottom". */
   position?: "top" | "bottom";
+  /** Extra px pushed below the default top offset — for pages that stack
+   *  their own sticky header under the app top bar. Ignored for "bottom". */
+  topOffset?: number;
+  /** Extra right/block margin on desktop only (ignored on mobile) — for
+   *  pages that want the button pulled further in from the edge. */
+  edgeOffset?: number;
+  /** Extra px pushed below the default top offset, mobile only — for making
+   *  room for a control stacked above it. Ignored for "bottom". */
+  mobileTopOffset?: number;
+  /** Slides the button out past the edge and disables it — a manual
+   *  show/hide toggle, independent of the scroll-driven `visible` fade. */
+  slideOut?: boolean;
 };
 
 export const ScrollJumpButton: FC<Props> = ({
@@ -25,6 +37,10 @@ export const ScrollJumpButton: FC<Props> = ({
   visible = true,
   icon,
   position = "bottom",
+  topOffset = 0,
+  edgeOffset = 0,
+  mobileTopOffset = 0,
+  slideOut = false,
 }) => {
   const defaultLabel =
     direction === "up" ? "Scroll to top" : "Scroll to bottom";
@@ -43,6 +59,10 @@ export const ScrollJumpButton: FC<Props> = ({
       aria-label={label ?? defaultLabel}
       $visible={visible}
       $position={position}
+      $topOffset={topOffset}
+      $edgeOffset={edgeOffset}
+      $mobileTopOffset={mobileTopOffset}
+      $slideOut={slideOut}
     >
       {icon ??
         (direction === "up" ? (

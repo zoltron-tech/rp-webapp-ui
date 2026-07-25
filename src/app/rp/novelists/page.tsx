@@ -5,17 +5,19 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   FiArrowRight,
+  FiCheck,
   FiChevronDown,
   FiDownload,
   FiGlobe,
   FiHeart,
   FiSmartphone,
   FiUsers,
-  FiWifiOff,
 } from "react-icons/fi";
 import appInstallLogo from "@/assets/images/NW-mobile-app-install-logo.png";
 import { InstallAppDialog } from "@/components/dialog/install-app-dialog";
 import { Footer } from "@/components/layout";
+import { LiveManuscript } from "@/components/live-manuscript";
+import { LiveStorybook } from "@/components/live-storybook";
 import { MusePreviewCard } from "@/components/muse-preview-card";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -98,33 +100,59 @@ export default function NovelistsPage() {
     <S.PageShell>
       {/* ─── Hero ─────────────────────────────────────────────────────── */}
       <S.Hero>
-        <S.HeroInner>
-          <S.Eyebrow>Collaborative Storytelling Platform</S.Eyebrow>
-          <S.HeroTitle>
-            Create live worlds.
-            <br />
-            <S.HeroTitleAccent>Write stories together.</S.HeroTitleAccent>
-          </S.HeroTitle>
-          <S.HeroText>
-            Build realms with friends, bring characters to life, and watch your
-            stories evolve through real-time collaboration.
-          </S.HeroText>
-          <S.HeroActions>
-            <S.PrimaryButton onClick={isLoggedIn ? toHomePage : onLoginClick}>
-              {isLoggedIn ? "My Dashboard" : "Get Started"}
-              <FiArrowRight />
-            </S.PrimaryButton>
-            <S.GhostButton onClick={handleDownloadAppClick}>
-              <FiDownload />
-              Download as App
-            </S.GhostButton>
-          </S.HeroActions>
-        </S.HeroInner>
+        <S.HeroGrid>
+          <S.HeroInner>
+            <S.Eyebrow>Collaborative Storytelling Platform</S.Eyebrow>
+            <S.HeroTitle>
+              Every story needs
+              <br />
+              <S.HeroTitleAccent>a second voice.</S.HeroTitleAccent>
+            </S.HeroTitle>
+            <S.HeroText>
+              Novelist World is where roleplayers build living worlds together —
+              you play a character, a friend replies as theirs, and the story
+              unfolds one turn at a time.
+            </S.HeroText>
+            <S.HeroActions>
+              <S.PrimaryButton onClick={isLoggedIn ? toHomePage : onLoginClick}>
+                {isLoggedIn ? "My Dashboard" : "Get Started"}
+                <FiArrowRight />
+              </S.PrimaryButton>
+              <S.GhostButton onClick={handleDownloadAppClick}>
+                <FiDownload />
+                Download as App
+              </S.GhostButton>
+            </S.HeroActions>
+            <S.HeroNote>
+              <FiCheck />
+              No credit card · A new world takes about a minute to set up
+            </S.HeroNote>
+          </S.HeroInner>
+
+          <S.HeroPanel>
+            <LiveManuscript />
+          </S.HeroPanel>
+        </S.HeroGrid>
         <S.ScrollCue>
           <span>Explore</span>
           <FiChevronDown />
         </S.ScrollCue>
       </S.Hero>
+
+      {/* ─── Read a storyboard ──────────────────────────────────────────
+      <S.Section>
+        <S.SectionHead>
+          <S.SectionEyebrow>Read Along</S.SectionEyebrow>
+          <S.SectionTitle>Open a storyboard, turn by turn</S.SectionTitle>
+          <S.SectionSubtitle>
+            Every world reads like a book — a chapter title page, narration, and
+            the dialogue its characters trade, spread across the page.
+          </S.SectionSubtitle>
+        </S.SectionHead>
+        <S.StorybookShowcase>
+          <LiveStorybook />
+        </S.StorybookShowcase>
+      </S.Section> */}
 
       {/* ─── Novelists ────────────────────────────────────────────────── */}
       <S.Section>

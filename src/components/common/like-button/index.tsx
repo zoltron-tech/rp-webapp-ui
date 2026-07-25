@@ -1,6 +1,7 @@
 import classNames from "classnames";
 import { type FC, useCallback, useEffect, useMemo, useState } from "react";
 import { pluralize } from "@/utils/helpers";
+import { ReactionLikersDialog } from "../../reaction-likers-dialog";
 import { HeartIcon } from "../heart-icon";
 import * as S from "./styled";
 
@@ -12,32 +13,22 @@ type LikeButtonProps = {
   subject?: string;
 };
 
-type LikeButtonAuthernticatedProps = Omit<LikeButtonProps, "subject"> & {
+type LikeButtonVariantProps = {
+  liked?: boolean;
+  likes?: number;
   subjectText: string;
   likeText: string;
+  onOpenLikers: (e: React.MouseEvent) => void;
 };
 
-type LikeButtonUnauthenticatedProps = Omit<
-  LikeButtonAuthernticatedProps,
-  "onLike" | "parentId"
->;
-
-const LikeButtonAuthenticated: FC<LikeButtonAuthernticatedProps> = ({
-  parentId,
-  liked = false,
-  likes = 0,
-  subjectText,
-  likeText,
-  onLike,
-}) => {
-  const inputId = useMemo(() => `like-${parentId}`, [parentId]);
+const LikeButtonAuthenticated: FC<
+  LikeButtonVariantProps & { onLike: (liked: boolean) => void }
+> = ({ liked = false, likes = 0, subjectText, likeText, onLike, onOpenLikers }) => {
   const [initialRender, setInitialRender] = useState(true);
   const [unliked, setUnliked] = useState(false);
 
   const handleChange = useCallback(() => {
-    if (onLike) {
-      onLike(liked);
-    }
+    onLike(liked);
   }, [onLike, liked]);
 
   useEffect(() => {
@@ -55,9 +46,11 @@ const LikeButtonAuthenticated: FC<LikeButtonAuthernticatedProps> = ({
 
   return (
     <S.LikeButton.Root>
-      <S.LikeButton.Label
+      <S.LikeButton.HeartButton
+        type="button"
         title="Like this comment"
-        htmlFor={inputId}
+        aria-label={liked ? "Unlike this comment" : "Like this comment"}
+        aria-pressed={liked}
         className={classNames("like-button", {
           liked: liked,
           unliked: unliked,
@@ -65,65 +58,76 @@ const LikeButtonAuthenticated: FC<LikeButtonAuthernticatedProps> = ({
         onClick={handleChange}
       >
         <HeartIcon filled={liked} />
-      </S.LikeButton.Label>
-      <input
-        readOnly
-        id={inputId}
-        name="like"
-        type="checkbox"
-        checked={liked}
-        hidden
-      />
-      <S.LikeButton.Text className="like-text">{`${likes} ${subjectText} ${likeText} this`}</S.LikeButton.Text>
+      </S.LikeButton.HeartButton>
+      <S.LikeButton.CountButton type="button" onClick={onOpenLikers}>
+        {`${likes} ${subjectText} ${likeText} this`}
+      </S.LikeButton.CountButton>
     </S.LikeButton.Root>
   );
 };
 
-const LikeButtonUnauthenticated: FC<LikeButtonUnauthenticatedProps> = ({
+const LikeButtonUnauthenticated: FC<LikeButtonVariantProps> = ({
   liked,
   likes = 0,
   subjectText,
   likeText,
+  onOpenLikers,
 }) => {
   return (
     <S.LikeButton.Root className="like-button">
       <HeartIcon filled={liked} />
-      <S.LikeButton.Text className="like-text">{`${likes} ${subjectText} ${likeText} this`}</S.LikeButton.Text>
+      <S.LikeButton.CountButton type="button" onClick={onOpenLikers}>
+        {`${likes} ${subjectText} ${likeText} this`}
+      </S.LikeButton.CountButton>
     </S.LikeButton.Root>
   );
 };
 
 export const LikeButton: FC<LikeButtonProps> = ({
   onLike,
+  parentId,
   likes = 0,
   liked = false,
   subject = "novelist",
-  ...rest
 }) => {
+  const [likersOpen, setLikersOpen] = useState(false);
+
   const [subjectText, likeText] = useMemo(() => {
     return [pluralize(subject, likes), pluralize("like", likes === 1 ? 2 : 1)];
   }, [subject, likes]);
 
-  if (!onLike) {
-    return (
-      <LikeButtonUnauthenticated
-        liked={liked}
-        likes={likes}
-        subjectText={subjectText}
-        likeText={likeText}
-        {...rest}
-      />
-    );
-  }
+  const handleOpenLikers = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!likes) return;
+    setLikersOpen(true);
+  };
 
   return (
-    <LikeButtonAuthenticated
-      liked={liked}
-      likes={likes}
-      onLike={onLike}
-      subjectText={subjectText}
-      likeText={likeText}
-      {...rest}
-    />
+    <>
+      {onLike ? (
+        <LikeButtonAuthenticated
+          liked={liked}
+          likes={likes}
+          onLike={onLike}
+          subjectText={subjectText}
+          likeText={likeText}
+          onOpenLikers={handleOpenLikers}
+        />
+      ) : (
+        <LikeButtonUnauthenticated
+          liked={liked}
+          likes={likes}
+          subjectText={subjectText}
+          likeText={likeText}
+          onOpenLikers={handleOpenLikers}
+        />
+      )}
+      <ReactionLikersDialog
+        open={likersOpen}
+        onClose={() => setLikersOpen(false)}
+        targetId={parentId}
+        initialCount={likes}
+      />
+    </>
   );
 };

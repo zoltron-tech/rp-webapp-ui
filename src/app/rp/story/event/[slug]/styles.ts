@@ -36,7 +36,9 @@ export const ParentContainer = styled.div`
   min-height: 100%;
   width: 100%;
   z-index: ${Z_INDEX.CARD};
-  padding: 28px 24px 96px;
+  /* No top padding — the reader's own sticky TopBar sits flush under the app
+     top bar instead of leaving a gap above it. */
+  padding: 0 24px 96px;
   background:
     radial-gradient(
         140% 120% at 50% -10%,
@@ -59,17 +61,21 @@ export const TopBar = styled.div`
   width: 100%;
   max-width: 780px;
   margin-bottom: 6px;
+  padding: 10px 6px;
+  border-bottom: 1px solid var(--bg-4);
+  position: sticky;
+  /* Sits below the app's own sticky top bar rather than at the same top:0
+     — both stack at 0 otherwise, and this one (painted later) ends up
+     hidden underneath it once scrolled. */
+  top: var(--topbar-height, 60px);
+  z-index: ${Z_INDEX.TOPBAR};
+  background: color-mix(in srgb, var(--bg-1) 92%, transparent);
+  backdrop-filter: blur(8px);
 
   @container content-container (max-width: 800px) {
     max-width: 100%;
     padding: 14px 16px;
     margin-bottom: 4px;
-    border-bottom: 1px solid var(--bg-4);
-    position: sticky;
-    top: 0;
-    z-index: ${Z_INDEX.TOPBAR};
-    background: color-mix(in srgb, var(--bg-1) 92%, transparent);
-    backdrop-filter: blur(8px);
   }
 `;
 
@@ -126,23 +132,47 @@ export const BookmarkButton = styled(BackButton)<{ $accent?: boolean }>`
   color: ${(p) => (p.$accent ? "var(--accent)" : "var(--text)")};
 `;
 
-/* Small centered tag above a bookmarked passage in the scroll reader. */
-export const BookmarkedMark = styled.div`
+/* Small centered toggle under every passage divider in the scroll reader —
+   quiet until hovered, except on the passage that's already bookmarked
+   (always shown, so the reader can always see where they left off). Tapping
+   it bookmarks that passage, or clears the bookmark if it's already there. */
+export const PassageBookmarkToggle = styled.button<{ $active?: boolean }>`
+  all: unset;
   display: flex;
+  width: 100%;
   align-items: center;
   justify-content: center;
   gap: 6px;
   margin: -12px 0 12px;
-  color: var(--accent);
+  padding: 2px 0;
+  cursor: pointer;
+  color: ${(p) => (p.$active ? "var(--accent)" : "var(--text-secondary)")};
   font-family: var(--font);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
+  opacity: ${(p) => (p.$active ? 1 : 0.3)};
+  transition: opacity 0.2s ease, color 0.15s ease;
 
   svg {
     width: 11px;
     height: 11px;
+  }
+
+  &:hover {
+    opacity: 1;
+    color: var(--accent);
+  }
+
+  &:focus-visible {
+    opacity: 1;
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (hover: none) {
+    opacity: ${(p) => (p.$active ? 1 : 0.55)};
   }
 `;
 

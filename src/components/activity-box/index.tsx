@@ -38,7 +38,7 @@ import {
   type StoryBoardReactedPayload,
 } from "@/utils/constants/custom-events";
 import { ROUTES } from "@/utils/constants/routes";
-import { toFormattedDateFromUnix } from "@/utils/helpers";
+import { pluralize, toFormattedDateFromUnix } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import { ShouldRender } from "../common";
 import * as ChatPlayerS from "../common/chat-bubble/styles";
@@ -662,20 +662,28 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
       </S.Body>
       <S.ActionRow>
         <ShouldRender if={Boolean(activity.target.id)}>
-          <S.HeartButton
-            type="button"
-            $active={reacted}
-            aria-label={reacted ? "Remove reaction" : "React"}
-            aria-pressed={reacted}
-            onClick={handleReact}
-          >
-            {reacted ? <FaHeart /> : <FaRegHeart />}
+          <S.ReactionGroup>
+            <S.HeartButton
+              type="button"
+              $active={reacted}
+              aria-label={reacted ? "Remove reaction" : "React"}
+              aria-pressed={reacted}
+              onClick={handleReact}
+            >
+              {reacted ? <FaHeart /> : <FaRegHeart />}
+            </S.HeartButton>
             <ShouldRender if={reactionCount > 0}>
-              <S.ReactionCount onClick={handleOpenLikers}>
-                {reactionCount}
+              <S.ReactionCount type="button" onClick={handleOpenLikers}>
+                <span className="count-short">{reactionCount}</span>
+                <span className="label-full">
+                  {`${reactionCount} ${pluralize("novelist", reactionCount)} ${pluralize(
+                    "like",
+                    reactionCount === 1 ? 2 : 1,
+                  )} this`}
+                </span>
               </S.ReactionCount>
             </ShouldRender>
-          </S.HeartButton>
+          </S.ReactionGroup>
         </ShouldRender>
         <S.PrimaryAction type="button" onClick={handlePrimaryAction}>
           {kind.icon}

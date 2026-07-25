@@ -29,7 +29,7 @@ export const Input = styled.input`
   border: 1px solid var(--bg-6);
   border-radius: 999px;
   color: var(--text);
-  font-size: 14.5px;
+  font-size: var(--font-size-input);
   font-family: var(--font);
 
   &::placeholder {

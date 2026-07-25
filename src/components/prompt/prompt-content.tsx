@@ -172,24 +172,26 @@ export const PromptContent: FC<PromptContentProps> = ({ disableCollapse }) => {
       </ShouldRender>
 
       <S.PromptContent.Footer>
-        <S.ActionButton
-          type="button"
-          className="like"
-          $liked={reacted}
-          onClick={onLike}
-          aria-label="Like prompt"
-        >
-          <HeartIcon filled={reacted} />
-          <span className="count-short" onClick={handleOpenLikers}>
-            {reactions}
-          </span>
-          <span className="label-full" onClick={handleOpenLikers}>
-            {`${reactions} ${pluralize("novelist", reactions)} ${pluralize(
-              "like",
-              reactions === 1 ? 2 : 1,
-            )} this`}
-          </span>
-        </S.ActionButton>
+        <S.LikeGroup>
+          <S.HeartLikeButton
+            type="button"
+            $liked={reacted}
+            onClick={onLike}
+            aria-label={reacted ? "Unlike prompt" : "Like prompt"}
+            aria-pressed={reacted}
+          >
+            <HeartIcon filled={reacted} />
+          </S.HeartLikeButton>
+          <S.LikeCountButton type="button" onClick={handleOpenLikers}>
+            <span className="count-short">{reactions}</span>
+            <span className="label-full">
+              {`${reactions} ${pluralize("novelist", reactions)} ${pluralize(
+                "like",
+                reactions === 1 ? 2 : 1,
+              )} this`}
+            </span>
+          </S.LikeCountButton>
+        </S.LikeGroup>
         <S.ActionButton type="button" onClick={handleReplyClick}>
           <TbMessageCircle />
           <span className="count-short">{commentCount}</span>

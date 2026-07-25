@@ -75,7 +75,7 @@ export const TextInput = styled.input<{ $optional?: boolean }>`
   border: 1.5px ${(p) => (p.$optional ? "dashed" : "solid")} var(--bg-6);
   background: ${(p) => (p.$optional ? "transparent" : "var(--bg-3)")};
   color: var(--text);
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-input);
   font-family: var(--font);
   transition: border-color 0.18s;
 
@@ -117,7 +117,7 @@ export const NumberInput = styled.input<{
   border: 1.5px ${(p) => (p.$optional ? "dashed" : "solid")} var(--bg-6);
   background: ${(p) => (p.$optional ? "transparent" : "var(--bg-3)")};
   color: var(--text);
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-input);
   font-family: var(--font);
   text-align: center;
   transition: border-color 0.18s;

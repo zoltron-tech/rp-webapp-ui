@@ -52,6 +52,15 @@ export const Hero = styled.section`
   isolation: isolate;
   overflow: hidden;
 
+  @media (max-width: 640px) {
+    min-height: auto;
+    padding: 88px 20px 52px;
+  }
+
+  @media (max-width: 420px) {
+    padding: 80px 18px 44px;
+  }
+
   /* Wallpaper layer + cinematic overlay that fades into the page background */
   &::before {
     content: "";
@@ -86,12 +95,30 @@ export const Hero = styled.section`
   }
 `;
 
+/* Two columns on desktop (copy + live manuscript), stacking to a single
+   centered column on tablet/mobile so it still fits an iPhone SE. */
+export const HeroGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  align-items: center;
+  gap: clamp(32px, 5vw, 64px);
+  width: 100%;
+  max-width: 1180px;
+
+  @media (max-width: 980px) {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: clamp(28px, 6vw, 44px);
+  }
+`;
+
 export const HeroInner = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: clamp(18px, 3vw, 28px);
-  max-width: 860px;
+  align-items: flex-start;
+  text-align: left;
+  gap: clamp(16px, 2.4vw, 24px);
+  max-width: 620px;
   width: 100%;
 
   > * {
@@ -101,6 +128,25 @@ export const HeroInner = styled.div`
   > *:nth-child(3) { animation-delay: 0.12s; }
   > *:nth-child(4) { animation-delay: 0.18s; }
   > *:nth-child(5) { animation-delay: 0.24s; }
+  > *:nth-child(6) { animation-delay: 0.30s; }
+
+  @media (max-width: 980px) {
+    align-items: center;
+    text-align: center;
+    max-width: 640px;
+  }
+
+  @media (max-width: 420px) {
+    gap: 14px;
+  }
+`;
+
+/* Manuscript column — floats in slightly after the copy. */
+export const HeroPanel = styled.div`
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  animation: ${floatUp} 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.28s both;
 `;
 
 export const Eyebrow = styled.div`
@@ -142,6 +188,12 @@ export const HeroTitle = styled.h1`
   letter-spacing: -1.5px;
   color: #ffffff;
   text-shadow: 0 4px 40px rgba(0, 0, 0, 0.55);
+
+  @media (max-width: 420px) {
+    font-size: 2.1rem;
+    line-height: 1.08;
+    letter-spacing: -0.6px;
+  }
 `;
 
 export const HeroTitleAccent = styled.span`
@@ -164,15 +216,24 @@ export const HeroText = styled.p`
   font-weight: 400;
   color: rgba(255, 255, 255, 0.74);
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+
+  @media (max-width: 420px) {
+    font-size: 0.94rem;
+    line-height: 1.58;
+  }
 `;
 
 export const HeroActions = styled.div`
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 16px;
   margin-top: 6px;
+
+  @media (max-width: 980px) {
+    justify-content: center;
+  }
 
   @media (max-width: 420px) {
     width: 100%;
@@ -181,41 +242,88 @@ export const HeroActions = styled.div`
   }
 `;
 
+/* Small reassurance line under the CTAs. */
+export const HeroNote = styled.p`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 0;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.55);
+
+  svg {
+    color: var(--accent);
+    flex-shrink: 0;
+    font-size: 1rem;
+  }
+
+  @media (max-width: 420px) {
+    font-size: 0.74rem;
+    line-height: 1.45;
+    gap: 7px;
+    text-align: center;
+  }
+`;
+
 // ─── Buttons ────────────────────────────────────────────────────────────────
+
+// A light bar that sweeps across a button on hover.
+const buttonSheen = keyframes`
+  from { transform: translateX(-160%) skewX(-18deg); }
+  to   { transform: translateX(260%) skewX(-18deg); }
+`;
 
 const ButtonBase = styled.button`
   appearance: none;
   cursor: pointer;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
-  padding: 15px 28px;
+  gap: 8px;
+  padding: 11px 22px;
   font-family: inherit;
-  font-size: 0.86rem;
-  font-weight: 700;
-  letter-spacing: 1.2px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.6px;
   text-transform: uppercase;
-  border-radius: 4px;
-  /* Clipped top-right / bottom-left corners for the angular brand feel */
-  clip-path: polygon(
-    10px 0,
-    100% 0,
-    100% calc(100% - 10px),
-    calc(100% - 10px) 100%,
-    0 100%,
-    0 10px
-  );
-  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease,
-    color 0.18s ease, border-color 0.18s ease;
+  border-radius: 999px;
+  transition: transform 0.2s cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 0.2s ease,
+    background 0.2s ease, color 0.2s ease, border-color 0.2s ease, filter 0.2s ease;
 
   svg {
-    font-size: 1.05em;
+    font-size: 1em;
     transition: transform 0.2s ease;
   }
 
+  /* Diagonal light sweep — parked off-screen, runs on hover/focus. */
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 44%;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.35),
+      transparent
+    );
+    transform: translateX(-160%) skewX(-18deg);
+  }
+
+  &:hover::after,
+  &:focus-visible::after {
+    animation: ${buttonSheen} 0.8s cubic-bezier(0.3, 0.7, 0.3, 1);
+  }
+
   &:active {
-    transform: translateY(1px);
+    transform: translateY(1px) scale(0.99);
   }
 
   &:focus-visible {
@@ -225,37 +333,81 @@ const ButtonBase = styled.button`
 
   @media (max-width: 420px) {
     width: 100%;
-    padding: 15px 24px;
+    padding: 12px 20px;
+    font-size: 0.74rem;
+    letter-spacing: 0.5px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      display: none;
+    }
   }
 `;
 
 export const PrimaryButton = styled(ButtonBase)`
   border: none;
   color: #08090c;
-  background: var(--accent);
-  box-shadow: 0 10px 28px -10px var(--accent), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  background: linear-gradient(
+    140deg,
+    color-mix(in srgb, var(--accent) 82%, #ffffff) 0%,
+    var(--accent) 45%,
+    color-mix(in srgb, var(--accent) 78%, #000000) 100%
+  );
+  box-shadow: 0 12px 30px -10px var(--accent),
+    0 1px 0 0 rgba(255, 255, 255, 0.35) inset,
+    0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent);
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 16px 38px -12px var(--accent);
-    filter: brightness(1.08);
+    transform: translateY(-3px);
+    box-shadow: 0 20px 44px -12px var(--accent),
+      0 1px 0 0 rgba(255, 255, 255, 0.45) inset,
+      0 0 0 1px color-mix(in srgb, var(--accent) 75%, transparent);
+    filter: saturate(1.08) brightness(1.05);
   }
 
   &:hover svg {
-    transform: translateX(3px);
+    transform: translateX(4px);
   }
 `;
 
 export const GhostButton = styled(ButtonBase)`
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  backdrop-filter: blur(8px);
+  border: 1px solid transparent;
+  backdrop-filter: blur(10px);
+  /* Two-layer background: soft glass fill (padding-box) + a bright gradient
+     hairline (border-box) for a lit, beveled edge. */
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02))
+      padding-box,
+    linear-gradient(
+        140deg,
+        rgba(255, 255, 255, 0.45),
+        rgba(255, 255, 255, 0.08) 55%,
+        color-mix(in srgb, var(--accent) 55%, transparent)
+      )
+      border-box;
+  box-shadow: 0 10px 26px -16px rgba(0, 0, 0, 0.9);
+
+  svg {
+    color: #ffffff;
+  }
 
   &:hover {
-    transform: translateY(-2px);
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-3px);
+    background:
+      linear-gradient(
+          rgba(255, 255, 255, 0.14),
+          color-mix(in srgb, var(--accent) 12%, transparent)
+        )
+        padding-box,
+      linear-gradient(
+          140deg,
+          color-mix(in srgb, var(--accent) 85%, #ffffff),
+          color-mix(in srgb, var(--accent) 40%, transparent)
+        )
+        border-box;
+    box-shadow: 0 16px 34px -18px color-mix(in srgb, var(--accent) 70%, #000);
   }
 
   &:hover svg {
@@ -296,6 +448,14 @@ export const Section = styled.section`
   width: 100%;
   padding: clamp(56px, 9vw, 104px) 0;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
+
+  @media (max-width: 640px) {
+    padding: 46px 0;
+  }
+
+  @media (max-width: 420px) {
+    padding: 38px 0;
+  }
 `;
 
 export const SectionHead = styled.div`
@@ -307,6 +467,18 @@ export const SectionHead = styled.div`
   max-width: 720px;
   margin: 0 auto clamp(36px, 6vw, 60px);
   padding-inline: clamp(20px, 5vw, 48px);
+
+  @media (max-width: 420px) {
+    gap: 8px;
+    margin-bottom: 26px;
+  }
+`;
+
+/* Centers the LiveStorybook book-view preview. */
+export const StorybookShowcase = styled.div`
+  display: flex;
+  justify-content: center;
+  padding: 8px clamp(20px, 5vw, 48px) 0;
 `;
 
 export const SectionEyebrow = styled.span`
@@ -329,6 +501,12 @@ export const SectionTitle = styled.h2`
   line-height: 1.15;
   letter-spacing: -0.6px;
   color: #ffffff;
+
+  @media (max-width: 420px) {
+    font-size: 1.5rem;
+    line-height: 1.2;
+    letter-spacing: -0.3px;
+  }
 `;
 
 export const SectionSubtitle = styled.p`
@@ -337,6 +515,11 @@ export const SectionSubtitle = styled.p`
   line-height: 1.65;
   color: rgba(255, 255, 255, 0.62);
   max-width: 560px;
+
+  @media (max-width: 420px) {
+    font-size: 0.9rem;
+    line-height: 1.55;
+  }
 `;
 
 // ─── Muse carousels ───────────────────────────────────────────────────────────
@@ -411,6 +594,11 @@ export const InfoCard = styled(Container)`
   @-moz-document url-prefix() {
     backdrop-filter: none !important;
   }
+
+  @media (max-width: 420px) {
+    padding: 26px 20px !important;
+    border-radius: 16px !important;
+  }
 `;
 
 export const CardIcon = styled.div`
@@ -428,6 +616,16 @@ export const CardIcon = styled.div`
   svg {
     font-size: 1.55rem;
   }
+
+  @media (max-width: 420px) {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 14px;
+
+    svg {
+      font-size: 1.35rem;
+    }
+  }
 `;
 
 export const Cardheading = styled.h3`
@@ -436,6 +634,11 @@ export const Cardheading = styled.h3`
   font-weight: 700;
   color: #ffffff;
   letter-spacing: 0.2px;
+
+  @media (max-width: 420px) {
+    font-size: 1.1rem;
+    margin-bottom: 6px;
+  }
 `;
 
 export const CardText = styled.p`
@@ -443,6 +646,11 @@ export const CardText = styled.p`
   font-size: 0.96rem;
   line-height: 1.7;
   color: rgba(255, 255, 255, 0.66);
+
+  @media (max-width: 420px) {
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
 `;
 
 // ─── Download-as-app band ─────────────────────────────────────────────────────
@@ -452,6 +660,10 @@ export const AppSection = styled.section`
   width: 100%;
   padding: clamp(48px, 8vw, 88px) clamp(20px, 5vw, 48px);
   border-top: 1px solid rgba(255, 255, 255, 0.06);
+
+  @media (max-width: 420px) {
+    padding: 40px 18px;
+  }
 `;
 
 export const AppCard = styled.div`
@@ -477,6 +689,12 @@ export const AppCard = styled.div`
   @media (max-width: 720px) {
     flex-direction: column;
     text-align: center;
+    gap: 22px;
+  }
+
+  @media (max-width: 420px) {
+    padding: 24px 20px;
+    border-radius: 20px;
   }
 `;
 
@@ -485,8 +703,8 @@ export const AppIconTile = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: clamp(256px, 18vw, 172px);
-  height: clamp(256px, 18vw, 172px);
+  width: 172px;
+  height: 172px;
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -497,6 +715,17 @@ export const AppIconTile = styled.div`
     height: 70%;
     object-fit: contain;
     border-radius: 18px;
+  }
+
+  @media (max-width: 720px) {
+    width: 148px;
+    height: 148px;
+  }
+
+  @media (max-width: 420px) {
+    width: 120px;
+    height: 120px;
+    border-radius: 16px;
   }
 `;
 
@@ -517,6 +746,10 @@ export const AppHeading = styled.h2`
   font-weight: 700;
   letter-spacing: -0.5px;
   color: #ffffff;
+
+  @media (max-width: 420px) {
+    font-size: 1.35rem;
+  }
 `;
 
 export const AppText = styled.p`
@@ -525,6 +758,11 @@ export const AppText = styled.p`
   font-size: clamp(0.94rem, 1.5vw, 1.05rem);
   line-height: 1.65;
   color: rgba(255, 255, 255, 0.66);
+
+  @media (max-width: 420px) {
+    font-size: 0.9rem;
+    line-height: 1.58;
+  }
 `;
 
 export const AppBenefits = styled.ul`

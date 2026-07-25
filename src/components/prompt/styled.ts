@@ -272,9 +272,100 @@ const PromptContentFooter = styled.footer`
   }
 `;
 
+/* Wraps the heart tap-target and the count/label tap-target as separate
+   sibling controls — they must not nest (a <button> inside a <button>
+   breaks a11y and stops the two from having independent hover states). */
+export const LikeGroup = styled.div`
+  display: inline-flex;
+  align-items: center;
+`;
+
+export const HeartLikeButton = styled.button<{ $liked?: boolean }>`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 8px;
+  border-radius: 9px;
+  color: ${({ $liked }) => ($liked ? "var(--tomato-9)" : "var(--text-secondary)")};
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
+
+  svg {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+  }
+
+  &:active {
+    transform: scale(0.92);
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--tomato-9);
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+  }
+
+  &:focus-visible {
+    outline: 1.5px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media screen and (max-width: 600px) {
+    padding: 7px 4px;
+  }
+`;
+
+export const LikeCountButton = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 11px 7px 0;
+  border-radius: 9px;
+  font-family: var(--font);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+
+  /* Desktop shows the full label; the short count is a mobile fallback. */
+  .count-short {
+    display: none;
+  }
+  .label-full {
+    display: inline;
+  }
+
+  &:hover {
+    text-decoration: underline;
+    color: var(--text);
+  }
+
+  &:focus-visible {
+    outline: 1.5px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media screen and (max-width: 600px) {
+    padding: 7px 4px 7px 0;
+
+    .count-short {
+      display: inline;
+    }
+    .label-full {
+      display: none;
+    }
+  }
+`;
+
 export const ActionButton = styled.button<{
   $accentHover?: boolean;
-  $liked?: boolean;
 }>`
   all: unset;
   box-sizing: border-box;
@@ -286,7 +377,7 @@ export const ActionButton = styled.button<{
   font-family: var(--font);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-semi-bold);
-  color: ${({ $liked }) => ($liked ? "#e5766a" : "var(--text-secondary)")};
+  color: var(--text-secondary);
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 
@@ -307,13 +398,9 @@ export const ActionButton = styled.button<{
   @media (hover: hover) {
     &:hover {
       background: var(--bg-4);
-      color: ${({ $accentHover, $liked }) =>
-        $liked ? "#e5766a" : $accentHover ? "var(--accent)" : "var(--text)"};
+      color: ${({ $accentHover }) =>
+        $accentHover ? "var(--accent)" : "var(--text)"};
     }
-  }
-
-  &.like:hover {
-    color: #e5766a;
   }
 
   &:focus-visible {

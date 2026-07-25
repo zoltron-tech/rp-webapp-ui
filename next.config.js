@@ -6,8 +6,13 @@ const withPWA = require('@ducanh2912/next-pwa').default({
   register: true,
   skipWaiting: true,
   disable: false, // Set to false to test in development
-  cacheOnFrontEndNav: true,
-  aggressiveFrontEndNavCaching: true,
+  // Precaching whole page navigations is a production optimization that
+  // actively fights dev iteration — it keeps serving an old cached page
+  // shell (old script URLs and all) through server restarts and hard
+  // refreshes alike. Scope it to production; the SW itself stays on in
+  // dev for push-notification testing.
+  cacheOnFrontEndNav: process.env.NODE_ENV === 'production',
+  aggressiveFrontEndNavCaching: process.env.NODE_ENV === 'production',
   reloadOnOnline: true,
   customWorkerSrc: 'worker',
   workboxOptions: {

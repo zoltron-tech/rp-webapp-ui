@@ -454,10 +454,16 @@ export default function StoryboardEventPage({}) {
     if (saved && "threadIndex" in saved) {
       setBookmarkIndex(threadIndex);
       successToast("Bookmark saved — you'll pick up right here.");
-      // Mirror the bookmark into the URL so the spot is shareable.
-      const url = new URL(window.location.href);
-      url.searchParams.set("t", String(threadIndex));
-      window.history.replaceState(null, "", url.toString());
+      // Mirror the bookmark into the URL so the spot is shareable. Best
+      // effort only — some mobile in-app browsers restrict history writes,
+      // and that's not worth losing the saved bookmark over.
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set("t", String(threadIndex));
+        window.history.replaceState(null, "", url.toString());
+      } catch (err) {
+        console.error("Failed to update URL after bookmark save", err);
+      }
     } else {
       errorToast("Could not save the bookmark. Please try again.");
     }
@@ -471,9 +477,13 @@ export default function StoryboardEventPage({}) {
     if (result.message === API_MESSAGE.Success) {
       setBookmarkIndex(null);
       successToast("Bookmark removed.");
-      const url = new URL(window.location.href);
-      url.searchParams.delete("t");
-      window.history.replaceState(null, "", url.toString());
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("t");
+        window.history.replaceState(null, "", url.toString());
+      } catch (err) {
+        console.error("Failed to update URL after bookmark removal", err);
+      }
     } else {
       errorToast("Could not remove the bookmark. Please try again.");
     }

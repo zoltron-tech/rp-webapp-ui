@@ -1,4 +1,4 @@
-import styled, { keyframes } from "styled-components";
+import styled, { css, keyframes } from "styled-components";
 import { Z_INDEX } from "@/theme";
 
 /* Stacks directly above the scroll-to-bottom button (right/bottom, 48px
@@ -45,7 +45,7 @@ export const SaveButton = styled.button<{ $pulse?: boolean }>`
   justify-content: center;
   box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--accent) 60%, transparent);
   transition: box-shadow 0.2s ease, transform 0.15s ease;
-  ${({ $pulse }) => $pulse && `animation: ${pulse} 0.45s ease;`}
+  ${({ $pulse }) => $pulse && css`animation: ${pulse} 0.45s ease;`}
 
   &:hover {
     box-shadow: 0 4px 18px -2px color-mix(in srgb, var(--accent) 75%, transparent);

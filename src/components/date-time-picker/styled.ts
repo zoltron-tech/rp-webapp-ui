@@ -98,6 +98,23 @@ export const TextInput = styled.input<{ $optional?: boolean }>`
   }
 `;
 
+/* Checkbox that shows/hides the time inputs — time is optional, so it starts
+   hidden and only appears once the user opts in. */
+export const TimeToggle = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  cursor: pointer;
+
+  input {
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+`;
+
 export const ErrorText = styled.span`
   font-size: var(--font-size-xsmall);
   color: var(--tomato-9);

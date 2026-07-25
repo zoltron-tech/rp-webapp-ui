@@ -67,17 +67,26 @@ function toBcNumbers(fields: BcFieldsState): Omit<DateTimeFields, "era"> {
   };
 }
 
+/** A parsed value only carries an hour/minute, never a "time was set" flag —
+ *  so whether to show the time inputs is inferred from them being
+ *  non-midnight. A real midnight time gets flattened to "no time" on
+ *  reload, which is an acceptable tradeoff for how rarely that matters. */
+function hasExplicitTime(parsed: DateTimeFields | null): boolean {
+  return !!parsed && (parsed.hour !== 0 || parsed.minute !== 0);
+}
+
 /**
  * Chapter dates can fall well before year 1, where a normal calendar grid
  * (weekdays, leap years) stops applying reliably. Date and time are always
- * split into separate inputs, and the time input is styled with a dashed
- * border and an "(optional)" label so it reads as skippable at a glance.
+ * split into separate inputs, and time is opt-in via a checkbox — unchecking
+ * it clears the time fields without touching the date.
  */
 export const DateTimePicker: FC<Props> = ({ id, value, onChange }) => {
   const initialParsed = parseWireValue(value);
   const initialAdParsed = initialParsed?.era === "AD" ? initialParsed : null;
 
   const [era, setEra] = useState<Era>(initialParsed?.era ?? "AD");
+  const [hasTime, setHasTime] = useState(hasExplicitTime(initialParsed));
   const [adDateText, setAdDateText] = useState(
     initialAdParsed ? toAdDateText(initialAdParsed) : "",
   );
@@ -92,6 +101,7 @@ export const DateTimePicker: FC<Props> = ({ id, value, onChange }) => {
     const parsed = parseWireValue(value);
     const adParsed = parsed?.era === "AD" ? parsed : null;
     setEra(parsed?.era ?? "AD");
+    setHasTime(hasExplicitTime(parsed));
     setAdDateText(adParsed ? toAdDateText(adParsed) : "");
     setAdTimeText(adParsed ? toAdTimeText(adParsed) : "");
     setBcFields(bcFieldsFromParsed(parsed));
@@ -135,6 +145,24 @@ export const DateTimePicker: FC<Props> = ({ id, value, onChange }) => {
     commitAd(adDateText, text);
   };
 
+  const handleToggleTime = (checked: boolean) => {
+    setHasTime(checked);
+    if (!checked) {
+      setAdTimeText("");
+      setBcFields((prev) => ({ ...prev, hour: "", minute: "" }));
+      if (era === "AD") {
+        commitAd(adDateText, "");
+      } else {
+        const nextFields = { ...bcFields, hour: "", minute: "" };
+        onChange(
+          requiredBcFieldsFilled(nextFields)
+            ? toWireValue({ ...toBcNumbers(nextFields), era: "BC" })
+            : null,
+        );
+      }
+    }
+  };
+
   const handleBcFieldChange = (key: BcFieldKey, rawValue: string) => {
     const nextFields = { ...bcFields, [key]: rawValue };
     setBcFields(nextFields);
@@ -168,6 +196,17 @@ export const DateTimePicker: FC<Props> = ({ id, value, onChange }) => {
     </S.EraToggle>
   );
 
+  const timeToggle = (
+    <S.TimeToggle>
+      <input
+        type="checkbox"
+        checked={hasTime}
+        onChange={(e) => handleToggleTime(e.target.checked)}
+      />
+      Add a time
+    </S.TimeToggle>
+  );
+
   return (
     <S.Wrap>
       {era === "AD" ? (
@@ -186,20 +225,22 @@ export const DateTimePicker: FC<Props> = ({ id, value, onChange }) => {
             />
             {eraToggle}
           </S.Row>
-          {/* Line 2: time */}
-          <S.Row>
-            <S.TextInput
-              id={`${id}-time`}
-              type="text"
-              inputMode="numeric"
-              placeholder="hh:mm (optional)"
-              aria-label="Time (optional)"
-              value={adTimeText}
-              aria-invalid={adTimeIsInvalid}
-              $optional
-              onChange={handleAdTimeChange}
-            />
-          </S.Row>
+          {/* Line 2: time toggle, and the time input itself once enabled */}
+          {timeToggle}
+          {hasTime && (
+            <S.Row>
+              <S.TextInput
+                id={`${id}-time`}
+                type="text"
+                inputMode="numeric"
+                placeholder="hh:mm"
+                aria-label="Time"
+                value={adTimeText}
+                aria-invalid={adTimeIsInvalid}
+                onChange={handleAdTimeChange}
+              />
+            </S.Row>
+          )}
           {adDateIsInvalid && (
             <S.ErrorText>Date must be in dd-mm-yyyy format</S.ErrorText>
           )}
@@ -249,33 +290,34 @@ export const DateTimePicker: FC<Props> = ({ id, value, onChange }) => {
             />
             {eraToggle}
           </S.Row>
-          {/* Line 2: time */}
-          <S.Row>
-            <S.NumberInput
-              id={`${id}-hour`}
-              type="number"
-              inputMode="numeric"
-              min={0}
-              max={23}
-              placeholder="Hour"
-              aria-label="Hour (optional)"
-              value={bcFields.hour}
-              $optional
-              onChange={(e) => handleBcFieldChange("hour", e.target.value)}
-            />
-            <S.NumberInput
-              id={`${id}-minute`}
-              type="number"
-              inputMode="numeric"
-              min={0}
-              max={59}
-              placeholder="Min"
-              aria-label="Minute (optional)"
-              value={bcFields.minute}
-              $optional
-              onChange={(e) => handleBcFieldChange("minute", e.target.value)}
-            />
-          </S.Row>
+          {/* Line 2: time toggle, and the time fields themselves once enabled */}
+          {timeToggle}
+          {hasTime && (
+            <S.Row>
+              <S.NumberInput
+                id={`${id}-hour`}
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={23}
+                placeholder="Hour"
+                aria-label="Hour"
+                value={bcFields.hour}
+                onChange={(e) => handleBcFieldChange("hour", e.target.value)}
+              />
+              <S.NumberInput
+                id={`${id}-minute`}
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={59}
+                placeholder="Min"
+                aria-label="Minute"
+                value={bcFields.minute}
+                onChange={(e) => handleBcFieldChange("minute", e.target.value)}
+              />
+            </S.Row>
+          )}
         </>
       )}
     </S.Wrap>

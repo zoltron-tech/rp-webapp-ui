@@ -2,6 +2,7 @@
 
 import { DefaultTheme } from "@novelist-world/ui";
 import classNames from "classnames";
+import { usePathname } from "next/navigation";
 import type React from "react";
 import { type FC, type HTMLProps, useEffect, useMemo } from "react";
 import { useCookies } from "react-cookie";
@@ -30,6 +31,7 @@ import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import { setBadgeCount } from "@/lib/badge-manager";
 import { THEME_DARK, THEME_LIGHT } from "@/theme";
 import type { StoreState } from "@/types/state";
+import { ROUTES } from "@/utils/constants/routes";
 import { ACCENT_MAP } from "@/types/theme";
 import {
   decryptConversations,
@@ -88,6 +90,10 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
   const unreadReplyCount = useGlobalState("unreadReplyCount");
   const authState = useGlobalState("authState");
   const hideAppSidebars = useGlobalState("hideAppSidebars");
+  const pathname = usePathname();
+  // The novelists landing is a full-bleed marketing page: it should span the
+  // whole viewport rather than the centered, sidebar-reserved content column.
+  const isFullBleedPage = pathname === ROUTES.Novelists;
   const { width } = useWindowDimensions();
   // LeftNav + RightSidebar need real estate beyond the page's own content
   // column on both sides — below this, don't even mount them (avoids
@@ -176,6 +182,7 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
           AppGrid just reserves the horizontal room for them. */}
       {canShowSidebars && <LeftNav visible={showSidebars} />}
       <S.AppGrid
+        $fullBleed={isFullBleedPage}
         $leftReserve={showSidebars ? NAV_WIDTH + SIDEBAR_GAP : 0}
         $rightReserve={showSidebars ? SIDEBAR_WIDTH + SIDEBAR_GAP : 0}
       >

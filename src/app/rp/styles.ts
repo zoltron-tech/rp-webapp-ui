@@ -29,6 +29,7 @@ export const PageContainer = styled.main`
 export const AppGrid = styled.div<{
   $leftReserve: number;
   $rightReserve: number;
+  $fullBleed?: boolean;
 }>`
   display: flex;
   flex-direction: row;
@@ -46,4 +47,16 @@ export const AppGrid = styled.div<{
   @media (max-width: 600px) {
     padding-inline: 0;
   }
+
+  /* Full-bleed pages (e.g. the /rp/novelists landing) span the whole viewport
+     instead of the centered, sidebar-reserved content column — no max-width,
+     no edge padding, so their hero/carousels reach both edges. Sidebar
+     mount/visibility is unchanged; only this container's geometry drops. */
+  ${({ $fullBleed }) =>
+    $fullBleed &&
+    `
+      max-width: none;
+      padding-left: 0;
+      padding-right: 0;
+    `}
 `;

@@ -205,6 +205,14 @@ const EditStoryboardDataCard = forwardRef<
     setImageUploading(true);
     const formData = new FormData();
     formData.append("file", file);
+    // Store the cover under app-media/<storyboardId>/<file> (no user-id
+    // segment). Only possible once the storyboard has an id; new drafts fall
+    // back to the default per-user scoped path until first save.
+    if (id) {
+      formData.append("mediaBucket", "APP_MEDIA");
+      formData.append("prefix", id);
+      formData.append("scoped", "false");
+    }
     const url = await uploadMedia(formData);
     setImageUploading(false);
 

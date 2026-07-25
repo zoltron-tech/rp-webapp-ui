@@ -204,11 +204,13 @@ export default function ConversationsPage() {
     [setGlobalState],
   );
 
-  // Load from backend only when the global store has no cached data.
+  // Always fetch page 1 on mount. Cached data (a small preview slice seeded
+  // by the right sidebar) paints instantly so there's no shimmer, but it's
+  // not a full page — only the fetch gives us the authoritative list and a
+  // correct hasMore, so the Load more / end-of-list choice is right from the
+  // start instead of after a wasted click.
   useEffect(() => {
-    if (!cachedConversations) {
-      fetchConversations(1);
-    }
+    fetchConversations(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -568,6 +570,7 @@ export default function ConversationsPage() {
             loadingMore={loadingMore}
             onLoadMore={loadMore}
             unreadCount={unreadBadgeCount}
+            endMarker={!!conversations?.length}
           />
         </S.ConversationListContainer>
       </S.Container>

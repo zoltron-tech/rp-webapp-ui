@@ -48,6 +48,7 @@ import {
   PromptEvent,
   usePromptInputEvents,
 } from "./helpers";
+import { IcMuseRequiredForm } from "./ic-muse-required-form";
 import { NovelistConfirm } from "./novelist-confirm";
 import { PromptPrivacySelect } from "./privacy-select";
 import {
@@ -104,10 +105,6 @@ export const PromptForm: FC<PromptInputFormProps> = ({
   const [novelistConfirmOpen, setNovelistConfirmOpen] = useState(false);
   const pendingSubmitRef = useRef<(() => Promise<void>) | null>(null);
   const museSelectRef = useRef<MuseSelectHandle | null>(null);
-  // Muses created on the fly from the "who is posting?" dialog — session-local
-  // — merged with the novelist's real muses so a freshly created character is
-  // immediately selectable without requiring a refetch of the novelist.
-  const [addedMuses, setAddedMuses] = useState<Muse[]>([]);
 
   const { emit } = usePromptInputEvents();
 
@@ -135,9 +132,7 @@ export const PromptForm: FC<PromptInputFormProps> = ({
     if (!novelist) return [];
 
     const novelistSource = novelistToSource(novelist);
-    const museSources = [...(novelist.muses ?? []), ...addedMuses].map(
-      museToSource,
-    );
+    const museSources = (novelist.muses ?? []).map(museToSource);
 
     switch (dropdownSelection) {
       case "NOVELIST":
@@ -145,12 +140,10 @@ export const PromptForm: FC<PromptInputFormProps> = ({
 
       case "MUSE":
         return museSources;
-
-      case "ALL":
       default:
         return [novelistSource, ...museSources];
     }
-  }, [novelist, dropdownSelection, addedMuses]);
+  }, [novelist, dropdownSelection]);
 
   const novelistConfirmSource = useMemo(
     () => sources.find((s) => s.sourceType === "NOVELIST"),
@@ -289,9 +282,10 @@ export const PromptForm: FC<PromptInputFormProps> = ({
   }, []);
 
   const handleCharacterCreated = useCallback((muse: Muse) => {
-    setAddedMuses((prev) => [...prev, muse]);
     museSelectRef.current?.selectSource(museToSource(muse));
   }, []);
+
+  const showIcMuseRequired = dropdownSelection === "MUSE" && !hasMuseOptions;
 
   return (
     <>
@@ -304,105 +298,111 @@ export const PromptForm: FC<PromptInputFormProps> = ({
         onSelectCharacter={handleSelectCharacter}
         onCharacterCreated={handleCharacterCreated}
       />
-      <Form.Root className="form-content" onSubmit={handleSend}>
-        {/* ── Meta row: sender + privacy avatars on left, media buttons on right ─ */}
-        <S.DesktopMetaRow>
-          <PromptMuseSelect
-            ref={museSelectRef}
-            sources={sources}
-            dropdownSelection={dropdownSelection}
-            initialSelection={initialSelection}
-          />
-          <ShouldRender if={privacySelectedFriends.length > 0}>
-            <IoIosShareAlt style={{ marginLeft: "8px", marginRight: "8px" }} />
-            {privacySelectedFriends.slice(0, 2).map((friend) => (
-              <>
-                <S.PrivacySelectedFriendAvatar
-                  key={friend.id}
-                  src={friend.image}
-                  alt={friend.username}
-                  onClick={() => setShowCustomPrivacyListSelection(true)}
-                />
-              </>
-            ))}
-            <S.privacyAvatarMoreIcon
-              onClick={() => setShowCustomPrivacyListSelection(true)}
-            >
-              <PiDotsThreeOutlineFill />
-            </S.privacyAvatarMoreIcon>
-          </ShouldRender>
-          <S.DesktopMediaWrap>
-            {type === "prompt" && (
-              <S.ToolButton
-                type="button"
-                style={{ marginTop: 20 }}
-                aria-label={featuredSong ? "Change song" : "Add a song"}
-                title={featuredSong ? "Change song" : "Add a song"}
-                onClick={() => setSongDialogOpen(true)}
-              >
-                <MdMusicNote />
-              </S.ToolButton>
-            )}
-            <PromptMediaInput />
-          </S.DesktopMediaWrap>
-        </S.DesktopMetaRow>
-
-        {type === "prompt" && (
-          <PromptPrivacySelect className="prompt-input-privacy-select" />
-        )}
-
-        {/* ── Editor with inline send button ─────────────────────────── */}
-        <S.DesktopEditorWrap>
-          <PromptTextField />
-          {promptText?.trim() && (
-            <Form.Submit asChild>
-              <S.DesktopSendIconBtn
-                disabled={sending}
-                title={sending ? "Sending..." : undefined}
-              >
-                <HiPaperAirplane size={16} />
-              </S.DesktopSendIconBtn>
-            </Form.Submit>
-          )}
-        </S.DesktopEditorWrap>
-
-        <PromptMediaPreview />
-
-        {type === "prompt" && featuredSong && (
-          <S.PromptSongPreview>
-            <ProfileSongPlayer
-              key={
-                featuredSong.spotifyTrackId ??
-                featuredSong.songId ??
-                featuredSong.title
-              }
-              song={featuredSong}
-              slim
-              block
+      {showIcMuseRequired ? (
+        <IcMuseRequiredForm />
+      ) : (
+        <Form.Root className="form-content" onSubmit={handleSend}>
+          {/* ── Meta row: sender + privacy avatars on left, media buttons on right ─ */}
+          <S.DesktopMetaRow>
+            <PromptMuseSelect
+              ref={museSelectRef}
+              sources={sources}
+              dropdownSelection={dropdownSelection}
+              initialSelection={initialSelection}
             />
-            <S.PromptSongRemove
-              type="button"
-              aria-label="Remove song"
-              title="Remove song"
-              onClick={() => setPromptInputState({ featuredSong: null })}
-            >
-              <MdDeleteOutline />
-            </S.PromptSongRemove>
-          </S.PromptSongPreview>
-        )}
+            <ShouldRender if={privacySelectedFriends.length > 0}>
+              <IoIosShareAlt
+                style={{ marginLeft: "8px", marginRight: "8px" }}
+              />
+              {privacySelectedFriends.slice(0, 2).map((friend) => (
+                <>
+                  <S.PrivacySelectedFriendAvatar
+                    key={friend.id}
+                    src={friend.image}
+                    alt={friend.username}
+                    onClick={() => setShowCustomPrivacyListSelection(true)}
+                  />
+                </>
+              ))}
+              <S.privacyAvatarMoreIcon
+                onClick={() => setShowCustomPrivacyListSelection(true)}
+              >
+                <PiDotsThreeOutlineFill />
+              </S.privacyAvatarMoreIcon>
+            </ShouldRender>
+            <S.DesktopMediaWrap>
+              {type === "prompt" && (
+                <S.ToolButton
+                  type="button"
+                  style={{ marginTop: 20 }}
+                  aria-label={featuredSong ? "Change song" : "Add a song"}
+                  title={featuredSong ? "Change song" : "Add a song"}
+                  onClick={() => setSongDialogOpen(true)}
+                >
+                  <MdMusicNote />
+                </S.ToolButton>
+              )}
+              <PromptMediaInput />
+            </S.DesktopMediaWrap>
+          </S.DesktopMetaRow>
 
-        {type === "prompt" && (
-          <SongPickerDialog
-            open={songDialogOpen}
-            onOpenChange={setSongDialogOpen}
-            commit={false}
-            title="Add a song to your prompt"
-            onSelected={(picked: ProfileSong) =>
-              setPromptInputState({ featuredSong: picked })
-            }
-          />
-        )}
-      </Form.Root>
+          {type === "prompt" && (
+            <PromptPrivacySelect className="prompt-input-privacy-select" />
+          )}
+
+          {/* ── Editor with inline send button ─────────────────────────── */}
+          <S.DesktopEditorWrap>
+            <PromptTextField />
+            {promptText?.trim() && (
+              <Form.Submit asChild>
+                <S.DesktopSendIconBtn
+                  disabled={sending}
+                  title={sending ? "Sending..." : undefined}
+                >
+                  <HiPaperAirplane size={16} />
+                </S.DesktopSendIconBtn>
+              </Form.Submit>
+            )}
+          </S.DesktopEditorWrap>
+
+          <PromptMediaPreview />
+
+          {type === "prompt" && featuredSong && (
+            <S.PromptSongPreview>
+              <ProfileSongPlayer
+                key={
+                  featuredSong.spotifyTrackId ??
+                  featuredSong.songId ??
+                  featuredSong.title
+                }
+                song={featuredSong}
+                slim
+                block
+              />
+              <S.PromptSongRemove
+                type="button"
+                aria-label="Remove song"
+                title="Remove song"
+                onClick={() => setPromptInputState({ featuredSong: null })}
+              >
+                <MdDeleteOutline />
+              </S.PromptSongRemove>
+            </S.PromptSongPreview>
+          )}
+
+          {type === "prompt" && (
+            <SongPickerDialog
+              open={songDialogOpen}
+              onOpenChange={setSongDialogOpen}
+              commit={false}
+              title="Add a song to your prompt"
+              onSelected={(picked: ProfileSong) =>
+                setPromptInputState({ featuredSong: picked })
+              }
+            />
+          )}
+        </Form.Root>
+      )}
     </>
   );
 };

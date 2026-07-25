@@ -78,6 +78,37 @@ export const dialogDesignClass = (design: DialogDesign): string =>
   `dialog-design-${design}`;
 
 /**
+ * Rebuilds a single `.dialog-embed` using the chosen read-only design. The
+ * sender's name and accent are resolved from `museAttrs` (keyed by muse id);
+ * the avatar is derived from the muse id. Used by the reader for every embed,
+ * and by the composer to preview the design on embeds that aren't being edited.
+ */
+export const renderDialogEmbed = (
+  embed: HTMLElement,
+  design: DialogDesign = DEFAULT_DIALOG_DESIGN,
+  museAttrs: MuseDialogAttrs = {},
+): void => {
+  const render = RENDERERS[design] ?? renderCardDialog;
+  const data = readDialogData(embed);
+  const attr = data.museId ? museAttrs[data.museId] : undefined;
+  const resolved = {
+    ...data,
+    accent: attr?.accent ?? null,
+    name: attr?.name ?? data.name,
+    useAccent: !!attr?.accent,
+  };
+  embed.removeAttribute("contenteditable");
+  embed.removeAttribute("data-selected");
+  embed.className = "dialog-embed";
+  // Drop any inline accent a previous colored render left behind so the plain
+  // (non-colored) designs fall back to the ambient novelist accent; the colored
+  // renderers set it again below when the muse opted into its own accent.
+  embed.style.removeProperty("--accent");
+  embed.style.removeProperty("--accent-hover");
+  render(embed, resolved);
+};
+
+/**
  * Rebuilds every dialog embed inside `root` using the chosen read-only design.
  * The sender's name and accent are resolved from `museAttrs` (keyed by muse id,
  * provided per thread by the backend); the avatar is derived from the muse id.
@@ -87,21 +118,9 @@ export const renderDialogEmbeds = (
   design: DialogDesign = DEFAULT_DIALOG_DESIGN,
   museAttrs: MuseDialogAttrs = {},
 ): void => {
-  const render = RENDERERS[design] ?? renderCardDialog;
-  root.querySelectorAll<HTMLElement>(".dialog-embed").forEach((embed) => {
-    const data = readDialogData(embed);
-    const attr = data.museId ? museAttrs[data.museId] : undefined;
-    const resolved = {
-      ...data,
-      accent: attr?.accent ?? null,
-      name: attr?.name ?? data.name,
-      useAccent: !!attr?.accent,
-    };
-    embed.removeAttribute("contenteditable");
-    embed.removeAttribute("data-selected");
-    embed.className = "dialog-embed";
-    render(embed, resolved);
-  });
+  root
+    .querySelectorAll<HTMLElement>(".dialog-embed")
+    .forEach((embed) => renderDialogEmbed(embed, design, museAttrs));
 };
 
 /** All design styles combined, each scoped by its `.dialog-design-*` class. */

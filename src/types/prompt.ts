@@ -47,6 +47,8 @@ export interface Comment {
   reacted: boolean;
   /** Author-set flag closing the thread: no new replies, hidden reply count. */
   concluded: boolean;
+  /** Whether the requesting novelist owns the prompt this comment was made on. */
+  isPromptOwner: boolean;
 }
 
 export interface Reply {

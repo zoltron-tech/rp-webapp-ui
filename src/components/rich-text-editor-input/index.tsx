@@ -9,6 +9,7 @@ import {
   useEffect,
   useImperativeHandle,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -29,6 +30,13 @@ import { useGlobalState } from "@/context/store/stores";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import type { MentionDataItem, MentionTab } from "@/types";
 import { MentionDropdown } from "../mention-dropdown";
+import {
+  DEFAULT_DIALOG_DESIGN,
+  type DialogDesign,
+  dialogDesignClass,
+  type MuseDialogAttrs,
+  renderDialogEmbed,
+} from "./dialog-designs";
 import {
   createDialogEmbed,
   type DialogEmbedData,
@@ -67,6 +75,10 @@ interface RichTextEditorProps {
   compact?: boolean;
   /** Muses selectable as the sender of an embedded dialog (inline editing). */
   dialogMuses?: DialogMuse[];
+  /** When set, embeds that aren't being edited preview this read-only design;
+   *  the selected embed reverts to the editable card. Omit to keep every embed
+   *  on the editable card chrome (the default for editors without dialogs). */
+  dialogDesign?: DialogDesign;
   /** Round the toolbar's top corners and the editor's bottom corners on
    *  desktop. Opt-in per call site — post/comment/reply, storyboard +
    *  storyboard-event descriptions, and storyboard event threads. */
@@ -97,6 +109,7 @@ export const RichTextEditor = forwardRef<
       fullPage,
       compact,
       dialogMuses = [],
+      dialogDesign,
       desktopRounded,
     },
     editorHandleRef,
@@ -106,6 +119,43 @@ export const RichTextEditor = forwardRef<
     const { width } = useWindowDimensions();
     const isDesktop = width !== null && width > 800;
     const rounded = desktopRounded && isDesktop;
+
+    // Design preview: when a dialogDesign is supplied, embeds that aren't being
+    // edited render in that read-only design; only the selected embed keeps the
+    // editable card chrome. Refs let the select/deselect callbacks read the
+    // current design/muses without re-subscribing.
+    const designPreview = dialogDesign != null;
+    const dialogMuseAttrs = useMemo<MuseDialogAttrs>(
+      () =>
+        Object.fromEntries(
+          dialogMuses
+            .filter((m) => m.id)
+            .map((m) => [m.id, { accent: m.accent ?? null, name: m.name }]),
+        ),
+      [dialogMuses],
+    );
+    const designRef = useRef<DialogDesign | undefined>(dialogDesign);
+    const museAttrsRef = useRef<MuseDialogAttrs>(dialogMuseAttrs);
+    useEffect(() => {
+      designRef.current = dialogDesign;
+    }, [dialogDesign]);
+    useEffect(() => {
+      museAttrsRef.current = dialogMuseAttrs;
+    }, [dialogMuseAttrs]);
+
+    // Rebuild one embed into the chosen read-only design (no-op unless preview
+    // is on). Used to render embeds that leave the "selected" edit state.
+    const renderEmbedDesign = useCallback(
+      (embed: HTMLElement) => {
+        if (!designPreview) return;
+        renderDialogEmbed(
+          embed,
+          designRef.current ?? DEFAULT_DIALOG_DESIGN,
+          museAttrsRef.current,
+        );
+      },
+      [designPreview],
+    );
 
     const [mentionItems, setMentionItems] = useState<MentionDataItem[]>([]);
     const [isMentionLoading, setIsMentionLoading] = useState(false);
@@ -256,11 +306,20 @@ export const RichTextEditor = forwardRef<
             const muse = id ? dialogMuses.find((m) => m.id === id) : null;
             if (muse) embed.dataset.museName = muse.name;
           });
-        // Render editable chrome for any saved (or legacy) dialog embeds in the
-        // loaded content, so they stay inline-editable/deletable when editing.
-        hydrateDialogEmbeds(editor, { editable: true });
+        if (designPreview) {
+          // Preview mode: start every embed in the chosen read-only design.
+          // A click selects one and swaps it to the editable card (see
+          // selectDialogNode).
+          editor
+            .querySelectorAll<HTMLElement>(".dialog-embed")
+            .forEach((embed) => renderEmbedDesign(embed));
+        } else {
+          // Render editable chrome for any saved (or legacy) dialog embeds in
+          // the loaded content, so they stay inline-editable/deletable.
+          hydrateDialogEmbeds(editor, { editable: true });
+        }
       }
-    }, [value, dialogMuses]);
+    }, [value, dialogMuses, designPreview, renderEmbedDesign]);
 
     useEffect(() => {
       if (!showMentionPopover || !mentionTabs.length) return;
@@ -1312,7 +1371,30 @@ export const RichTextEditor = forwardRef<
         setImageResizeBarPos(null);
         editorRef.current
           ?.querySelectorAll<HTMLElement>(".dialog-embed[data-selected]")
-          .forEach((el) => el.removeAttribute("data-selected"));
+          .forEach((el) => {
+            el.removeAttribute("data-selected");
+            // A different embed is being selected — return the old one to its
+            // read-only design preview.
+            if (el !== embed) renderEmbedDesign(el);
+          });
+        // In preview mode the clicked embed is currently read-only design DOM;
+        // swap it to the editable card so its line/sender/font can be edited.
+        // Rebuilding drops the native click caret, so drop it into the (now
+        // editable) line so the author can type straight away.
+        if (designPreview) {
+          mountDialogEmbed(embed, { editable: true });
+          const text = embed.querySelector<HTMLElement>(".dialog-text");
+          const sel = window.getSelection();
+          if (text && sel) {
+            text.focus();
+            const range = document.createRange();
+            range.selectNodeContents(text);
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+            saveSelection();
+          }
+        }
         embed.setAttribute("data-selected", "true");
         setSelectedDialog(embed);
         setDialogFont(embed.dataset.font || DEFAULT_FONT);
@@ -1323,19 +1405,29 @@ export const RichTextEditor = forwardRef<
         updateDialogBarPos(embed);
         refreshDialogFormats();
       },
-      [updateDialogBarPos, refreshDialogFormats],
+      [
+        updateDialogBarPos,
+        refreshDialogFormats,
+        renderEmbedDesign,
+        designPreview,
+        saveSelection,
+      ],
     );
 
     const deselectDialog = useCallback(() => {
       editorRef.current
         ?.querySelectorAll<HTMLElement>(".dialog-embed[data-selected]")
-        .forEach((el) => el.removeAttribute("data-selected"));
+        .forEach((el) => {
+          el.removeAttribute("data-selected");
+          // Return the embed to its read-only design preview once editing ends.
+          renderEmbedDesign(el);
+        });
       setSelectedDialog(null);
       setDialogBarPos(null);
       setDialogAvatarRect(null);
       setShowDialogFont(false);
       setShowDialogMuse(false);
-    }, []);
+    }, [renderEmbedDesign]);
 
     // Whole-line font for the selected dialog. Stored on data-font (persisted)
     // and mirrored as presentation on the line (stripped again on serialize).
@@ -1974,6 +2066,20 @@ export const RichTextEditor = forwardRef<
         document.removeEventListener("selectionchange", handleSelectionChange);
     }, [handleSelectionChange]);
 
+    // Re-render the preview when the chosen design (or the resolved muse names)
+    // changes. The embed being edited keeps the editable card and is skipped.
+    useEffect(() => {
+      if (!designPreview) return;
+      const editor = editorRef.current;
+      if (!editor) return;
+      editor
+        .querySelectorAll<HTMLElement>(".dialog-embed")
+        .forEach((embed) => {
+          if (embed.getAttribute("data-selected") === "true") return;
+          renderEmbedDesign(embed);
+        });
+    }, [designPreview, dialogDesign, dialogMuseAttrs, renderEmbedDesign]);
+
     // Scroll selected bullet into view when dropdown opens
     useEffect(() => {
       if (showBulletDropdown && bulletDropdownPanelRef.current) {
@@ -2507,6 +2613,10 @@ export const RichTextEditor = forwardRef<
           <S.EditorContent
             ref={editorRef}
             contentEditable
+            className={
+              dialogDesign ? dialogDesignClass(dialogDesign) : undefined
+            }
+            $dialogPreview={designPreview}
             $dropdownOpen={
               showBulletDropdown ||
               showQuotationDropdown ||

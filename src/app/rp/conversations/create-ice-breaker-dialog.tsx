@@ -17,7 +17,7 @@ import {
 import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { IceBreaker, Muse, Novelist, PromptSource } from "@/types";
+import type { IceBreaker, Novelist, PromptSource } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { createIceBreakerAction } from "./actions";
 import {
@@ -72,18 +72,13 @@ export function CreateIceBreakerDialog({
   const [loading, setLoading] = useState(false);
   const senderRowRef = useRef<HTMLDivElement>(null);
 
-  // Muses created on the fly from this dialog (session-local — merged with
-  // the novelist's real muses so a freshly created character is immediately
-  // selectable without requiring a refetch of the novelist).
-  const [addedMuses, setAddedMuses] = useState<Muse[]>([]);
-
   const novelistSource = useMemo<PromptSource | null>(
     () => (novelist ? novelistToSource(novelist) : null),
     [novelist],
   );
   const museSources = useMemo<PromptSource[]>(
-    () => [...(novelist?.muses ?? []), ...addedMuses].map(museToSource),
-    [novelist, addedMuses],
+    () => (novelist?.muses ?? []).map(museToSource),
+    [novelist],
   );
   const sources = useMemo<PromptSource[]>(
     () => (novelistSource ? [novelistSource, ...museSources] : museSources),
@@ -98,7 +93,6 @@ export function CreateIceBreakerDialog({
     sources.find((s) => s.sourceId === selectedSourceId) ?? sources[0];
 
   const quickAddMuse = useQuickAddMuse((muse) => {
-    setAddedMuses((prev) => [...prev, muse]);
     setSelectedSourceId(muse.id ?? undefined);
   });
 

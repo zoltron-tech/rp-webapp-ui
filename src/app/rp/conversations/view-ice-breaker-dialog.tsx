@@ -19,7 +19,7 @@ import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { IceBreaker, Muse, Novelist, PromptSource } from "@/types";
+import type { IceBreaker, Novelist, PromptSource } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { encryptMessageText } from "@/utils/e2e-crypto";
@@ -74,18 +74,13 @@ export function ViewIceBreakerDialog({
   const [sendingReply, setSendingReply] = useState(false);
   const replySenderRowRef = useRef<HTMLDivElement>(null);
 
-  // Muses created on the fly from this picker (session-local — merged with
-  // the novelist's real muses so a freshly created character is immediately
-  // selectable without requiring a refetch of the novelist).
-  const [addedReplyMuses, setAddedReplyMuses] = useState<Muse[]>([]);
-
   const replyNovelistSource = useMemo<PromptSource | null>(
     () => (novelist ? novelistToSource(novelist) : null),
     [novelist],
   );
   const replyMuseSources = useMemo<PromptSource[]>(
-    () => [...(novelist?.muses ?? []), ...addedReplyMuses].map(museToSource),
-    [novelist, addedReplyMuses],
+    () => (novelist?.muses ?? []).map(museToSource),
+    [novelist],
   );
   const replySources = useMemo<PromptSource[]>(
     () =>
@@ -102,7 +97,6 @@ export function ViewIceBreakerDialog({
     replySources[0];
 
   const quickAddReplyMuse = useQuickAddMuse((muse) => {
-    setAddedReplyMuses((prev) => [...prev, muse]);
     setReplySelectedSourceId(muse.id ?? undefined);
   });
 

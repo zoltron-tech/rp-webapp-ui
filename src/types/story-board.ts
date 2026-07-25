@@ -25,6 +25,19 @@ export interface StoryBoard {
    * STORY_BOARD-target activity (editing the story or one of its events). */
   reactions?: number;
   reacted?: boolean;
+  /** Muses with at least one embedded dialog anywhere in the story's threads,
+   *  sorted by name. Server-derived; kept in sync as threads are edited. */
+  cast?: StoryCastMember[];
+}
+
+/** A muse in a story's cast: minimal shape to render a character chip. */
+export interface StoryCastMember {
+  id: string;
+  name: string;
+  image: string | null;
+  avatar: NWImage | null;
+  /** The muse's accent when it opted into using it; null otherwise. */
+  accent: string | null;
 }
 
 export interface StoryBoardMember {

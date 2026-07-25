@@ -496,7 +496,7 @@ export const NameInput = styled.input`
   flex: 1;
   width: 100%;
   min-width: 0;
-  font-size: var(--font-size-h5);
+  font-size: var(--font-size-input);
   font-weight: var(--font-weight-bold);
   color: var(--text);
   font-family: var(--font);
@@ -523,10 +523,6 @@ export const NameInput = styled.input`
     border-color: var(--accent);
     background: var(--bg-3);
     outline: none;
-  }
-
-  @media (max-width: 480px) {
-    font-size: var(--font-size-h6);
   }
 `;
 

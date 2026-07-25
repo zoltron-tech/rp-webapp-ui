@@ -666,4 +666,9 @@ export const HeartButton = styled.button<{ $active: boolean }>`
 export const ReactionCount = styled.span`
   font-size: var(--font-size-small);
   font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
 `;

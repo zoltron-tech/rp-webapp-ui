@@ -16,6 +16,7 @@ import { pluralize } from "@/utils/helpers";
 import { HeartIcon } from "../common/heart-icon";
 import { AppImageViewer } from "../image-viewer/AppImageViewer";
 import { VideoViewer } from "../image-viewer/VideoViewer";
+import { ReactionLikersDialog } from "../reaction-likers-dialog";
 import { RichTextRenderer } from "../rich-text-editor-input/rich-test-renderer";
 import { usePromptState, usePromptStateSet } from "./prompt.store";
 import { PromptFeaturedSong } from "./prompt-featured-song";
@@ -40,6 +41,7 @@ export const PromptContent: FC<PromptContentProps> = ({ disableCollapse }) => {
 
   const isOOC = source?.sourceType === "NOVELIST";
   const [showShareDialog, setShowShareDialog] = useState(false);
+  const [likersOpen, setLikersOpen] = useState(false);
 
   const authState = useGlobalState("authState");
   const setPromptState = usePromptStateSet();
@@ -111,6 +113,12 @@ export const PromptContent: FC<PromptContentProps> = ({ disableCollapse }) => {
     return handleLikeToggle;
   }, [authState, handleLikeToggle]);
 
+  const handleOpenLikers = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!reactions) return;
+    setLikersOpen(true);
+  };
+
   const handleReplyClick = useCallback(() => {
     emitPromptEvent(EVENTS.PROMPT.OPEN_THREADS, { id: promptId });
   }, [emitPromptEvent, promptId]);
@@ -172,8 +180,10 @@ export const PromptContent: FC<PromptContentProps> = ({ disableCollapse }) => {
           aria-label="Like prompt"
         >
           <HeartIcon filled={reacted} />
-          <span className="count-short">{reactions}</span>
-          <span className="label-full">
+          <span className="count-short" onClick={handleOpenLikers}>
+            {reactions}
+          </span>
+          <span className="label-full" onClick={handleOpenLikers}>
             {`${reactions} ${pluralize("novelist", reactions)} ${pluralize(
               "like",
               reactions === 1 ? 2 : 1,
@@ -210,6 +220,12 @@ export const PromptContent: FC<PromptContentProps> = ({ disableCollapse }) => {
         }}
         open={showShareDialog}
         onClose={() => setShowShareDialog(false)}
+      />
+      <ReactionLikersDialog
+        open={likersOpen}
+        onClose={() => setLikersOpen(false)}
+        targetId={promptId ?? ""}
+        initialCount={reactions}
       />
     </S.PromptContent.Root>
   );

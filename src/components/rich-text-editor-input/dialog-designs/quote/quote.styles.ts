@@ -5,8 +5,8 @@ import { css } from "styled-components";
  * background, border, accent color or avatar — just the quoted line.
  */
 export const quoteDialogCss = css`
-  &.dialog-design-quote .dialog-embed,
-  &.dialog-design-quote-plain .dialog-embed {
+  &.dialog-design-quote .dialog-embed:not([data-selected="true"]),
+  &.dialog-design-quote-plain .dialog-embed:not([data-selected="true"]) {
     display: block;
     /* Horizontal margin, with extra on the left for the minimal style. */
     margin: 8px 10px 8px 24px;

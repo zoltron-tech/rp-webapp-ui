@@ -4,14 +4,20 @@ import { useState } from "react";
 import { BsCheck, BsX } from "react-icons/bs";
 import { MdAdd } from "react-icons/md";
 import { updateMuseAction } from "@/app/rp/muse/actions";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks/use-ui-context";
 import type { CreateUpdateMuse, Fandom, Muse } from "@/types";
 import * as S from "./styles";
 
 /** Shared "create a fandomless character on the fly" flow used by both the
- *  create-ice-breaker sender picker and the reply sender picker. */
+ *  create-ice-breaker sender picker and the reply sender picker.
+ *  Adds the new muse to the global store's novelist.muses immediately, so
+ *  every other reader of that store (sender pickers, composers) sees it
+ *  without a refetch. */
 export function useQuickAddMuse(onCreated: (muse: Muse) => void) {
   const { errorToast } = useUIContext();
+  const novelist = useGlobalState("novelist");
+  const setGlobalState = useGlobalStoreSet();
   const [addingMuse, setAddingMuse] = useState(false);
   const [newMuseName, setNewMuseName] = useState("");
   const [creatingMuse, setCreatingMuse] = useState(false);
@@ -55,6 +61,16 @@ export function useQuickAddMuse(onCreated: (muse: Muse) => void) {
     if ("message" in result) {
       errorToast("Failed to create character. Please try again.");
       return;
+    }
+
+    if (novelist) {
+      setGlobalState({
+        novelist: {
+          ...novelist,
+          museCount: novelist.museCount + 1,
+          muses: [...novelist.muses, result],
+        },
+      });
     }
 
     onCreated(result);

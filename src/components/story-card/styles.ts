@@ -60,7 +60,12 @@ export const CoverBadge = styled.span<{ $public?: boolean }>`
     height: 11px;
   }
 
-  @container content-container (max-width: 1000px) {
+  /* Real viewport check, not a container query: the layout's content column
+     is squeezed under 1000px by the fixed sidebar reserves on effectively
+     every desktop width once the sidebars are showing (>= 1300px), so a
+     container query here would keep this in its "narrow" state on desktop
+     too. */
+  @media (max-width: 600px) {
     .badge-label {
       display: none;
     }
@@ -188,7 +193,7 @@ export const CardTitle = styled.h3`
   overflow: hidden;
   text-overflow: ellipsis;
 
-  @container content-container (max-width: 1000px) {
+  @media (max-width: 600px) {
     font-size: var(--font-size-small);
   }
 `;
@@ -267,14 +272,18 @@ export const Card = styled.div`
   transition: transform 0.22s ease, box-shadow 0.22s ease,
     border-color 0.22s ease;
 
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
-    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
-  }
+  /* hover:hover excludes touch devices — otherwise :hover sticks after a tap
+     until the next tap elsewhere, which reads as a stuck/broken card. */
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
+      border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    }
 
-  &:hover ${Cover} .cover-image {
-    transform: scale(1.05);
+    &:hover ${Cover} .cover-image {
+      transform: scale(1.05);
+    }
   }
 
   &:focus-visible {
@@ -304,10 +313,6 @@ export const CardWrapper = styled.div`
 
   &.profile {
     --card-w: 150px;
-  }
-
-  @container content-container (max-width: 1000px) {
-    --card-w: 165px;
   }
 
   @media (max-width: 600px) {
@@ -420,6 +425,17 @@ export const HeartStatChip = styled.button<{ $active?: boolean }>`
 
   &:active {
     transform: scale(0.94);
+  }
+`;
+
+export const HeartCountText = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
   }
 `;
 
@@ -550,6 +566,61 @@ export const SectionLabel = styled.div`
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-secondary);
+`;
+
+/* Horizontal, swipeable row of cast (muse) avatars shown in the preview. */
+export const CastRow = styled.div`
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  margin-top: 8px;
+  padding: 4px 2px 2px;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+export const CastChip = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  width: 56px;
+`;
+
+export const CastAvatar = styled.img`
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg-4);
+  border: 2px solid var(--bg-2);
+`;
+
+export const CastAvatarFallback = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 70%);
+  color: #fff;
+  font-weight: var(--font-weight-bold);
+  border: 2px solid var(--bg-2);
+`;
+
+export const CastName = styled.span`
+  max-width: 56px;
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `;
 
 /* Positioning context for the rail and its left/right nav arrows. */

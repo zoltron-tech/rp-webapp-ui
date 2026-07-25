@@ -111,24 +111,28 @@ const keyboard05 = keyframes`
 
 /* ---------- BACKGROUND WRAPPER ---------- */
 
+/* Scoped to ContentContainer (its nearest position:relative ancestor) rather
+   than the viewport — the content column no longer spans the full viewport
+   width now that LeftNav/RightSidebar can flank it, and the two sidebars
+   aren't the same width, so a viewport-centered fixed overlay drifted off
+   the actual content column's center. */
 export const BackgroundOverlay = styled.div`
-  width: 100%;
-  height: 100%;
-  position: fixed;
+  position: absolute;
+  inset: 0;
+  min-height: 100dvh;
   z-index: ${Z_INDEX.MODAL} - 1;
   opacity: 95%;
   background-color: var(--bg-1);
 `;
 
 export const LoadingRoot = styled.div`
-  width: 100%;
-  height: 100%;
-  position: fixed;
+  position: absolute;
+  inset: 0;
+  min-height: 100dvh;
   z-index: ${Z_INDEX.MODAL};
   cursor: progress;
   display: flex;
   align-items: center;
-  justify-content: center;
   flex-direction: column;
 
   /* ---------- TYPEWRITER ROOT ---------- */
@@ -143,6 +147,7 @@ export const LoadingRoot = styled.div`
     --duration: 3s;
 
     position: relative;
+    margin-top: 50dvh;
     animation: ${bounce05} var(--duration) linear infinite;
 
     box-shadow: 0 4px 30px var(--bg-2);

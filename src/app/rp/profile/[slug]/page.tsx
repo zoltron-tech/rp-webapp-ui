@@ -398,6 +398,8 @@ export default function UserProfilePage({}) {
   const [novelist, setNovelist] = useState<Novelist | null>(
     username === user?.username ? userNovelist : null,
   );
+  const atMuseLimit =
+    (novelist?.museCount ?? 0) >= (novelist?.tier.museLimit ?? 0);
 
   const {
     activities,
@@ -1337,7 +1339,16 @@ export default function UserProfilePage({}) {
                 style={{ width: "100%" }}
                 direction="column"
               >
-                <S.SubText>{`Characters (${novelist?.museCount})`}</S.SubText>
+                <S.MuseSectionHeader>
+                  <span>{`Characters (${novelist?.museCount})`}</span>
+                  <S.MuseSectionRule />
+                  <ShouldRender if={isCurrentUser && !atMuseLimit}>
+                    <S.AddMuseButton onClick={toCreateMusePage}>
+                      <IoMdPersonAdd />
+                      Add
+                    </S.AddMuseButton>
+                  </ShouldRender>
+                </S.MuseSectionHeader>
                 <S.MuseList>
                   {mainVerseMuses(novelist?.muses)
                     .slice(0, 3)
@@ -1479,6 +1490,7 @@ export default function UserProfilePage({}) {
                     hasMore={hasMoreActivities}
                     loadingMore={loadingMoreActivities}
                     onLoadMore={loadMoreActivities}
+                    endMarker={activities.length > 0}
                   />
                 </>
               ) : (
@@ -1500,6 +1512,7 @@ export default function UserProfilePage({}) {
                     hasMore={hasMorePosts}
                     loadingMore={loadingMorePosts}
                     onLoadMore={loadMorePosts}
+                    endMarker={posts.length > 0}
                   />
                 </>
               ))}
@@ -1519,6 +1532,7 @@ export default function UserProfilePage({}) {
                     hasMore={hasMorePrompts}
                     loadingMore={loadingMorePrompts}
                     onLoadMore={loadMorePrompts}
+                    endMarker={prompts.length > 0}
                   />
                 </>
               ))}

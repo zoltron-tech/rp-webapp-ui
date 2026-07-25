@@ -77,6 +77,22 @@ export function toAdTimeText(fields: DateTimeFields): string {
   return `${pad(fields.hour)}:${pad(fields.minute)}`;
 }
 
+/** Reformats raw keystrokes into "dd-mm-yyyy" as the user types, inserting
+ *  the dashes automatically — mobile's numeric keypad has no "-" key, so
+ *  digit-only input must still be able to produce a valid date string. */
+export function formatAdDateInput(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 8);
+  const parts = [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4, 8)];
+  return parts.filter(Boolean).join("-");
+}
+
+/** Same auto-formatting as formatAdDateInput, for "hh:mm". */
+export function formatAdTimeInput(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 4);
+  const parts = [digits.slice(0, 2), digits.slice(2, 4)];
+  return parts.filter(Boolean).join(":");
+}
+
 /** Validates ranges only (not days-in-month) — good enough to catch typos
  *  without re-implementing a calendar. */
 export function parseAdDateText(

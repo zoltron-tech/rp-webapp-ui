@@ -14,7 +14,9 @@ import {
 import { GlobalMusicPlayer } from "@/components/global-music-player";
 import { InstallAppPrompt } from "@/components/install-app-prompt";
 import { JoinDiscordPrompt } from "@/components/join-discord-prompt";
-import { ContentContainer, TopBar } from "@/components/layout";
+import { ContentContainer, LeftNav, RightSidebar, TopBar } from "@/components/layout";
+import { NAV_WIDTH } from "@/components/layout/left-nav/styles";
+import { SIDEBAR_WIDTH } from "@/components/layout/right-sidebar/styles";
 import {
   AuthProvider,
   MusicProvider,
@@ -24,6 +26,7 @@ import {
 import { useSocket } from "@/context/socket";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
+import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import { setBadgeCount } from "@/lib/badge-manager";
 import { THEME_DARK, THEME_LIGHT } from "@/theme";
 import type { StoreState } from "@/types/state";
@@ -34,6 +37,11 @@ import {
 } from "@/utils/e2e-crypto";
 import { getUnreadReplyCount } from "./outgoing-threads/actions";
 import * as S from "./styles";
+
+/** Visual gap between the fixed LeftNav/RightSidebar and the content column
+ * they flank — mirrors what used to be AppGrid's flex `gap` before the
+ * sidebars moved out of its layout flow. */
+const SIDEBAR_GAP = 24;
 
 /**
  * Schedule non-critical background work for when the browser is idle so it
@@ -79,6 +87,17 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
   const unreadConversationIds = useGlobalState("unreadConversationIds");
   const unreadReplyCount = useGlobalState("unreadReplyCount");
   const authState = useGlobalState("authState");
+  const hideAppSidebars = useGlobalState("hideAppSidebars");
+  const { width } = useWindowDimensions();
+  // LeftNav + RightSidebar need real estate beyond the page's own content
+  // column on both sides — below this, don't even mount them (avoids
+  // pointless preview fetches on phones/tablets that will never show them).
+  const canShowSidebars =
+    authState === "LOGGED_IN" && width !== null && width >= 1300;
+  // Within a wide-enough viewport, a page can still opt out at runtime (e.g.
+  // the storyboard book reader) — this just toggles the slide transition on
+  // an already-mounted sidebar instead of unmounting/refetching it.
+  const showSidebars = canShowSidebars && !hideAppSidebars;
 
   // Prefetch the current group count after login so the create-group gate is ready
   useEffect(() => {
@@ -152,7 +171,17 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
       <GlobalMusicPlayer />
       <InstallAppPrompt />
       <JoinDiscordPrompt />
-      <ContentContainer>{children}</ContentContainer>
+      {/* LeftNav/RightSidebar are position:fixed and live outside AppGrid
+          entirely (see their styles) so they never scroll with the page —
+          AppGrid just reserves the horizontal room for them. */}
+      {canShowSidebars && <LeftNav visible={showSidebars} />}
+      <S.AppGrid
+        $leftReserve={showSidebars ? NAV_WIDTH + SIDEBAR_GAP : 0}
+        $rightReserve={showSidebars ? SIDEBAR_WIDTH + SIDEBAR_GAP : 0}
+      >
+        <ContentContainer>{children}</ContentContainer>
+      </S.AppGrid>
+      {canShowSidebars && <RightSidebar visible={showSidebars} />}
     </S.PageContainer>
   );
 };
@@ -182,6 +211,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           friendSuggestions: null,
           groupCount: null,
           helloStickers: null,
+          hideAppSidebars: false,
           justOnboarded: false,
           lastReadConversationId: null,
           muses: [],

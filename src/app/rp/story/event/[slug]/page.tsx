@@ -4,6 +4,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BsCalendar2Date } from "react-icons/bs";
 import { FaBookmark, FaPlus } from "react-icons/fa6";
+import { FiShare2 } from "react-icons/fi";
 import { IoArrowBackOutline } from "react-icons/io5";
 import { LuBookmarkPlus, LuBookOpen, LuScrollText } from "react-icons/lu";
 import { TfiLocationPin } from "react-icons/tfi";
@@ -13,7 +14,8 @@ import { AppAlertDialog } from "@/components/dialog";
 import EventThreadInput from "@/components/event-thread-input";
 import { ProfileSongPlayer } from "@/components/profile-song";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
-import { useGlobalState } from "@/context/store/stores";
+import { ShareChapterDialog } from "@/components/share-chapter-dialog";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext, useWindowDimensions } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type {
@@ -54,6 +56,7 @@ export default function StoryboardEventPage({}) {
   const searchParams = useSearchParams();
   const authState = useGlobalState("authState");
   const user = useGlobalState("user");
+  const setGlobalState = useGlobalStoreSet();
 
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
@@ -88,6 +91,7 @@ export default function StoryboardEventPage({}) {
   const [threadToDelete, setThreadToDelete] =
     useState<StoryBoardEventThread | null>(null);
   const [mode, setMode] = useState<ReadingMode>("scroll");
+  const [showShareDialog, setShowShareDialog] = useState(false);
   // Window size is only known on the client; gate window-dependent UI behind a
   // mount flag so the server and first client render agree (no hydration skew).
   const [mounted, setMounted] = useState(false);
@@ -120,6 +124,13 @@ export default function StoryboardEventPage({}) {
   const canUseBook = mounted && (winW ?? 0) >= BOOK_MODE_MIN_WIDTH;
   // Never leave the reader stuck in a mode the viewport can't show.
   const effectiveMode: ReadingMode = canUseBook ? mode : "scroll";
+
+  // Book mode needs the full width — hide the shared layout's LeftNav/
+  // RightSidebar while it's active, restore them on mode change/unmount.
+  useEffect(() => {
+    setGlobalState({ hideAppSidebars: effectiveMode === "book" });
+    return () => setGlobalState({ hideAppSidebars: false });
+  }, [effectiveMode, setGlobalState]);
 
   const loadedEnd = windowStart + storyboardEventThreads.length;
   const hasOlder = windowStart > 0;
@@ -418,9 +429,10 @@ export default function StoryboardEventPage({}) {
 
   const switchMode = (next: ReadingMode) => {
     if (next === mode) return;
-    // Hand the current position across so the reader resumes in place.
+    // Hand the current position to book mode so it opens on the right
+    // spread. Coming back to scroll mode intentionally does NOT jump the
+    // page's scroll position to match — it just stays where it already is.
     if (next === "book") setBookTarget(currentIndexRef.current);
-    else setScrollTarget(currentIndexRef.current);
     setMode(next);
   };
 
@@ -556,6 +568,13 @@ export default function StoryboardEventPage({}) {
             </S.ModeButton>
           </S.ModeToggle>
         )}
+        <S.BookmarkButton
+          onClick={() => setShowShareDialog(true)}
+          aria-label="Share this chapter"
+          title="Share this chapter"
+        >
+          <FiShare2 size={17} />
+        </S.BookmarkButton>
       </S.TopBar>
 
       {storyboardEvent?.song && (
@@ -730,12 +749,23 @@ export default function StoryboardEventPage({}) {
       {effectiveMode === "scroll" && (
         <ScrollJumpButton
           direction="down"
-          icon={<FaPlus size={18} />}
+          icon={
+            authState === "LOGGED_IN" && isMember ? (
+              <FaPlus size={18} />
+            ) : undefined
+          }
           visible={showScrollToBottom}
           onClick={scrollToBottom}
           label="Jump to the latest passage"
         />
       )}
+
+      <ShareChapterDialog
+        event={storyboardEvent}
+        storyboardName={storyboard?.name ?? ""}
+        open={showShareDialog}
+        onClose={() => setShowShareDialog(false)}
+      />
     </S.ParentContainer>
   );
 }

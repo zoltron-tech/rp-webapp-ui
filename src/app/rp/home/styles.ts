@@ -1,4 +1,5 @@
 import { css, keyframes, styled } from "styled-components";
+import { Z_INDEX } from "@/theme";
 
 // ─── Feed shimmer ─────────────────────────────────────────────────────────────
 
@@ -90,11 +91,11 @@ export const ShimmerBlock = styled.div<{ $height?: string }>`
 
 // ─── Carousel card shimmers ───────────────────────────────────────────────────
 
-/** Matches MusePreviewCard home-variant dimensions (180 × 300, 120 × 220 mobile). */
+/** Matches MusePreviewCard dimensions (240 × 420, 120 × 220 mobile). */
 export const MuseCardShimmer = styled.div`
   flex-shrink: 0;
-  width: 180px;
-  height: 300px;
+  width: 240px;
+  height: 420px;
   border-radius: 8px;
   ${shimmer}
 
@@ -104,7 +105,7 @@ export const MuseCardShimmer = styled.div`
   }
 `;
 
-/** Matches StoryCard dimensions (240 × 360, 170 × 255 in narrow content, 160 × 240 mobile). */
+/** Matches StoryCard dimensions (200 × 392 desktop, 158 × 321 mobile). */
 export const StoryCardShimmer = styled.div`
   flex-shrink: 0;
   /* Cover (2:3 of width) + info panel, matching the redesigned StoryCard. */
@@ -112,11 +113,6 @@ export const StoryCardShimmer = styled.div`
   height: calc(200px * 1.5 + 92px);
   border-radius: 8px;
   ${shimmer}
-
-  @container content-container (max-width: 1000px) {
-    width: 165px;
-    height: calc(165px * 1.5 + 84px);
-  }
 
   @media (max-width: 600px) {
     width: 158px;
@@ -129,31 +125,23 @@ export const NovelistCardShimmer = styled.div`
   flex-shrink: 0;
   width: 240px;
   height: 344px;
-  border-radius: 18px;
+  border-radius: 8px;
   ${shimmer}
 
   @media (max-width: 600px) {
     width: 160px;
     height: 248px;
-    border-radius: 14px;
+    border-radius: 8px;
   }
 `;
 
-// ─── Sidebar friend shimmers ──────────────────────────────────────────────────
-
-export const SidebarShimmerList = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 20px 8px;
-  width: 100%;
-`;
+// ─── Friends strip shimmers ───────────────────────────────────────────────────
 
 export const SidebarShimmerItem = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  flex-shrink: 0;
   gap: 6px;
 `;
 
@@ -194,104 +182,30 @@ export const Button = styled.button`
   }
 `;
 
-/* The home viewport: exactly the space under the sticky TopBar. Fixing the
-   height here (instead of letting content dictate it) means the outer page
-   has no extra height to scroll — the two columns can never be dragged
-   off-screen by scrolling empty space. Each column scrolls internally.
-   The calc() below only accounts for the TopBar and is a fallback for the
-   first paint; anything else that can render above ContentContainer in the
-   shared layout (e.g. GlobalMusicPlayer's 36px bar while a song is playing)
-   would silently make it wrong, so page.tsx measures the real remaining
-   viewport height at runtime (via $measuredHeight) and overrides it —
-   see `useViewportRemainder` usage in page.tsx. */
-export const ParentWrapperContainer = styled.div<{ $measuredHeight?: number }>`
-  display: flex;
-  flex-direction: row;
-  justify-content: start;
-  align-items: stretch;
-  gap: 0.3em;
-  width: 100%;
-  height: ${({ $measuredHeight }) =>
-    $measuredHeight != null
-      ? `${$measuredHeight}px`
-      : "calc(100dvh - var(--topbar-height))"};
-  overflow: hidden;
-`;
-
-export const LeftWrapperContainer = styled.div`
+/** Single-column page body, centered like the profile page. The outer
+ * main.page-container owns scrolling — no fixed height, no internal scroll
+ * container here. Background/border/radius mark out the 900px content
+ * column against the full-width page behind it. */
+export const MainContainer = styled.div`
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  flex-shrink: 0;
-  width: 15cqw;
-  height: 100%;
-  overflow: hidden;
-
-  container-name: left_wrapper;
-  container-type: inline-size;
-
-  @container (max-width: 1200px) {
-    & {
-      width: 70px;
-    }
-  }
-`;
-
-export const ListContainer = styled.div`
-  flex: 1;
-  min-height: 0;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  overflow-x: hidden;
-  /* Prevent scroll chaining to the body once this list's scroll reaches its
-     end — otherwise the whole page becomes scrollable (see the matching fix
-     on RightWrapperContainer). */
-  overscroll-behavior: contain;
-  background-color: ${({ theme }: any) => theme.background};
-  border-top-right-radius: 5px;
-  border-bottom-right-radius: 5px;
-  border-top: 1px solid var(--bg-6);
-  border-right: 1px solid var(--bg-6);
-  border-bottom: 1px solid var(--bg-6);
-
-  @container left_wrapper (max-width: 200px) {
-    & {
-      width: 70px;
-    }
-  }
-
-  &::-webkit-scrollbar-track,
-  &::-webkit-scrollbar-thumb,
-  &::-webkit-scrollbar {
-    visibility: hidden;
-    width: 0.35em;
-  }
-
-  &:hover {
-    &::-webkit-scrollbar-track,
-    &::-webkit-scrollbar-thumb,
-    &::-webkit-scrollbar {
-      visibility: visible;
-    }
-  }
-`;
-
-export const RightWrapperContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: start;
   align-items: flex-start;
-  flex: 1;
+  width: 100%;
   min-width: 0;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  /* Prevent scroll chaining to the body when the mixed feed scroll reaches
-     its end — otherwise the whole page scrolls and scroll-to-top breaks. */
-  overscroll-behavior: contain;
+  max-width: 900px;
+  margin: 16px auto;
+  padding: 16px;
+  background-color: var(--bg-2);
+  border: 1px solid var(--bg-6);
+  border-radius: 16px;
+
+  @media (max-width: 600px) {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+  }
 `;
 
 export const ContentContainer = styled.div`
@@ -303,16 +217,12 @@ export const ContentContainer = styled.div`
   margin-top: 10px;
 `;
 
-/** Friends column inside LeftWrapperContainer — fills the column height and
- * top-aligns its content (heading + list) so it renders flush with the top.
- * ListContainer inside it flexes to fill the remaining space and owns the
- * only vertical scroll for the friends list. */
-export const FriendsContentContainer = styled(ContentContainer)`
-  height: 100%;
-  min-height: 0;
-  margin-top: 20px;
-  justify-content: flex-start;
-  overflow: hidden;
+/** Single "continue reading" bookmark card above Stories — not a carousel,
+ * so just a centered, comfortably wide single item. */
+export const ContinueReadingWrap = styled.div`
+  width: 100%;
+  max-width: 700px;
+  padding-inline: 4px;
 `;
 
 export const ActivityContainer = styled.div`
@@ -365,8 +275,6 @@ export const AddFriendButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 20px;
-  margin-bottom: 10px;
   flex-shrink: 0;
   align-self: center;
   transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease,
@@ -382,20 +290,16 @@ export const AddFriendButton = styled.button`
   &:active {
     transform: scale(0.95);
   }
-
-  @media (max-width: 600px)
-    {
-      margin-left: 10px;
-    }
 `;
 
 export const PartitionContainer = styled.div`
-  width: 84cqw;
+  width: 100%;
   display: flex;
   flex-direction: row;
   justify-content: start;
   align-items: flex-start;
   gap: 0.3rem;
+  padding-inline: 4px;
   overflow-x: auto;
 
   &::-webkit-scrollbar-track,
@@ -409,58 +313,72 @@ export const PartitionContainer = styled.div`
       visibility: visible;
     }
   }
+`;
 
-  @media screen and (max-width: 800px) {
-    padding-left: 12px;
+/** Positioning context for a PartitionContainer/FriendsStrip row plus its
+ * left/right ScrollNavButtons. */
+export const ScrollRowWrap = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+/** Circular scroll-by-one-page button overlaid on a horizontal row's edge. */
+export const ScrollNavButton = styled.button<{
+  $side: "left" | "right";
+  $visible: boolean;
+}>`
+  all: unset;
+  box-sizing: border-box;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  ${({ $side }) => ($side === "left" ? "left: 2px;" : "right: 2px;")}
+  z-index: ${Z_INDEX.SCROLL_JUMP};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: var(--text);
+  background: color-mix(in srgb, var(--bg-2) 85%, transparent);
+  border: 1px solid var(--bg-6);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  opacity: ${({ $visible }) => ($visible ? 1 : 0)};
+  pointer-events: ${({ $visible }) => ($visible ? "auto" : "none")};
+  transition: opacity 0.18s ease, background 0.15s ease, color 0.15s ease,
+    border-color 0.15s ease;
+
+  svg {
+    width: 16px;
+    height: 16px;
   }
 
-  @container (max-width: 1200px) {
-    & {
-      width: 92cqw;
-      font-size: 18px;
+  @media (hover: hover) {
+    &:hover {
+      background: var(--accent);
+      color: #fff;
+      border-color: transparent;
     }
   }
 
-  @container (max-width: 1000px) {
-    & {
-      width: 88cqw;
-      font-size: 18px;
-    }
+  &:active {
+    transform: translateY(-50%) scale(0.92);
   }
+`;
 
-  @container (max-width: 700px) {
-    & {
-      width: 88cqw;
-      font-size: 18px;
-    }
-  }
+/** Friends strip — same scrollable row as PartitionContainer, plus vertical
+ * padding so the avatar's hover outline has room and isn't clipped by the
+ * row's own overflow-x scroll box, and a wider gap between the (now bigger)
+ * desktop avatars. */
+export const FriendsStrip = styled(PartitionContainer)`
+  padding-block: 8px;
+  gap: 1.25rem;
 
-  @container (max-width: 600px) {
-    & {
-      width: 88cqw;
-      font-size: 18px;
-    }
-  }
-
-  @container (max-width: 550px) {
-    & {
-      width: 85cqw;
-      font-size: 18px;
-    }
-  }
-
-  @container (max-width: 430px) {
-    & {
-      width: 82cqw;
-      font-size: 18px;
-    }
-  }
-
-  @container (max-width: 360px) {
-    & {
-      width: 75cqw;
-      font-size: 18px;
-    }
+  @container page-container (max-width: 600px) {
+    gap: 0.5rem;
   }
 `;
 
@@ -469,10 +387,10 @@ export const NextPageCard = styled.button<{ $height?: string }>`
   all: unset;
   box-sizing: border-box;
   flex-shrink: 0;
-  /* Match preview card .home variant sizing */
-  width: 180px;
-  min-width: 180px;
-  height: ${({ $height }) => $height ?? "300px"};
+  /* Match MusePreviewCard sizing */
+  width: 240px;
+  min-width: 240px;
+  height: ${({ $height }) => $height ?? "420px"};
   border-radius: var(--border-radius, 8px);
   border: 1.5px dashed var(--bg-6);
   background: var(--bg-2);
@@ -515,13 +433,14 @@ export const NextPageCard = styled.button<{ $height?: string }>`
 export const NextPageNovelistCard = styled(NextPageCard)`
   width: 240px;
   min-width: 240px;
-  height: 344px;
-  border-radius: 18px;
+  height: auto;
+  min-height: 360px;
+  border-radius: 8px;
 
   @media (max-width: 600px) {
     width: 160px;
     min-width: 160px;
-    height: 248px;
-    border-radius: 14px;
+    min-height: 265px;
+    border-radius: 4px;
   }
 `;

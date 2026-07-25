@@ -247,6 +247,59 @@ export const CharactersIcon: FC<SvgProps> = ({ size = 20 }) => (
   </svg>
 );
 
+// ── Edit Profile — iOS-style: glossy gold pencil at 45°, silver ferrule, pink eraser, wood collar, graphite tip ──
+export const EditProfileIcon: FC<SvgProps> = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <defs>
+      {/* Barrel: dark gold edge → bright crest → dark gold edge (cross-barrel) */}
+      <linearGradient id="umEpBarrel" x1="9.4" y1="6" x2="14.6" y2="6" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"   stopColor="#A07808" />
+        <stop offset="34%"  stopColor="#F0C830" />
+        <stop offset="60%"  stopColor="#FFF0A8" />
+        <stop offset="100%" stopColor="#B48810" />
+      </linearGradient>
+      {/* Ferrule: light steel → slate */}
+      <linearGradient id="umEpFerrule" x1="9.4" y1="4.2" x2="14.6" y2="6.4" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"   stopColor="#E8ECF2" />
+        <stop offset="50%"  stopColor="#A8B2C0" />
+        <stop offset="100%" stopColor="#6C7686" />
+      </linearGradient>
+      {/* Eraser: bright rose → deep coral */}
+      <linearGradient id="umEpEraser" x1="9.6" y1="3" x2="14.4" y2="5" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"   stopColor="#FFC2CE" />
+        <stop offset="100%" stopColor="#E86A82" />
+      </linearGradient>
+      {/* Wood collar: pale tan → warm brown */}
+      <linearGradient id="umEpWood" x1="9.4" y1="17.5" x2="14.6" y2="20.8" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"   stopColor="#F0D8A8" />
+        <stop offset="100%" stopColor="#B88840" />
+      </linearGradient>
+    </defs>
+
+    <g transform="rotate(45 12 12)">
+      {/* Eraser */}
+      <rect x="9.6" y="2.6" width="4.8" height="2.2" rx="1.1" fill="url(#umEpEraser)" />
+      {/* Metal ferrule */}
+      <rect x="9.4" y="4.4" width="5.2" height="2.2" rx="0.4" fill="url(#umEpFerrule)" />
+      {/* Ferrule crimp lines */}
+      <line x1="9.4" y1="5.2" x2="14.6" y2="5.2" stroke="#586274" strokeWidth="0.4" opacity="0.5" />
+      <line x1="9.4" y1="5.9" x2="14.6" y2="5.9" stroke="#586274" strokeWidth="0.4" opacity="0.5" />
+      {/* Barrel */}
+      <rect x="9.4" y="6.4" width="5.2" height="11.2" fill="url(#umEpBarrel)" />
+      {/* Barrel specular stripe */}
+      <rect x="10.0" y="6.4" width="1.0" height="11.2" rx="0.5" fill="#FFFFFF" opacity="0.38" />
+      {/* Wood cone */}
+      <path d="M9.4 17.6 L14.6 17.6 L12 21.0 Z" fill="url(#umEpWood)" />
+      {/* Wood shade */}
+      <path d="M12 17.6 L14.6 17.6 L12 21.0 Z" fill="#8A6428" opacity="0.30" />
+      {/* Graphite tip */}
+      <path d="M11.0 19.5 L13.0 19.5 L12 21.1 Z" fill="#2A2A2E" />
+      {/* Outline */}
+      <rect x="9.4" y="6.4" width="5.2" height="11.2" stroke="#A07808" strokeWidth="0.4" fill="none" opacity="0.4" />
+    </g>
+  </svg>
+);
+
 // ── Inbox — iOS-style: deep navy envelope body, open flap, parchment letter with text lines, gloss overlay ──
 export const InboxIcon: FC<SvgProps> = ({ size = 20 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -1034,5 +1087,209 @@ export const StoriesIcon: FC<SvgProps> = ({ size = 20 }) => (
 
     {/* ── Cover rim outline ── */}
     <rect x="4" y="3" width="16" height="18" rx="2.4" stroke="#1E1860" strokeWidth="0.5" fill="none" opacity="0.5" />
+  </svg>
+);
+
+// ── Home — iOS-style: gradient sky-blue roof, parchment wall, gloss overlay, walnut door, porthole window ──
+export const HomeIcon: FC<SvgProps> = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <defs>
+      {/* Roof: bright sky highlight → mid azure → deep navy shadow */}
+      <linearGradient id="umHmRoof" x1="2" y1="3" x2="22" y2="13" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"   stopColor="#5CC0FF" />
+        <stop offset="40%"  stopColor="#2E90E8" />
+        <stop offset="75%"  stopColor="#1A68C0" />
+        <stop offset="100%" stopColor="#0E3E88" />
+      </linearGradient>
+      {/* Wall: bright ivory upper-left → warm cream → amber lower-right */}
+      <linearGradient id="umHmWall" x1="5" y1="11" x2="19" y2="22" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"   stopColor="#FFFFFB" />
+        <stop offset="55%"  stopColor="#F8F0DC" />
+        <stop offset="100%" stopColor="#ECD8A8" />
+      </linearGradient>
+      {/* Door: warm walnut top → deep umber base */}
+      <linearGradient id="umHmDoor" x1="9.6" y1="14.6" x2="14.4" y2="21.6" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"   stopColor="#8A5A20" />
+        <stop offset="55%"  stopColor="#6A4010" />
+        <stop offset="100%" stopColor="#40260A" />
+      </linearGradient>
+      {/* Window glass: bright sky core → deep azure edge */}
+      <radialGradient id="umHmWin" cx="35%" cy="30%" r="70%">
+        <stop offset="0%"   stopColor="#D0F0FF" />
+        <stop offset="55%"  stopColor="#3AA0E0" />
+        <stop offset="100%" stopColor="#1560A8" />
+      </radialGradient>
+      {/* Gloss dome overlay */}
+      <radialGradient id="umHmGl" cx="30%" cy="26%" r="72%">
+        <stop offset="0%"   stopColor="#FFFFFF" stopOpacity="0.5" />
+        <stop offset="55%"  stopColor="#FFFFFF" stopOpacity="0.08" />
+        <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+      </radialGradient>
+    </defs>
+
+    {/* ── Chimney ── */}
+    <rect x="15" y="4.4" width="2" height="4.2" fill="url(#umHmRoof)" />
+    <rect x="15" y="4.4" width="2" height="4.2" stroke="#0E3E88" strokeWidth="0.4" fill="none" opacity="0.4" />
+
+    {/* ── Roof ── */}
+    <path d="M2 12L12 3L22 12L20.3 13.6L12 6.4L3.7 13.6Z" fill="url(#umHmRoof)" />
+    {/* Roof specular streak */}
+    <path d="M5.5 11.3L12 5.8" stroke="#FFFFFF" strokeWidth="1" strokeLinecap="round" opacity="0.5" />
+    {/* Roof shadow fold — right slope */}
+    <path d="M12 6.4L19.6 13L18.6 14Q14.8 10.6 12 8.2Z" fill="#0A2E68" opacity="0.22" />
+    {/* Roof outline */}
+    <path d="M2 12L12 3L22 12L20.3 13.6L12 6.4L3.7 13.6Z" stroke="#0E3E88" strokeWidth="0.5" fill="none" opacity="0.45" />
+
+    {/* ── Wall body ── */}
+    <rect x="5" y="12" width="14" height="9.6" rx="1" fill="url(#umHmWall)" />
+    {/* Left face specular */}
+    <line x1="6" y1="12.7" x2="6" y2="21.2" stroke="#FFFFFF" strokeWidth="0.7" strokeLinecap="round" opacity="0.5" />
+    {/* Right face shadow */}
+    <line x1="18.3" y1="12.7" x2="18.3" y2="21.2" stroke="#B89860" strokeWidth="0.6" strokeLinecap="round" opacity="0.32" />
+    {/* Gloss overlay */}
+    <rect x="5" y="12" width="14" height="9.6" rx="1" fill="url(#umHmGl)" />
+    {/* Wall outline */}
+    <rect x="5" y="12" width="14" height="9.6" rx="1" stroke="#B89860" strokeWidth="0.5" fill="none" opacity="0.4" />
+
+    {/* ── Porthole window ── */}
+    <circle cx="8" cy="15.7" r="1.7" fill="url(#umHmWin)" />
+    <line x1="6.5" y1="15.7" x2="9.5" y2="15.7" stroke="#FFFFFF" strokeWidth="0.35" opacity="0.55" />
+    <line x1="8" y1="14.2" x2="8" y2="17.2" stroke="#FFFFFF" strokeWidth="0.35" opacity="0.55" />
+    <circle cx="8" cy="15.7" r="1.7" stroke="#1560A8" strokeWidth="0.4" fill="none" opacity="0.45" />
+
+    {/* ── Door ── */}
+    <rect x="9.6" y="14.6" width="4.8" height="7" rx="1.6" fill="url(#umHmDoor)" />
+    {/* Doorknob */}
+    <circle cx="13.6" cy="18.1" r="0.42" fill="#F0D040" opacity="0.85" />
+    {/* Door outline */}
+    <rect x="9.6" y="14.6" width="4.8" height="7" rx="1.6" stroke="#40260A" strokeWidth="0.45" fill="none" opacity="0.4" />
+  </svg>
+);
+
+// ── Friends — iOS-style: azure-blue front figure, violet figure behind, gloss domes, specular arcs on each silhouette ──
+export const FriendsIcon: FC<SvgProps> = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <defs>
+      {/* Front figure: bright azure highlight → mid blue → deep navy shadow */}
+      <linearGradient id="umFrBlu" x1="2" y1="10" x2="14" y2="22" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"   stopColor="#57B8FF" />
+        <stop offset="40%"  stopColor="#2C86E8" />
+        <stop offset="75%"  stopColor="#1A5CC0" />
+        <stop offset="100%" stopColor="#0E3688" />
+      </linearGradient>
+      {/* Back figure: bright violet highlight → mid amethyst → deep indigo shadow */}
+      <linearGradient id="umFrVio" x1="10" y1="6" x2="22" y2="20" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"   stopColor="#9860E0" />
+        <stop offset="38%"  stopColor="#7038C0" />
+        <stop offset="72%"  stopColor="#5024A0" />
+        <stop offset="100%" stopColor="#301468" />
+      </linearGradient>
+      {/* Gloss dome — front figure */}
+      <radialGradient id="umFrGlB" cx="32%" cy="26%" r="72%">
+        <stop offset="0%"   stopColor="#FFFFFF" stopOpacity="0.5" />
+        <stop offset="55%"  stopColor="#FFFFFF" stopOpacity="0.08" />
+        <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+      </radialGradient>
+      {/* Gloss dome — back figure */}
+      <radialGradient id="umFrGlV" cx="32%" cy="26%" r="72%">
+        <stop offset="0%"   stopColor="#FFFFFF" stopOpacity="0.38" />
+        <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+      </radialGradient>
+    </defs>
+
+    {/* ── Back figure (violet, upper-right) ── */}
+    <circle cx="15.6" cy="7.4" r="2.35" fill="url(#umFrVio)" />
+    <path d="M11.9 19.2Q11.9 11.6 15.6 11.6Q19.3 11.6 19.3 19.2Z" fill="url(#umFrVio)" />
+    {/* Shadow fold — right edge */}
+    <path d="M17.6 12.2Q19.3 14.5 19.3 17Q19.3 18.4 18.8 19.2" stroke="#200E48" strokeWidth="1" strokeLinecap="round" fill="none" opacity="0.25" />
+    {/* Specular arc — upper-left */}
+    <path d="M13 13Q13.3 12 14.3 11.7" stroke="#FFFFFF" strokeWidth="0.7" strokeLinecap="round" fill="none" opacity="0.4" />
+    {/* Gloss overlay */}
+    <circle cx="15.6" cy="7.4" r="2.35" fill="url(#umFrGlV)" />
+    <path d="M11.9 19.2Q11.9 11.6 15.6 11.6Q19.3 11.6 19.3 19.2Z" fill="url(#umFrGlV)" />
+    {/* Outlines */}
+    <circle cx="15.6" cy="7.4" r="2.35" stroke="#2A1060" strokeWidth="0.45" fill="none" opacity="0.4" />
+    <path d="M11.9 19.2Q11.9 11.6 15.6 11.6Q19.3 11.6 19.3 19.2Z" stroke="#2A1060" strokeWidth="0.45" fill="none" opacity="0.4" />
+
+    {/* ── Front figure (azure blue, lower-left, overlapping) ── */}
+    <circle cx="8.3" cy="9" r="2.75" fill="url(#umFrBlu)" />
+    <path d="M3.3 21.6Q3.3 13 8.3 13Q13.3 13 13.3 21.6Z" fill="url(#umFrBlu)" />
+    {/* Shadow fold — right edge */}
+    <path d="M11 14Q13.3 16.6 13.3 19.5Q13.3 20.7 12.9 21.6" stroke="#0A1E50" strokeWidth="1" strokeLinecap="round" fill="none" opacity="0.25" />
+    {/* Specular arc — upper-left */}
+    <path d="M4.6 14.3Q5 12.6 6.6 12" stroke="#FFFFFF" strokeWidth="0.9" strokeLinecap="round" fill="none" opacity="0.55" />
+    {/* Gloss overlay */}
+    <circle cx="8.3" cy="9" r="2.75" fill="url(#umFrGlB)" />
+    <path d="M3.3 21.6Q3.3 13 8.3 13Q13.3 13 13.3 21.6Z" fill="url(#umFrGlB)" />
+    {/* Outlines */}
+    <circle cx="8.3" cy="9" r="2.75" stroke="#0E2E70" strokeWidth="0.48" fill="none" opacity="0.42" />
+    <path d="M3.3 21.6Q3.3 13 8.3 13Q13.3 13 13.3 21.6Z" stroke="#0E2E70" strokeWidth="0.48" fill="none" opacity="0.42" />
+  </svg>
+);
+
+// ── Library — iOS-style: shelf of three gradient book spines (crimson/teal/gold), gloss domes, embossed title bands, wooden shelf ──
+export const LibraryIcon: FC<SvgProps> = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <defs>
+      {/* Book 1 spine: bright rose → rich crimson → deep burgundy */}
+      <linearGradient id="umLbB1" x1="3" y1="4" x2="8" y2="20" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"   stopColor="#F0486E" />
+        <stop offset="45%"  stopColor="#C81838" />
+        <stop offset="100%" stopColor="#7A0A1E" />
+      </linearGradient>
+      {/* Book 2 spine: bright aqua → teal → deep teal */}
+      <linearGradient id="umLbB2" x1="9" y1="3" x2="14" y2="20" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"   stopColor="#14C8A8" />
+        <stop offset="45%"  stopColor="#0BA88E" />
+        <stop offset="100%" stopColor="#047A6A" />
+      </linearGradient>
+      {/* Book 3 spine: bright amber → gold → deep gold */}
+      <linearGradient id="umLbB3" x1="15" y1="5" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"   stopColor="#F0C830" />
+        <stop offset="45%"  stopColor="#D4A018" />
+        <stop offset="100%" stopColor="#9A7008" />
+      </linearGradient>
+      {/* Shelf: warm walnut top → deep umber */}
+      <linearGradient id="umLbShf" x1="3" y1="20" x2="21" y2="22.5" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"   stopColor="#8A5A20" />
+        <stop offset="55%"  stopColor="#6A4010" />
+        <stop offset="100%" stopColor="#40260A" />
+      </linearGradient>
+      {/* Gloss dome overlay */}
+      <radialGradient id="umLbGl" cx="32%" cy="24%" r="74%">
+        <stop offset="0%"   stopColor="#FFFFFF" stopOpacity="0.5" />
+        <stop offset="55%"  stopColor="#FFFFFF" stopOpacity="0.08" />
+        <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+      </radialGradient>
+    </defs>
+
+    {/* ── Book 1 (crimson, tallest, leftmost) ── */}
+    <rect x="3.2" y="4" width="4.4" height="16" rx="1" fill="url(#umLbB1)" />
+    <rect x="3.2" y="4" width="4.4" height="16" rx="1" fill="url(#umLbGl)" />
+    {/* Title bands */}
+    <line x1="4.2" y1="7"  x2="6.6" y2="7"  stroke="#FFD0DC" strokeWidth="0.9" strokeLinecap="round" opacity="0.85" />
+    <line x1="4.2" y1="17" x2="6.6" y2="17" stroke="#FFD0DC" strokeWidth="0.9" strokeLinecap="round" opacity="0.6" />
+    <rect x="3.2" y="4" width="4.4" height="16" rx="1" stroke="#7A0A1E" strokeWidth="0.5" fill="none" opacity="0.45" />
+
+    {/* ── Book 2 (teal, mid height) ── */}
+    <rect x="8.4" y="3" width="4.4" height="17" rx="1" fill="url(#umLbB2)" />
+    <rect x="8.4" y="3" width="4.4" height="17" rx="1" fill="url(#umLbGl)" />
+    <line x1="9.4" y1="6"  x2="11.8" y2="6"  stroke="#C8FFF0" strokeWidth="0.9" strokeLinecap="round" opacity="0.85" />
+    <line x1="9.4" y1="16" x2="11.8" y2="16" stroke="#C8FFF0" strokeWidth="0.9" strokeLinecap="round" opacity="0.6" />
+    <rect x="8.4" y="3" width="4.4" height="17" rx="1" stroke="#047A6A" strokeWidth="0.5" fill="none" opacity="0.45" />
+
+    {/* ── Book 3 (gold, tilted, rightmost) ── */}
+    <g transform="rotate(9 17 12)">
+      <rect x="14.4" y="5" width="4.4" height="15" rx="1" fill="url(#umLbB3)" />
+      <rect x="14.4" y="5" width="4.4" height="15" rx="1" fill="url(#umLbGl)" />
+      <line x1="15.4" y1="8"  x2="17.8" y2="8"  stroke="#FFF0B0" strokeWidth="0.9" strokeLinecap="round" opacity="0.85" />
+      <line x1="15.4" y1="17" x2="17.8" y2="17" stroke="#FFF0B0" strokeWidth="0.9" strokeLinecap="round" opacity="0.6" />
+      <rect x="14.4" y="5" width="4.4" height="15" rx="1" stroke="#9A7008" strokeWidth="0.5" fill="none" opacity="0.45" />
+    </g>
+
+    {/* ── Shelf ── */}
+    <rect x="2.4" y="20" width="19.2" height="2.4" rx="0.8" fill="url(#umLbShf)" />
+    <line x1="3.6" y1="20.6" x2="20.4" y2="20.6" stroke="#B07830" strokeWidth="0.5" strokeLinecap="round" opacity="0.5" />
+    <rect x="2.4" y="20" width="19.2" height="2.4" rx="0.8" stroke="#40260A" strokeWidth="0.45" fill="none" opacity="0.45" />
   </svg>
 );

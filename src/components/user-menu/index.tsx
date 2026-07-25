@@ -22,6 +22,7 @@ import {
   InboxIcon,
   InstallAppIcon,
   InteractionsIcon,
+  LibraryIcon,
   LogoutIcon,
   MusicIcon,
   StoriesIcon,
@@ -178,6 +179,10 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
     routeToPage(ROUTES.explore);
   };
 
+  const toLibraryPage = () => {
+    routeToPage(ROUTES.Library);
+  };
+
   const toConversationsPage = () => {
     routeToPage(ROUTES.conversations);
   };
@@ -299,10 +304,17 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
             <S.Separator />
             <ShouldRender if={authState === "LOGGED_IN"}>
               <S.List>
+                <S.Element onClick={toLibraryPage}>
+                  <Flex justify="flex-start" align="center" gap="12px">
+                    <LibraryIcon size={20} />
+                    Library
+                  </Flex>
+                  <FiChevronRight size={16} color="gray" />
+                </S.Element>
                 <S.Element onClick={toExplorePage}>
                   <Flex justify="flex-start" align="center" gap="12px">
                     <ExploreIcon size={20} />
-                    Explore
+                    Explore Posts
                   </Flex>
                   <FiChevronRight size={16} color="gray" />
                 </S.Element>
@@ -487,12 +499,24 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                     <S.MobilePanelMenuItem
                       onClick={() => {
                         closeMobilePanel();
+                        toLibraryPage();
+                      }}
+                    >
+                      <Flex justify="flex-start" align="center" gap="12px">
+                        <LibraryIcon size={20} />
+                        Library
+                      </Flex>
+                      <FiChevronRight size={16} color="gray" />
+                    </S.MobilePanelMenuItem>
+                    <S.MobilePanelMenuItem
+                      onClick={() => {
+                        closeMobilePanel();
                         toExplorePage();
                       }}
                     >
                       <Flex justify="flex-start" align="center" gap="12px">
                         <ExploreIcon size={20} />
-                        Explore
+                        Explore Posts
                       </Flex>
                       <FiChevronRight size={16} color="gray" />
                     </S.MobilePanelMenuItem>

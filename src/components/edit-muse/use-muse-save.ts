@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { updateMuseAction } from "@/app/rp/muse/actions";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks/use-ui-context";
 import type { CreateUpdateMuse, Fandom } from "@/types";
 import { useMuseState, useMuseStoreSet } from "./muse.store";
@@ -32,6 +33,8 @@ export function useMuseSave() {
   const extraAttributes = useMuseState("extraAttributes");
   const originalVerseId = useMuseState("originalVerseId");
   const setMuseState = useMuseStoreSet();
+  const novelist = useGlobalState("novelist");
+  const setGlobalState = useGlobalStoreSet();
   const { successToast } = useUIContext();
 
   const [loading, setLoading] = useState(false);
@@ -40,6 +43,7 @@ export function useMuseSave() {
     async (privacyOverride?: string): Promise<SaveResult> => {
       const _accent = useAccent && accent?.trim() ? accent.trim() : null;
       const _privacy = privacyOverride ?? privacy ?? "PUBLIC";
+      const isCreate = !id;
 
       const payload: CreateUpdateMuse = {
         accent: _accent,
@@ -77,6 +81,20 @@ export function useMuseSave() {
 
       const savedId = response.id ?? id ?? "";
       setMuseState({ id: savedId });
+
+      if (novelist) {
+        const nextMuses = isCreate
+          ? [...novelist.muses, response]
+          : novelist.muses.map((m) => (m.id === savedId ? response : m));
+        setGlobalState({
+          novelist: {
+            ...novelist,
+            museCount: isCreate ? novelist.museCount + 1 : novelist.museCount,
+            muses: nextMuses,
+          },
+        });
+      }
+
       successToast("Data updated successfully.");
       return { id: savedId, ok: true };
     },
@@ -97,6 +115,8 @@ export function useMuseSave() {
       useExtraImages,
       extraAttributes,
       originalVerseId,
+      novelist,
+      setGlobalState,
       setMuseState,
       successToast,
     ],

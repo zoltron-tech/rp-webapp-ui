@@ -6,6 +6,7 @@ import { FaComments, FaHeart } from "react-icons/fa6";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { PrivacyIcon } from "@/components/common/privacy-icon";
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
+import { ReactionLikersDialog } from "@/components/reaction-likers-dialog";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
 import { SharedWithDialog } from "@/components/shared-with-dialog";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -44,6 +45,10 @@ export function PromptsSection({ muse, prompts }: Props) {
   const { routeToPage } = usePageRouter();
   const accent = muse?.useAccent ? muse.accent : undefined;
   const [sharedWithList, setSharedWithList] = useState<Friend[] | null>(null);
+  const [likersPrompt, setLikersPrompt] = useState<{
+    id: string;
+    count: number;
+  } | null>(null);
 
   return (
     <S.CardExpandedWrapper>
@@ -51,6 +56,12 @@ export function PromptsSection({ muse, prompts }: Props) {
         friends={sharedWithList ?? []}
         open={sharedWithList !== null}
         onClose={() => setSharedWithList(null)}
+      />
+      <ReactionLikersDialog
+        open={likersPrompt !== null}
+        onClose={() => setLikersPrompt(null)}
+        targetId={likersPrompt?.id ?? ""}
+        initialCount={likersPrompt?.count}
       />
       <S.CardBack className="muse-card" accent={accent}>
         <S.InfoCardContent>
@@ -155,7 +166,16 @@ export function PromptsSection({ muse, prompts }: Props) {
                         {commentsLabel(prompt.commentCount ?? 0)}
                       </S.PromptCommentsBtn>
                       {(prompt.reactions ?? 0) > 0 && (
-                        <S.PromptCardStat title="Reactions">
+                        <S.PromptCardStat
+                          title="Reactions"
+                          onClick={() =>
+                            prompt.id &&
+                            setLikersPrompt({
+                              count: prompt.reactions ?? 0,
+                              id: prompt.id,
+                            })
+                          }
+                        >
                           <FaHeart size={10} />
                           {prompt.reactions}
                         </S.PromptCardStat>

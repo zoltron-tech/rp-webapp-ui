@@ -22,6 +22,7 @@ import { AppAlertDialog } from "@/components/dialog";
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { VideoViewer } from "@/components/image-viewer/VideoViewer";
 import { MarkdownLite } from "@/components/markdown-lite";
+import { ReactionLikersDialog } from "@/components/reaction-likers-dialog";
 import { useGlobalState } from "@/context/store/stores";
 import { classifyUrlForUpload } from "@/hooks/use-nsfw-check";
 import { useToggleLike } from "@/hooks/use-toggle-like";
@@ -297,6 +298,7 @@ function MediaCaption({
   const [saving, setSaving] = useState(false);
   const [reacted, setReacted] = useState(meta?.reacted ?? false);
   const [count, setCount] = useState(meta?.reactionCount ?? 0);
+  const [likersOpen, setLikersOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Wrap the current textarea selection (or caret) with `marker` on both sides.
@@ -355,6 +357,12 @@ function MediaCaption({
     }
   }, [meta, reacted, toggleLike, onMetaChange, url]);
 
+  const handleOpenLikers = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (count <= 0) return;
+    setLikersOpen(true);
+  };
+
   const handleSave = useCallback(async () => {
     setSaving(true);
     const res = await editMediaDescriptionAction(museId, url, draft.trim());
@@ -382,7 +390,7 @@ function MediaCaption({
           disabled={!meta?.id}
         >
           {reacted ? <FaHeart size={16} /> : <FaRegHeart size={16} />}
-          {count > 0 && <span>{count}</span>}
+          {count > 0 && <span onClick={handleOpenLikers}>{count}</span>}
         </MediaHeartBtn>
         {isOwner && !editing && (
           <MediaEditBtn
@@ -453,6 +461,12 @@ function MediaCaption({
           </MediaCaptionText>
         )
       )}
+      <ReactionLikersDialog
+        open={likersOpen}
+        onClose={() => setLikersOpen(false)}
+        targetId={meta?.id ?? ""}
+        initialCount={count}
+      />
     </MediaCaptionBar>
   );
 }

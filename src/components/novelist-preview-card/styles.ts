@@ -14,6 +14,8 @@ export const CardWrapper = styled.div`
   z-index: ${Z_INDEX.CARD};
   width: 240px;
   min-width: 240px;
+  min-height: 344px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -24,6 +26,7 @@ export const CardWrapper = styled.div`
   @media (max-width: 600px) {
     width: 160px;
     min-width: 160px;
+    min-height: 248px;
     &:hover {
       transform: none;
       box-shadow: none;
@@ -138,6 +141,9 @@ export const Title = styled.span`
   letter-spacing: -0.01em;
   color: var(--text);
   line-height: 1.25;
+  /* Keeps the row's height even when firstName/lastName are missing —
+     otherwise a blank name collapses the line and shifts everything below. */
+  min-height: 1.25em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

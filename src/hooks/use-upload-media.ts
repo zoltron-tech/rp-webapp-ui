@@ -13,6 +13,7 @@ export const useUploadMedia = () => {
       const rawFile = formData.get("file") as Blob;
       const prefix = formData.get("prefix") as string | null;
       const mediaBucket = formData.get("mediaBucket") as string | null;
+      const scoped = formData.get("scoped") as string | null;
 
       // iPhones default to HEVC, which Chrome/Firefox can't play in <video>.
       // Re-encode to H.264 in-browser before it ever reaches S3, falling back
@@ -32,6 +33,9 @@ export const useUploadMedia = () => {
       }
       if (mediaBucket) {
         formDataWithoutFile.append("mediaBucket", mediaBucket);
+      }
+      if (scoped) {
+        formDataWithoutFile.append("scoped", scoped);
       }
 
       const presignedRes =

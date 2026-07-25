@@ -24,6 +24,7 @@ export const ROUTES = {
   Fellows: "/rp/fellows",
   ForgotPassword: "/rp/forgot-password",
   Home: "/rp/home",
+  Library: "/rp/library",
   Leaderboard: {
     Novelists: "/rp/leaderboard/novelists",
     Muses: "/rp/leaderboard/muses",

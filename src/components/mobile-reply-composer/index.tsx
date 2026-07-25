@@ -36,6 +36,7 @@ import {
   usePromptInputEvents,
   useRunOn,
 } from "../prompt-input/helpers";
+import { IcMuseRequiredForm } from "../prompt-input/ic-muse-required-form";
 import {
   INITIAL_STATE,
   type PromptInputState,
@@ -111,6 +112,12 @@ const MobileReplyComposerInner: FC<MobileReplyComposerProps> = ({
         return [novelistSource, ...museSources];
     }
   }, [novelist, dropdownSelection]);
+
+  const hasMuseOptions = useMemo(
+    () => sources.some((s) => s.sourceType === "MUSE"),
+    [sources],
+  );
+  const showIcMuseRequired = dropdownSelection === "MUSE" && !hasMuseOptions;
 
   const hasContent = Boolean(promptText?.trim());
 
@@ -227,6 +234,14 @@ const MobileReplyComposerInner: FC<MobileReplyComposerProps> = ({
       setPromptInputState,
     ],
   );
+
+  if (showIcMuseRequired) {
+    return (
+      <S.ComposerRoot>
+        <IcMuseRequiredForm />
+      </S.ComposerRoot>
+    );
+  }
 
   return (
     <S.ComposerRoot>

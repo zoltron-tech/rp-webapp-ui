@@ -77,6 +77,7 @@ export default function OutgoingThreadPage() {
       setPromptThreadComments((prev) =>
         append ? [...(prev || []), ...result] : result,
       );
+      setHasMore(result.length >= PAGE_SIZE);
 
       if (!append) {
         setIsLoading(false);
@@ -86,11 +87,13 @@ export default function OutgoingThreadPage() {
     [setGlobalState],
   );
 
-  // Load from backend only when the global store has no cached data.
+  // Always fetch page 1 on mount. Cached data (a small preview slice seeded
+  // by the right sidebar) paints instantly so there's no shimmer, but it's
+  // not a full page — only the fetch gives us the authoritative list and a
+  // correct hasMore, so the Load more / end-of-list choice is right from the
+  // start instead of after a wasted click.
   useEffect(() => {
-    if (!cachedOutgoingThreads) {
-      fetchOutgoingThreads(1);
-    }
+    fetchOutgoingThreads(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -168,6 +171,7 @@ export default function OutgoingThreadPage() {
               hasMore={hasMore}
               loadingMore={loadingMore}
               onLoadMore={loadMore}
+              endMarker={!!promptThreadComments?.length}
             />
           </S.InteractionsListContainer>
         </>

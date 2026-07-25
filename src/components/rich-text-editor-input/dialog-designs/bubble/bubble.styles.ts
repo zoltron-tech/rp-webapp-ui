@@ -4,8 +4,8 @@ import { css } from "styled-components";
  *  colored one tints the bubble background inline). The leading `&` binds the
  *  design class to the render container (see card). */
 export const bubbleDialogCss = css`
-  &.dialog-design-bubble .dialog-embed,
-  &.dialog-design-bubble-colored .dialog-embed {
+  &.dialog-design-bubble .dialog-embed:not([data-selected="true"]),
+  &.dialog-design-bubble-colored .dialog-embed:not([data-selected="true"]) {
     display: flex;
     align-items: flex-end;
     gap: 8px;

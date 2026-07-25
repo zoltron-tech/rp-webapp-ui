@@ -30,7 +30,7 @@ export const Title = styled.div`
     right: -10;
   }
 
-  @container content-container (max-width: 1000px) {
+  @container content-container (max-width: 750px) {
     bottom: 10px;
     font-size: 12px;
   }
@@ -56,7 +56,7 @@ export const Description = styled.div`
     right: -10;
   }
 
-  @container content-container (max-width: 1000px) {
+  @container content-container (max-width: 750px) {
     bottom: -180px;
     font-size: 12px;
     opacity: 1;
@@ -92,7 +92,7 @@ export const CardWrapper = styled.div`
     min-height: 240px;
   }
 
-  @container content-container (max-width: 1000px) {
+  @container content-container (max-width: 750px) {
     & {
       width: 170px;
       height: 255px;
@@ -110,7 +110,7 @@ export const CardWrapper = styled.div`
     }
   }
 
-  @container content-container (min-width: 1000px) {
+  @container content-container (min-width: 750px) {
     &:hover {
       z-index: ${Z_INDEX.MODAL};
       transform: scale(1.2);
@@ -138,7 +138,7 @@ export const CardFooter = styled.div`
     ${({ theme }: any): string => theme.cardBackgroundGradient.join(", ")}
   );
 
-  @container content-container (max-width: 1000px) {
+  @container content-container (max-width: 750px) {
     & {
       height: 30px;
       font-size: 8px;
@@ -162,7 +162,7 @@ export const Card = styled.div`
   );
   cursor: pointer;
 
-  @container content-container (min-width: 1000px) {
+  @container content-container (min-width: 750px) {
     &:hover {
       background: linear-gradient(
         ${({ theme }: any): string =>

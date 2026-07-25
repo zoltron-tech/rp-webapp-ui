@@ -18,3 +18,32 @@ export const PageContainer = styled.main`
 
   ${NO_SCROLLBAR}
 `;
+
+/** Holds the page content, centered the same way LeftNav/RightSidebar
+ * compute their own fixed left/right offsets (max-width 1400, 16px edge
+ * padding) — the two never need to talk to each other directly. LeftNav/
+ * RightSidebar themselves are position:fixed and live outside this element
+ * entirely (see rp/layout.tsx), so they never scroll with the page; this
+ * just reserves the horizontal room for them via extra padding so
+ * ContentContainer's text doesn't render underneath them. */
+export const AppGrid = styled.div<{
+  $leftReserve: number;
+  $rightReserve: number;
+}>`
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  max-width: 1400px;
+  margin-inline: auto;
+  min-width: 0;
+  padding-left: ${({ $leftReserve }) => 16 + $leftReserve}px;
+  padding-right: ${({ $rightReserve }) => 16 + $rightReserve}px;
+  transition: padding-left 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+    padding-right 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+
+  @media (max-width: 600px) {
+    padding-inline: 0;
+  }
+`;

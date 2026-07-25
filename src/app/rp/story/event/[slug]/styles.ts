@@ -270,8 +270,8 @@ export const TitlePage = styled.header`
 
 export const CoverFrame = styled.div`
   position: relative;
-  width: 220px;
-  height: 330px;
+  width: 250px;
+  height: 375px;
   margin-bottom: 30px;
   border-radius: 4px;
   overflow: hidden;
@@ -604,7 +604,6 @@ export const EditingBanner = styled.div`
 export const BookStage = styled.div`
   position: relative;
   width: 100%;
-  max-width: 1180px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -614,8 +613,14 @@ export const BookStage = styled.div`
 export const Spread = styled.div`
   position: relative;
   width: 100%;
+  /* Must match DESIGN_STAGE_WIDTH / DESIGN_STAGE_HEIGHT in book-view.tsx —
+     holds the stage's shape before the JS scale is computed, so height isn't
+     stuck at 0 while width snaps to 100%. Without this the two dimensions
+     open out of sync on mount (width first, height trailing in). */
+  aspect-ratio: 1040 / 660;
   border-radius: 8px;
   overflow: hidden;
+  transition: width 0.3s ease, height 0.3s ease;
   background:
     linear-gradient(var(--bg-2), var(--bg-2)) padding-box,
     linear-gradient(
@@ -708,6 +713,7 @@ export const ScaledPage = styled.div`
   overflow: hidden;
   padding: 52px 60px;
   transform-origin: top left;
+  transition: transform 0.3s ease;
 `;
 
 export const Flow = styled.div<{ $offset: number }>`
@@ -777,19 +783,29 @@ export const PageReveal = styled.div<{ $delayed?: boolean }>`
   }
 `;
 
-/* Title block inside the book flow (kept compact so it shares a column). */
+/* Title block inside the book flow — the whole first page: cover, title,
+   meta. Nothing else may share its column, so the narration always starts
+   fresh on page two. */
 export const BookTitleBlock = styled.div`
   break-inside: avoid;
+  break-after: column;
   text-align: center;
   margin-bottom: 22px;
+`;
+
+/* Wraps the opening narration (asterism + description) so it always starts
+   at the top of the next column — page two — regardless of how short the
+   title page is. */
+export const BookOvertureBlock = styled.div`
+  break-before: column;
 `;
 
 /* Chapter plate on the book's title page — sized to sit comfortably within a
    single column above the title. */
 export const BookCoverFrame = styled.div`
   position: relative;
-  width: 150px;
-  height: 225px;
+  width: 250px;
+  height: 375px;
   margin: 0 auto 22px;
   border-radius: 4px;
   overflow: hidden;

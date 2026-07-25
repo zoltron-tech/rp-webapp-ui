@@ -20,6 +20,8 @@ import { Button as AddNewButtonStyle } from "@/components/common/add-new-button/
 import { AppAlertDialog } from "@/components/dialog";
 import { EditStoryboardEventOverlay } from "@/components/edit-storyboard-event-card/edit-storyboard-event-overlay";
 import { AppDropdownMenuResponsive } from "@/components/profile-more-dropdown";
+import { ReactionLikersDialog } from "@/components/reaction-likers-dialog";
+import { museAvatarUrl } from "@/components/rich-text-editor-input/dialog-embed";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
 import { ReorderStoryboardEventsOverlay } from "@/components/reorder-storyboard-events";
 import { ShareStoryDialog } from "@/components/share-story-dialog";
@@ -83,6 +85,7 @@ export default function UserProfilePage({}) {
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showReportConfirm, setShowReportConfirm] = useState(false);
+  const [likersOpen, setLikersOpen] = useState(false);
 
   // Heart reaction — shared with StoryCard and any STORY_BOARD-target activity.
   const [reacted, setReacted] = useState(Boolean(storyboard?.reacted));
@@ -145,6 +148,12 @@ export default function UserProfilePage({}) {
     }
   };
 
+  const handleOpenLikers = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (reactionCount <= 0) return;
+    setLikersOpen(true);
+  };
+
   const onBackClick = () => {
     routeToPage(ROUTES.Profile.View(user?.username || "").Storyboards);
   };
@@ -185,6 +194,7 @@ export default function UserProfilePage({}) {
     ? "Original"
     : fandom?.name || fandom?.id?.replaceAll("_", " ");
   const genres = storyboard?.genres ?? [];
+  const cast = storyboard?.cast ?? [];
 
   const isMember = () => {
     if (!storyboard || !user?.username) return false;
@@ -346,8 +356,10 @@ export default function UserProfilePage({}) {
             onClick={onLike}
           >
             {reacted ? <FaHeart /> : <FaRegHeart />}
-            <b>{reactionCount}</b>
-            {reactionCount === 1 ? "like" : "likes"}
+            <S.HeartCountText onClick={handleOpenLikers}>
+              <b>{reactionCount}</b>
+              {reactionCount === 1 ? "like" : "likes"}
+            </S.HeartCountText>
           </S.HeartChip>
 
           <S.ShareButton
@@ -368,6 +380,30 @@ export default function UserProfilePage({}) {
         </S.ActionRow>
 
         <StoryMembers storyboard={storyboard} />
+
+        <ShouldRender if={cast.length > 0}>
+          <S.CastSection>
+            <S.SectionName>CAST</S.SectionName>
+            <S.CastRow>
+              {cast.map((member) => {
+                const avatarSrc = member.image || museAvatarUrl(member.id);
+                return (
+                  <S.CastChip key={member.id} title={member.name}>
+                    {avatarSrc ? (
+                      <S.CastAvatar src={avatarSrc} alt={member.name} />
+                    ) : (
+                      <S.CastAvatarFallback>
+                        {member.name.charAt(0).toUpperCase()}
+                      </S.CastAvatarFallback>
+                    )}
+                    <S.CastName>{member.name}</S.CastName>
+                  </S.CastChip>
+                );
+              })}
+            </S.CastRow>
+          </S.CastSection>
+        </ShouldRender>
+
         <S.SectionHeaderRow>
           <S.SectionName>
             <ShouldRender
@@ -476,6 +512,12 @@ export default function UserProfilePage({}) {
           handleReportStory();
         }}
         actionButtonLabel="Report"
+      />
+      <ReactionLikersDialog
+        open={likersOpen}
+        onClose={() => setLikersOpen(false)}
+        targetId={storyboardId ?? ""}
+        initialCount={reactionCount}
       />
     </>
   );

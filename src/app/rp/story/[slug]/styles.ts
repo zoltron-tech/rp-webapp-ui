@@ -205,6 +205,17 @@ export const HeartChip = styled.button<{ $active?: boolean }>`
   }
 `;
 
+export const HeartCountText = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
 /* Optional story flavor text, rendered below the hero cover/meta and above
    the engagement row. Matches HeroRow/ActionRow's width and left offset. */
 export const DescriptionSection = styled.div`
@@ -242,6 +253,68 @@ export const SectionName = styled.div`
   font-size: clamp(16px, 4vw, 22px);
   color: var(--text);
   z-index: ${Z_INDEX.DEFAULT};
+`;
+
+/* Cast strip: muses with at least one dialog anywhere in the story. */
+export const CastSection = styled.div`
+  width: 90%;
+  margin: 18px 0 0 8%;
+  z-index: ${Z_INDEX.DEFAULT};
+`;
+
+export const CastRow = styled.div`
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  margin-top: 14px;
+  padding: 4px 2px 6px;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+export const CastChip = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  width: 64px;
+`;
+
+export const CastAvatar = styled.img`
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg-4);
+  border: 2px solid var(--bg-2);
+`;
+
+export const CastAvatarFallback = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 70%);
+  color: #fff;
+  font-size: var(--font-size-large);
+  font-weight: var(--font-weight-bold);
+  border: 2px solid var(--bg-2);
+`;
+
+export const CastName = styled.span`
+  max-width: 64px;
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `;
 
 /* Engagement row (likes, share, more) sitting just above the co-authors

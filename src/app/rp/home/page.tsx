@@ -1,14 +1,7 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { FaChevronRight } from "react-icons/fa6";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import { FiSearch } from "react-icons/fi";
 import { ActivityBox } from "@/components/activity-box";
 import { ScrollJumpButton } from "@/components/common/scroll-jump-button";
@@ -22,6 +15,8 @@ import { StoryCard } from "@/components/story-card";
 import VideoCard from "@/components/video-card";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { useScrollArrows } from "@/hooks/use-scroll-arrows";
+import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import {
   FEED_PAGE_SIZES,
   getInflightFeed,
@@ -30,6 +25,7 @@ import {
   prefetchOOCPosts,
 } from "@/lib/feed-prefetch";
 import type {
+  BookmarkedStoryBoardEvent,
   Muse,
   Novelist,
   NovelistWorldNotification,
@@ -38,7 +34,9 @@ import type {
 } from "@/types";
 import type { Activity } from "@/types/activity";
 import { ROUTES } from "@/utils/constants/routes";
+import { BookmarkCard } from "../bookmarks/bookmark-card";
 import { getNewPromptsAction } from "../explore-prompts/actions";
+import { getBookmarkedEventsAction } from "../story/actions";
 import {
   getFriendActivities,
   getMusesAction,
@@ -46,6 +44,7 @@ import {
   getRandomStories,
   getStrangerNovelistsAction,
 } from "./actions";
+import { HomeMobileSearch } from "./mobile-search";
 import * as S from "./styles";
 
 const ACTIVITIES_PAGE_SIZE = FEED_PAGE_SIZES.homeActivities;
@@ -99,6 +98,8 @@ const interleaveFeed = (
 };
 
 export default function HomePage() {
+  const { width } = useWindowDimensions();
+  const isMobile = width !== null && width < 801;
   const [startTour, setStartTour] = useState(false);
   const authState = useGlobalState("authState");
   const novelist = useGlobalState("novelist");
@@ -107,9 +108,6 @@ export default function HomePage() {
   const cachedExplorePrompts = useGlobalState("cachedExplorePrompts");
   const cachedOOCPosts = useGlobalState("cachedOOCPosts");
   const notifications = useGlobalState("notifications");
-  // Only read to know when GlobalMusicPlayer mounts/unmounts its 36px bar in
-  // the shared layout above this page — see the measuredHeight effect below.
-  const musicPlayerSongId = useGlobalState("musicPlayer").playingSongId;
   const setGlobalState = useGlobalStoreSet();
   const { routeToPage, stopPageLoading } = usePageRouter();
   const [strangers, setStrangers] = useState<Novelist[] | undefined>(
@@ -186,34 +184,16 @@ export default function HomePage() {
   const [friendsMusesInitialLoading, setFriendsMusesInitialLoading] =
     useState(true);
   const [storiesInitialLoading, setStoriesInitialLoading] = useState(true);
-
-  const rightWrapRef = useRef<HTMLDivElement>(null);
-  const parentWrapperRef = useRef<HTMLDivElement>(null);
-  // The real remaining space below this element down to the viewport
-  // bottom, measured directly instead of assumed via CSS calc(). A pure
-  // calc(100dvh - var(--topbar-height)) only ever accounts for the TopBar —
-  // it goes stale the moment anything else with real height (e.g.
-  // GlobalMusicPlayer's bar while a song is playing) renders above
-  // ContentContainer in the shared layout, letting the outer <main> grow
-  // past one viewport and become scrollable, dragging these columns along
-  // with it. Re-measured on resize and whenever the music player mounts.
-  const [measuredHeight, setMeasuredHeight] = useState<number | undefined>(
-    undefined,
-  );
-
-  useLayoutEffect(() => {
-    const recalc = () => {
-      if (!parentWrapperRef.current) return;
-      const top = parentWrapperRef.current.getBoundingClientRect().top;
-      setMeasuredHeight(Math.max(0, window.innerHeight - top));
-    };
-    recalc();
-    window.addEventListener("resize", recalc);
-    return () => window.removeEventListener("resize", recalc);
-  }, [musicPlayerSongId]);
+  // Most recently updated bookmark, shown as a "continue reading" card above
+  // Stories. undefined = still loading; null = no bookmarks to resume.
+  const [continueBookmark, setContinueBookmark] = useState<
+    BookmarkedStoryBoardEvent | null | undefined
+  >(undefined);
 
   const scrollToTop = () => {
-    rightWrapRef.current?.scrollTo({ behavior: "smooth", top: 0 });
+    document
+      .querySelector("main.page-container")
+      ?.scrollTo({ behavior: "smooth", top: 0 });
   };
 
   // Derive NovelistPreview-shaped cards from FRIEND_REQUEST notifications.
@@ -309,6 +289,26 @@ export default function HomePage() {
     } finally {
       setStoriesInitialLoading(false);
     }
+  };
+
+  const fetchContinueBookmark = async () => {
+    const _bookmarks = await getBookmarkedEventsAction();
+    if (!_bookmarks || "message" in _bookmarks || _bookmarks.length === 0) {
+      setContinueBookmark(null);
+      return;
+    }
+    // Most recently touched bookmark first — fall back to array order if
+    // modifiedAt is missing.
+    const mostRecent = [..._bookmarks].sort((a, b) => {
+      const aTime = a.bookmark.modifiedAt
+        ? new Date(a.bookmark.modifiedAt).getTime()
+        : 0;
+      const bTime = b.bookmark.modifiedAt
+        ? new Date(b.bookmark.modifiedAt).getTime()
+        : 0;
+      return bTime - aTime;
+    })[0];
+    setContinueBookmark(mostRecent);
   };
 
   const fetchFriendsMusesWithVideos = async () => {
@@ -467,6 +467,7 @@ export default function HomePage() {
       fetchStrangerMuses();
       fetchFriendsMuses();
       fetchRandomStories();
+      fetchContinueBookmark();
       // Page-level loader can stop immediately — each section now has its
       // own shimmer that clears when its data arrives.
       stopPageLoading();
@@ -507,6 +508,21 @@ export default function HomePage() {
     }
   }, [authState, hydrateActivities, hydrateExplorePrompts, hydrateOOCPosts]);
 
+  const friendsScroll = useScrollArrows<HTMLDivElement>([
+    novelist?.friends.length,
+  ]);
+  const storiesScroll = useScrollArrows<HTMLDivElement>([storyboards?.length]);
+  const friendsMusesScroll = useScrollArrows<HTMLDivElement>([
+    friendsMuses?.length,
+  ]);
+  const strangersScroll = useScrollArrows<HTMLDivElement>([
+    strangers?.length,
+    friendRequestCards.length,
+  ]);
+  const unknownMusesScroll = useScrollArrows<HTMLDivElement>([
+    unknownMuses?.length,
+  ]);
+
   return (
     <S.PageContainer>
       {/* <ShouldRender if={!startTour}>
@@ -519,30 +535,36 @@ export default function HomePage() {
           onTourEnd={handleEndTour}
         />
       )} */}
-      <S.ParentWrapperContainer
-        ref={parentWrapperRef}
-        $measuredHeight={measuredHeight}
-      >
-        <S.LeftWrapperContainer>
-          <S.FriendsContentContainer>
-            <S.SubText>Friends</S.SubText>
-            <S.ListContainer id="home-tour-step-1">
-              <S.AddFriendButton
-                onClick={() => routeToPage(ROUTES.Fellows)}
-                title="Find novelists to connect with"
-                aria-label="Find novelists"
-              >
-                <FiSearch size={18} />
-              </S.AddFriendButton>
+      <S.MainContainer>
+        {isMobile && <HomeMobileSearch />}
+        <S.ContentContainer id="home-tour-step-1">
+          <S.SubText>Friends</S.SubText>
+          <S.ScrollRowWrap>
+            <S.ScrollNavButton
+              $side="left"
+              $visible={friendsScroll.canScrollLeft}
+              onClick={() => friendsScroll.scrollByPage(-1)}
+              aria-label="Scroll left"
+            >
+              <FaChevronLeft />
+            </S.ScrollNavButton>
+            <S.FriendsStrip ref={friendsScroll.ref}>
+              {!novelist?.friends.length && (
+                <S.AddFriendButton
+                  onClick={() => routeToPage(ROUTES.Fellows)}
+                  title="Find novelists to connect with"
+                  aria-label="Find novelists"
+                >
+                  <FiSearch size={18} />
+                </S.AddFriendButton>
+              )}
               {novelist === null ? (
-                <S.SidebarShimmerList>
-                  {[0, 1, 2, 3].map((i) => (
-                    <S.SidebarShimmerItem key={i}>
-                      <S.SidebarShimmerAvatar />
-                      <S.SidebarShimmerName />
-                    </S.SidebarShimmerItem>
-                  ))}
-                </S.SidebarShimmerList>
+                [0, 1, 2, 3].map((i) => (
+                  <S.SidebarShimmerItem key={i}>
+                    <S.SidebarShimmerAvatar />
+                    <S.SidebarShimmerName />
+                  </S.SidebarShimmerItem>
+                ))
               ) : novelist.friends.length > 0 ? (
                 novelist.friends.map((friend) => (
                   <SideBarFriendListItem
@@ -552,32 +574,41 @@ export default function HomePage() {
                   />
                 ))
               ) : (
-                <>
-                  <S.SubText></S.SubText>
-                  <S.SubText></S.SubText>
-                  <S.SubText>Add friends? Maybe...</S.SubText>
-                </>
+                <S.SubText>Add friends? Maybe...</S.SubText>
               )}
-            </S.ListContainer>
-          </S.FriendsContentContainer>
-        </S.LeftWrapperContainer>
-        <S.RightWrapperContainer ref={rightWrapRef}>
-          {/* <S.ContentContainer>
-          <S.SubText>Videos by your friends</S.SubText>
-          <S.PartitionContainer>
-            {friendsMusesWithVideos?.map((friendMuseWithVideo) => (
-              <VideoCard
-                key={friendMuseWithVideo?.id}
-                muse={friendMuseWithVideo}
-              ></VideoCard>
-            ))}
-          </S.PartitionContainer>
-        </S.ContentContainer> */}
-          {(storiesInitialLoading ||
-            (storyboards !== undefined && storyboards.length > 0)) && (
-            <S.ContentContainer>
-              <S.SubText>Dive into the Stories</S.SubText>
-              <S.PartitionContainer>
+            </S.FriendsStrip>
+            <S.ScrollNavButton
+              $side="right"
+              $visible={friendsScroll.canScrollRight}
+              onClick={() => friendsScroll.scrollByPage(1)}
+              aria-label="Scroll right"
+            >
+              <FaChevronRight />
+            </S.ScrollNavButton>
+          </S.ScrollRowWrap>
+        </S.ContentContainer>
+        {continueBookmark && (
+          <S.ContentContainer>
+            <S.SubText>Continue Reading</S.SubText>
+            <S.ContinueReadingWrap>
+              <BookmarkCard bookmarked={continueBookmark} />
+            </S.ContinueReadingWrap>
+          </S.ContentContainer>
+        )}
+        {(storiesInitialLoading ||
+          (storyboards !== undefined && storyboards.length > 0)) && (
+          <S.ContentContainer>
+            <S.SubText>Dive into the Stories</S.SubText>
+            <S.ScrollRowWrap>
+              <S.ScrollNavButton
+                $side="left"
+                $visible={storiesScroll.canScrollLeft}
+                onClick={() => storiesScroll.scrollByPage(-1)}
+                aria-label="Scroll left"
+              >
+                <FaChevronLeft />
+              </S.ScrollNavButton>
+              <S.PartitionContainer ref={storiesScroll.ref}>
                 {storiesInitialLoading ? (
                   [0, 1, 2, 3].map((i) => <S.StoryCardShimmer key={i} />)
                 ) : (
@@ -588,13 +619,31 @@ export default function HomePage() {
                   </>
                 )}
               </S.PartitionContainer>
-            </S.ContentContainer>
-          )}
-          {(friendsMusesInitialLoading ||
-            (friendsMuses !== undefined && friendsMuses.length > 0)) && (
-            <S.ContentContainer id="home-tour-step-2">
-              <S.SubText>characters by your friends</S.SubText>
-              <S.PartitionContainer>
+              <S.ScrollNavButton
+                $side="right"
+                $visible={storiesScroll.canScrollRight}
+                onClick={() => storiesScroll.scrollByPage(1)}
+                aria-label="Scroll right"
+              >
+                <FaChevronRight />
+              </S.ScrollNavButton>
+            </S.ScrollRowWrap>
+          </S.ContentContainer>
+        )}
+        {(friendsMusesInitialLoading ||
+          (friendsMuses !== undefined && friendsMuses.length > 0)) && (
+          <S.ContentContainer id="home-tour-step-2">
+            <S.SubText>characters by your friends</S.SubText>
+            <S.ScrollRowWrap>
+              <S.ScrollNavButton
+                $side="left"
+                $visible={friendsMusesScroll.canScrollLeft}
+                onClick={() => friendsMusesScroll.scrollByPage(-1)}
+                aria-label="Scroll left"
+              >
+                <FaChevronLeft />
+              </S.ScrollNavButton>
+              <S.PartitionContainer ref={friendsMusesScroll.ref}>
                 {friendsMusesInitialLoading ? (
                   [0, 1, 2, 3, 4].map((i) => <S.MuseCardShimmer key={i} />)
                 ) : (
@@ -621,11 +670,29 @@ export default function HomePage() {
                   </>
                 )}
               </S.PartitionContainer>
-            </S.ContentContainer>
-          )}
-          <S.ContentContainer id="home-tour-step-3">
-            <S.SubText>Friend Suggestions</S.SubText>
-            <S.PartitionContainer>
+              <S.ScrollNavButton
+                $side="right"
+                $visible={friendsMusesScroll.canScrollRight}
+                onClick={() => friendsMusesScroll.scrollByPage(1)}
+                aria-label="Scroll right"
+              >
+                <FaChevronRight />
+              </S.ScrollNavButton>
+            </S.ScrollRowWrap>
+          </S.ContentContainer>
+        )}
+        <S.ContentContainer id="home-tour-step-3">
+          <S.SubText>Friend Suggestions</S.SubText>
+          <S.ScrollRowWrap>
+            <S.ScrollNavButton
+              $side="left"
+              $visible={strangersScroll.canScrollLeft}
+              onClick={() => strangersScroll.scrollByPage(-1)}
+              aria-label="Scroll left"
+            >
+              <FaChevronLeft />
+            </S.ScrollNavButton>
+            <S.PartitionContainer ref={strangersScroll.ref}>
               {strangersInitialLoading ? (
                 [0, 1, 2, 3].map((i) => <S.NovelistCardShimmer key={i} />)
               ) : (
@@ -658,10 +725,28 @@ export default function HomePage() {
                 </>
               )}
             </S.PartitionContainer>
-          </S.ContentContainer>
-          <S.ContentContainer id="home-tour-step-4">
-            <S.SubText>Public Characters out there</S.SubText>
-            <S.PartitionContainer>
+            <S.ScrollNavButton
+              $side="right"
+              $visible={strangersScroll.canScrollRight}
+              onClick={() => strangersScroll.scrollByPage(1)}
+              aria-label="Scroll right"
+            >
+              <FaChevronRight />
+            </S.ScrollNavButton>
+          </S.ScrollRowWrap>
+        </S.ContentContainer>
+        <S.ContentContainer id="home-tour-step-4">
+          <S.SubText>Public Characters out there</S.SubText>
+          <S.ScrollRowWrap>
+            <S.ScrollNavButton
+              $side="left"
+              $visible={unknownMusesScroll.canScrollLeft}
+              onClick={() => unknownMusesScroll.scrollByPage(-1)}
+              aria-label="Scroll left"
+            >
+              <FaChevronLeft />
+            </S.ScrollNavButton>
+            <S.PartitionContainer ref={unknownMusesScroll.ref}>
               {unknownMusesInitialLoading ? (
                 [0, 1, 2, 3, 4].map((i) => <S.MuseCardShimmer key={i} />)
               ) : (
@@ -688,58 +773,56 @@ export default function HomePage() {
                 </>
               )}
             </S.PartitionContainer>
-          </S.ContentContainer>
-          {/* <S.ContentContainer>
-          <S.SubText>Interactions</S.SubText>
-          {prompts?.map((prompt) => (
-            <PromptComponent key={prompt.id} prompt={prompt} />
-          ))}
-        </S.ContentContainer> */}
-          <S.ActivityContainer>
-            <S.SubText id="home-tour-step-5">
-              Updates from your friends
-            </S.SubText>
-            {feedInitializing ? (
-              <S.FeedShimmerList>
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <S.FeedShimmerItem key={i}>
-                    <S.ShimmerRow>
-                      <S.ShimmerAvatar />
-                      <S.ShimmerLines>
-                        <S.ShimmerLine $width="48%" $height="13px" />
-                        <S.ShimmerLine $width="72%" $height="11px" />
-                      </S.ShimmerLines>
-                    </S.ShimmerRow>
-                    <S.ShimmerBlock $height={i % 2 === 0 ? "110px" : "64px"} />
-                    <S.ShimmerLine $width="38%" $height="11px" />
-                  </S.FeedShimmerItem>
-                ))}
-              </S.FeedShimmerList>
-            ) : (
-              <>
-                {mixedFeed.map((item) => {
-                  if (item.kind === "activity") {
-                    return <ActivityBox key={item.key} activity={item.data} />;
-                  }
-                  return (
-                    <PromptComponent
-                      key={item.key}
-                      prompt={item.data}
-                      $noBorder
-                    />
-                  );
-                })}
-                <LoadMore
-                  hasMore={feedHasMore}
-                  loadingMore={feedLoadingMore}
-                  onLoadMore={loadMoreFeed}
-                />
-              </>
-            )}
-          </S.ActivityContainer>
-          <ScrollJumpButton direction="up" onClick={scrollToTop} />
-        </S.RightWrapperContainer>
-      </S.ParentWrapperContainer>
+            <S.ScrollNavButton
+              $side="right"
+              $visible={unknownMusesScroll.canScrollRight}
+              onClick={() => unknownMusesScroll.scrollByPage(1)}
+              aria-label="Scroll right"
+            >
+              <FaChevronRight />
+            </S.ScrollNavButton>
+          </S.ScrollRowWrap>
+        </S.ContentContainer>
+        <S.ActivityContainer>
+          <S.SubText id="home-tour-step-5">
+            Updates from your friends
+          </S.SubText>
+          {feedInitializing ? (
+            <S.FeedShimmerList>
+              {[0, 1, 2, 3, 4].map((i) => (
+                <S.FeedShimmerItem key={i}>
+                  <S.ShimmerRow>
+                    <S.ShimmerAvatar />
+                    <S.ShimmerLines>
+                      <S.ShimmerLine $width="48%" $height="13px" />
+                      <S.ShimmerLine $width="72%" $height="11px" />
+                    </S.ShimmerLines>
+                  </S.ShimmerRow>
+                  <S.ShimmerBlock $height={i % 2 === 0 ? "110px" : "64px"} />
+                  <S.ShimmerLine $width="38%" $height="11px" />
+                </S.FeedShimmerItem>
+              ))}
+            </S.FeedShimmerList>
+          ) : (
+            <>
+              {mixedFeed.map((item) => {
+                if (item.kind === "activity") {
+                  return <ActivityBox key={item.key} activity={item.data} />;
+                }
+                return (
+                  <PromptComponent key={item.key} prompt={item.data} $noBorder />
+                );
+              })}
+              <LoadMore
+                hasMore={feedHasMore}
+                loadingMore={feedLoadingMore}
+                onLoadMore={loadMoreFeed}
+              />
+            </>
+          )}
+        </S.ActivityContainer>
+        <ScrollJumpButton direction="up" onClick={scrollToTop} />
+      </S.MainContainer>
     </S.PageContainer>
   );
 }

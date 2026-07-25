@@ -121,6 +121,7 @@ export default function NovelistPostsPage() {
         hasMore={hasMore}
         loadingMore={loadingMore}
         onLoadMore={loadMore}
+        endMarker={!!posts?.length}
       />
 
       {isCurrentUser && (

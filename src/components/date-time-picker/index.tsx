@@ -4,6 +4,8 @@ import { type ChangeEvent, type FC, useEffect, useState } from "react";
 import {
   type DateTimeFields,
   type Era,
+  formatAdDateInput,
+  formatAdTimeInput,
   parseAdDateText,
   parseAdTimeText,
   parseWireValue,
@@ -122,13 +124,13 @@ export const DateTimePicker: FC<Props> = ({ id, value, onChange }) => {
   };
 
   const handleAdDateChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const text = e.target.value;
+    const text = formatAdDateInput(e.target.value);
     setAdDateText(text);
     commitAd(text, adTimeText);
   };
 
   const handleAdTimeChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const text = e.target.value;
+    const text = formatAdTimeInput(e.target.value);
     setAdTimeText(text);
     commitAd(adDateText, text);
   };

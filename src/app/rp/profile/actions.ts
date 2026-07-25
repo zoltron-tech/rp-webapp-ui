@@ -27,6 +27,8 @@ export const getPresignedFileUploadObject = async (formData: FormData) => {
   const contentType = formData.get("contentType") as string;
   const prefix = formData.get("prefix") as string | null;
   const mediaBucket = formData.get("mediaBucket") as string | null;
+  // "false" drops the per-user id segment from the key (admin thread-generator).
+  const scoped = formData.get("scoped") as string | null;
 
   // Build query parameters dynamically
   const queryParams = new URLSearchParams({ contentType });
@@ -34,6 +36,9 @@ export const getPresignedFileUploadObject = async (formData: FormData) => {
     queryParams.append("prefix", prefix);
   }
   queryParams.append("mediaBucket", mediaBucket ?? "APP_MEDIA");
+  if (scoped === "false") {
+    queryParams.append("scoped", "false");
+  }
 
   console.log("Requesting presigned URL with params:", {
     contentType,

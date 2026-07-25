@@ -477,7 +477,7 @@ export const FandomSelectContent = styled(Select.Content)`
 export const FandomDropdownSearchInput = styled.input`
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--bg-4);
-  font-size: 0.9rem;
+  font-size: var(--font-size-input);
   background-color: var(--bg-2);
   color: var(--text);
   margin-block: 4px;

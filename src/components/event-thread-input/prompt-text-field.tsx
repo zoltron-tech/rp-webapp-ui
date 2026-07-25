@@ -35,6 +35,7 @@ export const EventThreadTextField: FC<Props> = ({
   const setPromptInputState = useEventThreadInputStoreSet();
 
   const promptText = useEventThreadInputState("promptText");
+  const dialogDesign = useEventThreadInputState("dialogDesign");
   const gifToInsert = useEventThreadInputState("gifToInsert");
   const uploadingImage = useEventThreadInputState("uploadingImage");
   const uploadedImage = useEventThreadInputState("uploadedImage");
@@ -172,6 +173,9 @@ export const EventThreadTextField: FC<Props> = ({
   const dialogMuses = useMemo(
     () =>
       (novelist?.muses ?? []).map((m) => ({
+        // Only carry the accent when the muse opted into it, so the colored
+        // designs tint with the app accent otherwise (matches the reader).
+        accent: m.useAccent ? m.accent : null,
         avatar: m.image || null,
         id: m.id ?? "",
         name: `${m.firstName} ${m.lastName}`.trim(),
@@ -187,6 +191,7 @@ export const EventThreadTextField: FC<Props> = ({
         value={initialValue ?? ""}
         mentionTabs={MENTION_TABS}
         dialogMuses={dialogMuses}
+        dialogDesign={dialogDesign}
         onChange={handlePromptTextChange}
         desktopRounded
       />

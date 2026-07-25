@@ -40,13 +40,12 @@ export const CardFrame = styled.div<{ $accent?: string | null }>`
     height: 300px;
   }
 
-  &.home {
-    width: 180px;
-    min-width: 180px;
-    height: 300px;
-  }
-
-  @container content-container (max-width: 1000px) {
+  /* Real viewport check, not a container query: the layout's content column
+     is squeezed under 1000px by the fixed sidebar reserves on effectively
+     every desktop width once the sidebars are showing (>= 1300px), so a
+     container query here would keep this card on the "narrow" branch on
+     desktop too — matches the breakpoint MuseCardShimmer/NextPageCard use. */
+  @media (max-width: 600px) {
     & {
       width: 160px;
       min-width: 160px;

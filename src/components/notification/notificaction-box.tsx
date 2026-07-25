@@ -93,11 +93,19 @@ export const NotificationBox: FC<NotificationBoxProps> = ({ notification }) => {
         routeToPage(ROUTES.Thread.View(notification.target.urlProp));
       else if (notification.type === "FRIEND_REQUEST")
         routeToPage(ROUTES.Profile.View(notification.source.urlProp).Index);
+      else if (notification.type === "STORYBOARD_UPDATE")
+        routeToPage(ROUTES.Story.View(notification.target.urlProp));
+      else if (notification.type === "STORYBOARD_EVENT_UPDATE")
+        routeToPage(ROUTES.Story.Event.View(notification.target.urlProp));
       else if (notification.type === "REACTION")
         if (["COMMENT", "REPLY"].includes(notification.target.targetType))
           routeToPage(ROUTES.Thread.View(notification.target.urlProp));
         else if (notification.target.targetType === "PROMPT")
           routeToPage(ROUTES.Prompt.View(notification.target.urlProp));
+        else if (notification.target.targetType === "STORY_BOARD")
+          routeToPage(ROUTES.Story.View(notification.target.urlProp));
+        else if (notification.target.targetType === "STORY_BOARD_EVENT")
+          routeToPage(ROUTES.Story.Event.View(notification.target.urlProp));
     },
     [notification],
   );

@@ -39,6 +39,9 @@ export type DialogMuse = {
   id: string;
   name: string;
   avatar: string | null;
+  /** Muse's accent hex, or null when unset / the muse opted out of its accent.
+   *  Used to tint the colored card/bubble designs in the composer preview. */
+  accent?: string | null;
 };
 
 const RP_SERVICE_URL = process.env.RP_SERVICE_URL ?? "";
@@ -203,6 +206,11 @@ export const mountDialogEmbed = (
   if (!text) return;
 
   root.setAttribute("contenteditable", "false");
+
+  // The editable card always uses the ambient (novelist) accent; clear any
+  // inline accent a colored design preview may have left on the embed.
+  root.style.removeProperty("--accent");
+  root.style.removeProperty("--accent-hover");
 
   if (editable) {
     text.setAttribute("contenteditable", "true");

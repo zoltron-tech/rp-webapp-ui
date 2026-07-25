@@ -5,8 +5,8 @@ import { css } from "styled-components";
  *  design class to the render container itself (both classes live on the
  *  same element). */
 export const cardDialogCss = css`
-  &.dialog-design-card .dialog-embed,
-  &.dialog-design-card-colored .dialog-embed {
+  &.dialog-design-card .dialog-embed:not([data-selected="true"]),
+  &.dialog-design-card-colored .dialog-embed:not([data-selected="true"]) {
     display: flex;
     align-items: flex-start;
     gap: 10px;

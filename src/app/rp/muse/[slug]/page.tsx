@@ -30,7 +30,7 @@ import { AppAlertDialog } from "@/components/dialog";
 import BannerCropDialog from "@/components/dialog/banner-crop-dialog";
 import { ProfileSongPlayer } from "@/components/profile-song";
 import { SongPickerDialog } from "@/app/rp/profile/edit/song-picker-dialog";
-import { useGlobalState } from "@/context/store/stores";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useStateMachine } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
@@ -162,6 +162,7 @@ export default function MuseProfilePage({}) {
   const authState = useGlobalState("authState");
   const user = useGlobalState("user");
   const novelist = useGlobalState("novelist");
+  const setGlobalState = useGlobalStoreSet();
   const { successToast, errorToast } = useUIContext();
   const { uploadMedia } = useUploadMedia();
   const [muse, setMuse] = useState<Muse | null>(null);
@@ -434,6 +435,13 @@ export default function MuseProfilePage({}) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Muse profile needs the full width — hide the shared layout's LeftNav/
+  // RightSidebar while it's open, restore them on unmount.
+  useEffect(() => {
+    setGlobalState({ hideAppSidebars: true });
+    return () => setGlobalState({ hideAppSidebars: false });
+  }, [setGlobalState]);
 
   Logger.debug("params are:", params);
 

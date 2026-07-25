@@ -34,26 +34,13 @@ export const SideBarFriendListItem: FC<Props> = ({
       ])}
       {...rest}
     >
-      <S.CardBackground />
-      <S.Card
-        className={classNames([
-          "muse-card",
-          {
-            new: !novelist?.username,
-          },
-        ])}
-      >
-        <S.Avatar
-          className="selectable"
-          src={novelist?.image ?? null}
-          alt={novelist?.username ?? "Avatar"}
-          onClick={onAvatarClick}
-          username={novelist?.username}
-        />
-        <S.Info>
-          <S.username username={novelist?.username} />
-        </S.Info>
-      </S.Card>
+      <S.Avatar
+        className="selectable"
+        src={novelist?.image ?? null}
+        alt={novelist?.username ?? "Avatar"}
+        onClick={onAvatarClick}
+        username={novelist?.username}
+      />
     </S.CardWrapper>
   );
 };

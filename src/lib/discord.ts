@@ -397,7 +397,7 @@ export function buildDiscordMuseEmbed(
       icon_url: muse.pennedBy.image || undefined,
       url: novelistUrl,
     },
-    title: `✦ ${fullName}  ·  Lv. ${muse.level}`,
+    title: `✦ ${fullName}`,
     description,
     color,
     url: museUrl,
@@ -415,6 +415,174 @@ export function buildDiscordMuseEmbed(
 
   return {
     content: `🌟 **A new character has entered the story!** Come say hello to **${fullName}**.`,
+    embeds: [embed],
+  };
+}
+
+// ─── Story share types ──────────────────────────────────────────────────────
+
+/** Minimal story data serialised from the frontend and sent to /api/discord/share-story. */
+export interface ShareStoryData {
+  name: string;
+  description: string | null;
+  image: string | null;
+  /** Pre-resolved from NWImage.src — cover used as the embed thumbnail. */
+  coverSrc: string | null;
+  fandomName: string | null;
+  genres: string[];
+  isPublic: boolean;
+  createdBy: {
+    id: string;
+    username: string;
+    firstName: string;
+    lastName: string | null;
+    image: string;
+  } | null;
+}
+
+export interface ShareStoryPayload {
+  storyUrl: string;
+  story: ShareStoryData;
+  novelistUsername: string;
+}
+
+// ─── Chapter share types ────────────────────────────────────────────────────
+
+/** Minimal chapter data serialised from the frontend and sent to /api/discord/share-chapter. */
+export interface ShareChapterData {
+  name: string;
+  description: string;
+  image: string | null;
+  /** Pre-resolved from NWImage.src — cover used as the embed thumbnail. */
+  coverSrc: string | null;
+  storyBoardName: string;
+  storyBoardId: string;
+}
+
+export interface ShareChapterPayload {
+  chapterUrl: string;
+  chapter: ShareChapterData;
+  novelistUsername: string;
+}
+
+// ─── Story embed ────────────────────────────────────────────────────────────
+
+/**
+ * Builds the Discord message body announcing a shared story.
+ *
+ * @param story    Lightweight story data extracted from the StoryBoard object.
+ * @param storyUrl Absolute URL to the story's page.
+ */
+export function buildDiscordStoryEmbed(
+  story: ShareStoryData,
+  storyUrl: string,
+  novelistUsername: string,
+): DiscordMessage {
+  const baseUrl = new URL(storyUrl).origin;
+  const authorUrl = story.createdBy
+    ? `${baseUrl}/rp/novelist/${story.createdBy.id}`
+    : undefined;
+
+  const rawDesc = (story.description || "").replace(/<[^>]+>/g, "").trim();
+  const description = rawDesc
+    ? trimText(rawDesc)
+        .split("\n")
+        .map((l: string) => `> ${l}`)
+        .join("\n")
+    : undefined;
+
+  const fields: DiscordEmbedField[] = [];
+
+  fields.push({
+    name: "🎬  universe",
+    value: `\`${story.fandomName || "Original"}\``,
+    inline: true,
+  });
+
+  fields.push({
+    name: "🔓  access",
+    value: story.isPublic ? "\`Public\`" : "\`Members only\`",
+    inline: true,
+  });
+
+  if (story.genres.length > 0) {
+    fields.push({
+      name: "🔖  genres",
+      value: story.genres.map((g) => `\`${g}\``).join("   "),
+      inline: false,
+    });
+  }
+
+  const embed: DiscordEmbed = {
+    author: story.createdBy
+      ? {
+          name: `Penned by ${story.createdBy.firstName} ${story.createdBy.lastName ?? ""}`.trim(),
+          icon_url: story.createdBy.image || undefined,
+          url: authorUrl,
+        }
+      : { name: "novelist.world" },
+    title: `📖 ${story.name}`,
+    description,
+    color: 0x29a383,
+    url: storyUrl,
+    fields,
+    footer: { text: `novelist.world · shared by @${novelistUsername}` },
+  };
+
+  const thumbnailUrl = story.coverSrc ?? story.image;
+  if (thumbnailUrl) {
+    embed.thumbnail = { url: thumbnailUrl };
+  }
+
+  return {
+    content: `📚 **A new story is ready to be read!** Come explore **${story.name}**.`,
+    embeds: [embed],
+  };
+}
+
+// ─── Chapter embed ──────────────────────────────────────────────────────────
+
+/**
+ * Builds the Discord message body announcing a shared story chapter.
+ *
+ * @param chapter    Lightweight chapter data extracted from the StoryBoardEvent object.
+ * @param chapterUrl Absolute URL to the chapter's page.
+ */
+export function buildDiscordChapterEmbed(
+  chapter: ShareChapterData,
+  chapterUrl: string,
+  novelistUsername: string,
+): DiscordMessage {
+  const baseUrl = new URL(chapterUrl).origin;
+  const storyUrl = `${baseUrl}/rp/story/${chapter.storyBoardId}`;
+
+  const rawDesc = (chapter.description || "").replace(/<[^>]+>/g, "").trim();
+  const description = rawDesc
+    ? trimText(rawDesc)
+        .split("\n")
+        .map((l: string) => `> ${l}`)
+        .join("\n")
+    : undefined;
+
+  const embed: DiscordEmbed = {
+    author: {
+      name: chapter.storyBoardName,
+      url: storyUrl,
+    },
+    title: `📜 ${chapter.name}`,
+    description,
+    color: 0x29a383,
+    url: chapterUrl,
+    footer: { text: `novelist.world · shared by @${novelistUsername}` },
+  };
+
+  const thumbnailUrl = chapter.coverSrc ?? chapter.image;
+  if (thumbnailUrl) {
+    embed.thumbnail = { url: thumbnailUrl };
+  }
+
+  return {
+    content: `📖 **A new chapter has been posted in ${chapter.storyBoardName}!** Catch up on **${chapter.name}**.`,
     embeds: [embed],
   };
 }

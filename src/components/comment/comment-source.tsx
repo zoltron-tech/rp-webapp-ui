@@ -35,6 +35,7 @@ export const CommentSource: FC = () => {
   const createdOn = useCommentState("createdOn");
   const concluded = useCommentState("concluded");
   const commentAlert = useCommentState("commentAlert");
+  const isPromptOwner = useCommentState("isPromptOwner");
   const setCommentState = useCommentStateSet();
   const { successToast, errorToast, warningToast } = useUIContext();
   const authState = useGlobalState("authState");
@@ -49,6 +50,7 @@ export const CommentSource: FC = () => {
   const isOwner =
     novelist?.muses.some((muse) => muse.id === source.sourceId) ||
     source.sourceId === novelist?.id;
+  const canConclude = isOwner || isPromptOwner;
 
   const handleReportComment = useCallback(async () => {
     const response = await reportAction(commentId, "", "COMMENT");
@@ -96,6 +98,18 @@ export const CommentSource: FC = () => {
     [commentAlert, setCommentState],
   );
 
+  const concludeItem = {
+    icon: concluded ? <RiArrowGoBackLine /> : <RiCheckboxCircleLine />,
+    label: concluded ? "Reopen thread" : "Mark as concluded",
+    onClick: handleToggleConcluded,
+  };
+  const reportItem = {
+    icon: <RiFlagFill />,
+    label: "Report this reply",
+    onClick: () => handleOpenChange("report")(true),
+    variant: "danger" as const,
+  };
+
   const dropdownItems = isOwner
     ? [
         {
@@ -110,11 +124,7 @@ export const CommentSource: FC = () => {
             setShowEditCommentAlert(true);
           },
         },
-        {
-          icon: concluded ? <RiArrowGoBackLine /> : <RiCheckboxCircleLine />,
-          label: concluded ? "Reopen thread" : "Mark as concluded",
-          onClick: handleToggleConcluded,
-        },
+        concludeItem,
         {
           separator: true,
         },
@@ -125,14 +135,9 @@ export const CommentSource: FC = () => {
           variant: "danger" as const,
         },
       ]
-    : [
-        {
-          icon: <RiFlagFill />,
-          label: "Report this reply",
-          onClick: () => handleOpenChange("report")(true),
-          variant: "danger" as const,
-        },
-      ];
+    : canConclude
+      ? [concludeItem, { separator: true }, reportItem]
+      : [reportItem];
 
   return (
     <S.Source>

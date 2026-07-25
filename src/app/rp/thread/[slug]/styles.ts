@@ -488,19 +488,9 @@ export const NotFoundContainer = styled.div`
 `;
 
 export const NotFoundAnimation = styled.div`
-  width: 280px;
-  height: 280px;
-
-  /* Blend the animation's dominant colors toward the app accent */
-  filter: hue-rotate(
-      calc(var(--animation-hue-shift, 0deg))
-    )
-    saturate(0.85) brightness(0.92);
-
-  @media (max-width: 480px) {
-    width: 200px;
-    height: 200px;
-  }
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 export const NotFoundTitle = styled.h2`

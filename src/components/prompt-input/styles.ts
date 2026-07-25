@@ -1325,3 +1325,123 @@ export const NovelistConfirmCreateIconButton = styled.button<{
     cursor: default;
   }
 `;
+
+/* ─── Embedded "create a character" form (forced in-character, no muses) ─── */
+
+export const IcRequiredWrap = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--bg-3);
+  border: 1px solid var(--bg-6);
+`;
+
+export const IcRequiredHeader = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+
+  > svg {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+    color: var(--accent-11, var(--accent));
+  }
+`;
+
+export const IcRequiredHeaderText = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+`;
+
+export const IcRequiredTitle = styled.span`
+  font-size: var(--font-size-input);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text);
+`;
+
+export const IcRequiredDesc = styled.span`
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+`;
+
+export const IcRequiredBody = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+
+export const IcRequiredAvatarLabel = styled.label`
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  cursor: pointer;
+
+  .avatar {
+    width: 52px;
+    height: 52px;
+  }
+
+  .camera-badge {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--text-on-accent, #fff);
+    font-size: 11px;
+    border: 2px solid var(--bg-3);
+  }
+`;
+
+export const IcRequiredFields = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+`;
+
+export const IcRequiredSubmitButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 11px 16px;
+  border-radius: 999px;
+  border: none;
+  background: var(--accent);
+  color: var(--text-on-accent, #fff);
+  font-size: var(--font-size-input);
+  font-weight: var(--font-weight-semi-bold);
+  font-family: var(--font);
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 0.92;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+`;
+
+export const IcRequiredError = styled.p`
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--red-9, #e5484d);
+`;

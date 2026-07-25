@@ -15,7 +15,7 @@ import {
   useState,
 } from "react";
 import { IoIosShareAlt } from "react-icons/io";
-import { IoArrowBack, IoCloseOutline } from "react-icons/io5";
+import { IoCloseOutline } from "react-icons/io5";
 import { MdDeleteOutline, MdMusicNote } from "react-icons/md";
 import { PiDotsThreeOutlineFill } from "react-icons/pi";
 import { submitPrompt } from "@/app/rp/profile/actions";
@@ -47,6 +47,7 @@ import {
   PromptEvent,
   usePromptInputEvents,
 } from "./helpers";
+import { IcMuseRequiredForm } from "./ic-muse-required-form";
 import { NovelistConfirm } from "./novelist-confirm";
 import { PromptPrivacySelect } from "./privacy-select";
 import {
@@ -114,10 +115,6 @@ const FullPageForm: FC<InnerFormProps> = ({
   const [novelistConfirmOpen, setNovelistConfirmOpen] = useState(false);
   const pendingSubmitRef = useRef<(() => Promise<void>) | null>(null);
   const museSelectRef = useRef<MuseSelectHandle | null>(null);
-  // Muses created on the fly from the "who is posting?" dialog — session-local
-  // — merged with the novelist's real muses so a freshly created character is
-  // immediately selectable without requiring a refetch of the novelist.
-  const [addedMuses, setAddedMuses] = useState<Muse[]>([]);
   const { emit } = usePromptInputEvents();
   const { on, off } = useCustomEvents(EVENTS.PRIVACY.CUSTOM.base);
 
@@ -136,9 +133,7 @@ const FullPageForm: FC<InnerFormProps> = ({
   const sources = useMemo(() => {
     if (!novelist) return [];
     const novelistSource = novelistToSource(novelist);
-    const museSources = [...(novelist.muses ?? []), ...addedMuses].map(
-      museToSource,
-    );
+    const museSources = (novelist.muses ?? []).map(museToSource);
     switch (dropdownSelection) {
       case "NOVELIST":
         return [novelistSource];
@@ -147,7 +142,7 @@ const FullPageForm: FC<InnerFormProps> = ({
       default:
         return [novelistSource, ...museSources];
     }
-  }, [novelist, dropdownSelection, addedMuses]);
+  }, [novelist, dropdownSelection]);
 
   const novelistConfirmSource = useMemo(
     () => sources.find((s) => s.sourceType === "NOVELIST"),
@@ -283,9 +278,10 @@ const FullPageForm: FC<InnerFormProps> = ({
   }, []);
 
   const handleCharacterCreated = useCallback((muse: Muse) => {
-    setAddedMuses((prev) => [...prev, muse]);
     museSelectRef.current?.selectSource(museToSource(muse));
   }, []);
+
+  const showIcMuseRequired = dropdownSelection === "MUSE" && !hasMuseOptions;
 
   return (
     <>
@@ -313,97 +309,109 @@ const FullPageForm: FC<InnerFormProps> = ({
             <IoCloseOutline />
           </S.FPBackButton>
           <S.FPTopBarRight>
-            {type === "prompt" && <PromptPrivacySelect />}
-            <Form.Submit asChild>
-              <S.FPSubmitButton disabled={submitDisabled}>
-                {submitText}
-              </S.FPSubmitButton>
-            </Form.Submit>
+            {!showIcMuseRequired && type === "prompt" && (
+              <PromptPrivacySelect />
+            )}
+            {!showIcMuseRequired && (
+              <Form.Submit asChild>
+                <S.FPSubmitButton disabled={submitDisabled}>
+                  {submitText}
+                </S.FPSubmitButton>
+              </Form.Submit>
+            )}
           </S.FPTopBarRight>
         </S.FPTopBar>
 
-        {/* Meta row: muse select + shared-with + media buttons */}
-        <S.FPMetaRow>
-          <PromptMuseSelect
-            ref={museSelectRef}
-            sources={sources}
-            dropdownSelection={dropdownSelection}
-            initialSelection={initialSelection}
-          />
-          <ShouldRender if={privacySelectedFriends.length > 0}>
-            <S.FPSharedWith>
-              <IoIosShareAlt />
-              {privacySelectedFriends.slice(0, 2).map((friend) => (
-                <S.PrivacySelectedFriendAvatar
-                  key={friend.id}
-                  src={friend.image}
-                  alt={friend.username}
-                  onClick={() => setShowCustomPrivacyListSelection(true)}
+        {showIcMuseRequired ? (
+          <S.FPEditorArea>
+            <IcMuseRequiredForm />
+          </S.FPEditorArea>
+        ) : (
+          <>
+            {/* Meta row: muse select + shared-with + media buttons */}
+            <S.FPMetaRow>
+              <PromptMuseSelect
+                ref={museSelectRef}
+                sources={sources}
+                dropdownSelection={dropdownSelection}
+                initialSelection={initialSelection}
+              />
+              <ShouldRender if={privacySelectedFriends.length > 0}>
+                <S.FPSharedWith>
+                  <IoIosShareAlt />
+                  {privacySelectedFriends.slice(0, 2).map((friend) => (
+                    <S.PrivacySelectedFriendAvatar
+                      key={friend.id}
+                      src={friend.image}
+                      alt={friend.username}
+                      onClick={() => setShowCustomPrivacyListSelection(true)}
+                    />
+                  ))}
+                  <S.privacyAvatarMoreIcon
+                    onClick={() => setShowCustomPrivacyListSelection(true)}
+                  >
+                    <PiDotsThreeOutlineFill />
+                  </S.privacyAvatarMoreIcon>
+                </S.FPSharedWith>
+              </ShouldRender>
+              <S.FPMetaRight>
+                {type === "prompt" && (
+                  <S.ToolButton
+                    type="button"
+                    style={{ marginTop: 20 }}
+                    aria-label={featuredSong ? "Change song" : "Add a song"}
+                    title={featuredSong ? "Change song" : "Add a song"}
+                    onClick={() => setSongDialogOpen(true)}
+                  >
+                    <MdMusicNote />
+                  </S.ToolButton>
+                )}
+                <PromptMediaInput />
+              </S.FPMetaRight>
+            </S.FPMetaRow>
+
+            {/* Full-height editor area (toolbar + expanding editor) */}
+            <S.FPEditorArea>
+              <PromptTextField fullPage />
+            </S.FPEditorArea>
+
+            <PromptMediaPreview />
+
+            {type === "prompt" && featuredSong && (
+              <S.PromptSongPreview>
+                <ProfileSongPlayer
+                  key={
+                    featuredSong.spotifyTrackId ??
+                    featuredSong.songId ??
+                    featuredSong.title
+                  }
+                  song={featuredSong}
+                  slim
+                  block
                 />
-              ))}
-              <S.privacyAvatarMoreIcon
-                onClick={() => setShowCustomPrivacyListSelection(true)}
-              >
-                <PiDotsThreeOutlineFill />
-              </S.privacyAvatarMoreIcon>
-            </S.FPSharedWith>
-          </ShouldRender>
-          <S.FPMetaRight>
-            {type === "prompt" && (
-              <S.ToolButton
-                type="button"
-                style={{ marginTop: 20 }}
-                aria-label={featuredSong ? "Change song" : "Add a song"}
-                title={featuredSong ? "Change song" : "Add a song"}
-                onClick={() => setSongDialogOpen(true)}
-              >
-                <MdMusicNote />
-              </S.ToolButton>
+                <S.PromptSongRemove
+                  type="button"
+                  aria-label="Remove song"
+                  title="Remove song"
+                  onClick={() => setPromptInputState({ featuredSong: null })}
+                >
+                  <MdDeleteOutline />
+                </S.PromptSongRemove>
+              </S.PromptSongPreview>
             )}
-            <PromptMediaInput />
-          </S.FPMetaRight>
-        </S.FPMetaRow>
 
-        {/* Full-height editor area (toolbar + expanding editor) */}
-        <S.FPEditorArea>
-          <PromptTextField fullPage />
-        </S.FPEditorArea>
-
-        <PromptMediaPreview />
-
-        {type === "prompt" && featuredSong && (
-          <S.PromptSongPreview>
-            <ProfileSongPlayer
-              key={
-                featuredSong.spotifyTrackId ??
-                featuredSong.songId ??
-                featuredSong.title
-              }
-              song={featuredSong}
-              slim
-              block
-            />
-            <S.PromptSongRemove
-              type="button"
-              aria-label="Remove song"
-              title="Remove song"
-              onClick={() => setPromptInputState({ featuredSong: null })}
-            >
-              <MdDeleteOutline />
-            </S.PromptSongRemove>
-          </S.PromptSongPreview>
-        )}
-
-        {type === "prompt" && (
-          <SongPickerDialog
-            open={songDialogOpen}
-            onOpenChange={setSongDialogOpen}
-            commit={false}
-            title="Add a song to your prompt"
-            onSelected={(picked: ProfileSong) =>
-              setPromptInputState({ featuredSong: picked })
-            }
-          />
+            {type === "prompt" && (
+              <SongPickerDialog
+                open={songDialogOpen}
+                onOpenChange={setSongDialogOpen}
+                commit={false}
+                title="Add a song to your prompt"
+                onSelected={(picked: ProfileSong) =>
+                  setPromptInputState({ featuredSong: picked })
+                }
+              />
+            )}
+          </>
         )}
 
         <InfoModal

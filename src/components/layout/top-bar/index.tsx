@@ -13,6 +13,7 @@ import {
 import { NotificationsMenu } from "@/components/notifications-menu";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styles";
 
@@ -25,6 +26,11 @@ export const TopBar: FC<Props> = memo(({}) => {
   const pathname = usePathname();
   const isLoginPage = useMemo(() => pathname === ROUTES.Login, [pathname]);
   const { routeToPage } = usePageRouter();
+  const { width } = useWindowDimensions();
+  // The home page renders its own always-expanded search inline on mobile
+  // (see app/rp/home/mobile-search.tsx) instead of this icon-triggered one.
+  const hideSearch =
+    pathname === ROUTES.Home && width !== null && width < 801;
 
   const onSearchItemClick =
     (record: { id?: string; username?: string; name?: string }) =>
@@ -73,42 +79,44 @@ export const TopBar: FC<Props> = memo(({}) => {
           <S.ActionsContainer
             className={searchBarExpanded ? "searchBarExpanded" : undefined}
           >
-            <S.SearchContainer>
-              <Search
-                placeholder="Search"
-                types={["novelist", "muse"]} // "story" not added yet
-                renderDropdownItem={(result, close) => (
-                  <S.SearchDropdownItem
-                    onClick={onSearchItemClick(result)(close)}
-                  >
-                    <S.AvatarContainer>
-                      <S.SearchAvatar
-                        size={60}
-                        src={result.image}
-                        alt={result.firstName}
-                      />
-                      <S.NameContainer>
-                        {result.firstName && (
-                          <div>
-                            {result.firstName} {result.lastName}
-                          </div>
-                        )}
-                        {result.name && <div>{result.name}</div>}
-                        {result.username && (
-                          <Username username={result.username} />
-                        )}
-                        {result.pennedBy && (
-                          <S.PennedBy>
-                            Penned by {result.pennedBy.username}
-                          </S.PennedBy>
-                        )}
-                      </S.NameContainer>
-                    </S.AvatarContainer>
-                    <GoArrowRight />
-                  </S.SearchDropdownItem>
-                )}
-              />
-            </S.SearchContainer>
+            <ShouldRender if={!hideSearch}>
+              <S.SearchContainer>
+                <Search
+                  placeholder="Search"
+                  types={["novelist", "muse"]} // "story" not added yet
+                  renderDropdownItem={(result, close) => (
+                    <S.SearchDropdownItem
+                      onClick={onSearchItemClick(result)(close)}
+                    >
+                      <S.AvatarContainer>
+                        <S.SearchAvatar
+                          size={60}
+                          src={result.image}
+                          alt={result.firstName}
+                        />
+                        <S.NameContainer>
+                          {result.firstName && (
+                            <div>
+                              {result.firstName} {result.lastName}
+                            </div>
+                          )}
+                          {result.name && <div>{result.name}</div>}
+                          {result.username && (
+                            <Username username={result.username} />
+                          )}
+                          {result.pennedBy && (
+                            <S.PennedBy>
+                              Penned by {result.pennedBy.username}
+                            </S.PennedBy>
+                          )}
+                        </S.NameContainer>
+                      </S.AvatarContainer>
+                      <GoArrowRight />
+                    </S.SearchDropdownItem>
+                  )}
+                />
+              </S.SearchContainer>
+            </ShouldRender>
 
             <ShouldRender if={authState === "LOGGED_OUT"}>
               <S.ButtonsContainerDesktop

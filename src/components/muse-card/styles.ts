@@ -82,7 +82,7 @@ export const CardWrapper = styled.div`
     bottom: -190px;
   }
 
-  @container content-container (max-width: 1000px) {
+  @container content-container (max-width: 850px) {
     & {
       width: 113px;
       height: 200px;

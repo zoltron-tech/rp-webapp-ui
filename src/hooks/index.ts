@@ -5,6 +5,7 @@ export * from "./use-local-storage";
 export * from "./use-nsfw-check";
 export * from "./use-post-login";
 export * from "./use-post-logout";
+export * from "./use-scroll-arrows";
 export * from "./use-state-machine";
 export * from "./use-theme-context";
 export * from "./use-ui-context";

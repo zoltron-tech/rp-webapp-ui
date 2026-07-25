@@ -229,6 +229,18 @@ export const BookView: FC<Props> = ({
     recompute();
   }, [recompute, winW, threads.length, startIndex, event.id]);
 
+  // The stage's own width changes independently of window resizes too — e.g.
+  // the shared layout's LeftNav/RightSidebar sliding out over ~300ms as book
+  // mode opens. Track the stage directly so scale grows in step with that
+  // animation instead of jumping once it settles.
+  useLayoutEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const observer = new ResizeObserver(() => recompute());
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, [recompute]);
+
   // The rich-text renderer injects its HTML after paint, and images/embeds
   // change the flowed width once they load. Re-measure whenever the flow's
   // contents actually change, plus on image load and a settle pass for fonts.
@@ -384,7 +396,9 @@ export const BookView: FC<Props> = ({
 
   return (
     <S.BookStage ref={stageRef}>
-      <S.Spread style={{ height: stageH, width: stageW || undefined }}>
+      <S.Spread
+        style={{ height: stageH || undefined, width: stageW || undefined }}
+      >
         <S.PageEdgeButton
           $side="left"
           onClick={() => turn(-1)}
@@ -436,21 +450,23 @@ export const BookView: FC<Props> = ({
                       </span>
                     )}
                   </S.MetaRow>
+                </S.BookTitleBlock>
+
+                <S.BookOvertureBlock>
                   {overtureAsterism.value !== "none" && (
                     <S.Asterism $tight $variant={overtureAsterism.lineVariant}>
                       <span className="glyph">{overtureAsterism.glyph}</span>
                     </S.Asterism>
                   )}
-                </S.BookTitleBlock>
-
-                <div className="book-overture">
-                  <ShouldRender if={Boolean(event?.description && event?.description.length > 0)}>
-                  <RichTextRenderer
-                    savedText={event.description ?? ""}
-                    disableCollapse
-                  />
-                  </ShouldRender>
-                </div>
+                  <div className="book-overture">
+                    <ShouldRender if={Boolean(event?.description && event?.description.length > 0)}>
+                    <RichTextRenderer
+                      savedText={event.description ?? ""}
+                      disableCollapse
+                    />
+                    </ShouldRender>
+                  </div>
+                </S.BookOvertureBlock>
               </>
             ) : (
               // Mid-story window: a slim continuation header instead of the

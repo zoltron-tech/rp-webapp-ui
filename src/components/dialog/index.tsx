@@ -46,10 +46,16 @@ export const AppAlertDialog = ({
   return (
     <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
       <AlertDialog.Portal>
-        <S.Overlay />
+        {/* Radix portals render in document.body, but React synthetic events
+            still bubble through the React tree — so clicks inside the dialog
+            would reach the onClick of whatever rendered <AppAlertDialog>
+            (e.g. a clickable muse card). Stop propagation here so dialog
+            interactions never trigger the parent's click handler. */}
+        <S.Overlay onClick={(e) => e.stopPropagation()} />
         <S.Content
           className={classNames([accent, theme])}
           $size={size}
+          onClick={(e) => e.stopPropagation()}
           onOpenAutoFocus={(e) => {
             if (typeof window !== "undefined" && window.matchMedia("(hover: none)").matches) {
               e.preventDefault();

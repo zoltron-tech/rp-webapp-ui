@@ -456,6 +456,65 @@ export const SubText = styled.div`
   }
 `;
 
+export const MuseSectionHeader = styled.div`
+  width: 95%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--font-size-xsmall);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 20px;
+  margin-bottom: 8px;
+
+  > span {
+    white-space: nowrap;
+  }
+
+  @media screen and (max-width: 800px) {
+    width: 92%;
+  }
+`;
+
+export const MuseSectionRule = styled.div`
+  flex: 1;
+  height: 1px;
+  background-color: var(--bg-5);
+`;
+
+export const AddMuseButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border: 1px solid var(--bg-6);
+  border-radius: 50px;
+  background: var(--bg-3);
+  font-size: var(--font-size-xsmall);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease,
+    border-color 0.15s ease;
+
+  svg {
+    display: block;
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 10%, var(--bg-3));
+    }
+  }
+`;
+
 export const SeeMoreLink = styled.div`
   width: 95%;
   display: flex;

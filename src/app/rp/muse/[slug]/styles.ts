@@ -1749,6 +1749,11 @@ export const PromptCardStat = styled.span`
   font-weight: 600;
   color: rgba(255, 255, 255, 0.5);
   white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    color: rgba(255, 255, 255, 0.8);
+  }
 `;
 
 /* ── Muse connection cards ("bonds") ─────────────────────────────────────────

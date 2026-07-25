@@ -216,7 +216,10 @@ const EditStoryboardEventDataCard = forwardRef<
     const formData = new FormData();
     formData.append("file", file);
     formData.append("mediaBucket", "APP_MEDIA");
-    formData.append("prefix", `${storyBoardId}/${id ?? "new"}`);
+    // Store the event cover under app-media/<storyboardId>/<file> (no user-id
+    // segment) so it sits alongside the storyboard's other media.
+    formData.append("prefix", storyBoardId);
+    formData.append("scoped", "false");
     const url = await uploadMedia(formData);
     setImageUploading(false);
 

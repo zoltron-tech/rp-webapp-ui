@@ -350,9 +350,9 @@ export const ConcludedBadge = styled.span`
   display: flex;
   align-items: center;
   gap: 4px;
-  background-color: var(--bg-3);
-  border: 1px solid var(--bg-6);
-  color: var(--text-secondary);
+  background-color: color-mix(in srgb, var(--ok, #4fb477) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ok, #4fb477) 35%, transparent);
+  color: var(--ok, #4fb477);
   font-family: var(--font);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-semi-bold);

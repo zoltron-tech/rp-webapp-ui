@@ -23,6 +23,7 @@ import { HiOutlineBookOpen, HiOutlineUserGroup } from "react-icons/hi2";
 import { IoChevronBack, IoChevronForward } from "react-icons/io5";
 import { MdOutlineTheaters } from "react-icons/md";
 import { deleteStoryBoardAction } from "@/app/rp/story/actions";
+import { museAvatarUrl } from "@/components/rich-text-editor-input/dialog-embed";
 import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents, useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -40,6 +41,7 @@ import { Logger } from "@/utils/services";
 import { CoverImage, ShouldRender } from "../common";
 import { AppAlertDialog } from "../dialog";
 import * as DropS from "../profile-more-dropdown/styled";
+import { ReactionLikersDialog } from "../reaction-likers-dialog";
 import * as S from "./styles";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
@@ -158,6 +160,8 @@ export const StoryCard: FC<Props> = ({
   // Desktop preview dialog state.
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  const [likersOpen, setLikersOpen] = useState(false);
+
   // Heart reaction — shared with any STORY_BOARD-target activity (editing
   // the story or one of its events reacts against this same story id).
   const [reacted, setReacted] = useState(Boolean(storyBoard?.reacted));
@@ -224,6 +228,12 @@ export const StoryCard: FC<Props> = ({
     }
   };
 
+  const handleOpenLikers = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!storyBoard?.id || reactionCount <= 0) return;
+    setLikersOpen(true);
+  };
+
   const isCreator =
     !!user?.username && storyBoard?.createdBy?.username === user.username;
   const isMember =
@@ -247,6 +257,7 @@ export const StoryCard: FC<Props> = ({
   }, [storyBoard]);
 
   const events = storyBoard?.events ?? [];
+  const cast = storyBoard?.cast ?? [];
   const tags = storyBoard?.tags ?? [];
   const genres = storyBoard?.genres ?? [];
   const fandom = storyBoard?.fandom ?? null;
@@ -442,8 +453,10 @@ export const StoryCard: FC<Props> = ({
           onClick={handleReact}
         >
           {reacted ? <FaHeart /> : <FaRegHeart />}
-          <b>{reactionCount}</b>
-          {reactionCount === 1 ? "like" : "likes"}
+          <S.HeartCountText onClick={handleOpenLikers}>
+            <b>{reactionCount}</b>
+            {reactionCount === 1 ? "like" : "likes"}
+          </S.HeartCountText>
         </S.HeartStatChip>
       </S.StatRow>
 
@@ -463,6 +476,29 @@ export const StoryCard: FC<Props> = ({
             <S.TagPill key={tag.id}>{tag.label}</S.TagPill>
           ))}
         </S.TagRow>
+      </ShouldRender>
+
+      <ShouldRender if={cast.length > 0}>
+        <div>
+          <S.SectionLabel>Cast</S.SectionLabel>
+          <S.CastRow>
+            {cast.map((member) => {
+              const avatarSrc = member.image || museAvatarUrl(member.id);
+              return (
+                <S.CastChip key={member.id} title={member.name}>
+                  {avatarSrc ? (
+                    <S.CastAvatar src={avatarSrc} alt={member.name} />
+                  ) : (
+                    <S.CastAvatarFallback>
+                      {member.name.charAt(0).toUpperCase()}
+                    </S.CastAvatarFallback>
+                  )}
+                  <S.CastName>{member.name}</S.CastName>
+                </S.CastChip>
+              );
+            })}
+          </S.CastRow>
+        </div>
       </ShouldRender>
 
       <div>
@@ -555,7 +591,7 @@ export const StoryCard: FC<Props> = ({
                 onClick={handleReact}
               >
                 {reacted ? <FaHeart /> : <FaRegHeart />}
-                <span>{reactionCount}</span>
+                <span onClick={handleOpenLikers}>{reactionCount}</span>
               </S.CoverHeartBadge>
             </S.Cover>
             <S.Info>
@@ -741,6 +777,13 @@ export const StoryCard: FC<Props> = ({
           document.body,
         )}
       </ShouldRender>
+
+      <ReactionLikersDialog
+        open={likersOpen}
+        onClose={() => setLikersOpen(false)}
+        targetId={storyBoard?.id ?? ""}
+        initialCount={reactionCount}
+      />
     </S.CardWrapper>
   );
 };

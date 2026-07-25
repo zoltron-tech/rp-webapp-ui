@@ -1,7 +1,6 @@
 "use client";
 
 import { Flex } from "@novelist-world/ui";
-import Lottie from "lottie-react";
 import { useParams } from "next/navigation";
 import { Separator } from "radix-ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -10,7 +9,7 @@ import { FaRegEdit } from "react-icons/fa";
 import { FaRegTrashCan, FaTrashCan } from "react-icons/fa6";
 import { IoArrowBackOutline } from "react-icons/io5";
 import { RiArrowGoBackLine, RiCheckboxCircleLine, RiFlagFill } from "react-icons/ri";
-import threadDeletedAnimation from "@/../public/animations/thread-deleted.json";
+import { BookMascot } from "@/components/book-mascot";
 import { ShouldRender } from "@/components/common";
 import { LikeButton } from "@/components/common/like-button";
 import { MuseAvatar } from "@/components/common/muse-avatar";
@@ -31,7 +30,7 @@ import {
   UpdatePromptForm,
   type UpdatePromptProps,
 } from "@/components/update-prompt";
-import { useGlobalState } from "@/context/store/stores";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useCustomEvents, useUIContext } from "@/hooks";
 import { useBindPageLoader, usePageRouter } from "@/hooks/use-page-router";
 import { useToggleLike } from "@/hooks/use-toggle-like";
@@ -58,6 +57,10 @@ import {
   getRepliesAction,
   reportAction,
 } from "../actions";
+import {
+  getOutgoingThreadsAction,
+  getUnreadReplyCount,
+} from "../../outgoing-threads/actions";
 import * as S from "./styles";
 
 const useGetComment = (commentId: string) => {
@@ -145,12 +148,7 @@ function DeletedThreadFallback() {
   return (
     <S.NotFoundContainer>
       <S.NotFoundAnimation>
-        <Lottie
-          animationData={threadDeletedAnimation}
-          loop
-          autoplay
-          style={{ height: "100%", width: "100%" }}
-        />
+        <BookMascot variant="sad" size={200} />
       </S.NotFoundAnimation>
       <S.NotFoundTitle>
         <FaTrashCan /> Thread Deleted
@@ -421,6 +419,8 @@ export default function ThreadPage({}) {
   const params = useParams();
   const authState = useGlobalState("authState");
   const novelist = useGlobalState("novelist");
+  const cachedOutgoingThreads = useGlobalState("cachedOutgoingThreads");
+  const setGlobalState = useGlobalStoreSet();
   const commentId = params?.slug as string;
   const {
     comment,
@@ -563,6 +563,7 @@ export default function ThreadPage({}) {
   const isCommentOwner =
     novelist?.muses.some((muse) => muse.id === comment?.source.sourceId) ||
     comment?.source.sourceId === novelist?.id;
+  const canConcludeComment = isCommentOwner || isPromptOwner;
 
   const { routeToPage } = usePageRouter();
   const { successToast, errorToast } = useUIContext();
@@ -760,9 +761,24 @@ export default function ThreadPage({}) {
       successToast(
         next ? `Thread marked as concluded` : `Thread reopened`,
       );
+      // Concluding answers/closes the thread — drop it from the outgoing
+      // pending list if we owed a reply on it.
+      if (next) await refreshOutgoingThreadsIfPending();
     } else {
       errorToast("There was an issue while updating this thread.");
     }
+  };
+
+  const concludeItem = {
+    icon: comment?.concluded ? <RiArrowGoBackLine /> : <RiCheckboxCircleLine />,
+    label: comment?.concluded ? `Reopen thread` : `Mark as concluded`,
+    onClick: handleToggleConcluded,
+  };
+  const reportCommentItem = {
+    icon: <RiFlagFill />,
+    label: `Report this reply`,
+    onClick: () => setShowReportCommentAlert(true),
+    variant: "danger" as const,
   };
 
   const onAvatarClick = (sourceId: string | undefined) => {
@@ -774,6 +790,44 @@ export default function ThreadPage({}) {
     if (!comment?.prompt?.id) return;
     routeToPage(`${ROUTES.Prompt.View(comment.prompt.id)}?threadOpen=true`);
   };
+
+  // After a reply is sent, if this thread is one where we owed a reply (it's
+  // in the cached outgoing-threads list), refetch that list so the now-answered
+  // thread stops showing as pending. Matches by parentId — the outgoing card's
+  // parentId is this page's commentId (ROUTES.Thread.View(parentId)).
+  const refreshOutgoingThreadsIfPending = useCallback(async () => {
+    const isPending = cachedOutgoingThreads?.some(
+      (thread) => thread.parentId === commentId,
+    );
+    if (!isPending) return;
+
+    // Refetch both the list (feeds the outgoing-threads page + right-sidebar
+    // preview) and the unread reply count (feeds the badges in user-menu,
+    // left-nav, and right-sidebar). Page size 5 matches the outgoing-threads
+    // page that seeds the same cache.
+    const [list, count] = await Promise.all([
+      getOutgoingThreadsAction(1, 5),
+      getUnreadReplyCount(),
+    ]);
+
+    if (list === null) {
+      // 404 → no outgoing threads left at all.
+      setGlobalState({ cachedOutgoingThreads: [] });
+    } else if (!("message" in list)) {
+      setGlobalState({ cachedOutgoingThreads: list });
+    }
+
+    if (count === null) {
+      setGlobalState({ unreadReplyCount: 0 });
+    } else if (typeof count === "number") {
+      setGlobalState({ unreadReplyCount: count });
+    }
+  }, [cachedOutgoingThreads, commentId, setGlobalState]);
+
+  const handleReplySent = useCallback(async () => {
+    await refreshLatestReplies();
+    await refreshOutgoingThreadsIfPending();
+  }, [refreshLatestReplies, refreshOutgoingThreadsIfPending]);
 
   const loadReplies = () => {
     return [...replies].reverse().map((reply) => (
@@ -1027,17 +1081,7 @@ export default function ThreadPage({}) {
                             setShowEditPromptAlert(true);
                           },
                         },
-                        {
-                          icon: comment?.concluded ? (
-                            <RiArrowGoBackLine />
-                          ) : (
-                            <RiCheckboxCircleLine />
-                          ),
-                          label: comment?.concluded
-                            ? `Reopen thread`
-                            : `Mark as concluded`,
-                          onClick: handleToggleConcluded,
-                        },
+                        concludeItem,
                         {
                           separator: true,
                         },
@@ -1048,14 +1092,9 @@ export default function ThreadPage({}) {
                           variant: "danger",
                         },
                       ]
-                    : [
-                        {
-                          icon: <RiFlagFill />,
-                          label: `Report this reply`,
-                          onClick: () => setShowReportCommentAlert(true),
-                          variant: "danger",
-                        },
-                      ]
+                    : canConcludeComment
+                      ? [concludeItem, { separator: true }, reportCommentItem]
+                      : [reportCommentItem]
                 }
               />
             </ShouldRender>
@@ -1166,7 +1205,7 @@ export default function ThreadPage({}) {
                   type="reply"
                   initialSelection={initialSelection}
                   dropdownSelection={isOOCPost ? "NOVELIST" : "MUSE"}
-                  onSend={refreshLatestReplies}
+                  onSend={handleReplySent}
                 />
               </>
             )}
@@ -1184,7 +1223,7 @@ export default function ThreadPage({}) {
             type="reply"
             initialSelection={initialSelection}
             dropdownSelection={isOOCPost ? "NOVELIST" : "MUSE"}
-            onSend={refreshLatestReplies}
+            onSend={handleReplySent}
           />
         )}
     </S.ParentContainer>

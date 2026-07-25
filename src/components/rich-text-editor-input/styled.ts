@@ -974,7 +974,37 @@ interface EditorContentProps {
   /** Start at one-line height and grow with content up to max-height. */
   $compact?: boolean;
   $rounded?: boolean;
+  /** Preview embedded dialogs in the chosen read-only design while composing
+   *  (the selected/being-edited embed still uses the editable card chrome). */
+  $dialogPreview?: boolean;
 }
+
+/**
+ * Composer-only: when a read-only design preview is active, embeds that aren't
+ * being edited render in the chosen design (the `.dialog-design-*` class on the
+ * editor scopes `dialogDesignsCss`). Those design rules are guarded against the
+ * selected embed, so the editable card's own box would still show through on
+ * designs that don't paint their own (e.g. bubbles). Strip that box from the
+ * unselected embeds and let each design own its look; the selected embed keeps
+ * the editable card (excluded here via `:not([data-selected])`).
+ */
+const composerDialogPreviewCss = css`
+  & .dialog-embed:not([data-selected="true"]) {
+    border-left: none;
+    border-right: none;
+    background: none;
+  }
+
+  /* The card design draws its own quotes on .dialog-text; suppress the editable
+     card's .dialog-line quotes so unselected card embeds don't show doubles.
+     The selected (being-edited) embed keeps its .dialog-line quotes. */
+  & .dialog-embed:not([data-selected="true"]) .dialog-line::before,
+  & .dialog-embed:not([data-selected="true"]) .dialog-line::after {
+    content: none;
+  }
+
+  ${dialogDesignsCss}
+`;
 
 export const EditorContent = styled.div<EditorContentProps>`
   box-sizing: border-box;
@@ -993,6 +1023,7 @@ export const EditorContent = styled.div<EditorContentProps>`
   ${richTextContentBase}
   ${editorMentionTagCss}
   ${dialogEmbedCss}
+  ${(p) => p.$dialogPreview && composerDialogPreviewCss}
   ${(p) =>
     p.$rounded &&
     `

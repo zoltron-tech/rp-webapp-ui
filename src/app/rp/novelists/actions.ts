@@ -419,6 +419,34 @@ export const getFriendsByUsernameAction = async (
   return friends;
 };
 
+export const getReactionLikersAction = async (
+  targetId: string,
+  pageNumber: number,
+  pageSize: number,
+): Promise<Friend[]> => {
+  const jwt = await authenticateAndGetJWT();
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/react/${targetId}/likers?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers: {
+      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
+      [AUTH_HEADER_NAME]: jwt,
+    },
+  });
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const likers: Friend[] = await response.json();
+
+  for (const f of likers) transformFriend(f, "feed");
+
+  return likers;
+};
+
 export const getConversationsAction = async (
   pageNumber: number,
   pageSize: number,

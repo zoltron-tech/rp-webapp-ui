@@ -243,6 +243,153 @@ export const NativeButton = styled.button`
   }
 `;
 
+const spin = keyframes`
+  to { transform: rotate(360deg); }
+`;
+
+export const DiscordButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #5865f2;
+  color: #fff;
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-semi-bold);
+  font-family: var(--font);
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 0.92;
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+`;
+
+export const Spinner = styled.span`
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  animation: ${spin} 0.7s linear infinite;
+`;
+
+export const ErrorText = styled.p`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: var(--font-size-small);
+  color: var(--red-9, #e5484d);
+
+  svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
+`;
+
+// ─── Success state ──────────────────────────────────────────────────────────
+
+export const ResultState = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 8px 4px 4px;
+`;
+
+export const ResultIconWrap = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.12);
+  color: #22c55e;
+  font-size: 22px;
+  margin-bottom: 4px;
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+`;
+
+export const ResultTitle = styled.h3`
+  margin: 0;
+  font-size: var(--font-size-h5);
+  font-weight: var(--font-weight-bold);
+  color: var(--text);
+`;
+
+export const ResultSubtitle = styled.p`
+  margin: 0 0 8px;
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+`;
+
+export const ViewButton = styled.a`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 16px;
+  border: 1px solid var(--bg-6);
+  border-radius: 8px;
+  background: var(--bg-3);
+  color: var(--text);
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-semi-bold);
+  font-family: var(--font);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover {
+    background: var(--bg-5);
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+`;
+
+export const DoneButton = styled.button`
+  width: 100%;
+  padding: 11px 16px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semi-bold);
+  font-family: var(--font);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text);
+  }
+`;
+
 export const SrAnnounce = styled.span`
   position: absolute;
   width: 1px;

@@ -65,6 +65,9 @@ export interface StoreState {
   cachedHomeActivities: Activity[] | null;
   /** First page of outgoing thread interactions — cached per session. */
   cachedOutgoingThreads: PromptThreadComment[] | null;
+  /** When true, the shared layout hides LeftNav/RightSidebar — e.g. the
+   *  storyboard event page's book reading mode needs the full width. */
+  hideAppSidebars: boolean;
   /** When true, shows the install-NW-as-app prompt before routing to onboarding. */
   showInstallAppPrompt: boolean;
   /** When true, shows the Join-Discord prompt over the welcome page after onboarding. */

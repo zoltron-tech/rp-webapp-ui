@@ -3,10 +3,20 @@
 import classNames from "classnames";
 import { type FC, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { FiCheck, FiCopy, FiLink, FiShare2, FiX } from "react-icons/fi";
+import { FaDiscord } from "react-icons/fa6";
+import {
+  FiAlertCircle,
+  FiCheck,
+  FiCopy,
+  FiExternalLink,
+  FiLink,
+  FiShare2,
+  FiX,
+} from "react-icons/fi";
 import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
+import type { ShareStoryData, ShareStoryPayload, SharePromptResult } from "@/lib/discord";
 import type { StoryBoard } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { CoverImage } from "../common";
@@ -19,6 +29,12 @@ interface ShareStoryDialogProps {
   onClose: () => void;
 }
 
+type ShareState =
+  | { status: "idle" }
+  | { status: "sharing" }
+  | { status: "success"; messageUrl: string }
+  | { status: "error" };
+
 export const ShareStoryDialog: FC<ShareStoryDialogProps> = ({
   storyboard,
   open,
@@ -26,16 +42,21 @@ export const ShareStoryDialog: FC<ShareStoryDialogProps> = ({
 }) => {
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
+  const novelist = useGlobalState("novelist");
   const { width } = useWindowDimensions();
   const isMobile = width !== null && width < 801;
   const { errorToast } = useUIContext();
 
   const [copied, setCopied] = useState(false);
+  const [shareState, setShareState] = useState<ShareState>({ status: "idle" });
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (open) setCopied(false);
+    if (open) {
+      setCopied(false);
+      setShareState({ status: "idle" });
+    }
   }, [open]);
 
   // Mobile tray animation state (mirrors AppDropdownMenuMobile pattern).
@@ -132,6 +153,53 @@ export const ShareStoryDialog: FC<ShareStoryDialogProps> = ({
     if (diff > 50) closeTray();
   };
 
+  const handleShareToDiscord = async () => {
+    if (!storyUrl || !storyboard || shareState.status === "sharing") return;
+    setShareState({ status: "sharing" });
+    try {
+      const storyData: ShareStoryData = {
+        coverSrc: storyboard.avatar?.src ?? null,
+        createdBy: storyboard.createdBy
+          ? {
+              firstName: storyboard.createdBy.firstName,
+              id: storyboard.createdBy.id,
+              image: storyboard.createdBy.image,
+              lastName: storyboard.createdBy.lastName,
+              username: storyboard.createdBy.username,
+            }
+          : null,
+        description: storyboard.description ?? null,
+        fandomName:
+          storyboard.fandom?.id && storyboard.fandom.id !== "FANDOMLESS"
+            ? storyboard.fandom.name ||
+              storyboard.fandom.id.replaceAll("_", " ")
+            : null,
+        genres: (storyboard.genres ?? []).map((g) => g.label),
+        image: storyboard.image,
+        isPublic: storyboard.isPublic,
+        name: storyboard.name,
+      };
+      const payload: ShareStoryPayload = {
+        novelistUsername: novelist?.username ?? "",
+        story: storyData,
+        storyUrl,
+      };
+      const res = await fetch("/api/discord/share-story", {
+        body: JSON.stringify(payload),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
+      if (res.ok) {
+        const data = (await res.json()) as SharePromptResult;
+        setShareState({ messageUrl: data.messageUrl, status: "success" });
+      } else {
+        setShareState({ status: "error" });
+      }
+    } catch {
+      setShareState({ status: "error" });
+    }
+  };
+
   if (typeof document === "undefined") return null;
 
   const fandom = storyboard?.fandom ?? null;
@@ -139,59 +207,105 @@ export const ShareStoryDialog: FC<ShareStoryDialogProps> = ({
   const fandomLabel = isFandomless
     ? "Original"
     : fandom?.name || fandom?.id?.replaceAll("_", " ");
+  const isSharing = shareState.status === "sharing";
 
-  const dialogContent = (
-    <>
-      <S.DialogHeader>
-        <S.DialogTitle>Share story</S.DialogTitle>
-        <S.DialogDescription>
-          Send {storyboard?.name || "this story"} to a friend or copy its
-          link.
-        </S.DialogDescription>
-      </S.DialogHeader>
+  let dialogContent: React.ReactNode;
 
-      <S.PreviewCard>
-        <S.StoryCover>
-          <CoverImage
-            src={storyboard?.image ?? null}
-            nwImage={storyboard?.avatar}
-          />
-        </S.StoryCover>
-        <S.StoryInfo>
-          <S.StoryName>{storyboard?.name}</S.StoryName>
-          <S.StoryFandom>{fandomLabel}</S.StoryFandom>
-        </S.StoryInfo>
-      </S.PreviewCard>
-
-      <S.LinkRow>
-        <S.LinkBox>
-          <FiLink aria-hidden="true" />
-          <S.LinkUrl title={storyUrl}>{displayUrl}</S.LinkUrl>
-        </S.LinkBox>
-        <S.CopyButton
-          type="button"
-          $copied={copied}
-          onClick={handleCopyLink}
-          aria-label={copied ? "Link copied" : "Copy story link"}
+  if (shareState.status === "success") {
+    dialogContent = (
+      <S.ResultState>
+        <S.ResultIconWrap>
+          <FiCheck />
+        </S.ResultIconWrap>
+        <S.ResultTitle>Shared to Discord!</S.ResultTitle>
+        <S.ResultSubtitle>
+          {storyboard?.name} is now live in the NW Stories channel.
+        </S.ResultSubtitle>
+        <S.ViewButton
+          href={shareState.messageUrl}
+          target="_blank"
+          rel="noopener noreferrer"
         >
-          {copied ? <FiCheck /> : <FiCopy />}
-          {copied ? "Copied" : "Copy"}
-        </S.CopyButton>
-        <S.SrAnnounce aria-live="polite">
-          {copied ? "Link copied to clipboard" : ""}
-        </S.SrAnnounce>
-      </S.LinkRow>
+          <FiExternalLink aria-hidden="true" />
+          View message
+        </S.ViewButton>
+        <S.DoneButton type="button" onClick={isMobile ? closeTray : onClose}>
+          Done
+        </S.DoneButton>
+      </S.ResultState>
+    );
+  } else {
+    dialogContent = (
+      <>
+        <S.DialogHeader>
+          <S.DialogTitle>Share story</S.DialogTitle>
+          <S.DialogDescription>
+            Post {storyboard?.name || "this story"} to the NW Discord
+            community, send it to a friend, or copy its link.
+          </S.DialogDescription>
+        </S.DialogHeader>
 
-      {canNativeShare && (
+        <S.PreviewCard>
+          <S.StoryCover>
+            <CoverImage
+              src={storyboard?.image ?? null}
+              nwImage={storyboard?.avatar}
+            />
+          </S.StoryCover>
+          <S.StoryInfo>
+            <S.StoryName>{storyboard?.name}</S.StoryName>
+            <S.StoryFandom>{fandomLabel}</S.StoryFandom>
+          </S.StoryInfo>
+        </S.PreviewCard>
+
+        <S.LinkRow>
+          <S.LinkBox>
+            <FiLink aria-hidden="true" />
+            <S.LinkUrl title={storyUrl}>{displayUrl}</S.LinkUrl>
+          </S.LinkBox>
+          <S.CopyButton
+            type="button"
+            $copied={copied}
+            onClick={handleCopyLink}
+            aria-label={copied ? "Link copied" : "Copy story link"}
+          >
+            {copied ? <FiCheck /> : <FiCopy />}
+            {copied ? "Copied" : "Copy"}
+          </S.CopyButton>
+          <S.SrAnnounce aria-live="polite">
+            {copied ? "Link copied to clipboard" : ""}
+          </S.SrAnnounce>
+        </S.LinkRow>
+
         <S.Actions>
-          <S.NativeButton type="button" onClick={handleNativeShare}>
-            <FiShare2 aria-hidden="true" />
-            More options
-          </S.NativeButton>
+          <S.DiscordButton
+            type="button"
+            onClick={handleShareToDiscord}
+            disabled={isSharing}
+          >
+            {isSharing ? (
+              <S.Spinner aria-hidden="true" />
+            ) : (
+              <FaDiscord aria-hidden="true" />
+            )}
+            {isSharing ? "Sharing..." : "Share in Community"}
+          </S.DiscordButton>
+          {canNativeShare && (
+            <S.NativeButton type="button" onClick={handleNativeShare}>
+              <FiShare2 aria-hidden="true" />
+              More options
+            </S.NativeButton>
+          )}
+          {shareState.status === "error" && (
+            <S.ErrorText role="alert">
+              <FiAlertCircle aria-hidden="true" />
+              Couldn't post to Discord. Please try again.
+            </S.ErrorText>
+          )}
         </S.Actions>
-      )}
-    </>
-  );
+      </>
+    );
+  }
 
   // ── Mobile: slide-up tray ────────────────────────────────────────────────
   if (isMobile) {

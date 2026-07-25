@@ -32,7 +32,7 @@ export const List = styled.div`
   flex-direction: column;
   gap: 14px;
   width: 100%;
-  max-width: 620px;
+  max-width: 760px;
   margin: 18px auto 0;
   padding-inline: 12px;
 
@@ -67,8 +67,8 @@ export const Card = styled.div`
 /* Portrait cover (2:3), matching Storyboard Event cover avatars. */
 export const CardCover = styled.div`
   position: relative;
-  width: 86px;
-  min-width: 86px;
+  width: 104px;
+  min-width: 104px;
   aspect-ratio: 2 / 3;
   flex-shrink: 0;
   overflow: hidden;
@@ -81,8 +81,8 @@ export const CardCover = styled.div`
   }
 
   @media (max-width: 600px) {
-    width: 72px;
-    min-width: 72px;
+    width: 84px;
+    min-width: 84px;
   }
 `;
 

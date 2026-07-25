@@ -46,6 +46,7 @@ import { AppImageViewer } from "../image-viewer/AppImageViewer";
 import { VideoViewer } from "../image-viewer/VideoViewer";
 import { MarkdownLite } from "../markdown-lite";
 import { SharePromptDialog } from "../prompt/share-prompt-dialog";
+import { ReactionLikersDialog } from "../reaction-likers-dialog";
 import { RichTextRenderer } from "../rich-text-editor-input/rich-test-renderer";
 import { ShareMuseDialog } from "../share-muse-dialog";
 import { ShareStoryDialog } from "../share-story-dialog";
@@ -183,6 +184,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
   const [reactionCount, setReactionCount] = useState(
     activity?.reactionCount ?? 0,
   );
+  const [likersOpen, setLikersOpen] = useState(false);
 
   const [shareOpen, setShareOpen] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
@@ -261,6 +263,15 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
     if ("reactions" in result) {
       setReactionCount(result.reactions);
       setReacted(result.reacted);
+      // Feed lists (e.g. the home page's mixedFeed) hold this exact `activity`
+      // object by reference, not a clone — without mutating it here, remounting
+      // this card (e.g. navigating away and back) would read the stale
+      // pre-reaction value straight off the object and appear to "revert"
+      // until a full page reload refetches the feed from the backend.
+      if (activity) {
+        activity.reacted = result.reacted;
+        activity.reactionCount = result.reactions;
+      }
       if (isPromptFamily && activity?.target.id) {
         emitPromptEvent(EVENTS.PROMPT.REACTED, {
           id: activity.target.id,
@@ -280,6 +291,12 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
       setReacted(!nextReacted);
       setReactionCount((c) => Math.max(0, c + (nextReacted ? -1 : 1)));
     }
+  };
+
+  const handleOpenLikers = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (reactionCount <= 0) return;
+    setLikersOpen(true);
   };
 
   const handleShare = async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -330,6 +347,8 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
       routeToPage(ROUTES.Prompt.View(activity.target.id));
     else if (activity?.target.activityTargetType === "STORY_BOARD")
       routeToPage(ROUTES.Story.View(activity.target.id));
+    else if (activity?.target.activityTargetType === "STORY_BOARD_EVENT")
+      routeToPage(ROUTES.Story.Event.View(activity.target.id));
     else if (activity?.target.activityTargetType === "PROFILE")
       routeToPage(ROUTES.Profile.View(activity.source.urlProp).Index);
   };
@@ -652,7 +671,9 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
           >
             {reacted ? <FaHeart /> : <FaRegHeart />}
             <ShouldRender if={reactionCount > 0}>
-              <S.ReactionCount>{reactionCount}</S.ReactionCount>
+              <S.ReactionCount onClick={handleOpenLikers}>
+                {reactionCount}
+              </S.ReactionCount>
             </ShouldRender>
           </S.HeartButton>
         </ShouldRender>
@@ -708,6 +729,12 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
         storyboard={shareStory}
         open={shareOpen && isStoryBoardFamily}
         onClose={() => setShareOpen(false)}
+      />
+      <ReactionLikersDialog
+        open={likersOpen}
+        onClose={() => setLikersOpen(false)}
+        targetId={activity.target.id ?? ""}
+        initialCount={reactionCount}
       />
     </S.ParentContainer>
   );

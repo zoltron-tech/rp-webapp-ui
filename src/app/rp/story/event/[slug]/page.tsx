@@ -359,10 +359,41 @@ export default function StoryboardEventPage({}) {
     if (pendingScrollBottomRef.current) {
       pendingScrollBottomRef.current = false;
       scrollToBottom();
-    } else {
-      el.scrollIntoView({ block: "start" });
+      setScrollTarget(null);
+      return;
     }
-    setScrollTarget(null);
+
+    // Late-loading images/embeds inside the passage reflow the page after
+    // the initial jump and drift the scroll position — keep re-aligning
+    // until the content settles instead of firing once and clearing
+    // immediately (which used to land on the wrong spot until the reader
+    // hit "Resume" a second time).
+    el.scrollIntoView({ block: "start" });
+    let settle: ReturnType<typeof setTimeout>;
+    const realign = () => {
+      el.scrollIntoView({ block: "start" });
+      clearTimeout(settle);
+      settle = setTimeout(() => setScrollTarget(null), 400);
+    };
+    settle = setTimeout(() => setScrollTarget(null), 400);
+
+    const observer = new MutationObserver(realign);
+    observer.observe(el, {
+      attributes: true,
+      characterData: true,
+      childList: true,
+      subtree: true,
+    });
+    const images = el.querySelectorAll("img");
+    images.forEach((img) => {
+      if (!img.complete) img.addEventListener("load", realign);
+    });
+
+    return () => {
+      observer.disconnect();
+      clearTimeout(settle);
+      images.forEach((img) => img.removeEventListener("load", realign));
+    };
   }, [scrollTarget, effectiveMode, storyboardEventThreads, scrollToBottom]);
 
   // Honor a queued scroll-to-bottom that isn't tied to a scrollTarget jump —

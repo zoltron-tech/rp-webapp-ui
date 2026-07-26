@@ -282,6 +282,21 @@ export const BookView: FC<Props> = ({
     recompute();
   }, [jumpRequest, recompute]);
 
+  // `targetIndex` often lands after mount (the page-level bookmark/thread
+  // fetch resolves after this component's own gating condition does), so the
+  // `pendingRef` lazy-init above can miss it entirely. Re-arm whenever a new
+  // target value shows up, same as an explicit jumpRequest.
+  useEffect(() => {
+    if (targetIndex == null) return;
+    if (
+      pendingRef.current?.type === "target" &&
+      pendingRef.current.index === targetIndex
+    )
+      return;
+    pendingRef.current = { index: targetIndex, type: "target" };
+    recompute();
+  }, [targetIndex, recompute]);
+
   // Report the thread the reader is on: the last thread that starts at or
   // before the current left page (it is the one flowing across this spread).
   useEffect(() => {

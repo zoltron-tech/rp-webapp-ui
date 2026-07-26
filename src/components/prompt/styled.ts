@@ -334,7 +334,6 @@ export const LikeCountButton = styled.button`
   white-space: nowrap;
   transition: color 0.15s ease;
 
-  /* Desktop shows the full label; the short count is a mobile fallback. */
   .count-short {
     display: none;
   }
@@ -354,13 +353,7 @@ export const LikeCountButton = styled.button`
 
   @media screen and (max-width: 600px) {
     padding: 7px 4px 7px 0;
-
-    .count-short {
-      display: inline;
-    }
-    .label-full {
-      display: none;
-    }
+    font-size: var(--font-size-xsmall);
   }
 `;
 

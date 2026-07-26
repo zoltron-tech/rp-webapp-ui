@@ -163,28 +163,28 @@ export const FriendRow = styled.div`
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   width: 100%;
-  padding: 10px 12px;
+  padding: 7px 10px;
 
   &:not(:last-child) {
     border-bottom: 1px solid var(--bg-6);
   }
 
   .likerAvatar {
-    width: 38px;
-    height: 38px;
+    width: 32px;
+    height: 32px;
     flex-shrink: 0;
     cursor: pointer;
   }
 
   @media screen and (max-width: 800px) {
-    gap: 8px;
-    padding: 8px 10px;
+    gap: 7px;
+    padding: 6px 8px;
 
     .likerAvatar {
-      width: 30px;
-      height: 30px;
+      width: 28px;
+      height: 28px;
     }
   }
 `;
@@ -226,8 +226,34 @@ export const FriendUsername = styled.span`
 export const RowActions = styled.div`
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   flex-shrink: 0;
+
+  .button {
+    width: auto;
+    min-width: max-content;
+    border-radius: 7px;
+  }
+
+  .button span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .button svg {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+  }
+
+  .button.primary,
+  .button.secondary,
+  .button.negative,
+  .button.positive {
+    padding: 5px 10px !important;
+    font-size: var(--font-size-xsmall);
+  }
 
   .button.messaging {
     background-color: var(--accent);
@@ -237,9 +263,18 @@ export const RowActions = styled.div`
 
   .button.icon-only {
     flex: 0 0 auto;
-    width: 32px;
-    min-width: 32px;
-    padding: 6px 0 !important;
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    padding: 0 !important;
+  }
+
+  .button.icon-only span {
+    min-width: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .button.secondary.icon-only {
@@ -266,12 +301,13 @@ export const RowActions = styled.div`
 
   @media screen and (max-width: 800px) {
     .button.icon-only {
-      width: 28px;
-      min-width: 28px;
-      padding: 5px 0 !important;
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
     }
   }
 `;
+
 
 export const EmptyText = styled.p`
   margin: 0;
@@ -321,9 +357,9 @@ export const ShimmerRow = styled.div`
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   width: 100%;
-  padding: 10px 12px;
+  padding: 7px 10px;
 
   &:not(:last-child) {
     border-bottom: 1px solid var(--bg-6);
@@ -331,15 +367,15 @@ export const ShimmerRow = styled.div`
 `;
 
 export const ShimmerCircle = styled.div`
-  width: 38px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   flex-shrink: 0;
   ${shimmer}
 
   @media screen and (max-width: 800px) {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
   }
 `;
 
@@ -359,9 +395,9 @@ export const ShimmerLine = styled.div<{ $width?: string; $height?: string }>`
 `;
 
 export const ShimmerButton = styled.div`
-  width: 84px;
-  height: 30px;
-  border-radius: 8px;
+  width: 68px;
+  height: 26px;
+  border-radius: 7px;
   flex-shrink: 0;
   ${shimmer}
 `;

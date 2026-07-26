@@ -289,15 +289,25 @@ export const ReactionLikersDialog: FC<ReactionLikersDialogProps> = ({
 
     if (friend.connection === "FRIEND_REQUEST_SENT") {
       return (
-        <Button
-          variant="negative"
-          size="sm"
-          className={isPendingThis ? "messaging" : "pending"}
-          onClick={() => handleCancelRequest(friend)}
-        >
-          <FiClock />
-          {isPendingThis ? "Cancelling…" : "Cancel"}
-        </Button>
+        <>
+          <Button
+            variant="negative"
+            size="sm"
+            className={isPendingThis ? "messaging" : "pending"}
+            onClick={() => handleCancelRequest(friend)}
+          >
+            <FiClock />
+            {isPendingThis ? "Cancelling…" : "Cancel"}
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="icon-only"
+            onClick={() => handleProfileClick(friend.username)}
+          >
+            <FiUser />
+          </Button>
+        </>
       );
     }
 
@@ -322,20 +332,38 @@ export const ReactionLikersDialog: FC<ReactionLikersDialogProps> = ({
           >
             <FiX />
           </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="icon-only"
+            onClick={() => handleProfileClick(friend.username)}
+          >
+            <FiUser />
+          </Button>
         </>
       );
     }
 
     return (
-      <Button
-        variant="primary"
-        size="sm"
-        className={isPendingThis ? "messaging" : undefined}
-        onClick={() => handleAddFriend(friend)}
-      >
-        <FiUserPlus />
-        {isPendingThis ? "Sending…" : "Add Friend"}
-      </Button>
+      <>
+        <Button
+          variant="primary"
+          size="sm"
+          className={isPendingThis ? "messaging" : undefined}
+          onClick={() => handleAddFriend(friend)}
+        >
+          <FiUserPlus />
+          {isPendingThis ? "Sending…" : "Add Friend"}
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          className="icon-only"
+          onClick={() => handleProfileClick(friend.username)}
+        >
+          <FiUser />
+        </Button>
+      </>
     );
   };
 

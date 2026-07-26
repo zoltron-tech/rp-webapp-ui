@@ -216,6 +216,11 @@ export const ActionRow = styled.div`
   padding: 12px 16px 14px;
   margin-top: 6px;
   border-top: 1px solid var(--bg-4);
+
+  @media screen and (max-width: 600px) {
+    gap: 4px;
+    padding: 10px 10px 12px;
+  }
 `;
 
 export const PrimaryAction = styled.button`
@@ -250,6 +255,17 @@ export const PrimaryAction = styled.button`
   @media (hover: hover) {
     &:hover {
       background: color-mix(in srgb, var(--accent) 30%, var(--bg-1));
+    }
+  }
+
+  @media screen and (max-width: 600px) {
+    gap: 5px;
+    padding: 6px 10px;
+    font-size: var(--font-size-xsmall);
+
+    svg {
+      width: 12px;
+      height: 12px;
     }
   }
 `;
@@ -287,6 +303,16 @@ export const ShareButton = styled.button`
     &:hover:not(:disabled) {
       color: var(--accent-11, var(--accent));
       background-color: rgba(255, 255, 255, 0.05);
+    }
+  }
+
+  @media screen and (max-width: 600px) {
+    width: 28px;
+    height: 28px;
+
+    svg {
+      width: 14px;
+      height: 14px;
     }
   }
 `;
@@ -687,22 +713,15 @@ export const ReactionCount = styled.button`
   cursor: pointer;
   white-space: nowrap;
 
-  /* Mobile shows a bare count; desktop has room for the full "N novelists
-     like this" label. */
   .count-short {
-    display: inline;
-  }
-  .label-full {
     display: none;
   }
+  .label-full {
+    display: inline;
+  }
 
-  @media screen and (min-width: 601px) {
-    .count-short {
-      display: none;
-    }
-    .label-full {
-      display: inline;
-    }
+  @media screen and (max-width: 400px) {
+    font-size: var(--font-size-xsmall);
   }
 
   &:hover {

@@ -58,7 +58,7 @@ export const Hero = styled.section`
   }
 
   @media (max-width: 420px) {
-    padding: 80px 18px 44px;
+    padding: 64px 16px 32px;
   }
 
   /* Wallpaper layer + cinematic overlay that fades into the page background */
@@ -137,7 +137,7 @@ export const HeroInner = styled.div`
   }
 
   @media (max-width: 420px) {
-    gap: 14px;
+    gap: 10px;
   }
 `;
 
@@ -173,10 +173,10 @@ export const Eyebrow = styled.div`
     box-shadow: 0 0 10px 1px var(--accent);
   }
 
-  @media (max-width: 420px) {
-    font-size: 0.62rem;
-    letter-spacing: 1.8px;
-    padding: 6px 13px;
+  @media (max-width: 480px) {
+    font-size: 0.56rem;
+    letter-spacing: 1.5px;
+    padding: 5px 11px;
   }
 `;
 
@@ -190,9 +190,9 @@ export const HeroTitle = styled.h1`
   text-shadow: 0 4px 40px rgba(0, 0, 0, 0.55);
 
   @media (max-width: 420px) {
-    font-size: 2.1rem;
-    line-height: 1.08;
-    letter-spacing: -0.6px;
+    font-size: 1.75rem;
+    line-height: 1.12;
+    letter-spacing: -0.4px;
   }
 `;
 
@@ -218,8 +218,8 @@ export const HeroText = styled.p`
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
 
   @media (max-width: 420px) {
-    font-size: 0.94rem;
-    line-height: 1.58;
+    font-size: 0.85rem;
+    line-height: 1.48;
   }
 `;
 
@@ -238,7 +238,7 @@ export const HeroActions = styled.div`
   @media (max-width: 420px) {
     width: 100%;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
   }
 `;
 
@@ -257,10 +257,10 @@ export const HeroNote = styled.p`
     font-size: 1rem;
   }
 
-  @media (max-width: 420px) {
-    font-size: 0.74rem;
-    line-height: 1.45;
-    gap: 7px;
+  @media (max-width: 480px) {
+    font-size: 0.68rem;
+    line-height: 1.4;
+    gap: 6px;
     text-align: center;
   }
 `;
@@ -333,9 +333,9 @@ const ButtonBase = styled.button`
 
   @media (max-width: 420px) {
     width: 100%;
-    padding: 12px 20px;
-    font-size: 0.74rem;
-    letter-spacing: 0.5px;
+    padding: 10px 16px;
+    font-size: 0.7rem;
+    letter-spacing: 0.4px;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -569,6 +569,10 @@ export const CardsContainer = styled.div`
     max-width: 460px;
     gap: 18px;
   }
+
+  @media (max-width: 420px) {
+    gap: 12px;
+  }
 `;
 
 export const InfoCard = styled(Container)`
@@ -596,8 +600,9 @@ export const InfoCard = styled(Container)`
   }
 
   @media (max-width: 420px) {
-    padding: 26px 20px !important;
-    border-radius: 16px !important;
+    padding: 18px 16px !important;
+    border-radius: 14px !important;
+    gap: 4px;
   }
 `;
 
@@ -618,12 +623,12 @@ export const CardIcon = styled.div`
   }
 
   @media (max-width: 420px) {
-    width: 48px;
-    height: 48px;
-    margin-bottom: 14px;
+    width: 38px;
+    height: 38px;
+    margin-bottom: 8px;
 
     svg {
-      font-size: 1.35rem;
+      font-size: 1.1rem;
     }
   }
 `;
@@ -636,8 +641,8 @@ export const Cardheading = styled.h3`
   letter-spacing: 0.2px;
 
   @media (max-width: 420px) {
-    font-size: 1.1rem;
-    margin-bottom: 6px;
+    font-size: 1rem;
+    margin-bottom: 3px;
   }
 `;
 
@@ -648,8 +653,8 @@ export const CardText = styled.p`
   color: rgba(255, 255, 255, 0.66);
 
   @media (max-width: 420px) {
-    font-size: 0.9rem;
-    line-height: 1.6;
+    font-size: 0.82rem;
+    line-height: 1.5;
   }
 `;
 

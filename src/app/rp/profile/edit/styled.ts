@@ -298,7 +298,7 @@ export const PaletteGroup = styled(RadioGroup.Root)`
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 8px;
+  padding: 6px;
   border-radius: 8px;
   background-color: var(--bg-2);
 `;
@@ -308,19 +308,24 @@ export const PaletteRow = styled.div`
   flex-direction: row;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 2px;
   width: 100%;
+
+  @media (max-width: 768px) {
+    column-gap: 0;
+  }
 `;
 
 export const RadioItemContainer = styled.div`
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 8px;
-  border-radius: 4px;
+  justify-content: flex-start;
+  gap: 4px;
+  padding: 6px 4px;
+  border-radius: 6px;
   cursor: pointer;
-  pointer-events: passthrough;
+  width: 56px;
 
   &:hover {
     background-color: var(--bg-4);
@@ -328,14 +333,11 @@ export const RadioItemContainer = styled.div`
 
   .radio-item {
     all: unset;
-    width: 48px;
-    height: 48px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     background-color: var(--accent);
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    box-sizing: border-box;
     cursor: pointer;
     transition: transform 0.15s ease, outline-color 0.15s ease;
 
@@ -345,18 +347,37 @@ export const RadioItemContainer = styled.div`
 
     &[aria-checked="true"] {
       outline: 2px solid var(--accent-9);
-      outline-offset: 3px;
+      outline-offset: 2px;
     }
   }
 
-  /* Mobile: shrink swatches and lay out exactly 4 per row (two rows of 4) */
+  .palette-name {
+    font-size: 9px;
+    line-height: 1;
+    font-weight: var(--font-weight-medium);
+    letter-spacing: 0.04em;
+    text-transform: capitalize;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  &:has(.radio-item[aria-checked="true"]) .palette-name {
+    color: var(--text);
+  }
+
+  /* Mobile: fit narrow screens (375px baseline) — five columns per row */
   @media (max-width: 768px) {
-    flex: 0 0 calc(25% - 8px);
-    padding: 4px;
+    width: 20%;
+    padding: 4px 0;
 
     .radio-item {
-      width: 36px;
-      height: 36px;
+      width: 24px;
+      height: 24px;
+    }
+
+    .palette-name {
+      font-size: 8px;
     }
   }
 `;

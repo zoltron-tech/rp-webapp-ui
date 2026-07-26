@@ -524,31 +524,33 @@ textarea {
     --bg-11: var(--olive-11);
     --bg-12: var(--olive-12);
 
-    /* Custom lime scale — step 9 is #60b03b */
-    --lime-1: #0b1009;
-    --lime-a1: #60b03b06;
-    --lime-2: #121a0e;
-    --lime-a2: #60b03b0f;
-    --lime-3: #192413;
-    --lime-a3: #60b03b1c;
-    --lime-4: #1f2f19;
-    --lime-a4: #60b03b2a;
-    --lime-5: #263a1f;
-    --lime-a5: #60b03b39;
-    --lime-6: #2e4c26;
-    --lime-a6: #60b03b4d;
-    --lime-7: #3b622f;
-    --lime-a7: #60b03b68;
-    --lime-8: #4b7d3b;
-    --lime-a8: #60b03b8d;
-    --lime-9: #60b03b;
-    --lime-a9: #60b03bec;
-    --lime-10: #72c44b;
-    --lime-a10: #72c44bec;
-    --lime-11: #94d570;
-    --lime-a11: #94d570f5;
-    --lime-12: #c9eeb1;
-    --lime-a12: #c9eeb1fb;
+    /* Custom lime scale — step 9 is #4a7a38 (softened/muted from #60b03b,
+       darker so default light --text reads on it without an --accent-fg
+       override) */
+    --lime-1: #0b100a;
+    --lime-a1: #4a7a3806;
+    --lime-2: #12190e;
+    --lime-a2: #4a7a380f;
+    --lime-3: #182213;
+    --lime-a3: #4a7a381c;
+    --lime-4: #1e2c19;
+    --lime-a4: #4a7a382a;
+    --lime-5: #25371f;
+    --lime-a5: #4a7a3839;
+    --lime-6: #2d4526;
+    --lime-a6: #4a7a384d;
+    --lime-7: #38572f;
+    --lime-a7: #4a7a3868;
+    --lime-8: #436b39;
+    --lime-a8: #4a7a388d;
+    --lime-9: #4a7a38;
+    --lime-a9: #4a7a38ec;
+    --lime-10: #5c9247;
+    --lime-a10: #5c9247ec;
+    --lime-11: #8ab876;
+    --lime-a11: #8ab876f5;
+    --lime-12: #d0e6c2;
+    --lime-a12: #d0e6c2fb;
 
     --accent-1: var(--lime-1);
     --accent-a1: var(--lime-a1);
@@ -578,9 +580,6 @@ textarea {
     --accent: var(--lime-9);
     --accent-hover: var(--lime-10);
     --accent-active: var(--lime-8);
-
-    /* Dark text on bright lime accent surfaces (buttons, badges) */
-    --accent-fg: var(--lime-1);
 
     --text: var(--bg-12);
     --text-secondary: var(--bg-11);
@@ -628,6 +627,155 @@ textarea {
     --accent: var(--accent-6);
     --accent-hover: var(--accent-7);
     --accent-active: var(--accent-5);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  .dracula {
+    --bg-1: var(--mauve-1);
+    --bg-2: var(--mauve-2);
+    --bg-3: var(--mauve-3);
+    --bg-4: var(--mauve-4);
+    --bg-5: var(--mauve-5);
+    --bg-6: var(--mauve-6);
+    --bg-7: var(--mauve-7);
+    --bg-8: var(--mauve-8);
+    --bg-9: var(--mauve-9);
+    --bg-10: var(--mauve-10);
+    --bg-11: var(--mauve-11);
+    --bg-12: var(--mauve-12);
+
+    /* Custom red scale — step 9 is #ac0a0a, steps 6-8 are the darker shades
+       #610606 / #860808 / #900908. */
+    --dracula-red-1: #150708;
+    --dracula-red-a1: #ac0a0a06;
+    --dracula-red-2: #1f0808;
+    --dracula-red-a2: #ac0a0a10;
+    --dracula-red-3: #2d0808;
+    --dracula-red-a3: #ac0a0a1e;
+    --dracula-red-4: #3b0707;
+    --dracula-red-a4: #ac0a0a2c;
+    --dracula-red-5: #4d0606;
+    --dracula-red-a5: #ac0a0a3c;
+    --dracula-red-6: #610606;
+    --dracula-red-a6: #ac0a0a52;
+    --dracula-red-7: #860808;
+    --dracula-red-a7: #ac0a0a6b;
+    --dracula-red-8: #900908;
+    --dracula-red-a8: #ac0a0a88;
+    --dracula-red-9: #ac0a0a;
+    --dracula-red-a9: #ac0a0aec;
+    --dracula-red-10: #c61415;
+    --dracula-red-a10: #c61415ec;
+    --dracula-red-11: #ef7b78;
+    --dracula-red-a11: #ef7b78f5;
+    --dracula-red-12: #fcd8d5;
+    --dracula-red-a12: #fcd8d5fb;
+
+    --accent-1: var(--dracula-red-1);
+    --accent-a1: var(--dracula-red-a1);
+    --accent-2: var(--dracula-red-2);
+    --accent-a2: var(--dracula-red-a2);
+    --accent-3: var(--dracula-red-3);
+    --accent-a3: var(--dracula-red-a3);
+    --accent-4: var(--dracula-red-4);
+    --accent-a4: var(--dracula-red-a4);
+    --accent-5: var(--dracula-red-5);
+    --accent-a5: var(--dracula-red-a5);
+    --accent-6: var(--dracula-red-6);
+    --accent-a6: var(--dracula-red-a6);
+    --accent-7: var(--dracula-red-7);
+    --accent-a7: var(--dracula-red-a7);
+    --accent-8: var(--dracula-red-8);
+    --accent-a8: var(--dracula-red-a8);
+    --accent-9: var(--dracula-red-9);
+    --accent-a9: var(--dracula-red-a9);
+    --accent-10: var(--dracula-red-10);
+    --accent-a10: var(--dracula-red-a10);
+    --accent-11: var(--dracula-red-11);
+    --accent-a11: var(--dracula-red-a11);
+    --accent-12: var(--dracula-red-12);
+    --accent-a12: var(--dracula-red-a12);
+
+    --accent: var(--dracula-red-9);
+    --accent-hover: var(--dracula-red-10);
+    --accent-active: var(--dracula-red-8);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  /* Lunar: royal blue — bg uses slate-dark (already imported, cool undertone) */
+  .lunar {
+    --bg-1: var(--slate-1);
+    --bg-2: var(--slate-2);
+    --bg-3: var(--slate-3);
+    --bg-4: var(--slate-4);
+    --bg-5: var(--slate-5);
+    --bg-6: var(--slate-6);
+    --bg-7: var(--slate-7);
+    --bg-8: var(--slate-8);
+    --bg-9: var(--slate-9);
+    --bg-10: var(--slate-10);
+    --bg-11: var(--slate-11);
+    --bg-12: var(--slate-12);
+
+    /* Custom lunar scale — step 9 is #2563eb, verified ~5.2:1 contrast with
+       white so default light --text reads on it without an --accent-fg override */
+    --lunar-1: #050810;
+    --lunar-a1: #2563eb06;
+    --lunar-2: #0a0f1c;
+    --lunar-a2: #2563eb0f;
+    --lunar-3: #0f1729;
+    --lunar-a3: #2563eb1c;
+    --lunar-4: #142038;
+    --lunar-a4: #2563eb2a;
+    --lunar-5: #1a2c4c;
+    --lunar-a5: #2563eb39;
+    --lunar-6: #1e3a8a;
+    --lunar-a6: #2563eb4d;
+    --lunar-7: #1e40af;
+    --lunar-a7: #2563eb68;
+    --lunar-8: #1d4ed8;
+    --lunar-a8: #2563eb8d;
+    --lunar-9: #2563eb;
+    --lunar-a9: #2563ebec;
+    --lunar-10: #3b82f6;
+    --lunar-a10: #3b82f6ec;
+    --lunar-11: #93c5fd;
+    --lunar-a11: #93c5fdf5;
+    --lunar-12: #dbeafe;
+    --lunar-a12: #dbeafefb;
+
+    --accent-1: var(--lunar-1);
+    --accent-a1: var(--lunar-a1);
+    --accent-2: var(--lunar-2);
+    --accent-a2: var(--lunar-a2);
+    --accent-3: var(--lunar-3);
+    --accent-a3: var(--lunar-a3);
+    --accent-4: var(--lunar-4);
+    --accent-a4: var(--lunar-a4);
+    --accent-5: var(--lunar-5);
+    --accent-a5: var(--lunar-a5);
+    --accent-6: var(--lunar-6);
+    --accent-a6: var(--lunar-a6);
+    --accent-7: var(--lunar-7);
+    --accent-a7: var(--lunar-a7);
+    --accent-8: var(--lunar-8);
+    --accent-a8: var(--lunar-a8);
+    --accent-9: var(--lunar-9);
+    --accent-a9: var(--lunar-a9);
+    --accent-10: var(--lunar-10);
+    --accent-a10: var(--lunar-a10);
+    --accent-11: var(--lunar-11);
+    --accent-a11: var(--lunar-a11);
+    --accent-12: var(--lunar-12);
+    --accent-a12: var(--lunar-a12);
+
+    --accent: var(--lunar-9);
+    --accent-hover: var(--lunar-10);
+    --accent-active: var(--lunar-8);
 
     --text: var(--bg-12);
     --text-secondary: var(--bg-11);

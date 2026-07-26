@@ -621,14 +621,15 @@ export function AppearanceSection({ onBack }: Props) {
             <S.PaletteRow>
               {Object.entries(ACCENT_MAP).map(([key, color]) => (
                 <S.RadioItemContainer key={key} className={color}>
-                  <div style={{ position: "relative" }}>
-                    <RadioGroup.Item
-                      className="radio-item"
-                      value={key}
-                      id={`palette-${key}`}
-                      aria-label={`Palette ${color}`}
-                    />
-                  </div>
+                  <RadioGroup.Item
+                    className="radio-item"
+                    value={key}
+                    id={`palette-${key}`}
+                    aria-label={`Palette ${color}`}
+                  />
+                  <label className="palette-name" htmlFor={`palette-${key}`}>
+                    {color}
+                  </label>
                 </S.RadioItemContainer>
               ))}
             </S.PaletteRow>

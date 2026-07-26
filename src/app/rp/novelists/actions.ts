@@ -40,8 +40,11 @@ export const getNovelists = async () => {
 
   const novelists: Novelist[] = await response.json();
 
-  // Route S3 image URLs through wsrv.nl for resizing (profile-page sizes).
-  for (const n of novelists) transformNovelist(n, "profile");
+  // Route S3 image URLs through wsrv.nl for resizing. This feeds the landing
+  // page's novelist carousel only, so use the carousel sizes — "profile" leaves
+  // avatars as un-resized S3 originals, which is what full profile pages want
+  // but is far too heavy for eight cards loading at once.
+  for (const n of novelists) transformNovelist(n, "carousel");
 
   return novelists;
 };

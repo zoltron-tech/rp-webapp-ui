@@ -703,11 +703,15 @@ export const PaletteGroup = styled.div`
   flex-wrap: wrap;
   justify-content: center;
   align-items: flex-start;
-  gap: 16px;
-  padding: 16px 8px;
+  gap: 2px;
+  padding: 10px 6px;
   border-radius: 8px;
   background-color: var(--bg-2);
   width: 100%;
+
+  @media screen and (max-width: 800px) {
+    column-gap: 0;
+  }
 `;
 
 export const AvatarCropBody = styled.div`
@@ -726,10 +730,15 @@ export const PaletteOption = styled.label`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   cursor: pointer;
-  padding: 4px;
+  padding: 6px 4px;
   border-radius: 6px;
+  width: 20%;
+
+  &:hover {
+    background-color: var(--bg-4);
+  }
 
   &:hover .palette-swatch {
     transform: scale(1.05);
@@ -737,8 +746,8 @@ export const PaletteOption = styled.label`
 
   .palette-swatch {
     all: unset;
-    width: 48px;
-    height: 48px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     background-color: var(--accent);
     cursor: pointer;
@@ -747,35 +756,39 @@ export const PaletteOption = styled.label`
 
     &[aria-checked="true"] {
       outline: 2px solid var(--accent-9);
-      outline-offset: 3px;
+      outline-offset: 2px;
     }
 
     &:focus-visible {
       outline: 2px solid var(--accent-9);
-      outline-offset: 3px;
+      outline-offset: 2px;
     }
   }
 
   .palette-name {
-    font-size: var(--font-size-xsmall);
-    font-weight: var(--font-weight-bold);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font-size: 9px;
+    line-height: 1;
+    font-weight: var(--font-weight-medium);
+    letter-spacing: 0.04em;
+    text-transform: capitalize;
     color: var(--text-secondary);
     font-family: var(--font);
+    white-space: nowrap;
   }
 
   &:has(.palette-swatch[aria-checked="true"]) .palette-name {
     color: var(--text);
   }
 
+  /* Fits the 375px baseline: five slim columns per row */
   @media screen and (max-width: 800px) {
-    gap: 6px;
-    padding: 2px;
+    width: 20%;
+    gap: 3px;
+    padding: 4px 0;
 
     .palette-swatch {
-      width: 36px;
-      height: 36px;
+      width: 26px;
+      height: 26px;
 
       &[aria-checked="true"],
       &:focus-visible {
@@ -785,8 +798,7 @@ export const PaletteOption = styled.label`
     }
 
     .palette-name {
-      font-size: 10px;
-      letter-spacing: 0.06em;
+      font-size: 8px;
     }
   }
 `;

@@ -135,11 +135,13 @@ export function wsrvImage<T extends string | null | undefined>(
 // ──────────────────────────────────────────────────────────────────────────
 // Per-context size profiles.
 //
-// "profile" — /rp/novelists pages: larger, used as hero/profile imagery.
-// "feed"    — /rp/home & /rp/explore cards: smaller, denser layouts.
+// "profile"  — /rp/novelists/[username] pages: larger, used as hero/profile imagery.
+// "feed"     — /rp/home & /rp/explore cards: smaller, denser layouts.
+// "hero"     — /rp/novelists landing muse rows.
+// "carousel" — /rp/novelists landing novelist carousel cards.
 // ──────────────────────────────────────────────────────────────────────────
 
-type Context = "profile" | "feed" | "hero";
+type Context = "profile" | "feed" | "hero" | "carousel";
 
 const sizesFor = (ctx: Context) => {
   if (ctx === "profile")
@@ -153,6 +155,20 @@ const sizesFor = (ctx: Context) => {
       banner: null,
       cardBg: IMAGE_SIZES.CARD_BG, // 500x800
       cover: IMAGE_SIZES.COVER_LARGE, // 400x400 — muse cards on profile
+    };
+  if (ctx === "carousel")
+    return {
+      // NovelistCard uses `novelist.image` twice: as the 180px round avatar and
+      // as the full-bleed card background (which is blur(20px)'d, so detail
+      // there is irrelevant). 240 covers the avatar at 1x with headroom.
+      // The "profile" context leaves this field untouched — i.e. the raw S3
+      // original — which is far too heavy for eight simultaneous carousel cards.
+      avatar: IMAGE_SIZES.AVATAR_MEDIUM, // 240
+      banner: IMAGE_SIZES.BANNER_MEDIUM,
+      // Nested muses only ever render as 60px avatars inside the expanded card,
+      // so both muse image slots collapse to one small square.
+      cardBg: IMAGE_SIZES.COVER_MEDIUM, // 300x300
+      cover: IMAGE_SIZES.COVER_MEDIUM, // 300x300
     };
   if (ctx === "hero")
     return {

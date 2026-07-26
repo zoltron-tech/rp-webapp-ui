@@ -15,6 +15,7 @@ import { useStateMachine } from "@/hooks";
 import { initialisePushNotifications } from "@/lib/push";
 import type { AuthState } from "@/types/state";
 import { API_MESSAGE } from "@/utils/constants";
+import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import { useGlobalState, useGlobalStoreSet } from "../store/stores";
 import { AuthContext } from "./auth.context";
@@ -158,6 +159,13 @@ export const AuthProvider: FC<Props> = ({ children }) => {
   useEffect(() => {
     if (initialRender.current) {
       initialRender.current = false;
+      // The OAuth callback page owns the auth handshake itself (it calls
+      // handlePostLogin / setGlobalState directly). Running this flow too
+      // races both against it for authState/user/novelist, and whichever
+      // resolves last can stomp the other's result — e.g. leaving authState
+      // stuck on "LOADING" after the callback page already finished and
+      // navigated away.
+      if (pathname === ROUTES.Oauth.Callback) return;
       verifyInitialAuthState();
     }
   }, []);

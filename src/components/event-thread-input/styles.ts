@@ -31,6 +31,22 @@ export const EventThreadInputRoot = styled.div`
     top: 20px;
     right: 16px;
   }
+
+  /* Inline (on-page) variant: the composer sits directly on a manuscript
+     page, so it sheds the boxed chrome — transparent surface, no side
+     padding, a shorter default editor — and reads as part of the page. */
+  &.inline {
+    background-color: transparent;
+    padding: 40px 0 4px;
+
+    @media (max-width: 680px) {
+      padding: 40px 0 4px;
+    }
+
+    [data-placeholder] {
+      min-height: 140px;
+    }
+  }
 `;
 
 export const TextInputContainer = styled(Form.Field)`
@@ -286,6 +302,11 @@ export const DialogInsertSlot = styled.div`
   position: absolute;
   top: 6px;
   right: 16px;
+
+  /* The inline page composer has no side padding to clear. */
+  .inline & {
+    right: 0;
+  }
   z-index: 5;
   display: flex;
   align-items: center;
@@ -526,6 +547,56 @@ export const DialogInsertActions = styled.div`
         background-color: #555;
         cursor: not-allowed;
       }
+    }
+  }
+`;
+
+/* Save/Cancel row for the inline (on-page) composer — textual buttons in the
+   page's corner instead of the floating circular send button. */
+export const InlineActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+
+  button {
+    all: unset;
+    box-sizing: border-box;
+    cursor: pointer;
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-size: var(--font-size-small);
+    font-family: var(--font);
+    color: var(--text);
+
+    &.cancel {
+      background-color: var(--bg-5);
+
+      &:hover {
+        background-color: var(--bg-6);
+      }
+    }
+
+    &.save {
+      background-color: var(--accent);
+
+      &:hover:not(:disabled) {
+        background-color: var(--accent-hover);
+      }
+
+      &:active:not(:disabled) {
+        background-color: var(--accent-active);
+      }
+
+      &:disabled {
+        opacity: 0.55;
+        cursor: default;
+      }
+    }
+
+    &:focus-visible {
+      outline: 1.5px solid var(--accent);
+      outline-offset: 2px;
     }
   }
 `;

@@ -3,6 +3,7 @@ import {
   useStoreSet,
   useStoreState,
 } from "@/context/store/use-store";
+import { DEFAULT_PAGE_FORMAT, type PageFormat } from "@/lib/paginator";
 import type { Fandom, NWImage, StoryBoardMember } from "@/types";
 import type { Genre, Tag } from "@/types/common";
 
@@ -13,6 +14,8 @@ export type StoryboardState = {
   image: string | null;
   avatar: NWImage | null;
   isPublic: boolean;
+  /** Page geometry for the book layout — shared by every co-author. */
+  pageFormat: PageFormat;
   tags: Tag[];
   fandom: Fandom | null;
   genres: Genre[];
@@ -31,6 +34,7 @@ export const INITIAL_STATE: StoryboardState = {
   isPublic: false,
   members: [],
   name: "",
+  pageFormat: DEFAULT_PAGE_FORMAT,
   tags: [],
 };
 

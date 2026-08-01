@@ -1,6 +1,5 @@
 "use client";
 
-import { Flex } from "@novelist-world/ui";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
@@ -21,12 +20,14 @@ import { AppAlertDialog } from "@/components/dialog";
 import { EditStoryboardEventOverlay } from "@/components/edit-storyboard-event-card/edit-storyboard-event-overlay";
 import { AppDropdownMenuResponsive } from "@/components/profile-more-dropdown";
 import { ReactionLikersDialog } from "@/components/reaction-likers-dialog";
+import { ReorderStoryboardEventsOverlay } from "@/components/reorder-storyboard-events";
 import { museAvatarUrl } from "@/components/rich-text-editor-input/dialog-embed";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
-import { ReorderStoryboardEventsOverlay } from "@/components/reorder-storyboard-events";
 import { ShareStoryDialog } from "@/components/share-story-dialog";
 import StoryCardEvent from "@/components/story-event-card";
 import { StoryMembers } from "@/components/story-members";
+import { StoryboardWorkspace } from "@/components/storyboard-workspace";
+import * as W from "@/components/storyboard-workspace/styles";
 import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents, useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -256,6 +257,12 @@ export default function UserProfilePage({}) {
         },
       ];
 
+  const canAddChapter =
+    isMember() &&
+    creatorEventLimit != null &&
+    storyboard != null &&
+    storyboard.events.length < creatorEventLimit;
+
   const fetchStoryboard = async () => {
     const _storyboard = await baseDataLoader(() =>
       getStoryboardAction(storyboardId),
@@ -286,7 +293,11 @@ export default function UserProfilePage({}) {
     return () => {
       cancelled = true;
     };
-  }, [storyboard?.createdBy?.username, user?.username, novelist?.tier.eventLimit]);
+  }, [
+    storyboard?.createdBy?.username,
+    user?.username,
+    novelist?.tier.eventLimit,
+  ]);
 
   return (
     <>
@@ -314,7 +325,11 @@ export default function UserProfilePage({}) {
             <S.Name>{storyboard?.name}</S.Name>
             <S.CreatedByRow>
               <span>Author:</span>
-              <Username primary className="mini medium" username={storyboard?.createdBy?.username} />
+              <Username
+                primary
+                className="mini medium"
+                username={storyboard?.createdBy?.username}
+              />
             </S.CreatedByRow>
             <S.MetaStack>
               <ShouldRender if={!!fandom?.id}>
@@ -362,10 +377,7 @@ export default function UserProfilePage({}) {
             </S.HeartCountText>
           </S.HeartChip>
 
-          <S.ShareButton
-            type="button"
-            onClick={() => setShowShareDialog(true)}
-          >
+          <S.ShareButton type="button" onClick={() => setShowShareDialog(true)}>
             <FiShare2 />
             Share
           </S.ShareButton>
@@ -404,71 +416,77 @@ export default function UserProfilePage({}) {
           </S.CastSection>
         </ShouldRender>
 
-        <S.SectionHeaderRow>
-          <S.SectionName>
-            <ShouldRender
-              if={storyboard != null && storyboard?.events.length <= 0}
-            >
-              NO{" "}
-            </ShouldRender>
-            CHAPTERS
-            <ShouldRender if={isMember() && creatorEventLimit != null}>
-              {" "}
-              ({storyboard?.events.length ?? 0} / {creatorEventLimit})
-            </ShouldRender>
-          </S.SectionName>
-          <ShouldRender if={isMember() && (storyboard?.events.length ?? 0) > 1}>
-            <AddNewButtonStyle type="button" onClick={() => setReorderOpen(true)}>
-              Reorder chapters
-              <RxDragHandleDots2 size={18} />
-            </AddNewButtonStyle>
-          </ShouldRender>
-          <ShouldRender
-            if={
-              isMember() &&
-              creatorEventLimit != null &&
-              storyboard != null &&
-              storyboard.events.length < creatorEventLimit
-            }
-          >
-            <AddNewButtonStyle type="button" onClick={onAddChapterClick}>
-              Add chapter
-              <IoMdAdd size={18} />
-            </AddNewButtonStyle>
-          </ShouldRender>
-        </S.SectionHeaderRow>
-        <Flex
-          direction="row"
-          gap={"1rem"}
-          style={{
-            flexWrap: "wrap",
-            marginTop: "25px",
-          }}
-        >
-          {storyboard?.events?.map((event) => {
-            return (
-              <StoryCardEvent
-                key={event.id}
-                event={event}
-                storyboardId={storyboardId}
-                isCurrentUser={isMember()}
-                onEdit={onEditChapter}
-                onDeleted={(deletedId) =>
-                  setStoryBoard((prev) =>
-                    prev
-                      ? {
-                          ...prev,
-                          events: prev.events.filter((e) => e.id !== deletedId),
-                        }
-                      : prev,
-                  )
-                }
-              >
-                {event.name}
-              </StoryCardEvent>
-            );
-          })}
-        </Flex>
+        <StoryboardWorkspace
+          storyboardId={storyboardId}
+          story={storyboard}
+          canEdit={isMember()}
+          chaptersView={
+            <>
+              <W.SectionHeaderRow>
+                <W.SectionName>
+                  {storyboard != null && storyboard.events.length <= 0
+                    ? "NO CHAPTERS"
+                    : "CHAPTERS"}
+                  {isMember() && creatorEventLimit != null
+                    ? ` (${storyboard?.events.length ?? 0} / ${creatorEventLimit})`
+                    : ""}
+                </W.SectionName>
+                <W.Spacer />
+                <ShouldRender
+                  if={isMember() && (storyboard?.events.length ?? 0) > 1}
+                >
+                  <AddNewButtonStyle
+                    type="button"
+                    onClick={() => setReorderOpen(true)}
+                  >
+                    Reorder chapters
+                    <RxDragHandleDots2 size={18} />
+                  </AddNewButtonStyle>
+                </ShouldRender>
+                <ShouldRender if={canAddChapter}>
+                  <AddNewButtonStyle type="button" onClick={onAddChapterClick}>
+                    Add chapter
+                    <IoMdAdd size={18} />
+                  </AddNewButtonStyle>
+                </ShouldRender>
+              </W.SectionHeaderRow>
+
+              {(storyboard?.events?.length ?? 0) === 0 ? (
+                <W.EmptyCanvas>
+                  {isMember()
+                    ? "No chapters yet. Add the first one and the story begins."
+                    : "This story hasn't been written yet."}
+                </W.EmptyCanvas>
+              ) : (
+                <W.ChapterGrid>
+                  {storyboard?.events?.map((event) => (
+                    <StoryCardEvent
+                      key={event.id}
+                      event={event}
+                      storyboardId={storyboardId}
+                      isCurrentUser={isMember()}
+                      onEdit={onEditChapter}
+                      onDeleted={(deletedId) =>
+                        setStoryBoard((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                events: prev.events.filter(
+                                  (e) => e.id !== deletedId,
+                                ),
+                              }
+                            : prev,
+                        )
+                      }
+                    >
+                      {event.name}
+                    </StoryCardEvent>
+                  ))}
+                </W.ChapterGrid>
+              )}
+            </>
+          }
+        />
       </S.StoryContainer>
       <EditStoryboardEventOverlay
         open={eventEditor.open}

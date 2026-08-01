@@ -461,6 +461,10 @@ export const ByLine = styled.div`
   align-items: baseline;
   gap: 8px;
   margin-top: 10px;
+  /* Fixed height whether or not the edit/delete controls are in it: a passage
+     must measure the same for a member, a visitor, and the book — that is what
+     makes the page breaks identical everywhere. */
+  min-height: 22px;
   font-family: var(--font);
   font-size: 11.5px;
   letter-spacing: 0.04em;
@@ -522,6 +526,24 @@ export const ByLine = styled.div`
 export const ThreadFlow = styled.div`
   display: flex;
   flex-direction: column;
+`;
+
+/* One item of the paginated chapter flow (the title/overture block, or one
+   passage). `flow-root` keeps child margins and floated images inside the box,
+   so the height the page packer measures is the height the item really takes. */
+export const ChapterFlowItem = styled.div`
+  display: flow-root;
+
+  /* Nothing embedded may be taller than the page it sits on — otherwise no
+     amount of keep-together can stop a break falling through it. The cap is
+     set per view from the story's page format. */
+  img,
+  video,
+  iframe,
+  canvas {
+    max-height: var(--nw-page-media-max, none);
+    object-fit: contain;
+  }
 `;
 
 /* Quiet centered control for fetching the next/previous chunk of passages in
@@ -643,11 +665,11 @@ export const BookStage = styled.div`
 export const Spread = styled.div`
   position: relative;
   width: 100%;
-  /* Must match DESIGN_STAGE_WIDTH / DESIGN_STAGE_HEIGHT in book-view.tsx —
-     holds the stage's shape before the JS scale is computed, so height isn't
-     stuck at 0 while width snaps to 100%. Without this the two dimensions
-     open out of sync on mount (width first, height trailing in). */
-  aspect-ratio: 1040 / 660;
+  /* Fallback shape only — book-view.tsx sets the real ratio inline from the
+     story's page format (two pages side by side). This holds the stage's shape
+     before the JS scale is computed, so height isn't stuck at 0 while width
+     snaps to 100%. Without it the two dimensions open out of sync on mount. */
+  aspect-ratio: 2 / 1.5;
   border-radius: 8px;
   overflow: hidden;
   transition: width 0.3s ease, height 0.3s ease;
@@ -744,6 +766,56 @@ export const ScaledPage = styled.div`
   padding: 52px 60px;
   transform-origin: top left;
   transition: transform 0.3s ease;
+`;
+
+/* ── The book spread, built from the shared page model ──────────────────────
+   Both halves of the spread are windows onto the very same packed chapter the
+   scrolling manuscript renders: each shows the slice of the flow that belongs
+   to its page number. Nothing is re-flowed here, so a page holds exactly what
+   the author saw it holding while writing. */
+
+/** Both pages at their fixed design size, scaled as one unit. */
+export const BookPages = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  transform-origin: top left;
+  transition: transform 0.3s ease;
+`;
+
+/** One page of paper in the spread. */
+export const BookSheet = styled.div`
+  position: relative;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  background: var(--bg-2);
+  overflow: hidden;
+`;
+
+/** The clipped window showing this page's slice of the chapter. */
+export const BookWindow = styled.div`
+  position: absolute;
+  overflow: hidden;
+`;
+
+/** The chapter flow, pushed up so the window frames the right page. */
+export const BookWindowInner = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+`;
+
+export const BookPageNumber = styled.div`
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  opacity: 0.75;
+  user-select: none;
 `;
 
 export const Flow = styled.div<{ $offset: number }>`

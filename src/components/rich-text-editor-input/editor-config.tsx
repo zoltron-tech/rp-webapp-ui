@@ -366,3 +366,18 @@ export const ORDERED_LIST_STYLES = [
 
 export const DEFAULT_UNORDERED_LIST_STYLE = "bullet";
 export const DEFAULT_ORDERED_LIST_STYLE = "decimal";
+
+/**
+ * How prose flows around an inline image (Word's "Wrap Text"). Stored as
+ * `data-wrap` on the image's container span; `full` is the historical
+ * behaviour and therefore what any image without the attribute means.
+ */
+export type ImageWrap = "full" | "inline-left" | "inline-right";
+
+export const DEFAULT_IMAGE_WRAP: ImageWrap = "full";
+
+const IMAGE_WRAPS: ImageWrap[] = ["full", "inline-left", "inline-right"];
+
+/** Reads the wrap mode off an image container, defaulting old content to `full`. */
+export const toImageWrap = (value: string | null | undefined): ImageWrap =>
+  IMAGE_WRAPS.find((wrap) => wrap === value) ?? DEFAULT_IMAGE_WRAP;

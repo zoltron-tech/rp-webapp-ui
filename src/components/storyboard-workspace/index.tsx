@@ -1,0 +1,222 @@
+"use client";
+
+import {
+  type FC,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { StoryCodexView } from "@/components/story-codex";
+import { StoryMapView } from "@/components/story-map";
+import { StorySoundscapeView } from "@/components/story-soundscape/workspace-view";
+import { StoryTimelineView } from "@/components/story-timeline";
+import type { StoryBoard } from "@/types";
+import * as S from "./styles";
+import {
+  isWorkspaceView,
+  VIEW_META,
+  WORKSPACE_VIEWS,
+  type WorkspaceView,
+} from "./views";
+
+type Props = {
+  storyboardId: string;
+  story: StoryBoard | null;
+  /** Members edit everything; everyone else gets the same views, read-only. */
+  canEdit: boolean;
+  /** The Chapters view — it stays on the page so it can keep its own
+   *  chapter-editor overlays and limit checks. */
+  chaptersView: ReactNode;
+};
+
+/**
+ * The storyboard workspace.
+ *
+ * Desktop is the mock's frame: an icon rail and the canvas. Mobile drops the
+ * rail for a full-bleed canvas and a bottom tab bar.
+ *
+ * The views are client-side tabs over one story fetch, not routes — switching
+ * never reloads the page. Each view mounts on its first activation and then
+ * stays mounted (hidden), so its own fetch happens once and coming back to it
+ * is instant. The active view is mirrored into `?view=` so a view is linkable.
+ */
+export const StoryboardWorkspace: FC<Props> = ({
+  storyboardId,
+  story,
+  canEdit,
+  chaptersView,
+}) => {
+  const [view, setView] = useState<WorkspaceView>("chapters");
+  /** Views opened so far — they stay mounted once activated. */
+  const [opened, setOpened] = useState<WorkspaceView[]>(["chapters"]);
+  /** The chapter the Sound view is editing. */
+  const [soundChapterId, setSoundChapterId] = useState<string | null>(null);
+
+  const chapters = useMemo(() => story?.events ?? [], [story?.events]);
+
+  // The URL is the source of truth on first paint.
+  useEffect(() => {
+    const initial = new URLSearchParams(window.location.search).get("view");
+    if (!isWorkspaceView(initial) || initial === "chapters") return;
+    setView(initial);
+    setOpened((current) =>
+      current.includes(initial) ? current : [...current, initial],
+    );
+  }, []);
+
+  /** Sound is members-only. Everything else a public story shows read-only. */
+  const views = useMemo(
+    () =>
+      canEdit
+        ? WORKSPACE_VIEWS
+        : WORKSPACE_VIEWS.filter((candidate) => candidate !== "sound"),
+    [canEdit],
+  );
+
+  // A ?view=sound link from a non-member lands on Chapters instead. Waits for
+  // the story, since canEdit is false until it has loaded and the membership
+  // check can run.
+  useEffect(() => {
+    if (!story || canEdit || view !== "sound") return;
+    setView("chapters");
+  }, [story, canEdit, view]);
+
+  // Default the Sound view to the first chapter, once one exists.
+  useEffect(() => {
+    if (soundChapterId) return;
+    const first = chapters[0]?.id;
+    if (first) setSoundChapterId(first);
+  }, [chapters, soundChapterId]);
+
+  const switchView = useCallback((next: WorkspaceView) => {
+    setView(next);
+    setOpened((current) =>
+      current.includes(next) ? current : [...current, next],
+    );
+    // Best effort — some in-app browsers restrict history writes, and that is
+    // not worth losing the view switch over.
+    try {
+      const url = new URL(window.location.href);
+      if (next === "chapters") url.searchParams.delete("view");
+      else url.searchParams.set("view", next);
+      window.history.replaceState(null, "", url.toString());
+    } catch (err) {
+      console.error("Failed to mirror the workspace view into the URL", err);
+    }
+  }, []);
+
+  /**
+   * Mobile only — the tab bar is pinned to the foot of the page, so a tap
+   * should carry the reader down to what it opened rather than leave them
+   * wherever they were scrolled. The view mounts on this same switch, so its
+   * height only exists after the next paint; two frames covers layout.
+   */
+  const scrollToBottom = useCallback(() => {
+    const scroller = document.querySelector("main.page-container");
+    if (!scroller) return;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        scroller.scrollTo({ behavior: "smooth", top: scroller.scrollHeight });
+      });
+    });
+  }, []);
+
+  const isOpen = (candidate: WorkspaceView) => opened.includes(candidate);
+
+  return (
+    <>
+      <S.Frame>
+        <S.Rail aria-label="Storyboard views">
+          {views.map((candidate) => {
+            const meta = VIEW_META[candidate];
+            const Icon = meta.icon;
+            return (
+              <S.RailButton
+                key={candidate}
+                type="button"
+                $active={view === candidate}
+                aria-current={view === candidate ? "page" : undefined}
+                title={meta.description}
+                onClick={() => switchView(candidate)}
+              >
+                <Icon size={18} />
+                {meta.label}
+              </S.RailButton>
+            );
+          })}
+        </S.Rail>
+
+        <S.Canvas>
+          <S.ViewSlot $active={view === "chapters"}>{chaptersView}</S.ViewSlot>
+
+          {isOpen("timeline") && (
+            <S.ViewSlot $active={view === "timeline"}>
+              <StoryTimelineView storyboardId={storyboardId} canEdit={canEdit} />
+            </S.ViewSlot>
+          )}
+
+          {isOpen("codex") && (
+            <S.ViewSlot $active={view === "codex"}>
+              <StoryCodexView
+                storyboardId={storyboardId}
+                chapters={chapters}
+                cast={story?.cast ?? []}
+                canEdit={canEdit}
+              />
+            </S.ViewSlot>
+          )}
+
+          {isOpen("map") && (
+            <S.ViewSlot $active={view === "map"}>
+              <StoryMapView
+                storyboardId={storyboardId}
+                chapters={chapters}
+                canEdit={canEdit}
+              />
+            </S.ViewSlot>
+          )}
+
+          {canEdit && isOpen("sound") && (
+            <S.ViewSlot $active={view === "sound"}>
+              <StorySoundscapeView
+                chapters={chapters}
+                selectedChapterId={soundChapterId}
+                onSelectChapter={setSoundChapterId}
+                canEdit={canEdit}
+              />
+            </S.ViewSlot>
+          )}
+        </S.Canvas>
+      </S.Frame>
+
+      {/* Mobile: the rail becomes a bottom tab bar. */}
+      <S.TabBar aria-label="Storyboard views">
+        {views.map((candidate) => {
+          const meta = VIEW_META[candidate];
+          const Icon = meta.icon;
+          return (
+            <S.TabButton
+              key={candidate}
+              type="button"
+              $active={view === candidate}
+              aria-current={view === candidate ? "page" : undefined}
+              aria-label={meta.description}
+              onClick={() => {
+                switchView(candidate);
+                scrollToBottom();
+              }}
+            >
+              <Icon size={19} />
+              <span>{meta.label}</span>
+            </S.TabButton>
+          );
+        })}
+      </S.TabBar>
+    </>
+  );
+};
+
+export type { WorkspaceView } from "./views";
+export { VIEW_META, WORKSPACE_VIEWS } from "./views";

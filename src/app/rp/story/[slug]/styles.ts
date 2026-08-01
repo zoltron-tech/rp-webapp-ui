@@ -493,4 +493,3 @@ export const BackButton = styled.button`
     outline-offset: 2px;
   }
 `;
-

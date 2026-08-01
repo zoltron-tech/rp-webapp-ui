@@ -925,6 +925,40 @@ const richTextContentBase = css`
     min-width: 30px;
   }
 
+  /* ── Text wrap (Word's "Wrap Text → Square") ──────────────────────────
+     \`data-wrap\` on the image container decides how prose flows around it:
+     \`full\` (the default, and what every pre-existing image is) keeps the
+     old block behaviour; \`inline-left\`/\`inline-right\` float it so the
+     following paragraphs run alongside. The width stays the container's
+     inline percentage, so wrapping is page-format independent. */
+  .inline-image-container[data-wrap="inline-left"] {
+    float: left;
+    margin: 0.15em 14px 8px 0;
+  }
+
+  .inline-image-container[data-wrap="inline-right"] {
+    float: right;
+    margin: 0.15em 0 8px 14px;
+  }
+
+  /* A floated image escapes its own block, so without this it would bleed
+     into the next passage (or, in book/page layouts, the next page). */
+  &::after {
+    content: "";
+    display: block;
+    clear: both;
+  }
+
+  /* Small screens can't give a float and its text column enough room at
+     full size — cap wrapped images at half the measure (verified at the
+     375px baseline). */
+  @media (max-width: 480px) {
+    .inline-image-container[data-wrap="inline-left"],
+    .inline-image-container[data-wrap="inline-right"] {
+      max-width: 50%;
+    }
+  }
+
   .inline-image-container.uploading .inline-image {
     filter: blur(4px);
     opacity: 0.7;
@@ -1077,7 +1111,9 @@ export const ContentWrapper = styled.div<{
 
 export const ImageControlsWrapper = styled.div`
   position: absolute;
-  z-index: 200;
+  /* Must clear the editor's own toolbars and any chrome it is nested in —
+     the controls are only useful if nothing paints over them. */
+  z-index: 2147483000;
   left: 5%;
   width: 90%;
   transform: translateY(-100%);
@@ -1118,6 +1154,62 @@ export const ImageAlignButton = styled.button<{ $active?: boolean }>`
   &:hover {
     background: ${(p) => (p.$active ? "var(--accent)" : "var(--bg-5)")};
     color: ${(p) => (p.$active ? "#fff" : "var(--text)")};
+  }
+`;
+
+export const ImageWrapLabel = styled.span`
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-right: 0.15rem;
+  flex-shrink: 0;
+`;
+
+export const ImageBarDivider = styled.span`
+  width: 1px;
+  align-self: stretch;
+  margin: 0.15rem 0.15rem;
+  background: var(--bg-6);
+  flex-shrink: 0;
+`;
+
+export const ImageAltButton = styled.button<{ $active?: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.75rem;
+  padding: 0 0.4rem;
+  border-radius: 0.25rem;
+  border: none;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: ${(p) => (p.$active ? "var(--accent)" : "transparent")};
+  color: ${(p) => (p.$active ? "#fff" : "var(--text-secondary)")};
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: ${(p) => (p.$active ? "var(--accent)" : "var(--bg-5)")};
+    color: ${(p) => (p.$active ? "#fff" : "var(--text)")};
+  }
+`;
+
+export const ImageAltInput = styled.input`
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.35rem;
+  border: 1px solid var(--bg-6);
+  background: var(--bg-2);
+  color: var(--text);
+  font-size: var(--font-size-input);
+  outline: none;
+
+  &:focus {
+    border-color: var(--accent);
   }
 `;
 

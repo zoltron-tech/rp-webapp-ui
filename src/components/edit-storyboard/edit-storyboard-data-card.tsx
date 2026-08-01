@@ -10,6 +10,7 @@ import {
 import { BsArrowLeft, BsGlobe2, BsLockFill } from "react-icons/bs";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { HiOutlineCamera } from "react-icons/hi2";
+import { LuBookOpen } from "react-icons/lu";
 import { MdAutoStories, MdOutlineTheaters } from "react-icons/md";
 import { deleteMedia } from "@/app/rp/profile/actions";
 import {
@@ -27,6 +28,7 @@ import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUploadMedia } from "@/hooks/use-upload-media";
+import { resolvePageSpec } from "@/lib/paginator";
 import type { ImageCropFilter, NWImage, StoryBoard } from "@/types";
 import type { Genre } from "@/types/common";
 import { API_MESSAGE } from "@/utils/constants";
@@ -39,6 +41,7 @@ import { plainTextLength } from "@/utils/rich-text";
 import { StoryboardMembersDialog } from "../storyboard-members-dialog";
 import FandomPicker from "./fandom-picker";
 import GenrePicker from "./genre-picker";
+import { PageFormatPicker } from "./page-format-picker";
 import { useStoryboardState, useStoryboardStoreSet } from "./storyboard.store";
 import * as S from "./styled";
 
@@ -102,6 +105,7 @@ const EditStoryboardDataCard = forwardRef<
   const tags = useStoryboardState("tags");
   const fandom = useStoryboardState("fandom");
   const genres = useStoryboardState("genres");
+  const pageFormat = useStoryboardState("pageFormat");
   const members = useStoryboardState("members");
   const createdByUsername = useStoryboardState("createdByUsername");
   const setStoryboardState = useStoryboardStoreSet();
@@ -139,6 +143,7 @@ const EditStoryboardDataCard = forwardRef<
     genres,
     isPublic,
     name,
+    pageFormat,
   });
 
   // Avatar crop dialog state
@@ -155,6 +160,7 @@ const EditStoryboardDataCard = forwardRef<
     description !== initialSnapshot.current.description ||
     isPublic !== initialSnapshot.current.isPublic ||
     (fandom?.id ?? null) !== (initialSnapshot.current.fandom?.id ?? null) ||
+    pageFormat !== initialSnapshot.current.pageFormat ||
     genreKey(genres) !== genreKey(initialSnapshot.current.genres);
 
   const handleAvatarClick = () => {
@@ -268,6 +274,7 @@ const EditStoryboardDataCard = forwardRef<
       genres: initialSnapshot.current.genres,
       isPublic: initialSnapshot.current.isPublic,
       name: initialSnapshot.current.name,
+      pageFormat: initialSnapshot.current.pageFormat,
     });
     setDescriptionEditorKey((k) => k + 1);
     setAvatarChanged(false);
@@ -301,6 +308,7 @@ const EditStoryboardDataCard = forwardRef<
       isPublic,
       members,
       name: name.trim(),
+      pageFormat,
       tags,
     };
 
@@ -323,6 +331,7 @@ const EditStoryboardDataCard = forwardRef<
       isPublic: response.isPublic,
       members: response.members ?? [],
       name: response.name,
+      pageFormat: resolvePageSpec(response.pageFormat).value,
       tags: response.tags ?? [],
     });
     initialSnapshot.current = {
@@ -332,6 +341,7 @@ const EditStoryboardDataCard = forwardRef<
       genres: response.genres ?? [],
       isPublic: response.isPublic,
       name: response.name,
+      pageFormat: resolvePageSpec(response.pageFormat).value,
     };
     setAvatarChanged(false);
     setTempUploadedImage(null);
@@ -405,42 +415,40 @@ const EditStoryboardDataCard = forwardRef<
             </div>
           </S.FormHeading>
         </S.TopBarLeft>
-        {embedded ? (
-          isCreator &&
-          id && (
-            <S.HeaderDangerButton
-              type="button"
-              onClick={() => setDeleteDialogOpen(true)}
-              title="Delete story"
-              aria-label="Delete story"
-            >
-              <FaRegTrashCan />
-            </S.HeaderDangerButton>
-          )
-        ) : (
-          isDirty && (
-            <S.TopBarActions>
-              <S.ResetButton
+        {embedded
+          ? isCreator &&
+            id && (
+              <S.HeaderDangerButton
                 type="button"
-                onClick={handleReset}
-                disabled={loading || imageUploading}
+                onClick={() => setDeleteDialogOpen(true)}
+                title="Delete story"
+                aria-label="Delete story"
               >
-                Reset
-              </S.ResetButton>
-              <S.SaveButton
-                type="button"
-                onClick={handleSave}
-                disabled={loading || imageUploading || descriptionTooLong}
-              >
-                {loading
-                  ? "Saving..."
-                  : imageUploading
-                    ? "Uploading..."
-                    : "Save"}
-              </S.SaveButton>
-            </S.TopBarActions>
-          )
-        )}
+                <FaRegTrashCan />
+              </S.HeaderDangerButton>
+            )
+          : isDirty && (
+              <S.TopBarActions>
+                <S.ResetButton
+                  type="button"
+                  onClick={handleReset}
+                  disabled={loading || imageUploading}
+                >
+                  Reset
+                </S.ResetButton>
+                <S.SaveButton
+                  type="button"
+                  onClick={handleSave}
+                  disabled={loading || imageUploading || descriptionTooLong}
+                >
+                  {loading
+                    ? "Saving..."
+                    : imageUploading
+                      ? "Uploading..."
+                      : "Save"}
+                </S.SaveButton>
+              </S.TopBarActions>
+            )}
       </S.TopBar>
 
       <S.Body $embedded={embedded}>
@@ -575,6 +583,22 @@ const EditStoryboardDataCard = forwardRef<
           />
         </S.Section>
 
+        <S.Section>
+          <S.SectionLabel as="span">
+            <LuBookOpen style={{ marginRight: 4, verticalAlign: "-2px" }} />
+            Page format
+          </S.SectionLabel>
+          <PageFormatPicker
+            value={pageFormat}
+            onChange={(next) => setStoryboardState({ pageFormat: next })}
+          />
+          <S.VisibilityHint>
+            Sets the page size the book layout paginates against. It applies to
+            everyone reading or writing this story, so co-authors see the same
+            page breaks.
+          </S.VisibilityHint>
+        </S.Section>
+
         {id && (
           <S.Section>
             <S.SectionLabel as="span">Members</S.SectionLabel>
@@ -595,8 +619,7 @@ const EditStoryboardDataCard = forwardRef<
               </S.MemberStack>
               <S.MembersRowText>
                 <span className="title">
-                  {members.length}{" "}
-                  {members.length === 1 ? "member" : "members"}
+                  {members.length} {members.length === 1 ? "member" : "members"}
                 </span>
                 <span className="subtitle">Manage roles & invites</span>
               </S.MembersRowText>

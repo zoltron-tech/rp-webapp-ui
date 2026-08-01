@@ -51,12 +51,55 @@ type Props = React.HTMLProps<HTMLDivElement> & {
   /** When set, the composer edits this thread instead of creating a new one. */
   initialThread?: StoryBoardEventThread | null;
   onSend?: () => void;
+  /**
+   * "inline" drops the boxed chrome so the composer sits directly on a
+   * manuscript page — transparent surface, page typography around it, and a
+   * textual Save/Cancel row instead of the floating send button.
+   */
+  variant?: "default" | "inline";
+  /** Shown for the inline variant; abandons the edit without saving. */
+  onCancel?: () => void;
+  /** Editor placeholder override (e.g. "Continue the story…"). */
+  editorPlaceholder?: string;
+};
+
+/** Save/Cancel row for the inline (on-page) composer. */
+const InlineActions: FC<{ loading: boolean; onCancel?: () => void }> = ({
+  loading,
+  onCancel,
+}) => {
+  const threadId = useEventThreadInputState("threadId");
+  const promptText = useEventThreadInputState("promptText");
+  const trimmed = (promptText ?? "").trim();
+  const hasContent = trimmed !== "" && trimmed !== "<br>";
+
+  return (
+    <S.InlineActions>
+      {onCancel && (
+        <button type="button" className="cancel" onClick={onCancel}>
+          Cancel
+        </button>
+      )}
+      <Form.Submit asChild>
+        <button
+          type="submit"
+          className="save"
+          disabled={loading || !hasContent}
+        >
+          {loading ? "Saving…" : threadId ? "Save changes" : "Add to the page"}
+        </button>
+      </Form.Submit>
+    </S.InlineActions>
+  );
 };
 
 export const EventThreadForm: FC<Props> = ({
   storyBoardEventId = "",
   initialThread,
   onSend,
+  variant = "default",
+  onCancel,
+  editorPlaceholder,
 }) => {
   const [sending, setSending] = useState(false);
   const promptText = useEventThreadInputState("promptText");
@@ -87,11 +130,11 @@ export const EventThreadForm: FC<Props> = ({
       }
 
       const payload: StoryBoardEventThreadInput = {
+        dialogDesign,
         id: threadId,
         // Persist dialogs as their style-agnostic data model (chrome stripped).
         message: serializeDialogEmbeds(promptText),
         storyBoardEventId: storyBoardEventId,
-        dialogDesign,
       };
 
       setSending(true);
@@ -145,8 +188,13 @@ export const EventThreadForm: FC<Props> = ({
         <EventThreadTextField
           editorRef={editorRef}
           initialValue={initialThread?.message ?? ""}
+          placeholder={editorPlaceholder}
         />
-        <SendButton loading={sending} />
+        {variant === "inline" ? (
+          <InlineActions loading={sending} onCancel={onCancel} />
+        ) : (
+          <SendButton loading={sending} />
+        )}
       </Form.Root>
     </>
   );
@@ -154,7 +202,16 @@ export const EventThreadForm: FC<Props> = ({
 
 export const EventThreadInput: FC<Props> = forwardRef(
   (
-    { storyBoardEventId = "", initialThread, onSend, className, ...rest },
+    {
+      storyBoardEventId = "",
+      initialThread,
+      onSend,
+      variant = "default",
+      onCancel,
+      editorPlaceholder,
+      className,
+      ...rest
+    },
     forwardedRef,
   ) => {
     const initialDesign = initialThread?.dialogDesign ?? null;
@@ -173,13 +230,16 @@ export const EventThreadInput: FC<Props> = forwardRef(
       >
         <S.EventThreadInputRoot
           {...rest}
-          className={classNames([className])}
+          className={classNames([className, { inline: variant === "inline" }])}
           ref={forwardedRef as React.Ref<HTMLDivElement>}
         >
           <EventThreadForm
             storyBoardEventId={storyBoardEventId}
             initialThread={initialThread}
             onSend={onSend}
+            variant={variant}
+            onCancel={onCancel}
+            editorPlaceholder={editorPlaceholder}
             className={className}
           />
         </S.EventThreadInputRoot>

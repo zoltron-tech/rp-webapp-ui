@@ -1,47 +1,31 @@
 "use client";
 
 import {
+  type CSSProperties,
   type FC,
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
-import { BsCalendar2Date } from "react-icons/bs";
 import { FaBookmark } from "react-icons/fa6";
 import { IoChevronBack, IoChevronForward } from "react-icons/io5";
-import { TfiLocationPin } from "react-icons/tfi";
-import { resolveAsterismStyle } from "@/components/asterism-styles";
-import { CoverImage } from "@/components/common";
-import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
 import { useWindowDimensions } from "@/hooks";
+import { contentHeight, contentWidth, resolvePageSpec } from "@/lib/paginator";
 import type { StoryBoardEvent, StoryBoardEventThread } from "@/types";
-import { toFormattedDate } from "@/utils/helpers";
-import { EventThread } from "./event-thread";
+import {
+  ChapterFlow,
+  pageAtOffset,
+  useChapterPages,
+  useFlowItems,
+  useMeasuredHeights,
+} from "./chapter-pages";
 import * as S from "./styles";
-import { ShouldRender } from "@novelist-world/ui";
 
-/* ── Fixed design geometry ────────────────────────────────────────────────
-   The book is always laid out at these exact pixel dimensions and then the
-   whole page is visually scaled to fit the screen. Because the layout never
-   changes, the number of words per line — and where every page breaks — is
-   identical on every monitor. */
-const COLUMN_GAP = 60;
-const DESIGN_COL_WIDTH = 430;
-/** Must match the `ScaledPage` padding in styles.ts. */
-const DESIGN_PAD_X = 60;
-const DESIGN_PAD_Y = 52;
-const DESIGN_FLOW_WIDTH = DESIGN_COL_WIDTH * 2 + COLUMN_GAP;
-const DESIGN_STAGE_WIDTH = DESIGN_FLOW_WIDTH + DESIGN_PAD_X * 2;
-const DESIGN_FLOW_HEIGHT = 556;
-const DESIGN_STAGE_HEIGHT = DESIGN_FLOW_HEIGHT + DESIGN_PAD_Y * 2;
-/** Width of one page half — from the outer edge to the spine (the center). */
-const DESIGN_HALF_WIDTH = DESIGN_STAGE_WIDTH / 2;
-const PITCH = DESIGN_COL_WIDTH + COLUMN_GAP;
-
-/** Column a thread starts on, per loaded thread (global index → column). */
-type ThreadColumn = { index: number; col: number };
+/** Gutter between the two halves of the spread, in design pixels. */
+const SPINE_GAP = 0;
 
 /** Varied line widths so the loading shimmer reads like ragged prose. */
 const SHIMMER_LINE_WIDTHS = [
@@ -59,17 +43,14 @@ const SHIMMER_LINE_WIDTHS = [
   "68%",
 ];
 
-type Pending =
-  /** Keep snapping to the thread the reader opened at (sticky until the
-      reader turns a page — late-loading images can reflow the columns). */
-  | { type: "target"; index: number }
-  /** A next-page turn that had to fetch more threads first. */
-  | { type: "advance"; fromSpread: number }
-  /** A previous-page turn that had to fetch earlier threads first. */
-  | { type: "retreat"; anchorIndex: number };
+/** Keep snapping to the passage the reader opened at (sticky until the reader
+ *  turns a page — the passage may not even be fetched yet). */
+type Pending = { type: "target"; index: number };
 
 type Props = {
   event: StoryBoardEvent;
+  /** The story's page geometry preset — the same one the manuscript uses. */
+  pageFormat?: string | null;
   /** The loaded, contiguous window of the event's threads. */
   threads: StoryBoardEventThread[];
   /** Global index (in createdAt order) of `threads[0]`. */
@@ -93,14 +74,18 @@ type Props = {
 };
 
 /**
- * Paginated "book" reader. The whole event (title page → narration → passages)
- * is laid out as a single CSS multi-column flow at a fixed design size; the
- * stage is then scaled as one unit to fit the screen, so typography and page
- * breaks are identical regardless of monitor size. Turning a page past either
- * end of the loaded window fetches the neighbouring chunk of threads first.
+ * The book spread.
+ *
+ * Pages come from the shared packer in `chapter-pages` — the same model the
+ * scrolling manuscript renders — so page 7 in the book is page 7 in the
+ * manuscript, cut in exactly the place the author was shown while writing.
+ * Each half of the spread is a window onto that packed flow, pushed up to its
+ * own page offset; nothing is re-flowed here, so the book cannot invent a
+ * break the author never saw.
  */
 export const BookView: FC<Props> = ({
   event,
+  pageFormat,
   threads,
   startIndex,
   totalThreads,
@@ -112,10 +97,14 @@ export const BookView: FC<Props> = ({
   onNeedAfter,
   onPositionChange,
 }) => {
+  const spec = resolvePageSpec(pageFormat);
+  const pageW = contentWidth(spec);
+  const pageH = contentHeight(spec);
+  const designWidth = spec.width * 2 + SPINE_GAP;
+  const designHeight = spec.height;
+
   const stageRef = useRef<HTMLDivElement>(null);
   const footerRef = useRef<HTMLDivElement>(null);
-  const flowRef = useRef<HTMLDivElement>(null);
-  const threadColsRef = useRef<ThreadColumn[]>([]);
   const pendingRef = useRef<Pending | null>(
     targetIndex != null && targetIndex > 0
       ? { index: targetIndex, type: "target" }
@@ -126,161 +115,153 @@ export const BookView: FC<Props> = ({
   const { width: winW, height: winH } = useWindowDimensions();
 
   const [spread, setSpread] = useState(0);
-  const [spreadCount, setSpreadCount] = useState(1);
-  const [pageCount, setPageCount] = useState(1);
   const [scale, setScale] = useState(0);
   const [loadingEdge, setLoadingEdge] = useState<"before" | "after" | null>(
     null,
   );
-  // Bumped after every geometry pass so position reporting sees fresh columns.
-  const [layoutVersion, setLayoutVersion] = useState(0);
+
+  const { heights, reportHeight } = useMeasuredHeights();
+  const items = useFlowItems(threads, startIndex);
+  // The book paginates the whole chapter from the heights frozen on the server,
+  // so its page numbers are the chapter's — the same ones the manuscript shows.
+  const { packed } = useChapterPages({
+    canReport: false,
+    measured: heights,
+    pageFormat: spec.value,
+    pageHeight: pageH,
+    storyboardEventId: event.id ?? "",
+  });
+
+  const pageCount = packed.totalPages;
+  const spreadCount = Math.max(1, Math.ceil(pageCount / 2));
 
   const hasMoreBefore = startIndex > 0;
   const hasMoreAfter = startIndex + threads.length < totalThreads;
 
-  const overtureAsterism = resolveAsterismStyle(event.overtureAsterism);
-  const passageAsterism = resolveAsterismStyle(event.passageAsterism);
+  /** Where this window's passages sit in the chapter, and which pages they cover. */
+  const flowTop = items.length ? (packed.topOfItem.get(items[0].key) ?? 0) : 0;
+  const loadedFirstPage = items.length
+    ? (packed.pageOfItem.get(items[0].key) ?? 1)
+    : 1;
+  const loadedLastPage = items.length
+    ? pageAtOffset(
+        packed,
+        (packed.topOfItem.get(items[items.length - 1].key) ?? 0) +
+          (heights[items[items.length - 1].key] ?? 0) -
+          1,
+      )
+    : 1;
 
-  const recompute = useCallback(() => {
-    const flow = flowRef.current;
+  /** Page number each loaded passage opens on, by global passage index. */
+  const pageOfThread = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const item of items) {
+      if (item.kind !== "thread") continue;
+      const page = packed.pageOfItem.get(item.key);
+      if (page !== undefined) map.set(item.index, page);
+    }
+    return map;
+  }, [items, packed.pageOfItem]);
+
+  // ── Fit the spread to whatever room is left on screen ────────────────────
+  const recomputeScale = useCallback(() => {
     const stage = stageRef.current;
-    if (!flow || !stage) return;
-
-    // Fit the fixed-size page into the available box, preserving its aspect.
+    if (!stage) return;
     // The vertical budget is measured, not guessed: everything above the stage
     // (top bar + chapter song) is whatever sits between the viewport top and
-    // the stage, and everything below is the footer plus the page's own bottom
-    // padding. Reserving the real chrome keeps header + song + book + nav all
-    // on one screen at 100% zoom instead of pushing the footer past the fold.
-    const availW = stage.clientWidth || DESIGN_STAGE_WIDTH;
+    // the stage, and everything below is the footer plus a breathing gap.
+    const availW = stage.clientWidth || designWidth;
     const stageTop = Math.max(0, stage.getBoundingClientRect().top);
     const footer = footerRef.current;
     const footerH = footer
       ? footer.offsetHeight +
         parseFloat(getComputedStyle(footer).marginTop || "0")
       : 60;
-    // Only a small breathing gap below the footer is reserved (not the page's
-    // full bottom padding), so the book fills as much height as it can.
     const availH = Math.max(360, (winH ?? 800) - stageTop - footerH - 24);
     setScale(
       Math.min(
         2.6,
-        Math.max(
-          0.4,
-          Math.min(availW / DESIGN_STAGE_WIDTH, availH / DESIGN_STAGE_HEIGHT),
-        ),
+        Math.max(0.4, Math.min(availW / designWidth, availH / designHeight)),
       ),
     );
+  }, [designWidth, designHeight, winH]);
 
-    // The flow's geometry is fixed, so only the flowed length can change.
-    const total = flow.scrollWidth;
-    const cols = Math.max(1, Math.round((total + COLUMN_GAP) / PITCH));
-    const spreads = Math.max(1, Math.ceil(cols / 2));
-
-    // Record which column each thread starts on (offsetLeft is measured in
-    // the flow's own, unscaled coordinate space).
-    threadColsRef.current = Array.from(
-      flow.querySelectorAll<HTMLElement>("[data-thread-index]"),
-    ).map((el) => ({
-      col: Math.round(el.offsetLeft / PITCH),
-      index: Number(el.dataset.threadIndex),
-    }));
-
-    setPageCount(cols);
-    setSpreadCount(spreads);
-
-    const colOf = (index: number) =>
-      threadColsRef.current.find((t) => t.index === index)?.col;
-
-    const pending = pendingRef.current;
-    if (pending?.type === "target") {
-      const col = colOf(pending.index);
-      if (col != null) {
-        setSpread(Math.min(Math.floor(col / 2), spreads - 1));
-      }
-      // stays pending: content that loads late may shift the columns again
-    } else if (pending?.type === "advance") {
-      // Only resolve once the fetched threads actually grew the book.
-      if (spreads - 1 > pending.fromSpread) {
-        setSpread(pending.fromSpread + 1);
-        pendingRef.current = null;
-      }
-    } else if (pending?.type === "retreat") {
-      // Only resolve once threads before the anchor are laid out.
-      const hasEarlier = threadColsRef.current.some(
-        (t) => t.index < pending.anchorIndex,
-      );
-      if (hasEarlier) {
-        const col = colOf(pending.anchorIndex);
-        const anchorSpread = col != null ? Math.floor(col / 2) : 1;
-        setSpread(Math.max(anchorSpread - 1, 0));
-        pendingRef.current = null;
-      }
-    } else {
-      setSpread((s) => Math.min(s, spreads - 1));
-    }
-
-    setLayoutVersion((v) => v + 1);
-  }, [winH]);
-
-  // Recompute geometry on mount, on resize, and when the window of loaded
-  // threads changes.
   useLayoutEffect(() => {
-    recompute();
-  }, [recompute, winW, threads.length, startIndex, event.id]);
+    recomputeScale();
+  }, [recomputeScale, winW]);
 
   // The stage's own width changes independently of window resizes too — e.g.
   // the shared layout's LeftNav/RightSidebar sliding out over ~300ms as book
-  // mode opens. Track the stage directly so scale grows in step with that
-  // animation instead of jumping once it settles.
+  // mode opens. Track the stage directly so scale grows in step with that.
   useLayoutEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
-    const observer = new ResizeObserver(() => recompute());
+    const observer = new ResizeObserver(() => recomputeScale());
     observer.observe(stage);
     return () => observer.disconnect();
-  }, [recompute]);
+  }, [recomputeScale]);
 
-  // The rich-text renderer injects its HTML after paint, and images/embeds
-  // change the flowed width once they load. Re-measure whenever the flow's
-  // contents actually change, plus on image load and a settle pass for fonts.
+  // ── Resolve a pending jump against the freshly packed chapter ───────────
   useEffect(() => {
-    const flow = flowRef.current;
-    if (!flow) return;
+    const pending = pendingRef.current;
+    if (pending?.type === "target") {
+      const page = pageOfThread.get(pending.index);
+      // Stays pending: the passage may not be fetched yet, and content that
+      // loads late can repack the chapter again.
+      if (page !== undefined) {
+        setSpread(Math.min(Math.floor((page - 1) / 2), spreadCount - 1));
+      }
+      return;
+    }
+    setSpread((current) => Math.min(current, spreadCount - 1));
+  }, [pageOfThread, spreadCount]);
 
-    let raf = 0;
-    const schedule = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(recompute);
+  // ── Keep the open spread's passages loaded ──────────────────────────────
+  // The book knows how many pages the chapter has before it has fetched them,
+  // so turning to a page outside the loaded window simply pulls that window
+  // along — a chunk at a time until the spread is covered.
+  useEffect(() => {
+    if (loadingEdge !== null || busyRef.current) return;
+    const left = spread * 2 + 1;
+    const right = left + 1;
+
+    const pull = async (
+      edge: "before" | "after",
+      load: () => Promise<boolean>,
+    ) => {
+      busyRef.current = true;
+      setLoadingEdge(edge);
+      await load();
+      busyRef.current = false;
+      setLoadingEdge(null);
     };
 
-    const observer = new MutationObserver(schedule);
-    observer.observe(flow, {
-      characterData: true,
-      childList: true,
-      subtree: true,
-    });
+    if (left < loadedFirstPage && hasMoreBefore && onNeedBefore) {
+      pull("before", onNeedBefore);
+    } else if (right > loadedLastPage && hasMoreAfter && onNeedAfter) {
+      pull("after", onNeedAfter);
+    }
+  }, [
+    spread,
+    loadedFirstPage,
+    loadedLastPage,
+    hasMoreBefore,
+    hasMoreAfter,
+    loadingEdge,
+    onNeedBefore,
+    onNeedAfter,
+  ]);
 
-    const onLoad = () => schedule();
-    flow.addEventListener("load", onLoad, true); // capture: <img> load doesn't bubble
-
-    const settle = setTimeout(recompute, 400);
-
-    return () => {
-      observer.disconnect();
-      flow.removeEventListener("load", onLoad, true);
-      cancelAnimationFrame(raf);
-      clearTimeout(settle);
-    };
-  }, [recompute, threads.length, event.id]);
-
-  // Snap to a thread on demand (e.g. "go to bookmark" while the book is
+  // Snap to a passage on demand (e.g. "go to bookmark" while the book is
   // open). The sticky target keeps re-snapping until the reader turns a page.
   useEffect(() => {
     if (!jumpRequest) return;
     pendingRef.current = { index: jumpRequest.index, type: "target" };
-    recompute();
-  }, [jumpRequest, recompute]);
+    const page = pageOfThread.get(jumpRequest.index);
+    if (page !== undefined) {
+      setSpread(Math.min(Math.floor((page - 1) / 2), spreadCount - 1));
+    }
+  }, [jumpRequest, pageOfThread, spreadCount]);
 
   // `targetIndex` often lands after mount (the page-level bookmark/thread
   // fetch resolves after this component's own gating condition does), so the
@@ -294,72 +275,43 @@ export const BookView: FC<Props> = ({
     )
       return;
     pendingRef.current = { index: targetIndex, type: "target" };
-    recompute();
-  }, [targetIndex, recompute]);
+  }, [targetIndex]);
 
-  // Report the thread the reader is on: the last thread that starts at or
-  // before the current left page (it is the one flowing across this spread).
+  // Report the passage the reader is on: the last one that starts at or before
+  // the left page (it is the one flowing across this spread).
   useEffect(() => {
     if (!onPositionChange) return;
-    const map = threadColsRef.current;
-    if (map.length === 0) return;
+    if (pageOfThread.size === 0) return;
 
-    const leftCol = spread * 2;
-    const rightCol = leftCol + 1;
+    const leftPage = spread * 2 + 1;
+    const rightPage = leftPage + 1;
     let spanning: number | null = null;
     let starting: number | null = null;
-    for (const t of map) {
-      if (t.col < leftCol) spanning = t.index;
-      if (starting == null && t.col >= leftCol && t.col <= rightCol) {
-        starting = t.index;
+    for (const [index, page] of Array.from(pageOfThread.entries()).sort(
+      (a, b) => a[0] - b[0],
+    )) {
+      if (page < leftPage) spanning = index;
+      if (starting === null && page >= leftPage && page <= rightPage) {
+        starting = index;
       }
     }
     onPositionChange(spanning ?? starting ?? startIndex);
-  }, [spread, layoutVersion, startIndex, onPositionChange]);
+  }, [spread, pageOfThread, startIndex, onPositionChange]);
 
+  /**
+   * Turning is pure navigation now: the chapter's page count is known up front,
+   * so a turn just moves the spread and the effect above pulls in whatever
+   * passages the new pages need.
+   */
   const turn = useCallback(
-    async (dir: 1 | -1) => {
-      if (busyRef.current) return;
+    (dir: 1 | -1) => {
       // A manual turn releases the sticky open-at-bookmark snap.
       if (pendingRef.current?.type === "target") pendingRef.current = null;
-
-      if (dir === 1) {
-        if (spread < spreadCount - 1) {
-          setSpread(spread + 1);
-          return;
-        }
-        if (!hasMoreAfter || !onNeedAfter) return;
-        busyRef.current = true;
-        setLoadingEdge("after");
-        pendingRef.current = { fromSpread: spread, type: "advance" };
-        const loaded = await onNeedAfter();
-        if (!loaded) pendingRef.current = null;
-        busyRef.current = false;
-        setLoadingEdge(null);
-      } else {
-        if (spread > 0) {
-          setSpread(spread - 1);
-          return;
-        }
-        if (!hasMoreBefore || !onNeedBefore) return;
-        busyRef.current = true;
-        setLoadingEdge("before");
-        pendingRef.current = { anchorIndex: startIndex, type: "retreat" };
-        const loaded = await onNeedBefore();
-        if (!loaded) pendingRef.current = null;
-        busyRef.current = false;
-        setLoadingEdge(null);
-      }
+      setSpread((current) =>
+        Math.min(Math.max(current + dir, 0), spreadCount - 1),
+      );
     },
-    [
-      spread,
-      spreadCount,
-      hasMoreAfter,
-      hasMoreBefore,
-      onNeedAfter,
-      onNeedBefore,
-      startIndex,
-    ],
+    [spreadCount],
   );
 
   // Arrow-key page turning.
@@ -375,28 +327,21 @@ export const BookView: FC<Props> = ({
     return () => window.removeEventListener("keydown", onKey);
   }, [turn]);
 
-  const atStart = spread <= 0 && !hasMoreBefore;
-  const atEnd = spread >= spreadCount - 1 && !hasMoreAfter;
+  const atStart = spread <= 0;
+  const atEnd = spread >= spreadCount - 1;
   const leftPage = spread * 2 + 1;
   const rightPage = Math.min(leftPage + 1, pageCount);
 
-  const stageW = DESIGN_STAGE_WIDTH * scale;
-  const stageH = DESIGN_STAGE_HEIGHT * scale;
+  const stageW = designWidth * scale;
+  const stageH = designHeight * scale;
 
-  // Ribbon over the page half where the bookmarked passage starts (fresh
-  // after every layout pass — `layoutVersion` re-renders us).
-  const bookmarkCol =
-    bookmarkIndex !== null
-      ? threadColsRef.current.find((t) => t.index === bookmarkIndex)?.col
-      : undefined;
+  const bookmarkPage =
+    bookmarkIndex !== null ? pageOfThread.get(bookmarkIndex) : undefined;
   const bookmarkOnSpread =
-    bookmarkCol !== undefined &&
-    bookmarkCol >= spread * 2 &&
-    bookmarkCol <= spread * 2 + 1;
+    bookmarkPage !== undefined &&
+    (bookmarkPage === leftPage || bookmarkPage === rightPage);
   const ribbonLeft =
-    bookmarkCol !== undefined && bookmarkCol % 2 === 0
-      ? DESIGN_PAD_X + 36
-      : DESIGN_STAGE_WIDTH - DESIGN_PAD_X - 60;
+    bookmarkPage === leftPage ? spec.padX + 36 : designWidth - spec.padX - 60;
 
   const morePrefix = hasMoreBefore ? "…" : "";
   const moreSuffix = hasMoreAfter ? "+" : "";
@@ -409,10 +354,79 @@ export const BookView: FC<Props> = ({
           ? `Page ${morePrefix}${leftPage} of ${pageCount}${moreSuffix}`
           : `Pages ${morePrefix}${leftPage}–${rightPage} of ${pageCount}${moreSuffix}`;
 
+  /**
+   * One half of the spread: the paper, and a window showing the slice of the
+   * chapter that belongs to `pageNumber`. The left half carries the measuring
+   * copy of the flow — its heights are what the packer runs on.
+   */
+  const renderHalf = (pageNumber: number, measuring: boolean) => {
+    const top = packed.pageTops[pageNumber - 1] ?? 0;
+    const beyondEnd = pageNumber > pageCount;
+    // A page whose passages are not fetched yet has nothing to frame; the
+    // effect below is already pulling them in.
+    const unloaded =
+      pageNumber < loadedFirstPage || pageNumber > loadedLastPage;
+    return (
+      <S.BookSheet
+        style={{
+          height: spec.height,
+          padding: `${spec.padY}px ${spec.padX}px`,
+          width: spec.width,
+        }}
+      >
+        <S.BookWindow
+          style={{
+            height: pageH,
+            left: spec.padX,
+            top: spec.padY,
+            width: pageW,
+          }}
+        >
+          {!beyondEnd && (!unloaded || measuring) && (
+            <S.BookWindowInner
+              aria-hidden={!measuring}
+              style={
+                {
+                  "--nw-page-media-max": `${pageH}px`,
+                  fontSize: spec.fontSize,
+                  lineHeight: spec.lineHeight,
+                  // The flow holds only the loaded passages, so it is placed
+                  // where they sit in the chapter, not at zero.
+                  top: flowTop - top,
+                  width: pageW,
+                } as CSSProperties
+              }
+            >
+              <ChapterFlow
+                items={items}
+                packed={packed}
+                event={event}
+                hasThreads={threads.length > 0}
+                pageHeight={pageH}
+                scale={scale || 1}
+                onHeight={measuring ? reportHeight : undefined}
+                bookmarkIndex={bookmarkIndex}
+              />
+            </S.BookWindowInner>
+          )}
+        </S.BookWindow>
+        {!beyondEnd && (
+          <S.BookPageNumber style={{ bottom: spec.padY / 3 }}>
+            {pageNumber}
+          </S.BookPageNumber>
+        )}
+      </S.BookSheet>
+    );
+  };
+
   return (
     <S.BookStage ref={stageRef}>
       <S.Spread
-        style={{ height: stageH || undefined, width: stageW || undefined }}
+        style={{
+          aspectRatio: `${designWidth} / ${designHeight}`,
+          height: stageH || undefined,
+          width: stageW || undefined,
+        }}
       >
         <S.PageEdgeButton
           $side="left"
@@ -423,129 +437,49 @@ export const BookView: FC<Props> = ({
           <IoChevronBack />
         </S.PageEdgeButton>
 
-        <S.ScaledPage
+        <S.BookPages
           style={{
-            height: DESIGN_STAGE_HEIGHT,
+            columnGap: SPINE_GAP,
+            height: designHeight,
             transform: `scale(${scale || 1})`,
             visibility: scale > 0 ? undefined : "hidden",
-            width: DESIGN_STAGE_WIDTH,
+            width: designWidth,
           }}
         >
-          <S.Flow
-            ref={flowRef}
-            $offset={spread * 2 * PITCH}
-            style={{
-              columnGap: `${COLUMN_GAP}px`,
-              columnWidth: `${DESIGN_COL_WIDTH}px`,
-              height: DESIGN_FLOW_HEIGHT,
-              width: DESIGN_FLOW_WIDTH,
-            }}
-          >
-            {startIndex === 0 ? (
-              <>
-                <S.BookTitleBlock>
-                  {event.image && (
-                    <S.BookCoverFrame>
-                      <CoverImage src={event.image} nwImage={event.avatar} />
-                    </S.BookCoverFrame>
-                  )}
-                  <S.EyebrowRule>Chapter</S.EyebrowRule>
-                  <S.BookEventTitle>{event.name}</S.BookEventTitle>
-                  <S.MetaRow>
-                    {event.eventTime && (
-                      <span className="meta">
-                        <BsCalendar2Date size={13} />
-                        {toFormattedDate(event.eventTime)}
-                      </span>
-                    )}
-                    {event.location && (
-                      <span className="meta">
-                        <TfiLocationPin size={13} />
-                        {event.location}
-                      </span>
-                    )}
-                  </S.MetaRow>
-                </S.BookTitleBlock>
+          {renderHalf(leftPage, true)}
+          {renderHalf(leftPage + 1, false)}
+        </S.BookPages>
 
-                <S.BookOvertureBlock>
-                  {overtureAsterism.value !== "none" && (
-                    <S.Asterism $tight $variant={overtureAsterism.lineVariant}>
-                      <span className="glyph">{overtureAsterism.glyph}</span>
-                    </S.Asterism>
-                  )}
-                  <div className="book-overture">
-                    <ShouldRender if={Boolean(event?.description && event?.description.length > 0)}>
-                    <RichTextRenderer
-                      savedText={event.description ?? ""}
-                      disableCollapse
-                    />
-                    </ShouldRender>
-                  </div>
-                </S.BookOvertureBlock>
-              </>
-            ) : (
-              // Mid-story window: a slim continuation header instead of the
-              // full title page (the earlier pages are a turn away).
-              <S.BookTitleBlock>
-                <S.EyebrowRule>Continued</S.EyebrowRule>
-                <S.BookEventTitle as="h2">{event.name}</S.BookEventTitle>
-              </S.BookTitleBlock>
-            )}
+        {/* Soft gutter shadow at the fold. */}
+        <S.Spine />
 
-            {threads.map((thread, i) => (
-              <div
-                key={thread.id ?? startIndex + i}
-                data-thread-index={startIndex + i}
-              >
-                {passageAsterism.value !== "none" && (
-                  <S.Asterism $tight $variant={passageAsterism.lineVariant}>
-                    <span className="glyph">{passageAsterism.glyph}</span>
-                  </S.Asterism>
-                )}
-                <EventThread
-                  thread={thread}
-                  canManage={false}
-                  onEdit={() => {}}
-                  onDelete={() => {}}
-                  variant="book"
-                />
-              </div>
-            ))}
-          </S.Flow>
+        {/* Ribbon marking the page that holds the bookmarked passage. */}
+        {bookmarkOnSpread && <S.BookmarkRibbon style={{ left: ribbonLeft }} />}
 
-          {/* Soft gutter shadow at the fold. */}
-          <S.Spine />
-
-          {/* Ribbon marking the page that holds the bookmarked passage. */}
-          {bookmarkOnSpread && (
-            <S.BookmarkRibbon style={{ left: ribbonLeft }} />
-          )}
-
-          {/* Paper "reveal" curtains: on each turn the flow jumps to the new
-              spread underneath these opaque halves, which then wipe away from
-              the top — left page first, then the right — so the new text fades
-              in rather than the old page ever being seen leaving. Keyed by
-              `spread` so the animation retriggers on every turn. */}
-          <S.PageReveal
-            key={`reveal-left-${spread}`}
-            style={{
-              height: DESIGN_STAGE_HEIGHT,
-              left: 0,
-              top: 0,
-              width: DESIGN_HALF_WIDTH,
-            }}
-          />
-          <S.PageReveal
-            key={`reveal-right-${spread}`}
-            $delayed
-            style={{
-              height: DESIGN_STAGE_HEIGHT,
-              left: DESIGN_HALF_WIDTH,
-              top: 0,
-              width: DESIGN_HALF_WIDTH,
-            }}
-          />
-        </S.ScaledPage>
+        {/* Paper "reveal" curtains: on each turn the pages swap underneath
+            these opaque halves, which then wipe away from the top — left page
+            first, then the right — so the new text fades in rather than the old
+            page ever being seen leaving. Keyed by `spread` so the animation
+            retriggers on every turn. */}
+        <S.PageReveal
+          key={`reveal-left-${spread}`}
+          style={{
+            height: designHeight * (scale || 1),
+            left: 0,
+            top: 0,
+            width: (designWidth / 2) * (scale || 1),
+          }}
+        />
+        <S.PageReveal
+          key={`reveal-right-${spread}`}
+          $delayed
+          style={{
+            height: designHeight * (scale || 1),
+            left: (designWidth / 2) * (scale || 1),
+            top: 0,
+            width: (designWidth / 2) * (scale || 1),
+          }}
+        />
 
         {/* Fore-edge page blocks: a visual cue that more pages wait on that
             side — hidden at the very first/last page. */}

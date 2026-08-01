@@ -2,28 +2,34 @@
 import classNames from "classnames";
 import { useParams, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BsCalendar2Date } from "react-icons/bs";
 import { FaBookmark, FaPlus } from "react-icons/fa6";
 import { FiShare2 } from "react-icons/fi";
 import { IoArrowBackOutline } from "react-icons/io5";
-import { LuBookmarkPlus, LuBookOpen, LuScrollText } from "react-icons/lu";
-import { TfiLocationPin } from "react-icons/tfi";
-import { resolveAsterismStyle } from "@/components/asterism-styles";
+import {
+  LuBookmarkPlus,
+  LuBookOpen,
+  LuFileText,
+  LuVolume2,
+  LuVolumeX,
+  LuWaves,
+} from "react-icons/lu";
 import {
   BookmarkFAB,
-  CoverImage,
   ScrollJumpButton,
   SideControlsToggle,
 } from "@/components/common";
 import { AppAlertDialog } from "@/components/dialog";
 import EventThreadInput from "@/components/event-thread-input";
 import { ProfileSongPlayer } from "@/components/profile-song";
-import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
 import { ShareChapterDialog } from "@/components/share-chapter-dialog";
+import { StorySoundscapeBoard } from "@/components/story-soundscape";
+import * as SS from "@/components/story-soundscape/styles";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext, useWindowDimensions } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { useSoundscape } from "@/lib/soundscape";
 import type {
+  SoundCue,
   StoryBoard,
   StoryBoardEvent,
   StoryBoardEventThread,
@@ -31,10 +37,10 @@ import type {
 } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
-import { toFormattedDate } from "@/utils/helpers";
 import {
   deleteStoryBoardEventThreadAction,
   deleteStoryboardEventBookmarkAction,
+  getChapterSoundscapeAction,
   getStoryboardAction,
   getStoryboardEventAction,
   getStoryboardEventBookmarkAction,
@@ -42,9 +48,8 @@ import {
   saveStoryboardEventBookmarkAction,
 } from "../../actions";
 import { BookView } from "./book-view";
-import { EventThread } from "./event-thread";
+import { PaginatedChapterView } from "./paginated-chapter-view";
 import * as S from "./styles";
-import { ShouldRender } from "@novelist-world/ui";
 
 /** Book mode is a desktop-only affordance — it needs the room for two pages. */
 const BOOK_MODE_MIN_WIDTH = 1000;
@@ -52,6 +57,10 @@ const BOOK_MODE_MIN_WIDTH = 1000;
 /** Threads are fetched in page-aligned chunks of this size. */
 const THREADS_PAGE_SIZE = 10;
 
+/**
+ * "scroll" is the paged reader — a scrolling stack of manuscript pages, with
+ * the composer live on the last one. "book" is the two-page desktop spread.
+ */
 type ReadingMode = "scroll" | "book";
 
 const isThreadPage = (value: unknown): value is StoryBoardEventThreadPage =>
@@ -97,6 +106,14 @@ export default function StoryboardEventPage({}) {
   const [threadToDelete, setThreadToDelete] =
     useState<StoryBoardEventThread | null>(null);
   const [mode, setMode] = useState<ReadingMode>("scroll");
+  /** The chapter's audio cues, and whether the cue board is open. */
+  const [soundCues, setSoundCues] = useState<SoundCue[]>([]);
+  const [soundBoardOpen, setSoundBoardOpen] = useState(false);
+  /**
+   * The passage the reader is on, as state rather than only a ref: the
+   * soundscape engine has to re-evaluate whenever it changes.
+   */
+  const [currentPassage, setCurrentPassage] = useState(0);
   const [showShareDialog, setShowShareDialog] = useState(false);
   // Window size is only known on the client; gate window-dependent UI behind a
   // mount flag so the server and first client render agree (no hydration skew).
@@ -131,8 +148,10 @@ export default function StoryboardEventPage({}) {
       storyboard.members.some((member) => member.username === user.username));
 
   const canUseBook = mounted && (winW ?? 0) >= BOOK_MODE_MIN_WIDTH;
-  // Never leave the reader stuck in a mode the viewport can't show.
-  const effectiveMode: ReadingMode = canUseBook ? mode : "scroll";
+  // Never leave the reader stuck in a mode the viewport can't show. The paged
+  // reader scales to any width, so only the two-page book is gated.
+  const effectiveMode: ReadingMode =
+    mode === "book" && !canUseBook ? "scroll" : mode;
 
   // Book mode needs the full width — hide the shared layout's LeftNav/
   // RightSidebar while it's active, restore them on mode change/unmount.
@@ -144,13 +163,6 @@ export default function StoryboardEventPage({}) {
   const loadedEnd = windowStart + storyboardEventThreads.length;
   const hasOlder = windowStart > 0;
   const hasNewer = totalCount !== null && loadedEnd < totalCount;
-
-  const overtureAsterism = resolveAsterismStyle(
-    storyboardEvent?.overtureAsterism,
-  );
-  const passageAsterism = resolveAsterismStyle(
-    storyboardEvent?.passageAsterism,
-  );
 
   const onBackClick = () => {
     if (!storyboardEvent?.storyBoardId) return;
@@ -228,6 +240,7 @@ export default function StoryboardEventPage({}) {
           : null;
       if (resolved !== null) {
         currentIndexRef.current = resolved;
+        setCurrentPassage(resolved);
         setScrollTarget(resolved);
         setBookTarget(resolved);
       }
@@ -406,12 +419,6 @@ export default function StoryboardEventPage({}) {
     scrollToBottom();
   }, [storyboardEventThreads, scrollTarget, effectiveMode, scrollToBottom]);
 
-  // Picking a passage to edit populates the composer at the foot of the
-  // reader; scroll to the bottom so it and its input come into view.
-  useEffect(() => {
-    if (editingThread && effectiveMode === "scroll") scrollToBottom();
-  }, [editingThread, effectiveMode, scrollToBottom]);
-
   // Scroll reader: track the topmost visible passage as the reading position.
   useEffect(() => {
     if (effectiveMode !== "scroll") return;
@@ -427,7 +434,9 @@ export default function StoryboardEventPage({}) {
           else visible.delete(index);
         }
         if (visible.size > 0) {
-          currentIndexRef.current = Math.min(...visible);
+          const next = Math.min(...visible);
+          currentIndexRef.current = next;
+          setCurrentPassage(next);
         }
       },
       { rootMargin: "-80px 0px -35% 0px" },
@@ -463,8 +472,27 @@ export default function StoryboardEventPage({}) {
     };
   }, [effectiveMode, storyboardEventThreads, mounted]);
 
+  // A chapter's cues are small and everyone who can read the chapter can hear
+  // them, so they load with it rather than behind the enable toggle.
+  const loadSoundscape = useCallback(async () => {
+    const result = await getChapterSoundscapeAction(storyboardEventId);
+    if (!result || "message" in result) return;
+    setSoundCues(result.cues);
+  }, [storyboardEventId]);
+
+  useEffect(() => {
+    if (authState === "LOADING") return;
+    loadSoundscape();
+  }, [authState, loadSoundscape]);
+
+  const soundscape = useSoundscape({
+    cues: soundCues,
+    position: currentPassage,
+  });
+
   const handleBookPosition = useCallback((threadIndex: number) => {
     currentIndexRef.current = threadIndex;
+    setCurrentPassage(threadIndex);
   }, []);
 
   const switchMode = (next: ReadingMode) => {
@@ -472,7 +500,12 @@ export default function StoryboardEventPage({}) {
     // Hand the current position to book mode so it opens on the right
     // spread. Coming back to scroll mode intentionally does NOT jump the
     // page's scroll position to match — it just stays where it already is.
-    if (next === "book") setBookTarget(currentIndexRef.current);
+    if (next === "book") {
+      setBookTarget(currentIndexRef.current);
+      // The book is read-only; abandon an in-place edit rather than carry
+      // its editor into a view that cannot show it.
+      setEditingThread(null);
+    }
     setMode(next);
   };
 
@@ -537,6 +570,7 @@ export default function StoryboardEventPage({}) {
     const inWindow = bookmarkIndex >= windowStart && bookmarkIndex < loadedEnd;
     if (inWindow) {
       currentIndexRef.current = bookmarkIndex;
+      setCurrentPassage(bookmarkIndex);
       setScrollTarget(bookmarkIndex);
     } else {
       await jumpToIndex(bookmarkIndex);
@@ -567,8 +601,42 @@ export default function StoryboardEventPage({}) {
     else threadElsRef.current.delete(index);
   };
 
-  const showComposer =
-    authState === "LOGGED_IN" && isMember && effectiveMode === "scroll";
+  const canCompose = authState === "LOGGED_IN" && isMember;
+  const showComposer = canCompose && effectiveMode === "scroll";
+
+  /** The end-of-chapter composer — sits on the last page as its final item,
+   *  where new writing grows the page exactly like a Word document. */
+  const composerNode = (
+    <EventThreadInput
+      key="new-thread"
+      variant="inline"
+      editorPlaceholder="Continue the story… @ to mention novelists or muses"
+      storyBoardEventId={storyboardEventId}
+      onSend={() => {
+        // Scroll to the bottom afterwards so the saved passage and the
+        // composer beneath it both come into view.
+        pendingScrollBottomRef.current = true;
+        jumpToIndex(null, true);
+      }}
+    />
+  );
+
+  /** The in-place editor for the passage being edited. Mounted once, on the
+   *  page the passage lives on — the page reflows around it as it grows. */
+  const inlineEditorNode = editingThread ? (
+    <EventThreadInput
+      key={editingThread.id}
+      variant="inline"
+      storyBoardEventId={storyboardEventId}
+      initialThread={editingThread}
+      onSend={() => {
+        setEditingThread(null);
+        // The passage re-renders in place; the reader stays where they are.
+        refreshWindow();
+      }}
+      onCancel={() => setEditingThread(null)}
+    />
+  ) : null;
 
   return (
     <S.ParentContainer className={classNames([accent, theme])}>
@@ -627,9 +695,10 @@ export default function StoryboardEventPage({}) {
               aria-selected={effectiveMode === "scroll"}
               $active={effectiveMode === "scroll"}
               onClick={() => switchMode("scroll")}
+              title="Manuscript pages — scroll through them, write on the last"
             >
-              <LuScrollText />
-              Scroll
+              <LuFileText />
+              Pages
             </S.ModeButton>
             <S.ModeButton
               type="button"
@@ -643,6 +712,43 @@ export default function StoryboardEventPage({}) {
             </S.ModeButton>
           </S.ModeToggle>
         )}
+        {/* Browsers block audio before a gesture, so the soundscape only ever
+            starts from this tap — which is also the master mute. */}
+        {soundCues.length > 0 && (
+          <SS.EnableButton
+            type="button"
+            $on={soundscape.enabled}
+            onClick={soundscape.toggle}
+            aria-pressed={soundscape.enabled}
+            title={
+              soundscape.enabled
+                ? "Mute this chapter's soundscape"
+                : "Play this chapter's soundscape"
+            }
+          >
+            {soundscape.enabled ? (
+              <LuVolume2 size={15} />
+            ) : (
+              <LuVolumeX size={15} />
+            )}
+            Sound
+            {soundscape.activeCount > 0 && (
+              <span className="badge">{soundscape.activeCount}</span>
+            )}
+          </SS.EnableButton>
+        )}
+
+        {authState === "LOGGED_IN" && isMember && (
+          <S.BookmarkButton
+            $accent={soundBoardOpen}
+            onClick={() => setSoundBoardOpen((open) => !open)}
+            aria-label="Edit this chapter's soundscape"
+            title="Edit this chapter's soundscape"
+          >
+            <LuWaves size={17} />
+          </S.BookmarkButton>
+        )}
+
         <S.BookmarkButton
           onClick={() => setShowShareDialog(true)}
           aria-label="Share this chapter"
@@ -651,6 +757,20 @@ export default function StoryboardEventPage({}) {
           <FiShare2 size={17} />
         </S.BookmarkButton>
       </S.TopBar>
+
+      {/* Cue editor — members only, and only while they ask for it. */}
+      {soundBoardOpen && authState === "LOGGED_IN" && isMember && (
+        <S.ChapterSong>
+          <StorySoundscapeBoard
+            storyboardEventId={storyboardEventId}
+            cues={soundCues}
+            passageCount={totalCount ?? storyboardEventThreads.length}
+            currentPassage={currentPassage}
+            canEdit={isMember}
+            onCuesChanged={setSoundCues}
+          />
+        </S.ChapterSong>
+      )}
 
       {storyboardEvent?.song && (
         <S.ChapterSong>
@@ -670,6 +790,7 @@ export default function StoryboardEventPage({}) {
       {effectiveMode === "book" && storyboardEvent ? (
         <BookView
           event={storyboardEvent}
+          pageFormat={storyboard?.pageFormat}
           threads={storyboardEventThreads}
           startIndex={windowStart}
           totalThreads={totalCount ?? storyboardEventThreads.length}
@@ -682,151 +803,33 @@ export default function StoryboardEventPage({}) {
           onPositionChange={handleBookPosition}
         />
       ) : (
-        <S.Book>
-          {/* Title page */}
-          <S.TitlePage>
-            {storyboardEvent?.image && (
-              <S.CoverFrame>
-                <CoverImage
-                  src={storyboardEvent.image}
-                  nwImage={storyboardEvent.avatar}
-                />
-              </S.CoverFrame>
-            )}
-            <S.EyebrowRule>Chapter</S.EyebrowRule>
-            <S.EventTitle>{storyboardEvent?.name}</S.EventTitle>
-            <S.MetaRow>
-              {storyboardEvent?.eventTime && (
-                <span className="meta">
-                  <BsCalendar2Date size={13} />
-                  {toFormattedDate(storyboardEvent.eventTime)}
-                </span>
-              )}
-              {storyboardEvent?.location && (
-                <span className="meta">
-                  <TfiLocationPin size={13} />
-                  {storyboardEvent.location}
-                </span>
-              )}
-            </S.MetaRow>
-          </S.TitlePage>
-
-          {/* Opening narration */}
-          {overtureAsterism.value !== "none" && (
-            <S.Asterism $variant={overtureAsterism.lineVariant}>
-              <span className="glyph">{overtureAsterism.glyph}</span>
-            </S.Asterism>
-          )}
-          <S.Overture>
-            <ShouldRender if={Boolean(storyboardEvent?.description && storyboardEvent?.description.length > 0)}>
-            <RichTextRenderer
-              savedText={storyboardEvent?.description ?? ""}
-              disableCollapse
-            />
-            </ShouldRender>
-          </S.Overture>
-
-          {/* Passages — one seamless flow of the story */}
-          <S.ThreadFlow>
-            {hasOlder && (
-              <S.LoadMoreButton
-                type="button"
-                onClick={loadOlder}
-                disabled={loadingOlder}
-              >
-                {loadingOlder ? "Turning back…" : "Read earlier passages"}
-              </S.LoadMoreButton>
-            )}
-            {storyboardEventThreads.length === 0 ? (
-              <S.EmptyPassages>
-                The story waits for its first words…
-              </S.EmptyPassages>
-            ) : (
-              storyboardEventThreads.map((thread, i) => (
-                <div
-                  key={thread.id ?? windowStart + i}
-                  ref={registerThreadEl(windowStart + i)}
-                  data-thread-index={windowStart + i}
-                >
-                  {passageAsterism.value !== "none" && (
-                    <S.Asterism $tight $variant={passageAsterism.lineVariant}>
-                      <span className="glyph">{passageAsterism.glyph}</span>
-                    </S.Asterism>
-                  )}
-                  {authState === "LOGGED_IN" && (
-                    <S.PassageBookmarkToggle
-                      type="button"
-                      $active={bookmarkIndex === windowStart + i}
-                      onClick={() =>
-                        handleTogglePassageBookmark(windowStart + i)
-                      }
-                      aria-label={
-                        bookmarkIndex === windowStart + i
-                          ? "Remove bookmark from this passage"
-                          : "Bookmark this passage"
-                      }
-                      title={
-                        bookmarkIndex === windowStart + i
-                          ? "Remove bookmark from this passage"
-                          : "Bookmark this passage"
-                      }
-                    >
-                      <FaBookmark />
-                      {bookmarkIndex === windowStart + i
-                        ? "Bookmarked"
-                        : "Bookmark"}
-                    </S.PassageBookmarkToggle>
-                  )}
-                  <EventThread
-                    thread={thread}
-                    canManage={isMember}
-                    onEdit={(t) => setEditingThread(t)}
-                    onDelete={(t) => setThreadToDelete(t)}
-                  />
-                </div>
-              ))
-            )}
-            {hasNewer && (
-              <S.LoadMoreButton
-                type="button"
-                onClick={loadNewer}
-                disabled={loadingNewer}
-              >
-                {loadingNewer ? "Turning the page…" : "Read on"}
-              </S.LoadMoreButton>
-            )}
-          </S.ThreadFlow>
-        </S.Book>
-      )}
-
-      {showComposer && (
-        <S.ComposerWrap>
-          <div className="separator" />
-          <S.ComposerHint>Add to the story</S.ComposerHint>
-          {editingThread && (
-            <S.EditingBanner>
-              <span>Editing a passage</span>
-              <button type="button" onClick={() => setEditingThread(null)}>
-                Cancel
-              </button>
-            </S.EditingBanner>
-          )}
-          <EventThreadInput
-            key={editingThread?.id ?? "new-thread"}
-            storyBoardEventId={storyboardEventId}
-            initialThread={editingThread}
-            onSend={() => {
-              const wasEditing = Boolean(editingThread);
-              setEditingThread(null);
-              // Either way, scroll to the bottom afterwards so the saved
-              // passage and the composer are both in view. An edit refreshes
-              // in place; a new passage joins at the end.
-              pendingScrollBottomRef.current = true;
-              if (wasEditing) refreshWindow();
-              else jumpToIndex(null, true);
-            }}
+        storyboardEvent && (
+          <PaginatedChapterView
+            event={storyboardEvent}
+            pageFormat={storyboard?.pageFormat}
+            threads={storyboardEventThreads}
+            startIndex={windowStart}
+            totalThreads={totalCount ?? storyboardEventThreads.length}
+            canManage={isMember}
+            isLoggedIn={authState === "LOGGED_IN"}
+            bookmarkIndex={bookmarkIndex}
+            editingThreadId={editingThread?.id ?? null}
+            editor={inlineEditorNode}
+            onEdit={(t) => setEditingThread(t)}
+            onDelete={(t) => setThreadToDelete(t)}
+            onToggleBookmark={handleTogglePassageBookmark}
+            registerThreadEl={registerThreadEl}
+            hasOlder={hasOlder}
+            hasNewer={hasNewer}
+            loadingOlder={loadingOlder}
+            loadingNewer={loadingNewer}
+            onNeedBefore={loadOlder}
+            onNeedAfter={loadNewer}
+            // One write surface at a time: the composer yields while a
+            // passage is being edited in place.
+            composer={showComposer && !editingThread ? composerNode : undefined}
           />
-        </S.ComposerWrap>
+        )
       )}
 
       {effectiveMode === "scroll" && (

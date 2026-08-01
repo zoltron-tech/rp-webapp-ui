@@ -25,11 +25,14 @@ type Props = {
   editorRef: RefObject<RichTextEditorHandle | null>;
   /** Initial rich text HTML (used when editing an existing thread). */
   initialValue?: string;
+  /** Editor placeholder override (the inline page composer uses its own). */
+  placeholder?: string;
 };
 
 export const EventThreadTextField: FC<Props> = ({
   editorRef,
   initialValue,
+  placeholder,
 }) => {
   const novelist = useGlobalState("novelist");
   const setPromptInputState = useEventThreadInputStoreSet();
@@ -187,7 +190,10 @@ export const EventThreadTextField: FC<Props> = ({
     <S.TextInputContainer name="promptText">
       <RichTextEditor
         ref={editorRef}
-        placeholder="Type your story here... @ to mention other novelists or muses"
+        placeholder={
+          placeholder ??
+          "Type your story here... @ to mention other novelists or muses"
+        }
         value={initialValue ?? ""}
         mentionTabs={MENTION_TABS}
         dialogMuses={dialogMuses}

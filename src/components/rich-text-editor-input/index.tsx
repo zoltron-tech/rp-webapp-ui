@@ -26,6 +26,7 @@ import {
   RiMarkPenLine,
   RiUnderline,
 } from "react-icons/ri";
+import { TbFloatLeft, TbFloatNone, TbFloatRight } from "react-icons/tb";
 import { useGlobalState } from "@/context/store/stores";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import type { MentionDataItem, MentionTab } from "@/types";
@@ -50,15 +51,18 @@ import {
   BULLET_POINT_CATEGORIES,
   DEFAULT_FONT,
   DEFAULT_FONT_SIZE,
+  DEFAULT_IMAGE_WRAP,
   DEFAULT_ORDERED_LIST_STYLE,
   DEFAULT_UNORDERED_LIST_STYLE,
   FONT_SIZES,
   FONTS,
   FORMAT_BUTTONS,
   HIGHLIGHT_COLORS,
+  type ImageWrap,
   LIST_BUTTONS,
   ORDERED_LIST_STYLES,
   QUOTATION_MARK_CATEGORIES,
+  toImageWrap,
   UNORDERED_LIST_STYLES,
 } from "./editor-config";
 import { createMentionChip } from "./mention-chip";
@@ -95,6 +99,17 @@ export interface RichTextEditorHandle {
 }
 
 type ActiveStyles = Record<string, boolean>;
+
+/**
+ * The wrapper's on-screen scale. The editor can sit inside a scaled
+ * manuscript page (`transform: scale(...)`), where client rects come back in
+ * visual pixels while absolutely-positioned overlays lay out in the wrapper's
+ * own (unscaled) pixels — rect deltas must be divided by this to convert.
+ */
+const wrapperScale = (wrapper: HTMLElement, wrapperRect: DOMRect) => ({
+  x: wrapper.offsetWidth ? wrapperRect.width / wrapper.offsetWidth : 1,
+  y: wrapper.offsetHeight ? wrapperRect.height / wrapper.offsetHeight : 1,
+});
 
 export const RichTextEditor = forwardRef<
   RichTextEditorHandle,
@@ -217,6 +232,10 @@ export const RichTextEditor = forwardRef<
     const [imageAlign, setImageAlign] = useState<"left" | "center" | "right">(
       "left",
     );
+    /** How prose flows around the selected image (Word's "Wrap Text"). */
+    const [imageWrap, setImageWrap] = useState<ImageWrap>(DEFAULT_IMAGE_WRAP);
+    const [imageAlt, setImageAlt] = useState("");
+    const [showImageAlt, setShowImageAlt] = useState(false);
     const [imageResizeBarPos, setImageResizeBarPos] = useState<{
       top: number;
       left: number;
@@ -1120,13 +1139,25 @@ export const RichTextEditor = forwardRef<
           tempRange.setEnd(textNode, lastAtIndex + 1);
           const rect = tempRange.getBoundingClientRect();
           const DROPDOWN_MAX_WIDTH = 320;
-          setMentionPosition({
-            bottom: window.innerHeight - rect.top + 8,
-            left: Math.max(
-              8,
-              Math.min(rect.left, window.innerWidth - DROPDOWN_MAX_WIDTH - 8),
-            ),
-          });
+          // Anchored to the editor wrapper, not the viewport: `fixed` breaks
+          // inside a scaled manuscript page (a transformed ancestor becomes
+          // the containing block), so the dropdown lays out in wrapper pixels.
+          const wrapper = editorRef.current?.parentElement;
+          if (wrapper) {
+            const wrapperRect = wrapper.getBoundingClientRect();
+            const { x: sx, y: sy } = wrapperScale(wrapper, wrapperRect);
+            setMentionPosition({
+              bottom:
+                wrapper.offsetHeight - (rect.top - wrapperRect.top) / sy + 8,
+              left: Math.max(
+                8,
+                Math.min(
+                  (rect.left - wrapperRect.left) / sx,
+                  wrapper.clientWidth - DROPDOWN_MAX_WIDTH - 8,
+                ),
+              ),
+            });
+          }
 
           setShowMentionPopover(true);
           setFocusedItemIndex(0);
@@ -1192,19 +1223,25 @@ export const RichTextEditor = forwardRef<
       pct = Math.max(10, Math.min(100, pct));
       setSelectedImage(img);
       setImageResizePct(pct);
-      const imageBlock = img.closest(".inline-image-container")
-        ?.parentElement as HTMLElement | null;
+      const container = img.closest(
+        ".inline-image-container",
+      ) as HTMLElement | null;
+      const imageBlock = container?.parentElement as HTMLElement | null;
       const raw = imageBlock?.style.textAlign;
       const align =
         raw === "left" || raw === "center" || raw === "right" ? raw : "left";
       setImageAlign(align);
-      const wrapperRect =
-        editorRef.current?.parentElement?.getBoundingClientRect();
+      setImageWrap(toImageWrap(container?.getAttribute("data-wrap")));
+      setImageAlt(img.getAttribute("alt") ?? "");
+      setShowImageAlt(false);
+      const wrapper = editorRef.current?.parentElement;
       const imgRect = img.getBoundingClientRect();
-      if (wrapperRect) {
+      if (wrapper) {
+        const wrapperRect = wrapper.getBoundingClientRect();
+        const { y: sy } = wrapperScale(wrapper, wrapperRect);
         setImageResizeBarPos({
           left: 0,
-          top: imgRect.top - wrapperRect.top - 6,
+          top: (imgRect.top - wrapperRect.top) / sy - 6,
         });
       }
     }, []);
@@ -1250,6 +1287,9 @@ export const RichTextEditor = forwardRef<
           : "inline-image-container";
         imgContainer.contentEditable = "false";
         imgContainer.style.width = `${defaultPct}%`;
+        // New images start in the historical full-width flow; the author opts
+        // into text wrap from the image toolbar.
+        imgContainer.setAttribute("data-wrap", DEFAULT_IMAGE_WRAP);
         imgContainer.appendChild(img);
 
         // Place image in its own block after the current block
@@ -1325,16 +1365,17 @@ export const RichTextEditor = forwardRef<
       const wrapper = editorRef.current?.parentElement;
       if (!wrapper) return;
       const wrapperRect = wrapper.getBoundingClientRect();
+      const { x: sx, y: sy } = wrapperScale(wrapper, wrapperRect);
       const rect = embed.getBoundingClientRect();
       const bar = dialogBarRef.current;
       const barH = bar?.offsetHeight ?? 40;
       const barW = bar?.offsetWidth ?? 240;
       const gap = 6;
 
-      let top = rect.top - wrapperRect.top - barH - gap;
-      if (top < 2) top = rect.bottom - wrapperRect.top + gap; // flip below
+      let top = (rect.top - wrapperRect.top) / sy - barH - gap;
+      if (top < 2) top = (rect.bottom - wrapperRect.top) / sy + gap; // flip below
 
-      let left = rect.left - wrapperRect.left;
+      let left = (rect.left - wrapperRect.left) / sx;
       const maxLeft = wrapper.clientWidth - barW - 4;
       left = Math.max(4, Math.min(left, Math.max(4, maxLeft)));
 
@@ -1345,10 +1386,10 @@ export const RichTextEditor = forwardRef<
       if (avatar) {
         const aRect = avatar.getBoundingClientRect();
         setDialogAvatarRect({
-          height: aRect.height,
-          left: aRect.left - wrapperRect.left,
-          top: aRect.top - wrapperRect.top,
-          width: aRect.width,
+          height: aRect.height / sy,
+          left: (aRect.left - wrapperRect.left) / sx,
+          top: (aRect.top - wrapperRect.top) / sy,
+          width: aRect.width / sx,
         });
       } else {
         setDialogAvatarRect(null);
@@ -1655,6 +1696,53 @@ export const RichTextEditor = forwardRef<
         }
       },
       [selectedImage, onChange],
+    );
+
+    /** Commits the editor's current HTML after a direct DOM mutation. */
+    const flushEditorContent = useCallback(() => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      const content = editor.innerHTML;
+      if (content && content.trim() !== "" && content !== "<br>") {
+        onChange(content);
+      }
+    }, [onChange]);
+
+    /**
+     * Wrap mode for the selected image. `full` keeps the image in the block
+     * flow (where its block's text-align still applies); the inline modes
+     * float it so following paragraphs run alongside — the float is cleared
+     * by the passage container, so it never bleeds into the next passage.
+     */
+    const handleImageWrapChange = useCallback(
+      (wrap: ImageWrap) => {
+        if (!selectedImage) return;
+        const container = selectedImage.closest(
+          ".inline-image-container",
+        ) as HTMLElement | null;
+        if (!container) return;
+        container.setAttribute("data-wrap", wrap);
+        // A floated image ignores its block's text-align; drop the stale
+        // alignment so switching back to `full` doesn't restore a surprise.
+        if (wrap !== "full") {
+          const imageBlock = container.parentElement as HTMLElement | null;
+          if (imageBlock) imageBlock.style.textAlign = "";
+          setImageAlign("left");
+        }
+        setImageWrap(wrap);
+        flushEditorContent();
+      },
+      [selectedImage, flushEditorContent],
+    );
+
+    const handleImageAltChange = useCallback(
+      (alt: string) => {
+        setImageAlt(alt);
+        if (!selectedImage) return;
+        selectedImage.setAttribute("alt", alt);
+        flushEditorContent();
+      },
+      [selectedImage, flushEditorContent],
     );
 
     const handleImageResizeChange = useCallback(
@@ -1993,6 +2081,14 @@ export const RichTextEditor = forwardRef<
       if (!selectedImage) return;
       const handleOutside = (e: MouseEvent) => {
         const t = e.target as Node;
+        // The alt-text popover is portalled out of the bar — typing in it
+        // must not count as clicking away from the image.
+        if (
+          t instanceof Element &&
+          t.closest("[data-radix-popper-content-wrapper]")
+        ) {
+          return;
+        }
         if (
           !editorRef.current?.contains(t) &&
           !imageResizeBarRef.current?.contains(t)
@@ -2072,12 +2168,10 @@ export const RichTextEditor = forwardRef<
       if (!designPreview) return;
       const editor = editorRef.current;
       if (!editor) return;
-      editor
-        .querySelectorAll<HTMLElement>(".dialog-embed")
-        .forEach((embed) => {
-          if (embed.getAttribute("data-selected") === "true") return;
-          renderEmbedDesign(embed);
-        });
+      editor.querySelectorAll<HTMLElement>(".dialog-embed").forEach((embed) => {
+        if (embed.getAttribute("data-selected") === "true") return;
+        renderEmbedDesign(embed);
+      });
     }, [designPreview, dialogDesign, dialogMuseAttrs, renderEmbedDesign]);
 
     // Scroll selected bullet into view when dropdown opens
@@ -2651,6 +2745,7 @@ export const RichTextEditor = forwardRef<
               style={{
                 bottom: mentionPosition.bottom,
                 left: mentionPosition.left,
+                position: "absolute",
                 top: "auto",
               }}
             />
@@ -2663,7 +2758,98 @@ export const RichTextEditor = forwardRef<
                 top: imageResizeBarPos.top,
               }}
             >
+              {/* Wrap mode — how the prose flows around the image. */}
               <S.ImagePositionBar>
+                <S.ImageWrapLabel>Wrap</S.ImageWrapLabel>
+                <S.ImageAlignButton
+                  type="button"
+                  $active={imageWrap === "full"}
+                  title="Full width — text above and below"
+                  aria-label="Full width — text above and below"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleImageWrapChange("full");
+                  }}
+                >
+                  <TbFloatNone size={15} />
+                </S.ImageAlignButton>
+                <S.ImageAlignButton
+                  type="button"
+                  $active={imageWrap === "inline-left"}
+                  title="Wrap text — image on the left"
+                  aria-label="Wrap text — image on the left"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleImageWrapChange("inline-left");
+                  }}
+                >
+                  <TbFloatLeft size={15} />
+                </S.ImageAlignButton>
+                <S.ImageAlignButton
+                  type="button"
+                  $active={imageWrap === "inline-right"}
+                  title="Wrap text — image on the right"
+                  aria-label="Wrap text — image on the right"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleImageWrapChange("inline-right");
+                  }}
+                >
+                  <TbFloatRight size={15} />
+                </S.ImageAlignButton>
+
+                <S.ImageBarDivider />
+
+                {/* Alt text — described to screen readers and shown if the
+                    image fails to load. */}
+                <Popover.Root
+                  open={showImageAlt}
+                  onOpenChange={setShowImageAlt}
+                >
+                  <Popover.Trigger asChild>
+                    <S.ImageAltButton
+                      type="button"
+                      $active={imageAlt.trim().length > 0}
+                      title="Alt text"
+                      aria-label="Edit alt text"
+                      onMouseDown={(e) => e.preventDefault()}
+                    >
+                      ALT
+                    </S.ImageAltButton>
+                  </Popover.Trigger>
+                  <Popover.Portal>
+                    <S.DropdownPopoverContent
+                      side="bottom"
+                      align="end"
+                      sideOffset={6}
+                      collisionPadding={8}
+                      className={classNames("select-content", theme, accent)}
+                      style={{ padding: "0.5rem", width: "15rem" }}
+                    >
+                      <S.ImageAltInput
+                        value={imageAlt}
+                        placeholder="Describe this image"
+                        onChange={(e) => handleImageAltChange(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            setShowImageAlt(false);
+                          }
+                        }}
+                      />
+                    </S.DropdownPopoverContent>
+                  </Popover.Portal>
+                </Popover.Root>
+              </S.ImagePositionBar>
+
+              {/* Block alignment — only meaningful while the image sits in the
+                  block flow; a floated image is positioned by its wrap side. */}
+              <S.ImagePositionBar
+                style={{ display: imageWrap === "full" ? undefined : "none" }}
+              >
                 <S.ImageAlignButton
                   type="button"
                   $active={imageAlign === "left"}

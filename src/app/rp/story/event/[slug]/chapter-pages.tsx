@@ -55,6 +55,11 @@ import * as S from "./styles";
 /** Height key for the composer, which is measured but never packed. */
 export const COMPOSER_KEY = "__composer";
 
+/** Height key for the in-place editor. Measured (so the passage's slot can be
+ *  held open at the editor's size) but never packed, and never reported: it is
+ *  the chrome around a passage, not the passage. */
+export const EDITOR_KEY = "__editor";
+
 /** Height key for the chapter's title/overture block (mirrors the backend). */
 export const OVERTURE_KEY = "overture";
 
@@ -450,7 +455,7 @@ export const useChapterPages = ({
     if (!canReport || !layout) return;
     const fresh: Record<string, number> = {};
     for (const [key, value] of Object.entries(measured)) {
-      if (key === COMPOSER_KEY) continue;
+      if (key === COMPOSER_KEY || key === EDITOR_KEY) continue;
       if (storedRef.current[key] !== value) fresh[key] = value;
     }
     if (Object.keys(fresh).length === 0) return;
@@ -715,6 +720,22 @@ type ChapterFlowProps = {
   editingThreadId?: string | null;
   /** Current measured height of the inline editor (the spacer's height). */
   editingHoleHeight?: number;
+  /**
+   * The editor itself, for a reader that renders the flow whole (the
+   * manuscript). It takes the edited passage's slot instead of a spacer, so
+   * there is nothing to keep in sync — it is measured under the passage's own
+   * key and everything below it reflows as it grows.
+   */
+  editorNode?: ReactNode;
+  /**
+   * The blank tail under the last item on a page. A reader that frames pages
+   * needs it — it is what puts the next page's first line in the same place
+   * everywhere. A reader that shows the flow unbroken drops it: there is no
+   * page edge there to fill.
+   */
+  showLeftover?: boolean;
+  /** Hands each passage's element out, for scroll jumps and position tracking. */
+  registerThreadEl?: (index: number) => (el: HTMLDivElement | null) => void;
   onEdit?: (thread: StoryBoardEventThread) => void;
   onDelete?: (thread: StoryBoardEventThread) => void;
   onToggleBookmark?: (threadIndex: number) => void;
@@ -743,6 +764,9 @@ export const ChapterFlow: FC<ChapterFlowProps> = ({
   bookmarkIndex = null,
   editingThreadId = null,
   editingHoleHeight = 0,
+  editorNode = null,
+  showLeftover = true,
+  registerThreadEl,
   onEdit,
   onDelete,
   onToggleBookmark,
@@ -765,8 +789,17 @@ export const ChapterFlow: FC<ChapterFlowProps> = ({
             startOffset={packed.offsetOfItem.get(item.key) ?? 0}
             scale={scale}
             dataThreadIndex={item.kind === "thread" ? item.index : undefined}
+            elementRef={
+              item.kind === "thread"
+                ? registerThreadEl?.(item.index)
+                : undefined
+            }
           >
-            {isEditingHole ? (
+            {isEditingHole && editorNode ? (
+              // The editor in the passage's own slot — measured under the
+              // passage's key, so the pages below follow every keystroke.
+              editorNode
+            ) : isEditingHole ? (
               // Blank spacer holding the editor's spot open. It tracks the
               // editor's height, so every page after it reflows live — the
               // measure layer re-reports the same number, keeping the pack
@@ -786,7 +819,7 @@ export const ChapterFlow: FC<ChapterFlowProps> = ({
               />
             )}
           </MeasuredItem>
-          {closesSheet && sheet.leftover > 0 && (
+          {showLeftover && closesSheet && sheet.leftover > 0 && (
             <div style={{ height: sheet.leftover }} />
           )}
         </Fragment>

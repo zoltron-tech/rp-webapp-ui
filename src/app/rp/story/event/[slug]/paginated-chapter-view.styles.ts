@@ -1,19 +1,10 @@
-import styled, { css, keyframes } from "styled-components";
-
-/** Vertical gap between two pages, in design pixels. */
-export const PAGE_GAP = 28;
+import styled, { css } from "styled-components";
 
 export const Stage = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-`;
-
-/** Reserves the scaled footprint of a page so the scrollbar stays honest. */
-export const PageSlot = styled.div`
-  position: relative;
-  flex-shrink: 0;
 `;
 
 const paper = css`
@@ -25,68 +16,67 @@ const paper = css`
 `;
 
 /**
- * One page of the manuscript — the same rectangle the book spread puts side by
- * side, stacked down the screen instead. `$live` marks the page the author is
- * writing on, which is the only one allowed to grow past its own height.
+ * Reserves the scaled footprint of the manuscript, so the scrollbar measures
+ * what the reader actually sees — the sheet inside is laid out at full page
+ * width and only then scaled down to fit.
  */
-export const Page = styled.div<{ $live?: boolean }>`
+export const ManuscriptSlot = styled.div`
+  position: relative;
+  flex-shrink: 0;
+  margin: 0.25rem 0 0.5rem;
+`;
+
+/**
+ * The manuscript: the whole loaded chapter as one unbroken sheet. Pages are
+ * still the model underneath — they are just not drawn as separate cards any
+ * more, so the prose runs on and only a page number in the margin marks where
+ * one page gave way to the next.
+ */
+export const Sheet = styled.div`
   position: absolute;
   top: 0;
   left: 0;
   box-sizing: border-box;
   transform-origin: top left;
-  overflow: hidden;
   ${paper}
-  ${(p) =>
-    p.$live &&
-    css`
-      border: 1px dashed color-mix(in srgb, var(--accent) 45%, transparent);
-    `}
 `;
 
-/** The clipped window showing this page's slice of the chapter. */
-export const PageWindow = styled.div`
-  position: absolute;
-  overflow: hidden;
-`;
-
-/** The chapter flow, pushed up so the window frames the right page. */
-export const PageWindowInner = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
+/** The chapter flow itself, at the story's page geometry. */
+export const FlowColumn = styled.div`
+  position: relative;
 `;
 
 /**
- * Off-screen twin of the flow. It is the copy the packer measures, so page
- * geometry stays known even for pages that are scrolled far away and unmounted.
- *
- * Its own box is collapsed to nothing: the unscaled flow is taller than the
- * scaled page stack (much taller on mobile), and an absolutely-positioned
- * descendant still extends the scroll container's scrollable overflow — left
- * uncollapsed it adds phantom scroll space below the last page. Clipping
- * doesn't affect layout sizes, so the children measure exactly the same.
+ * Where a page ended, in the sheet's right margin. Deliberately quiet — it is
+ * a reference mark for talking about the chapter, not a break in the reading.
  */
-export const MeasureLayer = styled.div`
+export const PageTick = styled.div`
   position: absolute;
-  top: 0;
-  left: -100000px;
-  height: 0;
-  overflow: hidden;
-  visibility: hidden;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  /* Sits on the division itself, in the margin — never over the prose. */
+  transform: translateY(-50%);
   pointer-events: none;
-`;
-
-export const PageNumber = styled.div`
-  position: absolute;
-  left: 0;
-  right: 0;
-  text-align: center;
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  color: var(--text-secondary);
-  opacity: 0.75;
   user-select: none;
+  font-family: var(--font);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+  opacity: 0.4;
+
+  /* A hairline fading in from the text side, so the number reads as a margin
+     note rather than a rule drawn across the page. */
+  &::before {
+    content: "";
+    width: 14px;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      color-mix(in srgb, var(--text-secondary) 55%, transparent)
+    );
+  }
 `;
 
 /** Separates the last saved passage from the live composer beneath it. */
@@ -121,33 +111,9 @@ export const DraftBadge = styled.div`
 `;
 
 /**
- * Where the draft crosses onto the next page. Only the live page ever draws
- * these: a saved page cannot overrun, because it is a window one page tall.
- */
-export const CutLine = styled.div`
-  position: absolute;
-  pointer-events: none;
-  z-index: 2;
-  border-top: 1px solid color-mix(in srgb, var(--accent) 75%, transparent);
-
-  &::after {
-    content: attr(data-label);
-    position: absolute;
-    right: 0;
-    top: 4px;
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    color: var(--accent);
-    background: var(--bg-2);
-    padding: 0 4px;
-    border-radius: 3px;
-  }
-`;
-
-/**
  * The composer when the reader is not at the end of the chapter. A new passage
- * joins the end, which is a page this window cannot show, so it is written off
- * the page stack rather than on a page it would not land on.
+ * joins the end, which is past the passages this window holds, so it is written
+ * off the manuscript rather than where it would not land.
  */
 export const DetachedComposer = styled.div`
   margin: 0.5rem 0 1rem;
@@ -157,18 +123,25 @@ export const DetachedComposer = styled.div`
   background: var(--bg-2);
 `;
 
-const shimmer = keyframes`
-  0% { opacity: 0.35; }
-  50% { opacity: 0.65; }
-  100% { opacity: 0.35; }
-`;
-
-/** Stand-in for a page scrolled far enough away to be worth unmounting. */
-export const PagePlaceholder = styled.div`
+/**
+ * Off-screen twin of the flow. It is the copy the packer measures: it renders
+ * every passage the same way for every reader, so pages do not move depending
+ * on who is looking or what chrome their view adds.
+ *
+ * Its own box is collapsed to nothing: the unscaled flow is taller than the
+ * scaled manuscript (much taller on mobile), and an absolutely-positioned
+ * descendant still extends the scroll container's scrollable overflow — left
+ * uncollapsed it adds phantom scroll space below the chapter. Clipping doesn't
+ * affect layout sizes, so the children measure exactly the same.
+ */
+export const MeasureLayer = styled.div`
   position: absolute;
-  inset: 0;
-  animation: ${shimmer} 1.6s ease-in-out infinite;
-  ${paper}
+  top: 0;
+  left: -100000px;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
 `;
 
 export const EdgeButton = styled.button`

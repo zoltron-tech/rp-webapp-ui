@@ -56,6 +56,7 @@ import { PromptComposeTrigger } from "@/components/prompt-compose-trigger";
 import PromptInput from "@/components/prompt-input";
 import { FullPagePromptInput } from "@/components/prompt-input/full-page-prompt-input";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
+import { ShareProfileDialog } from "@/components/share-profile-dialog";
 import StoryCard from "@/components/story-card";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -387,6 +388,7 @@ export default function UserProfilePage({}) {
   const [showReportNWAlert, setShowReportNWAlert] = useState(false);
   const [showContactSupportAlert, setShowContactSupportAlert] = useState(false);
   const [showMiniCard, setShowMiniCard] = useState(false);
+  const [showShareProfile, setShowShareProfile] = useState(false);
   const [supportMessage, setSupportMessage] = useState("");
   const user = useGlobalState("user");
   const userNovelist = useGlobalState("novelist");
@@ -485,10 +487,7 @@ export default function UserProfilePage({}) {
   };
 
   const handleShareProfile = () => {
-    if (username) {
-      navigator.clipboard.writeText(`https://novelist.world/${username}`);
-      successToast("Profile link copied to clipboard");
-    }
+    setShowShareProfile(true);
   };
 
   const handleSendFeedbackMessage = async () => {
@@ -938,6 +937,12 @@ export default function UserProfilePage({}) {
           onClose={() => setShowMiniCard(false)}
         />
       )}
+      <ShareProfileDialog
+        novelist={novelist}
+        open={showShareProfile}
+        onClose={() => setShowShareProfile(false)}
+      />
+
       <AppAlertDialog
         heading={`Unfriend ${username}?`}
         text={`Are you sure you want to remove ${username} from your friends list?`}

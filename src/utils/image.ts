@@ -316,13 +316,19 @@ export function transformNovelist(
   if (novelist.avatar) {
     novelist.avatar.src = wsrvImage(novelist.avatar.src, sizes.avatar);
     if (novelist.avatar.crop?.src) {
-      novelist.avatar.crop.src = wsrvImage(novelist.avatar.crop.src, sizes.avatar);
+      novelist.avatar.crop.src = wsrvImage(
+        novelist.avatar.crop.src,
+        sizes.avatar,
+      );
     }
   }
   if (novelist.banner && sizes.banner) {
     novelist.banner.src = wsrvImage(novelist.banner.src, sizes.banner);
     if (novelist.banner.crop?.src) {
-      novelist.banner.crop.src = wsrvImage(novelist.banner.crop.src, sizes.banner);
+      novelist.banner.crop.src = wsrvImage(
+        novelist.banner.crop.src,
+        sizes.banner,
+      );
     }
   }
 
@@ -330,7 +336,8 @@ export function transformNovelist(
     for (const muse of novelist.muses) transformMuse(muse, ctx, visited);
   }
   if (Array.isArray(novelist.friends)) {
-    for (const friend of novelist.friends) transformFriend(friend, ctx, visited);
+    for (const friend of novelist.friends)
+      transformFriend(friend, ctx, visited);
   }
 }
 

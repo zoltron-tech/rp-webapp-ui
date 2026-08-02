@@ -1,4 +1,5 @@
 import type { Prompt, PromptSource } from "@/types";
+import { IMAGE_SIZES, reverseWsrvUrl, wsrvImage } from "@/utils/image";
 
 // ─── Discord API types ────────────────────────────────────────────────────────
 
@@ -89,7 +90,9 @@ function parsePromptHtml(html: string): {
     (_, openAttrs: string, rawName: string) => {
       const name = rawName.trim();
       const id = openAttrs.match(/data-id="([^"]+)"/)?.[1] ?? "";
-      const rawType = openAttrs.match(/data-type="([^"]+)"/i)?.[1]?.toUpperCase();
+      const rawType = openAttrs
+        .match(/data-type="([^"]+)"/i)?.[1]
+        ?.toUpperCase();
       const type: "MUSE" | "NOVELIST" =
         rawType === "NOVELIST" ? "NOVELIST" : "MUSE";
       mentions.push({ name, id, type });
@@ -122,9 +125,7 @@ function parsePromptHtml(html: string): {
 
 /** "2026-06-14 13:26:12.960236" → ISO 8601 string */
 function toIso(createdOn: string): string {
-  const normalized = createdOn
-    .replace(" ", "T")
-    .replace(/(\.\d{3})\d*/, "$1");
+  const normalized = createdOn.replace(" ", "T").replace(/(\.\d{3})\d*/, "$1");
   const withZ = normalized.endsWith("Z") ? normalized : `${normalized}Z`;
   return new Date(withZ).toISOString();
 }
@@ -189,7 +190,7 @@ export interface ShareMusePayload {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/** Radix dark step-9 hex for each ACCENT_MAP palette index (0–7). */
+/** Radix dark step-9 hex for each ACCENT_MAP palette index (0–9). */
 const NOVELIST_PALETTE_HEX: Record<number, string> = {
   0: "#29a383", // jade
   1: "#00a2c7", // cyan
@@ -199,7 +200,34 @@ const NOVELIST_PALETTE_HEX: Record<number, string> = {
   5: "#e5484d", // red
   6: "#bdee63", // lime
   7: "#bf7db1", // lotus
+  8: "#ac0a0a", // dracula (--dracula-red-9)
+  9: "#2563eb", // lunar (--lunar-9)
 };
+
+const isGifUrl = (url: string) => /\.gif(?:$|[?#])/i.test(url);
+
+/**
+ * Prepares an image URL for a Discord embed.
+ *
+ * Stills go through wsrv: raw S3 keys can lack an extension and be served as
+ * application/octet-stream, which <img> tolerates but Discord's embed proxy
+ * drops.
+ *
+ * GIFs are handed over as the raw S3 URL. Discord decides whether to animate
+ * from the URL *path* ending in `.gif` — a wsrv URL ends in its query string
+ * (`…&n=-1`), so even a correctly re-encoded animated GIF renders as a still.
+ */
+function embedImageUrl(url: string, kind: "avatar" | "banner"): string {
+  // Unwrap first: callers on feed-sized pages hand us an already-proxied URL,
+  // which would hide the .gif behind wsrv's `url=` param.
+  const source = reverseWsrvUrl(url);
+  if (isGifUrl(source)) return source;
+
+  return wsrvImage(
+    source,
+    kind === "avatar" ? IMAGE_SIZES.AVATAR_LARGE : IMAGE_SIZES.BANNER_LARGE,
+  );
+}
 
 /** Converts a CSS hex colour string (#rgb or #rrggbb) to a Discord decimal int. */
 function hexToDecimal(hex: string): number | null {
@@ -221,7 +249,9 @@ function hexToDecimal(hex: string): number | null {
  * - MUSE:     `accent` is already a hex string → pass through hexToDecimal
  * Falls back to NW teal when useAccent is false or accent is missing.
  */
-function resolvePromptColor(source: Pick<PromptSource, "sourceType" | "useAccent" | "accent">): number {
+function resolvePromptColor(
+  source: Pick<PromptSource, "sourceType" | "useAccent" | "accent">,
+): number {
   const NW_TEAL = 0x29a383;
   if (!source.useAccent || !source.accent) return NW_TEAL;
 
@@ -266,7 +296,9 @@ export function buildDiscordEmbed(
   if (mentions.length > 0) {
     // Each mention on its own line as a clickable ✦-bulleted link, no @ prefix
     const featuringValue = mentions
-      .map(({ name, id, type }) => `✦ [${name}](${profileUrl(baseUrl, type, id)})`)
+      .map(
+        ({ name, id, type }) => `✦ [${name}](${profileUrl(baseUrl, type, id)})`,
+      )
       .join("\n");
 
     fields.push({
@@ -336,9 +368,7 @@ export function buildDiscordMuseEmbed(
   const color = accentDecimal ?? 0x29a383;
 
   // Plain-text description (note is plain text; strip any accidental tags from story)
-  const rawDesc = (muse.note || "")
-    .replace(/<[^>]+>/g, "")
-    .trim();
+  const rawDesc = (muse.note || "").replace(/<[^>]+>/g, "").trim();
   const description = rawDesc
     ? rawDesc
         .split("\n")
@@ -369,9 +399,7 @@ export function buildDiscordMuseEmbed(
     const entries = Object.entries(muse.extraAttributes);
     const visible = entries.slice(0, 3);
     const remaining = entries.length - visible.length;
-    const traitLines = visible
-      .map(([k, v]) => `**${k}**\n*${v}*`)
-      .join("\n");
+    const traitLines = visible.map(([k, v]) => `**${k}**\n*${v}*`).join("\n");
     const readMore =
       remaining > 0 ? `\n[\`+ ${remaining} more\`](${museUrl})` : "";
     fields.push({
@@ -443,6 +471,39 @@ export interface ShareStoryData {
 export interface ShareStoryPayload {
   storyUrl: string;
   story: ShareStoryData;
+  novelistUsername: string;
+}
+
+// ─── Profile share types ────────────────────────────────────────────────────
+
+/** Minimal novelist data serialised from the frontend and sent to /api/discord/share-profile. */
+export interface ShareProfileData {
+  id: string;
+  username: string;
+  firstName: string;
+  lastName: string | null;
+  image: string | null;
+  /** Pre-resolved from NWImage.src — avatar portrait used as embed thumbnail. */
+  avatarSrc: string | null;
+  /** Pre-resolved from NWImage.src — banner used as full-width embed image. */
+  bannerSrc: string | null;
+  /** Status note text, shown above the about blurb when present. */
+  note: string | null;
+  /** Rich-text about blurb (HTML). */
+  about: string | null;
+  /** ACCENT_MAP palette index — resolves the embed border colour. */
+  palette: number | null;
+  museCount: number;
+  friendsCount: number;
+  isVerified: boolean;
+  createdAt: string | null;
+  /** A few muses to spotlight on the embed. */
+  muses: { id: string; name: string }[];
+}
+
+export interface ShareProfilePayload {
+  profileUrl: string;
+  profile: ShareProfileData;
   novelistUsername: string;
 }
 
@@ -583,6 +644,132 @@ export function buildDiscordChapterEmbed(
 
   return {
     content: `📖 **A new chapter has been posted in ${chapter.storyBoardName}!** Catch up on **${chapter.name}**.`,
+    embeds: [embed],
+  };
+}
+
+// ─── Profile embed ──────────────────────────────────────────────────────────
+
+/** Best-effort unix seconds from a backend timestamp; null when unparseable. */
+function toUnixSeconds(raw: string): number | null {
+  try {
+    const ts = new Date(toIso(raw)).getTime();
+    return Number.isNaN(ts) ? null : Math.floor(ts / 1000);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Builds the Discord message body announcing a shared novelist profile.
+ *
+ * @param profile    Lightweight novelist data extracted from the Novelist object.
+ * @param profileUrl Absolute URL to the novelist's profile page.
+ */
+export function buildDiscordProfileEmbed(
+  profile: ShareProfileData,
+  profileUrl: string,
+  novelistUsername: string,
+): DiscordMessage {
+  const baseUrl = new URL(profileUrl).origin;
+  const fullName = [profile.firstName, profile.lastName]
+    .filter(Boolean)
+    .join(" ");
+
+  // Palette index → Radix step-9 hex, falling back to NW teal
+  const paletteHex =
+    typeof profile.palette === "number"
+      ? NOVELIST_PALETTE_HEX[profile.palette]
+      : undefined;
+  const color = (paletteHex ? hexToDecimal(paletteHex) : null) ?? 0x29a383;
+
+  // Note takes priority over the about blurb — it's the novelist's current status
+  const rawDesc = (profile.note || profile.about || "")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .trim();
+  const description = rawDesc
+    ? trimText(rawDesc)
+        .split("\n")
+        .map((l: string) => `> ${l}`)
+        .filter(Boolean)
+        .join("\n")
+    : undefined;
+
+  const fields: DiscordEmbedField[] = [
+    {
+      name: "🎭  muses",
+      value: `\`${profile.museCount}\``,
+      inline: true,
+    },
+    {
+      name: "🤝  friends",
+      value: `\`${profile.friendsCount}\``,
+      inline: true,
+    },
+  ];
+
+  if (profile.muses.length > 0) {
+    fields.push({
+      name: "✨  featured muses",
+      value: profile.muses
+        .map(({ id, name }) => `✦ [${name}](${baseUrl}/rp/muse/${id})`)
+        .join("\n"),
+      inline: false,
+    });
+  }
+
+  const joinedUnix = profile.createdAt
+    ? toUnixSeconds(profile.createdAt)
+    : null;
+  if (joinedUnix !== null) {
+    fields.push({
+      name: "📅  writing since",
+      value: `<t:${joinedUnix}:D>`,
+      inline: false,
+    });
+  }
+
+  const embed: DiscordEmbed = {
+    author: {
+      name: `@${profile.username}`,
+      icon_url: profile.image || profile.avatarSrc || undefined,
+      url: profileUrl,
+    },
+    title: `${profile.isVerified ? "✅" : "✦"} ${fullName || profile.username}`,
+    description,
+    color,
+    url: profileUrl,
+    fields,
+    footer: { text: `novelist.world · shared by @${novelistUsername}` },
+  };
+
+  // Empty strings come back from the API for missing images — `||` so they fall through.
+  const avatarUrl = profile.avatarSrc || profile.image;
+  const bannerUrl = profile.bannerSrc;
+
+  // Discord only animates GIFs in `image`, never in `thumbnail`. When the
+  // avatar is animated and there's no banner competing for the slot, show it
+  // full-width instead of as a frozen first frame in the corner.
+  const promoteAvatar = !bannerUrl && !!avatarUrl && isGifUrl(avatarUrl);
+
+  if (avatarUrl && !promoteAvatar) {
+    embed.thumbnail = { url: embedImageUrl(avatarUrl, "avatar") };
+  }
+
+  if (bannerUrl) {
+    embed.image = { url: embedImageUrl(bannerUrl, "banner") };
+  } else if (promoteAvatar) {
+    embed.image = { url: embedImageUrl(avatarUrl, "avatar") };
+  }
+
+  return {
+    content: `👋 **A novelist worth writing with!** Come meet **${fullName || profile.username}**.`,
     embeds: [embed],
   };
 }

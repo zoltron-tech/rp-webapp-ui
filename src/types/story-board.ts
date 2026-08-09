@@ -164,16 +164,62 @@ export interface CodexEntry {
  */
 export type RelationshipTone = "BOND" | "STRAIN" | "NEUTRAL";
 
-/** How two of a story's cast characters stand toward each other. */
+/**
+ * How a tone's edges are stroked — the mesh's secondary encoding.
+ *
+ * This is what lets a story hold more tones than hue alone could carry: colour
+ * and pattern together stay separable where colour on its own stops being, and
+ * the mesh still reads with no colour vision at all.
+ */
+export type CodexToneLineStyle = "SOLID" | "DASHED" | "DOTTED";
+
+/**
+ * A tone a story's authors defined for themselves — "blood oath", "same
+ * regiment", "unrequited".
+ *
+ * Only these come from the server. BOND / STRAIN / NEUTRAL are constants in
+ * `@/components/story-codex/relationships/tones`, with per-theme colours the
+ * mesh was validated against — which is exactly why they can never be renamed
+ * or deleted, and why they are not rows.
+ */
+export interface CodexTone {
+  id: string | null;
+  storyBoardId?: string | null;
+  label: string;
+  /** A hex, used in both themes. */
+  color: string;
+  lineStyle: CodexToneLineStyle;
+  ordinal: number;
+  createdBy?: string | null;
+}
+
+/**
+ * Which pool a character comes from.
+ *
+ * `MUSE` is a novelist's own muse, in this story's cast because it speaks here
+ * — only its owner may edit it. `CHARACTER` is one of the storyboard's own
+ * in-story characters, which every co-author writes. Both are characters in the
+ * story; they differ only in who owns them.
+ */
+export type CharacterRefType = "MUSE" | "CHARACTER";
+
+/** How two of a story's characters stand toward each other. */
 export interface CodexRelationship {
   id: string | null;
   storyBoardId?: string | null;
-  /** Both ends are cast muse ids — characters who actually speak in the story. */
-  fromMuseId: string;
-  toMuseId: string;
+  /** Either end may be a cast muse or one of the story's own characters. The
+   *  id and its type travel together; neither means anything alone. */
+  fromId: string;
+  fromType: CharacterRefType;
+  toId: string;
+  toType: CharacterRefType;
   /** The author's own words: "sworn enemies", "raised him", "owes a debt". */
   label: string;
+  /** One of the built-in three. When `toneId` is set this is what the edge
+   *  falls back to if that custom tone is later retired. */
   tone: RelationshipTone;
+  /** A tone this story defined for itself; null means the built-in above. */
+  toneId?: string | null;
   /** Directed ("betrayed") draws an arrow; mutual ("siblings") does not. */
   isDirected: boolean;
   /** 1–3, drawn as the edge's weight. */
@@ -183,14 +229,62 @@ export interface CodexRelationship {
   createdBy?: string | null;
 }
 
+// ── In-story characters ────────────────────────────────────────────────────
+// The storyboard's own shared pool, beside the derived cast of muses. A muse
+// belongs to one novelist and travels between stories; one of these belongs to
+// the story, and every co-author writes it.
+
+export interface StoryCharacter {
+  id: string | null;
+  storyBoardId?: string | null;
+  firstName: string;
+  lastName?: string | null;
+  /** Croppable portrait — the same adjustable avatar a muse has, framed by
+   *  pan and zoom. `image` mirrors avatar.src for the flat contexts (chips,
+   *  pickers, the dialog avatar endpoint).
+   *
+   *  Null means *unchanged* on the way in: a rename must not wipe the face. */
+  avatar?: NWImage | null;
+  image?: string | null;
+  /** Takes the portrait off. Explicit, because "no portrait sent" and "no
+   *  portrait wanted" are different things and only the client knows which. */
+  clearAvatar?: boolean;
+  /** Tints this character's embedded dialogs, exactly as a muse's accent does. */
+  accent?: string | null;
+  useAccent?: boolean;
+  gender?: string | null;
+  nicknames?: string[];
+  /** Rich-text HTML, same shape as a codex entry's description. */
+  about?: string | null;
+  /** The authors' own fields: "House", "Weapon", "Debt owed to". */
+  extraAttributes?: Record<string, string>;
+  createdBy?: string | null;
+  createdByName?: string | null;
+  modifiedBy?: string | null;
+  modifiedByName?: string | null;
+  createdAt?: string | null;
+  modifiedAt?: string | null;
+}
+
+/**
+ * A character in the story, whichever pool it came from — the shape the mesh,
+ * the relationship picker and the dialog sender picker all work in.
+ */
+export type StoryPerson = StoryCastMember & { refType: CharacterRefType };
+
 /** Everything the codex view needs, in one payload. */
 export interface Codex {
   storyBoardId: string;
   categories: CodexCategory[];
   /** Flat across every category — the view groups them by the active tab. */
   entries: CodexEntry[];
-  /** How the story's cast stand toward each other, drawn as the mesh. */
+  /** How the story's characters stand toward each other, drawn as the mesh.
+   *  Either end may be a cast muse or one of `characters` below. */
   relationships: CodexRelationship[];
+  /** The story's own characters. The cast (muses) rides on `StoryBoard.cast`. */
+  characters: StoryCharacter[];
+  /** Tones the authors defined for themselves, on top of the built-in three. */
+  tones: CodexTone[];
 }
 
 // ── Maps ───────────────────────────────────────────────────────────────────
@@ -238,7 +332,12 @@ export interface StoryBoardEventThread {
   dialogDesign: string;
   createdAt: string | null;
   /** Muse id → sender name/accent for the dialogs in `message` (server-set). */
-  museDialogAttrs?: Record<string, { name: string; accent: string | null }>;
+  /** Speaker id → name/accent for the dialogs in `message` (server-set). Covers
+   *  both pools: the novelist's muses and the story's own characters. */
+  museDialogAttrs?: Record<
+    string,
+    { name: string; accent: string | null; sourceType?: CharacterRefType }
+  >;
 }
 
 // ── Soundscape ─────────────────────────────────────────────────────────────
@@ -346,3 +445,80 @@ export type StoryBoardEventThreadInput = {
   /** The dialog style to fix on this thread (defaults server-side when unset). */
   dialogDesign?: string;
 };
+
+// ── Sticky notes ───────────────────────────────────────────────────────────
+// A storyboard's shared corkboard, in the spirit of Google Keep. Members-only
+// in both directions — unlike the codex, a public story does not show these.
+
+/**
+ * What a sticky is. A plain note is one author telling the others something;
+ * a poll is the board asking them — a question with a ballot every co-author
+ * gets exactly one vote on.
+ */
+export type StoryNoteType = "NOTE" | "POLL";
+
+/** Just enough of a co-author to render their chip beside their choice. */
+export interface StoryNotePollVoter {
+  id: string;
+  name?: string | null;
+  image?: string | null;
+}
+
+/**
+ * One choice on a poll's ballot.
+ *
+ * `id` is null for a choice just added in the editor. An existing id is what
+ * keeps the votes already cast on that choice attached to it while its author
+ * edits the wording of the others — so send ids back untouched.
+ */
+export interface StoryNotePollOption {
+  id: string | null;
+  /** Plain text, never markup. */
+  label: string;
+  ordinal: number;
+  /** Server-derived; ignored on the way in. */
+  voteCount: number;
+  /** A shared corkboard has no secret ballot — knowing who still owes an
+   *  answer is half the point of asking. */
+  voters: StoryNotePollVoter[];
+}
+
+export interface StoryNote {
+  id: string | null;
+  storyBoardId?: string | null;
+  /** Optional — a note can be body-only. A poll's title is its question. */
+  title?: string | null;
+  /** Rich-text HTML, same shape as a codex entry's description. */
+  content?: string | null;
+  /** A hex from `@/components/story-notes/colors`; null means the default. */
+  color?: string | null;
+  isPinned: boolean;
+  isArchived: boolean;
+  /** Board order within the pinned/unpinned halves. Server-assigned. */
+  ordinal?: number;
+  /** Defaults to a plain note when the server omits it. */
+  noteType?: StoryNoteType;
+  /** The ballot, in the order its author arranged it. Empty on a plain note. */
+  pollOptions?: StoryNotePollOption[];
+  /** A settled poll: results stay readable, the ballot closes. */
+  isPollClosed?: boolean;
+  /** The reading co-author's own vote. Server-derived. */
+  myVoteOptionId?: string | null;
+  /** How many co-authors have answered — one apiece, never more. */
+  totalVotes?: number;
+  createdBy?: string | null;
+  createdByName?: string | null;
+  createdByImage?: string | null;
+  modifiedBy?: string | null;
+  modifiedByName?: string | null;
+  createdAt?: string | null;
+  modifiedAt?: string | null;
+}
+
+/** Pin/archive/close toggles. Sent alone so a toggle doesn't resend the body. */
+export interface StoryNoteFlags {
+  isPinned?: boolean;
+  isArchived?: boolean;
+  /** Poll-only; ignored on a plain note. */
+  isPollClosed?: boolean;
+}

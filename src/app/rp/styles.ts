@@ -1,22 +1,42 @@
 import { styled } from "styled-components";
-import { NO_SCROLLBAR, Z_INDEX } from "@/theme";
+import { Z_INDEX } from "@/theme";
 
+/* NOT a scroll container — the document scrolls (see the html rule in
+ * globals.css). This element used to be a nested 100dvh overflow-y:auto
+ * scroller, which on iOS Safari only gets a viewport-sized layer instead of
+ * the document scroller's tiled backing store: under iOS 26 that meant
+ * content blanked out while scrolling and repainted seconds later. JS that
+ * scrolls the page targets document.scrollingElement, not this element.
+ *
+ * Also deliberately NOT a container-query container: container-type implies
+ * layout containment, which would make this the containing block for the
+ * position:fixed LeftNav/RightSidebar — they must attach to the viewport.
+ * The `page-container` class stays: portals target it for theme/accent CSS
+ * variables. */
 export const PageContainer = styled.main`
   min-height: 100dvh;
-  max-height: max-content;
-  width: 100vw;
+  width: 100%;
   position: relative;
+  /* The negative z-index is deliberate, and body's isolation:isolate (see
+     globals.css) is what keeps the app above body's #000 background despite
+     it. Beyond stacking, it has a compositing side effect we RELY on: WebKit
+     promotes the negative-z subtree into a single retained composited layer,
+     and on iOS 26 that retained backing store is what keeps off-screen
+     content painted while scrolling. An experiment with z-index: 0 (paint
+     order identical, "simpler") put content back into lazily-painted root
+     tiles and the iOS scroll-blanking returned immediately. Also a stacking
+     context, which pages' internal negative-z backdrops (story/muse) resolve
+     against. */
   z-index: ${Z_INDEX.BACKGROUND};
+  /* Deliberately NO overflow-x: clip (or any overflow value) here. Clip
+     semantics on this element license WebKit to skip painting content past
+     the clip edge — same machinery family as the body contain:paint bug —
+     and adding it here brought back the iOS blanking of off-screen content
+     during scroll. Sideways overflow is handled by the html rule (backstop)
+     and clipped at its sources: the novelist carousel's own paint
+     containment and the muse marquee wrapper's overflow:hidden. */
   background-color: var(--bg-1);
   color: var(--text);
-
-  scroll-behavior: smooth;
-  overflow-y: auto;
-
-  container-name: page-container;
-  container-type: size;
-
-  ${NO_SCROLLBAR}
 `;
 
 /** Holds the page content, centered the same way LeftNav/RightSidebar

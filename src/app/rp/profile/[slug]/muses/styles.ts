@@ -1,45 +1,13 @@
 import styled from "styled-components";
 import { DEV_MODE_BORDER } from "@/theme";
 
-// Background container
-export const BackgroundContainer = styled.div`
---navbar-width: 80px;
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-    overflow: hidden;
-    min-height: calc(100dvh - var(--navbar-width));
-
-    @media screen and (min-width: 480px) {
-       --navbar-width: 60px;
-    }
-`;
-
-// Each blurred background tile
-export const BackgroundTile = styled.div<{
-  image: string;
-  top: number;
-  left: number;
-  rotation: number;
-  scale: number;
-}>`
-  position: absolute;
-  width: 100px;
-  height: 100px;
-  top: ${(props) => props.top}%;
-  left: ${(props) => props.left}%;
-  background-image: url(${(props) => props.image});
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-
-  transform: rotate(${(props) => props.rotation}deg) scale(${(props) => props.scale});
-  filter: blur(25px) brightness(1);
-  opacity: 0.5;
-`;
-
+/* The old "background mesh" (one scaled tile per muse with filter: blur(25px)
+   across a full-page absolute layer) is gone for good: live blur layers under
+   scrolling content are the iOS 26 compositor-regression trigger — with
+   enough muses the page rendered only what was on screen and blanked
+   everything else. Plain --bg-2 instead. */
 export const Container = styled.div`
+  background-color: var(--bg-2);
   padding-top: 20px;
   display: flex;
   flex-direction: column;

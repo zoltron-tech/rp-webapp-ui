@@ -5,6 +5,10 @@ export const CarouselContainer = styled.div`
   max-width: 2000px;
   margin-inline: auto;
   margin-bottom: 20px;
+  /* Kept as paint containment on purpose — this is a fixed-height horizontal
+     carousel, not a tall scrolling list, and overflow clipping on an ancestor
+     of the Swiper 3D coverflow wrapper stalls its transitionend autoplay
+     (see PageShell in app/rp/novelists/styles.ts). */
   contain: paint;
 
   & .swiper-button-prev,

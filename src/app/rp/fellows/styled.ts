@@ -33,14 +33,35 @@ export const Root = styled.div`
   }
 `;
 
-/** Full-page backdrop layer — two are rendered and cross-faded */
+/** Full-page backdrop layer — two are rendered and cross-faded.
+ *
+ * Rendered at 1/5 resolution and scaled back up, rather than as a
+ * full-viewport blur. A fixed, viewport-sized layer carrying a very large
+ * blur radius under scrolling content is the iOS 26 compositor-regression
+ * trigger — the same shape as Apple's own repro (FB21749211) and as the muse
+ * mesh that was blanking /rp/profile/[slug]/muses. Blurring a 20%-size layer
+ * by 18px and scaling it 5x is visually equivalent to blurring the
+ * full-size layer by 90px, but the convolution runs over 1/25th the pixels
+ * and the radius stays far below the pathological range.
+ *
+ * Note the blur is NOT baked into the image server-side here (the approach
+ * used for one-off card art): these sources are small "feed"-sized images
+ * blown up to viewport scale, and an upscaled pre-baked blur reads as blocky
+ * smearing rather than a smooth wash. */
 export const BackdropLayer = styled.div<{ $img: string; $visible: boolean }>`
   position: fixed;
-  inset: 0;
+  /* 20% box anchored slightly off-origin, then scaled 5.75x (5 to fill the
+     viewport + the old 1.15 edge bleed) so the softened edges stay out of
+     view. transform-origin must be the top-left corner for the maths to
+     land. */
+  top: -1.5%;
+  left: -1.5%;
+  width: 20%;
+  height: 20%;
+  transform-origin: 0 0;
+  transform: scale(5.75);
   z-index: -1;
   pointer-events: none;
-  /* Prevent the scaled element from causing horizontal scroll */
-  overflow: hidden;
   background-image:
     /* top-to-bottom gradient: dark at top (text area), slightly lighter at bottom */
     linear-gradient(
@@ -52,9 +73,10 @@ export const BackdropLayer = styled.div<{ $img: string; $visible: boolean }>`
     url(${({ $img }) => $img});
   background-size: cover;
   background-position: center;
-  /* More blur + lower saturation = less image detail, more colour wash */
-  filter: blur(90px) saturate(0.7) brightness(0.5);
-  transform: scale(1.15); /* push scaled edges fully out of view */
+  /* 18px here ≈ 90px once scaled up. Saturation/brightness stay in CSS —
+     they are per-pixel colour maths, not a large-radius convolution, so they
+     carry none of the compositor cost that the blur did. */
+  filter: blur(18px) saturate(0.7) brightness(0.5);
   opacity: ${({ $visible }) => ($visible ? 0.7 : 0)};
   transition: opacity 0.7s ease;
 `;

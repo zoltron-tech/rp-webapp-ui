@@ -67,7 +67,17 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <S.CardBackground banner={novelist.image} />
+        <S.CardBackground
+          // Blur baked in server-side by wsrv.nl instead of a CSS filter —
+          // live per-slide blur layers trigger the iOS 26 rendering
+          // regression (see CardBackground in styles.ts). Non-wsrv URLs stay
+          // unblurred rather than reintroducing the filter.
+          banner={
+            novelist.image?.startsWith("https://wsrv.nl/")
+              ? `${novelist.image}&blur=15`
+              : novelist.image
+          }
+        />
         <S.Card className="novelist-card">
           <S.ExpandButton
             onClick={toggleState(setExpanded)}

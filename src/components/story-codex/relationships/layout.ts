@@ -63,8 +63,8 @@ interface Options {
   cast: { id: string; name: string; image: string | null }[];
   relationships: {
     id: string | null;
-    fromMuseId: string;
-    toMuseId: string;
+    fromId: string;
+    toId: string;
   }[];
   /** Viewport edge, in SVG units. */
   size: number;
@@ -83,14 +83,8 @@ export const buildMeshLayout = ({
 
   const degree = new Map<string, number>();
   for (const relationship of relationships) {
-    degree.set(
-      relationship.fromMuseId,
-      (degree.get(relationship.fromMuseId) ?? 0) + 1,
-    );
-    degree.set(
-      relationship.toMuseId,
-      (degree.get(relationship.toMuseId) ?? 0) + 1,
-    );
+    degree.set(relationship.fromId, (degree.get(relationship.fromId) ?? 0) + 1);
+    degree.set(relationship.toId, (degree.get(relationship.toId) ?? 0) + 1);
   }
 
   const nodes: MeshNode[] = cast.map((member, index) => {
@@ -115,13 +109,13 @@ export const buildMeshLayout = ({
 
   const edges: MeshEdge[] = [];
   relationships.forEach((relationship, index) => {
-    const from = byId.get(relationship.fromMuseId);
-    const to = byId.get(relationship.toMuseId);
+    const from = byId.get(relationship.fromId);
+    const to = byId.get(relationship.toId);
     // A relationship whose characters have dropped out of the cast has nothing
     // to draw between.
     if (!from || !to) return;
 
-    const pairKey = [relationship.fromMuseId, relationship.toMuseId]
+    const pairKey = [relationship.fromId, relationship.toId]
       .slice()
       .sort()
       .join("|");
@@ -169,7 +163,7 @@ export const buildMeshLayout = ({
     );
 
     edges.push({
-      fromId: relationship.fromMuseId,
+      fromId: relationship.fromId,
       id: relationship.id ?? `edge-${index}`,
       labelX: label[0],
       labelY: label[1],
@@ -178,7 +172,7 @@ export const buildMeshLayout = ({
         (Math.atan2(tip[1] - before[1], tip[0] - before[0]) * 180) / Math.PI,
       tipX: tip[0],
       tipY: tip[1],
-      toId: relationship.toMuseId,
+      toId: relationship.toId,
     });
   });
 

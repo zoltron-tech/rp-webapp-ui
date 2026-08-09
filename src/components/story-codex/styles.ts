@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 
 export const Root = styled.section`
   display: flex;
@@ -384,6 +384,186 @@ export const CastAvatarFallback = styled.span`
   color: var(--text-secondary);
   font-size: 0.75rem;
   flex-shrink: 0;
+`;
+
+// ── In-story characters ────────────────────────────────────────────────────
+// The story's own pool, shown beneath the derived cast. Same chip, because
+// they read as the same thing on the page — a character in this story. What
+// differs is who may edit them, and that shows in the actions, not the shape.
+
+/** "The cast" / "This story's characters" — the two pools, named. */
+export const PoolLabel = styled.h3`
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.75rem 0 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+`;
+
+/** The story's own character — a chip that opens its editor rather than a
+ *  muse page, so the two pools never get confused for one another. */
+export const CharacterChip = styled(CastChip)`
+  border-style: dashed;
+`;
+
+export const CharacterPortraitRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+`;
+
+/**
+ * A portrait drawn from its stored framing.
+ *
+ * Background-position rather than `object-fit`, because that is the only way
+ * the author's pan and zoom survive: `x`/`y` are 0–100 background-position
+ * percentages and `scale` is the zoom, so the same three numbers frame the same
+ * face at 26px on a chip and at 72px in the editor. Identical to how a muse
+ * avatar renders — see `avatar-new`.
+ */
+type FramedPortraitProps = {
+  $src: string;
+  /** Background-position percentages, 0–100. */
+  $x: number;
+  $y: number;
+  /** The zoom, as a multiplier. */
+  $scale: number;
+};
+
+export const framedPortrait = css<FramedPortraitProps>`
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid var(--bg-6);
+  background-image: url(${(p) => p.$src});
+  background-repeat: no-repeat;
+  /* Two-value size: width% auto — height scales proportionally (fit by width). */
+  background-size: ${(p) => p.$scale * 100}% auto;
+  background-position: ${(p) => `${p.$x}% ${p.$y}%`};
+`;
+
+export const CharacterPortraitFramed = styled.div<FramedPortraitProps>`
+  width: 72px;
+  height: 72px;
+  ${framedPortrait}
+`;
+
+/** The same, at the size the Characters tab draws its chips. */
+export const CharacterChipAvatar = styled.span<FramedPortraitProps>`
+  display: inline-block;
+  width: 26px;
+  height: 26px;
+  ${framedPortrait}
+`;
+
+/** The framing surface, sized to sit inside the codex sheet. */
+export const CharacterCropBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+
+  @media (max-width: 480px) {
+    padding: 4px 2px;
+  }
+`;
+
+export const CharacterPortraitFallback = styled.span`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--bg-4);
+  border: 1px solid var(--bg-6);
+  color: var(--text-secondary);
+  font-size: 1.6rem;
+`;
+
+export const CharacterPortraitActions = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  min-width: 0;
+`;
+
+/** First/last name side by side, stacking on a 375px screen. */
+export const CharacterNameRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const AttributeRow = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
+  align-items: center;
+  gap: 0.35rem;
+`;
+
+export const AttributeRemove = styled.button`
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--bg-6);
+  background: var(--bg-3);
+  color: var(--text-secondary);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--tomato-9, #e5484d);
+    color: var(--tomato-9, #e5484d);
+  }
+`;
+
+export const SheetError = styled.p`
+  margin: 0;
+  font-size: var(--font-size-small);
+  color: var(--tomato-9, #e5484d);
+`;
+
+/** Rich-text editor wrapper inside a sheet — keeps it from swallowing the tray. */
+export const SheetEditorArea = styled.div`
+  border-radius: 0.5rem;
+
+  /* The editor manages its own scrolling; cap it so the sheet's own actions
+     stay reachable on a 375×667 screen. */
+  [contenteditable] {
+    max-height: 30svh;
+  }
+`;
+
+/** The character's own fields, on the read-only card. */
+export const AttributeList = styled.dl`
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.2rem 0.6rem;
+  margin: 0;
+  font-size: var(--font-size-small);
+
+  dt {
+    color: var(--text-secondary);
+  }
+
+  dd {
+    margin: 0;
+    color: var(--text);
+    overflow-wrap: anywhere;
+  }
 `;
 
 // ── Entry reader ───────────────────────────────────────────────────────────

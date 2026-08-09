@@ -191,9 +191,8 @@ export default function HomePage() {
   >(undefined);
 
   const scrollToTop = () => {
-    document
-      .querySelector("main.page-container")
-      ?.scrollTo({ behavior: "smooth", top: 0 });
+    // The document scrolls, not main.page-container (see rp/styles.ts).
+    window.scrollTo({ behavior: "smooth", top: 0 });
   };
 
   // Derive NovelistPreview-shaped cards from FRIEND_REQUEST notifications.

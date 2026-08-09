@@ -43,7 +43,8 @@ const getModeFromTab = (tab: string | null): ExploreMode =>
   tab === "newsfeed" ? "NEWSFEED" : "PROMPTS";
 
 const getScrollContainer = () => {
-  return document.querySelector("main.page-container") as HTMLElement | null;
+  // The document scrolls, not main.page-container (see rp/styles.ts).
+  return document.scrollingElement as HTMLElement | null;
 };
 
 // Append a page while dropping any prompts already present. Offset pagination

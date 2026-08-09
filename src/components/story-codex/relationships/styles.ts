@@ -88,6 +88,58 @@ export const LegendSwatch = styled.svg`
   overflow: visible;
 `;
 
+// ── The tone maker ─────────────────────────────────────────────────────────
+// Lives inside the relationship sheet rather than behind a settings trip: an
+// author reaches for a new colour in the moment they need it, while writing
+// the relationship that needs it.
+
+export const ToneMaker = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.7rem;
+  border-radius: 0.5rem;
+  background: var(--bg-3);
+  border: 1px solid var(--bg-6);
+`;
+
+export const ToneMakerActions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+`;
+
+/** The stroke a line style draws as, shown on its own swatch in the picker. */
+export const ToneStrokePreview = styled.svg`
+  flex-shrink: 0;
+  width: 26px;
+  height: 10px;
+  overflow: visible;
+`;
+
+/**
+ * Retiring a tone. Quiet, and worded so it is plain that the relationships
+ * drawn in it survive — the server falls them back to their built-in rather
+ * than deleting them.
+ */
+export const ToneRetire = styled.button`
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  text-decoration: underline;
+
+  &:hover {
+    color: var(--tomato-9, #e5484d);
+  }
+`;
+
 // ── Mesh ───────────────────────────────────────────────────────────────────
 
 export const Stage = styled.div`

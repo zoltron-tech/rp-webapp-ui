@@ -571,12 +571,13 @@ export default function ThreadPage({}) {
   const { width } = useWindowDimensions();
   const isMobile = (width ?? 0) <= 800;
 
-  // Lock the outer PageContainer scroll on mobile so the fixed thread layout
-  // isn't scrollable and doesn't show a top gap from a previous page's scroll
-  // offset carried over via Next.js client-side navigation.
+  // Lock the outer page scroll on mobile so the fixed thread layout isn't
+  // scrollable and doesn't show a top gap from a previous page's scroll
+  // offset carried over via Next.js client-side navigation. The document
+  // scrolls, not .page-container (see rp/styles.ts).
   useEffect(() => {
     if (!isMobile) return;
-    const el = document.querySelector(".page-container") as HTMLElement | null;
+    const el = document.scrollingElement as HTMLElement | null;
     if (!el) return;
     el.style.overflow = "hidden";
     el.scrollTop = 0;

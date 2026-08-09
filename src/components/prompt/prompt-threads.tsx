@@ -122,11 +122,11 @@ export const PromptThreads: FC = () => {
     }
   };
 
-  // Lock outer page scroll while the overlay is open
-  // Preserve scroll position and lock outer page scroll while overlay is open
+  // Preserve scroll position and lock outer page scroll while overlay is
+  // open. The document scrolls, not .page-container (see rp/styles.ts).
   useEffect(() => {
     if (!showCommentOverlay) return;
-    const el = document.querySelector(".page-container") as HTMLElement | null;
+    const el = document.scrollingElement as HTMLElement | null;
     if (!el) return;
     const savedScrollTop = el.scrollTop;
     el.style.overflow = "hidden";

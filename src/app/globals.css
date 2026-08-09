@@ -90,12 +90,39 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+html {
+  /* The document is the app's scroller (see PageContainer in rp/styles.ts).
+     iOS Safari only gives the document scroller its full tiled backing
+     store — a nested overflow:auto element gets a roughly viewport-sized
+     layer and repaints synchronously, which under iOS 26 showed up as
+     content blanking out while scrolling and repainting seconds later.
+
+     Backstop only — the real sideways clip is overflow-x: clip on
+     main.page-container. Propagated to the viewport this downgrades to
+     `hidden` (still pannable when content overflows), so it must never be
+     the sole line of defense; it just catches body-portaled strays. */
+  overflow-x: clip;
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
 body {
   font-family: "Montserrat", sans-serif;
   background-color: #000;
   /* Scrollbar Styles */
   scrollbar-width: 0px;
-  contain: paint;
+  /* Stacking-context guardrail: any descendant with a negative z-index
+     (portaled nodes included) stays above this element's #000 background
+     instead of escaping into the root stacking context and vanishing behind
+     it. `contain: paint` used to provide this as a side effect, but paint
+     containment on <body> also licenses WebKit to drop off-screen content,
+     the scroll-blanking bug above. `isolation` creates the stacking context
+     and nothing else. */
+  isolation: isolate;
 }
 
 textarea:focus,

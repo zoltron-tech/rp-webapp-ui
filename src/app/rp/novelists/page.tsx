@@ -1,8 +1,6 @@
 "use client";
 
-import { Carousel } from "@novelist-world/ui";
-import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   FiArrowRight,
   FiCheck,
@@ -17,31 +15,17 @@ import appInstallLogo from "@/assets/images/NW-mobile-app-install-logo.png";
 import { InstallAppDialog } from "@/components/dialog/install-app-dialog";
 import { Footer } from "@/components/layout";
 import { LiveManuscript } from "@/components/live-manuscript";
-import { LiveStorybook } from "@/components/live-storybook";
-import { MusePreviewCard } from "@/components/muse-preview-card";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Muse } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
-import { getHeroPageMusesAction } from "../muse/actions";
 import * as S from "./styles";
-
-const NovelistCarouselDynamic = dynamic(
-  () => import("@/components/novelist-carousel"),
-  { ssr: false },
-);
-
-// Stable keys for the placeholder shimmer cards (avoids index-as-key).
-const MUSE_SHIMMER_KEYS = ["m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7"];
+import { ThreeMoves } from "./three-moves";
 
 export default function NovelistsPage() {
-  const initialRender = useRef(true);
-  const [muses, set] = useState<Muse[]>([]);
   const [showInstallDialog, setShowInstallDialog] = useState(false);
   const authState = useGlobalState("authState");
-  const novelists = useGlobalState("novelists");
-  const { routeToPage, baseDataLoader, stopPageLoading } = usePageRouter();
+  const { routeToPage, stopPageLoading } = usePageRouter();
   const isMobile = useMemo(
     () =>
       typeof window !== "undefined" &&
@@ -49,27 +33,11 @@ export default function NovelistsPage() {
     [],
   );
 
-  // Render the landing page immediately — don't keep the full-page loader up
-  // while novelists/muses are still being fetched. The card rows below show
-  // shimmer placeholders until their data streams in.
+  // The page is fully static now — nothing to wait on, so drop the loader on
+  // mount rather than when landing data arrives.
   useEffect(() => {
     stopPageLoading();
   }, [stopPageLoading]);
-
-  const updateMuses = useCallback(async () => {
-    const response = await baseDataLoader(() => getHeroPageMusesAction());
-    if (response && !("message" in response)) {
-      set(response);
-    }
-  }, [set]);
-
-  useEffect(() => {
-    if (initialRender.current) {
-      initialRender.current = false;
-      updateMuses();
-      return;
-    }
-  }, [updateMuses]);
 
   Logger.info("NovelistsPage rendered");
 
@@ -90,11 +58,6 @@ export default function NovelistsPage() {
   };
 
   const isLoggedIn = authState === "LOGGED_IN";
-  const museMidpoint = Math.floor(muses.length / 2);
-  const firstMuseRow = muses.slice(0, museMidpoint);
-  const secondMuseRow = muses.slice(museMidpoint);
-  const musesLoading = muses.length === 0;
-  const novelistsLoading = novelists.length === 0;
 
   return (
     <S.PageShell>
@@ -154,73 +117,23 @@ export default function NovelistsPage() {
         </S.StorybookShowcase>
       </S.Section> */}
 
-      {/* ─── Novelists ────────────────────────────────────────────────── */}
+      {/* ─── How it works ─────────────────────────────────────────────── */}
       <S.Section>
         <S.SectionHead>
-          <S.SectionEyebrow>Meet the Novelists</S.SectionEyebrow>
-          <S.SectionTitle>Storytellers shaping living worlds</S.SectionTitle>
+          <S.SectionEyebrow>How It Works</S.SectionEyebrow>
+          <S.SectionTitle>A story in three moves</S.SectionTitle>
           <S.SectionSubtitle>
-            Discover the writers building the realms, characters, and adventures
-            of Novelist World.
+            No rulebook, no setup weekend. Bring a character, open a scene, and
+            start writing with someone.
           </S.SectionSubtitle>
         </S.SectionHead>
-        {novelistsLoading && (
-          <S.NovelistShimmerRow aria-hidden="true">
-            <S.NovelistShimmerCard className="side" />
-            <S.NovelistShimmerCard />
-            <S.NovelistShimmerCard className="side" />
-          </S.NovelistShimmerRow>
-        )}
-        <NovelistCarouselDynamic />
-      </S.Section>
-
-      {/* ─── Muses ────────────────────────────────────────────────────── */}
-      <S.Section>
-        <S.SectionHead>
-          <S.SectionEyebrow>Living Characters</S.SectionEyebrow>
-          <S.SectionTitle>Interact with the Muses</S.SectionTitle>
-          <S.SectionSubtitle>
-            Meet the characters brought to life by our community — chat with
-            them, and weave them into your own stories.
-          </S.SectionSubtitle>
-        </S.SectionHead>
-        <S.MuseCarouselContainer>
-          {musesLoading ? (
-            <>
-              <S.MuseShimmerRow aria-hidden="true">
-                {MUSE_SHIMMER_KEYS.map((key) => (
-                  <S.MuseShimmerCard key={key} />
-                ))}
-              </S.MuseShimmerRow>
-              <S.MuseShimmerRow aria-hidden="true">
-                {MUSE_SHIMMER_KEYS.map((key) => (
-                  <S.MuseShimmerCard key={`${key}-b`} />
-                ))}
-              </S.MuseShimmerRow>
-            </>
-          ) : (
-            <>
-              <Carousel>
-                {firstMuseRow.map((muse) => (
-                  <MusePreviewCard
-                    key={muse?.id}
-                    className="hero"
-                    muse={muse}
-                  />
-                ))}
-              </Carousel>
-              <Carousel direction="to-right">
-                {secondMuseRow.map((muse) => (
-                  <MusePreviewCard
-                    key={muse?.id}
-                    className="hero"
-                    muse={muse}
-                  />
-                ))}
-              </Carousel>
-            </>
-          )}
-        </S.MuseCarouselContainer>
+        <ThreeMoves />
+        <S.StepsCta>
+          <S.PrimaryButton onClick={isLoggedIn ? toHomePage : onLoginClick}>
+            {isLoggedIn ? "Open my worlds" : "Start your first story"}
+            <FiArrowRight />
+          </S.PrimaryButton>
+        </S.StepsCta>
       </S.Section>
 
       {/* ─── Features ─────────────────────────────────────────────────── */}

@@ -15,31 +15,51 @@ import {
   deleteCodexCategoryAction,
   deleteCodexEntryAction,
   deleteCodexRelationshipAction,
+  deleteCodexToneAction,
+  deleteStoryCharacterAction,
   getStoryCodexAction,
   reorderCodexCategoriesAction,
   saveCodexCategoryAction,
   saveCodexEntryAction,
   saveCodexRelationshipAction,
+  saveCodexToneAction,
+  saveStoryCharacterAction,
 } from "@/app/rp/story/actions";
-import { museAvatarUrl } from "@/components/rich-text-editor-input/dialog-embed";
+import {
+  museAvatarUrl,
+  storyCharacterAvatarUrl,
+} from "@/components/rich-text-editor-input/dialog-embed";
 import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import type {
   CodexCategory,
   CodexEntry,
   CodexRelationship,
+  CodexTone,
   StoryBoardEvent,
   StoryCastMember,
+  StoryCharacter,
+  StoryPerson,
 } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { CategoryManager } from "./category-manager";
 import { CategorySheet } from "./category-sheet";
+import { CharacterSheet } from "./character-sheet";
 import { EntryReader } from "./entry-reader";
 import { EntrySheet } from "./entry-sheet";
 import { resolveCodexIcon } from "./icons";
 import { RelationshipsSection } from "./relationships";
 import * as S from "./styles";
+
+/**
+ * How many characters a story may own.
+ *
+ * Enforced here only, for now: the server still accepts up to 200, so this is a
+ * guard rail rather than a guarantee — a client that skips the UI is not stopped
+ * by it. Worth mirroring server-side before it is relied on.
+ */
+const MAX_STORY_CHARACTERS = 50;
 
 /** The Characters tab is the story's derived cast, not a codex category. */
 const CAST_TAB = "cast";
@@ -93,6 +113,10 @@ export const StoryCodexView: FC<Props> = ({
   const [categories, setCategories] = useState<CodexCategory[]>([]);
   const [entries, setEntries] = useState<CodexEntry[]>([]);
   const [relationships, setRelationships] = useState<CodexRelationship[]>([]);
+  /** Tones this story defined on top of the built-in three. */
+  const [tones, setTones] = useState<CodexTone[]>([]);
+  /** The story's own characters — the pool every co-author writes. */
+  const [characters, setCharacters] = useState<StoryCharacter[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>(CAST_TAB);
 
@@ -105,8 +129,15 @@ export const StoryCodexView: FC<Props> = ({
     category: CodexCategory | null;
   }>({ category: null, open: false });
   const [managerOpen, setManagerOpen] = useState(false);
+  const [characterSheet, setCharacterSheet] = useState<{
+    open: boolean;
+    character: StoryCharacter | null;
+  }>({ character: null, open: false });
   /** The entry being read. The card only shows a clamped preview. */
   const [readerEntry, setReaderEntry] = useState<CodexEntry | null>(null);
+
+  /** Stops new characters only; the ones already here stay editable. */
+  const atCharacterLimit = characters.length >= MAX_STORY_CHARACTERS;
 
   const tabRowRef = useRef<HTMLDivElement>(null);
   const activeTabRef = useRef<HTMLButtonElement>(null);
@@ -120,6 +151,8 @@ export const StoryCodexView: FC<Props> = ({
     setCategories(result.categories);
     setEntries(result.entries);
     setRelationships(result.relationships ?? []);
+    setTones(result.tones ?? []);
+    setCharacters(result.characters ?? []);
   }, [storyboardId]);
 
   useEffect(() => {
@@ -211,6 +244,30 @@ export const StoryCodexView: FC<Props> = ({
     ? (entriesByCategory.get(activeCategory.id) ?? [])
     : [];
 
+  /**
+   * Every character in the story, from both pools, in one list.
+   *
+   * The mesh and the relationship picker work in this shape because on the page
+   * a character is a character — the pool only decides who may edit them, and
+   * `refType` carries that through to the server.
+   */
+  const people = useMemo<StoryPerson[]>(
+    () => [
+      ...cast.map((member) => ({ ...member, refType: "MUSE" as const })),
+      ...characters
+        .filter((character) => character.id)
+        .map((character) => ({
+          accent: character.useAccent ? (character.accent ?? null) : null,
+          avatar: character.avatar ?? null,
+          id: character.id as string,
+          image: character.image ?? null,
+          name: `${character.firstName} ${character.lastName ?? ""}`.trim(),
+          refType: "CHARACTER" as const,
+        })),
+    ],
+    [cast, characters],
+  );
+
   // ── Entries ──────────────────────────────────────────────────────────────
 
   const handleSaveEntry = async (entry: CodexEntry) => {
@@ -245,6 +302,57 @@ export const StoryCodexView: FC<Props> = ({
     setEntrySheet({ entry: null, open: false });
   };
 
+  // ── In-story characters ──────────────────────────────────────────────────
+
+  const handleSaveCharacter = async (character: StoryCharacter) => {
+    // Belt and braces: the New buttons are already hidden at the cap, but a
+    // sheet left open while a co-author added the last one would slip past.
+    // Editing an existing character is never blocked.
+    if (!character.id && characters.length >= MAX_STORY_CHARACTERS) {
+      errorToast(
+        `This story is at its limit of ${MAX_STORY_CHARACTERS} characters.`,
+      );
+      return;
+    }
+    const saved = await saveStoryCharacterAction(storyboardId, character);
+    if (!saved || "message" in saved) {
+      errorToast("Could not save that character. Please try again.");
+      return;
+    }
+    setCharacters((current) => {
+      const exists = current.some((candidate) => candidate.id === saved.id);
+      return exists
+        ? current.map((candidate) =>
+            candidate.id === saved.id ? saved : candidate,
+          )
+        : [...current, saved];
+    });
+    setCharacterSheet({ character: null, open: false });
+  };
+
+  const handleDeleteCharacter = async (character: StoryCharacter) => {
+    if (!character.id) return;
+    const result = await deleteStoryCharacterAction(character.id);
+    if (result.message !== API_MESSAGE.Success) {
+      errorToast("Could not delete that character. Please try again.");
+      return;
+    }
+    setCharacters((current) =>
+      current.filter((candidate) => candidate.id !== character.id),
+    );
+    // The server took their relationships with them; drop the edges here too
+    // rather than leaving the mesh drawing lines to somebody who is gone.
+    setRelationships((current) =>
+      current.filter(
+        (edge) =>
+          !(edge.fromType === "CHARACTER" && edge.fromId === character.id) &&
+          !(edge.toType === "CHARACTER" && edge.toId === character.id),
+      ),
+    );
+    setCharacterSheet({ character: null, open: false });
+    successToast("Character deleted.");
+  };
+
   // ── Relationships ────────────────────────────────────────────────────────
 
   const handleSaveRelationship = async (relationship: CodexRelationship) => {
@@ -261,6 +369,49 @@ export const StoryCodexView: FC<Props> = ({
           )
         : [...current, saved];
     });
+  };
+
+  /**
+   * Adds a tone to the story. Returns it so the sheet can select it the moment
+   * it exists — the author made it for the relationship they are writing.
+   */
+  const handleSaveTone = async (tone: CodexTone): Promise<CodexTone | null> => {
+    const saved = await saveCodexToneAction(storyboardId, tone);
+    if (!saved || "message" in saved) {
+      errorToast("Could not save that tone. Please try again.");
+      return null;
+    }
+    setTones((current) => {
+      const exists = current.some((candidate) => candidate.id === saved.id);
+      return exists
+        ? current.map((candidate) =>
+            candidate.id === saved.id ? saved : candidate,
+          )
+        : [...current, saved];
+    });
+    return saved;
+  };
+
+  /**
+   * Retires a tone. The relationships drawn in it survive — the server nulls
+   * their link and they fall back to the built-in they carry — so drop the
+   * link here too rather than re-reading the whole codex.
+   */
+  const handleDeleteTone = async (tone: CodexTone) => {
+    if (!tone.id) return;
+    const result = await deleteCodexToneAction(tone.id);
+    if (result.message !== API_MESSAGE.Success) {
+      errorToast("Could not remove that tone. Please try again.");
+      return;
+    }
+    setTones((current) =>
+      current.filter((candidate) => candidate.id !== tone.id),
+    );
+    setRelationships((current) =>
+      current.map((edge) =>
+        edge.toneId === tone.id ? { ...edge, toneId: null } : edge,
+      ),
+    );
   };
 
   const handleDeleteRelationship = async (relationship: CodexRelationship) => {
@@ -380,7 +531,7 @@ export const StoryCodexView: FC<Props> = ({
           >
             <LuUsers size={14} />
             Characters
-            <span className="count">{cast.length}</span>
+            <span className="count">{cast.length + characters.length}</span>
           </S.Tab>
           <S.Tab
             ref={activeTab === MESH_TAB ? activeTabRef : undefined}
@@ -431,50 +582,143 @@ export const StoryCodexView: FC<Props> = ({
 
       {activeTab === MESH_TAB ? (
         <RelationshipsSection
-          cast={cast}
+          cast={people}
           relationships={relationships}
+          tones={tones}
+          onSaveTone={handleSaveTone}
+          onDeleteTone={handleDeleteTone}
           canEdit={canEdit}
           onSave={handleSaveRelationship}
           onDelete={handleDeleteRelationship}
         />
       ) : activeTab === CAST_TAB ? (
-        // The derived cast: every muse with dialog somewhere in this story.
-        // Read-only — the muse system owns these.
-        cast.length === 0 ? (
-          <S.Empty>
-            No characters yet. A muse joins the cast as soon as one of its
-            dialogs appears in a passage.
-          </S.Empty>
-        ) : (
-          <>
-            <S.CastRow>
-              {cast.map((member) => {
-                const avatarSrc = member.image || museAvatarUrl(member.id);
-                return (
-                  <S.CastChip
-                    key={member.id}
+        // Two pools, shown one under the other. The cast is muses: owned by a
+        // novelist, editable only from their own page, and here because they
+        // speak here. Beneath it, the story's own characters — owned by the
+        // storyboard, written by any co-author.
+        <>
+          {cast.length > 0 && (
+            <>
+              <S.PoolLabel>The cast</S.PoolLabel>
+              <S.CastRow>
+                {cast.map((member) => {
+                  const avatarSrc = member.image || museAvatarUrl(member.id);
+                  return (
+                    <S.CastChip
+                      key={member.id}
+                      type="button"
+                      title={`Open ${member.name}`}
+                      onClick={() => routeToPage(ROUTES.Muse.View(member.id))}
+                    >
+                      {avatarSrc ? (
+                        <S.CastAvatar src={avatarSrc} alt="" />
+                      ) : (
+                        <S.CastAvatarFallback>
+                          {member.name.charAt(0).toUpperCase()}
+                        </S.CastAvatarFallback>
+                      )}
+                      {member.name}
+                    </S.CastChip>
+                  );
+                })}
+              </S.CastRow>
+              <S.Note>
+                These are muses — they join the cast automatically when they
+                speak in a passage, and each is edited from its own page by the
+                novelist who penned it.
+              </S.Note>
+            </>
+          )}
+
+          <S.PoolLabel>This story&rsquo;s characters</S.PoolLabel>
+          {characters.length === 0 ? (
+            <S.Empty>
+              Nobody yet. These are the characters the story owns rather than
+              any one of you — the innkeeper, the dead king, the rival nobody
+              wants to build a whole muse for. Every co-author can write them,
+              and they can speak in a passage like any muse.
+              {canEdit && (
+                <S.ToolButton
+                  type="button"
+                  $primary
+                  onClick={() =>
+                    setCharacterSheet({ character: null, open: true })
+                  }
+                >
+                  <IoMdAdd size={16} />
+                  Add the first character
+                </S.ToolButton>
+              )}
+            </S.Empty>
+          ) : (
+            <>
+              <S.CastRow>
+                {characters.map((character) => {
+                  const name =
+                    `${character.firstName} ${character.lastName ?? ""}`.trim();
+                  const avatarSrc =
+                    character.image || storyCharacterAvatarUrl(character.id);
+                  const crop = character.avatar?.crop;
+                  return (
+                    <S.CharacterChip
+                      key={character.id}
+                      type="button"
+                      title={canEdit ? `Edit ${name}` : name}
+                      onClick={() =>
+                        canEdit && setCharacterSheet({ character, open: true })
+                      }
+                    >
+                      {/* The author's own framing, at chip size — the same
+                          three numbers that frame it in the editor. */}
+                      {character.avatar && crop ? (
+                        <S.CharacterChipAvatar
+                          $src={character.avatar.src}
+                          $x={crop.x}
+                          $y={crop.y}
+                          $scale={(crop.width || 100) / 100}
+                          aria-hidden
+                        />
+                      ) : avatarSrc ? (
+                        <S.CastAvatar src={avatarSrc} alt="" />
+                      ) : (
+                        <S.CastAvatarFallback>
+                          {name.charAt(0).toUpperCase()}
+                        </S.CastAvatarFallback>
+                      )}
+                      {name}
+                    </S.CharacterChip>
+                  );
+                })}
+                {canEdit && !atCharacterLimit && (
+                  <S.CharacterChip
                     type="button"
-                    title={`Open ${member.name}`}
-                    onClick={() => routeToPage(ROUTES.Muse.View(member.id))}
+                    title="Add a character"
+                    onClick={() =>
+                      setCharacterSheet({ character: null, open: true })
+                    }
                   >
-                    {avatarSrc ? (
-                      <S.CastAvatar src={avatarSrc} alt="" />
-                    ) : (
-                      <S.CastAvatarFallback>
-                        {member.name.charAt(0).toUpperCase()}
-                      </S.CastAvatarFallback>
-                    )}
-                    {member.name}
-                  </S.CastChip>
-                );
-              })}
-            </S.CastRow>
-            <S.Note>
-              Characters are your muses — they join this cast automatically when
-              they speak in a passage. Edit them from their own pages.
-            </S.Note>
-          </>
-        )
+                    <S.CastAvatarFallback>
+                      <IoMdAdd size={14} />
+                    </S.CastAvatarFallback>
+                    New character
+                  </S.CharacterChip>
+                )}
+              </S.CastRow>
+              <S.Note>
+                These belong to the story, not to any one of you — so anyone on
+                the storyboard can edit them, and anyone can speak as them.
+              </S.Note>
+              {/* Only the *adding* stops at the cap — every character already
+                  here stays fully editable. */}
+              {canEdit && atCharacterLimit && (
+                <S.Note>
+                  This story is at its limit of {MAX_STORY_CHARACTERS}{" "}
+                  characters. Remove one to make room for another.
+                </S.Note>
+              )}
+            </>
+          )}
+        </>
       ) : loading ? (
         <S.Grid aria-busy="true" aria-label="Loading the codex">
           <S.Skeleton />
@@ -609,6 +853,14 @@ export const StoryCodexView: FC<Props> = ({
         onClose={() => setCategorySheet({ category: null, open: false })}
         onSave={handleSaveCategory}
         onDelete={handleDeleteCategory}
+      />
+
+      <CharacterSheet
+        open={characterSheet.open}
+        character={characterSheet.character}
+        onClose={() => setCharacterSheet({ character: null, open: false })}
+        onSave={handleSaveCharacter}
+        onDelete={handleDeleteCharacter}
       />
 
       <CategoryManager

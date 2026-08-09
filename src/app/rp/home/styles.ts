@@ -377,7 +377,9 @@ export const FriendsStrip = styled(PartitionContainer)`
   padding-block: 8px;
   gap: 1.25rem;
 
-  @container page-container (max-width: 600px) {
+  /* media, not container query: page-container is no longer a container
+     (see rp/styles.ts) and it was viewport-wide anyway. */
+  @media (max-width: 600px) {
     gap: 0.5rem;
   }
 `;

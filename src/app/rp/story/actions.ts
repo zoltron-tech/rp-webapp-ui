@@ -10,6 +10,7 @@ import type {
   CodexCategory,
   CodexEntry,
   CodexRelationship,
+  CodexTone,
   SoundCue,
   StoryBoard,
   StoryBoardEvent,
@@ -17,9 +18,12 @@ import type {
   StoryBoardEventThreadInput,
   StoryBoardEventThreadPage,
   StoryBoardEventTimelineInput,
+  StoryCharacter,
   StoryMap,
   StoryMapPin,
   StoryMaps,
+  StoryNote,
+  StoryNoteFlags,
   StoryTimeline,
   StoryTimelineLane,
   StoryTimelineMarker,
@@ -1227,6 +1231,343 @@ export const deleteCodexRelationshipAction = async (relationshipId: string) => {
   });
 
   Logger.debug("deleteCodexRelationshipAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  return { message: API_MESSAGE.Success };
+};
+
+/**
+ * Creates a tone when `tone.id` is null, otherwise edits it.
+ *
+ * The story's own tones only — the built-in three live on the client and there
+ * is no route that could rename or remove them.
+ */
+export const saveCodexToneAction = async (
+  storyboardId: string,
+  tone: CodexTone,
+): Promise<DataType<CodexTone>> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/story/${storyboardId}/codex/tone`;
+
+  const response = await fetch(URL, {
+    body: JSON.stringify(tone),
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "POST",
+  });
+
+  Logger.debug("saveCodexToneAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const saved: CodexTone = await response.json();
+
+  return saved;
+};
+
+/** Retires a tone. Relationships drawn in it fall back to their built-in. */
+export const deleteCodexToneAction = async (toneId: string) => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/story/codex/tone/${toneId}`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "DELETE",
+  });
+
+  Logger.debug("deleteCodexToneAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  return { message: API_MESSAGE.Success };
+};
+
+// ── In-story characters ────────────────────────────────────────────────────
+// The storyboard's own shared pool. Reads follow the story (a character speaks
+// in chapters a public story shows); writes are members-only.
+
+export const getStoryCharactersAction = async (
+  storyboardId: string,
+): Promise<DataType<StoryCharacter[]>> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/story/${storyboardId}/characters`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+  });
+
+  Logger.debug("getStoryCharactersAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const characters: StoryCharacter[] = await response.json();
+
+  return characters;
+};
+
+/** Creates a character when `character.id` is null, otherwise updates it. */
+export const saveStoryCharacterAction = async (
+  storyboardId: string,
+  character: StoryCharacter,
+): Promise<DataType<StoryCharacter>> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/story/${storyboardId}/character`;
+
+  const response = await fetch(URL, {
+    body: JSON.stringify(character),
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "POST",
+  });
+
+  Logger.debug("saveStoryCharacterAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const saved: StoryCharacter = await response.json();
+
+  return saved;
+};
+
+export const deleteStoryCharacterAction = async (characterId: string) => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/story/character/${characterId}`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "DELETE",
+  });
+
+  Logger.debug("deleteStoryCharacterAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  return { message: API_MESSAGE.Success };
+};
+
+// ── Sticky notes ───────────────────────────────────────────────────────────
+// The storyboard's shared corkboard. Members-only in both directions, so every
+// call here authenticates — there is no anonymous read path.
+
+/** The whole board, archived notes included; the view splits them into tabs. */
+export const getStoryNotesAction = async (
+  storyboardId: string,
+): Promise<DataType<StoryNote[]>> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/story/${storyboardId}/notes`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+  });
+
+  Logger.debug("getStoryNotesAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const notes: StoryNote[] = await response.json();
+
+  return notes;
+};
+
+/** Creates a note when `note.id` is null, otherwise updates it. */
+export const saveStoryNoteAction = async (
+  storyboardId: string,
+  note: StoryNote,
+): Promise<DataType<StoryNote>> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/story/${storyboardId}/note`;
+
+  const response = await fetch(URL, {
+    body: JSON.stringify(note),
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "POST",
+  });
+
+  Logger.debug("saveStoryNoteAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const saved: StoryNote = await response.json();
+
+  return saved;
+};
+
+/** Pin/archive only — a pin from a card doesn't resend the note's body. */
+export const setStoryNoteFlagsAction = async (
+  noteId: string,
+  flags: StoryNoteFlags,
+): Promise<DataType<StoryNote>> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/story/note/${noteId}/flags`;
+
+  const response = await fetch(URL, {
+    body: JSON.stringify(flags),
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "POST",
+  });
+
+  Logger.debug("setStoryNoteFlagsAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const saved: StoryNote = await response.json();
+
+  return saved;
+};
+
+/** The board's full new order. Rejected server-side if it has gone stale. */
+export const reorderStoryNotesAction = async (
+  storyboardId: string,
+  orderedNoteIds: string[],
+): Promise<DataType<StoryNote[]>> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/story/${storyboardId}/notes/reorder`;
+
+  const response = await fetch(URL, {
+    body: JSON.stringify({ orderedNoteIds }),
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "POST",
+  });
+
+  Logger.debug("reorderStoryNotesAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const notes: StoryNote[] = await response.json();
+
+  return notes;
+};
+
+/**
+ * Casts — or moves — the caller's own vote on a poll note.
+ *
+ * One vote per co-author: voting again simply moves it, so there is never a
+ * retract-then-vote round trip. Comes back with the poll's fresh tallies.
+ */
+export const voteOnStoryNotePollAction = async (
+  noteId: string,
+  optionId: string,
+): Promise<DataType<StoryNote>> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/story/note/${noteId}/vote`;
+
+  const response = await fetch(URL, {
+    body: JSON.stringify({ optionId }),
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "POST",
+  });
+
+  Logger.debug("voteOnStoryNotePollAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const saved: StoryNote = await response.json();
+
+  return saved;
+};
+
+/** Takes the caller's own answer back off an open poll. */
+export const retractStoryNotePollVoteAction = async (
+  noteId: string,
+): Promise<DataType<StoryNote>> => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/story/note/${noteId}/vote`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "DELETE",
+  });
+
+  Logger.debug("retractStoryNotePollVoteAction", response.status);
+
+  if (!response.ok) {
+    return { message: API_MESSAGE.Error };
+  }
+
+  const saved: StoryNote = await response.json();
+
+  return saved;
+};
+
+export const deleteStoryNoteAction = async (noteId: string) => {
+  const jwt = await authenticateAndGetJWT();
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/story/note/${noteId}`;
+
+  const response = await fetch(URL, {
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      [AUTH_HEADER_NAME]: jwt,
+    },
+    method: "DELETE",
+  });
+
+  Logger.debug("deleteStoryNoteAction", response.status);
 
   if (!response.ok) {
     return { message: API_MESSAGE.Error };

@@ -11,10 +11,23 @@ import { css } from "styled-components";
 /** Which side the avatar/dialog sits on. Persisted; defaults to "left". */
 export type DialogOrientation = "left" | "right";
 
+/**
+ * Which pool a dialog's speaker comes from.
+ *
+ * `MUSE` is a novelist's own muse; `CHARACTER` is one of the storyboard's own
+ * in-story characters, shared by its co-authors. They are persisted under
+ * *different* attributes (`data-muse-id` / `data-character-id`) rather than one
+ * id plus a type flag: nothing has to assume attribute order, and every dialog
+ * written before in-story characters existed keeps meaning what it meant.
+ */
+export type DialogSourceType = "MUSE" | "CHARACTER";
+
 export type DialogEmbedData = {
-  /** Muse id, or null for an anonymous dialog. */
+  /** Speaker id, or null for an anonymous dialog. */
   museId: string | null;
-  /** Composer-only display name of the sender ("Anonymous" when no muse). */
+  /** Which pool `museId` names. Ignored when the dialog is anonymous. */
+  source?: DialogSourceType;
+  /** Composer-only display name of the sender ("Anonymous" when no speaker). */
   name: string;
   /** The spoken dialog line, as rich-text HTML (may carry bold/italic/underline). */
   text: string;
@@ -31,15 +44,21 @@ export type DialogEmbedData = {
 
 /**
  * A selectable sender for an embedded dialog. `avatar` is a plain image URL
- * shown in the muse picker (the embedded dialog's own avatar comes from the
- * muse avatar endpoint). The composer supplies the available muses to the
- * editor so the sender can be changed inline on a selected dialog.
+ * shown in the sender picker (the embedded dialog's own avatar comes from the
+ * avatar endpoint for its pool). The composer supplies the available senders to
+ * the editor so the sender can be changed inline on a selected dialog.
+ *
+ * Two pools feed this list: the novelist's own muses, and — inside a storyboard
+ * — the story's shared in-story characters.
  */
 export type DialogMuse = {
   id: string;
   name: string;
   avatar: string | null;
-  /** Muse's accent hex, or null when unset / the muse opted out of its accent.
+  /** Which pool this sender comes from. Defaults to a muse when unset, so
+   *  callers that only ever offer muses need not say so. */
+  source?: DialogSourceType;
+  /** Sender's accent hex, or null when unset / it opted out of its accent.
    *  Used to tint the colored card/bubble designs in the composer preview. */
   accent?: string | null;
 };
@@ -52,12 +71,28 @@ export const museAvatarUrl = (
 ): string | null =>
   museId ? `${RP_SERVICE_URL}/rp/portfolio/muse/${museId}/avatar` : null;
 
+/** The same, for one of a story's own characters. */
+export const storyCharacterAvatarUrl = (
+  characterId: string | null | undefined,
+): string | null =>
+  characterId
+    ? `${RP_SERVICE_URL}/rp/portfolio/story/character/${characterId}/avatar`
+    : null;
+
+/** The avatar endpoint for whichever pool a dialog's speaker came from. */
+export const dialogAvatarUrl = (
+  id: string | null | undefined,
+  source: DialogSourceType | undefined,
+): string | null =>
+  source === "CHARACTER" ? storyCharacterAvatarUrl(id) : museAvatarUrl(id);
+
 /** Builds a blank Anonymous dialog to embed and edit inline. */
 export const createEmptyDialogData = (): DialogEmbedData => ({
   font: null,
   museId: null,
   name: "Anonymous",
   orientation: "left",
+  source: "MUSE",
   text: "",
 });
 
@@ -87,11 +122,15 @@ export const createDialogDeleteButton = (): HTMLButtonElement => {
  */
 export const readDialogData = (root: HTMLElement): DialogEmbedData => {
   const text = root.querySelector<HTMLElement>(".dialog-text");
+  // A story character is carried under its own attribute, so an embed written
+  // before they existed still reads as the muse dialog it is.
+  const characterId = root.dataset.characterId || null;
   return {
     font: root.dataset.font || null,
-    museId: root.dataset.museId || null,
+    museId: characterId ?? root.dataset.museId ?? null,
     name: root.dataset.museName || "Anonymous",
     orientation: root.dataset.orientation === "right" ? "right" : "left",
+    source: characterId ? "CHARACTER" : "MUSE",
     text: text?.innerHTML ?? "",
   };
 };
@@ -106,7 +145,13 @@ export const createDialogModel = (data: DialogEmbedData): HTMLDivElement => {
   const root = document.createElement("div");
   root.className = "dialog-embed";
   root.setAttribute("data-dialog-embed", "");
-  root.dataset.museId = data.museId ?? "";
+  // Exactly one id attribute, never both: a speaker is one or the other, and
+  // the server reads each pool with its own pattern.
+  if (data.source === "CHARACTER" && data.museId) {
+    root.dataset.characterId = data.museId;
+  } else {
+    root.dataset.museId = data.museId ?? "";
+  }
   root.dataset.museName = data.name;
   if (data.font) root.dataset.font = data.font;
   // Only the non-default side is written; "left" is the implicit default.
@@ -160,7 +205,10 @@ const CHEVRON_SVG = `<svg viewBox="0 0 24 24" width="11" height="11" fill="none"
  * wrapped so a dropdown caret can overlay it while the dialog is being edited.
  */
 const buildAvatarChrome = (root: HTMLElement): HTMLElement => {
-  const avatarUrl = museAvatarUrl(root.dataset.museId || null);
+  const characterId = root.dataset.characterId || null;
+  const avatarUrl = characterId
+    ? storyCharacterAvatarUrl(characterId)
+    : museAvatarUrl(root.dataset.museId || null);
   const name = root.dataset.museName || "?";
 
   const wrap = document.createElement("span");
@@ -293,8 +341,10 @@ export const serializeDialogEmbeds = (html: string): string => {
     normalizeToModel(root);
     root.removeAttribute("contenteditable");
     root.removeAttribute("data-selected");
-    // Sender name/avatar/accent are resolved at render time from the muse id,
-    // so they are never persisted (name is only a composer-side display value).
+    // Sender name/avatar/accent are resolved at render time from the speaker
+    // id, so they are never persisted (name is only a composer-side display
+    // value). The id attributes themselves — data-muse-id or
+    // data-character-id — are the whole persisted model and stay put.
     root.removeAttribute("data-muse-name");
     root.removeAttribute("data-muse-avatar");
     root.removeAttribute("data-muse-accent");

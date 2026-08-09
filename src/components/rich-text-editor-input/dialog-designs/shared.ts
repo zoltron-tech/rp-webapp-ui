@@ -1,4 +1,4 @@
-import { type DialogEmbedData, museAvatarUrl } from "../dialog-embed";
+import { type DialogEmbedData, dialogAvatarUrl } from "../dialog-embed";
 
 /** Legacy dialogs baked the ❝ ❞ marks into a plain-text line; designs draw
  *  their own quotes, so strip them from pure-text content to avoid doubling. */
@@ -9,9 +9,10 @@ const stripLegacyQuotes = (html: string): string => {
 };
 
 /** Builds the avatar node (image or initial) for designs that show one. The
- *  image comes from the muse avatar endpoint, keyed by the muse id. */
+ *  image comes from the avatar endpoint of whichever pool the speaker is in —
+ *  a novelist's muse, or one of the story's own characters. */
 export const buildAvatar = (data: DialogEmbedData): HTMLElement => {
-  const url = museAvatarUrl(data.museId);
+  const url = dialogAvatarUrl(data.museId, data.source);
   if (url) {
     const img = document.createElement("img");
     img.src = url;

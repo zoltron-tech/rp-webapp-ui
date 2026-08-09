@@ -379,7 +379,8 @@ export function AvatarCropDialog({
   const clampZoom = (v: number) => Math.min(zoomMax, Math.max(ZOOM_MIN, v));
 
   const zoomPct = Math.round(((scale - ZOOM_MIN) / (zoomMax - ZOOM_MIN)) * 100);
-  const stepZoom = (dir: 1 | -1) => onScaleChange(clampZoom(scale + dir * ZOOM_STEP));
+  const stepZoom = (dir: 1 | -1) =>
+    onScaleChange(clampZoom(scale + dir * ZOOM_STEP));
 
   // ── Imperative pan ──────────────────────────────────────────────────────────
   // Dragging updates the image's background-position directly on the DOM node so
@@ -388,7 +389,12 @@ export function AvatarCropDialog({
   // parent only when the gesture ends, via onPan.
   const imgRef = useRef<HTMLDivElement>(null);
   const liveRef = useRef({ x, y });
-  const panStart = useRef<{ px: number; py: number; bx: number; by: number } | null>(null);
+  const panStart = useRef<{
+    px: number;
+    py: number;
+    bx: number;
+    by: number;
+  } | null>(null);
   const pinchDist = useRef<number | null>(null);
 
   // Keep the live position in sync with externally-driven changes (reset,
@@ -399,19 +405,30 @@ export function AvatarCropDialog({
 
   const applyPan = (nx: number, ny: number) => {
     liveRef.current = { x: nx, y: ny };
-    if (imgRef.current) imgRef.current.style.backgroundPosition = `${nx}% ${ny}%`;
+    if (imgRef.current)
+      imgRef.current.style.backgroundPosition = `${nx}% ${ny}%`;
   };
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.isPrimary === false) return;
     e.currentTarget.setPointerCapture(e.pointerId);
-    panStart.current = { px: e.clientX, py: e.clientY, bx: liveRef.current.x, by: liveRef.current.y };
+    panStart.current = {
+      bx: liveRef.current.x,
+      by: liveRef.current.y,
+      px: e.clientX,
+      py: e.clientY,
+    };
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     const start = panStart.current;
-    if (!start || !viewportRef?.current) return;
-    const rect = viewportRef.current.getBoundingClientRect();
+    if (!start) return;
+    // `viewportRef` is optional, so fall back to the element the gesture is
+    // actually on — which is the viewport, since these handlers are bound to
+    // the same node the ref is. Requiring the prop made dragging fail silently
+    // for any caller that didn't pass one, while zoom kept working.
+    const viewport = viewportRef?.current ?? e.currentTarget;
+    const rect = viewport.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
     const dx = ((e.clientX - start.px) / rect.width) * 100;
     const dy = ((e.clientY - start.py) / rect.height) * 100;
@@ -426,7 +443,9 @@ export function AvatarCropDialog({
 
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     e.preventDefault();
-    onScaleChange(clampZoom(scale + (e.deltaY < 0 ? ZOOM_STEP / 5 : -ZOOM_STEP / 5)));
+    onScaleChange(
+      clampZoom(scale + (e.deltaY < 0 ? ZOOM_STEP / 5 : -ZOOM_STEP / 5)),
+    );
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -520,8 +539,8 @@ export function AvatarCropDialog({
             $fill={shape === "rect" ? 100 : 92}
             style={{
               backgroundImage: src ? `url(${src})` : undefined,
-              backgroundSize: `${scale * 100}% auto`,
               backgroundPosition: `${x}% ${y}%`,
+              backgroundSize: `${scale * 100}% auto`,
             }}
           />
           {shape === "circle" ? <CircleBorderMask /> : <RectBorderMask />}

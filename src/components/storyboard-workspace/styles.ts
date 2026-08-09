@@ -27,6 +27,44 @@ export const Frame = styled.div`
   }
 `;
 
+/** Holds the guide trigger above the frame, aligned with the canvas's edge. */
+export const UtilityRow = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+  /* Pulls the frame's own top margin in, so the button reads as attached to
+     the workspace below it rather than floating between two sections. */
+  margin-bottom: -0.6rem;
+`;
+
+/** "Guide" — opens the storyboard walkthrough. Quiet until it is wanted. */
+export const GuideButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 34px;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  background: var(--bg-2);
+  border: 1px solid var(--bg-6);
+  transition: border-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  @media (max-width: ${WORKSPACE_BREAKPOINT}px) {
+    font-size: var(--font-size-xsmall);
+    padding: 0.3rem 0.6rem;
+  }
+`;
+
 /** Desktop icon rail — the workspace's primary navigation. */
 export const Rail = styled.nav`
   flex-shrink: 0;

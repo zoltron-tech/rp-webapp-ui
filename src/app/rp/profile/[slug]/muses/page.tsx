@@ -48,18 +48,6 @@ export default function MusesListPage({}) {
   // shown in the breadcrumb.
   const atMuseLimit = (muses?.length ?? 0) >= museLimit;
 
-  const backgroundTiles = useMemo(
-    () =>
-      muses?.map((muse) => ({
-        image: muse.avatar?.src || muse.image || "",
-        left: 5 + Math.random() * 80,
-        rotation: -45 + Math.random() * 90,
-        scale: 1.5 + Math.random() * 2.5,
-        top: 5 + Math.random() * 80,
-      })) ?? [],
-    [muses],
-  );
-
   const filteredMuses = muses?.filter((m) => {
     if (
       search &&
@@ -130,19 +118,6 @@ export default function MusesListPage({}) {
 
   return (
     <S.Container>
-      {/* ✨ Background mesh */}
-      <S.BackgroundContainer>
-        {backgroundTiles.map((tile, i) => (
-          <S.BackgroundTile
-            key={i}
-            image={tile.image}
-            top={tile.top}
-            left={tile.left}
-            rotation={tile.rotation}
-            scale={tile.scale}
-          />
-        ))}
-      </S.BackgroundContainer>
       <BreadCrumb
         label={`Characters ${isCurrentUser ? `(${muses?.length ?? 0} / ${novelist?.tier.museLimit ?? 0})` : ""}`}
         username={username}

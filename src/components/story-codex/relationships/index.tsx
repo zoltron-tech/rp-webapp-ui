@@ -6,29 +6,26 @@ import { IoMdAdd } from "react-icons/io";
 import { LuNetwork, LuTable2 } from "react-icons/lu";
 import { museAvatarUrl } from "@/components/rich-text-editor-input/dialog-embed";
 import { useGlobalState } from "@/context/store/stores";
-import type {
-  CodexRelationship,
-  RelationshipTone,
-  StoryCastMember,
-} from "@/types";
+import type { CodexRelationship, CodexTone, StoryPerson } from "@/types";
 import { RelationshipMesh } from "./mesh";
 import { RelationshipSheet } from "./relationship-sheet";
 import * as S from "./styles";
-import {
-  strengthWidth,
-  TONE_ORDER,
-  TONE_SPECS,
-  toneColor,
-  toneSpec,
-} from "./tones";
+import { buildTonePalette, resolveTone, strengthWidth } from "./tones";
 
 type Props = {
   /** The story's derived cast — the only characters a relationship can join. */
-  cast: StoryCastMember[];
+  /** Every character in the story, from both pools. */
+  cast: StoryPerson[];
   relationships: CodexRelationship[];
+  /** Tones this story added on top of the built-in three. */
+  tones: CodexTone[];
   canEdit: boolean;
   onSave: (relationship: CodexRelationship) => void;
   onDelete: (relationship: CodexRelationship) => void;
+  /** Creating a tone happens inside the relationship sheet — an author reaches
+   *  for a new colour while recording the relationship that needs it. */
+  onSaveTone: (tone: CodexTone) => Promise<CodexTone | null>;
+  onDeleteTone: (tone: CodexTone) => void;
 };
 
 type Mode = "mesh" | "table";
@@ -43,16 +40,18 @@ type Mode = "mesh" | "table";
 export const RelationshipsSection: FC<Props> = ({
   cast,
   relationships,
+  tones,
   canEdit,
   onSave,
   onDelete,
+  onSaveTone,
+  onDeleteTone,
 }) => {
   const theme = useGlobalState("theme");
 
   const [mode, setMode] = useState<Mode>("mesh");
-  const [hiddenTones, setHiddenTones] = useState<Set<RelationshipTone>>(
-    new Set(),
-  );
+  /** Keyed by tone key — a built-in name, or a custom tone id. */
+  const [hiddenTones, setHiddenTones] = useState<Set<string>>(new Set());
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const [sheet, setSheet] = useState<{
     open: boolean;
@@ -64,24 +63,30 @@ export const RelationshipsSection: FC<Props> = ({
     [cast],
   );
 
+  /** The built-in three first, always, then whatever this story added. */
+  const palette = useMemo(() => buildTonePalette(tones, theme), [tones, theme]);
+
   /** Only relationships whose characters are both still in the cast. */
   const drawable = useMemo(
     () =>
       relationships.filter(
         (relationship) =>
-          namesById.has(relationship.fromMuseId) &&
-          namesById.has(relationship.toMuseId),
+          namesById.has(relationship.fromId) &&
+          namesById.has(relationship.toId),
       ),
     [relationships, namesById],
   );
 
   const counts = useMemo(() => {
-    const map = new Map<RelationshipTone, number>();
+    const map = new Map<string, number>();
     for (const relationship of drawable) {
-      map.set(relationship.tone, (map.get(relationship.tone) ?? 0) + 1);
+      // Counted against the tone actually drawn, so an edge whose custom tone
+      // was retired is tallied under the built-in it fell back to.
+      const key = resolveTone(relationship, palette, theme).key;
+      map.set(key, (map.get(key) ?? 0) + 1);
     }
     return map;
-  }, [drawable]);
+  }, [drawable, palette, theme]);
 
   const focused = focusedId ? namesById.get(focusedId) : null;
   const focusedEdges = useMemo(
@@ -89,18 +94,18 @@ export const RelationshipsSection: FC<Props> = ({
       focusedId
         ? drawable.filter(
             (relationship) =>
-              relationship.fromMuseId === focusedId ||
-              relationship.toMuseId === focusedId,
+              relationship.fromId === focusedId ||
+              relationship.toId === focusedId,
           )
         : [],
     [drawable, focusedId],
   );
 
-  const toggleTone = (tone: RelationshipTone) =>
+  const toggleTone = (key: string) =>
     setHiddenTones((current) => {
       const next = new Set(current);
-      if (next.has(tone)) next.delete(tone);
-      else next.add(tone);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
 
@@ -159,18 +164,18 @@ export const RelationshipsSection: FC<Props> = ({
       {/* Always present — identity is never carried by colour alone, and each
           tone shows its stroke pattern next to its hue. */}
       <S.Legend>
-        {TONE_ORDER.map((tone) => {
-          const spec = TONE_SPECS[tone];
-          const colour = toneColor(tone, theme);
-          const hidden = hiddenTones.has(tone);
+        {palette.map((tone) => {
+          const hidden = hiddenTones.has(tone.key);
           return (
             <S.LegendItem
-              key={tone}
+              key={tone.key}
               type="button"
               $muted={hidden}
               aria-pressed={!hidden}
-              title={`${spec.description} — click to ${hidden ? "show" : "hide"}`}
-              onClick={() => toggleTone(tone)}
+              title={`${
+                tone.description ?? "A tone this story defined"
+              } — click to ${hidden ? "show" : "hide"}`}
+              onClick={() => toggleTone(tone.key)}
             >
               <S.LegendSwatch viewBox="0 0 26 10" aria-hidden>
                 <line
@@ -178,14 +183,14 @@ export const RelationshipsSection: FC<Props> = ({
                   y1="5"
                   x2="25"
                   y2="5"
-                  stroke={colour}
+                  stroke={tone.color}
                   strokeWidth="2.5"
                   strokeLinecap="round"
-                  strokeDasharray={spec.dash === "none" ? undefined : spec.dash}
+                  strokeDasharray={tone.dash}
                 />
               </S.LegendSwatch>
-              {spec.label}
-              <span>({counts.get(tone) ?? 0})</span>
+              {tone.label}
+              <span>({counts.get(tone.key) ?? 0})</span>
             </S.LegendItem>
           );
         })}
@@ -202,6 +207,7 @@ export const RelationshipsSection: FC<Props> = ({
           <RelationshipMesh
             cast={cast}
             relationships={drawable}
+            palette={palette}
             hiddenTones={hiddenTones}
             focusedId={focusedId}
             onFocus={setFocusedId}
@@ -231,26 +237,24 @@ export const RelationshipsSection: FC<Props> = ({
             </thead>
             <tbody>
               {drawable.map((relationship) => {
-                const spec = toneSpec(relationship.tone);
+                const tone = resolveTone(relationship, palette, theme);
                 return (
                   <tr key={relationship.id}>
-                    <td>{namesById.get(relationship.fromMuseId)}</td>
+                    <td>{namesById.get(relationship.fromId)}</td>
                     <td
                       aria-label={relationship.isDirected ? "toward" : "with"}
                     >
                       {relationship.isDirected ? "→" : "·"}
                     </td>
-                    <td>{namesById.get(relationship.toMuseId)}</td>
+                    <td>{namesById.get(relationship.toId)}</td>
                     <td>{relationship.label}</td>
                     <td>
                       <S.ToneCell>
                         <span
                           className="swatch"
-                          style={{
-                            background: toneColor(relationship.tone, theme),
-                          }}
+                          style={{ background: tone.color }}
                         />
-                        {spec.label}
+                        {tone.label}
                       </S.ToneCell>
                     </td>
                     <td>
@@ -299,10 +303,10 @@ export const RelationshipsSection: FC<Props> = ({
 
           {focusedEdges.map((relationship) => {
             const other =
-              relationship.fromMuseId === focusedId
-                ? relationship.toMuseId
-                : relationship.fromMuseId;
-            const spec = toneSpec(relationship.tone);
+              relationship.fromId === focusedId
+                ? relationship.toId
+                : relationship.fromId;
+            const tone = resolveTone(relationship, palette, theme);
             return (
               <S.DetailRow
                 key={relationship.id}
@@ -315,15 +319,14 @@ export const RelationshipsSection: FC<Props> = ({
                 <span
                   className="stroke"
                   style={{
-                    background: toneColor(relationship.tone, theme),
+                    background: tone.color,
                     height: strengthWidth(relationship.strength),
                   }}
                   aria-hidden
                 />
                 {relationship.label}
                 <span className="who">
-                  {relationship.isDirected &&
-                  relationship.fromMuseId === focusedId
+                  {relationship.isDirected && relationship.fromId === focusedId
                     ? "→ "
                     : relationship.isDirected
                       ? "← "
@@ -331,7 +334,7 @@ export const RelationshipsSection: FC<Props> = ({
                   {namesById.get(other)}
                 </span>
                 <S.Spacer />
-                <span className="who">{spec.label}</span>
+                <span className="who">{tone.label}</span>
               </S.DetailRow>
             );
           })}
@@ -342,7 +345,11 @@ export const RelationshipsSection: FC<Props> = ({
         open={sheet.open}
         relationship={sheet.relationship}
         cast={cast}
+        palette={palette}
+        tones={tones}
         canEdit={canEdit}
+        onSaveTone={onSaveTone}
+        onDeleteTone={onDeleteTone}
         onClose={() => setSheet({ open: false, relationship: null })}
         onSave={(relationship) => {
           onSave(relationship);

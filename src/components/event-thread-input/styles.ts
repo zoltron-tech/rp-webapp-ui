@@ -34,17 +34,56 @@ export const EventThreadInputRoot = styled.div`
 
   /* Inline (on-page) variant: the composer sits directly on a manuscript
      page, so it sheds the boxed chrome — transparent surface, no side
-     padding, a shorter default editor — and reads as part of the page. */
+     padding — and reads as part of the page. */
   &.inline {
     background-color: transparent;
-    padding: 40px 0 4px;
 
-    @media (max-width: 680px) {
-      padding: 40px 0 4px;
+    /*
+     * The sheet under this composer is drawn at a display scale — roughly 0.8
+     * on a phone, clamped to 1.25 on a wide screen — so a size written in page
+     * pixels lands too small on one and inflated on the other. Every chrome
+     * size below is divided back out by that scale, i.e. written in the pixels
+     * the writer actually sees. Prose is deliberately left alone: it is the
+     * page's own type and has to keep matching the passage it will become.
+     */
+    --nw-inv-scale: calc(1 / var(--nw-composer-scale, 1));
+
+    /*
+     * The writing surface runs to the paper's edge, but the controls around it
+     * are loose UI sitting on bare page — they keep this much inline breathing
+     * room so they never butt the sheet's edge. Every control row reads it, so
+     * they all line up on the same invisible margin.
+     */
+    --nw-composer-inset: calc(16px * var(--nw-inv-scale));
+
+    /* Exactly the action row's own height — nothing more. */
+    padding: calc(34px * var(--nw-inv-scale)) 0 0;
+
+    .form-content {
+      gap: calc(6px * var(--nw-inv-scale));
     }
 
     [data-placeholder] {
-      min-height: 140px;
+      min-height: calc(260px * var(--nw-inv-scale));
+      padding: calc(10px * var(--nw-inv-scale)) calc(12px * var(--nw-inv-scale));
+      /* No floating send button on this variant — that reserve is dead room. */
+      padding-bottom: calc(10px * var(--nw-inv-scale));
+    }
+
+    [role="toolbar"] {
+      gap: calc(2px * var(--nw-inv-scale));
+      padding: calc(4px * var(--nw-inv-scale)) calc(8px * var(--nw-inv-scale));
+    }
+
+    /* A phone is the one place the page is drawn *below* 1:1, dragging the
+       prose down to ~14px. There, and only there, the writing surface is held
+       at 16px real — which is also iOS's threshold for not zooming the
+       viewport on focus — and capped so it never swallows the whole screen. */
+    @media (max-width: 680px) {
+      [data-placeholder] {
+        font-size: calc(16px * var(--nw-inv-scale));
+        max-height: calc(48dvh * var(--nw-inv-scale));
+      }
     }
   }
 `;
@@ -54,6 +93,14 @@ export const TextInputContainer = styled(Form.Field)`
   flex-direction: column;
 
   margin-block: 12px;
+
+  /* On the manuscript page the editor is the page — near-flush, no block
+     margin of its own. (Scoped from here rather than the root: Form.Field
+     strips \`name\` before it reaches the DOM, so there is no attribute on
+     this element for an ancestor rule to hook onto.) */
+  .inline & {
+    margin-block: calc(4px * var(--nw-inv-scale, 1)) 0;
+  }
 
   /* Taller default editor surface so there is more room to write. Targets the
      editor surface only (it carries data-placeholder) — not the editable
@@ -303,15 +350,53 @@ export const DialogInsertSlot = styled.div`
   top: 6px;
   right: 16px;
 
-  /* The inline page composer has no side padding to clear. */
+  /* The inline page composer has no side padding of its own, so this row
+     carries the composer's shared inline inset instead. */
   .inline & {
-    right: 0;
+    right: var(--nw-composer-inset, 0);
+    top: 0;
+
+    /* Held at a real 32px whatever the sheet's scale: small enough that the
+       reserve above the editor stays thin, large enough to stay a tap target.
+       The composer's top padding is sized to exactly this row, so the two have
+       to agree — leaving it to scale would overrun it on a wide screen. */
+    gap: calc(4px * var(--nw-inv-scale, 1));
+
+    button,
+    .form-label {
+      height: calc(32px * var(--nw-inv-scale, 1));
+      font-size: calc(13px * var(--nw-inv-scale, 1));
+
+      svg {
+        width: calc(17px * var(--nw-inv-scale, 1));
+        height: calc(17px * var(--nw-inv-scale, 1));
+      }
+    }
+
+    /* Mirrors the icon-only collapse below — square once the label is gone. */
+    @media (max-width: 480px) {
+      button,
+      .form-label {
+        width: calc(32px * var(--nw-inv-scale, 1));
+      }
+    }
   }
   z-index: 5;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 6px;
+`;
+
+/**
+ * Holds the dialog-style dropdown. It exists only so the composer can inset a
+ * control it does not own — `DialogDesignSelect` is shared with other editors
+ * and has no business knowing it is sitting on a manuscript page.
+ */
+export const DialogDesignSlot = styled.div`
+  .inline & {
+    padding-inline: var(--nw-composer-inset, 0);
+  }
 `;
 
 export const DialogInsertButton = styled.button`
@@ -557,15 +642,20 @@ export const InlineActions = styled.div`
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 8px;
+  /* Same story as the rest of the composer: this row rides the sheet's display
+     scale, so size it in the real pixels a thumb (or pointer) has to hit. */
+  gap: calc(8px * var(--nw-inv-scale, 1));
+  margin-top: calc(4px * var(--nw-inv-scale, 1));
+  padding-inline: var(--nw-composer-inset, 0);
 
   button {
     all: unset;
     box-sizing: border-box;
     cursor: pointer;
-    padding: 6px 14px;
+    padding: calc(9px * var(--nw-inv-scale, 1))
+      calc(16px * var(--nw-inv-scale, 1));
     border-radius: 4px;
-    font-size: var(--font-size-small);
+    font-size: calc(14px * var(--nw-inv-scale, 1));
     font-family: var(--font);
     color: var(--text);
 

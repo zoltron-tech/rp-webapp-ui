@@ -2,6 +2,7 @@
 import getConfig from "next/config";
 import {
   authenticateAndGetJWT,
+  getAuthCookie,
   getJWTIfExists,
   logoutAction,
 } from "@/app/actions";
@@ -20,7 +21,11 @@ import {
   CONTENT_TYPE_HEADER_NAME,
   MEDIA_JSON_HEADER_VALUE,
 } from "@/utils/constants";
-import { reverseWsrvUrl, transformFriend, transformNovelist } from "@/utils/image";
+import {
+  reverseWsrvUrl,
+  transformFriend,
+  transformNovelist,
+} from "@/utils/image";
 import { Logger } from "@/utils/services";
 
 const { serverRuntimeConfig } = getConfig();
@@ -215,31 +220,31 @@ export const updateUserNovelist = async (
   // URL in the DB — the same bug that affects updateMuseAction.
   const novelist: UpdateNovelistPayload = {
     ..._novelist,
-    image: reverseWsrvUrl(_novelist.image),
     avatar: _novelist.avatar
       ? {
           ..._novelist.avatar,
-          src: reverseWsrvUrl(_novelist.avatar.src),
           crop: _novelist.avatar.crop
             ? {
                 ..._novelist.avatar.crop,
                 src: reverseWsrvUrl(_novelist.avatar.crop.src),
               }
             : _novelist.avatar.crop,
+          src: reverseWsrvUrl(_novelist.avatar.src),
         }
       : _novelist.avatar,
     banner: _novelist.banner
       ? {
           ..._novelist.banner,
-          src: reverseWsrvUrl(_novelist.banner.src),
           crop: _novelist.banner.crop
             ? {
                 ..._novelist.banner.crop,
                 src: reverseWsrvUrl(_novelist.banner.crop.src),
               }
             : _novelist.banner.crop,
+          src: reverseWsrvUrl(_novelist.banner.src),
         }
       : _novelist.banner,
+    image: reverseWsrvUrl(_novelist.image),
   };
 
   Logger.debug("updateUserNovelist", novelist);
@@ -333,7 +338,7 @@ export const addNoteAction = async (
   const URL = `${RP_SERVICE_URL}/rp/portfolio/note`;
 
   const response = await fetch(URL, {
-    body: JSON.stringify({ text, color, emoji }),
+    body: JSON.stringify({ color, emoji, text }),
     cache: "no-store",
     headers: {
       [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
@@ -474,4 +479,67 @@ export const getConversationsAction = async (
 
   const result = (await response.json()) as Conversation[];
   return result;
+};
+
+/**
+ * The guides this novelist has already been through, by their own ids.
+ *
+ * Null when nobody is signed in, or when the service could not be reached —
+ * both mean "we do not know", and a guide that auto-opens must not fire on a
+ * guess. See `useUserGuide`.
+ */
+export const getViewedGuidesAction = async (): Promise<string[] | null> => {
+  // The cookie is read, never validated here. `getJWTIfExists` clears a stale
+  // one, and clearing a cookie is a write — which throws outside an action's
+  // own context and would take the page down over a guide nobody asked for.
+  // The service validates the token anyway; a bad one comes back 401, which
+  // reads the same as "unknown" below.
+  const jwt = await getAuthCookie();
+  if (!jwt) return null;
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/guides`;
+
+  try {
+    const response = await fetch(URL, {
+      cache: "no-store",
+      headers: { [AUTH_HEADER_NAME]: jwt },
+    });
+
+    if (!response.ok) return null;
+
+    return (await response.json()) as string[];
+  } catch (error) {
+    Logger.debug("getViewedGuidesAction", error);
+    return null;
+  }
+};
+
+/**
+ * Records that this novelist finished a guide, and returns the whole list back.
+ * Idempotent server-side, so finishing one twice is not worth guarding against
+ * here.
+ */
+export const markGuideViewedAction = async (
+  guideId: string,
+): Promise<string[] | null> => {
+  // Read-only on the cookie, as above.
+  const jwt = await getAuthCookie();
+  if (!jwt) return null;
+
+  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/guides/${encodeURIComponent(guideId)}`;
+
+  try {
+    const response = await fetch(URL, {
+      cache: "no-store",
+      headers: { [AUTH_HEADER_NAME]: jwt },
+      method: "POST",
+    });
+
+    if (!response.ok) return null;
+
+    return (await response.json()) as string[];
+  } catch (error) {
+    Logger.debug("markGuideViewedAction", error);
+    return null;
+  }
 };

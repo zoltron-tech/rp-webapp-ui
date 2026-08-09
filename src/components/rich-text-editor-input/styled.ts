@@ -1316,6 +1316,22 @@ interface DialogMuseOptionProps {
   $selected?: boolean;
 }
 
+/**
+ * "My muses" / "Story characters" in the speaker picker.
+ *
+ * Only drawn when both pools are actually on offer — a composer outside a
+ * storyboard has nothing to disambiguate and gets no headings at all.
+ */
+export const DialogMuseGroupLabel = styled.span`
+  display: block;
+  padding: 0.45rem 0.6rem 0.2rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  pointer-events: none;
+`;
+
 export const DialogMuseOptionItem = styled.button<DialogMuseOptionProps>`
   width: 100%;
   display: flex;

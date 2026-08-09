@@ -16,11 +16,13 @@ export const CardWrapper = styled.div`
   height: 220px;
   border-radius: var(--border-radius);
   transition: all 0.3s ease-in-out;
-  contain: paint;
+  /* See muse-card: overflow clipping instead of paint containment, so iOS
+     cannot skip painting the card while it is off-screen. */
+  overflow: hidden;
   z-index: ${Z_INDEX.CARD};
 
   container-name: novelist-card;
-  container-type: size;
+  container-type: inline-size;
 
   &.expanded {
     height: 500px;
@@ -74,12 +76,10 @@ export const CardBackground = styled.div<CardProps>`
 
   background-position: center;
   background-size: cover;
-
-  filter: blur(20px);
-  -webkit-filter: blur(20px);
-  -moz-filter: blur(20px);
-  -o-filter: blur(20px);
-  -ms-filter: blur(20px);
+  /* No CSS filter — the blur is baked into the image via the wsrv.nl proxy
+     (see the banner prop in index.tsx). A live blur() layer per carousel
+     slide is an iOS 26 compositor-regression trigger (off-screen content
+     blanking during scroll). */
 `;
 
 export const Card = styled.div`

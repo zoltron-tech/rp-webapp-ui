@@ -16,6 +16,9 @@ type Props = {
   onClose: () => void;
   /** Roomier on desktop — for editors with a rich-text field. */
   wide?: boolean;
+  /** Extra circular actions, sat left of the close button — for a read-only
+   *  sheet that offers its own verbs (edit, archive, delete). */
+  headerActions?: ReactNode;
   children: ReactNode;
 };
 
@@ -31,6 +34,7 @@ export const ResponsiveSheet: FC<Props> = ({
   confirmDisabled,
   onClose,
   wide,
+  headerActions,
   children,
 }) => {
   const accent = useGlobalState("accent");
@@ -53,6 +57,7 @@ export const ResponsiveSheet: FC<Props> = ({
       <S.Sheet role="dialog" aria-modal aria-label={title} $wide={wide}>
         <S.SheetHeader>
           <S.SheetTitle>{title}</S.SheetTitle>
+          {headerActions}
           <S.SheetActionButton
             type="button"
             aria-label="Cancel"

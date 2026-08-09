@@ -12,7 +12,9 @@ export const CardWrapper = styled.div`
   justify-content: center;
   z-index: ${Z_INDEX.CARD};
 
-  @container page-container (max-width: 600px) {
+  /* media, not container query: page-container is no longer a container
+     (see rp/styles.ts) and it was viewport-wide anyway. */
+  @media (max-width: 600px) {
     & {
       width: 44px;
       height: 44px;

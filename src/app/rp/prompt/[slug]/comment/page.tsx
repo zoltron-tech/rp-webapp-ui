@@ -70,10 +70,11 @@ function CommentPageInner() {
     };
   }, [setGlobalState]);
 
-  // Lock outer PageContainer scroll on mobile.
+  // Lock outer page scroll on mobile. The document scrolls, not
+  // .page-container (see rp/styles.ts).
   useEffect(() => {
     if (!isMobile) return;
-    const el = document.querySelector(".page-container") as HTMLElement | null;
+    const el = document.scrollingElement as HTMLElement | null;
     if (!el) return;
     el.style.overflow = "hidden";
     el.scrollTop = 0;

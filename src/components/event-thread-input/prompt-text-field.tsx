@@ -9,7 +9,7 @@ import {
 import { searchMentionMusesAction } from "@/app/rp/muse/actions";
 import { deleteMedia } from "@/app/rp/profile/actions";
 import { useGlobalState } from "@/context/store/stores";
-import type { MentionDataItem, MentionTab } from "@/types";
+import type { MentionDataItem, MentionTab, StoryCharacter } from "@/types";
 import {
   RichTextEditor,
   type RichTextEditorHandle,
@@ -27,12 +27,16 @@ type Props = {
   initialValue?: string;
   /** Editor placeholder override (the inline page composer uses its own). */
   placeholder?: string;
+  /** The storyboard's own shared characters, when composing inside a story.
+   *  Offered as dialog speakers beside the novelist's own muses. */
+  storyCharacters?: StoryCharacter[];
 };
 
 export const EventThreadTextField: FC<Props> = ({
   editorRef,
   initialValue,
   placeholder,
+  storyCharacters = [],
 }) => {
   const novelist = useGlobalState("novelist");
   const setPromptInputState = useEventThreadInputStoreSet();
@@ -172,18 +176,34 @@ export const EventThreadTextField: FC<Props> = ({
     [fetchMentionableFriends, fetchMentionableMuses],
   );
 
-  // Muses selectable as the sender of an embedded dialog (inline editing).
+  /**
+   * Who can speak an embedded dialog: the novelist's own muses, plus — inside a
+   * storyboard — that story's shared characters. Both are offered, and the
+   * picker labels which is which; a muse belongs to its novelist, a story
+   * character to the story.
+   */
   const dialogMuses = useMemo(
-    () =>
-      (novelist?.muses ?? []).map((m) => ({
+    () => [
+      ...(novelist?.muses ?? []).map((m) => ({
         // Only carry the accent when the muse opted into it, so the colored
         // designs tint with the app accent otherwise (matches the reader).
         accent: m.useAccent ? m.accent : null,
         avatar: m.image || null,
         id: m.id ?? "",
         name: `${m.firstName} ${m.lastName}`.trim(),
+        source: "MUSE" as const,
       })),
-    [novelist?.muses],
+      ...storyCharacters
+        .filter((c) => c.id)
+        .map((c) => ({
+          accent: c.useAccent ? (c.accent ?? null) : null,
+          avatar: c.image || null,
+          id: c.id as string,
+          name: `${c.firstName} ${c.lastName ?? ""}`.trim(),
+          source: "CHARACTER" as const,
+        })),
+    ],
+    [novelist?.muses, storyCharacters],
   );
 
   return (

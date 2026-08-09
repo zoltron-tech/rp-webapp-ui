@@ -4,6 +4,7 @@ import classNames from "classnames";
 import { Popover } from "radix-ui";
 import type React from "react";
 import {
+  Fragment,
   forwardRef,
   useCallback,
   useEffect,
@@ -140,6 +141,30 @@ export const RichTextEditor = forwardRef<
     // editable card chrome. Refs let the select/deselect callbacks read the
     // current design/muses without re-subscribing.
     const designPreview = dialogDesign != null;
+
+    /**
+     * The speaker picker, split by where a speaker comes from: the novelist's
+     * own muses, and — inside a storyboard — the story's shared characters.
+     * Empty groups are dropped, so a composer with only muses looks exactly as
+     * it always did.
+     */
+    const dialogSenderGroups = useMemo(
+      () =>
+        (
+          [
+            { label: "My muses", source: "MUSE" },
+            { label: "Story characters", source: "CHARACTER" },
+          ] as const
+        )
+          .map((group) => ({
+            ...group,
+            senders: dialogMuses.filter(
+              (m) => (m.source ?? "MUSE") === group.source,
+            ),
+          }))
+          .filter((group) => group.senders.length > 0),
+      [dialogMuses],
+    );
     const dialogMuseAttrs = useMemo<MuseDialogAttrs>(
       () =>
         Object.fromEntries(
@@ -321,9 +346,11 @@ export const RichTextEditor = forwardRef<
         editor
           .querySelectorAll<HTMLElement>(".dialog-embed")
           .forEach((embed) => {
-            const id = embed.dataset.museId;
-            const muse = id ? dialogMuses.find((m) => m.id === id) : null;
-            if (muse) embed.dataset.museName = muse.name;
+            // Either pool — a story character is carried under its own
+            // attribute, so a pre-character embed still reads as a muse.
+            const id = embed.dataset.characterId || embed.dataset.museId;
+            const sender = id ? dialogMuses.find((m) => m.id === id) : null;
+            if (sender) embed.dataset.museName = sender.name;
           });
         if (designPreview) {
           // Preview mode: start every embed in the chosen read-only design.
@@ -1439,7 +1466,9 @@ export const RichTextEditor = forwardRef<
         embed.setAttribute("data-selected", "true");
         setSelectedDialog(embed);
         setDialogFont(embed.dataset.font || DEFAULT_FONT);
-        setDialogMuseId(embed.dataset.museId || null);
+        setDialogMuseId(
+          embed.dataset.characterId || embed.dataset.museId || null,
+        );
         setDialogOrientation(
           embed.dataset.orientation === "right" ? "right" : "left",
         );
@@ -1486,20 +1515,29 @@ export const RichTextEditor = forwardRef<
       [selectedDialog, onChange],
     );
 
-    // Change the sender muse of the selected dialog and rebuild its chrome
-    // (avatar + name) from the new data.
+    // Change the speaker of the selected dialog and rebuild its chrome
+    // (avatar + name) from the new data. The speaker may be one of the
+    // novelist's muses or one of the story's own characters.
     const applyDialogMuse = useCallback(
       (museId: string | null) => {
         const embed = selectedDialog;
         const editor = editorRef.current;
         if (!embed || !editor) return;
-        const muse = museId
+        const sender = museId
           ? (dialogMuses.find((m) => m.id === museId) ?? null)
           : null;
-        embed.dataset.museId = muse?.id ?? "";
+        // Exactly one id attribute survives — the other has to go, or a
+        // reader would resolve the speaker from the wrong pool.
+        if (sender && sender.source === "CHARACTER") {
+          embed.dataset.characterId = sender.id;
+          delete embed.dataset.museId;
+        } else {
+          embed.dataset.museId = sender?.id ?? "";
+          delete embed.dataset.characterId;
+        }
         // Transient display name only (stripped on save); the avatar comes from
-        // the muse endpoint and name/accent are resolved by the reader.
-        embed.dataset.museName = muse?.name ?? "Anonymous";
+        // that pool's endpoint and name/accent are resolved by the reader.
+        embed.dataset.museName = sender?.name ?? "Anonymous";
         mountDialogEmbed(embed, { editable: true });
         setDialogMuseId(museId);
         onChange(editor.innerHTML);
@@ -3127,26 +3165,38 @@ export const RichTextEditor = forwardRef<
                     <span className="muse-av fallback">?</span>
                     Anonymous
                   </S.DialogMuseOptionItem>
-                  {dialogMuses.map((m) => (
-                    <S.DialogMuseOptionItem
-                      key={m.id}
-                      type="button"
-                      $selected={dialogMuseId === m.id}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => {
-                        applyDialogMuse(m.id);
-                        setShowDialogMuse(false);
-                      }}
-                    >
-                      {m.avatar ? (
-                        <img className="muse-av" src={m.avatar} alt="" />
-                      ) : (
-                        <span className="muse-av fallback">
-                          {m.name.charAt(0).toUpperCase()}
-                        </span>
+                  {/* Two pools, labelled — a novelist's own muses and the
+                      story's shared characters are picked the same way, but
+                      they are not the same thing and the author knows it. */}
+                  {dialogSenderGroups.map((group) => (
+                    <Fragment key={group.source}>
+                      {dialogSenderGroups.length > 1 && (
+                        <S.DialogMuseGroupLabel>
+                          {group.label}
+                        </S.DialogMuseGroupLabel>
                       )}
-                      {m.name}
-                    </S.DialogMuseOptionItem>
+                      {group.senders.map((m) => (
+                        <S.DialogMuseOptionItem
+                          key={m.id}
+                          type="button"
+                          $selected={dialogMuseId === m.id}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            applyDialogMuse(m.id);
+                            setShowDialogMuse(false);
+                          }}
+                        >
+                          {m.avatar ? (
+                            <img className="muse-av" src={m.avatar} alt="" />
+                          ) : (
+                            <span className="muse-av fallback">
+                              {m.name.charAt(0).toUpperCase()}
+                            </span>
+                          )}
+                          {m.name}
+                        </S.DialogMuseOptionItem>
+                      ))}
+                    </Fragment>
                   ))}
                 </S.DropdownPopoverContent>
               </Popover.Portal>

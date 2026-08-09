@@ -84,13 +84,22 @@ export const HeroBanner = styled.div`
   transform: translateZ(0);
 `;
 
+/* Quarter-resolution layer scaled back up instead of a blur(22px) over the
+   full hero — same technique and reason as fellows' BackdropLayer: keep
+   large-radius blur convolutions off layers that sit under scrolling
+   content on iOS 26. blur(6px) at 1/4 size ≈ blur(22px) at full size. */
 export const HeroBg = styled.div<{ $src: string }>`
   position: absolute;
-  inset: -20px;
+  top: -20px;
+  left: -20px;
+  width: calc((100% + 40px) / 4);
+  height: calc((100% + 40px) / 4);
+  transform-origin: 0 0;
+  transform: scale(4);
   background-image: url(${(p) => p.$src});
   background-size: cover;
   background-position: center top;
-  filter: blur(22px) brightness(0.3);
+  filter: blur(6px) brightness(0.3);
   border-radius: 24px;
   z-index: 0;
 `;

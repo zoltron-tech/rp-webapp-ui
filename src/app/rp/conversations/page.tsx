@@ -121,10 +121,11 @@ export default function ConversationsPage() {
     }, 260);
   }, []);
 
-  // Lock outer page scroll while the panel is open
+  // Lock outer page scroll while the panel is open. The document scrolls,
+  // not .page-container (see rp/styles.ts).
   useEffect(() => {
     if (!panelOpen) return;
-    const el = document.querySelector(".page-container") as HTMLElement | null;
+    const el = document.scrollingElement as HTMLElement | null;
     if (!el) return;
     const saved = el.scrollTop;
     el.style.overflow = "hidden";

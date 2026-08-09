@@ -8,14 +8,19 @@ import {
   useMemo,
   useState,
 } from "react";
+import { LuCircleHelp } from "react-icons/lu";
 import { StoryCodexView } from "@/components/story-codex";
 import { StoryMapView } from "@/components/story-map";
+import { StoryNotesView } from "@/components/story-notes";
 import { StorySoundscapeView } from "@/components/story-soundscape/workspace-view";
 import { StoryTimelineView } from "@/components/story-timeline";
+import { UserGuideDialog, useUserGuide } from "@/components/user-guide-dialog";
+import { STORYBOARD_GUIDE } from "@/components/user-guide-dialog/guides/storyboard";
 import type { StoryBoard } from "@/types";
 import * as S from "./styles";
 import {
   isWorkspaceView,
+  MEMBERS_ONLY_VIEWS,
   VIEW_META,
   WORKSPACE_VIEWS,
   type WorkspaceView,
@@ -53,6 +58,10 @@ export const StoryboardWorkspace: FC<Props> = ({
   const [opened, setOpened] = useState<WorkspaceView[]>(["chapters"]);
   /** The chapter the Sound view is editing. */
   const [soundChapterId, setSoundChapterId] = useState<string | null>(null);
+  /** The "About storyboards" walkthrough — offered unprompted the first time
+   *  this novelist opens a storyboard, whether or not they write in it, and
+   *  reachable from the Guide button after that. */
+  const guide = useUserGuide(STORYBOARD_GUIDE.id, { auto: true });
 
   const chapters = useMemo(() => story?.events ?? [], [story?.events]);
 
@@ -66,20 +75,23 @@ export const StoryboardWorkspace: FC<Props> = ({
     );
   }, []);
 
-  /** Sound is members-only. Everything else a public story shows read-only. */
+  /** Notes and Sound are members-only. Everything else a public story shows
+   *  read-only. */
   const views = useMemo(
     () =>
       canEdit
         ? WORKSPACE_VIEWS
-        : WORKSPACE_VIEWS.filter((candidate) => candidate !== "sound"),
+        : WORKSPACE_VIEWS.filter(
+            (candidate) => !MEMBERS_ONLY_VIEWS.includes(candidate),
+          ),
     [canEdit],
   );
 
-  // A ?view=sound link from a non-member lands on Chapters instead. Waits for
+  // A ?view=notes link from a non-member lands on Chapters instead. Waits for
   // the story, since canEdit is false until it has loaded and the membership
   // check can run.
   useEffect(() => {
-    if (!story || canEdit || view !== "sound") return;
+    if (!story || canEdit || !MEMBERS_ONLY_VIEWS.includes(view)) return;
     setView("chapters");
   }, [story, canEdit, view]);
 
@@ -114,7 +126,8 @@ export const StoryboardWorkspace: FC<Props> = ({
    * height only exists after the next paint; two frames covers layout.
    */
   const scrollToBottom = useCallback(() => {
-    const scroller = document.querySelector("main.page-container");
+    // The document scrolls, not main.page-container (see rp/styles.ts).
+    const scroller = document.scrollingElement;
     if (!scroller) return;
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -127,6 +140,19 @@ export const StoryboardWorkspace: FC<Props> = ({
 
   return (
     <>
+      {/* The workspace is several screens deep and none of it is signposted on
+          the page itself — so the walkthrough sits above it, on every device. */}
+      <S.UtilityRow>
+        <S.GuideButton
+          type="button"
+          title="A walkthrough of the storyboard workspace"
+          onClick={guide.start}
+        >
+          <LuCircleHelp size={15} />
+          Guide
+        </S.GuideButton>
+      </S.UtilityRow>
+
       <S.Frame>
         <S.Rail aria-label="Storyboard views">
           {views.map((candidate) => {
@@ -153,7 +179,10 @@ export const StoryboardWorkspace: FC<Props> = ({
 
           {isOpen("timeline") && (
             <S.ViewSlot $active={view === "timeline"}>
-              <StoryTimelineView storyboardId={storyboardId} canEdit={canEdit} />
+              <StoryTimelineView
+                storyboardId={storyboardId}
+                canEdit={canEdit}
+              />
             </S.ViewSlot>
           )}
 
@@ -175,6 +204,12 @@ export const StoryboardWorkspace: FC<Props> = ({
                 chapters={chapters}
                 canEdit={canEdit}
               />
+            </S.ViewSlot>
+          )}
+
+          {canEdit && isOpen("notes") && (
+            <S.ViewSlot $active={view === "notes"}>
+              <StoryNotesView storyboardId={storyboardId} canEdit={canEdit} />
             </S.ViewSlot>
           )}
 
@@ -214,6 +249,14 @@ export const StoryboardWorkspace: FC<Props> = ({
           );
         })}
       </S.TabBar>
+
+      <UserGuideDialog
+        guide={STORYBOARD_GUIDE}
+        open={guide.open}
+        onClose={guide.close}
+        onFinish={guide.markSeen}
+        onSkip={guide.dismiss}
+      />
     </>
   );
 };

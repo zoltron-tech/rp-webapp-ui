@@ -224,6 +224,10 @@ export const PaginatedChapterView: FC<Props> = ({
   }, [items, packed, heights, pageH, composerHeight]);
 
   const flowStyle = {
+    // The flow is drawn at `scale`, so anything inside it that is chrome rather
+    // than prose — the composer, the in-place editor — can size itself in the
+    // real pixels the writer sees instead of the page pixels it is laid out in.
+    "--nw-composer-scale": scale,
     "--nw-page-media-max": `${pageH}px`,
     fontSize: spec.fontSize,
     lineHeight: spec.lineHeight,
@@ -310,7 +314,7 @@ export const PaginatedChapterView: FC<Props> = ({
                 onHeight={reportHeight}
                 scale={scale}
               >
-                <P.ComposerSlot>
+                <P.ComposerSlot $bleed={spec.padX}>
                   <P.DraftBadge>
                     Draft — page {draft?.startPage ?? packed.totalPages}
                     {draft &&

@@ -16,6 +16,7 @@ import { useUIContext } from "@/hooks";
 import type {
   StoryBoardEventThread,
   StoryBoardEventThreadInput,
+  StoryCharacter,
 } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { InfoModal } from "../info-modal";
@@ -30,6 +31,7 @@ import {
   serializeDialogEmbeds,
 } from "../rich-text-editor-input/dialog-embed";
 import { EventThreadDialogInsert } from "./event-thread-dialog-insert";
+import { EventThreadGuideButton } from "./event-thread-guide";
 import {
   type EventThreadInputState,
   INITIAL_STATE,
@@ -61,6 +63,9 @@ type Props = React.HTMLProps<HTMLDivElement> & {
   onCancel?: () => void;
   /** Editor placeholder override (e.g. "Continue the story…"). */
   editorPlaceholder?: string;
+  /** The storyboard's own shared characters, when composing inside a story.
+   *  Offered as dialog speakers beside the novelist's own muses. */
+  storyCharacters?: StoryCharacter[];
 };
 
 /** Save/Cancel row for the inline (on-page) composer. */
@@ -100,6 +105,7 @@ export const EventThreadForm: FC<Props> = ({
   variant = "default",
   onCancel,
   editorPlaceholder,
+  storyCharacters,
 }) => {
   const [sending, setSending] = useState(false);
   const promptText = useEventThreadInputState("promptText");
@@ -178,17 +184,25 @@ export const EventThreadForm: FC<Props> = ({
       />
       <Form.Root className="form-content" onSubmit={handleSend}>
         <S.DialogInsertSlot>
+          {/* First in the row, so the explanation sits ahead of the tools it
+              explains rather than after them. Only the new-passage composer
+              opens it by itself; editing an existing passage is not somebody's
+              first time here. */}
+          <EventThreadGuideButton autoOpen={!initialThread} />
           <EventThreadMediaInput />
           <EventThreadDialogInsert onInsert={handleInsertDialog} />
         </S.DialogInsertSlot>
-        <DialogDesignSelect
-          value={dialogDesign}
-          onChange={(next) => setState({ dialogDesign: next })}
-        />
+        <S.DialogDesignSlot>
+          <DialogDesignSelect
+            value={dialogDesign}
+            onChange={(next) => setState({ dialogDesign: next })}
+          />
+        </S.DialogDesignSlot>
         <EventThreadTextField
           editorRef={editorRef}
           initialValue={initialThread?.message ?? ""}
           placeholder={editorPlaceholder}
+          storyCharacters={storyCharacters}
         />
         {variant === "inline" ? (
           <InlineActions loading={sending} onCancel={onCancel} />
@@ -209,6 +223,7 @@ export const EventThreadInput: FC<Props> = forwardRef(
       variant = "default",
       onCancel,
       editorPlaceholder,
+      storyCharacters,
       className,
       ...rest
     },
@@ -240,6 +255,7 @@ export const EventThreadInput: FC<Props> = forwardRef(
             variant={variant}
             onCancel={onCancel}
             editorPlaceholder={editorPlaceholder}
+            storyCharacters={storyCharacters}
             className={className}
           />
         </S.EventThreadInputRoot>

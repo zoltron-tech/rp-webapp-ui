@@ -6,11 +6,11 @@ import { RedirectType, redirect } from "next/navigation";
 import type {
   AuthenticateResponsePayload,
   DiscordConnection,
-  SpotifyConnection,
   LoginOAuthProvider,
   LoginPayload,
   LoginResponsePayload,
   SignupResponsePayload,
+  SpotifyConnection,
   UpdateThemePayload,
   UpdateThemeResponse,
 } from "@/types";
@@ -323,7 +323,20 @@ export const logoutAction = async () => {
 export const authenticateJWT = async (jwt: string, useCookies?: boolean) => {
   const isValid = validateJWTSync(jwt);
   if (!isValid) {
-    if (useCookies) await removeAuthCookie();
+    // Best-effort tidying of a stale cookie. Writing one is only legal inside a
+    // Server Action or Route Handler, and this runs from read paths too — where
+    // the throw would take down the page over a token that is already invalid.
+    // The answer (false) is what the caller acts on either way.
+    if (useCookies) {
+      try {
+        await removeAuthCookie();
+      } catch (error) {
+        Logger.debug(
+          "authenticateJWT: could not clear the stale cookie",
+          error,
+        );
+      }
+    }
     return false;
   }
   return true;
@@ -459,17 +472,14 @@ export const getDiscordConnectionAction =
     const jwt = await getJWTIfExists();
     if (!jwt) return null;
 
-    const response = await fetch(
-      `${RP_SERVICE_URL}/rp/user/account/discord`,
-      {
-        cache: "no-store",
-        headers: {
-          "Content-Type": "application/json",
-          [AUTH_HEADER_NAME]: jwt,
-        },
-        method: "GET",
+    const response = await fetch(`${RP_SERVICE_URL}/rp/user/account/discord`, {
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        [AUTH_HEADER_NAME]: jwt,
       },
-    );
+      method: "GET",
+    });
 
     if (!response.ok) return null;
     return (await response.json()) as DiscordConnection;
@@ -516,17 +526,14 @@ export const getSpotifyConnectionAction =
     const jwt = await getJWTIfExists();
     if (!jwt) return null;
 
-    const response = await fetch(
-      `${RP_SERVICE_URL}/rp/user/account/spotify`,
-      {
-        cache: "no-store",
-        headers: {
-          "Content-Type": "application/json",
-          [AUTH_HEADER_NAME]: jwt,
-        },
-        method: "GET",
+    const response = await fetch(`${RP_SERVICE_URL}/rp/user/account/spotify`, {
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        [AUTH_HEADER_NAME]: jwt,
       },
-    );
+      method: "GET",
+    });
 
     if (!response.ok) return null;
     return (await response.json()) as SpotifyConnection;

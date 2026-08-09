@@ -21,7 +21,10 @@ export const CardFrame = styled.div<{ $accent?: string | null }>`
   z-index: ${Z_INDEX.CARD};
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   container-name: muse-preview-card;
-  container-type: size;
+  /* inline-size, not size: all muse-preview-card container queries are
+     width-only, and size containment on every card in a long grid is an iOS
+     paint hazard (see muse-card/novelist-card, same change). */
+  container-type: inline-size;
 
   @media (hover: hover) {
     &:hover {

@@ -55,6 +55,9 @@ export const Title = styled.div`
 `;
 
 export const CardWrapper = styled.div`
+  /* Explicit, because dropping paint containment below also drops the
+     containing block it used to establish for ImageWrapper/Card. */
+  position: relative;
   width: 169px;
   min-width: 169px;
   min-height: 300px;
@@ -63,11 +66,15 @@ export const CardWrapper = styled.div`
   ${CARD_BORDER};
 
   transition: all 0.3s ease-in-out;
-  contain: paint;
+  /* overflow clipping, not paint containment. Both clip the off-box Title,
+     but paint containment additionally lets the browser skip painting the
+     card while it is off-screen — on iOS that made cards render blank or
+     sliced in half until they were scrolled fully into view. */
+  overflow: hidden;
   z-index: ${Z_INDEX.CARD};
 
   container-name: muse-card;
-  container-type: size;
+  container-type: inline-size;
 
   &.hero {
     height: 200px;
@@ -288,7 +295,7 @@ export const Card = styled.div`
   position: relative;
   height: 100%;
   z-index: 2;
-  contain: paint;
+  overflow: hidden;
 
   &.new {
     background: linear-gradient(

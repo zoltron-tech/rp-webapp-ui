@@ -341,13 +341,20 @@ type ProfileBackgroundFilterProps = {
   banner: string;
 };
 
+/* Rendered at 1/4 resolution and scaled back up rather than blurring a
+   full-width layer by 80px — a large-radius blur on a big layer sitting under
+   scrolling content is the iOS 26 compositor-regression trigger (see
+   BackdropLayer in app/rp/fellows/styled.ts for the full note). blur(20px) on
+   a quarter-size box scaled 4x is visually equivalent to blur(80px) at full
+   size, at 1/16th the convolution area. */
 export const ProfileBackgroundBlurFilter = styled.div<ProfileBackgroundFilterProps>`
   position: absolute;
-  top: 0;
   left: 0px;
-  width: 100cqw;
-  height: 100%;
-  max-height: 100vh;
+  width: 25cqw;
+  height: 25%;
+  max-height: 25vh;
+  transform-origin: 0 0;
+  transform: scale(4);
   background-image: linear-gradient(
       ${({ theme }: any) => theme.cardBackgroundTint},
       ${({ theme }: any) => theme.cardBackgroundTint}
@@ -359,11 +366,8 @@ export const ProfileBackgroundBlurFilter = styled.div<ProfileBackgroundFilterPro
 
   top: clamp(-300px, calc(-600px + 80cqw), 0px);
 
-  filter: blur(80px);
-  -webkit-filter: blur(80px);
-  -moz-filter: blur(80px);
-  -o-filter: blur(80px);
-  -ms-filter: blur(80px);
+  filter: blur(20px);
+  -webkit-filter: blur(20px);
 `;
 
 export const Label = styled.label`

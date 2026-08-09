@@ -4,6 +4,7 @@ import {
   LuHistory,
   LuLibrary,
   LuMap,
+  LuStickyNote,
   LuWaves,
 } from "react-icons/lu";
 
@@ -15,15 +16,25 @@ import {
  * public story shows all of it read-only, so a reader can browse a world
  * bible without joining the story.
  */
-export type WorkspaceView = "chapters" | "timeline" | "codex" | "map" | "sound";
+export type WorkspaceView =
+  | "chapters"
+  | "timeline"
+  | "codex"
+  | "map"
+  | "notes"
+  | "sound";
 
 export const WORKSPACE_VIEWS: WorkspaceView[] = [
   "chapters",
   "timeline",
   "codex",
   "map",
+  "notes",
   "sound",
 ];
+
+/** Views a public story does not show at all — the authors' own workspace. */
+export const MEMBERS_ONLY_VIEWS: WorkspaceView[] = ["notes", "sound"];
 
 export const isWorkspaceView = (
   value: string | null | undefined,
@@ -55,6 +66,12 @@ export const VIEW_META: Record<WorkspaceView, WorkspaceViewMeta> = {
     icon: LuMap,
     label: "Map",
     view: "map",
+  },
+  notes: {
+    description: "Sticky notes shared with your co-authors — private to you",
+    icon: LuStickyNote,
+    label: "Notes",
+    view: "notes",
   },
   sound: {
     description: "Audio cues mounted to a chapter's passages",

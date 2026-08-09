@@ -3,14 +3,10 @@
 import { type FC, useMemo, useRef, useState } from "react";
 import { museAvatarUrl } from "@/components/rich-text-editor-input/dialog-embed";
 import { useGlobalState } from "@/context/store/stores";
-import type {
-  CodexRelationship,
-  RelationshipTone,
-  StoryCastMember,
-} from "@/types";
+import type { CodexRelationship, StoryPerson } from "@/types";
 import { buildMeshLayout } from "./layout";
 import * as S from "./styles";
-import { strengthWidth, toneColor, toneSpec } from "./tones";
+import { type ResolvedTone, resolveTone, strengthWidth } from "./tones";
 
 /** SVG design box; the stage scales it to whatever width it gets. */
 const SIZE = 620;
@@ -24,10 +20,13 @@ const LABEL_LIMIT = 12;
 const EDGE_LABEL_LIMIT = 14;
 
 type Props = {
-  cast: StoryCastMember[];
+  /** Every character in the story, from both pools. */
+  cast: StoryPerson[];
   relationships: CodexRelationship[];
-  /** Tones the reader has switched off from the legend. */
-  hiddenTones: Set<RelationshipTone>;
+  /** Every tone this story can draw — the built-in three, then its own. */
+  palette: ResolvedTone[];
+  /** Tone keys the reader has switched off from the legend. */
+  hiddenTones: Set<string>;
   /** The character in focus; its relationships stay lit, the rest dim. */
   focusedId: string | null;
   onFocus: (museId: string | null) => void;
@@ -38,15 +37,16 @@ type Props = {
  * The relationship mesh.
  *
  * The cast sits on a ring and every relationship arcs between two of them.
- * Colour carries only a coarse tone — three hues, the most that stay apart
- * under colour-vision deficiency when every edge is compared against every
- * other — and each tone also carries its own stroke pattern, so the mesh reads
- * with no colour vision at all. What a relationship *means* is its label,
- * which is on the arc, in the tooltip and in the table view.
+ * Colour carries only a coarse tone, and past the built-in three hues it cannot
+ * be trusted to separate on its own — which is why every tone, built-in or a
+ * story's own, also carries a stroke pattern. The mesh reads with no colour
+ * vision at all. What a relationship *means* is its label, which is on the arc,
+ * in the tooltip and in the table view.
  */
 export const RelationshipMesh: FC<Props> = ({
   cast,
   relationships,
+  palette,
   hiddenTones,
   focusedId,
   onFocus,
@@ -61,12 +61,27 @@ export const RelationshipMesh: FC<Props> = ({
     y: number;
   } | null>(null);
 
+  /** Each edge with the tone it is actually drawn in, resolved once. */
+  const drawn = useMemo(
+    () =>
+      relationships.map((relationship) => ({
+        relationship,
+        tone: resolveTone(relationship, palette, theme),
+      })),
+    [relationships, palette, theme],
+  );
+
+  const toneByRelationship = useMemo(
+    () => new Map(drawn.map((edge) => [edge.relationship.id, edge.tone])),
+    [drawn],
+  );
+
   const visible = useMemo(
     () =>
-      relationships.filter(
-        (relationship) => !hiddenTones.has(relationship.tone),
-      ),
-    [relationships, hiddenTones],
+      drawn
+        .filter((edge) => !hiddenTones.has(edge.tone.key))
+        .map((edge) => edge.relationship),
+    [drawn, hiddenTones],
   );
 
   const layout = useMemo(
@@ -79,9 +94,9 @@ export const RelationshipMesh: FC<Props> = ({
         })),
         inset: INSET,
         relationships: visible.map((relationship) => ({
-          fromMuseId: relationship.fromMuseId,
+          fromId: relationship.fromId,
           id: relationship.id,
-          toMuseId: relationship.toMuseId,
+          toId: relationship.toId,
         })),
         size: SIZE,
       }),
@@ -150,8 +165,8 @@ export const RelationshipMesh: FC<Props> = ({
         {layout.edges.map((edge) => {
           const relationship = byId.get(edge.id);
           if (!relationship) return null;
-          const spec = toneSpec(relationship.tone);
-          const colour = toneColor(relationship.tone, theme);
+          const tone = toneByRelationship.get(relationship.id);
+          const colour = tone?.color ?? "currentColor";
           const width = strengthWidth(relationship.strength);
           const lit = isEdgeLit(edge.fromId, edge.toId);
 
@@ -168,7 +183,7 @@ export const RelationshipMesh: FC<Props> = ({
                 d={edge.path}
                 stroke={colour}
                 strokeWidth={width}
-                strokeDasharray={spec.dash === "none" ? undefined : spec.dash}
+                strokeDasharray={tone?.dash}
               />
               {relationship.isDirected && (
                 <path
@@ -197,7 +212,7 @@ export const RelationshipMesh: FC<Props> = ({
                   relationship.isDirected ? "toward" : "with"
                 } ${namesById.get(edge.toId) ?? "someone"}: ${
                   relationship.label
-                }, ${toneSpec(relationship.tone).label}`}
+                }, ${tone?.label ?? ""}`}
                 onPointerMove={(e) => trackTooltip(e, relationship)}
                 onPointerLeave={() => setHovered(null)}
                 onClick={() => onOpenRelationship(relationship)}
@@ -308,18 +323,19 @@ export const RelationshipMesh: FC<Props> = ({
         >
           <div>{hovered.relationship.label}</div>
           <div className="pair">
-            {namesById.get(hovered.relationship.fromMuseId) ?? "Someone"}
+            {namesById.get(hovered.relationship.fromId) ?? "Someone"}
             {hovered.relationship.isDirected ? " → " : " · "}
-            {namesById.get(hovered.relationship.toMuseId) ?? "someone"}
+            {namesById.get(hovered.relationship.toId) ?? "someone"}
           </div>
           <span className="tone">
             <span
               className="swatch"
               style={{
-                background: toneColor(hovered.relationship.tone, theme),
+                background: resolveTone(hovered.relationship, palette, theme)
+                  .color,
               }}
             />
-            {toneSpec(hovered.relationship.tone).label}
+            {resolveTone(hovered.relationship, palette, theme).label}
           </span>
         </S.Tooltip>
       )}

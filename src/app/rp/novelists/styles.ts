@@ -1,5 +1,5 @@
 import { Container } from "@novelist-world/ui";
-import styled, { css, keyframes } from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { setOpacity } from "@/utils/helpers";
 
 /* ────────────────────────────────────────────────────────────────────────────
@@ -522,34 +522,20 @@ export const SectionSubtitle = styled.p`
   }
 `;
 
-// ─── Muse carousels ───────────────────────────────────────────────────────────
+// ─── How it works ─────────────────────────────────────────────────────────────
+// Replaced the novelist coverflow + muse marquees that used to sit here — both
+// were live-data rows of image-heavy layers. The reel that took their place
+// lives in ./three-moves.tsx: one scene animating at a time, gated on
+// visibility, no fetch.
 
-export const MuseCarouselContainer = styled.div`
+export const StepsCta = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  width: 100%;
-  overflow: hidden;
+  justify-content: center;
+  margin-top: clamp(28px, 4vw, 44px);
+  padding-inline: clamp(20px, 5vw, 48px);
 
-  /* Fade the marquee edges so cards enter/exit gracefully */
-  -webkit-mask-image: linear-gradient(
-    90deg,
-    transparent,
-    #000 6%,
-    #000 94%,
-    transparent
-  );
-  mask-image: linear-gradient(
-    90deg,
-    transparent,
-    #000 6%,
-    #000 94%,
-    transparent
-  );
-
-  @media (max-width: 640px) {
-    -webkit-mask-image: none;
-    mask-image: none;
+  @media (max-width: 420px) {
+    margin-top: 22px;
   }
 `;
 
@@ -795,82 +781,5 @@ export const AppBenefit = styled.li`
     font-size: 1.05rem;
     color: var(--accent);
     flex-shrink: 0;
-  }
-`;
-
-// ─── Loading shimmers ─────────────────────────────────────────────────────────
-// Placeholder cards shown in the novelist / muse rows until their data arrives,
-// so the page renders instantly instead of blocking on the fetches. Dimensions
-// mirror the real cards (novelist ~220px tall coverflow slides; muse "hero"
-// cards 160×300, shrinking to 100×180 in the content container).
-
-const shimmerMove = keyframes`
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-`;
-
-const shimmerSurface = css`
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.04) 25%,
-    rgba(255, 255, 255, 0.1) 50%,
-    rgba(255, 255, 255, 0.04) 75%
-  );
-  background-size: 200% 100%;
-  animation: ${shimmerMove} 1.5s ease-in-out infinite;
-`;
-
-export const NovelistShimmerRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(14px, 3vw, 34px);
-  padding-block: 30px;
-  overflow: hidden;
-`;
-
-export const NovelistShimmerCard = styled.div`
-  flex-shrink: 0;
-  width: min(360px, 80vw);
-  height: 220px;
-  border-radius: var(--border-radius);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  ${shimmerSurface}
-
-  /* Side cards echo the coverflow scale + fade of the real carousel */
-  &.side {
-    opacity: 0.4;
-    transform: scale(0.78);
-  }
-
-  @media (max-width: 900px) {
-    height: 190px;
-  }
-
-  @media (max-width: 640px) {
-    height: 150px;
-
-    &.side {
-      display: none;
-    }
-  }
-`;
-
-export const MuseShimmerRow = styled.div`
-  display: flex;
-  gap: clamp(10px, 2vw, 18px);
-`;
-
-export const MuseShimmerCard = styled.div`
-  flex-shrink: 0;
-  width: 160px;
-  height: 300px;
-  border-radius: calc(var(--border-radius) + 2px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  ${shimmerSurface}
-
-  @container content-container (max-width: 1000px) {
-    width: 100px;
-    height: 180px;
   }
 `;

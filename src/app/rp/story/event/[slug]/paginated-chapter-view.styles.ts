@@ -79,13 +79,6 @@ export const PageTick = styled.div`
   }
 `;
 
-/** Separates the last saved passage from the live composer beneath it. */
-export const ComposerSlot = styled.div`
-  position: relative;
-  padding-top: 20px;
-  border-top: 1px solid color-mix(in srgb, var(--bg-6) 70%, transparent);
-`;
-
 /** Marks the page the author is still writing on. */
 export const DraftBadge = styled.div`
   display: inline-flex;
@@ -108,6 +101,42 @@ export const DraftBadge = styled.div`
     letter-spacing: 0.08em;
     text-transform: none;
   }
+
+  @media (max-width: 680px) {
+    margin-bottom: 6px;
+  }
+`;
+
+/**
+ * Separates the last saved passage from the live composer beneath it.
+ *
+ * The composer is chrome, not prose, so it is not bound by the page's inner
+ * margins the way a passage is — it bleeds out to the sheet's edges instead
+ * (`$bleed` is that margin, cancelled). Those margins cost a phone a third of
+ * an already narrow screen, and a desktop sheet a good 145px of the widest
+ * writing surface the reader will ever get.
+ */
+export const ComposerSlot = styled.div<{ $bleed?: number }>`
+  position: relative;
+  margin-inline: ${(p) => -(p.$bleed ?? 0)}px;
+  /* Room between the last written passage and the rule that opens the
+     composer, so the prose is finished before the chrome starts. Measured
+     (the flow item is a flow-root, so this margin is inside its box) and
+     therefore costed against the page like everything else. */
+  margin-top: calc(28px / var(--nw-composer-scale, 1));
+  padding-top: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--bg-6) 70%, transparent);
+
+  @media (max-width: 680px) {
+    margin-top: calc(20px / var(--nw-composer-scale, 1));
+    padding-top: 8px;
+  }
+
+  /* The writing surface below runs to the paper's edge; the badge over it is
+     loose type, so it keeps a hair of margin rather than butting the edge. */
+  ${DraftBadge} {
+    margin-inline: calc(10px / var(--nw-composer-scale, 1));
+  }
 `;
 
 /**
@@ -121,6 +150,13 @@ export const DetachedComposer = styled.div`
   border-radius: 8px;
   border: 1px dashed color-mix(in srgb, var(--accent) 45%, transparent);
   background: var(--bg-2);
+  /* Off the sheet, so nothing is scaled here — the composer sizes 1:1. */
+  --nw-composer-scale: 1;
+
+  @media (max-width: 680px) {
+    margin: 0.25rem 0 0.75rem;
+    padding: 8px;
+  }
 `;
 
 /**

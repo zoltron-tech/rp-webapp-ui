@@ -34,6 +34,7 @@ import type {
   StoryBoardEvent,
   StoryBoardEventThread,
   StoryBoardEventThreadPage,
+  StoryCharacter,
 } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
@@ -45,6 +46,7 @@ import {
   getStoryboardEventAction,
   getStoryboardEventBookmarkAction,
   getStoryboardEventThreadsAction,
+  getStoryCharactersAction,
   saveStoryboardEventBookmarkAction,
 } from "../../actions";
 import { BookView } from "./book-view";
@@ -79,6 +81,9 @@ export default function StoryboardEventPage({}) {
   const { width: winW } = useWindowDimensions();
 
   const [storyboard, setStoryBoard] = useState<StoryBoard | null>(null);
+  /** The story's own characters — offered as dialog speakers in the composer,
+   *  beside the novelist's own muses. */
+  const [storyCharacters, setStoryCharacters] = useState<StoryCharacter[]>([]);
   const [storyboardEvent, setStoryBoardEvent] =
     useState<StoryBoardEvent | null>(null);
   const [storyboardEventThreads, setStoryBoardEventThreads] = useState<
@@ -174,6 +179,13 @@ export default function StoryboardEventPage({}) {
       getStoryboardAction(storyboardId),
     );
     setStoryBoard(_storyboard);
+
+    // Fetched alongside the story rather than with the threads: the pool is
+    // the same for every passage on the page, and the composer needs it before
+    // the author reaches for the speaker picker.
+    const characters = await getStoryCharactersAction(storyboardId);
+    if (characters && !("message" in characters))
+      setStoryCharacters(characters);
   };
 
   const fetchStoryboardEvent = async () => {
@@ -344,10 +356,8 @@ export default function StoryboardEventPage({}) {
     windowStart,
   ]);
 
-  /** The page's scroll container (see rp/styles.ts — the app scrolls here,
-   *  not the window). */
-  const getScroller = () =>
-    document.querySelector<HTMLElement>("main.page-container");
+  /** The page's scroll container — the document itself (see rp/styles.ts). */
+  const getScroller = () => document.scrollingElement as HTMLElement | null;
 
   const scrollToBottom = useCallback(() => {
     const scroller = getScroller();
@@ -464,10 +474,12 @@ export default function StoryboardEventPage({}) {
     };
 
     update();
-    scroller.addEventListener("scroll", update, { passive: true });
+    // Document scrolling fires scroll events on window, not on
+    // document.scrollingElement — the reads above still use the element.
+    window.addEventListener("scroll", update, { passive: true });
     window.addEventListener("resize", update);
     return () => {
-      scroller.removeEventListener("scroll", update);
+      window.removeEventListener("scroll", update);
       window.removeEventListener("resize", update);
     };
   }, [effectiveMode, storyboardEventThreads, mounted]);
@@ -612,6 +624,7 @@ export default function StoryboardEventPage({}) {
       variant="inline"
       editorPlaceholder="Continue the story… @ to mention novelists or muses"
       storyBoardEventId={storyboardEventId}
+      storyCharacters={storyCharacters}
       onSend={() => {
         // Scroll to the bottom afterwards so the saved passage and the
         // composer beneath it both come into view.
@@ -628,6 +641,7 @@ export default function StoryboardEventPage({}) {
       key={editingThread.id}
       variant="inline"
       storyBoardEventId={storyboardEventId}
+      storyCharacters={storyCharacters}
       initialThread={editingThread}
       onSend={() => {
         setEditingThread(null);

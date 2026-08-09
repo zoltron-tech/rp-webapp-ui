@@ -37,7 +37,11 @@ export async function generateMetadata({
   const title = parent ? `${event.name} — ${parent.name}` : event.name;
   // All absolute CDN URLs (the same ones Discord embeds use).
   const cover =
-    event.image ?? event.avatar?.src ?? parent?.image ?? parent?.avatar?.src ?? null;
+    event.image ??
+    event.avatar?.src ??
+    parent?.image ??
+    parent?.avatar?.src ??
+    null;
   const description =
     toPlainText(event.description).slice(0, 200) ||
     `Read "${event.name}" on Novelist World.`;

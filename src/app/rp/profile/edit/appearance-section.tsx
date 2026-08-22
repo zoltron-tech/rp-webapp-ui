@@ -1,6 +1,10 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
+import type { NWImage } from "@nw/types";
+import type { ProfileSong } from "@nw/types/music";
+import { ACCENT_MAP, type Accent } from "@nw/types/theme";
+import { clamp, toCropFilter, VALID_IMAGE_TYPES } from "@nw/utils";
 import { RadioGroup, Separator } from "radix-ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BsArrowLeft } from "react-icons/bs";
@@ -15,9 +19,6 @@ import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { ImageCropFilter, NWImage } from "@/types";
-import type { ProfileSong } from "@/types/music";
-import { ACCENT_MAP, type Accent } from "@/types/theme";
 import { API_MESSAGE } from "@/utils/constants";
 import { deleteMedia } from "../actions";
 import { NoteDialogBody } from "./note-dialog-body";
@@ -31,12 +32,7 @@ import { SongPickerDialog } from "./song-picker-dialog";
 import * as S from "./styled";
 import { useProfileSave } from "./use-profile-save";
 
-const VALID_IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
-
-function clamp(v: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, v));
-}
 
 /**
  * Build an ImageCropFilter from background-position state.
@@ -45,22 +41,6 @@ function clamp(v: number, min: number, max: number) {
  * This mirrors the Muse cardBackground encoding: a fit-by-width display that
  * is resolution- and aspect-ratio-independent.
  */
-function toCropFilter(
-  src: string,
-  x: number,
-  y: number,
-  scale: number,
-): ImageCropFilter {
-  const scalePct = Math.round(scale * 100);
-  return {
-    height: scalePct,
-    src,
-    width: scalePct,
-    x: Math.round(x),
-    y: Math.round(y),
-  };
-}
-
 type Props = {
   onBack: () => void;
 };
@@ -479,7 +459,7 @@ export function AppearanceSection({ onBack }: Props) {
   const confirmNote = () => {
     setProfileState({
       note: tempNote.trim()
-        ? { text: tempNote, color: tempNoteColor, emoji: tempNoteEmoji }
+        ? { color: tempNoteColor, emoji: tempNoteEmoji, text: tempNote }
         : null,
     });
     setNoteDialogOpen(false);

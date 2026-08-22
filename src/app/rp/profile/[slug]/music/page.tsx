@@ -1,5 +1,6 @@
 "use client";
 
+import type { Song } from "@nw/types/music";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { MdOutlineCloudUpload } from "react-icons/md";
@@ -10,7 +11,6 @@ import { useMusicContext } from "@/context";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useCustomEvents } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Song } from "@/types/music";
 import {
   type CustomEventType,
   EVENTS,

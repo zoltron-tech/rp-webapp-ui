@@ -1,11 +1,11 @@
+import type { Fandom, NWImage, StoryBoardMember } from "@nw/types";
+import type { Genre, Tag } from "@nw/types/common";
 import {
   createGetFunction,
   useStoreSet,
   useStoreState,
 } from "@/context/store/use-store";
 import { DEFAULT_PAGE_FORMAT, type PageFormat } from "@/lib/paginator";
-import type { Fandom, NWImage, StoryBoardMember } from "@/types";
-import type { Genre, Tag } from "@/types/common";
 
 export type StoryboardState = {
   id: string | null;

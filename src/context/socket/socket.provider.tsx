@@ -1,5 +1,6 @@
 "use client";
 
+import type { Message } from "@nw/types";
 import {
   createContext,
   type FC,
@@ -12,7 +13,6 @@ import {
 import { useCookies } from "react-cookie";
 import { getUnreadConversationIdsAction } from "@/app/rp/conversations/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
-import type { Message } from "@/types";
 import type { WebSocketExt } from "@/types/socket";
 import { JWT_COOKIE_NAME, SOCKET_URL } from "@/utils/constants";
 import {
@@ -53,10 +53,10 @@ type SocketContextType = {
 const SocketContext = createContext<SocketContextType>({
   ensureConnected: () => {},
   isConnected: false,
+  lastIncomingE2ERefresh: null,
+  lastIncomingEdit: null,
   lastIncomingMessage: null,
   lastIncomingReaction: null,
-  lastIncomingEdit: null,
-  lastIncomingE2ERefresh: null,
   onlineUsernames: [],
   socket: null,
 });
@@ -370,10 +370,10 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
       value={{
         ensureConnected,
         isConnected,
+        lastIncomingE2ERefresh,
+        lastIncomingEdit,
         lastIncomingMessage,
         lastIncomingReaction,
-        lastIncomingEdit,
-        lastIncomingE2ERefresh,
         onlineUsernames,
         socket,
       }}

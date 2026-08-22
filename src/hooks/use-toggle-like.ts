@@ -1,5 +1,5 @@
+import type { Hook } from "@nw/types/common";
 import { useCallback } from "react";
-import type { Hook } from "@/types/common";
 import { API_MESSAGE } from "@/utils/constants";
 
 type Props = {

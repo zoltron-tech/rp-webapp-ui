@@ -1,8 +1,8 @@
 "use client";
 
+import type { StoryNotePollOption } from "@nw/types";
 import type { FC } from "react";
 import { LuCheck } from "react-icons/lu";
-import type { StoryNotePollOption } from "@/types";
 import * as S from "./styles";
 
 /** The ballot in the order its author arranged it. */

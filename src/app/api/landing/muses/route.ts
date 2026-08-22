@@ -1,6 +1,6 @@
+import type { Muse } from "@nw/types";
+import { transformMuse } from "@nw/utils/image";
 import { NextResponse } from "next/server";
-import type { Muse } from "@/types";
-import { transformMuse } from "@/utils/image";
 
 /**
  * Public landing-page muses. A GET route handler — deliberately NOT a server

@@ -6,6 +6,7 @@ import {
   DEV_MODE_BORDER,
   Z_INDEX,
 } from "@/theme";
+import { fadeIn } from "@/theme/animations";
 import { UnreadBadgeBase } from "../common/unread-badge";
 
 const slideInRight = keyframes`
@@ -16,11 +17,6 @@ const slideInRight = keyframes`
 const slideOutRight = keyframes`
   from { transform: translateX(0); }
   to   { transform: translateX(100%); }
-`;
-
-const fadeIn = keyframes`
-  from { opacity: 0; }
-  to   { opacity: 1; }
 `;
 
 const fadeOut = keyframes`

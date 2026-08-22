@@ -15,6 +15,7 @@ import { usePageRouter } from "@/hooks/use-page-router";
 import { usePostLogin } from "@/hooks/use-post-login";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
+import { Logger } from "@/utils/services";
 import { getUserNovelist } from "../../novelists/actions";
 import * as S from "./styled";
 
@@ -56,7 +57,7 @@ export default function LoginOAuthCallbackPage() {
     return Content[operationState];
   }, [operationState]);
 
-  const validateToken = useCallback(async () => {
+  const runLoginFlow = useCallback(async () => {
     const isValid = await authenticateAction();
     if (!isValid) {
       setOperationState("ERROR");
@@ -106,6 +107,17 @@ export default function LoginOAuthCallbackPage() {
       setGlobalState({ showInstallAppPrompt: true });
     }
   }, []);
+
+  const validateToken = useCallback(async () => {
+    try {
+      await runLoginFlow();
+    } catch (error) {
+      // Without this the spinner never resolves: a rejected step would leave
+      // operationState on "LOADING" with nothing to move it off.
+      Logger.error("OAuth callback failed", error);
+      setOperationState("ERROR");
+    }
+  }, [runLoginFlow]);
 
   useEffect(() => {
     validateToken();

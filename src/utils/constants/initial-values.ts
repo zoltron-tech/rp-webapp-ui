@@ -1,6 +1,6 @@
+import type { Fandom, Friend, Muse, Novelist, NovelistTier } from "@nw/types";
+import type { StoryBoard, StoryBoardEvent } from "@nw/types/story-board";
 import { DEFAULT_ASTERISM_STYLE } from "@/components/asterism-styles";
-import type { Fandom, Friend, Muse, Novelist, NovelistTier } from "@/types";
-import type { StoryBoard, StoryBoardEvent } from "@/types/story-board";
 
 export const STANDARD_TIER: NovelistTier = {
   eventLimit: 20,

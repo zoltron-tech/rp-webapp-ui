@@ -1,10 +1,10 @@
 "use client";
+import type { BookmarkedStoryBoardEvent } from "@nw/types";
 import type { FC } from "react";
 import { BsCalendar2Date } from "react-icons/bs";
 import { FaArrowRight, FaBookmark } from "react-icons/fa6";
 import { CoverImage } from "@/components/common";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { BookmarkedStoryBoardEvent } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDate } from "@/utils/helpers";
 import * as S from "./styles";

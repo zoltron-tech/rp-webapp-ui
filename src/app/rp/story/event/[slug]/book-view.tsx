@@ -1,5 +1,6 @@
 "use client";
 
+import type { StoryBoardEvent, StoryBoardEventThread } from "@nw/types";
 import {
   type CSSProperties,
   type FC,
@@ -14,7 +15,6 @@ import { FaBookmark } from "react-icons/fa6";
 import { IoChevronBack, IoChevronForward } from "react-icons/io5";
 import { useWindowDimensions } from "@/hooks";
 import { contentHeight, contentWidth, resolvePageSpec } from "@/lib/paginator";
-import type { StoryBoardEvent, StoryBoardEventThread } from "@/types";
 import {
   ChapterFlow,
   pageAtOffset,

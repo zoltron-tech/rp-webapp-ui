@@ -1,5 +1,6 @@
 "use client";
 
+import type { IceBreaker, Novelist, PromptSource } from "@nw/types";
 import classNames from "classnames";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -19,7 +20,6 @@ import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { IceBreaker, Novelist, PromptSource } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { encryptMessageText } from "@/utils/e2e-crypto";

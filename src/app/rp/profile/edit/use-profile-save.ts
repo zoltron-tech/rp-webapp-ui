@@ -1,11 +1,11 @@
 "use client";
 
+import type { NovelistNote, NWImage, UpdateNovelistPayload } from "@nw/types/novelist";
+import type { Accent } from "@nw/types/theme";
 import { useCallback, useState } from "react";
 import { updateUserTheme } from "@/app/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
-import type { NWImage, NovelistNote, UpdateNovelistPayload } from "@/types/novelist";
-import type { Accent } from "@/types/theme";
 import { API_MESSAGE } from "@/utils/constants";
 import {
   addNoteAction,
@@ -162,8 +162,8 @@ export function useProfileSave() {
   const saveAll = useCallback(
     async (
       opts: { novelist?: boolean; theme?: boolean; note?: boolean } = {
-        novelist: true,
         note: true,
+        novelist: true,
         theme: true,
       },
     ): Promise<SaveResult> => {

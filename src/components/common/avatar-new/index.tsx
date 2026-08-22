@@ -1,9 +1,9 @@
+import type { NWImage } from "@nw/types";
 import classNames from "classnames";
 import { Avatar } from "radix-ui";
 import { type FC, forwardRef, type HTMLProps, useMemo } from "react";
 import { useSocket } from "@/context/socket";
 import { useGlobalState } from "@/context/store/stores";
-import type { NWImage } from "@/types";
 import * as S from "./styled";
 
 type AvatarProps = Omit<HTMLProps<HTMLSpanElement>, "src"> & {

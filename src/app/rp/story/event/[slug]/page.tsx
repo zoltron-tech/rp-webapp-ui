@@ -1,4 +1,12 @@
 "use client";
+import type {
+  SoundCue,
+  StoryBoard,
+  StoryBoardEvent,
+  StoryBoardEventThread,
+  StoryBoardEventThreadPage,
+  StoryCharacter,
+} from "@nw/types";
 import classNames from "classnames";
 import { useParams, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -28,14 +36,6 @@ import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext, useWindowDimensions } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useSoundscape } from "@/lib/soundscape";
-import type {
-  SoundCue,
-  StoryBoard,
-  StoryBoardEvent,
-  StoryBoardEventThread,
-  StoryBoardEventThreadPage,
-  StoryCharacter,
-} from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import {

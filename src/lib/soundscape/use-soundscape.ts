@@ -1,7 +1,7 @@
 "use client";
 
+import type { SoundCue } from "@nw/types";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { SoundCue } from "@/types";
 
 /**
  * The reader's soundscape engine.

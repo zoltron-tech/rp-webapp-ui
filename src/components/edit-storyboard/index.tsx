@@ -1,13 +1,13 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
+import type { StoryBoard } from "@nw/types";
 import { forwardRef, useEffect, useState } from "react";
 import { getStoryboardAction } from "@/app/rp/story/actions";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { resolvePageSpec } from "@/lib/paginator";
-import type { StoryBoard } from "@/types";
 import EditStoryboardDataCard, {
   type EditStoryboardDataCardHandle,
 } from "./edit-storyboard-data-card";

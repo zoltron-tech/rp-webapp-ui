@@ -1,8 +1,8 @@
+import type { DataType, ErrorType } from "@nw/types/common";
 import type { NavigateOptions } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect } from "react";
 import { useGlobalStoreSet } from "@/context/store/stores";
-import type { DataType, ErrorType } from "@/types/common";
 import { API_MESSAGE } from "@/utils/constants";
 
 interface PageLoadingOptions extends NavigateOptions {

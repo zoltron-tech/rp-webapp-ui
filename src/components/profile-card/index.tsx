@@ -1,9 +1,9 @@
 "use client";
+import type { Novelist } from "@nw/types";
 import { type FC, useEffect, useState } from "react";
 import { getUserNovelist } from "@/app/rp/novelists/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Novelist } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import { Card } from "../common";

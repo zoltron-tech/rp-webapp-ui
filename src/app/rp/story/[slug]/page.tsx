@@ -1,5 +1,6 @@
 "use client";
 
+import type { StoryBoard, StoryBoardEvent } from "@nw/types";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
@@ -32,7 +33,6 @@ import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents, useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useToggleLike } from "@/hooks/use-toggle-like";
-import type { StoryBoard, StoryBoardEvent } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import {
   type CustomEventType,

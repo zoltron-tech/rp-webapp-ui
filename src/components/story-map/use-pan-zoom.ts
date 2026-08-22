@@ -1,5 +1,6 @@
 "use client";
 
+import { clamp } from "@nw/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
@@ -23,9 +24,6 @@ export interface ZoomLimits {
 }
 
 const IDENTITY: Transform = { scale: 1, x: 0, y: 0 };
-
-const clamp = (value: number, min: number, max: number) =>
-  Math.min(max, Math.max(min, value));
 
 /**
  * The most zoomed-out view: the whole image visible inside the stage (a

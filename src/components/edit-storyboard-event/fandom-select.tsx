@@ -1,5 +1,7 @@
 "use client";
 
+import type { Fandom } from "@nw/types";
+import { useDebounce } from "@nw/utils/hooks/use-debounce";
 import classNames from "classnames";
 import { Form, Select } from "radix-ui";
 import { type FC, forwardRef, useEffect, useState } from "react";
@@ -7,7 +9,6 @@ import { GrRadialSelected } from "react-icons/gr";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { searchFandomsAction } from "@/app/rp/muse/actions";
 import { useGlobalState } from "@/context/store/stores";
-import type { Fandom } from "@/types";
 import { FANDOMLESS } from "@/utils/constants";
 import * as S from "./styled";
 
@@ -15,17 +16,6 @@ interface FandomSelectProps {
   value: Fandom | null;
   onChange: (fandom: Fandom) => void;
 }
-
-const useDebounce = <T,>(value: T, delay: number): T => {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedValue(value), delay);
-    return () => clearTimeout(handler);
-  }, [value, delay]);
-
-  return debouncedValue;
-};
 
 export const FandomSelect: FC<FandomSelectProps> = forwardRef(
   ({ value, onChange, ...props }, forwardedRef) => {

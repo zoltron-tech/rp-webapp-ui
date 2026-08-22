@@ -1,6 +1,10 @@
 "use client";
 
 import { Flex } from "@novelist-world/ui";
+import type { Novelist, NWImage, Prompt, StoryBoard } from "@nw/types";
+import type { Activity } from "@nw/types/activity";
+import type { ProfileSong } from "@nw/types/music";
+import { ACCENT_MAP, type Accent } from "@nw/types/theme";
 import classNames from "classnames";
 import { useParams } from "next/navigation";
 import { Tooltip } from "radix-ui";
@@ -62,10 +66,6 @@ import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { Novelist, NWImage, Prompt, StoryBoard } from "@/types";
-import type { Activity } from "@/types/activity";
-import type { ProfileSong } from "@/types/music";
-import { ACCENT_MAP, type Accent } from "@/types/theme";
 import { ScoreBadgeIcon } from "@/utils/badge-icons";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";

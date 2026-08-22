@@ -1,223 +1,43 @@
 "use server";
-import getConfig from "next/config";
-import { authenticateAndGetJWT, getJWTIfExists } from "@/app/actions";
-import type { Comment, Reply } from "@/types";
+
 import {
-  API_MESSAGE,
-  AUTH_HEADER_NAME,
-  CONTENT_TYPE_HEADER_NAME,
-  MEDIA_JSON_HEADER_VALUE,
-} from "@/utils/constants";
-import { Logger } from "@/utils/services";
+  concludeComment,
+  deleteComment,
+  deletePrompt,
+  deleteReply,
+  getComment,
+  getCommentsByPrompt,
+  getReplies,
+  report,
+} from "@nw/api/endpoints/thread";
+import { api, authedApi } from "@/lib/server-api";
 
-const { serverRuntimeConfig } = getConfig();
-const { RP_SERVICE_URL } = serverRuntimeConfig;
-
-export const reportAction = async (
+export const reportAction = (
   replyId: string,
   reason: string,
   targetType: string,
-) => {
-  const jwt = await authenticateAndGetJWT();
+) => report(authedApi, replyId, reason, targetType);
 
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/report`;
-  const body = {
-    reason,
-    targetId: replyId,
-    targetType: targetType,
-  };
+export const getCommentAction = (commentId: string) =>
+  getComment(api, commentId);
 
-  const response = await fetch(URL, {
-    body: JSON.stringify(body),
-    cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-      [AUTH_HEADER_NAME]: jwt,
-    },
-    method: "POST",
-  });
-
-  if (!response.ok) {
-    return { message: API_MESSAGE.Error };
-  }
-
-  const result = await response.json();
-
-  return result;
-};
-
-export const getCommentAction = async (commentId: string) => {
-  const jwt = await getJWTIfExists();
-  const headers: Record<string, string> = {
-    [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
-  };
-  if (jwt) {
-    headers[AUTH_HEADER_NAME as string] = jwt;
-  }
-
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/comment/${commentId}`;
-
-  const response = await fetch(URL, {
-    cache: "no-store",
-    headers: headers,
-  });
-
-  Logger.debug("getCommentAction", response.status);
-
-  if (response.status === 404) {
-    return null;
-  } else if (!response.ok) {
-    return { message: API_MESSAGE.Error };
-  }
-
-  const comment: Comment = await response.json();
-
-  return comment;
-};
-
-export const getRepliesAction = async (
+export const getRepliesAction = (
   commentId: string,
   pageNumber: number,
   pageSize: number,
-) => {
-  const jwt = await getJWTIfExists();
-  const headers: Record<string, string> = {
-    [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
-  };
-  if (jwt) {
-    headers[AUTH_HEADER_NAME as string] = jwt;
-  }
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/comment/${commentId}/replies?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+) => getReplies(api, commentId, pageNumber, pageSize);
 
-  const response = await fetch(URL, {
-    cache: "no-store",
-    headers: headers,
-  });
+export const getCommentsByPromptAction = (promptId: string) =>
+  getCommentsByPrompt(api, promptId);
 
-  if (response.status === 404) {
-    return null;
-  } else if (!response.ok) {
-    return { message: API_MESSAGE.Error };
-  }
+export const concludeCommentAction = (commentId: string, concluded: boolean) =>
+  concludeComment(authedApi, commentId, concluded);
 
-  const replies: Reply[] = await response.json();
-  return replies;
-};
+export const deleteReplyAction = (replyId: string) =>
+  deleteReply(authedApi, replyId);
 
-export const getCommentsByPromptAction = async (promptId: string) => {
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/${promptId}/comments`;
+export const deleteCommentAction = (commentId: string) =>
+  deleteComment(authedApi, commentId);
 
-  const response = await fetch(URL, {
-    cache: "no-store",
-  });
-
-  Logger.debug("getPromptCommentsAction", response.status);
-
-  if (response.status === 404) {
-    return null;
-  } else if (!response.ok) {
-    return { message: API_MESSAGE.Error };
-  }
-
-  const comments: Comment[] = await response.json();
-
-  return comments;
-};
-
-export const concludeCommentAction = async (
-  commentId: string,
-  concluded: boolean,
-) => {
-  const jwt = await authenticateAndGetJWT();
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/comment/${commentId}/conclude`;
-
-  const response = await fetch(URL, {
-    body: JSON.stringify({ concluded }),
-    cache: "no-store",
-    headers: {
-      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
-      [AUTH_HEADER_NAME]: jwt,
-    },
-    method: "PUT",
-  });
-
-  Logger.debug("concludeCommentAction", response.status);
-
-  if (!response.ok) {
-    return { message: API_MESSAGE.Error };
-  }
-  const result = await response.json();
-  return result;
-};
-
-export const deleteReplyAction = async (replyId: string) => {
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/reply/${replyId}`;
-  const jwt = await authenticateAndGetJWT();
-
-  const headers: Record<string, string> = {
-    [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
-    [AUTH_HEADER_NAME]: jwt,
-  };
-
-  const response = await fetch(URL, {
-    cache: "no-store",
-    headers: headers,
-    method: "DELETE",
-  });
-
-  Logger.debug("deleteReplyAction", response.status);
-
-  if (!response.ok) {
-    return { message: API_MESSAGE.Error };
-  }
-  const result = await response.json();
-  return result;
-};
-
-export const deleteCommentAction = async (commentId: string) => {
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/comment/${commentId}`;
-  const jwt = await authenticateAndGetJWT();
-
-  const headers: Record<string, string> = {
-    [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
-    [AUTH_HEADER_NAME]: jwt,
-  };
-
-  const response = await fetch(URL, {
-    cache: "no-store",
-    headers: headers,
-    method: "DELETE",
-  });
-
-  Logger.debug("deleteCommentAction", response.status);
-
-  if (!response.ok) {
-    return { message: API_MESSAGE.Error };
-  }
-  const result = await response.json();
-  return result;
-};
-
-export const deletePromptAction = async (promptId: string) => {
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/prompt/${promptId}`;
-  const jwt = await authenticateAndGetJWT();
-
-  const headers: Record<string, string> = {
-    [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
-    [AUTH_HEADER_NAME]: jwt,
-  };
-
-  const response = await fetch(URL, {
-    cache: "no-store",
-    headers: headers,
-    method: "DELETE",
-  });
-
-  Logger.debug("deletePromptAction", response.status);
-
-  if (!response.ok) {
-    return { message: API_MESSAGE.Error };
-  }
-  const result = await response.json();
-  return result;
-};
+export const deletePromptAction = (promptId: string) =>
+  deletePrompt(authedApi, promptId);

@@ -1,6 +1,6 @@
+import type { Message } from "@nw/types";
 import { IoClose } from "react-icons/io5";
 import { AvatarNew } from "@/components/common/avatar-new";
-import type { Message } from "@/types";
 import * as S from "./styles";
 
 const REPLY_IMAGE_EXTS = new Set(["png", "jpg", "jpeg", "gif", "webp", "bmp"]);

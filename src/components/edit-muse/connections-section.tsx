@@ -1,5 +1,6 @@
 "use client";
 
+import type { MuseConnectionGroup } from "@nw/types";
 import { Separator } from "radix-ui";
 import { useCallback, useEffect, useState } from "react";
 import { BsArrowLeft, BsPeopleFill } from "react-icons/bs";
@@ -18,7 +19,6 @@ import {
 } from "@/components/muse-connection/muse-connection-form";
 import * as MC from "@/components/muse-connection/styled";
 import { useUIContext } from "@/hooks/use-ui-context";
-import type { MuseConnectionGroup } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { useMuseState } from "./muse.store";
 import * as S from "./styled";

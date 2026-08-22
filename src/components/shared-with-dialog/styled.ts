@@ -1,14 +1,5 @@
-import { keyframes, styled } from "styled-components";
-
-const fadeIn = keyframes`
-  from { opacity: 0; }
-  to   { opacity: 1; }
-`;
-
-const dialogPopIn = keyframes`
-  from { opacity: 0; transform: translate(-50%, -48%) scale(0.96); }
-  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-`;
+import { styled } from "styled-components";
+import { dialogPopIn, fadeIn } from "@/theme/animations";
 
 // ─── Dialog shell (desktop) ───────────────────────────────────────────────────
 

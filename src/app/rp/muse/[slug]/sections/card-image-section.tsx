@@ -1,7 +1,7 @@
 ﻿"use client";
 
+import type { Muse } from "@nw/types";
 import { FiCamera } from "react-icons/fi";
-import type { Muse } from "@/types";
 import * as S from "../styles";
 
 type Props = {
@@ -13,7 +13,14 @@ type Props = {
   onRemoveCardBg?: () => void;
 };
 
-export function CardImageSection({ muse, cardBgSrc, isOwnMuse, cardBgSaving, onEditCardBg, onRemoveCardBg }: Props) {
+export function CardImageSection({
+  muse,
+  cardBgSrc,
+  isOwnMuse,
+  cardBgSaving,
+  onEditCardBg,
+  onRemoveCardBg,
+}: Props) {
   const accent = muse?.useAccent ? muse.accent : undefined;
 
   const cardCrop = muse?.useExtraImages ? muse?.cardBackground?.crop : null;
@@ -38,11 +45,21 @@ export function CardImageSection({ muse, cardBgSrc, isOwnMuse, cardBgSaving, onE
           <>
             <S.CardBgEditBtn
               type="button"
-              title={cardBgSaving ? "Saving…" : muse?.cardBackground ? "Adjust card image" : "Add card image"}
+              title={
+                cardBgSaving
+                  ? "Saving…"
+                  : muse?.cardBackground
+                    ? "Adjust card image"
+                    : "Add card image"
+              }
               disabled={cardBgSaving}
               onClick={onEditCardBg}
             >
-              {cardBgSaving ? <span style={{ fontSize: "0.45rem" }}>…</span> : <FiCamera size={12} />}
+              {cardBgSaving ? (
+                <span style={{ fontSize: "0.45rem" }}>…</span>
+              ) : (
+                <FiCamera size={12} />
+              )}
             </S.CardBgEditBtn>
             {muse?.cardBackground && (
               <S.CardBgRemoveBtn

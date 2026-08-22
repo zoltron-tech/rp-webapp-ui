@@ -1,5 +1,10 @@
 "use client";
 
+import type {
+  CreateUpdateMuse,
+  Muse,
+  MuseAboutSection,
+} from "@nw/types/novelist";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BsArrowLeft, BsThreeDots } from "react-icons/bs";
@@ -21,11 +26,6 @@ import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
-import type {
-  CreateUpdateMuse,
-  Muse,
-  MuseAboutSection,
-} from "@/types/novelist";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styled";

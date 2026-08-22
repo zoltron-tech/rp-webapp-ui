@@ -1,10 +1,10 @@
 "use client";
 
+import type { Novelist } from "@nw/types";
 import classNames from "classnames";
 import type { FC } from "react";
 import { Button, ShouldRender } from "@/components/common";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Novelist } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styles";
 

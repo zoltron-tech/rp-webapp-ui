@@ -1,12 +1,12 @@
 "use client";
 
+import type { SoundCue } from "@nw/types";
+import type { Song } from "@nw/types/music";
 import { type FC, useEffect, useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { LuMusic, LuRepeat } from "react-icons/lu";
 import { ResponsiveSheet } from "@/components/common/responsive-sheet";
 import * as F from "@/components/common/responsive-sheet/styles";
-import type { SoundCue } from "@/types";
-import type { Song } from "@/types/music";
 import * as S from "./styles";
 import { WaveformTrimmer } from "./waveform-trimmer";
 

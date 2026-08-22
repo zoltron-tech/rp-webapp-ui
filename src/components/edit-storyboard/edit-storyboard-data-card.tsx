@@ -1,5 +1,8 @@
 "use client";
 
+import type { NWImage, StoryBoard } from "@nw/types";
+import type { Genre } from "@nw/types/common";
+import { clamp, toCropFilter } from "@nw/utils";
 import {
   forwardRef,
   useCallback,
@@ -29,8 +32,6 @@ import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { resolvePageSpec } from "@/lib/paginator";
-import type { ImageCropFilter, NWImage, StoryBoard } from "@/types";
-import type { Genre } from "@/types/common";
 import { API_MESSAGE } from "@/utils/constants";
 import {
   STORY_COVER_ASPECT_RATIO,
@@ -52,26 +53,6 @@ const genreKey = (genres: Genre[]) =>
     .join(",");
 
 const MAX_DESCRIPTION_LENGTH = 2000;
-
-function clamp(v: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, v));
-}
-
-function toCropFilter(
-  src: string,
-  x: number,
-  y: number,
-  scale: number,
-): ImageCropFilter {
-  const scalePct = Math.round(scale * 100);
-  return {
-    height: scalePct,
-    src,
-    width: scalePct,
-    x: Math.round(x),
-    y: Math.round(y),
-  };
-}
 
 export type EditStoryboardDataCardHandle = {
   /** Runs the same dirty-check as the back button; closes or prompts to discard. */

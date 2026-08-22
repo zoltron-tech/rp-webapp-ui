@@ -1,0 +1,24 @@
+{
+  "name": "@nw/api",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Transport-agnostic Novelist World API client, shared by web and native.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./endpoints/*": "./src/endpoints/*.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@nw/types": "workspace:*",
+    "@nw/utils": "workspace:*"
+  },
+  "devDependencies": {
+    "@nw/config": "workspace:*"
+  }
+}

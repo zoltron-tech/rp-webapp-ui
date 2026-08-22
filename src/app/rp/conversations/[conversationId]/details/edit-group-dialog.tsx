@@ -1,12 +1,12 @@
 "use client";
 
+import type { Conversation } from "@nw/types";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { TbCameraUp } from "react-icons/tb";
 import { Input } from "@/components/common";
 import { AppAlertDialog } from "@/components/dialog";
 import { useUIContext } from "@/hooks/use-ui-context";
-import type { Conversation } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { uploadMedia } from "@/utils/upload-media";
 import { updateGroupAction } from "../actions";

@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import type { MuseAboutSection } from "@nw/types/novelist";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GrAttachment } from "react-icons/gr";
 import { IoCloseOutline } from "react-icons/io5";
@@ -20,7 +21,6 @@ import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
-import type { MuseAboutSection } from "@/types/novelist";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styled";

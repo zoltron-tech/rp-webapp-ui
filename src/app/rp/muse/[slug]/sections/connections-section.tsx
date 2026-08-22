@@ -1,6 +1,7 @@
 "use client";
 
 import { Flex } from "@novelist-world/ui";
+import type { Muse, MuseConnectionGroup } from "@nw/types";
 import classNames from "classnames";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -28,7 +29,6 @@ import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { Muse, MuseConnectionGroup } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "../styles";
@@ -37,9 +37,17 @@ import SectionMiniHeader from "./SectionMiniHeader";
 type Props = {
   muse: Muse | null;
   isOwnMuse: boolean;
+  /**
+   * Connections handed in whole instead of fetched.
+   *
+   * Only the promo capture (`src/app/promo`) passes this — it renders this
+   * section with fixture data and no backend. Left unset everywhere else, so
+   * the app's own path is the fetch below, untouched.
+   */
+  seed?: MuseConnectionGroup[] | null;
 };
 
-export function ConnectionsSection({ muse, isOwnMuse }: Props) {
+export function ConnectionsSection({ muse, isOwnMuse, seed = null }: Props) {
   const { routeToPage } = usePageRouter();
   const { successToast, errorToast } = useUIContext();
   const authState = useGlobalState("authState");
@@ -133,6 +141,10 @@ export function ConnectionsSection({ muse, isOwnMuse }: Props) {
   }, [expandedConnectionId]);
 
   useEffect(() => {
+    if (seed) {
+      setConnections(seed);
+      return;
+    }
     if (!muse?.id) return;
     let cancelled = false;
     getMuseConnectionsByMuseAction(muse.id).then((result) => {
@@ -142,7 +154,7 @@ export function ConnectionsSection({ muse, isOwnMuse }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [muse?.id]);
+  }, [muse?.id, seed]);
 
   const handleConnectionClick = (
     connection: NonNullable<Muse["connections"]>[number],

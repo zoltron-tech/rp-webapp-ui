@@ -1,6 +1,9 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
+import type { Muse } from "@nw/types";
+import type { MediaMetadata } from "@nw/types/activity";
+import { reverseWsrvUrl } from "@nw/utils/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FaHeart, FaPlay, FaRegHeart, FaRegTrashCan } from "react-icons/fa6";
 import {
@@ -28,10 +31,7 @@ import { classifyUrlForUpload } from "@/hooks/use-nsfw-check";
 import { useToggleLike } from "@/hooks/use-toggle-like";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
-import type { Muse } from "@/types";
-import type { MediaMetadata } from "@/types/activity";
 import { API_MESSAGE } from "@/utils/constants";
-import { reverseWsrvUrl } from "@/utils/image";
 import * as S from "../styles";
 import SectionMiniHeader from "./SectionMiniHeader";
 
@@ -487,7 +487,12 @@ const VALID_TYPES = [
 ];
 const MAX_FILE_SIZE = 30 * 1024 * 1024;
 
-type PendingFile = { file: File; previewUrl: string; isVideo: boolean; isChecking: boolean };
+type PendingFile = {
+  file: File;
+  previewUrl: string;
+  isVideo: boolean;
+  isChecking: boolean;
+};
 
 function UploadPanel({
   museId,
@@ -531,8 +536,14 @@ function UploadPanel({
           setError("A file exceeds the 30 MB limit.");
           continue;
         }
-        const isVideo = file.type === "video/mp4" || file.type === "video/quicktime";
-        newFiles.push({ file, isVideo, previewUrl: URL.createObjectURL(file), isChecking: !isVideo });
+        const isVideo =
+          file.type === "video/mp4" || file.type === "video/quicktime";
+        newFiles.push({
+          file,
+          isChecking: !isVideo,
+          isVideo,
+          previewUrl: URL.createObjectURL(file),
+        });
       }
       if (newFiles.length === 0) return;
       setPendingFiles((prev) => [...prev, ...newFiles]);
@@ -542,11 +553,19 @@ function UploadPanel({
         classifyUrlForUpload(pending.previewUrl).then((isNsfw) => {
           if (isNsfw) {
             URL.revokeObjectURL(pending.previewUrl);
-            setPendingFiles((prev) => prev.filter((f) => f.previewUrl !== pending.previewUrl));
-            setError("An image contains sensitive content and cannot be uploaded.");
+            setPendingFiles((prev) =>
+              prev.filter((f) => f.previewUrl !== pending.previewUrl),
+            );
+            setError(
+              "An image contains sensitive content and cannot be uploaded.",
+            );
           } else {
             setPendingFiles((prev) =>
-              prev.map((f) => f.previewUrl === pending.previewUrl ? { ...f, isChecking: false } : f),
+              prev.map((f) =>
+                f.previewUrl === pending.previewUrl
+                  ? { ...f, isChecking: false }
+                  : f,
+              ),
             );
           }
         });
@@ -640,15 +659,17 @@ function UploadPanel({
                     alt="Preview"
                     style={{
                       display: "block",
+                      filter: f.isChecking ? "blur(8px)" : undefined,
                       height: "100%",
                       objectFit: "cover",
-                      width: "100%",
-                      filter: f.isChecking ? "blur(8px)" : undefined,
                       transition: "filter 0.3s ease",
+                      width: "100%",
                     }}
                   />
                 )}
-                {f.isChecking && <UploadCheckingOverlay>Checking…</UploadCheckingOverlay>}
+                {f.isChecking && (
+                  <UploadCheckingOverlay>Checking…</UploadCheckingOverlay>
+                )}
                 <UploadThumbRemove
                   type="button"
                   aria-label="Remove"
@@ -888,7 +909,9 @@ export function GallerySection({ muse, media }: Props) {
                 onItemClick={setGalleryIndex}
                 isOwner={isOwner}
                 onDeleteItem={handleDeleteMedia}
-                avatarSrc={isOwner ? reverseWsrvUrl(muse?.avatar?.src) : undefined}
+                avatarSrc={
+                  isOwner ? reverseWsrvUrl(muse?.avatar?.src) : undefined
+                }
                 cardBgSrc={
                   isOwner && muse?.useExtraImages
                     ? reverseWsrvUrl(muse?.cardBackground?.src)

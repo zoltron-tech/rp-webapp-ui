@@ -1,5 +1,3 @@
-import classNames from "classnames";
-import { type FC, useEffect, useRef } from "react";
 import {
   verifyPasswordLength,
   verifyPasswordLowerCase,
@@ -8,7 +6,9 @@ import {
   verifyPasswordSpecialChar,
   verifyPasswordsMatch,
   verifyPasswordUpperCase,
-} from "@/utils/helpers/pattens";
+} from "@nw/utils";
+import classNames from "classnames";
+import { type FC, useEffect, useRef } from "react";
 
 import * as S from "./styled";
 

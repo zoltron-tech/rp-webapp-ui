@@ -1,7 +1,7 @@
 "use client";
 
+import type { MentionDataItem } from "@nw/types";
 import type React from "react";
-import type { MentionDataItem } from "@/types";
 import { AvatarNew } from "../common/avatar-new";
 import * as S from "./styled";
 

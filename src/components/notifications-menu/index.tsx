@@ -1,5 +1,7 @@
 "use client";
 
+import type { NovelistWorldNotification } from "@nw/types";
+import { isCompactViewport } from "@nw/utils/platform";
 import classNames from "classnames";
 import { usePathname } from "next/navigation";
 import { Popover } from "radix-ui";
@@ -13,15 +15,10 @@ import {
 } from "@/app/rp/novelists/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { NovelistWorldNotification } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import { FriendRequestNotification } from "../friend-request-notification";
 import * as S from "./styles";
-
-function checkIsMobile() {
-  return window.innerWidth < 768 || screen.width < 768;
-}
 
 export const NotificationsMenu: FC = () => {
   const authState = useGlobalState("authState");
@@ -32,7 +29,7 @@ export const NotificationsMenu: FC = () => {
   const { routeToPage, baseDataLoader } = usePageRouter();
   const [open, setOpen] = useState(false);
   const [markingRead, setMarkingRead] = useState(false);
-  const isMobile = useMemo(() => checkIsMobile(), []);
+  const isMobile = useMemo(() => isCompactViewport(), []);
   const pathname = usePathname();
   const set = useGlobalStoreSet();
 

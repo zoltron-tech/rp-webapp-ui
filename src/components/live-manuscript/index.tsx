@@ -1,6 +1,8 @@
 "use client";
 
+import { prefersReducedMotion } from "@nw/utils/platform";
 import { type FC, useEffect, useRef, useState } from "react";
+import { FaHeart } from "react-icons/fa";
 import {
   FiCheck,
   FiEdit3,
@@ -13,7 +15,6 @@ import {
   FiShare2,
   FiUser,
 } from "react-icons/fi";
-import { FaHeart } from "react-icons/fa";
 import * as S from "./styles";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -133,9 +134,7 @@ export const LiveManuscript: FC = () => {
   useEffect(() => {
     if (!visible) return;
 
-    const reduce =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduce = prefersReducedMotion();
 
     if (reduce) {
       setTyped("");

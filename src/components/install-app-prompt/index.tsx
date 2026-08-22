@@ -1,5 +1,6 @@
 "use client";
 
+import { isCompactViewport } from "@nw/utils/platform";
 import classNames from "classnames";
 import { useRouter } from "next/navigation";
 import { type FC, useCallback, useMemo } from "react";
@@ -11,19 +12,13 @@ import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { ROUTES } from "@/utils/constants/routes";
 import * as L from "./styled";
 
-function checkIsMobile() {
-  if (typeof window === "undefined") return false;
-  const minWidth = 768;
-  return window.innerWidth < minWidth || screen.width < minWidth;
-}
-
 export const InstallAppPrompt: FC = () => {
   const showInstallAppPrompt = useGlobalState("showInstallAppPrompt");
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
   const setGlobalState = useGlobalStoreSet();
   const router = useRouter();
-  const isMobile = useMemo(() => checkIsMobile(), []);
+  const isMobile = useMemo(() => isCompactViewport(), []);
 
   const handleSkip = useCallback(() => {
     setGlobalState({ showInstallAppPrompt: false });

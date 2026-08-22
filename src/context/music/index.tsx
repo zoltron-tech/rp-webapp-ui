@@ -1,5 +1,6 @@
 "use client";
 
+import type { StoreState } from "@nw/types/state";
 import type { FC, ReactNode } from "react";
 import {
   createContext,
@@ -11,7 +12,6 @@ import {
 } from "react";
 import { StoreContext } from "@/context/store/context";
 import { useGlobalStoreSet } from "@/context/store/stores";
-import type { StoreState } from "@/types/state";
 
 interface MusicContextType {
   playingSongId: string | null;

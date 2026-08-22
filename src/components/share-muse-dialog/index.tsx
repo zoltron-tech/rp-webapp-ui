@@ -1,5 +1,6 @@
 "use client";
 
+import type { Muse } from "@nw/types";
 import classNames from "classnames";
 import { type FC, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -22,7 +23,6 @@ import type {
   ShareMusePayload,
   SharePromptResult,
 } from "@/lib/discord";
-import type { Muse } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import * as DropS from "../profile-more-dropdown/styled";
 import * as S from "./styled";

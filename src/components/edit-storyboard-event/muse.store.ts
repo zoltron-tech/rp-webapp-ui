@@ -1,9 +1,9 @@
+import type { Fandom, NWImage, PrivacyLevel } from "@nw/types";
 import {
   createGetFunction,
   useStoreSet,
   useStoreState,
 } from "@/context/store/use-store";
-import type { Fandom, NWImage, PrivacyLevel } from "@/types";
 import { FANDOMLESS } from "@/utils/constants";
 
 export type MuseState = {

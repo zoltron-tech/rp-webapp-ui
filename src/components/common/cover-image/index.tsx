@@ -1,7 +1,7 @@
+import type { NWImage } from "@nw/types";
 import classNames from "classnames";
 import type { FC, HTMLProps } from "react";
 import { HiOutlineBookOpen } from "react-icons/hi2";
-import type { NWImage } from "@/types";
 import { STORY_COVER_ZOOM_MAX } from "@/utils/constants/common";
 import * as S from "./styled";
 

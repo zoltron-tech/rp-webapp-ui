@@ -1,13 +1,9 @@
 import styled, { keyframes } from "styled-components";
+import { fadeIn as overlayFadeIn } from "@/theme/animations";
 
 /* Carries the accent + theme classes so fixed children resolve CSS variables
    (e.g. --bg-2) even when portaled to document.body. Takes no layout space. */
 export const PortalRoot = styled.div``;
-
-const overlayFadeIn = keyframes`
-  from { opacity: 0; }
-  to   { opacity: 1; }
-`;
 
 const dialogPopIn = keyframes`
   from { opacity: 0; transform: translate(-50%, -46%) scale(0.96); }

@@ -16,6 +16,7 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
+import type { StoryNote, StoryNoteType } from "@nw/types";
 import { type FC, useCallback, useEffect, useMemo, useState } from "react";
 import { IoMdAdd } from "react-icons/io";
 import {
@@ -35,7 +36,6 @@ import {
   voteOnStoryNotePollAction,
 } from "@/app/rp/story/actions";
 import { useUIContext } from "@/hooks";
-import type { StoryNote, StoryNoteType } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { toPlainText } from "@/utils/rich-text";
 import { NoteCard } from "./note-card";

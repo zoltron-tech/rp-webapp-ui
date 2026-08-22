@@ -1,5 +1,12 @@
 "use client";
 
+import type {
+  CodexCategory,
+  CodexEntry,
+  StoryBoardEvent,
+  StoryMap,
+  StoryMapPin,
+} from "@nw/types";
 import {
   type FC,
   useCallback,
@@ -28,13 +35,6 @@ import {
 import { resolveCodexIcon } from "@/components/story-codex/icons";
 import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type {
-  CodexCategory,
-  CodexEntry,
-  StoryBoardEvent,
-  StoryMap,
-  StoryMapPin,
-} from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { MapSheet } from "./map-sheet";

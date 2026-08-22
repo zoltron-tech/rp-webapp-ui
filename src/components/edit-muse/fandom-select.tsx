@@ -1,5 +1,6 @@
 "use client";
 
+import type { Fandom } from "@nw/types";
 import classNames from "classnames";
 import { Dialog, Form } from "radix-ui";
 import {
@@ -15,7 +16,6 @@ import { GrRadialSelected } from "react-icons/gr";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { searchFandomsAction } from "@/app/rp/muse/actions";
 import { useGlobalState } from "@/context/store/stores";
-import type { Fandom } from "@/types";
 import * as S from "./styled";
 
 interface FandomSelectProps {

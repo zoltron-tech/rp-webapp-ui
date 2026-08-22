@@ -1,11 +1,11 @@
+import type { NWImage } from "@nw/types";
+import type { ProfileSong } from "@nw/types/music";
 import { DEFAULT_ASTERISM_STYLE } from "@/components/asterism-styles";
 import {
   createGetFunction,
   useStoreSet,
   useStoreState,
 } from "@/context/store/use-store";
-import type { NWImage } from "@/types";
-import type { ProfileSong } from "@/types/music";
 
 export type StoryboardEventState = {
   id: string | null;

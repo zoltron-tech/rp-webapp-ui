@@ -1,6 +1,11 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
+import type {
+  ChapterPageLayout,
+  StoryBoardEvent,
+  StoryBoardEventThread,
+} from "@nw/types";
 import {
   type CSSProperties,
   type FC,
@@ -19,11 +24,6 @@ import { TfiLocationPin } from "react-icons/tfi";
 import { resolveAsterismStyle } from "@/components/asterism-styles";
 import { CoverImage } from "@/components/common";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
-import type {
-  ChapterPageLayout,
-  StoryBoardEvent,
-  StoryBoardEventThread,
-} from "@/types";
 import { toFormattedDate } from "@/utils/helpers";
 import {
   getChapterPageLayoutAction,
@@ -728,6 +728,14 @@ type ChapterFlowProps = {
    */
   editorNode?: ReactNode;
   /**
+   * Whether items keep dialogs, media and short paragraphs off a page break by
+   * pushing them onto the next page. A reader that frames pages needs it — the
+   * push is what fills out the page edge. A reader that shows the flow unbroken
+   * must not run it: with no page edge drawn, a push is just a hole in the
+   * prose, ending nowhere the reader can see.
+   */
+  applyBreaks?: boolean;
+  /**
    * The blank tail under the last item on a page. A reader that frames pages
    * needs it — it is what puts the next page's first line in the same place
    * everywhere. A reader that shows the flow unbroken drops it: there is no
@@ -765,6 +773,7 @@ export const ChapterFlow: FC<ChapterFlowProps> = ({
   editingThreadId = null,
   editingHoleHeight = 0,
   editorNode = null,
+  applyBreaks = true,
   showLeftover = true,
   registerThreadEl,
   onEdit,
@@ -785,7 +794,7 @@ export const ChapterFlow: FC<ChapterFlowProps> = ({
           <MeasuredItem
             itemKey={item.key}
             onHeight={onHeight}
-            pageHeight={isEditingHole ? 0 : pageHeight}
+            pageHeight={isEditingHole || !applyBreaks ? 0 : pageHeight}
             startOffset={packed.offsetOfItem.get(item.key) ?? 0}
             scale={scale}
             dataThreadIndex={item.kind === "thread" ? item.index : undefined}

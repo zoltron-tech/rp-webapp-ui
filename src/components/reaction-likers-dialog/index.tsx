@@ -1,5 +1,6 @@
 "use client";
 
+import type { Friend } from "@nw/types";
 import classNames from "classnames";
 import { type FC, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -25,7 +26,6 @@ import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { Friend } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { AvatarNew } from "../common/avatar-new";

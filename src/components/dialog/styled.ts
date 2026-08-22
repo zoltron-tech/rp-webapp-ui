@@ -1,10 +1,7 @@
 import { AlertDialog } from "radix-ui";
 import { keyframes, styled } from "styled-components";
+import { fadeIn as overlayShow } from "@/theme/animations";
 
-const overlayShow = keyframes`
-from { opacity: 0; }
-to { opacity: 1; }
-`;
 const contentShow = keyframes`
 from {
   opacity: 0;

@@ -1,5 +1,5 @@
+import type { WithMessage } from "@nw/types/common";
 import { createContext } from "react";
-import type { WithMessage } from "@/types/common";
 
 export interface AuthContextType {
   verifyAccount: (jwt: string) => Promise<WithMessage>;

@@ -1,5 +1,5 @@
+import type { MentionDataItem } from "@nw/types";
 import { css } from "styled-components";
-import type { MentionDataItem } from "@/types";
 
 /**
  * Builds a non-editable mention chip DOM node — avatar + display name —

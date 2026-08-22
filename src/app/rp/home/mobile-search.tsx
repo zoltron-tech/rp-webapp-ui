@@ -1,5 +1,6 @@
 "use client";
 
+import type { SearchResult } from "@nw/types/common";
 import { type FC, useCallback, useRef, useState } from "react";
 import { CgSpinner } from "react-icons/cg";
 import { FiSearch } from "react-icons/fi";
@@ -11,7 +12,6 @@ import { Username } from "@/components/common";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { useOutsideClick } from "@/hooks/use-outside-click";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { SearchResult } from "@/types/common";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./mobile-search-styles";
 

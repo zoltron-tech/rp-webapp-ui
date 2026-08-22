@@ -1,5 +1,6 @@
 "use client";
 
+import type { Friend, StoryBoardMember } from "@nw/types";
 import classNames from "classnames";
 import { type FC, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -12,7 +13,6 @@ import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { Friend, StoryBoardMember } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { AvatarNew } from "../common/avatar-new";

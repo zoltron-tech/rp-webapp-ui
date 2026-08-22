@@ -1,12 +1,12 @@
 "use client";
 
+import type { CodexRelationship, CodexTone, StoryPerson } from "@nw/types";
 import { type FC, useMemo, useState } from "react";
 import { GrEdit } from "react-icons/gr";
 import { IoMdAdd } from "react-icons/io";
 import { LuNetwork, LuTable2 } from "react-icons/lu";
 import { museAvatarUrl } from "@/components/rich-text-editor-input/dialog-embed";
 import { useGlobalState } from "@/context/store/stores";
-import type { CodexRelationship, CodexTone, StoryPerson } from "@/types";
 import { RelationshipMesh } from "./mesh";
 import { RelationshipSheet } from "./relationship-sheet";
 import * as S from "./styles";
@@ -122,7 +122,7 @@ export const RelationshipsSection: FC<Props> = ({
   }
 
   return (
-    <S.Root>
+    <S.Root data-nw="relationships">
       <S.HeaderRow>
         <S.ModeToggle role="tablist" aria-label="Relationship view">
           <S.ModeButton
@@ -163,7 +163,7 @@ export const RelationshipsSection: FC<Props> = ({
 
       {/* Always present — identity is never carried by colour alone, and each
           tone shows its stroke pattern next to its hue. */}
-      <S.Legend>
+      <S.Legend data-nw="mesh-legend">
         {palette.map((tone) => {
           const hidden = hiddenTones.has(tone.key);
           return (

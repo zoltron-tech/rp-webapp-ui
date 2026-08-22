@@ -1,5 +1,6 @@
 import styled, { keyframes } from "styled-components";
 import { CARD_BORDER, Z_INDEX } from "@/theme";
+import { fadeIn as overlayFadeIn } from "@/theme/animations";
 
 export const CardBackground = styled.div`
   position: absolute;
@@ -406,11 +407,6 @@ export const TrayReadMoreButton = styled.button`
 `;
 
 // ─── Desktop preview dialog (Netflix-style) ────────────────────────────────
-
-const overlayFadeIn = keyframes`
-  from { opacity: 0; }
-  to   { opacity: 1; }
-`;
 
 const dialogPopIn = keyframes`
   from { opacity: 0; transform: translate(-50%, -46%) scale(0.94); }

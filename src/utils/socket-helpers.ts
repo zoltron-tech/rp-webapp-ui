@@ -20,8 +20,8 @@ export const isServerPing = (data: unknown): data is ServerPing => {
 
 // ─── Incoming message type guard ─────────────────────────────────────────────
 
-import type { Message } from "@/types";
-import type { Reaction } from "@/types/conversation";
+import type { Message } from "@nw/types";
+import type { Reaction } from "@nw/types/conversation";
 
 /** Narrows an unknown WS payload to a server-delivered chat Message. */
 export const isServerMessage = (data: unknown): data is Message => {

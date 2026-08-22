@@ -1,6 +1,6 @@
+import type { SubmitPromptType } from "@nw/types";
 import { Form } from "radix-ui";
 import { type FC, type HTMLProps, useMemo } from "react";
-import type { SubmitPromptType } from "@/types";
 import { usePromptInputState } from "./prompt-input.store";
 import * as S from "./styles";
 

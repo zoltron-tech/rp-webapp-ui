@@ -1,5 +1,6 @@
 import styled, { keyframes } from "styled-components";
 import { CARD_BORDER, Z_INDEX } from "@/theme";
+import { fadeIn as overlayFadeIn } from "@/theme/animations";
 import { MobileSheet } from "../profile-more-dropdown/styled";
 
 /* 6:9 (2:3) portrait cover, locked regardless of the info panel's height. */
@@ -1046,11 +1047,6 @@ export const TraySheet = styled(MobileSheet)`
 `;
 
 // ─── Desktop preview dialog (Netflix-style) ────────────────────────────────
-
-const overlayFadeIn = keyframes`
-  from { opacity: 0; }
-  to   { opacity: 1; }
-`;
 
 const dialogPopIn = keyframes`
   from { opacity: 0; transform: translate(-50%, -46%) scale(0.94); }

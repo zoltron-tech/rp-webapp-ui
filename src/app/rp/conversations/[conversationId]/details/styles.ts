@@ -1,13 +1,9 @@
 import styled, { css, keyframes } from "styled-components";
+import { shimmerMove } from "@/theme/animations";
 
 const slideInFromRight = keyframes`
   from { transform: translateX(30px); opacity: 0; }
   to   { transform: translateX(0);    opacity: 1; }
-`;
-
-const shimmerMove = keyframes`
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
 `;
 
 export const Container = styled.div`

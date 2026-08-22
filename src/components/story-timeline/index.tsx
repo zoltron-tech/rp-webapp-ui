@@ -1,5 +1,10 @@
 "use client";
 
+import type {
+  StoryBoardEvent,
+  StoryTimelineLane,
+  StoryTimelineMarker,
+} from "@nw/types";
 import {
   type FC,
   useCallback,
@@ -19,13 +24,9 @@ import {
   saveStoryTimelineLaneAction,
   saveStoryTimelineMarkerAction,
 } from "@/app/rp/story/actions";
+import { toShortStoryDate } from "@/components/date-time-picker/date-format";
 import { useUIContext } from "@/hooks";
 import { useTrackDrag } from "@/lib/track-drag";
-import type {
-  StoryBoardEvent,
-  StoryTimelineLane,
-  StoryTimelineMarker,
-} from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { type BlockPlacement, BlockSheet } from "./block-sheet";
 import { LaneSheet } from "./lane-sheet";
@@ -334,6 +335,58 @@ export const StoryTimelineView: FC<Props> = ({ storyboardId, canEdit }) => {
   const toPercent = (value: number) =>
     ((value - AXIS_MIN) / (AXIS_MAX - AXIS_MIN)) * 100;
 
+  const dragStartPercent = drag ? toPercent(drag.start) : 0;
+
+  // Keep a badge inside the track at either end, where centring it on the
+  // start edge would push half of it out of view.
+  const labelShift = (percent: number) =>
+    percent < 8 ? "0" : percent > 92 ? "-100%" : "-50%";
+
+  /** Every placed chapter's in-story date, read out on the axis above its
+   *  start edge and kept on show — the one being dragged reads from the live
+   *  drag, and falls back to the bare axis position when the authors never
+   *  gave it a date. */
+  const axisDates = (() => {
+    type Chip = {
+      dragging: boolean;
+      eventId: string;
+      label: string;
+      percent: number;
+    };
+
+    const chips = placed
+      .map((item): Chip | null => {
+        const dragging = drag?.item.id === item.event.id;
+        const start = dragging && drag ? drag.start : item.start;
+        const label =
+          toShortStoryDate(item.event.eventTime) ??
+          (dragging ? `at ${start.toFixed(1)}` : null);
+        if (!label) return null;
+        return {
+          dragging,
+          eventId: item.event.id ?? "",
+          label,
+          percent: toPercent(start),
+        };
+      })
+      .filter((chip): chip is Chip => chip !== null)
+      .sort((a, b) => a.percent - b.percent);
+
+    // Thin out dates that would print on top of each other. The chapter under
+    // the pointer always wins its spot, since that is the one being read.
+    const MIN_GAP = 11;
+    const kept: Chip[] = [];
+    for (const chip of chips) {
+      const previous = kept[kept.length - 1];
+      if (!previous || chip.percent - previous.percent >= MIN_GAP) {
+        kept.push(chip);
+      } else if (chip.dragging) {
+        kept[kept.length - 1] = chip;
+      }
+    }
+    return kept;
+  })();
+
   return (
     <S.Root>
       <S.HeaderRow>
@@ -388,6 +441,21 @@ export const StoryTimelineView: FC<Props> = ({ storyboardId, canEdit }) => {
 
         <S.Scroller>
           <S.Track ref={trackRef}>
+            <S.DateRow>
+              {axisDates.map((chip) => (
+                <S.EventDate
+                  key={chip.eventId}
+                  $active={chip.dragging}
+                  style={{
+                    left: `${chip.percent}%`,
+                    transform: `translate(${labelShift(chip.percent)}, -50%)`,
+                  }}
+                >
+                  {chip.label}
+                </S.EventDate>
+              ))}
+            </S.DateRow>
+
             <S.AxisRow>
               {markers.map((marker) => (
                 <S.Marker
@@ -400,12 +468,14 @@ export const StoryTimelineView: FC<Props> = ({ storyboardId, canEdit }) => {
                   {marker.label}
                 </S.Marker>
               ))}
-              {markers.length === 0 && (
+              {markers.length === 0 && !drag && (
                 <S.Marker as="span" style={{ cursor: "default", left: "50%" }}>
                   story time →
                 </S.Marker>
               )}
             </S.AxisRow>
+
+            {drag && <S.DragLine style={{ left: `${dragStartPercent}%` }} />}
 
             {markers.map((marker) => (
               <S.MarkerLine

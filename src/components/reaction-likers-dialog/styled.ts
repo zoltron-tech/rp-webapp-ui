@@ -1,14 +1,5 @@
-import { css, keyframes, styled } from "styled-components";
-
-const fadeIn = keyframes`
-  from { opacity: 0; }
-  to   { opacity: 1; }
-`;
-
-const dialogPopIn = keyframes`
-  from { opacity: 0; transform: translate(-50%, -48%) scale(0.96); }
-  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-`;
+import { css, styled } from "styled-components";
+import { dialogPopIn, fadeIn, shimmerMove } from "@/theme/animations";
 
 // ─── Dialog shell (desktop) ───────────────────────────────────────────────────
 
@@ -308,7 +299,6 @@ export const RowActions = styled.div`
   }
 `;
 
-
 export const EmptyText = styled.p`
   margin: 0;
   padding: 20px 12px;
@@ -336,11 +326,6 @@ export const TrayContent = styled.div`
 `;
 
 // ─── Shimmer skeleton rows ──────────────────────────────────────────────────────
-
-const shimmerMove = keyframes`
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-`;
 
 const shimmer = css`
   background: linear-gradient(

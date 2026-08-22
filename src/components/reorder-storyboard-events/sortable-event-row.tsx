@@ -2,10 +2,10 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import type { StoryBoardEvent } from "@nw/types";
 import type { FC } from "react";
 import { RxDragHandleDots2 } from "react-icons/rx";
 import { CoverImage } from "@/components/common";
-import type { StoryBoardEvent } from "@/types";
 import * as S from "./styles";
 
 type Props = {

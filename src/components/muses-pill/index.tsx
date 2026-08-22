@@ -1,7 +1,7 @@
+import type { Muse, Novelist, StoryBoard } from "@nw/types";
+import type { PillType } from "@nw/types/pill-type";
 import type { FC } from "react";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Muse, Novelist, StoryBoard } from "@/types";
-import type { PillType } from "@/types/pill-type";
 import { ROUTES } from "@/utils/constants/routes";
 import { mainVerseMuses } from "@/utils/muse";
 import { Logger } from "@/utils/services";

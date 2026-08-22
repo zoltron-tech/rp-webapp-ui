@@ -1,5 +1,6 @@
 "use client";
 
+import { isCompactViewport } from "@nw/utils/platform";
 import classNames from "classnames";
 import { type FC, useMemo } from "react";
 import { createPortal } from "react-dom";
@@ -7,11 +8,6 @@ import { FiX } from "react-icons/fi";
 import appInstallLogo from "@/assets/images/NW-mobile-app-install-logo.png";
 import * as S from "@/components/user-menu/styles";
 import { useGlobalState } from "@/context/store/stores";
-
-function checkIsMobile() {
-  if (typeof window === "undefined") return false;
-  return window.innerWidth < 768 || screen.width < 768;
-}
 
 interface InstallAppDialogProps {
   open: boolean;
@@ -24,7 +20,7 @@ export const InstallAppDialog: FC<InstallAppDialogProps> = ({
 }) => {
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
-  const isMobile = useMemo(() => checkIsMobile(), []);
+  const isMobile = useMemo(() => isCompactViewport(), []);
 
   if (!open) return null;
   if (typeof document === "undefined") return null;

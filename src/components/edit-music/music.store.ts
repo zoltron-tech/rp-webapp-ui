@@ -1,9 +1,9 @@
+import type { Tag } from "@nw/types/common";
 import {
   createGetFunction,
   useStoreSet,
   useStoreState,
 } from "@/context/store/use-store";
-import type { Tag } from "@/types/common";
 
 export type MusicState = {
   id: string | null;

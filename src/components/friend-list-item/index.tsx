@@ -1,9 +1,9 @@
 "use client";
 
+import type { Friend } from "@nw/types";
 import type { FC } from "react";
 import { Button } from "@/components/common";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Friend } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { AvatarNew } from "../common/avatar-new";
 import * as S from "./styles";

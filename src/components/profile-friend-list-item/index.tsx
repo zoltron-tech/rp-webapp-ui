@@ -1,10 +1,10 @@
 "use client";
 import { Flex, ShouldRender } from "@novelist-world/ui";
+import type { Friend } from "@nw/types";
 import classNames from "classnames";
 import type { FC } from "react";
 import { FiChevronRight } from "react-icons/fi";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Friend } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { EmailVerifiedBadge, Username } from "../common";
 import { AvatarNew } from "../common/avatar-new";

@@ -1,4 +1,5 @@
 import styled, { keyframes } from "styled-components";
+import { fadeIn as overlayFadeIn } from "@/theme/animations";
 
 export const Container = styled.div`
   display: flex;
@@ -224,11 +225,6 @@ const sheetSlideUp = keyframes`
 const sheetSlideDown = keyframes`
   from { transform: translateY(0); }
   to   { transform: translateY(100%); }
-`;
-
-const overlayFadeIn = keyframes`
-  from { opacity: 0; }
-  to   { opacity: 1; }
 `;
 
 const overlayFadeOut = keyframes`

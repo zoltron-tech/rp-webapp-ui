@@ -1,11 +1,11 @@
 "use client";
 
+import type { StoryBoard } from "@nw/types";
 import { useCallback, useEffect, useState } from "react";
 import { getRandomStories } from "@/app/rp/home/actions";
 import { LoadMore } from "@/components/load-more/page";
 import { StoryCard } from "@/components/story-card";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { StoryBoard } from "@/types";
 import * as S from "./styles";
 
 const PAGE_SIZE = 12;

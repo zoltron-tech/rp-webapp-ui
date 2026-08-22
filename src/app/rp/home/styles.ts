@@ -1,16 +1,8 @@
-import { css, keyframes, styled } from "styled-components";
+import { css, styled } from "styled-components";
 import { Z_INDEX } from "@/theme";
+import { shimmerMove, spin } from "@/theme/animations";
 
 // ─── Feed shimmer ─────────────────────────────────────────────────────────────
-
-const shimmerMove = keyframes`
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-`;
-
-const spin = keyframes`
-  to { transform: rotate(360deg); }
-`;
 
 export const SpinnerRing = styled.div`
   width: 20px;

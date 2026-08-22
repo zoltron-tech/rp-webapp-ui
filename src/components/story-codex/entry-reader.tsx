@@ -1,11 +1,11 @@
 "use client";
 
+import type { CodexCategory, CodexEntry, StoryBoardEvent } from "@nw/types";
 import type { FC } from "react";
 import { GrEdit } from "react-icons/gr";
 import { ResponsiveSheet } from "@/components/common/responsive-sheet";
 import * as F from "@/components/common/responsive-sheet/styles";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
-import type { CodexCategory, CodexEntry, StoryBoardEvent } from "@/types";
 import { resolveCodexIcon } from "./icons";
 import * as S from "./styles";
 

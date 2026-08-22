@@ -1,6 +1,8 @@
 "use client";
 
 import { Flex, ShouldRender } from "@novelist-world/ui";
+import type { Tag } from "@nw/types/common";
+import type { Song } from "@nw/types/music";
 import classNames from "classnames";
 import { type FC, useCallback, useEffect, useRef, useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
@@ -13,8 +15,6 @@ import { useMusicContext } from "@/context";
 import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents, useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Tag } from "@/types/common";
-import type { Song } from "@/types/music";
 import { API_MESSAGE } from "@/utils/constants";
 import { EVENTS } from "@/utils/constants/custom-events";
 import { ROUTES } from "@/utils/constants/routes";

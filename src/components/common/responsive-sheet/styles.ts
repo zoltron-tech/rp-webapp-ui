@@ -1,20 +1,11 @@
 import styled, { keyframes } from "styled-components";
+import { fadeIn as overlayFadeIn, slideInUp } from "@/theme/animations";
 
 /**
  * Chrome and form primitives for [ResponsiveSheet] — a centred dialog on
  * desktop, a bottom-sheet tray on mobile. Shared by the storyboard workspace
  * views (timeline, codex) so their editors look and behave identically.
  */
-
-const overlayFadeIn = keyframes`
-  from { opacity: 0; }
-  to   { opacity: 1; }
-`;
-
-const slideInUp = keyframes`
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
-`;
 
 const popIn = keyframes`
   from { opacity: 0; transform: translate(-50%, -48%) scale(0.97); }

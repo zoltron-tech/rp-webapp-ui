@@ -1,9 +1,9 @@
 "use client";
 
+import type { Muse } from "@nw/types";
 import { useCallback, useState } from "react";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Muse } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { AppearanceSection } from "./appearance-section";
 import { ConnectionsSection } from "./connections-section";

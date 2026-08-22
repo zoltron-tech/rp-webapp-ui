@@ -1,5 +1,10 @@
 ﻿"use client";
 
+import type { Muse, MuseAboutSection, Prompt } from "@nw/types";
+import type { ProfileSong } from "@nw/types/music";
+import type { ImageFilter, MuseNavItem, NWImage } from "@nw/types/novelist";
+import { clamp, toCropFilter } from "@nw/utils";
+import { reverseWsrvUrl } from "@nw/utils/image";
 import { useParams } from "next/navigation";
 import {
   useCallback,
@@ -25,27 +30,18 @@ import {
 import { GiBookCover } from "react-icons/gi";
 import { MdImage, MdPhotoLibrary } from "react-icons/md";
 import { TiInfoLarge } from "react-icons/ti";
+import { SongPickerDialog } from "@/app/rp/profile/edit/song-picker-dialog";
 import { ShouldRender } from "@/components/common";
 import { AppAlertDialog } from "@/components/dialog";
 import BannerCropDialog from "@/components/dialog/banner-crop-dialog";
 import { ProfileSongPlayer } from "@/components/profile-song";
-import { SongPickerDialog } from "@/app/rp/profile/edit/song-picker-dialog";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useStateMachine } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
-import type { Muse, MuseAboutSection, Prompt } from "@/types";
-import type { ProfileSong } from "@/types/music";
-import type {
-  ImageCropFilter,
-  ImageFilter,
-  MuseNavItem,
-  NWImage,
-} from "@/types/novelist";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
-import { reverseWsrvUrl } from "@/utils/image";
 import { Logger } from "@/utils/services";
 import {
   deleteMuseSongAction,
@@ -66,26 +62,6 @@ import { MoreSection } from "./sections/more-section";
 import { MuseInfoSection } from "./sections/muse-info-section";
 import { PromptsSection } from "./sections/prompts-section";
 import * as S from "./styles";
-
-function clamp(v: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, v));
-}
-
-function toCropFilter(
-  src: string,
-  x: number,
-  y: number,
-  scale: number,
-): ImageCropFilter {
-  const scalePct = Math.round(scale * 100);
-  return {
-    height: scalePct,
-    src,
-    width: scalePct,
-    x: Math.round(x),
-    y: Math.round(y),
-  };
-}
 
 type CARD_STATE =
   | "CARD_IMAGE"
@@ -975,7 +951,9 @@ export default function MuseProfilePage({}) {
           <S.MuseSongInner
             $spotify={muse?.featuredSong?.source === "SPOTIFY"}
             style={
-              accent ? ({ "--accent": accent } as React.CSSProperties) : undefined
+              accent
+                ? ({ "--accent": accent } as React.CSSProperties)
+                : undefined
             }
           >
             {muse?.featuredSong ? (

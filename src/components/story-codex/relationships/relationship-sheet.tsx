@@ -1,12 +1,5 @@
 "use client";
 
-import { type FC, useEffect, useState } from "react";
-import { FaRegTrashCan } from "react-icons/fa6";
-import { IoMdAdd } from "react-icons/io";
-import { LuArrowLeftRight, LuArrowRight, LuX } from "react-icons/lu";
-import { ResponsiveSheet } from "@/components/common/responsive-sheet";
-import * as F from "@/components/common/responsive-sheet/styles";
-import { useGlobalState } from "@/context/store/stores";
 import type {
   CharacterRefType,
   CodexRelationship,
@@ -14,7 +7,14 @@ import type {
   CodexToneLineStyle,
   RelationshipTone,
   StoryPerson,
-} from "@/types";
+} from "@nw/types";
+import { type FC, useEffect, useState } from "react";
+import { FaRegTrashCan } from "react-icons/fa6";
+import { IoMdAdd } from "react-icons/io";
+import { LuArrowLeftRight, LuArrowRight, LuX } from "react-icons/lu";
+import { ResponsiveSheet } from "@/components/common/responsive-sheet";
+import * as F from "@/components/common/responsive-sheet/styles";
+import { useGlobalState } from "@/context/store/stores";
 import { CODEX_COLORS } from "../icons";
 import * as S from "./styles";
 import {

@@ -1,9 +1,9 @@
+import type { MentionDataItem, MentionTab } from "@nw/types";
 import { type FC, useCallback, useEffect, useMemo, useRef } from "react";
 import { RiErrorWarningLine } from "react-icons/ri";
 import { searchMentionMusesAction } from "@/app/rp/muse/actions";
 import { deleteMedia } from "@/app/rp/profile/actions";
 import { useGlobalState } from "@/context/store/stores";
-import type { MentionDataItem, MentionTab } from "@/types";
 import {
   RichTextEditor,
   type RichTextEditorHandle,

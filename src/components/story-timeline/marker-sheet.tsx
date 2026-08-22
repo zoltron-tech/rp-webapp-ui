@@ -1,9 +1,9 @@
 "use client";
 
+import type { StoryTimelineMarker } from "@nw/types";
 import { type FC, useEffect, useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { ResponsiveSheet } from "@/components/common/responsive-sheet";
-import type { StoryTimelineMarker } from "@/types";
 import * as S from "./styles";
 
 type Props = {

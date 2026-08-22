@@ -1,10 +1,10 @@
+import type { Fandom, NWImage, PrivacyLevel } from "@nw/types";
+import type { ProfileSong } from "@nw/types/music";
 import {
   createGetFunction,
   useStoreSet,
   useStoreState,
 } from "@/context/store/use-store";
-import type { Fandom, NWImage, PrivacyLevel } from "@/types";
-import type { ProfileSong } from "@/types/music";
 import { FANDOMLESS } from "@/utils/constants";
 
 export type MuseState = {

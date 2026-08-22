@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import type { Fandom, Muse } from "@nw/types";
 import { useCallback, useState } from "react";
 import { BsArrowLeft } from "react-icons/bs";
 import { FiPlus, FiTrash2 } from "react-icons/fi";
@@ -8,7 +9,6 @@ import { updateMuseAction } from "@/app/rp/muse/actions";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
-import type { Fandom, Muse } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { Flex } from "../edit-muse-card/styles";
 import * as S from "./styled";

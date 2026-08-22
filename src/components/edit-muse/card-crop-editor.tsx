@@ -20,6 +20,8 @@
  * CSS encoding is sufficient.
  */
 
+import type { ImageCropFilter } from "@nw/types";
+import { toCropFilter } from "@nw/utils";
 import {
   type PointerEvent as ReactPointerEvent,
   useCallback,
@@ -27,7 +29,6 @@ import {
   useRef,
   useState,
 } from "react";
-import type { ImageCropFilter } from "@/types";
 import * as S from "./styled";
 
 type Props = {
@@ -44,22 +45,6 @@ type Props = {
  * x/y are background-position percentages (0–100).
  * width/height are the scale * 100 (100 = 1×, 200 = 2×, …).
  */
-function toCropFilter(
-  src: string,
-  bgX: number,
-  bgY: number,
-  scale: number,
-): ImageCropFilter {
-  const scalePct = Math.round(scale * 100);
-  return {
-    height: scalePct,
-    src,
-    width: scalePct,
-    x: Math.round(bgX),
-    y: Math.round(bgY),
-  };
-}
-
 /**
  * Decode ImageCropFilter → internal (bgX%, bgY%, scale).
  * Handles both the new CSS-percentage encoding and the legacy

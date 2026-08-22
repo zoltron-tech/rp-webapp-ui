@@ -1,6 +1,6 @@
+import type { Muse, Novelist, PromptSource } from "@nw/types";
 import { useEffect } from "react";
 import { useCustomEvents } from "@/hooks";
-import type { Muse, Novelist, PromptSource } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { useEventThreadInputState } from "./event-thread-input.store";
 

@@ -1,5 +1,10 @@
 "use client";
 
+import type {
+  StoryBoardEventThread,
+  StoryBoardEventThreadInput,
+  StoryCharacter,
+} from "@nw/types";
 import classNames from "classnames";
 import { Form } from "radix-ui";
 import {
@@ -13,11 +18,6 @@ import {
 import { saveStoryBoardEventThreadAction } from "@/app/rp/story/actions";
 import { StoreProvider } from "@/context/store/context";
 import { useUIContext } from "@/hooks";
-import type {
-  StoryBoardEventThread,
-  StoryBoardEventThreadInput,
-  StoryCharacter,
-} from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { InfoModal } from "../info-modal";
 import type { RichTextEditorHandle } from "../rich-text-editor-input";

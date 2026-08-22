@@ -1,5 +1,6 @@
 "use client";
 
+import type { Friend } from "@nw/types";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BsPeopleFill } from "react-icons/bs";
 import { FiArrowRight } from "react-icons/fi";
@@ -16,7 +17,6 @@ import { InviteFriendsDialog } from "@/components/invite-friends-dialog";
 import { LoadMore } from "@/components/load-more/page";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Friend } from "@/types";
 import {
   RankTrophyIcon,
   ScoreBadgeIcon,

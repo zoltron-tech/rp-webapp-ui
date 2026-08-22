@@ -1,10 +1,10 @@
+import type { NWImage } from "@nw/types";
+import type { Accent, ThemeType } from "@nw/types/theme";
 import {
   createGetFunction,
   useStoreSet,
   useStoreState,
 } from "@/context/store/use-store";
-import type { NWImage } from "@/types";
-import type { Accent, ThemeType } from "@/types/theme";
 
 export type OnboardingState = {
   username: string | null;

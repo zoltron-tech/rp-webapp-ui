@@ -1,4 +1,4 @@
-import type { Tag } from "@/types/common";
+import type { Tag } from "@nw/types/common";
 
 export const EVENTS = {
   COMMENT: {

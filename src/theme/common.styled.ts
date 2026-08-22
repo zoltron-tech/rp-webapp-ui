@@ -1,8 +1,8 @@
 "use client";
 
+import { setOpacity } from "@nw/utils/theme";
 import { css } from "styled-components";
 import { __DEV__ } from "@/utils/constants";
-import { setOpacity } from "@/utils/helpers/theme";
 import type { Theme } from "./palette";
 
 const DEV_MODE = __DEV__;

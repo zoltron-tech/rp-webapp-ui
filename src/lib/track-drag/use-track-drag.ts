@@ -1,5 +1,6 @@
 "use client";
 
+import { clamp } from "@nw/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
@@ -70,9 +71,6 @@ export interface TrackDragHandle<T> {
     span: { start: number; end: number; laneIndex?: number | null },
   ) => void;
 }
-
-const clamp = (value: number, min: number, max: number) =>
-  Math.min(max, Math.max(min, value));
 
 /** Pulls `value` onto the nearest target inside the snap radius. */
 const snap = (value: number, targets: number[], threshold: number) => {

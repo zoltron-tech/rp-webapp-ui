@@ -1,6 +1,7 @@
 import { RichText as NWRichText } from "@novelist-world/ui";
 import { Dialog, Form, Select } from "radix-ui";
 import styled, { keyframes } from "styled-components";
+import { fadeIn as overlayShow } from "@/theme/animations";
 import { AvatarNew } from "../common/avatar-new";
 
 export const RichText = styled(NWRichText)`
@@ -1677,11 +1678,6 @@ export const WallpaperPreviewBox = styled.div`
 `;
 
 // ── Fandom picker dialog ─────────────────────────────────────────────────────
-
-const overlayShow = keyframes`
-  from { opacity: 0; }
-  to   { opacity: 1; }
-`;
 
 const contentShow = keyframes`
   from { opacity: 0; transform: translate(-50%, -48%) scale(0.96); }

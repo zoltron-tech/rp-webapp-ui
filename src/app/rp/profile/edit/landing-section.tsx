@@ -1,6 +1,8 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
+import type { NWImage } from "@nw/types";
+import { clamp, toCropFilter, VALID_IMAGE_TYPES } from "@nw/utils";
 import { Separator } from "radix-ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BsArrowLeft, BsPersonCircle } from "react-icons/bs";
@@ -17,7 +19,6 @@ import AvatarCropDialog from "@/components/dialog/avatar-crop-dialog";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUploadMedia } from "@/hooks/use-upload-media";
-import type { ImageCropFilter, NWImage } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { deleteMedia } from "../actions";
@@ -25,12 +26,7 @@ import { useProfileState, useProfileStoreSet } from "./profile.store";
 import * as S from "./styled";
 import { useProfileSave } from "./use-profile-save";
 
-const VALID_IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
-
-function clamp(v: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, v));
-}
 
 /**
  * Build an ImageCropFilter from background-position state.
@@ -39,22 +35,6 @@ function clamp(v: number, min: number, max: number) {
  * This mirrors the Muse cardBackground encoding: a fit-by-width display that
  * is resolution- and aspect-ratio-independent.
  */
-function toCropFilter(
-  src: string,
-  x: number,
-  y: number,
-  scale: number,
-): ImageCropFilter {
-  const scalePct = Math.round(scale * 100);
-  return {
-    height: scalePct,
-    src,
-    width: scalePct,
-    x: Math.round(x),
-    y: Math.round(y),
-  };
-}
-
 type ProfileView = "landing" | "appearance" | "about" | "account";
 
 type Props = {

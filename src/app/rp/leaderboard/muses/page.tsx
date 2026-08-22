@@ -1,5 +1,6 @@
 "use client";
 
+import type { MuseLeaderboardEntry } from "@nw/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FaUser } from "react-icons/fa6";
 import { HiUserAdd } from "react-icons/hi";
@@ -14,10 +15,7 @@ import {
   ScoreBadgeIcon,
 } from "@/utils/badge-icons";
 import { ROUTES } from "@/utils/constants/routes";
-import {
-  getMuseLeaderboardAction,
-  type MuseLeaderboardEntry,
-} from "../actions";
+import { getMuseLeaderboardAction } from "../actions";
 import { LeaderboardInfo } from "../leaderboard-info";
 import * as S from "../styles";
 

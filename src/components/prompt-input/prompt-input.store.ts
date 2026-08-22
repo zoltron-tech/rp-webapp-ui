@@ -1,10 +1,10 @@
+import type { SubmitPromptType } from "@nw/types";
+import type { ProfileSong } from "@nw/types/music";
 import {
   createGetFunction,
   useStoreSet,
   useStoreState,
 } from "@/context/store/use-store";
-import type { SubmitPromptType } from "@/types";
-import type { ProfileSong } from "@/types/music";
 
 type MediaUploadError =
   | "INVALID_FILE_TYPE"

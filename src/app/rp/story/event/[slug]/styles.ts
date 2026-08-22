@@ -3,6 +3,7 @@ import type { AsterismLineVariant } from "@/components/asterism-styles";
 import { ASTERISM_LINE_CSS } from "@/components/asterism-styles/line-css";
 import * as Common from "@/components/common";
 import { Z_INDEX } from "@/theme";
+import { shimmerMove } from "@/theme/animations";
 
 /* ────────────────────────────────────────────────────────────────────────
    Storybook reader — a warm, paper-like reading surface where the event and
@@ -1081,11 +1082,6 @@ export const BookmarkRibbon = styled.div`
    which has to fetch the next/previous chunk of threads first. Sits exactly
    over the scaled page's own box (see the inline `stageW`/`stageH` sizing in
    book-view.tsx), covering the (possibly stale) content until it resolves. */
-
-const shimmerMove = keyframes`
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-`;
 
 const shimmer = css`
   background: linear-gradient(

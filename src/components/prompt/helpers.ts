@@ -1,8 +1,8 @@
+import type { Comment } from "@nw/types";
 import { useCallback, useEffect, useState } from "react";
 import { getPropmptCommentsAction } from "@/app/rp/prompt/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useCustomEvents } from "@/hooks";
-import type { Comment } from "@/types";
 import {
   type CustomEventType,
   EVENTS,

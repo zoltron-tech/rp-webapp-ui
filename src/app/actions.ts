@@ -1,21 +1,36 @@
 "use server";
 
-import getConfig from "next/config";
-import { cookies } from "next/headers";
-import { RedirectType, redirect } from "next/navigation";
+import {
+  checkUsernameAvailability as apiCheckUsernameAvailability,
+  updateUserTheme as apiUpdateUserTheme,
+  finishOnboarding,
+  forgotPassword,
+  getDiscordConnection,
+  getSpotifyConnection,
+  login,
+  resetPassword,
+  sendVerificationEmail,
+  signUp,
+  unlinkDiscord,
+  unlinkSpotify,
+  updateUsername,
+  verifyAccount,
+  verifyPassword,
+} from "@nw/api/endpoints/account";
 import type {
   AuthenticateResponsePayload,
-  DiscordConnection,
   LoginOAuthProvider,
   LoginPayload,
   LoginResponsePayload,
   SignupResponsePayload,
-  SpotifyConnection,
   UpdateThemePayload,
-  UpdateThemeResponse,
-} from "@/types";
-import type { WithMessage } from "@/types/common";
-import type { SignUpPayload } from "@/types/register";
+} from "@nw/types";
+import type { SignUpPayload } from "@nw/types/register";
+import { validateJWTSync } from "@nw/utils";
+import getConfig from "next/config";
+import { cookies } from "next/headers";
+import { RedirectType, redirect } from "next/navigation";
+import { api, authedApi } from "@/lib/server-api";
 import {
   API_MESSAGE,
   AUTH_HEADER_NAME,
@@ -24,11 +39,14 @@ import {
   THEME_COOKIE_NAME,
 } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
-import { validateJWTSync } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 
 const { serverRuntimeConfig } = getConfig();
 const { RP_SERVICE_URL, USE_LOCAL_DOMAIN } = serverRuntimeConfig;
+
+// ─── Cookies ─────────────────────────────────────────────────────────────────
+// Deliberately not in @nw/api: a cookie jar is a web concept, and the native
+// client will put the same token in SecureStore instead.
 
 export const getThemeCookie = async () => {
   const cookie = (await cookies()).get(THEME_COOKIE_NAME);
@@ -41,7 +59,10 @@ export const getAuthCookie = async () => {
 };
 
 export const setAuthCookie = async (jwt: string) => {
-  return (await cookies()).set(JWT_COOKIE_NAME, jwt, {
+  // No return value: `set` hands back the cookie store (a class instance), and
+  // this action is called from client components, which only accept
+  // serializable results — returning it rejects the caller's promise.
+  (await cookies()).set(JWT_COOKIE_NAME, jwt, {
     ...(USE_LOCAL_DOMAIN ? {} : { domain: "novelist.world" }),
     expires: new Date(Date.now() + 60 * 60 * 24 * 30 * 1000), // 30 days
     httpOnly: false,
@@ -91,220 +112,70 @@ export const removeReferralCookie = async () => {
   });
 };
 
-export const forgotPasswordAction = async (email: string) => {
-  const URL = `${RP_SERVICE_URL}/rp/user/account/forgotPassword`;
+// ─── Account ─────────────────────────────────────────────────────────────────
 
-  const response = await fetch(URL, {
-    body: JSON.stringify({ email }),
-    cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    method: "POST",
-  });
+export const forgotPasswordAction = (email: string) =>
+  forgotPassword(api, email);
 
-  if (response.status === 404) {
-    return { message: API_MESSAGE.NotFound };
-  }
+/** The JWT comes from the verification link, not from a session. */
+export const verifyAccountAction = (jwt: string) => verifyAccount(api, jwt);
 
-  if (!response.ok) {
-    return {
-      message: API_MESSAGE.UncategorizedError,
-    };
-  }
+export const sendVerificationEmailAction = (jwt: string) =>
+  sendVerificationEmail(api, jwt);
 
-  const result: WithMessage = await response.json();
-  return result;
-};
+export const verifyPasswordAction = (password: string) =>
+  verifyPassword(authedApi, password);
 
-export const verifyAccountAction = async (jwt: string) => {
-  const URL = `${RP_SERVICE_URL}/rp/user/account/verifyAccount`;
-  const response = await fetch(URL, {
-    cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-      [AUTH_HEADER_NAME]: jwt,
-    },
-    method: "POST",
-  });
+/** The JWT comes from the reset link, not from a session. */
+export const resetPasswordAction = (jwt: string, password: string) =>
+  resetPassword(api, jwt, password);
 
-  if (!response.ok) {
-    return {
-      message: "Something went wrong, please try again or contact support.",
-    };
-  }
-
-  const result: WithMessage = await response.json();
-  return result;
-};
-
-export const sendVerificationEmailAction = async (jwt: string) => {
-  const URL = `${RP_SERVICE_URL}/rp/user/account/verificationEmail`;
-  const response = await fetch(URL, {
-    cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-      [AUTH_HEADER_NAME]: jwt,
-    },
-    method: "POST",
-  });
-
-  if (!response.ok) {
-    return {
-      message: API_MESSAGE.Error,
-    };
-  }
-
-  const result: WithMessage = await response.json();
-  return result;
-};
-
-export const verifyPasswordAction = async (password: string) => {
-  const URL = `${RP_SERVICE_URL}/rp/user/account/verifyPassword`;
-
-  const jwt = await authenticateAndGetJWT();
-
-  const response = await fetch(URL, {
-    body: JSON.stringify({ password }),
-    cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-      [AUTH_HEADER_NAME]: jwt,
-    },
-    method: "POST",
-  });
-
-  if (response.status === 401) {
-    return { message: API_MESSAGE.Unauthorized };
-  }
-
-  if (!response.ok) {
-    return { message: API_MESSAGE.UncategorizedError };
-  }
-
-  const result: WithMessage = await response.json();
-  return result;
-};
-
-export const resetPasswordAction = async (jwt: string, password: string) => {
-  const URL = `${RP_SERVICE_URL}/rp/user/account/resetPassword`;
-
-  const response = await fetch(URL, {
-    body: JSON.stringify({ password }),
-    cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-      [AUTH_HEADER_NAME]: jwt,
-    },
-    method: "POST",
-  });
-
-  if (!response.ok) {
-    if (response.status === 401) {
-      return {
-        message: API_MESSAGE.Unauthorized,
-      };
-    }
-
-    return {
-      message: API_MESSAGE.UncategorizedError,
-    };
-  }
-
-  const result: WithMessage = await response.json();
-  return result;
-};
-
+/** Signs in and stores the token. The cookie write is why this is not in @nw/api. */
 export const loginAction = async (
   payload: LoginPayload,
 ): Promise<LoginResponsePayload> => {
-  const URL = `${RP_SERVICE_URL}/rp/user/account/login`;
+  const result = await login(api, payload);
+  if (!result.token) return result;
 
-  const response = await fetch(URL, {
-    body: JSON.stringify(payload),
-    cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    method: "POST",
-  });
+  await setAuthCookie(result.token);
 
-  if (response.status === 401) {
-    return {
-      message: API_MESSAGE.BadPayload,
-    };
-  } else if (!response.ok) {
-    return {
-      message: API_MESSAGE.UncategorizedError,
-    };
-  }
-
-  const result = await response.json();
-
-  setAuthCookie(result.token!);
-
-  const clientResponse = {
-    message: result.message,
-    user: result.user!,
-  };
-
-  return clientResponse;
+  return { message: result.message, user: result.user };
 };
 
 export const signupAction = async (
   payload: SignUpPayload,
 ): Promise<SignupResponsePayload> => {
-  const URL = `${RP_SERVICE_URL}/rp/user/account`;
-
   try {
     const referralUser = (await cookies()).get(REFERRAL_COOKIE_NAME)?.value;
 
-    const response = await fetch(URL, {
-      body: JSON.stringify({
-        ...payload,
-        ...(referralUser ? { referralUser } : {}),
-      }),
-      cache: "no-store",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      method: "POST",
+    const { status, result } = await signUp(api, {
+      ...payload,
+      ...(referralUser ? { referralUser } : {}),
     });
 
-    const result: LoginResponsePayload = await response.json();
-
-    if (!response.ok) {
-      if (response.status === 409) {
-        return {
-          message: API_MESSAGE.Conflict,
-        };
-      } else if (response.status === 400) {
-        return {
-          message: API_MESSAGE.BadPayload,
-          serverMessage: result.message,
-        };
-      } else {
-        Logger.debug(API_MESSAGE.Error, response.status, result.message);
-        return {
-          message: API_MESSAGE.UncategorizedError,
-        };
-      }
+    if (status === 409) return { message: API_MESSAGE.Conflict };
+    if (status === 400) {
+      return {
+        message: API_MESSAGE.BadPayload,
+        serverMessage: result.message,
+      };
+    }
+    if (!result.token) {
+      Logger.debug(API_MESSAGE.Error, status, result.message);
+      return { message: API_MESSAGE.UncategorizedError };
     }
 
-    await setAuthCookie(result.token!);
+    await setAuthCookie(result.token);
     if (referralUser) await removeReferralCookie();
-    const clientResponse: LoginResponsePayload = {
-      message: API_MESSAGE.Success,
-      token: result.token!,
-      user: result.user!,
-    };
 
-    return clientResponse;
+    return {
+      message: API_MESSAGE.Success,
+      token: result.token,
+      user: result.user,
+    };
   } catch (error) {
     Logger.error("Error during signupAction:", error);
-    return {
-      message: API_MESSAGE.UncategorizedError,
-    };
+    return { message: API_MESSAGE.UncategorizedError };
   }
 };
 
@@ -315,10 +186,13 @@ export const loginViaProviderAction = async (provider: LoginOAuthProvider) => {
   );
 };
 
+/** The one place a redirect belongs: the user asked to leave. */
 export const logoutAction = async () => {
   await removeAuthCookie();
   redirect(ROUTES.Novelists, RedirectType.push);
 };
+
+// ─── Session ─────────────────────────────────────────────────────────────────
 
 export const authenticateJWT = async (jwt: string, useCookies?: boolean) => {
   const isValid = validateJWTSync(jwt);
@@ -331,10 +205,7 @@ export const authenticateJWT = async (jwt: string, useCookies?: boolean) => {
       try {
         await removeAuthCookie();
       } catch (error) {
-        Logger.debug(
-          "authenticateJWT: could not clear the stale cookie",
-          error,
-        );
+        Logger.debug("authenticateJWT: could not clear the stale cookie", error);
       }
     }
     return false;
@@ -344,52 +215,42 @@ export const authenticateJWT = async (jwt: string, useCookies?: boolean) => {
 
 export const authenticateAction = async () => {
   Logger.debug("authenticate");
-  // ADD_AUTH_COOKIE
-  // await setAuthCookie();
   const jwtCookie = (await cookies()).get(JWT_COOKIE_NAME);
   Logger.info("jwtCookie", jwtCookie);
   if (!jwtCookie?.value) return false;
 
-  const isValid = await authenticateJWT(jwtCookie.value, true);
-  return isValid;
+  return authenticateJWT(jwtCookie.value, true);
 };
 
-export const authenticateAndGetJWT = async () => {
+/**
+ * The token, or null when there is no valid session.
+ *
+ * It used to call `logoutAction()` here, which clears the cookie and redirects
+ * — meaning any action that merely wanted to read data could navigate the user
+ * away as a side effect, and could never simply report "not signed in".
+ * Callers now decide: stop and return, or carry on without a token.
+ */
+export const authenticateAndGetJWT = async (): Promise<string | null> => {
   const authenticated = await authenticateAction();
-  if (!authenticated) return logoutAction();
-  const cookie = await getAuthCookie();
-  return cookie;
+  if (!authenticated) return null;
+  return (await getAuthCookie()) ?? null;
 };
 
 export const getJWTIfExists = async () => {
   const authenticated = await authenticateAction();
   if (!authenticated) return;
-  const cookie = await getAuthCookie();
-  return cookie;
+  return getAuthCookie();
 };
 
-export const checkUsernameAvailability = async (username: string) => {
-  const URL = `${RP_SERVICE_URL}/rp/user/account/username?username=${username}`;
+export const checkUsernameAvailability = (username: string) =>
+  apiCheckUsernameAvailability(api, username);
 
-  const response = await fetch(URL, { cache: "no-store" });
-
-  if (response.status === 404) {
-    return true;
-  } else if (response.ok) {
-    return false;
-  }
-
-  const result: WithMessage = await response.json();
-
-  return result.message;
-};
-
+/** Redirects when there is no cookie at all — this gates the authed shell. */
 export const getUser = async () => {
-  const URL = `${RP_SERVICE_URL}/rp/user/account/auth`;
   const jwtCookie = (await cookies()).get(JWT_COOKIE_NAME);
-
   if (!jwtCookie) redirect("/", RedirectType.push);
-  const response = await fetch(URL, {
+
+  const response = await fetch(`${RP_SERVICE_URL}/rp/user/account/auth`, {
     cache: "no-store",
     headers: {
       "Content-Type": "application/json",
@@ -400,111 +261,23 @@ export const getUser = async () => {
 
   const result: AuthenticateResponsePayload = await response.json();
 
-  if (!response.ok) {
-    return {
-      message: API_MESSAGE.Unauthorized,
-    };
-  }
+  if (!response.ok) return { message: API_MESSAGE.Unauthorized };
   return result;
 };
 
-export const updateUsernameAction = async (username: string) => {
-  const URL = `${RP_SERVICE_URL}/rp/user/account/updateUsername`;
+export const updateUsernameAction = (username: string) =>
+  updateUsername(authedApi, username);
 
-  const jwtCookie = await authenticateAndGetJWT();
+export const updateUserTheme = (payload: UpdateThemePayload) =>
+  apiUpdateUserTheme(authedApi, payload);
 
-  const response = await fetch(URL, {
-    body: JSON.stringify({ username }),
-    cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-      [AUTH_HEADER_NAME]: jwtCookie,
-    },
-    method: "POST",
-  });
-
-  if (!response.ok) {
-    if (response.status === 409) {
-      return {
-        message: API_MESSAGE.Conflict,
-      };
-    }
-
-    return {
-      message: API_MESSAGE.UncategorizedError,
-    };
-  }
-
-  const result: WithMessage = await response.json();
-  return result;
-};
-
-export const updateUserTheme = async (payload: UpdateThemePayload) => {
-  const URL = `${RP_SERVICE_URL}/rp/user/account/updateUser`;
-
-  const jwtCookie = await authenticateAndGetJWT();
-
-  const response = await fetch(URL, {
-    body: JSON.stringify(payload),
-    cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-      [AUTH_HEADER_NAME]: jwtCookie,
-    },
-    method: "POST",
-  });
-
-  if (!response.ok) {
-    return {
-      message: API_MESSAGE.UncategorizedError,
-    };
-  }
-
-  const result: UpdateThemeResponse = await response.json();
-  return result;
-};
-
-// ─── Connected accounts: Discord ───────────────────────────────────────────
+// ─── Connected accounts ──────────────────────────────────────────────────────
 
 /** Returns the caller's linked Discord account, or null when none is linked. */
-export const getDiscordConnectionAction =
-  async (): Promise<DiscordConnection | null> => {
-    const jwt = await getJWTIfExists();
-    if (!jwt) return null;
-
-    const response = await fetch(`${RP_SERVICE_URL}/rp/user/account/discord`, {
-      cache: "no-store",
-      headers: {
-        "Content-Type": "application/json",
-        [AUTH_HEADER_NAME]: jwt,
-      },
-      method: "GET",
-    });
-
-    if (!response.ok) return null;
-    return (await response.json()) as DiscordConnection;
-  };
+export const getDiscordConnectionAction = () => getDiscordConnection(authedApi);
 
 /** Removes the caller's Discord link. */
-export const unlinkDiscordAction = async (): Promise<WithMessage> => {
-  const jwt = await authenticateAndGetJWT();
-
-  const response = await fetch(`${RP_SERVICE_URL}/rp/user/account/discord`, {
-    cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-      [AUTH_HEADER_NAME]: jwt,
-    },
-    method: "DELETE",
-  });
-
-  if (!response.ok) {
-    return { message: API_MESSAGE.UncategorizedError };
-  }
-
-  const result: WithMessage = await response.json();
-  return result;
-};
+export const unlinkDiscordAction = () => unlinkDiscord(authedApi);
 
 /**
  * Starts the Discord link flow. Navigates to the backend initiation endpoint,
@@ -518,47 +291,11 @@ export const linkDiscordAction = async () => {
   );
 };
 
-// ─── Connected accounts: Spotify ───────────────────────────────────────────
-
 /** Returns the caller's linked Spotify account, or null when none is linked. */
-export const getSpotifyConnectionAction =
-  async (): Promise<SpotifyConnection | null> => {
-    const jwt = await getJWTIfExists();
-    if (!jwt) return null;
-
-    const response = await fetch(`${RP_SERVICE_URL}/rp/user/account/spotify`, {
-      cache: "no-store",
-      headers: {
-        "Content-Type": "application/json",
-        [AUTH_HEADER_NAME]: jwt,
-      },
-      method: "GET",
-    });
-
-    if (!response.ok) return null;
-    return (await response.json()) as SpotifyConnection;
-  };
+export const getSpotifyConnectionAction = () => getSpotifyConnection(authedApi);
 
 /** Removes the caller's Spotify link. */
-export const unlinkSpotifyAction = async (): Promise<WithMessage> => {
-  const jwt = await authenticateAndGetJWT();
-
-  const response = await fetch(`${RP_SERVICE_URL}/rp/user/account/spotify`, {
-    cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-      [AUTH_HEADER_NAME]: jwt,
-    },
-    method: "DELETE",
-  });
-
-  if (!response.ok) {
-    return { message: API_MESSAGE.UncategorizedError };
-  }
-
-  const result: WithMessage = await response.json();
-  return result;
-};
+export const unlinkSpotifyAction = () => unlinkSpotify(authedApi);
 
 /** Starts the Spotify link flow (navigates to the backend initiation endpoint). */
 export const linkSpotifyAction = async () => {
@@ -568,26 +305,4 @@ export const linkSpotifyAction = async () => {
   );
 };
 
-export const finishOnboardingAction = async () => {
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/onboard`;
-
-  const jwtCookie = await authenticateAndGetJWT();
-
-  const response = await fetch(URL, {
-    cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-      [AUTH_HEADER_NAME]: jwtCookie,
-    },
-    method: "POST",
-  });
-
-  if (!response.ok) {
-    return {
-      message: API_MESSAGE.UncategorizedError,
-    };
-  }
-
-  const result: WithMessage = await response.json();
-  return result;
-};
+export const finishOnboardingAction = () => finishOnboarding(authedApi);

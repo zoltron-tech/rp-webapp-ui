@@ -1,5 +1,6 @@
 "use client";
 
+import type { StoryBoardEventThread } from "@nw/types";
 import type { FC } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { GrEdit } from "react-icons/gr";
@@ -8,7 +9,6 @@ import {
   isDialogDesign,
 } from "@/components/rich-text-editor-input/dialog-designs";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
-import type { StoryBoardEventThread } from "@/types";
 import { toFormattedDate } from "@/utils/helpers";
 import * as S from "./styles";
 

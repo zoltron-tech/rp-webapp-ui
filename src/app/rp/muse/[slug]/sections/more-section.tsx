@@ -1,5 +1,6 @@
 "use client";
 
+import type { Muse } from "@nw/types";
 import { useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { GrEdit } from "react-icons/gr";
@@ -10,7 +11,6 @@ import { ShareMuseDialog } from "@/components/share-muse-dialog";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
-import type { Muse } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { deleteMuseAction } from "../../../muse/actions";

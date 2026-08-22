@@ -1,4 +1,5 @@
 import { ShouldRender } from "@novelist-world/ui";
+import type { UpdateNovelistPayload } from "@nw/types";
 import { Form } from "radix-ui";
 import {
   type FC,
@@ -9,9 +10,8 @@ import {
 } from "react";
 import { ErrorBox } from "@/components/error-box";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
-import type { UpdateNovelistPayload } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
-import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
+import { UNCATEGORIZED_ERROR_MESSAGE } from "@/utils/form-errors";
 import { updateUserNovelist } from "../novelists/actions";
 import { useOnboardingState, useOnboardingStoreSet } from "./onboarding.store";
 import * as S from "./styled";
@@ -24,19 +24,7 @@ const ErrorKeys = [API_MESSAGE.UncategorizedError] as const;
 type ErrorKey = (typeof ErrorKeys)[number];
 
 const ERROR_MAP: Record<ErrorKey, ReactNode> = {
-  [API_MESSAGE.UncategorizedError]: (
-    <>
-      <p>
-        Something went wrong while logging you in, please try reloading the
-        page.
-      </p>
-      <p>
-        <strong>Tip:&nbsp;</strong>
-        If this keeps happening, try&nbsp;
-        <a href={SUPPORT_EMAIL_URL}>contacting support</a>.
-      </p>
-    </>
-  ),
+  [API_MESSAGE.UncategorizedError]: UNCATEGORIZED_ERROR_MESSAGE,
 };
 
 export const AboutStep: FC<BasicInfoStepProps> = ({ handleNext }) => {

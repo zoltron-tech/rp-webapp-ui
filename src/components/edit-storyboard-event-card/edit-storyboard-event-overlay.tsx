@@ -1,11 +1,11 @@
 "use client";
 
+import type { StoryBoardEvent } from "@nw/types";
 import classNames from "classnames";
 import { type FC, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useGlobalState } from "@/context/store/stores";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { StoryBoardEvent } from "@/types";
 import type { EditStoryboardEventDataCardHandle } from "./edit-storyboard-event-data-card";
 import { EditStoryboardEventForm } from "./index";
 import * as O from "./overlay.styled";

@@ -1,6 +1,7 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
+import type { Friend, Muse, Prompt } from "@nw/types";
 import { useState } from "react";
 import { FaComments, FaHeart } from "react-icons/fa6";
 import { AvatarNew } from "@/components/common/avatar-new";
@@ -10,7 +11,6 @@ import { ReactionLikersDialog } from "@/components/reaction-likers-dialog";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
 import { SharedWithDialog } from "@/components/shared-with-dialog";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Friend, Muse, Prompt } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDate } from "@/utils/helpers";
 import * as S from "../styles";

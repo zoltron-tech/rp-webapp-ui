@@ -1,7 +1,7 @@
+import { ACCENT_MAP } from "@nw/types/theme";
 import classNames from "classnames";
 import type { FC } from "react";
 import { AvatarNew } from "@/components/common/avatar-new";
-import { ACCENT_MAP } from "@/types/theme";
 import { useOnboardingState } from "./onboarding.store";
 import * as S from "./styled";
 

@@ -7,8 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "biome check ",
-    "push": "rm -rf .next && yarn build && git add . && git commit -m \"$@\" && git fetch origin && git rebase origin/main && git push -f origin expanded-content",
-    "update-local": "rm -rf node_modules/@novelist-world/ui/dist && cd ../novelist-world-ui && yarn build && cp -r dist ../rp-webapp-ui/node_modules/@novelist-world/ui/dist && cd ../rp-webapp-ui"
+    "type-check": "tsc --noEmit",
+    "check:boundaries": "node scripts/check-package-boundaries.mjs",
+    "verify": "pnpm type-check && pnpm type-check:packages && pnpm check:boundaries",
+    "push": "rm -rf .next && pnpm build && git add . && git commit -m \"$@\" && git fetch origin && git rebase origin/main && git push -f origin expanded-content",
+    "update-local": "rm -rf node_modules/@novelist-world/ui/dist && cd ../novelist-world-ui && yarn build && cp -r dist ../rp-webapp-ui/node_modules/@novelist-world/ui/dist && cd ../rp-webapp-ui",
+    "type-check:packages": "pnpm -r --filter \"./packages/**\" type-check"
   },
   "engines": {
     "node": ">=18.16.0"
@@ -22,6 +26,9 @@
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
     "@novelist-world/ui": "1.0.2-alpha-2",
+    "@nw/api": "workspace:*",
+    "@nw/types": "workspace:*",
+    "@nw/utils": "workspace:*",
     "@radix-ui/colors": "^3.0.0",
     "@tensorflow/tfjs": "^4.22.0",
     "@trpc/client": "^10.45.2",

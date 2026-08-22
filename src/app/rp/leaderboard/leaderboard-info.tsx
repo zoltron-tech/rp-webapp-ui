@@ -3,16 +3,12 @@
 import classNames from "classnames";
 import { createPortal } from "react-dom";
 import { FiX } from "react-icons/fi";
-import { useGlobalState } from "@/context/store/stores";
 import styled, { keyframes } from "styled-components";
+import { useGlobalState } from "@/context/store/stores";
 import { LEVELS } from "@/lib/rp-levels";
+import { fadeIn } from "@/theme/animations";
 
 // ─── Animations ───────────────────────────────────────────────────────────────
-
-const fadeIn = keyframes`
-  from { opacity: 0; }
-  to   { opacity: 1; }
-`;
 
 const scaleIn = keyframes`
   from { opacity: 0; transform: translate(-50%, -48%) scale(0.95); }

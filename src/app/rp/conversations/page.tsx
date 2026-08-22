@@ -1,5 +1,6 @@
 "use client";
 
+import type { Conversation, IceBreaker } from "@nw/types";
 import classNames from "classnames";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BiSupport } from "react-icons/bi";
@@ -13,7 +14,6 @@ import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { Conversation, IceBreaker } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { decryptConversations } from "@/utils/e2e-crypto";
 import { pluralize } from "@/utils/helpers";

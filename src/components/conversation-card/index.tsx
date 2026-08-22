@@ -1,10 +1,10 @@
 "use client";
 
+import type { Conversation } from "@nw/types";
 import { useRouter } from "next/navigation";
 import { type FC, useEffect } from "react";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Conversation } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { toLocalDate } from "@/utils/helpers";
 import { EmailVerifiedBadge } from "../common";

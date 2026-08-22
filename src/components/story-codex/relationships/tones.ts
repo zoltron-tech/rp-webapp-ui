@@ -3,8 +3,8 @@ import type {
   CodexTone,
   CodexToneLineStyle,
   RelationshipTone,
-} from "@/types";
-import type { ThemeType } from "@/types/theme";
+} from "@nw/types";
+import type { ThemeType } from "@nw/types/theme";
 
 /**
  * The mesh's colour encoding.

@@ -1,13 +1,13 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
+import type { Muse } from "@nw/types";
 import { useSearchParams } from "next/navigation";
 import { type FC, useEffect, useState } from "react";
 import { getMuseAction } from "@/app/rp/muse/actions";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Muse } from "@/types";
 import { FANDOMLESS } from "@/utils/constants";
 import EditMuseDataCard from "./edit-muse-data-card";
 import type { MuseState } from "./muse.store";

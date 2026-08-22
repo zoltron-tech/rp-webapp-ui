@@ -1,16 +1,16 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
+import type { Muse, MuseAboutSection } from "@nw/types";
 import { useRef, useState } from "react";
-import { GrEdit } from "react-icons/gr";
 import { FiCheck, FiEdit2, FiPlus, FiTrash2, FiX } from "react-icons/fi";
-import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
+import { GrEdit } from "react-icons/gr";
+import { removeMuseNoteAction, setMuseNoteAction } from "@/app/rp/muse/actions";
 import { AppAlertDialog } from "@/components/dialog";
+import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
-import { removeMuseNoteAction, setMuseNoteAction } from "@/app/rp/muse/actions";
-import type { Muse, MuseAboutSection } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "../styles";
 import SectionMiniHeader from "./SectionMiniHeader";
@@ -22,7 +22,12 @@ type Props = {
   onMuseUpdate?: (updates: Partial<Muse>) => void;
 };
 
-export function BackStorySection({ muse, aboutSections, isOwnMuse, onMuseUpdate }: Props) {
+export function BackStorySection({
+  muse,
+  aboutSections,
+  isOwnMuse,
+  onMuseUpdate,
+}: Props) {
   const accent = muse?.useAccent ? muse.accent : undefined;
   const { routeToPage } = usePageRouter();
   const { successToast, errorToast } = useUIContext();
@@ -155,7 +160,11 @@ export function BackStorySection({ muse, aboutSections, isOwnMuse, onMuseUpdate 
                   <S.NoteQuote>{muse?.note}</S.NoteQuote>
                   {isOwnMuse && (
                     <S.NoteControlRow className="note-actions">
-                      <S.NoteControlBtn type="button" title="Edit note" onClick={startNoteEdit}>
+                      <S.NoteControlBtn
+                        type="button"
+                        title="Edit note"
+                        onClick={startNoteEdit}
+                      >
                         <FiEdit2 size={11} />
                       </S.NoteControlBtn>
                       <S.NoteControlBtn
@@ -177,7 +186,9 @@ export function BackStorySection({ muse, aboutSections, isOwnMuse, onMuseUpdate 
                 </S.NoteAddBtn>
               ) : null}
 
-              <ShouldRender if={aboutSections !== null && aboutSections.length === 0}>
+              <ShouldRender
+                if={aboutSections !== null && aboutSections.length === 0}
+              >
                 <S.SectionEmptyWrap>
                   <S.SectionEmpty>No story yet.</S.SectionEmpty>
                   <ShouldRender if={isOwnMuse}>
@@ -196,7 +207,9 @@ export function BackStorySection({ muse, aboutSections, isOwnMuse, onMuseUpdate 
                 </S.SectionEmptyWrap>
               </ShouldRender>
 
-              <ShouldRender if={Boolean(aboutSections && aboutSections.length > 0)}>
+              <ShouldRender
+                if={Boolean(aboutSections && aboutSections.length > 0)}
+              >
                 {aboutSections?.map((section, index) => (
                   <div key={section.id ?? `about-section-${index}`}>
                     {section.image && (
@@ -228,7 +241,9 @@ export function BackStorySection({ muse, aboutSections, isOwnMuse, onMuseUpdate 
         heading="Remove note?"
         text="Are you sure you want to remove this note? This cannot be undone."
         open={confirmRemoveNote}
-        onOpenChange={(open) => { if (!open && !noteRemoving) setConfirmRemoveNote(false); }}
+        onOpenChange={(open) => {
+          if (!open && !noteRemoving) setConfirmRemoveNote(false);
+        }}
         onCancel={() => setConfirmRemoveNote(false)}
         onConfirm={() => {
           setConfirmRemoveNote(false);

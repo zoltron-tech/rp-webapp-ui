@@ -1,10 +1,10 @@
+import type { NovelistNote, NWImage } from "@nw/types";
+import type { Accent, ThemeType } from "@nw/types/theme";
 import {
   createGetFunction,
   useStoreSet,
   useStoreState,
 } from "@/context/store/use-store";
-import type { NWImage, NovelistNote } from "@/types";
-import type { Accent, ThemeType } from "@/types/theme";
 
 export type ProfileState = {
   firstName: string | null;

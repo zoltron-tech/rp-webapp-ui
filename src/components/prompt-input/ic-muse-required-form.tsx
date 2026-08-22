@@ -1,5 +1,6 @@
 "use client";
 
+import type { CreateUpdateMuse, Fandom, Muse } from "@nw/types";
 import { type FC, useCallback, useState } from "react";
 import { FaMasksTheater } from "react-icons/fa6";
 import { TbCameraUp } from "react-icons/tb";
@@ -7,7 +8,6 @@ import { updateMuseAction } from "@/app/rp/muse/actions";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks/use-ui-context";
-import type { CreateUpdateMuse, Fandom, Muse } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { uploadMedia } from "@/utils/upload-media";
 import * as S from "./styles";

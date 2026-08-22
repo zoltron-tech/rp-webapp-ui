@@ -1,5 +1,6 @@
 "use client";
 
+import type { Friend } from "@nw/types";
 import classNames from "classnames";
 import { type FC, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -7,7 +8,6 @@ import { FiChevronRight, FiX } from "react-icons/fi";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { Friend } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { EmailVerifiedBadge } from "../common";
 import { AvatarNew } from "../common/avatar-new";

@@ -1,4 +1,5 @@
 "use client";
+import type { StoryBoard, StoryBoardEvent } from "@nw/types/story-board";
 import classNames from "classnames";
 import {
   type FC,
@@ -29,7 +30,6 @@ import { useCustomEvents, useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useToggleLike } from "@/hooks/use-toggle-like";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { StoryBoard, StoryBoardEvent } from "@/types/story-board";
 import { API_MESSAGE, INITIAL_STORY_BOARD } from "@/utils/constants";
 import {
   type CustomEventType,

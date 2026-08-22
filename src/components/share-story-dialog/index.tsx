@@ -1,5 +1,6 @@
 "use client";
 
+import type { StoryBoard } from "@nw/types";
 import classNames from "classnames";
 import { type FC, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -16,8 +17,7 @@ import {
 import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { ShareStoryData, ShareStoryPayload, SharePromptResult } from "@/lib/discord";
-import type { StoryBoard } from "@/types";
+import type { SharePromptResult, ShareStoryData, ShareStoryPayload } from "@/lib/discord";
 import { ROUTES } from "@/utils/constants/routes";
 import { CoverImage } from "../common";
 import * as DropS from "../profile-more-dropdown/styled";

@@ -1,6 +1,7 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
+import type { MentionDataItem, MentionTab } from "@nw/types/novelist";
 import { Separator } from "radix-ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BsArrowLeft } from "react-icons/bs";
@@ -14,7 +15,6 @@ import {
 } from "@/components/rich-text-editor-input";
 import { useGlobalState } from "@/context/store/stores";
 import { useUploadMedia } from "@/hooks/use-upload-media";
-import type { MentionDataItem, MentionTab } from "@/types/novelist";
 import { API_MESSAGE } from "@/utils/constants";
 import { searchMentionMusesAction } from "../../muse/actions";
 import { useProfileState, useProfileStoreSet } from "./profile.store";

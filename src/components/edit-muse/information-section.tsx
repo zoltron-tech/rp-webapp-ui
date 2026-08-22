@@ -1,5 +1,6 @@
 "use client";
 
+import type { Fandom } from "@nw/types";
 import { Form, Separator } from "radix-ui";
 import { type FormEventHandler, useCallback, useState } from "react";
 import { BsArrowLeft } from "react-icons/bs";
@@ -13,7 +14,6 @@ import {
 import { MdOutlineCategory, MdOutlineInfo } from "react-icons/md";
 import { updateMuseAction } from "@/app/rp/muse/actions";
 import { useUIContext } from "@/hooks/use-ui-context";
-import type { Fandom } from "@/types";
 import { LoaderAction } from "../common/loader-action";
 import * as EA from "../edit-muse-extra-attributes/styled";
 import { ErrorBox } from "../error-box";

@@ -1,8 +1,8 @@
 "use client";
 
+import type { ProfileSong } from "@nw/types/music";
 import { type FC, useEffect, useMemo, useRef, useState } from "react";
 import { FaMusic, FaPause, FaPlay } from "react-icons/fa";
-import type { ProfileSong } from "@/types/music";
 import {
   getSpotifyIframeApi,
   type SpotifyEmbedController,

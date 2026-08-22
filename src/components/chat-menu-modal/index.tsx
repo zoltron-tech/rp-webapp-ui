@@ -1,15 +1,15 @@
 "use client";
 
 import { Flex } from "@novelist-world/ui";
+import type { Conversation } from "@nw/types/conversation";
 import classNames from "classnames";
 import { useRouter } from "next/navigation";
 import { type FC, useEffect, useState } from "react";
 import { IoChatbubblesSharp } from "react-icons/io5";
 import { TiGroup } from "react-icons/ti";
-import { getConversationsAction } from "@/app/rp/novelists/actions";
+import { getConversationsAction } from "@/app/rp/conversations/actions";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Conversation } from "@/types/conversation";
 import { ROUTES } from "@/utils/constants/routes";
 import { decryptConversations } from "@/utils/e2e-crypto";
 import { toFormattedDate, toggleState } from "@/utils/helpers";

@@ -1,4 +1,5 @@
 import styled, { keyframes } from "styled-components";
+import { spin } from "@/theme/animations";
 
 /* display:contents so this wrapper doesn't sit between the dialog/tray
    shell and Card — Card's flex:1/min-height:0 needs to reach the shell's
@@ -6,10 +7,6 @@ import styled, { keyframes } from "styled-components";
    break and content overflows the shell instead. */
 export const EditStoryboardEventPageRoot = styled.div`
   display: contents;
-`;
-
-const spin = keyframes`
-  to { transform: rotate(360deg); }
 `;
 
 export const EmbeddedLoading = styled.div`

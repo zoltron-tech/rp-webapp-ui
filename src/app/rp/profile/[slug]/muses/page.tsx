@@ -1,5 +1,6 @@
 "use client";
 
+import type { Muse } from "@nw/types";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { FiGrid, FiList } from "react-icons/fi";
@@ -13,7 +14,6 @@ import { MusePreviewCard } from "@/components/muse-preview-card";
 import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents, useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Muse } from "@/types";
 import {
   type CustomEventType,
   EVENTS,

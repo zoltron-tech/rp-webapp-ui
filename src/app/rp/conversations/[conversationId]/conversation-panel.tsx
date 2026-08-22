@@ -1,5 +1,7 @@
 "use client";
 
+import type { Conversation, MentionDataItem, Message } from "@nw/types";
+import type { MessageSender, Reaction } from "@nw/types/conversation";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -16,8 +18,6 @@ import { useSocket } from "@/context/socket";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
-import type { Conversation, MentionDataItem, Message } from "@/types";
-import type { MessageSender, Reaction } from "@/types/conversation";
 import { ROUTES } from "@/utils/constants/routes";
 import {
   decryptConversation,

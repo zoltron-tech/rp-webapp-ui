@@ -1,8 +1,8 @@
+import type { NWImage } from "@nw/types";
+import { ACCENT_MAP, type Accent } from "@nw/types/theme";
 import classNames from "classnames";
 import { type FC, type MouseEventHandler, useCallback } from "react";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { NWImage } from "@/types";
-import { ACCENT_MAP, type Accent } from "@/types/theme";
 import { ROUTES } from "@/utils/constants/routes";
 import { AvatarNew } from "./avatar-new";
 

@@ -1,5 +1,6 @@
 "use client";
 
+import type { Prompt } from "@nw/types";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
@@ -23,7 +24,6 @@ import {
   prefetchExplorePrompts,
   prefetchOOCPosts,
 } from "@/lib/feed-prefetch";
-import type { Prompt } from "@/types";
 import {
   type CustomEventType,
   EVENTS,

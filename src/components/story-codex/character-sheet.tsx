@@ -1,5 +1,7 @@
 "use client";
 
+import type { NWImage, StoryCharacter } from "@nw/types";
+import { clamp } from "@nw/utils";
 import { type FC, useCallback, useEffect, useRef, useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { GrAttachment } from "react-icons/gr";
@@ -14,7 +16,6 @@ import {
   type RichTextEditorHandle,
 } from "@/components/rich-text-editor-input";
 import { useUploadMedia } from "@/hooks/use-upload-media";
-import type { NWImage, StoryCharacter } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { CODEX_COLORS } from "./icons";
 import * as S from "./styles";
@@ -28,9 +29,6 @@ const ZOOM_MAX = 3;
 
 /** Centred and unzoomed — where a fresh portrait starts. */
 const DEFAULT_CROP = { scale: 1, x: 50, y: 50 };
-
-const clamp = (value: number, min: number, max: number) =>
-  Math.min(max, Math.max(min, value));
 
 /**
  * The stored framing of an existing portrait, read back into the dialog.

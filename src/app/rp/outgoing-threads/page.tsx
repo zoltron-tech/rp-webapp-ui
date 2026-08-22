@@ -1,6 +1,7 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
+import type { PromptThreadComment } from "@nw/types";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FcRight } from "react-icons/fc";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
@@ -8,7 +9,6 @@ import { LoadMore } from "@/components/load-more/page";
 import { PromptThreadCommentCard } from "@/components/outgoing-reply";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { PromptThreadComment } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { pluralize } from "@/utils/helpers";
 import { getOutgoingThreadsAction } from "./actions";

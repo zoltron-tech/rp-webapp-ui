@@ -1,9 +1,9 @@
+import type { Prompt as PromptType } from "@nw/types";
 import {
   createGetFunction,
   useStoreSet,
   useStoreState,
 } from "@/context/store/use-store";
-import type { Prompt as PromptType } from "@/types";
 
 export type PromptStoreType = PromptType & {
   threadOpen: boolean;

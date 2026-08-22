@@ -1,8 +1,8 @@
 "use client";
 
+import type { ProfileSong } from "@nw/types/music";
 import { type FC, useEffect, useRef, useState } from "react";
 import { MdMusicNote, MdPause, MdPlayArrow } from "react-icons/md";
-import type { ProfileSong } from "@/types/music";
 import {
   getSpotifyIframeApi,
   type SpotifyEmbedController,
@@ -59,7 +59,7 @@ export const ProfileSongPlayer: FC<Props> = ({
       if (cancelled || !embedHostRef.current) return;
       api.createController(
         embedHostRef.current,
-        { uri: `spotify:track:${song.spotifyTrackId}`, width: 1, height: 1 },
+        { height: 1, uri: `spotify:track:${song.spotifyTrackId}`, width: 1 },
         (embedController) => {
           controller = embedController;
           controllerRef.current = embedController;

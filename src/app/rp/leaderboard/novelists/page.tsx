@@ -1,5 +1,6 @@
 "use client";
 
+import type { NovelistLeaderboardEntry } from "@nw/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { HiUserAdd } from "react-icons/hi";
 import { IoChevronBack } from "react-icons/io5";
@@ -16,7 +17,6 @@ import { ROUTES } from "@/utils/constants/routes";
 import {
   getNovelistLeaderboardAction,
   getNovelistRankByIdAction,
-  type NovelistLeaderboardEntry,
 } from "../actions";
 import { LeaderboardInfo } from "../leaderboard-info";
 import * as S from "../styles";

@@ -1,5 +1,6 @@
 "use client";
 
+import type { Conversation, ConversationParticipant } from "@nw/types";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IoArrowBackOutline } from "react-icons/io5";
@@ -16,7 +17,6 @@ import { AppAlertDialog } from "@/components/dialog";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
-import type { Conversation, ConversationParticipant } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import {
   deleteGroupAction,

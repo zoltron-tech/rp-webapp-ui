@@ -79,6 +79,7 @@ export const PennedByRow = styled.span`
 `;
 
 import { Container } from "@novelist-world/ui";
+import type { ImageFilter } from "@nw/types";
 import styled, { css } from "styled-components";
 import { Avatar as AvatarCommon } from "@/components/common";
 import {
@@ -88,7 +89,6 @@ import {
   CARD_BORDER,
   Z_INDEX,
 } from "@/theme";
-import type { ImageFilter } from "@/types";
 
 interface BannerProps {
   src: string | null;
@@ -1642,12 +1642,16 @@ export const PromptPrivacyChip = styled.button<{
     css`
       &:hover {
         color: rgba(255, 255, 255, 0.85);
-        background: ${$accent && $accent.trim() !== ""
-          ? `color-mix(in srgb, ${$accent} 30%, rgba(0, 0, 0, 0.3))`
-          : "color-mix(in srgb, var(--accent) 40%, transparent)"};
-        border-color: ${$accent && $accent.trim() !== ""
-          ? `color-mix(in srgb, ${$accent} 55%, transparent)`
-          : "rgba(255, 255, 255, 0.32)"};
+        background: ${
+          $accent && $accent.trim() !== ""
+            ? `color-mix(in srgb, ${$accent} 30%, rgba(0, 0, 0, 0.3))`
+            : "color-mix(in srgb, var(--accent) 40%, transparent)"
+        };
+        border-color: ${
+          $accent && $accent.trim() !== ""
+            ? `color-mix(in srgb, ${$accent} 55%, transparent)`
+            : "rgba(255, 255, 255, 0.32)"
+        };
       }
     `}
 `;
@@ -2981,13 +2985,19 @@ export const ShimmerBase = styled.div`
   }
 `;
 
-export const ShimmerLine = styled(ShimmerBase)<{ $width?: string; $height?: string }>`
+export const ShimmerLine = styled(ShimmerBase)<{
+  $width?: string;
+  $height?: string;
+}>`
   height: ${({ $height }) => $height ?? "12px"};
   width: ${({ $width }) => $width ?? "100%"};
   border-radius: 4px;
 `;
 
-export const ShimmerBlock = styled(ShimmerBase)<{ $height?: string; $width?: string }>`
+export const ShimmerBlock = styled(ShimmerBase)<{
+  $height?: string;
+  $width?: string;
+}>`
   width: ${({ $width }) => $width ?? "100%"};
   height: ${({ $height }) => $height ?? "80px"};
   border-radius: 8px;
@@ -3329,7 +3339,10 @@ export const VerseHeaderLabel = styled.span<{ $accent?: string | null }>`
   }
 `;
 
-export const VerseCircleTrack = styled.div<{ $fade?: boolean; $accent?: string | null }>`
+export const VerseCircleTrack = styled.div<{
+  $fade?: boolean;
+  $accent?: string | null;
+}>`
   /* Shrink (to scroll) when there's not enough room, but never grow beyond
      its own content — flex: 1 would keep claiming the row's full remaining
      width even with only a couple of circles left, leaving empty slack

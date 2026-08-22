@@ -1,3 +1,4 @@
+import type { PrivacyLevel } from "@nw/types";
 import classNames from "classnames";
 import { Form, Select } from "radix-ui";
 import {
@@ -12,7 +13,6 @@ import { GrRadialSelected } from "react-icons/gr";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents } from "@/hooks";
-import type { PrivacyLevel } from "@/types";
 import { EVENTS } from "@/utils/constants/custom-events";
 import { PrivacyIcon } from "../common/privacy-icon";
 import * as S from "./styles";

@@ -1,9 +1,9 @@
 "use client";
 
+import type { CodexRelationship, StoryPerson } from "@nw/types";
 import { type FC, useMemo, useRef, useState } from "react";
 import { museAvatarUrl } from "@/components/rich-text-editor-input/dialog-embed";
 import { useGlobalState } from "@/context/store/stores";
-import type { CodexRelationship, StoryPerson } from "@/types";
 import { buildMeshLayout } from "./layout";
 import * as S from "./styles";
 import { type ResolvedTone, resolveTone, strengthWidth } from "./tones";
@@ -171,7 +171,11 @@ export const RelationshipMesh: FC<Props> = ({
           const lit = isEdgeLit(edge.fromId, edge.toId);
 
           return (
-            <g key={edge.id} className={lit ? undefined : "dimmed"}>
+            <g
+              key={edge.id}
+              data-nw="mesh-edge"
+              className={lit ? undefined : "dimmed"}
+            >
               {/* Surface gap so crossing arcs stay separable. */}
               <path
                 className="edge-halo"
@@ -238,7 +242,11 @@ export const RelationshipMesh: FC<Props> = ({
           const labelOffset = NODE_RADIUS + 8;
 
           return (
-            <g key={node.id} className={lit ? undefined : "dimmed"}>
+            <g
+              key={node.id}
+              data-nw="mesh-node"
+              className={lit ? undefined : "dimmed"}
+            >
               {/* Backing disc, then the initial, then the avatar over both —
                   a missing or broken avatar reveals the initial underneath. */}
               <circle

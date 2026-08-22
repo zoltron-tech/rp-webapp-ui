@@ -1,9 +1,5 @@
-import { css, keyframes, styled } from "styled-components";
-
-const shimmerMove = keyframes`
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-`;
+import { css, styled } from "styled-components";
+import { shimmerMove } from "@/theme/animations";
 
 const shimmer = css`
   background: linear-gradient(

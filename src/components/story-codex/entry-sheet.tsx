@@ -1,5 +1,6 @@
 "use client";
 
+import type { CodexCategory, CodexEntry, StoryBoardEvent } from "@nw/types";
 import { type FC, useCallback, useEffect, useRef, useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { GrAttachment } from "react-icons/gr";
@@ -14,7 +15,6 @@ import {
 } from "@/components/rich-text-editor-input";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { CodexCategory, CodexEntry, StoryBoardEvent } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import {
   CODEX_COLORS,

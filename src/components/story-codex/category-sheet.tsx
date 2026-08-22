@@ -1,10 +1,10 @@
 "use client";
 
+import type { CodexCategory } from "@nw/types";
 import { type FC, useEffect, useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { ResponsiveSheet } from "@/components/common/responsive-sheet";
 import * as F from "@/components/common/responsive-sheet/styles";
-import type { CodexCategory } from "@/types";
 import { CODEX_ICON_KEYS, DEFAULT_CODEX_ICON, resolveCodexIcon } from "./icons";
 
 type Props = {

@@ -1,9 +1,9 @@
 "use client";
 
+import type { SubmitPromptType } from "@nw/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { FullPagePromptInput } from "@/components/prompt-input/full-page-prompt-input";
-import type { SubmitPromptType } from "@/types";
 
 function ComposePageInner() {
   const router = useRouter();

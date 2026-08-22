@@ -1,6 +1,7 @@
 "use client";
 
 import { Flex } from "@novelist-world/ui";
+import type { Comment, PromptSource, Reply } from "@nw/types";
 import { useParams } from "next/navigation";
 import { Separator } from "radix-ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -35,7 +36,6 @@ import { useCustomEvents, useUIContext } from "@/hooks";
 import { useBindPageLoader, usePageRouter } from "@/hooks/use-page-router";
 import { useToggleLike } from "@/hooks/use-toggle-like";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { Comment, PromptSource, Reply } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import {
   type CustomEventType,
@@ -49,6 +49,10 @@ import {
   toFormattedDate,
 } from "@/utils/helpers";
 import {
+  getOutgoingThreadsAction,
+  getUnreadReplyCount,
+} from "../../outgoing-threads/actions";
+import {
   concludeCommentAction,
   deleteCommentAction,
   deletePromptAction,
@@ -57,10 +61,6 @@ import {
   getRepliesAction,
   reportAction,
 } from "../actions";
-import {
-  getOutgoingThreadsAction,
-  getUnreadReplyCount,
-} from "../../outgoing-threads/actions";
 import * as S from "./styles";
 
 const useGetComment = (commentId: string) => {

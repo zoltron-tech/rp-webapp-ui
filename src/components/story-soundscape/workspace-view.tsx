@@ -1,8 +1,8 @@
 "use client";
 
+import type { SoundCue, StoryBoardEvent } from "@nw/types";
 import { type FC, useCallback, useEffect, useState } from "react";
 import { getChapterSoundscapeAction } from "@/app/rp/story/actions";
-import type { SoundCue, StoryBoardEvent } from "@/types";
 import { StorySoundscapeBoard } from "./index";
 import * as S from "./styles";
 

@@ -1,5 +1,7 @@
 "use client";
 
+import type { Novelist, PromptThreadComment } from "@nw/types";
+import type { Conversation } from "@nw/types/conversation";
 import { type FC, useEffect, useState } from "react";
 import { FiCheck, FiFeather, FiUserPlus, FiUsers } from "react-icons/fi";
 import { getConversationsAction } from "@/app/rp/conversations/actions";
@@ -13,8 +15,6 @@ import { useSocket } from "@/context/socket";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
-import type { Novelist, PromptThreadComment } from "@/types";
-import type { Conversation } from "@/types/conversation";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { decryptConversations } from "@/utils/e2e-crypto";

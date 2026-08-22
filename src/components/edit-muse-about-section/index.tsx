@@ -1,12 +1,12 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
+import type { MuseAboutSection } from "@nw/types/novelist";
 import { useEffect, useState } from "react";
 import { getMuseAboutSectionAction } from "@/app/rp/muse/actions";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { MuseAboutSection } from "@/types/novelist";
 import EditMuseAboutSectionDataCard from "./edit-muse-about-section-data-card";
 import * as S from "./styled";
 

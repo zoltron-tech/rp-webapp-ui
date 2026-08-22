@@ -15,9 +15,9 @@ import { useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { usePostLogin } from "@/hooks/use-post-login";
 import { API_MESSAGE } from "@/utils/constants";
-import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
 import { ROUTES } from "@/utils/constants/routes";
 import { syncE2EKeyBackup } from "@/utils/e2e-crypto";
+import { UNCATEGORIZED_ERROR_MESSAGE } from "@/utils/form-errors";
 import { getUserNovelist } from "../novelists/actions";
 import * as S from "./styled";
 
@@ -28,19 +28,7 @@ const ErrorKeys = [
 type ErrorKey = (typeof ErrorKeys)[number];
 
 const ERROR_MAP: Record<ErrorKey, ReactNode> = {
-  [API_MESSAGE.UncategorizedError]: (
-    <>
-      <p>
-        Something went wrong while logging you in, please try reloading the
-        page.
-      </p>
-      <p>
-        <strong>Tip:&nbsp;</strong>
-        If this keeps happening, try&nbsp;
-        <a href={SUPPORT_EMAIL_URL}>contacting support</a>.
-      </p>
-    </>
-  ),
+  [API_MESSAGE.UncategorizedError]: UNCATEGORIZED_ERROR_MESSAGE,
   [API_MESSAGE.BadPayload]: (
     <>
       <p>Invalid username or password. Please try again.</p>

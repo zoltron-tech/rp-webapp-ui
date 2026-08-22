@@ -1,13 +1,13 @@
 "use client";
 
 import { Flex } from "@novelist-world/ui";
+import type { Friend } from "@nw/types";
 import { Checkbox } from "radix-ui";
 import { type SetStateAction, useMemo, useState } from "react";
 import { FaXmark } from "react-icons/fa6";
 import { GiCheckMark } from "react-icons/gi";
 import { IoSearch } from "react-icons/io5";
 import { useGlobalState } from "@/context/store/stores";
-import type { Friend } from "@/types";
 import { AvatarNew } from "../common/avatar-new";
 import * as S from "./styled";
 

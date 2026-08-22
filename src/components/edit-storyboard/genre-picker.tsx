@@ -1,9 +1,9 @@
 "use client";
 
+import type { Genre } from "@nw/types/common";
 import { type FC, useEffect, useState } from "react";
 import { MdOutlineExpandLess, MdOutlineExpandMore } from "react-icons/md";
 import { getAllGenresAction } from "@/app/rp/story/actions";
-import type { Genre } from "@/types/common";
 import * as S from "./styled";
 
 /** Maximum genres a story can be tagged with (mirrors the backend cap). */

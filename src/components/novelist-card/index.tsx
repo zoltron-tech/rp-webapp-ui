@@ -1,11 +1,11 @@
 "use client";
+import type { Novelist } from "@nw/types/novelist";
 import classNames from "classnames";
 import { type FC, useEffect, useState } from "react";
 import { MdOutlineExpandLess, MdOutlineExpandMore } from "react-icons/md";
 import { useSwiper, useSwiperSlide } from "swiper/react";
 import { ShouldRender } from "@/components/common";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Novelist } from "@/types/novelist";
 import { ROUTES } from "@/utils/constants/routes";
 import { toggleState } from "@/utils/helpers";
 import { mainVerseMuses } from "@/utils/muse";

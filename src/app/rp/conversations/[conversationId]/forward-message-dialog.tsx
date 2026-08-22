@@ -1,5 +1,6 @@
 "use client";
 
+import type { Conversation, Message } from "@nw/types";
 import { useCallback, useEffect, useState } from "react";
 import { BsCheckLg } from "react-icons/bs";
 import styled from "styled-components";
@@ -10,7 +11,6 @@ import { LoadMore } from "@/components/load-more/page";
 import { useSocket } from "@/context/socket";
 import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks/use-ui-context";
-import type { Conversation, Message } from "@/types";
 import {
   decryptConversations,
   encryptMessageText,

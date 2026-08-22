@@ -1,5 +1,6 @@
 "use client";
 
+import type { MuseAboutSection } from "@nw/types/novelist";
 import { useCallback, useRef, useState } from "react";
 import { GrAttachment } from "react-icons/gr";
 import { IoCloseOutline } from "react-icons/io5";
@@ -17,7 +18,6 @@ import {
 } from "@/components/rich-text-editor-input";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
-import type { MuseAboutSection } from "@/types/novelist";
 import { API_MESSAGE } from "@/utils/constants";
 import * as S from "./styled";
 

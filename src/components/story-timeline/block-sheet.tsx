@@ -1,10 +1,10 @@
 "use client";
 
+import type { StoryBoardEvent, StoryTimelineLane } from "@nw/types";
 import { type FC, useEffect, useState } from "react";
 import { LuHistory } from "react-icons/lu";
 import { MdOutlineDoNotDisturbOn } from "react-icons/md";
 import { ResponsiveSheet } from "@/components/common/responsive-sheet";
-import type { StoryBoardEvent, StoryTimelineLane } from "@/types";
 import * as S from "./styles";
 
 export type BlockPlacement = {

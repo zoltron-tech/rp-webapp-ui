@@ -1,9 +1,9 @@
+import type { MentionDataItem, MentionTab } from "@nw/types";
 import { type FC, useCallback, useEffect, useMemo, useState } from "react";
 import { searchMentionMusesAction } from "@/app/rp/muse/actions";
 import { updatePromptCommentAction } from "@/app/rp/prompt/actions";
 import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents, useUIContext } from "@/hooks";
-import type { MentionDataItem, MentionTab } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { EVENTS } from "@/utils/constants/custom-events";
 import { AppAlertDialog } from "../dialog";

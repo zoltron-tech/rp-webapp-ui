@@ -1,12 +1,12 @@
 "use client";
 
+import type { BookmarkedStoryBoardEvent } from "@nw/types";
 import { useEffect, useState } from "react";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { FaBookmark } from "react-icons/fa6";
 import { BreadCrumb } from "@/components/breadcrumb";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { BookmarkedStoryBoardEvent } from "@/types";
 import { getBookmarkedEventsAction } from "../story/actions";
 import { BookmarkCard } from "./bookmark-card";
 import * as S from "./styles";

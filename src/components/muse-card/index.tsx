@@ -1,4 +1,5 @@
 "use client";
+import type { Muse } from "@nw/types/novelist";
 import classNames from "classnames";
 import { useParams } from "next/navigation";
 import { type FC, useState } from "react";
@@ -8,7 +9,6 @@ import { deleteMuseAction } from "@/app/rp/muse/actions";
 import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Muse } from "@/types/novelist";
 import { API_MESSAGE, INITIAL_MUSE } from "@/utils/constants";
 import { EVENTS } from "@/utils/constants/custom-events";
 import { ROUTES } from "@/utils/constants/routes";

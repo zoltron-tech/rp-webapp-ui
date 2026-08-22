@@ -1,6 +1,7 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
+import type { User } from "@nw/types";
 import classNames from "classnames";
 import { AlertDialog, Form } from "radix-ui";
 import {
@@ -21,7 +22,6 @@ import {
 } from "@/app/actions";
 import { PasswordField } from "@/components/common/password-field";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
-import type { User } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { checkUsernameInvalidity } from "@/utils/helpers";
 import * as S from "./styled";

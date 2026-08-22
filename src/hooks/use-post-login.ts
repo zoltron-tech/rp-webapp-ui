@@ -1,10 +1,10 @@
+import type { Novelist, User } from "@nw/types";
 import { useCallback } from "react";
 import { getUnreadConversationIdsAction } from "@/app/rp/conversations/actions";
 import { getNotifications } from "@/app/rp/novelists/actions";
 import { getUnreadReplyCount } from "@/app/rp/outgoing-threads/actions";
 import { useGlobalStoreSet } from "@/context/store/stores";
 import { initialisePushNotifications } from "@/lib/push";
-import type { Novelist, User } from "@/types";
 
 /**
  * Returns an async handler to be called immediately after a successful login.

@@ -19,12 +19,12 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import type { CodexCategory } from "@nw/types";
 import { type FC, useEffect, useState } from "react";
 import { GrEdit } from "react-icons/gr";
 import { RxDragHandleDots2 } from "react-icons/rx";
 import { ResponsiveSheet } from "@/components/common/responsive-sheet";
 import * as F from "@/components/common/responsive-sheet/styles";
-import type { CodexCategory } from "@/types";
 import { resolveCodexIcon } from "./icons";
 import * as S from "./styles";
 

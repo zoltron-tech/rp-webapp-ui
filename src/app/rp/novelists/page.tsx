@@ -1,5 +1,6 @@
 "use client";
 
+import { isCompactViewport } from "@nw/utils/platform";
 import { useEffect, useMemo, useState } from "react";
 import {
   FiArrowRight,
@@ -26,12 +27,7 @@ export default function NovelistsPage() {
   const [showInstallDialog, setShowInstallDialog] = useState(false);
   const authState = useGlobalState("authState");
   const { routeToPage, stopPageLoading } = usePageRouter();
-  const isMobile = useMemo(
-    () =>
-      typeof window !== "undefined" &&
-      (window.innerWidth < 768 || screen.width < 768),
-    [],
-  );
+  const isMobile = useMemo(() => isCompactViewport(), []);
 
   // The page is fully static now — nothing to wait on, so drop the loader on
   // mount rather than when landing data arrives.

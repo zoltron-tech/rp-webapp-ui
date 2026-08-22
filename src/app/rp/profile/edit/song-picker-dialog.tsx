@@ -1,6 +1,7 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
+import type { ProfileSong, Song, SpotifyTrack } from "@nw/types/music";
 import classNames from "classnames";
 import { Dialog } from "radix-ui";
 import { type FC, useCallback, useEffect, useRef, useState } from "react";
@@ -17,7 +18,6 @@ import {
   type SpotifyEmbedController,
 } from "@/components/profile-song/spotify-iframe-api";
 import { useGlobalState } from "@/context/store/stores";
-import type { ProfileSong, Song, SpotifyTrack } from "@/types/music";
 import { getOwnMusicAction } from "../[slug]/music/action";
 import {
   searchSpotifyTracksAction,
@@ -247,7 +247,7 @@ export const SongPickerDialog: FC<Props> = ({
       if (!spotifyHostRef.current) return;
       api.createController(
         spotifyHostRef.current,
-        { uri, width: 1, height: 1 },
+        { height: 1, uri, width: 1 },
         (controller) => {
           controllerRef.current = controller;
           controller.addListener("ready", () => {
@@ -593,12 +593,12 @@ export const SongPickerDialog: FC<Props> = ({
               ref={spotifyHostRef}
               aria-hidden
               style={{
+                height: 1,
+                opacity: 0,
+                overflow: "hidden",
+                pointerEvents: "none",
                 position: "absolute",
                 width: 1,
-                height: 1,
-                overflow: "hidden",
-                opacity: 0,
-                pointerEvents: "none",
               }}
             />
           </S.SongPickerContent>

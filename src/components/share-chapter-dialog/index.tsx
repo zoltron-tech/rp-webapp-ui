@@ -1,5 +1,6 @@
 "use client";
 
+import type { StoryBoardEvent } from "@nw/types";
 import classNames from "classnames";
 import { type FC, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -21,7 +22,6 @@ import type {
   ShareChapterPayload,
   SharePromptResult,
 } from "@/lib/discord";
-import type { StoryBoardEvent } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { CoverImage } from "../common";
 import * as DropS from "../profile-more-dropdown/styled";

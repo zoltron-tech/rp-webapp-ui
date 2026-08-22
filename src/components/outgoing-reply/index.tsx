@@ -1,13 +1,13 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
+import type { PromptThreadComment } from "@nw/types";
 import { Separator } from "radix-ui";
 import { type FC, type MouseEventHandler, useCallback, useMemo } from "react";
 import { GoCommentDiscussion } from "react-icons/go";
 import { IoMdArrowForward } from "react-icons/io";
 import { RiCheckboxCircleLine } from "react-icons/ri";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { PromptThreadComment } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { displayDate, pluralize, toFormattedDate } from "@/utils/helpers";
 import { MuseAvatar } from "../common/muse-avatar";

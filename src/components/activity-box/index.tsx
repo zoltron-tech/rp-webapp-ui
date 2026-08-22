@@ -1,5 +1,8 @@
 "use client";
 
+import type { Muse, Prompt, StoryBoard } from "@nw/types";
+import type { Activity } from "@nw/types/activity";
+import { formatTime } from "@nw/utils";
 import classNames from "classnames";
 import {
   type FC,
@@ -29,8 +32,6 @@ import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useToggleLike } from "@/hooks/use-toggle-like";
-import type { Muse, Prompt, StoryBoard } from "@/types";
-import type { Activity } from "@/types/activity";
 import {
   type CustomEventType,
   EVENTS,
@@ -53,15 +54,6 @@ import { ShareStoryDialog } from "../share-story-dialog";
 import * as S from "./styles";
 
 const STORY_BOARD_TYPES = ["STORY_BOARD", "STORY_BOARD_EVENT"];
-
-const formatTime = (seconds: number) => {
-  if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60)
-    .toString()
-    .padStart(2, "0");
-  return `${mins}:${secs}`;
-};
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   activity?: Activity | null;

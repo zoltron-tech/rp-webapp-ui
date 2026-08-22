@@ -1,9 +1,9 @@
 "use client";
 
+import type { Friend } from "@nw/types";
 import classNames from "classnames";
 import type { FC } from "react";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Friend } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styles";
 

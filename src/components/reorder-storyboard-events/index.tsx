@@ -17,6 +17,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import type { StoryBoardEvent } from "@nw/types";
 import classNames from "classnames";
 import { type FC, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -25,7 +26,6 @@ import { reorderStoryBoardEventsAction } from "@/app/rp/story/actions";
 import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { StoryBoardEvent } from "@/types";
 import * as O from "./overlay.styled";
 import { SortableEventRow } from "./sortable-event-row";
 import * as S from "./styles";

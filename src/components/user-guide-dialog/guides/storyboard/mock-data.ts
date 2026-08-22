@@ -6,7 +6,7 @@ import type {
   StoryCastMember,
   StoryCharacter,
   StoryPerson,
-} from "@/types";
+} from "@nw/types";
 
 /**
  * Sample data for the storyboard guide.

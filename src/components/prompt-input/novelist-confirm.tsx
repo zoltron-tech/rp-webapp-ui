@@ -1,5 +1,6 @@
 "use client";
 
+import type { Muse, PromptSource } from "@nw/types";
 import classNames from "classnames";
 import { type FC, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -16,7 +17,6 @@ import { AppAlertDialog } from "@/components/dialog";
 import * as SheetS from "@/components/profile-more-dropdown/styled";
 import { useGlobalState } from "@/context/store/stores";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { Muse, PromptSource } from "@/types";
 import * as S from "./styles";
 
 interface Props {

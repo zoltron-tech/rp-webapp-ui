@@ -1,8 +1,8 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
+import type { Tag } from "@nw/types/common";
 import type { FC } from "react";
-import type { Tag } from "@/types/common";
 import * as S from "./styles";
 
 type Props = React.HTMLProps<HTMLDivElement> & {

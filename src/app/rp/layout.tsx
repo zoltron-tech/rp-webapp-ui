@@ -1,6 +1,8 @@
 "use client";
 
 import { DefaultTheme } from "@novelist-world/ui";
+import type { StoreState } from "@nw/types/state";
+import { ACCENT_MAP } from "@nw/types/theme";
 import classNames from "classnames";
 import { usePathname } from "next/navigation";
 import type React from "react";
@@ -30,9 +32,7 @@ import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import { setBadgeCount } from "@/lib/badge-manager";
 import { THEME_DARK, THEME_LIGHT } from "@/theme";
-import type { StoreState } from "@/types/state";
 import { ROUTES } from "@/utils/constants/routes";
-import { ACCENT_MAP } from "@/types/theme";
 import {
   decryptConversations,
   ensureE2EIdentityPublished,
@@ -210,9 +210,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           authState: "LOGGED_OUT",
           cachedConversations: null,
           cachedExplorePrompts: null,
-          cachedOutgoingThreads: null,
           cachedHomeActivities: null,
           cachedOOCPosts: null,
+          cachedOutgoingThreads: null,
           cachedPromptComments: null,
           conversationNavDirection: null,
           friendSuggestions: null,

@@ -1,7 +1,7 @@
 "use client";
 
+import type { Muse } from "@nw/types";
 import type React from "react";
-import type { Muse } from "@/types";
 import * as S from "../styles";
 import PennedBy from "./PennedBy";
 

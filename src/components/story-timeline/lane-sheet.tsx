@@ -1,9 +1,9 @@
 "use client";
 
+import type { StoryTimelineLane } from "@nw/types";
 import { type FC, useEffect, useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { ResponsiveSheet } from "@/components/common/responsive-sheet";
-import type { StoryTimelineLane } from "@/types";
 import * as S from "./styles";
 
 /** Lane accents, drawn from the app's existing palette variables. */

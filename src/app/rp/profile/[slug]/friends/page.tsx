@@ -1,5 +1,6 @@
 "use client";
 
+import type { Friend } from "@nw/types";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getFriendsByUsernameAction } from "@/app/rp/novelists/actions";
@@ -8,7 +9,6 @@ import { FilterSearch } from "@/components/common";
 import { LoadMore } from "@/components/load-more/page";
 import { NovelistPreviewCard } from "@/components/novelist-preview-card";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Friend } from "@/types";
 import * as S from "./styles";
 
 const PAGE_SIZE = 8;

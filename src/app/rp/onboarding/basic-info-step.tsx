@@ -1,4 +1,6 @@
 import { ShouldRender } from "@novelist-world/ui";
+import type { NWImage, UpdateNovelistPayload } from "@nw/types";
+import { clamp, toCropFilter } from "@nw/utils";
 import { Form } from "radix-ui";
 import {
   type FC,
@@ -14,9 +16,8 @@ import { AppAlertDialog } from "@/components/dialog";
 import AvatarCropDialog from "@/components/dialog/avatar-crop-dialog";
 import { ErrorBox } from "@/components/error-box";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
-import type { ImageCropFilter, NWImage, UpdateNovelistPayload } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
-import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
+import { UNCATEGORIZED_ERROR_MESSAGE } from "@/utils/form-errors";
 import { uploadMedia } from "@/utils/upload-media";
 import { updateUserNovelist } from "../novelists/actions";
 import { deleteMedia } from "../profile/actions";
@@ -31,24 +32,8 @@ const ErrorKeys = [API_MESSAGE.UncategorizedError] as const;
 type ErrorKey = (typeof ErrorKeys)[number];
 
 const ERROR_MAP: Record<ErrorKey, ReactNode> = {
-  [API_MESSAGE.UncategorizedError]: (
-    <>
-      <p>
-        Something went wrong while logging you in, please try reloading the
-        page.
-      </p>
-      <p>
-        <strong>Tip:&nbsp;</strong>
-        If this keeps happening, try&nbsp;
-        <a href={SUPPORT_EMAIL_URL}>contacting support</a>.
-      </p>
-    </>
-  ),
+  [API_MESSAGE.UncategorizedError]: UNCATEGORIZED_ERROR_MESSAGE,
 };
-
-function clamp(v: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, v));
-}
 
 /**
  * Build an ImageCropFilter from background-position state.
@@ -57,22 +42,6 @@ function clamp(v: number, min: number, max: number) {
  * This mirrors the Muse cardBackground encoding: a fit-by-width display that
  * is resolution- and aspect-ratio-independent.
  */
-function toCropFilter(
-  src: string,
-  x: number,
-  y: number,
-  scale: number,
-): ImageCropFilter {
-  const scalePct = Math.round(scale * 100);
-  return {
-    height: scalePct,
-    src,
-    width: scalePct,
-    x: Math.round(x),
-    y: Math.round(y),
-  };
-}
-
 export const BasicInfoStep: FC<BasicInfoStepProps> = ({ handleNext }) => {
   const novelist = useGlobalState("novelist");
   const firstName = useOnboardingState("firstName");

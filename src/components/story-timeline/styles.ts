@@ -7,6 +7,13 @@ export const LANE_HEIGHT = 64;
 export const LANE_GUTTER = 132;
 /** Narrowest the axis is allowed to get before the track scrolls sideways. */
 export const MIN_TRACK_WIDTH = 640;
+/** The marker strip. */
+export const MARKER_ROW_HEIGHT = 34;
+/** The in-story dates, on their own strip above the markers so the two
+ *  never collide. */
+export const DATE_ROW_HEIGHT = 24;
+/** Everything above the first lane row — what the vertical rules hang from. */
+export const AXIS_HEIGHT = MARKER_ROW_HEIGHT + DATE_ROW_HEIGHT;
 
 export const Root = styled.section`
   display: flex;
@@ -82,7 +89,7 @@ export const Gutter = styled.div`
 `;
 
 export const GutterHead = styled.div`
-  height: 34px;
+  height: ${AXIS_HEIGHT}px;
   border-bottom: 1px solid var(--bg-5);
 `;
 
@@ -148,9 +155,15 @@ export const Track = styled.div`
   min-width: ${MIN_TRACK_WIDTH}px;
 `;
 
+/** The in-story dates of every placed chapter, always on show. */
+export const DateRow = styled.div`
+  position: relative;
+  height: ${DATE_ROW_HEIGHT}px;
+`;
+
 export const AxisRow = styled.div`
   position: relative;
-  height: 34px;
+  height: ${MARKER_ROW_HEIGHT}px;
   border-bottom: 1px solid var(--bg-5);
 `;
 
@@ -174,10 +187,40 @@ export const Marker = styled.div`
   }
 `;
 
+/** A chapter's in-story date, pinned to its start edge on the axis. Quiet
+ *  while it simply sits there; lit up while that chapter is being dragged. */
+export const EventDate = styled.div<{ $active?: boolean }>`
+  position: absolute;
+  top: 50%;
+  white-space: nowrap;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  color: ${(p) => (p.$active ? "#fff" : "var(--text-secondary)")};
+  background: ${(p) => (p.$active ? "var(--accent)" : "var(--bg-4)")};
+  border: 1px solid ${(p) => (p.$active ? "var(--accent)" : "var(--bg-6)")};
+  box-shadow: ${(p) => (p.$active ? "0 2px 6px rgba(0, 0, 0, 0.3)" : "none")};
+  pointer-events: none;
+  z-index: ${(p) => (p.$active ? 4 : 1)};
+`;
+
+/** The rule under the dragged chapter's date — what ties it to the exact
+ *  start edge. */
+export const DragLine = styled.div`
+  position: absolute;
+  top: ${AXIS_HEIGHT}px;
+  bottom: 0;
+  width: 1px;
+  background: var(--accent);
+  pointer-events: none;
+  z-index: 4;
+`;
+
 /** The marker's rule, dropped down through every lane row. */
 export const MarkerLine = styled.div`
   position: absolute;
-  top: 34px;
+  top: ${AXIS_HEIGHT}px;
   bottom: 0;
   width: 1px;
   background: var(--bg-5);

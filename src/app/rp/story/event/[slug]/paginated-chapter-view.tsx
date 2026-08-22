@@ -1,5 +1,6 @@
 "use client";
 
+import type { StoryBoardEvent, StoryBoardEventThread } from "@nw/types";
 import {
   type CSSProperties,
   type FC,
@@ -12,7 +13,6 @@ import {
 } from "react";
 import { useWindowDimensions } from "@/hooks";
 import { contentHeight, contentWidth, resolvePageSpec } from "@/lib/paginator";
-import type { StoryBoardEvent, StoryBoardEventThread } from "@/types";
 import {
   ChapterFlow,
   COMPOSER_KEY,
@@ -112,6 +112,14 @@ export const PaginatedChapterView: FC<Props> = ({
   /** The sheet's own (unscaled) height, so its scaled footprint can be held. */
   const [sheetHeight, setSheetHeight] = useState(0);
   const { heights, reportHeight } = useMeasuredHeights();
+  /**
+   * What the manuscript actually draws. It is shorter than the packed height
+   * wherever the book pushed a block onto a fresh page: the model keeps those
+   * pushes (they are the page breaks), the drawn flow drops them so the prose
+   * runs on with no holes. Page numbers are placed against these.
+   */
+  const { heights: drawnHeights, reportHeight: reportDrawnHeight } =
+    useMeasuredHeights();
 
   // ── Fit the fixed page width to the viewport ─────────────────────────────
   // Geometry never changes; only the whole-sheet scale does. That is what keeps
@@ -187,9 +195,11 @@ export const PaginatedChapterView: FC<Props> = ({
    *
    * The pack lays the chapter out in sheets, each carrying one page number (or
    * several, when a single passage overruns) plus the blank tail that fills out
-   * its last page. This view renders no blank tails, so a page's end is simply
-   * its content's end: walk the sheets this window actually renders, stacking
-   * their used height, and mark every page boundary on the way.
+   * its last page. This view renders no blank tails and no keep-together
+   * pushes, so a page's end is simply its content's end: walk the sheets this
+   * window actually renders, stacking the height they are *drawn* at, and mark
+   * every page boundary on the way. Where the drawn sheet is shorter than the
+   * packed one, its inner divisions move with it, in proportion.
    */
   const pageTicks = useMemo(() => {
     if (items.length === 0) return [];
@@ -199,29 +209,49 @@ export const PaginatedChapterView: FC<Props> = ({
     const lastSheet = packed.sheetOfItem.get(lastKey);
     if (firstSheet === undefined || lastSheet === undefined) return [];
 
-    /** How much of the flow this window renders — nothing may be marked past
-     *  it, since the sheets it sits on also carry passages nobody loaded. */
+    /** An item's drawn height, falling back to its packed one until the
+     *  manuscript has measured it. */
+    const drawn = (key: string) => drawnHeights[key] ?? heights[key] ?? 0;
+
+    /** How much shorter this sheet is drawn than it was packed. Only the items
+     *  this window holds can answer that, which is exactly the part of the
+     *  sheet the ticks below are placed against. */
+    const shrink = (keys: string[]) => {
+      let packedUsed = 0;
+      let drawnUsed = 0;
+      for (const key of keys) {
+        if (drawnHeights[key] === undefined) continue;
+        packedUsed += heights[key] ?? 0;
+        drawnUsed += drawnHeights[key];
+      }
+      return packedUsed > 0 ? drawnUsed / packedUsed : 1;
+    };
+
+    /** How much of the flow this window draws — nothing may be marked past it,
+     *  since the sheets it sits on also carry passages nobody loaded. */
     const rendered =
-      items.reduce((sum, item) => sum + (heights[item.key] ?? 0), 0) +
-      composerHeight;
+      items.reduce((sum, item) => sum + drawn(item.key), 0) + composerHeight;
 
     const ticks: { page: number; top: number }[] = [];
     // The window can open mid-sheet: back the cursor up by however much of the
-    // sheet was already spent before its first rendered passage.
-    let cursor = -(packed.offsetOfItem.get(firstKey) ?? 0);
+    // sheet was already spent before its first drawn passage.
+    let cursor =
+      -(packed.offsetOfItem.get(firstKey) ?? 0) *
+      shrink(packed.sheets[firstSheet]?.keys ?? []);
     for (let index = firstSheet; index <= lastSheet; index++) {
       const sheet = packed.sheets[index];
       if (!sheet) break;
+      const ratio = shrink(sheet.keys);
       for (let step = 0; step < sheet.span; step++) {
-        const top = cursor + Math.min((step + 1) * pageH, sheet.used);
+        const top = cursor + Math.min((step + 1) * pageH, sheet.used) * ratio;
         if (top > 0 && top <= rendered + 2) {
           ticks.push({ page: sheet.startNumber + step, top });
         }
       }
-      cursor += sheet.used;
+      cursor += sheet.used * ratio;
     }
     return ticks;
-  }, [items, packed, heights, pageH, composerHeight]);
+  }, [items, packed, heights, drawnHeights, pageH, composerHeight]);
 
   const flowStyle = {
     // The flow is drawn at `scale`, so anything inside it that is chrome rather
@@ -281,6 +311,12 @@ export const PaginatedChapterView: FC<Props> = ({
               hasThreads={threads.length > 0}
               pageHeight={pageH}
               scale={scale}
+              // The manuscript draws no page edges, so nothing is pushed off a
+              // break here: a push would leave a hole running to the next page
+              // in prose that is meant to be unbroken. The measured copy above
+              // still pushes, so the model — and the book — keep their breaks.
+              applyBreaks={false}
+              onHeight={reportDrawnHeight}
               canManage={canManage}
               bookmarksInteractive={isLoggedIn}
               bookmarkIndex={bookmarkIndex}

@@ -1,10 +1,10 @@
 "use client";
 
+import type { CreateUpdateMuse, Fandom } from "@nw/types";
 import { useCallback, useState } from "react";
 import { updateMuseAction } from "@/app/rp/muse/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks/use-ui-context";
-import type { CreateUpdateMuse, Fandom } from "@/types";
 import { useMuseState, useMuseStoreSet } from "./muse.store";
 
 type SaveResult = { ok: true; id: string } | { ok: false; message: string };

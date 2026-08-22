@@ -1,6 +1,6 @@
+import type { NWImage } from "@nw/types";
 import type { FC } from "react";
 import { HiOutlineCamera } from "react-icons/hi2";
-import type { NWImage } from "@/types";
 import * as S from "./styles";
 
 type CoverUploadFieldProps = {

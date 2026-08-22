@@ -18,7 +18,7 @@
 // import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 // import { useForm, useUIContext } from "@/hooks";
 // import { usePageRouter } from "@/hooks/use-page-router";
-// import type { Novelist } from "@/types";
+// import type { Novelist } from "@nw/types";
 // import { API_MESSAGE, INITIAL_NOVELIST } from "@/utils/constants";
 // import { ROUTES } from "@/utils/constants/routes";
 // import { Logger } from "@/utils/services";

@@ -1,5 +1,14 @@
 "use client";
 
+import type {
+  BookmarkedStoryBoardEvent,
+  Muse,
+  Novelist,
+  NovelistWorldNotification,
+  Prompt,
+  StoryBoard,
+} from "@nw/types";
+import type { Activity } from "@nw/types/activity";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import { FiSearch } from "react-icons/fi";
@@ -24,15 +33,6 @@ import {
   prefetchHomeActivities,
   prefetchOOCPosts,
 } from "@/lib/feed-prefetch";
-import type {
-  BookmarkedStoryBoardEvent,
-  Muse,
-  Novelist,
-  NovelistWorldNotification,
-  Prompt,
-  StoryBoard,
-} from "@/types";
-import type { Activity } from "@/types/activity";
 import { ROUTES } from "@/utils/constants/routes";
 import { BookmarkCard } from "../bookmarks/bookmark-card";
 import { getNewPromptsAction } from "../explore-prompts/actions";

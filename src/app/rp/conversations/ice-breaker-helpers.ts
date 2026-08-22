@@ -1,18 +1,15 @@
-import type { PromptSource } from "@/types";
-import { ACCENT_MAP, type Accent } from "@/types/theme";
+import type { PromptSource } from "@nw/types";
+import { ACCENT_MAP, type Accent } from "@nw/types/theme";
+import { truncate } from "@nw/utils";
 
 export const ICE_BREAKER_PREVIEW_LENGTH = 20;
 export const ICE_BREAKER_SOURCE_NAME_LENGTH = 16;
 
 export const truncateIceBreakerMessage = (message: string) =>
-  message.length > ICE_BREAKER_PREVIEW_LENGTH
-    ? `${message.slice(0, ICE_BREAKER_PREVIEW_LENGTH)}...`
-    : message;
+  truncate(message, ICE_BREAKER_PREVIEW_LENGTH);
 
 export const truncateIceBreakerSourceName = (name: string) =>
-  name.length > ICE_BREAKER_SOURCE_NAME_LENGTH
-    ? `${name.slice(0, ICE_BREAKER_SOURCE_NAME_LENGTH)}...`
-    : name;
+  truncate(name, ICE_BREAKER_SOURCE_NAME_LENGTH);
 
 /** Resolves a source's accent into a ring color, mirroring MuseAvatar/
  *  NovelistAvatar: muses carry a literal hex color, while novelists carry a

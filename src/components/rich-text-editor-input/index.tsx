@@ -1,5 +1,6 @@
 "use client";
 
+import type { MentionDataItem, MentionTab } from "@nw/types";
 import classNames from "classnames";
 import { Popover } from "radix-ui";
 import type React from "react";
@@ -30,7 +31,6 @@ import {
 import { TbFloatLeft, TbFloatNone, TbFloatRight } from "react-icons/tb";
 import { useGlobalState } from "@/context/store/stores";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { MentionDataItem, MentionTab } from "@/types";
 import { MentionDropdown } from "../mention-dropdown";
 import {
   DEFAULT_DIALOG_DESIGN,
@@ -1932,7 +1932,8 @@ export const RichTextEditor = forwardRef<
 
     const handlePaste = useCallback(
       (e: React.ClipboardEvent<HTMLDivElement>) => {
-        const pastedText = e.clipboardData.getData("text/plain").trim();
+        const plain = e.clipboardData.getData("text/plain");
+        const pastedText = plain.trim();
 
         // Check if pasted text is an image URL
         if (pastedText && isImageUrl(pastedText)) {
@@ -1941,7 +1942,20 @@ export const RichTextEditor = forwardRef<
           return;
         }
 
-        // For other content, let default paste behavior work
+        // Image files (screenshots, copied images) carry no text/plain — leave
+        // those to the browser's default paste.
+        if (!plain) return;
+
+        // Everything else pastes as raw text: the source's colors, highlights,
+        // fonts and block styling are dropped so the pasted words inherit the
+        // editor's own formatting. insertText keeps the native undo stack and
+        // the caret's current typing style.
+        e.preventDefault();
+        document.execCommand(
+          "insertText",
+          false,
+          plain.replace(/\r\n?/g, "\n"),
+        );
       },
       [isImageUrl, insertImageFromUrl],
     );

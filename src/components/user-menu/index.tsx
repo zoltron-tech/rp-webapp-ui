@@ -1,5 +1,6 @@
 "use client";
 
+import { isCompactViewport } from "@nw/utils/platform";
 import classNames from "classnames";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -13,21 +14,6 @@ import {
 import { createPortal } from "react-dom";
 import { FaDiscord } from "react-icons/fa6";
 import { FcBusinessman } from "react-icons/fc";
-import {
-  BookmarksIcon,
-  CharactersIcon,
-  ExploreIcon,
-  FAQsIcon,
-  HelpSupportIcon,
-  InboxIcon,
-  InstallAppIcon,
-  InteractionsIcon,
-  LibraryIcon,
-  LogoutIcon,
-  MusicIcon,
-  StoriesIcon,
-  TermsIcon,
-} from "./user-menu-icons";
 import { FiChevronRight, FiEdit2 } from "react-icons/fi";
 import { sendFeedbackMessage } from "@/app/rp/profile/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
@@ -45,13 +31,23 @@ import { InstallAppDialog } from "../dialog/install-app-dialog";
 import { Flex } from "../edit-muse-card/styles";
 import { DiscordCommunityDialog } from "./discord-community-dialog";
 import * as S from "./styles";
+import {
+  BookmarksIcon,
+  CharactersIcon,
+  ExploreIcon,
+  FAQsIcon,
+  HelpSupportIcon,
+  InboxIcon,
+  InstallAppIcon,
+  InteractionsIcon,
+  LibraryIcon,
+  LogoutIcon,
+  MusicIcon,
+  StoriesIcon,
+  TermsIcon,
+} from "./user-menu-icons";
 
 type UserMenuProps = {};
-
-function checkIsMobile() {
-  const minWidth = 768;
-  return window.innerWidth < minWidth || screen.width < minWidth;
-}
 
 export const ContactSupportForm = ({
   message,
@@ -106,7 +102,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
   const router = useRouter();
   const { successToast, errorToast } = useUIContext();
   const { handlePostLogout } = usePostLogout();
-  const isMobile = useMemo(() => checkIsMobile(), []);
+  const isMobile = useMemo(() => isCompactViewport(), []);
   const pathname = usePathname();
 
   // Prefetch the edit profile page so navigation is instant

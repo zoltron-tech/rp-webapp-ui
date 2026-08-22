@@ -1,8 +1,8 @@
+import type { LoginOAuthProvider } from "@nw/types";
 import { type FC, useCallback } from "react";
 import { FaDiscord } from "react-icons/fa6";
 import { loginViaProviderAction } from "@/app/actions";
 import { GoogleLogo } from "@/assets/logos";
-import type { LoginOAuthProvider } from "@/types";
 import * as S from "./styled";
 
 export const Socials: FC = () => {

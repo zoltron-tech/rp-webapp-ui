@@ -1,5 +1,5 @@
+import type { Muse } from "@nw/types";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
-import type { Muse } from "@/types";
 
 export type CardDesignProps = {
   muse: Muse;

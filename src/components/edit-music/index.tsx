@@ -1,12 +1,12 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
+import type { Song } from "@nw/types/music";
 import { type FC, useEffect, useState } from "react";
 import { getSongAction } from "@/app/rp/profile/[slug]/music/action";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Song } from "@/types/music";
 import EditMusicDataCard from "./edit-music-data-card";
 import type { MusicState } from "./music.store";
 import * as S from "./styled";

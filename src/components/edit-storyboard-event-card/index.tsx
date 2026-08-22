@@ -1,13 +1,13 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
+import type { StoryBoardEvent } from "@nw/types";
 import { forwardRef, useEffect, useState } from "react";
 import { getStoryboardEventAction } from "@/app/rp/story/actions";
 import { DEFAULT_ASTERISM_STYLE } from "@/components/asterism-styles";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { StoryBoardEvent } from "@/types";
 import EditStoryboardEventDataCard, {
   type EditStoryboardEventDataCardHandle,
 } from "./edit-storyboard-event-data-card";

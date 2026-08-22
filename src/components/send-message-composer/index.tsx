@@ -1,16 +1,18 @@
 "use client";
 
+import type { MentionDataItem, Muse, Novelist } from "@nw/types";
+import type { Message } from "@nw/types/conversation";
 import type { EmojiClickData } from "emoji-picker-react";
 import { Theme as EmojiTheme } from "emoji-picker-react";
 import dynamic from "next/dynamic";
 import type { FC, FormEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { BsPencil } from "react-icons/bs";
 import { FcAddImage } from "react-icons/fc";
 import { HiFaceSmile, HiGif, HiPaperAirplane } from "react-icons/hi2";
 import { IoCheckmark, IoClose } from "react-icons/io5";
 import { MdOutlineSlowMotionVideo } from "react-icons/md";
 import { RiEmojiStickerLine } from "react-icons/ri";
-import { BsPencil } from "react-icons/bs";
 import { TiArrowSortedUp } from "react-icons/ti";
 import { deleteMedia } from "@/app/rp/profile/actions";
 import type { ChatRichInputHandle } from "@/components/chat-rich-input";
@@ -22,8 +24,6 @@ import { GifPicker } from "@/components/gif-picker";
 import { StickerPicker } from "@/components/sticker-picker";
 import { useGlobalState } from "@/context/store/stores";
 import { useUploadMedia } from "@/hooks/use-upload-media";
-import type { MentionDataItem, Muse, Novelist } from "@/types";
-import type { Message } from "@/types/conversation";
 import { API_MESSAGE } from "@/utils/constants";
 import { Flex } from "../edit-muse-card/styles";
 import { MediaTray, type TrayTab } from "./media-tray";

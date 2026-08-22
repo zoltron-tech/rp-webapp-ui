@@ -1,5 +1,6 @@
 "use client";
 
+import { useDebounce } from "@nw/utils/hooks/use-debounce";
 import { type FC, useEffect, useState } from "react";
 import type { StickerItem } from "@/pages/api/klipy-stickers";
 import * as S from "./styled";
@@ -13,15 +14,6 @@ interface StickerPickerProps {
    *  height. Defaults to false. */
   fill?: boolean;
 }
-
-const useDebounce = (value: string, delay: number) => {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const id = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(id);
-  }, [value, delay]);
-  return debounced;
-};
 
 export const StickerPicker: FC<StickerPickerProps> = ({
   onSelect,

@@ -1,3 +1,4 @@
+import type { MentionDataItem, MentionTab, StoryCharacter } from "@nw/types";
 import {
   type FC,
   type RefObject,
@@ -9,7 +10,6 @@ import {
 import { searchMentionMusesAction } from "@/app/rp/muse/actions";
 import { deleteMedia } from "@/app/rp/profile/actions";
 import { useGlobalState } from "@/context/store/stores";
-import type { MentionDataItem, MentionTab, StoryCharacter } from "@/types";
 import {
   RichTextEditor,
   type RichTextEditorHandle,

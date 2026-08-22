@@ -1,5 +1,7 @@
 "use client";
 
+import type { NWImage, StoryBoardEvent } from "@nw/types";
+import { clamp, toCropFilter } from "@nw/utils";
 import {
   forwardRef,
   useCallback,
@@ -27,7 +29,6 @@ import { RichTextEditor } from "@/components/rich-text-editor-input";
 import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUploadMedia } from "@/hooks/use-upload-media";
-import type { ImageCropFilter, NWImage, StoryBoardEvent } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import {
   STORY_COVER_ASPECT_RATIO,
@@ -41,27 +42,7 @@ import {
 } from "./storyboard-event.store";
 import * as S from "./styled";
 
-function clamp(v: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, v));
-}
-
 const MAX_DESCRIPTION_LENGTH = 4000;
-
-function toCropFilter(
-  src: string,
-  x: number,
-  y: number,
-  scale: number,
-): ImageCropFilter {
-  const scalePct = Math.round(scale * 100);
-  return {
-    height: scalePct,
-    src,
-    width: scalePct,
-    x: Math.round(x),
-    y: Math.round(y),
-  };
-}
 
 /**
  * Descriptions predate the rich text editor and may still be stored as plain

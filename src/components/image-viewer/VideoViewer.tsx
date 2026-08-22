@@ -1,5 +1,6 @@
 "use client";
 
+import { formatTime } from "@nw/utils";
 import classNames from "classnames";
 import { Dialog } from "radix-ui";
 import {
@@ -42,13 +43,6 @@ interface VideoViewerProps {
   /** Optional caption region rendered under the media (e.g. description + reactions). */
   overlay?: ReactNode;
 }
-
-const formatTime = (s: number) => {
-  if (!Number.isFinite(s) || s < 0) return "0:00";
-  const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
-  return `${m}:${sec.toString().padStart(2, "0")}`;
-};
 
 export const VideoViewer = ({
   src,

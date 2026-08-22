@@ -1,5 +1,6 @@
 "use client";
 
+import type { Prompt } from "@nw/types";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { getNovelistAction } from "@/app/rp/novelists/actions";
@@ -13,7 +14,6 @@ import { FullPagePromptInput } from "@/components/prompt-input/full-page-prompt-
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { Prompt } from "@/types";
 import { getPostsByNovelistAction } from "./actions";
 import * as S from "./styles";
 

@@ -16,18 +16,18 @@
  * be able to await the same promise without prop drilling.
  */
 
+import type { Prompt } from "@nw/types";
+import type { Activity } from "@nw/types/activity";
+import type { StoreState } from "@nw/types/state";
 import { getNewPromptsAction } from "@/app/rp/explore-prompts/actions";
 import { getFriendActivities } from "@/app/rp/home/actions";
 import { getNewsFeedPageAction } from "@/app/rp/news-feed/actions";
-import type { Prompt } from "@/types";
-import type { Activity } from "@/types/activity";
-import type { StoreState } from "@/types/state";
 
 /** Per-source page sizes — keep in one place so home and explore stay in sync. */
 export const FEED_PAGE_SIZES = {
   explorePrompts: 5,
-  oocPosts: 8,
   homeActivities: 10,
+  oocPosts: 8,
 } as const;
 
 export type FeedKey = "explorePrompts" | "oocPosts" | "homeActivities";

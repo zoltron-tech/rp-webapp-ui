@@ -1,9 +1,9 @@
+import type { PrivacyLevel } from "@nw/types";
 import { AccessibleIcon } from "radix-ui";
 import type { FC } from "react";
 import { FaGlobeAmericas, FaUserFriends } from "react-icons/fa";
 import { FaGear } from "react-icons/fa6";
 import { SiPrivateinternetaccess } from "react-icons/si";
-import type { PrivacyLevel } from "@/types";
 
 const PrivacyIconInner: FC<{ privacy: PrivacyLevel }> = ({ privacy }) => {
   switch (privacy) {

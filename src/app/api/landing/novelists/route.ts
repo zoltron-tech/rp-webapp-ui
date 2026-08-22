@@ -1,6 +1,6 @@
+import type { Novelist } from "@nw/types";
+import { transformNovelist } from "@nw/utils/image";
 import { NextResponse } from "next/server";
-import type { Novelist } from "@/types";
-import { transformNovelist } from "@/utils/image";
 
 /**
  * Public landing-page novelists. A GET route handler — deliberately NOT a

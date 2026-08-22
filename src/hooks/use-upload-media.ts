@@ -1,47 +1,32 @@
 import { useCallback } from "react";
 import { getPresignedFileUploadObject } from "@/app/rp/profile/actions";
 import { API_MESSAGE } from "@/utils/constants";
-import { ensureWebCompatibleVideo } from "@/utils/video-transcode";
+import { Logger } from "@/utils/services";
+import { prepareUploadFile } from "@/utils/upload-media";
 import { useUIContext } from "./use-ui-context";
 
+/**
+ * The presigned upload path: the browser asks the service for a signed URL and
+ * then PUTs straight to S3, so the file never passes through nginx.
+ */
 export const useUploadMedia = () => {
   const { errorToast } = useUIContext();
 
   const uploadMedia = useCallback(
     async (formData: FormData) => {
-      const formDataWithoutFile = new FormData();
-      const rawFile = formData.get("file") as Blob;
-      const prefix = formData.get("prefix") as string | null;
-      const mediaBucket = formData.get("mediaBucket") as string | null;
-      const scoped = formData.get("scoped") as string | null;
+      const { file, contentType } = await prepareUploadFile(formData);
 
-      // iPhones default to HEVC, which Chrome/Firefox can't play in <video>.
-      // Re-encode to H.264 in-browser before it ever reaches S3, falling back
-      // to the original file when transcoding isn't needed or isn't possible.
-      const file =
-        rawFile instanceof File
-          ? await ensureWebCompatibleVideo(rawFile)
-          : rawFile;
-      const contentType =
-        file instanceof File
-          ? file.type
-          : (formData.get("contentType") as string);
-
-      formDataWithoutFile.append("contentType", contentType);
-      if (prefix) {
-        formDataWithoutFile.append("prefix", prefix);
-      }
-      if (mediaBucket) {
-        formDataWithoutFile.append("mediaBucket", mediaBucket);
-      }
-      if (scoped) {
-        formDataWithoutFile.append("scoped", scoped);
+      // The presign request carries only the metadata — sending the file here
+      // would upload it twice.
+      const presignRequest = new FormData();
+      presignRequest.append("contentType", contentType);
+      for (const key of ["prefix", "mediaBucket", "scoped"] as const) {
+        const value = formData.get(key) as string | null;
+        if (value) presignRequest.append(key, value);
       }
 
-      const presignedRes =
-        await getPresignedFileUploadObject(formDataWithoutFile);
+      const presignedRes = await getPresignedFileUploadObject(presignRequest);
 
-      console.log("Presigned URL response", presignedRes);
       if (!presignedRes || typeof presignedRes === "string") {
         errorToast?.("Failed to upload");
         return API_MESSAGE.MediaError;
@@ -58,7 +43,7 @@ export const useUploadMedia = () => {
       });
 
       if (!s3Res.ok) {
-        console.error("Failed to upload to S3", s3Res.status, s3Res.statusText);
+        Logger.error("Failed to upload to S3", s3Res.status, s3Res.statusText);
         return API_MESSAGE.MediaError;
       }
 

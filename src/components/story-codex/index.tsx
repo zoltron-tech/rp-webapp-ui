@@ -1,5 +1,16 @@
 "use client";
 
+import type {
+  Codex,
+  CodexCategory,
+  CodexEntry,
+  CodexRelationship,
+  CodexTone,
+  StoryBoardEvent,
+  StoryCastMember,
+  StoryCharacter,
+  StoryPerson,
+} from "@nw/types";
 import {
   type FC,
   useCallback,
@@ -31,16 +42,6 @@ import {
 } from "@/components/rich-text-editor-input/dialog-embed";
 import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type {
-  CodexCategory,
-  CodexEntry,
-  CodexRelationship,
-  CodexTone,
-  StoryBoardEvent,
-  StoryCastMember,
-  StoryCharacter,
-  StoryPerson,
-} from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { CategoryManager } from "./category-manager";
@@ -74,6 +75,14 @@ type Props = {
   cast: StoryCastMember[];
   /** Members write the codex; everyone else reads it. */
   canEdit: boolean;
+  /**
+   * A codex handed in whole instead of fetched.
+   *
+   * Only the promo/demo harness (`src/app/promo`) passes this — it renders the
+   * real view with fixture data and no backend. Left unset everywhere else, so
+   * the app's own path is the fetch below, untouched.
+   */
+  seed?: Codex | null;
 };
 
 /**
@@ -106,6 +115,7 @@ export const StoryCodexView: FC<Props> = ({
   chapters,
   cast,
   canEdit,
+  seed = null,
 }) => {
   const { successToast, errorToast } = useUIContext();
   const { routeToPage } = usePageRouter();
@@ -145,6 +155,15 @@ export const StoryCodexView: FC<Props> = ({
   const [tabsOverflow, setTabsOverflow] = useState(false);
 
   const load = useCallback(async () => {
+    if (seed) {
+      setLoading(false);
+      setCategories(seed.categories);
+      setEntries(seed.entries);
+      setRelationships(seed.relationships ?? []);
+      setTones(seed.tones ?? []);
+      setCharacters(seed.characters ?? []);
+      return;
+    }
     const result = await getStoryCodexAction(storyboardId);
     setLoading(false);
     if (!result || "message" in result) return;
@@ -153,7 +172,7 @@ export const StoryCodexView: FC<Props> = ({
     setRelationships(result.relationships ?? []);
     setTones(result.tones ?? []);
     setCharacters(result.characters ?? []);
-  }, [storyboardId]);
+  }, [storyboardId, seed]);
 
   useEffect(() => {
     load();
@@ -487,7 +506,9 @@ export const StoryCodexView: FC<Props> = ({
   };
 
   return (
-    <S.Root>
+    /* `data-nw` marks the few landmarks the promo capture animates against
+       (`promo-gif/`). Inert here — nothing in the app reads them. */
+    <S.Root data-nw="codex">
       <S.HeaderRow>
         <S.Title>Codex</S.Title>
         <S.Spacer />
@@ -600,7 +621,7 @@ export const StoryCodexView: FC<Props> = ({
           {cast.length > 0 && (
             <>
               <S.PoolLabel>The cast</S.PoolLabel>
-              <S.CastRow>
+              <S.CastRow data-nw="codex-cast-row">
                 {cast.map((member) => {
                   const avatarSrc = member.image || museAvatarUrl(member.id);
                   return (
@@ -652,7 +673,7 @@ export const StoryCodexView: FC<Props> = ({
             </S.Empty>
           ) : (
             <>
-              <S.CastRow>
+              <S.CastRow data-nw="codex-cast-row">
                 {characters.map((character) => {
                   const name =
                     `${character.firstName} ${character.lastName ?? ""}`.trim();

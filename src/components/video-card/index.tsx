@@ -1,9 +1,9 @@
 "use client";
 import { Flex } from "@novelist-world/ui";
+import type { Muse } from "@nw/types/novelist";
 import classNames from "classnames";
 import { type FC, useRef } from "react";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Muse } from "@/types/novelist";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import * as S from "./styles";

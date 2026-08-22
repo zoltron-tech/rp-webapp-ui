@@ -1,9 +1,9 @@
 "use client";
 
+import type { SearchResult } from "@nw/types/common";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getMuseAction } from "@/app/rp/muse/actions";
 import { getNovelistAction, searchAction } from "@/app/rp/novelists/actions";
-import type { SearchResult } from "@/types/common";
 import { API_MESSAGE } from "@/utils/constants";
 import { uploadMedia } from "@/utils/upload-media";
 
@@ -214,10 +214,10 @@ export default function MsgToExportPage() {
       }
 
       const item: MuseListItem = {
+        avatar: muse.avatar?.src || muse.image || null,
         id: muse.id,
         name:
           `${muse.firstName ?? ""} ${muse.lastName ?? ""}`.trim() || muse.id,
-        avatar: muse.avatar?.src || muse.image || null,
       };
       setMuses((prev) => [...prev, item]);
       setSelectedMuseId(item.id);

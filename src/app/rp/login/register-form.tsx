@@ -16,8 +16,8 @@ import { UpdatePasswordFields } from "@/components/common/update-password-fields
 import { ErrorBox } from "@/components/error-box";
 import { useGlobalStoreSet } from "@/context/store/stores";
 import { API_MESSAGE } from "@/utils/constants";
-import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
 import { ROUTES } from "@/utils/constants/routes";
+import { UNCATEGORIZED_ERROR_MESSAGE } from "@/utils/form-errors";
 import * as S from "./styled";
 
 const ErrorKeys = [
@@ -36,19 +36,7 @@ const ERROR_MAP: Record<ErrorKey, ReactNode> = {
       </p>
     </>
   ),
-  [API_MESSAGE.UncategorizedError]: (
-    <>
-      <p>
-        Something went wrong while logging you in, please try reloading the
-        page.
-      </p>
-      <p>
-        <strong>Tip:&nbsp;</strong>
-        If this keeps happening, try&nbsp;
-        <a href={SUPPORT_EMAIL_URL}>contacting support</a>.
-      </p>
-    </>
-  ),
+  [API_MESSAGE.UncategorizedError]: UNCATEGORIZED_ERROR_MESSAGE,
 };
 
 export const RegisterForm: FC = () => {

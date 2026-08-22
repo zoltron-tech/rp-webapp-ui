@@ -1,11 +1,11 @@
 "use client";
 
+import type { StoryBoard } from "@nw/types";
 import { type FC, useMemo, useState } from "react";
 import { FiChevronRight } from "react-icons/fi";
 import { HiOutlineUserGroup } from "react-icons/hi2";
 import { MdOutlineExpandMore } from "react-icons/md";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { StoryBoard } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styled";
 

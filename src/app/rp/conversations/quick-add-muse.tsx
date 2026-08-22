@@ -1,12 +1,12 @@
 "use client";
 
+import type { CreateUpdateMuse, Fandom, Muse } from "@nw/types";
 import { useState } from "react";
 import { BsCheck, BsX } from "react-icons/bs";
 import { MdAdd } from "react-icons/md";
 import { updateMuseAction } from "@/app/rp/muse/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks/use-ui-context";
-import type { CreateUpdateMuse, Fandom, Muse } from "@/types";
 import * as S from "./styles";
 
 /** Shared "create a fandomless character on the fly" flow used by both the

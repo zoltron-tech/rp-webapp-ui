@@ -1,6 +1,8 @@
 "use client";
 
 import { Flex, ShouldRender } from "@novelist-world/ui";
+import type { Fandom, Muse, NWImage } from "@nw/types";
+import { clamp, VALID_IMAGE_TYPES } from "@nw/utils";
 import { Form, Separator } from "radix-ui";
 import {
   type FormEventHandler,
@@ -12,7 +14,6 @@ import { ImProfile } from "react-icons/im";
 import { setMuseAvatarAction } from "@/app/rp/muse/actions";
 import { deleteMedia } from "@/app/rp/profile/actions";
 import { useUploadMedia } from "@/hooks/use-upload-media";
-import type { Fandom, Muse, NWImage } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { AvatarNew } from "../common/avatar-new";
 import { AvatarUploadField } from "../common/avatar-upload-field";
@@ -26,7 +27,6 @@ import { useMuseState, useMuseStoreSet } from "./muse.store";
 import * as S from "./styled";
 import { useMuseSave } from "./use-muse-save";
 
-const VALID_IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif"];
 
 const PRIVACY_LABELS: Record<string, string> = {
   CUSTOM: "Custom",
@@ -34,10 +34,6 @@ const PRIVACY_LABELS: Record<string, string> = {
   ONLY_ME: "Only Me",
   PUBLIC: "Public",
 };
-
-function clamp(v: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, v));
-}
 
 import { FiArrowLeft } from "react-icons/fi";
 

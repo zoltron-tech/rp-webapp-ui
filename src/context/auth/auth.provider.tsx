@@ -1,5 +1,6 @@
 "use client";
 
+import type { AuthState } from "@nw/types/state";
 import { usePathname } from "next/navigation";
 import { type FC, type ReactNode, useCallback, useEffect, useRef } from "react";
 import {
@@ -13,7 +14,6 @@ import { getUserNovelist } from "@/app/rp/novelists/actions";
 import { getUnreadReplyCount } from "@/app/rp/outgoing-threads/actions";
 import { useStateMachine } from "@/hooks";
 import { initialisePushNotifications } from "@/lib/push";
-import type { AuthState } from "@/types/state";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";

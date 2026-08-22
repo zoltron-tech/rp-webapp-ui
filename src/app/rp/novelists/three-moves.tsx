@@ -1,5 +1,6 @@
 "use client";
 
+import { prefersReducedMotion } from "@nw/utils/platform";
 import {
   type FC,
   Fragment,
@@ -279,10 +280,7 @@ export const ThreeMoves: FC = () => {
   );
 
   useEffect(() => {
-    setReduce(
-      typeof window !== "undefined" &&
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-    );
+    setReduce(prefersReducedMotion());
   }, []);
 
   // Only run while the section is actually on screen.

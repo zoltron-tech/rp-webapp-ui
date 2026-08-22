@@ -1,10 +1,10 @@
 "use client";
 
+import type { Muse } from "@nw/types";
 import { useEffect, useState } from "react";
 import { getMuseAction } from "@/app/rp/muse/actions";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Muse } from "@/types";
 import EditMuseExtraAttributesDataCard from "./edit-muse-extra-attributes-data-card";
 import * as S from "./styled";
 

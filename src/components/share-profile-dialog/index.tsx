@@ -1,5 +1,6 @@
 "use client";
 
+import type { Novelist } from "@nw/types";
 import classNames from "classnames";
 import { type FC, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -22,7 +23,6 @@ import type {
   ShareProfilePayload,
   SharePromptResult,
 } from "@/lib/discord";
-import type { Novelist } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import { mainVerseMuses } from "@/utils/muse";
 import * as DropS from "../profile-more-dropdown/styled";

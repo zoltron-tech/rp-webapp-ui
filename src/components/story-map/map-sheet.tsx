@@ -1,12 +1,12 @@
 "use client";
 
+import type { StoryMap } from "@nw/types";
 import { type FC, useEffect, useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { LuImageUp } from "react-icons/lu";
 import { ResponsiveSheet } from "@/components/common/responsive-sheet";
 import * as F from "@/components/common/responsive-sheet/styles";
 import { useUploadMedia } from "@/hooks/use-upload-media";
-import type { StoryMap } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import * as S from "./styles";
 

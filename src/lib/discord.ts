@@ -1,5 +1,5 @@
-import type { Prompt, PromptSource } from "@/types";
-import { IMAGE_SIZES, reverseWsrvUrl, wsrvImage } from "@/utils/image";
+import type { Prompt, PromptSource } from "@nw/types";
+import { IMAGE_SIZES, reverseWsrvUrl, wsrvImage } from "@nw/utils/image";
 
 // ─── Discord API types ────────────────────────────────────────────────────────
 
@@ -95,7 +95,7 @@ function parsePromptHtml(html: string): {
         ?.toUpperCase();
       const type: "MUSE" | "NOVELIST" =
         rawType === "NOVELIST" ? "NOVELIST" : "MUSE";
-      mentions.push({ name, id, type });
+      mentions.push({ id, name, type });
       return `**@${name}**`;
     },
   );
@@ -120,7 +120,7 @@ function parsePromptHtml(html: string): {
     .join("\n")
     .trim();
 
-  return { plainText, inlineImage, mentions };
+  return { inlineImage, mentions, plainText };
 }
 
 /** "2026-06-14 13:26:12.960236" → ISO 8601 string */
@@ -302,17 +302,17 @@ export function buildDiscordEmbed(
       .join("\n");
 
     fields.push({
+      inline: true,
       name: "🎭 featuring",
       value: featuringValue,
-      inline: true,
     });
   }
 
   // Discord native relative timestamp — renders as "2 hours ago" in the client
   fields.push({
+    inline: true,
     name: "🕒 posted",
     value: `<t:${unixTs}:R>`,
-    inline: true,
   });
 
   const authorProfileUrl = profileUrl(
@@ -323,15 +323,15 @@ export function buildDiscordEmbed(
 
   const embed: DiscordEmbed = {
     author: {
-      name: `${prompt.source.name}`,
       icon_url: prompt.source.image || undefined,
+      name: `${prompt.source.name}`,
       url: authorProfileUrl, // makes the author name a clickable link in Discord
     },
-    description,
     color: resolvePromptColor(prompt.source),
-    url: promptUrl,
+    description,
     fields,
     footer: { text: `novelist.world · shared by @${novelistUsername}` },
+    url: promptUrl,
   };
 
   if (imageUrl) {
@@ -381,17 +381,17 @@ export function buildDiscordMuseEmbed(
 
   const fields: DiscordEmbedField[] = [
     {
+      inline: false,
       name: "🎬  universe",
       value: pad(`\`${muse.fandom.name}\``),
-      inline: false,
     },
   ];
 
   if (muse.nicknames && muse.nicknames.length > 0) {
     fields.push({
+      inline: false,
       name: "🏷️  also known as",
       value: pad(muse.nicknames.map((n) => `\`${n}\``).join("   ")),
-      inline: false,
     });
   }
 
@@ -403,17 +403,17 @@ export function buildDiscordMuseEmbed(
     const readMore =
       remaining > 0 ? `\n[\`+ ${remaining} more\`](${museUrl})` : "";
     fields.push({
+      inline: false,
       name: "✨  information",
       value: pad(`${traitLines}${readMore}`),
-      inline: false,
     });
   }
 
   if (muse.tags.length > 0) {
     fields.push({
+      inline: false,
       name: "🔖  tags",
       value: muse.tags.map((t) => `\`${t.label}\``).join("   "),
-      inline: false,
     });
   }
 
@@ -421,16 +421,16 @@ export function buildDiscordMuseEmbed(
 
   const embed: DiscordEmbed = {
     author: {
-      name: `Penned by ${muse.pennedBy.firstName} ${muse.pennedBy.lastName}`,
       icon_url: muse.pennedBy.image || undefined,
+      name: `Penned by ${muse.pennedBy.firstName} ${muse.pennedBy.lastName}`,
       url: novelistUrl,
     },
-    title: `✦ ${fullName}`,
-    description,
     color,
-    url: museUrl,
+    description,
     fields,
     footer: { text: `novelist.world · shared by @${novelistUsername}` },
+    title: `✦ ${fullName}`,
+    url: museUrl,
   };
 
   if (thumbnailUrl) {
@@ -555,39 +555,39 @@ export function buildDiscordStoryEmbed(
   const fields: DiscordEmbedField[] = [];
 
   fields.push({
+    inline: true,
     name: "🎬  universe",
     value: `\`${story.fandomName || "Original"}\``,
-    inline: true,
   });
 
   fields.push({
+    inline: true,
     name: "🔓  access",
     value: story.isPublic ? "\`Public\`" : "\`Members only\`",
-    inline: true,
   });
 
   if (story.genres.length > 0) {
     fields.push({
+      inline: false,
       name: "🔖  genres",
       value: story.genres.map((g) => `\`${g}\``).join("   "),
-      inline: false,
     });
   }
 
   const embed: DiscordEmbed = {
     author: story.createdBy
       ? {
-          name: `Penned by ${story.createdBy.firstName} ${story.createdBy.lastName ?? ""}`.trim(),
           icon_url: story.createdBy.image || undefined,
+          name: `Penned by ${story.createdBy.firstName} ${story.createdBy.lastName ?? ""}`.trim(),
           url: authorUrl,
         }
       : { name: "novelist.world" },
-    title: `📖 ${story.name}`,
-    description,
     color: 0x29a383,
-    url: storyUrl,
+    description,
     fields,
     footer: { text: `novelist.world · shared by @${novelistUsername}` },
+    title: `📖 ${story.name}`,
+    url: storyUrl,
   };
 
   const thumbnailUrl = story.coverSrc ?? story.image;
@@ -630,11 +630,11 @@ export function buildDiscordChapterEmbed(
       name: chapter.storyBoardName,
       url: storyUrl,
     },
-    title: `📜 ${chapter.name}`,
-    description,
     color: 0x29a383,
-    url: chapterUrl,
+    description,
     footer: { text: `novelist.world · shared by @${novelistUsername}` },
+    title: `📜 ${chapter.name}`,
+    url: chapterUrl,
   };
 
   const thumbnailUrl = chapter.coverSrc ?? chapter.image;
@@ -703,24 +703,24 @@ export function buildDiscordProfileEmbed(
 
   const fields: DiscordEmbedField[] = [
     {
+      inline: true,
       name: "🎭  muses",
       value: `\`${profile.museCount}\``,
-      inline: true,
     },
     {
+      inline: true,
       name: "🤝  friends",
       value: `\`${profile.friendsCount}\``,
-      inline: true,
     },
   ];
 
   if (profile.muses.length > 0) {
     fields.push({
+      inline: false,
       name: "✨  featured muses",
       value: profile.muses
         .map(({ id, name }) => `✦ [${name}](${baseUrl}/rp/muse/${id})`)
         .join("\n"),
-      inline: false,
     });
   }
 
@@ -729,24 +729,24 @@ export function buildDiscordProfileEmbed(
     : null;
   if (joinedUnix !== null) {
     fields.push({
+      inline: false,
       name: "📅  writing since",
       value: `<t:${joinedUnix}:D>`,
-      inline: false,
     });
   }
 
   const embed: DiscordEmbed = {
     author: {
-      name: `@${profile.username}`,
       icon_url: profile.image || profile.avatarSrc || undefined,
+      name: `@${profile.username}`,
       url: profileUrl,
     },
-    title: `${profile.isVerified ? "✅" : "✦"} ${fullName || profile.username}`,
-    description,
     color,
-    url: profileUrl,
+    description,
     fields,
     footer: { text: `novelist.world · shared by @${novelistUsername}` },
+    title: `${profile.isVerified ? "✅" : "✦"} ${fullName || profile.username}`,
+    url: profileUrl,
   };
 
   // Empty strings come back from the API for missing images — `||` so they fall through.

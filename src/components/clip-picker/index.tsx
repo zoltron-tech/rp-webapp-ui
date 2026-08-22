@@ -1,5 +1,7 @@
 ﻿"use client";
 
+import { formatTime } from "@nw/utils";
+import { useDebounce } from "@nw/utils/hooks/use-debounce";
 import { type FC, useEffect, useRef, useState } from "react";
 import { FaPause, FaPlay } from "react-icons/fa";
 import { HiPaperAirplane } from "react-icons/hi2";
@@ -11,22 +13,6 @@ interface ClipPickerProps {
   autoFocus?: boolean;
   fill?: boolean;
 }
-
-const useDebounce = (value: string, delay: number) => {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const id = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(id);
-  }, [value, delay]);
-  return debounced;
-};
-
-const formatTime = (s: number) => {
-  if (!Number.isFinite(s)) return "0:00";
-  const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
-  return `${m}:${sec.toString().padStart(2, "0")}`;
-};
 
 const ClipCell: FC<{
   clip: ClipItem;

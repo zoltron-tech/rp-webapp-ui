@@ -1,5 +1,6 @@
 "use client";
 
+import type { Novelist, NovelistWorldNotification } from "@nw/types";
 import {
   type FC,
   useCallback,
@@ -12,7 +13,6 @@ import { getStrangerNovelistsAction } from "@/app/rp/home/actions";
 import { NovelistPreviewCard } from "@/components/novelist-preview-card";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Novelist, NovelistWorldNotification } from "@/types";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styled";
 

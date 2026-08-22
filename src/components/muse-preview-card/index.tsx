@@ -1,5 +1,6 @@
 "use client";
 
+import type { Muse } from "@nw/types";
 import { usePathname } from "next/navigation";
 import type { FC } from "react";
 import { useMemo, useState } from "react";
@@ -10,7 +11,6 @@ import { AppAlertDialog } from "@/components/dialog";
 import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { Muse } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { EVENTS } from "@/utils/constants/custom-events";
 import { ROUTES } from "@/utils/constants/routes";

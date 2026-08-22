@@ -24,6 +24,8 @@
 // All key material and plaintext stay in client components — server actions
 // only ever relay public keys and wrapped keys.
 
+import type { Conversation, Message } from "@nw/types";
+import type { E2EConversationBundle, E2EEnvelope } from "@nw/types/e2e";
 import {
   getE2EBundleAction,
   getE2EKeyBackupAction,
@@ -31,9 +33,7 @@ import {
   storeE2EEnvelopesAction,
   storeE2EKeyBackupAction,
 } from "@/app/rp/conversations/e2e-actions";
-import type { Conversation, Message } from "@/types";
 import { JWT_COOKIE_NAME } from "@/utils/constants";
-import type { E2EConversationBundle, E2EEnvelope } from "@/utils/e2e-types";
 
 /** PBKDF2 rounds for the password-derived backup key. */
 const BACKUP_KDF_ITERATIONS = 600_000;

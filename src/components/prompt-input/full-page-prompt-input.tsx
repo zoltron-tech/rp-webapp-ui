@@ -1,6 +1,15 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
+import type {
+  Friend,
+  Muse,
+  Prompt,
+  PromptSource,
+  SubmitPromptInput,
+  SubmitPromptType,
+} from "@nw/types";
+import type { ProfileSong } from "@nw/types/music";
 import classNames from "classnames";
 import { Form } from "radix-ui";
 import {
@@ -24,15 +33,6 @@ import { ProfileSongPlayer } from "@/components/profile-song";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState } from "@/context/store/stores";
 import { useCustomEvents, useUIContext } from "@/hooks";
-import type {
-  Friend,
-  Muse,
-  Prompt,
-  PromptSource,
-  SubmitPromptInput,
-  SubmitPromptType,
-} from "@/types";
-import type { ProfileSong } from "@/types/music";
 import { API_MESSAGE } from "@/utils/constants";
 import { EVENTS } from "@/utils/constants/custom-events";
 import { AppAlertDialog } from "../dialog";

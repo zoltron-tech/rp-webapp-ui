@@ -1,5 +1,3 @@
-import { useEffect } from "react";
-import { useCustomEvents } from "@/hooks";
 import type {
   Muse,
   Novelist,
@@ -7,7 +5,9 @@ import type {
   PromptSource,
   SubmitPromptInput,
   SubmitPromptType,
-} from "@/types";
+} from "@nw/types";
+import { useEffect } from "react";
+import { useCustomEvents } from "@/hooks";
 import { API_MESSAGE } from "@/utils/constants";
 import { usePromptInputState } from "./prompt-input.store";
 

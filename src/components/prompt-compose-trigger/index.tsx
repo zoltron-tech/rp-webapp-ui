@@ -1,8 +1,8 @@
 "use client";
 
+import type { NWImage } from "@nw/types";
 import { useEffect, useState } from "react";
 import { AvatarNew } from "@/components/common/avatar-new";
-import type { NWImage } from "@/types";
 import * as S from "./styled";
 
 const DEFAULT_PLACEHOLDERS = [

@@ -1,5 +1,8 @@
 "use client";
 
+import type { Novelist } from "@nw/types";
+import { ACCENT_MAP } from "@nw/types/theme";
+import { isIOS, isPWA } from "@nw/utils/platform";
 import classNames from "classnames";
 import { toPng } from "html-to-image";
 import { type FC, useRef, useState } from "react";
@@ -8,8 +11,6 @@ import QRCode from "react-qr-code";
 import { EmailVerifiedBadge, NWLogoInner } from "@/components/common";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { useGlobalState } from "@/context/store/stores";
-import type { Novelist } from "@/types";
-import { ACCENT_MAP } from "@/types/theme";
 import { mainVerseMuses } from "@/utils/muse";
 import { Flex } from "../edit-muse-card/styles";
 import * as S from "./styles";
@@ -77,19 +78,6 @@ const formatJoinYear = (dateStr: string | undefined): string => {
 
 // ─── Platform detection ──────────────────────────────────────────────────────
 
-/**
- * True on iPhone / iPod / iPad (including iPads that report MacIntel in iOS 13+).
- * Excludes Windows touch laptops and Macs by checking for absence of a fine pointer.
- */
-const getIsIOS = () =>
-  /iP(ad|hone|od)/i.test(navigator.userAgent) ||
-  (navigator.platform === "MacIntel" &&
-    navigator.maxTouchPoints > 1 &&
-    !window.matchMedia("(pointer: fine)").matches);
-
-/** True when the app is running as an installed PWA (standalone mode). */
-const getIsPWA = () => window.matchMedia("(display-mode: standalone)").matches;
-
 // ─── Component ───────────────────────────────────────────────────────────────
 
 interface Props {
@@ -129,7 +117,7 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
       await toPng(cardRef.current, exportOptions);
       const dataUrl = await toPng(cardRef.current, exportOptions);
 
-      if (getIsIOS() || getIsPWA()) {
+      if (isIOS() || isPWA()) {
         // iOS / PWA — show inline overlay so user can long-press → Save
         setExportedImage(dataUrl);
       } else {

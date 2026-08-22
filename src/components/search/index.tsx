@@ -1,4 +1,5 @@
 "use client";
+import type { SearchResult } from "@nw/types/common";
 import classNames from "classnames";
 import type { JSX } from "react";
 import { type FC, useCallback, useEffect, useRef, useState } from "react";
@@ -11,7 +12,6 @@ import { searchAction } from "@/app/rp/novelists/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useForm } from "@/hooks";
 import { useOutsideClick } from "@/hooks/use-outside-click";
-import type { SearchResult } from "@/types/common";
 import { toggleState } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import { ShouldRender } from "../common";

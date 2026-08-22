@@ -1,11 +1,12 @@
 "use client";
 
+import type { Muse } from "@nw/types";
+import { ACCENT_MAP } from "@nw/types/theme";
+import { isIOS, isPWA } from "@nw/utils/platform";
 import { toPng } from "html-to-image";
 import { type FC, useEffect, useMemo, useRef, useState } from "react";
 import { FiChevronLeft, FiChevronRight, FiDownload, FiX } from "react-icons/fi";
 import { useGlobalState } from "@/context/store/stores";
-import type { Muse } from "@/types";
-import { ACCENT_MAP } from "@/types/theme";
 import { PortraitCardDesign } from "./portrait";
 import { SquareCardDesign } from "./square";
 import * as S from "./styles";
@@ -73,14 +74,6 @@ const waitForImages = (node: HTMLElement): Promise<void[]> => {
     ),
   );
 };
-
-const getIsIOS = () =>
-  /iP(ad|hone|od)/i.test(navigator.userAgent) ||
-  (navigator.platform === "MacIntel" &&
-    navigator.maxTouchPoints > 1 &&
-    !window.matchMedia("(pointer: fine)").matches);
-
-const getIsPWA = () => window.matchMedia("(display-mode: standalone)").matches;
 
 // ─── Design gallery ───────────────────────────────────────────────────────────
 // Each export design lives in its own folder (./portrait, ./square) as a
@@ -250,7 +243,7 @@ export const MiniMuseCard: FC<Props> = ({ muse, onClose }) => {
       await toPng(node, exportOptions);
       const dataUrl = await toPng(node, exportOptions);
 
-      if (getIsIOS() || getIsPWA()) {
+      if (isIOS() || isPWA()) {
         setExportedImage(dataUrl);
       } else {
         const link = document.createElement("a");

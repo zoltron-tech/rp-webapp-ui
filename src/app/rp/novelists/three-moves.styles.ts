@@ -1,4 +1,5 @@
 import styled, { css, keyframes } from "styled-components";
+import { spin } from "@/theme/animations";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    "A story in three moves" — an animated reel.
@@ -44,10 +45,6 @@ const caretBlink = keyframes`
 const sweepRing = keyframes`
   from { stroke-dashoffset: 163.4; }
   to   { stroke-dashoffset: 0; }
-`;
-
-const spin = keyframes`
-  to { transform: rotate(360deg); }
 `;
 
 const sheen = keyframes`

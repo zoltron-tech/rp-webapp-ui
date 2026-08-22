@@ -1,16 +1,16 @@
 "use client";
 
-import { type FC, useEffect, useMemo, useState } from "react";
-import { FaRegTrashCan } from "react-icons/fa6";
-import { ResponsiveSheet } from "@/components/common/responsive-sheet";
-import * as F from "@/components/common/responsive-sheet/styles";
-import { resolveCodexIcon } from "@/components/story-codex/icons";
 import type {
   CodexCategory,
   CodexEntry,
   StoryBoardEvent,
   StoryMapPin,
-} from "@/types";
+} from "@nw/types";
+import { type FC, useEffect, useMemo, useState } from "react";
+import { FaRegTrashCan } from "react-icons/fa6";
+import { ResponsiveSheet } from "@/components/common/responsive-sheet";
+import * as F from "@/components/common/responsive-sheet/styles";
+import { resolveCodexIcon } from "@/components/story-codex/icons";
 import * as S from "./styles";
 
 type Props = {

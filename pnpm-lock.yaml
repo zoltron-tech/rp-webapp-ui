@@ -32,6 +32,15 @@ importers:
       '@novelist-world/ui':
         specifier: 1.0.2-alpha-2
         version: 1.0.2-alpha-2(react@19.1.1)(styled-components@6.1.19(react-dom@19.1.1(react@19.1.1))(react@19.1.1))
+      '@nw/api':
+        specifier: workspace:*
+        version: link:packages/api
+      '@nw/types':
+        specifier: workspace:*
+        version: link:packages/types
+      '@nw/utils':
+        specifier: workspace:*
+        version: link:packages/utils
       '@radix-ui/colors':
         specifier: ^3.0.0
         version: 3.0.0
@@ -162,6 +171,43 @@ importers:
       typescript:
         specifier: ^5.9.2
         version: 5.9.2
+
+  packages/api:
+    dependencies:
+      '@nw/types':
+        specifier: workspace:*
+        version: link:../types
+      '@nw/utils':
+        specifier: workspace:*
+        version: link:../utils
+    devDependencies:
+      '@nw/config':
+        specifier: workspace:*
+        version: link:../config
+
+  packages/config: {}
+
+  packages/types:
+    devDependencies:
+      '@nw/config':
+        specifier: workspace:*
+        version: link:../config
+
+  packages/utils:
+    dependencies:
+      '@nw/types':
+        specifier: workspace:*
+        version: link:../types
+      moment:
+        specifier: ^2.30.1
+        version: 2.30.1
+      react:
+        specifier: '>=18'
+        version: 19.1.1
+    devDependencies:
+      '@nw/config':
+        specifier: workspace:*
+        version: link:../config
 
 packages:
 

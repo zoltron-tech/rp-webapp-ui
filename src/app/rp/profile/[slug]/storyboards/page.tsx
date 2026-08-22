@@ -1,5 +1,6 @@
 "use client";
 
+import type { StoryBoard } from "@nw/types";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { IoMdAdd } from "react-icons/io";
@@ -15,7 +16,6 @@ import { EditStoryboardOverlay } from "@/components/edit-storyboard/edit-storybo
 import StoryCard from "@/components/story-card";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
-import type { StoryBoard } from "@/types";
 import { Logger } from "@/utils/services";
 import * as S from "./styles";
 

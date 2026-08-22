@@ -1,6 +1,9 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
+import type { ImageCropFilter, NWImage } from "@nw/types";
+import type { ProfileSong } from "@nw/types/music";
+import { clamp, toCropFilter, VALID_IMAGE_TYPES } from "@nw/utils";
 import { Form, Separator } from "radix-ui";
 import {
   type FormEventHandler,
@@ -23,8 +26,6 @@ import { SongPickerDialog } from "@/app/rp/profile/edit/song-picker-dialog";
 import { ProfileSongPlayer } from "@/components/profile-song";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
-import type { ImageCropFilter, NWImage } from "@/types";
-import type { ProfileSong } from "@/types/music";
 import { API_MESSAGE } from "@/utils/constants";
 import { AvatarUploadField } from "../common/avatar-upload-field";
 import { LoaderAction } from "../common/loader-action";
@@ -37,7 +38,6 @@ import { useMuseState, useMuseStoreSet } from "./muse.store";
 import * as S from "./styled";
 import { useMuseSave } from "./use-muse-save";
 
-const VALID_IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif"];
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 const PRIVACY_LABELS: Record<string, string> = {
@@ -56,26 +56,6 @@ const isImageUrl = (url: string) => {
   const lower = url.toLowerCase().split("?")[0];
   return IMAGE_EXTENSIONS.some((ext) => lower.endsWith(ext));
 };
-
-function clamp(v: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, v));
-}
-
-function toCropFilter(
-  src: string,
-  x: number,
-  y: number,
-  scale: number,
-): ImageCropFilter {
-  const scalePct = Math.round(scale * 100);
-  return {
-    height: scalePct,
-    src,
-    width: scalePct,
-    x: Math.round(x),
-    y: Math.round(y),
-  };
-}
 
 type TempUploads = {
   image?: string;

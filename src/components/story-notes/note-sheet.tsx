@@ -1,5 +1,6 @@
 "use client";
 
+import type { StoryNote, StoryNoteType } from "@nw/types";
 import { type FC, useCallback, useEffect, useRef, useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { GrAttachment } from "react-icons/gr";
@@ -27,7 +28,6 @@ import {
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { StoryNote, StoryNoteType } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { toFormattedDate } from "@/utils/helpers";
 import { toPlainText } from "@/utils/rich-text";

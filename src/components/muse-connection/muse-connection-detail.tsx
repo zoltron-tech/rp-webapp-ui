@@ -1,5 +1,6 @@
 "use client";
 
+import type { MuseConnectionGroup } from "@nw/types";
 import { useState } from "react";
 import { FiCheck, FiClock, FiEdit2, FiX } from "react-icons/fi";
 import {
@@ -10,7 +11,6 @@ import { Button } from "@/components/common";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
-import type { MuseConnectionGroup } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styled";

@@ -1,4 +1,5 @@
 import { ShouldRender } from "@novelist-world/ui";
+import type { PromptSource, SubmitPromptType } from "@nw/types";
 import { Form } from "radix-ui";
 import {
   type FC,
@@ -15,7 +16,6 @@ import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { AppAlertDialog } from "@/components/dialog";
 import { FilterSearch } from "@/components/filter-search";
-import type { PromptSource, SubmitPromptType } from "@/types";
 import { usePromptInputState } from "./prompt-input.store";
 import * as S from "./styles";
 

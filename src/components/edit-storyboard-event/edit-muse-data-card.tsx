@@ -1,6 +1,8 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
+import type { CreateUpdateMuse, Fandom } from "@nw/types";
+import { VALID_IMAGE_TYPES } from "@nw/utils";
 import { Form, Separator } from "radix-ui";
 import {
   type FormEventHandler,
@@ -17,10 +19,9 @@ import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUploadMedia } from "@/hooks/use-upload-media";
-import type { CreateUpdateMuse, Fandom } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
-import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
 import { ROUTES } from "@/utils/constants/routes";
+import { UNCATEGORIZED_ERROR_MESSAGE } from "@/utils/form-errors";
 import { AvatarNew } from "../common/avatar-new";
 import { LoaderAction } from "../common/loader-action";
 import { AppAlertDialog } from "../dialog";
@@ -37,22 +38,9 @@ const ErrorKeys = [
 ] as const;
 type ErrorKey = (typeof ErrorKeys)[number];
 
-const VALID_IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif"];
 
 const ERROR_MAP: Record<ErrorKey, ReactNode> = {
-  [API_MESSAGE.UncategorizedError]: (
-    <>
-      <p>
-        Something went wrong while logging you in, please try reloading the
-        page.
-      </p>
-      <p>
-        <strong>Tip:&nbsp;</strong>
-        If this keeps happening, try&nbsp;
-        <a href={SUPPORT_EMAIL_URL}>contacting support</a>.
-      </p>
-    </>
-  ),
+  [API_MESSAGE.UncategorizedError]: UNCATEGORIZED_ERROR_MESSAGE,
   [API_MESSAGE.FileTooLarge]: (
     <p>
       The selected file is too large. Maximum allowed size is{" "}

@@ -1,9 +1,9 @@
+import type { Comment as CommentType } from "@nw/types";
 import {
   createGetFunction,
   useStoreSet,
   useStoreState,
 } from "@/context/store/use-store";
-import type { Comment as CommentType } from "@/types";
 
 export type CommentStoreType = CommentType & {
   commentAlert: "report" | "delete" | null;

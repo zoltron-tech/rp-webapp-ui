@@ -1,3 +1,4 @@
+import type { PromptSource, Prompt as PromptType } from "@nw/types";
 import classNames from "classnames";
 import { Collapsible, Separator } from "radix-ui";
 import {
@@ -17,7 +18,6 @@ import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useCustomEvents } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { PromptSource, Prompt as PromptType } from "@/types";
 import {
   type CustomEventType,
   EVENTS,

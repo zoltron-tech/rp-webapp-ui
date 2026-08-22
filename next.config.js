@@ -91,6 +91,10 @@ const nextConfig = {
       ],
     },
   },
+  // Workspace packages ship TypeScript source rather than a build artifact, so
+  // Next has to compile them alongside the app.
+  transpilePackages: ["@nw/api", "@nw/types", "@nw/utils"],
+
   reactStrictMode: true,
   compiler: {
     styledComponents: true,

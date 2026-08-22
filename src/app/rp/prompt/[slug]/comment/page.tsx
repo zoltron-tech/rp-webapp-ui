@@ -1,5 +1,6 @@
 "use client";
 
+import type { PromptSource, Prompt as PromptType } from "@nw/types";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Separator } from "radix-ui";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
@@ -17,7 +18,6 @@ import { StoreProvider } from "@/context/store/context";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { PromptSource, Prompt as PromptType } from "@/types";
 import * as S from "./styles";
 
 // ── Data hook ─────────────────────────────────────────────────────────────────

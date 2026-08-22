@@ -1,545 +1,78 @@
 "use server";
-import getConfig from "next/config";
+
 import {
-  authenticateAndGetJWT,
-  getAuthCookie,
-  getJWTIfExists,
-  logoutAction,
-} from "@/app/actions";
-import type {
-  Friend,
-  Novelist,
-  NovelistNote,
-  NovelistWorldNotification,
-  UpdateNovelistPayload,
-} from "@/types";
-import type { DataType, SearchResult, WithMessage } from "@/types/common";
-import type { Conversation, Message } from "@/types/conversation";
-import {
-  API_MESSAGE,
-  AUTH_HEADER_NAME,
-  CONTENT_TYPE_HEADER_NAME,
-  MEDIA_JSON_HEADER_VALUE,
-} from "@/utils/constants";
-import {
-  reverseWsrvUrl,
-  transformFriend,
-  transformNovelist,
-} from "@/utils/image";
-import { Logger } from "@/utils/services";
+  addNote,
+  getNotifications as apiGetNotifications,
+  getNovelists as apiGetNovelists,
+  getUserNovelist as apiGetUserNovelist,
+  patchNotifications as apiPatchNotifications,
+  updateUserNovelist as apiUpdateUserNovelist,
+  deleteBanner,
+  deleteNote,
+  getChatMessages,
+  getFriendsByUsername,
+  getNovelist,
+  getNovelistById,
+  getReactionLikers,
+  getViewedGuides,
+  markGuideViewed,
+  search,
+} from "@nw/api/endpoints/novelists";
+import type { UpdateNovelistPayload } from "@nw/types";
+import { api, authedApi, cookieApi } from "@/lib/server-api";
 
-const { serverRuntimeConfig } = getConfig();
-const { RP_SERVICE_URL } = serverRuntimeConfig;
+export const getNovelists = () => apiGetNovelists(api);
 
-export const getNovelists = async () => {
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/all`;
+export const getNovelistByIdAction = (novelistId: string) =>
+  getNovelistById(api, novelistId);
 
-  const response = await fetch(URL, { cache: "no-store" });
-  Logger.debug("getNovelists", response.status);
+export const getNovelistAction = (username: string) =>
+  getNovelist(api, username);
 
-  if (response.status === 404) {
-    return [];
-  } else if (!response.ok) {
-    return { message: API_MESSAGE.Error };
-  }
+export const getUserNovelist = () => apiGetUserNovelist(authedApi);
 
-  const novelists: Novelist[] = await response.json();
+export const getNotifications = (pageNumber: number, pageSize: number) =>
+  apiGetNotifications(authedApi, pageNumber, pageSize);
 
-  // Route S3 image URLs through wsrv.nl for resizing. This feeds the landing
-  // page's novelist carousel only, so use the carousel sizes — "profile" leaves
-  // avatars as un-resized S3 originals, which is what full profile pages want
-  // but is far too heavy for eight cards loading at once.
-  for (const n of novelists) transformNovelist(n, "carousel");
+export const patchNotifications = () => apiPatchNotifications(authedApi);
 
-  return novelists;
-};
-
-export const getNovelistByIdAction = async (
-  novelistId: string,
-): Promise<DataType<Novelist>> => {
-  const headers: Record<string, string> = {
-    [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
-  };
-
-  const jwt = await getJWTIfExists();
-  if (jwt) {
-    headers[AUTH_HEADER_NAME as string] = jwt;
-  }
-
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/${novelistId}`;
-
-  const response = await fetch(URL, {
-    cache: "no-store",
-    headers: headers,
-  });
-
-  if (response.status === 404) {
-    return null;
-  } else if (!response.ok) {
-    return { message: API_MESSAGE.Error };
-  }
-
-  const novelist: Novelist = await response.json();
-
-  transformNovelist(novelist, "profile");
-
-  return novelist;
-};
-
-export const getNovelistAction = async (
-  username: string,
-): Promise<DataType<Novelist>> => {
-  const headers: Record<string, string> = {
-    [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
-  };
-
-  console.log("getNovelistAction");
-
-  const jwt = await getJWTIfExists();
-  if (jwt) {
-    headers[AUTH_HEADER_NAME as string] = jwt;
-  }
-
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/get?username=${username}`;
-
-  try {
-    const response = await fetch(URL, {
-      cache: "no-store",
-      headers: headers,
-    });
-
-    if (response.status === 404) {
-      return null;
-    } else if (!response.ok) {
-      return { message: API_MESSAGE.Error };
-    }
-
-    const novelist: Novelist = await response.json();
-
-    transformNovelist(novelist, "profile");
-
-    return novelist;
-  } catch (e) {
-    console.log("error occured in getNovelistAction", e);
-    return { message: API_MESSAGE.Error };
-  }
-
-  // const response = {
-  //   json: async () => ({}) as Novelist,
-  //   ok: true,
-  //   status: 200,
-  // };
-};
-
-export const getUserNovelist = async () => {
-  const jwt = await authenticateAndGetJWT();
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist`;
-
-  const response = await fetch(URL, {
-    cache: "no-store",
-    headers: {
-      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
-      [AUTH_HEADER_NAME]: jwt,
-    },
-  });
-
-  console.log(response);
-
-  if (response.status === 404) {
-    return {
-      message: API_MESSAGE.NotFound,
-    };
-  } else if (!response.ok) {
-    Logger.debug(API_MESSAGE.Error, response.status, response.statusText);
-    return {
-      message: API_MESSAGE.UncategorizedError,
-    };
-  }
-
-  const novelist: Novelist = await response.json();
-
-  transformNovelist(novelist, "profile");
-
-  return novelist;
-};
-
-export const getNotifications = async (
-  pageNumber: number,
-  pageSize: number,
-): Promise<DataType<NovelistWorldNotification[]>> => {
-  const jwt = await authenticateAndGetJWT();
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/notification?pageNumber=${pageNumber}&pageSize=${pageSize}`;
-
-  const response = await fetch(URL, {
-    cache: "no-store",
-    headers: {
-      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
-      [AUTH_HEADER_NAME]: jwt,
-    },
-  });
-
-  if (response.status === 404) {
-    return null;
-  }
-
-  const notifications: NovelistWorldNotification[] = await response.json();
-  return notifications;
-};
-
-export const patchNotifications = async () => {
-  const jwt = await authenticateAndGetJWT();
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/notification`;
-
-  const response = await fetch(URL, {
-    cache: "no-store",
-    headers: {
-      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
-      [AUTH_HEADER_NAME]: jwt,
-    },
-    method: "PATCH",
-  });
-
-  if (response.status === 404) {
-    return null;
-  }
-
-  return "success";
-};
-
-export const updateUserNovelist = async (
+export const updateUserNovelist = (
   _novelist: UpdateNovelistPayload,
   create = false,
-) => {
-  const jwt = await authenticateAndGetJWT();
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist`;
+) => apiUpdateUserNovelist(authedApi, _novelist, create);
 
-  // Strip wsrv.nl proxy URLs back to original S3 URLs before sending to the
-  // backend. The global novelist state is seeded via getUserNovelist which runs
-  // transformNovelist (S3 → wsrv.nl). Sending wsrv.nl URLs causes the backend
-  // to detect a URL change, delete the original S3 file, and persist a proxy
-  // URL in the DB — the same bug that affects updateMuseAction.
-  const novelist: UpdateNovelistPayload = {
-    ..._novelist,
-    avatar: _novelist.avatar
-      ? {
-          ..._novelist.avatar,
-          crop: _novelist.avatar.crop
-            ? {
-                ..._novelist.avatar.crop,
-                src: reverseWsrvUrl(_novelist.avatar.crop.src),
-              }
-            : _novelist.avatar.crop,
-          src: reverseWsrvUrl(_novelist.avatar.src),
-        }
-      : _novelist.avatar,
-    banner: _novelist.banner
-      ? {
-          ..._novelist.banner,
-          crop: _novelist.banner.crop
-            ? {
-                ..._novelist.banner.crop,
-                src: reverseWsrvUrl(_novelist.banner.crop.src),
-              }
-            : _novelist.banner.crop,
-          src: reverseWsrvUrl(_novelist.banner.src),
-        }
-      : _novelist.banner,
-    image: reverseWsrvUrl(_novelist.image),
-  };
-
-  Logger.debug("updateUserNovelist", novelist);
-
-  const response = await fetch(URL, {
-    body: JSON.stringify(novelist),
-    cache: "no-store",
-    headers: {
-      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
-      [AUTH_HEADER_NAME]: jwt,
-    },
-    method: create ? "POST" : "PUT",
-  });
-
-  if (!response.ok) {
-    return { message: API_MESSAGE.Error };
-  }
-
-  const result: WithMessage<Novelist> = await response.json();
-  Logger.debug("updateUserNovelist", result);
-
-  const savedNovelist: Novelist = Object.assign(
-    {},
-    {
-      ...result,
-      message: undefined,
-    },
-  );
-
-  return savedNovelist;
-};
-
-export const searchAction = async (searchTerm: string, type = "novelist") => {
-  const jwt = await getJWTIfExists();
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/${type}/search?prefix=${searchTerm}`;
-
-  const headers: Record<string, string> = {
-    [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
-  };
-
-  if (jwt) {
-    headers[AUTH_HEADER_NAME] = jwt;
-  }
-
-  const response = await fetch(URL, {
-    cache: "no-store",
-    headers: headers,
-  });
-
-  Logger.debug("searchAction", response.status);
-  if (response.status === 404) {
-    return [];
-  } else if (!response.ok) {
-    return { message: API_MESSAGE.Error };
-  }
-
-  const result = (await response.json()) as SearchResult[];
-  return result;
-};
+export const searchAction = (searchTerm: string, type = "novelist") =>
+  search(api, searchTerm, type);
 
 export const chatAction = async (targetUserName: string | null) => {
   if (targetUserName === null) return;
-  const jwt = await authenticateAndGetJWT();
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/getMessages/${targetUserName}`;
-
-  const response = await fetch(URL, {
-    cache: "no-store",
-    headers: {
-      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
-      [AUTH_HEADER_NAME]: jwt,
-    },
-  });
-
-  Logger.debug("chatAction", response.status);
-  if (response.status === 404) {
-    return [];
-  } else if (!response.ok) {
-    return { message: API_MESSAGE.Error };
-  }
-
-  const result = (await response.json()) as Message[];
-  return result;
+  return getChatMessages(authedApi, targetUserName);
 };
 
-export const addNoteAction = async (
+export const addNoteAction = (
   text: string,
   color: string | null,
   emoji: string | null,
-): Promise<NovelistNote | { message: string }> => {
-  const jwt = await authenticateAndGetJWT();
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/note`;
+) => addNote(authedApi, text, color, emoji);
 
-  const response = await fetch(URL, {
-    body: JSON.stringify({ color, emoji, text }),
-    cache: "no-store",
-    headers: {
-      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
-      [AUTH_HEADER_NAME]: jwt,
-    },
-    method: "POST",
-  });
+export const deleteBannerAction = () => deleteBanner(authedApi);
 
-  if (!response.ok) {
-    return { message: API_MESSAGE.Error };
-  }
+export const deleteNoteAction = () => deleteNote(authedApi);
 
-  return response.json() as Promise<NovelistNote>;
-};
-
-export const deleteBannerAction = async (): Promise<{ message: string }> => {
-  const jwt = await authenticateAndGetJWT();
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/banner`;
-
-  const response = await fetch(URL, {
-    cache: "no-store",
-    headers: {
-      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
-      [AUTH_HEADER_NAME]: jwt,
-    },
-    method: "DELETE",
-  });
-
-  if (!response.ok && response.status !== 404) {
-    return { message: API_MESSAGE.Error };
-  }
-
-  return { message: API_MESSAGE.Success };
-};
-
-export const deleteNoteAction = async (): Promise<{ message: string }> => {
-  const jwt = await authenticateAndGetJWT();
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/note`;
-
-  const response = await fetch(URL, {
-    cache: "no-store",
-    headers: {
-      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
-      [AUTH_HEADER_NAME]: jwt,
-    },
-    method: "DELETE",
-  });
-
-  // 404 means the note didn't exist — still a success state
-  if (!response.ok && response.status !== 404) {
-    return { message: API_MESSAGE.Error };
-  }
-
-  return { message: API_MESSAGE.Success };
-};
-
-export const getFriendsByUsernameAction = async (
+export const getFriendsByUsernameAction = (
   username: string,
   pageNumber: number,
   pageSize: number,
-): Promise<Friend[]> => {
-  const headers: Record<string, string> = {
-    [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
-  };
+) => getFriendsByUsername(api, username, pageNumber, pageSize);
 
-  const jwt = await getJWTIfExists();
-  if (jwt) {
-    headers[AUTH_HEADER_NAME] = jwt;
-  }
-
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/friends?username=${username}&pageNumber=${pageNumber}&pageSize=${pageSize}`;
-
-  const response = await fetch(URL, {
-    cache: "no-store",
-    headers,
-  });
-
-  if (!response.ok) {
-    return [];
-  }
-
-  const friends: Friend[] = await response.json();
-
-  for (const f of friends) transformFriend(f, "feed");
-
-  return friends;
-};
-
-export const getReactionLikersAction = async (
+export const getReactionLikersAction = (
   targetId: string,
   pageNumber: number,
   pageSize: number,
-): Promise<Friend[]> => {
-  const jwt = await authenticateAndGetJWT();
+) => getReactionLikers(authedApi, targetId, pageNumber, pageSize);
 
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/react/${targetId}/likers?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+/** Read-only on the cookie — see `cookieApi`. */
+export const getViewedGuidesAction = () => getViewedGuides(cookieApi);
 
-  const response = await fetch(URL, {
-    cache: "no-store",
-    headers: {
-      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
-      [AUTH_HEADER_NAME]: jwt,
-    },
-  });
-
-  if (!response.ok) {
-    return [];
-  }
-
-  const likers: Friend[] = await response.json();
-
-  for (const f of likers) transformFriend(f, "feed");
-
-  return likers;
-};
-
-export const getConversationsAction = async (
-  pageNumber: number,
-  pageSize: number,
-): Promise<DataType<Conversation[]>> => {
-  const jwt = await authenticateAndGetJWT();
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/chat/conversations?pageNumber=${pageNumber}&pageSize=${pageSize}`;
-
-  const response = await fetch(URL, {
-    cache: "no-store",
-    headers: {
-      [CONTENT_TYPE_HEADER_NAME]: MEDIA_JSON_HEADER_VALUE,
-      [AUTH_HEADER_NAME]: jwt,
-    },
-  });
-
-  Logger.debug("getConversationsAction", response.status);
-  if (response.status === 404) {
-    return [];
-  } else if (!response.ok) {
-    return { message: API_MESSAGE.Error };
-  }
-
-  const result = (await response.json()) as Conversation[];
-  return result;
-};
-
-/**
- * The guides this novelist has already been through, by their own ids.
- *
- * Null when nobody is signed in, or when the service could not be reached —
- * both mean "we do not know", and a guide that auto-opens must not fire on a
- * guess. See `useUserGuide`.
- */
-export const getViewedGuidesAction = async (): Promise<string[] | null> => {
-  // The cookie is read, never validated here. `getJWTIfExists` clears a stale
-  // one, and clearing a cookie is a write — which throws outside an action's
-  // own context and would take the page down over a guide nobody asked for.
-  // The service validates the token anyway; a bad one comes back 401, which
-  // reads the same as "unknown" below.
-  const jwt = await getAuthCookie();
-  if (!jwt) return null;
-
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/guides`;
-
-  try {
-    const response = await fetch(URL, {
-      cache: "no-store",
-      headers: { [AUTH_HEADER_NAME]: jwt },
-    });
-
-    if (!response.ok) return null;
-
-    return (await response.json()) as string[];
-  } catch (error) {
-    Logger.debug("getViewedGuidesAction", error);
-    return null;
-  }
-};
-
-/**
- * Records that this novelist finished a guide, and returns the whole list back.
- * Idempotent server-side, so finishing one twice is not worth guarding against
- * here.
- */
-export const markGuideViewedAction = async (
-  guideId: string,
-): Promise<string[] | null> => {
-  // Read-only on the cookie, as above.
-  const jwt = await getAuthCookie();
-  if (!jwt) return null;
-
-  const URL = `${RP_SERVICE_URL}/rp/portfolio/novelist/guides/${encodeURIComponent(guideId)}`;
-
-  try {
-    const response = await fetch(URL, {
-      cache: "no-store",
-      headers: { [AUTH_HEADER_NAME]: jwt },
-      method: "POST",
-    });
-
-    if (!response.ok) return null;
-
-    return (await response.json()) as string[];
-  } catch (error) {
-    Logger.debug("markGuideViewedAction", error);
-    return null;
-  }
-};
+export const markGuideViewedAction = (guideId: string) =>
+  markGuideViewed(cookieApi, guideId);

@@ -1,5 +1,7 @@
 "use client";
 
+import type { SoundCue } from "@nw/types";
+import type { Song } from "@nw/types/music";
 import { type FC, useCallback, useEffect, useRef, useState } from "react";
 import { GrEdit } from "react-icons/gr";
 import { IoMdAdd } from "react-icons/io";
@@ -11,8 +13,6 @@ import {
 } from "@/app/rp/story/actions";
 import { useUIContext } from "@/hooks";
 import { useTrackDrag } from "@/lib/track-drag";
-import type { SoundCue } from "@/types";
-import type { Song } from "@/types/music";
 import { API_MESSAGE } from "@/utils/constants";
 import { CueSheet } from "./cue-sheet";
 import * as S from "./styles";

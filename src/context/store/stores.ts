@@ -1,4 +1,4 @@
-import type { StoreState } from "@/types/state";
+import type { StoreState } from "@nw/types/state";
 import { createGetFunction, useStoreSet, useStoreState } from "./use-store";
 
 type GlobalStoreKey = keyof StoreState;

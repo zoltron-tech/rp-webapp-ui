@@ -1,9 +1,9 @@
 "use client";
 
+import type { Comment as CommentType } from "@nw/types";
 import { Separator } from "radix-ui";
 import type { FC } from "react";
 import { StoreProvider } from "@/context/store/context";
-import type { Comment as CommentType } from "@/types";
 import { CommentContent } from "./comment-content";
 import { CommentFooter } from "./comment-footer";
 import { CommentSource } from "./comment-source";

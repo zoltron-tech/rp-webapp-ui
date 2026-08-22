@@ -1,12 +1,12 @@
 "use client";
 
+import type { Tag } from "@nw/types/common";
+import type { Song } from "@nw/types/music";
 import { type FC, useCallback, useEffect, useState } from "react";
 import { HexColorPicker } from "react-colorful";
 import { FaPlus, FaXmark } from "react-icons/fa6";
 import { updateSongAction } from "@/app/rp/profile/[slug]/music/action";
 import { useCustomEvents, useUIContext } from "@/hooks";
-import type { Tag } from "@/types/common";
-import type { Song } from "@/types/music";
 import { API_MESSAGE } from "@/utils/constants";
 import { EVENTS } from "@/utils/constants/custom-events";
 import { AppAlertDialog } from "../dialog";

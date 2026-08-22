@@ -62,6 +62,35 @@ export function toWireValue(fields: DateTimeFields): string {
   return `${prefix}${y}-${m}-${d} ${hh}:${mm}:00.000000`;
 }
 
+const MONTH_NAMES = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+/**
+ * The in-story date, short enough to sit on a timeline axis: "12 Mar 1892",
+ * or "12 Mar 500 BC". Returns null when there is no usable date — an in-story
+ * date is the authors' own, so it is never guessed at or defaulted.
+ */
+export function toShortStoryDate(value: string | null): string | null {
+  const fields = parseWireValue(value);
+  if (!fields) return null;
+
+  const month = MONTH_NAMES[fields.month - 1] ?? pad(fields.month);
+  const era = fields.era === "BC" ? " BC" : "";
+  return `${fields.day} ${month} ${fields.year}${era}`;
+}
+
 /** The AD date field's format: "dd-mm-yyyy". Kept in its own input from the
  *  time field so the optional-ness of time is visually obvious rather than
  *  buried inside one combined string. */

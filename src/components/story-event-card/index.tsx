@@ -1,4 +1,6 @@
 "use client";
+import type { StoryBoardEvent } from "@nw/types/story-board";
+import { truncate } from "@nw/utils";
 import classNames from "classnames";
 import { type FC, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -11,7 +13,6 @@ import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { StoryBoardEvent } from "@/types/story-board";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
@@ -28,9 +29,6 @@ type Props = React.HTMLProps<HTMLDivElement> & {
   /** When provided, editing opens in place (overlay) instead of routing away. */
   onEdit?: (eventId: string) => void;
 };
-
-const truncate = (text: string, max: number) =>
-  text.length > max ? `${text.slice(0, max)}...` : text;
 
 // Descriptions are stored as rich-text HTML; preview surfaces (card teaser,
 // tray, dialog) only have room for a plain-text snippet, so strip tags before

@@ -1,0 +1,18 @@
+{
+  "extends": "@nw/config/tsconfig.react.json",
+  "compilerOptions": {
+    "paths": {
+      "@nw/types": [
+        "../types/src"
+      ],
+      "@nw/types/*": [
+        "../types/src/*"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "../config/universal-globals.d.ts"
+  ]
+}

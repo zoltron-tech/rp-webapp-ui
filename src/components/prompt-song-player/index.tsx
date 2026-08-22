@@ -1,15 +1,15 @@
 "use client";
 
+import type { ProfileSong } from "@nw/types/music";
 import classNames from "classnames";
 import type { FC } from "react";
 import { useEffect, useRef, useState } from "react";
 import { FaPause, FaPlay, FaRegCopy } from "react-icons/fa";
+import { useUIContext } from "@/hooks";
 import {
   getSpotifyIframeApi,
   type SpotifyEmbedController,
 } from "../profile-song/spotify-iframe-api";
-import { useUIContext } from "@/hooks";
-import type { ProfileSong } from "@/types/music";
 import * as S from "./styles";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
@@ -86,7 +86,7 @@ export const PromptSongPlayer: FC<Props> = ({ song, className, ...rest }) => {
       if (cancelled || !embedHostRef.current) return;
       api.createController(
         embedHostRef.current,
-        { uri: `spotify:track:${song.spotifyTrackId}`, width: 1, height: 1 },
+        { height: 1, uri: `spotify:track:${song.spotifyTrackId}`, width: 1 },
         (embedController) => {
           controller = embedController;
           controllerRef.current = embedController;

@@ -1,5 +1,10 @@
 "use client";
 
+import type {
+  PromptSource,
+  SubmitPromptInput,
+  SubmitPromptType,
+} from "@nw/types";
 import { Form } from "radix-ui";
 import {
   type FC,
@@ -21,11 +26,6 @@ import {
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
-import type {
-  PromptSource,
-  SubmitPromptInput,
-  SubmitPromptType,
-} from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { uploadMedia } from "@/utils/upload-media";
 import {

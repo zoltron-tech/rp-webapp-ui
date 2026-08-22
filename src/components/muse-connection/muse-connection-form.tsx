@@ -1,5 +1,6 @@
 "use client";
 
+import type { MuseConnectionGroup } from "@nw/types";
 import classNames from "classnames";
 import {
   forwardRef,
@@ -31,7 +32,6 @@ import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import type { MuseConnectionGroup } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import * as S from "./styled";
 import { MuseConnectionTrayHeader } from "./tray-header";

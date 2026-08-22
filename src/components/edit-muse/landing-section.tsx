@@ -1,5 +1,7 @@
 "use client";
 
+import type { NWImage } from "@nw/types";
+import { clamp, toCropFilter, VALID_IMAGE_TYPES } from "@nw/utils";
 import { Separator } from "radix-ui";
 import { useCallback, useRef, useState } from "react";
 import {
@@ -20,7 +22,6 @@ import { deleteMedia } from "@/app/rp/profile/actions";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
-import type { ImageCropFilter, NWImage } from "@/types";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { AvatarUploadField } from "../common/avatar-upload-field";
@@ -30,27 +31,6 @@ import { useMuseState, useMuseStoreSet } from "./muse.store";
 import * as S from "./styled";
 import { useMuseSave } from "./use-muse-save";
 
-const VALID_IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif"];
-
-function clamp(v: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, v));
-}
-
-function toCropFilter(
-  src: string,
-  x: number,
-  y: number,
-  scale: number,
-): ImageCropFilter {
-  const scalePct = Math.round(scale * 100);
-  return {
-    height: scalePct,
-    src,
-    width: scalePct,
-    x: Math.round(x),
-    y: Math.round(y),
-  };
-}
 
 type EditView =
   | "appearance"

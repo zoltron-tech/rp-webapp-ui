@@ -1,4 +1,5 @@
 import styled, { keyframes } from "styled-components";
+import { fadeIn as overlayFadeIn, slideInUp } from "@/theme/animations";
 
 /**
  * Chrome for [UserGuideDialog] — a centred dialog on desktop, a slide-up tray
@@ -8,16 +9,6 @@ import styled, { keyframes } from "styled-components";
  * Sized against the 375 × 667 baseline: the header and footer are fixed, and
  * everything else scrolls between them, so Next is always on screen.
  */
-
-const overlayFadeIn = keyframes`
-  from { opacity: 0; }
-  to   { opacity: 1; }
-`;
-
-const slideInUp = keyframes`
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
-`;
 
 const popIn = keyframes`
   from { opacity: 0; transform: translate(-50%, -48%) scale(0.97); }

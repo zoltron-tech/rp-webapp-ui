@@ -2,6 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import type { StoryNote } from "@nw/types";
 import type { FC } from "react";
 import {
   LuArchive,
@@ -11,7 +12,6 @@ import {
   LuPinOff,
 } from "react-icons/lu";
 import { RxDragHandleDots2 } from "react-icons/rx";
-import type { StoryNote } from "@/types";
 import { toFormattedDate } from "@/utils/helpers";
 import { Ballot, votesLabel } from "./ballot";
 import * as S from "./styles";

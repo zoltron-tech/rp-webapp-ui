@@ -1,6 +1,10 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
+import type { Fandom, Muse } from "@nw/types";
+import type { NWImage } from "@nw/types/novelist";
+import type { PrivacyLevel } from "@nw/types/prompt";
+import { clamp, toCropFilter } from "@nw/utils";
 import classNames from "classnames";
 import { Tooltip } from "radix-ui";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -35,33 +39,10 @@ import AvatarCropDialog from "@/components/dialog/avatar-crop-dialog";
 import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
-import type { Fandom, Muse } from "@/types";
-import type { ImageCropFilter, NWImage } from "@/types/novelist";
-import type { PrivacyLevel } from "@/types/prompt";
 import { ScoreBadgeIcon } from "@/utils/badge-icons";
 import { API_MESSAGE } from "@/utils/constants";
 import * as S from "../styles";
 import PennedBy from "./PennedBy";
-
-function clamp(v: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, v));
-}
-
-function toCropFilter(
-  src: string,
-  x: number,
-  y: number,
-  scale: number,
-): ImageCropFilter {
-  const scalePct = Math.round(scale * 100);
-  return {
-    height: scalePct,
-    src,
-    width: scalePct,
-    x: Math.round(x),
-    y: Math.round(y),
-  };
-}
 
 const PRIVACY_OPTIONS: PrivacyLevel[] = ["PUBLIC", "FRIENDS", "ONLY_ME"];
 const PRIVACY_LABELS: Record<string, string> = {

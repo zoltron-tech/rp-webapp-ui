@@ -1,5 +1,6 @@
 "use client";
 
+import type { Codex, StoryBoard } from "@nw/types";
 import {
   type FC,
   type ReactNode,
@@ -16,7 +17,6 @@ import { StorySoundscapeView } from "@/components/story-soundscape/workspace-vie
 import { StoryTimelineView } from "@/components/story-timeline";
 import { UserGuideDialog, useUserGuide } from "@/components/user-guide-dialog";
 import { STORYBOARD_GUIDE } from "@/components/user-guide-dialog/guides/storyboard";
-import type { StoryBoard } from "@/types";
 import * as S from "./styles";
 import {
   isWorkspaceView,
@@ -34,6 +34,9 @@ type Props = {
   /** The Chapters view — it stays on the page so it can keep its own
    *  chapter-editor overlays and limit checks. */
   chaptersView: ReactNode;
+  /** Promo/demo only — hands the Codex view its data instead of fetching it.
+   *  See `StoryCodexView`'s `seed`. */
+  codexSeed?: Codex | null;
 };
 
 /**
@@ -52,6 +55,7 @@ export const StoryboardWorkspace: FC<Props> = ({
   story,
   canEdit,
   chaptersView,
+  codexSeed = null,
 }) => {
   const [view, setView] = useState<WorkspaceView>("chapters");
   /** Views opened so far — they stay mounted once activated. */
@@ -193,6 +197,7 @@ export const StoryboardWorkspace: FC<Props> = ({
                 chapters={chapters}
                 cast={story?.cast ?? []}
                 canEdit={canEdit}
+                seed={codexSeed}
               />
             </S.ViewSlot>
           )}

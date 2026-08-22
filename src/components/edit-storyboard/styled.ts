@@ -1,5 +1,6 @@
 import { Dialog } from "radix-ui";
 import styled, { keyframes } from "styled-components";
+import { fadeIn as overlayShow, spin } from "@/theme/animations";
 
 /* display:contents so this wrapper doesn't sit between the dialog/tray
    shell and Card — Card's flex:1/min-height:0 needs to reach the shell's
@@ -7,10 +8,6 @@ import styled, { keyframes } from "styled-components";
    break and content overflows the shell instead. */
 export const EditStoryboardPageRoot = styled.div`
   display: contents;
-`;
-
-const spin = keyframes`
-  to { transform: rotate(360deg); }
 `;
 
 export const EmbeddedLoading = styled.div`
@@ -796,11 +793,6 @@ export const PickerClear = styled.button`
   &:hover {
     color: var(--tomato-9);
   }
-`;
-
-const overlayShow = keyframes`
-  from { opacity: 0; }
-  to { opacity: 1; }
 `;
 
 const contentShow = keyframes`

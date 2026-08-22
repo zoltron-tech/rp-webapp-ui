@@ -1,5 +1,7 @@
 "use client";
 
+import type { NWImage } from "@nw/types/novelist";
+import { ACCENT_MAP } from "@nw/types/theme";
 import { type FC, useState } from "react";
 import {
   FiCheck,
@@ -22,8 +24,6 @@ import { Button, EmailVerifiedBadge, ShouldRender } from "@/components/common";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
-import type { NWImage } from "@/types/novelist";
-import { ACCENT_MAP } from "@/types/theme";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { mainVerseMuses } from "@/utils/muse";

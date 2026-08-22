@@ -1,4 +1,5 @@
 import styled, { keyframes } from "styled-components";
+import { fadeIn as overlayFadeIn, slideInUp } from "@/theme/animations";
 
 export const ChoiceGrid = styled.div`
   display: grid;
@@ -94,16 +95,6 @@ export const BackButton = styled.button`
 `;
 
 // ── Mobile picker tray ────────────────────────────────────────────────────────
-
-const overlayFadeIn = keyframes`
-  from { opacity: 0; }
-  to   { opacity: 1; }
-`;
-
-const slideInUp = keyframes`
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
-`;
 
 export const PickerTrayOverlay = styled.div`
   position: fixed;

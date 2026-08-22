@@ -1,5 +1,7 @@
 "use client";
 
+import type { Message } from "@nw/types/conversation";
+import { formatTime } from "@nw/utils";
 import classNames from "classnames";
 import moment from "moment";
 import {
@@ -18,7 +20,6 @@ import { RiFlagFill } from "react-icons/ri";
 import { TbAlertCircle, TbError404 } from "react-icons/tb";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
-import type { Message } from "@/types/conversation";
 import { ROUTES } from "@/utils/constants/routes";
 import { AppAlertDialog } from "../../dialog";
 import { AppImageViewer } from "../../image-viewer/AppImageViewer";
@@ -54,47 +55,47 @@ const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "gif", "webp", "bmp"];
 const VIDEO_EXTENSIONS = ["mp4", "webm", "mov", "m4v", "ogv"];
 const AUDIO_EXTENSIONS = ["mp3", "mpeg", "wav", "ogg", "m4a", "aac"];
 const REACTION_EMOJI_MAP: Record<string, string> = {
-  // core (very common / backend-compatible)
-  heart: "❤️",
-  broken_heart: "💔",
-  laugh: "😂",
-  sad: "😢",
-  angry: "😡",
-  wow: "😮",
-  mind_blown: "🤯",
-
-  // legacy aliases
-  love: "❤️",
-  haha: "😂",
-
-  // common thumbs/affirmations
-  like: "👍",
-  ok: "👌🏼",
+  "100": "💯",
 
   // light / affectionate
   adore: "🥰",
-  kiss: "😘",
-  smile: "🙂",
-  biting_lip: "🫦",
 
   // high-react / expressive
   amazing: "🤩",
-  cry: "😭",
-  skull: "💀",
-  respect: "🫡",
-  "100": "💯",
-  hundred: "💯",
-  tada: "🎉",
+  angry: "😡",
+  biting_lip: "🫦",
+  broken_heart: "💔",
   celebrate: "🎉",
-  pray: "🙏",
   clap: "👏",
+  cry: "😭",
   fire: "🔥",
+  gem: "💎",
+  haha: "😂",
+  // core (very common / backend-compatible)
+  heart: "❤️",
+  hundred: "💯",
+  kiss: "😘",
+  laugh: "😂",
+
+  // common thumbs/affirmations
+  like: "👍",
+
+  // legacy aliases
+  love: "❤️",
+  mind_blown: "🤯",
+  ok: "👌🏼",
+  pray: "🙏",
+  respect: "🫡",
+  ribbon: "🎀",
+  sad: "😢",
+  skull: "💀",
+  smile: "🙂",
 
   // utility / celebratory
   star: "⭐",
-  gem: "💎",
   strong: "💪",
-  ribbon: "🎀",
+  tada: "🎉",
+  wow: "😮",
 };
 
 // Reactions offered in the bubble menu (ordered by mood / frequency).
@@ -673,17 +674,6 @@ const LinkPreview: FC<{ url: string }> = ({ url }) => {
   );
 };
 
-const formatTime = (seconds: number) => {
-  if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
-
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60)
-    .toString()
-    .padStart(2, "0");
-
-  return `${mins}:${secs}`;
-};
-
 const AttachmentFallback: FC = () => (
   <S.AttachmentFallback>
     <TbError404 size={32} />
@@ -1249,7 +1239,7 @@ export const ChatBubble: FC<Props> = ({
 
   const scrollPicker = (dir: "left" | "right") => {
     // 44px button + 6px gap = one emoji step
-    pickerRef.current?.scrollBy({ left: dir === "right" ? 50 : -50, behavior: "smooth" });
+    pickerRef.current?.scrollBy({ behavior: "smooth", left: dir === "right" ? 50 : -50 });
   };
 
   const reactionPicker = onReact ? (
@@ -1417,7 +1407,7 @@ export const ChatBubble: FC<Props> = ({
           trigger={<BsThreeDots size={14} />}
           items={menuItems}
           headerContent={reactionPicker}
-          {...(isSender ? { open: menuOpen, onOpenChange: setMenuOpen } : {})}
+          {...(isSender ? { onOpenChange: setMenuOpen, open: menuOpen } : {})}
         />
       </S.MessageMenuWrapper>
 
@@ -1672,7 +1662,7 @@ export const ChatBubble: FC<Props> = ({
           trigger={<BsThreeDots size={14} />}
           items={menuItems}
           headerContent={reactionPicker}
-          {...(!isSender ? { open: menuOpen, onOpenChange: setMenuOpen } : {})}
+          {...(!isSender ? { onOpenChange: setMenuOpen, open: menuOpen } : {})}
         />
       </S.MessageMenuWrapper>
 

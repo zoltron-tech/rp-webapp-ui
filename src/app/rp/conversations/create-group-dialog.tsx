@@ -1,11 +1,11 @@
 "use client";
 
+import type { Conversation, Friend } from "@nw/types";
 import { useState } from "react";
 import { Input } from "@/components/common";
 import { AppAlertDialog } from "@/components/dialog";
 import { FriendSelectionDropdown } from "@/components/friends-selection-dropdown";
 import { useUIContext } from "@/hooks/use-ui-context";
-import type { Conversation, Friend } from "@/types";
 import { createGroupAction } from "./actions";
 
 type CreateGroupDialogProps = {

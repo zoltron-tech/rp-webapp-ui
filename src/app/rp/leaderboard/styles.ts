@@ -1,12 +1,9 @@
 import styled, { keyframes } from "styled-components";
+import { spin } from "@/theme/animations";
 
 const fadeUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
-`;
-
-const spin = keyframes`
-  to { transform: rotate(360deg); }
 `;
 
 // ─── Page shell ───────────────────────────────────────────────────────────────

@@ -1,12 +1,9 @@
 import { css, keyframes, styled } from "styled-components";
+import { spin } from "@/theme/animations";
 
 const eq = keyframes`
   0%, 100% { transform: scaleY(0.3); }
   50% { transform: scaleY(1); }
-`;
-
-const spin = keyframes`
-  to { transform: rotate(360deg); }
 `;
 
 /**

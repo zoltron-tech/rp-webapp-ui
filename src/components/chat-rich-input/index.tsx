@@ -1,5 +1,6 @@
 "use client";
 
+import type { MentionDataItem } from "@nw/types";
 import type { ReactNode } from "react";
 import {
   forwardRef,
@@ -10,7 +11,6 @@ import {
   useRef,
   useState,
 } from "react";
-import type { MentionDataItem } from "@/types";
 import { MentionDropdown } from "../mention-dropdown";
 import { createMentionChip } from "../rich-text-editor-input/mention-chip";
 import * as S from "./styled";

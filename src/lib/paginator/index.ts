@@ -1,14 +1,12 @@
+/**
+ * Read-time pagination.
+ *
+ * There are no page formats here any more. A page is whatever the reader's
+ * screen gives the book, and `paginate` decides where it ends by measuring the
+ * flow that is actually on that screen — so a break never lands inside an
+ * image or a dialog, and nothing is clipped out of sight.
+ */
 export { FLOW_ITEM_ATTR, paginate } from "./measure";
-export {
-  contentHeight,
-  contentWidth,
-  DEFAULT_PAGE_FORMAT,
-  PAGE_FORMATS,
-  PAGE_SPECS,
-  type PageFormat,
-  type PageSpec,
-  resolvePageSpec,
-} from "./page-formats";
 export {
   EMPTY_PAGE_MAP,
   type FlowKey,
@@ -17,4 +15,3 @@ export {
   type PageMap,
   threadKey,
 } from "./types";
-export { usePaginator } from "./use-paginator";

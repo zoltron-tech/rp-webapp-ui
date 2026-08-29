@@ -6,8 +6,8 @@ import { FaRegTrashCan } from "react-icons/fa6";
 import { ResponsiveSheet } from "@/components/common/responsive-sheet";
 import * as S from "./styles";
 
-/** Lane accents, drawn from the app's existing palette variables. */
-export const LANE_COLORS = [
+/** Timeline accents, drawn from the app's existing palette variables. */
+export const TIMELINE_COLORS = [
   "#e5484d",
   "#f76b15",
   "#ffb224",
@@ -20,15 +20,16 @@ export const LANE_COLORS = [
 
 type Props = {
   open: boolean;
-  /** Null when creating a new lane. */
+  /** Null when creating a new timeline. The wire shape is still a "lane" —
+   *  only the reader-facing name changed. */
   lane: StoryTimelineLane | null;
   onClose: () => void;
   onSave: (lane: StoryTimelineLane) => void;
   onDelete?: (lane: StoryTimelineLane) => void;
 };
 
-/** Create/rename/recolor one timeline lane (a POV, a plotline, a faction). */
-export const LaneSheet: FC<Props> = ({
+/** Create/rename/recolor one timeline (a POV, a plotline, a faction). */
+export const TimelineSheet: FC<Props> = ({
   open,
   lane,
   onClose,
@@ -38,11 +39,11 @@ export const LaneSheet: FC<Props> = ({
   const [name, setName] = useState("");
   const [color, setColor] = useState<string | null>(null);
 
-  // Reset whenever the sheet opens on a different lane.
+  // Reset whenever the sheet opens on a different timeline.
   useEffect(() => {
     if (!open) return;
     setName(lane?.name ?? "");
-    setColor(lane?.color ?? LANE_COLORS[0]);
+    setColor(lane?.color ?? TIMELINE_COLORS[0]);
   }, [open, lane]);
 
   const trimmed = name.trim();
@@ -50,7 +51,7 @@ export const LaneSheet: FC<Props> = ({
   return (
     <ResponsiveSheet
       open={open}
-      title={lane ? "Edit lane" : "New lane"}
+      title={lane ? "Edit timeline" : "New timeline"}
       confirmDisabled={trimmed.length === 0}
       onConfirm={() =>
         onSave({
@@ -75,13 +76,13 @@ export const LaneSheet: FC<Props> = ({
       <S.Field as="div">
         Colour
         <S.SwatchRow>
-          {LANE_COLORS.map((swatch) => (
+          {TIMELINE_COLORS.map((swatch) => (
             <S.Swatch
               key={swatch}
               type="button"
               $color={swatch}
               $active={color === swatch}
-              aria-label={`Lane colour ${swatch}`}
+              aria-label={`Timeline colour ${swatch}`}
               aria-pressed={color === swatch}
               onClick={() => setColor(swatch)}
             />
@@ -90,14 +91,15 @@ export const LaneSheet: FC<Props> = ({
       </S.Field>
 
       <S.Hint>
-        A lane is a thread of the story — a POV character, a plotline, a
-        faction. Chapters sit on one lane each.
+        A timeline is a thread of the story — a POV character, a plotline, a
+        faction. It runs as one line across the board, and its chapters branch
+        off it above and below.
       </S.Hint>
 
       {lane && onDelete && (
         <S.DangerButton type="button" onClick={() => onDelete(lane)}>
           <FaRegTrashCan size={13} />
-          Delete lane
+          Delete timeline
         </S.DangerButton>
       )}
     </ResponsiveSheet>

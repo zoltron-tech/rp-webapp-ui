@@ -312,6 +312,11 @@ export const PartitionContainer = styled.div`
 export const ScrollRowWrap = styled.div`
   position: relative;
   width: 100%;
+  /* The nav arrows carry Z_INDEX.SCROLL_JUMP (40), which outranks the
+     sticky TopBar (10) in the shared page-container stacking context: without
+     a local stacking context here they paint over the top bar as the row
+     scrolls underneath it. */
+  isolation: isolate;
 `;
 
 /** Circular scroll-by-one-page button overlaid on a horizontal row's edge. */

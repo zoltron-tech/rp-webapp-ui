@@ -17,6 +17,8 @@ export type BlockPlacement = {
 type Props = {
   open: boolean;
   event: StoryBoardEvent | null;
+  /** The story's timelines. Still `lanes` on the wire — only the
+   *  reader-facing name changed. */
   lanes: StoryTimelineLane[];
   /** 1-based position in reading order. */
   readingPosition: number;
@@ -144,10 +146,10 @@ export const BlockSheet: FC<Props> = ({
           </S.Field>
 
           <S.Field as="div">
-            Lane
+            Timeline
             <S.ChoiceRow>
               {lanes.length === 0 && (
-                <S.Hint>Add a lane first — chapters sit on one each.</S.Hint>
+                <S.Hint>Add a timeline first — chapters branch off one.</S.Hint>
               )}
               {lanes.map((lane) => (
                 <S.Choice

@@ -13,9 +13,12 @@ type PennedByType =
 export default function PennedBy({
   pennedBy,
   accent,
+  textColor,
 }: {
   pennedBy: PennedByType;
   accent?: string | null;
+  /** Advanced appearance override; falls back to the default text colours. */
+  textColor?: string | null;
 }) {
   const { routeToPage } = usePageRouter();
 
@@ -31,11 +34,18 @@ export default function PennedBy({
   };
 
   return (
-    <S.PennedByRow>
+    <S.PennedByRow $textColor={textColor ?? null}>
       <span>Penned by</span>
-      <S.PennedByChip accent={accent ?? null} onClick={handleClick}>
+      <S.PennedByChip
+        accent={accent ?? null}
+        $textColor={textColor ?? null}
+        onClick={handleClick}
+      >
         <S.PennedByMiniAvatar $src={pennedBy.image ?? undefined} />
-        <S.PennedByName title={pennedBy.username}>
+        <S.PennedByName
+          title={pennedBy.username}
+          $textColor={textColor ?? null}
+        >
           {pennedBy.username}
         </S.PennedByName>
       </S.PennedByChip>

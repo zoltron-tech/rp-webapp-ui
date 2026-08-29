@@ -74,9 +74,11 @@ export const ShareProfileDialog: FC<ShareProfileDialogProps> = ({
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [startY, setStartY] = useState(0);
 
+  // The short, readable form — this link is going somewhere a person will
+  // read it, not into the app's own router.
   const profileUrl =
     typeof window !== "undefined" && novelist?.username
-      ? `${window.location.origin}${ROUTES.Profile.View(novelist.username).Index}`
+      ? `${window.location.origin}${ROUTES.Profile.Share(novelist.username)}`
       : "";
   const displayUrl = profileUrl.replace(/^https?:\/\//, "");
   const canNativeShare =

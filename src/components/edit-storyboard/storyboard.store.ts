@@ -5,7 +5,6 @@ import {
   useStoreSet,
   useStoreState,
 } from "@/context/store/use-store";
-import { DEFAULT_PAGE_FORMAT, type PageFormat } from "@/lib/paginator";
 
 export type StoryboardState = {
   id: string | null;
@@ -14,8 +13,14 @@ export type StoryboardState = {
   image: string | null;
   avatar: NWImage | null;
   isPublic: boolean;
-  /** Page geometry for the book layout — shared by every co-author. */
-  pageFormat: PageFormat;
+  /**
+   * Whatever page format the story was saved with.
+   *
+   * The client no longer picks one or reads it: the book cuts its pages from
+   * the screen at read time. It is carried here only so a save round-trips the
+   * stored value instead of clearing it.
+   */
+  pageFormat: string | null;
   tags: Tag[];
   fandom: Fandom | null;
   genres: Genre[];
@@ -34,7 +39,7 @@ export const INITIAL_STATE: StoryboardState = {
   isPublic: false,
   members: [],
   name: "",
-  pageFormat: DEFAULT_PAGE_FORMAT,
+  pageFormat: null,
   tags: [],
 };
 

@@ -54,6 +54,7 @@ import {
 } from "../../muse/actions";
 import { deleteMedia } from "../../profile/actions";
 import { getPromptsByMuseAction } from "../../prompt/actions";
+import { getMuseAppearance } from "./appearance";
 import { BackStorySection } from "./sections/back-story-section";
 import { CardImageSection } from "./sections/card-image-section";
 import { ConnectionsSection } from "./sections/connections-section";
@@ -105,13 +106,19 @@ function museToNavItem(m: Muse): MuseNavItem | null {
     featuredSong: m.featuredSong,
     firstName: m.firstName,
     gender: null,
+    hideExpandedBackground: m.hideExpandedBackground ?? false,
+    hideSideMenuBackground: m.hideSideMenuBackground ?? false,
     id: m.id,
     image: m.image,
     lastName: m.lastName,
+    nameColor: m.nameColor ?? null,
     nicknames: m.nicknames,
     note: m.note,
     originalVerseId: m.originalVerseId ?? null,
+    pennedByColor: m.pennedByColor ?? null,
     privacy: m.privacy,
+    sideMenuBgColor: m.sideMenuBgColor ?? null,
+    sideMenuTextColor: m.sideMenuTextColor ?? null,
     song: m.song,
     story: m.story,
     useAccent: m.useAccent,
@@ -643,6 +650,8 @@ export default function MuseProfilePage({}) {
   const accent = museVisual?.useAccent
     ? (museVisual.accent ?? undefined)
     : undefined;
+  const { sideMenuBgColor, sideMenuTextColor, hideSideMenuBackground } =
+    getMuseAppearance(museVisual);
 
   const bannerSrc =
     (museVisual?.useExtraImages && getSafeImage(museVisual?.wallpaper?.src)) ||
@@ -1097,7 +1106,11 @@ export default function MuseProfilePage({}) {
       </ShouldRender>
 
       {/* Section navigation */}
-      <S.SideMenu aria-label="Character sections">
+      <S.SideMenu
+        aria-label="Character sections"
+        $bgColor={sideMenuBgColor}
+        $hideChrome={hideSideMenuBackground}
+      >
         <S.MenuHighlight
           $accent={accent}
           style={{
@@ -1112,6 +1125,7 @@ export default function MuseProfilePage({}) {
           type="button"
           onClick={() => transition("CARD_IMAGE")}
           className={`card-image-mobile-only ${is("CARD_IMAGE") ? "selected" : ""}`}
+          $textColor={sideMenuTextColor}
           $accent={accent}
         >
           <S.MenuButtonIcon>
@@ -1124,6 +1138,7 @@ export default function MuseProfilePage({}) {
           type="button"
           onClick={() => transition("MUSE_INFO")}
           className={is("MUSE_INFO") ? "selected" : ""}
+          $textColor={sideMenuTextColor}
           $accent={accent}
         >
           <S.MenuButtonIcon>
@@ -1136,6 +1151,7 @@ export default function MuseProfilePage({}) {
           type="button"
           onClick={() => transition("BACK_STORY")}
           className={is("BACK_STORY") ? "selected" : ""}
+          $textColor={sideMenuTextColor}
           $accent={accent}
         >
           <S.MenuButtonIcon>
@@ -1148,6 +1164,7 @@ export default function MuseProfilePage({}) {
           type="button"
           onClick={() => transition("PROMPTS")}
           className={is("PROMPTS") ? "selected" : ""}
+          $textColor={sideMenuTextColor}
           $accent={accent}
         >
           <S.MenuButtonIcon>
@@ -1160,6 +1177,7 @@ export default function MuseProfilePage({}) {
           type="button"
           onClick={() => transition("CONNECTIONS")}
           className={is("CONNECTIONS") ? "selected" : ""}
+          $textColor={sideMenuTextColor}
           $accent={accent}
         >
           <S.MenuButtonIcon>
@@ -1172,6 +1190,7 @@ export default function MuseProfilePage({}) {
           type="button"
           onClick={() => transition("GALLERY")}
           className={is("GALLERY") ? "selected" : ""}
+          $textColor={sideMenuTextColor}
           $accent={accent}
         >
           <S.MenuButtonIcon>
@@ -1184,6 +1203,7 @@ export default function MuseProfilePage({}) {
           type="button"
           onClick={() => transition("MORE")}
           className={is("MORE") ? "selected" : ""}
+          $textColor={sideMenuTextColor}
           $accent={accent}
         >
           <S.MenuButtonIcon>

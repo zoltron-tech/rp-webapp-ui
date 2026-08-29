@@ -13,7 +13,6 @@ import {
 import { BsArrowLeft, BsGlobe2, BsLockFill } from "react-icons/bs";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { HiOutlineCamera } from "react-icons/hi2";
-import { LuBookOpen } from "react-icons/lu";
 import { MdAutoStories, MdOutlineTheaters } from "react-icons/md";
 import { deleteMedia } from "@/app/rp/profile/actions";
 import {
@@ -31,7 +30,6 @@ import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUploadMedia } from "@/hooks/use-upload-media";
-import { resolvePageSpec } from "@/lib/paginator";
 import { API_MESSAGE } from "@/utils/constants";
 import {
   STORY_COVER_ASPECT_RATIO,
@@ -42,7 +40,6 @@ import { plainTextLength } from "@/utils/rich-text";
 import { StoryboardMembersDialog } from "../storyboard-members-dialog";
 import FandomPicker from "./fandom-picker";
 import GenrePicker from "./genre-picker";
-import { PageFormatPicker } from "./page-format-picker";
 import { useStoryboardState, useStoryboardStoreSet } from "./storyboard.store";
 import * as S from "./styled";
 
@@ -83,10 +80,12 @@ const EditStoryboardDataCard = forwardRef<
   const image = useStoryboardState("image");
   const avatar = useStoryboardState("avatar");
   const isPublic = useStoryboardState("isPublic");
+  // Still read and still saved, so a save round-trips whatever format the
+  // story was stored with — there is simply no longer any UI that sets it.
+  const pageFormat = useStoryboardState("pageFormat");
   const tags = useStoryboardState("tags");
   const fandom = useStoryboardState("fandom");
   const genres = useStoryboardState("genres");
-  const pageFormat = useStoryboardState("pageFormat");
   const members = useStoryboardState("members");
   const createdByUsername = useStoryboardState("createdByUsername");
   const setStoryboardState = useStoryboardStoreSet();
@@ -312,7 +311,7 @@ const EditStoryboardDataCard = forwardRef<
       isPublic: response.isPublic,
       members: response.members ?? [],
       name: response.name,
-      pageFormat: resolvePageSpec(response.pageFormat).value,
+      pageFormat: response.pageFormat ?? null,
       tags: response.tags ?? [],
     });
     initialSnapshot.current = {
@@ -322,7 +321,7 @@ const EditStoryboardDataCard = forwardRef<
       genres: response.genres ?? [],
       isPublic: response.isPublic,
       name: response.name,
-      pageFormat: resolvePageSpec(response.pageFormat).value,
+      pageFormat: response.pageFormat ?? null,
     };
     setAvatarChanged(false);
     setTempUploadedImage(null);
@@ -562,22 +561,6 @@ const EditStoryboardDataCard = forwardRef<
             value={genres}
             onChange={(next) => setStoryboardState({ genres: next })}
           />
-        </S.Section>
-
-        <S.Section>
-          <S.SectionLabel as="span">
-            <LuBookOpen style={{ marginRight: 4, verticalAlign: "-2px" }} />
-            Page format
-          </S.SectionLabel>
-          <PageFormatPicker
-            value={pageFormat}
-            onChange={(next) => setStoryboardState({ pageFormat: next })}
-          />
-          <S.VisibilityHint>
-            Sets the page size the book layout paginates against. It applies to
-            everyone reading or writing this story, so co-authors see the same
-            page breaks.
-          </S.VisibilityHint>
         </S.Section>
 
         {id && (

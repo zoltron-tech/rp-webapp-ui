@@ -35,6 +35,7 @@ import {
   setStoryNoteFlagsAction,
   voteOnStoryNotePollAction,
 } from "@/app/rp/story/actions";
+import { PushPinIcon } from "@/components/user-menu/user-menu-icons";
 import { useUIContext } from "@/hooks";
 import { API_MESSAGE } from "@/utils/constants";
 import { toPlainText } from "@/utils/rich-text";
@@ -441,7 +442,10 @@ export const StoryNotesView: FC<Props> = ({ storyboardId, canEdit }) => {
         <>
           {pinned.length > 0 && (
             <>
-              <S.SectionLabel>Pinned</S.SectionLabel>
+              <S.SectionLabel>
+                <PushPinIcon size={13} />
+                Pinned
+              </S.SectionLabel>
               {renderGrid("pinned", pinned)}
             </>
           )}

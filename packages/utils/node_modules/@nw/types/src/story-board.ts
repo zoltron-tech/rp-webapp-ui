@@ -229,6 +229,47 @@ export interface CodexRelationship {
   createdBy?: string | null;
 }
 
+/**
+ * One character in a group.
+ *
+ * The id and its kind travel together, exactly as an end of a relationship
+ * does: the muse and story-character id spaces are separate, so an id on its
+ * own does not say who somebody is.
+ */
+export interface CodexGroupMember {
+  id: string;
+  refType: CharacterRefType;
+}
+
+/**
+ * A named, coloured set of the story's characters — a house, a clan, a crew,
+ * an affiliation.
+ *
+ * A relationship is a line between exactly two characters, which is the wrong
+ * shape for "these five are Gryffindor": an affiliation is a *set*, it carries
+ * a name of its own, and a character belongs to as many as the story says. The
+ * mesh draws each group as a coloured field around its members, and where two
+ * fields overlap it paints the blend of their colours — so somebody in both
+ * houses reads as being in both, without a line being drawn anywhere.
+ *
+ * Two members at least: a group of one is that character, and a field around a
+ * single disc says nothing the disc does not already say.
+ */
+export interface CodexGroup {
+  id: string | null;
+  storyBoardId?: string | null;
+  /** The authors' own words: "Gryffindor", "House Corvin", "the Ninth". */
+  name: string;
+  /** A hex, used in both themes — the same single choice a custom tone makes. */
+  color: string;
+  /** Legend order, and the order the mesh paints the fields in. */
+  ordinal: number;
+  /** The whole membership. The server diffs this against what it has stored,
+   *  so send the whole set, not a delta. */
+  members: CodexGroupMember[];
+  createdBy?: string | null;
+}
+
 // ── In-story characters ────────────────────────────────────────────────────
 // The storyboard's own shared pool, beside the derived cast of muses. A muse
 // belongs to one novelist and travels between stories; one of these belongs to
@@ -285,6 +326,9 @@ export interface Codex {
   characters: StoryCharacter[];
   /** Tones the authors defined for themselves, on top of the built-in three. */
   tones: CodexTone[];
+  /** The houses, clans and affiliations this story sorts its characters into,
+   *  drawn on the mesh as coloured fields around their members. */
+  groups?: CodexGroup[];
 }
 
 // ── Maps ───────────────────────────────────────────────────────────────────

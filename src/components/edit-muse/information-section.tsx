@@ -73,6 +73,14 @@ export function InformationSection({
   const privacy = useMuseState("privacy");
   const accent = useMuseState("accent");
   const useAccent = useMuseState("useAccent");
+  // Carried through untouched so this partial save doesn't reset the advanced
+  // appearance flags (booleans always overwrite server-side).
+  const nameColor = useMuseState("nameColor");
+  const pennedByColor = useMuseState("pennedByColor");
+  const sideMenuBgColor = useMuseState("sideMenuBgColor");
+  const sideMenuTextColor = useMuseState("sideMenuTextColor");
+  const hideExpandedBackground = useMuseState("hideExpandedBackground");
+  const hideSideMenuBackground = useMuseState("hideSideMenuBackground");
   const useExtraImages = useMuseState("useExtraImages");
   const extraAttributes = useMuseState("extraAttributes");
   const setMuseState = useMuseStoreSet();
@@ -225,11 +233,19 @@ export function InformationSection({
         extraAttributes,
         fandom: (fandom?.id ?? "FANDOMLESS") as unknown as Fandom,
         firstName: firstName?.trim() ?? "",
+        hideExpandedBackground,
+        hideSideMenuBackground,
         image: image ?? "",
         lastName: lastName?.trim() ?? "",
+        // Empty means "cleared", null would mean "not sent" — see
+        // `CreateUpdateMuse`. This form holds the whole muse, so it says.
+        nameColor: nameColor?.trim() ?? "",
         nicknames: nicknames ?? [],
         note: note ?? "",
+        pennedByColor: pennedByColor?.trim() ?? "",
         privacy,
+        sideMenuBgColor: sideMenuBgColor?.trim() ?? "",
+        sideMenuTextColor: sideMenuTextColor?.trim() ?? "",
         song: null,
         story: story ?? null,
         tags: null,
@@ -272,6 +288,12 @@ export function InformationSection({
       accent,
       useAccent,
       useExtraImages,
+      nameColor,
+      pennedByColor,
+      sideMenuBgColor,
+      sideMenuTextColor,
+      hideExpandedBackground,
+      hideSideMenuBackground,
       pairs,
       id,
       setMuseState,

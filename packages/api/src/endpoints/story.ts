@@ -6,6 +6,7 @@ import type {
   Codex,
   CodexCategory,
   CodexEntry,
+  CodexGroup,
   CodexRelationship,
   CodexTone,
   SoundCue,
@@ -172,10 +173,7 @@ export const saveStoryBoardEventThread = async (
   return { message: response.ok ? API_MESSAGE.Success : API_MESSAGE.Error };
 };
 
-export const deleteStoryBoardEventThread = (
-  api: ApiClient,
-  threadId: string,
-) =>
+export const deleteStoryBoardEventThread = (api: ApiClient, threadId: string) =>
   remove(
     api,
     `${STORY}/event/thread/${threadId}`,
@@ -400,6 +398,21 @@ export const saveCodexTone = (
 export const deleteCodexTone = (api: ApiClient, toneId: string) =>
   remove(api, `${STORY}/codex/tone/${toneId}`, "deleteCodexToneAction");
 
+export const saveCodexGroup = (
+  api: ApiClient,
+  storyboardId: string,
+  group: CodexGroup,
+) =>
+  save<CodexGroup>(
+    api,
+    `${STORY}/${storyboardId}/codex/group`,
+    "saveCodexGroupAction",
+    group,
+  );
+
+export const deleteCodexGroup = (api: ApiClient, groupId: string) =>
+  remove(api, `${STORY}/codex/group/${groupId}`, "deleteCodexGroupAction");
+
 // ─── Maps ────────────────────────────────────────────────────────────────────
 
 export const getStoryMaps = (api: ApiClient, storyboardId: string) =>
@@ -507,7 +520,11 @@ export const saveStoryCharacter = (
   );
 
 export const deleteStoryCharacter = (api: ApiClient, characterId: string) =>
-  remove(api, `${STORY}/character/${characterId}`, "deleteStoryCharacterAction");
+  remove(
+    api,
+    `${STORY}/character/${characterId}`,
+    "deleteStoryCharacterAction",
+  );
 
 // ─── Notes ───────────────────────────────────────────────────────────────────
 
@@ -559,9 +576,14 @@ export const voteOnStoryNotePoll = (
   noteId: string,
   optionId: string,
 ) =>
-  save<StoryNote>(api, `${STORY}/note/${noteId}/vote`, "voteOnStoryNotePollAction", {
-    optionId,
-  });
+  save<StoryNote>(
+    api,
+    `${STORY}/note/${noteId}/vote`,
+    "voteOnStoryNotePollAction",
+    {
+      optionId,
+    },
+  );
 
 export const retractStoryNotePollVote = (api: ApiClient, noteId: string) =>
   api.request<StoryNote>(`${STORY}/note/${noteId}/vote`, {

@@ -71,7 +71,16 @@ export const ComposeSheet = styled.div<{ $open: boolean }>`
   bottom: 0;
   z-index: 50;
   transform: translateY(${(p) => (p.$open ? "0" : "100%")});
-  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+  /* iOS Safari sizes position:fixed boxes against the shrunken visual
+     viewport while the browser toolbars are showing, then grows the viewport
+     when they retract at the bottom of the page: the off-screen
+     translateY(100%) is left short by the toolbar height and a strip of the
+     closed sheet paints over the content below it (the Load More button).
+     visibility makes the closed state unpaintable whatever the geometry, and
+     the 0.38s delay lets the slide-out animation finish before it applies. */
+  visibility: ${(p) => (p.$open ? "visible" : "hidden")};
+  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0s linear ${(p) => (p.$open ? "0s" : "0.38s")};
   pointer-events: ${(p) => (p.$open ? "auto" : "none")};
 
   /* Since FPRoot is position:fixed relative to this element (transform
@@ -810,6 +819,87 @@ export const MusePillContainer = styled.div`
     & {
       gap: 0rem;
     }
+  }
+`;
+
+/* Fandom chips above the character list — the distinct fandoms this novelist
+   writes in, sent by the backend (the muse list itself is trimmed to 3, so
+   they can't be derived client-side). Collapsed to two plus a "See all"
+   toggle so a prolific novelist doesn't push the characters off screen. */
+export const FandomChipRow = styled.div`
+  width: 95%;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+
+  @media screen and (max-width: 800px) {
+    width: 92%;
+  }
+`;
+
+export const ProfileFandomChip = styled.span<{ $color: string }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-family: var(--font);
+  font-size: var(--font-size-xsmall);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.5;
+  color: var(--text);
+  background: ${({ $color }) =>
+    `color-mix(in srgb, ${$color} 16%, transparent)`};
+  border: 1px solid
+    ${({ $color }) => `color-mix(in srgb, ${$color} 34%, transparent)`};
+
+  .name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &::before {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: ${({ $color }) => $color};
+  }
+`;
+
+export const FandomSeeAllChip = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: var(--font-size-xsmall);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.5;
+  white-space: nowrap;
+  color: var(--text-secondary);
+  background: var(--bg-3);
+  border: 1px solid var(--bg-6);
+  transition: color 0.15s, border-color 0.15s;
+
+  &:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 `;
 

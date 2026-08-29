@@ -1,7 +1,7 @@
 "use client";
 
 import { Flex } from "@novelist-world/ui";
-import type { Novelist, NWImage, Prompt, StoryBoard } from "@nw/types";
+import type { Fandom, Novelist, NWImage, Prompt, StoryBoard } from "@nw/types";
 import type { Activity } from "@nw/types/activity";
 import type { ProfileSong } from "@nw/types/music";
 import { ACCENT_MAP, type Accent } from "@nw/types/theme";
@@ -92,6 +92,15 @@ import {
   getPromptsByNovelistAction,
 } from "./posts/actions";
 import * as S from "./styles";
+
+/** Fandom chips shown before the "See all" toggle expands the row. */
+const COLLAPSED_FANDOM_COUNT = 2;
+const FANDOMLESS_ID = "FANDOMLESS";
+
+/** The fandomless bucket's stored name is a full sentence — too long for a
+ *  chip, so it gets a short label here. */
+const fandomChipLabel = (fandom: Fandom) =>
+  fandom.id === FANDOMLESS_ID ? "Fandomless" : fandom.name;
 
 const POST_PAGE_SIZE = 20;
 const ACTIVITY_PAGE_SIZE = 10;
@@ -402,6 +411,13 @@ export default function UserProfilePage({}) {
   );
   const atMuseLimit =
     (novelist?.museCount ?? 0) >= (novelist?.tier.museLimit ?? 0);
+  const [showAllFandoms, setShowAllFandoms] = useState(false);
+  // Backend sends the distinct fandoms across all of this novelist's visible
+  // muses; the muse list itself is trimmed to 3, so they can't be derived here.
+  const fandoms = novelist?.fandoms ?? [];
+  const visibleFandoms = showAllFandoms
+    ? fandoms
+    : fandoms.slice(0, COLLAPSED_FANDOM_COUNT);
 
   const {
     activities,
@@ -1354,6 +1370,30 @@ export default function UserProfilePage({}) {
                     </S.AddMuseButton>
                   </ShouldRender>
                 </S.MuseSectionHeader>
+                {fandoms.length > 0 && (
+                  <S.FandomChipRow>
+                    {visibleFandoms.map((fandom) => (
+                      <S.ProfileFandomChip
+                        key={fandom.id}
+                        $color={fandom.color || "var(--accent)"}
+                        title={fandom.name}
+                      >
+                        <span className="name">{fandomChipLabel(fandom)}</span>
+                      </S.ProfileFandomChip>
+                    ))}
+                    {fandoms.length > COLLAPSED_FANDOM_COUNT && (
+                      <S.FandomSeeAllChip
+                        type="button"
+                        aria-expanded={showAllFandoms}
+                        onClick={() => setShowAllFandoms((prev) => !prev)}
+                      >
+                        {showAllFandoms
+                          ? "See less"
+                          : `See all (${fandoms.length})`}
+                      </S.FandomSeeAllChip>
+                    )}
+                  </S.FandomChipRow>
+                )}
                 <S.MuseList>
                   {mainVerseMuses(novelist?.muses)
                     .slice(0, 3)

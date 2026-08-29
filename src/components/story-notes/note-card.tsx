@@ -4,14 +4,9 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { StoryNote } from "@nw/types";
 import type { FC } from "react";
-import {
-  LuArchive,
-  LuArchiveRestore,
-  LuLock,
-  LuPin,
-  LuPinOff,
-} from "react-icons/lu";
+import { LuArchive, LuArchiveRestore, LuLock } from "react-icons/lu";
 import { RxDragHandleDots2 } from "react-icons/rx";
+import { PushPinIcon } from "@/components/user-menu/user-menu-icons";
 import { toFormattedDate } from "@/utils/helpers";
 import { Ballot, votesLabel } from "./ballot";
 import * as S from "./styles";
@@ -82,7 +77,10 @@ export const NoteCard: FC<Props> = ({
         title={note.isPinned ? "Unpin" : "Pin"}
         onClick={() => onTogglePin(note)}
       >
-        {note.isPinned ? <LuPin size={15} /> : <LuPinOff size={15} />}
+        {/* One pin, either way — the button scales and angles it, so the
+            control always reads as "pin" and its state reads off how the pin
+            itself is sitting. */}
+        <PushPinIcon size={28} />
       </S.PinButton>
 
       <S.CardOpen

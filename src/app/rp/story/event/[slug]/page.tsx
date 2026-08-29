@@ -804,7 +804,6 @@ export default function StoryboardEventPage({}) {
       {effectiveMode === "book" && storyboardEvent ? (
         <BookView
           event={storyboardEvent}
-          pageFormat={storyboard?.pageFormat}
           threads={storyboardEventThreads}
           startIndex={windowStart}
           totalThreads={totalCount ?? storyboardEventThreads.length}
@@ -820,7 +819,6 @@ export default function StoryboardEventPage({}) {
         storyboardEvent && (
           <PaginatedChapterView
             event={storyboardEvent}
-            pageFormat={storyboard?.pageFormat}
             threads={storyboardEventThreads}
             startIndex={windowStart}
             totalThreads={totalCount ?? storyboardEventThreads.length}

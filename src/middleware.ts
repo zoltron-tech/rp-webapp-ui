@@ -1,4 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
+import {
+  RESERVED_TOP_LEVEL_SEGMENTS,
+  USERNAME_PATH_RE,
+} from "@/utils/constants/reserved-paths";
 
 /**
  * Tracking parameters injected by external platforms that should be stripped
@@ -20,34 +24,6 @@ const TRACKING_PARAMS = new Set([
   "twclid",
   "igshid",
 ]);
-
-/**
- * Top-level path segments that belong to the app itself and must never be
- * treated as candidate usernames.
- */
-const KNOWN_SEGMENTS = new Set([
-  "rp",
-  "api",
-  "_next",
-  "favicon.ico",
-  "robots.txt",
-  "sitemap.xml",
-  "manifest.json",
-  "icons",
-  "sw.js",
-  "workbox",
-  "worker",
-  "models",
-  "animations",
-  "assets",
-  "public",
-]);
-
-/**
- * Same validation rule used in the front-end (see checkUsernameInvalidity).
- * Must be 3–50 chars, only letters / digits / underscore / dot / hyphen.
- */
-const USERNAME_RE = /^[a-zA-Z0-9_.-]{3,50}$/;
 
 export async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
@@ -72,7 +48,10 @@ export async function middleware(request: NextRequest) {
   if (segments.length === 1) {
     const candidate = segments[0];
 
-    if (!KNOWN_SEGMENTS.has(candidate) && USERNAME_RE.test(candidate)) {
+    if (
+      !RESERVED_TOP_LEVEL_SEGMENTS.has(candidate) &&
+      USERNAME_PATH_RE.test(candidate)
+    ) {
       const serviceUrl = process.env.RP_SERVICE_URL;
 
       if (serviceUrl) {

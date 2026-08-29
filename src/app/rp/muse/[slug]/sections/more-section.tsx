@@ -15,6 +15,7 @@ import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { deleteMuseAction } from "../../../muse/actions";
 import { reportAction } from "../../../thread/actions";
+import { getMuseAppearance } from "../appearance";
 import * as S from "../styles";
 import SectionMiniHeader from "./SectionMiniHeader";
 
@@ -32,11 +33,16 @@ export function MoreSection({ muse, isOwnMuse }: Props) {
   const [showExportCard, setShowExportCard] = useState(false);
   const [showShareMuse, setShowShareMuse] = useState(false);
   const accent = muse?.useAccent ? muse.accent : undefined;
+  const { hideExpandedBackground } = getMuseAppearance(muse);
 
   return (
     <>
-      <S.CardExpandedWrapper>
-        <S.CardBack className="muse-card" accent={accent}>
+      <S.CardExpandedWrapper $hideChrome={hideExpandedBackground}>
+        <S.CardBack
+          className="muse-card"
+          accent={accent}
+          $hideBackground={hideExpandedBackground}
+        >
           <S.InfoCardContent>
             <SectionMiniHeader muse={muse} accent={accent ?? null} />
             <S.InfoDivider $accent={accent ?? null} />

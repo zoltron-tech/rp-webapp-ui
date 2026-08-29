@@ -27,17 +27,22 @@ export const Banner = styled.div<BannerProps>`
   ${BLUR_FILTER}
 `;
 
+/**
+ * Cover and title, side by side.
+ *
+ * It used to stack on narrow containers, which cost a 225px-tall cover *plus*
+ * the whole title block before anything else on the page — most of a 375x667
+ * screen spent on a header. Staying a row at every width, with a cover scaled
+ * to match, is what buys the chapters and codex below their room back.
+ */
 export const HeroRow = styled.div`
   display: flex;
   flex-direction: row;
   align-items: flex-end;
-  gap: 20px;
-  width: 90%;
-  margin-left: 8%;
-
+  gap: 16px;
+  width: 100%;
 
   @container (max-width: 500px) {
-    flex-direction: column;
     align-items: flex-start;
     gap: 12px;
   }
@@ -47,8 +52,8 @@ export const HeroRow = styled.div`
 export const HeroCover = styled.div`
   position: relative;
   flex-shrink: 0;
-  width: 250px;
-  height: 336px;
+  width: 148px;
+  height: 222px;
   border-radius: 10px;
   overflow: hidden;
   ${CARD_BORDER};
@@ -56,8 +61,8 @@ export const HeroCover = styled.div`
 
   @container (max-width: 500px) {
     & {
-      width: 150px;
-      height: 225px;
+      width: 96px;
+      height: 144px;
     }
   }
 `;
@@ -68,19 +73,19 @@ export const HeroInfo = styled.div`
   min-width: 0;
 `;
 
-/* Stacks fandom, genres and the like chip on their own lines so each group
-   reads as a distinct block instead of blending into one chip soup — still
-   compact down to the 375×667 baseline. */
+/* Fandom and genres share one wrapping row. They used to be stacked blocks,
+   which read well but spent a line each — at 375px that is two lines of
+   header for a handful of chips that fit on one. */
 export const MetaStack = styled.div`
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-  margin-top: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin-top: 8px;
 
   @container (max-width: 500px) {
-    gap: 8px;
-    margin-top: 8px;
+    gap: 5px 6px;
+    margin-top: 6px;
   }
 `;
 
@@ -96,8 +101,8 @@ export const GenreRow = styled.div`
 export const FandomChip = styled.span`
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 13px;
+  gap: 5px;
+  padding: 4px 10px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--accent) 14%, transparent);
   color: var(--text);
@@ -106,8 +111,8 @@ export const FandomChip = styled.span`
   white-space: nowrap;
 
   svg {
-    width: 13px;
-    height: 13px;
+    width: 12px;
+    height: 12px;
     color: var(--accent);
     flex-shrink: 0;
   }
@@ -117,7 +122,7 @@ export const FandomChip = styled.span`
   }
 
   @container (max-width: 500px) {
-    padding: 5px 11px;
+    padding: 4px 9px;
     font-size: var(--font-size-xsmall);
   }
 `;
@@ -127,7 +132,7 @@ export const GenrePill = styled.span<{ $color: string }>`
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 6px 12px;
+  padding: 4px 9px;
   border-radius: 999px;
   background: color-mix(in srgb, ${(p) => p.$color} 18%, transparent);
   color: ${(p) => p.$color};
@@ -138,15 +143,15 @@ export const GenrePill = styled.span<{ $color: string }>`
 
   &::before {
     content: "";
-    width: 7px;
-    height: 7px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background: ${(p) => p.$color};
     flex-shrink: 0;
   }
 
   @container (max-width: 500px) {
-    padding: 5px 10px;
+    padding: 4px 8px;
     font-size: var(--font-size-xsmall);
   }
 `;
@@ -157,7 +162,7 @@ export const Name = styled.div`
   align-items: center;
   flex-wrap: wrap;
   text-align: left;
-  font-size: clamp(18px, 4vw, 36px);
+  font-size: clamp(17px, 3vw, 26px);
   font-weight: 600;
   line-height: 1.2;
   color: var(--text);
@@ -171,8 +176,8 @@ export const HeartChip = styled.button<{ $active?: boolean }>`
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 13px;
+  gap: 5px;
+  padding: 4px 10px;
   border-radius: 999px;
   cursor: pointer;
   font-size: var(--font-size-small);
@@ -190,8 +195,8 @@ export const HeartChip = styled.button<{ $active?: boolean }>`
   }
 
   svg {
-    width: 15px;
-    height: 15px;
+    width: 13px;
+    height: 13px;
     color: var(--tomato-9);
   }
 
@@ -200,7 +205,7 @@ export const HeartChip = styled.button<{ $active?: boolean }>`
   }
 
   @container (max-width: 500px) {
-    padding: 5px 11px;
+    padding: 4px 9px;
     font-size: var(--font-size-xsmall);
   }
 `;
@@ -217,17 +222,17 @@ export const HeartCountText = styled.span`
 `;
 
 /* Optional story flavor text, rendered below the hero cover/meta and above
-   the engagement row. Matches HeroRow/ActionRow's width and left offset. */
+   the engagement row. */
 export const DescriptionSection = styled.div`
-  width: 90%;
-  margin: 16px 0 0 8%;
+  width: 100%;
+  margin: 12px 0 0;
   font-size: var(--font-size-small);
   color: var(--text-secondary);
   line-height: 1.5;
 
   @container (max-width: 500px) {
-    width: 100%;
-    margin: 12px 0 0;
+    margin: 10px 0 0;
+    font-size: var(--font-size-xsmall);
   }
 `;
 
@@ -236,7 +241,7 @@ export const CreatedByRow = styled.div`
   align-items: center;
   gap: 2px;
   flex-wrap: wrap;
-  margin-top: 10px;
+  margin-top: 6px;
   font-size: var(--font-size-small);
   color: var(--text-secondary);
 
@@ -246,75 +251,28 @@ export const CreatedByRow = styled.div`
   }
 `;
 
-export const SectionName = styled.div`
-  ${NameFontStyles}
-  text-transform: uppercase;
-  text-align: left;
-  font-size: clamp(16px, 4vw, 22px);
-  color: var(--text);
-  z-index: ${Z_INDEX.DEFAULT};
-`;
-
-/* Cast strip: muses with at least one dialog anywhere in the story. */
-export const CastSection = styled.div`
-  width: 90%;
-  margin: 18px 0 0 8%;
-  z-index: ${Z_INDEX.DEFAULT};
-`;
-
-export const CastRow = styled.div`
-  display: flex;
-  gap: 14px;
-  overflow-x: auto;
-  margin-top: 14px;
-  padding: 4px 2px 6px;
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-`;
-
-export const CastChip = styled.div`
+/**
+ * Co-authors and cast, stacked.
+ *
+ * One column at every width, desktop included. They were briefly a side-by-side
+ * pair on wide containers, which saved a little height but read as two
+ * competing panels — and the cast strip scrolls horizontally, so halving its
+ * width just meant scrolling it sooner. Full width each, in a column, is the
+ * same order on every device; the space they used to cost was taken out of
+ * their own sizing instead.
+ */
+export const PeopleGrid = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-  width: 64px;
-`;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+  margin-top: 12px;
 
-export const CastAvatar = styled.img`
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  object-fit: cover;
-  background: var(--bg-4);
-  border: 2px solid var(--bg-2);
-`;
-
-export const CastAvatarFallback = styled.span`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 70%);
-  color: #fff;
-  font-size: var(--font-size-large);
-  font-weight: var(--font-weight-bold);
-  border: 2px solid var(--bg-2);
-`;
-
-export const CastName = styled.span`
-  max-width: 64px;
-  font-size: var(--font-size-small);
-  color: var(--text-secondary);
-  text-align: center;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  @container (max-width: 500px) {
+    gap: 10px;
+    margin-top: 10px;
+  }
 `;
 
 /* Engagement row (likes, share, more) sitting just above the co-authors
@@ -323,14 +281,13 @@ export const ActionRow = styled.div`
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
-  width: 90%;
-  margin: 20px 0 16px 8%;
+  gap: 8px;
+  width: 100%;
+  margin: 12px 0 0;
 
   @container (max-width: 500px) {
-    width: 100%;
-    margin: 14px 0 12px;
-    gap: 8px;
+    margin: 10px 0 0;
+    gap: 6px;
   }
 `;
 
@@ -344,8 +301,8 @@ export const ShareButton = styled.button`
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 13px;
+  gap: 5px;
+  padding: 4px 10px;
   border-radius: 999px;
   cursor: pointer;
   font-size: var(--font-size-small);
@@ -436,21 +393,22 @@ export const StoryContainer = styled.div`
   box-sizing: border-box;
   width: 100%;
   max-width: 900px;
-  padding-top: 64px;
+  /* Clears the BackButton (top 16 + 40px tall) and no more. */
+  padding-top: 60px;
   min-height: 100vh;
   padding-inline: 24px;
-  padding-bottom: 50px;
+  padding-bottom: 24px;
   margin-inline: auto;
-  margin-bottom: 50px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
 
   @container (max-width: 500px) {
     & {
-      padding-inline: 16px;
-      gap: 0.2rem;
-      margin-bottom: 0px;
+      /* The button sits at top 12 on narrow containers. */
+      padding-top: 56px;
+      padding-inline: 12px;
+      padding-bottom: 16px;
     }
   }
 `;

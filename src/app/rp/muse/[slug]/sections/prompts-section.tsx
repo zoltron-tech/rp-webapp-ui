@@ -13,6 +13,7 @@ import { SharedWithDialog } from "@/components/shared-with-dialog";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDate } from "@/utils/helpers";
+import { getMuseAppearance } from "../appearance";
 import * as S from "../styles";
 import SectionMiniHeader from "./SectionMiniHeader";
 
@@ -44,6 +45,7 @@ const sharedWithLabel = (friends: Friend[]) => {
 export function PromptsSection({ muse, prompts }: Props) {
   const { routeToPage } = usePageRouter();
   const accent = muse?.useAccent ? muse.accent : undefined;
+  const { hideExpandedBackground } = getMuseAppearance(muse);
   const [sharedWithList, setSharedWithList] = useState<Friend[] | null>(null);
   const [likersPrompt, setLikersPrompt] = useState<{
     id: string;
@@ -51,7 +53,7 @@ export function PromptsSection({ muse, prompts }: Props) {
   } | null>(null);
 
   return (
-    <S.CardExpandedWrapper>
+    <S.CardExpandedWrapper $hideChrome={hideExpandedBackground}>
       <SharedWithDialog
         friends={sharedWithList ?? []}
         open={sharedWithList !== null}
@@ -63,7 +65,11 @@ export function PromptsSection({ muse, prompts }: Props) {
         targetId={likersPrompt?.id ?? ""}
         initialCount={likersPrompt?.count}
       />
-      <S.CardBack className="muse-card" accent={accent}>
+      <S.CardBack
+        className="muse-card"
+        accent={accent}
+        $hideBackground={hideExpandedBackground}
+      >
         <S.InfoCardContent>
           <SectionMiniHeader muse={muse} accent={accent ?? null} />
           <S.InfoDivider $accent={accent ?? null} />

@@ -41,6 +41,24 @@ export interface Muse {
   privacy: PrivacyLevel;
   useAccent: boolean;
   useExtraImages: boolean;
+  /**
+   * Advanced appearance overrides, on a *partial* update.
+   *
+   * Three states, because a save may be editing one tab and leaving the rest of
+   * the muse alone: omit the field to leave whatever is stored alone, send `""`
+   * to clear the override, send a colour to set it. `null` reads as omitted.
+   *
+   * So a caller that loaded the whole muse sends all six every time — empty for
+   * "no override" — and a caller that only touches one tab omits them. Sending
+   * `null` for a colour the author just cleared is what made the reset buttons
+   * appear to do nothing.
+   */
+  nameColor?: string | null;
+  pennedByColor?: string | null;
+  sideMenuBgColor?: string | null;
+  sideMenuTextColor?: string | null;
+  hideExpandedBackground?: boolean;
+  hideSideMenuBackground?: boolean;
   totalPoints: number;
   level: number;
   prev: MuseNavItem | null;
@@ -83,6 +101,13 @@ export interface MuseNavItem {
   privacy: PrivacyLevel;
   useAccent: boolean;
   useExtraImages: boolean;
+  /** Advanced appearance overrides. Null/false everywhere = default styling. */
+  nameColor?: string | null;
+  pennedByColor?: string | null;
+  sideMenuBgColor?: string | null;
+  sideMenuTextColor?: string | null;
+  hideExpandedBackground?: boolean;
+  hideSideMenuBackground?: boolean;
   originalVerseId?: string | null;
   verseNumber?: number | null;
 }
@@ -120,6 +145,13 @@ export interface CreateUpdateMuse {
   privacy: string;
   useAccent: boolean;
   useExtraImages: boolean;
+  /** Advanced appearance overrides. Null/false everywhere = default styling. */
+  nameColor?: string | null;
+  pennedByColor?: string | null;
+  sideMenuBgColor?: string | null;
+  sideMenuTextColor?: string | null;
+  hideExpandedBackground?: boolean;
+  hideSideMenuBackground?: boolean;
   /** Set on create to make the new muse an alternative verse of an existing muse. */
   originalVerseId?: string | null;
   verseNumber?: number | null;
@@ -209,6 +241,11 @@ export type Novelist = {
   museCount: number;
   palette: number;
   muses: Muse[];
+  /**
+   * Distinct fandoms across every muse of this novelist the caller may see,
+   * sorted by name. Absent on endpoints that page the muse list.
+   */
+  fandoms?: Fandom[];
   friendsCount: number;
   friends: Friend[];
   connection: string | null;

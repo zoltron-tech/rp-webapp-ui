@@ -14,18 +14,33 @@ import {
 import { FaBookmark } from "react-icons/fa6";
 import { IoChevronBack, IoChevronForward } from "react-icons/io5";
 import { useWindowDimensions } from "@/hooks";
-import { contentHeight, contentWidth, resolvePageSpec } from "@/lib/paginator";
-import {
-  ChapterFlow,
-  pageAtOffset,
-  useChapterPages,
-  useFlowItems,
-  useMeasuredHeights,
-} from "./chapter-pages";
+import { EMPTY_PAGE_MAP, type PageMap, paginate } from "@/lib/paginator";
+import { ChapterFlow, useFlowItems } from "./chapter-pages";
 import * as S from "./styles";
 
-/** Gutter between the two halves of the spread, in design pixels. */
+/** Gutter between the two halves of the spread. */
 const SPINE_GAP = 0;
+
+/**
+ * How the page sizes itself to the screen.
+ *
+ * There are no stored page formats any more, so the book takes the room it is
+ * given and makes a page out of it: as wide as fits, capped so a line never
+ * runs past a comfortable measure, and as tall as the window leaves after the
+ * chrome. That is the whole point of paginating at read time — the page is the
+ * screen, not a trim size somebody picked in a settings panel months ago.
+ */
+const PAGE_MAX_WIDTH = 560;
+const PAGE_MIN_WIDTH = 260;
+const PAGE_MIN_HEIGHT = 320;
+/** Inner margin as a fraction of page width, floored so it never disappears. */
+const PAD_X_RATIO = 0.11;
+const PAD_Y_RATIO = 0.085;
+const PAD_X_MIN = 18;
+const PAD_Y_MIN = 16;
+
+/** Below this the spread shows one page at a time rather than two. */
+const SINGLE_PAGE_BREAKPOINT = 820;
 
 /** Varied line widths so the loading shimmer reads like ragged prose. */
 const SHIMMER_LINE_WIDTHS = [
@@ -49,8 +64,6 @@ type Pending = { type: "target"; index: number };
 
 type Props = {
   event: StoryBoardEvent;
-  /** The story's page geometry preset — the same one the manuscript uses. */
-  pageFormat?: string | null;
   /** The loaded, contiguous window of the event's threads. */
   threads: StoryBoardEventThread[];
   /** Global index (in createdAt order) of `threads[0]`. */
@@ -76,16 +89,22 @@ type Props = {
 /**
  * The book spread.
  *
- * Pages come from the shared packer in `chapter-pages` — the same model the
- * scrolling manuscript renders — so page 7 in the book is page 7 in the
- * manuscript, cut in exactly the place the author was shown while writing.
- * Each half of the spread is a window onto that packed flow, pushed up to its
- * own page offset; nothing is re-flowed here, so the book cannot invent a
- * break the author never saw.
+ * Pages are decided here, at read time, against the screen the chapter is
+ * actually being read on. A hidden copy of the flow is laid out at the page's
+ * measure and `paginate` walks it for legal cut points — line-box boundaries,
+ * never inside an image, a dialog embed, or the prose wrapping a float — then
+ * takes the last one that fits each page. Each half of the spread is a clipped
+ * window onto that flow, pushed up to its page's offset.
+ *
+ * This replaces a model where heights were measured once, frozen on the
+ * server, and packed into the same pages for everybody. That gave stable page
+ * numbers, but it forced the writing surface to be a fixed page geometry and
+ * meant the reader's own text size could not move a break. The trade is
+ * deliberate: numbers here describe this screen and this session, so they are
+ * for orientation, not for citation.
  */
 export const BookView: FC<Props> = ({
   event,
-  pageFormat,
   threads,
   startIndex,
   totalThreads,
@@ -97,14 +116,9 @@ export const BookView: FC<Props> = ({
   onNeedAfter,
   onPositionChange,
 }) => {
-  const spec = resolvePageSpec(pageFormat);
-  const pageW = contentWidth(spec);
-  const pageH = contentHeight(spec);
-  const designWidth = spec.width * 2 + SPINE_GAP;
-  const designHeight = spec.height;
-
   const stageRef = useRef<HTMLDivElement>(null);
   const footerRef = useRef<HTMLDivElement>(null);
+  const measureRef = useRef<HTMLDivElement>(null);
   const pendingRef = useRef<Pending | null>(
     targetIndex != null && targetIndex > 0
       ? { index: targetIndex, type: "target" }
@@ -115,93 +129,139 @@ export const BookView: FC<Props> = ({
   const { width: winW, height: winH } = useWindowDimensions();
 
   const [spread, setSpread] = useState(0);
-  const [scale, setScale] = useState(0);
   const [loadingEdge, setLoadingEdge] = useState<"before" | "after" | null>(
     null,
   );
 
-  const { heights, reportHeight } = useMeasuredHeights();
   const items = useFlowItems(threads, startIndex);
-  // The book paginates the whole chapter from the heights frozen on the server,
-  // so its page numbers are the chapter's — the same ones the manuscript shows.
-  const { packed } = useChapterPages({
-    canReport: false,
-    measured: heights,
-    pageFormat: spec.value,
-    pageHeight: pageH,
-    storyboardEventId: event.id ?? "",
-  });
 
-  const pageCount = packed.totalPages;
-  const spreadCount = Math.max(1, Math.ceil(pageCount / 2));
+  // ── The page, cut from the screen ────────────────────────────────────────
 
-  const hasMoreBefore = startIndex > 0;
-  const hasMoreAfter = startIndex + threads.length < totalThreads;
+  /** Two pages side by side, unless the screen is too narrow to hold them. */
+  const twoUp = (winW ?? 1024) >= SINGLE_PAGE_BREAKPOINT;
 
-  /** Where this window's passages sit in the chapter, and which pages they cover. */
-  const flowTop = items.length ? (packed.topOfItem.get(items[0].key) ?? 0) : 0;
-  const loadedFirstPage = items.length
-    ? (packed.pageOfItem.get(items[0].key) ?? 1)
-    : 1;
-  const loadedLastPage = items.length
-    ? pageAtOffset(
-        packed,
-        (packed.topOfItem.get(items[items.length - 1].key) ?? 0) +
-          (heights[items[items.length - 1].key] ?? 0) -
-          1,
-      )
-    : 1;
-
-  /** Page number each loaded passage opens on, by global passage index. */
-  const pageOfThread = useMemo(() => {
-    const map = new Map<number, number>();
-    for (const item of items) {
-      if (item.kind !== "thread") continue;
-      const page = packed.pageOfItem.get(item.key);
-      if (page !== undefined) map.set(item.index, page);
-    }
-    return map;
-  }, [items, packed.pageOfItem]);
-
-  // ── Fit the spread to whatever room is left on screen ────────────────────
-  const recomputeScale = useCallback(() => {
+  const geometry = useMemo(() => {
     const stage = stageRef.current;
-    if (!stage) return;
-    // The vertical budget is measured, not guessed: everything above the stage
-    // (top bar + chapter song) is whatever sits between the viewport top and
-    // the stage, and everything below is the footer plus a breathing gap.
-    const availW = stage.clientWidth || designWidth;
-    const stageTop = Math.max(0, stage.getBoundingClientRect().top);
+    const availW = stage?.clientWidth || winW || 1024;
+    const halves = twoUp ? 2 : 1;
+    const width = Math.max(
+      PAGE_MIN_WIDTH,
+      Math.min(PAGE_MAX_WIDTH, Math.floor((availW - SPINE_GAP) / halves)),
+    );
+    const padX = Math.max(PAD_X_MIN, Math.round(width * PAD_X_RATIO));
+
+    // The vertical budget is measured, not guessed: whatever sits above the
+    // stage (top bar, chapter song) plus the footer below it.
+    const stageTop = Math.max(0, stage?.getBoundingClientRect().top ?? 0);
     const footer = footerRef.current;
     const footerH = footer
       ? footer.offsetHeight +
         parseFloat(getComputedStyle(footer).marginTop || "0")
       : 60;
-    const availH = Math.max(360, (winH ?? 800) - stageTop - footerH - 24);
-    setScale(
-      Math.min(
-        2.6,
-        Math.max(0.4, Math.min(availW / designWidth, availH / designHeight)),
-      ),
+    const height = Math.max(
+      PAGE_MIN_HEIGHT,
+      (winH ?? 800) - stageTop - footerH - 24,
     );
-  }, [designWidth, designHeight, winH]);
+    const padY = Math.max(PAD_Y_MIN, Math.round(height * PAD_Y_RATIO));
 
+    return {
+      contentH: Math.max(80, height - padY * 2),
+      contentW: Math.max(120, width - padX * 2),
+      height,
+      padX,
+      padY,
+      width,
+    };
+    // Recomputed whenever the window moves; `measureTick` also forces it after
+    // the stage itself resizes (the nav sliding out, say).
+  }, [winW, winH, twoUp]);
+
+  /** Bumped to force a re-measure when something other than the window moves. */
+  const [measureTick, setMeasureTick] = useState(0);
+  const [pageMap, setPageMap] = useState<PageMap>(EMPTY_PAGE_MAP);
+
+  /**
+   * Cut the flow into pages.
+   *
+   * Runs against the hidden copy below, which is laid out at exactly the
+   * page's measure. Deferred to an animation frame so rich text, images and
+   * web fonts have landed before anything is measured — a cut taken over a
+   * half-loaded image is a cut in the wrong place.
+   */
   useLayoutEffect(() => {
-    recomputeScale();
-  }, [recomputeScale, winW]);
+    const root = measureRef.current;
+    if (!root) return;
+    let frame = 0;
+    const run = () => {
+      const measured = measureRef.current;
+      if (!measured) return;
+      setPageMap(paginate(measured, geometry.contentH));
+    };
+    frame = requestAnimationFrame(run);
 
-  // The stage's own width changes independently of window resizes too — e.g.
-  // the shared layout's LeftNav/RightSidebar sliding out over ~300ms as book
-  // mode opens. Track the stage directly so scale grows in step with that.
+    // Anything that changes the flow's height changes where the pages fall.
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(run);
+    });
+    observer.observe(root);
+    const mutations = new MutationObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(run);
+    });
+    mutations.observe(root, {
+      characterData: true,
+      childList: true,
+      subtree: true,
+    });
+
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      mutations.disconnect();
+    };
+  }, [geometry.contentH, measureTick]);
+
+  const pages = pageMap.pages;
+  /** Pages of the *loaded* run. The chapter may hold more either side. */
+  const pageCount = Math.max(1, pages.length);
+  const perSpread = twoUp ? 2 : 1;
+  const spreadCount = Math.max(1, Math.ceil(pageCount / perSpread));
+
+  const hasMoreBefore = startIndex > 0;
+  const hasMoreAfter = startIndex + threads.length < totalThreads;
+
+  /** The page each loaded passage opens on, by global passage index. */
+  const pageOfThread = useMemo(() => {
+    const map = new Map<number, number>();
+    const indexOfKey = new Map<string, number>();
+    for (const item of items) {
+      if (item.kind === "thread") indexOfKey.set(item.key, item.index);
+    }
+    for (const page of pages) {
+      for (const entry of page.items) {
+        if (!entry.starts) continue;
+        const index = indexOfKey.get(entry.key);
+        if (index !== undefined && !map.has(index)) {
+          map.set(index, page.index + 1);
+        }
+      }
+    }
+    return map;
+  }, [items, pages]);
+
+  // The stage's own width changes independently of window resizes — the
+  // shared layout's nav sliding out as book mode opens, say. Geometry is
+  // derived from it, so a stage resize has to re-derive it.
   useLayoutEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
-    const observer = new ResizeObserver(() => recomputeScale());
+    const observer = new ResizeObserver(() => setMeasureTick((n) => n + 1));
     observer.observe(stage);
     return () => observer.disconnect();
-  }, [recomputeScale]);
+  }, []);
 
-  // ── Resolve a pending jump against the freshly packed chapter ───────────
+  // ── Resolve a pending jump against the freshly cut pages ───────────
   useEffect(() => {
     const pending = pendingRef.current;
     if (pending?.type === "target") {
@@ -209,21 +269,22 @@ export const BookView: FC<Props> = ({
       // Stays pending: the passage may not be fetched yet, and content that
       // loads late can repack the chapter again.
       if (page !== undefined) {
-        setSpread(Math.min(Math.floor((page - 1) / 2), spreadCount - 1));
+        setSpread(
+          Math.min(Math.floor((page - 1) / perSpread), spreadCount - 1),
+        );
       }
       return;
     }
     setSpread((current) => Math.min(current, spreadCount - 1));
-  }, [pageOfThread, spreadCount]);
+  }, [pageOfThread, spreadCount, perSpread]);
 
-  // ── Keep the open spread's passages loaded ──────────────────────────────
-  // The book knows how many pages the chapter has before it has fetched them,
-  // so turning to a page outside the loaded window simply pulls that window
-  // along — a chunk at a time until the spread is covered.
+  // ── Pull more of the chapter in at the ends ─────────────────────────────
+  // The book only knows the pages of what it has loaded — page numbers are cut
+  // from this run, not from the whole chapter — so the trigger is reaching an
+  // end of that run rather than a page number outside it.
   useEffect(() => {
     if (loadingEdge !== null || busyRef.current) return;
-    const left = spread * 2 + 1;
-    const right = left + 1;
+    if (pages.length === 0) return;
 
     const pull = async (
       edge: "before" | "after",
@@ -236,15 +297,15 @@ export const BookView: FC<Props> = ({
       setLoadingEdge(null);
     };
 
-    if (left < loadedFirstPage && hasMoreBefore && onNeedBefore) {
+    if (spread <= 0 && hasMoreBefore && onNeedBefore) {
       pull("before", onNeedBefore);
-    } else if (right > loadedLastPage && hasMoreAfter && onNeedAfter) {
+    } else if (spread >= spreadCount - 1 && hasMoreAfter && onNeedAfter) {
       pull("after", onNeedAfter);
     }
   }, [
     spread,
-    loadedFirstPage,
-    loadedLastPage,
+    spreadCount,
+    pages.length,
     hasMoreBefore,
     hasMoreAfter,
     loadingEdge,
@@ -259,9 +320,9 @@ export const BookView: FC<Props> = ({
     pendingRef.current = { index: jumpRequest.index, type: "target" };
     const page = pageOfThread.get(jumpRequest.index);
     if (page !== undefined) {
-      setSpread(Math.min(Math.floor((page - 1) / 2), spreadCount - 1));
+      setSpread(Math.min(Math.floor((page - 1) / perSpread), spreadCount - 1));
     }
-  }, [jumpRequest, pageOfThread, spreadCount]);
+  }, [jumpRequest, pageOfThread, spreadCount, perSpread]);
 
   // `targetIndex` often lands after mount (the page-level bookmark/thread
   // fetch resolves after this component's own gating condition does), so the
@@ -283,8 +344,8 @@ export const BookView: FC<Props> = ({
     if (!onPositionChange) return;
     if (pageOfThread.size === 0) return;
 
-    const leftPage = spread * 2 + 1;
-    const rightPage = leftPage + 1;
+    const leftPage = spread * perSpread + 1;
+    const rightPage = leftPage + perSpread - 1;
     let spanning: number | null = null;
     let starting: number | null = null;
     for (const [index, page] of Array.from(pageOfThread.entries()).sort(
@@ -296,7 +357,7 @@ export const BookView: FC<Props> = ({
       }
     }
     onPositionChange(spanning ?? starting ?? startIndex);
-  }, [spread, pageOfThread, startIndex, onPositionChange]);
+  }, [spread, perSpread, pageOfThread, startIndex, onPositionChange]);
 
   /**
    * Turning is pure navigation now: the chapter's page count is known up front,
@@ -327,21 +388,24 @@ export const BookView: FC<Props> = ({
     return () => window.removeEventListener("keydown", onKey);
   }, [turn]);
 
-  const atStart = spread <= 0;
-  const atEnd = spread >= spreadCount - 1;
-  const leftPage = spread * 2 + 1;
-  const rightPage = Math.min(leftPage + 1, pageCount);
+  const atStart = spread <= 0 && !hasMoreBefore;
+  const atEnd = spread >= spreadCount - 1 && !hasMoreAfter;
+  const leftPage = spread * perSpread + 1;
+  const rightPage = Math.min(leftPage + perSpread - 1, pageCount);
 
-  const stageW = designWidth * scale;
-  const stageH = designHeight * scale;
+  const spreadW = geometry.width * perSpread + (twoUp ? SPINE_GAP : 0);
+  const spreadH = geometry.height;
 
   const bookmarkPage =
     bookmarkIndex !== null ? pageOfThread.get(bookmarkIndex) : undefined;
   const bookmarkOnSpread =
     bookmarkPage !== undefined &&
-    (bookmarkPage === leftPage || bookmarkPage === rightPage);
+    bookmarkPage >= leftPage &&
+    bookmarkPage <= rightPage;
   const ribbonLeft =
-    bookmarkPage === leftPage ? spec.padX + 36 : designWidth - spec.padX - 60;
+    bookmarkPage === leftPage
+      ? geometry.padX + 36
+      : spreadW - geometry.padX - 60;
 
   const morePrefix = hasMoreBefore ? "…" : "";
   const moreSuffix = hasMoreAfter ? "+" : "";
@@ -354,64 +418,73 @@ export const BookView: FC<Props> = ({
           ? `Page ${morePrefix}${leftPage} of ${pageCount}${moreSuffix}`
           : `Pages ${morePrefix}${leftPage}–${rightPage} of ${pageCount}${moreSuffix}`;
 
+  /** The type the page is set in — one place, so the hidden copy that gets
+   *  measured and the visible page can never disagree. */
+  const flowStyle = {
+    "--nw-page-media-max": `${geometry.contentH}px`,
+    width: geometry.contentW,
+  } as CSSProperties;
+
   /**
-   * One half of the spread: the paper, and a window showing the slice of the
-   * chapter that belongs to `pageNumber`. The left half carries the measuring
-   * copy of the flow — its heights are what the packer runs on.
+   * One half of the spread: the paper, and a clipped window onto the flow,
+   * pushed up so this page's slice is what shows.
+   *
+   * Every half renders the same flow at the same offset arithmetic — there is
+   * no measuring copy among them, because measuring happens once, off-screen,
+   * for the whole spread.
    */
-  const renderHalf = (pageNumber: number, measuring: boolean) => {
-    const top = packed.pageTops[pageNumber - 1] ?? 0;
-    const beyondEnd = pageNumber > pageCount;
-    // A page whose passages are not fetched yet has nothing to frame; the
-    // effect below is already pulling them in.
-    const unloaded =
-      pageNumber < loadedFirstPage || pageNumber > loadedLastPage;
+  const renderHalf = (pageNumber: number) => {
+    const page = pages[pageNumber - 1];
+    /**
+     * A page can come out taller than the window it is shown in: a single
+     * block bigger than a whole page (a full-bleed image, one enormous dialog)
+     * has no legal cut inside it, so the paginator lets it overrun rather than
+     * slicing it in half. The window clips, which would put the overrun out of
+     * sight entirely — so that one page is scaled down to fit instead. Nothing
+     * is ever hidden; at worst an outsized block is drawn smaller.
+     */
+    const fit =
+      page && page.height > geometry.contentH
+        ? geometry.contentH / page.height
+        : 1;
     return (
       <S.BookSheet
+        key={pageNumber}
         style={{
-          height: spec.height,
-          padding: `${spec.padY}px ${spec.padX}px`,
-          width: spec.width,
+          height: geometry.height,
+          padding: `${geometry.padY}px ${geometry.padX}px`,
+          width: geometry.width,
         }}
       >
         <S.BookWindow
           style={{
-            height: pageH,
-            left: spec.padX,
-            top: spec.padY,
-            width: pageW,
+            height: geometry.contentH,
+            left: geometry.padX,
+            top: geometry.padY,
+            width: geometry.contentW,
           }}
         >
-          {!beyondEnd && (!unloaded || measuring) && (
+          {page && (
             <S.BookWindowInner
-              aria-hidden={!measuring}
-              style={
-                {
-                  "--nw-page-media-max": `${pageH}px`,
-                  fontSize: spec.fontSize,
-                  lineHeight: spec.lineHeight,
-                  // The flow holds only the loaded passages, so it is placed
-                  // where they sit in the chapter, not at zero.
-                  top: flowTop - top,
-                  width: pageW,
-                } as CSSProperties
-              }
+              aria-hidden
+              style={{
+                ...flowStyle,
+                top: -page.top * fit,
+                transform: fit < 1 ? `scale(${fit})` : undefined,
+                transformOrigin: "top left",
+              }}
             >
               <ChapterFlow
                 items={items}
-                packed={packed}
                 event={event}
                 hasThreads={threads.length > 0}
-                pageHeight={pageH}
-                scale={scale || 1}
-                onHeight={measuring ? reportHeight : undefined}
                 bookmarkIndex={bookmarkIndex}
               />
             </S.BookWindowInner>
           )}
         </S.BookWindow>
-        {!beyondEnd && (
-          <S.BookPageNumber style={{ bottom: spec.padY / 3 }}>
+        {page && (
+          <S.BookPageNumber style={{ bottom: geometry.padY / 3 }}>
             {pageNumber}
           </S.BookPageNumber>
         )}
@@ -421,13 +494,21 @@ export const BookView: FC<Props> = ({
 
   return (
     <S.BookStage ref={stageRef}>
-      <S.Spread
-        style={{
-          aspectRatio: `${designWidth} / ${designHeight}`,
-          height: stageH || undefined,
-          width: stageW || undefined,
-        }}
-      >
+      {/* The copy the pages are cut from. Laid out at exactly the page's
+          measure, off-screen, so the cuts it yields are the cuts the visible
+          pages show. */}
+      <S.BookMeasureLayer aria-hidden>
+        <div ref={measureRef} style={flowStyle}>
+          <ChapterFlow
+            items={items}
+            event={event}
+            hasThreads={threads.length > 0}
+            bookmarkIndex={bookmarkIndex}
+          />
+        </div>
+      </S.BookMeasureLayer>
+
+      <S.Spread style={{ height: spreadH, width: spreadW }}>
         <S.PageEdgeButton
           $side="left"
           onClick={() => turn(-1)}
@@ -440,14 +521,13 @@ export const BookView: FC<Props> = ({
         <S.BookPages
           style={{
             columnGap: SPINE_GAP,
-            height: designHeight,
-            transform: `scale(${scale || 1})`,
-            visibility: scale > 0 ? undefined : "hidden",
-            width: designWidth,
+            height: spreadH,
+            width: spreadW,
           }}
         >
-          {renderHalf(leftPage, true)}
-          {renderHalf(leftPage + 1, false)}
+          {Array.from({ length: perSpread }, (_, offset) =>
+            renderHalf(leftPage + offset),
+          )}
         </S.BookPages>
 
         {/* Soft gutter shadow at the fold. */}
@@ -464,22 +544,24 @@ export const BookView: FC<Props> = ({
         <S.PageReveal
           key={`reveal-left-${spread}`}
           style={{
-            height: designHeight * (scale || 1),
+            height: spreadH,
             left: 0,
             top: 0,
-            width: (designWidth / 2) * (scale || 1),
+            width: spreadW / perSpread,
           }}
         />
-        <S.PageReveal
-          key={`reveal-right-${spread}`}
-          $delayed
-          style={{
-            height: designHeight * (scale || 1),
-            left: (designWidth / 2) * (scale || 1),
-            top: 0,
-            width: (designWidth / 2) * (scale || 1),
-          }}
-        />
+        {twoUp && (
+          <S.PageReveal
+            key={`reveal-right-${spread}`}
+            $delayed
+            style={{
+              height: spreadH,
+              left: spreadW / perSpread,
+              top: 0,
+              width: spreadW / perSpread,
+            }}
+          />
+        )}
 
         {/* Fore-edge page blocks: a visual cue that more pages wait on that
             side — hidden at the very first/last page. */}
@@ -490,19 +572,14 @@ export const BookView: FC<Props> = ({
             chunk of threads first — cover the (possibly stale) spread with a
             page-shaped shimmer until it resolves. */}
         {loadingEdge !== null && (
-          <S.BookLoadingShimmer
-            style={{ height: stageH || undefined, width: stageW || undefined }}
-          >
-            <S.BookShimmerPage>
-              {SHIMMER_LINE_WIDTHS.map((width, i) => (
-                <S.BookShimmerLine key={i} $width={width} />
-              ))}
-            </S.BookShimmerPage>
-            <S.BookShimmerPage>
-              {SHIMMER_LINE_WIDTHS.map((width, i) => (
-                <S.BookShimmerLine key={i} $width={width} />
-              ))}
-            </S.BookShimmerPage>
+          <S.BookLoadingShimmer style={{ height: spreadH, width: spreadW }}>
+            {Array.from({ length: perSpread }, (_, half) => (
+              <S.BookShimmerPage key={half}>
+                {SHIMMER_LINE_WIDTHS.map((width, i) => (
+                  <S.BookShimmerLine key={width + i} $width={width} />
+                ))}
+              </S.BookShimmerPage>
+            ))}
           </S.BookLoadingShimmer>
         )}
 

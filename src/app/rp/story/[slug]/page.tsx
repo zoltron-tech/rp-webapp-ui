@@ -22,9 +22,9 @@ import { EditStoryboardEventOverlay } from "@/components/edit-storyboard-event-c
 import { AppDropdownMenuResponsive } from "@/components/profile-more-dropdown";
 import { ReactionLikersDialog } from "@/components/reaction-likers-dialog";
 import { ReorderStoryboardEventsOverlay } from "@/components/reorder-storyboard-events";
-import { museAvatarUrl } from "@/components/rich-text-editor-input/dialog-embed";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
 import { ShareStoryDialog } from "@/components/share-story-dialog";
+import { StoryCharacters } from "@/components/story-characters";
 import StoryCardEvent from "@/components/story-event-card";
 import { StoryMembers } from "@/components/story-members";
 import { StoryboardWorkspace } from "@/components/storyboard-workspace";
@@ -391,30 +391,15 @@ export default function UserProfilePage({}) {
           />
         </S.ActionRow>
 
-        <StoryMembers storyboard={storyboard} />
+        <S.PeopleGrid>
+          <StoryMembers storyboard={storyboard} />
 
-        <ShouldRender if={cast.length > 0}>
-          <S.CastSection>
-            <S.SectionName>CAST</S.SectionName>
-            <S.CastRow>
-              {cast.map((member) => {
-                const avatarSrc = member.image || museAvatarUrl(member.id);
-                return (
-                  <S.CastChip key={member.id} title={member.name}>
-                    {avatarSrc ? (
-                      <S.CastAvatar src={avatarSrc} alt={member.name} />
-                    ) : (
-                      <S.CastAvatarFallback>
-                        {member.name.charAt(0).toUpperCase()}
-                      </S.CastAvatarFallback>
-                    )}
-                    <S.CastName>{member.name}</S.CastName>
-                  </S.CastChip>
-                );
-              })}
-            </S.CastRow>
-          </S.CastSection>
-        </ShouldRender>
+          <StoryCharacters
+            storyboardId={storyboardId}
+            cast={cast}
+            canEdit={isMember()}
+          />
+        </S.PeopleGrid>
 
         <StoryboardWorkspace
           storyboardId={storyboardId}

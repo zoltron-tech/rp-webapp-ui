@@ -37,6 +37,7 @@ import {
   MOCK_CHARACTERS,
   MOCK_ENTRIES,
   MOCK_ENTRY_COUNTS,
+  MOCK_GROUPS,
   MOCK_PEOPLE,
   MOCK_RELATIONSHIPS,
   MOCK_TONES,
@@ -277,6 +278,9 @@ const MeshTab: FC<TabProps> = ({ marks, ringed }) => {
   /* Every tone stays drawn: the legend's filters are the reader's to work on
      the real page, and there is nothing worth hiding in four sample threads. */
   const hiddenTones = useMemo(() => new Set<string>(), []);
+  /* Both sample houses stay painted, for the same reason — the overlap between
+     them is the thing this stage is here to show. */
+  const hiddenGroups = useMemo(() => new Set<string>(), []);
   // One beat per character, then one with nobody followed.
   const { beat } = useStageFlow(MOCK_PEOPLE.length + 1, 2400);
 
@@ -353,6 +357,8 @@ const MeshTab: FC<TabProps> = ({ marks, ringed }) => {
         relationships={MOCK_RELATIONSHIPS}
         palette={palette}
         hiddenTones={hiddenTones}
+        groups={MOCK_GROUPS}
+        hiddenGroups={hiddenGroups}
         focusedId={followed}
         onFocus={() => {
           /* The flow follows the cast; the model takes no input of its own. */

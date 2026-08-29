@@ -1,6 +1,7 @@
 import type {
   CodexCategory,
   CodexEntry,
+  CodexGroup,
   CodexRelationship,
   CodexTone,
   StoryCastMember,
@@ -99,6 +100,34 @@ export const MOCK_TONES: CodexTone[] = [
     label: "Blood oath",
     lineStyle: "DOTTED",
     ordinal: 0,
+  },
+];
+
+/**
+ * Two houses that share a member, so the guide's mesh shows the overlap and
+ * not just two fields side by side — the blend is the part that needs
+ * explaining.
+ */
+export const MOCK_GROUPS: CodexGroup[] = [
+  {
+    color: "#0091ff",
+    id: "group-tide",
+    members: [
+      { id: "muse-elenna", refType: "MUSE" },
+      { id: "muse-corvin", refType: "MUSE" },
+    ],
+    name: "The Tidewatch",
+    ordinal: 0,
+  },
+  {
+    color: "#e5484d",
+    id: "group-aldric",
+    members: [
+      { id: "muse-corvin", refType: "MUSE" },
+      { id: "character-aldric", refType: "CHARACTER" },
+    ],
+    name: "House Aldric",
+    ordinal: 1,
   },
 ];
 

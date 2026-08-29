@@ -30,6 +30,12 @@ export function useMuseSave() {
   const accent = useMuseState("accent");
   const useAccent = useMuseState("useAccent");
   const useExtraImages = useMuseState("useExtraImages");
+  const nameColor = useMuseState("nameColor");
+  const pennedByColor = useMuseState("pennedByColor");
+  const sideMenuBgColor = useMuseState("sideMenuBgColor");
+  const sideMenuTextColor = useMuseState("sideMenuTextColor");
+  const hideExpandedBackground = useMuseState("hideExpandedBackground");
+  const hideSideMenuBackground = useMuseState("hideSideMenuBackground");
   const extraAttributes = useMuseState("extraAttributes");
   const originalVerseId = useMuseState("originalVerseId");
   const setMuseState = useMuseStoreSet();
@@ -54,14 +60,23 @@ export function useMuseSave() {
         // read `target.fandom.value` from the hidden input bound to `fandom.id`).
         fandom: (fandom?.id ?? "FANDOMLESS") as unknown as Fandom,
         firstName: firstName?.trim() ?? "",
+        hideExpandedBackground,
+        hideSideMenuBackground,
         image: image ?? "",
         lastName: lastName?.trim() ?? "",
+        // Empty, not null: this hook holds the whole muse, so an override it
+        // has no value for is one the author cleared. Null would read as "not
+        // sending this" and leave the stored colour in place.
+        nameColor: nameColor?.trim() ?? "",
         nicknames: nicknames ?? [],
         note: note ?? "",
         // Only meaningful on create; the backend keeps verse lineage immutable
         // on update. Verse numbers are assigned server-side.
         originalVerseId: originalVerseId ?? null,
+        pennedByColor: pennedByColor?.trim() ?? "",
         privacy: _privacy,
+        sideMenuBgColor: sideMenuBgColor?.trim() ?? "",
+        sideMenuTextColor: sideMenuTextColor?.trim() ?? "",
         song: null,
         story: story ?? null,
         tags: null,
@@ -113,6 +128,12 @@ export function useMuseSave() {
       accent,
       useAccent,
       useExtraImages,
+      nameColor,
+      pennedByColor,
+      sideMenuBgColor,
+      sideMenuTextColor,
+      hideExpandedBackground,
+      hideSideMenuBackground,
       extraAttributes,
       originalVerseId,
       novelist,

@@ -13,7 +13,13 @@ import {
   useState,
 } from "react";
 import { HexColorPicker } from "react-colorful";
-import { BsArrowLeft, BsAspectRatio, BsPencil, BsUpload } from "react-icons/bs";
+import {
+  BsArrowLeft,
+  BsAspectRatio,
+  BsChevronDown,
+  BsPencil,
+  BsUpload,
+} from "react-icons/bs";
 import { MdOutlineBrush, MdTune } from "react-icons/md";
 import {
   deleteMuseSongAction,
@@ -34,7 +40,7 @@ import { AppAlertDialog } from "../dialog";
 import AvatarCropDialog from "../dialog/avatar-crop-dialog";
 import { ErrorBox } from "../error-box";
 import { PromptPrivacySelect } from "../prompt-input/privacy-select";
-import { useMuseState, useMuseStoreSet } from "./muse.store";
+import { type MuseState, useMuseState, useMuseStoreSet } from "./muse.store";
 import * as S from "./styled";
 import { useMuseSave } from "./use-muse-save";
 
@@ -46,6 +52,17 @@ const PRIVACY_LABELS: Record<string, string> = {
   ONLY_ME: "Only Me",
   PUBLIC: "Public",
 };
+
+/** Advanced appearance colour overrides, in the order they render. Each maps
+ *  1:1 to a nullable field on the muse; null means "use the default styling". */
+const ADVANCED_COLOR_FIELDS = [
+  { key: "nameColor", label: "Name text color" },
+  { key: "pennedByColor", label: "Penned by color" },
+  { key: "sideMenuBgColor", label: "Side menu background color" },
+  { key: "sideMenuTextColor", label: "Side menu text color" },
+] as const;
+
+type AdvancedColorKey = (typeof ADVANCED_COLOR_FIELDS)[number]["key"];
 
 /** Height ÷ width of the muse card (9:16 portrait). Used to compute the
  *  "fit smaller side" zoom for the card image. */
@@ -92,6 +109,12 @@ export function AppearanceSection({
   const accent = useMuseState("accent");
   const useAccent = useMuseState("useAccent");
   const useExtraImages = useMuseState("useExtraImages");
+  const nameColor = useMuseState("nameColor");
+  const pennedByColor = useMuseState("pennedByColor");
+  const sideMenuBgColor = useMuseState("sideMenuBgColor");
+  const sideMenuTextColor = useMuseState("sideMenuTextColor");
+  const hideExpandedBackground = useMuseState("hideExpandedBackground");
+  const hideSideMenuBackground = useMuseState("hideSideMenuBackground");
   const featuredSong = useMuseState("featuredSong");
   const setMuseState = useMuseStoreSet();
   const { save, loading } = useMuseSave();
@@ -137,6 +160,28 @@ export function AppearanceSection({
   const [mediaError, setMediaError] = useState<string | null>(null);
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [tempAccent, setTempAccent] = useState("#ff0000");
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  // Which advanced colour the shared picker dialog is editing; null = closed.
+  const [advancedColorKey, setAdvancedColorKey] =
+    useState<AdvancedColorKey | null>(null);
+  const [tempAdvancedColor, setTempAdvancedColor] = useState("#ffffff");
+
+  const advancedColorValues: Record<AdvancedColorKey, string | null> = {
+    nameColor,
+    pennedByColor,
+    sideMenuBgColor,
+    sideMenuTextColor,
+  };
+
+  // Computed-key writes need the narrowing cast — TS widens `{ [key]: value }`
+  // to a string index signature when `key` is a union of literals.
+  const setAdvancedColor = (key: AdvancedColorKey, value: string | null) =>
+    setMuseState({ [key]: value } as Pick<MuseState, AdvancedColorKey>);
+
+  const openAdvancedColorPicker = (key: AdvancedColorKey) => {
+    setTempAdvancedColor(advancedColorValues[key] ?? "#ffffff");
+    setAdvancedColorKey(key);
+  };
   const [tempUploads, setTempUploads] = useState<TempUploads>({});
 
   // Combined extra-images dialog
@@ -1020,6 +1065,136 @@ export function AppearanceSection({
             }
           />
         </S.MediaUploadSectionContainer>
+
+        {/* Advanced appearance overrides */}
+        <Separator.Root className="separator" orientation="horizontal" />
+        <S.AdvancedToggle
+          type="button"
+          aria-expanded={advancedOpen}
+          onClick={() => setAdvancedOpen((open) => !open)}
+        >
+          <MdTune size={15} />
+          Advanced
+          <span className="chevron">
+            <BsChevronDown size={12} />
+          </span>
+        </S.AdvancedToggle>
+
+        <ShouldRender if={advancedOpen}>
+          <S.AdvancedPanel>
+            <S.AdvancedHint>
+              Fine-tune the character profile. Anything left unset keeps the
+              default look.
+            </S.AdvancedHint>
+
+            {ADVANCED_COLOR_FIELDS.map(({ key, label }) => {
+              const value = advancedColorValues[key];
+              return (
+                <S.AdvancedColorRow key={key}>
+                  <span className="label">{label}</span>
+                  <S.AccentColorSwatch
+                    type="button"
+                    aria-label={`Edit ${label.toLowerCase()}`}
+                    style={
+                      value
+                        ? { backgroundColor: value }
+                        : {
+                            // Striped = unset, so it can't be mistaken for a
+                            // deliberately chosen grey.
+                            backgroundImage:
+                              "repeating-linear-gradient(45deg, var(--bg-4) 0 4px, var(--bg-3) 4px 8px)",
+                          }
+                    }
+                    onClick={() => openAdvancedColorPicker(key)}
+                  />
+                  <S.AccentEditButton
+                    type="button"
+                    aria-label={`Edit ${label.toLowerCase()}`}
+                    onClick={() => openAdvancedColorPicker(key)}
+                  >
+                    <BsPencil size={14} />
+                  </S.AccentEditButton>
+                  <S.AdvancedClearButton
+                    type="button"
+                    onClick={() => setAdvancedColor(key, null)}
+                    style={{ visibility: value ? "visible" : "hidden" }}
+                  >
+                    Reset
+                  </S.AdvancedClearButton>
+                </S.AdvancedColorRow>
+              );
+            })}
+
+            <S.AdvancedCheckboxRow>
+              <input
+                type="checkbox"
+                checked={hideExpandedBackground}
+                onChange={() =>
+                  setMuseState({
+                    hideExpandedBackground: !hideExpandedBackground,
+                  })
+                }
+              />
+              Remove expanded container background and border
+            </S.AdvancedCheckboxRow>
+
+            <S.AdvancedCheckboxRow>
+              <input
+                type="checkbox"
+                checked={hideSideMenuBackground}
+                onChange={() =>
+                  setMuseState({
+                    hideSideMenuBackground: !hideSideMenuBackground,
+                  })
+                }
+              />
+              Remove side menu background, border and shadow
+            </S.AdvancedCheckboxRow>
+          </S.AdvancedPanel>
+        </ShouldRender>
+
+        <AppAlertDialog
+          open={advancedColorKey !== null}
+          onOpenChange={(open) => {
+            if (!open) setAdvancedColorKey(null);
+          }}
+          heading={
+            ADVANCED_COLOR_FIELDS.find((f) => f.key === advancedColorKey)
+              ?.label ?? "Pick a color"
+          }
+          text=""
+          actionButtonLabel="Select"
+          closeButtonText="Cancel"
+          actionColor="neutral"
+          onConfirm={() => {
+            if (advancedColorKey) {
+              setAdvancedColor(advancedColorKey, tempAdvancedColor);
+            }
+            setAdvancedColorKey(null);
+          }}
+          onCancel={() => setAdvancedColorKey(null)}
+          body={
+            <S.AccentPickerDialogBody>
+              <HexColorPicker
+                color={tempAdvancedColor}
+                onChange={setTempAdvancedColor}
+              />
+              <div className="hex-input-row">
+                <span>Hex:</span>
+                <input
+                  type="text"
+                  value={tempAdvancedColor}
+                  onChange={(e) => {
+                    let val = e.target.value;
+                    if (val && val[0] !== "#") val = `#${val}`;
+                    setTempAdvancedColor(val);
+                  }}
+                  placeholder="#ffffff"
+                />
+              </div>
+            </S.AccentPickerDialogBody>
+          }
+        />
 
         {/* Character song — only for an existing muse (needs an id to attach to) */}
         {id ? (

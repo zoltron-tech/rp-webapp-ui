@@ -2,6 +2,7 @@
 
 import type { Muse } from "@nw/types";
 import type React from "react";
+import { getMuseAppearance } from "../appearance";
 import * as S from "../styles";
 import PennedBy from "./PennedBy";
 
@@ -13,6 +14,7 @@ type Props = {
 export default function SectionMiniHeader({ muse, accent }: Props) {
   // routing for penned-by is handled by the PennedBy component
   const avatarSrc = muse?.avatar?.src || muse?.image || "";
+  const { nameColor, pennedByColor } = getMuseAppearance(muse);
 
   if (!muse) {
     return (
@@ -51,11 +53,15 @@ export default function SectionMiniHeader({ muse, accent }: Props) {
           justifyContent: "center",
         }}
       >
-        <S.SectionMiniName>
+        <S.SectionMiniName $textColor={nameColor}>
           {muse?.firstName} {muse?.lastName}
         </S.SectionMiniName>
 
-        <PennedBy pennedBy={muse?.pennedBy} accent={accent ?? null} />
+        <PennedBy
+          pennedBy={muse?.pennedBy}
+          accent={accent ?? null}
+          textColor={pennedByColor}
+        />
       </div>
     </S.SectionMiniHeader>
   );

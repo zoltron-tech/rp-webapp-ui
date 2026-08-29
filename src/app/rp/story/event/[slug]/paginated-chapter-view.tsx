@@ -1,38 +1,12 @@
 "use client";
 
 import type { StoryBoardEvent, StoryBoardEventThread } from "@nw/types";
-import {
-  type CSSProperties,
-  type FC,
-  type ReactNode,
-  useCallback,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { useWindowDimensions } from "@/hooks";
-import { contentHeight, contentWidth, resolvePageSpec } from "@/lib/paginator";
-import {
-  ChapterFlow,
-  COMPOSER_KEY,
-  EDITOR_KEY,
-  MeasuredItem,
-  threadKey,
-  useChapterPages,
-  useFlowItems,
-  useMeasuredHeights,
-} from "./chapter-pages";
+import type { FC, ReactNode } from "react";
+import { ChapterFlow, useFlowItems } from "./chapter-pages";
 import * as P from "./paginated-chapter-view.styles";
-
-/** Never let the manuscript get so small it stops being readable. */
-const MIN_SCALE = 0.55;
-const MAX_SCALE = 1.25;
 
 type Props = {
   event: StoryBoardEvent;
-  /** The story's page geometry preset (a `PageFormat`). */
-  pageFormat?: string | null;
   /** The loaded, contiguous window of the chapter's passages. */
   threads: StoryBoardEventThread[];
   /** Global index (in createdAt order) of `threads[0]`. */
@@ -47,10 +21,8 @@ type Props = {
   bookmarkIndex: number | null;
   /** The passage being edited in place, if any. */
   editingThreadId?: string | null;
-  /**
-   * The inline editor for `editingThreadId`. Mounted exactly once, in the
-   * passage's own place in the flow, so everything below it reflows live.
-   */
+  /** The inline editor for `editingThreadId`, mounted in that passage's own
+   *  place in the flow so everything below it reflows live. */
   editor?: ReactNode;
   onEdit: (thread: StoryBoardEventThread) => void;
   onDelete: (thread: StoryBoardEventThread) => void;
@@ -71,16 +43,22 @@ type Props = {
 /**
  * The chapter as one continuous manuscript.
  *
- * Pages are still the model underneath — the packer runs over the whole
- * chapter using the heights frozen on the server, so page 12 here is page 12
- * in the book. What this view drops is the *drawing* of them: no stack of
- * paper cards, no gaps, no clipped windows. The prose runs on unbroken and
- * each page division is marked only by its number, quietly, in the right
- * margin where the page gave out.
+ * Deliberately has no idea what a page is. It used to: the chapter was laid
+ * out against a stored page format, packed into numbered pages from heights
+ * frozen on the server, and marked with a page number in the margin wherever
+ * one gave out — with a badge under the composer telling you which page your
+ * draft had landed on and how many lines were left on it.
+ *
+ * None of that helped anyone write. It made the writing surface a fixed
+ * measure that had nothing to do with the window it was in, it re-packed the
+ * whole chapter on every keystroke, and the numbers it showed were only ever
+ * true for one page geometry. Where a page ends is a reading decision, so the
+ * book makes it at read time, against the screen it is being read on.
+ *
+ * What is left is prose in a readable column, running on.
  */
 export const PaginatedChapterView: FC<Props> = ({
   event,
-  pageFormat,
   threads,
   startIndex,
   totalThreads,
@@ -101,187 +79,15 @@ export const PaginatedChapterView: FC<Props> = ({
   onNeedAfter,
   composer,
 }) => {
-  const spec = resolvePageSpec(pageFormat);
-  const pageW = contentWidth(spec);
-  const pageH = contentHeight(spec);
-
-  const stageRef = useRef<HTMLDivElement>(null);
-  const sheetRef = useRef<HTMLDivElement>(null);
-  const { width: winW } = useWindowDimensions();
-  const [scale, setScale] = useState(1);
-  /** The sheet's own (unscaled) height, so its scaled footprint can be held. */
-  const [sheetHeight, setSheetHeight] = useState(0);
-  const { heights, reportHeight } = useMeasuredHeights();
-  /**
-   * What the manuscript actually draws. It is shorter than the packed height
-   * wherever the book pushed a block onto a fresh page: the model keeps those
-   * pushes (they are the page breaks), the drawn flow drops them so the prose
-   * runs on with no holes. Page numbers are placed against these.
-   */
-  const { heights: drawnHeights, reportHeight: reportDrawnHeight } =
-    useMeasuredHeights();
-
-  // ── Fit the fixed page width to the viewport ─────────────────────────────
-  // Geometry never changes; only the whole-sheet scale does. That is what keeps
-  // the measure — and so the page breaks — the same from a 375px phone to a 4K
-  // monitor.
-  const recomputeScale = useCallback(() => {
-    const stage = stageRef.current;
-    if (!stage) return;
-    const available = stage.clientWidth;
-    if (available <= 0) return;
-    setScale(Math.min(MAX_SCALE, Math.max(MIN_SCALE, available / spec.width)));
-  }, [spec.width]);
-
-  useLayoutEffect(() => {
-    recomputeScale();
-  }, [recomputeScale, winW]);
-
-  useLayoutEffect(() => {
-    const stage = stageRef.current;
-    if (!stage) return;
-    const observer = new ResizeObserver(recomputeScale);
-    observer.observe(stage);
-    return () => observer.disconnect();
-  }, [recomputeScale]);
-
-  // The sheet is transformed, so its scaled height is invisible to layout —
-  // measure it and let the slot around it reserve the room.
-  useLayoutEffect(() => {
-    const sheet = sheetRef.current;
-    if (!sheet) return;
-    const measure = () => setSheetHeight(sheet.offsetHeight);
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(sheet);
-    return () => observer.disconnect();
-  }, []);
-
   const items = useFlowItems(threads, startIndex);
-  /** The composer only costs the chapter a draft's worth of room when it is
-   *  written at the end of it — mid-chapter it is detached, off the flow. */
+
+  /** The composer belongs at the end of the chapter, so it is only written
+   *  inline when the end is what is loaded. */
   const inlineComposer = Boolean(composer) && !hasNewer;
-  const composerHeight = inlineComposer ? (heights[COMPOSER_KEY] ?? 0) : 0;
-
-  /** The passage being edited in place, if it is among the loaded items. */
-  const editKey = editingThreadId ? threadKey(editingThreadId) : null;
-  const editing = Boolean(
-    editKey && editor && items.some((item) => item.key === editKey),
-  );
-  /** The editor's measured height. The measured copy of the flow holds the
-   *  passage's slot open at exactly this height, which is what makes the pages
-   *  below it reflow as the author types. */
-  const editHeight = editing ? (heights[EDITOR_KEY] ?? 0) : 0;
-
-  // Pages are the chapter's, not this window's: the packer runs over every
-  // passage in the chapter using the heights frozen on the server, so page 12
-  // is page 12 however the reader got here and on whatever machine.
-  const { packed, settled } = useChapterPages({
-    // While an inline edit is live the measured height of the edited passage is
-    // the editor's — never freeze that on the server; reporting resumes (and
-    // self-corrects) once the passage renders as prose again.
-    canReport: canManage && !editing,
-    composerHeight,
-    measured: heights,
-    pageFormat: spec.value,
-    pageHeight: pageH,
-    storyboardEventId: event.id ?? "",
-  });
-
-  const { draft } = packed;
-
-  /**
-   * Where each page ended, as an offset down the rendered flow.
-   *
-   * The pack lays the chapter out in sheets, each carrying one page number (or
-   * several, when a single passage overruns) plus the blank tail that fills out
-   * its last page. This view renders no blank tails and no keep-together
-   * pushes, so a page's end is simply its content's end: walk the sheets this
-   * window actually renders, stacking the height they are *drawn* at, and mark
-   * every page boundary on the way. Where the drawn sheet is shorter than the
-   * packed one, its inner divisions move with it, in proportion.
-   */
-  const pageTicks = useMemo(() => {
-    if (items.length === 0) return [];
-    const firstKey = items[0].key;
-    const lastKey = items[items.length - 1].key;
-    const firstSheet = packed.sheetOfItem.get(firstKey);
-    const lastSheet = packed.sheetOfItem.get(lastKey);
-    if (firstSheet === undefined || lastSheet === undefined) return [];
-
-    /** An item's drawn height, falling back to its packed one until the
-     *  manuscript has measured it. */
-    const drawn = (key: string) => drawnHeights[key] ?? heights[key] ?? 0;
-
-    /** How much shorter this sheet is drawn than it was packed. Only the items
-     *  this window holds can answer that, which is exactly the part of the
-     *  sheet the ticks below are placed against. */
-    const shrink = (keys: string[]) => {
-      let packedUsed = 0;
-      let drawnUsed = 0;
-      for (const key of keys) {
-        if (drawnHeights[key] === undefined) continue;
-        packedUsed += heights[key] ?? 0;
-        drawnUsed += drawnHeights[key];
-      }
-      return packedUsed > 0 ? drawnUsed / packedUsed : 1;
-    };
-
-    /** How much of the flow this window draws — nothing may be marked past it,
-     *  since the sheets it sits on also carry passages nobody loaded. */
-    const rendered =
-      items.reduce((sum, item) => sum + drawn(item.key), 0) + composerHeight;
-
-    const ticks: { page: number; top: number }[] = [];
-    // The window can open mid-sheet: back the cursor up by however much of the
-    // sheet was already spent before its first drawn passage.
-    let cursor =
-      -(packed.offsetOfItem.get(firstKey) ?? 0) *
-      shrink(packed.sheets[firstSheet]?.keys ?? []);
-    for (let index = firstSheet; index <= lastSheet; index++) {
-      const sheet = packed.sheets[index];
-      if (!sheet) break;
-      const ratio = shrink(sheet.keys);
-      for (let step = 0; step < sheet.span; step++) {
-        const top = cursor + Math.min((step + 1) * pageH, sheet.used) * ratio;
-        if (top > 0 && top <= rendered + 2) {
-          ticks.push({ page: sheet.startNumber + step, top });
-        }
-      }
-      cursor += sheet.used * ratio;
-    }
-    return ticks;
-  }, [items, packed, heights, drawnHeights, pageH, composerHeight]);
-
-  const flowStyle = {
-    // The flow is drawn at `scale`, so anything inside it that is chrome rather
-    // than prose — the composer, the in-place editor — can size itself in the
-    // real pixels the writer sees instead of the page pixels it is laid out in.
-    "--nw-composer-scale": scale,
-    "--nw-page-media-max": `${pageH}px`,
-    fontSize: spec.fontSize,
-    lineHeight: spec.lineHeight,
-    width: pageW,
-  } as CSSProperties;
+  const editing = Boolean(editingThreadId && editor);
 
   return (
-    <P.Stage ref={stageRef}>
-      {/* The copy the packer measures. It renders every passage the same way
-          for every reader — no edit controls, no live editor — so the page
-          breaks never depend on who is reading or what they are doing. */}
-      <P.MeasureLayer aria-hidden style={flowStyle}>
-        <ChapterFlow
-          items={items}
-          packed={packed}
-          event={event}
-          hasThreads={threads.length > 0}
-          pageHeight={pageH}
-          editingThreadId={editing ? editingThreadId : null}
-          editingHoleHeight={editHeight}
-          onHeight={reportHeight}
-        />
-      </P.MeasureLayer>
-
+    <P.Stage>
       {hasOlder && (
         <P.EdgeButton
           type="button"
@@ -292,100 +98,29 @@ export const PaginatedChapterView: FC<Props> = ({
         </P.EdgeButton>
       )}
 
-      <P.ManuscriptSlot
-        style={{ height: sheetHeight * scale, width: spec.width * scale }}
-      >
-        <P.Sheet
-          ref={sheetRef}
-          style={{
-            padding: `${spec.padY}px ${spec.padX}px`,
-            transform: `scale(${scale})`,
-            width: spec.width,
-          }}
-        >
-          <P.FlowColumn style={flowStyle}>
-            <ChapterFlow
-              items={items}
-              packed={packed}
-              event={event}
-              hasThreads={threads.length > 0}
-              pageHeight={pageH}
-              scale={scale}
-              // The manuscript draws no page edges, so nothing is pushed off a
-              // break here: a push would leave a hole running to the next page
-              // in prose that is meant to be unbroken. The measured copy above
-              // still pushes, so the model — and the book — keep their breaks.
-              applyBreaks={false}
-              onHeight={reportDrawnHeight}
-              canManage={canManage}
-              bookmarksInteractive={isLoggedIn}
-              bookmarkIndex={bookmarkIndex}
-              editingThreadId={editing ? editingThreadId : null}
-              // The one mounted copy of the editor, in the passage's own slot.
-              // Keep-together is off around it: it injects margins into live
-              // DOM, and this DOM is the contentEditable being saved.
-              editorNode={
-                editing ? (
-                  <MeasuredItem
-                    itemKey={EDITOR_KEY}
-                    onHeight={reportHeight}
-                    scale={scale}
-                  >
-                    {editor}
-                  </MeasuredItem>
-                ) : null
-              }
-              showLeftover={false}
-              registerThreadEl={registerThreadEl}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onToggleBookmark={onToggleBookmark}
-            />
+      <P.Manuscript>
+        <ChapterFlow
+          items={items}
+          event={event}
+          hasThreads={threads.length > 0}
+          canManage={canManage}
+          bookmarksInteractive={isLoggedIn}
+          bookmarkIndex={bookmarkIndex}
+          editingThreadId={editing ? editingThreadId : null}
+          editorNode={editing ? editor : null}
+          registerThreadEl={registerThreadEl}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onToggleBookmark={onToggleBookmark}
+        />
 
-            {/* The live end of the chapter. A new passage joins the end, so it
-                is written here only when the end is what is loaded. */}
-            {inlineComposer && (
-              <MeasuredItem
-                itemKey={COMPOSER_KEY}
-                onHeight={reportHeight}
-                scale={scale}
-              >
-                <P.ComposerSlot $bleed={spec.padX}>
-                  <P.DraftBadge>
-                    Draft — page {draft?.startPage ?? packed.totalPages}
-                    {draft &&
-                      draft.endPage > draft.startPage &&
-                      `–${draft.endPage}`}
-                    {draft && (
-                      <span className="room">
-                        {draft.roomLeft > 12
-                          ? `· about ${Math.round(
-                              draft.roomLeft /
-                                (spec.fontSize * spec.lineHeight),
-                            )} lines left on this page`
-                          : "· this page is full"}
-                      </span>
-                    )}
-                  </P.DraftBadge>
-                  {composer}
-                </P.ComposerSlot>
-              </MeasuredItem>
-            )}
-          </P.FlowColumn>
-
-          {pageTicks.map((tick) => (
-            <P.PageTick
-              key={tick.page}
-              style={{
-                right: Math.round(spec.padX / 4),
-                top: spec.padY + tick.top,
-              }}
-            >
-              {tick.page}
-            </P.PageTick>
-          ))}
-        </P.Sheet>
-      </P.ManuscriptSlot>
+        {inlineComposer && (
+          <P.ComposerSlot>
+            <P.DraftBadge>Draft — joins the end of the chapter</P.DraftBadge>
+            {composer}
+          </P.ComposerSlot>
+        )}
+      </P.Manuscript>
 
       {hasNewer && (
         <P.EdgeButton
@@ -400,19 +135,15 @@ export const PaginatedChapterView: FC<Props> = ({
       {/* Reading mid-chapter: a new passage still joins the end, so it is
           written here rather than in a place it would not land. */}
       {composer && hasNewer && (
-        <P.DetachedComposer style={{ width: spec.width * scale }}>
-          <P.DraftBadge>
-            Draft — joins the end of the chapter, page {packed.totalPages}
-          </P.DraftBadge>
+        <P.DetachedComposer>
+          <P.DraftBadge>Draft — joins the end of the chapter</P.DraftBadge>
           {composer}
         </P.DetachedComposer>
       )}
 
       <P.Footer>
-        {packed.totalPages} {packed.totalPages === 1 ? "page" : "pages"} ·{" "}
         {totalThreads} {totalThreads === 1 ? "passage" : "passages"}
         {canManage && composer ? " · writing" : ""}
-        {!settled && " · measuring"}
       </P.Footer>
     </P.Stage>
   );

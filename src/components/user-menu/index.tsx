@@ -195,7 +195,6 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
     routeToPage(ROUTES.FAQs);
   };
 
-
   const handleInstallAppClick = () => {
     if (isMobile) {
       setShowInstallDialog(true);

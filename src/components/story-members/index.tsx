@@ -74,20 +74,19 @@ export const StoryMembers: FC<Props> = ({ storyboard }) => {
         </S.HeaderLeft>
 
         <S.HeaderRight>
-            <S.Stack aria-label="Members preview">
-              {stackMembers.map((member) => (
-                <S.StackAvatar
-                  key={member.username}
-                  src={member.image}
-                  alt={member.username}
-                  title={`@${member.username}`}
-                />
-              ))}
-              {overflowCount > 0 && (
-                <S.StackOverflow>+{overflowCount}</S.StackOverflow>
-              )}
-            </S.Stack>
-          
+          <S.Stack aria-label="Members preview">
+            {stackMembers.map((member) => (
+              <S.StackAvatar
+                key={member.username}
+                src={member.image}
+                alt={member.username}
+                title={`@${member.username}`}
+              />
+            ))}
+            {overflowCount > 0 && (
+              <S.StackOverflow>+{overflowCount}</S.StackOverflow>
+            )}
+          </S.Stack>
 
           <S.Chevron $expanded={expanded}>
             <MdOutlineExpandMore />

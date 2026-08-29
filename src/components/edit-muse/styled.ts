@@ -2571,3 +2571,151 @@ export const InheritedPrivacyBadge = styled.div`
     height: 13px;
   }
 `;
+
+/* ── Advanced appearance disclosure ──────────────────────────────────────── */
+
+export const AdvancedToggle = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 16px;
+  padding: 9px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--bg-6);
+  background: var(--bg-3);
+  color: var(--text-secondary);
+  font-family: var(--font);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: var(--bg-4);
+    color: var(--text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .chevron {
+    margin-left: auto;
+    display: inline-flex;
+    transition: transform 0.2s ease;
+  }
+
+  &[aria-expanded="true"] .chevron {
+    transform: rotate(180deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chevron {
+      transition: none;
+    }
+  }
+`;
+
+export const AdvancedPanel = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid var(--bg-4);
+  background: var(--bg-2);
+`;
+
+export const AdvancedHint = styled.p`
+  margin: 0 0 6px;
+  font-family: var(--font);
+  font-size: var(--font-size-xsmall);
+  color: var(--text-secondary);
+`;
+
+export const AdvancedColorRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+
+  .label {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font);
+    font-size: var(--font-size-small);
+    color: var(--text-secondary);
+  }
+`;
+
+export const AdvancedClearButton = styled.button`
+  all: unset;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 3px 8px;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-family: var(--font);
+  font-size: var(--font-size-xsmall);
+  transition: color 0.15s, background-color 0.15s;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--text);
+    background-color: var(--bg-4);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+`;
+
+export const AdvancedCheckboxRow = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+
+  input[type="checkbox"] {
+    all: unset;
+    width: 20px;
+    height: 20px;
+    aspect-ratio: 1;
+    flex-shrink: 0;
+    border-radius: 4px;
+    cursor: pointer;
+    accent-color: var(--accent);
+    background-color: var(--bg-3);
+    border: 1px solid var(--bg-6);
+
+    &:checked {
+      background-color: var(--accent);
+      border: 1px solid var(--accent-hover);
+
+      &::before {
+        content: "✓";
+        display: block;
+        color: var(--text);
+        text-align: center;
+        line-height: 20px;
+        font-weight: var(--font-weight-bold);
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  }
+`;

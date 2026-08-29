@@ -151,7 +151,11 @@ export const SearchInput = styled.input`
 
 /** "Pinned" / "Others", the way Keep splits its board. */
 export const SectionLabel = styled.h3`
-  margin: 0.25rem 0 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  /* Bottom room for the pins standing proud of the first row of cards. */
+  margin: 0.25rem 0 0.4rem;
   font-size: 0.7rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -242,25 +246,66 @@ export const CardThumb = styled.img`
 `;
 
 /** Sits over the card's top-right corner, clear of the open button beneath. */
+/**
+ * The pin, and the only control on the card.
+ *
+ * Pinned, it is a physical object: oversized, driven in at an angle, and
+ * hanging off the card's top-right corner so the card reads as being held up
+ * by it. Nothing clips it — the card sets no overflow, and the grid leaves
+ * room above for it to stand proud.
+ *
+ * Unpinned, it retreats: small, tipped back, and drained of colour, so it is
+ * an affordance sitting on the card rather than something stuck through it.
+ */
 export const PinButton = styled.button<{ $active?: boolean }>`
   position: absolute;
-  top: 0.4rem;
-  right: 0.4rem;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  padding: 0;
   border: none;
+  border-radius: 50%;
   background: transparent;
   cursor: pointer;
-  color: ${(p) => (p.$active ? "var(--accent)" : "var(--text-secondary)")};
+  /*
+   * The pinned pin breaks the card's bounds; the unpinned one sits inside.
+   *
+   * The sideways overhang is the constrained one. On the storyboard page the
+   * card's right edge is only 12px from the viewport at 375px, and between
+   * grid columns there is a 12px gap — so 6px stands the pin proud while
+   * still clearing both by 6px. The overhang upward has the row gap and the
+   * section label's margin to fall into, so it can be deeper.
+   */
+  top: ${(p) => (p.$active ? "-10px" : "0.4rem")};
+  right: ${(p) => (p.$active ? "-6px" : "0.4rem")};
+  width: ${(p) => (p.$active ? "38px" : "32px")};
+  height: ${(p) => (p.$active ? "38px" : "32px")};
+  transition: top 0.18s ease, right 0.18s ease, width 0.18s ease,
+    height 0.18s ease, background 0.15s ease;
 
-  &:hover {
+  svg {
+    /* Driven in at an angle, and casting onto the card it holds. */
+    transform: ${(p) =>
+      p.$active ? "rotate(34deg)" : "scale(0.66) rotate(-26deg)"};
+    transform-origin: 50% 62%;
+    filter: ${(p) =>
+      p.$active
+        ? "drop-shadow(-2px 3px 2.5px rgba(0, 0, 0, 0.34))"
+        : "grayscale(0.85)"};
+    opacity: ${(p) => (p.$active ? 1 : 0.45)};
+    transition: transform 0.18s ease, filter 0.18s ease, opacity 0.18s ease;
+  }
+
+  /* Hover previews going in, without committing to it. */
+  &:hover[aria-pressed="false"] {
     background: color-mix(in srgb, var(--text) 8%, transparent);
-    color: var(--text);
+  }
+
+  &:hover[aria-pressed="false"] svg {
+    filter: none;
+    opacity: 1;
+    transform: scale(0.72) rotate(10deg);
   }
 `;
 

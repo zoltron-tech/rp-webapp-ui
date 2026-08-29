@@ -41,6 +41,7 @@ import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { ScoreBadgeIcon } from "@/utils/badge-icons";
 import { API_MESSAGE } from "@/utils/constants";
+import { getMuseAppearance } from "../appearance";
 import * as S from "../styles";
 import PennedBy from "./PennedBy";
 
@@ -64,6 +65,8 @@ type Props = {
 
 export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
   const accent = muse?.useAccent ? muse.accent : undefined;
+  const { hideExpandedBackground, nameColor, pennedByColor } =
+    getMuseAppearance(muse);
   const theme = useGlobalState("theme");
   const globalAccent = useGlobalState("accent");
   const { successToast, errorToast } = useUIContext();
@@ -498,8 +501,11 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
 
   if (!muse) {
     return (
-      <S.CardExpandedWrapper>
-        <S.CardBack className="muse-card">
+      <S.CardExpandedWrapper $hideChrome={hideExpandedBackground}>
+        <S.CardBack
+          className="muse-card"
+          $hideBackground={hideExpandedBackground}
+        >
           <S.InfoCardContent>
             <S.InfoScrollBody>
               <S.InfoHeaderSection>
@@ -531,8 +537,12 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
   }
 
   return (
-    <S.CardExpandedWrapper>
-      <S.CardBack className="muse-card" accent={accent}>
+    <S.CardExpandedWrapper $hideChrome={hideExpandedBackground}>
+      <S.CardBack
+        className="muse-card"
+        accent={accent}
+        $hideBackground={hideExpandedBackground}
+      >
         <S.InfoCardContent>
           {/* Score corner */}
           <ShouldRender if={typeof muse?.totalPoints === "number"}>
@@ -706,12 +716,16 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
                 </S.InfoCardAvatar>
               )}
 
-              <S.InfoMuseName>
+              <S.InfoMuseName $textColor={nameColor}>
                 {muse?.firstName}
                 {muse?.lastName ? ` ${muse.lastName}` : ""}
               </S.InfoMuseName>
 
-              <PennedBy pennedBy={muse?.pennedBy} accent={accent ?? null} />
+              <PennedBy
+                pennedBy={muse?.pennedBy}
+                accent={accent ?? null}
+                textColor={pennedByColor}
+              />
 
               {/* Nicknames */}
               {isOwnMuse ? (

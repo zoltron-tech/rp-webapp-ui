@@ -4,6 +4,7 @@ import type {
   Codex,
   CodexCategory,
   CodexEntry,
+  CodexGroup,
   CodexRelationship,
   CodexTone,
   StoryBoardEvent,
@@ -25,6 +26,7 @@ import { LuNetwork, LuSettings2, LuUsers } from "react-icons/lu";
 import {
   deleteCodexCategoryAction,
   deleteCodexEntryAction,
+  deleteCodexGroupAction,
   deleteCodexRelationshipAction,
   deleteCodexToneAction,
   deleteStoryCharacterAction,
@@ -32,6 +34,7 @@ import {
   reorderCodexCategoriesAction,
   saveCodexCategoryAction,
   saveCodexEntryAction,
+  saveCodexGroupAction,
   saveCodexRelationshipAction,
   saveCodexToneAction,
   saveStoryCharacterAction,
@@ -40,7 +43,13 @@ import {
   museAvatarUrl,
   storyCharacterAvatarUrl,
 } from "@/components/rich-text-editor-input/dialog-embed";
+import {
+  CHARACTER_DELETED,
+  CHARACTER_SAVED,
+  STORY_CHARACTER_EVENTS,
+} from "@/components/story-characters/events";
 import { useUIContext } from "@/hooks";
+import { useCustomEvents } from "@/hooks/use-custom-events";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
@@ -125,8 +134,13 @@ export const StoryCodexView: FC<Props> = ({
   const [relationships, setRelationships] = useState<CodexRelationship[]>([]);
   /** Tones this story defined on top of the built-in three. */
   const [tones, setTones] = useState<CodexTone[]>([]);
+  /** The houses, clans and affiliations this story sorts its cast into. */
+  const [groups, setGroups] = useState<CodexGroup[]>([]);
   /** The story's own characters — the pool every co-author writes. */
   const [characters, setCharacters] = useState<StoryCharacter[]>([]);
+  /** The header strip shows these too, from its own copy — tell it what
+   *  changes here. See `@/components/story-characters/events`. */
+  const characterEvents = useCustomEvents(STORY_CHARACTER_EVENTS, storyboardId);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>(CAST_TAB);
 
@@ -161,6 +175,7 @@ export const StoryCodexView: FC<Props> = ({
       setEntries(seed.entries);
       setRelationships(seed.relationships ?? []);
       setTones(seed.tones ?? []);
+      setGroups(seed.groups ?? []);
       setCharacters(seed.characters ?? []);
       return;
     }
@@ -171,6 +186,7 @@ export const StoryCodexView: FC<Props> = ({
     setEntries(result.entries);
     setRelationships(result.relationships ?? []);
     setTones(result.tones ?? []);
+    setGroups(result.groups ?? []);
     setCharacters(result.characters ?? []);
   }, [storyboardId, seed]);
 
@@ -346,6 +362,7 @@ export const StoryCodexView: FC<Props> = ({
           )
         : [...current, saved];
     });
+    characterEvents.emit(CHARACTER_SAVED, saved);
     setCharacterSheet({ character: null, open: false });
   };
 
@@ -368,6 +385,17 @@ export const StoryCodexView: FC<Props> = ({
           !(edge.toType === "CHARACTER" && edge.toId === character.id),
       ),
     );
+    // Their group memberships went the same way — the foreign key took them.
+    setGroups((current) =>
+      current.map((group) => ({
+        ...group,
+        members: group.members.filter(
+          (member) =>
+            !(member.refType === "CHARACTER" && member.id === character.id),
+        ),
+      })),
+    );
+    characterEvents.emit(CHARACTER_DELETED, character.id);
     setCharacterSheet({ character: null, open: false });
     successToast("Character deleted.");
   };
@@ -430,6 +458,41 @@ export const StoryCodexView: FC<Props> = ({
       current.map((edge) =>
         edge.toneId === tone.id ? { ...edge, toneId: null } : edge,
       ),
+    );
+  };
+
+  // ── Groups ───────────────────────────────────────────────────────────────
+
+  /**
+   * Creates or replaces a group. Membership travels whole, not as a delta —
+   * the sheet holds the set the author is editing, so it sends that set.
+   */
+  const handleSaveGroup = async (group: CodexGroup) => {
+    const saved = await saveCodexGroupAction(storyboardId, group);
+    if (!saved || "message" in saved) {
+      errorToast("Could not save that group. Please try again.");
+      return;
+    }
+    setGroups((current) => {
+      const exists = current.some((candidate) => candidate.id === saved.id);
+      return exists
+        ? current.map((candidate) =>
+            candidate.id === saved.id ? saved : candidate,
+          )
+        : [...current, saved];
+    });
+  };
+
+  /** Disbands a group. Its characters and their relationships are untouched. */
+  const handleDeleteGroup = async (group: CodexGroup) => {
+    if (!group.id) return;
+    const result = await deleteCodexGroupAction(group.id);
+    if (result.message !== API_MESSAGE.Success) {
+      errorToast("Could not disband that group. Please try again.");
+      return;
+    }
+    setGroups((current) =>
+      current.filter((candidate) => candidate.id !== group.id),
     );
   };
 
@@ -606,8 +669,11 @@ export const StoryCodexView: FC<Props> = ({
           cast={people}
           relationships={relationships}
           tones={tones}
+          groups={groups}
           onSaveTone={handleSaveTone}
           onDeleteTone={handleDeleteTone}
+          onSaveGroup={handleSaveGroup}
+          onDeleteGroup={handleDeleteGroup}
           canEdit={canEdit}
           onSave={handleSaveRelationship}
           onDelete={handleDeleteRelationship}

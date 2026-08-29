@@ -26,6 +26,7 @@ import {
   type RichTextEditorHandle,
 } from "@/components/rich-text-editor-input";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
+import { PushPinIcon } from "@/components/user-menu/user-menu-icons";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import { API_MESSAGE } from "@/utils/constants";
@@ -405,7 +406,10 @@ export const NoteSheet: FC<Props> = ({
             <S.ViewTags>
               {note.isPinned && (
                 <S.ViewTag>
-                  <LuPin size={12} />
+                  {/* Same badge as the card's pin, so "this note is pinned"
+                      looks the same wherever it is said. The toggle below
+                      keeps its line icon — it sits in a row of them. */}
+                  <PushPinIcon size={13} />
                   Pinned
                 </S.ViewTag>
               )}

@@ -7,7 +7,6 @@ import { getStoryboardAction } from "@/app/rp/story/actions";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
-import { resolvePageSpec } from "@/lib/paginator";
 import EditStoryboardDataCard, {
   type EditStoryboardDataCardHandle,
 } from "./edit-storyboard-data-card";
@@ -76,7 +75,7 @@ export const EditStoryboardForm = forwardRef<
             isPublic: storyboard?.isPublic ?? false,
             members: storyboard?.members ?? [],
             name: storyboard?.name ?? "",
-            pageFormat: resolvePageSpec(storyboard?.pageFormat).value,
+            pageFormat: storyboard?.pageFormat ?? null,
             tags: storyboard?.tags ?? [],
           }}
         >

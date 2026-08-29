@@ -24,6 +24,13 @@ export type MuseState = {
   privacy: PrivacyLevel;
   useAccent: boolean;
   useExtraImages: boolean;
+  /** Advanced appearance overrides; null/false = default profile styling. */
+  nameColor: string | null;
+  pennedByColor: string | null;
+  sideMenuBgColor: string | null;
+  sideMenuTextColor: string | null;
+  hideExpandedBackground: boolean;
+  hideSideMenuBackground: boolean;
   extraAttributes: Record<string, string> | null;
   /** Rich featured song for the muse (NW Library / Spotify); null when unset. */
   featuredSong: ProfileSong | null;
@@ -40,13 +47,19 @@ export const INITIAL_STATE: MuseState = {
   featuredSong: null,
   firstName: null,
   gender: null,
+  hideExpandedBackground: false,
+  hideSideMenuBackground: false,
   id: null,
   image: null,
   lastName: null,
+  nameColor: null,
   nicknames: [],
   note: null,
   originalVerseId: null,
+  pennedByColor: null,
   privacy: "ONLY_ME",
+  sideMenuBgColor: null,
+  sideMenuTextColor: null,
   story: null,
   useAccent: false,
   useExtraImages: false,

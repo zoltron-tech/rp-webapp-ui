@@ -1,3 +1,5 @@
+import { canShortenProfilePath } from "./reserved-paths";
+
 export const ROUTES = {
   Bookmarks: "/rp/bookmarks",
   Compose: (params: {
@@ -24,13 +26,13 @@ export const ROUTES = {
   Fellows: "/rp/fellows",
   ForgotPassword: "/rp/forgot-password",
   Home: "/rp/home",
-  Library: "/rp/library",
-  Leaderboard: {
-    Novelists: "/rp/leaderboard/novelists",
-    Muses: "/rp/leaderboard/muses",
-  },
   InstallApp: "/rp/install-app",
+  Leaderboard: {
+    Muses: "/rp/leaderboard/muses",
+    Novelists: "/rp/leaderboard/novelists",
+  },
   Levels: "/rp/levels",
+  Library: "/rp/library",
   Login: "/rp/login",
   Muse: {
     Index: "/rp/muse",
@@ -53,7 +55,6 @@ export const ROUTES = {
   Profile: {
     Edit: "/rp/profile/edit",
     Index: "/rp/profile",
-    Referrals: "/rp/profile/referrals",
     Muses: {
       About: (museId: string) => `/rp/profile/muses/edit/${museId}/about`,
       AboutCreate: (museId: string) =>
@@ -65,6 +66,24 @@ export const ROUTES = {
       ExtraAttributes: (museId: string) =>
         `/rp/profile/muses/edit/${museId}/extra-attributes`,
     },
+    Referrals: "/rp/profile/referrals",
+    /**
+     * The path to hand out when a link leaves the app — copied, shared to a
+     * system share sheet, posted to Discord.
+     *
+     * `novelist.world/{username}` rather than the full internal path: it is
+     * the form a person can read out or type, and the middleware redirects it
+     * onto the real route. Falls back to the long path for the handful of
+     * names the middleware will not shorten, so a share never produces a link
+     * that goes nowhere.
+     *
+     * In-app navigation should keep using `View(...)`, which routes directly
+     * instead of taking the redirect.
+     */
+    Share: (username: string) =>
+      canShortenProfilePath(username)
+        ? `/${username}`
+        : `/rp/profile/${username}`,
     Story: {
       Create: "/rp/profile/story/create",
       Edit: (storyId: string) => ({

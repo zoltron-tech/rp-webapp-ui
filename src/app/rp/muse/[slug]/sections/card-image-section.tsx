@@ -2,6 +2,7 @@
 
 import type { Muse } from "@nw/types";
 import { FiCamera } from "react-icons/fi";
+import { getMuseAppearance } from "../appearance";
 import * as S from "../styles";
 
 type Props = {
@@ -22,13 +23,14 @@ export function CardImageSection({
   onRemoveCardBg,
 }: Props) {
   const accent = muse?.useAccent ? muse.accent : undefined;
+  const { hideExpandedBackground } = getMuseAppearance(muse);
 
   const cardCrop = muse?.useExtraImages ? muse?.cardBackground?.crop : null;
   const bgSize = cardCrop ? `${cardCrop.width}%` : undefined;
   const bgPosition = cardCrop ? `${cardCrop.x}% ${cardCrop.y}%` : undefined;
 
   return (
-    <S.CardExpandedWrapper>
+    <S.CardExpandedWrapper $hideChrome={hideExpandedBackground}>
       <S.CardMainBack className="muse-card" accent={accent}>
         <S.ImageWrapper>
           {!muse ? (

@@ -538,10 +538,18 @@ export const ChapterFlowItem = styled.div`
   /* Nothing embedded may be taller than the page it sits on — otherwise no
      amount of keep-together can stop a break falling through it. The cap is
      set per view from the story's page format. */
+  /* Anything long and unbroken — a URL, a pasted token — wraps rather than
+     pushing the column wider than its container. */
+  overflow-wrap: break-word;
+
   img,
   video,
   iframe,
   canvas {
+    /* Never wider than the column. Without this an image at its natural size
+       overflows the measure on a narrow screen and takes the prose with it. */
+    max-width: 100%;
+    height: auto;
     max-height: var(--nw-page-media-max, none);
     object-fit: contain;
   }
@@ -656,7 +664,12 @@ export const EditingBanner = styled.div`
 
 export const BookStage = styled.div`
   position: relative;
+  box-sizing: border-box;
   width: 100%;
+  /* A gutter so the paper never sits flush against the screen edge. The page
+     geometry is derived from this element's inner width, so the pages resize
+     to suit rather than overflowing it. */
+  padding-inline: clamp(8px, 2vw, 20px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -801,6 +814,26 @@ export const BookWindow = styled.div`
 `;
 
 /** The chapter flow, pushed up so the window frames the right page. */
+/**
+ * The off-screen copy of the flow the book cuts its pages from.
+ *
+ * Laid out at the page's own measure, so what is measured is exactly what the
+ * visible pages render. Its box is collapsed to nothing: the whole loaded
+ * chapter is far taller than the spread, and an absolutely-positioned
+ * descendant still extends the scroll container's overflow — left uncollapsed
+ * it would add phantom scroll space under the book. Clipping does not change
+ * layout sizes, so the children measure the same either way.
+ */
+export const BookMeasureLayer = styled.div`
+  position: absolute;
+  top: 0;
+  left: -100000px;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+`;
+
 export const BookWindowInner = styled.div`
   position: absolute;
   top: 0;

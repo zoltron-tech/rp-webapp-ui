@@ -1,6 +1,6 @@
 "use client";
 
-import type { Muse } from "@nw/types";
+import type { Fandom, Muse } from "@nw/types";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { FiGrid, FiList } from "react-icons/fi";
@@ -22,6 +22,13 @@ import {
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styles";
 
+const FANDOMLESS_ID = "FANDOMLESS";
+
+/** The fandomless bucket's stored name is a full sentence — too long for a
+ *  chip, so it gets a short label here. */
+const fandomLabel = (fandom: Fandom) =>
+  fandom.id === FANDOMLESS_ID ? "Fandomless" : fandom.name;
+
 export default function MusesListPage({}) {
   const params = useParams();
   const [muses, setMuses] = useState<Muse[] | null>(null);
@@ -41,6 +48,9 @@ export default function MusesListPage({}) {
   ]);
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  // Empty = no fandom filter (show all). Ids are Fandom.id.
+  const [selectedFandoms, setSelectedFandoms] = useState<string[]>([]);
+  const [groupByFandom, setGroupByFandom] = useState(false);
   const [limitDialogOpen, setLimitDialogOpen] = useState(false);
   const museLimit = novelist?.tier.museLimit ?? 0;
   // Alternate verses count toward the limit just like root characters, so
@@ -86,6 +96,94 @@ export default function MusesListPage({}) {
       })
       .sort((a, b) => a.root.firstName.localeCompare(b.root.firstName));
   }, [filteredMuses]);
+
+  // Fandom chips are built from the search/visibility-filtered families but
+  // *before* the fandom filter is applied — otherwise selecting one fandom
+  // would remove every other chip and trap the user in that selection.
+  const fandomOptions = useMemo(() => {
+    const byId = new Map<
+      string,
+      { id: string; name: string; color: string; count: number }
+    >();
+    for (const { root } of museFamilies) {
+      const fandom = root.fandom;
+      if (!fandom?.id) continue;
+      const existing = byId.get(fandom.id);
+      if (existing) {
+        existing.count += 1;
+        continue;
+      }
+      byId.set(fandom.id, {
+        color: fandom.color || "var(--accent)",
+        count: 1,
+        id: fandom.id,
+        name: fandomLabel(fandom),
+      });
+    }
+    // Fandomless originals sort last; everything else alphabetically.
+    return Array.from(byId.values()).sort((a, b) => {
+      if (a.id === FANDOMLESS_ID) return 1;
+      if (b.id === FANDOMLESS_ID) return -1;
+      return a.name.localeCompare(b.name);
+    });
+  }, [museFamilies]);
+
+  // Drop selections whose fandom is no longer represented (e.g. after the
+  // search box narrows the roster or a character is deleted).
+  useEffect(() => {
+    if (!selectedFandoms.length) return;
+    const available = new Set(fandomOptions.map((f) => f.id));
+    const next = selectedFandoms.filter((id) => available.has(id));
+    if (next.length !== selectedFandoms.length) setSelectedFandoms(next);
+  }, [fandomOptions, selectedFandoms]);
+
+  const visibleFamilies = useMemo(
+    () =>
+      selectedFandoms.length
+        ? museFamilies.filter(({ root }) =>
+            selectedFandoms.includes(root.fandom?.id),
+          )
+        : museFamilies,
+    [museFamilies, selectedFandoms],
+  );
+
+  // One bucket per fandom, in the same order as the chips above.
+  const fandomGroups = useMemo(() => {
+    if (!groupByFandom) return [];
+    const buckets = new Map<string, typeof visibleFamilies>();
+    for (const family of visibleFamilies) {
+      const id = family.root.fandom?.id ?? FANDOMLESS_ID;
+      if (!buckets.has(id)) buckets.set(id, []);
+      buckets.get(id)?.push(family);
+    }
+    return fandomOptions
+      .filter((fandom) => buckets.has(fandom.id))
+      .map((fandom) => ({
+        families: buckets.get(fandom.id) ?? [],
+        fandom,
+      }));
+  }, [groupByFandom, visibleFamilies, fandomOptions]);
+
+  const toggleFandom = (id: string) =>
+    setSelectedFandoms((prev) =>
+      prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id],
+    );
+
+  const renderFamilies = (families: typeof museFamilies) => (
+    <S.MuseListContainer>
+      {viewMode === "grid" ? (
+        families.map(({ root, verses }) => (
+          <MusePreviewCard key={root?.id} muse={root} verses={verses} />
+        ))
+      ) : (
+        <S.ListWrapper>
+          {families.map(({ root, verses }) => (
+            <MuseListItem key={root?.id} muse={root} verses={verses} />
+          ))}
+        </S.ListWrapper>
+      )}
+    </S.MuseListContainer>
+  );
 
   const fetchMuses = async () => {
     const _muses = await baseDataLoader(() =>
@@ -159,41 +257,84 @@ export default function MusesListPage({}) {
         activeFilters={visibility}
         onFilterChange={isCurrentUser ? setVisibility : undefined}
       />
-      {/* View mode toggle (grid / list) */}
+      {/* Fandom filter chips — hidden when there's nothing to choose between */}
+      {fandomOptions.length > 1 && (
+        <S.FandomFilterRow>
+          <S.FandomFilterLabel>Fandoms:</S.FandomFilterLabel>
+          {fandomOptions.map((fandom) => {
+            const active = selectedFandoms.includes(fandom.id);
+            return (
+              <S.FandomChip
+                key={fandom.id}
+                type="button"
+                $color={fandom.color}
+                $active={active}
+                aria-pressed={active}
+                onClick={() => toggleFandom(fandom.id)}
+              >
+                <span className="name">{fandom.name}</span>
+                <span className="count">{fandom.count}</span>
+              </S.FandomChip>
+            );
+          })}
+          {selectedFandoms.length > 0 && (
+            <S.FandomChipReset
+              type="button"
+              onClick={() => setSelectedFandoms([])}
+            >
+              Clear
+            </S.FandomChipReset>
+          )}
+        </S.FandomFilterRow>
+      )}
+
+      {/* Group-by toggle + view mode toggle (grid / list) */}
       <S.ViewToggleRow>
-        <S.ToggleButton
-          type="button"
-          $active={viewMode === "grid"}
-          aria-pressed={viewMode === "grid"}
-          title="Grid view"
-          onClick={() => setViewMode("grid")}
-        >
-          <FiGrid size={16} />
-        </S.ToggleButton>
-        <S.ToggleButton
-          type="button"
-          $active={viewMode === "list"}
-          aria-pressed={viewMode === "list"}
-          title="List view"
-          onClick={() => setViewMode("list")}
-        >
-          <FiList size={16} />
-        </S.ToggleButton>
+        <S.GroupByLabel>
+          <input
+            type="checkbox"
+            checked={groupByFandom}
+            onChange={() => setGroupByFandom((prev) => !prev)}
+          />
+          Group by fandom
+        </S.GroupByLabel>
+        <S.ViewToggleButtons>
+          <S.ToggleButton
+            type="button"
+            $active={viewMode === "grid"}
+            aria-pressed={viewMode === "grid"}
+            title="Grid view"
+            onClick={() => setViewMode("grid")}
+          >
+            <FiGrid size={16} />
+          </S.ToggleButton>
+          <S.ToggleButton
+            type="button"
+            $active={viewMode === "list"}
+            aria-pressed={viewMode === "list"}
+            title="List view"
+            onClick={() => setViewMode("list")}
+          >
+            <FiList size={16} />
+          </S.ToggleButton>
+        </S.ViewToggleButtons>
       </S.ViewToggleRow>
 
-      <S.MuseListContainer>
-        {viewMode === "grid" ? (
-          museFamilies.map(({ root, verses }) => (
-            <MusePreviewCard key={root?.id} muse={root} verses={verses} />
+      {groupByFandom
+        ? fandomGroups.map(({ fandom, families }) => (
+            <S.FandomGroup key={fandom.id} $color={fandom.color}>
+              <S.FandomGroupHeader $color={fandom.color}>
+                {fandom.name}
+                <span className="count">({families.length})</span>
+              </S.FandomGroupHeader>
+              {renderFamilies(families)}
+            </S.FandomGroup>
           ))
-        ) : (
-          <S.ListWrapper>
-            {museFamilies.map(({ root, verses }) => (
-              <MuseListItem key={root?.id} muse={root} verses={verses} />
-            ))}
-          </S.ListWrapper>
-        )}
-      </S.MuseListContainer>
+        : renderFamilies(visibleFamilies)}
+
+      {muses !== null && visibleFamilies.length === 0 && (
+        <S.EmptyResult>No characters match the current filters.</S.EmptyResult>
+      )}
     </S.Container>
   );
 }

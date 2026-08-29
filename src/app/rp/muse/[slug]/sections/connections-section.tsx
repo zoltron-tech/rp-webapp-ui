@@ -31,6 +31,7 @@ import { useUIContext } from "@/hooks/use-ui-context";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
+import { getMuseAppearance } from "../appearance";
 import * as S from "../styles";
 import SectionMiniHeader from "./SectionMiniHeader";
 
@@ -58,6 +59,7 @@ export function ConnectionsSection({ muse, isOwnMuse, seed = null }: Props) {
   // Per-muse accent color override — used for this section's own styling
   // (card back, detail meta, etc.), distinct from the theme accent above.
   const accent = muse?.useAccent ? muse.accent : undefined;
+  const { hideExpandedBackground } = getMuseAppearance(muse);
   const { width } = useWindowDimensions();
   const isMobile = width !== null && width < 801;
 
@@ -233,8 +235,12 @@ export function ConnectionsSection({ muse, isOwnMuse, seed = null }: Props) {
   };
 
   return (
-    <S.CardExpandedWrapper>
-      <S.CardBack className="muse-card" accent={accent}>
+    <S.CardExpandedWrapper $hideChrome={hideExpandedBackground}>
+      <S.CardBack
+        className="muse-card"
+        accent={accent}
+        $hideBackground={hideExpandedBackground}
+      >
         <S.InfoCardContent>
           <SectionMiniHeader muse={muse} accent={accent ?? null} />
           <S.ConnectionsContainer>

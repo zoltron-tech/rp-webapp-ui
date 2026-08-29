@@ -10,7 +10,10 @@ export const PennedByAccentLink = styled.a<{ accent?: string | null }>`
   }
 `;
 
-export const PennedByChip = styled.button<{ accent?: string | null }>`
+export const PennedByChip = styled.button<{
+  accent?: string | null;
+  $textColor?: string | null;
+}>`
   all: unset;
   display: inline-flex;
   align-items: center;
@@ -21,7 +24,7 @@ export const PennedByChip = styled.button<{ accent?: string | null }>`
     accent && accent.trim() !== ""
       ? `color-mix(in srgb, ${accent} 22%, transparent)`
       : "var(--accent)"};
-  color: var(--text);
+  color: ${({ $textColor }) => $textColor || "var(--text)"};
   font-weight: 700;
   cursor: pointer;
 
@@ -34,8 +37,8 @@ export const PennedByChip = styled.button<{ accent?: string | null }>`
   }
 `;
 
-export const PennedByName = styled.span`
-  color: var(--text);
+export const PennedByName = styled.span<{ $textColor?: string | null }>`
+  color: ${({ $textColor }) => $textColor || "var(--text)"};
   font-weight: 700;
   max-width: 24ch;
   overflow: hidden;
@@ -68,12 +71,12 @@ export const PennedByMiniAvatar = styled.div<{ $src?: string }>`
   }
 `;
 
-export const PennedByRow = styled.span`
+export const PennedByRow = styled.span<{ $textColor?: string | null }>`
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  color: var(--text-secondary);
+  color: ${({ $textColor }) => $textColor || "var(--text-secondary)"};
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-medium);
 `;
@@ -663,12 +666,12 @@ export const MuseNavCardName = styled.span`
   text-overflow: ellipsis;
 `;
 
-export const CardExpandedWrapper = styled.div`
+export const CardExpandedWrapper = styled.div<{ $hideChrome?: boolean }>`
   position: relative;
   width: 326px;
   aspect-ratio: 9 / 16;
   border-radius: 8px;
-  ${CARD_BORDER};
+  ${({ $hideChrome }) => ($hideChrome ? "border: none;" : CARD_BORDER)};
 
   transition: all 0.3s ease-in-out;
   contain: paint;
@@ -980,7 +983,12 @@ export const NoteEditSaveBtn = styled.button`
    accent-aware selected pill with an indicator bar. Vertical column beside
    the card on desktop, horizontal pill bar below the content on mobile. */
 
-export const SideMenu = styled.nav`
+export const SideMenu = styled.nav<{
+  /** Advanced appearance: custom rail background colour. */
+  $bgColor?: string | null;
+  /** Advanced appearance: strip background, border, blur and shadow. */
+  $hideChrome?: boolean;
+}>`
   position: relative;
   z-index: ${Z_INDEX.CARD};
   align-self: center;
@@ -992,10 +1000,14 @@ export const SideMenu = styled.nav`
   padding: 10px 8px;
   margin-left: 14px;
   border-radius: 18px;
-  background: rgba(10, 10, 14, 0.7);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  background: ${({ $bgColor, $hideChrome }) =>
+    $hideChrome ? "transparent" : $bgColor || "rgba(10, 10, 14, 0.7)"};
+  backdrop-filter: ${({ $hideChrome }) =>
+    $hideChrome ? "none" : "blur(10px)"};
+  border: ${({ $hideChrome }) =>
+    $hideChrome ? "none" : "1px solid rgba(255, 255, 255, 0.16)"};
+  box-shadow: ${({ $hideChrome }) =>
+    $hideChrome ? "none" : "0 10px 30px rgba(0, 0, 0, 0.45)"};
 
   @media (min-width: 1024px) and (max-width: 2047px) {
     margin-top: 20px;
@@ -1026,7 +1038,10 @@ export const SideMenu = styled.nav`
   }
 `;
 
-export const MenuButton = styled.button<{ $accent?: string | null }>`
+export const MenuButton = styled.button<{
+  $accent?: string | null;
+  $textColor?: string | null;
+}>`
   all: unset;
   box-sizing: border-box;
   position: relative;
@@ -1039,7 +1054,10 @@ export const MenuButton = styled.button<{ $accent?: string | null }>`
   padding: 10px 6px 8px;
   border-radius: 12px;
   cursor: pointer;
-  color: rgba(255, 255, 255, 0.6);
+  color: ${({ $textColor }) =>
+    $textColor
+      ? `color-mix(in srgb, ${$textColor} 70%, transparent)`
+      : "rgba(255, 255, 255, 0.6)"};
   transition: background 0.25s ease, color 0.25s ease;
 
   /* Accent indicator bar: hugs the rail's inner-left edge on desktop,
@@ -1062,14 +1080,17 @@ export const MenuButton = styled.button<{ $accent?: string | null }>`
 
   &:hover {
     background: rgba(255, 255, 255, 0.07);
-    color: rgba(255, 255, 255, 0.92);
+    color: ${({ $textColor }) =>
+      $textColor
+        ? `color-mix(in srgb, ${$textColor} 92%, transparent)`
+        : "rgba(255, 255, 255, 0.92)"};
   }
 
   /* Fill/glow live on the sliding MenuHighlight pill behind the buttons (see
      below) so the active state can animate its position between sections;
      this class only carries the parts that don't need to move. */
   &.selected {
-    color: #fff;
+    color: ${({ $textColor }) => $textColor || "#fff"};
 
     &::before {
       transform: translateY(-50%) scaleY(1);
@@ -1305,7 +1326,11 @@ export const CardMainBack = styled.div<{ accent?: string | null }>`
   contain: paint;
 `;
 
-export const CardBack = styled.div<{ accent?: string | null }>`
+export const CardBack = styled.div<{
+  accent?: string | null;
+  /** Advanced appearance: drop the panel's gradient + blur entirely. */
+  $hideBackground?: boolean;
+}>`
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1314,7 +1339,9 @@ export const CardBack = styled.div<{ accent?: string | null }>`
   position: relative;
   height: 100%;
   contain: paint;
-  background: ${({ accent }: any) => {
+  background: ${({ accent, $hideBackground }: any) => {
+    if ($hideBackground) return "transparent";
+
     if (accent && accent.trim() !== "") {
       return `linear-gradient(
       to bottom,
@@ -1329,7 +1356,8 @@ export const CardBack = styled.div<{ accent?: string | null }>`
 
 
   & {
-    ${BACKGROUND_BLUR()}
+    ${({ $hideBackground }: any) =>
+      $hideBackground ? "backdrop-filter: none;" : BACKGROUND_BLUR()}
   }
 `;
 
@@ -2146,11 +2174,11 @@ export const InfoHeaderSection = styled.div`
   padding-top: 6px;
 `;
 
-export const InfoMuseName = styled.h2`
+export const InfoMuseName = styled.h2<{ $textColor?: string | null }>`
   margin: 0;
   font-size: var(--font-size-h6);
   font-weight: var(--font-weight-semi-bold);
-  color: var(--text);
+  color: ${({ $textColor }) => $textColor || "var(--text)"};
   text-align: center;
 `;
 
@@ -3084,10 +3112,10 @@ export const SectionMiniHeader = styled.div`
   }
 `;
 
-export const SectionMiniName = styled.div`
+export const SectionMiniName = styled.div<{ $textColor?: string | null }>`
   font-size: var(--font-size-medium);
   font-weight: var(--font-weight-semi-bold);
-  color: var(--text);
+  color: ${({ $textColor }) => $textColor || "var(--text)"};
   margin-bottom: 5px;
 `;
 

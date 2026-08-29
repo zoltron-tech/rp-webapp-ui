@@ -12,6 +12,7 @@ import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { ROUTES } from "@/utils/constants/routes";
+import { getMuseAppearance } from "../appearance";
 import * as S from "../styles";
 import SectionMiniHeader from "./SectionMiniHeader";
 
@@ -29,6 +30,7 @@ export function BackStorySection({
   onMuseUpdate,
 }: Props) {
   const accent = muse?.useAccent ? muse.accent : undefined;
+  const { hideExpandedBackground } = getMuseAppearance(muse);
   const { routeToPage } = usePageRouter();
   const { successToast, errorToast } = useUIContext();
 
@@ -87,8 +89,12 @@ export function BackStorySection({
   }
 
   return (
-    <S.CardExpandedWrapper>
-      <S.CardBack className="muse-card" accent={accent}>
+    <S.CardExpandedWrapper $hideChrome={hideExpandedBackground}>
+      <S.CardBack
+        className="muse-card"
+        accent={accent}
+        $hideBackground={hideExpandedBackground}
+      >
         <S.InfoCardContent>
           <SectionMiniHeader muse={muse} accent={accent ?? null} />
           <S.InfoDivider $accent={accent ?? null} />

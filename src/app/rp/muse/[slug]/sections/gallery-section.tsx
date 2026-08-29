@@ -32,6 +32,7 @@ import { useToggleLike } from "@/hooks/use-toggle-like";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { API_MESSAGE } from "@/utils/constants";
+import { getMuseAppearance } from "../appearance";
 import * as S from "../styles";
 import SectionMiniHeader from "./SectionMiniHeader";
 
@@ -748,6 +749,7 @@ export function GallerySection({ muse, media }: Props) {
   const [localMedia, setLocalMedia] = useState<string[]>(media ?? []);
   const [metaByUrl, setMetaByUrl] = useState<Record<string, MediaMetadata>>({});
   const accent = muse?.useAccent ? muse.accent : undefined;
+  const { hideExpandedBackground } = getMuseAppearance(muse);
   const isMediaLoading = media === null;
 
   // Keep localMedia in sync when the parent refreshes the prop
@@ -823,8 +825,12 @@ export function GallerySection({ muse, media }: Props) {
   }, [muse?.id, confirmDeleteUrl, successToast]);
 
   return (
-    <S.CardExpandedWrapper>
-      <S.CardBack className="muse-card" accent={accent}>
+    <S.CardExpandedWrapper $hideChrome={hideExpandedBackground}>
+      <S.CardBack
+        className="muse-card"
+        accent={accent}
+        $hideBackground={hideExpandedBackground}
+      >
         <S.InfoCardContent>
           <SectionMiniHeader muse={muse} accent={accent ?? null} />
           <S.InfoDivider $accent={accent ?? null} />

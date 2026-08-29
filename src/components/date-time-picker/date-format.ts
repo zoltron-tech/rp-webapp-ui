@@ -91,6 +91,18 @@ export function toShortStoryDate(value: string | null): string | null {
   return `${fields.day} ${month} ${fields.year}${era}`;
 }
 
+/**
+ * The in-story clock, "14:30". Midnight reads as no time at all: the picker
+ * defaults an omitted time to 00:00, so showing it back would invent a
+ * precision the authors never gave.
+ */
+export function toStoryClock(value: string | null): string | null {
+  const fields = parseWireValue(value);
+  if (!fields) return null;
+  if (fields.hour === 0 && fields.minute === 0) return null;
+  return `${pad(fields.hour)}:${pad(fields.minute)}`;
+}
+
 /** The AD date field's format: "dd-mm-yyyy". Kept in its own input from the
  *  time field so the optional-ness of time is visually obvious rather than
  *  buried inside one combined string. */

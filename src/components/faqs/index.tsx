@@ -8,6 +8,7 @@ import UserMenuCharsImage from "@/assets/images/FAQs/user-menu-chars.png";
 import UserMenuEditProfileImage from "@/assets/images/FAQs/user-menu-edit-profile.png";
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { SUPPORT_EMAIL } from "@/utils/constants";
 import * as S from "./../privacy-policy/styled";
 
 export const FAQs = () => {
@@ -38,8 +39,8 @@ export const FAQs = () => {
         <br />
         <br />
         If you need further assistance, please contact us at{" "}
-        <a href="mailto:support@zoltrontech.com">support@zoltrontech.com</a> or
-        reach out through our official social channels.
+        <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> or reach out
+        through our official social channels.
       </p>
 
       <S.AccordionRoot type="single" collapsible defaultValue="user-accounts">

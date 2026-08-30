@@ -1,6 +1,7 @@
 "use client";
 
 import { MdOutlinePrivacyTip } from "react-icons/md";
+import { SUPPORT_EMAIL } from "@/utils/constants";
 import * as S from "./styled";
 
 export const PrivacyPolicy = () => {
@@ -37,7 +38,7 @@ export const PrivacyPolicy = () => {
         <br />
         <br />
         If you have any questions or concerns, you can contact us at &nbsp;
-        <a href="mailto:support@zoltrontech.com">support@zoltrontech.com</a>.
+        <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>.
       </p>
 
       <S.AccordionRoot type="single" collapsible defaultValue="info-collection">
@@ -323,9 +324,7 @@ export const PrivacyPolicy = () => {
                   </li>
                 </ul>
                 You can make such requests by contacting us at{" "}
-                <a href="mailto:support@zoltrontech.com">
-                  support@zoltrontech.com
-                </a>
+                <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
               </p>
               <br />
               <p>
@@ -374,10 +373,7 @@ export const PrivacyPolicy = () => {
               <p>
                 If you have questions or comments about your privacy rights,
                 please contact us at{" "}
-                <a href="mailto:support@zoltrontech.com">
-                  support@zoltrontech.com
-                </a>
-                .
+                <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>.
               </p>
             </S.AccordionContentInner>
           </S.AccordionContent>

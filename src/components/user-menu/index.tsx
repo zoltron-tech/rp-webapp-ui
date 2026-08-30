@@ -20,7 +20,7 @@ import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { usePostLogout } from "@/hooks/use-post-logout";
-import { API_MESSAGE } from "@/utils/constants";
+import { API_MESSAGE, SUPPORT_EMAIL } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { toggleState } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
@@ -132,7 +132,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
       successToast(`Feedback sent successfully.`);
     } else {
       errorToast(
-        "There was an issue while sending feedback Please contact at support@zoltrontech.com.",
+        `There was an issue while sending feedback Please contact at ${SUPPORT_EMAIL}.`,
       );
     }
   };

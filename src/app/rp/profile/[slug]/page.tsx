@@ -67,7 +67,7 @@ import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import { ScoreBadgeIcon } from "@/utils/badge-icons";
-import { API_MESSAGE } from "@/utils/constants";
+import { API_MESSAGE, SUPPORT_EMAIL } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDate } from "@/utils/helpers";
 import { mainVerseMuses } from "@/utils/muse";
@@ -512,7 +512,7 @@ export default function UserProfilePage({}) {
       successToast(`Feedback sent successfully.`);
     } else {
       errorToast(
-        "There was an issue while sending feedback Please contact at support@zoltrontech.com.",
+        `There was an issue while sending feedback Please contact at ${SUPPORT_EMAIL}.`,
       );
     }
   };
@@ -1352,6 +1352,33 @@ export default function UserProfilePage({}) {
                 </ShouldRender>
               </S.MediaStack>
             </ShouldRender>
+            {fandoms.length > 0 && (
+              <S.FandomSection>
+                <S.FandomEyebrow>{`Fandoms ${novelist?.firstName} writes in`}</S.FandomEyebrow>
+                <S.FandomChipRow>
+                  {visibleFandoms.map((fandom) => (
+                    <S.ProfileFandomChip
+                      key={fandom.id}
+                      $color={fandom.color || "var(--accent)"}
+                      title={fandom.name}
+                    >
+                      <span className="name">{fandomChipLabel(fandom)}</span>
+                    </S.ProfileFandomChip>
+                  ))}
+                  {fandoms.length > COLLAPSED_FANDOM_COUNT && (
+                    <S.FandomSeeAllChip
+                      type="button"
+                      aria-expanded={showAllFandoms}
+                      onClick={() => setShowAllFandoms((prev) => !prev)}
+                    >
+                      {showAllFandoms
+                        ? "See less"
+                        : `See all (${fandoms.length})`}
+                    </S.FandomSeeAllChip>
+                  )}
+                </S.FandomChipRow>
+              </S.FandomSection>
+            )}
             <ShouldRender
               if={!!(novelist?.museCount && novelist.museCount > 0)}
             >
@@ -1370,30 +1397,6 @@ export default function UserProfilePage({}) {
                     </S.AddMuseButton>
                   </ShouldRender>
                 </S.MuseSectionHeader>
-                {fandoms.length > 0 && (
-                  <S.FandomChipRow>
-                    {visibleFandoms.map((fandom) => (
-                      <S.ProfileFandomChip
-                        key={fandom.id}
-                        $color={fandom.color || "var(--accent)"}
-                        title={fandom.name}
-                      >
-                        <span className="name">{fandomChipLabel(fandom)}</span>
-                      </S.ProfileFandomChip>
-                    ))}
-                    {fandoms.length > COLLAPSED_FANDOM_COUNT && (
-                      <S.FandomSeeAllChip
-                        type="button"
-                        aria-expanded={showAllFandoms}
-                        onClick={() => setShowAllFandoms((prev) => !prev)}
-                      >
-                        {showAllFandoms
-                          ? "See less"
-                          : `See all (${fandoms.length})`}
-                      </S.FandomSeeAllChip>
-                    )}
-                  </S.FandomChipRow>
-                )}
                 <S.MuseList>
                   {mainVerseMuses(novelist?.muses)
                     .slice(0, 3)

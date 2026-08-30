@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { GoLaw } from "react-icons/go";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { SUPPORT_EMAIL } from "@/utils/constants";
 import * as S from "./../privacy-policy/styled";
 
 export const Terms = () => {
@@ -33,9 +34,9 @@ export const Terms = () => {
         (collectively, the <strong>`Services`</strong>)). <br />
         <br />
         You can contact us by email at{" "}
-        <a href="mailto:support@zoltrontech.com">support@zoltrontech.com</a> or
-        by contacting one of our social accounts (Discord, Facebook,
-        Intstagram). <br /> <br />
+        <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> or by contacting
+        one of our social accounts (Discord, Facebook, Intstagram). <br />{" "}
+        <br />
         These Legal Terms constitute a legally binding agreement made between
         you, whether personally or on behalf of an entity (
         <strong>`you`</strong>), and Zoltron Tech s.r.o, concerning your access
@@ -217,10 +218,8 @@ export const Terms = () => {
               </p>
               <p>
                 For permission requests, contact us at{" "}
-                <a href="mailto:support@zoltrontech.com">
-                  support@zoltrontech.com
-                </a>
-                . If granted permission, you must credit{" "}
+                <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>. If
+                granted permission, you must credit{" "}
                 <strong>Zoltron Tech</strong> as the owner or licensor of the
                 Services, <strong>`Content`</strong>, or{" "}
                 <strong>`Marks`</strong>, and display any applicable copyright

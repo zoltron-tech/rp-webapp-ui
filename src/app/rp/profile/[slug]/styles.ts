@@ -826,17 +826,39 @@ export const MusePillContainer = styled.div`
    writes in, sent by the backend (the muse list itself is trimmed to 3, so
    they can't be derived client-side). Collapsed to two plus a "See all"
    toggle so a prolific novelist doesn't push the characters off screen. */
-export const FandomChipRow = styled.div`
+export const FandomSection = styled.div`
   width: 95%;
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
+  flex-direction: column;
+  gap: 4px;
   margin-bottom: 10px;
 
   @media screen and (max-width: 800px) {
     width: 92%;
   }
+`;
+
+/** Sits above the chips to say whose fandoms these are — deliberately smaller
+ *  than the chips themselves so it reads as a caption, not another chip. */
+export const FandomEyebrow = styled.span`
+  font-family: var(--font);
+  font-size: var(--font-size-xxsmall);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+export const FandomChipRow = styled.div`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
 `;
 
 export const ProfileFandomChip = styled.span<{ $color: string }>`

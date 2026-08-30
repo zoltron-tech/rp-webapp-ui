@@ -2,7 +2,7 @@
 
 import { ShouldRender } from "@novelist-world/ui";
 import type { NWImage } from "@nw/types";
-import { clamp, toCropFilter, VALID_IMAGE_TYPES } from "@nw/utils";
+import { clamp, cropToEditorState, toCropFilter, VALID_IMAGE_TYPES } from "@nw/utils";
 import { Separator } from "radix-ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BsArrowLeft, BsPersonCircle } from "react-icons/bs";
@@ -95,9 +95,33 @@ export function LandingSection({ onSelect }: Props) {
     (lastName ?? "") !== (novelist?.lastName ?? "") ||
     (image ?? "") !== (novelist?.image ?? "");
 
+  /** Clicking the avatar adjusts the one that is already there, seeded from
+   *  its stored crop; "Replace" inside the dialog reaches the picker. With
+   *  nothing set yet there is nothing to adjust, so the picker opens directly.
+   *  Same rule as the Appearance section — see `openExistingAvatarCropDialog`
+   *  there. */
   const handleAvatarClick = () => {
+    if (avatar?.src) {
+      const { scale, x, y } = cropToEditorState(avatar.crop);
+      setPendingCropSrc(avatar.src);
+      setCropX(x);
+      setCropY(y);
+      setCropScale(scale);
+      setCropDialogOpen(true);
+      return;
+    }
+    if (image) {
+      openCropDialog(image);
+      return;
+    }
     setAvatarDialogOpen(true);
   };
+
+  /** "Replace" hands the user back to the picker (Upload / GIF / Sticker). */
+  const handleAvatarReplace = useCallback(() => {
+    setCropDialogOpen(false);
+    setAvatarDialogOpen(true);
+  }, []);
 
   const handleMediaSelect = async (url: string) => {
     setError(null);
@@ -409,6 +433,7 @@ export function LandingSection({ onSelect }: Props) {
               onReset={resetCrop}
               onCancel={handleCropCancel}
               onConfirm={handleCropConfirm}
+              onReplace={handleAvatarReplace}
               isUploading={imageUploading}
               viewportRef={cropViewportRef}
             />

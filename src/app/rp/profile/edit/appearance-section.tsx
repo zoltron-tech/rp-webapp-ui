@@ -4,7 +4,7 @@ import { ShouldRender } from "@novelist-world/ui";
 import type { NWImage } from "@nw/types";
 import type { ProfileSong } from "@nw/types/music";
 import { ACCENT_MAP, type Accent } from "@nw/types/theme";
-import { clamp, toCropFilter, VALID_IMAGE_TYPES } from "@nw/utils";
+import { clamp, cropToEditorState, toCropFilter, VALID_IMAGE_TYPES } from "@nw/utils";
 import { RadioGroup, Separator } from "radix-ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BsArrowLeft } from "react-icons/bs";
@@ -233,12 +233,11 @@ export function AppearanceSection({ onBack }: Props) {
   // (Upload / Library GIF / Sticker) is reached from there via "Replace".
   const openExistingAvatarCropDialog = useCallback(() => {
     if (avatar) {
+      const { scale, x, y } = cropToEditorState(avatar.crop);
       setPendingCropSrc(avatar.src);
-      setCropX(avatar.crop?.x ?? 50);
-      setCropY(avatar.crop?.y ?? 50);
-      setCropScale(
-        avatar.crop?.width && avatar.crop.width > 0 ? avatar.crop.width / 100 : 1,
-      );
+      setCropX(x);
+      setCropY(y);
+      setCropScale(scale);
       setCropDialogOpen(true);
     } else if (image) {
       openCropDialog(image);

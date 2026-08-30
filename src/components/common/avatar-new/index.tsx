@@ -1,4 +1,5 @@
 import type { NWImage } from "@nw/types";
+import { hasUsableCrop } from "@nw/utils";
 import classNames from "classnames";
 import { Avatar } from "radix-ui";
 import { type FC, forwardRef, type HTMLProps, useMemo } from "react";
@@ -45,7 +46,7 @@ export const AvatarNew: FC<AvatarProps> = forwardRef(
     const isOnline = useIsOnline(username);
 
     const crop = nwImage?.crop;
-    const hasCrop = crop && crop.width > 0 && crop.width <= 300;
+    const hasCrop = hasUsableCrop(crop);
     const effectiveSrc = nwImage?.src || src || "";
 
     if (hasCrop && effectiveSrc) {

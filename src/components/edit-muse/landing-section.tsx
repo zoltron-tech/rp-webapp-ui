@@ -1,7 +1,7 @@
 "use client";
 
 import type { NWImage } from "@nw/types";
-import { clamp, toCropFilter, VALID_IMAGE_TYPES } from "@nw/utils";
+import { clamp, cropToEditorState, toCropFilter, VALID_IMAGE_TYPES } from "@nw/utils";
 import { Separator } from "radix-ui";
 import { useCallback, useRef, useState } from "react";
 import {
@@ -82,6 +82,7 @@ export function LandingSection({ onBack, onSelect }: Props) {
 
   // ── Avatar crop dialog ──────────────────────────────────────────────────────
   const cropViewportRef = useRef<HTMLDivElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [pendingCropSrc, setPendingCropSrc] = useState("");
   const [cropX, setCropX] = useState(50);
@@ -170,6 +171,23 @@ export function LandingSection({ onBack, onSelect }: Props) {
     setCropScale(1);
     setCropDialogOpen(true);
   };
+
+  /** Clicking the hero avatar adjusts the one that is there, seeded from its
+   *  stored crop; "Replace" inside the dialog reaches the picker. Without an
+   *  avatar there is nothing to adjust, so the picker opens directly. */
+  const handleAvatarClick = useCallback(() => {
+    const existing = avatar?.src ? avatar : null;
+    if (!existing) {
+      avatarInputRef.current?.click();
+      return;
+    }
+    const { scale, x, y } = cropToEditorState(existing.crop);
+    setPendingCropSrc(existing.src);
+    setCropX(x);
+    setCropY(y);
+    setCropScale(scale);
+    setCropDialogOpen(true);
+  }, [avatar]);
 
   const handleAvatarChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -337,10 +355,14 @@ export function LandingSection({ onBack, onSelect }: Props) {
       <S.LandingHero>
         {/* Clickable avatar upload */}
         <S.LandingHeroAvatarWrap>
-          <label htmlFor="landing-avatar-input">
-            <AvatarUploadField src={avatar?.src || image} alt={fullName} />
-          </label>
+          <AvatarUploadField
+            src={avatar?.src || image}
+            alt={fullName}
+            nwImage={avatar}
+            onAvatarClick={handleAvatarClick}
+          />
           <input
+            ref={avatarInputRef}
             id="landing-avatar-input"
             type="file"
             accept="image/png,image/jpeg,image/webp,image/gif"
@@ -556,6 +578,7 @@ export function LandingSection({ onBack, onSelect }: Props) {
               onReset={resetCrop}
               onCancel={handleCropCancel}
               onConfirm={handleCropConfirm}
+              onReplace={() => avatarInputRef.current?.click()}
               isUploading={imageUploading}
               viewportRef={cropViewportRef}
             />

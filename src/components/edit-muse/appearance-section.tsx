@@ -3,7 +3,7 @@
 import { ShouldRender } from "@novelist-world/ui";
 import type { ImageCropFilter, NWImage } from "@nw/types";
 import type { ProfileSong } from "@nw/types/music";
-import { clamp, toCropFilter, VALID_IMAGE_TYPES } from "@nw/utils";
+import { clamp, cropToEditorState, toCropFilter, VALID_IMAGE_TYPES } from "@nw/utils";
 import { Form, Separator } from "radix-ui";
 import {
   type FormEventHandler,
@@ -204,6 +204,7 @@ export function AppearanceSection({
 
   // ── Avatar crop dialog ──────────────────────────────────────────────────────
   const avatarViewportRef = useRef<HTMLDivElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [avatarCropOpen, setAvatarCropOpen] = useState(false);
   const [pendingAvatarSrc, setPendingAvatarSrc] = useState("");
   const [avatarX, setAvatarX] = useState(50);
@@ -243,6 +244,23 @@ export function AppearanceSection({
     setAvatarScale(1);
     setAvatarCropOpen(true);
   };
+
+  /** Clicking an avatar that already exists re-opens the crop dialog on it,
+   *  seeded from the stored crop (mirrors the novelist profile's flow). With no
+   *  avatar yet there is nothing to adjust, so it goes straight to the picker. */
+  const openExistingAvatarCropDialog = useCallback(() => {
+    const existing = avatar?.src ? avatar : null;
+    if (!existing) {
+      avatarInputRef.current?.click();
+      return;
+    }
+    const { scale, x, y } = cropToEditorState(existing.crop);
+    setPendingAvatarSrc(existing.src);
+    setAvatarX(x);
+    setAvatarY(y);
+    setAvatarScale(scale);
+    setAvatarCropOpen(true);
+  }, [avatar]);
 
   const handleAvatarChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -658,14 +676,19 @@ export function AppearanceSection({
         <S.BasicInfoFields>
           <S.MediaUploadSectionContainer>
             <Form.Field className="avatar-field" name="avatar">
-              <Form.Label className="media-label">
+              <div className="media-label">
                 <AvatarUploadField
                   src={avatar?.src || image}
                   alt={firstName || "Avatar"}
+                  nwImage={avatar}
+                  onAvatarClick={openExistingAvatarCropDialog}
                 />
+                {/* A caption, not a control: the avatar itself is the
+                    affordance, and it decides between adjust and pick. */}
                 <span>Avatar</span>
-              </Form.Label>
+              </div>
               <Form.Control
+                ref={avatarInputRef}
                 aria-label="Avatar"
                 name="avatar"
                 type="file"
@@ -728,6 +751,7 @@ export function AppearanceSection({
                 onReset={resetAvatarCrop}
                 onCancel={handleAvatarCropCancel}
                 onConfirm={handleAvatarCropConfirm}
+                onReplace={() => avatarInputRef.current?.click()}
                 isUploading={imageUploading}
                 viewportRef={avatarViewportRef}
               />
@@ -841,6 +865,7 @@ export function AppearanceSection({
                     <S.FilterPreviewPanel>
                       <S.FilterPreviewAvatar
                         $src={avatar?.src || image || ""}
+                        $crop={avatar?.src ? avatar.crop : null}
                       />
                       <S.FilterPreviewMuseName>
                         {firstName || "Character Name"}

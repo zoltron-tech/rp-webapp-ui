@@ -82,7 +82,8 @@ export const PennedByRow = styled.span<{ $textColor?: string | null }>`
 `;
 
 import { Container } from "@novelist-world/ui";
-import type { ImageFilter } from "@nw/types";
+import type { ImageCropFilter, ImageFilter } from "@nw/types";
+import { cropBackgroundStyle } from "@nw/utils";
 import styled, { css } from "styled-components";
 import { Avatar as AvatarCommon } from "@/components/common";
 import {
@@ -2058,7 +2059,11 @@ export const InfoScrollBody = styled.div<{ accent?: string | null }>`
   overflow: hidden;
 `;
 
-export const InfoCardAvatar = styled.div<{ $src: string }>`
+export const InfoCardAvatar = styled.div<{
+  $src: string;
+  /** The avatar's stored crop, when the src being shown is the avatar's own. */
+  $crop?: ImageCropFilter | null;
+}>`
   width: 82px;
   height: 82px;
   border-radius: 50%;
@@ -2068,8 +2073,8 @@ export const InfoCardAvatar = styled.div<{ $src: string }>`
   justify-content: center;
   color: rgba(255, 255, 255, 0.35);
   background-image: url(${({ $src }) => $src});
-  background-size: cover;
-  background-position: center;
+  background-size: ${({ $crop }) => cropBackgroundStyle($crop).backgroundSize};
+  background-position: ${({ $crop }) => cropBackgroundStyle($crop).backgroundPosition};
   border: 3px solid rgba(255, 255, 255, 0.2);
   box-shadow:
     0 4px 16px rgba(0, 0, 0, 0.6),

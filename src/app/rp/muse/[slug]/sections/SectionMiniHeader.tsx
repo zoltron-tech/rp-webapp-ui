@@ -14,6 +14,8 @@ type Props = {
 export default function SectionMiniHeader({ muse, accent }: Props) {
   // routing for penned-by is handled by the PennedBy component
   const avatarSrc = muse?.avatar?.src || muse?.image || "";
+  // Only the avatar carries a crop; the `image` fallback is uncropped.
+  const avatarCrop = muse?.avatar?.src ? muse.avatar.crop : null;
   const { nameColor, pennedByColor } = getMuseAppearance(muse);
 
   if (!muse) {
@@ -38,7 +40,7 @@ export default function SectionMiniHeader({ muse, accent }: Props) {
 
   return (
     <S.SectionMiniHeader>
-      <S.InfoCardAvatar $src={avatarSrc}>
+      <S.InfoCardAvatar $src={avatarSrc} $crop={avatarCrop}>
         {avatarSrc && (
           // biome-ignore lint/a11y/useAltText: hidden probe only
           <img src={avatarSrc} style={{ display: "none" }} />

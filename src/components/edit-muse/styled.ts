@@ -1,4 +1,6 @@
 import { RichText as NWRichText } from "@novelist-world/ui";
+import type { ImageCropFilter } from "@nw/types";
+import { cropBackgroundStyle } from "@nw/utils";
 import { Dialog, Form, Select } from "radix-ui";
 import styled, { keyframes } from "styled-components";
 import { fadeIn as overlayShow } from "@/theme/animations";
@@ -1244,14 +1246,18 @@ export const FilterPreviewFandom = styled.div`
   width: 100%;
 `;
 
-export const FilterPreviewAvatar = styled.div<{ $src: string }>`
+export const FilterPreviewAvatar = styled.div<{
+  $src: string;
+  /** The avatar's stored crop, when the src being shown is the avatar's own. */
+  $crop?: ImageCropFilter | null;
+}>`
   width: 38px;
   height: 38px;
   border-radius: 50%;
   flex-shrink: 0;
   background-image: url(${({ $src }) => $src});
-  background-size: cover;
-  background-position: center;
+  background-size: ${({ $crop }) => cropBackgroundStyle($crop).backgroundSize};
+  background-position: ${({ $crop }) => cropBackgroundStyle($crop).backgroundPosition};
   border: 2px solid rgba(255, 255, 255, 0.18);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
   background-color: rgba(255, 255, 255, 0.08);

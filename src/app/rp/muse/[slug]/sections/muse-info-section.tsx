@@ -4,7 +4,7 @@ import { ShouldRender } from "@novelist-world/ui";
 import type { Fandom, Muse } from "@nw/types";
 import type { NWImage } from "@nw/types/novelist";
 import type { PrivacyLevel } from "@nw/types/prompt";
-import { clamp, toCropFilter } from "@nw/utils";
+import { clamp, cropToEditorState, toCropFilter } from "@nw/utils";
 import classNames from "classnames";
 import { Tooltip } from "radix-ui";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -72,6 +72,10 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
   const { successToast, errorToast } = useUIContext();
   const { uploadMedia } = useUploadMedia();
   const [avatarError, setAvatarError] = useState(false);
+  /** The stored crop, but only while the avatar's own src is the one showing:
+   *  it describes that image, not the uncropped `muse.image` fallback. */
+  const avatarCrop =
+    !avatarError && muse?.avatar?.src ? muse.avatar.crop : null;
   const [avatarSaving, setAvatarSaving] = useState(false);
   const [confirmRemoveAvatar, setConfirmRemoveAvatar] = useState(false);
   const avatarFileInputRef = useRef<HTMLInputElement>(null);
@@ -95,6 +99,24 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
     setCropScale(1);
     setCropDialogOpen(true);
   };
+
+  /** The camera button. With an avatar already set this opens the adjust
+   *  dialog on it, seeded from the stored crop — "Replace" inside the dialog is
+   *  the way to a different image. Only an avatar-less muse goes straight to the
+   *  picker, since there is nothing to adjust yet. Mirrors the card image. */
+  const handleAvatarEditClick = useCallback(() => {
+    const existing = muse?.avatar?.src ? muse.avatar : null;
+    if (!existing) {
+      avatarFileInputRef.current?.click();
+      return;
+    }
+    const { scale, x, y } = cropToEditorState(existing.crop);
+    setPendingCropSrc(existing.src);
+    setCropX(x);
+    setCropY(y);
+    setCropScale(scale);
+    setCropDialogOpen(true);
+  }, [muse?.avatar]);
 
   async function handleAvatarFileChange(
     e: React.ChangeEvent<HTMLInputElement>,
@@ -666,6 +688,7 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
                     $src={
                       !avatarError ? muse?.avatar?.src || muse?.image || "" : ""
                     }
+                    $crop={avatarCrop}
                     style={{ height: "100%", width: "100%" }}
                   >
                     {((!muse?.avatar?.src && !muse?.image) || avatarError) &&
@@ -676,7 +699,7 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
                     type="button"
                     title={avatarSaving ? "Saving…" : "Change photo"}
                     disabled={avatarSaving}
-                    onClick={() => avatarFileInputRef.current?.click()}
+                    onClick={handleAvatarEditClick}
                   >
                     {avatarSaving ? (
                       <span style={{ fontSize: "0.5rem" }}>…</span>
@@ -709,6 +732,7 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
                   $src={
                     !avatarError ? muse?.avatar?.src || muse?.image || "" : ""
                   }
+                  $crop={avatarCrop}
                 >
                   {((!muse?.avatar?.src && !muse?.image) || avatarError) && (
                     <FaUser size={30} />
@@ -1145,6 +1169,7 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
               onReset={resetCrop}
               onCancel={handleCropCancel}
               onConfirm={handleCropConfirm}
+              onReplace={() => avatarFileInputRef.current?.click()}
               isUploading={imageUploading}
               viewportRef={cropViewportRef}
             />

@@ -38,6 +38,64 @@ export function toCropFilter(
   };
 }
 
+/**
+ * The largest zoom the crop editors allow, as the whole percentage the crop is
+ * stored in (`scale: 3` → `width: 300`). Anything above it is not a zoom this
+ * app wrote: older records stored a pixel crop box in the same fields, and
+ * reading those as a percentage would blow the image up by an arbitrary factor.
+ */
+export const CROP_SCALE_MAX_PCT = 300;
+
+/** Whether a stored crop is one of ours, and therefore safe to render. */
+export function hasUsableCrop(
+  crop?: ImageCropFilter | null,
+): crop is ImageCropFilter {
+  return !!crop && crop.width > 0 && crop.width <= CROP_SCALE_MAX_PCT;
+}
+
+/**
+ * Unpacks a stored crop back into a crop editor's pan/zoom state — the inverse
+ * of `toCropFilter`, and what an "adjust the image you already have" flow seeds
+ * its dialog from. Falls back to dead centre at 1x when there is nothing usable
+ * to read, which is also the right starting point for a freshly picked image.
+ */
+export function cropToEditorState(crop?: ImageCropFilter | null): {
+  scale: number;
+  x: number;
+  y: number;
+} {
+  if (!hasUsableCrop(crop)) return { scale: 1, x: 50, y: 50 };
+  return { scale: crop.width / 100, x: crop.x, y: crop.y };
+}
+
+/**
+ * The CSS a stored crop describes.
+ *
+ * `x`/`y` are 0–100 `background-position` percentages and `width` is the zoom
+ * as `scale * 100`, so the image is sized `width% auto` — fit by width, height
+ * following — which is exactly what the crop dialogs preview. Rendering it this
+ * way makes the avatar match the user's adjustment at any display size, whatever
+ * the image's aspect ratio.
+ *
+ * Falls back to the uncropped default, so it is safe to spread unconditionally:
+ *
+ * ```ts
+ * <div style={{ backgroundImage: `url(${src})`, ...cropBackgroundStyle(crop) }} />
+ * ```
+ */
+export function cropBackgroundStyle(crop?: ImageCropFilter | null): {
+  backgroundPosition: string;
+  backgroundSize: string;
+} {
+  if (!hasUsableCrop(crop)) {
+    return { backgroundPosition: "center", backgroundSize: "cover" };
+  }
+  return {
+    backgroundPosition: `${crop.x}% ${crop.y}%`,
+    backgroundSize: `${crop.width}% auto`,
+  };
+}
+
 // ──────────────────────────────────────────────────────────────────────────
 // Bucket prefix — single source of truth.
 // ──────────────────────────────────────────────────────────────────────────

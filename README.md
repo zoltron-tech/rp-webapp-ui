@@ -2,10 +2,13 @@
 
 The Novelist World web app.
 
-> **This repo currently builds twice.** The app is mid-migration from Next.js to
-> a Vite SPA plus a small Hono BFF, and both builds work and are kept green. Next
-> is still what deploys. See [REACT_MIGRATION_STEPS.md](../REACT_MIGRATION_STEPS.md)
-> for where that has got to and what is left.
+A **Vite + React Router SPA**. There is no framework server: the browser talks
+to the Kotlin backend directly. A small Hono function under `api/` holds the few
+things that genuinely cannot ship to a browser — see [The `api/` functions](#the-api-functions).
+
+The migration off Next.js is complete; [REACT_MIGRATION_PLAN.md](../REACT_MIGRATION_PLAN.md)
+and [REACT_MIGRATION_STEPS.md](../REACT_MIGRATION_STEPS.md) record what changed
+and why, including several things worth knowing that were found along the way.
 
 ## Prerequisites
 
@@ -19,39 +22,37 @@ pnpm install
 
 ## Running it
 
-Both dev servers listen on **port 3000**, deliberately. Three things outside this
-app are wired to that number — the backend's `APP_BASE_URL` and
-`OAUTH_REDIRECT_BASE`, and `RP_LOGIN_URL` here — so a different port breaks local
-OAuth in a way that looks like a backend fault. Run one at a time.
-
 ```bash
-pnpm dev          # Next  (the deployed build)
-pnpm dev:vite     # Vite  (the migration target)
+pnpm dev
 ```
+
+The dev server listens on **port 3000**, deliberately. Three things outside this
+app are wired to that number — the backend's `APP_BASE_URL` and
+`OAUTH_REDIRECT_BASE`, and `VITE_RP_LOGIN_URL` here — so a different port breaks
+local OAuth in a way that looks like a backend fault.
 
 The app needs a backend. Point `RP_SERVICE_URL` at the real API, or run the
 services locally — [LOCAL_DEV.md](../LOCAL_DEV.md) covers that end to end,
 including Discord OAuth linking.
 
-Copy `.env.example` to `.env` first. The Vite build reads `VITE_`-prefixed names
-but **falls back to the legacy unprefixed ones**, so an existing `.env` works
-under both builds with no duplication. That fallback is transitional and goes
-when Next does.
+Copy `.env.example` to `.env` first. **Only `VITE_`-prefixed names reach the
+browser** — that is what stops a secret being shipped by accident. The unprefixed
+names in the same file are read server-side by `api/`; never add a `VITE_` prefix
+to one of those to "make it work".
 
 ## Scripts
 
 | Script | What it does |
 |---|---|
-| `pnpm dev` | Next dev server on :3000 |
-| `pnpm dev:vite` | Vite dev server on :3000 |
-| `pnpm build` | `next build` — **this is what deploys** |
-| `pnpm build:vite` | `vite build` → `dist/`, including the service worker |
-| `pnpm preview:vite` | Serves the built `dist/` on :3000 |
+| `pnpm dev` | Dev server on :3000 |
+| `pnpm build` | `vite build` → `dist/`, including the service worker |
+| `pnpm start` | Serves the built `dist/` on :3000 |
 | `pnpm verify` | Type-check (app + packages) + package boundaries + both smoke tests. **Run this on every commit.** |
 | `pnpm type-check` | `tsc --noEmit` for the app |
 | `pnpm smoke` | Both smoke tests below |
 | `pnpm smoke:bff` | Open Graph injection and the BFF's error paths |
 | `pnpm smoke:mw` | The `/{username}` short link and reserved paths |
+| `pnpm smoke:routes` | Renders all 66 routes in headless Chrome. Needs a build and a browser, so it is not in `verify` |
 | `pnpm lint` | `biome check` — **fails today**, pre-existing, see below |
 
 ### On the smoke tests
@@ -71,50 +72,66 @@ Both stub `fetch`, so they need no network and no credentials.
 
 ### On `pnpm lint`
 
-`biome check` fails today with pre-existing style errors, and ~500 files are
-unformatted. That is the state this repo was already in. **Do not run
-`biome format --write` while the migration is in flight** — it would touch more
-files than the migration itself and make every diff unreviewable.
+`biome check` fails with pre-existing style errors, and ~500 files are
+unformatted. That predates the migration. Formatting the repo is now safe to do
+— it was deliberately held off while two builds had to stay diffable — but do it
+as its own commit, touching nothing else.
 
 ## How it is put together
 
 ```
-src/app/…          page components, one directory per route
-                   (directory names still match Next's convention, brackets
-                    and all, so migration diffs stay readable)
-src/routes.tsx     the explicit route table the Vite build uses
+index.html         the document shell, including the site-wide meta tags
+src/main.tsx       entry: createRoot, providers, RouterProvider
+src/routes.tsx     the route table — 66 entries, written by hand, read top to
+                   bottom. Add new routes here.
+src/app/…          page components, one directory per route. The directory names
+                   still use Next's bracket convention ([slug]) because renaming
+                   them is a large mechanical diff that has not been worth doing
+                   yet; the brackets carry no meaning now.
 src/components/…   shared components
-src/lib/…          app-level plumbing, including the build seams below
+src/lib/…          app-level plumbing: the API client, navigation helpers,
+                   cookies, config
 packages/          @nw/api, @nw/types, @nw/utils, @nw/config — framework-free,
                    shared with the future mobile app. No build step: they ship
                    TypeScript source.
-api/               the Hono BFF (Discord + Klipy proxies, reactions, landing
-                   feeds, Open Graph injection) as one Vercel Function
-worker/            service worker — handlers.ts is shared, index.ts is the Next
-                   custom worker, sw.ts is the whole Vite one
+api/               the server functions (see below)
+middleware.ts      edge middleware: tracking-param stripping and the
+                   /{username} short link
+worker/            service worker — sw.ts is the worker, handlers.ts holds the
+                   push/notification/badge logic
 ```
 
-### Build seams
+### The `api/` functions
 
-A handful of modules exist twice because the two bundlers genuinely cannot share
-one implementation. `vite.config.ts` aliases each `@/…` path on the left to its
-Vite-specific file; the Next build uses the plain one. This is what lets both
-builds stay fully working at the same time.
+One Hono app on a single Vercel Function, holding the handful of things that
+cannot run in a browser:
 
-| Module | Why it differs |
+| Route | Why it is server-side |
 |---|---|
-| `@/lib/navigation` | `next/navigation` vs React Router |
-| `@/components/link` | `next/link` vs React Router's `<Link>` (`href` is kept either way) |
-| `@/lib/env` | webpack inlines `process.env.X`; Vite inlines `import.meta.env.VITE_X` |
-| `@/lib/dynamic` | `next/dynamic` vs `React.lazy` |
-| `@/lib/server-api` | server-side API client vs browser client |
-| `@/app/actions` | `next/headers` cookies vs `document.cookie` |
+| `/api/discord/share*` | Holds `DISCORD_BOT_TOKEN` |
+| `/api/klipy-*` | Holds `KLIPY_API_KEY`, which Klipy puts in the URL |
+| `/api/reaction/:id` | Proxies a write with the caller's JWT |
+| `/api/landing/*` | Public feeds, pre-transformed for the landing page |
+| `/rp/story/:slug`, `/rp/story/event/:slug` | Open Graph injection — crawlers do not run JS, so a shared story link would otherwise unfurl with the generic site card |
 
-Adding a new one means adding the alias too. If you find yourself reaching for a
-`typeof window` check to tell the builds apart, add a seam instead.
+**These are a staging post, not the destination.** Everything except the Open
+Graph injection is a proxy that exists only because the browser cannot hold a
+secret, and each one belongs in the Kotlin backend next to the data it is
+already talking to. Moving them there removes this function, its deployment
+surface, and one more place where a token lives.
+
+So: **do not build new features here.** If something needs a server, it goes in
+the Kotlin backend. The Open Graph injection is the one thing that has to stay
+at the edge, because it rewrites the HTML document itself before it reaches a
+crawler.
 
 ## Deployment
 
-Vercel builds and serves this. `pnpm build` (Next) is what currently ships;
-`vercel.json` already carries the Vite-era rewrites and the security response
-headers.
+Vercel builds and serves this: the CDN serves `dist/` and `vercel.json` rewrites
+`/api/*` and the two storyboard routes to the function. Same-origin by
+construction, which is why the client's relative `fetch("/api/…")` calls need no
+CORS.
+
+`vercel.json` also carries the security response headers (nosniff, frame
+options, referrer, permissions). They are not in nginx — `rp-webapp-nginx`
+fronts `api.novelist.world` only, not this app.

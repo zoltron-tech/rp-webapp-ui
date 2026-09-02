@@ -8,6 +8,7 @@ import { FiX } from "react-icons/fi";
 import appInstallLogo from "@/assets/images/NW-mobile-app-install-logo.png";
 import * as S from "@/components/user-menu/styles";
 import { useGlobalState } from "@/context/store/stores";
+import { assetUrl } from "@/lib/asset";
 
 interface InstallAppDialogProps {
   open: boolean;
@@ -38,7 +39,7 @@ export const InstallAppDialog: FC<InstallAppDialogProps> = ({
           <FiX />
         </S.DiscordDialogClose>
         <S.DiscordDialogImage
-          src={appInstallLogo.src}
+          src={assetUrl(appInstallLogo)}
           alt="Install Novelist World"
         />
         <S.DiscordDialogTitle>

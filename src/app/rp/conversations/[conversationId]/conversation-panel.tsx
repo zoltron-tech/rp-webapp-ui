@@ -2,7 +2,6 @@
 
 import type { Conversation, MentionDataItem, Message } from "@nw/types";
 import type { MessageSender, Reaction } from "@nw/types/conversation";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { FaChevronDown } from "react-icons/fa";
@@ -163,7 +162,6 @@ export function ConversationPanel({
   const conversationNavDirection = useGlobalState("conversationNavDirection");
   const unreadConversationIds = useGlobalState("unreadConversationIds");
   const setGlobalState = useGlobalStoreSet();
-  const router = useRouter();
   const musicPlayerHeight =
     musicPlayer?.playingSongId && musicPlayer?.playingSongName ? 53 : 0;
   const {
@@ -486,11 +484,9 @@ export function ConversationPanel({
     fetchConversation();
   }, [active, fetchConversation, stopPageLoading, setGlobalState, isPanel]);
 
-  // Prefetch the details page so the first click is instant.
-  useEffect(() => {
-    if (!active || !conversationId) return;
-    router.prefetch(ROUTES.Conversation.Details(conversationId));
-  }, [active, router, conversationId]);
+  // The prefetch that used to live here is gone: React Router has no
+  // equivalent and Vite already code-splits per route, so the chunk for this
+  // destination is fetched on hover/click by the router itself.
 
   useEffect(() => {
     if (!active || !conversationId) return;

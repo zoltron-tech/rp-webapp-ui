@@ -2,7 +2,6 @@
 
 import { DefaultTheme, Input } from "@novelist-world/ui";
 import type { Fandom, Muse } from "@nw/types";
-import { useRouter } from "next/navigation";
 import { type FC, type ReactNode, useEffect, useState } from "react";
 import { ThemeProvider } from "styled-components";
 import { FandomValue } from "@/app/rp/muse/[slug]/styles";

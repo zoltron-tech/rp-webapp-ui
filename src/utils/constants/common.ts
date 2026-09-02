@@ -1,4 +1,5 @@
-export const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "";
+import { env } from "@/lib/env";
+export const SUPPORT_EMAIL = env.SUPPORT_EMAIL || "";
 export const SUPPORT_EMAIL_URL = `mailto:${SUPPORT_EMAIL}`;
 
 /** Width ÷ height for Storyboard and Storyboard Event cover avatars (6:9

@@ -9,10 +9,11 @@ import {
   TbSquareRoundedLetterSFilled,
 } from "react-icons/tb";
 import * as S from "./styles";
+import { env } from "@/lib/env";
 
 export default function TiersCatalog() {
   const onLoginClick = () => {
-    window.location.replace(`${process.env.RP_LOGIN_URL}?modal=SIGNUP`);
+    window.location.replace(`${env.RP_LOGIN_URL}?modal=SIGNUP`);
   };
 
   return (

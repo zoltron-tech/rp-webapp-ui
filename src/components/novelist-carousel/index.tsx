@@ -15,6 +15,7 @@ import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { NovelistCard } from "..";
 import { ShouldRender } from "../common";
 import * as S from "./styles";
+import { env } from "@/lib/env";
 
 export const NovelistCarousel: FC = () => {
   const { errorToast: error } = useUIContext();
@@ -96,7 +97,7 @@ export const NovelistCarousel: FC = () => {
           slidesPerView={3}
           speed={1000}
           autoplay={
-            process.env.DISABLE_AUTOSCROLL === "true"
+            env.DISABLE_AUTOSCROLL === "true"
               ? false
               : {
                   delay: 4000,

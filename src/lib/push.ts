@@ -2,8 +2,9 @@
 
 import { authenticateAndGetJWT } from "@/app/actions";
 import { AUTH_HEADER_NAME } from "@/utils/constants";
+import { env } from "@/lib/env";
 
-const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
+const VAPID_PUBLIC_KEY = env.VAPID_PUBLIC_KEY;
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   if (!base64String || typeof base64String !== "string") {
@@ -15,7 +16,7 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return new Uint8Array([...rawData].map((char) => char.charCodeAt(0)));
 }
 
-const RP_SERVICE_URL = process.env.RP_SERVICE_URL;
+const RP_SERVICE_URL = env.RP_SERVICE_URL;
 
 async function sendSubscriptionToBackend(
   subscription: PushSubscription,

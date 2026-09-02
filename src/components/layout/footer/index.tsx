@@ -5,10 +5,11 @@ import { SUPPORT_EMAIL, SUPPORT_EMAIL_URL } from "@/utils/constants/common";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import * as S from "./styles";
+import { env } from "@/lib/env";
 
 type Props = {};
 
-const DISCORD_INVITE_URL = process.env.NEXT_PUBLIC_DISCORD_INVITE_URL ?? "";
+const DISCORD_INVITE_URL = env.DISCORD_INVITE_URL ?? "";
 
 export const Footer: FC<Props> = memo(({}) => {
   Logger.info("Footer rendered");

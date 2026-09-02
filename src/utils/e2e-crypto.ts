@@ -34,6 +34,7 @@ import {
   storeE2EKeyBackupAction,
 } from "@/app/rp/conversations/e2e-actions";
 import { JWT_COOKIE_NAME } from "@/utils/constants";
+import { env } from "@/lib/env";
 
 /** PBKDF2 rounds for the password-derived backup key. */
 const BACKUP_KDF_ITERATIONS = 600_000;
@@ -51,13 +52,13 @@ const E2E_PREFIX_V1 = `${ZERO_WIDTH_SPACE}e2e:v1:`;
 export const DECRYPT_FALLBACK_TEXT = "🔒 This message could not be decrypted.";
 
 const LEGACY_SECRET =
-  process.env.NEXT_PUBLIC_CHAT_E2E_SECRET || "novelist-world-chat-e2e-v1";
+  env.CHAT_E2E_SECRET || "novelist-world-chat-e2e-v1";
 
 /** Feature flag: outgoing messages are only encrypted when this is set (any
  *  truthy value). Unset → messages send as plaintext. Key exchange, envelope
  *  repair, and decryption of already-encrypted messages are unaffected — this
  *  gates the encrypt step alone so existing E2E traffic still reads. */
-const E2E_ENCRYPT_ENABLED = !!process.env.NEXT_PUBLIC_CHAT_E2E_ENABLED;
+const E2E_ENCRYPT_ENABLED = !!env.CHAT_E2E_ENABLED;
 
 const IV_LENGTH = 12;
 const ECDH_PARAMS = { name: "ECDH", namedCurve: "P-256" } as const;

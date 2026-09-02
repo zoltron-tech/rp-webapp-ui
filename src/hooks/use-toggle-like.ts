@@ -1,5 +1,7 @@
+import { removeReaction, setReaction } from "@nw/api/endpoints/novelists";
 import type { Hook } from "@nw/types/common";
 import { useCallback } from "react";
+import { api } from "@/lib/api";
 import { API_MESSAGE } from "@/utils/constants";
 
 type Props = {
@@ -37,26 +39,15 @@ export const useToggleLike: Hook<Props, ReturnType> = ({
   const toggleLike = useCallback(async (): Promise<
     ReactionResponse | ApiErrorResponse
   > => {
-    const URL = `/api/reaction/${id}`;
-    const method = liked ? "DELETE" : "PATCH";
-    const body = liked
-      ? undefined
-      : JSON.stringify({ targetType: type.toUpperCase() });
+    // Straight to the portfolio service, which has had these endpoints all
+    // along. The Next route handler this replaces existed only to read the JWT
+    // cookie and re-send it as a header — work the browser now does itself.
+    const result = liked
+      ? await removeReaction(api, id)
+      : await setReaction(api, id, type.toUpperCase());
 
-    const response = await fetch(URL, {
-      body,
-      cache: "no-store",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      method,
-    });
-
-    if (!response.ok) {
-      return { message: API_MESSAGE.Error };
-    }
-
-    return response.json();
+    if (!result || "message" in result) return { message: API_MESSAGE.Error };
+    return result;
   }, [id, type, liked]);
 
   return { toggleLike };

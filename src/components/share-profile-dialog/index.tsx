@@ -27,6 +27,8 @@ import { ROUTES } from "@/utils/constants/routes";
 import { mainVerseMuses } from "@/utils/muse";
 import * as DropS from "../profile-more-dropdown/styled";
 import * as S from "./styled";
+import { shareProfileToDiscord } from "@nw/api/endpoints/community";
+import { api } from "@/lib/api";
 
 interface ShareProfileDialogProps {
   novelist: Novelist | null;
@@ -193,14 +195,9 @@ export const ShareProfileDialog: FC<ShareProfileDialogProps> = ({
         profile: profileData,
         profileUrl,
       };
-      const res = await fetch("/api/discord/share-profile", {
-        body: JSON.stringify(payload),
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-      });
-      if (res.ok) {
-        const data = (await res.json()) as SharePromptResult;
-        setShareState({ messageUrl: data.messageUrl, status: "success" });
+      const result = await shareProfileToDiscord(api, payload);
+      if (result && "messageUrl" in result) {
+        setShareState({ messageUrl: result.messageUrl, status: "success" });
       } else {
         setShareState({ status: "error" });
       }

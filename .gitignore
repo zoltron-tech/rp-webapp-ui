@@ -22,6 +22,8 @@ public/icons/photothumb.db
 
 # vite
 /dist/
+# vite-plugin-pwa writes the dev service worker here
+/dev-dist/
 /out/
 
 # production

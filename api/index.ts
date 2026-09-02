@@ -1,43 +1,32 @@
 import { Hono } from "hono";
 import { handle } from "hono/vercel";
-import { discord } from "./_discord";
-import { klipy } from "./_klipy";
 import { og } from "./_og";
-import { portfolio } from "./_portfolio";
 
 /**
- * The BFF — one Hono app behind a single Vercel Function.
+ * Open Graph injection for shared storyboard links — and nothing else.
  *
- * Replaces the seven `app/api/*` route handlers and the four `pages/api` ones
- * with a single deployable unit. `vercel.json` routes `/api/*` here, plus the
- * two storyboard patterns that need Open Graph injection.
+ * This was a small BFF holding eleven route handlers inherited from Next.js.
+ * All of them have since moved to the portfolio service, which is where server
+ * work belongs: the Discord and Klipy proxies existed only to hold a secret,
+ * and the reaction and landing-feed handlers were proxying the portfolio
+ * service to itself. See REACT_MIGRATION_PLAN.md.
  *
- * **Same-origin is the whole design.** All 18 client `fetch("/api/…")` call
- * sites use relative URLs, so none of them changed and none needs CORS. That is
- * free on Vercel, where the CDN serves `dist/` and rewrites `/api/*` to this
- * function — it is not the nginx arrangement REACT_MIGRATION_PLAN.md §10
- * assumed.
+ * What is left cannot move. It rewrites the HTML document before a crawler
+ * sees it, so it has to run wherever the document is served — the CDN edge, not
+ * the API. Crawlers do not execute JavaScript, so without it a shared story
+ * link unfurls with the generic site card.
  *
- * **Node runtime, not Edge.** `@nw/utils` and the image transforms are plain
- * JS and would run on either, but Node is what these handlers ran on before and
- * the difference buys nothing here.
+ * **Do not add routes here.** New server work goes in the Kotlin backend.
  *
- * See REACT_MIGRATION_STEPS.md C1.
+ * See REACT_MIGRATION_STEPS.md C8.
  */
 
 export const config = { runtime: "nodejs" };
 
 const app = new Hono();
 
-// Order matters, though far less than it does for the username rule in
-// middleware.ts: these paths are disjoint. `/api/*` is mounted first simply
-// because it is the overwhelming majority of the traffic.
-app.route("/api/discord", discord);
-app.route("/api", klipy);
-app.route("/api", portfolio);
-
-// Not under /api: these are real page URLs that happen to need a server-side
-// pass for their link preview. See _og.ts.
+// Mounted at the root rather than under /api: these are real page URLs that
+// happen to need a server-side pass for their link preview. See _og.ts.
 app.route("/", og);
 
 app.get("/api/health", (c) => c.json({ ok: true }));

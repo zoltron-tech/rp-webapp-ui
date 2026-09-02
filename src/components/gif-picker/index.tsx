@@ -4,6 +4,8 @@ import { useDebounce } from "@nw/utils/hooks/use-debounce";
 import { type FC, useEffect, useState } from "react";
 import type { GifItem } from "@/types/klipy";
 import * as S from "./styled";
+import { searchGifs } from "@nw/api/endpoints/community";
+import { api } from "@/lib/api";
 
 interface GifPickerProps {
   onSelect: (gifUrl: string) => void;
@@ -31,19 +33,13 @@ export const GifPicker: FC<GifPickerProps> = ({
     let cancelled = false;
     setLoading(true);
 
-    const params = debouncedQuery.trim()
-      ? `?q=${encodeURIComponent(debouncedQuery.trim())}&limit=30`
-      : `?limit=30`;
-
-    fetch(`/api/klipy-gifs${params}`)
-      .then((r) => r.json())
-      .then((data: { items: GifItem[]; next?: string | null }) => {
-        if (!cancelled) {
-          setGifItems(data.items ?? []);
-          setNextCursor(data.next ?? null);
-          setHasMore(Boolean(data.next));
-          setLoading(false);
-        }
+    searchGifs(api, debouncedQuery, 30)
+      .then((data) => {
+        if (cancelled) return;
+        setGifItems(data.items);
+        setNextCursor(data.next);
+        setHasMore(Boolean(data.next));
+        setLoading(false);
       })
       .catch(() => {
         if (!cancelled) setLoading(false);
@@ -58,18 +54,10 @@ export const GifPicker: FC<GifPickerProps> = ({
     if (loadingMore || !hasMore || !nextCursor) return;
     setLoadingMore(true);
 
-    const params = debouncedQuery.trim()
-      ? `?q=${encodeURIComponent(debouncedQuery.trim())}&limit=30&pos=${encodeURIComponent(nextCursor)}`
-      : `?limit=30&pos=${encodeURIComponent(nextCursor)}`;
-
     try {
-      const response = await fetch(`/api/klipy-gifs${params}`);
-      const data = (await response.json()) as {
-        items: GifItem[];
-        next?: string | null;
-      };
-      setGifItems((prev) => [...prev, ...(data.items ?? [])]);
-      setNextCursor(data.next ?? null);
+      const data = await searchGifs(api, debouncedQuery, 30, nextCursor);
+      setGifItems((prev) => [...prev, ...data.items]);
+      setNextCursor(data.next);
       setHasMore(Boolean(data.next));
     } finally {
       setLoadingMore(false);

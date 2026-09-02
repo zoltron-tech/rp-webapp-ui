@@ -15,6 +15,12 @@ import {
 } from "@nw/utils/image";
 import type { ApiClient } from "../client";
 
+/** What the portfolio service returns from a reaction write. */
+export type ReactionResponse = {
+  reacted: boolean;
+  reactions: number;
+};
+
 const NOVELIST = "/rp/portfolio/novelist";
 
 /**
@@ -228,6 +234,34 @@ export const getFriendsByUsername = (
     `${NOVELIST}/friends?username=${username}&pageNumber=${pageNumber}&pageSize=${pageSize}`,
     "getFriendsByUsernameAction",
   );
+
+/**
+ * Adds or removes this novelist's reaction on a target.
+ *
+ * Went through a Next route handler until the React migration, purely so the
+ * JWT cookie could be turned into a header server-side. The browser attaches
+ * that header itself now, so this calls the portfolio service directly and the
+ * proxy is gone.
+ */
+export const setReaction = (
+  api: ApiClient,
+  targetId: string,
+  targetType: string,
+): Promise<ReactionResponse | WithMessage> =>
+  api.request<ReactionResponse>(
+    `/rp/portfolio/react/${targetId}?targetType=${targetType}`,
+    { label: "setReaction", method: "PATCH", requireAuth: true },
+  );
+
+export const removeReaction = (
+  api: ApiClient,
+  targetId: string,
+): Promise<ReactionResponse | WithMessage> =>
+  api.request<ReactionResponse>(`/rp/portfolio/react/${targetId}`, {
+    label: "removeReaction",
+    method: "DELETE",
+    requireAuth: true,
+  });
 
 export const getReactionLikers = (
   api: ApiClient,

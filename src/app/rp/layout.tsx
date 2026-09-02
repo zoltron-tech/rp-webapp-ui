@@ -4,6 +4,8 @@ import { DefaultTheme } from "@novelist-world/ui";
 import type { StoreState } from "@nw/types/state";
 import { ACCENT_MAP } from "@nw/types/theme";
 import classNames from "classnames";
+import { searchStickers } from "@nw/api/endpoints/community";
+import { api } from "@/lib/api";
 import { usePathname } from "@/lib/navigation";
 import type React from "react";
 import { type FC, type HTMLProps, useEffect, useMemo } from "react";
@@ -153,15 +155,10 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
     return runWhenIdle(() => {
       const queries = ["hello", "wave"];
       const q = queries[Math.floor(Math.random() * queries.length)];
-      fetch(`/api/klipy-stickers?q=${encodeURIComponent(q)}&limit=20`)
-        .then((r) => r.json())
-        .then(
-          (data: { items: { stickerUrl: string; previewUrl: string }[] }) => {
-            if (data.items?.length) {
-              setGlobalState({ helloStickers: data.items });
-            }
-          },
-        )
+      searchStickers(api, q, 20)
+        .then((data) => {
+          if (data.items.length) setGlobalState({ helloStickers: data.items });
+        })
         .catch(() => {
           /* non-critical */
         });

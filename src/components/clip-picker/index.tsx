@@ -7,6 +7,8 @@ import { FaPause, FaPlay } from "react-icons/fa";
 import { HiPaperAirplane } from "react-icons/hi2";
 import * as S from "@/components/sticker-picker/styled";
 import type { ClipItem } from "@/types/klipy";
+import { searchClips } from "@nw/api/endpoints/community";
+import { api } from "@/lib/api";
 
 interface ClipPickerProps {
   onSelect: (clipUrl: string) => void;
@@ -264,20 +266,14 @@ export const ClipPicker: FC<ClipPickerProps> = ({
     setLoading(true);
     setPage(1);
 
-    const params = debouncedQuery.trim()
-      ? `?q=${encodeURIComponent(debouncedQuery.trim())}&limit=30&page=1`
-      : `?limit=30&page=1`;
-
-    fetch(`/api/klipy-clips${params}`)
-      .then((r) => r.json())
-      .then((data: { hasNext?: boolean; items: ClipItem[] }) => {
+    searchClips(api, debouncedQuery, 30, 1)
+      .then((data) => {
         if (!cancelled) {
-          const nextClips = data.items ?? [];
-          setClips(nextClips);
+          setClips(data.items);
           setHasMore(Boolean(data.hasNext));
           setSelectedClip((prev) => {
             if (!prev) return null;
-            return nextClips.find((c) => c.id === prev.id) ?? null;
+            return data.items.find((c) => c.id === prev.id) ?? null;
           });
           setLoading(false);
         }
@@ -295,16 +291,9 @@ export const ClipPicker: FC<ClipPickerProps> = ({
     if (loadingMore || !hasMore) return;
     const nextPage = page + 1;
     setLoadingMore(true);
-    const params = debouncedQuery.trim()
-      ? `?q=${encodeURIComponent(debouncedQuery.trim())}&limit=30&page=${nextPage}`
-      : `?limit=30&page=${nextPage}`;
     try {
-      const response = await fetch(`/api/klipy-clips${params}`);
-      const data = (await response.json()) as {
-        hasNext?: boolean;
-        items: ClipItem[];
-      };
-      setClips((prev) => [...prev, ...(data.items ?? [])]);
+      const data = await searchClips(api, debouncedQuery, 30, nextPage);
+      setClips((prev) => [...prev, ...data.items]);
       setHasMore(Boolean(data.hasNext));
       setPage(nextPage);
     } finally {

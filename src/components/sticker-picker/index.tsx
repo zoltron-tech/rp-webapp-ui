@@ -4,6 +4,8 @@ import { useDebounce } from "@nw/utils/hooks/use-debounce";
 import { type FC, useEffect, useState } from "react";
 import type { StickerItem } from "@/types/klipy";
 import * as S from "./styled";
+import { searchStickers } from "@nw/api/endpoints/community";
+import { api } from "@/lib/api";
 
 interface StickerPickerProps {
   onSelect: (stickerUrl: string) => void;
@@ -33,15 +35,10 @@ export const StickerPicker: FC<StickerPickerProps> = ({
     setLoading(true);
     setPage(1);
 
-    const params = debouncedQuery.trim()
-      ? `?q=${encodeURIComponent(debouncedQuery.trim())}&limit=30&page=1`
-      : `?limit=30&page=1`;
-
-    fetch(`/api/klipy-stickers${params}`)
-      .then((r) => r.json())
-      .then((data: { hasNext?: boolean; items: StickerItem[] }) => {
+    searchStickers(api, debouncedQuery, 30, 1)
+      .then((data) => {
         if (!cancelled) {
-          setStickers(data.items ?? []);
+          setStickers(data.items);
           setHasMore(Boolean(data.hasNext));
           setLoading(false);
         }
@@ -61,17 +58,9 @@ export const StickerPicker: FC<StickerPickerProps> = ({
     const nextPage = page + 1;
     setLoadingMore(true);
 
-    const params = debouncedQuery.trim()
-      ? `?q=${encodeURIComponent(debouncedQuery.trim())}&limit=30&page=${nextPage}`
-      : `?limit=30&page=${nextPage}`;
-
     try {
-      const response = await fetch(`/api/klipy-stickers${params}`);
-      const data = (await response.json()) as {
-        hasNext?: boolean;
-        items: StickerItem[];
-      };
-      setStickers((prev) => [...prev, ...(data.items ?? [])]);
+      const data = await searchStickers(api, debouncedQuery, 30, nextPage);
+      setStickers((prev) => [...prev, ...data.items]);
       setHasMore(Boolean(data.hasNext));
       setPage(nextPage);
     } finally {

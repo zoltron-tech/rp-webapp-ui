@@ -1,10 +1,10 @@
 /**
- * Smoke test for the BFF — run with `pnpm smoke:bff`.
+ * Smoke test for the Open Graph function — run with `pnpm smoke:bff`.
  *
- * Not a test suite, and not the start of one: this exists because C8's failure
- * mode is invisible to `tsc` and to both builds. A wrong OG injection ships a
- * generic card to the exact audience the feature exists for, and nobody notices
- * until a shared link looks wrong in Discord.
+ * Not a test suite, and not the start of one: this exists because the OG
+ * injection's failure mode is invisible to `tsc` and to the build. A wrong card
+ * ships a generic preview to the exact audience shared story links exist for,
+ * and nobody notices until someone posts one in Discord.
  *
  * It stubs `fetch`, so it needs no network and no credentials. It checks the
  * things that fail silently: that the meta tags are *rewritten* rather than
@@ -96,21 +96,6 @@ const run = async () => {
   res = await app.request("https://novelist.world/api/nope");
   check("unknown api 404", String(res.status), "404");
 
-  // ── klipy without key → 500, not a crash ──
-  delete process.env.KLIPY_API_KEY;
-  res = await app.request("https://novelist.world/api/klipy-gifs");
-  check("klipy unconfigured", String(res.status), "500");
-
-  // ── discord without token → 503 ──
-  delete process.env.DISCORD_BOT_TOKEN;
-  res = await app.request("https://novelist.world/api/discord/share", {
-    method: "POST", body: JSON.stringify({}), headers: { "Content-Type": "application/json" },
-  });
-  check("discord unconfigured", String(res.status), "503");
-
-  // ── reaction without cookie → 401 ──
-  res = await app.request("https://novelist.world/api/reaction/abc", { method: "DELETE" });
-  check("reaction unauthenticated", String(res.status), "401");
 
   if (failures > 0) {
     // Thrown rather than `process.exit`: the shared packages narrow the

@@ -16,6 +16,8 @@ import { NovelistCard } from "..";
 import { ShouldRender } from "../common";
 import * as S from "./styles";
 import { env } from "@/lib/env";
+import { getNovelists } from "@nw/api/endpoints/novelists";
+import { api } from "@/lib/api";
 
 export const NovelistCarousel: FC = () => {
   const { errorToast: error } = useUIContext();
@@ -24,19 +26,16 @@ export const NovelistCarousel: FC = () => {
 
   const setNovelists = useCallback(async () => {
     Logger.info("setNovelists called:", novelists);
-    // Route handler, not a server action — server actions are serialized per
-    // client, and this fetch was blocking authenticateAction (and with it the
-    // top-bar login button) on first load.
-    try {
-      const response = await fetch("/api/landing/novelists");
-      if (!response.ok) {
-        return error("Novelists could not be fetched!");
-      }
-      const _novelists = await response.json();
-      setStore({ novelists: _novelists });
-    } catch {
+    // Straight to the portfolio service. `getNovelists` already applies the
+    // same "carousel" image sizing the route handler it replaces did, so this
+    // is one fewer hop for identical data. The reason that handler existed —
+    // server actions being serialised per client, so this fetch blocked the
+    // top-bar login button — went away with server actions themselves.
+    const _novelists = await getNovelists(api);
+    if (!Array.isArray(_novelists)) {
       return error("Novelists could not be fetched!");
     }
+    setStore({ novelists: _novelists });
   }, []);
 
   useEffect(() => {

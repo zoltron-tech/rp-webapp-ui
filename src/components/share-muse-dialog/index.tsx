@@ -26,6 +26,8 @@ import type {
 import { ROUTES } from "@/utils/constants/routes";
 import * as DropS from "../profile-more-dropdown/styled";
 import * as S from "./styled";
+import { shareMuseToDiscord } from "@nw/api/endpoints/community";
+import { api } from "@/lib/api";
 
 interface ShareMuseDialogProps {
   muse: Muse | null;
@@ -186,14 +188,9 @@ export const ShareMuseDialog: FC<ShareMuseDialogProps> = ({
         museUrl,
         novelistUsername: novelist?.username ?? "",
       };
-      const res = await fetch("/api/discord/share-muse", {
-        body: JSON.stringify(payload),
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-      });
-      if (res.ok) {
-        const data = (await res.json()) as SharePromptResult;
-        setShareState({ messageUrl: data.messageUrl, status: "success" });
+      const result = await shareMuseToDiscord(api, payload);
+      if (result && "messageUrl" in result) {
+        setShareState({ messageUrl: result.messageUrl, status: "success" });
       } else {
         setShareState({ status: "error" });
       }

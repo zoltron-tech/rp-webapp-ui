@@ -102,7 +102,10 @@ export const metadata: Metadata = {
     "writers",
     "Novelist World",
   ],
-  manifest: "/manifest.json",
+  // Next's app/manifest.ts serves at /manifest.webmanifest, not /manifest.json.
+  // Under Vite this becomes a static public/manifest.json and the two agree by
+  // construction — see REACT_MIGRATION_STEPS.md C6.
+  manifest: "/manifest.webmanifest",
   metadataBase: new URL("https://novelist.world"),
   openGraph: {
     description: SOCIAL_DESCRIPTION,

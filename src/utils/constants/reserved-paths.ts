@@ -11,23 +11,51 @@
 /**
  * Top-level path segments that belong to the app itself and must never be
  * treated as a candidate username.
+ *
+ * Note that `USERNAME_PATH_RE` below allows dots, so a filename like
+ * `favicon-32x32.png` is a *valid* username shape. Anything served from the
+ * root of `public/` therefore has to be listed here, or requesting it costs a
+ * backend lookup (and up to a 2s timeout) before it falls through. The
+ * middleware's `matcher` excludes some of these already; this set is the
+ * second layer and the one the link-generating code also reads.
  */
 export const RESERVED_TOP_LEVEL_SEGMENTS = new Set([
   "rp",
   "api",
+  // Next's build output. Dead once the app is on Vite, whose asset directory
+  // is "assets" — already listed below. Remove with the rest of Next.
   "_next",
-  "favicon.ico",
   "robots.txt",
   "sitemap.xml",
+  // Next's app/manifest.ts serves .webmanifest today; the static Vite build
+  // serves .json. Both are listed so the set is correct before and after.
+  "manifest.webmanifest",
   "manifest.json",
+  // Directories under public/
   "icons",
-  "sw.js",
-  "workbox",
-  "worker",
+  "images",
   "models",
   "animations",
   "assets",
+  "promo",
   "public",
+  // Service worker artefacts
+  "sw.js",
+  "workbox",
+  "worker",
+  // Files at the root of public/ — icons and friends. These moved out of
+  // src/app/ so they are actually served; before that they were inert and
+  // never reached the middleware at all.
+  "favicon.ico",
+  "apple-touch-icon.png",
+  "favicon-16x16.png",
+  "favicon-32x32.png",
+  "android-chrome-192x192.png",
+  "android-chrome-384x384.png",
+  "mstile-150x150.png",
+  "browserconfig.xml",
+  "safari-pinned-tab.svg",
+  "og_image.png",
 ]);
 
 /**

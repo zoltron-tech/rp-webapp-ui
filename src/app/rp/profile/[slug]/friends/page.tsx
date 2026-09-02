@@ -1,7 +1,7 @@
 "use client";
 
 import type { Friend } from "@nw/types";
-import { useParams } from "next/navigation";
+import { useParams } from "@/lib/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getFriendsByUsernameAction } from "@/app/rp/novelists/actions";
 import { BreadCrumb } from "@/components/breadcrumb";

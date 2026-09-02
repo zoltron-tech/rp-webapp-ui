@@ -1,7 +1,7 @@
 "use client";
 
 import type { AuthState } from "@nw/types/state";
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/lib/navigation";
 import { type FC, type ReactNode, useCallback, useEffect, useRef } from "react";
 import {
   authenticateAction,

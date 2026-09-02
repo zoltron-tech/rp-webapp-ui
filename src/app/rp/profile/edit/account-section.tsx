@@ -3,7 +3,7 @@
 import { ShouldRender } from "@novelist-world/ui";
 import type { DiscordConnection, SpotifyConnection } from "@nw/types";
 import type { Friend } from "@nw/types/novelist";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams } from "@/lib/navigation";
 import { Separator } from "radix-ui";
 import { useEffect, useState } from "react";
 import {

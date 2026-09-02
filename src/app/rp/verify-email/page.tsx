@@ -1,6 +1,7 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useNavigate } from "@/lib/navigation";
+import { useSearchParams } from "@/lib/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 import { FaFaceSadTear } from "react-icons/fa6";
@@ -16,7 +17,7 @@ export default function ResetPassword() {
   const [_disabled, _setDisabled] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const { verifyAccount } = useAuthContext();
-  const { push } = useRouter();
+  const push = useNavigate();
   const [verificationStatus, setVerificationStatus] = useState<boolean | null>(
     null,
   );

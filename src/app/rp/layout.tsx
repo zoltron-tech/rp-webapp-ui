@@ -4,7 +4,7 @@ import { DefaultTheme } from "@novelist-world/ui";
 import type { StoreState } from "@nw/types/state";
 import { ACCENT_MAP } from "@nw/types/theme";
 import classNames from "classnames";
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/lib/navigation";
 import type React from "react";
 import { type FC, type HTMLProps, useEffect, useMemo } from "react";
 import { useCookies } from "react-cookie";

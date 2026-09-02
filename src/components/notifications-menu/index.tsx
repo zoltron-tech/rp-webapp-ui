@@ -3,7 +3,7 @@
 import type { NovelistWorldNotification } from "@nw/types";
 import { isCompactViewport } from "@nw/utils/platform";
 import classNames from "classnames";
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/lib/navigation";
 import { Popover } from "radix-ui";
 import { type FC, useCallback, useEffect, useMemo, useState } from "react";
 import { BsCheckAll } from "react-icons/bs";

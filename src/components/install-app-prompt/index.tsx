@@ -2,7 +2,7 @@
 
 import { isCompactViewport } from "@nw/utils/platform";
 import classNames from "classnames";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@/lib/navigation";
 import { type FC, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { FiX } from "react-icons/fi";
@@ -11,19 +11,20 @@ import * as S from "@/components/user-menu/styles";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { ROUTES } from "@/utils/constants/routes";
 import * as L from "./styled";
+import { assetUrl } from "@/lib/asset";
 
 export const InstallAppPrompt: FC = () => {
   const showInstallAppPrompt = useGlobalState("showInstallAppPrompt");
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
   const setGlobalState = useGlobalStoreSet();
-  const router = useRouter();
+  const navigate = useNavigate();
   const isMobile = useMemo(() => isCompactViewport(), []);
 
   const handleSkip = useCallback(() => {
     setGlobalState({ showInstallAppPrompt: false });
-    router.push(ROUTES.Onboarding);
-  }, [router, setGlobalState]);
+    navigate(ROUTES.Onboarding);
+  }, [navigate, setGlobalState]);
 
   if (!showInstallAppPrompt) return null;
   if (typeof document === "undefined") return null;
@@ -41,7 +42,7 @@ export const InstallAppPrompt: FC = () => {
           <FiX />
         </S.DiscordDialogClose>
         <S.DiscordDialogImage
-          src={appInstallLogo.src}
+          src={assetUrl(appInstallLogo)}
           alt="Install Novelist World"
         />
         <S.DiscordDialogTitle>

@@ -1,7 +1,7 @@
 "use client";
 
 import type { Fandom, Muse } from "@nw/types";
-import { useParams } from "next/navigation";
+import { useParams } from "@/lib/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { FiGrid, FiList } from "react-icons/fi";
 import { HiUserAdd } from "react-icons/hi";

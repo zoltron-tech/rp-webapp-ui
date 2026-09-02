@@ -1,7 +1,7 @@
 "use client";
 
 import type { Prompt as PromptType } from "@nw/types";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "@/lib/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Prompt } from "@/components/prompt";
 import { usePageRouter } from "@/hooks/use-page-router";

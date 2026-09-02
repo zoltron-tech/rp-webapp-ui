@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/link";
 import { css, keyframes, styled } from "styled-components";
 import { Username } from "@/components/common";
 import { UnreadBadgeBase } from "@/components/common/unread-badge";

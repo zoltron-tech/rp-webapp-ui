@@ -1,7 +1,7 @@
 "use client";
 
 import type { Song } from "@nw/types/music";
-import { useParams } from "next/navigation";
+import { useParams } from "@/lib/navigation";
 import { useEffect, useState } from "react";
 import { MdOutlineCloudUpload } from "react-icons/md";
 import { BreadCrumb } from "@/components/breadcrumb";

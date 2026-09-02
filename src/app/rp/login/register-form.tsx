@@ -1,6 +1,6 @@
 import { ShouldRender } from "@novelist-world/ui";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Link from "@/components/link";
+import { useNavigate } from "@/lib/navigation";
 import { Form } from "radix-ui";
 import {
   type FC,
@@ -46,7 +46,7 @@ export const RegisterForm: FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ErrorKey | null>(null);
   const setGlobalState = useGlobalStoreSet();
-  const { push } = useRouter();
+  const push = useNavigate();
 
   const valid = useMemo(() => {
     return passwordsValid && userConsent;

@@ -1,12 +1,13 @@
 "use client";
 
 import type { SubmitPromptType } from "@nw/types";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useNavigate } from "@/lib/navigation";
+import { useSearchParams } from "@/lib/navigation";
 import { Suspense } from "react";
 import { FullPagePromptInput } from "@/components/prompt-input/full-page-prompt-input";
 
 function ComposePageInner() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const searchParams = useSearchParams();
 
   const type = (searchParams?.get("type") ?? "prompt") as SubmitPromptType;
@@ -21,8 +22,8 @@ function ComposePageInner() {
       type={type}
       parentId={parentId}
       dropdownSelection={dropdownSelection}
-      onBack={() => router.back()}
-      onSend={() => router.back()}
+      onBack={() => navigate(-1)}
+      onSend={() => navigate(-1)}
     />
   );
 }

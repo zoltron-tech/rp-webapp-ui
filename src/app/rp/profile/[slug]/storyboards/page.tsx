@@ -1,7 +1,7 @@
 "use client";
 
 import type { StoryBoard } from "@nw/types";
-import { useParams } from "next/navigation";
+import { useParams } from "@/lib/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { IoMdAdd } from "react-icons/io";
 import { getAllStoryboardsByUsernameAction } from "@/app/rp/story/actions";

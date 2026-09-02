@@ -1,5 +1,5 @@
 "use client";
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/lib/navigation";
 import { type FC, useMemo } from "react";
 import { ShouldRender } from "@/components/common";
 import { useGlobalState } from "@/context/store/stores";

@@ -5,7 +5,7 @@ import type { ProfileSong } from "@nw/types/music";
 import type { ImageFilter, MuseNavItem, NWImage } from "@nw/types/novelist";
 import { clamp, toCropFilter } from "@nw/utils";
 import { reverseWsrvUrl } from "@nw/utils/image";
-import { useParams } from "next/navigation";
+import { useParams } from "@/lib/navigation";
 import {
   useCallback,
   useEffect,

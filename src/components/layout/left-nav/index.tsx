@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/lib/navigation";
 import type { FC, ReactNode } from "react";
 import { EmailVerifiedBadge } from "@/components/common";
 import {

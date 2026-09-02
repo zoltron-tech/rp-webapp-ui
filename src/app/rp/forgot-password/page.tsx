@@ -2,7 +2,7 @@
 
 import { ShouldRender } from "@novelist-world/ui";
 import classNames from "classnames";
-import Link from "next/link";
+import Link from "@/components/link";
 import { Form } from "radix-ui";
 import { type FormEventHandler, useCallback, useMemo, useState } from "react";
 import { CgClose } from "react-icons/cg";

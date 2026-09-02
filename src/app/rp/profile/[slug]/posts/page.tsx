@@ -1,7 +1,7 @@
 "use client";
 
 import type { Prompt } from "@nw/types";
-import { useParams } from "next/navigation";
+import { useParams } from "@/lib/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { getNovelistAction } from "@/app/rp/novelists/actions";
 import { BreadCrumb } from "@/components/breadcrumb";

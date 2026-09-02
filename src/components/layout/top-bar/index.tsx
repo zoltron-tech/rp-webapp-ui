@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/lib/navigation";
 import { type FC, memo, useCallback, useMemo } from "react";
 import { GoArrowRight } from "react-icons/go";
 import { Search, UserMenu } from "@/components";

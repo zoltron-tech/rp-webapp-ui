@@ -2,7 +2,7 @@
 
 import { Flex } from "@novelist-world/ui";
 import type { Comment, PromptSource, Reply } from "@nw/types";
-import { useParams } from "next/navigation";
+import { useParams } from "@/lib/navigation";
 import { Separator } from "radix-ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BsThreeDots } from "react-icons/bs";

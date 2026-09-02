@@ -1,7 +1,7 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { useParams } from "next/navigation";
+import { dynamic } from "@/lib/dynamic";
+import { useParams } from "@/lib/navigation";
 import { useEffect, useState } from "react";
 import { getMuseAboutSectionsAction } from "@/app/rp/muse/actions";
 import { EditMuseAboutSectionForm } from "@/components/edit-muse-about-section";

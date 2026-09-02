@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/link";
 import styled from "styled-components";
 
 export const LoginPageRoot = styled.main``;

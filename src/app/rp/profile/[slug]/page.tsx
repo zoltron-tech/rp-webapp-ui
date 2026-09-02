@@ -6,7 +6,7 @@ import type { Activity } from "@nw/types/activity";
 import type { ProfileSong } from "@nw/types/music";
 import { ACCENT_MAP, type Accent } from "@nw/types/theme";
 import classNames from "classnames";
-import { useParams } from "next/navigation";
+import { useParams } from "@/lib/navigation";
 import { Tooltip } from "radix-ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BiHide } from "react-icons/bi";

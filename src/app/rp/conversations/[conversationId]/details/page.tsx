@@ -1,7 +1,7 @@
 "use client";
 
 import type { Conversation, ConversationParticipant } from "@nw/types";
-import { useParams } from "next/navigation";
+import { useParams } from "@/lib/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IoArrowBackOutline } from "react-icons/io5";
 import {

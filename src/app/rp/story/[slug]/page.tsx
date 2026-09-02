@@ -1,7 +1,7 @@
 "use client";
 
 import type { StoryBoard, StoryBoardEvent } from "@nw/types";
-import { useParams } from "next/navigation";
+import { useParams } from "@/lib/navigation";
 import { useEffect, useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
 import { FaGlobeAmericas, FaHeart, FaLock, FaRegHeart } from "react-icons/fa";

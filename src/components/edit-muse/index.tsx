@@ -2,7 +2,7 @@
 
 import { ShouldRender } from "@novelist-world/ui";
 import type { Muse } from "@nw/types";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams } from "@/lib/navigation";
 import { type FC, useEffect, useState } from "react";
 import { getMuseAction } from "@/app/rp/muse/actions";
 import { StoreProvider } from "@/context/store/context";

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/link";
 import type { FC } from "react";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styled";

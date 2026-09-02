@@ -11,7 +11,6 @@ import { useUIContext } from "@/hooks";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import * as DropS from "../profile-more-dropdown/styled";
 import * as S from "./styles";
-import { assetUrl } from "@/lib/asset";
 import { env } from "@/lib/env";
 
 interface DiscordCommunityDialogProps {
@@ -128,7 +127,7 @@ export const DiscordCommunityDialog: FC<DiscordCommunityDialogProps> = ({
 
   const dialogContent = (
     <>
-      <S.DiscordDialogImage src={assetUrl(discordLogo)} alt="NW Community Discord" />
+      <S.DiscordDialogImage src={discordLogo} alt="NW Community Discord" />
       <S.DiscordDialogTitle>Be a part of NW Community</S.DiscordDialogTitle>
       <S.DiscordDialogDescription>
         Connect & hangout with fellow novelists, get the latest app updates,

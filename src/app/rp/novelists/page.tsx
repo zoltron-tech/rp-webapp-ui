@@ -22,7 +22,6 @@ import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 import * as S from "./styles";
 import { ThreeMoves } from "./three-moves";
-import { assetUrl } from "@/lib/asset";
 
 export default function NovelistsPage() {
   const [showInstallDialog, setShowInstallDialog] = useState(false);
@@ -180,7 +179,7 @@ export default function NovelistsPage() {
       <S.AppSection>
         <S.AppCard>
           <S.AppIconTile>
-            <img src={assetUrl(appInstallLogo)} alt="Novelist World app" />
+            <img src={appInstallLogo} alt="Novelist World app" />
           </S.AppIconTile>
           <S.AppBody>
             <S.AppHeading>Take your worlds anywhere</S.AppHeading>

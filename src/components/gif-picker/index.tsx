@@ -2,7 +2,7 @@
 
 import { useDebounce } from "@nw/utils/hooks/use-debounce";
 import { type FC, useEffect, useState } from "react";
-import type { GifItem } from "@/pages/api/klipy-gifs";
+import type { GifItem } from "@/types/klipy";
 import * as S from "./styled";
 
 interface GifPickerProps {

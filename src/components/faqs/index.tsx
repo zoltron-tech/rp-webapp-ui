@@ -10,7 +10,6 @@ import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { SUPPORT_EMAIL } from "@/utils/constants";
 import * as S from "./../privacy-policy/styled";
-import { assetUrl } from "@/lib/asset";
 
 export const FAQs = () => {
   const { stopPageLoading } = usePageRouter();
@@ -58,11 +57,11 @@ export const FAQs = () => {
                 <li>
                   Go to user menu by clicking on the avatar in top right corner.
                   <AppImageViewer
-                    src={assetUrl(UserMenuCharsImage)}
+                    src={UserMenuCharsImage}
                     alt="User menu with Your Characters option"
                   >
                     <S.FAQImage
-                      src={assetUrl(UserMenuCharsImage)}
+                      src={UserMenuCharsImage}
                       alt="User menu with Your Characters option"
                     />
                   </AppImageViewer>
@@ -73,11 +72,11 @@ export const FAQs = () => {
                 </li>
                 <li>You should see the list of all your characters there.</li>
                 <AppImageViewer
-                  src={assetUrl(CharSelectScreen)}
+                  src={CharSelectScreen}
                   alt="Character selection screen with list of characters and add new character card"
                 >
                   <S.FAQImage
-                    src={assetUrl(CharSelectScreen)}
+                    src={CharSelectScreen}
                     alt="Character selection screen with list of characters and add new character card"
                   />
                 </AppImageViewer>
@@ -115,11 +114,11 @@ export const FAQs = () => {
                 <li>
                   Click on <strong>'Edit Profile'</strong> option.
                   <AppImageViewer
-                    src={assetUrl(UserMenuEditProfileImage)}
+                    src={UserMenuEditProfileImage}
                     alt="User menu with Edit Profile option"
                   >
                     <S.FAQImage
-                      src={assetUrl(UserMenuEditProfileImage)}
+                      src={UserMenuEditProfileImage}
                       alt="User menu with Edit Profile option"
                     />
                   </AppImageViewer>
@@ -131,11 +130,11 @@ export const FAQs = () => {
                   To change avatar, click on the avatar and upload the desired
                   image that you want to set as your avatar.
                   <AppImageViewer
-                    src={assetUrl(EditProfileImage)}
+                    src={EditProfileImage}
                     alt="Edit Profile screen with input fields for first name, last name, avatar, and bio"
                   >
                     <S.FAQImage
-                      src={assetUrl(EditProfileImage)}
+                      src={EditProfileImage}
                       alt="Edit Profile screen with input fields for first name, last name, avatar, and bio"
                     />
                   </AppImageViewer>

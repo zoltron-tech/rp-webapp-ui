@@ -1,5 +1,3 @@
-"use server";
-
 import {
   concludeComment,
   deleteComment,
@@ -10,7 +8,7 @@ import {
   getReplies,
   report,
 } from "@nw/api/endpoints/thread";
-import { api, authedApi } from "@/lib/server-api";
+import { api, authedApi } from "@/lib/api";
 
 export const reportAction = (
   replyId: string,

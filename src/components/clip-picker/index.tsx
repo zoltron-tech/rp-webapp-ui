@@ -6,7 +6,7 @@ import { type FC, useEffect, useRef, useState } from "react";
 import { FaPause, FaPlay } from "react-icons/fa";
 import { HiPaperAirplane } from "react-icons/hi2";
 import * as S from "@/components/sticker-picker/styled";
-import type { ClipItem } from "@/pages/api/klipy-clips";
+import type { ClipItem } from "@/types/klipy";
 
 interface ClipPickerProps {
   onSelect: (clipUrl: string) => void;

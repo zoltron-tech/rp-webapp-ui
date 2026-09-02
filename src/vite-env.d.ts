@@ -1,45 +1,38 @@
+/// <reference types="vite/client" />
+
 /**
- * Vite ambient types.
+ * Ambient types for the app.
  *
- * Deliberately NOT `/// <reference types="vite/client" />` yet. That reference
- * declares `*.png` (and friends) as a plain string URL, while
- * `next/image-types/global` — pulled in by next-env.d.ts — declares the same
- * modules as `StaticImageData`. Two ambient declarations of one module is a
- * type error, and both builds have to stay green while they coexist.
+ * `vite/client` supplies `import.meta.env`'s built-ins and the module
+ * declarations for static asset imports — `import logo from "./logo.png"` is a
+ * plain string URL.
  *
- * So the half that is needed now — `import.meta.env` — is declared by hand,
- * and the asset-import half is handled by `assetUrl()` in `@/lib/asset`, which
- * accepts either shape.
- *
- * At D7, when Next and next-env.d.ts are deleted, this whole file collapses to
- * the one-line reference and `assetUrl` can go with it.
- *
- * See REACT_MIGRATION_STEPS.md B2/B8.
+ * The interface below narrows `import.meta.env` to the variables this app
+ * actually reads, so a typo in a `VITE_` name is a type error rather than
+ * `undefined` at runtime. Every one of them is public: Vite only exposes
+ * `VITE_`-prefixed names to the browser, which is what keeps a secret from
+ * being shipped by accident. Server-side values — the Discord token and channel
+ * ids, the Klipy key — are read from `process.env` in `api/` and must never
+ * gain the prefix.
  */
 
 interface ImportMetaEnv {
-  readonly BASE_URL: string;
-  readonly DEV: boolean;
-  readonly MODE: string;
-  readonly PROD: boolean;
-  readonly SSR: boolean;
-
   readonly VITE_CHAT_E2E_ENABLED?: string;
   readonly VITE_CHAT_E2E_SECRET?: string;
   readonly VITE_DISABLE_AUTOSCROLL?: string;
   readonly VITE_DISCORD_CLIENT_ID?: string;
   readonly VITE_DISCORD_INVITE_URL?: string;
   readonly VITE_LOG_LEVEL?: string;
-  readonly VITE_NOVE_ENV?: string;
   readonly VITE_RP_CHAT_URL?: string;
   readonly VITE_RP_LOGIN_URL?: string;
   readonly VITE_RP_SERVICE_URL?: string;
   readonly VITE_SOCKET_URL?: string;
   readonly VITE_SUPPORT_EMAIL?: string;
   /**
-   * Server-only under Next, public here: after the browser starts writing the
-   * auth cookie it has to know whether to set `domain` and `secure`. Miss this
-   * and local dev over http silently cannot hold a session. See B10/B13.
+   * Decides whether the auth cookie gets `Domain` and `Secure`. Note the check
+   * on it is a plain truthiness test on a string, so any non-empty value —
+   * including "false" — selects the local behaviour. Leave it unset for
+   * production. See REACT_MIGRATION_STEPS.md finding 15.
    */
   readonly VITE_USE_LOCAL_DOMAIN?: string;
   readonly VITE_VAPID_PUBLIC_KEY?: string;

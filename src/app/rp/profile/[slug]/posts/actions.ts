@@ -1,10 +1,8 @@
-"use server";
-
 import {
   getPostsByNovelist,
   getPromptsByNovelist,
 } from "@nw/api/endpoints/posts";
-import { api } from "@/lib/server-api";
+import { api } from "@/lib/api";
 
 export const getPostsByNovelistAction = (
   novelistId: string,

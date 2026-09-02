@@ -1,10 +1,8 @@
-"use server";
-
 import {
   getUnreadReplyCount as fetchUnreadReplyCount,
   getOutgoingThreads,
 } from "@nw/api/endpoints/feed";
-import { api } from "@/lib/server-api";
+import { api } from "@/lib/api";
 
 export const getOutgoingThreadsAction = (
   pageNumber: number,

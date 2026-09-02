@@ -1,5 +1,3 @@
-"use server";
-
 import {
   addMuseAboutSection,
   addMuseExtraAttribute,
@@ -40,7 +38,7 @@ import type { CreateUpdateMuse } from "@nw/types";
 import type { ProfileSong } from "@nw/types/music";
 import type { NWImage } from "@nw/types/novelist";
 import type { PrivacyLevel } from "@nw/types/prompt";
-import { api, authedApi } from "@/lib/server-api";
+import { api, authedApi } from "@/lib/api";
 
 export const getMuseAction = (museId: string) => getMuse(api, museId);
 

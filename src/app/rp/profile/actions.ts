@@ -1,5 +1,3 @@
-"use server";
-
 import {
   acceptFriendRequest as apiAcceptFriendRequest,
   blacklistUser as apiBlacklistUser,
@@ -20,7 +18,7 @@ import {
   unblockNovelist,
 } from "@nw/api/endpoints/profile";
 import type { SubmitPromptInput, SubmitPromptType } from "@nw/types";
-import { api, authedApi } from "@/lib/server-api";
+import { api, authedApi } from "@/lib/api";
 
 export const getPresignedFileUploadObject = (formData: FormData) =>
   apiGetPresignedFileUploadObject(authedApi, formData);

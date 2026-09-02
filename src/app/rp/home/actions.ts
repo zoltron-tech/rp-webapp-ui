@@ -1,5 +1,3 @@
-"use server";
-
 import {
   getFriendActivities as fetchFriendActivities,
   getRandomStories as fetchRandomStories,
@@ -8,7 +6,7 @@ import {
   getMusesWithVideos,
   getStrangerNovelists,
 } from "@nw/api/endpoints/home";
-import { api, authedApi } from "@/lib/server-api";
+import { api, authedApi } from "@/lib/api";
 
 export const getStrangerNovelistsAction = (
   pageNumber: number,

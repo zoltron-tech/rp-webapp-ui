@@ -1,5 +1,3 @@
-"use server";
-
 import {
   checkUsernameAvailability as apiCheckUsernameAvailability,
   updateUserTheme as apiUpdateUserTheme,
@@ -27,89 +25,78 @@ import type {
 } from "@nw/types";
 import type { SignUpPayload } from "@nw/types/register";
 import { validateJWTSync } from "@nw/utils";
-import getConfig from "next/config";
-import { cookies } from "next/headers";
-import { RedirectType, redirect } from "next/navigation";
-import { api, authedApi } from "@/lib/server-api";
+import { api, authedApi } from "@/lib/api";
+import {
+  readAuthCookie,
+  readReferralCookie,
+  removeAuthCookieSync,
+  removeReferralCookieSync,
+  setAuthCookieSync,
+  setReferralCookieSync,
+} from "@/lib/auth-cookie";
+import { env } from "@/lib/env";
 import {
   API_MESSAGE,
   AUTH_HEADER_NAME,
-  JWT_COOKIE_NAME,
-  REFERRAL_COOKIE_NAME,
   THEME_COOKIE_NAME,
 } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 
-const { serverRuntimeConfig } = getConfig();
-const { RP_SERVICE_URL, USE_LOCAL_DOMAIN } = serverRuntimeConfig;
+/**
+ * The browser port of `app/actions.ts`.
+ *
+ * `vite.config.ts` aliases `@/app/actions` to this module. Every export keeps
+ * its name, signature and return type — including staying `async` where the
+ * body no longer needs to be — so none of the importing components changes.
+ *
+ * Three things genuinely differ, and each is marked below:
+ *   • cookies are read and written through `@/lib/auth-cookie` rather than
+ *     `next/headers`;
+ *   • `redirect()` becomes a real browser navigation, which is what the server
+ *     redirect produced anyway;
+ *   • `getUser` calls the API directly instead of proxying through the server.
+ *
+ * See REACT_MIGRATION_STEPS.md B13.
+ */
+
+/**
+ * `redirect()` under Next issued an HTTP redirect, so the browser performed a
+ * full navigation. `assign` reproduces that exactly — and it is required, not
+ * merely equivalent, for the three OAuth/link destinations, which are on the
+ * API origin and cannot be reached by the client router at all.
+ */
+const navigateHard = (url: string) => {
+  window.location.assign(url);
+};
 
 // ─── Cookies ─────────────────────────────────────────────────────────────────
 // Deliberately not in @nw/api: a cookie jar is a web concept, and the native
 // client will put the same token in SecureStore instead.
 
 export const getThemeCookie = async () => {
-  const cookie = (await cookies()).get(THEME_COOKIE_NAME);
-  return cookie ? cookie.value : "dark";
+  const match = document.cookie.match(
+    new RegExp(`(?:^|; )${THEME_COOKIE_NAME}=([^;]*)`),
+  );
+  return match ? decodeURIComponent(match[1]) : "dark";
 };
 
-export const getAuthCookie = async () => {
-  const cookie = (await cookies()).get(JWT_COOKIE_NAME);
-  return cookie ? cookie.value : "";
-};
+export const getAuthCookie = async () => readAuthCookie() ?? "";
 
 export const setAuthCookie = async (jwt: string) => {
-  // No return value: `set` hands back the cookie store (a class instance), and
-  // this action is called from client components, which only accept
-  // serializable results — returning it rejects the caller's promise.
-  (await cookies()).set(JWT_COOKIE_NAME, jwt, {
-    ...(USE_LOCAL_DOMAIN ? {} : { domain: "novelist.world" }),
-    expires: new Date(Date.now() + 60 * 60 * 24 * 30 * 1000), // 30 days
-    httpOnly: false,
-    path: "/",
-    sameSite: "strict",
-    secure: !USE_LOCAL_DOMAIN,
-  });
+  setAuthCookieSync(jwt);
 };
 
 export const removeAuthCookie = async () => {
-  const pastDate = new Date(0);
-  pastDate.setFullYear(pastDate.getFullYear() - 1);
-  // Remove the cookie by setting an expired date
-  (await cookies()).set(JWT_COOKIE_NAME, "", {
-    ...(USE_LOCAL_DOMAIN ? {} : { domain: "novelist.world" }),
-    expires: pastDate,
-    httpOnly: false,
-    path: "/",
-    sameSite: "strict",
-    secure: !USE_LOCAL_DOMAIN,
-  });
+  removeAuthCookieSync();
 };
 
 export const setReferralCookie = async (username: string) => {
-  // SameSite must be "lax" (not "strict") so the cookie is still sent on the
-  // top-level redirect back from Google/Discord to the OAuth2 callback.
-  // No return value: the cookie store is a class instance and this action is
-  // called from client components, which only accept serializable results.
-  (await cookies()).set(REFERRAL_COOKIE_NAME, username, {
-    ...(USE_LOCAL_DOMAIN ? {} : { domain: "novelist.world" }),
-    expires: new Date(Date.now() + 60 * 60 * 24 * 7 * 1000), // 7 days
-    httpOnly: false,
-    path: "/",
-    sameSite: "lax",
-    secure: !USE_LOCAL_DOMAIN,
-  });
+  setReferralCookieSync(username);
 };
 
 export const removeReferralCookie = async () => {
-  (await cookies()).set(REFERRAL_COOKIE_NAME, "", {
-    ...(USE_LOCAL_DOMAIN ? {} : { domain: "novelist.world" }),
-    expires: new Date(0),
-    httpOnly: false,
-    path: "/",
-    sameSite: "lax",
-    secure: !USE_LOCAL_DOMAIN,
-  });
+  removeReferralCookieSync();
 };
 
 // ─── Account ─────────────────────────────────────────────────────────────────
@@ -146,7 +133,7 @@ export const signupAction = async (
   payload: SignUpPayload,
 ): Promise<SignupResponsePayload> => {
   try {
-    const referralUser = (await cookies()).get(REFERRAL_COOKIE_NAME)?.value;
+    const referralUser = readReferralCookie();
 
     const { status, result } = await signUp(api, {
       ...payload,
@@ -180,16 +167,15 @@ export const signupAction = async (
 };
 
 export const loginViaProviderAction = async (provider: LoginOAuthProvider) => {
-  redirect(
-    `${RP_SERVICE_URL}/rp/user/oauth2/authorization/${provider}`,
-    RedirectType.push,
+  navigateHard(
+    `${env.RP_SERVICE_URL}/rp/user/oauth2/authorization/${provider}`,
   );
 };
 
 /** The one place a redirect belongs: the user asked to leave. */
 export const logoutAction = async () => {
   await removeAuthCookie();
-  redirect(ROUTES.Novelists, RedirectType.push);
+  navigateHard(ROUTES.Novelists);
 };
 
 // ─── Session ─────────────────────────────────────────────────────────────────
@@ -197,10 +183,9 @@ export const logoutAction = async () => {
 export const authenticateJWT = async (jwt: string, useCookies?: boolean) => {
   const isValid = validateJWTSync(jwt);
   if (!isValid) {
-    // Best-effort tidying of a stale cookie. Writing one is only legal inside a
-    // Server Action or Route Handler, and this runs from read paths too — where
-    // the throw would take down the page over a token that is already invalid.
-    // The answer (false) is what the caller acts on either way.
+    // Clearing a stale cookie was best-effort on the server, because a write
+    // from a read path would throw. In the browser it simply works, so the dead
+    // token stops being re-sent. The answer (false) is unchanged.
     if (useCookies) {
       try {
         await removeAuthCookie();
@@ -215,20 +200,18 @@ export const authenticateJWT = async (jwt: string, useCookies?: boolean) => {
 
 export const authenticateAction = async () => {
   Logger.debug("authenticate");
-  const jwtCookie = (await cookies()).get(JWT_COOKIE_NAME);
-  Logger.info("jwtCookie", jwtCookie);
-  if (!jwtCookie?.value) return false;
+  const jwt = readAuthCookie();
+  Logger.info("jwtCookie", jwt);
+  if (!jwt) return false;
 
-  return authenticateJWT(jwtCookie.value, true);
+  return authenticateJWT(jwt, true);
 };
 
 /**
  * The token, or null when there is no valid session.
  *
- * It used to call `logoutAction()` here, which clears the cookie and redirects
- * — meaning any action that merely wanted to read data could navigate the user
- * away as a side effect, and could never simply report "not signed in".
- * Callers now decide: stop and return, or carry on without a token.
+ * Callers decide what that means — stop and return, or carry on without a
+ * token. Nothing here redirects.
  */
 export const authenticateAndGetJWT = async (): Promise<string | null> => {
   const authenticated = await authenticateAction();
@@ -247,14 +230,17 @@ export const checkUsernameAvailability = (username: string) =>
 
 /** Redirects when there is no cookie at all — this gates the authed shell. */
 export const getUser = async () => {
-  const jwtCookie = (await cookies()).get(JWT_COOKIE_NAME);
-  if (!jwtCookie) redirect("/", RedirectType.push);
+  const jwt = readAuthCookie();
+  if (!jwt) {
+    navigateHard("/");
+    return { message: API_MESSAGE.Unauthorized };
+  }
 
-  const response = await fetch(`${RP_SERVICE_URL}/rp/user/account/auth`, {
+  const response = await fetch(`${env.RP_SERVICE_URL}/rp/user/account/auth`, {
     cache: "no-store",
     headers: {
       "Content-Type": "application/json",
-      [AUTH_HEADER_NAME]: `${jwtCookie.value}`,
+      [AUTH_HEADER_NAME]: `${jwt}`,
     },
     method: "GET",
   });
@@ -285,10 +271,7 @@ export const unlinkDiscordAction = () => unlinkDiscord(authedApi);
  * hands off to Discord's OAuth2 consent screen.
  */
 export const linkDiscordAction = async () => {
-  redirect(
-    `${RP_SERVICE_URL}/rp/user/account/discord/link/start`,
-    RedirectType.push,
-  );
+  navigateHard(`${env.RP_SERVICE_URL}/rp/user/account/discord/link/start`);
 };
 
 /** Returns the caller's linked Spotify account, or null when none is linked. */
@@ -299,10 +282,7 @@ export const unlinkSpotifyAction = () => unlinkSpotify(authedApi);
 
 /** Starts the Spotify link flow (navigates to the backend initiation endpoint). */
 export const linkSpotifyAction = async () => {
-  redirect(
-    `${RP_SERVICE_URL}/rp/user/account/spotify/link/start`,
-    RedirectType.push,
-  );
+  navigateHard(`${env.RP_SERVICE_URL}/rp/user/account/spotify/link/start`);
 };
 
 export const finishOnboardingAction = () => finishOnboarding(authedApi);

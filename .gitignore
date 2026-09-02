@@ -8,12 +8,6 @@
 
 # PWA generated files
 public/icons/photothumb.db
-public/sw.js
-public/sw.js.map
-public/workbox-*.js
-public/workbox-*.js.map
-public/swe-worker-*.js
-public/worker-*.js
 
 # yarn 2
 .yarn/*
@@ -28,9 +22,6 @@ public/worker-*.js
 
 # vite
 /dist/
-
-# next.js
-/.next/
 /out/
 
 # production
@@ -56,7 +47,6 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
 format.css
 
 # design-sync (staged scripts, build output, machine state)

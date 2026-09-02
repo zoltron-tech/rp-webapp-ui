@@ -1,5 +1,3 @@
-"use server";
-
 import {
   addNote,
   getNotifications as apiGetNotifications,
@@ -19,7 +17,7 @@ import {
   search,
 } from "@nw/api/endpoints/novelists";
 import type { UpdateNovelistPayload } from "@nw/types";
-import { api, authedApi, cookieApi } from "@/lib/server-api";
+import { api, authedApi, cookieApi } from "@/lib/api";
 
 export const getNovelists = () => apiGetNovelists(api);
 

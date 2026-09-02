@@ -1,12 +1,10 @@
-"use server";
-
 import {
   getMuseLeaderboard,
   getMuseRank,
   getNovelistLeaderboard,
   getNovelistRankById,
 } from "@nw/api/endpoints/leaderboard";
-import { api } from "@/lib/server-api";
+import { api } from "@/lib/api";
 
 export const getNovelistLeaderboardAction = (
   pageNumber: number,

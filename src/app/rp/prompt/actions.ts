@@ -1,5 +1,3 @@
-"use server";
-
 import {
   getPrompt,
   getPromptComments,
@@ -8,7 +6,7 @@ import {
   updatePromptComment,
 } from "@nw/api/endpoints/prompt";
 import type { Prompt } from "@nw/types";
-import { api, authedApi } from "@/lib/server-api";
+import { api, authedApi } from "@/lib/api";
 
 export const getPromptAction = (promptId: string) => getPrompt(api, promptId);
 

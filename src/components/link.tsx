@@ -1,28 +1,27 @@
-"use client";
-
-import NextLink from "next/link";
 import { type ComponentPropsWithoutRef, forwardRef } from "react";
+import { Link as RouterLink } from "react-router";
 
 /**
- * The app's link seam.
+ * The app's link seam — the React Router implementation.
  *
- * Wraps the router's link component so the swap to React Router touches this
- * file and nothing else. Deliberately keeps Next's `href` prop name: React
- * Router's `<Link>` takes `to`, and mapping one to the other here is what
- * keeps the seven call sites — three of which are `styled(Link)` targets —
- * from changing at all.
+ * `vite.config.ts` aliases `@/components/link` to this file. See `link.tsx` for
+ * why both exist.
  *
- * `forwardRef` is not optional: styled-components needs a ref-forwarding
- * target to style, and three call sites do exactly that.
- *
- * See REACT_MIGRATION_STEPS.md A5/B4.
+ * Keeps Next's `href` prop name and maps it to React Router's `to`, so none of
+ * the seven call sites changes — including the three that are `styled(Link)`
+ * targets, which is also why the ref forwarding is not optional.
  */
 
-export type LinkProps = ComponentPropsWithoutRef<typeof NextLink>;
+export type LinkProps = Omit<
+  ComponentPropsWithoutRef<typeof RouterLink>,
+  "to"
+> & {
+  href: string;
+};
 
 export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
-  function Link(props, ref) {
-    return <NextLink ref={ref} {...props} />;
+  function Link({ href, ...rest }, ref) {
+    return <RouterLink ref={ref} to={href} {...rest} />;
   },
 );
 

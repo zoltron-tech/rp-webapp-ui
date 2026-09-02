@@ -2,7 +2,7 @@
 
 import { useDebounce } from "@nw/utils/hooks/use-debounce";
 import { type FC, useEffect, useState } from "react";
-import type { StickerItem } from "@/pages/api/klipy-stickers";
+import type { StickerItem } from "@/types/klipy";
 import * as S from "./styled";
 
 interface StickerPickerProps {

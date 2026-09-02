@@ -7,7 +7,6 @@ import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styled";
-import { assetUrl } from "@/lib/asset";
 
 const WelcomePage: FC = () => {
   const justOnboarded = useGlobalState("justOnboarded");
@@ -69,7 +68,7 @@ const WelcomePage: FC = () => {
         <S.Card>
           {/* ── Branding ── */}
           <S.BrandHeader>
-            <S.LogoImg src={assetUrl(logo)} alt="Novelist World logo" />
+            <S.LogoImg src={logo} alt="Novelist World logo" />
             <S.BrandName>
               <S.BrandNamePrimary>Novelist</S.BrandNamePrimary>
               <S.BrandNameAccent>World</S.BrandNameAccent>

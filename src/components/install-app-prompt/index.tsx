@@ -11,7 +11,6 @@ import * as S from "@/components/user-menu/styles";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { ROUTES } from "@/utils/constants/routes";
 import * as L from "./styled";
-import { assetUrl } from "@/lib/asset";
 
 export const InstallAppPrompt: FC = () => {
   const showInstallAppPrompt = useGlobalState("showInstallAppPrompt");
@@ -42,7 +41,7 @@ export const InstallAppPrompt: FC = () => {
           <FiX />
         </S.DiscordDialogClose>
         <S.DiscordDialogImage
-          src={assetUrl(appInstallLogo)}
+          src={appInstallLogo}
           alt="Install Novelist World"
         />
         <S.DiscordDialogTitle>

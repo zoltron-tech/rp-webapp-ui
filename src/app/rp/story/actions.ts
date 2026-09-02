@@ -1,5 +1,3 @@
-"use server";
-
 import {
   deleteCodexCategory,
   deleteCodexEntry,
@@ -79,7 +77,7 @@ import type {
   StoryTimelineLane,
   StoryTimelineMarker,
 } from "@nw/types";
-import { api, authedApi } from "@/lib/server-api";
+import { api, authedApi } from "@/lib/api";
 
 export const getAllGenresAction = () => getAllGenres(api);
 

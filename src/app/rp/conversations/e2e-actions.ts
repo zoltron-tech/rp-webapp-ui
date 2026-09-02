@@ -1,5 +1,3 @@
-"use server";
-
 import {
   getE2EBundle,
   getE2EKeyBackup,
@@ -8,7 +6,7 @@ import {
   storeE2EKeyBackup,
 } from "@nw/api/endpoints/e2e";
 import type { E2EEnvelope, E2EKeyBackup } from "@nw/types/e2e";
-import { api } from "@/lib/server-api";
+import { api } from "@/lib/api";
 
 export const publishE2EPublicKeyAction = (publicKey: string) =>
   publishE2EPublicKey(api, publicKey);

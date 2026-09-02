@@ -98,6 +98,7 @@ pSBC.pSBCr = (d) => {
   return x;
 };
 
-module.exports = {
-  pSBC,
-};
+// ESM export: Rollup treats first-party .js as ESM and cannot see a
+// `module.exports` assignment. webpack tolerated the CJS form; nothing else
+// about this file changes.
+export { pSBC };

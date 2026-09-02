@@ -1,0 +1,31 @@
+# Static robots.txt, replacing Next's app/robots.ts.
+#
+# /promo/ is new here: promo/layout.tsx set `robots: { index: false }` per
+# route, and a SPA has no per-route metadata — without this line the promo
+# capture pages become indexable. See REACT_MIGRATION_STEPS.md B12.
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /promo/
+Disallow: /rp/compose
+Disallow: /rp/conversations
+Disallow: /rp/forgot-password
+Disallow: /rp/install-app
+Disallow: /rp/notifications
+Disallow: /rp/oauth
+Disallow: /rp/onboarding
+Disallow: /rp/outgoing-threads
+Disallow: /rp/profile/edit
+Disallow: /rp/profile/muses/create
+Disallow: /rp/profile/muses/edit
+Disallow: /rp/profile/music/create
+Disallow: /rp/profile/story/create
+Disallow: /rp/profile/story/edit
+Disallow: /rp/reset-password
+Disallow: /rp/user-menu
+Disallow: /rp/verify-email
+Disallow: /rp/welcome
+
+Host: https://novelist.world
+Sitemap: https://novelist.world/sitemap.xml

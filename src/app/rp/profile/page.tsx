@@ -34,4 +34,8 @@ export default function ProfilePage({}) {
 
     routeToPage(ROUTES.Novelists);
   }, [authState]);
+
+  // Renders nothing: this route exists only to redirect. Explicit rather
+  // than implicit so the component satisfies ComponentType in routes.tsx.
+  return null;
 }

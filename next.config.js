@@ -61,26 +61,10 @@ const nextConfig = {
     ];
   },
 
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          // Prevent MIME-type sniffing (e.g. script injection via image uploads)
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          // Disallow embedding in iframes from other origins (clickjacking)
-          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-          // Restrict referrer information sent to external sites
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          // Restrict access to sensitive device features
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
-          },
-        ],
-      },
-    ];
-  },
+  // Security response headers now live in vercel.json, which is what actually
+  // serves them and which survives the framework swap. They are NOT in nginx —
+  // rp-webapp-nginx fronts api.novelist.world only, not this app.
+  // See REACT_MIGRATION_STEPS.md A6.
 
   experimental: {
     serverActions: {

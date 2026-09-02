@@ -2,12 +2,71 @@ import path from "node:path";
 import { fileURLToPath, URL } from "node:url";
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig, loadEnv } from "vite";
+import type { Connect, PluginOption } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
+import { decide, INFRA_PATH_RE } from "./middleware-rules";
 
 const resolve = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
 /** Virtual module id standing in for nsfwjs's bundled model shards. */
 const EMPTY_MODEL_ID = "virtual:nsfwjs-bundled-model";
+
+/**
+ * Runs the HTTP-layer rules in `middleware-rules.ts` against the dev and
+ * preview servers.
+ *
+ * Vercel Edge Middleware only runs when deployed. Next ran `src/middleware.ts`
+ * in its dev server, so `/{username}` short links worked locally without
+ * anyone having to arrange it; after the migration they silently stopped —
+ * the shell rendered, the router matched nothing, and `not-found` sent you to
+ * Novelists. This is the local half of that behaviour, sharing one copy of the
+ * rules with the edge entry point so the two cannot drift.
+ *
+ * Registered from the hook body rather than a returned function, so it runs
+ * **before** Vite's internal middlewares. The SPA fallback serves index.html
+ * for every unmatched path; anything registered after it never sees a single
+ * `/{username}` request.
+ */
+const middlewareRules = (serviceUrl: string | undefined): PluginOption => {
+  const handle: Connect.NextHandleFunction = (req, res, next) => {
+    const accept = req.headers.accept ?? "";
+    const isDocument =
+      req.headers["sec-fetch-dest"] === "document" ||
+      accept.includes("text/html") ||
+      // Tools that state no preference (curl and friends) are treated as
+      // navigations, so a short link can be checked from a terminal.
+      accept.includes("*/*") ||
+      accept === "";
+
+    // Vite serves its client, source modules and dependency pre-bundles from
+    // paths no production matcher covers. In production this is the
+    // middleware `matcher`'s job; here it is this test.
+    if (!isDocument || INFRA_PATH_RE.test(req.url ?? "/")) return next();
+
+    const url = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
+
+    decide(url, serviceUrl)
+      .then((decision) => {
+        if (decision.kind !== "redirect") return next();
+        res.statusCode = decision.status;
+        res.setHeader("Location", decision.location);
+        res.end();
+      })
+      // A rule that throws must not take the page down with it — the app is
+      // still perfectly serviceable without the redirect.
+      .catch(() => next());
+  };
+
+  return {
+    configurePreviewServer: (server) => {
+      server.middlewares.use(handle);
+    },
+    configureServer: (server) => {
+      server.middlewares.use(handle);
+    },
+    name: "middleware-rules-dev",
+  };
+};
 
 export default defineConfig(({ mode }) => {
   // Loaded without the VITE_ filter because RP_BUCKET_NAME is read below and
@@ -45,6 +104,10 @@ export default defineConfig(({ mode }) => {
     },
 
     plugins: [
+      // Before everything else: this decides whether a request is a redirect
+      // rather than a page, and the answer has to come first.
+      middlewareRules(env.RP_SERVICE_URL),
+
       /**
        * nsfwjs ships ~25MB of pre-built model shards under `dist/models`,
        * reached through a non-standard 2-arg `require(name, version)` JSONP

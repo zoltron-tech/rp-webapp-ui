@@ -95,8 +95,9 @@ packages/          @nw/api, @nw/types, @nw/utils, @nw/config — framework-free,
                    shared with the future mobile app. No build step: they ship
                    TypeScript source.
 api/               the Open Graph function (see below)
-middleware.ts      edge middleware: tracking-param stripping and the
+middleware-rules.ts the two HTTP-layer rules: tracking-param stripping and the
                    /{username} short link
+middleware.ts      edge entry point for those rules (production only)
 worker/            service worker — sw.ts is the worker, handlers.ts holds the
                    push/notification/badge logic
 ```
@@ -123,6 +124,33 @@ Everything else that used to be here has moved to `rp-webapp-service`:
   header — which the browser does itself now.
 
 **Do not add routes here.** New server work goes in the Kotlin backend.
+
+### The HTTP-layer rules
+
+Two things happen before the app loads: tracking parameters (`fbclid`, `gclid`
+and friends) are stripped, and `novelist.world/{username}` redirects to
+`/rp/profile/{username}` when the backend confirms that novelist exists. Both
+are redirects issued before any JS runs, so neither can move into the router.
+
+They live in `middleware-rules.ts` and run in three places: Vercel Edge
+Middleware in production (`middleware.ts`), and the Vite dev and preview servers
+(the `middleware-rules-dev` plugin in `vite.config.ts`). **Vercel Edge
+Middleware does not run locally** — Next used to execute its middleware in the
+dev server, and that stopped silently when Next did. One copy of the rules, two
+entry points, because two copies would drift invisibly.
+
+Short links need `RP_SERVICE_URL` set in `.env` to work locally: the redirect
+only fires once the backend confirms the username. Without it — or with the
+backend down, or slow — the request falls through and serves the app normally.
+Check it with:
+
+```bash
+curl -sI http://localhost:3000/someusername | head -2
+```
+
+`pnpm smoke:mw` covers the rules themselves. Note that it calls the middleware
+function directly, so it cannot tell you whether the rules are actually *wired*
+to a running server; the `curl` above is the check for that.
 
 ## Deployment
 

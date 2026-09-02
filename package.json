@@ -15,7 +15,7 @@
     "lint": "biome check ",
     "type-check": "tsc --noEmit",
     "check:boundaries": "node scripts/check-package-boundaries.mjs",
-    "verify": "pnpm type-check && pnpm type-check:packages && pnpm check:boundaries",
+    "verify": "pnpm type-check && pnpm type-check:packages && pnpm check:boundaries && pnpm smoke",
     "push": "rm -rf .next && pnpm build && git add . && git commit -m \"$@\" && git fetch origin && git rebase origin/main && git push -f origin expanded-content",
     "update-local": "rm -rf node_modules/@novelist-world/ui/dist && cd ../novelist-world-ui && yarn build && cp -r dist ../rp-webapp-ui/node_modules/@novelist-world/ui/dist && cd ../rp-webapp-ui",
     "type-check:packages": "pnpm -r --filter \"./packages/**\" type-check"

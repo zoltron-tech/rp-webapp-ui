@@ -82,7 +82,12 @@ export const routes: RouteObject[] = [
       { path: "conversations/:conversationId", lazy: page(() => import("./app/rp/conversations/[conversationId]/page")) },
       { path: "conversations/:conversationId/details", lazy: page(() => import("./app/rp/conversations/[conversationId]/details/page")) },
       { path: "explore", lazy: page(() => import("./app/rp/explore/page")) },
-      { path: "explore-prompts", lazy: page(() => import("./app/rp/explore-prompts/page")) },
+      // Both of these were one-line files re-exporting explore's page. In a
+      // route table that is just a second entry pointing at the same import,
+      // which is clearer than the indirection — and it means the two
+      // `export { default } from "../explore/page"` files can be deleted with
+      // the rest of Next without touching this table. The URLs stay live.
+      { path: "explore-prompts", lazy: page(() => import("./app/rp/explore/page")) },
       { path: "faqs", lazy: page(() => import("./app/rp/faqs/page")) },
       { path: "fellows", lazy: page(() => import("./app/rp/fellows/page")) },
       { path: "forgot-password", lazy: page(() => import("./app/rp/forgot-password/page")) },
@@ -96,7 +101,7 @@ export const routes: RouteObject[] = [
       { path: "msgtoexport", lazy: page(() => import("./app/rp/msgtoexport/page")) },
       { path: "muse", lazy: page(() => import("./app/rp/muse/page")) },
       { path: "muse/:slug", lazy: page(() => import("./app/rp/muse/[slug]/page")) },
-      { path: "news-feed", lazy: page(() => import("./app/rp/news-feed/page")) },
+      { path: "news-feed", lazy: page(() => import("./app/rp/explore/page")) },
       { path: "notifications", lazy: page(() => import("./app/rp/notifications/page")) },
       { path: "novelist/:slug", lazy: page(() => import("./app/rp/novelist/[slug]/page")) },
       { path: "novelists", lazy: page(() => import("./app/rp/novelists/page")) },

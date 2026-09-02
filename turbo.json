@@ -3,7 +3,7 @@
     "globalDotEnv": [".env"],
     "pipeline": {
       "build": {
-        "outputs": [".next/**", "!.next/cache/**"],
+        "outputs": [".next/**", "!.next/cache/**", "dist/**"],
         "dotEnv": [".env.production.local", ".env.local", ".env.production", ".env"]
       },
       "dev": {

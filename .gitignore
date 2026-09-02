@@ -26,6 +26,9 @@ public/worker-*.js
 # testing
 /coverage
 
+# vite
+/dist/
+
 # next.js
 /.next/
 /out/

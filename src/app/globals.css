@@ -125,6 +125,23 @@ body {
   isolation: isolate;
 }
 
+/* The React root, and the reason it needs this.
+   
+   PageContainer is `z-index: -1` on purpose (see app/rp/styles.ts): WebKit
+   promotes the negative-z subtree into one retained composited layer, and that
+   backing store is what stops iOS blanking off-screen content while scrolling.
+   That only works if some ancestor holds a stacking context for the negative z
+   to resolve against — which is what body's `isolation: isolate` above was for,
+   back when the app rendered straight into <body>.
+   
+   Vite renders into this wrapper instead, so without the same isolation here
+   the negative-z subtree escapes past #root and paints behind it. Nothing looks
+   wrong — #root has no background — but #root becomes the topmost hit-test
+   target over the whole page and swallows every click. */
+#root {
+  isolation: isolate;
+}
+
 textarea:focus,
 input:focus {
   outline: none;

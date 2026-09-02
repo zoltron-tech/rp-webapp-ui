@@ -52,6 +52,8 @@ type Result = {
   status: number | null;
   errors: string[];
   mounted: boolean;
+  /** null when the route has no interactive elements to test. */
+  clickable: boolean | null;
   finalPath: string;
 };
 
@@ -144,6 +146,54 @@ const visit = async (page: Page, route: string): Promise<Result> => {
       return root.querySelectorAll("*").length > 3;
     })
     .catch(() => false);
+  /**
+   * Is anything on this page actually clickable?
+   *
+   * Mounting is not enough, and this is not hypothetical: the app renders into
+   * a `#root` wrapper that Next did not have, and `PageContainer` carries a
+   * deliberate `z-index: -1`. Without `isolation: isolate` on `#root` the whole
+   * app painted *behind* that wrapper — visually perfect, every button
+   * unclickable, no error anywhere. A mount check sails straight past that.
+   *
+   * So: take the interactive elements, and confirm that hit-testing at their
+   * own centre actually reaches them rather than some ancestor or overlay.
+   */
+  /**
+   * /promo/* is exempt. Those are capture fixtures, not product routes: the
+   * scenes are stepped by `window.__promo.seek()` and never clicked, and the
+   * shell deliberately leaves a full-viewport dialog scrim in place (made
+   * transparent for the capture, still covering the page). Asserting
+   * clickability there would fail for a reason nobody should act on.
+   */
+  const clickable = route.startsWith("/promo/")
+    ? null
+    : await page
+        .evaluate(() => {
+          const els = Array.from(
+        document.querySelectorAll<HTMLElement>("button, a[href]"),
+      ).filter((el) => {
+        const r = el.getBoundingClientRect();
+        return (
+          r.width > 0 &&
+          r.height > 0 &&
+          r.top >= 0 &&
+          r.top < window.innerHeight &&
+          r.left >= 0 &&
+          r.left < window.innerWidth
+        );
+      });
+      if (els.length === 0) return null;
+      return els.some((el) => {
+        const r = el.getBoundingClientRect();
+        const top = document.elementFromPoint(
+          r.left + r.width / 2,
+          r.top + r.height / 2,
+        );
+        return top !== null && (el === top || el.contains(top));
+      });
+    })
+    .catch(() => null);
+
   const finalPath = await page
     .evaluate(() => location.pathname)
     .catch(() => route);
@@ -151,7 +201,7 @@ const visit = async (page: Page, route: string): Promise<Result> => {
   page.off("pageerror", onError);
   page.off("console", onConsole);
 
-  return { errors, finalPath, mounted, route, status };
+  return { clickable, errors, finalPath, mounted, route, status };
 };
 
 const run = async () => {
@@ -188,16 +238,20 @@ const run = async () => {
     for (const route of routes) {
       const result = await visit(page, route);
       results.push(result);
-      const bad = result.errors.length > 0 || !result.mounted;
+      const bad =
+        result.errors.length > 0 || !result.mounted || result.clickable === false;
       process.stdout.write(
         `${bad ? "FAIL" : "ok  "}  ${route.padEnd(52)}` +
           `${result.mounted ? "mounted" : "EMPTY  "}` +
+          `${result.clickable === false ? "  UNCLICKABLE" : ""}` +
           `${result.finalPath !== route ? `  → ${result.finalPath}` : ""}\n`,
       );
       for (const e of result.errors) console.log(`        ${e}`);
     }
 
-    const failed = results.filter((r) => r.errors.length > 0 || !r.mounted);
+    const failed = results.filter(
+      (r) => r.errors.length > 0 || !r.mounted || r.clickable === false,
+    );
     console.log(
       `\n${results.length - failed.length}/${results.length} routes rendered clean.`,
     );

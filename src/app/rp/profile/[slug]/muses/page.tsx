@@ -2,6 +2,7 @@
 
 import type { Fandom, Muse } from "@nw/types";
 import { useParams } from "@/lib/navigation";
+import { usernameFromHandle } from "@/utils/constants/profile-handle";
 import { useEffect, useMemo, useState } from "react";
 import { FiGrid, FiList } from "react-icons/fi";
 import { HiUserAdd } from "react-icons/hi";
@@ -35,7 +36,8 @@ export default function MusesListPage({}) {
   const authState = useGlobalState("authState");
   const user = useGlobalState("user");
   const novelist = useGlobalState("novelist");
-  const username = params?.slug as string;
+  // The route param is a handle (`@tokyo`), not a bare username.
+  const username = usernameFromHandle(params?.handle as string);
   const isCurrentUser = user?.username === username;
   const { baseDataLoader } = usePageRouter();
   const { on, off } = useCustomEvents(EVENTS.MUSE.base);

@@ -95,8 +95,7 @@ packages/          @nw/api, @nw/types, @nw/utils, @nw/config — framework-free,
                    shared with the future mobile app. No build step: they ship
                    TypeScript source.
 api/               the Open Graph function (see below)
-middleware-rules.ts the two HTTP-layer rules: tracking-param stripping and the
-                   /{username} short link
+middleware-rules.ts the HTTP-layer rules — tracking-param stripping
 middleware.ts      edge entry point for those rules (production only)
 worker/            service worker — sw.ts is the worker, handlers.ts holds the
                    push/notification/badge logic
@@ -125,32 +124,55 @@ Everything else that used to be here has moved to `rp-webapp-service`:
 
 **Do not add routes here.** New server work goes in the Kotlin backend.
 
+### Profile URLs
+
+A novelist's profile is `novelist.world/@tokyo`, at the root of the domain,
+next to the app's own routes.
+
+The `@` is what keeps those two namespaces apart. It is not a legal username
+character, so no username can collide with a path the app owns and no path the
+app owns can shadow a username — and neither can start to when someone adds a
+page or drops a file in `public/`. **Adding a route never requires checking the
+username table.** Build `/@` URLs with `ROUTES.Profile.View(username)`; the
+handle is parsed back with `usernameFromHandle` from
+`src/utils/constants/profile-handle.ts`.
+
+Two older forms still resolve, as redirects in the route table, because they
+are in already posted Discord embeds and notification payloads:
+
+| Old | New |
+|---|---|
+| `/rp/profile/tokyo` (and its five tabs) | `/@tokyo` |
+| `/tokyo` — the bare short link | `/@tokyo` |
+
+Both are client-side and cost nothing. The bare form used to be an edge
+redirect that asked the backend whether the name was a novelist, guarded by a
+hand-maintained list of every path and file served from the root; the `@`
+retired the lookup, the list and the 2s timeout on the hot path together.
+
+Expressing the `/rp/profile/:slug` redirect as a route rather than a rule at
+the HTTP layer is deliberate: a regex over `/rp/profile/([^/]+)` would also
+rewrite `edit`, `muses`, `music`, `story` and `referrals`, which are real
+pages. React Router ranks a static path above a dynamic one, so those match
+their own routes and never reach the redirect.
+
 ### The HTTP-layer rules
 
-Two things happen before the app loads: tracking parameters (`fbclid`, `gclid`
-and friends) are stripped, and `novelist.world/{username}` redirects to
-`/rp/profile/{username}` when the backend confirms that novelist exists. Both
-are redirects issued before any JS runs, so neither can move into the router.
+One rule left: tracking parameters (`fbclid`, `gclid` and friends) are stripped
+before the app loads. It is a redirect issued before any JS runs, so it cannot
+move into the router.
 
-They live in `middleware-rules.ts` and run in three places: Vercel Edge
+It lives in `middleware-rules.ts` and runs in three places: Vercel Edge
 Middleware in production (`middleware.ts`), and the Vite dev and preview servers
 (the `middleware-rules-dev` plugin in `vite.config.ts`). **Vercel Edge
 Middleware does not run locally** — Next used to execute its middleware in the
 dev server, and that stopped silently when Next did. One copy of the rules, two
 entry points, because two copies would drift invisibly.
 
-Short links need `RP_SERVICE_URL` set in `.env` to work locally: the redirect
-only fires once the backend confirms the username. Without it — or with the
-backend down, or slow — the request falls through and serves the app normally.
-Check it with:
-
-```bash
-curl -sI http://localhost:3000/someusername | head -2
-```
-
-`pnpm smoke:mw` covers the rules themselves. Note that it calls the middleware
-function directly, so it cannot tell you whether the rules are actually *wired*
-to a running server; the `curl` above is the check for that.
+`pnpm smoke:mw` covers the rules and the handle helpers. It calls them
+directly, so it cannot tell you whether they are *wired* to a running server;
+`pnpm smoke:routes` is what checks that, and it renders `/@name`, `/name` and
+`/rp/profile/name` in a real browser.
 
 ## Deployment
 

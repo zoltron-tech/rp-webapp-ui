@@ -2,6 +2,7 @@
 
 import type { Friend } from "@nw/types";
 import { useParams } from "@/lib/navigation";
+import { usernameFromHandle } from "@/utils/constants/profile-handle";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getFriendsByUsernameAction } from "@/app/rp/novelists/actions";
 import { BreadCrumb } from "@/components/breadcrumb";
@@ -29,7 +30,8 @@ function CardShimmer() {
 
 export default function FriendsListPage() {
   const params = useParams();
-  const username = params?.slug as string;
+  // The route param is a handle (`@tokyo`), not a bare username.
+  const username = usernameFromHandle(params?.handle as string);
   const { stopPageLoading } = usePageRouter();
 
   useEffect(() => {

@@ -1,22 +1,19 @@
-import {
-  RESERVED_TOP_LEVEL_SEGMENTS,
-  USERNAME_PATH_RE,
-} from "./src/utils/constants/reserved-paths";
-
 /**
- * The two HTTP-layer rules, as plain logic with no runtime attached.
+ * The HTTP-layer rules, as plain logic with no runtime attached.
  *
  * They exist in one place because they have to run in three: Vercel Edge
  * Middleware in production, the Vite dev server, and `vite preview`. Under
  * Next these ran in the dev server for free — Next executed `src/middleware.ts`
  * locally. Vercel Edge Middleware does not work that way: it only runs when
- * deployed. Nothing failed loudly when that changed; `/{username}` simply
- * served the app shell, the client router matched nothing, and `not-found`
- * redirected to Novelists. See REACT_MIGRATION_STEPS.md C2 and finding 29.
+ * deployed. Nothing failed loudly when that changed. See
+ * REACT_MIGRATION_STEPS.md C2 and finding 30.
  *
- * Keeping the rules here rather than duplicating them into the dev server is
- * the point: two copies would drift, and the drift would be invisible in
- * exactly the same way.
+ * **This used to also resolve `/{username}` short links**, which meant a
+ * backend lookup, a 2s timeout and a reserved-word list on the hot path of
+ * every root request. `/@username` made all three unnecessary: the `@` tells a
+ * profile from a path without asking anyone, so the redirect is now a route in
+ * the client router and nothing here needs to know what a username is. See
+ * `src/utils/constants/profile-handle.ts`.
  */
 
 /**
@@ -43,9 +40,7 @@ const TRACKING_PARAMS = [
 /** What should happen to a request: send it somewhere, or leave it alone. */
 export type MiddlewareDecision =
   | { kind: "continue" }
-  | { kind: "redirect"; location: string; status: 302 | 308 };
-
-const CONTINUE: MiddlewareDecision = { kind: "continue" };
+  | { kind: "redirect"; location: string; status: 308 };
 
 /**
  * Paths that belong to the serving infrastructure rather than the app.
@@ -55,24 +50,10 @@ const CONTINUE: MiddlewareDecision = { kind: "continue" };
  * that no matcher covers, so the dev server checks these instead.
  */
 export const INFRA_PATH_RE =
-  /^\/(?:@|assets\/|api\/|src\/|node_modules\/|favicon\.ico|icons\/|images\/|models\/|animations\/|promo\/|sw\.js|sw\.ts|dev-sw\.js|workbox-|swe-worker-|worker-)/;
+  /^\/(?:@vite\/|@id\/|@fs\/|@react-refresh|assets\/|api\/|src\/|node_modules\/)/;
 
-/**
- * Decides what to do with a request URL.
- *
- * `serviceUrl` is passed in rather than read from the environment because the
- * dev server and the edge runtime get it from different places — `loadEnv` in
- * one, `process.env` in the other.
- *
- * A missing `serviceUrl`, an unknown username, a slow backend and a network
- * error all resolve the same way: continue, and serve the app normally. The
- * short link is a convenience, and none of those are reasons to fail a request.
- */
-export const decide = async (
-  url: URL,
-  serviceUrl: string | undefined,
-): Promise<MiddlewareDecision> => {
-  // ── 1. Strip tracking query params ────────────────────────────────────────
+/** Decides what to do with a request URL. */
+export const decide = (url: URL): MiddlewareDecision => {
   if (TRACKING_PARAMS.some((key) => url.searchParams.has(key))) {
     const clean = new URL(url);
     for (const key of TRACKING_PARAMS) clean.searchParams.delete(key);
@@ -80,38 +61,5 @@ export const decide = async (
     return { kind: "redirect", location: clean.toString(), status: 308 };
   }
 
-  // ── 2. Short-URL redirect: /{username} → /rp/profile/{username} ───────────
-  const segments = url.pathname.split("/").filter(Boolean);
-  if (segments.length !== 1) return CONTINUE;
-
-  const candidate = segments[0];
-  if (
-    RESERVED_TOP_LEVEL_SEGMENTS.has(candidate) ||
-    !USERNAME_PATH_RE.test(candidate)
-  ) {
-    return CONTINUE;
-  }
-
-  if (!serviceUrl) return CONTINUE;
-
-  try {
-    const res = await fetch(
-      `${serviceUrl}/rp/portfolio/novelist/get?username=${encodeURIComponent(candidate)}`,
-      {
-        method: "GET",
-        // Abort quickly so a slow/down backend doesn't stall every request.
-        signal: AbortSignal.timeout(2000),
-      },
-    );
-
-    if (res.ok) {
-      const destination = new URL(url);
-      destination.pathname = `/rp/profile/${candidate}`;
-      return { kind: "redirect", location: destination.toString(), status: 302 };
-    }
-  } catch {
-    // Timeout or network error — fall through and serve the app normally.
-  }
-
-  return CONTINUE;
+  return { kind: "continue" };
 };

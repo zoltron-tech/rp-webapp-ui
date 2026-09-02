@@ -1,46 +1,27 @@
 /**
- * Smoke test for the edge middleware — run with `pnpm smoke:mw`.
+ * Smoke test for the HTTP-layer rules and the profile handle — `pnpm smoke:mw`.
  *
- * The `/{username}` short link is the one behaviour in the whole migration
- * with no visible failure mode. If it stops matching, the app shell renders,
- * the client router matches nothing, `not-found` redirects to Novelists, and
- * the feature is simply gone — no error, no log, nothing to notice.
+ * This used to be mostly about the `/{username}` short link, which was the one
+ * behaviour in the migration with no visible failure mode: if it stopped
+ * matching, the shell rendered, the router matched nothing, `not-found`
+ * redirected to Novelists, and the feature was simply gone.
  *
- * The reserved-path checks matter for a second reason. `USERNAME_PATH_RE`
- * allows dots, so `favicon-32x32.png` is a valid username shape; if the
- * reserved set does not cover a file served from the root of `public/`, every
- * request for it costs a backend lookup and up to a 2s timeout. These assert
- * that no lookup is even attempted.
+ * `/@username` retired that whole class of failure. There is no lookup left to
+ * stub and no reserved-word list left to keep in step with `public/`, so what
+ * remains here is the tracking-parameter rule plus the handle helpers that the
+ * route guard is built on.
  *
- * Stubs `fetch`, so no network and no credentials.
- *
- * See REACT_MIGRATION_STEPS.md C2.
+ * Note the limit of this file, unchanged: it calls the rules directly, so it
+ * cannot tell you whether they are *wired* to a running server. `pnpm
+ * smoke:routes` is what checks that.
  */
 
-import * as mod from "../middleware";
-
-type Middleware = (request: Request) => Promise<Response | undefined>;
-
-// tsx's interop can double-wrap the default export depending on entry format.
-const middleware = ((mod as { default?: unknown }).default as {
-  default?: Middleware;
-})?.default ?? ((mod as { default?: Middleware }).default as Middleware);
-
-const realFetch = globalThis.fetch;
-
-let lookups: string[] = [];
-let backend: "found" | "missing" | "timeout" = "found";
-
-globalThis.fetch = (async (input: unknown) => {
-  const url = String(input);
-  lookups.push(url);
-  if (backend === "timeout") throw new Error("simulated timeout");
-  if (backend === "missing") return new Response("null", { status: 404 });
-  return new Response(JSON.stringify({ username: "someone" }), {
-    headers: { "Content-Type": "application/json" },
-    status: 200,
-  });
-}) as typeof fetch;
+import { decide } from "../middleware-rules";
+import {
+  isProfileHandle,
+  toHandle,
+  usernameFromHandle,
+} from "../src/utils/constants/profile-handle";
 
 let failures = 0;
 const check = (label: string, actual: unknown, expected: unknown) => {
@@ -48,91 +29,79 @@ const check = (label: string, actual: unknown, expected: unknown) => {
   if (!ok) failures++;
   console.log(
     `${ok ? "PASS" : "FAIL"}  ${label}` +
-      (ok ? `  (${actual})` : `\n      got:      ${actual}\n      expected: ${expected}`),
+      (ok
+        ? `  (${actual})`
+        : `\n      got:      ${actual}\n      expected: ${expected}`),
   );
 };
 
-const call = async (path: string) => {
-  lookups = [];
-  const res = await middleware(new Request(`https://novelist.world${path}`));
-  return {
-    location: res?.headers.get("location") ?? null,
-    lookups: lookups.length,
-    status: res?.status ?? 0,
-  };
+const call = (path: string) => {
+  const decision = decide(new URL(`https://novelist.world${path}`));
+  return decision.kind === "redirect"
+    ? { location: decision.location, status: decision.status }
+    : { location: null, status: 200 };
 };
 
-const run = async () => {
-  process.env.RP_SERVICE_URL = "https://api.novelist.world";
+// ── Tracking parameters ─────────────────────────────────────────────────────
+let r = call("/rp/explore?fbclid=abc123");
+check("fbclid → 308", r.status, 308);
+check("fbclid stripped", r.location, "https://novelist.world/rp/explore");
 
-  // ── Tracking parameters ──────────────────────────────────────────────────
-  let r = await call("/rp/explore?fbclid=abc123");
-  check("fbclid → 308", r.status, 308);
-  check("fbclid stripped", r.location, "https://novelist.world/rp/explore");
+r = call("/rp/explore?gclid=a&igshid=b&keep=yes");
+check(
+  "multiple trackers stripped, others kept",
+  r.location,
+  "https://novelist.world/rp/explore?keep=yes",
+);
 
-  r = await call("/rp/explore?gclid=a&igshid=b&keep=yes");
-  check("multiple trackers stripped, others kept", r.location,
-    "https://novelist.world/rp/explore?keep=yes");
+r = call("/rp/explore?keep=yes");
+check("no tracker → no redirect", r.status, 200);
 
-  r = await call("/rp/explore?keep=yes");
-  check("no tracker → no redirect", r.status, 200);
+r = call("/@tokyo?fbclid=abc");
+check("tracker on a profile → stripped", r.location, "https://novelist.world/@tokyo");
 
-  // ── Username short link ──────────────────────────────────────────────────
-  backend = "found";
-  r = await call("/someuser");
-  check("known username → 302", r.status, 302);
-  check("… to the profile", r.location, "https://novelist.world/rp/profile/someuser");
-  check("… after exactly one lookup", r.lookups, 1);
+// ── Paths the rules must leave alone ────────────────────────────────────────
+//
+// Every one of these needed an entry in a reserved-word list before the `@`.
+// They are here to document that none of them can collide any more, not
+// because the rule below them is doing any work.
+for (const path of [
+  "/@tokyo",
+  "/@tokyo/muses",
+  "/tokyo",
+  "/rp/profile/tokyo",
+  "/favicon.ico",
+  "/favicon-32x32.png",
+  "/og_image.png",
+  "/manifest.json",
+  "/robots.txt",
+  "/sitemap.xml",
+  "/registerSW.js",
+  "/index.html",
+  "/promo/muse",
+  "/icons",
+  "/images",
+  "/models",
+]) {
+  check(`untouched ${path}`, call(path).status, 200);
+}
 
-  backend = "missing";
-  r = await call("/nobodyhere");
-  check("unknown username falls through", r.status, 200);
+// ── The handle itself ───────────────────────────────────────────────────────
+check("toHandle", toHandle("tokyo"), "@tokyo");
+check("usernameFromHandle", usernameFromHandle("@tokyo"), "tokyo");
+check("usernameFromHandle tolerates a bare name", usernameFromHandle("tokyo"), "tokyo");
+check("usernameFromHandle of undefined", usernameFromHandle(undefined), "");
+check("round trip", usernameFromHandle(toHandle("a.b-c_d")), "a.b-c_d");
 
-  backend = "timeout";
-  r = await call("/whoever");
-  check("backend timeout falls through", r.status, 200);
-  backend = "found";
+check("@tokyo is a handle", isProfileHandle("@tokyo"), true);
+check("tokyo is not", isProfileHandle("tokyo"), false);
+check("a bare @ is not", isProfileHandle("@"), false);
+check("undefined is not", isProfileHandle(undefined), false);
+// `@` is not a legal username character, so no username can produce a segment
+// that collides with a path the app owns — the whole point of the prefix.
+check("rp is not a handle", isProfileHandle("rp"), false);
+check("promo is not a handle", isProfileHandle("promo"), false);
+check("favicon.ico is not a handle", isProfileHandle("favicon.ico"), false);
 
-  // ── Reserved paths: must not even be looked up ───────────────────────────
-  for (const path of [
-    "/favicon.ico",
-    "/favicon-32x32.png",
-    "/apple-touch-icon.png",
-    "/android-chrome-192x192.png",
-    "/safari-pinned-tab.svg",
-    "/browserconfig.xml",
-    "/og_image.png",
-    "/manifest.json",
-    "/manifest.webmanifest",
-    "/robots.txt",
-    "/sitemap.xml",
-    "/rp",
-    "/api",
-    "/assets",
-    "/icons",
-    "/images",
-    "/models",
-  ]) {
-    const res = await call(path);
-    check(`reserved ${path} → no lookup`, res.lookups, 0);
-  }
-
-  // ── Shapes that are not usernames ────────────────────────────────────────
-  r = await call("/ab");
-  check("2 chars is too short → no lookup", r.lookups, 0);
-
-  r = await call("/rp/profile/someone");
-  check("multi-segment path → no lookup", r.lookups, 0);
-
-  r = await call("/has spaces");
-  check("invalid characters → no lookup", r.lookups, 0);
-
-  globalThis.fetch = realFetch;
-
-  if (failures > 0) {
-    throw new Error(`${failures} middleware check(s) failed`);
-  }
-  console.log("\nALL PASS");
-};
-
-run();
+if (failures > 0) throw new Error(`${failures} check(s) failed`);
+console.log("\nALL PASS");

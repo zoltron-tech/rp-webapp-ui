@@ -1,9 +1,17 @@
 import { type ComponentType, Suspense } from "react";
-import { Navigate, Outlet, type RouteObject, useRouteError } from "react-router";
+import {
+  Navigate,
+  Outlet,
+  type RouteObject,
+  useLocation,
+  useParams,
+  useRouteError,
+} from "react-router";
 import ErrorPage from "./app/error";
 import PromoLayout from "./app/promo/layout";
 import RpLayout from "./app/rp/layout";
 import { useAuthCookie } from "./lib/auth-cookie";
+import { isProfileHandle } from "./utils/constants/profile-handle";
 import { ROUTES } from "./utils/constants/routes";
 
 /**
@@ -71,6 +79,50 @@ const withOutlet = (Layout: ComponentType<{ children: React.ReactNode }>) => (
   </Layout>
 );
 
+/**
+ * `/rp/profile/{username}` and its tabs → `/@{username}`.
+ *
+ * A component rather than a path rewrite so the redirect only ever fires for
+ * routes that actually reached it; see the note at the call sites.
+ */
+const LegacyProfileRedirect = ({ tab }: { tab?: string }) => {
+  const { slug = "" } = useParams();
+  const { search } = useLocation();
+  return <Navigate replace to={`/@${slug}${tab ? `/${tab}` : ""}${search}`} />;
+};
+
+/**
+ * The `/@username` branch, which sits at the root of the domain alongside the
+ * app's own paths.
+ *
+ * `/:handle` matches any single root segment, so this decides what the segment
+ * actually is. A handle renders the profile; anything else is a **legacy bare
+ * short link** (`/tokyo`, the form this app handed out before the `@`) and is
+ * redirected onto the handle, tabs and query string intact.
+ *
+ * Note what that redirect does *not* do: no backend lookup, no reserved-word
+ * list. Static files are served before the SPA fallback ever runs, and React
+ * Router ranks a static path above a dynamic one — so `/rp/...`, `/promo/...`
+ * and every file in `public/` are all matched before this route is considered.
+ * The old `/{username}` rule needed both a list and a lookup precisely because
+ * it had no `@` to tell a username from a path.
+ *
+ * A bare segment that is *not* a username lands on the profile page's
+ * not-found rather than the catch-all's redirect to Novelists. That is the one
+ * behaviour change here, and it is the better of the two: a mistyped profile
+ * link now says so.
+ */
+const ProfileHandleBranch = () => {
+  const { handle } = useParams();
+  const { pathname, search } = useLocation();
+
+  return isProfileHandle(handle) ? (
+    withOutlet(RpLayout)
+  ) : (
+    <Navigate replace to={`/@${pathname.slice(1)}${search}`} />
+  );
+};
+
 export const routes: RouteObject[] = [
   { element: <IndexRedirect />, path: "/" },
 
@@ -112,12 +164,23 @@ export const routes: RouteObject[] = [
       { path: "post-prompt", lazy: page(() => import("./app/rp/post-prompt/page")) },
       { path: "privacy-policy", lazy: page(() => import("./app/rp/privacy-policy/page")) },
       { path: "profile", lazy: page(() => import("./app/rp/profile/page")) },
-      { path: "profile/:slug", lazy: page(() => import("./app/rp/profile/[slug]/page")) },
-      { path: "profile/:slug/friends", lazy: page(() => import("./app/rp/profile/[slug]/friends/page")) },
-      { path: "profile/:slug/muses", lazy: page(() => import("./app/rp/profile/[slug]/muses/page")) },
-      { path: "profile/:slug/music", lazy: page(() => import("./app/rp/profile/[slug]/music/page")) },
-      { path: "profile/:slug/posts", lazy: page(() => import("./app/rp/profile/[slug]/posts/page")) },
-      { path: "profile/:slug/storyboards", lazy: page(() => import("./app/rp/profile/[slug]/storyboards/page")) },
+
+      // Legacy profile paths. These are redirects rather than pages now — the
+      // profile lives at `/@username`. They stay because they are in already
+      // posted Discord embeds, in notification payloads and in the privacy
+      // policy, and a shared link should not rot.
+      //
+      // Expressing them as routes rather than as a rule at the HTTP layer is
+      // deliberate: a regex over `/rp/profile/([^/]+)` would also rewrite
+      // `edit`, `muses`, `music`, `story` and `referrals`, which are real
+      // pages. React Router ranks a static path above a dynamic one, so those
+      // five match their own routes and never reach this.
+      { element: <LegacyProfileRedirect />, path: "profile/:slug" },
+      { element: <LegacyProfileRedirect tab="friends" />, path: "profile/:slug/friends" },
+      { element: <LegacyProfileRedirect tab="muses" />, path: "profile/:slug/muses" },
+      { element: <LegacyProfileRedirect tab="music" />, path: "profile/:slug/music" },
+      { element: <LegacyProfileRedirect tab="posts" />, path: "profile/:slug/posts" },
+      { element: <LegacyProfileRedirect tab="storyboards" />, path: "profile/:slug/storyboards" },
       { path: "profile/edit", lazy: page(() => import("./app/rp/profile/edit/page")) },
       { path: "profile/muses/create", lazy: page(() => import("./app/rp/profile/muses/create/page")) },
       { path: "profile/muses/edit/:id", lazy: page(() => import("./app/rp/profile/muses/edit/[id]/page")) },
@@ -156,6 +219,22 @@ export const routes: RouteObject[] = [
     element: withOutlet(PromoLayout),
     errorElement: <RouteErrorBoundary />,
     path: "/promo",
+  },
+
+  // Profiles, at the root of the domain. Last of the real branches: it matches
+  // any single root segment, so every static path above must be tried first.
+  {
+    children: [
+      { index: true, lazy: page(() => import("./app/rp/profile/[slug]/page")) },
+      { path: "friends", lazy: page(() => import("./app/rp/profile/[slug]/friends/page")) },
+      { path: "muses", lazy: page(() => import("./app/rp/profile/[slug]/muses/page")) },
+      { path: "music", lazy: page(() => import("./app/rp/profile/[slug]/music/page")) },
+      { path: "posts", lazy: page(() => import("./app/rp/profile/[slug]/posts/page")) },
+      { path: "storyboards", lazy: page(() => import("./app/rp/profile/[slug]/storyboards/page")) },
+    ],
+    element: <ProfileHandleBranch />,
+    errorElement: <RouteErrorBoundary />,
+    path: "/:handle",
   },
 
   // Next's app/not-found.tsx was a bare redirect to Novelists; this is the

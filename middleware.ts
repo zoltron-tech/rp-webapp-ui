@@ -18,30 +18,25 @@ import { decide } from "./middleware-rules";
  * rewrite the matching paths to it from vercel.json — the ordering rule below
  * survives the move unchanged.
  *
- * **Order is load-bearing and fails silently.** The username rule matches any
- * unclaimed single-segment path, so it must be evaluated *before* the SPA
- * fallback that serves index.html for everything. Get it backwards and every
- * `/{username}` serves the app shell; the client router then matches nothing,
- * `not-found` redirects to Novelists, and the entire short-link feature is gone
- * with no error logged anywhere — in production, where the client has no
- * logging at all.
+ * All that is left here is stripping tracking parameters. The `/{username}`
+ * short link used to live here too, and needed a backend lookup and a
+ * reserved-word list to tell a username from one of the app's own paths;
+ * `/@username` removed the need for both, and the redirect is a route in the
+ * client router now.
  *
  * See REACT_MIGRATION_STEPS.md C2.
  */
 
 export const config = {
   // Everything except build output, the function itself, and the static files
-  // that would otherwise cost a backend lookup each (see reserved-paths.ts).
+  // that would otherwise invoke the function for nothing.
   matcher: [
     "/((?!assets/|api/|favicon.ico|icons/|images/|models/|animations/|promo/|sw\.js|workbox-.*\.js|swe-worker-.*\.js|worker-.*\.js).*)",
   ],
 };
 
-export default async function middleware(request: Request) {
-  const decision = await decide(
-    new URL(request.url),
-    process.env.RP_SERVICE_URL,
-  );
+export default function middleware(request: Request) {
+  const decision = decide(new URL(request.url));
 
   return decision.kind === "redirect"
     ? Response.redirect(decision.location, decision.status)

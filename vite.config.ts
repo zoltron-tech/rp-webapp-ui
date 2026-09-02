@@ -27,7 +27,7 @@ const EMPTY_MODEL_ID = "virtual:nsfwjs-bundled-model";
  * for every unmatched path; anything registered after it never sees a single
  * `/{username}` request.
  */
-const middlewareRules = (serviceUrl: string | undefined): PluginOption => {
+const middlewareRules = (): PluginOption => {
   const handle: Connect.NextHandleFunction = (req, res, next) => {
     const accept = req.headers.accept ?? "";
     const isDocument =
@@ -45,16 +45,11 @@ const middlewareRules = (serviceUrl: string | undefined): PluginOption => {
 
     const url = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
 
-    decide(url, serviceUrl)
-      .then((decision) => {
-        if (decision.kind !== "redirect") return next();
-        res.statusCode = decision.status;
-        res.setHeader("Location", decision.location);
-        res.end();
-      })
-      // A rule that throws must not take the page down with it — the app is
-      // still perfectly serviceable without the redirect.
-      .catch(() => next());
+    const decision = decide(url);
+    if (decision.kind !== "redirect") return next();
+    res.statusCode = decision.status;
+    res.setHeader("Location", decision.location);
+    res.end();
   };
 
   return {
@@ -106,7 +101,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       // Before everything else: this decides whether a request is a redirect
       // rather than a page, and the answer has to come first.
-      middlewareRules(env.RP_SERVICE_URL),
+      middlewareRules(),
 
       /**
        * nsfwjs ships ~25MB of pre-built model shards under `dist/models`,

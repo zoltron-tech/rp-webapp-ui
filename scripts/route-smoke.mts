@@ -70,7 +70,22 @@ const readRoutes = (): string[] => {
     for (const kid of kids) routes.push(`${prefix}/${kid}`);
   }
 
-  return [...new Set(routes)].map((r) => r.replace(/:[^/]+/g, PARAM));
+  // Profiles are reached by handle, so `:handle` gets the `@` a real URL has.
+  // Without it the pass would exercise the legacy bare-name redirect instead
+  // of the route it is meant to be checking.
+  //
+  // Three of these are not in the table's `{ path, lazy }` shape and would
+  // otherwise go unrendered: the profile index (an `index: true` route), the
+  // legacy `/rp/profile/{name}` path, and the legacy bare `/{name}` short
+  // link. The last two are redirects, and a redirect that stops redirecting is
+  // exactly the kind of silent breakage this pass exists to catch.
+  routes.push("/:handle", "/rp/profile/:slug", `/${PARAM}`);
+
+  return [...new Set(routes)].map((r) =>
+    r
+      .replace(/:handle/g, `@${PARAM}`)
+      .replace(/:[^/]+/g, PARAM),
+  );
 };
 
 const waitForServer = async (deadlineMs = 60_000) => {

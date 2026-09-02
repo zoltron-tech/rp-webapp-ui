@@ -18,6 +18,7 @@ import {
   updateSongAction,
 } from "@/app/rp/profile/[slug]/music/action";
 import { deleteMedia } from "@/app/rp/profile/actions";
+import { ROUTES } from "@/utils/constants/routes";
 import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -288,7 +289,7 @@ export default function EditMusicDataCard() {
 
       // Navigate to music page
       if (novelist?.username) {
-        routeToPage(`/rp/profile/${novelist.username}/music`);
+        routeToPage(ROUTES.Profile.View(novelist.username).Music);
       }
     } catch (err) {
       setError(API_MESSAGE.UncategorizedError);
@@ -303,7 +304,7 @@ export default function EditMusicDataCard() {
     }
 
     if (novelist?.username) {
-      routeToPage(`/rp/profile/${novelist.username}/music`);
+      routeToPage(ROUTES.Profile.View(novelist.username).Music);
     }
   }, [tempUpload, novelist?.username, routeToPage]);
 

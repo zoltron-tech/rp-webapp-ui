@@ -7,6 +7,7 @@ import type { ProfileSong } from "@nw/types/music";
 import { ACCENT_MAP, type Accent } from "@nw/types/theme";
 import classNames from "classnames";
 import { useParams } from "@/lib/navigation";
+import { usernameFromHandle } from "@/utils/constants/profile-handle";
 import { Tooltip } from "radix-ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BiHide } from "react-icons/bi";
@@ -404,7 +405,8 @@ export default function UserProfilePage({}) {
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
   const [scoreTooltipOpen, setScoreTooltipOpen] = useState(false);
-  const username = params?.slug as string;
+  // The route param is a handle (`@tokyo`), not a bare username.
+  const username = usernameFromHandle(params?.handle as string);
   const isCurrentUser = username === user?.username;
   const [novelist, setNovelist] = useState<Novelist | null>(
     username === user?.username ? userNovelist : null,

@@ -2,6 +2,7 @@
 
 import type { Prompt } from "@nw/types";
 import { useParams } from "@/lib/navigation";
+import { usernameFromHandle } from "@/utils/constants/profile-handle";
 import { useCallback, useEffect, useState } from "react";
 import { getNovelistAction } from "@/app/rp/novelists/actions";
 import { BreadCrumb } from "@/components/breadcrumb";
@@ -21,7 +22,8 @@ const PAGE_SIZE = 20;
 
 export default function NovelistPostsPage() {
   const params = useParams();
-  const username = params?.slug as string;
+  // The route param is a handle (`@tokyo`), not a bare username.
+  const username = usernameFromHandle(params?.handle as string);
   const authState = useGlobalState("authState");
   const user = useGlobalState("user");
   const novelist = useGlobalState("novelist");

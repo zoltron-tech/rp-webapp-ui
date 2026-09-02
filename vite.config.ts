@@ -53,6 +53,16 @@ export default defineConfig(({ mode }) => {
       //
       // The bucket name is not a secret — it already appears in every image URL
       // the app renders. See REACT_MIGRATION_STEPS.md A1 and finding 2.
+      // Defining any `process.env.*` key stops Vite substituting the whole
+      // `process.env` object, which is how React's
+      // `process.env.NODE_ENV !== "production"` guards normally get folded
+      // away. Without this line the production build ships **development
+      // React**: dev-only warnings, no tree-shaking of the dev branch, and a
+      // much larger bundle. Found by the route render pass (D5), which saw
+      // warnings that a production React build cannot emit.
+      "process.env.NODE_ENV": JSON.stringify(
+        mode === "production" ? "production" : "development",
+      ),
       "process.env.RP_BUCKET_NAME": JSON.stringify(env.RP_BUCKET_NAME ?? ""),
 
       // Transitional: read VITE_X, falling back to the old unprefixed name so

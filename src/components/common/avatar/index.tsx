@@ -40,8 +40,15 @@ export const Avatar: FC<AvatarProps> = ({
       {/* Plain <img>: these avatars already go through the wsrv.nl proxy,
           which does the resizing and format conversion next/image would have.
           `object-fit` and the circular crop come from AVATAR_IMAGE in
-          theme/common.styled.ts, which targets `img` and is unchanged. */}
-      <img src={src || ""} alt={alt} width={size} height={size} />
+          theme/common.styled.ts, which targets `img` and is unchanged.
+
+          Rendered only when there is a src. next/image ignored an empty one;
+          a plain <img src=""> makes the browser re-request the current page as
+          the image, which is a real request per avatar on any list of users
+          without pictures. */}
+      {src ? (
+        <img src={src} alt={alt} width={size} height={size} />
+      ) : null}
       {name && hoverable && <S.Name>{name}</S.Name>}
     </S.Avatar>
   );

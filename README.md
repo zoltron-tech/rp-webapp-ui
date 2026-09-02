@@ -2,9 +2,9 @@
 
 The Novelist World web app.
 
-A **Vite + React Router SPA**. There is no framework server: the browser talks
-to the Kotlin backend directly. A small Hono function under `api/` holds the few
-things that genuinely cannot ship to a browser — see [The `api/` functions](#the-api-functions).
+A **Vite + React Router SPA**. There is no framework server and no backend of
+its own: the browser talks to the Kotlin services directly. One function under
+`api/` remains, and it is not an API — see [The `api/` function](#the-api-function).
 
 The migration off Next.js is complete; [REACT_MIGRATION_PLAN.md](../REACT_MIGRATION_PLAN.md)
 and [REACT_MIGRATION_STEPS.md](../REACT_MIGRATION_STEPS.md) record what changed
@@ -50,7 +50,7 @@ to one of those to "make it work".
 | `pnpm verify` | Type-check (app + packages) + package boundaries + both smoke tests. **Run this on every commit.** |
 | `pnpm type-check` | `tsc --noEmit` for the app |
 | `pnpm smoke` | Both smoke tests below |
-| `pnpm smoke:bff` | Open Graph injection and the BFF's error paths |
+| `pnpm smoke:bff` | Open Graph injection and its fallbacks |
 | `pnpm smoke:mw` | The `/{username}` short link and reserved paths |
 | `pnpm smoke:routes` | Renders all 66 routes in headless Chrome. Needs a build and a browser, so it is not in `verify` |
 | `pnpm lint` | `biome check` — **fails today**, pre-existing, see below |
@@ -94,41 +94,40 @@ src/lib/…          app-level plumbing: the API client, navigation helpers,
 packages/          @nw/api, @nw/types, @nw/utils, @nw/config — framework-free,
                    shared with the future mobile app. No build step: they ship
                    TypeScript source.
-api/               the server functions (see below)
+api/               the Open Graph function (see below)
 middleware.ts      edge middleware: tracking-param stripping and the
                    /{username} short link
 worker/            service worker — sw.ts is the worker, handlers.ts holds the
                    push/notification/badge logic
 ```
 
-### The `api/` functions
+### The `api/` function
 
-One Hono app on a single Vercel Function, holding the handful of things that
-cannot run in a browser:
+One route, and it is the only server-side code this repo owns:
 
-| Route | Why it is server-side |
+| Route | Why it exists |
 |---|---|
-| `/api/discord/share*` | Holds `DISCORD_BOT_TOKEN` |
-| `/api/klipy-*` | Holds `KLIPY_API_KEY`, which Klipy puts in the URL |
-| `/api/reaction/:id` | Proxies a write with the caller's JWT |
-| `/api/landing/*` | Public feeds, pre-transformed for the landing page |
-| `/rp/story/:slug`, `/rp/story/event/:slug` | Open Graph injection — crawlers do not run JS, so a shared story link would otherwise unfurl with the generic site card |
+| `/rp/story/:slug`, `/rp/story/event/:slug` | Open Graph injection. Crawlers do not run JS, so a shared story link would otherwise unfurl with the generic site card |
 
-**These are a staging post, not the destination.** Everything except the Open
-Graph injection is a proxy that exists only because the browser cannot hold a
-secret, and each one belongs in the Kotlin backend next to the data it is
-already talking to. Moving them there removes this function, its deployment
-surface, and one more place where a token lives.
+It rewrites the HTML document before a crawler sees it, which has to happen
+wherever the document is served — the CDN edge, not the API. That is the whole
+reason it cannot live in the Kotlin backend with everything else.
 
-So: **do not build new features here.** If something needs a server, it goes in
-the Kotlin backend. The Open Graph injection is the one thing that has to stay
-at the edge, because it rewrites the HTML document itself before it reaches a
-crawler.
+Everything else that used to be here has moved to `rp-webapp-service`:
+
+- **Discord sharing** and **Klipy media search** → the portfolio service, which
+  now holds `DISCORD_BOT_TOKEN` and `KLIPY_API_KEY`. The embed building went
+  with them: whoever holds the token decides what gets posted with it.
+- **Reactions** and the **landing feeds** were deleted rather than moved. They
+  proxied the portfolio service to itself, only to turn the JWT cookie into a
+  header — which the browser does itself now.
+
+**Do not add routes here.** New server work goes in the Kotlin backend.
 
 ## Deployment
 
 Vercel builds and serves this: the CDN serves `dist/` and `vercel.json` rewrites
-`/api/*` and the two storyboard routes to the function. Same-origin by
+the two storyboard routes to the function. Same-origin by
 construction, which is why the client's relative `fetch("/api/…")` calls need no
 CORS.
 

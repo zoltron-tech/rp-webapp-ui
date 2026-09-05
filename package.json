@@ -18,7 +18,7 @@
     "update-local": "rm -rf node_modules/@novelist-world/ui/dist && cd ../novelist-world-ui && yarn build && cp -r dist ../rp-webapp-ui/node_modules/@novelist-world/ui/dist && cd ../rp-webapp-ui"
   },
   "engines": {
-    "node": ">=18.16.0"
+    "node": ">=22"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

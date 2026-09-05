@@ -1,7 +1,6 @@
 // lib/push.ts
 
-import { authenticateAndGetJWT } from "@/app/actions";
-import { AUTH_HEADER_NAME } from "@/utils/constants";
+import { authedApi } from "@/lib/api";
 import { env } from "@/lib/env";
 
 const VAPID_PUBLIC_KEY = env.VAPID_PUBLIC_KEY;
@@ -16,34 +15,34 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return new Uint8Array([...rawData].map((char) => char.charCodeAt(0)));
 }
 
-const RP_SERVICE_URL = env.RP_SERVICE_URL;
-
+/**
+ * Goes through the shared API client rather than a bare `fetch`.
+ *
+ * It used to read the JWT and set the auth header by hand. That is no longer
+ * possible — the session is an `httpOnly` cookie — and a plain `fetch` would
+ * send no credentials at all. The client sends them, and renews an expired
+ * access token underneath this call rather than silently dropping the
+ * subscription.
+ */
 async function sendSubscriptionToBackend(
   subscription: PushSubscription,
 ): Promise<void> {
-  const jwt = await authenticateAndGetJWT();
-  if (!jwt) {
-    console.warn("[Push] No JWT available, skipping subscription send");
-    return;
-  }
-
-  const headers = new Headers({
-    "Content-Type": "application/json",
-    [AUTH_HEADER_NAME]: jwt,
-  });
-
   const sub = subscription.toJSON();
-  await fetch(`${RP_SERVICE_URL}/rp/portfolio/push/subscribe`, {
-    body: JSON.stringify({
+  const response = await authedApi.raw("/rp/portfolio/push/subscribe", {
+    body: {
       endpoint: sub.endpoint,
       keys: {
         auth: sub.keys?.auth,
         p256dh: sub.keys?.p256dh,
       },
-    }),
-    headers,
+    },
+    label: "pushSubscribe",
     method: "POST",
   });
+
+  if (!response.ok) {
+    console.warn("[Push] Subscription was not accepted", response.status);
+  }
 }
 
 // ── No registerServiceWorker() — the library handles it ──
@@ -106,17 +105,10 @@ export async function unsubscribeFromPush(): Promise<void> {
 
     if (subscription) {
       await subscription.unsubscribe();
-      const jwt = await authenticateAndGetJWT();
-      if (!jwt) {
-        console.warn("[Push] No JWT available, skipping unsubscribe request");
-        return;
-      }
-      const headers = new Headers({
-        "Content-Type": "application/json",
-        [AUTH_HEADER_NAME]: jwt,
-      });
-      await fetch(`${RP_SERVICE_URL}/rp/portfolio/push/unsubscribe`, {
-        headers,
+      // Called during logout, while the session cookies are still present —
+      // `usePostLogout` runs this before `logoutAction` for exactly that reason.
+      await authedApi.raw("/rp/portfolio/push/unsubscribe", {
+        label: "pushUnsubscribe",
         method: "DELETE",
       });
     }

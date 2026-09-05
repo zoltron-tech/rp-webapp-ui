@@ -72,7 +72,57 @@ export interface ApiConfig {
   log?: (label: string, status: number) => void;
   /** Called on any 401, before the result is returned. */
   onUnauthorized?: () => void;
+  /**
+   * Send cookies on every request.
+   *
+   * Required on web now that the session lives in httpOnly cookies the browser
+   * attaches itself — without it the API sees an anonymous request. Native has
+   * no cookie jar and leaves this off, which is why it is a flag rather than a
+   * constant.
+   */
+  withCredentials?: boolean;
+  /**
+   * Try to renew an expired session, once, and say whether it worked.
+   *
+   * This is the seam that makes a 15-minute access token invisible. When a
+   * request comes back 401 the client calls this and, if it succeeds, replays
+   * the original request exactly once. Supplying it is what turns on that
+   * behaviour; a client without it treats every 401 as final.
+   *
+   * The implementation must be single-flight — see `createRefreshCoordinator`.
+   */
+  refreshSession?: () => Promise<boolean>;
 }
+
+/**
+ * Collapses concurrent refreshes into one.
+ *
+ * The app fires many requests at once — a page load kicks off the profile, the
+ * unread counts and the feed together. When the access token has just expired
+ * they all 401 at the same moment, and without this each would start its own
+ * rotation. That is not merely wasteful: rotation is single-use by design, so
+ * the second request would present a token the first had already spent, which
+ * user-service reads as *reuse* and answers by revoking the whole session
+ * family. Racing refreshes would log the user out.
+ *
+ * So: the first caller performs the rotation, everyone who arrives while it is
+ * in flight awaits the same promise, and the slot is cleared once it settles.
+ */
+export const createRefreshCoordinator = (
+  refresh: () => Promise<boolean>,
+): (() => Promise<boolean>) => {
+  let inFlight: Promise<boolean> | null = null;
+
+  return () => {
+    if (inFlight) return inFlight;
+
+    inFlight = refresh().finally(() => {
+      inFlight = null;
+    });
+
+    return inFlight;
+  };
+};
 
 const errorResult = (): ErrorType => ({ message: API_MESSAGE.Error });
 
@@ -165,18 +215,10 @@ export const createApiClient = (config: ApiConfig): ApiClient => {
     options: RequestOptions = {},
   ): Promise<Response> => {
     const method = options.method ?? "GET";
-    const token = options.anonymous ? null : await config.getToken();
+    const label = options.label ?? `${method} ${path}`;
 
-    // Stop before the network when the caller said a session is mandatory.
-    // Deliberately not a redirect — the shared client has no idea what screen
-    // it is on, and a native app has nowhere to redirect to anyway.
-    const requireAuth = options.requireAuth ?? config.requireAuth ?? false;
-    if (requireAuth && !token) {
-      config.log?.(options.label ?? `${method} ${path}`, 401);
-      config.onUnauthorized?.();
-      return unauthorizedResponse();
-    }
-
+    // A body that is a stream or FormData can only be sent once, so it is built
+    // here and reused by both the first attempt and the post-refresh retry.
     const body =
       options.body === undefined
         ? undefined
@@ -185,17 +227,63 @@ export const createApiClient = (config: ApiConfig): ApiClient => {
           ? (options.body as BodyInit)
           : JSON.stringify(options.body);
 
-    const response = await fetch(`${config.baseUrl}${path}`, {
-      body,
-      cache: "no-store",
-      headers: buildHeaders(options, token),
-      method,
-    });
+    const attempt = async (): Promise<Response | "no-token"> => {
+      const token = options.anonymous ? null : await config.getToken();
 
-    config.log?.(options.label ?? `${method} ${path}`, response.status);
-    if (response.status === 401) config.onUnauthorized?.();
+      // Stop before the network when the caller said a session is mandatory
+      // *and* nothing can supply one. With cookie sessions there is no token to
+      // read, so `refreshSession` being present means "the browser may well be
+      // carrying a session" and the request is worth making.
+      const requireAuth = options.requireAuth ?? config.requireAuth ?? false;
+      if (requireAuth && !token && !config.refreshSession) return "no-token";
 
-    return response;
+      return fetch(`${config.baseUrl}${path}`, {
+        body,
+        cache: "no-store",
+        // The session is two httpOnly cookies; omitting this sends the request
+        // signed out. Same-origin would not do — the app and the API are
+        // different origins on the same site.
+        credentials: config.withCredentials ? "include" : "same-origin",
+        headers: buildHeaders(options, token),
+        method,
+      });
+    };
+
+    const first = await attempt();
+    if (first === "no-token") {
+      // Deliberately not a redirect — the shared client has no idea what screen
+      // it is on, and a native app has nowhere to redirect to anyway.
+      config.log?.(label, 401);
+      config.onUnauthorized?.();
+      return unauthorizedResponse();
+    }
+
+    // The access token expires every fifteen minutes, so a 401 here is the
+    // ordinary case rather than an error: renew and replay. Anonymous calls are
+    // excluded because a 401 on one means something else entirely.
+    if (first.status === 401 && config.refreshSession && !options.anonymous) {
+      config.log?.(`${label} (refreshing)`, 401);
+
+      if (await config.refreshSession()) {
+        const retried = await attempt();
+        if (retried !== "no-token") {
+          config.log?.(label, retried.status);
+          // Exactly once. A second 401 means the new token is genuinely not
+          // good enough for this call, and retrying again would loop.
+          if (retried.status === 401) config.onUnauthorized?.();
+          return retried;
+        }
+      }
+
+      config.log?.(label, 401);
+      config.onUnauthorized?.();
+      return first;
+    }
+
+    config.log?.(label, first.status);
+    if (first.status === 401) config.onUnauthorized?.();
+
+    return first;
   };
 
   const requestNullable = async <T>(

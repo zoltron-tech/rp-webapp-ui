@@ -21,7 +21,6 @@ import { TbUnlink, TbUserOff } from "react-icons/tb";
 import {
   forgotPasswordAction,
   getDiscordConnectionAction,
-  getJWTIfExists,
   getSpotifyConnectionAction,
   linkDiscordAction,
   linkSpotifyAction,
@@ -39,6 +38,7 @@ import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { getBlockedNovelistsAction, unblockNovelistAction } from "../actions";
 import { ChangeUsernameDialog } from "./change-username-dialog";
+import { DevicesSection } from "./devices-section";
 import * as S from "./styled";
 
 type Props = {
@@ -151,12 +151,9 @@ export function AccountSection({ onBack }: Props) {
 
   const handleResendVerification = async () => {
     setVerifyState("loading");
-    const jwt = await getJWTIfExists();
-    if (!jwt) {
-      setVerifyState("error");
-      return;
-    }
-    const response = await sendVerificationEmailAction(jwt);
+    // No token to fetch first: the session cookie authenticates the call, and
+    // a missing session comes back as a plain failure like any other.
+    const response = await sendVerificationEmailAction();
     if (response.message === API_MESSAGE.Success) {
       setVerifyState("success");
     } else {
@@ -482,6 +479,9 @@ export function AccountSection({ onBack }: Props) {
             </ShouldRender>
           </S.AccountRowActions>
         </S.AccountRow>
+
+        {/* Signed-in devices */}
+        <DevicesSection />
 
         {/* Blocked novelists */}
         <S.BlockedSectionHeading>

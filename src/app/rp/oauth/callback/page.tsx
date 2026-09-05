@@ -4,12 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { CgClose } from "react-icons/cg";
 import { IoMdCheckmark } from "react-icons/io";
 import { PiSpinnerGapLight } from "react-icons/pi";
-import {
-  authenticateAction,
-  getAuthCookie,
-  getUser,
-  setAuthCookie,
-} from "@/app/actions";
+import { authenticateAction, getUser } from "@/app/actions";
 import { useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { usePostLogin } from "@/hooks/use-post-login";
@@ -64,12 +59,12 @@ export default function LoginOAuthCallbackPage() {
       return;
     }
 
-    // Re-set the cookie with the correct domain for the current environment.
-    // The backend always issues the cookie scoped to novelist.world; on localhost
-    // that domain won't match, so we promote it to a locally-scoped cookie here.
-    const jwt = await getAuthCookie();
-    await setAuthCookie(jwt);
-
+    // No cookie handling here any more. The OAuth success handler opens the
+    // session and sets both `httpOnly` cookies on the redirect that brought the
+    // browser here, so there is nothing for this page to promote, re-scope or
+    // copy — and nothing it could read if there were. It used to re-write the
+    // cookie with a different domain, which quietly produced a *second* cookie
+    // of the same name that logout then failed to clear.
     const response = await getUser();
     if (response.message === API_MESSAGE.Unauthorized) {
       setOperationState("ERROR");

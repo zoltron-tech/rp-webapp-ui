@@ -29,10 +29,15 @@ interface ImportMetaEnv {
   readonly VITE_SOCKET_URL?: string;
   readonly VITE_SUPPORT_EMAIL?: string;
   /**
-   * Decides whether the auth cookie gets `Domain` and `Secure`. Note the check
-   * on it is a plain truthiness test on a string, so any non-empty value —
-   * including "false" — selects the local behaviour. Leave it unset for
-   * production. See REACT_MIGRATION_STEPS.md finding 15.
+   * Whether cookies written from the browser are host-only rather than scoped
+   * to novelist.world. Only the literal string "true" enables it; anything else,
+   * including "false" and unset, means production behaviour.
+   *
+   * It used to be read with `Boolean(...)`, which made the string "false"
+   * truthy — so production wrote host-only cookies that were a *different
+   * cookie* from the domain-scoped ones the backend wrote, and logout cleared
+   * only one of the two. The auth cookies are now written solely by
+   * user-service, so this affects the referral cookie alone.
    */
   readonly VITE_USE_LOCAL_DOMAIN?: string;
   readonly VITE_VAPID_PUBLIC_KEY?: string;

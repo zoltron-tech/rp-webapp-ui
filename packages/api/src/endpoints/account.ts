@@ -1,10 +1,13 @@
 import type {
+  AuthSession,
   DiscordConnection,
   LoginPayload,
   LoginResponsePayload,
+  SessionsResponsePayload,
   SpotifyConnection,
   UpdateThemePayload,
   UpdateThemeResponse,
+  WsTicketPayload,
 } from "@nw/types";
 import { API_MESSAGE } from "@nw/types";
 import type { WithMessage } from "@nw/types/common";
@@ -14,9 +17,14 @@ import type { ApiClient } from "../client";
 /**
  * user-service account endpoints.
  *
- * Login and signup return the raw payload *including the token*. Storing that
- * token is the caller's job — web writes an httpOnly-able cookie, native will
- * write SecureStore — which is why neither of them touches storage here.
+ * Login and signup no longer hand back a token to store: user-service sets the
+ * access and refresh cookies on the response itself, and the browser never sees
+ * either value. What comes back is the user record and a session id for the
+ * Devices screen.
+ *
+ * A native client, which has no cookie jar, will need its own token-bearing
+ * variants of these three — that is the reason `getToken` and the auth header
+ * survive in the client config at all.
  */
 
 const ACCOUNT = "/rp/user/account";
@@ -57,13 +65,17 @@ export const verifyAccount = async (
   return (await response.json()) as WithMessage;
 };
 
+/**
+ * Re-sends the confirmation mail to the signed-in user's own address.
+ *
+ * Took an explicit JWT before, because the caller could read one. It cannot any
+ * more, and it should not need to: this is a call about the caller, so the
+ * session authenticates it like any other.
+ */
 export const sendVerificationEmail = async (
   api: ApiClient,
-  jwt: string,
 ): Promise<WithMessage> => {
   const response = await api.raw(`${ACCOUNT}/verificationEmail`, {
-    anonymous: true,
-    headers: { [api.authHeaderName]: jwt },
     label: "sendVerificationEmailAction",
     method: "POST",
   });
@@ -112,7 +124,7 @@ export const resetPassword = async (
   return (await response.json()) as WithMessage;
 };
 
-/** Returns the payload *with* its token — the caller decides where to put it. */
+/** The session lands in cookies set on this response; the body carries the user. */
 export const login = async (
   api: ApiClient,
   payload: LoginPayload,
@@ -253,4 +265,128 @@ export const finishOnboarding = async (
 
   if (!response.ok) return { message: API_MESSAGE.UncategorizedError };
   return (await response.json()) as WithMessage;
+};
+
+// ─── Session lifecycle ───────────────────────────────────────────────────────
+
+/**
+ * Trades the refresh cookie for a fresh pair.
+ *
+ * Anonymous on purpose: the access token is expired by definition here, and
+ * sending it would just be noise. What authenticates this call is the refresh
+ * cookie, which the browser attaches on its own.
+ *
+ * Returns false on any failure, and a failure is final — user-service has
+ * already cleared both cookies, so there is nothing left to retry with.
+ */
+export const refreshSession = async (api: ApiClient): Promise<boolean> => {
+  const response = await api.raw(`${ACCOUNT}/refresh`, {
+    anonymous: true,
+    label: "refreshSession",
+    method: "POST",
+  });
+
+  return response.ok;
+};
+
+/**
+ * Ends this device's session server-side.
+ *
+ * Anonymous for the same reason as the refresh: the refresh cookie is what
+ * identifies the session, and the access token may well have expired. Never
+ * throws — a user who asked to log out is logged out of this browser whether or
+ * not the API was reachable.
+ */
+export const logout = async (api: ApiClient): Promise<boolean> => {
+  try {
+    const response = await api.raw(`${ACCOUNT}/logout`, {
+      anonymous: true,
+      label: "logout",
+      method: "POST",
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+};
+
+/** Ends every session on the account, this device included. */
+export const logoutEverywhere = async (api: ApiClient): Promise<WithMessage> => {
+  const response = await api.raw(`${ACCOUNT}/logout/all`, {
+    label: "logoutEverywhere",
+    method: "POST",
+  });
+
+  if (!response.ok) return { message: API_MESSAGE.UncategorizedError };
+  return (await response.json()) as WithMessage;
+};
+
+/** Ends every session except this one. "Log out my other devices." */
+export const logoutOtherDevices = async (
+  api: ApiClient,
+): Promise<WithMessage> => {
+  const response = await api.raw(`${ACCOUNT}/logout/others`, {
+    label: "logoutOtherDevices",
+    method: "POST",
+  });
+
+  if (!response.ok) return { message: API_MESSAGE.UncategorizedError };
+  return (await response.json()) as WithMessage;
+};
+
+/** Every device currently signed in to this account, most recently used first. */
+export const getSessions = async (
+  api: ApiClient,
+): Promise<AuthSession[] | WithMessage> => {
+  const response = await api.raw(`${ACCOUNT}/sessions`, {
+    label: "getSessions",
+  });
+
+  if (response.status === 401) return { message: API_MESSAGE.Unauthorized };
+  if (!response.ok) return { message: API_MESSAGE.UncategorizedError };
+
+  const result = (await response.json()) as SessionsResponsePayload;
+  return result.sessions ?? [];
+};
+
+/**
+ * Signs one device out.
+ *
+ * A 404 means the session is not on this account — ownership is enforced by the
+ * server, so a guessed id cannot log a stranger out.
+ */
+export const revokeSession = async (
+  api: ApiClient,
+  sessionId: string,
+): Promise<WithMessage> => {
+  const response = await api.raw(
+    `${ACCOUNT}/sessions/${encodeURIComponent(sessionId)}`,
+    { label: "revokeSession", method: "DELETE" },
+  );
+
+  if (response.status === 404) return { message: API_MESSAGE.NotFound };
+  if (!response.ok) return { message: API_MESSAGE.UncategorizedError };
+  return (await response.json()) as WithMessage;
+};
+
+/**
+ * A single-use ticket for the WebSocket handshake, good for about 30 seconds.
+ *
+ * The browser cannot put a header on a `WebSocket` upgrade, so something has to
+ * travel in the URL — and it used to be the session JWT, which then sat in
+ * nginx and proxy logs for a day (SECURITY_AUTH_PLAN H1). Fetch a new one per
+ * connection attempt; they are cheap and they do not survive a redemption.
+ */
+export const getWebSocketTicket = async (
+  api: ApiClient,
+): Promise<string | null> => {
+  const response = await api.raw(`${ACCOUNT}/ws-ticket`, {
+    label: "getWebSocketTicket",
+    method: "POST",
+  });
+
+  if (!response.ok) return null;
+
+  const result = (await response.json()) as WsTicketPayload;
+  return result.ticket ?? null;
 };

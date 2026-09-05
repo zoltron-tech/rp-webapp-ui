@@ -117,6 +117,16 @@ declare class Headers {
 interface RequestInit {
   body?: BodyInit;
   cache?: "default" | "no-store" | "reload" | "no-cache" | "force-cache";
+  /**
+   * Whether cookies ride along.
+   *
+   * Portable rather than DOM-only: `fetch` in Node 18+ and in React Native both
+   * accept it. The web app needs `"include"` because the session is two
+   * httpOnly cookies on api.novelist.world, and the app is served from
+   * novelist.world — a different origin on the same site, so the default
+   * (`"same-origin"`) would send nothing and every request would be anonymous.
+   */
+  credentials?: "omit" | "same-origin" | "include";
   headers?: Record<string, string> | Headers;
   method?: string;
   signal?: unknown;

@@ -10,7 +10,7 @@ import {
 import ErrorPage from "./app/error";
 import PromoLayout from "./app/promo/layout";
 import RpLayout from "./app/rp/layout";
-import { useAuthCookie } from "./lib/auth-cookie";
+import { probablySignedIn } from "./lib/session-hint";
 import { isProfileHandle } from "./utils/constants/profile-handle";
 import { ROUTES } from "./utils/constants/routes";
 
@@ -41,18 +41,21 @@ const page =
   });
 
 /**
- * `/` — read the auth cookie and send the visitor somewhere real.
+ * `/` — send the visitor somewhere real.
  *
- * Next did this on the server; there is no server here, and the cookie is
- * readable from JS (it is `httpOnly: false`). Rendering nothing while the
- * cookie is read is correct: this route has no UI of its own.
+ * Next did this on the server. There is no server here, and the auth cookie is
+ * no longer readable from JS either, so this uses the local "we established a
+ * session in this browser" hint instead. That is a routing convenience and
+ * nothing more: the destination re-checks with user-service and bounces anyone
+ * whose session has actually gone, so a forged hint buys a redirect and no
+ * access. This route has no UI of its own.
  */
-const IndexRedirect = () => {
-  const jwt = useAuthCookie();
-  return (
-    <Navigate replace to={jwt ? ROUTES.Profile.Index : ROUTES.Novelists} />
-  );
-};
+const IndexRedirect = () => (
+  <Navigate
+    replace
+    to={probablySignedIn() ? ROUTES.Profile.Index : ROUTES.Novelists}
+  />
+);
 
 /**
  * React Router hands the thrown error to `useRouteError()` rather than to

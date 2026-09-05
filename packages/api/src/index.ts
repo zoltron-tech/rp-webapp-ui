@@ -4,4 +4,4 @@ export type {
   NotFoundBehaviour,
   RequestOptions,
 } from "./client";
-export { createApiClient } from "./client";
+export { createApiClient, createRefreshCoordinator } from "./client";

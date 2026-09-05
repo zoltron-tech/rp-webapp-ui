@@ -12,7 +12,8 @@ import { getNovelistRankByIdAction } from "@/app/rp/leaderboard/actions";
 import { getUserNovelist } from "@/app/rp/novelists/actions";
 import { getUnreadReplyCount } from "@/app/rp/outgoing-threads/actions";
 import { useStateMachine } from "@/hooks";
-import { dropStaleAuthCookie } from "@/lib/api";
+import { refreshSessionNow } from "@/lib/api";
+import { dropLegacyAuthCookie } from "@/lib/auth-cookie";
 import { usePathname } from "@/lib/navigation";
 import { initialisePushNotifications } from "@/lib/push";
 import { API_MESSAGE } from "@/utils/constants";
@@ -25,9 +26,20 @@ interface Props {
   children: ReactNode;
 }
 
+/** Must match `auth.jwt.access-ttl-minutes` in user-service. */
+const ACCESS_TOKEN_TTL_MS = 15 * 60 * 1000;
+
+/**
+ * Comfortably inside the access token's life, so a renewal has landed well
+ * before the old one lapses even if one attempt fails.
+ */
+const PROACTIVE_REFRESH_MS = 12 * 60 * 1000;
+
 export const AuthProvider: FC<Props> = ({ children }) => {
   const initialRender = useRef(true);
   const pathname = usePathname();
+  /** When the tab was last hidden, so a long absence can be told from a glance away. */
+  const hiddenSinceRef = useRef<number | null>(null);
 
   const authState = useGlobalState("authState");
   const setGlobalState = useGlobalStoreSet();
@@ -166,13 +178,58 @@ export const AuthProvider: FC<Props> = ({ children }) => {
       // stuck on "LOADING" after the callback page already finished and
       // navigated away.
       if (pathname === ROUTES.Oauth.Callback) return;
-      // An expired token is worse than no token: the API client still sends
-      // it, and the backend answers a public read (a profile, say) with 404
-      // rather than the anonymous view. Clear it before the first request.
-      dropStaleAuthCookie();
+      // A browser signed in before the httpOnly migration is still carrying the
+      // old script-visible cookie of the same name. The browser would send both,
+      // and the stale one can win — so it goes before the first request. The
+      // refresh cookie then re-establishes the session with no visible break.
+      dropLegacyAuthCookie();
       verifyInitialAuthState();
     }
   }, []);
+
+  /**
+   * Renew the access token before anything has to fail on it.
+   *
+   * Everything still works without this: the API client refreshes and retries
+   * on the first 401 it sees. But that costs the user a round trip on whichever
+   * request happened to be first, which on a cold tab is the one rendering the
+   * screen. Refreshing on a timer and on return to a tab that has been away
+   * longer than the token lives keeps that entirely off the critical path.
+   *
+   * Both paths go through the same single-flight coordinator as the reactive
+   * refresh, so a timer firing while a 401 retry is already rotating does not
+   * start a second rotation — which the server would read as token reuse and
+   * answer by revoking the session.
+   */
+  useEffect(() => {
+    if (authState !== "LOGGED_IN") return;
+
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") void refreshSessionNow();
+    }, PROACTIVE_REFRESH_MS);
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        hiddenSinceRef.current = Date.now();
+        return;
+      }
+
+      const hiddenSince = hiddenSinceRef.current;
+      hiddenSinceRef.current = null;
+      // A glance at another tab does not need a refresh; a phone in a pocket
+      // overnight does, and that is the case where the first request back would
+      // otherwise be the one that discovers the token has expired.
+      if (hiddenSince && Date.now() - hiddenSince > ACCESS_TOKEN_TTL_MS) {
+        void refreshSessionNow();
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [authState]);
 
   return (
     <AuthContext.Provider

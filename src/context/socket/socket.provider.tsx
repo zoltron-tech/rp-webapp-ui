@@ -10,11 +10,11 @@ import {
   useRef,
   useState,
 } from "react";
-import { useCookies } from "react-cookie";
+import { getSocketTicketAction } from "@/app/actions";
 import { getUnreadConversationIdsAction } from "@/app/rp/conversations/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import type { WebSocketExt } from "@/types/socket";
-import { JWT_COOKIE_NAME, SOCKET_URL } from "@/utils/constants";
+import { SOCKET_URL } from "@/utils/constants";
 import { decryptMessage } from "@/utils/e2e-crypto";
 import {
   createHeartbeatPong,
@@ -85,8 +85,6 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
   const authState = useGlobalState("authState");
   const novelist = useGlobalState("novelist");
   const setGlobalState = useGlobalStoreSet();
-  const [cookies] = useCookies([JWT_COOKIE_NAME]);
-  const jwt: string | undefined = cookies[JWT_COOKIE_NAME];
   const [socket, setSocket] = useState<WebSocketExt | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [onlineUsernames, setOnlineUsernames] = useState<string[]>([]);
@@ -101,47 +99,85 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
   // Keep stable refs so callbacks never capture stale values
   const socketRef = useRef<WebSocketExt | null>(null);
   const authStateRef = useRef(authState);
-  const jwtRef = useRef(jwt);
   const connectDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /**
+   * Guards the gap between asking for a ticket and the socket existing.
+   *
+   * `socketRef` is only set once `new WebSocket` returns, so without this a
+   * second connect attempt during the ticket round trip would mint a second
+   * ticket and open a second socket.
+   */
+  const connectingRef = useRef(false);
   const lastActivityCheckRef = useRef<number>(0);
   const reconnectingRef = useRef(false);
 
   // ─── Core connect logic ──────────────────────────────────────────────────
-  const connectSocket = useCallback(() => {
+  /**
+   * Opens the socket with a single-use ticket rather than the session token.
+   *
+   * A `WebSocket` handshake cannot carry a header, so whatever authenticates it
+   * has to sit in the URL — and it used to be the session JWT, which then lived
+   * on in nginx access logs, in every intermediary proxy log, and in
+   * chat-server's own stdout, valid for a day (SECURITY_AUTH_PLAN H1). A ticket
+   * is fetched per attempt, dies thirty seconds later, and burns on first
+   * redemption, so the same log line is worthless by the time anyone reads it.
+   *
+   * Now asynchronous, which is the one behavioural change: a fresh ticket is one
+   * request away, and callers that fire this optimistically (the activity
+   * listeners, the debounce) must not stack up attempts — hence `connectingRef`.
+   */
+  const connectSocket = useCallback(async () => {
     if (
       socketRef.current ||
+      connectingRef.current ||
       authStateRef.current !== "LOGGED_IN" ||
-      !jwtRef.current ||
       !SOCKET_URL
     )
       return;
-    const params = new URLSearchParams();
-    params.append("token", jwtRef.current);
-    const webSocketUrl = `${SOCKET_URL}?${params.toString()}`;
-    const socketInstance = new WebSocket(webSocketUrl) as WebSocketExt;
-    socketInstance.addEventListener("open", () => {
-      setIsConnected(true);
-    });
-    socketInstance.addEventListener("error", (error) => {
-      console.log("websocket:error", error);
-    });
-    socketInstance.addEventListener("close", () => {
-      if (socketInstance.pingTimeout) clearTimeout(socketInstance.pingTimeout);
-      socketRef.current = null;
-      setSocket(null);
-      setIsConnected(false);
-    });
-    socketRef.current = socketInstance;
-    setSocket(socketInstance);
+
+    connectingRef.current = true;
+    try {
+      const ticket = await getSocketTicketAction();
+      // No ticket means no live session. Staying disconnected is right: the auth
+      // provider is about to notice the same thing.
+      if (!ticket) return;
+
+      // Auth state can change during the round trip — a logout, say.
+      if (socketRef.current || authStateRef.current !== "LOGGED_IN") return;
+
+      const params = new URLSearchParams();
+      params.append("ticket", ticket);
+      const webSocketUrl = `${SOCKET_URL}?${params.toString()}`;
+      const socketInstance = new WebSocket(webSocketUrl) as WebSocketExt;
+      socketInstance.addEventListener("open", () => {
+        setIsConnected(true);
+      });
+      socketInstance.addEventListener("error", (error) => {
+        console.log("websocket:error", error);
+      });
+      socketInstance.addEventListener("close", () => {
+        if (socketInstance.pingTimeout) clearTimeout(socketInstance.pingTimeout);
+        socketRef.current = null;
+        setSocket(null);
+        setIsConnected(false);
+      });
+      socketRef.current = socketInstance;
+      setSocket(socketInstance);
+    } catch (error) {
+      console.log("websocket:ticket-failed", error);
+    } finally {
+      connectingRef.current = false;
+    }
   }, []);
 
   // ─── Debounced ensureConnected ───────────────────────────────────────────
   const ensureConnected = useCallback(() => {
-    if (authStateRef.current !== "LOGGED_IN" || !jwtRef.current || !SOCKET_URL)
-      return;
-    if (socketRef.current) return;
+    if (authStateRef.current !== "LOGGED_IN" || !SOCKET_URL) return;
+    if (socketRef.current || connectingRef.current) return;
     if (connectDebounceRef.current) clearTimeout(connectDebounceRef.current);
-    connectDebounceRef.current = setTimeout(connectSocket, CONNECT_DEBOUNCE_MS);
+    connectDebounceRef.current = setTimeout(() => {
+      void connectSocket();
+    }, CONNECT_DEBOUNCE_MS);
   }, [connectSocket]);
 
   // Now place the visibilitychange effect after ensureConnected is defined
@@ -178,16 +214,15 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
   useEffect(() => {
     authStateRef.current = authState;
   }, [authState]);
-  useEffect(() => {
-    jwtRef.current = jwt;
-  }, [jwt]);
 
   // ─── Auth-change effect ──────────────────────────────────────────────────
   // Connects on login; closes the socket on logout.
 
   useEffect(() => {
-    if (authState === "LOGGED_IN" && jwt && SOCKET_URL) {
-      const timeout = setTimeout(connectSocket, CONNECT_DEBOUNCE_MS);
+    if (authState === "LOGGED_IN" && SOCKET_URL) {
+      const timeout = setTimeout(() => {
+        void connectSocket();
+      }, CONNECT_DEBOUNCE_MS);
       return () => clearTimeout(timeout);
     }
 
@@ -204,7 +239,7 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
         setSocket(null);
       }
     }
-  }, [authState, jwt, connectSocket]);
+  }, [authState, connectSocket]);
 
   // ─── User-activity listeners ─────────────────────────────────────────────
   // Any user interaction re-checks the connection so it is re-established

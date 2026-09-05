@@ -4,9 +4,15 @@ import {
   finishOnboarding,
   forgotPassword,
   getDiscordConnection,
+  getSessions,
   getSpotifyConnection,
+  getWebSocketTicket,
   login,
+  logout,
+  logoutEverywhere,
+  logoutOtherDevices,
   resetPassword,
+  revokeSession,
   sendVerificationEmail,
   signUp,
   unlinkDiscord,
@@ -17,29 +23,24 @@ import {
 } from "@nw/api/endpoints/account";
 import type {
   AuthenticateResponsePayload,
+  AuthSession,
   LoginOAuthProvider,
   LoginPayload,
   LoginResponsePayload,
   SignupResponsePayload,
   UpdateThemePayload,
 } from "@nw/types";
+import type { WithMessage } from "@nw/types/common";
 import type { SignUpPayload } from "@nw/types/register";
-import { validateJWTSync } from "@nw/utils";
-import { api, authedApi } from "@/lib/api";
+import { api, authedApi, markSessionEstablished } from "@/lib/api";
 import {
-  readAuthCookie,
   readReferralCookie,
-  removeAuthCookieSync,
   removeReferralCookieSync,
-  setAuthCookieSync,
   setReferralCookieSync,
 } from "@/lib/auth-cookie";
 import { env } from "@/lib/env";
-import {
-  API_MESSAGE,
-  AUTH_HEADER_NAME,
-  THEME_COOKIE_NAME,
-} from "@/utils/constants";
+import { forgetSession, rememberSession } from "@/lib/session-hint";
+import { API_MESSAGE, THEME_COOKIE_NAME } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
 
@@ -50,14 +51,19 @@ import { Logger } from "@/utils/services";
  * its name, signature and return type — including staying `async` where the
  * body no longer needs to be — so none of the importing components changes.
  *
- * Three things genuinely differ, and each is marked below:
- *   • cookies are read and written through `@/lib/auth-cookie` rather than
- *     `next/headers`;
- *   • `redirect()` becomes a real browser navigation, which is what the server
- *     redirect produced anyway;
- *   • `getUser` calls the API directly instead of proxying through the server.
+ * Two things differ from the server original: `redirect()` becomes a real
+ * browser navigation, which is what the server redirect produced anyway, and
+ * `getUser` calls the API directly instead of proxying through the server.
  *
- * See REACT_MIGRATION_STEPS.md B13.
+ * **Nothing here handles a token any more.** Signing in used to mean receiving
+ * a JWT in a response body and writing it to a cookie this code could read.
+ * user-service now sets an `httpOnly` access cookie and an `httpOnly` refresh
+ * cookie itself, the browser attaches them, and neither value is visible to
+ * script — so an XSS on the site no longer yields a session
+ * (SECURITY_AUTH_PLAN C5). Renewal happens inside the API client, which retries
+ * a 401 once behind a single-flight refresh.
+ *
+ * See REACT_MIGRATION_STEPS.md B13 and SECURITY_AUTH_PLAN Phase 2.
  */
 
 /**
@@ -81,16 +87,6 @@ export const getThemeCookie = async () => {
   return match ? decodeURIComponent(match[1]) : "dark";
 };
 
-export const getAuthCookie = async () => readAuthCookie() ?? "";
-
-export const setAuthCookie = async (jwt: string) => {
-  setAuthCookieSync(jwt);
-};
-
-export const removeAuthCookie = async () => {
-  removeAuthCookieSync();
-};
-
 export const setReferralCookie = async (username: string) => {
   setReferralCookieSync(username);
 };
@@ -107,8 +103,15 @@ export const forgotPasswordAction = (email: string) =>
 /** The JWT comes from the verification link, not from a session. */
 export const verifyAccountAction = (jwt: string) => verifyAccount(api, jwt);
 
-export const sendVerificationEmailAction = (jwt: string) =>
-  sendVerificationEmail(api, jwt);
+/**
+ * Re-sends the confirmation mail to the caller's own address.
+ *
+ * Took a JWT before, because the caller had one to hand. It no longer can —
+ * the session is a cookie — so the session cookie authenticates this like any
+ * other call.
+ */
+export const sendVerificationEmailAction = () =>
+  sendVerificationEmail(authedApi);
 
 export const verifyPasswordAction = (password: string) =>
   verifyPassword(authedApi, password);
@@ -117,16 +120,22 @@ export const verifyPasswordAction = (password: string) =>
 export const resetPasswordAction = (jwt: string, password: string) =>
   resetPassword(api, jwt, password);
 
-/** Signs in and stores the token. The cookie write is why this is not in @nw/api. */
+/**
+ * Signs in.
+ *
+ * There is no token to store: user-service sets both cookies on this very
+ * response. All that is left to do locally is note that a session exists, for
+ * the sake of the first-render redirect at `/`.
+ */
 export const loginAction = async (
   payload: LoginPayload,
 ): Promise<LoginResponsePayload> => {
   const result = await login(api, payload);
-  if (!result.token) return result;
+  if (!result.user) return result;
 
-  await setAuthCookie(result.token);
-
-  return { message: result.message, user: result.user };
+  rememberSession();
+  markSessionEstablished();
+  return result;
 };
 
 export const signupAction = async (
@@ -147,17 +156,23 @@ export const signupAction = async (
         serverMessage: result.message,
       };
     }
-    if (!result.token) {
+    // Success is now "the server returned the new account", not "the server
+    // returned a token" — the session left in the cookies it set on this
+    // response, which this code cannot inspect.
+    if (!result.user) {
       Logger.debug(API_MESSAGE.Error, status, result.message);
       return { message: API_MESSAGE.UncategorizedError };
     }
 
-    await setAuthCookie(result.token);
+    rememberSession();
+    markSessionEstablished();
+    // user-service clears the referral cookie too, under its own domain. Doing
+    // it here as well covers the copy an older build may have left host-only.
     if (referralUser) await removeReferralCookie();
 
     return {
       message: API_MESSAGE.Success,
-      token: result.token,
+      sessionId: result.sessionId,
       user: result.user,
     };
   } catch (error) {
@@ -172,83 +187,121 @@ export const loginViaProviderAction = async (provider: LoginOAuthProvider) => {
   );
 };
 
-/** The one place a redirect belongs: the user asked to leave. */
+/**
+ * The one place a redirect belongs: the user asked to leave.
+ *
+ * The server call is the part that matters. Logging out used to be purely
+ * local — delete the cookie, navigate — which left the token valid for a full
+ * day afterwards, so anyone who had copied it stayed signed in
+ * (SECURITY_AUTH_PLAN C3). `POST /account/logout` revokes the session row, ends
+ * the Spring session behind the OAuth2 login, and expires both cookies; only
+ * user-service can do any of those, because the cookies are `httpOnly` and
+ * `JSESSIONID` belongs to a different host.
+ *
+ * Failure is swallowed. Someone who asked to log out leaves this browser
+ * whether or not the API answered.
+ */
 export const logoutAction = async () => {
-  await removeAuthCookie();
+  await logout(api);
+  forgetSession();
   navigateHard(ROUTES.Novelists);
 };
 
-// ─── Session ─────────────────────────────────────────────────────────────────
+// ─── Devices ─────────────────────────────────────────────────────────────────
 
-export const authenticateJWT = async (jwt: string, useCookies?: boolean) => {
-  const isValid = validateJWTSync(jwt);
-  if (!isValid) {
-    // Clearing a stale cookie was best-effort on the server, because a write
-    // from a read path would throw. In the browser it simply works, so the dead
-    // token stops being re-sent. The answer (false) is unchanged.
-    if (useCookies) {
-      try {
-        await removeAuthCookie();
-      } catch (error) {
-        Logger.debug("authenticateJWT: could not clear the stale cookie", error);
-      }
-    }
-    return false;
+/** Every device signed in to this account, most recently used first. */
+export const getSessionsAction = (): Promise<AuthSession[] | WithMessage> =>
+  getSessions(authedApi);
+
+/** Signs one other device out. Ownership is checked server-side. */
+export const revokeSessionAction = (sessionId: string): Promise<WithMessage> =>
+  revokeSession(authedApi, sessionId);
+
+/**
+ * Signs every *other* device out and leaves this one alone.
+ *
+ * The answer to "I left myself logged in somewhere", which is the common case
+ * and does not deserve to cost the user their current session.
+ */
+export const logoutOtherDevicesAction = (): Promise<WithMessage> =>
+  logoutOtherDevices(authedApi);
+
+/**
+ * Signs every device out, including this one, and sends the user to the public
+ * view.
+ *
+ * The answer to "I think someone else is in my account".
+ */
+export const logoutEverywhereAction = async (): Promise<WithMessage> => {
+  const result = await logoutEverywhere(authedApi);
+  if (result.message === API_MESSAGE.Success) {
+    forgetSession();
+    navigateHard(ROUTES.Novelists);
   }
-  return true;
-};
-
-export const authenticateAction = async () => {
-  Logger.debug("authenticate");
-  const jwt = readAuthCookie();
-  Logger.info("jwtCookie", jwt);
-  if (!jwt) return false;
-
-  return authenticateJWT(jwt, true);
+  return result;
 };
 
 /**
- * The token, or null when there is no valid session.
+ * A single-use ticket for the WebSocket handshake, good for about 30 seconds.
  *
- * Callers decide what that means — stop and return, or carry on without a
- * token. Nothing here redirects.
+ * Returns null when there is no live session, which the socket provider reads
+ * as "do not connect".
  */
-export const authenticateAndGetJWT = async (): Promise<string | null> => {
-  const authenticated = await authenticateAction();
-  if (!authenticated) return null;
-  return (await getAuthCookie()) ?? null;
-};
+export const getSocketTicketAction = (): Promise<string | null> =>
+  getWebSocketTicket(authedApi);
 
-export const getJWTIfExists = async () => {
-  const authenticated = await authenticateAction();
-  if (!authenticated) return;
-  return getAuthCookie();
+// ─── Session ─────────────────────────────────────────────────────────────────
+
+/**
+ * Is there a live session?
+ *
+ * A real question to the server now, not a local one. It used to be
+ * `validateJWTSync`, which *decoded* the token and compared `exp` — it never
+ * verified the signature, so a forged token with a future expiry got a visitor
+ * past the app shell (SECURITY_AUTH_PLAN H2). Backend calls still failed, but
+ * the app's idea of "signed in" was attacker-controllable and there was no
+ * server-side route guard behind it.
+ *
+ * `/account/auth` verifies the signature, the purpose claim and the revocation
+ * list. If the access token has merely expired, the API client refreshes and
+ * retries underneath this call, so an ordinary returning user answers true
+ * without noticing anything happened.
+ */
+export const authenticateAction = async (): Promise<boolean> => {
+  const response = await api.raw("/rp/user/account/auth", {
+    label: "authenticateAction",
+  });
+
+  if (response.ok) {
+    rememberSession();
+    markSessionEstablished();
+    return true;
+  }
+
+  forgetSession();
+  return false;
 };
 
 export const checkUsernameAvailability = (username: string) =>
   apiCheckUsernameAvailability(api, username);
 
-/** Redirects when there is no cookie at all — this gates the authed shell. */
-export const getUser = async () => {
-  const jwt = readAuthCookie();
-  if (!jwt) {
-    navigateHard("/");
-    return { message: API_MESSAGE.Unauthorized };
-  }
-
-  const response = await fetch(`${env.RP_SERVICE_URL}/rp/user/account/auth`, {
-    cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-      [AUTH_HEADER_NAME]: `${jwt}`,
-    },
-    method: "GET",
-  });
-
-  const result: AuthenticateResponsePayload = await response.json();
+/**
+ * The signed-in user's own record — the one response that still carries their
+ * email address.
+ *
+ * Goes through the shared client rather than a bare `fetch` so it gets the
+ * credentialed request and the automatic refresh-and-retry; a bare fetch would
+ * send no cookies at all now that the session is not readable from script.
+ *
+ * No longer redirects on a missing token, because there is no token to find
+ * missing. An unauthenticated answer comes back as `Unauthorized` and the
+ * caller decides — which is what the auth provider was already doing with it.
+ */
+export const getUser = async (): Promise<AuthenticateResponsePayload> => {
+  const response = await api.raw("/rp/user/account/auth", { label: "getUser" });
 
   if (!response.ok) return { message: API_MESSAGE.Unauthorized };
-  return result;
+  return (await response.json()) as AuthenticateResponsePayload;
 };
 
 export const updateUsernameAction = (username: string) =>

@@ -3,45 +3,31 @@ import { env } from "@/lib/env";
 import { JWT_COOKIE_NAME, REFERRAL_COOKIE_NAME } from "@/utils/constants";
 
 /**
- * Reading and writing the auth cookie from the browser.
+ * The cookies this app still writes from the browser.
  *
- * Next read and wrote this server-side through `next/headers`; a SPA does it
- * here. That is a change in *where* the cookie is touched, not in whether it is
- * reachable — it is `httpOnly: false` today and `validateJWTSync` already
- * decodes it client-side, so any script on the page could already see it.
+ * **The auth cookies are not among them.** `X-NW-AUTH-TOKEN` and
+ * `X-NW-REFRESH-TOKEN` are `httpOnly` and written only by user-service; nothing
+ * here can read or set either one, which is the point — an XSS on
+ * novelist.world no longer walks away with a session (SECURITY_AUTH_PLAN C5).
  *
- * **Every attribute below is reproduced exactly from `app/actions.ts`.** A
- * mismatch here does not fail loudly: it logs everyone out on deploy, or writes
- * a cookie `api.novelist.world` cannot see. Diff the `Set-Cookie` header before
- * and after, and test the OAuth path specifically — `ExternalOAuth2SuccessHandler`
- * in user-service writes the same cookie with *different* attributes (7-day
- * maxAge, default SameSite), and the callback page then calls `setAuthCookie`
- * itself, so both writers run on that one flow.
+ * What is left is the referral cookie, which is a marketing attribution hint
+ * rather than a credential, plus the clean-up needed for the browsers still
+ * carrying an old, script-visible auth cookie.
  *
- * When SECURITY_AUTH_PLAN flips the cookie to `httpOnly: true`, the browser can
- * no longer read or write it and this module is deleted rather than fixed — the
- * transport becomes credentialed CORS. See REACT_MIGRATION_STEPS.md C7.
- *
- * See REACT_MIGRATION_STEPS.md B13.
+ * See REACT_MIGRATION_STEPS.md B13 and SECURITY_AUTH_PLAN Phase 2 step 18.
  */
 
 /**
- * ⚠ Reproduces a pre-existing truthiness bug, deliberately.
+ * Whether this build writes cookies scoped to novelist.world or host-only.
  *
- * `USE_LOCAL_DOMAIN` is a string. The original wrote
- * `USE_LOCAL_DOMAIN ? {} : { domain: … }`, so the string `"false"` — which is
- * what `.env.example` ships — is **truthy** and takes the *local* branch: no
- * `domain`, and `secure: !"false"` → `false`.
- *
- * In other words the flag only behaves as its name suggests when it is unset
- * entirely. Setting it to `false` explicitly does the opposite of what it says.
- *
- * This is copied rather than corrected because fixing it changes live cookie
- * attributes, which is exactly the failure this migration must not cause. It
- * should be fixed on its own, deliberately, with the `Set-Cookie` header
- * checked before and after — not smuggled in here.
+ * `USE_LOCAL_DOMAIN` arrives as a string, so the `Boolean(...)` this replaced
+ * made `"false"` truthy and took the local branch in production. Only the
+ * literal string `"true"` enables it now.
  */
-const useLocalDomain = Boolean(env.USE_LOCAL_DOMAIN);
+const useLocalDomain = env.USE_LOCAL_DOMAIN === "true";
+
+/** The domain user-service scopes its cookies to. Must match `app.cookie.domain`. */
+const SHARED_COOKIE_DOMAIN = "novelist.world";
 
 const DAY = 60 * 60 * 24 * 1000;
 
@@ -50,14 +36,6 @@ type CookieAttributes = {
   sameSite: "strict" | "lax";
 };
 
-/**
- * Serialises one cookie write to the exact shape `next/headers` produced.
- *
- * `httpOnly` is absent because it cannot be set from JS — and it was already
- * `false`, so nothing is lost. Values are `encodeURIComponent`d, matching what
- * Next did; for a JWT this is a no-op, since none of its characters are
- * escaped.
- */
 const writeCookie = (
   name: string,
   value: string,
@@ -70,41 +48,89 @@ const writeCookie = (
     `SameSite=${sameSite === "strict" ? "Strict" : "Lax"}`,
   ];
   if (!useLocalDomain) {
-    parts.push("Domain=novelist.world");
+    parts.push(`Domain=${SHARED_COOKIE_DOMAIN}`);
     parts.push("Secure");
   }
   document.cookie = parts.join("; ");
 };
 
-/** The raw JWT, or `undefined` when there is no session. Non-reactive. */
-export const readAuthCookie = (): string | undefined => {
-  if (typeof document === "undefined") return undefined;
-  const match = document.cookie.match(
-    new RegExp(`(?:^|; )${JWT_COOKIE_NAME}=([^;]*)`),
-  );
-  return match ? decodeURIComponent(match[1]) : undefined;
+/**
+ * Every `Domain` a copy of a cookie could be sitting under: host-only (no
+ * attribute), the exact host, each parent down to the registrable domain, and
+ * `novelist.world` itself.
+ *
+ * Single-label hosts (`localhost`) can only hold a host-only cookie, and a bare
+ * TLD (`.world`) is rejected by the browser, so neither is emitted.
+ */
+const deletionDomains = (): (string | undefined)[] => {
+  const domains: (string | undefined)[] = [undefined];
+  const host = typeof location === "undefined" ? "" : location.hostname;
+  const labels = host.split(".");
+  for (let i = 0; i + 1 < labels.length; i++) {
+    domains.push(labels.slice(i).join("."));
+  }
+  if (!domains.includes(SHARED_COOKIE_DOMAIN)) {
+    domains.push(SHARED_COOKIE_DOMAIN);
+  }
+  return domains;
 };
 
-/** The same value, re-rendering the caller when the cookie changes. */
-export const useAuthCookie = (): string | undefined => {
-  const [cookies] = useCookies([JWT_COOKIE_NAME]);
-  return cookies[JWT_COOKIE_NAME];
-};
-
-/** 30-day expiry, `SameSite=Strict` — as the server wrote it. */
-export const setAuthCookieSync = (jwt: string) =>
-  writeCookie(JWT_COOKIE_NAME, jwt, {
-    expires: new Date(Date.now() + 30 * DAY),
-    sameSite: "strict",
-  });
-
-export const removeAuthCookieSync = () => {
-  // The original backdated by a year rather than using the epoch; kept, because
-  // some clients treat a 1970 date oddly and this is the behaviour in production.
+/**
+ * Expires a cookie under every domain it could exist under, not just the one
+ * this build writes.
+ *
+ * Cookie identity is (name, domain, path), so a browser holding both a
+ * host-only copy and a `Domain=novelist.world` copy under one name has two
+ * cookies — and clearing one leaves the other alive. Expiring a cookie that was
+ * never set costs a header and nothing else.
+ */
+const clearCookieEverywhere = (name: string) => {
+  // Backdated by a year rather than the epoch: some clients treat 1970 oddly,
+  // and this is the behaviour production already had.
   const past = new Date(0);
   past.setFullYear(past.getFullYear() - 1);
-  writeCookie(JWT_COOKIE_NAME, "", { expires: past, sameSite: "strict" });
+  const expires = past.toUTCString();
+
+  for (const domain of deletionDomains()) {
+    for (const sameSite of ["Strict", "Lax", "None"]) {
+      const parts = [`${name}=`, "Path=/", `Expires=${expires}`];
+      if (domain) parts.push(`Domain=${domain}`);
+      parts.push(`SameSite=${sameSite}`);
+      // SameSite=None is only honoured on a Secure cookie; without it the
+      // browser drops the whole deletion write and the copy survives.
+      if (sameSite === "None") parts.push("Secure");
+      document.cookie = parts.join("; ");
+    }
+  }
 };
+
+/**
+ * Removes the pre-migration, script-visible auth cookie.
+ *
+ * Called once at startup. A browser that was signed in before this change is
+ * carrying a `X-NW-AUTH-TOKEN` cookie that JavaScript can still see and that the
+ * browser will keep sending — where it would shadow the new `httpOnly` cookie of
+ * the same name, and where it remains a readable bearer token. It cannot be
+ * upgraded in place, only deleted; the refresh cookie then re-establishes the
+ * session, or the user signs in again.
+ *
+ * Safe to run forever: once no legacy cookie exists this writes expiry headers
+ * for cookies that are already gone. `httpOnly` cookies are untouched — script
+ * cannot delete those either, which is exactly why user-service clears them on
+ * logout instead.
+ */
+export const dropLegacyAuthCookie = () => {
+  if (typeof document === "undefined") return;
+
+  const hasScriptVisibleAuthCookie = new RegExp(
+    `(?:^|; )${JWT_COOKIE_NAME}=`,
+  ).test(document.cookie);
+  if (!hasScriptVisibleAuthCookie) return;
+
+  clearCookieEverywhere(JWT_COOKIE_NAME);
+};
+
+// ─── Referral ────────────────────────────────────────────────────────────────
 
 /**
  * 7-day expiry, and `SameSite=Lax` rather than Strict — deliberately.
@@ -120,10 +146,9 @@ export const setReferralCookieSync = (username: string) =>
   });
 
 export const removeReferralCookieSync = () =>
-  writeCookie(REFERRAL_COOKIE_NAME, "", {
-    expires: new Date(0),
-    sameSite: "lax",
-  });
+  // Same two-writers problem as the auth cookie had: user-service clears this
+  // one under `Domain=novelist.world`, so clear every variant here too.
+  clearCookieEverywhere(REFERRAL_COOKIE_NAME);
 
 export const readReferralCookie = (): string | undefined => {
   if (typeof document === "undefined") return undefined;
@@ -131,4 +156,10 @@ export const readReferralCookie = (): string | undefined => {
     new RegExp(`(?:^|; )${REFERRAL_COOKIE_NAME}=([^;]*)`),
   );
   return match ? decodeURIComponent(match[1]) : undefined;
+};
+
+/** Re-renders the caller when the referral cookie changes. */
+export const useReferralCookie = (): string | undefined => {
+  const [cookies] = useCookies([REFERRAL_COOKIE_NAME]);
+  return cookies[REFERRAL_COOKIE_NAME];
 };

@@ -3,7 +3,7 @@
 import classNames from "classnames";
 import { type FC, memo, useEffect, useMemo, useState } from "react";
 import { GoArrowRight } from "react-icons/go";
-import { Search, UserMenu } from "@/components";
+import { PaletteMenu, Search, UserMenu } from "@/components";
 import {
   Button,
   NWLogoInner,
@@ -166,6 +166,15 @@ export const TopBar: FC<Props> = memo(({}) => {
                   )}
                 />
               </S.SearchContainer>
+            </ShouldRender>
+
+            {/* Signed-out readers have no saved palette, so the landing page
+                offers one to try on here — see PaletteMenu, it is a preview
+                that dies with the visit. */}
+            <ShouldRender if={authState === "LOGGED_OUT" && isLandingPage}>
+              <PaletteMenu
+                className={searchBarExpanded ? "searchBarExpanded" : undefined}
+              />
             </ShouldRender>
 
             <ShouldRender if={authState === "LOGGED_OUT"}>

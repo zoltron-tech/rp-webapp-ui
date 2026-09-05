@@ -63,6 +63,7 @@ const PromoGlobalStyle = createGlobalStyle`
  *  the workspace renders its authoring chrome. */
 const INITIAL_STATE: StoreState = {
   accent: "jade",
+  accentPreview: null,
   activeConversation: null,
   activePrompt: null,
   authState: "LOGGED_IN",

@@ -68,6 +68,27 @@ export const BADGE_CATALOGUE: CatalogueBadge[] = [
     requirement: "Upload a song or a sound effect to your music tab.",
     title: "Musician",
   },
+  {
+    code: "MUSE_KEEPER",
+    description: "Runs a whole cast, not a favourite.",
+    rarity: "RARE",
+    requirement: "Create fifty Muses.",
+    title: "Muse Keeper",
+  },
+  {
+    code: "PROLIFIC_WRITER",
+    description: "Always has a scene on the go.",
+    rarity: "RARE",
+    requirement: "Post fifty public prompts from your Muses.",
+    title: "Prolific Writer",
+  },
+  {
+    code: "POSTAHOLIC",
+    description: "Cannot leave the feed alone.",
+    rarity: "RARE",
+    requirement: "Make fifty public out-of-character posts.",
+    title: "Post-aholic",
+  },
 ];
 
 /** Copy for the rarity chip. Rarity drives nothing but how a badge reads. */

@@ -16,7 +16,10 @@ export type BadgeCode =
   | "SOCIAL_BIRD"
   | "FRIENDLY_NOVELIST"
   | "SPOTIFY_LINKED"
-  | "MUSICIAN";
+  | "MUSICIAN"
+  | "MUSE_KEEPER"
+  | "PROLIFIC_WRITER"
+  | "POSTAHOLIC";
 
 /** Drives the badge frame's colour and glow. No behaviour attached. */
 export type BadgeRarity = "COMMON" | "RARE" | "LEGENDARY";

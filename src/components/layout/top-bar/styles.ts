@@ -111,6 +111,11 @@ export const LogoContainer = styled.div`
   color: var(--text);
   text-decoration: none;
   cursor: pointer;
+  /* The wordmark is the one part of the bar that can afford to give ground:
+     the actions on the right are all hit targets and must keep their size, so
+     this yields first rather than pushing Log In past the gutter. */
+  min-width: 0;
+  flex-shrink: 1;
 `;
 
 export const Logo = styled.div`
@@ -165,6 +170,14 @@ export const LogoText = styled.div`
     }
   }
 
+  /* The 375px baseline: at 16px the wordmark alone eats half the bar, which
+     is what pushed Log In off-screen once the palette trigger joined the row. */
+  @container (max-width: 400px) {
+    & {
+      font-size: var(--font-size);
+      margin-left: 3px;
+    }
+  }
 `;
 
 export const LogoTextSuffix = styled.div`
@@ -197,6 +210,13 @@ export const LogoTextSuffix = styled.div`
     @container (max-width: 430px) {
     & {
     font-size: var(--font-size-input);
+    }
+  }
+
+  @container (max-width: 400px) {
+    & {
+      font-size: var(--font-size);
+      margin-left: 3px;
     }
   }
 `;
@@ -280,6 +300,8 @@ export const ActionsContainer = styled.div`
   align-items: center;
   justify-content: flex-end;
   gap: clamp(12px, 1.8vw, 22px);
+  /* Every child here is a hit target; the wordmark shrinks instead. */
+  flex-shrink: 0;
 
   @media (max-width: 700px) {
     gap: 10px;
@@ -287,6 +309,10 @@ export const ActionsContainer = styled.div`
     &.searchBarExpanded {
       gap: 0px;
     }
+  }
+
+  @media (max-width: 420px) {
+    gap: 6px;
   }
 `;
 

@@ -73,12 +73,23 @@ const runWhenIdle = (cb: () => void): (() => void) => {
 
 const useAccent = () => {
   const user = useGlobalState("user");
+  const accentPreview = useGlobalState("accentPreview");
   const setGlobalState = useGlobalStoreSet();
-  const accent = useMemo(() => {
+  const pathname = usePathname();
+  const userAccent = useMemo(() => {
     return (
       ACCENT_MAP[user?.palette as keyof typeof ACCENT_MAP] ?? ACCENT_MAP[0]
     );
   }, [user]);
+  // A palette picked from the top bar (see PaletteMenu) is a try-on, not a
+  // setting: it wins while it is set, and nothing writes it anywhere.
+  const accent = accentPreview ?? userAccent;
+
+  // Leaving the page ends the try-on. A refresh drops it too, the store being
+  // in-memory, so the preview never outlives the visit.
+  useEffect(() => {
+    setGlobalState({ accentPreview: null });
+  }, [pathname, setGlobalState]);
 
   useEffect(() => {
     setGlobalState({ accent });
@@ -205,6 +216,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         storeId="global-store"
         initial={{
           accent: "jade", // Default accent
+          accentPreview: null,
           activeConversation: null,
           activePrompt: null,
           authState: "LOGGED_OUT",

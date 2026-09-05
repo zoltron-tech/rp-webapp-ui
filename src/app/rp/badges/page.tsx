@@ -8,10 +8,20 @@ import {
   type CatalogueBadge,
   RARITY_LABEL,
 } from "@/components/badges/catalogue";
-import { BreadCrumb } from "@/components/breadcrumb";
-import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import * as S from "./styles";
+
+/**
+ * The blanks at the foot of the page.
+ *
+ * Six of them, which is enough for the fade to run out mid-row on every width
+ * the grid takes — the shelf has to look like it carries on past the bottom of
+ * the page, and a tidy finished row says the opposite.
+ */
+const GHOST_COUNT = 6;
+
+/** Title, description, requirement: the shape of a card, with nothing in it. */
+const GHOST_LINES = ["54%", "88%", "70%"];
 
 function CatalogueCard({ badge }: { badge: CatalogueBadge }) {
   return (
@@ -38,12 +48,12 @@ function CatalogueCard({ badge }: { badge: CatalogueBadge }) {
 /**
  * Every badge in Novelist World, with what earns each one.
  *
- * Deliberately not personalised — this is the "what is there to collect" page,
- * reachable from any novelist's badge dialog. A novelist's own progress lives
- * on the profile badges page instead.
+ * Deliberately not personalised, and deliberately without a breadcrumb: this is
+ * the "what is there to collect" page, not a page about the novelist looking at
+ * it, and a trail reading "/ username / Badges" says the opposite. A novelist's
+ * own progress lives on the profile badges page instead.
  */
 export default function BadgeCataloguePage() {
-  const user = useGlobalState("user");
   const { stopPageLoading } = usePageRouter();
 
   useEffect(() => {
@@ -52,8 +62,6 @@ export default function BadgeCataloguePage() {
 
   return (
     <S.Container>
-      <BreadCrumb label="Badges" username={user?.username ?? ""} />
-
       <S.Hero>
         <S.HeroIcon>
           <TbAward />
@@ -76,6 +84,27 @@ export default function BadgeCataloguePage() {
           <CatalogueCard key={badge.code} badge={badge} />
         ))}
       </S.Grid>
+
+      <S.ComingSoon>
+        <S.ComingSoonLabel>More badges on the way</S.ComingSoonLabel>
+
+        {/* Decorative: there is nothing here to read, and a screen reader
+            announcing six empty cards would be worse than silence. */}
+        <S.GhostFade aria-hidden="true">
+          <S.Grid>
+            {Array.from({ length: GHOST_COUNT }, (_, index) => (
+              <S.GhostCard key={`ghost-${index + 1}`}>
+                <S.GhostArt>?</S.GhostArt>
+                <S.CardText>
+                  {GHOST_LINES.map((width) => (
+                    <S.GhostLine key={width} $w={width} />
+                  ))}
+                </S.CardText>
+              </S.GhostCard>
+            ))}
+          </S.Grid>
+        </S.GhostFade>
+      </S.ComingSoon>
     </S.Container>
   );
 }

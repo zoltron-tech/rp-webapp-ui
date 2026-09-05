@@ -261,6 +261,89 @@ const meterBounce = keyframes`
   75%      { transform: scaleY(0.95); }
 `;
 
+/**
+ * The two cards behind the top one, fanning open and closing again.
+ *
+ * Their resting angle lives here rather than in a transform attribute on the
+ * card: on an SVG element those are the same property, so an attribute would be
+ * thrown away the moment this animation ran.
+ */
+const fanLeft = keyframes`
+  0%, 100% { transform: rotate(-15deg); }
+  50%      { transform: rotate(-22deg); }
+`;
+
+const fanRight = keyframes`
+  0%, 100% { transform: rotate(15deg); }
+  50%      { transform: rotate(22deg); }
+`;
+
+/**
+ * The top card being dealt away, and the next one taking its place.
+ *
+ * It leaves to the right and the replacement appears from under the deck,
+ * which is the only way to fake a reordering: SVG paints in document order, so
+ * a card cannot actually go behind the ones drawn before it.
+ */
+const cardDeal = keyframes`
+  0%, 58%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  72%       { transform: translate(16px, -13px) rotate(13deg); opacity: 1; }
+  82%       { transform: translate(32px, -4px) rotate(22deg); opacity: 0; }
+  83%       { transform: translate(0, 9px) rotate(0deg); opacity: 0; }
+  93%, 100% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+`;
+
+/**
+ * A quill working across the page, lifting at the end of the line and coming
+ * back to start the next one.
+ *
+ * The travel is the written line's own length on the 120 grid, so the nib runs
+ * the line rather than sliding over the book, and the lift is what stops the
+ * return stroke from drawing a second line backwards.
+ */
+const quillWrite = keyframes`
+  0%        { transform: translate(0, 0) rotate(0deg); }
+  64%       { transform: translate(20px, 0) rotate(0deg); }
+  72%       { transform: translate(21px, -7px) rotate(-7deg); }
+  84%       { transform: translate(1px, -7px) rotate(-7deg); }
+  92%, 100% { transform: translate(0, 0) rotate(0deg); }
+`;
+
+/** The ink appearing under it, on the same clock and at the same pace. */
+const inkDraw = keyframes`
+  0%        { stroke-dashoffset: 20; }
+  64%, 84%  { stroke-dashoffset: 0; }
+  92%, 100% { stroke-dashoffset: 20; }
+`;
+
+/** A spark off the nib: up, out, gone. Staggered so they never leave together. */
+const moteRise = keyframes`
+  0%   { transform: translateY(5px) scale(0.5); opacity: 0; }
+  30%  { opacity: 1; }
+  100% { transform: translateY(-11px) scale(1); opacity: 0; }
+`;
+
+/**
+ * A letter dropping into the slot.
+ *
+ * It comes in from above the badge, lands on the mouth of the box and is gone —
+ * the fade at the bottom is the letter going *in*, not vanishing, which is why
+ * it happens over the last few percent rather than gradually on the way down.
+ */
+const letterDrop = keyframes`
+  0%        { transform: translateY(-34px) rotate(-10deg); opacity: 0; }
+  16%       { opacity: 1; }
+  74%       { transform: translateY(0) rotate(0deg); opacity: 1; }
+  84%, 100% { transform: translateY(4px) rotate(0deg); opacity: 0; }
+`;
+
+/** The box taking the weight of each one as it lands. */
+const boxNudge = keyframes`
+  0%, 68%   { transform: scaleY(1); }
+  78%       { transform: scaleY(0.972); }
+  90%, 100% { transform: scaleY(1); }
+`;
+
 export const Frame = styled.span<{ $size: number; $animated: boolean }>`
   display: inline-flex;
   align-items: center;
@@ -311,6 +394,29 @@ export const Frame = styled.span<{ $size: number; $animated: boolean }>`
     transform-origin: 75px 71px;
   }
 
+  /* A quill turns about its nib, which is where the written line starts —
+     a fixed point on the view box, and the one place on a feather that is not
+     supposed to move when the pen is lifted. Matches ACTIVE_LINE in
+     prolific-writer.tsx. */
+  .nwb-quill {
+    transform-box: view-box;
+    transform-origin: 64px 82px;
+  }
+
+  /* A fanned card pivots on the corner it rests on, at the foot of the deck. */
+  .nwb-card-l,
+  .nwb-card-r {
+    transform-box: fill-box;
+    transform-origin: bottom center;
+  }
+
+  /* A postbox is bolted down: it settles onto its plinth rather than squashing
+     about its middle. */
+  .nwb-box {
+    transform-box: fill-box;
+    transform-origin: bottom center;
+  }
+
   /* A meter bar grows off its own foot. */
   .nwb-bar-1,
   .nwb-bar-2,
@@ -320,6 +426,14 @@ export const Frame = styled.span<{ $size: number; $animated: boolean }>`
     transform-origin: bottom center;
   }
 
+  .nwb-card-top,
+  .nwb-letter-1,
+  .nwb-letter-2,
+  .nwb-letter-3,
+  .nwb-mote-1,
+  .nwb-mote-2,
+  .nwb-mote-3,
+  .nwb-mote-4,
   .nwb-emblem,
   .nwb-nib,
   .nwb-write,
@@ -535,6 +649,49 @@ export const Frame = styled.span<{ $size: number; $animated: boolean }>`
           .nwb-bar-4 {
             animation: ${meterBounce} 1.6s ease-in-out 0.15s infinite;
           }
+          .nwb-card-l {
+            animation: ${fanLeft} 5.2s ease-in-out infinite;
+          }
+          .nwb-card-r {
+            animation: ${fanRight} 5.2s ease-in-out infinite;
+          }
+          .nwb-card-top {
+            animation: ${cardDeal} 5.2s ease-in-out infinite;
+          }
+          /* One clock for the quill and the ink it is laying down: they are
+             the same event seen twice, and a beat of drift between them reads
+             as a pen that has run dry. */
+          .nwb-quill {
+            animation: ${quillWrite} 4.4s ease-in-out infinite;
+          }
+          .nwb-inkline {
+            animation: ${inkDraw} 4.4s ease-in-out infinite;
+          }
+          .nwb-mote-1 {
+            animation: ${moteRise} 2.2s ease-out infinite;
+          }
+          .nwb-mote-2 {
+            animation: ${moteRise} 2.2s ease-out 0.45s infinite;
+          }
+          .nwb-mote-3 {
+            animation: ${moteRise} 2.2s ease-out 0.95s infinite;
+          }
+          .nwb-mote-4 {
+            animation: ${moteRise} 2.2s ease-out 1.5s infinite;
+          }
+          /* One clock for the post going in and the box taking it. */
+          .nwb-letter-1 {
+            animation: ${letterDrop} 2.7s ease-in infinite;
+          }
+          .nwb-letter-2 {
+            animation: ${letterDrop} 2.7s ease-in -0.9s infinite;
+          }
+          .nwb-letter-3 {
+            animation: ${letterDrop} 2.7s ease-in -1.8s infinite;
+          }
+          .nwb-box {
+            animation: ${boxNudge} 0.9s ease-in-out infinite;
+          }
         `
       : ""}
 
@@ -582,6 +739,19 @@ export const Frame = styled.span<{ $size: number; $animated: boolean }>`
     .nwb-spoke-4,
     .nwb-branch-l,
     .nwb-branch-r,
+    .nwb-card-l,
+    .nwb-card-r,
+    .nwb-card-top,
+    .nwb-quill,
+    .nwb-inkline,
+    .nwb-mote-1,
+    .nwb-mote-2,
+    .nwb-mote-3,
+    .nwb-mote-4,
+    .nwb-box,
+    .nwb-letter-1,
+    .nwb-letter-2,
+    .nwb-letter-3,
     .nwb-disc,
     .nwb-arm,
     .nwb-wave-1,
@@ -604,6 +774,28 @@ export const Frame = styled.span<{ $size: number; $animated: boolean }>`
     }
     .nwb-sheen {
       opacity: 0;
+    }
+
+    /* A spark frozen halfway out of the page is a smudge, not a spark, and a
+       letter frozen in mid-air is litter. The two already wedged in the slot
+       carry the badge on their own. */
+    .nwb-mote-1,
+    .nwb-mote-2,
+    .nwb-mote-3,
+    .nwb-mote-4,
+    .nwb-letter-1,
+    .nwb-letter-2,
+    .nwb-letter-3 {
+      opacity: 0;
+    }
+
+    /* The fan is the badge. With the animation off, the two cards behind carry
+       their resting angle here instead, or the deck collapses into one card. */
+    .nwb-card-l {
+      transform: rotate(-18deg);
+    }
+    .nwb-card-r {
+      transform: rotate(18deg);
     }
   }
 `;

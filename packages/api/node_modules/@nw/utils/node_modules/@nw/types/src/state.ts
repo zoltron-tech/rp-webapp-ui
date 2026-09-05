@@ -35,6 +35,12 @@ export interface StoreState {
   novelist: Novelist | null;
   pageLoading: boolean;
   accent: AccentValue;
+  /**
+   * Palette a logged-out reader picked from the top bar to try the landing
+   * page in. Overrides the user/default accent while set, and is dropped on
+   * navigation (and, being state, on refresh) — nothing is persisted.
+   */
+  accentPreview: AccentValue | null;
   searchBarExpanded: Boolean;
   notifications: NovelistWorldNotification[] | null;
   musicPlayer: MusicPlayerState;

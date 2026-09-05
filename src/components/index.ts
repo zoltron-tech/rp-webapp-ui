@@ -2,6 +2,7 @@ export * from "./conversation-card";
 export * from "./muses-pill";
 export * from "./novelist-card";
 export * from "./novelist-carousel";
+export * from "./palette-menu";
 export * from "./profile-card";
 export * from "./search";
 export * from "./send-message-composer";

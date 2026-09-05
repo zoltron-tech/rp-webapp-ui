@@ -182,3 +182,105 @@ export const RarityChip = styled.span<{ $rare: boolean }>`
   border: 1px solid ${(p) => (p.$rare ? "transparent" : "var(--bg-5)")};
   color: ${(p) => (p.$rare ? "var(--accent)" : "var(--text-secondary)")};
 `;
+
+// ─── Still to come ───────────────────────────────────────────────────────────
+
+export const ComingSoon = styled.section`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+`;
+
+export const ComingSoonLabel = styled.h2`
+  margin: 0;
+  font-size: var(--font-size-small);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  /* A rule running off to the right of the words, so the section reads as the
+     shelf continuing rather than as a second, separate list. */
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      var(--bg-5),
+      color-mix(in srgb, var(--bg-5) 0%, transparent)
+    );
+  }
+`;
+
+/**
+ * The blanks underneath, fading out as they go down the page.
+ *
+ * A mask rather than a stack of hand-tuned opacities: the point is that the
+ * list carries on past the bottom of what is drawn, and a mask keeps that true
+ * however many blanks are rendered and however they wrap.
+ */
+export const GhostFade = styled.div`
+  --ghost-fade: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.7) 0%,
+    rgba(0, 0, 0, 0.34) 46%,
+    rgba(0, 0, 0, 0) 96%
+  );
+
+  -webkit-mask-image: var(--ghost-fade);
+  mask-image: var(--ghost-fade);
+  pointer-events: none;
+  user-select: none;
+`;
+
+export const GhostCard = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  min-width: 0;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--bg-2);
+  border: 1px dashed var(--bg-5);
+
+  @media screen and (max-width: 600px) {
+    padding: 13px;
+    gap: 12px;
+  }
+`;
+
+export const GhostArt = styled.span`
+  flex-shrink: 0;
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  border: 2px dashed var(--bg-5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--bg-5);
+`;
+
+export const GhostLine = styled.span<{ $w: string }>`
+  height: 9px;
+  width: ${(p) => p.$w};
+  border-radius: 999px;
+  background: var(--bg-4);
+
+  /* The first line is the title, so it sits a little heavier than the rest. */
+  &:first-child {
+    height: 11px;
+    background: var(--bg-5);
+  }
+
+  & + & {
+    margin-top: 4px;
+  }
+`;

@@ -146,6 +146,7 @@ export const routes: RouteObject[] = [
     children: [
       {
         children: [
+      { path: "badges", lazy: page(() => import("./app/rp/badges/page")) },
       { path: "bookmarks", lazy: page(() => import("./app/rp/bookmarks/page")) },
       { path: "compose", lazy: page(() => import("./app/rp/compose/page")) },
       { path: "conversations", lazy: page(() => import("./app/rp/conversations/page")) },
@@ -190,15 +191,16 @@ export const routes: RouteObject[] = [
       //
       // Expressing them as routes rather than as a rule at the HTTP layer is
       // deliberate: a regex over `/rp/profile/([^/]+)` would also rewrite
-      // `edit`, `muses`, `music`, `story` and `referrals`, which are real
-      // pages. React Router ranks a static path above a dynamic one, so those
-      // five match their own routes and never reach this.
+      // `badges`, `edit`, `muses`, `music`, `story` and `referrals`, which are
+      // real pages. React Router ranks a static path above a dynamic one, so
+      // those six match their own routes and never reach this.
       { element: <LegacyProfileRedirect />, path: "profile/:slug" },
       { element: <LegacyProfileRedirect tab="friends" />, path: "profile/:slug/friends" },
       { element: <LegacyProfileRedirect tab="muses" />, path: "profile/:slug/muses" },
       { element: <LegacyProfileRedirect tab="music" />, path: "profile/:slug/music" },
       { element: <LegacyProfileRedirect tab="posts" />, path: "profile/:slug/posts" },
       { element: <LegacyProfileRedirect tab="storyboards" />, path: "profile/:slug/storyboards" },
+      { path: "profile/badges", lazy: page(() => import("./app/rp/profile/badges/page")) },
       { path: "profile/edit", lazy: page(() => import("./app/rp/profile/edit/page")) },
       { path: "profile/muses/create", lazy: page(() => import("./app/rp/profile/muses/create/page")) },
       { path: "profile/muses/edit/:id", lazy: page(() => import("./app/rp/profile/muses/edit/[id]/page")) },

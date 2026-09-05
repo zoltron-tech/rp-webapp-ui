@@ -18,13 +18,14 @@ import {
   updateSongAction,
 } from "@/app/rp/profile/[slug]/music/action";
 import { deleteMedia } from "@/app/rp/profile/actions";
-import { ROUTES } from "@/utils/constants/routes";
+import { syncMyBadgesAction } from "@/app/rp/profile/badges/actions";
 import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { API_MESSAGE } from "@/utils/constants";
 import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
+import { ROUTES } from "@/utils/constants/routes";
 import { ErrorBox } from "../error-box";
 import { Spinner } from "../mention-dropdown/styled";
 import { useMusicState, useMusicStoreSet } from "./music.store";
@@ -286,6 +287,13 @@ export default function EditMusicDataCard() {
       successToast(
         id ? "Song updated successfully!" : "Song created successfully!",
       );
+
+      // A first upload is what earns the Musician badge, and the novelist is
+      // right here when it happens. Editing an existing song cannot change the
+      // answer, so only a create is worth the call. Fire and forget: the badge
+      // is not what this screen is about, and the throttled check on the next
+      // profile load would catch it anyway.
+      if (!id) void syncMyBadgesAction();
 
       // Navigate to music page
       if (novelist?.username) {

@@ -1,5 +1,6 @@
 "use client";
 
+import type { Badge } from "@nw/types/badge";
 import type { NWImage } from "@nw/types/novelist";
 import { ACCENT_MAP } from "@nw/types/theme";
 import { type FC, useState } from "react";
@@ -20,6 +21,7 @@ import {
   deleteFriendRequest,
   sendFriendRequest,
 } from "@/app/rp/profile/actions";
+import { BadgeStrip, hasVisibleBadges } from "@/components/badges";
 import { Button, EmailVerifiedBadge, ShouldRender } from "@/components/common";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -52,6 +54,7 @@ type NovelistPreview = {
   connection: string | null;
   muses?: MusePreview[];
   mutualFriendCount?: number;
+  badges?: Badge[];
 };
 
 type Props = {
@@ -281,6 +284,21 @@ export const NovelistPreviewCard: FC<Props> = ({ novelist }) => {
             : undefined
         }
       />
+      {/* Gated on the outside rather than left to the strip: the corner carries
+          its own scrim, which would otherwise sit on the banner as an empty
+          pill for every novelist with no badges.
+
+          Static, too — the whole card is one tap target that opens the profile,
+          so a badge row with its own dialog would fight it. */}
+      <ShouldRender if={hasVisibleBadges(novelist.badges)}>
+        <S.BadgeCorner>
+          <BadgeStrip
+            badges={novelist.badges}
+            size={22}
+            orientation="vertical"
+          />
+        </S.BadgeCorner>
+      </ShouldRender>
       <S.Body>
         <S.AvatarWrapper>
           <S.StyledAvatar

@@ -1,0 +1,78 @@
+import type { BadgeCode, BadgeRarity } from "@nw/types/badge";
+
+/**
+ * Every badge Novelist World has, as the client knows it.
+ *
+ * This is the copy behind the public badges page — "here is everything there is
+ * to earn" — and it is deliberately a static list rather than a fetch.
+ *
+ * Every badge here is wired server-side. The backend sends its own copy of this
+ * text on the profile payload, and that is what a novelist's own badges page
+ * renders; this list is what a signed-out visitor sees. The two must say the
+ * same thing, so changing a title, description or requirement here means
+ * changing `BadgeCode` in portfolio-service to match.
+ */
+export interface CatalogueBadge {
+  code: BadgeCode;
+  title: string;
+  /** What holding the badge says about the novelist. */
+  description: string;
+  /** What earns it, phrased as an instruction. */
+  requirement: string;
+  rarity: BadgeRarity;
+}
+
+export const BADGE_CATALOGUE: CatalogueBadge[] = [
+  {
+    code: "DISCORD_GUILD_MEMBER",
+    description: "A face in the Novelist World Discord guild.",
+    rarity: "COMMON",
+    requirement:
+      "Link your Discord account, then join the Novelist World server.",
+    title: "Guild Member",
+  },
+  {
+    code: "STORY_BOARD_AUTHOR",
+    description: "Has a storyboard of their own on the go.",
+    rarity: "COMMON",
+    requirement:
+      "Author or co-author a storyboard — start one, or be added to somebody else's.",
+    title: "Storyboard Author",
+  },
+  {
+    code: "SOCIAL_BIRD",
+    description: "Never lets a post go unanswered.",
+    rarity: "RARE",
+    requirement: "Comment on ten out-of-character posts by other Novelists.",
+    title: "Social Bird",
+  },
+  {
+    code: "FRIENDLY_NOVELIST",
+    description: "Keeps a wide circle, and everyone in it.",
+    rarity: "RARE",
+    requirement: "Have fifty Novelists on your friends list.",
+    title: "Friendly Novelist",
+  },
+  {
+    code: "SPOTIFY_LINKED",
+    description: "Brings their own soundtrack.",
+    rarity: "COMMON",
+    requirement:
+      "Link your Spotify account from the account section of your profile.",
+    title: "Now Playing",
+  },
+  {
+    code: "MUSICIAN",
+    description: "Scores the story as well as writing it.",
+    rarity: "COMMON",
+    requirement: "Upload a song or a sound effect to your music tab.",
+    title: "Musician",
+  },
+];
+
+/** Copy for the rarity chip. Rarity drives nothing but how a badge reads. */
+export const RARITY_LABEL: Record<BadgeRarity, string> = {
+  COMMON: "Common",
+  LEGENDARY: "Legendary",
+  RARE: "Rare",
+};

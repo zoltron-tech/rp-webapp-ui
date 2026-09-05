@@ -60,6 +60,54 @@ export const Banner = styled.div<BannerProps>`
     $scale != null ? `${$x ?? 50}% ${$y ?? 50}%` : "center"};
 `;
 
+// ─── Badges (stacked in the banner's top-right corner) ───────────────────────
+
+/**
+ * The badge column sits over the banner rather than under the username: the
+ * card's centre column is already name, handle and stats, and the banner's
+ * right side is the only space on a 160px card that is reliably empty.
+ *
+ * A banner is an arbitrary uploaded photo, so the crests get their own scrim —
+ * without it a pale banner swallows the blurple.
+ */
+export const BadgeCorner = styled.div`
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  padding: 5px 4px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(3px);
+  /* The strip lays itself out; this only positions and shades it. */
+  display: flex;
+
+  /* The mobile banner is 64px tall (a 160px card at 5:2), and a full column is
+     two crests plus a "+N". These numbers are picked so that stack lands on
+     the banner's bottom edge rather than hanging over the body:
+     4 top + 3 pad + 3×16 + 2×3 gap + 3 pad = 64. Change one, redo the sum.
+
+     The crests are sized from a numeric prop, so this is an override rather
+     than a second prop — this is the only place their size has to follow the
+     viewport. The child selector below catches every item the strip lays out,
+     crest frames and the "+N" pill alike, so the column keeps one width. */
+  @media (max-width: 600px) {
+    top: 4px;
+    right: 5px;
+    padding: 3px;
+
+    > span {
+      gap: 3px;
+    }
+
+    > span > span {
+      width: 16px;
+      min-width: 16px;
+      height: 16px;
+    }
+  }
+`;
+
 // ─── Body (everything below the banner) ──────────────────────────────────────
 
 export const Body = styled.div`

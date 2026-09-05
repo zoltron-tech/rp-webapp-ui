@@ -10,6 +10,7 @@ import { FaPause, FaPlay, FaRegCopy, FaRegEdit } from "react-icons/fa";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { RiFlagFill } from "react-icons/ri";
 import { deleteSongAction } from "@/app/rp/profile/[slug]/music/action";
+import { syncMyBadgesAction } from "@/app/rp/profile/badges/actions";
 import { reportAction } from "@/app/rp/thread/actions";
 import { useMusicContext } from "@/context";
 import { useGlobalState } from "@/context/store/stores";
@@ -149,6 +150,9 @@ export const MusicListItem: FC<Props> = ({ song, className, ...rest }) => {
       emit(EVENTS.SONG.DELETED, {
         id: song.id,
       });
+      // That may have been the last upload, in which case Musician is no longer
+      // true. Same fire-and-forget as the create side.
+      void syncMyBadgesAction();
     } else {
       errorToast("There was an issue while deleting this song.");
     }

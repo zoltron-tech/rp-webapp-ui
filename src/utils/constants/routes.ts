@@ -1,6 +1,8 @@
 import { toHandle } from "./profile-handle";
 
 export const ROUTES = {
+  /** The public badge catalogue — everything there is to earn. */
+  Badges: "/rp/badges",
   Bookmarks: "/rp/bookmarks",
   Compose: (params: {
     type: string;
@@ -53,6 +55,7 @@ export const ROUTES = {
   outgoingThreads: "/rp/outgoing-threads",
   PrivacyPolicy: "/rp/privacy-policy",
   Profile: {
+    Badges: "/rp/profile/badges",
     Edit: "/rp/profile/edit",
     Index: "/rp/profile",
     Muses: {

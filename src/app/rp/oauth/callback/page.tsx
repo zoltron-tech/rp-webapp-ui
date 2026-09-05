@@ -8,6 +8,7 @@ import { authenticateAction, getUser } from "@/app/actions";
 import { useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { usePostLogin } from "@/hooks/use-post-login";
+import { dropLegacyAuthCookie } from "@/lib/auth-cookie";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
@@ -53,6 +54,18 @@ export default function LoginOAuthCallbackPage() {
   }, [operationState]);
 
   const runLoginFlow = useCallback(async () => {
+    // Before anything else, and specifically here.
+    //
+    // A browser signed in before the httpOnly migration still holds the old
+    // script-visible `X-NW-AUTH-TOKEN`. That is a *different cookie* from the
+    // one user-service just set — different scope, same name — so the browser
+    // sends both, and the stale one, being older, tends to be listed first.
+    // `AuthProvider` clears it on every other route but deliberately skips this
+    // one, because this page owns the handshake; without this line the first
+    // call below reads a token signed with a retired key and the whole callback
+    // reports failure, on a login that in fact succeeded.
+    dropLegacyAuthCookie();
+
     const isValid = await authenticateAction();
     if (!isValid) {
       setOperationState("ERROR");

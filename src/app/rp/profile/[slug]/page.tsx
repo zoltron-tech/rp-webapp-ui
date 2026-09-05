@@ -38,6 +38,7 @@ import {
 import { getProfileSongAction } from "@/app/rp/profile/edit/profile-song.actions";
 import { ContactSupportForm } from "@/components";
 import ActivityBox from "@/components/activity-box";
+import { BadgeRow } from "@/components/badges";
 import { OpenBookArt } from "@/components/book-art";
 import {
   EmailVerifiedBadge,
@@ -1194,6 +1195,13 @@ export default function UserProfilePage({}) {
                   <EmailVerifiedBadge size={14} />
                 )}
               </ShouldRender>
+              {/* Earned badges sit with the handle rather than in the stats row:
+                  they belong to the identity, and the row below is counts. */}
+              <BadgeRow
+                badges={novelist?.badges}
+                size={20}
+                ownerName={novelist?.firstName ?? username}
+              />
             </S.UsernameContainer>
             <ShouldRender if={username !== "novelistworld"}>
               <S.StatsRow id="profile-tour-step-3">

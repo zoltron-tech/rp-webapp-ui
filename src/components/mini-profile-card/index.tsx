@@ -8,6 +8,7 @@ import { toPng } from "html-to-image";
 import { type FC, useRef, useState } from "react";
 import { FiDownload, FiX } from "react-icons/fi";
 import QRCode from "react-qr-code";
+import { BadgeStrip } from "@/components/badges";
 import { EmailVerifiedBadge, NWLogoInner } from "@/components/common";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { useGlobalState } from "@/context/store/stores";
@@ -183,6 +184,13 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
                   <S.HeroUsername>
                     @{novelist.username}
                     {novelist.isVerified && <EmailVerifiedBadge size={13} />}
+                    {/* Still, not animated: html-to-image paints one frame, and
+                        a crest caught mid-sheen exports with a white streak. */}
+                    <BadgeStrip
+                      badges={novelist.badges}
+                      size={18}
+                      animated={false}
+                    />
                   </S.HeroUsername>
                 </S.HeroInner>
               </S.HeroBanner>

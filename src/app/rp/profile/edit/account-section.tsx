@@ -17,7 +17,7 @@ import {
 import { FaCircleCheck, FaCircleXmark, FaSpotify } from "react-icons/fa6";
 import { MdMailOutline } from "react-icons/md";
 import { RiUserForbidLine } from "react-icons/ri";
-import { TbUnlink, TbUserOff } from "react-icons/tb";
+import { TbAward, TbUnlink, TbUserOff } from "react-icons/tb";
 import {
   forgotPasswordAction,
   getDiscordConnectionAction,
@@ -37,6 +37,7 @@ import { useSearchParams } from "@/lib/navigation";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { getBlockedNovelistsAction, unblockNovelistAction } from "../actions";
+import { syncMyBadgesAction } from "../badges/actions";
 import { ChangeUsernameDialog } from "./change-username-dialog";
 import { DevicesSection } from "./devices-section";
 import * as S from "./styled";
@@ -98,6 +99,10 @@ export function AccountSection({ onBack }: Props) {
     const discordStatus = searchParams?.get("discord");
     if (discordStatus === "linked") {
       successToast("Discord account linked.");
+      // A fresh link is exactly when the Guild Member badge becomes earnable,
+      // and the novelist is looking at the screen — so force the check now
+      // rather than leaving it to the throttled one on the next profile load.
+      syncMyBadgesAction();
     } else if (discordStatus === "already_linked") {
       errorToast(
         "That Discord account is already linked to another Novelist World profile.",
@@ -106,6 +111,9 @@ export function AccountSection({ onBack }: Props) {
     const spotifyStatus = searchParams?.get("spotify");
     if (spotifyStatus === "linked") {
       successToast("Spotify account linked.");
+      // Now Playing becomes earnable on the link, exactly as Guild Member does
+      // above.
+      syncMyBadgesAction();
     } else if (spotifyStatus === "already_linked") {
       errorToast(
         "That Spotify account is already linked to another Novelist World profile.",
@@ -121,6 +129,8 @@ export function AccountSection({ onBack }: Props) {
     setDiscordUnlinking(false);
     if (response.message === API_MESSAGE.Success) {
       setDiscord(null);
+      // The Guild Member badge is no longer true the moment the link is gone.
+      syncMyBadgesAction();
       successToast("Discord account unlinked.");
     } else {
       errorToast("Could not unlink Discord. Please try again.");
@@ -133,6 +143,8 @@ export function AccountSection({ onBack }: Props) {
     setSpotifyUnlinking(false);
     if (response.message === API_MESSAGE.Success) {
       setSpotify(null);
+      // Now Playing is no longer true the moment the link is gone.
+      syncMyBadgesAction();
       successToast("Spotify account unlinked.");
     } else {
       errorToast("Could not unlink Spotify. Please try again.");
@@ -267,6 +279,25 @@ export function AccountSection({ onBack }: Props) {
             >
               <BsPencil />
               Change
+            </S.AccountActionButton>
+          </S.AccountRowActions>
+        </S.AccountRow>
+
+        {/* Badges row */}
+        <S.AccountRow>
+          <S.AccountRowMain>
+            <S.AccountRowLabel>Badges</S.AccountRowLabel>
+            <S.AccountRowValue>
+              What you have earned around Novelist World
+            </S.AccountRowValue>
+          </S.AccountRowMain>
+          <S.AccountRowActions>
+            <S.AccountActionButton
+              type="button"
+              onClick={() => routeToPage(ROUTES.Profile.Badges)}
+            >
+              <TbAward />
+              View badges
             </S.AccountActionButton>
           </S.AccountRowActions>
         </S.AccountRow>

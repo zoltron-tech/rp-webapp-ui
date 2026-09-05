@@ -48,6 +48,7 @@ export const MUSES: Muse[] = [
 export const NOVELIST: Novelist = {
   about: null,
   avatar: null,
+  badges: [],
   banner: null,
   connection: null,
   createdAt: "2025-04-02T10:00:00Z",

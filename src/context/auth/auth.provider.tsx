@@ -16,6 +16,7 @@ import { refreshSessionNow } from "@/lib/api";
 import { dropLegacyAuthCookie } from "@/lib/auth-cookie";
 import { usePathname } from "@/lib/navigation";
 import { initialisePushNotifications } from "@/lib/push";
+import { probablySignedIn } from "@/lib/session-hint";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
@@ -149,10 +150,33 @@ export const AuthProvider: FC<Props> = ({ children }) => {
     }
   };
 
+  /**
+   * The first question the app asks on a cold start: is this browser still
+   * signed in?
+   *
+   * The API client renews an expired access token by itself, but only when it
+   * sees a 401. Anything else it can only read as failure — a 5xx, a proxy
+   * error, a redirect, an offline blip on a PWA that has just been reopened —
+   * and answering those by signing the user out throws away a refresh cookie
+   * that is good for sixty days. So when the local hint says a session was
+   * established here, one explicit rotation is attempted before that
+   * conclusion is drawn. `refreshSessionNow` is the same single-flight
+   * coordinator the client uses, so this cannot race a rotation already in
+   * flight — two would present the same token and the server would read that
+   * as reuse.
+   */
   const verifyInitialAuthState = async () => {
     transition("LOADING");
     try {
-      const authenticated = await authenticateAction();
+      let authenticated = await authenticateAction();
+
+      if (!authenticated && probablySignedIn()) {
+        Logger.debug(
+          "Initial auth check failed with a session hint; refreshing",
+        );
+        if (await refreshSessionNow())
+          authenticated = await authenticateAction();
+      }
 
       if (authenticated) {
         const _user = await getUser();

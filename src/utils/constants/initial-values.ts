@@ -29,6 +29,7 @@ export const EMPTY_FRIEND: Friend = {
 export const INITIAL_NOVELIST: Novelist = {
   about: null,
   avatar: null,
+  badges: [],
   banner: null,
   connection: null,
   createdAt: "",

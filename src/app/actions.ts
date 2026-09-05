@@ -32,7 +32,12 @@ import type {
 } from "@nw/types";
 import type { WithMessage } from "@nw/types/common";
 import type { SignUpPayload } from "@nw/types/register";
-import { api, authedApi, markSessionEstablished } from "@/lib/api";
+import {
+  api,
+  authedApi,
+  markSessionEstablished,
+  refreshSessionNow,
+} from "@/lib/api";
 import {
   readReferralCookie,
   removeReferralCookieSync,
@@ -322,8 +327,15 @@ export const unlinkDiscordAction = () => unlinkDiscord(authedApi);
  * Starts the Discord link flow. Navigates to the backend initiation endpoint,
  * which authenticates the JWT cookie, stashes the account in the session, and
  * hands off to Discord's OAuth2 consent screen.
+ *
+ * The session is renewed first because this is a *navigation*, not a fetch:
+ * the API client's refresh-and-retry cannot rescue it. The endpoint is
+ * authenticated, so a browser whose access token lapsed while this screen sat
+ * open would land on a bare 401 instead of Discord's consent page — the one
+ * place where the fifteen-minute token is visible to the user.
  */
 export const linkDiscordAction = async () => {
+  await refreshSessionNow();
   navigateHard(`${env.RP_SERVICE_URL}/rp/user/account/discord/link/start`);
 };
 
@@ -333,8 +345,9 @@ export const getSpotifyConnectionAction = () => getSpotifyConnection(authedApi);
 /** Removes the caller's Spotify link. */
 export const unlinkSpotifyAction = () => unlinkSpotify(authedApi);
 
-/** Starts the Spotify link flow (navigates to the backend initiation endpoint). */
+/** Starts the Spotify link flow. Renews the session first, for the reason in [linkDiscordAction]. */
 export const linkSpotifyAction = async () => {
+  await refreshSessionNow();
   navigateHard(`${env.RP_SERVICE_URL}/rp/user/account/spotify/link/start`);
 };
 

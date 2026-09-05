@@ -1,3 +1,4 @@
+import type { Badge } from "./badge";
 import type { Tag } from "./common";
 import type { ProfileSong } from "./music";
 import type { PrivacyLevel } from "./prompt";
@@ -255,6 +256,8 @@ export type Novelist = {
   isVerified: boolean;
   totalPoints: number;
   level: number;
+  /** Earned badges only. The full catalogue lives on the badges page. */
+  badges: Badge[];
 };
 
 export type UpdateNovelistPayload = Omit<
@@ -280,6 +283,8 @@ export interface Friend {
   rank?: number;
   totalPoints: number;
   level: number;
+  /** Earned badges only; absent on older payloads, so treat as optional. */
+  badges?: Badge[];
 }
 
 export interface Fandom {

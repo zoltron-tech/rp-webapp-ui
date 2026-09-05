@@ -579,7 +579,7 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
             <S.ImageWrapper>
               {mediaType === "image" && !imgError && (
                 <S.CardBackground
-                  banner={activity.target.url || ""}
+                  $banner={activity.target.url || ""}
                   className="image"
                 />
               )}

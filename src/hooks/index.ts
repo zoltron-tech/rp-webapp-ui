@@ -1,4 +1,5 @@
 export * from "./use-auth-context";
+export * from "./use-auth-redirect";
 export * from "./use-custom-events";
 export * from "./use-form";
 export * from "./use-local-storage";

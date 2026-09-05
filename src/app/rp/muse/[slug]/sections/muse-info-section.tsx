@@ -33,6 +33,7 @@ import {
   setMusePrivacyAction,
 } from "@/app/rp/muse/actions";
 import { deleteMedia } from "@/app/rp/profile/actions";
+import { BlankCardArt } from "@/components/book-art";
 import { PrivacyIcon } from "@/components/common/privacy-icon";
 import { AppAlertDialog } from "@/components/dialog";
 import AvatarCropDialog from "@/components/dialog/avatar-crop-dialog";
@@ -948,6 +949,7 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
             <S.InfoDetailsSection $accent={accent ?? null}>
               <ShouldRender if={!hasAttributes && !addingNew}>
                 <S.SectionEmptyWrap>
+                  <BlankCardArt accent={accent} />
                   <S.SectionEmpty>No information yet.</S.SectionEmpty>
                   <ShouldRender if={isOwnMuse}>
                     <S.InfoAttrAddBtn

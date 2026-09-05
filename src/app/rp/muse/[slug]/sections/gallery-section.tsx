@@ -21,6 +21,7 @@ import {
   getMuseMediaMetadataAction,
 } from "@/app/rp/muse/actions";
 import { deleteMedia } from "@/app/rp/profile/actions";
+import { EmptyGalleryArt } from "@/components/book-art";
 import { AppAlertDialog } from "@/components/dialog";
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { VideoViewer } from "@/components/image-viewer/VideoViewer";
@@ -860,7 +861,10 @@ export function GallerySection({ muse, media }: Props) {
               </ShouldRender>
 
               <ShouldRender if={localMedia.length === 0}>
-                <S.SectionEmpty>No media yet.</S.SectionEmpty>
+                <S.SectionEmptyWrap>
+                  <EmptyGalleryArt accent={accent} />
+                  <S.SectionEmpty>No media yet.</S.SectionEmpty>
+                </S.SectionEmptyWrap>
               </ShouldRender>
             </ShouldRender>
 

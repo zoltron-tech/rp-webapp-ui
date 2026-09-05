@@ -228,7 +228,20 @@ export const Body = styled.div`
   }
 `;
 
-export const Turn = styled.div<{ $delay: number; $slide?: boolean }>`
+/**
+ * `$reserved` keeps a turn's space in the layout before it has been sent.
+ *
+ * The panel used to mount that turn only once the demo sent it, so the whole
+ * hero panel grew mid-animation and shoved the page around. The turn's content
+ * is fully deterministic (one muse, one line), so it can simply be rendered
+ * from the start and hidden: `visibility: hidden` still takes up the room, and
+ * the height never changes.
+ */
+export const Turn = styled.div<{
+  $delay: number;
+  $reserved?: boolean;
+  $slide?: boolean;
+}>`
   display: flex;
   gap: 11px;
   margin-bottom: 14px;
@@ -237,6 +250,13 @@ export const Turn = styled.div<{ $delay: number; $slide?: boolean }>`
     ${({ $slide }) => ($slide ? "0.55s" : "0.6s")}
     cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
   animation-delay: ${({ $delay }) => $delay}s;
+
+  ${({ $reserved }) =>
+    $reserved &&
+    css`
+      visibility: hidden;
+      animation: none;
+    `}
 
   @media (max-width: 480px) {
     gap: 9px;
@@ -249,7 +269,11 @@ export const Turn = styled.div<{ $delay: number; $slide?: boolean }>`
   }
 `;
 
-export const Avatar = styled.span<{ $from: string; $to: string; $img?: string }>`
+export const Avatar = styled.span<{
+  $from: string;
+  $to: string;
+  $img?: string;
+}>`
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -329,12 +353,20 @@ export const TurnText = styled.p`
 
 // ─── Reactions on a settled turn ───────────────────────────────────────────────
 
-export const ReactionRow = styled.div`
+export const ReactionRow = styled.div<{ $reserved?: boolean }>`
   position: relative;
   display: flex;
   align-items: center;
   gap: 7px;
   margin-top: 8px;
+
+  /* Same reasoning as Turn: the like lands part-way through the demo, so its
+     row is always in the layout and only becomes visible when it arrives. */
+  ${({ $reserved }) =>
+    $reserved &&
+    css`
+      visibility: hidden;
+    `}
 `;
 
 /* A heart that drifts up and fades when a new like lands during the demo. */
@@ -587,13 +619,13 @@ export const MuseButton = styled.button<{
           box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
         `
       : $from && $to
-      ? css`
+        ? css`
           color: #0b0a0d;
           border: none;
           background: linear-gradient(150deg, ${$from}, ${$to});
           box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
         `
-      : css`
+        : css`
           color: rgba(255, 255, 255, 0.5);
           border: 1px dashed rgba(255, 255, 255, 0.28);
           background: rgba(255, 255, 255, 0.02);

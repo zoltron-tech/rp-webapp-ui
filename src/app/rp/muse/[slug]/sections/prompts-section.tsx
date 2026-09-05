@@ -4,6 +4,7 @@ import { ShouldRender } from "@novelist-world/ui";
 import type { Friend, Muse, Prompt } from "@nw/types";
 import { useState } from "react";
 import { FaComments, FaHeart } from "react-icons/fa6";
+import { OpenStarterArt } from "@/components/book-art";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { PrivacyIcon } from "@/components/common/privacy-icon";
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
@@ -84,7 +85,10 @@ export function PromptsSection({ muse, prompts }: Props) {
             </ShouldRender>
 
             <ShouldRender if={prompts !== null && prompts.length === 0}>
-              <S.SectionEmpty>No open starters yet.</S.SectionEmpty>
+              <S.SectionEmptyWrap>
+                <OpenStarterArt accent={accent} />
+                <S.SectionEmpty>No open starters yet.</S.SectionEmpty>
+              </S.SectionEmptyWrap>
             </ShouldRender>
 
             {prompts && prompts.length > 0 && (

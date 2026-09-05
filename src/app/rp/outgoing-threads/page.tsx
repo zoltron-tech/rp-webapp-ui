@@ -3,8 +3,9 @@
 import { ShouldRender } from "@novelist-world/ui";
 import type { PromptThreadComment } from "@nw/types";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FcRight } from "react-icons/fc";
+import { FiArrowRight } from "react-icons/fi";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
+import { NoInteractionsArt } from "@/components/book-art";
 import { LoadMore } from "@/components/load-more/page";
 import { PromptThreadCommentCard } from "@/components/outgoing-reply";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
@@ -143,20 +144,18 @@ export default function OutgoingThreadPage() {
           <ShouldRender
             if={!promptThreadComments || promptThreadComments.length === 0}
           >
-            <S.MessageContainer>
-              <S.MessageText>
-                You do not have anything active right now, but there is plenty
-                to discover! ✨
-                <br />
-                Why not explore starters posted by other people and spark a new
-                interaction?
-                <br />
-                <S.HyperLink onClick={toExplorePromptsPage}>
-                  Explore Open Interactions {` `}
-                  <FcRight size={22} />
-                </S.HyperLink>
-              </S.MessageText>
-            </S.MessageContainer>
+            <S.EmptyStateWrap>
+              <NoInteractionsArt />
+              <S.EmptyStateTitle>No active interactions</S.EmptyStateTitle>
+              <S.EmptyStateSubtitle>
+                Nothing is running right now. Find a starter someone else has
+                posted and reply to spark one.
+              </S.EmptyStateSubtitle>
+              <S.EmptyStateCta type="button" onClick={toExplorePromptsPage}>
+                Explore open interactions
+                <FiArrowRight size={14} />
+              </S.EmptyStateCta>
+            </S.EmptyStateWrap>
           </ShouldRender>
 
           <S.InteractionsListContainer>

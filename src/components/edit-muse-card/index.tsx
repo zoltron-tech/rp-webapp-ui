@@ -250,7 +250,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
   return (
     <>
       <S.ProfileBackgroundBlurFilter
-        banner={
+        $banner={
           values?.image ||
           "https://i.etsystatic.com/44068041/r/il/3bab40/5467123737/il_300x300.5467123737_1kne.jpg"
         }

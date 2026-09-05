@@ -25,17 +25,16 @@ const slideUp = keyframes`
   }
 `;
 
+/* Laid out by the top bar rather than pinned to it.
+ *
+ * This used to be `position: absolute; right: 4.5rem`, which took the bell out
+ * of the flow and made the bar depend on a matching fixed-width spacer to keep
+ * other controls clear of it. Two magic numbers that had to be kept in sync,
+ * and at 375px the search trigger ended up underneath the avatar when they
+ * were not. In the flow, flexbox keeps them apart at any width. */
 export const PositionContainer = styled.div`
-  position: absolute;
-  right: 4.5rem;
-
-  @media (max-width: 700px) {
-    right: 4rem;
-  }
-
-  @media (max-width: 480px) {
-    right: 4rem;
-  }
+  display: inline-flex;
+  align-items: center;
 `;
 
 export const TriggerArea = styled.div`
@@ -167,11 +166,24 @@ export const ScrollArea = styled.div`
 `;
 
 export const EmptyState = styled.div`
-  padding: 36px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 16px 28px;
   text-align: center;
   font-size: 13px;
   color: var(--text-secondary);
   font-family: var(--font);
+
+  /* The shared art sizes itself for a full page. A descendant selector
+     outranks its single class, so the popover can scale it down. */
+  svg {
+    flex-shrink: 0;
+    width: 108px;
+    height: auto;
+  }
 `;
 
 export const Footer = styled.button`

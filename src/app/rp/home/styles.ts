@@ -256,6 +256,30 @@ export const SubText = styled.div`
   }
 `;
 
+/** Empty state inside the friends strip. Inline and compact, the same shape as
+ *  the ice breaker rail's — SubText was being reused here, but that is the
+ *  section-heading style (uppercase, italic, 18px) and read as a second title. */
+export const FriendsEmptyState = styled.div`
+  display: flex;
+  align-items: center;
+  align-self: center;
+  gap: 8px;
+  padding-right: 14px;
+  color: var(--text-secondary);
+  font-family: var(--font);
+  font-size: 12px;
+  line-height: 1.4;
+
+  /* The art carries its own colour and opacity, so it is left alone here. */
+  svg {
+    flex-shrink: 0;
+  }
+
+  span {
+    max-width: 26ch;
+  }
+`;
+
 export const AddFriendButton = styled.button`
   width: 40px;
   height: 40px;

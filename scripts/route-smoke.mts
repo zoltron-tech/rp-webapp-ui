@@ -66,8 +66,12 @@ const readRoutes = (): string[] => {
     const kids = [...childrenPart.matchAll(/\{ path: "([^"]*)", lazy:/g)].map(
       (m) => m[1],
     );
+    // The `/rp` and `/:handle` branches are nested under a pathless layout
+    // route, so their own `path` is relative ("rp", ":handle") — put the
+    // leading slash back before building a URL out of it.
     const prefix = rest.match(/path: "([^"]+)"/)?.[1] ?? "";
-    for (const kid of kids) routes.push(`${prefix}/${kid}`);
+    const base = prefix && !prefix.startsWith("/") ? `/${prefix}` : prefix;
+    for (const kid of kids) routes.push(`${base}/${kid}`);
   }
 
   // Profiles are reached by handle, so `:handle` gets the `@` a real URL has.

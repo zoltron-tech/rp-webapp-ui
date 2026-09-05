@@ -26,6 +26,7 @@ import {
   ScrollJumpButton,
   SideControlsToggle,
 } from "@/components/common";
+import { DeletedContent } from "@/components/deleted-content";
 import { AppAlertDialog } from "@/components/dialog";
 import EventThreadInput from "@/components/event-thread-input";
 import { ProfileSongPlayer } from "@/components/profile-song";
@@ -87,6 +88,7 @@ export default function StoryboardEventPage({}) {
   const [storyCharacters, setStoryCharacters] = useState<StoryCharacter[]>([]);
   const [storyboardEvent, setStoryBoardEvent] =
     useState<StoryBoardEvent | null>(null);
+  const [notFound, setNotFound] = useState(false);
   const [storyboardEventThreads, setStoryBoardEventThreads] = useState<
     StoryBoardEventThread[]
   >([]);
@@ -134,7 +136,7 @@ export default function StoryboardEventPage({}) {
   // (scroll-to-top/bottom, bookmark), so they don't crowd a small screen.
   const [sideControlsShown, setSideControlsShown] = useState(true);
   const storyboardEventId = params?.slug as string;
-  const { routeToPage, baseDataLoader } = usePageRouter();
+  const { routeToPage, baseDataLoader, stopPageLoading } = usePageRouter();
 
   /** Global index of the thread the reader is currently on. */
   const currentIndexRef = useRef(0);
@@ -189,13 +191,22 @@ export default function StoryboardEventPage({}) {
       setStoryCharacters(characters);
   };
 
+  /* `baseDataLoader` collapses a deleted chapter and a failed request into the
+   * same null, so the action is called directly — only a 404 should show the
+   * torn-page scene. */
   const fetchStoryboardEvent = async () => {
-    const _storyboardEvent = await baseDataLoader(() =>
-      getStoryboardEventAction(storyboardEventId),
-    );
+    const _storyboardEvent = await getStoryboardEventAction(storyboardEventId);
+    stopPageLoading();
+
+    if (_storyboardEvent === null) {
+      setNotFound(true);
+      return;
+    }
+
+    if ("message" in _storyboardEvent) return;
+
     setStoryBoardEvent(_storyboardEvent);
-    if (_storyboardEvent !== null)
-      fetchStoryboard(_storyboardEvent.storyBoardId);
+    fetchStoryboard(_storyboardEvent.storyBoardId);
   };
 
   const fetchThreadPage = useCallback(
@@ -640,6 +651,8 @@ export default function StoryboardEventPage({}) {
       onCancel={() => setEditingThread(null)}
     />
   ) : null;
+
+  if (notFound) return <DeletedContent label="Chapter" />;
 
   return (
     <S.ParentContainer className={classNames([accent, theme])}>

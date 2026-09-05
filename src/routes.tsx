@@ -116,8 +116,11 @@ const ProfileHandleBranch = () => {
   const { handle } = useParams();
   const { pathname, search } = useLocation();
 
+  // No layout of its own: `RpLayout` is mounted by the shared parent route, so
+  // moving between `/@username` and `/rp/...` reconciles instead of remounting.
+  // See the note on that route below.
   return isProfileHandle(handle) ? (
-    withOutlet(RpLayout)
+    <Outlet />
   ) : (
     <Navigate replace to={`/@${pathname.slice(1)}${search}`} />
   );
@@ -126,8 +129,20 @@ const ProfileHandleBranch = () => {
 export const routes: RouteObject[] = [
   { element: <IndexRedirect />, path: "/" },
 
+  // Everything the signed-in app renders lives under one **pathless** layout
+  // route, so `RpLayout` — and with it the global store, AuthProvider and the
+  // socket — is a single mounted instance shared by `/rp/...` and `/@username`.
+  //
+  // These used to be two sibling branches that each rendered their own
+  // `RpLayout`. Crossing between them (profile -> "add character", say) swapped
+  // one branch's element for the other's, which remounted the layout: the store
+  // went back to its seed (`authState: "LOGGED_OUT"`), AuthProvider started a
+  // fresh verify, and any page that redirects on a logged-out state fired
+  // before that verify resolved — sending the novelist to /rp/novelists.
   {
     children: [
+      {
+        children: [
       { path: "bookmarks", lazy: page(() => import("./app/rp/bookmarks/page")) },
       { path: "compose", lazy: page(() => import("./app/rp/compose/page")) },
       { path: "conversations", lazy: page(() => import("./app/rp/conversations/page")) },
@@ -206,9 +221,27 @@ export const routes: RouteObject[] = [
       { path: "tiers", lazy: page(() => import("./app/rp/tiers/page")) },
       { path: "verify-email", lazy: page(() => import("./app/rp/verify-email/page")) },
       { path: "welcome", lazy: page(() => import("./app/rp/welcome/page")) },    ],
+        path: "rp",
+      },
+
+      // Profiles, at the root of the domain. Last of the real branches: it
+      // matches any single root segment, so every static path above must be
+      // tried first.
+      {
+        children: [
+          { index: true, lazy: page(() => import("./app/rp/profile/[slug]/page")) },
+          { path: "friends", lazy: page(() => import("./app/rp/profile/[slug]/friends/page")) },
+          { path: "muses", lazy: page(() => import("./app/rp/profile/[slug]/muses/page")) },
+          { path: "music", lazy: page(() => import("./app/rp/profile/[slug]/music/page")) },
+          { path: "posts", lazy: page(() => import("./app/rp/profile/[slug]/posts/page")) },
+          { path: "storyboards", lazy: page(() => import("./app/rp/profile/[slug]/storyboards/page")) },
+        ],
+        element: <ProfileHandleBranch />,
+        path: ":handle",
+      },
+    ],
     element: withOutlet(RpLayout),
     errorElement: <RouteErrorBoundary />,
-    path: "/rp",
   },
 
   {
@@ -219,22 +252,6 @@ export const routes: RouteObject[] = [
     element: withOutlet(PromoLayout),
     errorElement: <RouteErrorBoundary />,
     path: "/promo",
-  },
-
-  // Profiles, at the root of the domain. Last of the real branches: it matches
-  // any single root segment, so every static path above must be tried first.
-  {
-    children: [
-      { index: true, lazy: page(() => import("./app/rp/profile/[slug]/page")) },
-      { path: "friends", lazy: page(() => import("./app/rp/profile/[slug]/friends/page")) },
-      { path: "muses", lazy: page(() => import("./app/rp/profile/[slug]/muses/page")) },
-      { path: "music", lazy: page(() => import("./app/rp/profile/[slug]/music/page")) },
-      { path: "posts", lazy: page(() => import("./app/rp/profile/[slug]/posts/page")) },
-      { path: "storyboards", lazy: page(() => import("./app/rp/profile/[slug]/storyboards/page")) },
-    ],
-    element: <ProfileHandleBranch />,
-    errorElement: <RouteErrorBoundary />,
-    path: "/:handle",
   },
 
   // Next's app/not-found.tsx was a bare redirect to Novelists; this is the

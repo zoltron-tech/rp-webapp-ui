@@ -3,7 +3,7 @@
 import type { BookmarkedStoryBoardEvent } from "@nw/types";
 import { useEffect, useState } from "react";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
-import { FaBookmark } from "react-icons/fa6";
+import { NoBookmarksArt } from "@/components/book-art";
 import { BreadCrumb } from "@/components/breadcrumb";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -16,9 +16,9 @@ export default function BookmarksPage() {
   const authState = useGlobalState("authState");
   const { baseDataLoader } = usePageRouter();
 
-  const [bookmarks, setBookmarks] = useState<BookmarkedStoryBoardEvent[] | null>(
-    null,
-  );
+  const [bookmarks, setBookmarks] = useState<
+    BookmarkedStoryBoardEvent[] | null
+  >(null);
 
   useEffect(() => {
     if (authState !== "LOGGED_IN") return;
@@ -43,7 +43,7 @@ export default function BookmarksPage() {
 
       {bookmarks !== null && bookmarks.length === 0 && (
         <S.EmptyState>
-          <FaBookmark />
+          <NoBookmarksArt />
           <S.EmptyTitle>No bookmarks yet</S.EmptyTitle>
           <S.EmptyText>
             While reading a chapter, tap the bookmark icon to save your spot.

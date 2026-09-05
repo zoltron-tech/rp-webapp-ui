@@ -718,8 +718,8 @@ export default function MuseProfilePage({}) {
       {bannerLayers.map((layer, i) => (
         <S.Banner
           key={layer.id}
-          src={layer.src}
-          filterValues={layer.filters}
+          $src={layer.src}
+          $filterValues={layer.filters}
           className={
             i > 0
               ? layer.dir === "next"
@@ -1014,7 +1014,7 @@ export default function MuseProfilePage({}) {
         <S.ImageWrapper>
           {museVisual ? (
             <S.CardBackground
-              banner={cardBgSrc}
+              $banner={cardBgSrc}
               $bgSize={cardBgCss?.bgSize}
               $bgPosition={cardBgCss?.bgPosition}
             />

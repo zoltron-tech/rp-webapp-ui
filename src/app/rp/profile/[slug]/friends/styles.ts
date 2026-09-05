@@ -33,6 +33,64 @@ export const Empty = styled.div`
   margin-top: 2rem;
 `;
 
+/** Art centred over the message, matching the other profile empty states. */
+export const EmptyStateWrap = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 260px;
+  gap: 10px;
+  padding-block: 24px;
+`;
+
+export const EmptyStateTitle = styled.p`
+  margin: 0;
+  font-family: var(--font);
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-bold);
+  color: var(--text);
+  text-align: center;
+`;
+
+export const EmptyStateSubtitle = styled.p`
+  margin: 0;
+  font-family: var(--font);
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  text-align: center;
+  max-width: 280px;
+  line-height: 1.55;
+`;
+
+/** Same call-to-action pill the outgoing threads empty state uses. */
+export const EmptyStateCta = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 8px 18px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  font-family: var(--font);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--accent-11);
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 22%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 70%, transparent);
+  }
+`;
+
 // ─── Shimmer card ─────────────────────────────────────────────────────────────
 
 export const ShimmerCard = styled.div`

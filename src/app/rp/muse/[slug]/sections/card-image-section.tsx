@@ -37,7 +37,7 @@ export function CardImageSection({
             <S.CardBackgroundShimmer />
           ) : (
             <S.CardBackground
-              banner={cardBgSrc}
+              $banner={cardBgSrc}
               $bgSize={bgSize}
               $bgPosition={bgPosition}
             />

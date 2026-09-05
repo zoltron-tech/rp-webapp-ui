@@ -1,5 +1,5 @@
 import { Container, ContainerClasses } from "@novelist-world/ui";
-import styled, { keyframes } from "styled-components";
+import styled, { css, keyframes } from "styled-components";
 import { Avatar as AvatarCommon, Pill } from "@/components/common";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { AppDropdownMenu } from "@/components/profile-more-dropdown";
@@ -7,7 +7,10 @@ import { BLUR_FILTER, DEV_MODE_BORDER, Z_INDEX } from "@/theme";
 import { Badge } from "../../tiers/styles";
 
 interface BannerProps {
-  src: string;
+  /* Transient: this renders a <div>, which has no src attribute. Left
+     un-prefixed, styled-components forwards `src` (a valid HTML attribute
+     name) straight to the DOM, and React warns on an empty one. */
+  $src: string;
   $x?: number;
   $y?: number;
   $scale?: number;
@@ -136,7 +139,7 @@ export const Banner = styled.div<BannerProps>`
   border-radius: inherit;
   overflow: hidden;
 
-  background-image: url(${({ src }) => src});
+  ${({ $src }) => $src && css`background-image: url(${$src});`}
   background-repeat: no-repeat;
   /* When crop data exists use the stored scale/position exactly as the crop
      dialog set them. Fall back to cover+center only when there is no crop. */

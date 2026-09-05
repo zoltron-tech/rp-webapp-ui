@@ -4,12 +4,16 @@ import type { Friend } from "@nw/types";
 import { useParams } from "@/lib/navigation";
 import { usernameFromHandle } from "@/utils/constants/profile-handle";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { FiArrowRight } from "react-icons/fi";
 import { getFriendsByUsernameAction } from "@/app/rp/novelists/actions";
+import { NoFriendsArt, NoMatchesArt } from "@/components/book-art";
 import { BreadCrumb } from "@/components/breadcrumb";
 import { FilterSearch } from "@/components/common";
 import { LoadMore } from "@/components/load-more/page";
 import { NovelistPreviewCard } from "@/components/novelist-preview-card";
+import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styles";
 
 const PAGE_SIZE = 8;
@@ -32,7 +36,9 @@ export default function FriendsListPage() {
   const params = useParams();
   // The route param is a handle (`@tokyo`), not a bare username.
   const username = usernameFromHandle(params?.handle as string);
-  const { stopPageLoading } = usePageRouter();
+  const user = useGlobalState("user");
+  const isOwnProfile = user?.username === username;
+  const { stopPageLoading, routeToPage } = usePageRouter();
 
   useEffect(() => {
     stopPageLoading();
@@ -98,9 +104,34 @@ export default function FriendsListPage() {
               <NovelistPreviewCard key={friend.id} novelist={friend} />
             ))}
       </S.Grid>
-      {!loading && friends.length === 0 && <S.Empty>No friends yet.</S.Empty>}
+      {!loading && friends.length === 0 && (
+        <S.EmptyStateWrap>
+          <NoFriendsArt />
+          <S.EmptyStateTitle>No friends yet</S.EmptyStateTitle>
+          <S.EmptyStateSubtitle>
+            {isOwnProfile
+              ? "Novelists you connect with will show up here."
+              : `${username} hasn't connected with anyone yet.`}
+          </S.EmptyStateSubtitle>
+          {isOwnProfile && (
+            <S.EmptyStateCta
+              type="button"
+              onClick={() => routeToPage(ROUTES.Fellows)}
+            >
+              Find fellow novelists
+              <FiArrowRight size={14} />
+            </S.EmptyStateCta>
+          )}
+        </S.EmptyStateWrap>
+      )}
       {!loading && friends.length > 0 && displayedFriends.length === 0 && (
-        <S.Empty>No friends match your search.</S.Empty>
+        <S.EmptyStateWrap>
+          <NoMatchesArt />
+          <S.EmptyStateTitle>No friends match your search</S.EmptyStateTitle>
+          <S.EmptyStateSubtitle>
+            Try a different name, or clear the search to see everyone.
+          </S.EmptyStateSubtitle>
+        </S.EmptyStateWrap>
       )}
       {!loading && !search && (
         <LoadMore

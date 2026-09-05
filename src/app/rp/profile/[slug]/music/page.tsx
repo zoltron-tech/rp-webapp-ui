@@ -5,6 +5,7 @@ import { useParams } from "@/lib/navigation";
 import { usernameFromHandle } from "@/utils/constants/profile-handle";
 import { useEffect, useState } from "react";
 import { MdOutlineCloudUpload } from "react-icons/md";
+import { NoMusicArt } from "@/components/book-art";
 import { BreadCrumb } from "@/components/breadcrumb";
 import { AddNewButton } from "@/components/common";
 import { MusicListItem } from "@/components/music-list-item/page";
@@ -115,6 +116,17 @@ export default function SongsListPage({}) {
           return <MusicListItem key={song.id} song={song} />;
         })}
       </S.SongListContainer>
+
+      {songs !== null && songs.length === 0 && (
+        <S.EmptyStateWrap>
+          <NoMusicArt />
+          <S.EmptyStateTitle>No songs yet</S.EmptyStateTitle>
+          <S.EmptyStateSubtitle>
+            Upload a song and it will show up here, ready to play on your
+            profile.
+          </S.EmptyStateSubtitle>
+        </S.EmptyStateWrap>
+      )}
     </S.Container>
   );
 }

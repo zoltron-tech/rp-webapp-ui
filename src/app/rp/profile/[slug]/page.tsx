@@ -6,10 +6,8 @@ import type { Activity } from "@nw/types/activity";
 import type { ProfileSong } from "@nw/types/music";
 import { ACCENT_MAP, type Accent } from "@nw/types/theme";
 import classNames from "classnames";
-import { useParams } from "@/lib/navigation";
-import { usernameFromHandle } from "@/utils/constants/profile-handle";
 import { Tooltip } from "radix-ui";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BiHide } from "react-icons/bi";
 import { BsPersonFillCheck, BsPersonFillUp, BsThreeDots } from "react-icons/bs";
 import { FaPeopleGroup } from "react-icons/fa6";
@@ -40,6 +38,7 @@ import {
 import { getProfileSongAction } from "@/app/rp/profile/edit/profile-song.actions";
 import { ContactSupportForm } from "@/components";
 import ActivityBox from "@/components/activity-box";
+import { OpenBookArt } from "@/components/book-art";
 import {
   EmailVerifiedBadge,
   ShouldRender,
@@ -49,6 +48,7 @@ import { AdminBadge } from "@/components/common/admin-badge";
 import { useIsOnline } from "@/components/common/avatar-new";
 import { NovelistAvatar } from "@/components/common/novelist-avatar";
 import { AppAlertDialog } from "@/components/dialog";
+import { ErrorBox } from "@/components/error-box";
 import { novelistToSource } from "@/components/event-thread-input/helpers";
 import { Image } from "@/components/image-viewer/styled";
 import { LoadMore } from "@/components/load-more/page";
@@ -67,8 +67,10 @@ import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
+import { useParams } from "@/lib/navigation";
 import { ScoreBadgeIcon } from "@/utils/badge-icons";
 import { API_MESSAGE, SUPPORT_EMAIL } from "@/utils/constants";
+import { usernameFromHandle } from "@/utils/constants/profile-handle";
 import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDate } from "@/utils/helpers";
 import { mainVerseMuses } from "@/utils/muse";
@@ -135,163 +137,7 @@ function EmptyFeed({
 }) {
   return (
     <S.EmptyFeedContainer>
-      <svg
-        viewBox="0 0 200 160"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        style={{ height: 128, width: 160 }}
-        aria-hidden="true"
-      >
-        {/* Shadow */}
-        <ellipse cx="100" cy="148" rx="52" ry="6" fill="var(--bg-4)" />
-        {/* Left page */}
-        <path
-          d="M35 50 Q35 45 40 45 L95 45 L95 130 L40 130 Q35 130 35 125 Z"
-          fill="var(--bg-3)"
-          stroke="var(--bg-5)"
-          strokeWidth="1.5"
-        />
-        {/* Right page */}
-        <path
-          d="M165 50 Q165 45 160 45 L105 45 L105 130 L160 130 Q165 130 165 125 Z"
-          fill="var(--bg-3)"
-          stroke="var(--bg-5)"
-          strokeWidth="1.5"
-        />
-        {/* Spine */}
-        <line
-          x1="100"
-          y1="44"
-          x2="100"
-          y2="131"
-          stroke="var(--bg-6)"
-          strokeWidth="2"
-        />
-        {/* Lines — left page */}
-        <line
-          x1="48"
-          y1="62"
-          x2="88"
-          y2="62"
-          stroke="var(--bg-5)"
-          strokeWidth="1.2"
-          strokeLinecap="round"
-        />
-        <line
-          x1="48"
-          y1="73"
-          x2="88"
-          y2="73"
-          stroke="var(--bg-5)"
-          strokeWidth="1.2"
-          strokeLinecap="round"
-        />
-        <line
-          x1="48"
-          y1="84"
-          x2="76"
-          y2="84"
-          stroke="var(--bg-5)"
-          strokeWidth="1.2"
-          strokeLinecap="round"
-        />
-        <line
-          x1="48"
-          y1="95"
-          x2="88"
-          y2="95"
-          stroke="var(--bg-5)"
-          strokeWidth="1.2"
-          strokeLinecap="round"
-        />
-        <line
-          x1="48"
-          y1="106"
-          x2="68"
-          y2="106"
-          stroke="var(--bg-5)"
-          strokeWidth="1.2"
-          strokeLinecap="round"
-        />
-        {/* Lines — right page */}
-        <line
-          x1="112"
-          y1="62"
-          x2="152"
-          y2="62"
-          stroke="var(--bg-5)"
-          strokeWidth="1.2"
-          strokeLinecap="round"
-        />
-        <line
-          x1="112"
-          y1="73"
-          x2="152"
-          y2="73"
-          stroke="var(--bg-5)"
-          strokeWidth="1.2"
-          strokeLinecap="round"
-        />
-        <line
-          x1="112"
-          y1="84"
-          x2="140"
-          y2="84"
-          stroke="var(--bg-5)"
-          strokeWidth="1.2"
-          strokeLinecap="round"
-        />
-        <line
-          x1="112"
-          y1="95"
-          x2="152"
-          y2="95"
-          stroke="var(--bg-5)"
-          strokeWidth="1.2"
-          strokeLinecap="round"
-        />
-        {/* Quill feather */}
-        <path
-          d="M150 6 C137 1 117 19 127 36 C132 44 139 46 139 46 C139 46 142 39 147 34 C154 26 160 13 150 6Z"
-          fill="var(--accent)"
-          opacity="0.45"
-        />
-        <path
-          d="M150 6 C147 14 142 24 139 46"
-          stroke="var(--accent)"
-          strokeWidth="1"
-          strokeLinecap="round"
-          opacity="0.55"
-        />
-        <line
-          x1="139"
-          y1="46"
-          x2="127"
-          y2="63"
-          stroke="var(--accent)"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          opacity="0.5"
-        />
-        {/* Ink drop */}
-        <circle cx="125" cy="65" r="2.5" fill="var(--accent)" opacity="0.35" />
-        {/* Sparkles */}
-        <circle cx="26" cy="36" r="2" fill="var(--accent)" opacity="0.25" />
-        <circle cx="42" cy="20" r="1.5" fill="var(--accent)" opacity="0.4" />
-        <circle cx="22" cy="58" r="1" fill="var(--accent)" opacity="0.2" />
-        <circle cx="172" cy="26" r="1.5" fill="var(--accent)" opacity="0.3" />
-        <circle cx="180" cy="46" r="1" fill="var(--accent)" opacity="0.2" />
-        {/* "?" on right page */}
-        <text
-          x="126"
-          y="118"
-          fontSize="22"
-          fill="var(--bg-6)"
-          fontFamily="Georgia, serif"
-        >
-          ?
-        </text>
-      </svg>
+      <OpenBookArt />
       <S.EmptyFeedTitle>
         {tab === "activities"
           ? "No recent activity"
@@ -411,6 +257,10 @@ export default function UserProfilePage({}) {
   const [novelist, setNovelist] = useState<Novelist | null>(
     username === user?.username ? userNovelist : null,
   );
+  // The lookup came back empty: a mistyped handle, a blocked viewer, or a
+  // failed request. Rendering the empty profile shell for that is worse than
+  // saying so.
+  const [profileMissing, setProfileMissing] = useState(false);
   const atMuseLimit =
     (novelist?.museCount ?? 0) >= (novelist?.tier.museLimit ?? 0);
   const [showAllFandoms, setShowAllFandoms] = useState(false);
@@ -804,16 +654,25 @@ export default function UserProfilePage({}) {
     }
   };
 
-  const fetchNovelist = async (username: string) => {
-    // fetch novelist by username
-    const _novelist = await baseDataLoader(() => getNovelistAction(username));
-    if (!_novelist || isCurrentUser) {
-      setGlobalState({ authState: "UNINITIALIZED" });
-      routeToPage(ROUTES.Onboarding);
-      return;
-    }
+  // Username whose data is currently loaded/loading. Navigating from one
+  // profile to another reuses this component (same route, new param), so the
+  // fetch effect must key off the param, not off a one-shot mount.
+  const loadedUsername = useRef<string | null>(null);
 
-    setNovelist(_novelist);
+  // Drop everything scoped to the previous novelist.
+  const resetProfileState = () => {
+    setNovelist(null);
+    setProfileMissing(false);
+    setProfileSong(null);
+    setPosts(null);
+    setPostPage(1);
+    setHasMorePosts(false);
+    setPrompts(null);
+    setPromptPage(1);
+    setHasMorePrompts(false);
+    setStories(null);
+    setFeedTab("activities");
+    setShowAllFandoms(false);
   };
 
   // Keep local novelist in sync when global store updates (current user only)
@@ -824,25 +683,68 @@ export default function UserProfilePage({}) {
   }, [userNovelist, isCurrentUser]);
 
   useEffect(() => {
-    if (authState === "UNINITIALIZED") {
+    // Onboarding is for a signed-in novelist who has not built a profile yet.
+    // A signed-out visitor reading someone else's profile is not that, and
+    // bouncing them to onboarding makes every shared `/@username` link dead
+    // for anyone who is not already a member.
+    if (authState === "UNINITIALIZED" && user) {
       routeToPage(ROUTES.Onboarding);
       return;
     }
 
     if (authState === "LOADING") return;
 
+    // Already have (or are fetching) this username's data.
+    if (loadedUsername.current === username) return;
+
+    const isFirstLoad = loadedUsername.current === null;
+    loadedUsername.current = username;
+
     if (isCurrentUser) {
       // Data already in global store — no fetch needed
-      if (!novelist) setNovelist(userNovelist);
+      if (!isFirstLoad) resetProfileState();
+      setNovelist(userNovelist);
       stopPageLoading();
       return;
     }
 
-    if (novelist) return;
+    if (!isFirstLoad) resetProfileState();
 
-    fetchNovelist(username);
+    let cancelled = false;
+    let settled = false;
+    const load = async () => {
+      const _novelist = await baseDataLoader(() => getNovelistAction(username));
+      if (cancelled) return;
+      if (!_novelist) {
+        // No such novelist (or the fetch failed). That says nothing about the
+        // viewer's own account, so it must not touch `authState` — doing so
+        // used to send signed-out visitors to onboarding.
+        setProfileMissing(true);
+        stopPageLoading();
+        return;
+      }
+      settled = true;
+      setNovelist(_novelist);
+    };
+    load();
     //fetchStoryboards();
-  }, [authState]);
+
+    return () => {
+      cancelled = true;
+      // `loadedUsername` is claimed before the fetch resolves, so two effect
+      // runs for the same username can't both fetch. That claim has to be
+      // released if this run is torn down before it settled, or the next run
+      // sees "already loaded" and never fetches — leaving the profile empty
+      // for good. StrictMode does exactly that on every mount in dev
+      // (mount -> cleanup -> mount): run 1 claims the name and starts the
+      // fetch, cleanup cancels it, run 2 bails on the claim, and the in-flight
+      // response is discarded. Production doesn't double-invoke, which is why
+      // this only ever showed up locally.
+      if (!settled && loadedUsername.current === username) {
+        loadedUsername.current = null;
+      }
+    };
+  }, [authState, username, isCurrentUser]);
 
   // Fetch posts on demand when the Posts tab is first activated
   useEffect(() => {
@@ -919,6 +821,15 @@ export default function UserProfilePage({}) {
     setPrompts((prev) => [...(prev ?? []), ...data]);
     setPromptPage(nextPage);
   }, [loadingMorePrompts, novelist?.id, promptPage]);
+
+  if (profileMissing && !novelist) {
+    return (
+      <ErrorBox>
+        No novelist called @{username}. The link may be mistyped, or the profile
+        is no longer here.
+      </ErrorBox>
+    );
+  }
 
   return (
     <>
@@ -1042,7 +953,7 @@ export default function UserProfilePage({}) {
             $hasBanner={!!novelist?.banner?.src}
           >
             <S.Banner
-              src={
+              $src={
                 novelist?.banner?.src
                   ? novelist.banner.src
                   : novelist?.image && !novelist.image.endsWith(".gif")

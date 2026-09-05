@@ -26,7 +26,7 @@ export const Footer: FC<Props> = memo(({}) => {
             </S.BrandRow>
             <S.BrandTagline>
               Build realms, breathe life into characters, and write living
-              stories together — one collaborative world at a time.
+              stories together. One collaborative world at a time.
             </S.BrandTagline>
             <S.SocialRow>
               <a

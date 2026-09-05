@@ -28,7 +28,9 @@ import * as S from "./three-moves.styles";
 /* ─────────────────────────────────────────────────────────────────────────────
    The core loop, told in three beats — the animated replacement for the old
    novelist and muse carousels. Still no fetch and no images beyond three local
-   avatars: each beat plays a small scripted mock of the move it describes.
+   avatars: each beat plays its move as its own object rather than as one more
+   screenshot — a character card being struck, a storyboard opening like a
+   book, and the turns knotted onto a running thread.
 
    Navigation, on purpose, has several ways in:
      · the beat rail auto-advances on a ring countdown,
@@ -55,161 +57,169 @@ type Move = {
 // ─── Scene 1 · create a character ─────────────────────────────────────────────
 
 const CharacterScene: FC = () => (
-  <S.Mock>
-    <S.MockBar>
-      <S.MockDot />
-      <S.MockDot />
-      <S.MockDot />
-      <span>
-        new character · <b>draft</b>
-      </span>
-    </S.MockBar>
-    <S.MockBody>
-      <S.CharTop>
-        <S.CharAvatar $img="/images/Dorian.png" />
-        <S.CharLines>
-          <S.CharName>
-            <S.Typed $delay={260} $ms={1150}>
-              Dorian Ashcroft
-            </S.Typed>
-          </S.CharName>
-          <S.CharHandle>played by @vesper</S.CharHandle>
-        </S.CharLines>
-      </S.CharTop>
+  <S.Scene>
+    <S.Card>
+      {/* The card's own edge, inked on. `pathLength` normalises the dash so the
+          draw reads the same however wide the card ends up. */}
+      <S.CardEdge
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <rect x="2" y="2" width="96" height="96" rx="6" pathLength={1} />
+      </S.CardEdge>
+      <S.CardTick $at="tl" aria-hidden="true" />
+      <S.CardTick $at="tr" aria-hidden="true" />
+      <S.CardTick $at="bl" aria-hidden="true" />
+      <S.CardTick $at="br" aria-hidden="true" />
 
-      <S.FieldLabel $delay={1200}>Traits</S.FieldLabel>
-      <S.ChipRow>
-        <S.Chip $accent $delay={1300}>
+      <S.CardKind>
+        <span>Character sheet</span>
+        <b>
           <FiMapPin />
           Ashfall Realm
-        </S.Chip>
-        <S.Chip $delay={1450}>Guarded</S.Chip>
-        <S.Chip $delay={1600}>Ex-knight</S.Chip>
-        <S.Chip $delay={1750}>Sharp tongue</S.Chip>
-      </S.ChipRow>
+        </b>
+      </S.CardKind>
 
-      <S.FieldLabel $delay={1900}>Voice</S.FieldLabel>
-      <S.FieldBox $delay={2000}>
-        Speaks in short, cold lines — and means every one of them.
-      </S.FieldBox>
+      <S.Portrait $img="/images/Dorian.png" />
 
-      <S.SavePill $delay={2400}>
-        <FiFeather />
-        Character created
-      </S.SavePill>
-    </S.MockBody>
-  </S.Mock>
+      <S.CardName>
+        <S.Typed $delay={620} $ms={1150}>
+          Dorian Ashcroft
+        </S.Typed>
+      </S.CardName>
+      <S.CardHandle $delay={1600}>played by @vesper</S.CardHandle>
+
+      <S.TagRow>
+        <S.Tag $delay={1750}>Guarded</S.Tag>
+        <S.Tag $delay={1880}>Ex-knight</S.Tag>
+        <S.Tag $delay={2010}>Sharp tongue</S.Tag>
+      </S.TagRow>
+
+      <S.Voice $delay={2150}>
+        &ldquo;Speaks in short, cold lines — and means every one of them.&rdquo;
+      </S.Voice>
+
+      <S.SealRow>
+        <S.SealNote $delay={2800}>Character created</S.SealNote>
+        <S.Seal $delay={2600}>
+          <FiFeather />
+        </S.Seal>
+      </S.SealRow>
+    </S.Card>
+  </S.Scene>
 );
 
 // ─── Scene 2 · open a storyboard ──────────────────────────────────────────────
 
 const StoryboardScene: FC = () => (
-  <S.Mock>
-    <S.MockBar>
-      <S.MockDot />
-      <S.MockDot />
-      <S.MockDot />
-      <span>
-        new storyboard · <b>ch.1</b>
-      </span>
-    </S.MockBar>
-    <S.MockBody>
-      <S.Cover $delay={200}>
-        <S.CoverTitle>
-          <S.Typed $delay={420} $ms={1400}>
+  <S.Scene>
+    <S.Book>
+      <S.Spine aria-hidden="true" />
+      <S.Ribbon $delay={1700} aria-hidden="true" />
+
+      <S.Leaf $side="left">
+        <S.LeafLabel $delay={120}>New storyboard</S.LeafLabel>
+        <S.BoardTitle>
+          <S.Inked $delay={360} $ms={1300}>
             the ashes remember your name
-          </S.Typed>
-        </S.CoverTitle>
-        <S.CoverMeta $delay={1700}>
-          <FiGlobe />
-          Public
-          <span>·</span>
-          Enemies to lovers
-          <span>·</span>
-          Ashfall Realm
-        </S.CoverMeta>
-      </S.Cover>
+          </S.Inked>
+        </S.BoardTitle>
+        <S.BoardMeta $delay={1600}>
+          <li>
+            <FiGlobe />
+            Public
+          </li>
+          <li>
+            <FiFeather />
+            Enemies to lovers
+          </li>
+          <li>
+            <FiMapPin />
+            Ashfall Realm
+          </li>
+        </S.BoardMeta>
+        <S.LeafFoot $delay={1800}>Chapter one</S.LeafFoot>
+      </S.Leaf>
 
-      <S.FieldLabel $delay={1850}>Opening scene</S.FieldLabel>
-      <S.FieldBox $delay={1950}>
-        Rain on the ruined keep. Two people who should not be here, and one
-        blade between them.
-      </S.FieldBox>
+      <S.Leaf $side="right">
+        <S.LeafLabel $delay={1400}>Opening scene</S.LeafLabel>
+        <S.RuledText $delay={1520}>
+          Rain on the ruined keep. Two people who should not be here, and one
+          blade between them.
+        </S.RuledText>
 
-      <S.InviteRow $delay={2250}>
-        <S.AvatarStack>
-          <S.StackAvatar $delay={2350} $img="/images/Saraphine.png" />
-          <S.StackAvatar $delay={2500} $img="/images/Rowan.png" />
-          <S.StackAvatar $delay={2650} $img="/images/Casius.png" />
-        </S.AvatarStack>
-        <S.InviteText>
-          <b>3 writers</b> invited to the scene
-        </S.InviteText>
-      </S.InviteRow>
+        <S.InviteRow $delay={2250}>
+          <S.AvatarStack>
+            <S.StackAvatar $delay={2350} $img="/images/Saraphine.png" />
+            <S.StackAvatar $delay={2500} $img="/images/Rowan.png" />
+            <S.StackAvatar $delay={2650} $img="/images/Casius.png" />
+          </S.AvatarStack>
+          <S.InviteText>
+            <b>3 writers</b> invited
+          </S.InviteText>
+        </S.InviteRow>
 
-      <S.Toast $delay={2900}>
-        <FiUserPlus />
-        @inkwren joined your storyboard
-      </S.Toast>
-    </S.MockBody>
-  </S.Mock>
+        <S.Toast $delay={2900}>
+          <FiUserPlus />
+          <span>@inkwren joined</span>
+        </S.Toast>
+      </S.Leaf>
+    </S.Book>
+  </S.Scene>
 );
 
 // ─── Scene 3 · take your turn ─────────────────────────────────────────────────
 
 const TurnScene: FC = () => (
-  <S.Mock>
-    <S.MockBar>
-      <S.MockDot />
-      <S.MockDot />
-      <S.MockDot />
-      <span>
-        the ashes remember your name · <b>ch.4</b>
-      </span>
-    </S.MockBar>
-    <S.MockBody>
-      <S.Turn $delay={200}>
-        <S.TurnAvatar $img="/images/Saraphine.png" />
-        <div>
-          <S.TurnWho>Seraphine Vale</S.TurnWho>
-          <S.Bubble>
-            She pressed the blade flat against his chest.{" "}
-            <em>&ldquo;Give me one reason.&rdquo;</em>
-          </S.Bubble>
-        </div>
-      </S.Turn>
+  <S.Scene>
+    <S.Thread>
+      <S.ThreadInner>
+        <S.Ply aria-hidden="true" />
 
-      <S.Typing $delay={900} $until={1900}>
-        <S.TypingDot $i={0} />
-        <S.TypingDot $i={1} />
-        <S.TypingDot $i={2} />
-      </S.Typing>
+        <S.Knot $delay={200}>
+          <S.KnotAvatar $img="/images/Saraphine.png" />
+          <div>
+            <S.TurnWho>Seraphine Vale</S.TurnWho>
+            <S.Line>
+              She pressed the blade flat against his chest.{" "}
+              <em>&ldquo;Give me one reason.&rdquo;</em>
+            </S.Line>
+          </div>
+        </S.Knot>
 
-      <S.Turn $delay={2000} $mine>
-        <S.TurnAvatar $img="/images/Dorian.png" />
-        <div>
-          <S.TurnWho>Dorian Ashcroft · you</S.TurnWho>
-          <S.Bubble $mine>
-            He smirked, eyes cold as ever.{" "}
-            <em>&ldquo;Well what&rsquo;s stopping you?&rdquo;</em>
-          </S.Bubble>
-        </div>
-      </S.Turn>
+        <S.Tying $delay={900} $until={1900}>
+          <S.TypingDot $i={0} />
+          <S.TypingDot $i={1} />
+          <S.TypingDot $i={2} />
+        </S.Tying>
 
-      <S.ReactionRow $delay={2700}>
-        <S.Reaction>
-          <FiHeart />9
-        </S.Reaction>
-        <S.FloatingHeart $delay={2900}>
-          <FaHeart />
-        </S.FloatingHeart>
-        <S.LivePill $delay={3000}>
-          <S.LiveDot />
-          @inkwren is writing back…
-        </S.LivePill>
-      </S.ReactionRow>
-    </S.MockBody>
-  </S.Mock>
+        <S.Knot $delay={2000} $mine>
+          <S.KnotAvatar $img="/images/Dorian.png" $mine />
+          <div>
+            <S.TurnWho>Dorian Ashcroft · you</S.TurnWho>
+            <S.Line $mine>
+              He smirked, eyes cold as ever.{" "}
+              <em>&ldquo;Well what&rsquo;s stopping you?&rdquo;</em>
+            </S.Line>
+          </div>
+        </S.Knot>
+
+        <S.Tail $delay={2700}>
+          <S.Reaction>
+            <FiHeart />9
+          </S.Reaction>
+          <S.FloatingHeart $delay={2900}>
+            <FaHeart />
+          </S.FloatingHeart>
+          <S.LivePill $delay={3000}>
+            <S.LiveDot />
+            @inkwren is writing back…
+          </S.LivePill>
+        </S.Tail>
+      </S.ThreadInner>
+    </S.Thread>
+  </S.Scene>
 );
 
 const MOVES: Move[] = [

@@ -1,12 +1,9 @@
 "use client";
 
+import { useRedirectWhenLoggedOut } from "@/hooks/use-auth-redirect";
 import { dynamic } from "@/lib/dynamic";
 import { useParams } from "@/lib/navigation";
-import { useEffect } from "react";
-import { useGlobalState } from "@/context/store/stores";
-import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
-import { Logger } from "@/utils/services";
 
 const DynamicEditStoryboardForm = dynamic(
   () => import("@/components/edit-storyboard"),
@@ -15,17 +12,7 @@ const DynamicEditStoryboardForm = dynamic(
 
 export default function EditStoryBoardPage({}) {
   const id = useParams()?.id as string;
-  const authState = useGlobalState("authState");
-
-  const { routeToPage } = usePageRouter();
-
-  useEffect(() => {
-    Logger.debug("EditStoryBoardPage", authState);
-    if (authState === "LOGGED_OUT") {
-      Logger.debug("pushing to home");
-      routeToPage(ROUTES.Novelists);
-    }
-  }, [authState]);
+  useRedirectWhenLoggedOut(ROUTES.Novelists);
 
   return (
     <div>

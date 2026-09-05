@@ -8,6 +8,7 @@ import { getConversationsAction } from "@/app/rp/conversations/actions";
 import { getStrangerNovelistsAction } from "@/app/rp/home/actions";
 import { getOutgoingThreadsAction } from "@/app/rp/outgoing-threads/actions";
 import { sendFriendRequest } from "@/app/rp/profile/actions";
+import { DozingBookArt, NoConversationsArt } from "@/components/book-art";
 import { EmailVerifiedBadge } from "@/components/common";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { ConversationCard } from "@/components/conversation-card";
@@ -24,6 +25,12 @@ import * as S from "./styles";
 const THREADS_PREVIEW_COUNT = 3;
 const SUGGESTIONS_PREVIEW_COUNT = 4;
 const CONVERSATIONS_PREVIEW_COUNT = 2;
+/* Both previews drop rows with nothing to say — a conversation nobody has
+ * written in, a thread with no new replies — so they pull a wider window than
+ * they show. Fetching only the preview count would call a panel empty just
+ * because its newest couple of rows happen to be the quiet ones. */
+const THREADS_FETCH_COUNT = 12;
+const CONVERSATIONS_FETCH_COUNT = 10;
 
 /** The suggestions endpoint returns a couple of computed fields (mutual
  * friend count) beyond the strict Novelist type — the same looseness
@@ -108,37 +115,39 @@ const SuggestionRow: FC<{ novelist: SuggestionNovelist }> = ({ novelist }) => {
   const mutualCount = novelist.mutualFriendCount ?? 0;
 
   return (
-    <S.SuggestionRow
-      onClick={() => routeToPage(ROUTES.Profile.View(novelist.username).Index)}
-    >
-      <AvatarNew
-        src={novelist.image}
-        alt={novelist.firstName}
-        nwImage={novelist.avatar}
-      />
-      <S.ThreadInfo>
-        <S.ThreadTitleRow>
-          <S.ThreadTitle>
-            {novelist.firstName} {novelist.lastName}
-          </S.ThreadTitle>
-          {novelist.isVerified && <EmailVerifiedBadge size={12} />}
-        </S.ThreadTitleRow>
-        <S.SuggestionUsername username={novelist.username} />
-        <S.StatRow>
-          {novelist.museCount > 0 && (
-            <S.Stat>
-              <FiFeather size={10} />
-              <b>{novelist.museCount}</b>
-            </S.Stat>
-          )}
-          {mutualCount > 0 && (
-            <S.Stat>
-              <FiUsers size={10} />
-              <b>{mutualCount}</b> mutual
-            </S.Stat>
-          )}
-        </S.StatRow>
-      </S.ThreadInfo>
+    <S.SuggestionRow>
+      <S.SuggestionMain
+        onClick={() => routeToPage(ROUTES.Profile.View(novelist.username).Index)}
+      >
+        <AvatarNew
+          src={novelist.image}
+          alt={novelist.firstName}
+          nwImage={novelist.avatar}
+        />
+        <S.ThreadInfo>
+          <S.ThreadTitleRow>
+            <S.ThreadTitle>
+              {novelist.firstName} {novelist.lastName}
+            </S.ThreadTitle>
+            {novelist.isVerified && <EmailVerifiedBadge size={12} />}
+          </S.ThreadTitleRow>
+          <S.SuggestionUsername username={novelist.username} />
+          <S.StatRow>
+            {novelist.museCount > 0 && (
+              <S.Stat>
+                <FiFeather size={10} />
+                <b>{novelist.museCount}</b>
+              </S.Stat>
+            )}
+            {mutualCount > 0 && (
+              <S.Stat>
+                <FiUsers size={10} />
+                <b>{mutualCount}</b> mutual
+              </S.Stat>
+            )}
+          </S.StatRow>
+        </S.ThreadInfo>
+      </S.SuggestionMain>
       <S.SuggestionAddButton onClick={onAdd} disabled={loading || sent}>
         {sent ? <>Sent</> : loading ? <>…</> : <><FiUserPlus size={12} /> Add</>}
       </S.SuggestionAddButton>
@@ -169,21 +178,21 @@ export const RightSidebar: FC<Props> = ({ visible }) => {
   const { routeToPage } = usePageRouter();
   const { lastIncomingMessage } = useSocket();
   const [threads, setThreads] = useState<PromptThreadComment[] | undefined>(
-    cachedOutgoingThreads?.slice(0, THREADS_PREVIEW_COUNT),
+    cachedOutgoingThreads?.slice(0, THREADS_FETCH_COUNT),
   );
   const [suggestions, setSuggestions] = useState<
     SuggestionNovelist[] | undefined
   >(cachedSuggestions?.slice(0, SUGGESTIONS_PREVIEW_COUNT) ?? undefined);
   const [conversations, setConversations] = useState<
     Conversation[] | undefined
-  >(cachedConversations?.slice(0, CONVERSATIONS_PREVIEW_COUNT) ?? undefined);
+  >(cachedConversations?.slice(0, CONVERSATIONS_FETCH_COUNT) ?? undefined);
   const [conversationsLoading, setConversationsLoading] = useState(
     !cachedConversations,
   );
 
   useEffect(() => {
     if (!cachedOutgoingThreads) {
-      getOutgoingThreadsAction(1, THREADS_PREVIEW_COUNT).then((result) => {
+      getOutgoingThreadsAction(1, THREADS_FETCH_COUNT).then((result) => {
         if (result && !("message" in result)) {
           setThreads(result);
           setGlobalState({ cachedOutgoingThreads: result });
@@ -196,7 +205,7 @@ export const RightSidebar: FC<Props> = ({ visible }) => {
       });
     }
     if (!cachedConversations) {
-      getConversationsAction(1, CONVERSATIONS_PREVIEW_COUNT).then(
+      getConversationsAction(1, CONVERSATIONS_FETCH_COUNT).then(
         async (result) => {
           if (result && Array.isArray(result)) {
             const decrypted = await decryptConversations(result);
@@ -215,7 +224,7 @@ export const RightSidebar: FC<Props> = ({ visible }) => {
   // going through a socket event — mirror those changes into our local slice.
   useEffect(() => {
     if (!cachedConversations) return;
-    setConversations(cachedConversations.slice(0, CONVERSATIONS_PREVIEW_COUNT));
+    setConversations(cachedConversations.slice(0, CONVERSATIONS_FETCH_COUNT));
   }, [cachedConversations]);
 
   // The thread page refetches cachedOutgoingThreads after a reply/conclude —
@@ -223,7 +232,7 @@ export const RightSidebar: FC<Props> = ({ visible }) => {
   // updates too.
   useEffect(() => {
     if (!cachedOutgoingThreads) return;
-    setThreads(cachedOutgoingThreads.slice(0, THREADS_PREVIEW_COUNT));
+    setThreads(cachedOutgoingThreads.slice(0, THREADS_FETCH_COUNT));
   }, [cachedOutgoingThreads]);
 
   // Live-update the preview when a message arrives for one of the conversations
@@ -249,6 +258,16 @@ export const RightSidebar: FC<Props> = ({ visible }) => {
     });
   }, [lastIncomingMessage, user?.username]);
 
+  /* A conversation nobody has written in yet has nothing to preview, and a
+   * thread with no unread replies is nothing to act on — in both cases the
+   * panel reads as empty even though the list isn't. */
+  const conversationsWithMessages = conversations
+    ?.filter((conversation) => conversation.lastMessage)
+    .slice(0, CONVERSATIONS_PREVIEW_COUNT);
+  const threadsWithNewReplies = threads
+    ?.filter((thread) => !thread.concluded && thread.replyCount > 0)
+    .slice(0, THREADS_PREVIEW_COUNT);
+
   if (!novelist) return null;
 
   return (
@@ -272,14 +291,17 @@ export const RightSidebar: FC<Props> = ({ visible }) => {
               </S.ShimmerLines>
             </S.ConversationRowShimmer>
           ))
-        ) : conversations?.length ? (
+        ) : conversationsWithMessages?.length ? (
           <S.ConversationsList>
-            {conversations.map((conversation) => (
+            {conversationsWithMessages.map((conversation) => (
               <ConversationCard key={conversation.id} conversation={conversation} />
             ))}
           </S.ConversationsList>
         ) : (
-          <S.EmptyState>No conversations yet</S.EmptyState>
+          <S.EmptyState>
+            <NoConversationsArt />
+            <span>No new messages</span>
+          </S.EmptyState>
         )}
       </S.Panel>
       <S.Panel>
@@ -296,10 +318,15 @@ export const RightSidebar: FC<Props> = ({ visible }) => {
             View all
           </S.ViewAllLink>
         </S.PanelHeader>
-        {threads?.length ? (
-          threads.map((thread) => <ThreadRow key={thread.id} thread={thread} />)
+        {threadsWithNewReplies?.length ? (
+          threadsWithNewReplies.map((thread) => (
+            <ThreadRow key={thread.id} thread={thread} />
+          ))
         ) : (
-          <S.EmptyState>You're all caught up ✨</S.EmptyState>
+          <S.EmptyState>
+            <DozingBookArt />
+            <span>You&apos;re all caught up</span>
+          </S.EmptyState>
         )}
       </S.Panel>
       {Boolean(suggestions?.length) && (

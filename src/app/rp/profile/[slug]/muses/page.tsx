@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { FiGrid, FiList } from "react-icons/fi";
 import { HiUserAdd } from "react-icons/hi";
 import { getAllMusesByUsernameAction } from "@/app/rp/muse/actions";
+import { NoMatchesArt } from "@/components/book-art";
 import { BreadCrumb } from "@/components/breadcrumb";
 import { AddNewButton, FilterSearch } from "@/components/common";
 import { AppAlertDialog } from "@/components/dialog";
@@ -335,7 +336,12 @@ export default function MusesListPage({}) {
         : renderFamilies(visibleFamilies)}
 
       {muses !== null && visibleFamilies.length === 0 && (
-        <S.EmptyResult>No characters match the current filters.</S.EmptyResult>
+        <S.EmptyResultWrap>
+          <NoMatchesArt />
+          <S.EmptyResult>
+            No characters match the current filters.
+          </S.EmptyResult>
+        </S.EmptyResultWrap>
       )}
     </S.Container>
   );

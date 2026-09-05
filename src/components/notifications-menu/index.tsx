@@ -13,6 +13,7 @@ import {
   getNotifications,
   patchNotifications,
 } from "@/app/rp/novelists/actions";
+import { NoNotificationsArt } from "@/components/book-art";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
@@ -140,7 +141,10 @@ export const NotificationsMenu: FC = () => {
                     />
                   ))
               ) : (
-                <S.EmptyState>No notifications yet</S.EmptyState>
+                <S.EmptyState>
+                  <NoNotificationsArt />
+                  <span>No notifications yet</span>
+                </S.EmptyState>
               )}
             </S.ScrollArea>
 

@@ -2,7 +2,9 @@ import styled, { css } from "styled-components";
 import { BLUR_FILTER, CARD_BORDER, Z_INDEX } from "@/theme";
 
 interface BannerProps {
-  src: string;
+  /* Transient: this renders a <div>. `src` is a valid HTML attribute name, so
+     un-prefixed it is forwarded to the DOM and React warns on an empty one. */
+  $src: string;
 }
 
 const NameFontStyles = css`
@@ -19,7 +21,7 @@ export const Banner = styled.div<BannerProps>`
   z-index: ${Z_INDEX.BACKGROUND};
   position: absolute;
 
-  background-image: url(${({ src }) => src});
+  ${({ $src }) => $src && css`background-image: url(${$src});`}
   background-repeat: no-repeat;
   background-size: cover;
   contain: paint;

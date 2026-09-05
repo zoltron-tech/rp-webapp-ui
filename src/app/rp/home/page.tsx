@@ -13,6 +13,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import { FiSearch } from "react-icons/fi";
 import { ActivityBox } from "@/components/activity-box";
+import { NoFriendsRailArt } from "@/components/book-art";
 import { ScrollJumpButton } from "@/components/common/scroll-jump-button";
 import HomeTourGuide from "@/components/home-tour-guide";
 import { LoadMore } from "@/components/load-more/page";
@@ -573,7 +574,10 @@ export default function HomePage() {
                   />
                 ))
               ) : (
-                <S.SubText>Add friends? Maybe...</S.SubText>
+                <S.FriendsEmptyState>
+                  <NoFriendsRailArt />
+                  <span>No friends yet. Find novelists to connect with.</span>
+                </S.FriendsEmptyState>
               )}
             </S.FriendsStrip>
             <S.ScrollNavButton

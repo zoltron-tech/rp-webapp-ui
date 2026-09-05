@@ -95,8 +95,10 @@ import {
 } from "@/theme";
 
 interface BannerProps {
-  src: string | null;
-  filterValues: ImageFilter | null;
+  /* Transient: this renders a <div>. `src` is a valid HTML attribute name, so
+     un-prefixed it is forwarded to the DOM and React warns on an empty one. */
+  $src: string | null;
+  $filterValues: ImageFilter | null;
 }
 
 export const Banner = styled.div<BannerProps>`
@@ -114,12 +116,12 @@ export const Banner = styled.div<BannerProps>`
   height: 100%;
   z-index: ${Z_INDEX.BACKGROUND};
 
-  background-image: url(${({ src }) => src});
+  ${({ $src }) => $src && css`background-image: url(${$src});`}
   /* Apply dynamic filters */
-  filter: ${({ filterValues }) =>
-    `grayscale(${filterValues?.greyscale ?? 0}%)
-     brightness(${filterValues?.brightness ?? 100}%)
-     blur(${filterValues?.blur ?? 0}px)`};
+  filter: ${({ $filterValues }) =>
+    `grayscale(${$filterValues?.greyscale ?? 0}%)
+     brightness(${$filterValues?.brightness ?? 100}%)
+     blur(${$filterValues?.blur ?? 0}px)`};
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
@@ -272,7 +274,7 @@ export const CardBackground = styled.div<CardProps>`
   width: 100%;
   height: 100%;
 
-  background-image: url(${(props): string => props.banner});
+  background-image: url(${(props): string => props.$banner});
   transition-timing-function: ease-out;
   transition-duration: 300ms;
   transition-property: scale;
@@ -728,7 +730,9 @@ export const CardExpandedWrapper = styled.div<{ $hideChrome?: boolean }>`
 `;
 
 type CardProps = {
-  banner: string;
+  /** Transient: `banner` is not an HTML attribute, so left un-prefixed
+   *  styled-components forwards it to the DOM and React errors on it. */
+  $banner: string;
   /** CSS background-size computed from crop data. Falls back to 'cover'. */
   $bgSize?: string;
   /** CSS background-position computed from crop data. Falls back to 'center center'. */
@@ -2920,8 +2924,16 @@ export const SectionEmptyWrap = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* A fixed box the art centres inside, rather than one that stretches to the
+     section's full height. Sections give this wrap wildly different heights --
+     a short row-flex parent in connections, a tall scroller in story and
+     prompts -- and stretching made the gap above the art differ in each. A
+     fixed min-height keeps that gap identical everywhere. */
+  justify-content: center;
+  min-height: 260px;
   gap: 10px;
   width: 100%;
+  padding-block: 24px;
 `;
 
 export const SectionEmpty = styled.div`

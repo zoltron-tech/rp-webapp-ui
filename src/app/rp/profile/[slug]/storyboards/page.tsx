@@ -6,6 +6,7 @@ import { usernameFromHandle } from "@/utils/constants/profile-handle";
 import { useEffect, useMemo, useState } from "react";
 import { IoMdAdd } from "react-icons/io";
 import { getAllStoryboardsByUsernameAction } from "@/app/rp/story/actions";
+import { BlankStoryboardArt } from "@/components/book-art";
 import { BreadCrumb } from "@/components/breadcrumb";
 import { ShouldRender } from "@/components/common";
 import {
@@ -122,6 +123,18 @@ export default function MusesListPage({}) {
           );
         })}
       </S.StoryListContainer>
+
+      <ShouldRender if={storyBoards !== null && storyBoards.length === 0}>
+        <S.EmptyStateWrap>
+          <BlankStoryboardArt />
+          <S.EmptyStateTitle>No stories yet</S.EmptyStateTitle>
+          <S.EmptyStateSubtitle>
+            {isCurrentUser
+              ? "Start a story and your scenes will show up here."
+              : `${username} hasn't started any stories yet.`}
+          </S.EmptyStateSubtitle>
+        </S.EmptyStateWrap>
+      </ShouldRender>
 
       <EditStoryboardOverlay
         open={createOpen}

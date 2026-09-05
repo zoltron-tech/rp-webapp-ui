@@ -17,6 +17,7 @@ import { getNovelistAction } from "@/app/rp/novelists/actions";
 import { reportAction } from "@/app/rp/thread/actions";
 import { CoverImage, ShouldRender, Username } from "@/components/common";
 import { Button as AddNewButtonStyle } from "@/components/common/add-new-button/styles";
+import { DeletedContent } from "@/components/deleted-content";
 import { AppAlertDialog } from "@/components/dialog";
 import { EditStoryboardEventOverlay } from "@/components/edit-storyboard-event-card/edit-storyboard-event-overlay";
 import { AppDropdownMenuResponsive } from "@/components/profile-more-dropdown";
@@ -65,6 +66,7 @@ export default function UserProfilePage({}) {
   const user = useGlobalState("user");
   const novelist = useGlobalState("novelist");
   const [storyboard, setStoryBoard] = useState<StoryBoard | null>(null);
+  const [notFound, setNotFound] = useState(false);
   // Event limits are the story's creator's, regardless of who is viewing or
   // co-authoring — resolved from the viewer's own tier when they are the
   // creator, otherwise fetched from the creator's profile.
@@ -72,7 +74,7 @@ export default function UserProfilePage({}) {
     null,
   );
   const storyboardId = params?.slug as string;
-  const { baseDataLoader, routeToPage } = usePageRouter();
+  const { routeToPage, stopPageLoading } = usePageRouter();
 
   // Chapter create/edit renders in place (dialog on desktop, tray on mobile).
   const [eventEditor, setEventEditor] = useState<{
@@ -263,10 +265,20 @@ export default function UserProfilePage({}) {
     storyboard != null &&
     storyboard.events.length < creatorEventLimit;
 
+  /* `baseDataLoader` collapses a deleted story and a failed request into the
+   * same null, so the action is called directly — only a 404 should show the
+   * torn-page scene. */
   const fetchStoryboard = async () => {
-    const _storyboard = await baseDataLoader(() =>
-      getStoryboardAction(storyboardId),
-    );
+    const _storyboard = await getStoryboardAction(storyboardId);
+    stopPageLoading();
+
+    if (_storyboard === null) {
+      setNotFound(true);
+      return;
+    }
+
+    if ("message" in _storyboard) return;
+
     setStoryBoard(_storyboard);
   };
 
@@ -299,10 +311,12 @@ export default function UserProfilePage({}) {
     novelist?.tier.eventLimit,
   ]);
 
+  if (notFound) return <DeletedContent label="Story" />;
+
   return (
     <>
       <S.Banner
-        src={
+        $src={
           storyboard?.image && !storyboard.image.endsWith(".gif")
             ? storyboard.image
             : ""

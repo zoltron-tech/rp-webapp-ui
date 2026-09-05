@@ -1,13 +1,7 @@
 "use client";
 
 import { css, styled } from "styled-components";
-import {
-  BACKGROUND_BLUR,
-  DEV_MODE_BORDER,
-  NO_SCROLLBAR,
-  SPIN,
-  Z_INDEX,
-} from "@/theme";
+import { DEV_MODE_BORDER, NO_SCROLLBAR, SPIN, Z_INDEX } from "@/theme";
 
 const TypeSelectTypography = css`
   font-size: 12px;
@@ -34,7 +28,7 @@ export const Dropdown = styled.div`
   box-shadow: none;
   z-index: 100;
   max-height: 400px;
-  transition-property: width, height, max-height, box-shadow;
+  transition-property: width, height, max-height, box-shadow, background-color;
   transition-duration: 0.2s;
   transition-timing-function: linear;
   border-radius: var(--border-radius);
@@ -49,10 +43,18 @@ export const Dropdown = styled.div`
   align-items: center;
   justify-content: flex-start;
   gap: var(--type-select-gap);
-  ${BACKGROUND_BLUR("searchBar")}
+
+  /* The pill surface, and behind the input once expanded.
+     Was BACKGROUND_BLUR("searchBar"): a flat grey at 50% alpha, which over the
+     top bar glass left the field washed out. A step above the bar own --bg-3
+     instead, so it reads as a control sitting on the bar, with just enough
+     translucency left for the blur to do something. */
+  background-color: color-mix(in srgb, var(--bg-4) 92%, transparent);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  backdrop-filter: blur(20px) saturate(140%);
 
   &.empty {
-    max-height: 200px;
+    max-height: 240px;
   }
 `;
 
@@ -61,6 +63,12 @@ export const DropdownArea = styled.div`
   width: 100%;
   margin-top: calc(var(--height));
   height: 100%;
+  /* The results panel is opaque, matching the notifications panel, so names
+     and avatars are never read against whatever is scrolling underneath. Only
+     the area below the field is painted, so the field keeps its own shade and
+     nothing changes colour as results arrive. Clipped to the rounded corners
+     by the paint containment on the parent. */
+  background-color: var(--bg-2);
   ${NO_SCROLLBAR}
 `;
 
@@ -92,21 +100,41 @@ export const DropdownItem = styled.div`
 
 export const EmptyDropdown = styled.div`
   width: 100%;
-  height: 100%;
-  margin-top: var(--height);
-  margin-bottom: calc(var(--height) / 2);
+  /* DropdownArea already offsets past the search bar; this used to add a
+     second var(--height) on top of that. */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
-  color: var(--text);
-  opacity: 0.5;
+  gap: 6px;
+  padding: 4px 16px 18px;
+  text-align: center;
 
-  & > svg {
-    width: calc(var(--height) * 2);
-    height: calc(var(--height) * 2);
+  /* The shared art sizes itself for a full page. A descendant selector
+     outranks its own class, so the dropdown can scale it down. The old rule
+     forced a square on it, which would squash a 180x137 viewBox. */
+  svg {
+    flex-shrink: 0;
+    width: 132px;
+    height: auto;
   }
+`;
+
+export const EmptyDropdownTitle = styled.p`
+  margin: 0;
+  font-family: var(--font);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-bold);
+  color: var(--text);
+`;
+
+export const EmptyDropdownHint = styled.p`
+  margin: 0;
+  font-family: var(--font);
+  font-size: var(--font-size-xsmall);
+  color: var(--text-secondary);
+  line-height: 1.5;
+  max-width: 30ch;
 `;
 
 export const Wrapper = styled.div`
@@ -191,8 +219,17 @@ export const TypeSelect = styled.div`
   border-radius: var(--border-radius) 0 0 var(--border-radius);
   position: relative;
   top: 50%;
-  transform: translateY(-51%);
   left: 0px;
+  /* Collapsed, the trigger is --height wide while this strip is
+     --type-select-width, so it hung out past the right edge of the bar and
+     gave the whole page 16px of horizontal overflow at 375. It is already
+     invisible in that state, so park it inside the trigger and slide it back
+     out when the search opens; only the opacity is transitioned, so there is
+     nothing to see moving. */
+  transform: translate(
+    calc(var(--height) - var(--type-select-width)),
+    -51%
+  );
   gap: 3px;
   color: ${({ theme }: any) => theme.textPrimary};
   z-index: ${Z_INDEX.AVATAR};
@@ -275,6 +312,7 @@ export const Container = styled.div`
       & > ${TypeSelect} {
         opacity: 1;
         pointer-events: all;
+        transform: translate(0, -51%);
       }
 
       & > ${Input} {

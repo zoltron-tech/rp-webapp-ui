@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { FiCheck, FiEdit2, FiPlus, FiTrash2, FiX } from "react-icons/fi";
 import { GrEdit } from "react-icons/gr";
 import { removeMuseNoteAction, setMuseNoteAction } from "@/app/rp/muse/actions";
+import { BlankScrollArt } from "@/components/book-art";
 import { AppAlertDialog } from "@/components/dialog";
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
@@ -196,6 +197,7 @@ export function BackStorySection({
                 if={aboutSections !== null && aboutSections.length === 0}
               >
                 <S.SectionEmptyWrap>
+                  <BlankScrollArt accent={accent} />
                   <S.SectionEmpty>No story yet.</S.SectionEmpty>
                   <ShouldRender if={isOwnMuse}>
                     <S.SectionEmptyCta

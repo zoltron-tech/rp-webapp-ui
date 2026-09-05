@@ -7,8 +7,8 @@ import { BiExpandVertical } from "react-icons/bi";
 import { BsSearch } from "react-icons/bs";
 import { CgSpinner } from "react-icons/cg";
 import { IoCloseOutline } from "react-icons/io5";
-import { PiSmileyThin } from "react-icons/pi";
 import { searchAction } from "@/app/rp/novelists/actions";
+import { NoMatchesArt } from "@/components/book-art";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useForm } from "@/hooks";
 import { useOutsideClick } from "@/hooks/use-outside-click";
@@ -159,8 +159,11 @@ export const Search: FC<SearchProps> = ({
             </ShouldRender>
             <ShouldRender if={noResults}>
               <S.EmptyDropdown>
-                No results found
-                <PiSmileyThin />
+                <NoMatchesArt />
+                <S.EmptyDropdownTitle>No results found</S.EmptyDropdownTitle>
+                <S.EmptyDropdownHint>
+                  Try a different name, or check the spelling.
+                </S.EmptyDropdownHint>
               </S.EmptyDropdown>
             </ShouldRender>
           </S.DropdownArea>

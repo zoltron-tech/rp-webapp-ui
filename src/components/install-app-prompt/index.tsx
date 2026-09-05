@@ -2,7 +2,7 @@
 
 import { isCompactViewport } from "@nw/utils/platform";
 import classNames from "classnames";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@/lib/navigation";
 import { type FC, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { FiX } from "react-icons/fi";
@@ -17,13 +17,13 @@ export const InstallAppPrompt: FC = () => {
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
   const setGlobalState = useGlobalStoreSet();
-  const router = useRouter();
+  const navigate = useNavigate();
   const isMobile = useMemo(() => isCompactViewport(), []);
 
   const handleSkip = useCallback(() => {
     setGlobalState({ showInstallAppPrompt: false });
-    router.push(ROUTES.Onboarding);
-  }, [router, setGlobalState]);
+    navigate(ROUTES.Onboarding);
+  }, [navigate, setGlobalState]);
 
   if (!showInstallAppPrompt) return null;
   if (typeof document === "undefined") return null;
@@ -41,7 +41,7 @@ export const InstallAppPrompt: FC = () => {
           <FiX />
         </S.DiscordDialogClose>
         <S.DiscordDialogImage
-          src={appInstallLogo.src}
+          src={appInstallLogo}
           alt="Install Novelist World"
         />
         <S.DiscordDialogTitle>

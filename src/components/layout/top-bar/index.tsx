@@ -1,7 +1,7 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { type FC, memo, useCallback, useMemo } from "react";
+import classNames from "classnames";
+import { type FC, memo, useEffect, useMemo, useState } from "react";
 import { GoArrowRight } from "react-icons/go";
 import { Search, UserMenu } from "@/components";
 import {
@@ -14,8 +14,43 @@ import { NotificationsMenu } from "@/components/notifications-menu";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
+import { usePathname } from "@/lib/navigation";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styles";
+
+/**
+ * True once the page has scrolled past `offset`.
+ *
+ * Drives the landing page's transparent-to-glass bar. Reads are coalesced into
+ * one rAF per frame so a fast scroll cannot queue a render per scroll event,
+ * and the state is a boolean, so React bails out of all but the two flips.
+ */
+const useScrolledPast = (offset: number) => {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    let frame = 0;
+    const read = () => {
+      frame = 0;
+      setScrolled(window.scrollY > offset);
+    };
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(read);
+    };
+
+    // Restoring a scroll position (back button, refresh) lands us mid-page
+    // with no scroll event of our own.
+    read();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [offset]);
+
+  return scrolled;
+};
 
 type Props = {};
 
@@ -27,10 +62,17 @@ export const TopBar: FC<Props> = memo(({}) => {
   const isLoginPage = useMemo(() => pathname === ROUTES.Login, [pathname]);
   const { routeToPage } = usePageRouter();
   const { width } = useWindowDimensions();
+  const accent = useGlobalState("accent");
+  // The landing hero is drawn edge to edge, so the bar floats over it instead
+  // of capping it with a solid strip.
+  const isLandingPage = useMemo(
+    () => pathname === ROUTES.Novelists,
+    [pathname],
+  );
+  const scrolled = useScrolledPast(12);
   // The home page renders its own always-expanded search inline on mobile
   // (see app/rp/home/mobile-search.tsx) instead of this icon-triggered one.
-  const hideSearch =
-    pathname === ROUTES.Home && width !== null && width < 801;
+  const hideSearch = pathname === ROUTES.Home && width !== null && width < 801;
 
   const onSearchItemClick =
     (record: { id?: string; username?: string; name?: string }) =>
@@ -56,8 +98,16 @@ export const TopBar: FC<Props> = memo(({}) => {
   };
 
   return (
-    <S.Container>
-      <S.Bar>
+    <S.Container
+      $overlay={isLandingPage}
+      $scrolled={scrolled}
+      // Over the hero the bar has to read on near-black whatever palette the
+      // reader has chosen, so on the landing page it re-declares the dark
+      // theme for its own subtree. Both classes are needed: `dark` sets the
+      // raw scales and the accent class is what maps them onto --bg-*/--text.
+      className={isLandingPage ? classNames("dark", accent) : undefined}
+    >
+      <S.Bar $overlay={isLandingPage}>
         <S.LogoContainer onClick={onLogoClick}>
           <S.Logo>
             <NWLogoInner

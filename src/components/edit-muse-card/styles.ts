@@ -338,7 +338,9 @@ export const SaveButton = styled(Common.Button)`
 `;
 
 type ProfileBackgroundFilterProps = {
-  banner: string;
+  /** Transient: `banner` is not an HTML attribute, so left un-prefixed
+   *  styled-components forwards it to the DOM and React errors on it. */
+  $banner: string;
 };
 
 /* Rendered at 1/4 resolution and scaled back up rather than blurring a
@@ -359,7 +361,7 @@ export const ProfileBackgroundBlurFilter = styled.div<ProfileBackgroundFilterPro
       ${({ theme }: any) => theme.cardBackgroundTint},
       ${({ theme }: any) => theme.cardBackgroundTint}
     ),
-    url(${(props): string => props.banner});
+    url(${(props): string => props.$banner});
   background-position: center;
   background-size: cover;
   z-index: ${Z_INDEX.BACKGROUND};

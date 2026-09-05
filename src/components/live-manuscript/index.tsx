@@ -73,7 +73,7 @@ const MUSES = [
 ];
 const CHOSEN = 0; // Dorian
 
-const COMPOSED = "He smirked, eyes cold as ever. \"Well what's stopping you?\"";
+const COMPOSED = 'He smirked, eyes cold as ever. "Well what\'s stopping you?"';
 
 // Classic arrow-cursor glyph for the demo pointer.
 const CursorIcon: FC = () => (
@@ -304,27 +304,33 @@ export const LiveManuscript: FC = () => {
             </S.TurnBody>
           </S.Turn>
 
-          {/* The just-sent turn, rising into the thread as the chosen muse */}
-          {sent && chosenMuse && (
-            <S.Turn $delay={0} $slide>
-              <S.Avatar
-                $from={chosenMuse.from}
-                $img={chosenMuse.img}
-                $to={chosenMuse.to}
-              >
-                {chosenMuse.initial}
-              </S.Avatar>
-              <S.TurnBody>
-                <S.TurnHead>
-                  <S.TurnName>{chosenMuse.name}</S.TurnName>
-                  <S.TurnTime>now</S.TurnTime>
-                </S.TurnHead>
-                <S.TurnText>
-                  He smirked, eyes cold as ever.{" "}
-                  <em>&ldquo;Well what&rsquo;s stopping you?&rdquo;</em>
-                </S.TurnText>
-                {dorianLiked && (
-                  <S.ReactionRow>
+          {/* The just-sent turn, rising into the thread as the chosen muse.
+              Always mounted so the panel keeps a constant height; it is only
+              made visible once the demo actually sends it. The muse is a
+              constant (CHOSEN), so the reserved layout matches the real one
+              exactly. */}
+          {(() => {
+            const turnMuse = chosenMuse ?? MUSES[CHOSEN];
+            const pending = !sent || !chosenMuse;
+            return (
+              <S.Turn $delay={0} $reserved={pending} $slide={!pending}>
+                <S.Avatar
+                  $from={turnMuse.from}
+                  $img={turnMuse.img}
+                  $to={turnMuse.to}
+                >
+                  {turnMuse.initial}
+                </S.Avatar>
+                <S.TurnBody>
+                  <S.TurnHead>
+                    <S.TurnName>{turnMuse.name}</S.TurnName>
+                    <S.TurnTime>now</S.TurnTime>
+                  </S.TurnHead>
+                  <S.TurnText>
+                    He smirked, eyes cold as ever.{" "}
+                    <em>&ldquo;Well what&rsquo;s stopping you?&rdquo;</em>
+                  </S.TurnText>
+                  <S.ReactionRow $reserved={!dorianLiked}>
                     <S.Reaction $accent $bump>
                       <FiHeart />1
                     </S.Reaction>
@@ -334,14 +340,14 @@ export const LiveManuscript: FC = () => {
                       </S.FloatingHeart>
                     )}
                   </S.ReactionRow>
-                )}
-                <S.PennedBy>
-                  <S.PennedByAvatar $from={WRITER.from} $to={WRITER.to} />
-                  penned by <b>{WRITER.handle}</b>
-                </S.PennedBy>
-              </S.TurnBody>
-            </S.Turn>
-          )}
+                  <S.PennedBy>
+                    <S.PennedByAvatar $from={WRITER.from} $to={WRITER.to} />
+                    penned by <b>{WRITER.handle}</b>
+                  </S.PennedBy>
+                </S.TurnBody>
+              </S.Turn>
+            );
+          })()}
         </S.Body>
 
         {/* Composer + character picker + demo cursor */}
@@ -414,7 +420,11 @@ export const LiveManuscript: FC = () => {
         <S.Foot>
           <S.Writers>
             <S.AvatarStack>
-              <S.Avatar $from={OPENING.from} $img={OPENING.img} $to={OPENING.to}>
+              <S.Avatar
+                $from={OPENING.from}
+                $img={OPENING.img}
+                $to={OPENING.to}
+              >
                 {OPENING.initial}
               </S.Avatar>
               <S.Avatar

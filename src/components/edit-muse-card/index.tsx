@@ -2,7 +2,6 @@
 
 import { DefaultTheme, Input } from "@novelist-world/ui";
 import type { Fandom, Muse } from "@nw/types";
-import { useRouter } from "next/navigation";
 import { type FC, type ReactNode, useEffect, useState } from "react";
 import { ThemeProvider } from "styled-components";
 import { FandomValue } from "@/app/rp/muse/[slug]/styles";
@@ -251,7 +250,7 @@ export const EditMuseCard: FC<EditMuseCardProps> = ({ id }) => {
   return (
     <>
       <S.ProfileBackgroundBlurFilter
-        banner={
+        $banner={
           values?.image ||
           "https://i.etsystatic.com/44068041/r/il/3bab40/5467123737/il_300x300.5467123737_1kne.jpg"
         }

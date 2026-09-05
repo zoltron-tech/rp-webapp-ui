@@ -1,5 +1,3 @@
-"use server";
-
 import {
   createSong,
   deleteSong,
@@ -8,7 +6,7 @@ import {
   type SongInput,
   updateSong,
 } from "@nw/api/endpoints/songs";
-import { authedApi } from "@/lib/server-api";
+import { authedApi } from "@/lib/api";
 
 export const getOwnMusicAction = () => getOwnMusic(authedApi);
 

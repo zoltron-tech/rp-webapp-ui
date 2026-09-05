@@ -201,10 +201,11 @@ export const MobilePanelDestructiveMenuItem = styled(MobilePanelMenuItem)`
   }
 `;
 
+/** Laid out by the top bar, not pinned to it — see the notifications menu. */
 export const PositionContainer = styled.div`
   ${DEV_MODE_BORDER("red")}
-  position: absolute;
-  right: 1rem;
+  display: inline-flex;
+  align-items: center;
 `;
 
 export const FormRoot = styled(RadixForm.Root)`

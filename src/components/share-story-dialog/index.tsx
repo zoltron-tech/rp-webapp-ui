@@ -22,6 +22,8 @@ import { ROUTES } from "@/utils/constants/routes";
 import { CoverImage } from "../common";
 import * as DropS from "../profile-more-dropdown/styled";
 import * as S from "./styled";
+import { shareStoryToDiscord } from "@nw/api/endpoints/community";
+import { api } from "@/lib/api";
 
 interface ShareStoryDialogProps {
   storyboard: StoryBoard | null;
@@ -184,14 +186,9 @@ export const ShareStoryDialog: FC<ShareStoryDialogProps> = ({
         story: storyData,
         storyUrl,
       };
-      const res = await fetch("/api/discord/share-story", {
-        body: JSON.stringify(payload),
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-      });
-      if (res.ok) {
-        const data = (await res.json()) as SharePromptResult;
-        setShareState({ messageUrl: data.messageUrl, status: "success" });
+      const result = await shareStoryToDiscord(api, payload);
+      if (result && "messageUrl" in result) {
+        setShareState({ messageUrl: result.messageUrl, status: "success" });
       } else {
         setShareState({ status: "error" });
       }

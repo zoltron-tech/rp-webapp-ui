@@ -1,5 +1,3 @@
-"use server";
-
 import {
   createMuseConnection,
   deleteMuseConnection,
@@ -8,7 +6,7 @@ import {
   reRequestMuseConnection,
   updateMuseConnection,
 } from "@nw/api/endpoints/muse-connection";
-import { api, authedApi } from "@/lib/server-api";
+import { api, authedApi } from "@/lib/api";
 
 export const createMuseConnectionAction = (
   title: string,

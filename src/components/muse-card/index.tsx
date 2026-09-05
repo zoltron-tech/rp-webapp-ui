@@ -1,7 +1,7 @@
 "use client";
 import type { Muse } from "@nw/types/novelist";
 import classNames from "classnames";
-import { useParams } from "next/navigation";
+import { useParams } from "@/lib/navigation";
 import { type FC, useState } from "react";
 import { FaRegTrashCan, FaUser } from "react-icons/fa6";
 import { GrEdit } from "react-icons/gr";

@@ -1,6 +1,9 @@
 import type { DataType, ErrorType } from "@nw/types/common";
-import type { NavigateOptions } from "next/dist/shared/lib/app-router-context.shared-runtime";
-import { usePathname, useRouter } from "next/navigation";
+import {
+  type NavigateOptions,
+  useNavigate,
+  usePathname,
+} from "@/lib/navigation";
 import { useCallback, useEffect } from "react";
 import { useGlobalStoreSet } from "@/context/store/stores";
 import { API_MESSAGE } from "@/utils/constants";
@@ -10,7 +13,7 @@ interface PageLoadingOptions extends NavigateOptions {
 }
 
 export const usePageRouter = () => {
-  const { push } = useRouter();
+  const navigate = useNavigate();
   const pathname = usePathname();
   const setGlobalState = useGlobalStoreSet();
 
@@ -22,9 +25,9 @@ export const usePageRouter = () => {
         });
       }
 
-      push(route, options);
+      navigate(route, options);
     },
-    [push, setGlobalState, pathname],
+    [navigate, setGlobalState, pathname],
   );
 
   const stopPageLoading = useCallback(() => {

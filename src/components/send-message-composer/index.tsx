@@ -4,7 +4,7 @@ import type { MentionDataItem, Muse, Novelist } from "@nw/types";
 import type { Message } from "@nw/types/conversation";
 import type { EmojiClickData } from "emoji-picker-react";
 import { Theme as EmojiTheme } from "emoji-picker-react";
-import dynamic from "next/dynamic";
+import { dynamic } from "@/lib/dynamic";
 import type { FC, FormEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BsPencil } from "react-icons/bs";

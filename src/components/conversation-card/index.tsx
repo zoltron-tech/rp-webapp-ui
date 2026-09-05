@@ -1,7 +1,6 @@
 "use client";
 
 import type { Conversation } from "@nw/types";
-import { useRouter } from "next/navigation";
 import { type FC, useEffect } from "react";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -153,12 +152,9 @@ export const ConversationCard: FC<ConversationCardProps> = ({
   const user = useGlobalState("user");
   const setGlobalState = useGlobalStoreSet();
   const { routeToPage } = usePageRouter();
-  const router = useRouter();
-
-  // Prefetch the conversation route so the first click is instant
-  useEffect(() => {
-    router.prefetch(ROUTES.Conversation.View(conversation.id));
-  }, [router, conversation.id]);
+  // The prefetch that used to live here is gone: React Router has no
+  // equivalent and Vite already code-splits per route, so the chunk for this
+  // destination is fetched on hover/click by the router itself.
   const { lastMessage } = conversation;
   const sender =
     lastMessage?.sender?.name || lastMessage?.sender?.username || "";

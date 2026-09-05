@@ -305,6 +305,19 @@ export const FandomGroupHeader = styled.h2<{ $color: string }>`
   }
 `;
 
+/** Centres the no-matches art over the message, matching the empty-state
+ *  treatment used across the muse profile sections. */
+export const EmptyResultWrap = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 260px;
+  gap: 10px;
+  padding-block: 24px;
+`;
+
 export const EmptyResult = styled.p`
   width: 100%;
   margin: 24px 0;

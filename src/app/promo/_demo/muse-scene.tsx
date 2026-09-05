@@ -151,8 +151,8 @@ export const PromoMuseScene = () => {
         <S.MuseProfileLayer data-promo="muse-profile">
           <M.Banner
             data-promo="muse-banner"
-            src={bannerSrc}
-            filterValues={muse.wallpaper?.filterValues ?? null}
+            $src={bannerSrc}
+            $filterValues={muse.wallpaper?.filterValues ?? null}
           />
 
           <M.MuseNavCard
@@ -269,7 +269,7 @@ export const PromoMuseScene = () => {
           <S.MuseCardFlip data-promo="card-flip">
             <M.CardWrapper data-promo="muse-card">
               <M.ImageWrapper>
-                <M.CardBackground banner={cardSrc} />
+                <M.CardBackground $banner={cardSrc} />
               </M.ImageWrapper>
             </M.CardWrapper>
           </S.MuseCardFlip>

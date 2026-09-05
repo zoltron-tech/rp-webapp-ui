@@ -1,139 +1,126 @@
 # How chat encryption works (plain-English explainer)
 
-This describes the end-to-end (E2E) encryption used for direct/group chat messages
-in Novelist World. It's written for someone who isn't deep in the crypto code.
+This describes the encryption used for direct/group chat messages in Novelist
+World. It's written for someone who isn't deep in the crypto code.
 
 Core files:
 - `src/utils/e2e-crypto.ts` — all the encryption/decryption logic (client-side)
-- `src/utils/e2e-types.ts` — shared data shapes for talking to the backend
-- `src/app/rp/conversations/e2e-actions.ts` — server actions that call the backend key-distribution API
+- `packages/types/src/e2e.ts` — the shape of the one call to the backend
+- `src/app/rp/conversations/e2e-actions.ts` — that call
+- `service/ChatMessageCryptoService.kt` (portfolio-service) — the server's
+  matching decryption, used only for reported messages
 
 ## The big idea
 
-Messages are encrypted **on your device** before they're sent, and decrypted
-**on the recipient's device** after they arrive. The server (and its database)
-only ever sees scrambled ciphertext — it stores keys but can never use them to
-read a message. This is "true" E2E, not just "encrypted in transit" — even
-someone with full access to the Novelist World database couldn't read your chats.
+Messages are encrypted **in the browser** before they're sent and decrypted in
+the browser after they arrive. What is stored in the `messages` table, and what
+travels through chat-server, is ciphertext.
 
-## Two kinds of keys
+Read the next section carefully before describing this to users: **this is not
+end-to-end encryption.** The server can decrypt, deliberately.
 
-1. **Your identity key pair** — every user generates one ECDH key pair
-   (a public key and a private key) the first time they use chat. The private
-   key **never leaves your browser** — it's stored in `localStorage`. The
-   public key gets uploaded to the backend so other people can use it.
+## Two halves of one key
 
-2. **A conversation key** — every conversation (1:1 or group) has one shared
-   secret key (AES-256) used to actually encrypt/decrypt the messages in that
-   conversation. This key is created once, by whoever sends the first
-   encrypted message in that conversation.
+Every conversation has a single AES-256-GCM key. Nobody stores that key
+anywhere — it is derived, on demand, from two pieces:
 
-The clever part is how the conversation key gets safely shared with everyone
-in the conversation without the server ever seeing it in the clear:
+1. **The server half** — 32 random bytes the backend generates the first time
+   anyone asks for that conversation's key, stored in `e2e_conversation_secrets`
+   and handed out over `GET /chat/e2e/conversation/{id}/key` to **members only**.
+2. **The client half** — `CHAT_E2E_SECRET`, one value baked into the UI bundle
+   at build time and shared by every user.
 
-## "Envelopes" — sharing the conversation key safely
+The two go through HKDF-SHA256 (server half as the input key, client half as the
+salt, the conversation id as the info string) to produce the key. Same two
+halves in, same key out, every time — so every member of a conversation derives
+an identical key without any key exchange between them.
 
-For each member of a conversation, the conversation key is individually
-**wrapped** (encrypted) using a secret that only that member and the wrapper
-can compute together (via ECDH + HKDF — a standard "two people can derive the
-same shared secret from their public/private keys" trick). This wrapped copy
-is called an **envelope**.
+## Why it's built this way
 
-- The server stores everyone's public keys and everyone's envelopes.
-- The server can see *that* Alice has an envelope, but not what's inside it —
-  only Alice's private key (which never left her browser) can open it.
-- If you're the first person to send an encrypted message in a conversation,
-  your browser creates the conversation key and wraps ("envelopes") it for
-  every current member.
-- If someone joins later, or publishes their public key after the
-  conversation key already existed, they won't have an envelope yet. Any
-  member who *does* hold the key will notice this gap and create an envelope
-  for the missing person automatically — this is called a "repair pass" (see
-  `repairEnvelopes` in the code). Until that happens, that member sees a
-  🔒 placeholder instead of the real message.
+Because it removes all the moving parts. There is no per-user keypair, nothing
+kept in `localStorage`, no per-member copies of the key to distribute, nothing
+to repair when someone joins late, and no passphrase to remember. A new member,
+a new browser, or a fresh incognito window reads the whole conversation the
+moment it loads — it just asks the backend for the server half.
+
+Chat-server, which relays messages and sends push notifications, is given
+neither half. That's why a push preview for an encrypted message says
+"Sent a message" instead of leaking ciphertext.
 
 ## Sending a message
 
-1. You type a message and hit send.
-2. It appears instantly in your chat (optimistic UI) — before encryption even
-   happens, so the UI feels snappy.
-3. Right before the message actually goes over the socket, the app:
-   - Looks up (or creates) the conversation's shared key.
-   - If your envelope isn't ready yet, it politely asks other online members
-     to hurry up and create one for you (a small "nudge" over the socket),
-     waits ~2.5 seconds, and tries again.
-   - Encrypts the text with AES-256-GCM and sends the ciphertext instead of
-     plain text.
-4. If a key genuinely can't be resolved (e.g., you're the very first sender
-   and something failed), the app falls back to sending **plain text** rather
-   than blocking you from chatting. A special invisible marker (a hidden
-   character) is used to distinguish "this text is encrypted" from "this is
-   plain text" — so old messages sent before encryption was added still
-   display correctly.
+1. The composer hands the plaintext to `encryptMessageText(conversationId, text)`.
+2. That fetches (and caches) the conversation key, encrypts with AES-256-GCM
+   under a fresh random 12-byte IV, and returns
+   `HIDDEN_PREFIX + base64(iv ‖ ciphertext)`.
+3. The result goes over the WebSocket and into the database.
+
+The hidden prefix is a zero-width space followed by `e2e:v3:` — invisible if it
+ever renders, and the flag that tells a reader "this is ciphertext". Text
+without it is plaintext and passes through untouched, which is what makes the
+feature flag and every pre-encryption message safe.
+
+**Encryption fails open.** If the key can't be fetched — flag off, backend
+unreachable, no WebCrypto — the message is sent as plaintext rather than not
+sent at all. Chat never breaks because of encryption.
 
 ## Receiving a message
 
-1. A message arrives over the WebSocket.
-2. The app checks the invisible marker to see if it's encrypted.
-3. If encrypted, it decrypts using the conversation key (resolved/cached the
-   same way as sending).
-4. If the key isn't available yet (you just joined, or haven't been
-   enveloped yet), you see: **"🔒 This message could not be decrypted."**
-   The original ciphertext is kept in memory so that as soon as your envelope
-   arrives, the app automatically retries and swaps in the real text — you
-   don't need to refresh.
+Incoming messages are decrypted centrally in `socket.provider.tsx`, so every
+consumer of `lastIncomingMessage` sees plaintext. Fetched history, `lastMessage`
+previews in the inbox and the chat menu, and forwarded messages go through the
+same `decryptMessage` / `decryptConversations` helpers.
 
-## Keeping devices repaired without manual action
+If a message can't be decrypted right now, the UI shows
+"🔒 This message could not be decrypted." and keeps the original ciphertext on
+the message object (`e2eCiphertext`). A failed key fetch is retried after 30
+seconds, and the next incoming message re-runs decryption over the visible
+history — so a transient failure heals itself without a reload.
 
-Whenever you open a conversation, send a message, or a new message/nudge
-arrives over the socket, the app quietly re-checks: "do I have the key? does
-anyone I know need me to wrap it for them?" This is throttled (not on every
-keystroke) so it doesn't spam the backend, but it means:
+## The feature flag
 
-- A newcomer to a group chat usually gets access within seconds of any
-  existing member being online.
-- Nobody has to manually "share a key" — it's automatic in the background.
+`VITE_CHAT_E2E_ENABLED` (unset/empty = off) controls **encrypting only**.
+Decryption always runs. Turning the flag off makes new messages plaintext while
+everything already encrypted stays readable.
 
-## Using chat on more than one device
+`CHAT_E2E_SECRET` is not a flag — it's half the key. If it is unset, nothing
+encrypts. If it is *changed*, every message encrypted under the old value
+becomes permanently unreadable, so treat it as fixed once deployed.
 
-Your identity private key normally only lives in one browser's
-`localStorage`. To read the same encrypted chats on a second device (or after
-clearing browser storage), Novelist World keeps an encrypted **backup** of
-your identity key on the server:
+## Reported messages
 
-- The backup is encrypted with a key derived from your **password**
-  (via PBKDF2, 600,000 rounds — a slow, brute-force-resistant hashing
-  scheme). The server stores the encrypted blob but can't open it without
-  knowing your password.
-- When you log in with a password, the app automatically tries to restore
-  your identity from this backup (or creates one if it doesn't exist yet).
-  This means logging into chat from a new device "just works" using your
-  normal password.
-- If you signed up via Discord (OAuth) and have no password, there's a
-  dedicated "Secure chat sync" passphrase you set once in
-  Profile → Account settings. Enter the same passphrase on any device to
-  unlock the same chat history there.
-- A typo when entering that passphrase will **not** silently overwrite your
-  existing backup (it just says "doesn't match") — only right after a real
-  password login (where the password was just proven correct) does the app
-  allow it to replace the backup, e.g. after a password reset.
+A reported message is stored with the report. Because chat messages are
+encrypted and are deleted after 14 days, `ReportService` decrypts the message at
+report time and saves the plaintext into `reports.reported_content` — otherwise
+a moderator reviewing the report later would find ciphertext, or nothing.
+
+This is why portfolio-service is configured with `CHAT_E2E_CLIENT_SECRET`, which
+must hold the same value as the UI's `CHAT_E2E_SECRET`.
 
 ## What this does *not* protect against
 
-Being upfront about the current limitations:
+- **The server.** It holds one half of the key in its database and the other in
+  its configuration. It can read any message. That is a deliberate choice, made
+  so reported messages can be moderated.
+- **Anyone who reads the JS bundle.** The client half ships to every browser;
+  extracting it is trivial. It is not a secret from users, only from someone who
+  has the database and nothing else.
+- **A compromised or malicious server.** It could serve modified JS, or simply
+  log plaintext.
+- **Attachments.** Images, files and media are not encrypted.
+- **Metadata.** Who talks to whom, when, and how often is all in plaintext.
 
-- No key rotation. If someone leaves a group, they technically could still
-  decrypt messages sent while they were a member (irrelevant in practice
-  since messages are auto-deleted after 14 days).
-- Attachments (images/files) are **not** encrypted, only text.
-- If you report a message, moderators see the decrypted content (needed to
-  review reports).
-- If nobody who holds the conversation key is ever online to "repair" a new
-  member's envelope, that member is stuck seeing 🔒 until someone is.
-- The server does see your raw password at login (used to derive the backup
-  key) — so this protects your chat data from a database leak, not from a
-  fully compromised/malicious server at the moment you log in.
-- If the conversation key truly cannot be resolved, the app quietly falls
-  back to sending plain text rather than blocking the send, so chat never
-  breaks — but it means encryption coverage isn't 100% guaranteed in every
-  edge case.
+What it *does* protect is a stolen database dump or a leaked backup: the message
+rows are ciphertext, and the client half is not in there.
+
+## Notes for future work
+
+- No key rotation and no re-key when membership changes. A removed member who
+  kept a copy of the server half could still decrypt old ciphertext they saved.
+  Acceptable given the 14-day retention.
+- The prefix version (`e2e:v3:`) is what makes a future scheme change possible:
+  bump it, keep the old decrypt path for the retention window, then delete it.
+  The `v1` and `v2` schemes were removed this way.
+- The prefix appears in three places and must stay in sync:
+  `src/utils/e2e-crypto.ts`, `ChatMessageCryptoService.kt`, and the generic
+  `e2e:` check in chat-server's `push-notification-manager.ts`.

@@ -11,6 +11,7 @@ import { useUIContext } from "@/hooks";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import * as DropS from "../profile-more-dropdown/styled";
 import * as S from "./styles";
+import { env } from "@/lib/env";
 
 interface DiscordCommunityDialogProps {
   open: boolean;
@@ -32,7 +33,7 @@ export const DiscordCommunityDialog: FC<DiscordCommunityDialogProps> = ({
   const isMobile = width !== null && width < 801;
   const { errorToast } = useUIContext();
 
-  const inviteUrl = process.env.NEXT_PUBLIC_DISCORD_INVITE_URL ?? "";
+  const inviteUrl = env.DISCORD_INVITE_URL ?? "";
   const displayUrl = inviteUrl.replace(/^https?:\/\//, "");
 
   const [copied, setCopied] = useState(false);
@@ -126,7 +127,7 @@ export const DiscordCommunityDialog: FC<DiscordCommunityDialogProps> = ({
 
   const dialogContent = (
     <>
-      <S.DiscordDialogImage src={discordLogo.src} alt="NW Community Discord" />
+      <S.DiscordDialogImage src={discordLogo} alt="NW Community Discord" />
       <S.DiscordDialogTitle>Be a part of NW Community</S.DiscordDialogTitle>
       <S.DiscordDialogDescription>
         Connect & hangout with fellow novelists, get the latest app updates,

@@ -1,10 +1,12 @@
 "use client";
 
 import type { StoryBoard } from "@nw/types";
-import { useParams } from "next/navigation";
+import { useParams } from "@/lib/navigation";
+import { usernameFromHandle } from "@/utils/constants/profile-handle";
 import { useEffect, useMemo, useState } from "react";
 import { IoMdAdd } from "react-icons/io";
 import { getAllStoryboardsByUsernameAction } from "@/app/rp/story/actions";
+import { BlankStoryboardArt } from "@/components/book-art";
 import { BreadCrumb } from "@/components/breadcrumb";
 import { ShouldRender } from "@/components/common";
 import {
@@ -28,7 +30,8 @@ export default function MusesListPage({}) {
   const authState = useGlobalState("authState");
   const user = useGlobalState("user");
   const novelist = useGlobalState("novelist");
-  const username = params?.slug as string;
+  // The route param is a handle (`@tokyo`), not a bare username.
+  const username = usernameFromHandle(params?.handle as string);
   const isCurrentUser = user?.username === username;
   const { baseDataLoader } = usePageRouter();
   Logger.debug("params are:", params);
@@ -120,6 +123,18 @@ export default function MusesListPage({}) {
           );
         })}
       </S.StoryListContainer>
+
+      <ShouldRender if={storyBoards !== null && storyBoards.length === 0}>
+        <S.EmptyStateWrap>
+          <BlankStoryboardArt />
+          <S.EmptyStateTitle>No stories yet</S.EmptyStateTitle>
+          <S.EmptyStateSubtitle>
+            {isCurrentUser
+              ? "Start a story and your scenes will show up here."
+              : `${username} hasn't started any stories yet.`}
+          </S.EmptyStateSubtitle>
+        </S.EmptyStateWrap>
+      </ShouldRender>
 
       <EditStoryboardOverlay
         open={createOpen}

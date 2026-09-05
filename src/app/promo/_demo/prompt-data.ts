@@ -7,7 +7,7 @@
  */
 
 import type { Comment, Muse, Novelist, Prompt, PromptSource } from "@nw/types";
-import type { GifItem } from "@/pages/api/klipy-gifs";
+import type { GifItem } from "@/types/klipy";
 import { gifTile, portrait } from "./art";
 
 export const PROMPT_ID = "promo-prompt";

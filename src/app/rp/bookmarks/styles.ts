@@ -186,12 +186,6 @@ export const EmptyState = styled.div`
   padding: 32px 24px;
   text-align: center;
   color: var(--text-secondary);
-
-  svg {
-    font-size: 2.4rem;
-    color: var(--accent);
-    opacity: 0.85;
-  }
 `;
 
 export const EmptyTitle = styled.div`

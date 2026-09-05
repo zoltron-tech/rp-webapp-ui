@@ -1,7 +1,8 @@
 "use client";
 
 import type { PromptSource, Prompt as PromptType } from "@nw/types";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useNavigate } from "@/lib/navigation";
+import { useParams, useSearchParams } from "@/lib/navigation";
 import { Separator } from "radix-ui";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { IoArrowBackOutline } from "react-icons/io5";
@@ -37,7 +38,7 @@ const useGetPrompt = (promptId: string) => {
 
 function CommentPageInner() {
   const params = useParams();
-  const router = useRouter();
+  const navigate = useNavigate();
   const searchParams = useSearchParams();
   const promptId = params?.slug as string;
   const dropdownSelection = (searchParams?.get("dropdownSelection") ?? "ALL") as
@@ -109,7 +110,7 @@ function CommentPageInner() {
       <S.PageContainer>
         {/* ── Sticky header — shows the prompt source/meta ─────────── */}
         <S.HeaderContainer>
-          <S.BackButton onClick={() => router.back()} aria-label="Go back">
+          <S.BackButton onClick={() => navigate(-1)} aria-label="Go back">
             <IoArrowBackOutline size={22} />
           </S.BackButton>
           <S.HeaderPromptWrap>
@@ -134,7 +135,7 @@ function CommentPageInner() {
             type="comment"
             dropdownSelection={isOOCPost ? "NOVELIST" : dropdownSelection}
             initialSelection={initialSelection}
-            onSend={() => router.back()}
+            onSend={() => navigate(-1)}
           />
         )}
       </S.PageContainer>

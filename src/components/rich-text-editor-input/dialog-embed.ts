@@ -1,4 +1,5 @@
 import { css } from "styled-components";
+import { env } from "@/lib/env";
 
 /**
  * The style-agnostic data model for an inserted dialog. Only `museId`, the
@@ -63,7 +64,7 @@ export type DialogMuse = {
   accent?: string | null;
 };
 
-const RP_SERVICE_URL = process.env.RP_SERVICE_URL ?? "";
+const RP_SERVICE_URL = env.RP_SERVICE_URL ?? "";
 
 /** URL of a muse's avatar image (served by the portfolio service). */
 export const museAvatarUrl = (

@@ -10,6 +10,6 @@ interface Props {
 
 export const NWLogoInner: FC<Props> = ({ size, className }) => (
   <S.Inner $size={size} className={className}>
-    <S.Img src={logoText.src} alt="NW" />
+    <S.Img src={logoText} alt="NW" />
   </S.Inner>
 );

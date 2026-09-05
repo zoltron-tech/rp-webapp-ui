@@ -27,6 +27,10 @@ export default function NotifiactionsPage() {
 
       if (!data || data.length === 0) {
         setHasMore(false);
+        // Record the empty result on a first page, so the list can tell
+        // "loaded, nothing here" apart from "still loading" (both of which
+        // otherwise leave `notifications` undefined) and show its empty state.
+        if (!append) set({ notifications: [] });
         return;
       }
 

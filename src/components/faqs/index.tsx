@@ -57,11 +57,11 @@ export const FAQs = () => {
                 <li>
                   Go to user menu by clicking on the avatar in top right corner.
                   <AppImageViewer
-                    src={UserMenuCharsImage.src}
+                    src={UserMenuCharsImage}
                     alt="User menu with Your Characters option"
                   >
                     <S.FAQImage
-                      src={UserMenuCharsImage.src}
+                      src={UserMenuCharsImage}
                       alt="User menu with Your Characters option"
                     />
                   </AppImageViewer>
@@ -72,11 +72,11 @@ export const FAQs = () => {
                 </li>
                 <li>You should see the list of all your characters there.</li>
                 <AppImageViewer
-                  src={CharSelectScreen.src}
+                  src={CharSelectScreen}
                   alt="Character selection screen with list of characters and add new character card"
                 >
                   <S.FAQImage
-                    src={CharSelectScreen.src}
+                    src={CharSelectScreen}
                     alt="Character selection screen with list of characters and add new character card"
                   />
                 </AppImageViewer>
@@ -114,11 +114,11 @@ export const FAQs = () => {
                 <li>
                   Click on <strong>'Edit Profile'</strong> option.
                   <AppImageViewer
-                    src={UserMenuEditProfileImage.src}
+                    src={UserMenuEditProfileImage}
                     alt="User menu with Edit Profile option"
                   >
                     <S.FAQImage
-                      src={UserMenuEditProfileImage.src}
+                      src={UserMenuEditProfileImage}
                       alt="User menu with Edit Profile option"
                     />
                   </AppImageViewer>
@@ -130,11 +130,11 @@ export const FAQs = () => {
                   To change avatar, click on the avatar and upload the desired
                   image that you want to set as your avatar.
                   <AppImageViewer
-                    src={EditProfileImage.src}
+                    src={EditProfileImage}
                     alt="Edit Profile screen with input fields for first name, last name, avatar, and bio"
                   >
                     <S.FAQImage
-                      src={EditProfileImage.src}
+                      src={EditProfileImage}
                       alt="Edit Profile screen with input fields for first name, last name, avatar, and bio"
                     />
                   </AppImageViewer>

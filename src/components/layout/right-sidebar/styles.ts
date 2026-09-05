@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/link";
 import { css, keyframes, styled } from "styled-components";
 import { Username } from "@/components/common";
 import { UnreadBadgeBase } from "@/components/common/unread-badge";
@@ -81,15 +81,41 @@ export const ViewAllLink = styled.button`
   }
 `;
 
+/** Panel empty state: art stacked over one line, the same shape the full-page
+ *  empty states use, just scaled to a 280px sidebar. */
 export const EmptyState = styled.div`
-  padding: 10px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 4px 8px;
+  font-family: var(--font);
   font-size: 12px;
   color: var(--text-secondary);
   line-height: 1.4;
+  text-align: center;
+
+  /* The shared art sets its own width for a full page. A descendant selector
+     outranks that single class, so the panel can size it down without the
+     component needing to know where it is being rendered. */
+  svg {
+    flex-shrink: 0;
+    width: 104px;
+    height: auto;
+  }
+
+  span {
+    max-width: 24ch;
+  }
 `;
 
-export const ThreadRow = styled.button`
-  all: unset;
+/** The shared shape of a sidebar row. Extracted because the two rows need
+ *  different host elements: a thread row is itself the button, while a
+ *  suggestion row also contains an Add button and so cannot be one — a button
+ *  inside a button is invalid HTML, and the parser's auto-close of the outer
+ *  one breaks hydration for the whole tree. */
+const rowBase = css`
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -97,7 +123,6 @@ export const ThreadRow = styled.button`
   width: 100%;
   padding: 8px 4px;
   border-radius: 10px;
-  cursor: pointer;
 
   &:hover {
     background: var(--bg-3);
@@ -114,9 +139,30 @@ export const ThreadRow = styled.button`
   }
 `;
 
-export const SuggestionRow = styled(ThreadRow)`
-  align-items: flex-start;
+export const ThreadRow = styled.button`
+  all: unset;
+  ${rowBase}
   cursor: pointer;
+`;
+
+/** A plain container, not a button — it holds SuggestionAddButton. */
+export const SuggestionRow = styled.div`
+  ${rowBase}
+  align-items: flex-start;
+`;
+
+/** The part of a suggestion row that opens the profile. Carries the row's
+ *  click target so the row itself can stay a non-interactive container. */
+export const SuggestionMain = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+  text-align: left;
 `;
 
 /* Overlapping pair — the muse whose thread this is, plus the muse it's with

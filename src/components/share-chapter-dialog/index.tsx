@@ -26,6 +26,8 @@ import { ROUTES } from "@/utils/constants/routes";
 import { CoverImage } from "../common";
 import * as DropS from "../profile-more-dropdown/styled";
 import * as S from "./styled";
+import { shareChapterToDiscord } from "@nw/api/endpoints/community";
+import { api } from "@/lib/api";
 
 interface ShareChapterDialogProps {
   event: StoryBoardEvent | null;
@@ -176,14 +178,9 @@ export const ShareChapterDialog: FC<ShareChapterDialogProps> = ({
         chapterUrl,
         novelistUsername: novelist?.username ?? "",
       };
-      const res = await fetch("/api/discord/share-chapter", {
-        body: JSON.stringify(payload),
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-      });
-      if (res.ok) {
-        const data = (await res.json()) as SharePromptResult;
-        setShareState({ messageUrl: data.messageUrl, status: "success" });
+      const result = await shareChapterToDiscord(api, payload);
+      if (result && "messageUrl" in result) {
+        setShareState({ messageUrl: result.messageUrl, status: "success" });
       } else {
         setShareState({ status: "error" });
       }

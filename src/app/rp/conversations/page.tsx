@@ -4,8 +4,10 @@ import type { Conversation, IceBreaker } from "@nw/types";
 import classNames from "classnames";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BiSupport } from "react-icons/bi";
+import { FiArrowRight } from "react-icons/fi";
 import { HiOutlineChatBubbleLeftRight, HiOutlineSparkles } from "react-icons/hi2";
 import { MdAdd, MdGroupAdd } from "react-icons/md";
+import { FrozenSilenceArt, NoConversationsArt } from "@/components/book-art";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { ConversationCard } from "@/components/conversation-card";
 import { LoadMore } from "@/components/load-more/page";
@@ -398,7 +400,7 @@ export default function ConversationsPage() {
 
           {!iceBreakersLoading && iceBreakers.length === 0 && (
             <S.IceBreakerEmptyState>
-              <HiOutlineSparkles size={20} />
+              <FrozenSilenceArt />
               <span>Silence is icy. Click the button to break the ice.</span>
             </S.IceBreakerEmptyState>
           )}
@@ -463,104 +465,28 @@ export default function ConversationsPage() {
               </S.ConversationList>
             ) : (
               <S.EmptyStateRoot>
-                <S.IllustrationWrap>
-                  <svg
-                    width="110"
-                    height="96"
-                    viewBox="0 0 110 96"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true"
-                  >
-                    {/* Back bubble */}
-                    <rect
-                      x="26"
-                      y="4"
-                      width="76"
-                      height="48"
-                      rx="14"
-                      fill="var(--bg-5)"
-                    />
-                    <path d="M82 52 L96 68 L72 52Z" fill="var(--bg-5)" />
-                    {/* Front bubble (accent-tinted) */}
-                    <rect
-                      x="8"
-                      y="28"
-                      width="72"
-                      height="48"
-                      rx="14"
-                      fill="var(--accent)"
-                      fillOpacity="0.12"
-                    />
-                    <rect
-                      x="8"
-                      y="28"
-                      width="72"
-                      height="48"
-                      rx="14"
-                      stroke="var(--accent)"
-                      strokeWidth="1.5"
-                    />
-                    <path
-                      d="M20 76 L8 92 L34 76Z"
-                      fill="var(--accent)"
-                      fillOpacity="0.12"
-                    />
-                    <path
-                      d="M20 76 L8 92 L34 76Z"
-                      stroke="var(--accent)"
-                      strokeWidth="1.5"
-                      strokeLinejoin="round"
-                    />
-                    {/* Typing dots */}
-                    <circle cx="30" cy="52" r="4" fill="var(--accent)">
-                      <animate
-                        attributeName="opacity"
-                        values="1;0.25;1"
-                        dur="1.4s"
-                        begin="0s"
-                        repeatCount="indefinite"
-                      />
-                    </circle>
-                    <circle cx="44" cy="52" r="4" fill="var(--accent)">
-                      <animate
-                        attributeName="opacity"
-                        values="1;0.25;1"
-                        dur="1.4s"
-                        begin="0.22s"
-                        repeatCount="indefinite"
-                      />
-                    </circle>
-                    <circle cx="58" cy="52" r="4" fill="var(--accent)">
-                      <animate
-                        attributeName="opacity"
-                        values="1;0.25;1"
-                        dur="1.4s"
-                        begin="0.44s"
-                        repeatCount="indefinite"
-                      />
-                    </circle>
-                  </svg>
-                </S.IllustrationWrap>
-
+                <NoConversationsArt />
                 <S.EmptyStateHeading>No conversations yet</S.EmptyStateHeading>
                 <S.EmptyStateBody>
-                  Start by connecting with fellow novelists or discover new
-                  stories to write together.
+                  Connect with fellow novelists, or find a story to write
+                  together.
                 </S.EmptyStateBody>
-
                 <S.EmptyStateActions>
-                  <S.EmptyStateButton
+                  <S.EmptyStateCta
+                    type="button"
                     $primary
                     onClick={() => routeToPage(ROUTES.Fellows)}
                   >
-                    Find Novelists
-                  </S.EmptyStateButton>
-                  <S.EmptyStateButton
+                    Find novelists
+                    <FiArrowRight size={14} />
+                  </S.EmptyStateCta>
+                  <S.EmptyStateCta
+                    type="button"
                     onClick={() => routeToPage(ROUTES.explore)}
                   >
                     Explore
-                  </S.EmptyStateButton>
+                    <FiArrowRight size={14} />
+                  </S.EmptyStateCta>
                 </S.EmptyStateActions>
               </S.EmptyStateRoot>
             )}

@@ -1,7 +1,7 @@
 "use client";
 
 import type { Prompt } from "@nw/types";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams } from "@/lib/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { IoIosBookmarks } from "react-icons/io";

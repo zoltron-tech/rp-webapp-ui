@@ -1,4 +1,4 @@
-import { canShortenProfilePath } from "./reserved-paths";
+import { toHandle } from "./profile-handle";
 
 export const ROUTES = {
   Bookmarks: "/rp/bookmarks",
@@ -71,19 +71,15 @@ export const ROUTES = {
      * The path to hand out when a link leaves the app — copied, shared to a
      * system share sheet, posted to Discord.
      *
-     * `novelist.world/{username}` rather than the full internal path: it is
-     * the form a person can read out or type, and the middleware redirects it
-     * onto the real route. Falls back to the long path for the handful of
-     * names the middleware will not shorten, so a share never produces a link
-     * that goes nowhere.
+     * Identical to `View(username).Index` now that `/@username` is the real
+     * route rather than a redirect onto one. Kept as its own name because the
+     * call sites mean something different by it, and because a share is the
+     * one place where a link going nowhere is unrecoverable.
      *
-     * In-app navigation should keep using `View(...)`, which routes directly
-     * instead of taking the redirect.
+     * It no longer falls back to a long path for awkward names: with the `@`
+     * there are no awkward names.
      */
-    Share: (username: string) =>
-      canShortenProfilePath(username)
-        ? `/${username}`
-        : `/rp/profile/${username}`,
+    Share: (username: string) => `/${toHandle(username)}`,
     Story: {
       Create: "/rp/profile/story/create",
       Edit: (storyId: string) => ({
@@ -96,13 +92,19 @@ export const ROUTES = {
       }),
       Index: "/rp/profile/story",
     },
+    /**
+     * A novelist's profile and its tabs, at the root of the domain.
+     *
+     * `/@tokyo`, not `/rp/profile/tokyo`. The old paths still resolve — the
+     * route table redirects them — but nothing should generate one.
+     */
     View: (username: string) => ({
-      Friends: `/rp/profile/${username}/friends`,
-      Index: `/rp/profile/${username}`,
-      Muses: `/rp/profile/${username}/muses`,
-      Music: `/rp/profile/${username}/music`,
-      Posts: `/rp/profile/${username}/posts`,
-      Storyboards: `/rp/profile/${username}/storyboards`,
+      Friends: `/${toHandle(username)}/friends`,
+      Index: `/${toHandle(username)}`,
+      Muses: `/${toHandle(username)}/muses`,
+      Music: `/${toHandle(username)}/music`,
+      Posts: `/${toHandle(username)}/posts`,
+      Storyboards: `/${toHandle(username)}/storyboards`,
     }),
   },
   Prompt: {

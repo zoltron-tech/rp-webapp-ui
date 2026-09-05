@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams } from "@/lib/navigation";
 import { useEffect } from "react";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
@@ -25,4 +25,8 @@ export default function ProfilePage({}) {
     Logger.debug("ProfilePage");
     fetchNovelist(novelistId);
   }, []);
+
+  // Renders nothing: this route exists only to redirect. Explicit rather
+  // than implicit so the component satisfies ComponentType in routes.tsx.
+  return null;
 }

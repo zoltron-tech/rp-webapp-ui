@@ -5,7 +5,7 @@ import type {
   Muse,
   MuseAboutSection,
 } from "@nw/types/novelist";
-import { useParams } from "next/navigation";
+import { useParams } from "@/lib/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BsArrowLeft, BsThreeDots } from "react-icons/bs";
 import { FaRegEdit } from "react-icons/fa";

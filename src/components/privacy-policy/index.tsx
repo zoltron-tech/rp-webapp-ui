@@ -420,8 +420,8 @@ export const PrivacyPolicy = () => {
               <p>
                 To request to review, update, or delete your personal
                 information, please visit:&nbsp;
-                <a href="https://novelist.world/rp/profile/[your username]">
-                  https://novelist.world/rp/profile/[your username]
+                <a href="https://novelist.world/@[your username]">
+                  https://novelist.world/@[your username]
                 </a>{" "}
                 &rarr; Edit profile.
               </p>

@@ -1,5 +1,3 @@
-"use server";
-
 import {
   addGroupMembers,
   deleteGroup,
@@ -14,7 +12,7 @@ import {
   sendConversationMessage,
   updateGroup,
 } from "@nw/api/endpoints/conversation-detail";
-import { authedApi } from "@/lib/server-api";
+import { authedApi } from "@/lib/api";
 
 export const getConversationByIdAction = (conversationId: string) =>
   getConversationById(authedApi, conversationId);

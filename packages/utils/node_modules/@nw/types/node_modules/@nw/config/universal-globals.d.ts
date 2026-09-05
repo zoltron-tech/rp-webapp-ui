@@ -11,6 +11,23 @@
  * Deliberately NOT declared: `window`, `document`, `navigator`, `localStorage`,
  * and the Node-only surface (`fs`, `path`, `Buffer`). Reach for a platform
  * adapter instead — see `@nw/utils/platform`.
+ *
+ * ⚠ `process.env` is available everywhere only because every bundler we use
+ * *inlines* it at build time — webpack via Next's `env` block, Metro via Babel.
+ * It is not a runtime global in a browser. Vite does not inline it, so any
+ * `process.env.X` reaching browser code under Vite throws
+ * `ReferenceError: process is not defined` at runtime, where no type-checker
+ * will have caught it.
+ *
+ * Consequence for consumers: an app bundling these packages for a browser MUST
+ * declare every `process.env` key this code reads. Today that is exactly one —
+ * `RP_BUCKET_NAME`, read in `@nw/utils/image` — and the Vite app supplies it
+ * through `define` in `vite.config.ts`, reproducing what webpack does now.
+ * See REACT_MIGRATION_STEPS.md A1/B1.
+ *
+ * The better long-term shape is to stop reading an ambient global from shared
+ * code and thread the value in explicitly (`configureImages({ bucket })`). That
+ * is a shared-package API change, so it is deliberately out of scope here.
  */
 
 declare function setTimeout(

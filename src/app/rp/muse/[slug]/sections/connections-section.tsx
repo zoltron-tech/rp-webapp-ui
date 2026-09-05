@@ -14,6 +14,7 @@ import {
   getMuseConnectionsByMuseAction,
   reactToMuseConnectionAction,
 } from "@/app/rp/muse/connection-actions";
+import { MuseBondArt } from "@/components/book-art";
 import { AppAlertDialog } from "@/components/dialog";
 import { MuseConnectionDetail } from "@/components/muse-connection/muse-connection-detail";
 import {
@@ -450,7 +451,12 @@ export function ConnectionsSection({ muse, isOwnMuse, seed = null }: Props) {
                     })}
 
                     {connections?.length === 0 && (
-                      <S.SectionEmpty>No muse connections yet.</S.SectionEmpty>
+                      <S.SectionEmptyWrap>
+                        <MuseBondArt accent={accent} />
+                        <S.SectionEmpty>
+                          No muse connections yet.
+                        </S.SectionEmpty>
+                      </S.SectionEmptyWrap>
                     )}
 
                     {/* Guarantees scroll room below the last card so an

@@ -357,7 +357,9 @@ export const StyledDate = styled.div`
 `;
 
 type CardProps = {
-  banner: string;
+  /** Transient: `banner` is not an HTML attribute, so left un-prefixed
+   *  styled-components forwards it to the DOM and React errors on it. */
+  $banner: string;
 };
 
 export const CardBackground = styled.div<CardProps>`
@@ -365,7 +367,7 @@ export const CardBackground = styled.div<CardProps>`
   width: 100%;
   height: 100%;
 
-  background-image: url(${(props): string => props.banner});
+  background-image: url(${(props): string => props.$banner});
   background-size: cover;
   transition-timing-function: ease-out;
   transition-duration: 300ms;
@@ -475,44 +477,4 @@ export const LoadMoreDivider = styled.div`
     padding: 4px 8px;
     font-size: var(--font-size-small);
   }
-`;
-
-export const NotFoundContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 40px 20px 60px;
-  text-align: center;
-`;
-
-export const NotFoundAnimation = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-export const NotFoundTitle = styled.h2`
-  all: unset;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font);
-  font-size: var(--font-size-h5);
-  font-weight: var(--font-weight-bold);
-  color: var(--accent-8);
-  letter-spacing: 0.02em;
-  gap: 12px;
-`;
-
-export const NotFoundMessage = styled.p`
-  all: unset;
-  display: block;
-  font-family: var(--font);
-  font-size: var(--font-size);
-  font-weight: var(--font-weight-regular);
-  color: var(--text-secondary);
-  max-width: 320px;
-  line-height: 1.6;
 `;

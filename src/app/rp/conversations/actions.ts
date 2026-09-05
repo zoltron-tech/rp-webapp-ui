@@ -1,5 +1,3 @@
-"use server";
-
 import {
   createConversationIfNotExist,
   createGroup,
@@ -11,7 +9,7 @@ import {
   getIceBreakers,
   getUnreadConversationIds,
 } from "@nw/api/endpoints/conversations";
-import { api } from "@/lib/server-api";
+import { api } from "@/lib/api";
 
 export const getConversationsAction = (pageNumber: number, pageSize: number) =>
   getConversations(api, pageNumber, pageSize);

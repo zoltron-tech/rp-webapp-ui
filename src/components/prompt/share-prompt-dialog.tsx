@@ -22,6 +22,8 @@ import { toFormattedDate } from "@/utils/helpers";
 import { AvatarNew } from "../common/avatar-new";
 import * as DropS from "../profile-more-dropdown/styled";
 import * as S from "./styled";
+import { sharePromptToDiscord } from "@nw/api/endpoints/community";
+import { api } from "@/lib/api";
 
 interface SharePromptDialogProps {
   promptId: string;
@@ -177,14 +179,9 @@ export const SharePromptDialog: FC<SharePromptDialogProps> = ({
         prompt,
         promptUrl,
       };
-      const res = await fetch("/api/discord/share", {
-        body: JSON.stringify(payload),
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-      });
-      if (res.ok) {
-        const data = (await res.json()) as SharePromptResult;
-        setShareState({ messageUrl: data.messageUrl, status: "success" });
+      const result = await sharePromptToDiscord(api, payload);
+      if (result && "messageUrl" in result) {
+        setShareState({ messageUrl: result.messageUrl, status: "success" });
       } else {
         setShareState({ status: "error" });
       }

@@ -38,7 +38,7 @@ export const InstallAppDialog: FC<InstallAppDialogProps> = ({
           <FiX />
         </S.DiscordDialogClose>
         <S.DiscordDialogImage
-          src={appInstallLogo.src}
+          src={appInstallLogo}
           alt="Install Novelist World"
         />
         <S.DiscordDialogTitle>

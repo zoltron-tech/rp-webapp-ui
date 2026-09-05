@@ -1,5 +1,3 @@
-"use server";
-
 import {
   deleteProfileSong,
   getProfileSong,
@@ -7,7 +5,7 @@ import {
   setProfileSong,
 } from "@nw/api/endpoints/profile-song";
 import type { ProfileSong } from "@nw/types/music";
-import { api, authedApi } from "@/lib/server-api";
+import { api, authedApi } from "@/lib/api";
 
 /** Public: the featured song shown on a novelist's profile, or null when none. */
 export const getProfileSongAction = (novelistId: string) =>

@@ -2,19 +2,19 @@
 
 import { Flex } from "@novelist-world/ui";
 import type { Comment, PromptSource, Reply } from "@nw/types";
-import { useParams } from "next/navigation";
+import { useParams } from "@/lib/navigation";
 import { Separator } from "radix-ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
 import { FaRegEdit } from "react-icons/fa";
-import { FaRegTrashCan, FaTrashCan } from "react-icons/fa6";
+import { FaRegTrashCan } from "react-icons/fa6";
 import { IoArrowBackOutline } from "react-icons/io5";
 import { RiArrowGoBackLine, RiCheckboxCircleLine, RiFlagFill } from "react-icons/ri";
-import { BookMascot } from "@/components/book-mascot";
 import { ShouldRender } from "@/components/common";
 import { LikeButton } from "@/components/common/like-button";
 import { MuseAvatar } from "@/components/common/muse-avatar";
 import { NovelistAvatar } from "@/components/common/novelist-avatar";
+import { DeletedContent } from "@/components/deleted-content";
 import { AppAlertDialog } from "@/components/dialog";
 import {
   museToSource,
@@ -143,22 +143,6 @@ const useGetComment = (commentId: string) => {
 
   return { comment, loading, notFound, refetch: fetchComment, setComment };
 };
-
-function DeletedThreadFallback() {
-  return (
-    <S.NotFoundContainer>
-      <S.NotFoundAnimation>
-        <BookMascot variant="sad" size={200} />
-      </S.NotFoundAnimation>
-      <S.NotFoundTitle>
-        <FaTrashCan /> Thread Deleted
-      </S.NotFoundTitle>
-      <S.NotFoundMessage>
-        Oops! Looks like the thread has been deleted by the Novelist!
-      </S.NotFoundMessage>
-    </S.NotFoundContainer>
-  );
-}
 
 const PAGE_SIZE = 2;
 
@@ -858,7 +842,7 @@ export default function ThreadPage({}) {
     return (
       <S.ParentContainer>
         <S.RepliesContainer>
-          <DeletedThreadFallback />
+          <DeletedContent label="Thread" />
         </S.RepliesContainer>
       </S.ParentContainer>
     );

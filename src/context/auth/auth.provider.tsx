@@ -1,7 +1,6 @@
 "use client";
 
 import type { AuthState } from "@nw/types/state";
-import { usePathname } from "next/navigation";
 import { type FC, type ReactNode, useCallback, useEffect, useRef } from "react";
 import {
   authenticateAction,
@@ -13,6 +12,8 @@ import { getNovelistRankByIdAction } from "@/app/rp/leaderboard/actions";
 import { getUserNovelist } from "@/app/rp/novelists/actions";
 import { getUnreadReplyCount } from "@/app/rp/outgoing-threads/actions";
 import { useStateMachine } from "@/hooks";
+import { dropStaleAuthCookie } from "@/lib/api";
+import { usePathname } from "@/lib/navigation";
 import { initialisePushNotifications } from "@/lib/push";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
@@ -111,8 +112,7 @@ export const AuthProvider: FC<Props> = ({ children }) => {
         });
         void getNovelistRankByIdAction(_novelist.id).then((rankResult) => {
           setGlobalState({
-            novelistRank:
-              "message" in rankResult ? undefined : rankResult.rank,
+            novelistRank: "message" in rankResult ? undefined : rankResult.rank,
           });
         });
         initialisePushNotifications(); // fire-and-forget — errors caught inside
@@ -166,6 +166,10 @@ export const AuthProvider: FC<Props> = ({ children }) => {
       // stuck on "LOADING" after the callback page already finished and
       // navigated away.
       if (pathname === ROUTES.Oauth.Callback) return;
+      // An expired token is worse than no token: the API client still sends
+      // it, and the backend answers a public read (a profile, say) with 404
+      // rather than the anonymous view. Clear it before the first request.
+      dropStaleAuthCookie();
       verifyInitialAuthState();
     }
   }, []);

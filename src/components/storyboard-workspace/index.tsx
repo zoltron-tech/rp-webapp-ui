@@ -18,6 +18,7 @@ import { StoryTimelineView } from "@/components/story-timeline";
 import { UserGuideDialog, useUserGuide } from "@/components/user-guide-dialog";
 import { STORYBOARD_GUIDE } from "@/components/user-guide-dialog/guides/storyboard";
 import * as S from "./styles";
+import { useSetSearchParams } from "@/lib/navigation";
 import {
   isWorkspaceView,
   MEMBERS_ONLY_VIEWS,
@@ -57,6 +58,7 @@ export const StoryboardWorkspace: FC<Props> = ({
   chaptersView,
   codexSeed = null,
 }) => {
+  const setSearchParams = useSetSearchParams();
   const [view, setView] = useState<WorkspaceView>("chapters");
   /** Views opened so far — they stay mounted once activated. */
   const [opened, setOpened] = useState<WorkspaceView[]>(["chapters"]);
@@ -113,15 +115,11 @@ export const StoryboardWorkspace: FC<Props> = ({
     );
     // Best effort — some in-app browsers restrict history writes, and that is
     // not worth losing the view switch over.
-    try {
-      const url = new URL(window.location.href);
-      if (next === "chapters") url.searchParams.delete("view");
-      else url.searchParams.set("view", next);
-      window.history.replaceState(null, "", url.toString());
-    } catch (err) {
-      console.error("Failed to mirror the workspace view into the URL", err);
-    }
-  }, []);
+    setSearchParams((params) => {
+      if (next === "chapters") params.delete("view");
+      else params.set("view", next);
+    });
+  }, [setSearchParams]);
 
   /**
    * Mobile only — the tab bar is pinned to the foot of the page, so a tap

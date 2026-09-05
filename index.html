@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#212225" />
+
+    <!--
+      The site-wide metadata block, ported verbatim from the root layout's
+      `metadata` export. All of it was static, so none of it is lost by moving
+      to a SPA shell. The two per-story routes are the exception and are handled
+      by OG injection in the BFF — see REACT_MIGRATION_STEPS.md C8.
+    -->
+    <title>Novelist World — Live Roleplay Chat &amp; Writing Community</title>
+    <meta
+      name="description"
+      content="Novelist World is a live roleplay and creative writing community. Create Muses, chat in real time, write collaborative stories, and share writing prompts."
+    />
+    <meta
+      name="keywords"
+      content="roleplay, roleplaying, roleplay chat, live roleplay, online roleplay, text roleplay, roleplaying app, roleplaying application, roleplay community, RP, muses, characters, original characters, character creation, creative writing, collaborative writing, collaborative fiction, writing prompts, writing community, storyboards, fanfiction, writers, Novelist World"
+    />
+    <meta name="application-name" content="Novelist World" />
+    <meta name="author" content="Novelist World" />
+    <meta name="creator" content="Novelist World" />
+    <meta name="publisher" content="Novelist World" />
+    <meta name="category" content="social" />
+    <meta name="format-detection" content="telephone=no, address=no, email=no" />
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+    <link rel="canonical" href="https://novelist.world/" />
+
+    <!-- Apple / PWA -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Novelist World" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+
+    <!-- Open Graph -->
+    <meta
+      property="og:title"
+      content="Novelist World — Live Roleplay &amp; Creative Writing Community"
+    />
+    <meta
+      property="og:description"
+      content="Join Novelist World — the live roleplay and creative writing community. Build Muses and original characters, roleplay over real-time chat, co-write collaborative stories, and discover open writing prompts with fellow writers."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Novelist World" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:url" content="https://novelist.world/" />
+    <meta property="og:image" content="https://novelist.world/og_image.png" />
+    <meta property="og:image:width" content="1731" />
+    <meta property="og:image:height" content="909" />
+    <meta
+      property="og:image:alt"
+      content="Novelist World — live roleplay and creative writing community"
+    />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Novelist World — Live Roleplay &amp; Creative Writing Community"
+    />
+    <meta
+      name="twitter:description"
+      content="Join Novelist World — the live roleplay and creative writing community. Build Muses and original characters, roleplay over real-time chat, co-write collaborative stories, and discover open writing prompts with fellow writers."
+    />
+    <meta name="twitter:image" content="https://novelist.world/og_image.png" />
+
+    <!-- Icons. These resolve because the files were moved out of src/app/ and
+         into public/ — under Next only favicon.ico was ever served from app/,
+         which is why the other declarations used to 404. -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#212225" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@id": "https://novelist.world/#organization",
+            "@type": "Organization",
+            "alternateName": "NovelistWorld",
+            "description": "Novelist World is a live roleplay and creative writing community. Create Muses, chat in real time, write collaborative stories, and share writing prompts.",
+            "logo": "https://novelist.world/android-chrome-384x384.png",
+            "name": "Novelist World",
+            "url": "https://novelist.world"
+          },
+          {
+            "@id": "https://novelist.world/#website",
+            "@type": "WebSite",
+            "description": "Novelist World is a live roleplay and creative writing community. Create Muses, chat in real time, write collaborative stories, and share writing prompts.",
+            "inLanguage": "en",
+            "name": "Novelist World",
+            "publisher": { "@id": "https://novelist.world/#organization" },
+            "url": "https://novelist.world"
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

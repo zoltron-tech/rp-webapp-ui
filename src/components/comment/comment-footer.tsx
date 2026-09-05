@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { type FC, type MouseEventHandler, useCallback, useMemo } from "react";
 import { GoCommentDiscussion } from "react-icons/go";
 import { IoMdArrowForward } from "react-icons/io";

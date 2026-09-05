@@ -1,11 +1,23 @@
 import classNames from "classnames";
-import Image from "next/image";
 import type React from "react";
 import { type FC, useState } from "react";
 import { TbCameraUp } from "react-icons/tb";
 import { useUIContext } from "@/hooks";
 import { Logger } from "@/utils/services";
 import * as S from "./styles";
+
+/**
+ * Reproduces next/image's legacy `layout="fill"`: stretch to the positioned
+ * parent. S.UploadAvatar is already `position: absolute` with a fixed clamp
+ * size, so this fills exactly what the Image did.
+ */
+const FILL: React.CSSProperties = {
+  height: "100%",
+  inset: 0,
+  objectFit: "cover",
+  position: "absolute",
+  width: "100%",
+};
 
 type UploadAvatarProps = {
   image?: string;
@@ -46,13 +58,13 @@ export const UploadAvatar: FC<UploadAvatarProps> = ({ image, onChange }) => {
         ])}
       >
         {uploadedFile ? (
-          <Image
+          <img
             src={URL.createObjectURL(uploadedFile)}
-            layout="fill"
+            style={FILL}
             alt={"avatar"}
           />
         ) : image ? (
-          <Image src={image} layout="fill" alt={"avatar"} />
+          <img src={image} style={FILL} alt={"avatar"} />
         ) : null}
         <TbCameraUp />
       </S.UploadAvatar>

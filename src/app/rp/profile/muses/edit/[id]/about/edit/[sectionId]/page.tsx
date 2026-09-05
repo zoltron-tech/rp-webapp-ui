@@ -1,7 +1,7 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { useParams } from "next/navigation";
+import { dynamic } from "@/lib/dynamic";
+import { useParams } from "@/lib/navigation";
 import { EditMuseAboutSectionForm } from "@/components/edit-muse-about-section";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 

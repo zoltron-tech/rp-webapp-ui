@@ -252,16 +252,19 @@ export const IceBreakerEmptyState = styled.div`
   display: flex;
   align-items: center;
   align-self: center;
-  gap: 10px;
-  padding: 6px 14px 6px 4px;
+  gap: 8px;
+  padding: 6px 14px 6px 0;
   color: var(--text-secondary);
   font-size: 12px;
   line-height: 1.4;
 
+  /* The art carries its own colour and opacity, so it is left alone here. */
   svg {
     flex-shrink: 0;
-    color: var(--accent);
-    opacity: 0.85;
+  }
+
+  span {
+    max-width: 30ch;
   }
 `;
 
@@ -1096,37 +1099,33 @@ export const EmptyState = styled.p`
   color: var(--text-secondary);
 `;
 
-const float = keyframes`
-  0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(-10px); }
-`;
-
 export const EmptyStateRoot = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 48px 24px 44px;
-  gap: 14px;
+  justify-content: center;
+  min-height: 260px;
+  padding-block: 24px;
+  padding-inline: 24px;
+  gap: 10px;
 `;
 
-export const IllustrationWrap = styled.div`
-  animation: ${float} 3.6s ease-in-out infinite;
-`;
-
-export const EmptyStateHeading = styled.h3`
+export const EmptyStateHeading = styled.p`
   margin: 0;
-  font-size: var(--font-size-lg, 17px);
-  font-weight: 600;
+  font-family: var(--font);
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-bold);
   color: var(--text);
-  letter-spacing: -0.01em;
+  text-align: center;
 `;
 
 export const EmptyStateBody = styled.p`
   margin: 0;
-  font-size: 13px;
+  font-family: var(--font);
+  font-size: var(--font-size-small);
   color: var(--text-secondary);
   text-align: center;
-  max-width: 270px;
+  max-width: 280px;
   line-height: 1.55;
 `;
 
@@ -1138,26 +1137,37 @@ export const EmptyStateActions = styled.div`
   margin-top: 6px;
 `;
 
-export const EmptyStateButton = styled.button<{ $primary?: boolean }>`
-  padding: 9px 22px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
+export const EmptyStateCta = styled.button<{ $primary?: boolean }>`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: 1px solid
+    color-mix(in srgb, var(--accent) ${({ $primary }) => ($primary ? 70 : 45)}%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--accent) ${({ $primary }) => ($primary ? 22 : 12)}%,
+    transparent
+  );
+  font-family: var(--font);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--accent-11);
   cursor: pointer;
-  border: 1.5px solid
-    ${({ $primary }) => ($primary ? "var(--accent)" : "var(--bg-6)")};
-  background: ${({ $primary }) => ($primary ? "var(--accent)" : "transparent")};
-  color: ${({ $primary }) => ($primary ? "var(--bg-1)" : "var(--text)")};
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
 
   &:hover {
-    opacity: 0.82;
-    transform: translateY(-1px);
-  }
-
-  &:active {
-    transform: translateY(0);
-    opacity: 1;
+    background: color-mix(
+      in srgb,
+      var(--accent) ${({ $primary }) => ($primary ? 32 : 22)}%,
+      transparent
+    );
+    border-color: color-mix(in srgb, var(--accent) 70%, transparent);
   }
 `;
 

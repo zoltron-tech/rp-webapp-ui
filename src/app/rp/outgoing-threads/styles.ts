@@ -109,36 +109,62 @@ export const PageHeaderSubtitle = styled.span`
 
 // ── /Page header ──────────────────────────────────────────────────────────────
 
-export const MessageContainer = styled.div`
-  padding: 32px 16px;
+/* Empty state — art over a title, a short line of copy, then one call to
+   action. Same shape and spacing as the profile and muse empty states. */
+
+export const EmptyStateWrap = styled.div`
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-width: 600px;
+  justify-content: center;
+  min-height: 260px;
+  gap: 10px;
+  padding-block: 24px;
+`;
+
+export const EmptyStateTitle = styled.p`
+  margin: 0;
+  font-family: var(--font);
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-bold);
+  color: var(--text);
   text-align: center;
 `;
 
-export const MessageText = styled.div`
-  font-size: var(--font-size);
-  font-weight: var(--font-weight-regular);
+export const EmptyStateSubtitle = styled.p`
+  margin: 0;
+  font-family: var(--font);
+  font-size: var(--font-size-small);
   color: var(--text-secondary);
-  line-height: 1.6;
-  margin-bottom: 10px;
+  text-align: center;
+  max-width: 290px;
+  line-height: 1.55;
 `;
 
-export const HyperLink = styled.span`
+export const EmptyStateCta = styled.button`
+  all: unset;
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  margin-top: 16px;
-  font-size: var(--font-size);
+  gap: 6px;
+  margin-top: 6px;
+  padding: 8px 18px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  font-family: var(--font);
+  font-size: var(--font-size-small);
   font-weight: var(--font-weight-semi-bold);
-  color: var(--accent);
+  color: var(--accent-11);
   cursor: pointer;
-  transition: color 0.15s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
 
   &:hover {
-    color: var(--accent-hover);
+    background: color-mix(in srgb, var(--accent) 22%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 70%, transparent);
   }
 `;
 

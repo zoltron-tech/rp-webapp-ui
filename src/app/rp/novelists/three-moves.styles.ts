@@ -4,8 +4,10 @@ import { spin } from "@/theme/animations";
 /* ─────────────────────────────────────────────────────────────────────────────
    "A story in three moves" — an animated reel.
 
-   The three beats live on a rail at the top; the active beat plays a small,
-   scripted mock of that move in the stage below. Everything here is CSS-driven
+   The three beats live on a rail at the top; the active beat plays that move
+   in the stage below as its own object — a character card, an opening book, a
+   thread of turns — so the three read as different things rather than as three
+   screenshots of the same window. Everything here is CSS-driven
    (transform/opacity only) and unmounts when its beat is not active, so only
    one scene is ever animating. The whole block is gated on visibility by the
    component, and every animation collapses to its finished frame under
@@ -73,6 +75,47 @@ const fold = keyframes`
 const pulse = keyframes`
   0%, 100% { opacity: 0.45; transform: scale(1); }
   50%      { opacity: 1; transform: scale(1.35); }
+`;
+
+/* The card's border inking itself in. Normalised by `pathLength="1"` on the
+   rect, so the dash maths does not depend on the card's rendered size. */
+const inkEdge = keyframes`
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+`;
+
+/* The portrait coming up out of the dark, like a print developing. */
+const develop = keyframes`
+  from { opacity: 0; filter: brightness(0.2) contrast(1.6) blur(6px); transform: scale(1.08); }
+  60%  { opacity: 1; }
+  to   { opacity: 1; filter: none; transform: scale(1); }
+`;
+
+/* Wax seal pressed onto the card: it comes down big and settles crooked. */
+const stamp = keyframes`
+  0%   { opacity: 0; transform: scale(2.4) rotate(-26deg); }
+  55%  { opacity: 1; transform: scale(0.9) rotate(-4deg); }
+  100% { opacity: 1; transform: scale(1) rotate(-8deg); }
+`;
+
+/* The right-hand leaf of the storyboard swinging open on the spine. */
+const turnPage = keyframes`
+  from { opacity: 0; transform: rotateY(-82deg); }
+  60%  { opacity: 1; }
+  to   { opacity: 1; transform: rotateY(0deg); }
+`;
+
+/* Ink arriving across a block of text. Unlike the typewriter this survives
+   wrapping, so it can be used on a cover title inside a narrow page. */
+const inkIn = keyframes`
+  from { clip-path: inset(0 100% 0 0); }
+  to   { clip-path: inset(0 0 0 0); }
+`;
+
+/* The story thread spun out downward as the turns land on it. */
+const spool = keyframes`
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
 `;
 
 /** Every scene animation is an entrance from a hidden start frame, so killing
@@ -363,60 +406,28 @@ export const CopyHint = styled.span`
   }
 `;
 
-// ─── Shared mock chrome ───────────────────────────────────────────────────────
+// ─── Scene frame ──────────────────────────────────────────────────────────────
 
-export const Mock = styled.div`
-  position: relative;
+/**
+ * Every move gets its own object rather than a shared window mock: a character
+ * card, a storyboard opening like a book, a thread of turns. Only the outer box
+ * is shared, and only so the three of them are exactly the same size — the
+ * stage must not resize as the reel walks between beats.
+ *
+ * The height is set above the tallest composition at the narrowest width the
+ * scene is ever given (~300px, inside the stage on a 375px viewport), so no
+ * scene clips and none of them jump.
+ */
+export const Scene = styled.div`
+  display: flex;
   width: 100%;
   min-width: 0;
   max-width: 420px;
+  height: 352px;
   margin-inline: auto;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 16px;
-  background: #0d0f13;
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
-  overflow: hidden;
-`;
-
-export const MockBar = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 10px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.45);
-
-  span {
-    min-width: 0;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  b {
-    color: rgba(255, 255, 255, 0.75);
-    font-weight: 600;
-  }
-`;
-
-export const MockDot = styled.span`
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.16);
-`;
-
-export const MockBody = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 14px;
-  min-height: 232px;
 
   @media (max-width: 420px) {
-    min-height: 208px;
-    padding: 12px;
+    height: 344px;
   }
 `;
 
@@ -439,6 +450,17 @@ export const Typed = styled.span<{ $delay: number; $ms: number }>`
   `)}
 `;
 
+/** A left-to-right ink wipe that works on wrapped, multi-line text. */
+export const Inked = styled.span<{ $delay: number; $ms: number }>`
+  display: inline-block;
+  animation: ${inkIn} ${({ $ms }) => $ms}ms cubic-bezier(0.4, 0, 0.25, 1)
+    ${({ $delay }) => $delay}ms both;
+
+  ${reduced(css`
+    animation: none;
+  `)}
+`;
+
 const enters = ($delay: number) => css`
   animation: ${rise} 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) ${$delay}ms both;
 
@@ -455,175 +477,523 @@ const pops = ($delay: number) => css`
   `)}
 `;
 
-// ─── Scene 1 · create a character ─────────────────────────────────────────────
-
-export const CharTop = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
+/** Shared lift for the three scene objects. */
+const paper = css`
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
 `;
 
-export const CharAvatar = styled.span<{ $img: string }>`
-  position: relative;
-  display: inline-flex;
-  flex-shrink: 0;
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  background:
-    url(${({ $img }) => $img}) center / cover no-repeat,
-    linear-gradient(135deg, #6fa0c1, #2a4a6b);
-  ${pops(120)}
+// ─── Scene 1 · a character card being struck ──────────────────────────────────
 
-  /* Ring being "drawn" around the new character. */
-  &::after {
+/* The card's outline inks itself in, the portrait develops out of the dark,
+   traits are cut as tags, and the sheet is signed with a wax seal. */
+
+export const Card = styled.div`
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  padding: 20px 16px;
+  border-radius: 18px;
+  transform: rotate(-1.1deg);
+  background:
+    radial-gradient(
+      120% 78% at 50% 0%,
+      color-mix(in srgb, var(--accent) 13%, transparent),
+      transparent 68%
+    ),
+    linear-gradient(180deg, #111318, #0b0d11);
+  ${paper}
+  overflow: hidden;
+
+  /* Faint laid-paper grain, so the card does not read as one more panel. */
+  &::before {
     content: "";
     position: absolute;
-    inset: -5px;
-    border-radius: 50%;
-    border: 1.5px solid transparent;
-    border-top-color: var(--accent);
-    border-right-color: color-mix(in srgb, var(--accent) 45%, transparent);
-    animation: ${spin} 2.6s linear 300ms infinite;
+    inset: 0;
+    background: repeating-linear-gradient(
+      114deg,
+      rgba(255, 255, 255, 0.022) 0 1px,
+      transparent 1px 7px
+    );
+    pointer-events: none;
+  }
 
-    ${reduced(css`
-      animation: none;
-      border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-    `)}
+  @media (max-width: 420px) {
+    padding: 18px 13px;
   }
 `;
 
-export const CharLines = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  min-width: 0;
+/** The card's border, drawn on rather than simply present. `pathLength="1"`
+ *  keeps the dash maths identical at every width the card is given. */
+export const CardEdge = styled.svg`
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+
+  rect {
+    fill: none;
+    stroke: color-mix(in srgb, var(--accent) 46%, transparent);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+    stroke-dasharray: 1;
+    animation: ${inkEdge} 1.5s cubic-bezier(0.5, 0, 0.2, 1) 120ms both;
+  }
+
+  ${reduced(css`
+    rect {
+      animation: none;
+      stroke-dashoffset: 0;
+    }
+  `)}
 `;
 
-export const CharName = styled.div`
-  font-size: 1rem;
+/** Registration ticks at the corners — the sheet is being cut to size. */
+export const CardTick = styled.span<{ $at: "bl" | "br" | "tl" | "tr" }>`
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  border: 1.5px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  ${({ $at }) => css`
+    ${$at[0] === "t" ? "top: 11px;" : "bottom: 11px;"}
+    ${$at[1] === "l" ? "left: 11px;" : "right: 11px;"}
+    border-${$at[0] === "t" ? "bottom" : "top"}-width: 0;
+    border-${$at[1] === "l" ? "right" : "left"}-width: 0;
+  `}
+  ${enters(1000)}
+`;
+
+export const CardKind = styled.div`
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-inline: 8px;
+  font-size: 0.6rem;
   font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.32);
+  ${enters(760)}
+
+  b {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    letter-spacing: 1.2px;
+    color: var(--accent);
+  }
+
+  svg {
+    font-size: 0.8rem;
+  }
+`;
+
+/** A framed portrait, not one more round avatar: it develops out of the dark. */
+export const Portrait = styled.span<{ $img: string }>`
+  position: relative;
+  display: block;
+  flex-shrink: 0;
+  width: 92px;
+  height: 92px;
+  border-radius: 16px;
+  background:
+    url(${({ $img }) => $img}) center / cover no-repeat,
+    linear-gradient(135deg, #6fa0c1, #2a4a6b);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+  animation: ${develop} 1.2s ease-out 200ms both;
+
+  ${reduced(css`
+    animation: none;
+  `)}
+
+  /* A slow conic sweep running around the frame — the character catching the
+     light. Masked down to the border itself, so it is a travelling edge rather
+     than a wedge of colour spilling over the portrait. */
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -5px;
+    padding: 1.5px;
+    border-radius: 20px;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg 250deg,
+      color-mix(in srgb, var(--accent) 90%, transparent) 330deg,
+      transparent 360deg
+    );
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    animation: ${spin} 4.4s linear 400ms infinite;
+
+    ${reduced(css`
+      animation: none;
+      opacity: 0.55;
+    `)}
+  }
+
+  @media (max-width: 420px) {
+    width: 84px;
+    height: 84px;
+  }
+`;
+
+export const CardName = styled.div`
+  max-width: 100%;
+  font-size: 1.02rem;
+  font-weight: 700;
+  text-align: center;
   color: #ffffff;
 `;
 
-export const CharHandle = styled.div`
-  font-size: 0.76rem;
-  color: rgba(255, 255, 255, 0.42);
-  ${enters(900)}
+export const CardHandle = styled.div<{ $delay: number }>`
+  margin-top: -5px;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.4);
+  ${({ $delay }) => enters($delay)}
 `;
 
-export const ChipRow = styled.div`
+export const TagRow = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
+  justify-content: center;
+  gap: 6px;
 `;
 
-export const Chip = styled.span<{ $delay: number; $accent?: boolean }>`
+/** Notched tags — cut from the sheet, rather than pill-shaped chips. */
+export const Tag = styled.span<{ $accent?: boolean; $delay: number }>`
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 5px 10px;
-  border-radius: 999px;
-  font-size: 0.72rem;
+  padding: 5px 10px 5px 9px;
+  font-size: 0.71rem;
   font-weight: 600;
-  border: 1px solid
-    ${({ $accent }) =>
-      $accent
-        ? "color-mix(in srgb, var(--accent) 45%, transparent)"
-        : "rgba(255, 255, 255, 0.1)"};
-  color: ${({ $accent }) => ($accent ? "var(--accent)" : "rgba(255,255,255,0.6)")};
+  clip-path: polygon(7px 0, 100% 0, 100% 100%, 0 100%, 0 7px);
+  color: ${({ $accent }) =>
+    $accent ? "var(--accent)" : "rgba(255, 255, 255, 0.66)"};
   background: ${({ $accent }) =>
     $accent
-      ? "color-mix(in srgb, var(--accent) 12%, transparent)"
-      : "rgba(255, 255, 255, 0.04)"};
+      ? "color-mix(in srgb, var(--accent) 16%, transparent)"
+      : "rgba(255, 255, 255, 0.06)"};
   ${({ $delay }) => pops($delay)}
+
+  svg {
+    font-size: 0.78rem;
+  }
 `;
 
-export const FieldLabel = styled.div<{ $delay: number }>`
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 1.6px;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.3);
-  ${({ $delay }) => enters($delay)}
-`;
-
-export const FieldBox = styled.div<{ $delay: number }>`
-  padding: 9px 11px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  background: rgba(255, 255, 255, 0.03);
-  font-size: 0.8rem;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.66);
-  ${({ $delay }) => enters($delay)}
-`;
-
-export const SavePill = styled.span<{ $delay: number }>`
-  align-self: flex-start;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 0.74rem;
-  font-weight: 700;
-  color: #08090c;
-  background: var(--accent);
-  ${({ $delay }) => pops($delay)}
-`;
-
-// ─── Scene 2 · open a storyboard ──────────────────────────────────────────────
-
-export const Cover = styled.div<{ $delay: number }>`
+/** The character's voice, pulled out as a line of their own. */
+export const Voice = styled.p<{ $delay: number }>`
   position: relative;
-  padding: 16px 14px;
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--accent) 14%, transparent),
-    rgba(255, 255, 255, 0.02)
-  );
-  overflow: hidden;
+  margin: 2px 0 0;
+  padding-left: 11px;
+  font-size: 0.79rem;
+  font-style: italic;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.62);
   ${({ $delay }) => enters($delay)}
 
-  /* Light sweeping across the freshly opened board. */
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 3px;
+    bottom: 3px;
+    width: 2px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--accent) 65%, transparent);
+  }
+`;
+
+export const SealRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  margin-top: auto;
+`;
+
+export const SealNote = styled.span<{ $delay: number }>`
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--accent) 70%, #ffffff);
+  ${({ $delay }) => enters($delay)}
+`;
+
+/** Wax seal — the sheet is signed, so the character exists. */
+export const Seal = styled.span<{ $delay: number }>`
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  font-size: 1.05rem;
+  color: #08090c;
+  background:
+    radial-gradient(
+      70% 70% at 32% 28%,
+      rgba(255, 255, 255, 0.45),
+      transparent 60%
+    ),
+    var(--accent);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--accent) 30%, transparent);
+  animation: ${stamp} 0.6s cubic-bezier(0.2, 0.9, 0.3, 1)
+    ${({ $delay }) => $delay}ms both;
+
+  ${reduced(css`
+    animation: none;
+    transform: rotate(-8deg);
+  `)}
+
+  /* Scalloped rim, the way wax spreads out from under a stamp. */
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 1.5px dashed color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+
+  @media (max-width: 420px) {
+    width: 42px;
+    height: 42px;
+  }
+`;
+
+// ─── Scene 2 · a storyboard opening like a book ───────────────────────────────
+
+/* The left leaf is the cover being written; the right leaf turns open on the
+   spine to reveal the opening scene and the writers invited into it. */
+
+export const Book = styled.div`
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 0.84fr 1.16fr;
+  border-radius: 5px 14px 14px 5px;
+  background: linear-gradient(180deg, #12141a, #0b0d11);
+  perspective: 1100px;
+  ${paper}
+  overflow: hidden;
+
+  /* Light passing over the spread, once, as the page settles open. */
   &::after {
     content: "";
     position: absolute;
     top: 0;
     bottom: 0;
-    width: 45%;
+    width: 38%;
     background: linear-gradient(
       90deg,
       transparent,
-      rgba(255, 255, 255, 0.09),
+      rgba(255, 255, 255, 0.06),
       transparent
     );
-    animation: ${sheen} 2.4s ease-in-out 900ms infinite;
+    pointer-events: none;
+    animation: ${sheen} 1.7s ease-out 900ms both;
 
     ${reduced(css`
       animation: none;
       opacity: 0;
     `)}
   }
+
+  @media (max-width: 420px) {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    border-radius: 14px 14px 5px 5px;
+  }
 `;
 
-export const CoverTitle = styled.div`
-  font-size: 0.98rem;
+/** The gutter: a hard centre line with the page shadow falling either side. */
+export const Spine = styled.span`
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 42%;
+  width: 22px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 0, 0, 0.5) 45%,
+    rgba(255, 255, 255, 0.07) 50%,
+    rgba(0, 0, 0, 0.5) 55%,
+    transparent
+  );
+  pointer-events: none;
+
+  /* Stacked leaves put the gutter between two rows whose height depends on how
+     the cover wraps, so it is drawn on the leaf edge itself down here instead
+     of guessed at from the outside. */
+  @media (max-width: 420px) {
+    display: none;
+  }
+`;
+
+/** Bookmark ribbon hanging out of the top of the board. */
+export const Ribbon = styled.span<{ $delay: number }>`
+  position: absolute;
+  top: 0;
+  right: 20px;
+  width: 15px;
+  height: 42px;
+  background: linear-gradient(
+    180deg,
+    var(--accent),
+    color-mix(in srgb, var(--accent) 45%, transparent)
+  );
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 74%, 0 100%);
+  ${({ $delay }) => enters($delay)}
+`;
+
+export const Leaf = styled.div<{ $side: "left" | "right" }>`
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: ${({ $side }) =>
+    $side === "left" ? "20px 14px 16px 16px" : "20px 15px 16px 20px"};
+
+  ${({ $side }) =>
+    $side === "right" &&
+    css`
+      transform-origin: left center;
+      backface-visibility: hidden;
+      animation: ${turnPage} 1.05s cubic-bezier(0.3, 0.85, 0.35, 1) 240ms both;
+
+      ${reduced(css`
+        animation: none;
+      `)}
+
+      @media (max-width: 420px) {
+        transform-origin: center top;
+        padding: 18px 14px 14px;
+      }
+    `}
+
+  @media (max-width: 420px) {
+    padding: 16px 14px 12px;
+
+    ${({ $side }) =>
+      $side === "left" &&
+      css`
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        box-shadow: 0 8px 14px -8px rgba(0, 0, 0, 0.75);
+      `}
+  }
+`;
+
+export const LeafLabel = styled.div<{ $delay: number }>`
+  font-size: 0.6rem;
   font-weight: 700;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.3);
+  ${({ $delay }) => enters($delay)}
+`;
+
+export const BoardTitle = styled.div`
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.35;
   color: #ffffff;
 `;
 
-export const CoverMeta = styled.div<{ $delay: number }>`
+export const BoardMeta = styled.ul<{ $delay: number }>`
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 6px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.71rem;
+  color: rgba(255, 255, 255, 0.46);
+  ${({ $delay }) => enters($delay)}
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  svg {
+    flex-shrink: 0;
+    font-size: 0.8rem;
+    color: color-mix(in srgb, var(--accent) 85%, #ffffff);
+  }
+
+  @media (max-width: 420px) {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+  }
+`;
+
+/** Foot of the cover leaf: a rule and a chapter mark, so the page has a
+ *  bottom edge instead of trailing off into empty paper. */
+export const LeafFoot = styled.div<{ $delay: number }>`
+  display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 8px;
-  font-size: 0.72rem;
-  color: rgba(255, 255, 255, 0.45);
+  margin-top: auto;
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.34);
+  ${({ $delay }) => enters($delay)}
+
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--accent) 40%, transparent),
+      transparent
+    );
+  }
+
+  @media (max-width: 420px) {
+    display: none;
+  }
+`;
+
+/** Ruled manuscript lines, with the opening scene written onto them. */
+export const RuledText = styled.p<{ $delay: number }>`
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 22px;
+  color: rgba(255, 255, 255, 0.7);
+  background-image: linear-gradient(
+    rgba(255, 255, 255, 0.07) 1px,
+    transparent 1px
+  );
+  background-size: 100% 22px;
+  background-position: 0 21px;
   ${({ $delay }) => enters($delay)}
 `;
 
@@ -631,6 +1001,7 @@ export const InviteRow = styled.div<{ $delay: number }>`
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-top: auto;
   ${({ $delay }) => enters($delay)}
 `;
 
@@ -638,9 +1009,9 @@ export const AvatarStack = styled.div`
   display: flex;
 `;
 
-export const StackAvatar = styled.span<{ $img: string; $delay: number }>`
-  width: 30px;
-  height: 30px;
+export const StackAvatar = styled.span<{ $delay: number; $img: string }>`
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: 2px solid #0d0f13;
   background:
@@ -655,7 +1026,7 @@ export const StackAvatar = styled.span<{ $img: string; $delay: number }>`
 `;
 
 export const InviteText = styled.span`
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   color: rgba(255, 255, 255, 0.5);
 
   b {
@@ -668,48 +1039,130 @@ export const Toast = styled.div<{ $delay: number }>`
   align-items: center;
   gap: 7px;
   align-self: flex-start;
+  max-width: 100%;
   padding: 7px 11px;
   border-radius: 10px;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--accent);
   border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   ${({ $delay }) => pops($delay)}
+
+  svg {
+    flex-shrink: 0;
+  }
+
+  span {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
 `;
 
-// ─── Scene 3 · take your turn ─────────────────────────────────────────────────
+// ─── Scene 3 · turns knotted onto one thread ──────────────────────────────────
 
-export const Turn = styled.div<{ $delay: number; $mine?: boolean }>`
+/* Not a chat window: the story is a thread running down the scene, and every
+   turn is knotted onto it in the order it was written. */
+
+export const Thread = styled.div`
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
-  align-items: flex-end;
-  gap: 9px;
-  flex-direction: ${({ $mine }) => ($mine ? "row-reverse" : "row")};
+  align-items: center;
+  padding: 12px 2px;
+`;
+
+/** The turns hug their own height and sit centred in the scene, and the thread
+ *  is measured against them — otherwise it runs on past the last turn into the
+ *  empty half of a box sized by the two taller scenes. */
+export const ThreadInner = styled.div`
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+`;
+
+/** The thread itself, spun downward as the turns land on it. */
+export const Ply = styled.span`
+  position: absolute;
+  top: 15px;
+  bottom: 14px;
+  left: 15px;
+  width: 2px;
+  border-radius: 2px;
+  transform-origin: top center;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 75%, transparent),
+    color-mix(in srgb, var(--accent) 20%, transparent)
+  );
+  animation: ${spool} 2.9s cubic-bezier(0.4, 0, 0.3, 1) 150ms both;
+
+  ${reduced(css`
+    animation: none;
+  `)}
+`;
+
+export const Knot = styled.div<{ $delay: number; $mine?: boolean }>`
+  position: relative;
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  align-items: start;
+  gap: 8px;
+  padding-left: ${({ $mine }) => ($mine ? "24px" : "0")};
   ${({ $delay }) => enters($delay)}
 
   > div {
     min-width: 0;
   }
+
+  /* Elbow reaching from the thread across to the turn — longer for your own
+     turn, which is set in from the thread. */
+  &::before {
+    content: "";
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    width: ${({ $mine }) => ($mine ? "10px" : "8px")};
+    height: 1px;
+    background: color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+
+  @media (max-width: 420px) {
+    padding-left: ${({ $mine }) => ($mine ? "15px" : "0")};
+  }
 `;
 
-export const TurnAvatar = styled.span<{ $img: string }>`
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
+export const KnotAvatar = styled.span<{ $img: string; $mine?: boolean }>`
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background:
     url(${({ $img }) => $img}) center / cover no-repeat,
     linear-gradient(135deg, #c8a87c, #8e5b3a);
+  box-shadow:
+    0 0 0 2px #0b0d11,
+    0 0 0 ${({ $mine }) => ($mine ? "3.5px" : "3px")}
+      ${({ $mine }) => ($mine ? "var(--accent)" : "rgba(255, 255, 255, 0.16)")};
 `;
 
-export const Bubble = styled.div<{ $mine?: boolean }>`
-  position: relative;
-  max-width: 78%;
+export const TurnWho = styled.div`
+  margin-bottom: 4px;
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: rgba(255, 255, 255, 0.5);
+`;
+
+export const Line = styled.div<{ $mine?: boolean }>`
   padding: 9px 12px;
-  border-radius: 14px;
-  border-bottom-left-radius: ${({ $mine }) => ($mine ? "14px" : "4px")};
-  border-bottom-right-radius: ${({ $mine }) => ($mine ? "4px" : "14px")};
-  font-size: 0.8rem;
+  border-radius: 12px;
+  border-top-left-radius: 4px;
+  font-size: 0.79rem;
   line-height: 1.55;
   color: rgba(255, 255, 255, 0.82);
   border: 1px solid
@@ -728,25 +1181,17 @@ export const Bubble = styled.div<{ $mine?: boolean }>`
   }
 `;
 
-export const TurnWho = styled.div`
-  margin-bottom: 3px;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  color: rgba(255, 255, 255, 0.5);
-`;
-
-/* The typing bubble is a beat of its own: it appears, runs, then folds away as
-   the reply it was announcing lands. `$until` is when the fold starts. */
-export const Typing = styled.div<{ $delay: number; $until: number }>`
+/* The waiting beat is a knot still being tied: it appears, runs, then folds
+   away as the reply it was announcing lands. `$until` is when the fold starts. */
+export const Tying = styled.div<{ $delay: number; $until: number }>`
   display: inline-flex;
   align-self: flex-start;
   align-items: center;
   gap: 4px;
-  padding: 11px 13px;
-  margin-left: 37px;
-  border-radius: 14px;
-  border-bottom-left-radius: 4px;
+  margin-left: 40px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  border-top-left-radius: 4px;
   border: 1px solid rgba(255, 255, 255, 0.09);
   background: rgba(255, 255, 255, 0.04);
   overflow: hidden;
@@ -773,17 +1218,19 @@ export const TypingDot = styled.span<{ $i: number }>`
   `)}
 `;
 
-export const ReactionRow = styled.div<{ $delay: number }>`
+/** Foot of the thread — where it is still running. */
+export const Tail = styled.div<{ $delay: number }>`
   position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  padding-left: 37px;
+  margin-top: 2px;
+  padding-left: 40px;
   ${({ $delay }) => enters($delay)}
 
   @media (max-width: 420px) {
-    padding-left: 0;
+    padding-left: 32px;
   }
 `;
 
@@ -802,7 +1249,7 @@ export const Reaction = styled.span`
 
 export const FloatingHeart = styled.span<{ $delay: number }>`
   position: absolute;
-  left: 48px;
+  left: 52px;
   bottom: 4px;
   font-size: 0.85rem;
   color: #e0245e;
@@ -819,7 +1266,6 @@ export const LivePill = styled.span<{ $delay: number }>`
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  align-self: flex-start;
   font-size: 0.7rem;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.45);

@@ -1,7 +1,7 @@
 "use client";
 
 import type { Muse } from "@nw/types";
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/lib/navigation";
 import type { FC } from "react";
 import { useMemo, useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@/lib/navigation";
 import { type FC, useEffect, useRef, useState } from "react";
 import logo from "@/assets/images/logo.png";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
@@ -13,7 +13,7 @@ const WelcomePage: FC = () => {
   const authState = useGlobalState("authState");
   const novelist = useGlobalState("novelist");
   const setGlobalState = useGlobalStoreSet();
-  const router = useRouter();
+  const navigate = useNavigate();
   const { routeToPage, stopPageLoading } = usePageRouter();
   const [navigating, setNavigating] = useState(false);
   // Tracks whether we've ever observed a non-initial auth state. The store is
@@ -42,9 +42,9 @@ const WelcomePage: FC = () => {
       return;
     }
     if (authState === "LOGGED_OUT" && authResolved.current) {
-      router.replace(ROUTES.Login);
+      navigate(ROUTES.Login, { replace: true });
     }
-  }, [authState, router]);
+  }, [authState, navigate]);
 
   if (authState === "LOADING") return null;
   if (authState === "LOGGED_OUT" && !authResolved.current) return null;
@@ -68,7 +68,7 @@ const WelcomePage: FC = () => {
         <S.Card>
           {/* ── Branding ── */}
           <S.BrandHeader>
-            <S.LogoImg src={logo.src} alt="Novelist World logo" />
+            <S.LogoImg src={logo} alt="Novelist World logo" />
             <S.BrandName>
               <S.BrandNamePrimary>Novelist</S.BrandNamePrimary>
               <S.BrandNameAccent>World</S.BrandNameAccent>

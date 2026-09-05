@@ -1,10 +1,10 @@
 "use client";
 
 import { DefaultTheme } from "@novelist-world/ui";
+import { searchStickers } from "@nw/api/endpoints/community";
 import type { StoreState } from "@nw/types/state";
 import { ACCENT_MAP } from "@nw/types/theme";
 import classNames from "classnames";
-import { usePathname } from "next/navigation";
 import type React from "react";
 import { type FC, type HTMLProps, useEffect, useMemo } from "react";
 import { useCookies } from "react-cookie";
@@ -17,7 +17,12 @@ import {
 import { GlobalMusicPlayer } from "@/components/global-music-player";
 import { InstallAppPrompt } from "@/components/install-app-prompt";
 import { JoinDiscordPrompt } from "@/components/join-discord-prompt";
-import { ContentContainer, LeftNav, RightSidebar, TopBar } from "@/components/layout";
+import {
+  ContentContainer,
+  LeftNav,
+  RightSidebar,
+  TopBar,
+} from "@/components/layout";
 import { NAV_WIDTH } from "@/components/layout/left-nav/styles";
 import { SIDEBAR_WIDTH } from "@/components/layout/right-sidebar/styles";
 import {
@@ -30,13 +35,12 @@ import { useSocket } from "@/context/socket";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
+import { api } from "@/lib/api";
 import { setBadgeCount } from "@/lib/badge-manager";
+import { usePathname } from "@/lib/navigation";
 import { THEME_DARK, THEME_LIGHT } from "@/theme";
 import { ROUTES } from "@/utils/constants/routes";
-import {
-  decryptConversations,
-  ensureE2EIdentityPublished,
-} from "@/utils/e2e-crypto";
+import { decryptConversations } from "@/utils/e2e-crypto";
 import { getUnreadReplyCount } from "./outgoing-threads/actions";
 import * as S from "./styles";
 
@@ -71,7 +75,9 @@ const useAccent = () => {
   const user = useGlobalState("user");
   const setGlobalState = useGlobalStoreSet();
   const accent = useMemo(() => {
-    return ACCENT_MAP[user?.palette as keyof typeof ACCENT_MAP] ?? ACCENT_MAP[0];
+    return (
+      ACCENT_MAP[user?.palette as keyof typeof ACCENT_MAP] ?? ACCENT_MAP[0]
+    );
   }, [user]);
 
   useEffect(() => {
@@ -114,9 +120,6 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
           setGlobalState({ groupCount: result });
         }
       });
-      // Publish this browser's E2E public key so other members can wrap
-      // conversation keys for us before we ever open a conversation.
-      void ensureE2EIdentityPublished();
     });
   }, [authState, setGlobalState]);
 
@@ -134,7 +137,9 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
     // Refresh the cached conversations list so the inbox stays up to date
     getConversationsAction(1, 15).then(async (result) => {
       if (result && Array.isArray(result)) {
-        setGlobalState({ cachedConversations: await decryptConversations(result) });
+        setGlobalState({
+          cachedConversations: await decryptConversations(result),
+        });
       }
     });
   }, [lastIncomingMessage, setGlobalState]);
@@ -153,15 +158,10 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
     return runWhenIdle(() => {
       const queries = ["hello", "wave"];
       const q = queries[Math.floor(Math.random() * queries.length)];
-      fetch(`/api/klipy-stickers?q=${encodeURIComponent(q)}&limit=20`)
-        .then((r) => r.json())
-        .then(
-          (data: { items: { stickerUrl: string; previewUrl: string }[] }) => {
-            if (data.items?.length) {
-              setGlobalState({ helloStickers: data.items });
-            }
-          },
-        )
+      searchStickers(api, q, 20)
+        .then((data) => {
+          if (data.items.length) setGlobalState({ helloStickers: data.items });
+        })
         .catch(() => {
           /* non-critical */
         });

@@ -5,7 +5,7 @@ import type { ProfileSong } from "@nw/types/music";
 import type { ImageFilter, MuseNavItem, NWImage } from "@nw/types/novelist";
 import { clamp, toCropFilter } from "@nw/utils";
 import { reverseWsrvUrl } from "@nw/utils/image";
-import { useParams } from "next/navigation";
+import { useParams } from "@/lib/navigation";
 import {
   useCallback,
   useEffect,
@@ -718,8 +718,8 @@ export default function MuseProfilePage({}) {
       {bannerLayers.map((layer, i) => (
         <S.Banner
           key={layer.id}
-          src={layer.src}
-          filterValues={layer.filters}
+          $src={layer.src}
+          $filterValues={layer.filters}
           className={
             i > 0
               ? layer.dir === "next"
@@ -1014,7 +1014,7 @@ export default function MuseProfilePage({}) {
         <S.ImageWrapper>
           {museVisual ? (
             <S.CardBackground
-              banner={cardBgSrc}
+              $banner={cardBgSrc}
               $bgSize={cardBgCss?.bgSize}
               $bgPosition={cardBgCss?.bgPosition}
             />

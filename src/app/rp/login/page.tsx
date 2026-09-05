@@ -1,6 +1,7 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useNavigate } from "@/lib/navigation";
+import { usePathname, useSearchParams } from "@/lib/navigation";
 import { Separator, Tabs } from "radix-ui";
 import { useCallback, useEffect } from "react";
 import { setReferralCookie } from "@/app/actions";
@@ -23,7 +24,7 @@ export default function LoginPage() {
     searchParams?.get("register") === "1" ||
     (Boolean(referralUser) && searchParams?.get("register") !== "0");
   const { routeToPage, stopPageLoading } = usePageRouter();
-  const { push } = useRouter();
+  const push = useNavigate();
 
   useEffect(() => {
     // Persist the referral so it survives both the email/password signup and

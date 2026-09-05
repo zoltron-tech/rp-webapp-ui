@@ -2,7 +2,7 @@
 
 import { isCompactViewport } from "@nw/utils/platform";
 import classNames from "classnames";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "@/lib/navigation";
 import {
   type FC,
   useCallback,
@@ -99,16 +99,14 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
   const [mobileClosing, setMobileClosing] = useState(false);
   const swipeStartX = useRef<number | null>(null);
   const { routeToPage } = usePageRouter();
-  const router = useRouter();
   const { successToast, errorToast } = useUIContext();
   const { handlePostLogout } = usePostLogout();
   const isMobile = useMemo(() => isCompactViewport(), []);
   const pathname = usePathname();
 
-  // Prefetch the edit profile page so navigation is instant
-  useEffect(() => {
-    router.prefetch(ROUTES.Profile.Edit);
-  }, [router]);
+  // The prefetch that used to live here is gone: React Router has no
+  // equivalent and Vite already code-splits per route, so the chunk for this
+  // destination is fetched on hover/click by the router itself.
 
   const closeMobilePanel = useCallback(() => {
     setMobileClosing(true);

@@ -1,8 +1,8 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import Link from "@/components/link";
+import { useSearchParams } from "@/lib/navigation";
 import { Form } from "radix-ui";
 import {
   type FormEventHandler,

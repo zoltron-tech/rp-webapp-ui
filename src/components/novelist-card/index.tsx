@@ -11,6 +11,7 @@ import { toggleState } from "@/utils/helpers";
 import { mainVerseMuses } from "@/utils/muse";
 import { Logger } from "@/utils/services";
 import * as S from "./styles";
+import { env } from "@/lib/env";
 
 type Props = {
   novelist?: Novelist | null;
@@ -31,7 +32,7 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
   };
 
   const handleMouseEnter = () => {
-    if (process.env.DISABLE_AUTOSCROLL === "true") return;
+    if (env.DISABLE_AUTOSCROLL === "true") return;
 
     if (!isActive) return;
     Logger.debug("onMouseEnter");
@@ -39,7 +40,7 @@ export const NovelistCard: FC<Props> = ({ novelist }) => {
     autoplay.stop();
   };
   const handleMouseLeave = () => {
-    if (process.env.DISABLE_AUTOSCROLL === "true") return;
+    if (env.DISABLE_AUTOSCROLL === "true") return;
 
     if (!isActive) return;
     Logger.debug("onMouseLeave");

@@ -2,7 +2,6 @@
 
 import type { Conversation, MentionDataItem, Message } from "@nw/types";
 import type { MessageSender, Reaction } from "@nw/types/conversation";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { FaChevronDown } from "react-icons/fa";
@@ -24,7 +23,6 @@ import {
   decryptMessages,
   encryptMessageText,
   hasUndecryptedContent,
-  refreshConversationE2E,
 } from "@/utils/e2e-crypto";
 import {
   createEditSocketMessage,
@@ -163,7 +161,6 @@ export function ConversationPanel({
   const conversationNavDirection = useGlobalState("conversationNavDirection");
   const unreadConversationIds = useGlobalState("unreadConversationIds");
   const setGlobalState = useGlobalStoreSet();
-  const router = useRouter();
   const musicPlayerHeight =
     musicPlayer?.playingSongId && musicPlayer?.playingSongName ? 53 : 0;
   const {
@@ -172,7 +169,6 @@ export function ConversationPanel({
     lastIncomingMessage,
     lastIncomingReaction,
     lastIncomingEdit,
-    lastIncomingE2ERefresh,
   } = useSocket();
   const { routeToPage, stopPageLoading } = usePageRouter();
   const { errorToast, successToast } = useUIContext();
@@ -486,22 +482,13 @@ export function ConversationPanel({
     fetchConversation();
   }, [active, fetchConversation, stopPageLoading, setGlobalState, isPanel]);
 
-  // Prefetch the details page so the first click is instant.
-  useEffect(() => {
-    if (!active || !conversationId) return;
-    router.prefetch(ROUTES.Conversation.Details(conversationId));
-  }, [active, router, conversationId]);
+  // The prefetch that used to live here is gone: React Router has no
+  // equivalent and Vite already code-splits per route, so the chunk for this
+  // destination is fetched on hover/click by the router itself.
 
   useEffect(() => {
     if (!active || !conversationId) return;
-    // Re-check E2E envelopes before loading history: repair members who
-    // published their key after the conversation key was created, and pick up
-    // an envelope another member repaired for us — so the fetched page
-    // decrypts with the freshest key instead of showing 🔒 until a reopen.
-    refreshConversationE2E(conversationId)
-      .catch(() => false)
-      .then(() => fetchMessages(conversationId, 1))
-      .then(() => scrollToBottom());
+    fetchMessages(conversationId, 1).then(() => scrollToBottom());
   }, [active, fetchMessages, conversationId, scrollToBottom]);
 
   // Clear cached conversation when the component unmounts (user leaves the page).
@@ -541,10 +528,6 @@ export function ConversationPanel({
     const tempId = `optimistic-${Date.now()}-${Math.random()}`;
     const activeSender = selectedSender;
     const capturedReplyingTo = replyingTo;
-
-    // Re-check envelopes (throttled) so long-lived tabs still repair members
-    // who published their key after this conversation's key was created.
-    void refreshConversationE2E(conversationId);
 
     // Built with plaintext; encrypted in place right before the socket send
     // (see below) so the optimistic bubble renders without waiting on key
@@ -621,9 +604,8 @@ export function ConversationPanel({
 
     setSending(true);
     try {
-      // Encrypt for the wire as late as possible: if we're still waiting for
-      // our envelope, encryptMessageText nudges members and briefly waits for
-      // the repair before falling back to plaintext.
+      // Encrypt for the wire as late as possible, so the optimistic bubble
+      // renders without waiting on the conversation key fetch.
       socketPayload.message = await encryptMessageText(conversationId, text);
       socket.send(JSON.stringify({ payload: socketPayload, type: "message" }));
     } catch {
@@ -793,20 +775,17 @@ export function ConversationPanel({
   // Merge a single reaction into the message list. A novelist may only have one
   // reaction per message, so any existing reaction from the same sender is
   // replaced (mirrors the backend composite key messageId + novelistId).
-  const applyReaction = useCallback(
-    (reaction: Reaction) => {
-      setMessages((prev) =>
-        prev.map((m) => {
-          if (m.id !== reaction.messageId) return m;
-          const others = (m.reactions || []).filter(
-            (r) => r.sender?.id !== reaction.sender?.id,
-          );
-          return { ...m, reactions: [...others, reaction] };
-        }),
-      );
-    },
-    [],
-  );
+  const applyReaction = useCallback((reaction: Reaction) => {
+    setMessages((prev) =>
+      prev.map((m) => {
+        if (m.id !== reaction.messageId) return m;
+        const others = (m.reactions || []).filter(
+          (r) => r.sender?.id !== reaction.sender?.id,
+        );
+        return { ...m, reactions: [...others, reaction] };
+      }),
+    );
+  }, []);
 
   const handleReact = useCallback(
     (message: Message, reactionKey: string) => {
@@ -905,8 +884,8 @@ export function ConversationPanel({
   ]);
 
   // ── Retry messages that arrived before we had the conversation key ─────────
-  // Incoming messages and e2e-refresh nudges both mean the key may have just
-  // become available — re-decrypt any 🔒 history from the ciphertext each
+  // An incoming message means the key fetch may now succeed (it is retried
+  // after a cooldown) — re-decrypt any 🔒 history from the ciphertext each
   // failed message kept.
 
   const messagesRef = useRef<Message[]>([]);
@@ -933,12 +912,6 @@ export function ConversationPanel({
     if (lastIncomingMessage.conversationId !== conversationId) return;
     retryUndecryptedMessages();
   }, [lastIncomingMessage, conversationId, retryUndecryptedMessages]);
-
-  useEffect(() => {
-    if (!lastIncomingE2ERefresh) return;
-    if (lastIncomingE2ERefresh.conversationId !== conversationId) return;
-    retryUndecryptedMessages();
-  }, [lastIncomingE2ERefresh, conversationId, retryUndecryptedMessages]);
 
   // ── Socket: incoming real-time reactions ───────────────────────────────────
 

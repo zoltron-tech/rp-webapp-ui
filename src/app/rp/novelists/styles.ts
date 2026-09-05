@@ -1,6 +1,4 @@
-import { Container } from "@novelist-world/ui";
 import styled, { keyframes } from "styled-components";
-import { setOpacity } from "@/utils/helpers";
 
 /* ────────────────────────────────────────────────────────────────────────────
    Novelist World — landing / hero page
@@ -10,8 +8,11 @@ import { setOpacity } from "@/utils/helpers";
    Baseline responsive target: iPhone SE (375 × 667).
    ──────────────────────────────────────────────────────────────────────────── */
 
-const WALLPAPER =
-  "https://rp-webapp-ui.s3.eu-central-1.amazonaws.com/deployments/NW-Wallpaper.png";
+/** Pen stroke drawing itself in. Paired with pathLength="1" on the path. */
+const inkStroke = keyframes`
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+`;
 
 const floatUp = keyframes`
   from { opacity: 0; transform: translateY(24px); }
@@ -61,23 +62,21 @@ export const Hero = styled.section`
     padding: 64px 16px 32px;
   }
 
-  /* Wallpaper layer + cinematic overlay that fades into the page background */
+  /* The wallpaper is drawn, not fetched: see hero-backdrop.tsx. This layer is
+     just the readability scrim over it, so the copy holds contrast wherever
+     the aurora happens to drift. */
   &::before {
     content: "";
     position: absolute;
     inset: 0;
     z-index: -2;
-    background-image:
-      linear-gradient(
-        180deg,
-        rgba(8, 9, 12, 0.45) 0%,
-        rgba(8, 9, 12, 0.55) 45%,
-        rgba(8, 9, 12, 0.92) 88%,
-        #08090c 100%
-      ),
-      url(${WALLPAPER});
-    background-size: cover;
-    background-position: center 30%;
+    background: linear-gradient(
+      180deg,
+      rgba(8, 9, 12, 0.3) 0%,
+      rgba(8, 9, 12, 0.42) 45%,
+      rgba(8, 9, 12, 0.86) 88%,
+      #08090c 100%
+    );
   }
 
   /* Accent aura + vignette */
@@ -180,24 +179,36 @@ export const Eyebrow = styled.div`
   }
 `;
 
+/* The headline sets its own line breaks rather than taking a hard `<br>`.
+   The copy column is ~586px at 1440 and the old 4.6rem fit barely 13 characters
+   into it, so the two intended lines broke into four with "is" stranded on its
+   own. Sized to the measure instead: at the cap the line runs ~538px of the 586
+   available, and `balance` keeps the two lines even at every width in between
+   rather than leaving a word alone on the second one. */
 export const HeroTitle = styled.h1`
   margin: 0;
-  font-size: clamp(2.35rem, 7.5vw, 4.6rem);
+  max-width: 19ch;
+  font-size: clamp(2.05rem, 4.6vw, 3.05rem);
   font-weight: 800;
-  line-height: 1.04;
-  letter-spacing: -1.5px;
+  line-height: 1.1;
+  letter-spacing: -1.1px;
+  text-wrap: balance;
   color: #ffffff;
   text-shadow: 0 4px 40px rgba(0, 0, 0, 0.55);
 
   @media (max-width: 420px) {
-    font-size: 1.75rem;
-    line-height: 1.12;
+    font-size: 1.7rem;
+    line-height: 1.16;
     letter-spacing: -0.4px;
   }
 `;
 
+/** Carries the underline, so the swash is measured against the accented phrase
+ *  itself instead of the headline block it sits in. */
 export const HeroTitleAccent = styled.span`
+  position: relative;
   display: inline-block;
+  padding-bottom: 0.17em;
   background-image: linear-gradient(
     100deg,
     var(--accent) 0%,
@@ -208,9 +219,83 @@ export const HeroTitleAccent = styled.span`
   color: transparent;
 `;
 
+/* ── Hero copy ──────────────────────────────────────────────────────────── */
+
+/** Underline swash under the accented half of the headline. Drawn rather than
+ *  a border, so it can keep the hand-inked wobble of a pen stroke. */
+export const TitleUnderline = styled.svg`
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  display: block;
+  width: 100%;
+  height: 0.13em;
+  overflow: visible;
+
+  path {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 4;
+    /* The viewBox is stretched to whatever width the phrase happens to be
+       (preserveAspectRatio="none"), which would squash the stroke with it. */
+    vector-effect: non-scaling-stroke;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: ${inkStroke} 1.1s cubic-bezier(0.6, 0, 0.3, 1) 0.5s both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    path {
+      animation: none;
+      stroke-dashoffset: 0;
+    }
+  }
+`;
+
+/** What the reader actually gets, said in four words rather than a paragraph. */
+export const HeroChips = styled.ul`
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 2px 0 0;
+  padding: 0;
+
+  @media (max-width: 980px) {
+    justify-content: center;
+  }
+`;
+
+export const HeroChip = styled.li`
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.045);
+  backdrop-filter: blur(6px);
+  font-family: var(--font);
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.78);
+
+  svg {
+    flex-shrink: 0;
+    color: var(--accent);
+    font-size: 0.92rem;
+  }
+
+  @media (max-width: 420px) {
+    font-size: 0.7rem;
+    padding: 5px 10px;
+  }
+`;
+
 export const HeroText = styled.p`
   margin: 0;
   max-width: 600px;
+  text-wrap: pretty;
   font-size: clamp(1rem, 1.6vw, 1.18rem);
   line-height: 1.7;
   font-weight: 400;
@@ -541,87 +626,149 @@ export const StepsCta = styled.div`
 
 // ─── Feature cards ────────────────────────────────────────────────────────────
 
+/* ── Feature rows ─────────────────────────────────────────────────────────
+   Three full-width rows rather than three cards abreast: each pairs a block of
+   copy with an animated mock of the flow it describes, and the mock needs the
+   room to be legible. The rows alternate sides so the eye zig-zags down the
+   page instead of scanning one column. */
+
 export const CardsContainer = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 72px;
   width: 100%;
   max-width: 1120px;
   margin: 0 auto;
   padding-inline: clamp(20px, 5vw, 48px);
 
   @media (max-width: 900px) {
+    gap: 44px;
+  }
+`;
+
+export const FeatureRow = styled.div<{ $flip?: boolean }>`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: clamp(28px, 5vw, 64px);
+
+  /* The mock is second in the DOM so the copy is always read first — by a
+     screen reader, and on mobile where the row collapses to one column. On
+     flipped rows it is only *placed* first. */
+  > *:last-child {
+    grid-column: ${({ $flip }) => ($flip ? 1 : 2)};
+    grid-row: 1;
+  }
+  > *:first-child {
+    grid-column: ${({ $flip }) => ($flip ? 2 : 1)};
+    grid-row: 1;
+  }
+
+  @media (max-width: 900px) {
     grid-template-columns: 1fr;
-    max-width: 460px;
-    gap: 18px;
-  }
+    gap: 22px;
 
-  @media (max-width: 420px) {
-    gap: 12px;
-  }
-`;
-
-export const InfoCard = styled(Container)`
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 6px;
-  border-radius: 18px !important;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-  background-color: ${({ theme }: any) =>
-    setOpacity(theme.navbar, 0.28)} !important;
-  padding: 34px 26px !important;
-  cursor: default !important;
-  text-align: center;
-  transition: border-color 0.2s ease;
-
-  &:hover {
-    border-color: ${setOpacity("#ffffff", 0.22)};
-  }
-
-  @-moz-document url-prefix() {
-    backdrop-filter: none !important;
-  }
-
-  @media (max-width: 420px) {
-    padding: 18px 16px !important;
-    border-radius: 14px !important;
-    gap: 4px;
-  }
-`;
-
-export const CardIcon = styled.div`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  margin-bottom: 18px;
-  border-radius: 14px;
-  color: var(--accent);
-  background: ${setOpacity("#ffffff", 0.06)};
-  border: 1px solid ${setOpacity("#ffffff", 0.1)};
-
-  svg {
-    font-size: 1.55rem;
-  }
-
-  @media (max-width: 420px) {
-    width: 38px;
-    height: 38px;
-    margin-bottom: 8px;
-
-    svg {
-      font-size: 1.1rem;
+    > *:first-child,
+    > *:last-child {
+      grid-column: 1;
+      grid-row: auto;
     }
   }
 `;
 
+export const FeatureCopy = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+
+  @media (max-width: 900px) {
+    align-items: center;
+    text-align: center;
+  }
+`;
+
+export const FeatureStep = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  font-family: var(--font);
+  font-size: 0.72rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--accent-11);
+
+  &::before {
+    content: "";
+    width: 22px;
+    height: 1px;
+    background: color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+
+  @media (max-width: 900px) {
+    &::before {
+      display: none;
+    }
+  }
+`;
+
+/** The concrete capabilities under each feature's paragraph. The headline
+ *  says what the feature is for; these say what you actually get. */
+export const FeaturePoints = styled.ul`
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  width: 100%;
+
+  @media (max-width: 900px) {
+    max-width: 460px;
+    margin-inline: auto;
+  }
+`;
+
+export const FeaturePoint = styled.li`
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  /* Always left-aligned, even where the surrounding copy centres on mobile —
+     a centred ragged list is much harder to scan. */
+  text-align: left;
+  font-family: var(--font);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.72);
+
+  b {
+    color: #ffffff;
+    font-weight: var(--font-weight-semi-bold);
+  }
+
+  @media (max-width: 420px) {
+    font-size: 0.8rem;
+  }
+`;
+
+export const PointTick = styled.span`
+  flex-shrink: 0;
+  margin-top: 1px;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--accent-11);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, transparent);
+`;
+
 export const Cardheading = styled.h3`
-  margin: 0 0 8px;
-  font-size: 1.22rem;
+  margin: 0 0 12px;
+  font-size: clamp(1.35rem, 2.4vw, 1.85rem);
   font-weight: 700;
   color: #ffffff;
   letter-spacing: 0.2px;

@@ -3,7 +3,6 @@
 import { Flex } from "@novelist-world/ui";
 import type { Conversation } from "@nw/types/conversation";
 import classNames from "classnames";
-import { useRouter } from "next/navigation";
 import { type FC, useEffect, useState } from "react";
 import { IoChatbubblesSharp } from "react-icons/io5";
 import { TiGroup } from "react-icons/ti";
@@ -15,6 +14,7 @@ import { decryptConversations } from "@/utils/e2e-crypto";
 import { toFormattedDate, toggleState } from "@/utils/helpers";
 import { Avatar } from "../common";
 import * as S from "./styles";
+import { env } from "@/lib/env";
 
 type ChatMenuProps = {};
 
@@ -73,11 +73,11 @@ export const ChatMenuModal: FC<ChatMenuProps> = ({}) => {
   };
 
   const onMoreMessagesClick = () => {
-    window.location.replace(`${process.env.RP_CHAT_URL}`);
+    window.location.replace(`${env.RP_CHAT_URL}`);
   };
 
   const onOpenMessagesClick = (conversationId: string) => {
-    window.location.replace(`${process.env.RP_CHAT_URL}?id=${conversationId}`);
+    window.location.replace(`${env.RP_CHAT_URL}?id=${conversationId}`);
   };
 
   const fetchConversations = async () => {

@@ -318,7 +318,9 @@ export const ShareButton = styled.button`
 `;
 
 type CardProps = {
-  banner: string;
+  /** Transient: `banner` is not an HTML attribute, so left un-prefixed
+   *  styled-components forwards it to the DOM and React errors on it. */
+  $banner: string;
 };
 
 export const CardBackground = styled.div<CardProps>`
@@ -326,7 +328,7 @@ export const CardBackground = styled.div<CardProps>`
   width: 100%;
   height: 100%;
 
-  background-image: url('${(props): string => props.banner}');
+  background-image: url('${(props): string => props.$banner}');
   background-size: cover;
   transition-timing-function: ease-out;
   transition-duration: 300ms;

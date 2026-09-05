@@ -1,11 +1,13 @@
 "use client";
 
 import type { Fandom, Muse } from "@nw/types";
-import { useParams } from "next/navigation";
+import { useParams } from "@/lib/navigation";
+import { usernameFromHandle } from "@/utils/constants/profile-handle";
 import { useEffect, useMemo, useState } from "react";
 import { FiGrid, FiList } from "react-icons/fi";
 import { HiUserAdd } from "react-icons/hi";
 import { getAllMusesByUsernameAction } from "@/app/rp/muse/actions";
+import { NoMatchesArt } from "@/components/book-art";
 import { BreadCrumb } from "@/components/breadcrumb";
 import { AddNewButton, FilterSearch } from "@/components/common";
 import { AppAlertDialog } from "@/components/dialog";
@@ -35,7 +37,8 @@ export default function MusesListPage({}) {
   const authState = useGlobalState("authState");
   const user = useGlobalState("user");
   const novelist = useGlobalState("novelist");
-  const username = params?.slug as string;
+  // The route param is a handle (`@tokyo`), not a bare username.
+  const username = usernameFromHandle(params?.handle as string);
   const isCurrentUser = user?.username === username;
   const { baseDataLoader } = usePageRouter();
   const { on, off } = useCustomEvents(EVENTS.MUSE.base);
@@ -333,7 +336,12 @@ export default function MusesListPage({}) {
         : renderFamilies(visibleFamilies)}
 
       {muses !== null && visibleFamilies.length === 0 && (
-        <S.EmptyResult>No characters match the current filters.</S.EmptyResult>
+        <S.EmptyResultWrap>
+          <NoMatchesArt />
+          <S.EmptyResult>
+            No characters match the current filters.
+          </S.EmptyResult>
+        </S.EmptyResultWrap>
       )}
     </S.Container>
   );

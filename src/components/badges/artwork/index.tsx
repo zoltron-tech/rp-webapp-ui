@@ -2,6 +2,9 @@
 
 import type { BadgeCode } from "@nw/types/badge";
 import type { FC } from "react";
+import { CoAuthorBadge } from "./co-author";
+import { CreativeBadge } from "./creative";
+import { DedicatedBadge } from "./dedicated";
 import { DiscordGuildMemberBadge } from "./discord-guild-member";
 import type { BadgeArtworkProps } from "./frame";
 import { FriendlyNovelistBadge } from "./friendly-novelist";
@@ -21,6 +24,9 @@ import { StoryboardAuthorBadge } from "./storyboard-author";
  * bundle does not.
  */
 const BADGE_ARTWORK: Partial<Record<BadgeCode, FC<BadgeArtworkProps>>> = {
+  CO_AUTHOR: CoAuthorBadge,
+  CREATIVE: CreativeBadge,
+  DEDICATED: DedicatedBadge,
   DISCORD_GUILD_MEMBER: DiscordGuildMemberBadge,
   FRIENDLY_NOVELIST: FriendlyNovelistBadge,
   MUSE_KEEPER: MuseKeeperBadge,
@@ -50,6 +56,9 @@ export const BadgeArtwork: FC<Props> = ({
   return <Artwork size={size} animated={animated} muted={muted} />;
 };
 
+export { CoAuthorBadge } from "./co-author";
+export { CreativeBadge } from "./creative";
+export { DedicatedBadge } from "./dedicated";
 export { DiscordGuildMemberBadge } from "./discord-guild-member";
 export type { BadgeArtworkProps } from "./frame";
 export { FriendlyNovelistBadge } from "./friendly-novelist";

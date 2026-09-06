@@ -49,14 +49,35 @@ const deviceIcon = (label: string) => {
 };
 
 /**
+ * Milliseconds, from whichever shape the API sends.
+ *
+ * user-service serialises `OffsetDateTime` as epoch *seconds* — a decimal
+ * number, not the ISO string the type once claimed — so handing the value
+ * straight to `new Date` reads seconds as milliseconds and lands every row in
+ * January 1970. Anything under 1e12 is therefore seconds; larger numbers are
+ * already milliseconds, and a non-numeric value is left to `Date` to parse so
+ * an ISO string keeps working if the serialisation ever changes.
+ */
+const toMillis = (value: string | number): number => {
+  const numeric = typeof value === "number" ? value : Number(value);
+  if (
+    typeof value === "number" ||
+    (value.trim() !== "" && !Number.isNaN(numeric))
+  ) {
+    return numeric < 1e12 ? numeric * 1000 : numeric;
+  }
+  return new Date(value).getTime();
+};
+
+/**
  * "3 minutes ago", and so on.
  *
  * Hand-rolled rather than pulled from `moment`, which is already a dependency,
  * because this needs five buckets and no locale handling — and the point of the
  * line is recognition ("that was me, just now") rather than precision.
  */
-const relativeTime = (iso: string): string => {
-  const then = new Date(iso).getTime();
+const relativeTime = (value: string | number): string => {
+  const then = toMillis(value);
   if (Number.isNaN(then)) return "unknown";
 
   const seconds = Math.round((Date.now() - then) / 1000);
@@ -186,9 +207,7 @@ export function DevicesSection() {
 
         <ShouldRender if={otherDeviceCount === 0}>
           <InlineMessage variant="info">
-            <p>
-              This is the only device signed in to your account right now.
-            </p>
+            <p>This is the only device signed in to your account right now.</p>
           </InlineMessage>
         </ShouldRender>
 

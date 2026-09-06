@@ -19,7 +19,10 @@ export type BadgeCode =
   | "MUSICIAN"
   | "MUSE_KEEPER"
   | "PROLIFIC_WRITER"
-  | "POSTAHOLIC";
+  | "POSTAHOLIC"
+  | "CO_AUTHOR"
+  | "DEDICATED"
+  | "CREATIVE";
 
 /** Drives the badge frame's colour and glow. No behaviour attached. */
 export type BadgeRarity = "COMMON" | "RARE" | "LEGENDARY";

@@ -396,6 +396,45 @@ export const ChatRichInput = forwardRef<
     emitChange(editor);
   }, [showMention, tryApplyFormatting, emitChange]);
 
+  // Paste as plain text. The clipboard's text/html flavour carries the source
+  // page's inline styles (notably a hard-coded colour, which reads as black on
+  // our bubbles), so it must never reach the editor. `insertText` keeps the
+  // paste undoable and fires a native `input` event, so `handleInput` runs and
+  // emits the change like any other typing.
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      const plain = e.clipboardData.getData("text/plain").replace(/\r\n?/g, "\n");
+      if (!plain) return;
+      if (document.execCommand("insertText", false, plain)) return;
+
+      // Fallback for browsers without execCommand: insert the text manually,
+      // mapping newlines onto <br> so multi-line pastes keep their shape.
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+
+      const frag = document.createDocumentFragment();
+      plain.split("\n").forEach((line, i) => {
+        if (i > 0) frag.appendChild(document.createElement("br"));
+        if (line) frag.appendChild(document.createTextNode(line));
+      });
+      const last = frag.lastChild;
+      range.insertNode(frag);
+      if (last) {
+        range.setStartAfter(last);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+
+      const editor = editorRef.current;
+      if (editor) emitChange(editor);
+    },
+    [emitChange],
+  );
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
       // ── Mention navigation ───────────────────────────────────────────────
@@ -470,6 +509,7 @@ export const ChatRichInput = forwardRef<
         data-placeholder={placeholder}
         onInput={handleInput}
         onKeyDown={handleKeyDown}
+        onPaste={handlePaste}
         onBlur={() => {
           const sel = window.getSelection();
           if (sel && sel.rangeCount > 0) {

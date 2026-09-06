@@ -89,6 +89,29 @@ export const BADGE_CATALOGUE: CatalogueBadge[] = [
     requirement: "Make fifty public out-of-character posts.",
     title: "Post-aholic",
   },
+  {
+    code: "CO_AUTHOR",
+    description: "Turns up in everybody else's threads.",
+    rarity: "COMMON",
+    requirement: "Comment on ten public prompts by other Novelists.",
+    title: "Co-Author",
+  },
+  {
+    code: "DEDICATED",
+    description: "Stays with a thread until it is finished.",
+    rarity: "RARE",
+    requirement:
+      "Take fifty turns on a single public thread started by another Novelist.",
+    title: "Dedicated",
+  },
+  {
+    code: "CREATIVE",
+    description: "Ten Muses, and every one of them a whole person.",
+    rarity: "RARE",
+    requirement:
+      "Give ten Muses a backstory, their information filled in, and a public prompt each.",
+    title: "Creative",
+  },
 ];
 
 /** Copy for the rarity chip. Rarity drives nothing but how a badge reads. */

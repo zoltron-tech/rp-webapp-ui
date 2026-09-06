@@ -40,10 +40,15 @@ export type AuthSession = {
   id: string;
   /** Derived from the User-Agent server-side. "Chrome on Windows". */
   deviceLabel: string;
-  /** ISO timestamps. */
-  createdAt: string;
-  lastUsedAt: string;
-  expiresAt: string;
+  /**
+   * Timestamps. user-service serialises these as epoch *seconds* (a decimal
+   * number); the string form is only what an ISO-serialising server would send.
+   * Normalise before constructing a `Date` — seconds read as milliseconds land
+   * in January 1970.
+   */
+  createdAt: string | number;
+  lastUsedAt: string | number;
+  expiresAt: string | number;
   /** The device making the request. The UI must not offer to revoke it from the list. */
   isCurrent: boolean;
 };

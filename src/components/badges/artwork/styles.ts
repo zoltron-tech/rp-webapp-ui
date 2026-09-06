@@ -344,6 +344,64 @@ const boxNudge = keyframes`
   90%, 100% { transform: scaleY(1); }
 `;
 
+/**
+ * Two pens taking turns in one pot.
+ *
+ * Half a cycle apart rather than together: the badge is about sharing the ink,
+ * and two feathers rising and falling in step read as one pen drawn twice.
+ */
+const quillDip = keyframes`
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  46%      { transform: translateY(-7px) rotate(-4deg); }
+`;
+
+/** Ink coming off the raised pen and falling back into the pot. */
+const inkDrop = keyframes`
+  0%, 34%   { transform: translateY(0) scaleY(1); opacity: 0; }
+  44%       { opacity: 1; }
+  74%       { transform: translateY(15px) scaleY(1.25); opacity: 1; }
+  80%, 100% { transform: translateY(17px) scaleY(0.4); opacity: 0; }
+`;
+
+/** The surface stirring as a nib goes back in. */
+const inkStir = keyframes`
+  0%, 100% { transform: scaleX(1); }
+  50%      { transform: scaleX(0.94); }
+`;
+
+/**
+ * Thread paying out: the dash pattern marches along the line.
+ *
+ * Animating the offset rather than moving anything is what makes the run look
+ * endless — the path never changes, so there is no seam where a loop restarts.
+ */
+const threadFeed = keyframes`
+  to { stroke-dashoffset: -32; }
+`;
+
+/**
+ * The winding on the barrel, travelling up behind the barrel's clip.
+ *
+ * The travel is exactly the gap between two windings, so the loop lands on the
+ * next line and the spool turns forever without a jump.
+ */
+const windingScroll = keyframes`
+  to { transform: translateY(-6px); }
+`;
+
+/** Wet paint, each blob on its own clock. */
+const blobPulse = keyframes`
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.09); }
+`;
+
+/** A brush loading itself: down into the paint, and back out with it. */
+const brushDip = keyframes`
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  40%      { transform: translate(-2px, 5px) rotate(-5deg); }
+  62%      { transform: translate(-1px, 2px) rotate(-2deg); }
+`;
+
 export const Frame = styled.span<{ $size: number; $animated: boolean }>`
   display: inline-flex;
   align-items: center;
@@ -427,6 +485,16 @@ export const Frame = styled.span<{ $size: number; $animated: boolean }>`
   }
 
   .nwb-card-top,
+  .nwb-quill-l,
+  .nwb-quill-r,
+  .nwb-drop,
+  .nwb-ink,
+  .nwb-brush,
+  .nwb-blob-1,
+  .nwb-blob-2,
+  .nwb-blob-3,
+  .nwb-blob-4,
+  .nwb-blob-5,
   .nwb-letter-1,
   .nwb-letter-2,
   .nwb-letter-3,
@@ -692,6 +760,42 @@ export const Frame = styled.span<{ $size: number; $animated: boolean }>`
           .nwb-box {
             animation: ${boxNudge} 0.9s ease-in-out infinite;
           }
+          .nwb-quill-l {
+            animation: ${quillDip} 3.6s ease-in-out infinite;
+          }
+          .nwb-quill-r {
+            animation: ${quillDip} 3.6s ease-in-out -1.8s infinite;
+          }
+          .nwb-drop {
+            animation: ${inkDrop} 3.6s ease-in infinite;
+          }
+          .nwb-ink {
+            animation: ${inkStir} 1.8s ease-in-out infinite;
+          }
+          .nwb-thread {
+            animation: ${threadFeed} 1.6s linear infinite;
+          }
+          .nwb-winding {
+            animation: ${windingScroll} 1.1s linear infinite;
+          }
+          .nwb-brush {
+            animation: ${brushDip} 3.2s ease-in-out infinite;
+          }
+          .nwb-blob-1 {
+            animation: ${blobPulse} 3s ease-in-out infinite;
+          }
+          .nwb-blob-2 {
+            animation: ${blobPulse} 3s ease-in-out 0.5s infinite;
+          }
+          .nwb-blob-3 {
+            animation: ${blobPulse} 3s ease-in-out 1s infinite;
+          }
+          .nwb-blob-4 {
+            animation: ${blobPulse} 3s ease-in-out 1.5s infinite;
+          }
+          .nwb-blob-5 {
+            animation: ${blobPulse} 3s ease-in-out 2s infinite;
+          }
         `
       : ""}
 
@@ -749,6 +853,18 @@ export const Frame = styled.span<{ $size: number; $animated: boolean }>`
     .nwb-mote-3,
     .nwb-mote-4,
     .nwb-box,
+    .nwb-quill-l,
+    .nwb-quill-r,
+    .nwb-drop,
+    .nwb-ink,
+    .nwb-thread,
+    .nwb-winding,
+    .nwb-brush,
+    .nwb-blob-1,
+    .nwb-blob-2,
+    .nwb-blob-3,
+    .nwb-blob-4,
+    .nwb-blob-5,
     .nwb-letter-1,
     .nwb-letter-2,
     .nwb-letter-3,
@@ -785,7 +901,8 @@ export const Frame = styled.span<{ $size: number; $animated: boolean }>`
     .nwb-mote-4,
     .nwb-letter-1,
     .nwb-letter-2,
-    .nwb-letter-3 {
+    .nwb-letter-3,
+    .nwb-drop {
       opacity: 0;
     }
 

@@ -430,7 +430,7 @@ export const PrivacyPolicy = () => {
         </S.AccordionItem>
       </S.AccordionRoot>
       <S.Footer>
-        All rights reserved.&nbsp;<strong>©</strong>&nbsp;2025&nbsp;
+        All rights reserved.&nbsp;<strong>©</strong>&nbsp;{new Date().getFullYear()}&nbsp;
         <a href="http://zoltron.tech">Zoltron Tech.</a>
       </S.Footer>
     </S.PrivacyRoot>

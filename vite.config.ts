@@ -202,11 +202,13 @@ export default defineConfig(({ mode }) => {
           ? {
               "/rp/portfolio": {
                 changeOrigin: true,
+                cookieDomainRewrite: "",
                 target:
                   env.LOCAL_PORTFOLIO_SERVICE_URL || "http://127.0.0.1:50200",
               },
               "/rp/user": {
                 changeOrigin: true,
+                cookieDomainRewrite: "",
                 target: env.LOCAL_USER_SERVICE_URL || "http://127.0.0.1:50100",
               },
             }

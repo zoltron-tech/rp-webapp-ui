@@ -215,359 +215,372 @@ export function AccountSection({ onBack }: Props) {
       <Separator.Root className="separator" orientation="horizontal" />
 
       <S.AccountSectionBody>
-        {/* Email row */}
-        <S.AccountRow>
-          <S.AccountRowMain>
-            <S.AccountRowLabel>Email</S.AccountRowLabel>
-            <S.AccountRowValue>
-              {user?.email || "—"}
-              <S.VerifiedBadge $verified={isVerified} style={{ marginLeft: 8 }}>
-                {isVerified ? (
-                  <>
-                    <FaCircleCheck /> Verified
-                  </>
-                ) : (
-                  <>
-                    <FaCircleXmark /> Unverified
-                  </>
-                )}
-              </S.VerifiedBadge>
-            </S.AccountRowValue>
-          </S.AccountRowMain>
-          <ShouldRender if={!isVerified}>
-            <S.AccountRowActions>
-              <S.AccountActionButton
-                type="button"
-                onClick={handleResendVerification}
-                disabled={verifyState === "loading"}
-              >
-                <MdMailOutline />
-                {verifyState === "loading" ? "Sending..." : "Resend email"}
-              </S.AccountActionButton>
-            </S.AccountRowActions>
-          </ShouldRender>
-        </S.AccountRow>
+        {/* Sign-in and security: the three things that get you into the account. */}
+        <S.AccountGroup>
+          <S.AccountGroupHeading>
+            <BsKeyFill />
+            Sign-in &amp; security
+          </S.AccountGroupHeading>
 
-        <ShouldRender if={verifyState === "success"}>
-          <InlineMessage variant="success">
-            <p>
-              Verification email sent. Check your inbox and follow the link to
-              verify your address.
-            </p>
-          </InlineMessage>
-        </ShouldRender>
-        <ShouldRender if={verifyState === "error"}>
-          <InlineMessage variant="error">
-            <p>
-              Could not send verification email. Please try again in a moment.
-            </p>
-          </InlineMessage>
-        </ShouldRender>
-
-        {/* Username row */}
-        <S.AccountRow>
-          <S.AccountRowMain>
-            <S.AccountRowLabel>Username</S.AccountRowLabel>
-            <S.AccountRowValue>
-              {user?.username ? `@${user.username}` : "—"}
-            </S.AccountRowValue>
-          </S.AccountRowMain>
-          <S.AccountRowActions>
-            <S.AccountActionButton
-              type="button"
-              onClick={() => setUsernameDialogOpen(true)}
-            >
-              <BsPencil />
-              Change
-            </S.AccountActionButton>
-          </S.AccountRowActions>
-        </S.AccountRow>
-
-        {/* Badges row */}
-        <S.AccountRow>
-          <S.AccountRowMain>
-            <S.AccountRowLabel>Badges</S.AccountRowLabel>
-            <S.AccountRowValue>
-              What you have earned around Novelist World
-            </S.AccountRowValue>
-          </S.AccountRowMain>
-          <S.AccountRowActions>
-            <S.AccountActionButton
-              type="button"
-              onClick={() => routeToPage(ROUTES.Profile.Badges)}
-            >
-              <TbAward />
-              View badges
-            </S.AccountActionButton>
-          </S.AccountRowActions>
-        </S.AccountRow>
-
-        {/* Referrals row */}
-        <S.AccountRow>
-          <S.AccountRowMain>
-            <S.AccountRowLabel>Your Circle</S.AccountRowLabel>
-            <S.AccountRowValue>
-              Novelists who joined using your referral link
-            </S.AccountRowValue>
-          </S.AccountRowMain>
-          <S.AccountRowActions>
-            <S.AccountActionButton
-              type="button"
-              onClick={() => routeToPage(ROUTES.Profile.Referrals)}
-            >
-              <BsPeople />
-              View list
-            </S.AccountActionButton>
-          </S.AccountRowActions>
-        </S.AccountRow>
-
-        {/* Password row */}
-        <ShouldRender if={!isOauth}>
+          {/* Email row */}
           <S.AccountRow>
             <S.AccountRowMain>
-              <S.AccountRowLabel>Password</S.AccountRowLabel>
-              <S.AccountRowValue>••••••••</S.AccountRowValue>
+              <S.AccountRowLabel>Email</S.AccountRowLabel>
+              <S.AccountRowValue>
+                {user?.email || "—"}
+                <S.VerifiedBadge
+                  $verified={isVerified}
+                  style={{ marginLeft: 8 }}
+                >
+                  {isVerified ? (
+                    <>
+                      <FaCircleCheck /> Verified
+                    </>
+                  ) : (
+                    <>
+                      <FaCircleXmark /> Unverified
+                    </>
+                  )}
+                </S.VerifiedBadge>
+              </S.AccountRowValue>
+            </S.AccountRowMain>
+            <ShouldRender if={!isVerified}>
+              <S.AccountRowActions>
+                <S.AccountActionButton
+                  type="button"
+                  onClick={handleResendVerification}
+                  disabled={verifyState === "loading"}
+                >
+                  <MdMailOutline />
+                  {verifyState === "loading" ? "Sending..." : "Resend email"}
+                </S.AccountActionButton>
+              </S.AccountRowActions>
+            </ShouldRender>
+          </S.AccountRow>
+
+          <ShouldRender if={verifyState === "success"}>
+            <InlineMessage variant="success">
+              <p>
+                Verification email sent. Check your inbox and follow the link to
+                verify your address.
+              </p>
+            </InlineMessage>
+          </ShouldRender>
+          <ShouldRender if={verifyState === "error"}>
+            <InlineMessage variant="error">
+              <p>
+                Could not send verification email. Please try again in a moment.
+              </p>
+            </InlineMessage>
+          </ShouldRender>
+
+          {/* Username row */}
+          <S.AccountRow>
+            <S.AccountRowMain>
+              <S.AccountRowLabel>Username</S.AccountRowLabel>
+              <S.AccountRowValue>
+                {user?.username ? `@${user.username}` : "—"}
+              </S.AccountRowValue>
             </S.AccountRowMain>
             <S.AccountRowActions>
               <S.AccountActionButton
                 type="button"
-                onClick={handleResetPassword}
-                disabled={resetState === "loading" || !user?.email}
+                onClick={() => setUsernameDialogOpen(true)}
               >
-                <BsKeyFill />
-                {resetState === "loading" ? "Sending..." : "Reset password"}
+                <BsPencil />
+                Change
               </S.AccountActionButton>
             </S.AccountRowActions>
           </S.AccountRow>
-        </ShouldRender>
 
-        <ShouldRender if={resetState === "success"}>
-          <InlineMessage variant="success">
-            <p>
-              An email with further instructions has been sent to{" "}
-              <strong>{user?.email}</strong>. Check your inbox to reset your
-              password.
-            </p>
-          </InlineMessage>
-        </ShouldRender>
-        <ShouldRender if={resetState === "error"}>
-          <InlineMessage variant="error">
-            <p>Could not send password reset email. Please try again.</p>
-          </InlineMessage>
-        </ShouldRender>
+          {/* Password row */}
+          <ShouldRender if={!isOauth}>
+            <S.AccountRow>
+              <S.AccountRowMain>
+                <S.AccountRowLabel>Password</S.AccountRowLabel>
+                <S.AccountRowValue>••••••••</S.AccountRowValue>
+              </S.AccountRowMain>
+              <S.AccountRowActions>
+                <S.AccountActionButton
+                  type="button"
+                  onClick={handleResetPassword}
+                  disabled={resetState === "loading" || !user?.email}
+                >
+                  <BsKeyFill />
+                  {resetState === "loading" ? "Sending..." : "Reset password"}
+                </S.AccountActionButton>
+              </S.AccountRowActions>
+            </S.AccountRow>
+          </ShouldRender>
 
-        <ShouldRender if={Boolean(isOauth)}>
-          <InlineMessage variant="info">
-            <p>
-              Your account is linked to <strong>{user?.authApp}</strong>. Manage
-              your password through that provider.
-            </p>
-          </InlineMessage>
-        </ShouldRender>
+          <ShouldRender if={resetState === "success"}>
+            <InlineMessage variant="success">
+              <p>
+                An email with further instructions has been sent to{" "}
+                <strong>{user?.email}</strong>. Check your inbox to reset your
+                password.
+              </p>
+            </InlineMessage>
+          </ShouldRender>
+          <ShouldRender if={resetState === "error"}>
+            <InlineMessage variant="error">
+              <p>Could not send password reset email. Please try again.</p>
+            </InlineMessage>
+          </ShouldRender>
+
+          <ShouldRender if={Boolean(isOauth)}>
+            <InlineMessage variant="info">
+              <p>
+                Your account is linked to <strong>{user?.authApp}</strong>.
+                Manage your password through that provider.
+              </p>
+            </InlineMessage>
+          </ShouldRender>
+        </S.AccountGroup>
+
+        {/* What the account has collected: badges, and the people it brought in. */}
+        <S.AccountGroup>
+          <S.AccountGroupHeading>
+            <TbAward />
+            Badges &amp; your circle
+          </S.AccountGroupHeading>
+
+          <S.AccountRow>
+            <S.AccountRowMain>
+              <S.AccountRowLabel>Badges</S.AccountRowLabel>
+              <S.AccountRowValue>
+                What you have earned around Novelist World
+              </S.AccountRowValue>
+            </S.AccountRowMain>
+            <S.AccountRowActions>
+              <S.AccountActionButton
+                type="button"
+                onClick={() => routeToPage(ROUTES.Profile.Badges)}
+              >
+                <TbAward />
+                View badges
+              </S.AccountActionButton>
+            </S.AccountRowActions>
+          </S.AccountRow>
+
+          <S.AccountRow>
+            <S.AccountRowMain>
+              <S.AccountRowLabel>Your Circle</S.AccountRowLabel>
+              <S.AccountRowValue>
+                Novelists who joined using your referral link
+              </S.AccountRowValue>
+            </S.AccountRowMain>
+            <S.AccountRowActions>
+              <S.AccountActionButton
+                type="button"
+                onClick={() => routeToPage(ROUTES.Profile.Referrals)}
+              >
+                <BsPeople />
+                View list
+              </S.AccountActionButton>
+            </S.AccountRowActions>
+          </S.AccountRow>
+        </S.AccountGroup>
 
         {/* Connected accounts */}
-        <S.BlockedSectionHeading>
-          <BsLink45Deg
-            style={{
-              display: "inline",
-              marginRight: 6,
-              verticalAlign: "middle",
-            }}
-          />
-          Connected accounts
-        </S.BlockedSectionHeading>
+        <S.AccountGroup>
+          <S.AccountGroupHeading>
+            <BsLink45Deg />
+            Connected accounts
+          </S.AccountGroupHeading>
 
-        <S.AccountRow>
-          <S.AccountRowMain>
-            <S.AccountRowLabel>
-              <BsDiscord style={{ marginRight: 6, verticalAlign: "middle" }} />
-              Discord
-            </S.AccountRowLabel>
-            <S.AccountRowValue>
-              {discordLoading ? (
-                "…"
-              ) : discord ? (
-                <span
-                  style={{
-                    alignItems: "center",
-                    columnGap: 8,
-                    display: "inline-flex",
-                    flexWrap: "wrap",
-                    rowGap: 6,
-                  }}
+          <S.ConnectionRow $brand="discord" $connected={Boolean(discord)}>
+            <S.AccountRowMain>
+              <S.AccountRowLabel>
+                <BsDiscord
+                  style={{ marginRight: 6, verticalAlign: "middle" }}
+                />
+                Discord
+              </S.AccountRowLabel>
+              <S.AccountRowValue>
+                {discordLoading ? (
+                  "…"
+                ) : discord ? (
+                  <span
+                    style={{
+                      alignItems: "center",
+                      columnGap: 8,
+                      display: "inline-flex",
+                      flexWrap: "wrap",
+                      rowGap: 6,
+                    }}
+                  >
+                    <AvatarNew
+                      src={discord.avatarUrl}
+                      alt={discord.discordUsername}
+                    />
+                    @{discord.discordGlobalName || discord.discordUsername}
+                    {discord.isServerMember === true ? (
+                      <S.VerifiedBadge $verified>
+                        <FaCircleCheck /> In NW server
+                      </S.VerifiedBadge>
+                    ) : (
+                      <S.AccountActionButton
+                        type="button"
+                        onClick={() =>
+                          setGlobalState({ showJoinDiscordPrompt: true })
+                        }
+                      >
+                        <BsDiscord />
+                        Join server
+                      </S.AccountActionButton>
+                    )}
+                  </span>
+                ) : (
+                  "Not connected"
+                )}
+              </S.AccountRowValue>
+            </S.AccountRowMain>
+            <S.AccountRowActions>
+              <ShouldRender if={Boolean(discord)}>
+                <S.AccountActionButton
+                  type="button"
+                  onClick={handleUnlinkDiscord}
+                  disabled={discordUnlinking}
                 >
-                  <AvatarNew
-                    src={discord.avatarUrl}
-                    alt={discord.discordUsername}
-                  />
-                  @{discord.discordGlobalName || discord.discordUsername}
-                  {discord.isServerMember === true ? (
-                    <S.VerifiedBadge $verified>
-                      <FaCircleCheck /> In NW server
-                    </S.VerifiedBadge>
-                  ) : (
-                    <S.AccountActionButton
-                      type="button"
-                      onClick={() =>
-                        setGlobalState({ showJoinDiscordPrompt: true })
-                      }
-                    >
-                      <BsDiscord />
-                      Join server
-                    </S.AccountActionButton>
-                  )}
-                </span>
-              ) : (
-                "Not connected"
-              )}
-            </S.AccountRowValue>
-          </S.AccountRowMain>
-          <S.AccountRowActions>
-            <ShouldRender if={Boolean(discord)}>
-              <S.AccountActionButton
-                type="button"
-                onClick={handleUnlinkDiscord}
-                disabled={discordUnlinking}
-              >
-                <TbUnlink />
-                {discordUnlinking ? "Unlinking…" : "Unlink"}
-              </S.AccountActionButton>
-            </ShouldRender>
-            <ShouldRender if={!discord && !discordLoading}>
-              <S.AccountActionButton
-                type="button"
-                onClick={() => linkDiscordAction()}
-              >
-                <BsLink45Deg />
-                Connect
-              </S.AccountActionButton>
-            </ShouldRender>
-          </S.AccountRowActions>
-        </S.AccountRow>
-
-        <S.AccountRow>
-          <S.AccountRowMain>
-            <S.AccountRowLabel>
-              <FaSpotify style={{ marginRight: 6, verticalAlign: "middle" }} />
-              Spotify
-            </S.AccountRowLabel>
-            <S.AccountRowValue>
-              {spotifyLoading ? (
-                "…"
-              ) : spotify ? (
-                <span
-                  style={{
-                    alignItems: "center",
-                    columnGap: 8,
-                    display: "inline-flex",
-                    flexWrap: "wrap",
-                    rowGap: 6,
-                  }}
+                  <TbUnlink />
+                  {discordUnlinking ? "Unlinking…" : "Unlink"}
+                </S.AccountActionButton>
+              </ShouldRender>
+              <ShouldRender if={!discord && !discordLoading}>
+                <S.AccountActionButton
+                  type="button"
+                  onClick={() => linkDiscordAction()}
                 >
-                  <AvatarNew
-                    src={spotify.avatarUrl ?? null}
-                    alt={spotify.displayName ?? spotify.spotifyUserId}
-                  />
-                  {spotify.displayName || spotify.spotifyUserId}
-                  <ShouldRender if={Boolean(spotify.profileUrl)}>
-                    <a
-                      href={spotify.profileUrl ?? undefined}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        color: "var(--text-secondary)",
-                        fontSize: "var(--font-size-xsmall)",
-                      }}
-                    >
-                      Open profile
-                    </a>
-                  </ShouldRender>
-                </span>
-              ) : (
-                "Not connected"
-              )}
-            </S.AccountRowValue>
-          </S.AccountRowMain>
-          <S.AccountRowActions>
-            <ShouldRender if={Boolean(spotify)}>
-              <S.AccountActionButton
-                type="button"
-                onClick={handleUnlinkSpotify}
-                disabled={spotifyUnlinking}
-              >
-                <TbUnlink />
-                {spotifyUnlinking ? "Unlinking…" : "Unlink"}
-              </S.AccountActionButton>
-            </ShouldRender>
-            <ShouldRender if={!spotify && !spotifyLoading}>
-              <S.AccountActionButton
-                type="button"
-                onClick={() => linkSpotifyAction()}
-              >
-                <BsLink45Deg />
-                Connect
-              </S.AccountActionButton>
-            </ShouldRender>
-          </S.AccountRowActions>
-        </S.AccountRow>
+                  <BsLink45Deg />
+                  Connect
+                </S.AccountActionButton>
+              </ShouldRender>
+            </S.AccountRowActions>
+          </S.ConnectionRow>
 
-        {/* Signed-in devices */}
+          <S.ConnectionRow $brand="spotify" $connected={Boolean(spotify)}>
+            <S.AccountRowMain>
+              <S.AccountRowLabel>
+                <FaSpotify
+                  style={{ marginRight: 6, verticalAlign: "middle" }}
+                />
+                Spotify
+              </S.AccountRowLabel>
+              <S.AccountRowValue>
+                {spotifyLoading ? (
+                  "…"
+                ) : spotify ? (
+                  <span
+                    style={{
+                      alignItems: "center",
+                      columnGap: 8,
+                      display: "inline-flex",
+                      flexWrap: "wrap",
+                      rowGap: 6,
+                    }}
+                  >
+                    <AvatarNew
+                      src={spotify.avatarUrl ?? null}
+                      alt={spotify.displayName ?? spotify.spotifyUserId}
+                    />
+                    {spotify.displayName || spotify.spotifyUserId}
+                    <ShouldRender if={Boolean(spotify.profileUrl)}>
+                      <a
+                        href={spotify.profileUrl ?? undefined}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: "var(--text-secondary)",
+                          fontSize: "var(--font-size-xsmall)",
+                        }}
+                      >
+                        Open profile
+                      </a>
+                    </ShouldRender>
+                  </span>
+                ) : (
+                  "Not connected"
+                )}
+              </S.AccountRowValue>
+            </S.AccountRowMain>
+            <S.AccountRowActions>
+              <ShouldRender if={Boolean(spotify)}>
+                <S.AccountActionButton
+                  type="button"
+                  onClick={handleUnlinkSpotify}
+                  disabled={spotifyUnlinking}
+                >
+                  <TbUnlink />
+                  {spotifyUnlinking ? "Unlinking…" : "Unlink"}
+                </S.AccountActionButton>
+              </ShouldRender>
+              <ShouldRender if={!spotify && !spotifyLoading}>
+                <S.AccountActionButton
+                  type="button"
+                  onClick={() => linkSpotifyAction()}
+                >
+                  <BsLink45Deg />
+                  Connect
+                </S.AccountActionButton>
+              </ShouldRender>
+            </S.AccountRowActions>
+          </S.ConnectionRow>
+        </S.AccountGroup>
+
+        {/* Signed-in devices, with the two account-wide sign-outs. */}
         <DevicesSection />
 
         {/* Blocked novelists */}
-        <S.BlockedSectionHeading>
-          <RiUserForbidLine
-            style={{
-              display: "inline",
-              marginRight: 6,
-              verticalAlign: "middle",
-            }}
-          />
-          Blocked accounts
-        </S.BlockedSectionHeading>
+        <S.AccountGroup>
+          <S.AccountGroupHeading>
+            <RiUserForbidLine />
+            Blocked accounts
+          </S.AccountGroupHeading>
 
-        <ShouldRender if={blocked.length === 0}>
-          <InlineMessage variant="info">
-            <p>You have not blocked anyone.</p>
-          </InlineMessage>
-        </ShouldRender>
-
-        <ShouldRender if={blocked.length > 0}>
-          <S.BlockedList>
-            {blocked.map((person) => (
-              <S.BlockedItem key={person.id}>
-                <AvatarNew src={person.image} alt={person.username} />
-                <S.BlockedItemInfo>
-                  <S.BlockedItemName>
-                    {person.firstName}
-                    {person.lastName ? ` ${person.lastName}` : ""}
-                  </S.BlockedItemName>
-                  <S.BlockedItemUsername>
-                    @{person.username}
-                  </S.BlockedItemUsername>
-                </S.BlockedItemInfo>
-                <S.UnblockButton
-                  type="button"
-                  disabled={unblockingId === person.id}
-                  onClick={() => handleUnblock(person)}
-                >
-                  <TbUserOff />
-                  {unblockingId === person.id ? "Unblocking…" : "Unblock"}
-                </S.UnblockButton>
-              </S.BlockedItem>
-            ))}
-          </S.BlockedList>
-          <ShouldRender if={hasMore}>
-            <S.AccountActionButton
-              type="button"
-              onClick={handleLoadMore}
-              disabled={loadingMore}
-              style={{ alignSelf: "center" }}
-            >
-              {loadingMore ? "Loading…" : "Load more"}
-            </S.AccountActionButton>
+          <ShouldRender if={blocked.length === 0}>
+            <InlineMessage variant="info">
+              <p>You have not blocked anyone.</p>
+            </InlineMessage>
           </ShouldRender>
-        </ShouldRender>
+
+          <ShouldRender if={blocked.length > 0}>
+            <S.BlockedList>
+              {blocked.map((person) => (
+                <S.BlockedItem key={person.id}>
+                  <AvatarNew src={person.image} alt={person.username} />
+                  <S.BlockedItemInfo>
+                    <S.BlockedItemName>
+                      {person.firstName}
+                      {person.lastName ? ` ${person.lastName}` : ""}
+                    </S.BlockedItemName>
+                    <S.BlockedItemUsername>
+                      @{person.username}
+                    </S.BlockedItemUsername>
+                  </S.BlockedItemInfo>
+                  <S.UnblockButton
+                    type="button"
+                    disabled={unblockingId === person.id}
+                    onClick={() => handleUnblock(person)}
+                  >
+                    <TbUserOff />
+                    {unblockingId === person.id ? "Unblocking…" : "Unblock"}
+                  </S.UnblockButton>
+                </S.BlockedItem>
+              ))}
+            </S.BlockedList>
+            <ShouldRender if={hasMore}>
+              <S.AccountActionButton
+                type="button"
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                style={{ alignSelf: "center" }}
+              >
+                {loadingMore ? "Loading…" : "Load more"}
+              </S.AccountActionButton>
+            </ShouldRender>
+          </ShouldRender>
+        </S.AccountGroup>
       </S.AccountSectionBody>
 
       <ChangeUsernameDialog

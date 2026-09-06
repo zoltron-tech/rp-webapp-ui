@@ -155,13 +155,11 @@ export function DevicesSection() {
   const otherDeviceCount = sessions.filter((it) => !it.isCurrent).length;
 
   return (
-    <>
-      <S.BlockedSectionHeading>
-        <TbShieldLock
-          style={{ display: "inline", marginRight: 6, verticalAlign: -2 }}
-        />
+    <S.AccountGroup>
+      <S.AccountGroupHeading>
+        <TbShieldLock />
         Where you are signed in
-      </S.BlockedSectionHeading>
+      </S.AccountGroupHeading>
 
       <ShouldRender if={state === "loading"}>
         <S.AccountRowValue>Loading your devices…</S.AccountRowValue>
@@ -211,43 +209,47 @@ export function DevicesSection() {
           </InlineMessage>
         </ShouldRender>
 
-        <S.AccountRow>
-          <S.AccountRowMain>
-            <S.AccountRowLabel>Sign out everywhere else</S.AccountRowLabel>
-            <S.AccountRowValue>
-              Ends every session except this one.
-            </S.AccountRowValue>
-          </S.AccountRowMain>
-          <S.AccountRowActions>
-            <S.AccountActionButton
+        {/* Account-wide, so deliberately not shaped like a device row. */}
+        <S.SessionActionsPanel>
+          <S.SessionActionItem>
+            <S.SessionActionMain>
+              <S.SessionActionTitle>
+                Sign out everywhere else
+              </S.SessionActionTitle>
+              <S.SessionActionDesc>
+                Ends every session except this one.
+              </S.SessionActionDesc>
+            </S.SessionActionMain>
+            <S.SessionActionButton
               type="button"
               onClick={() => setConfirmOthers(true)}
               disabled={otherDeviceCount === 0}
             >
               <TbLogout />
               Sign out others
-            </S.AccountActionButton>
-          </S.AccountRowActions>
-        </S.AccountRow>
+            </S.SessionActionButton>
+          </S.SessionActionItem>
 
-        <S.AccountRow>
-          <S.AccountRowMain>
-            <S.AccountRowLabel>Sign out of everything</S.AccountRowLabel>
-            <S.AccountRowValue>
-              Ends every session, including this one. Use this if you think
-              someone else has access to your account.
-            </S.AccountRowValue>
-          </S.AccountRowMain>
-          <S.AccountRowActions>
-            <S.AccountActionButton
+          <S.SessionActionItem>
+            <S.SessionActionMain>
+              <S.SessionActionTitle $danger>
+                Sign out of everything
+              </S.SessionActionTitle>
+              <S.SessionActionDesc>
+                Ends every session, including this one. Use this if you think
+                someone else has access to your account.
+              </S.SessionActionDesc>
+            </S.SessionActionMain>
+            <S.SessionActionButton
               type="button"
+              $danger
               onClick={() => setConfirmEverywhere(true)}
             >
               <TbShieldLock />
               Sign out everywhere
-            </S.AccountActionButton>
-          </S.AccountRowActions>
-        </S.AccountRow>
+            </S.SessionActionButton>
+          </S.SessionActionItem>
+        </S.SessionActionsPanel>
       </ShouldRender>
 
       <AppAlertDialog
@@ -267,6 +269,6 @@ export function DevicesSection() {
         onConfirm={handleLogoutEverywhere}
         actionButtonLabel="Sign out everywhere"
       />
-    </>
+    </S.AccountGroup>
   );
 }

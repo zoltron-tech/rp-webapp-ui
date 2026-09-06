@@ -544,7 +544,6 @@ padding-top: 20px;
 width: 100%;
 `;
 
-
 export const NoteDialogBodyWrapper = styled.div`
   padding: 4px 12px 0;
   max-height: 62vh;
@@ -650,7 +649,10 @@ const notePickerWiggle = keyframes`
   100% { transform: scale(1.18); }
 `;
 
-export const NotePreviewEmoji = styled.span<{ $wiggling?: boolean; $rotate?: boolean }>`
+export const NotePreviewEmoji = styled.span<{
+  $wiggling?: boolean;
+  $rotate?: boolean;
+}>`
   position: absolute;
   top: -18px;
   right: -12px;
@@ -740,7 +742,10 @@ export const NoteEmojiPickerRow = styled.div`
   }
 `;
 
-export const NoteEmojiButton = styled.button<{ $selected: boolean; $wiggling?: boolean }>`
+export const NoteEmojiButton = styled.button<{
+  $selected: boolean;
+  $wiggling?: boolean;
+}>`
   all: unset;
   position: relative;
   display: flex;
@@ -759,7 +764,9 @@ export const NoteEmojiButton = styled.button<{ $selected: boolean; $wiggling?: b
     $selected ? "color-mix(in srgb, #ef4444 22%, var(--bg-3))" : "transparent"};
   outline: ${({ $selected }) => ($selected ? "2px solid #ef4444" : "1.5px solid transparent")};
   box-shadow: ${({ $selected }) =>
-    $selected ? "0 0 0 4px color-mix(in srgb, #ef4444 18%, transparent)" : "none"};
+    $selected
+      ? "0 0 0 4px color-mix(in srgb, #ef4444 18%, transparent)"
+      : "none"};
   transform: ${({ $selected }) => ($selected ? "scale(1.18)" : "scale(1)")};
 
   /* "×" badge always visible when selected */
@@ -915,7 +922,6 @@ export const NoteColorSwatch = styled.button<{
     transform: scale(1.15);
   }
 `;
-
 
 // ── Note level-3 perk box ─────────────────────────────────────────────────────
 
@@ -1571,33 +1577,45 @@ export const LandingCardChip = styled.span<{ $active?: boolean }>`
 export const AccountSectionBody = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   padding: 12px 4px;
+
+  @media screen and (max-width: 480px) {
+    gap: 10px;
+    padding: 8px 0;
+  }
 `;
 
 export const AccountRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 12px 14px;
   background: var(--bg-3);
   border: 1px solid var(--bg-5);
   border-radius: 8px;
 
   @media screen and (max-width: 480px) {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
+    gap: 6px 8px;
+    padding: 8px 10px;
+    border-radius: 7px;
   }
 `;
 
 export const AccountRowMain = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   min-width: 0;
-  flex: 1;
+  /* 150px is the narrowest a label + value stays readable; below that the row
+     wraps and the button takes the second line rather than crushing the text. */
+  flex: 1 1 150px;
+
+  @media screen and (max-width: 480px) {
+    gap: 2px;
+  }
 `;
 
 export const AccountRowLabel = styled.span`
@@ -1606,13 +1624,24 @@ export const AccountRowLabel = styled.span`
   font-weight: var(--font-weight-medium);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+
+  @media screen and (max-width: 480px) {
+    font-size: var(--font-size-xsmall);
+    letter-spacing: 0.4px;
+  }
 `;
 
 export const AccountRowValue = styled.span`
   font-size: var(--font-size);
   color: var(--text);
   font-weight: var(--font-weight-medium);
-  word-break: break-all;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+
+  @media screen and (max-width: 480px) {
+    font-size: var(--font-size-small);
+  }
 `;
 
 export const AccountRowActions = styled.div`
@@ -1620,6 +1649,11 @@ export const AccountRowActions = styled.div`
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+  margin-left: auto;
+
+  @media screen and (max-width: 480px) {
+    gap: 6px;
+  }
 `;
 
 export const AccountActionButton = styled.button`
@@ -1627,7 +1661,7 @@ export const AccountActionButton = styled.button`
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 14px;
+  padding: 7px 12px;
   border-radius: 6px;
   background: var(--bg-4);
   color: var(--text);
@@ -1657,6 +1691,17 @@ export const AccountActionButton = styled.button`
     width: 14px;
     height: 14px;
   }
+
+  @media screen and (max-width: 480px) {
+    gap: 5px;
+    padding: 6px 10px;
+    font-size: var(--font-size-xsmall);
+
+    svg {
+      width: 13px;
+      height: 13px;
+    }
+  }
 `;
 
 export const AccountActionButtonPrimary = styled(AccountActionButton)`
@@ -1678,6 +1723,7 @@ export const VerifiedBadge = styled.span<{ $verified: boolean }>`
   padding: 2px 8px;
   border-radius: 999px;
   font-size: 0.7rem;
+  white-space: nowrap;
   font-weight: var(--font-weight-bold);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -1693,37 +1739,300 @@ export const VerifiedBadge = styled.span<{ $verified: boolean }>`
     width: 12px;
     height: 12px;
   }
+
+  @media screen and (max-width: 480px) {
+    padding: 1px 6px;
+    font-size: 0.65rem;
+
+    svg {
+      width: 11px;
+      height: 11px;
+    }
+  }
+`;
+
+// ── Account sections ────────────────────────────────────────────────────────
+
+/**
+ * One titled group of account rows.
+ *
+ * The account screen is a long list of unrelated switches; grouping them —
+ * credentials, recognition, connections, devices, blocks — is what keeps it
+ * scannable. The panel is deliberately quieter than the rows it holds, so the
+ * rows still read as the clickable things.
+ */
+export const AccountGroup = styled.section`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--bg-4);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg-3) 40%, transparent);
+
+  @media screen and (max-width: 480px) {
+    gap: 6px;
+    padding: 8px;
+    border-radius: 10px;
+  }
+`;
+
+export const AccountGroupHeading = styled.h2`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 2px 2px 0;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  svg {
+    width: 15px;
+    height: 15px;
+    color: var(--accent-11);
+  }
+
+  @media screen and (max-width: 480px) {
+    gap: 6px;
+    padding: 0 2px;
+    font-size: var(--font-size-xsmall);
+
+    svg {
+      width: 13px;
+      height: 13px;
+    }
+  }
+`;
+
+// ── Connected accounts ──────────────────────────────────────────────────────
+
+/** Brand colours, straight from Discord's and Spotify's own guidelines. */
+const BRAND_COLOR = {
+  discord: "#5865f2",
+  spotify: "#1db954",
+} as const;
+
+export type ConnectionBrand = keyof typeof BRAND_COLOR;
+
+/**
+ * A connection row that wears its provider's colours once it is linked.
+ *
+ * Unconnected rows stay neutral on purpose: the tint is the status. Colour is
+ * mixed into `--bg-3` rather than laid over it so the row keeps its weight in
+ * every palette, and the gradient fades out to the left-to-right so the action
+ * button on the right sits on the plain surface it was designed for.
+ */
+export const ConnectionRow = styled(AccountRow)<{
+  $brand: ConnectionBrand;
+  $connected?: boolean;
+}>`
+  ${({ $brand, $connected }) => {
+    if (!$connected) return "";
+    const brand = BRAND_COLOR[$brand];
+    return css`
+      border-color: color-mix(in srgb, ${brand} 55%, transparent);
+      background: linear-gradient(
+        135deg,
+        color-mix(in srgb, ${brand} 24%, var(--bg-3)) 0%,
+        color-mix(in srgb, ${brand} 9%, var(--bg-3)) 45%,
+        var(--bg-3) 100%
+      );
+      box-shadow: inset 0 1px 0 color-mix(in srgb, ${brand} 20%, transparent);
+
+      ${AccountRowLabel} {
+        color: color-mix(in srgb, ${brand} 55%, var(--text));
+
+        svg {
+          color: ${brand};
+        }
+      }
+
+      ${AccountActionButton} {
+        background: color-mix(in srgb, ${brand} 12%, var(--bg-4));
+        border-color: color-mix(in srgb, ${brand} 40%, transparent);
+
+        &:hover:not(:disabled) {
+          background: color-mix(in srgb, ${brand} 22%, var(--bg-4));
+          border-color: ${brand};
+          color: ${brand};
+        }
+      }
+    `;
+  }}
+`;
+
+// ── Session-wide sign-out actions ───────────────────────────────────────────
+
+/**
+ * The two account-wide sign-outs, held apart from the device list.
+ *
+ * They are not devices, and mixing them into the same card shape invites the
+ * misread that "Sign out of everything" ends one row. The dashed, tomato-tinted
+ * panel says: these are the blunt instruments.
+ */
+export const SessionActionsPanel = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 2px;
+  padding: 12px 14px;
+  border: 1px dashed color-mix(in srgb, var(--tomato-9) 45%, var(--bg-5));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--tomato-9) 6%, transparent);
+
+  @media screen and (max-width: 480px) {
+    gap: 10px;
+    padding: 10px;
+  }
+`;
+
+export const SessionActionItem = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+
+  & + & {
+    padding-top: 12px;
+    border-top: 1px solid color-mix(in srgb, var(--tomato-9) 20%, transparent);
+  }
+
+  @media screen and (max-width: 480px) {
+    gap: 6px 8px;
+
+    & + & {
+      padding-top: 10px;
+    }
+  }
+`;
+
+export const SessionActionMain = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1 1 160px;
+
+  @media screen and (max-width: 480px) {
+    gap: 2px;
+  }
+`;
+
+export const SessionActionTitle = styled.span<{ $danger?: boolean }>`
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.3;
+  color: ${({ $danger }) => ($danger ? "var(--tomato-11)" : "var(--text)")};
+
+  @media screen and (max-width: 480px) {
+    font-size: var(--font-size-small);
+  }
+`;
+
+export const SessionActionDesc = styled.span`
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  line-height: 1.35;
+
+  @media screen and (max-width: 480px) {
+    font-size: var(--font-size-xsmall);
+  }
+`;
+
+export const SessionActionButton = styled.button<{ $danger?: boolean }>`
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 6px;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  border: 1px solid
+    ${({ $danger }) => ($danger ? "var(--tomato-9)" : "var(--amber-9)")};
+  color: ${({ $danger }) => ($danger ? "var(--tomato-11)" : "var(--amber-11)")};
+  background: ${({ $danger }) =>
+    $danger
+      ? "color-mix(in srgb, var(--tomato-9) 12%, transparent)"
+      : "color-mix(in srgb, var(--amber-9) 12%, transparent)"};
+
+  &:hover:not(:disabled) {
+    background: ${({ $danger }) =>
+      $danger ? "var(--tomato-9)" : "var(--amber-9)"};
+    color: var(--text-contrast, #fff);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  @media screen and (max-width: 480px) {
+    gap: 5px;
+    padding: 6px 10px;
+    font-size: var(--font-size-xsmall);
+
+    svg {
+      width: 13px;
+      height: 13px;
+    }
+  }
 `;
 
 // ── Blocked novelists list ───────────────────────────────────────────────────
-
-export const BlockedSectionHeading = styled.p`
-  font-size: var(--font-size-small);
-  color: var(--text-secondary);
-  font-weight: var(--font-weight-medium);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 8px 0 4px;
-`;
 
 export const BlockedList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
+
+  @media screen and (max-width: 480px) {
+    gap: 6px;
+  }
 `;
 
 export const BlockedItem = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 10px 14px;
   background: var(--bg-3);
   border: 1px solid var(--bg-5);
   border-radius: 8px;
 
   .avatar {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
+  }
+
+  @media screen and (max-width: 480px) {
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: 7px;
+
+    .avatar {
+      width: 30px;
+      height: 30px;
+    }
   }
 `;
 
@@ -1737,16 +2046,25 @@ export const BlockedItemInfo = styled.div`
 
 export const BlockedItemName = styled.span`
   font-size: var(--font-size);
+  line-height: 1.3;
   color: var(--text);
   font-weight: var(--font-weight-medium);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  @media screen and (max-width: 480px) {
+    font-size: var(--font-size-small);
+  }
 `;
 
 export const BlockedItemUsername = styled.span`
   font-size: var(--font-size-small);
   color: var(--text-secondary);
+
+  @media screen and (max-width: 480px) {
+    font-size: var(--font-size-xsmall);
+  }
 `;
 
 export const UnblockButton = styled.button`
@@ -1754,7 +2072,7 @@ export const UnblockButton = styled.button`
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 14px;
+  padding: 6px 12px;
   border-radius: 6px;
   background: color-mix(in srgb, var(--tomato-9) 10%, transparent);
   color: var(--tomato-9);
@@ -1778,6 +2096,17 @@ export const UnblockButton = styled.button`
   svg {
     width: 14px;
     height: 14px;
+  }
+
+  @media screen and (max-width: 480px) {
+    gap: 5px;
+    padding: 5px 9px;
+    font-size: var(--font-size-xsmall);
+
+    svg {
+      width: 13px;
+      height: 13px;
+    }
   }
 `;
 
@@ -2314,7 +2643,9 @@ export const NoteTrayActions = styled.div`
   align-items: center;
 `;
 
-export const NoteTrayActionButton = styled.button<{ $variant: "cancel" | "confirm" }>`
+export const NoteTrayActionButton = styled.button<{
+  $variant: "cancel" | "confirm";
+}>`
   all: unset;
   display: flex;
   align-items: center;

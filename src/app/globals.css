@@ -825,6 +825,173 @@ textarea {
     --text-secondary: var(--bg-11);
   }
 
+  /* Ember: burnt orange — bg uses sand-dark (already imported, warm neutral).
+     Built on #fc9403: that exact colour is step 11 (links/inline text, where a
+     bright orange on the dark bg reads best). Step 9 is the muted #b3620a, dark
+     enough that the default light --text reads on accent surfaces without an
+     --accent-fg override; the alpha scale is #fc9403 throughout. */
+  .ember {
+    --bg-1: var(--sand-1);
+    --bg-2: var(--sand-2);
+    --bg-3: var(--sand-3);
+    --bg-4: var(--sand-4);
+    --bg-5: var(--sand-5);
+    --bg-6: var(--sand-6);
+    --bg-7: var(--sand-7);
+    --bg-8: var(--sand-8);
+    --bg-9: var(--sand-9);
+    --bg-10: var(--sand-10);
+    --bg-11: var(--sand-11);
+    --bg-12: var(--sand-12);
+
+    --ember-1: #150e05;
+    --ember-a1: #fc940306;
+    --ember-2: #1f1407;
+    --ember-a2: #fc94030f;
+    --ember-3: #2e1b07;
+    --ember-a3: #fc94031c;
+    --ember-4: #3c2206;
+    --ember-a4: #fc94032a;
+    --ember-5: #4b2a06;
+    --ember-a5: #fc940339;
+    --ember-6: #5d3406;
+    --ember-a6: #fc94034d;
+    --ember-7: #784207;
+    --ember-a7: #fc940368;
+    --ember-8: #965208;
+    --ember-a8: #fc94038d;
+    --ember-9: #b3620a;
+    --ember-a9: #b3620aec;
+    --ember-10: #d97b06;
+    --ember-a10: #d97b06ec;
+    --ember-11: #fc9403;
+    --ember-a11: #fc9403f5;
+    --ember-12: #ffe0bb;
+    --ember-a12: #ffe0bbfb;
+
+    --accent-1: var(--ember-1);
+    --accent-a1: var(--ember-a1);
+    --accent-2: var(--ember-2);
+    --accent-a2: var(--ember-a2);
+    --accent-3: var(--ember-3);
+    --accent-a3: var(--ember-a3);
+    --accent-4: var(--ember-4);
+    --accent-a4: var(--ember-a4);
+    --accent-5: var(--ember-5);
+    --accent-a5: var(--ember-a5);
+    --accent-6: var(--ember-6);
+    --accent-a6: var(--ember-a6);
+    --accent-7: var(--ember-7);
+    --accent-a7: var(--ember-a7);
+    --accent-8: var(--ember-8);
+    --accent-a8: var(--ember-a8);
+    --accent-9: var(--ember-9);
+    --accent-a9: var(--ember-a9);
+    --accent-10: var(--ember-10);
+    --accent-a10: var(--ember-a10);
+    --accent-11: var(--ember-11);
+    --accent-a11: var(--ember-a11);
+    --accent-12: var(--ember-12);
+    --accent-a12: var(--ember-a12);
+
+    --accent: var(--ember-9);
+    --accent-hover: var(--ember-10);
+    --accent-active: var(--ember-8);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  /* Onyx: monochrome violet-charcoal, built on #1f1e26 — that colour is the
+     raised-surface step (--bg-3), with --bg-1/--bg-2 sunk below it into near
+     black so the theme reads dark. The accent is the same hue lifted into a
+     muted lilac; step 9 (#6f6b96) clears 4.5:1 with the default light --text,
+     so no --accent-fg override is needed. */
+  .onyx {
+    --onyx-bg-1: #0d0c11;
+    --onyx-bg-2: #16151b;
+    --onyx-bg-3: #1f1e26;
+    --onyx-bg-4: #24232d;
+    --onyx-bg-5: #2b2a35;
+    --onyx-bg-6: #343341;
+    --onyx-bg-7: #414052;
+    --onyx-bg-8: #56546a;
+    --onyx-bg-9: #63617a;
+    --onyx-bg-10: #706e88;
+    --onyx-bg-11: #9d9bad;
+    --onyx-bg-12: #e9e7f0;
+
+    --bg-1: var(--onyx-bg-1);
+    --bg-2: var(--onyx-bg-2);
+    --bg-3: var(--onyx-bg-3);
+    --bg-4: var(--onyx-bg-4);
+    --bg-5: var(--onyx-bg-5);
+    --bg-6: var(--onyx-bg-6);
+    --bg-7: var(--onyx-bg-7);
+    --bg-8: var(--onyx-bg-8);
+    --bg-9: var(--onyx-bg-9);
+    --bg-10: var(--onyx-bg-10);
+    --bg-11: var(--onyx-bg-11);
+    --bg-12: var(--onyx-bg-12);
+
+    --onyx-1: #0c0b10;
+    --onyx-a1: #6f6b9606;
+    --onyx-2: #131218;
+    --onyx-a2: #6f6b960f;
+    --onyx-3: #1b1a24;
+    --onyx-a3: #6f6b961c;
+    --onyx-4: #22212e;
+    --onyx-a4: #6f6b962a;
+    --onyx-5: #2a2839;
+    --onyx-a5: #6f6b9639;
+    --onyx-6: #343147;
+    --onyx-a6: #6f6b964d;
+    --onyx-7: #45415c;
+    --onyx-a7: #6f6b9668;
+    --onyx-8: #565273;
+    --onyx-a8: #6f6b968d;
+    --onyx-9: #6f6b96;
+    --onyx-a9: #6f6b96ec;
+    --onyx-10: #827ead;
+    --onyx-a10: #827eadec;
+    --onyx-11: #b3afd0;
+    --onyx-a11: #b3afd0f5;
+    --onyx-12: #e8e6f4;
+    --onyx-a12: #e8e6f4fb;
+
+    --accent-1: var(--onyx-1);
+    --accent-a1: var(--onyx-a1);
+    --accent-2: var(--onyx-2);
+    --accent-a2: var(--onyx-a2);
+    --accent-3: var(--onyx-3);
+    --accent-a3: var(--onyx-a3);
+    --accent-4: var(--onyx-4);
+    --accent-a4: var(--onyx-a4);
+    --accent-5: var(--onyx-5);
+    --accent-a5: var(--onyx-a5);
+    --accent-6: var(--onyx-6);
+    --accent-a6: var(--onyx-a6);
+    --accent-7: var(--onyx-7);
+    --accent-a7: var(--onyx-a7);
+    --accent-8: var(--onyx-8);
+    --accent-a8: var(--onyx-a8);
+    --accent-9: var(--onyx-9);
+    --accent-a9: var(--onyx-a9);
+    --accent-10: var(--onyx-10);
+    --accent-a10: var(--onyx-a10);
+    --accent-11: var(--onyx-11);
+    --accent-a11: var(--onyx-a11);
+    --accent-12: var(--onyx-12);
+    --accent-a12: var(--onyx-a12);
+
+    --accent: var(--onyx-9);
+    --accent-hover: var(--onyx-10);
+    --accent-active: var(--onyx-8);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
   ::selection {
     background-color: var(--accent-a5);
   }

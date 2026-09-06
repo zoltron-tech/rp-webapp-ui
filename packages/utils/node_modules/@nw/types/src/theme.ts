@@ -9,6 +9,8 @@ export const ACCENT_MAP = {
   7: "lotus",
   8: "dracula",
   9: "lunar",
+  10: "ember",
+  11: "onyx",
 } as const;
 
 export type Accent = keyof typeof ACCENT_MAP;

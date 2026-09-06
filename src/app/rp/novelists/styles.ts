@@ -432,7 +432,7 @@ const ButtonBase = styled.button`
 
 export const PrimaryButton = styled(ButtonBase)`
   border: none;
-  color: #08090c;
+  color: var(--text);
   background: linear-gradient(
     140deg,
     color-mix(in srgb, var(--accent) 82%, #ffffff) 0%,
@@ -457,7 +457,7 @@ export const PrimaryButton = styled(ButtonBase)`
 `;
 
 export const GhostButton = styled(ButtonBase)`
-  color: #ffffff;
+  color: var(--text);
   border: 1px solid transparent;
   backdrop-filter: blur(10px);
   /* Two-layer background: soft glass fill (padding-box) + a bright gradient
@@ -475,7 +475,7 @@ export const GhostButton = styled(ButtonBase)`
   box-shadow: 0 10px 26px -16px rgba(0, 0, 0, 0.9);
 
   svg {
-    color: #ffffff;
+    color: var(--text);
   }
 
   &:hover {

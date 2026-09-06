@@ -3,7 +3,7 @@ export const ACCENT_MAP = {
   1: "cyan",
   2: "iris",
   3: "crimson",
-  4: "amber",
+  4: "gold",
   5: "red",
   6: "lime",
   7: "lotus",

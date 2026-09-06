@@ -432,7 +432,10 @@ textarea {
     --text-secondary: var(--bg-11);
   }
 
-  .amber {
+  /* Gold: the palette formerly called amber. The class is `gold`, but the
+     scale it draws from stays `--amber-*` - those vars are also the app-wide
+     warning colour, so they are not the palette's to rename. */
+  .gold {
     --bg-1: var(--sand-1);
     --bg-2: var(--sand-2);
     --bg-3: var(--sand-3);

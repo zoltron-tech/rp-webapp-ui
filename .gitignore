@@ -57,3 +57,12 @@ ds-bundle/
 .design-sync/.cache/
 .design-sync/learnings/
 .design-sync/node_modules/
+
+# editors / IDEs
+.idea/
+*.swp
+.DS_Store
+# .vscode is machine state except for the two files the team shares.
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json

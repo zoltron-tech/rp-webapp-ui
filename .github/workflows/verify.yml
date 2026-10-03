@@ -50,6 +50,12 @@ jobs:
       - uses: browser-actions/setup-chrome@v1
         id: chrome
 
+      # The pass renders the built app: `route-smoke.mts` spawns `vite preview`,
+      # which serves `dist/`. Without this step preview exits immediately and the
+      # failure reads "vite preview did not come up", which says nothing about
+      # the missing build.
+      - run: pnpm build
+
       - run: pnpm smoke:routes
         env:
           # tools/find-chrome.mjs reads this first.

@@ -20,7 +20,7 @@
  */
 
 import { spawn } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import puppeteer, { type Browser, type Page } from "puppeteer-core";
 import { findChrome } from "../../../tools/find-chrome.mjs";
 
@@ -226,6 +226,15 @@ const visit = async (page: Page, route: string): Promise<Result> => {
 const run = async () => {
   const routes = readRoutes();
   console.log(`Routes to render: ${routes.length}\n`);
+
+  // `vite preview` serves `dist/` and exits at once if it is not there, which
+  // surfaces 60 seconds later as "vite preview did not come up" — a timeout
+  // message for what is really a missing build. Say so immediately instead.
+  if (!EXTERNAL_ORIGIN && !existsSync("dist/index.html")) {
+    throw new Error(
+      "dist/index.html is missing — run `pnpm build` first (CI does this in the routes job).",
+    );
+  }
 
   const server = EXTERNAL_ORIGIN
     ? null

@@ -1,13 +1,13 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules/
 /.pnp
 .pnp.js
 .yarn/install-state.gz
 
 # PWA generated files
-public/icons/photothumb.db
+**/public/icons/photothumb.db
 
 # yarn 2
 .yarn/*
@@ -18,16 +18,16 @@ public/icons/photothumb.db
 !.yarn/sdks/
 
 # testing
-/coverage
+coverage/
 
 # vite
-/dist/
+dist/
 # vite-plugin-pwa writes the dev service worker here
-/dev-dist/
-/out/
+dev-dist/
+out/
 
 # production
-/build
+build/
 
 # misc
 .DS_Store
@@ -56,4 +56,4 @@ format.css
 ds-bundle/
 .design-sync/.cache/
 .design-sync/learnings/
-.design-sync/node_modules
+.design-sync/node_modules/

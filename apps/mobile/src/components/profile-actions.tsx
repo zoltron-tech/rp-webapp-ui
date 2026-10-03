@@ -1,0 +1,397 @@
+import { Ionicons } from "@expo/vector-icons";
+import { SUPPORT_USERNAME } from "@nw/chat";
+import { useSession } from "@nw/features";
+import type { Novelist } from "@nw/types";
+import * as Clipboard from "expo-clipboard";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import { Alert, Pressable, Share, StyleSheet, View } from "react-native";
+import { type ActionItem, ActionMenu } from "@/components/action-menu";
+import {
+  type Connection,
+  useConnectionActions,
+  useOpenConversation,
+} from "@/hooks/use-connection";
+import { radius, space, useAppTheme } from "@/theme";
+
+/**
+ * The two buttons over a profile's banner.
+ *
+ * Web puts them in the banner's top-right corner and so does this: a connection
+ * button whose icon *is* the state — add, sent, received, friends — and a `⋯`
+ * for everything that is not about the connection. Both open menus rather than
+ * acting on a single tap, which is web's shape too and the right one here:
+ * every item behind them is a write, and several cannot be undone.
+ *
+ * ## The connection button is a state machine
+ *
+ * One field, `novelist.connection`, decides both the icon and the menu:
+ *
+ * | State | Icon | Menu |
+ * | --- | --- | --- |
+ * | none | person-add | Add |
+ * | `FRIEND_REQUEST_SENT` | arrow up | Cancel request |
+ * | `FRIEND_REQUEST_RECEIVED` | person-add + dot | Accept, Reject |
+ * | `FRIEND` | person-check | Message, Unfriend |
+ *
+ * The received state carries an unread dot, as web does — it is the only one
+ * where the other person is waiting on you, and a profile you opened for
+ * another reason is where you find out.
+ *
+ * ## What is missing, and why
+ *
+ * **Export novelist card** is deliberately absent for now. **Edit profile** is
+ * a screen this client does not have yet, so its row would be a dead end.
+ * **Invite to a story** is `handleNotImplemented` on web — a toast saying
+ * "coming soon" — and an item that exists only to apologise is worse on a phone
+ * than an item that is not there.
+ */
+
+/** Rows that cannot be undone ask first, with the verb in the button. */
+const confirm = (
+  title: string,
+  message: string,
+  verb: string,
+  run: () => void,
+) =>
+  Alert.alert(
+    title,
+    message,
+    [
+      { style: "cancel", text: "Cancel" },
+      { onPress: run, style: "destructive", text: verb },
+    ],
+    { cancelable: true },
+  );
+
+const PROFILE_URL = "https://novelist.world/rp/profile";
+
+export const ProfileActions = ({ novelist }: { novelist: Novelist }) => {
+  const theme = useAppTheme();
+  const router = useRouter();
+  const session = useSession();
+  const actions = useConnectionActions(novelist);
+  const openConversation = useOpenConversation();
+
+  const [menu, setMenu] = useState<"none" | "connection" | "more">("none");
+
+  const isSelf = session.novelist?.username === novelist.username;
+  const isSupport = novelist.username === SUPPORT_USERNAME;
+  const connection = (novelist.connection ?? null) as Connection;
+  const close = () => setMenu("none");
+
+  // Signed out: there is nothing here anyone can do.
+  if (session.status !== "signed-in") return null;
+
+  const failed = (what: string) => () =>
+    Alert.alert("Not saved", `${what} could not be completed. Try again.`);
+
+  const run = (
+    mutation: { mutateAsync: () => Promise<unknown> },
+    what: string,
+  ) => {
+    close();
+    mutation.mutateAsync().catch(failed(what));
+  };
+
+  const message = () => {
+    close();
+    openConversation
+      .mutateAsync(novelist)
+      .then((conversationId) => {
+        if (!conversationId) {
+          Alert.alert(
+            "No conversation",
+            "That conversation could not be opened. Try again.",
+          );
+          return;
+        }
+        router.push({
+          params: { conversationId },
+          pathname: "/(tabs)/(inbox)/[conversationId]",
+        });
+      })
+      .catch(failed("The conversation"));
+  };
+
+  const copyUsername = () => {
+    close();
+    void Clipboard.setStringAsync(novelist.username);
+  };
+
+  const shareProfile = () => {
+    close();
+    const url = `${PROFILE_URL}/${novelist.username}`;
+    // The platform sheet rather than a dialog of our own: it is the one place a
+    // phone already knows every app the link could go to.
+    void Share.share({ message: url, url });
+  };
+
+  const connectionMenu: ActionItem[] =
+    connection === "FRIEND"
+      ? [
+          {
+            icon: "chatbubbles-outline",
+            label: `Message ${novelist.firstName}`,
+            onPress: message,
+          },
+          { separator: true },
+          {
+            busy: actions.unfriend.isPending,
+            icon: "person-remove-outline",
+            label: `Unfriend ${novelist.firstName}`,
+            onPress: () =>
+              confirm(
+                `Unfriend ${novelist.firstName}?`,
+                "You can send another request later.",
+                "Unfriend",
+                () => run(actions.unfriend, "Unfriending"),
+              ),
+            variant: "danger",
+          },
+        ]
+      : connection === "FRIEND_REQUEST_SENT"
+        ? [
+            {
+              busy: actions.cancel.isPending,
+              icon: "close-circle-outline",
+              label: "Cancel friend request",
+              onPress: () => run(actions.cancel, "Cancelling the request"),
+              variant: "danger",
+            },
+          ]
+        : connection === "FRIEND_REQUEST_RECEIVED"
+          ? [
+              {
+                busy: actions.accept.isPending,
+                icon: "checkmark-circle-outline",
+                label: `Accept request from ${novelist.firstName}`,
+                onPress: () => run(actions.accept, "Accepting the request"),
+                variant: "positive",
+              },
+              {
+                busy: actions.reject.isPending,
+                icon: "close-circle-outline",
+                label: `Reject request from ${novelist.firstName}`,
+                onPress: () => run(actions.reject, "Rejecting the request"),
+                variant: "danger",
+              },
+            ]
+          : [
+              {
+                busy: actions.send.isPending,
+                icon: "person-add-outline",
+                label: `Add ${novelist.firstName}`,
+                onPress: () => run(actions.send, "The friend request"),
+                variant: "positive",
+              },
+            ];
+
+  const moreMenu: ActionItem[] = [
+    { icon: "at-outline", label: "Copy username", onPress: copyUsername },
+    {
+      icon: "share-social-outline",
+      label: "Share profile",
+      onPress: shareProfile,
+    },
+
+    ...(isSupport
+      ? ([
+          {
+            icon: "chatbubbles-outline",
+            label: "Send message",
+            onPress: message,
+          },
+          { separator: true },
+          {
+            busy: actions.report.isPending,
+            icon: "flag-outline",
+            label: `Report ${novelist.username}`,
+            onPress: () =>
+              confirm(
+                `Report ${novelist.username}?`,
+                "A moderator will review this profile.",
+                "Report",
+                () => run(actions.report, "The report"),
+              ),
+            variant: "danger",
+          },
+        ] satisfies ActionItem[])
+      : isSelf
+        ? []
+        : ([
+            { separator: true },
+            {
+              busy: actions.report.isPending,
+              icon: "flag-outline",
+              label: `Report ${novelist.username}`,
+              onPress: () =>
+                confirm(
+                  `Report ${novelist.username}?`,
+                  "A moderator will review this profile.",
+                  "Report",
+                  () => run(actions.report, "The report"),
+                ),
+              variant: "danger",
+            },
+            {
+              busy: actions.blacklist.isPending,
+              icon: "eye-off-outline",
+              label: `Blacklist ${novelist.username}`,
+              onPress: () =>
+                confirm(
+                  `Blacklist ${novelist.username}?`,
+                  "You will stop seeing them across the app.",
+                  "Blacklist",
+                  () => run(actions.blacklist, "Blacklisting"),
+                ),
+              variant: "danger",
+            },
+            {
+              busy: actions.block.isPending,
+              icon: "ban-outline",
+              label: `Block ${novelist.username}`,
+              onPress: () =>
+                confirm(
+                  `Block ${novelist.username}?`,
+                  "Neither of you will be able to reach the other.",
+                  "Block",
+                  () => run(actions.block, "Blocking"),
+                ),
+              variant: "danger",
+            },
+          ] satisfies ActionItem[])),
+  ];
+
+  const connectionIcon: keyof typeof Ionicons.glyphMap =
+    connection === "FRIEND"
+      ? "person"
+      : connection === "FRIEND_REQUEST_SENT"
+        ? "person-add"
+        : "person-add-outline";
+
+  // Their own profile has no connection to itself, and support is not a
+  // friendship — web hides the button on both.
+  const showConnection = !isSelf && !isSupport;
+
+  return (
+    <>
+      <View style={styles.row}>
+        {showConnection ? (
+          <Pressable
+            accessibilityLabel={
+              connection === "FRIEND"
+                ? `Friends with ${novelist.firstName}`
+                : connection === "FRIEND_REQUEST_RECEIVED"
+                  ? `${novelist.firstName} sent you a friend request`
+                  : connection === "FRIEND_REQUEST_SENT"
+                    ? "Friend request sent"
+                    : `Add ${novelist.firstName}`
+            }
+            accessibilityRole="button"
+            hitSlop={space.xs}
+            onPress={() => setMenu("connection")}
+            style={({ pressed }) => [
+              styles.button,
+              {
+                backgroundColor:
+                  connection === "FRIEND"
+                    ? theme.accent.surface
+                    : theme.glass.mediaChip,
+                borderColor:
+                  connection === "FRIEND"
+                    ? theme.accent.surfaceHover
+                    : "rgba(255,255,255,0.35)",
+                opacity: pressed ? 0.75 : 1,
+              },
+            ]}
+          >
+            <Ionicons color="#ffffff" name={connectionIcon} size={17} />
+
+            {/* The only state where somebody is waiting on you. */}
+            {connection === "FRIEND_REQUEST_RECEIVED" ? (
+              <View
+                style={[
+                  styles.dot,
+                  {
+                    backgroundColor: theme.unreadBadge,
+                    borderColor: theme.background,
+                  },
+                ]}
+              />
+            ) : null}
+          </Pressable>
+        ) : null}
+
+        <Pressable
+          accessibilityLabel="More"
+          accessibilityRole="button"
+          hitSlop={space.xs}
+          onPress={() => setMenu("more")}
+          style={({ pressed }) => [
+            styles.button,
+            {
+              backgroundColor: theme.glass.mediaChip,
+              borderColor: "rgba(255,255,255,0.35)",
+              opacity: pressed ? 0.75 : 1,
+            },
+          ]}
+        >
+          <Ionicons color="#ffffff" name="ellipsis-horizontal" size={17} />
+        </Pressable>
+      </View>
+
+      <ActionMenu
+        items={connectionMenu}
+        onClose={close}
+        subtitle={`@${novelist.username}`}
+        title={
+          connection === "FRIEND"
+            ? "Friends"
+            : connection === "FRIEND_REQUEST_RECEIVED"
+              ? "Friend request"
+              : connection === "FRIEND_REQUEST_SENT"
+                ? "Request sent"
+                : "Add friend"
+        }
+        visible={menu === "connection"}
+      />
+
+      <ActionMenu
+        items={moreMenu}
+        onClose={close}
+        subtitle={`@${novelist.username}`}
+        title={novelist.firstName}
+        visible={menu === "more"}
+      />
+    </>
+  );
+};
+
+const styles = StyleSheet.create({
+  button: {
+    alignItems: "center",
+    borderRadius: radius.full,
+    borderWidth: StyleSheet.hairlineWidth,
+    height: 34,
+    justifyContent: "center",
+    width: 34,
+  },
+  dot: {
+    borderRadius: radius.full,
+    borderWidth: 1.5,
+    height: 10,
+    position: "absolute",
+    right: 0,
+    top: 0,
+    width: 10,
+  },
+  row: {
+    flexDirection: "row",
+    gap: space.sm,
+    position: "absolute",
+    right: space.sm + 2,
+    top: space.sm + 2,
+    zIndex: 2,
+  },
+});

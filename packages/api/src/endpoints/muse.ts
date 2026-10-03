@@ -130,11 +130,14 @@ export const getHeroPageMuses = (api: ApiClient) =>
 
 /** Public: the fandom picker is usable before sign-in. */
 export const searchFandoms = (api: ApiClient, prefix: string) =>
-  api.requestNullable<Fandom[]>(`/rp/portfolio/fandom/search?prefix=${prefix}`, {
-    anonymous: true,
-    label: "searchFandomsAction",
-    notFound: "null",
-  });
+  api.requestNullable<Fandom[]>(
+    `/rp/portfolio/fandom/search?prefix=${encodeURIComponent(prefix)}`,
+    {
+      anonymous: true,
+      label: "searchFandomsAction",
+      notFound: "null",
+    },
+  );
 
 /** Falls back to an empty list — the mention dropdown has nothing to say on failure. */
 export const searchMentionMuses = async (

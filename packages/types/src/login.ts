@@ -26,6 +26,23 @@ export type LoginResponsePayload = {
   message: string;
   user?: User;
   sessionId?: string;
+} & NativeTokens;
+
+/**
+ * The token pair, present only for a client that asked for it.
+ *
+ * A browser never sees these: its session is two httpOnly cookies set on the
+ * same response, and that is the whole point of SECURITY_AUTH_PLAN C5. A native
+ * client has no cookie jar it can trust, so it sends `X-NW-Client: native` and
+ * user-service puts the pair in the body instead, for the app to keep in the
+ * platform keychain. Optional on the type because on web they are always
+ * absent — code that reads them must handle that.
+ *
+ * See MONOREPO_MIGRATION_PLAN §4.1.
+ */
+export type NativeTokens = {
+  accessToken?: string;
+  refreshToken?: string;
 };
 
 export type SignupResponsePayload = {
@@ -33,7 +50,7 @@ export type SignupResponsePayload = {
   user?: User;
   sessionId?: string;
   serverMessage?: string;
-};
+} & NativeTokens;
 
 /** One signed-in device, as `GET /account/sessions` returns it. */
 export type AuthSession = {

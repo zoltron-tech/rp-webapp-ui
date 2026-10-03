@@ -1,0 +1,1266 @@
+/* Accent colors*/
+/* Jade */
+@import "@radix-ui/colors/jade-dark.css";
+@import "@radix-ui/colors/jade-dark-alpha.css";
+/* Crimson */
+@import "@radix-ui/colors/crimson-dark.css";
+@import "@radix-ui/colors/crimson-dark-alpha.css";
+/* Iris */
+@import "@radix-ui/colors/iris-dark.css";
+@import "@radix-ui/colors/iris-dark-alpha.css";
+/* Cyan */
+@import "@radix-ui/colors/cyan-dark.css";
+@import "@radix-ui/colors/cyan-dark-alpha.css";
+/* Mint */
+@import "@radix-ui/colors/mint-dark.css";
+@import "@radix-ui/colors/mint-dark-alpha.css";
+/* Amber (theme accent — also used for warnings) */
+/* Sand (background for amber theme) */
+@import "@radix-ui/colors/sand-dark.css";
+@import "@radix-ui/colors/sand-dark-alpha.css";
+/* Red */
+@import "@radix-ui/colors/red-dark.css";
+@import "@radix-ui/colors/red-dark-alpha.css";
+
+/* Background colors */
+/* Olive */
+@import "@radix-ui/colors/olive-dark.css";
+@import "@radix-ui/colors/olive-dark-alpha.css";
+/* Muave */
+@import "@radix-ui/colors/mauve-dark.css";
+@import "@radix-ui/colors/mauve-dark-alpha.css";
+/* Slate */
+@import "@radix-ui/colors/slate-dark.css";
+@import "@radix-ui/colors/slate-dark-alpha.css";
+/* Gray */
+@import "@radix-ui/colors/gray-dark.css";
+@import "@radix-ui/colors/gray-dark-alpha.css";
+/* Sage */
+@import "@radix-ui/colors/sage-dark.css";
+@import "@radix-ui/colors/sage-dark-alpha.css";
+
+/* Success color */
+@import "@radix-ui/colors/grass-dark.css";
+@import "@radix-ui/colors/grass-dark-alpha.css";
+
+/* Info color */
+@import "@radix-ui/colors/blue-dark.css";
+@import "@radix-ui/colors/blue-dark-alpha.css";
+
+/* Error color */
+@import "@radix-ui/colors/tomato-dark.css";
+@import "@radix-ui/colors/tomato-dark-alpha.css";
+
+/* Warning color */
+/* Custom amber scale — step 9 is the gold #d4bd2c */
+.dark,
+.dark-theme {
+  --amber-1: #15130a;
+  --amber-a1: #d4bd2c07;
+  --amber-2: #201e0e;
+  --amber-a2: #d4bd2c10;
+  --amber-3: #342f14;
+  --amber-a3: #d4bd2c1e;
+  --amber-4: #474015;
+  --amber-a4: #d4bd2c2b;
+  --amber-5: #595018;
+  --amber-a5: #d4bd2c39;
+  --amber-6: #6d621d;
+  --amber-a6: #d4bd2c4d;
+  --amber-7: #857823;
+  --amber-a7: #d4bd2c67;
+  --amber-8: #a39329;
+  --amber-a8: #d4bd2c8b;
+  --amber-9: #d4bd2c;
+  --amber-a9: #d4bd2cee;
+  --amber-10: #dac53e;
+  --amber-a10: #dac53eee;
+  --amber-11: #d7ca75;
+  --amber-a11: #d7ca75f5;
+  --amber-12: #f4f1e1;
+  --amber-a12: #f4f1e1fb;
+}
+
+/* BEGIN: Remove base padding and styling */
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  /* The document is the app's scroller (see PageContainer in rp/styles.ts).
+     iOS Safari only gives the document scroller its full tiled backing
+     store — a nested overflow:auto element gets a roughly viewport-sized
+     layer and repaints synchronously, which under iOS 26 showed up as
+     content blanking out while scrolling and repainting seconds later.
+
+     Backstop only — the real sideways clip is overflow-x: clip on
+     main.page-container. Propagated to the viewport this downgrades to
+     `hidden` (still pannable when content overflows), so it must never be
+     the sole line of defense; it just catches body-portaled strays. */
+  overflow-x: clip;
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+body {
+  font-family: "Montserrat", sans-serif;
+  background-color: #000;
+  /* Scrollbar Styles */
+  scrollbar-width: 0px;
+  /* Stacking-context guardrail: any descendant with a negative z-index
+     (portaled nodes included) stays above this element's #000 background
+     instead of escaping into the root stacking context and vanishing behind
+     it. `contain: paint` used to provide this as a side effect, but paint
+     containment on <body> also licenses WebKit to drop off-screen content,
+     the scroll-blanking bug above. `isolation` creates the stacking context
+     and nothing else. */
+  isolation: isolate;
+}
+
+/* The React root, and the reason it needs this.
+   
+   PageContainer is `z-index: -1` on purpose (see app/rp/styles.ts): WebKit
+   promotes the negative-z subtree into one retained composited layer, and that
+   backing store is what stops iOS blanking off-screen content while scrolling.
+   That only works if some ancestor holds a stacking context for the negative z
+   to resolve against — which is what body's `isolation: isolate` above was for,
+   back when the app rendered straight into <body>.
+   
+   Vite renders into this wrapper instead, so without the same isolation here
+   the negative-z subtree escapes past #root and paints behind it. Nothing looks
+   wrong — #root has no background — but #root becomes the topmost hit-test
+   target over the whole page and swallows every click. */
+#root {
+  isolation: isolate;
+}
+
+textarea:focus,
+input:focus {
+  outline: none;
+}
+
+body::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+input,
+textarea {
+  min-width: 0;
+}
+
+/* END: Remove base padding and styling */
+
+/* BEGIN: Global variables */
+
+:root {
+  --topbar-height: 60px;
+
+  @media screen and (max-width: 480px) {
+    --topbar-height: 45px;
+  }
+
+  --profile-banner-height-min: 270px;
+  --profile-banner-height-max: 460px;
+  --profile-avatar-size: 340px;
+  --profile-small-avatar-size: 100px;
+
+  --profile-note-width: 460px;
+
+  --border-radius: 0.3rem;
+
+  --font: Montserrat, sans-serif;
+
+  --font-size-h1: 54px;
+  --font-size-h2: 43px;
+  --font-size-h3: 34px;
+  --font-size-h4: 27px;
+  --font-size-h5: 22px;
+  --font-size-h6: 18px;
+  --font-size-input: 16px;
+  --font-size: 14px;
+  --font-size-small: 12px;
+  --font-size-xsmall: 10px;
+  --font-size-xxsmall: 8px;
+  --font-size-xxxsmall: 6px;
+
+  --font-weight-bold: 700;
+  --font-weight-semi-bold: 600;
+  --font-weight-medium: 500;
+  --font-weight-regular: 400;
+
+  .jade {
+    --bg-1: var(--olive-1);
+    --bg-2: var(--olive-2);
+    --bg-3: var(--olive-3);
+    --bg-4: var(--olive-4);
+    --bg-5: var(--olive-5);
+    --bg-6: var(--olive-6);
+    --bg-7: var(--olive-7);
+    --bg-8: var(--olive-8);
+    --bg-9: var(--olive-9);
+    --bg-10: var(--olive-10);
+    --bg-11: var(--olive-11);
+    --bg-12: var(--olive-12);
+
+    --accent-1: var(--jade-1);
+    --accent-a1: var(--jade-a1);
+    --accent-2: var(--jade-2);
+    --accent-a2: var(--jade-a2);
+    --accent-3: var(--jade-3);
+    --accent-a3: var(--jade-a3);
+    --accent-4: var(--jade-4);
+    --accent-a4: var(--jade-a4);
+    --accent-5: var(--jade-5);
+    --accent-a5: var(--jade-a5);
+    --accent-6: var(--jade-6);
+    --accent-a6: var(--jade-a6);
+    --accent-7: var(--jade-7);
+    --accent-a7: var(--jade-a7);
+    --accent-8: var(--jade-8);
+    --accent-a8: var(--jade-a8);
+    --accent-9: var(--jade-9);
+    --accent-a9: var(--jade-a9);
+    --accent-10: var(--jade-10);
+    --accent-a10: var(--jade-a10);
+    --accent-11: var(--jade-11);
+    --accent-a11: var(--jade-a11);
+    --accent-12: var(--jade-12);
+    --accent-a12: var(--jade-a12);
+
+    --accent: var(--accent-6);
+    --accent-hover: var(--accent-7);
+    --accent-active: var(--accent-5);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  .crimson {
+    --bg-1: var(--mauve-1);
+    --bg-2: var(--mauve-2);
+    --bg-3: var(--mauve-3);
+    --bg-4: var(--mauve-4);
+    --bg-5: var(--mauve-5);
+    --bg-6: var(--mauve-6);
+    --bg-7: var(--mauve-7);
+    --bg-8: var(--mauve-8);
+    --bg-9: var(--mauve-9);
+    --bg-10: var(--mauve-10);
+    --bg-11: var(--mauve-11);
+    --bg-12: var(--mauve-12);
+
+    --accent-a1: var(--crimson-a1);
+    --accent-a2: var(--crimson-a2);
+    --accent-a3: var(--crimson-a3);
+    --accent-a4: var(--crimson-a4);
+    --accent-a5: var(--crimson-a5);
+    --accent-a6: var(--crimson-a6);
+    --accent-a7: var(--crimson-a7);
+    --accent-a8: var(--crimson-a8);
+    --accent-a9: var(--crimson-a9);
+    --accent-a10: var(--crimson-a10);
+    --accent-a11: var(--crimson-a11);
+    --accent-a12: var(--crimson-a12);
+    --accent-1: var(--crimson-1);
+    --accent-2: var(--crimson-2);
+    --accent-3: var(--crimson-3);
+    --accent-4: var(--crimson-4);
+    --accent-5: var(--crimson-5);
+    --accent-6: var(--crimson-6);
+    --accent-7: var(--crimson-7);
+    --accent-8: var(--crimson-8);
+    --accent-9: var(--crimson-9);
+    --accent-10: var(--crimson-10);
+    --accent-11: var(--crimson-11);
+    --accent-12: var(--crimson-12);
+
+    --accent: var(--accent-6);
+    --accent-hover: var(--accent-7);
+    --accent-active: var(--accent-5);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  .iris {
+    --bg-1: var(--slate-1);
+    --bg-2: var(--slate-2);
+    --bg-3: var(--slate-3);
+    --bg-4: var(--slate-4);
+    --bg-5: var(--slate-5);
+    --bg-6: var(--slate-6);
+    --bg-7: var(--slate-7);
+    --bg-8: var(--slate-8);
+    --bg-9: var(--slate-9);
+    --bg-10: var(--slate-10);
+    --bg-11: var(--slate-11);
+    --bg-12: var(--slate-12);
+
+    --accent-a1: var(--iris-a1);
+    --accent-a2: var(--iris-a2);
+    --accent-a3: var(--iris-a3);
+    --accent-a4: var(--iris-a4);
+    --accent-a5: var(--iris-a5);
+    --accent-a6: var(--iris-a6);
+    --accent-a7: var(--iris-a7);
+    --accent-a8: var(--iris-a8);
+    --accent-a9: var(--iris-a9);
+    --accent-a10: var(--iris-a10);
+    --accent-a11: var(--iris-a11);
+    --accent-a12: var(--iris-a12);
+    --accent-1: var(--iris-1);
+    --accent-2: var(--iris-2);
+    --accent-3: var(--iris-3);
+    --accent-4: var(--iris-4);
+    --accent-5: var(--iris-5);
+    --accent-6: var(--iris-6);
+    --accent-7: var(--iris-7);
+    --accent-8: var(--iris-8);
+    --accent-9: var(--iris-9);
+    --accent-10: var(--iris-10);
+    --accent-11: var(--iris-11);
+    --accent-12: var(--iris-12);
+
+    --accent: var(--accent-6);
+    --accent-hover: var(--accent-7);
+    --accent-active: var(--accent-5);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  .cyan {
+    --bg-1: var(--gray-1);
+    --bg-2: var(--gray-2);
+    --bg-3: var(--gray-3);
+    --bg-4: var(--gray-4);
+    --bg-5: var(--gray-5);
+    --bg-6: var(--gray-6);
+    --bg-7: var(--gray-7);
+    --bg-8: var(--gray-8);
+    --bg-9: var(--gray-9);
+    --bg-10: var(--gray-10);
+    --bg-11: var(--gray-11);
+    --bg-12: var(--gray-12);
+
+    --accent-a1: var(--cyan-a1);
+    --accent-a2: var(--cyan-a2);
+    --accent-a3: var(--cyan-a3);
+    --accent-a4: var(--cyan-a4);
+    --accent-a5: var(--cyan-a5);
+    --accent-a6: var(--cyan-a6);
+    --accent-a7: var(--cyan-a7);
+    --accent-a8: var(--cyan-a8);
+    --accent-a9: var(--cyan-a9);
+    --accent-a10: var(--cyan-a10);
+    --accent-a11: var(--cyan-a11);
+    --accent-a12: var(--cyan-a12);
+    --accent-1: var(--cyan-1);
+    --accent-2: var(--cyan-2);
+    --accent-3: var(--cyan-3);
+    --accent-4: var(--cyan-4);
+    --accent-5: var(--cyan-5);
+    --accent-6: var(--cyan-6);
+    --accent-7: var(--cyan-7);
+    --accent-8: var(--cyan-8);
+    --accent-9: var(--cyan-9);
+    --accent-10: var(--cyan-10);
+    --accent-11: var(--cyan-11);
+    --accent-12: var(--cyan-12);
+
+    --accent: var(--accent-6);
+    --accent-hover: var(--accent-7);
+    --accent-active: var(--accent-5);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  .mint {
+    --bg-1: var(--sage-1);
+    --bg-2: var(--sage-2);
+    --bg-3: var(--sage-3);
+    --bg-4: var(--sage-4);
+    --bg-5: var(--sage-5);
+    --bg-6: var(--sage-6);
+    --bg-7: var(--sage-7);
+    --bg-8: var(--sage-8);
+    --bg-9: var(--sage-9);
+    --bg-10: var(--sage-10);
+    --bg-11: var(--sage-11);
+    --bg-12: var(--sage-12);
+
+    --accent-a1: var(--mint-a1);
+    --accent-a2: var(--mint-a2);
+    --accent-a3: var(--mint-a3);
+    --accent-a4: var(--mint-a4);
+    --accent-a5: var(--mint-a5);
+    --accent-a6: var(--mint-a6);
+    --accent-a7: var(--mint-a7);
+    --accent-a8: var(--mint-a8);
+    --accent-a9: var(--mint-a9);
+    --accent-a10: var(--mint-a10);
+    --accent-a11: var(--mint-a11);
+    --accent-a12: var(--mint-a12);
+    --accent-1: var(--mint-1);
+    --accent-2: var(--mint-2);
+    --accent-3: var(--mint-3);
+    --accent-4: var(--mint-4);
+    --accent-5: var(--mint-5);
+    --accent-6: var(--mint-6);
+    --accent-7: var(--mint-7);
+    --accent-8: var(--mint-8);
+    --accent-9: var(--mint-9);
+    --accent-10: var(--mint-10);
+    --accent-11: var(--mint-11);
+    --accent-12: var(--mint-12);
+
+    --accent: var(--accent-6);
+    --accent-hover: var(--accent-7);
+    --accent-active: var(--accent-5);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  /* Gold: the palette formerly called amber. The class is `gold`, but the
+     scale it draws from stays `--amber-*` - those vars are also the app-wide
+     warning colour, so they are not the palette's to rename. */
+  .gold {
+    --bg-1: var(--sand-1);
+    --bg-2: var(--sand-2);
+    --bg-3: var(--sand-3);
+    --bg-4: var(--sand-4);
+    --bg-5: var(--sand-5);
+    --bg-6: var(--sand-6);
+    --bg-7: var(--sand-7);
+    --bg-8: var(--sand-8);
+    --bg-9: var(--sand-9);
+    --bg-10: var(--sand-10);
+    --bg-11: var(--sand-11);
+    --bg-12: var(--sand-12);
+
+    --accent-1: var(--amber-1);
+    --accent-a1: var(--amber-a1);
+    --accent-2: var(--amber-2);
+    --accent-a2: var(--amber-a2);
+    --accent-3: var(--amber-3);
+    --accent-a3: var(--amber-a3);
+    --accent-4: var(--amber-4);
+    --accent-a4: var(--amber-a4);
+    --accent-5: var(--amber-5);
+    --accent-a5: var(--amber-a5);
+    --accent-6: var(--amber-6);
+    --accent-a6: var(--amber-a6);
+    --accent-7: var(--amber-7);
+    --accent-a7: var(--amber-a7);
+    --accent-8: var(--amber-8);
+    --accent-a8: var(--amber-a8);
+    --accent-9: var(--amber-9);
+    --accent-a9: var(--amber-a9);
+    --accent-10: var(--amber-10);
+    --accent-a10: var(--amber-a10);
+    --accent-11: var(--amber-11);
+    --accent-a11: var(--amber-a11);
+    --accent-12: var(--amber-12);
+    --accent-a12: var(--amber-a12);
+
+    --accent: var(--accent-6);
+    --accent-hover: var(--accent-7);
+    --accent-active: var(--accent-5);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  /* Lotus: dusty rose-purple — bg uses mauve-dark (already imported, matches #988B94) */
+  .lotus {
+    --bg-1: var(--mauve-1);
+    --bg-2: var(--mauve-2);
+    --bg-3: var(--mauve-3);
+    --bg-4: var(--mauve-4);
+    --bg-5: var(--mauve-5);
+    --bg-6: var(--mauve-6);
+    --bg-7: var(--mauve-7);
+    --bg-8: var(--mauve-8);
+    --bg-9: var(--mauve-9);
+    --bg-10: var(--mauve-10);
+    --bg-11: var(--mauve-11);
+    --bg-12: var(--mauve-12);
+
+    /* Custom lotus scale — step 9 is the dusty rose #bf7db1 */
+    --lotus-1: #130d12;
+    --lotus-a1: #bf7db107;
+    --lotus-2: #1c1420;
+    --lotus-a2: #bf7db110;
+    --lotus-3: #291d2b;
+    --lotus-a3: #bf7db11e;
+    --lotus-4: #342535;
+    --lotus-a4: #bf7db12b;
+    --lotus-5: #3e2d3f;
+    --lotus-a5: #bf7db139;
+    --lotus-6: #503b4e;
+    --lotus-a6: #bf7db14d;
+    --lotus-7: #684a64;
+    --lotus-a7: #bf7db167;
+    --lotus-8: #8d5e83;
+    --lotus-a8: #bf7db18b;
+    --lotus-9: #bf7db1;
+    --lotus-a9: #bf7db1ee;
+    --lotus-10: #c98ebb;
+    --lotus-a10: #c98ebbee;
+    --lotus-11: #d9a8d0;
+    --lotus-a11: #d9a8d0f5;
+    --lotus-12: #f0dded;
+    --lotus-a12: #f0ddedfb;
+
+    --accent-1: var(--lotus-1);
+    --accent-a1: var(--lotus-a1);
+    --accent-2: var(--lotus-2);
+    --accent-a2: var(--lotus-a2);
+    --accent-3: var(--lotus-3);
+    --accent-a3: var(--lotus-a3);
+    --accent-4: var(--lotus-4);
+    --accent-a4: var(--lotus-a4);
+    --accent-5: var(--lotus-5);
+    --accent-a5: var(--lotus-a5);
+    --accent-6: var(--lotus-6);
+    --accent-a6: var(--lotus-a6);
+    --accent-7: var(--lotus-7);
+    --accent-a7: var(--lotus-a7);
+    --accent-8: var(--lotus-8);
+    --accent-a8: var(--lotus-a8);
+    --accent-9: var(--lotus-9);
+    --accent-a9: var(--lotus-a9);
+    --accent-10: var(--lotus-10);
+    --accent-a10: var(--lotus-a10);
+    --accent-11: var(--lotus-11);
+    --accent-a11: var(--lotus-a11);
+    --accent-12: var(--lotus-12);
+    --accent-a12: var(--lotus-a12);
+
+    --accent: var(--lotus-9);
+    --accent-hover: var(--lotus-10);
+    --accent-active: var(--lotus-8);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  /* Lime: forest green — bg uses olive-dark (already imported, matches #8E988B) */
+  .lime {
+    --bg-1: var(--olive-1);
+    --bg-2: var(--olive-2);
+    --bg-3: var(--olive-3);
+    --bg-4: var(--olive-4);
+    --bg-5: var(--olive-5);
+    --bg-6: var(--olive-6);
+    --bg-7: var(--olive-7);
+    --bg-8: var(--olive-8);
+    --bg-9: var(--olive-9);
+    --bg-10: var(--olive-10);
+    --bg-11: var(--olive-11);
+    --bg-12: var(--olive-12);
+
+    /* Custom lime scale — step 9 is #4a7a38 (softened/muted from #60b03b,
+       darker so default light --text reads on it without an --accent-fg
+       override) */
+    --lime-1: #0b100a;
+    --lime-a1: #4a7a3806;
+    --lime-2: #12190e;
+    --lime-a2: #4a7a380f;
+    --lime-3: #182213;
+    --lime-a3: #4a7a381c;
+    --lime-4: #1e2c19;
+    --lime-a4: #4a7a382a;
+    --lime-5: #25371f;
+    --lime-a5: #4a7a3839;
+    --lime-6: #2d4526;
+    --lime-a6: #4a7a384d;
+    --lime-7: #38572f;
+    --lime-a7: #4a7a3868;
+    --lime-8: #436b39;
+    --lime-a8: #4a7a388d;
+    --lime-9: #4a7a38;
+    --lime-a9: #4a7a38ec;
+    --lime-10: #5c9247;
+    --lime-a10: #5c9247ec;
+    --lime-11: #8ab876;
+    --lime-a11: #8ab876f5;
+    --lime-12: #d0e6c2;
+    --lime-a12: #d0e6c2fb;
+
+    --accent-1: var(--lime-1);
+    --accent-a1: var(--lime-a1);
+    --accent-2: var(--lime-2);
+    --accent-a2: var(--lime-a2);
+    --accent-3: var(--lime-3);
+    --accent-a3: var(--lime-a3);
+    --accent-4: var(--lime-4);
+    --accent-a4: var(--lime-a4);
+    --accent-5: var(--lime-5);
+    --accent-a5: var(--lime-a5);
+    --accent-6: var(--lime-6);
+    --accent-a6: var(--lime-a6);
+    --accent-7: var(--lime-7);
+    --accent-a7: var(--lime-a7);
+    --accent-8: var(--lime-8);
+    --accent-a8: var(--lime-a8);
+    --accent-9: var(--lime-9);
+    --accent-a9: var(--lime-a9);
+    --accent-10: var(--lime-10);
+    --accent-a10: var(--lime-a10);
+    --accent-11: var(--lime-11);
+    --accent-a11: var(--lime-a11);
+    --accent-12: var(--lime-12);
+    --accent-a12: var(--lime-a12);
+
+    --accent: var(--lime-9);
+    --accent-hover: var(--lime-10);
+    --accent-active: var(--lime-8);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  .red {
+    --bg-1: var(--mauve-1);
+    --bg-2: var(--mauve-2);
+    --bg-3: var(--mauve-3);
+    --bg-4: var(--mauve-4);
+    --bg-5: var(--mauve-5);
+    --bg-6: var(--mauve-6);
+    --bg-7: var(--mauve-7);
+    --bg-8: var(--mauve-8);
+    --bg-9: var(--mauve-9);
+    --bg-10: var(--mauve-10);
+    --bg-11: var(--mauve-11);
+    --bg-12: var(--mauve-12);
+
+    --accent-1: var(--red-1);
+    --accent-a1: var(--red-a1);
+    --accent-2: var(--red-2);
+    --accent-a2: var(--red-a2);
+    --accent-3: var(--red-3);
+    --accent-a3: var(--red-a3);
+    --accent-4: var(--red-4);
+    --accent-a4: var(--red-a4);
+    --accent-5: var(--red-5);
+    --accent-a5: var(--red-a5);
+    --accent-6: var(--red-6);
+    --accent-a6: var(--red-a6);
+    --accent-7: var(--red-7);
+    --accent-a7: var(--red-a7);
+    --accent-8: var(--red-8);
+    --accent-a8: var(--red-a8);
+    --accent-9: var(--red-9);
+    --accent-a9: var(--red-a9);
+    --accent-10: var(--red-10);
+    --accent-a10: var(--red-a10);
+    --accent-11: var(--red-11);
+    --accent-a11: var(--red-a11);
+    --accent-12: var(--red-12);
+    --accent-a12: var(--red-a12);
+
+    --accent: var(--accent-6);
+    --accent-hover: var(--accent-7);
+    --accent-active: var(--accent-5);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  .dracula {
+    --bg-1: var(--mauve-1);
+    --bg-2: var(--mauve-2);
+    --bg-3: var(--mauve-3);
+    --bg-4: var(--mauve-4);
+    --bg-5: var(--mauve-5);
+    --bg-6: var(--mauve-6);
+    --bg-7: var(--mauve-7);
+    --bg-8: var(--mauve-8);
+    --bg-9: var(--mauve-9);
+    --bg-10: var(--mauve-10);
+    --bg-11: var(--mauve-11);
+    --bg-12: var(--mauve-12);
+
+    /* Custom red scale — step 9 is #ac0a0a, steps 6-8 are the darker shades
+       #610606 / #860808 / #900908. */
+    --dracula-red-1: #150708;
+    --dracula-red-a1: #ac0a0a06;
+    --dracula-red-2: #1f0808;
+    --dracula-red-a2: #ac0a0a10;
+    --dracula-red-3: #2d0808;
+    --dracula-red-a3: #ac0a0a1e;
+    --dracula-red-4: #3b0707;
+    --dracula-red-a4: #ac0a0a2c;
+    --dracula-red-5: #4d0606;
+    --dracula-red-a5: #ac0a0a3c;
+    --dracula-red-6: #610606;
+    --dracula-red-a6: #ac0a0a52;
+    --dracula-red-7: #860808;
+    --dracula-red-a7: #ac0a0a6b;
+    --dracula-red-8: #900908;
+    --dracula-red-a8: #ac0a0a88;
+    --dracula-red-9: #ac0a0a;
+    --dracula-red-a9: #ac0a0aec;
+    --dracula-red-10: #c61415;
+    --dracula-red-a10: #c61415ec;
+    --dracula-red-11: #ef7b78;
+    --dracula-red-a11: #ef7b78f5;
+    --dracula-red-12: #fcd8d5;
+    --dracula-red-a12: #fcd8d5fb;
+
+    --accent-1: var(--dracula-red-1);
+    --accent-a1: var(--dracula-red-a1);
+    --accent-2: var(--dracula-red-2);
+    --accent-a2: var(--dracula-red-a2);
+    --accent-3: var(--dracula-red-3);
+    --accent-a3: var(--dracula-red-a3);
+    --accent-4: var(--dracula-red-4);
+    --accent-a4: var(--dracula-red-a4);
+    --accent-5: var(--dracula-red-5);
+    --accent-a5: var(--dracula-red-a5);
+    --accent-6: var(--dracula-red-6);
+    --accent-a6: var(--dracula-red-a6);
+    --accent-7: var(--dracula-red-7);
+    --accent-a7: var(--dracula-red-a7);
+    --accent-8: var(--dracula-red-8);
+    --accent-a8: var(--dracula-red-a8);
+    --accent-9: var(--dracula-red-9);
+    --accent-a9: var(--dracula-red-a9);
+    --accent-10: var(--dracula-red-10);
+    --accent-a10: var(--dracula-red-a10);
+    --accent-11: var(--dracula-red-11);
+    --accent-a11: var(--dracula-red-a11);
+    --accent-12: var(--dracula-red-12);
+    --accent-a12: var(--dracula-red-a12);
+
+    --accent: var(--dracula-red-9);
+    --accent-hover: var(--dracula-red-10);
+    --accent-active: var(--dracula-red-8);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  /* Lunar: royal blue — bg uses slate-dark (already imported, cool undertone) */
+  .lunar {
+    --bg-1: var(--slate-1);
+    --bg-2: var(--slate-2);
+    --bg-3: var(--slate-3);
+    --bg-4: var(--slate-4);
+    --bg-5: var(--slate-5);
+    --bg-6: var(--slate-6);
+    --bg-7: var(--slate-7);
+    --bg-8: var(--slate-8);
+    --bg-9: var(--slate-9);
+    --bg-10: var(--slate-10);
+    --bg-11: var(--slate-11);
+    --bg-12: var(--slate-12);
+
+    /* Custom lunar scale — step 9 is #2563eb, verified ~5.2:1 contrast with
+       white so default light --text reads on it without an --accent-fg override */
+    --lunar-1: #050810;
+    --lunar-a1: #2563eb06;
+    --lunar-2: #0a0f1c;
+    --lunar-a2: #2563eb0f;
+    --lunar-3: #0f1729;
+    --lunar-a3: #2563eb1c;
+    --lunar-4: #142038;
+    --lunar-a4: #2563eb2a;
+    --lunar-5: #1a2c4c;
+    --lunar-a5: #2563eb39;
+    --lunar-6: #1e3a8a;
+    --lunar-a6: #2563eb4d;
+    --lunar-7: #1e40af;
+    --lunar-a7: #2563eb68;
+    --lunar-8: #1d4ed8;
+    --lunar-a8: #2563eb8d;
+    --lunar-9: #2563eb;
+    --lunar-a9: #2563ebec;
+    --lunar-10: #3b82f6;
+    --lunar-a10: #3b82f6ec;
+    --lunar-11: #93c5fd;
+    --lunar-a11: #93c5fdf5;
+    --lunar-12: #dbeafe;
+    --lunar-a12: #dbeafefb;
+
+    --accent-1: var(--lunar-1);
+    --accent-a1: var(--lunar-a1);
+    --accent-2: var(--lunar-2);
+    --accent-a2: var(--lunar-a2);
+    --accent-3: var(--lunar-3);
+    --accent-a3: var(--lunar-a3);
+    --accent-4: var(--lunar-4);
+    --accent-a4: var(--lunar-a4);
+    --accent-5: var(--lunar-5);
+    --accent-a5: var(--lunar-a5);
+    --accent-6: var(--lunar-6);
+    --accent-a6: var(--lunar-a6);
+    --accent-7: var(--lunar-7);
+    --accent-a7: var(--lunar-a7);
+    --accent-8: var(--lunar-8);
+    --accent-a8: var(--lunar-a8);
+    --accent-9: var(--lunar-9);
+    --accent-a9: var(--lunar-a9);
+    --accent-10: var(--lunar-10);
+    --accent-a10: var(--lunar-a10);
+    --accent-11: var(--lunar-11);
+    --accent-a11: var(--lunar-a11);
+    --accent-12: var(--lunar-12);
+    --accent-a12: var(--lunar-a12);
+
+    --accent: var(--lunar-9);
+    --accent-hover: var(--lunar-10);
+    --accent-active: var(--lunar-8);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  /* Ember: burnt orange — bg uses sand-dark (already imported, warm neutral).
+     Built on #fc9403: that exact colour is step 11 (links/inline text, where a
+     bright orange on the dark bg reads best). Step 9 is the muted #b3620a, dark
+     enough that the default light --text reads on accent surfaces without an
+     --accent-fg override; the alpha scale is #fc9403 throughout. */
+  .ember {
+    --bg-1: var(--sand-1);
+    --bg-2: var(--sand-2);
+    --bg-3: var(--sand-3);
+    --bg-4: var(--sand-4);
+    --bg-5: var(--sand-5);
+    --bg-6: var(--sand-6);
+    --bg-7: var(--sand-7);
+    --bg-8: var(--sand-8);
+    --bg-9: var(--sand-9);
+    --bg-10: var(--sand-10);
+    --bg-11: var(--sand-11);
+    --bg-12: var(--sand-12);
+
+    --ember-1: #150e05;
+    --ember-a1: #fc940306;
+    --ember-2: #1f1407;
+    --ember-a2: #fc94030f;
+    --ember-3: #2e1b07;
+    --ember-a3: #fc94031c;
+    --ember-4: #3c2206;
+    --ember-a4: #fc94032a;
+    --ember-5: #4b2a06;
+    --ember-a5: #fc940339;
+    --ember-6: #5d3406;
+    --ember-a6: #fc94034d;
+    --ember-7: #784207;
+    --ember-a7: #fc940368;
+    --ember-8: #965208;
+    --ember-a8: #fc94038d;
+    --ember-9: #b3620a;
+    --ember-a9: #b3620aec;
+    --ember-10: #d97b06;
+    --ember-a10: #d97b06ec;
+    --ember-11: #fc9403;
+    --ember-a11: #fc9403f5;
+    --ember-12: #ffe0bb;
+    --ember-a12: #ffe0bbfb;
+
+    --accent-1: var(--ember-1);
+    --accent-a1: var(--ember-a1);
+    --accent-2: var(--ember-2);
+    --accent-a2: var(--ember-a2);
+    --accent-3: var(--ember-3);
+    --accent-a3: var(--ember-a3);
+    --accent-4: var(--ember-4);
+    --accent-a4: var(--ember-a4);
+    --accent-5: var(--ember-5);
+    --accent-a5: var(--ember-a5);
+    --accent-6: var(--ember-6);
+    --accent-a6: var(--ember-a6);
+    --accent-7: var(--ember-7);
+    --accent-a7: var(--ember-a7);
+    --accent-8: var(--ember-8);
+    --accent-a8: var(--ember-a8);
+    --accent-9: var(--ember-9);
+    --accent-a9: var(--ember-a9);
+    --accent-10: var(--ember-10);
+    --accent-a10: var(--ember-a10);
+    --accent-11: var(--ember-11);
+    --accent-a11: var(--ember-a11);
+    --accent-12: var(--ember-12);
+    --accent-a12: var(--ember-a12);
+
+    --accent: var(--ember-9);
+    --accent-hover: var(--ember-10);
+    --accent-active: var(--ember-8);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  /* Onyx: monochrome violet-charcoal, built on #1f1e26 — that colour is the
+     raised-surface step (--bg-3), with --bg-1/--bg-2 sunk below it into near
+     black so the theme reads dark. The accent is the same hue lifted into a
+     muted lilac; step 9 (#6f6b96) clears 4.5:1 with the default light --text,
+     so no --accent-fg override is needed. */
+  .onyx {
+    --onyx-bg-1: #0d0c11;
+    --onyx-bg-2: #16151b;
+    --onyx-bg-3: #1f1e26;
+    --onyx-bg-4: #24232d;
+    --onyx-bg-5: #2b2a35;
+    --onyx-bg-6: #343341;
+    --onyx-bg-7: #414052;
+    --onyx-bg-8: #56546a;
+    --onyx-bg-9: #63617a;
+    --onyx-bg-10: #706e88;
+    --onyx-bg-11: #9d9bad;
+    --onyx-bg-12: #e9e7f0;
+
+    --bg-1: var(--onyx-bg-1);
+    --bg-2: var(--onyx-bg-2);
+    --bg-3: var(--onyx-bg-3);
+    --bg-4: var(--onyx-bg-4);
+    --bg-5: var(--onyx-bg-5);
+    --bg-6: var(--onyx-bg-6);
+    --bg-7: var(--onyx-bg-7);
+    --bg-8: var(--onyx-bg-8);
+    --bg-9: var(--onyx-bg-9);
+    --bg-10: var(--onyx-bg-10);
+    --bg-11: var(--onyx-bg-11);
+    --bg-12: var(--onyx-bg-12);
+
+    --onyx-1: #0c0b10;
+    --onyx-a1: #6f6b9606;
+    --onyx-2: #131218;
+    --onyx-a2: #6f6b960f;
+    --onyx-3: #1b1a24;
+    --onyx-a3: #6f6b961c;
+    --onyx-4: #22212e;
+    --onyx-a4: #6f6b962a;
+    --onyx-5: #2a2839;
+    --onyx-a5: #6f6b9639;
+    --onyx-6: #343147;
+    --onyx-a6: #6f6b964d;
+    --onyx-7: #45415c;
+    --onyx-a7: #6f6b9668;
+    --onyx-8: #565273;
+    --onyx-a8: #6f6b968d;
+    --onyx-9: #6f6b96;
+    --onyx-a9: #6f6b96ec;
+    --onyx-10: #827ead;
+    --onyx-a10: #827eadec;
+    --onyx-11: #b3afd0;
+    --onyx-a11: #b3afd0f5;
+    --onyx-12: #e8e6f4;
+    --onyx-a12: #e8e6f4fb;
+
+    --accent-1: var(--onyx-1);
+    --accent-a1: var(--onyx-a1);
+    --accent-2: var(--onyx-2);
+    --accent-a2: var(--onyx-a2);
+    --accent-3: var(--onyx-3);
+    --accent-a3: var(--onyx-a3);
+    --accent-4: var(--onyx-4);
+    --accent-a4: var(--onyx-a4);
+    --accent-5: var(--onyx-5);
+    --accent-a5: var(--onyx-a5);
+    --accent-6: var(--onyx-6);
+    --accent-a6: var(--onyx-a6);
+    --accent-7: var(--onyx-7);
+    --accent-a7: var(--onyx-a7);
+    --accent-8: var(--onyx-8);
+    --accent-a8: var(--onyx-a8);
+    --accent-9: var(--onyx-9);
+    --accent-a9: var(--onyx-a9);
+    --accent-10: var(--onyx-10);
+    --accent-a10: var(--onyx-a10);
+    --accent-11: var(--onyx-11);
+    --accent-a11: var(--onyx-a11);
+    --accent-12: var(--onyx-12);
+    --accent-a12: var(--onyx-a12);
+
+    --accent: var(--onyx-9);
+    --accent-hover: var(--onyx-10);
+    --accent-active: var(--onyx-8);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
+  ::selection {
+    background-color: var(--accent-a5);
+  }
+
+  ::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background: var(--accent-6);
+  }
+}
+
+/* END: Global variables */
+
+/* BEGIN: Desktop layout geometry
+
+   One source for the three-column desktop shell: rp/styles.ts (AppGrid)
+   reserves the room, left-nav and right-sidebar pin themselves into it, and
+   the top bar shares the column so their edges line up. They used to agree
+   through three copies of "1400px" and two pixel constants passed through JS.
+
+   The side columns grow with the viewport instead of sitting at 210 / 280px,
+   which truncated the account name in the left nav at 1440. The app column
+   widens on large screens so that growth comes out of the empty margins, not
+   out of the content.
+
+   Content column with both sidebars showing (sidebars mount at >= 1300px):
+   1300 → 680 · 1366 → 746 · 1440 → 780 · 1600 → 944 · 1920 → 960 · 2560 → 1040 */
+:root {
+  --app-max-width: 1400px;
+  --app-gutter: 16px;
+  --sidebar-gap: 24px;
+  --nav-width: clamp(240px, 16vw, 280px);
+  --sidebar-width: clamp(300px, 20vw, 360px);
+}
+
+@media (min-width: 1600px) {
+  :root {
+    --app-max-width: 1600px;
+  }
+}
+
+@media (min-width: 1800px) {
+  :root {
+    --app-max-width: 1680px;
+  }
+}
+
+@media (min-width: 2200px) {
+  :root {
+    --app-max-width: 1760px;
+  }
+}
+
+/* END: Desktop layout geometry */
+
+/* BEGIN: Glass & material tokens — see GLASS_REDESIGN_PLAN.md at the repo root
+   (one level above rp-webapp-ui).
+
+   Two tiers, following the functional/content split:
+   - glass    — bars, sidebars, menus, sheets. Blurred and translucent. Read by
+                the GLASS() helper in theme/common.styled.ts.
+   - material — depth inside the content layer (cards, panels, chips). A
+                translucent fill and a hairline, never a backdrop blur. Read by
+                MATERIAL.
+
+   Declared on .page-container and the theme class rather than :root because
+   they are built from --bg-*, which only exist under the accent classes those
+   elements carry. The theme class also catches subtrees that re-declare the
+   theme outside the page container: the landing top bar, and Radix popovers
+   portaled to <body> (the notifications menu).
+
+   The percentages below are packages/theme/src/glass.ts, which the mobile app
+   reads. Change both together. */
+.page-container,
+.dark,
+.dark-theme {
+  --glass-blur: 24px;
+  --glass-saturate: 160%;
+  --glass-fill-bar: color-mix(in srgb, var(--bg-2) 64%, transparent);
+  /* Larger surfaces sit more opaque, so text-heavy panels stay legible over
+     whatever scrolls beneath them. */
+  --glass-fill-panel: color-mix(in srgb, var(--bg-2) 80%, transparent);
+  --glass-edge: color-mix(in srgb, var(--bg-12) 11%, transparent);
+  --glass-highlight: color-mix(in srgb, var(--bg-12) 7%, transparent);
+  --glass-shadow: 0 10px 36px -14px rgb(0 0 0 / 0.6);
+
+  --material-fill: color-mix(in srgb, var(--bg-12) 4%, transparent);
+  --material-fill-strong: color-mix(in srgb, var(--bg-2) 72%, transparent);
+  --material-edge: color-mix(in srgb, var(--bg-12) 9%, transparent);
+  --material-highlight: color-mix(in srgb, var(--bg-12) 6%, transparent);
+
+  /* Small controls floating over imagery (rail scroll arrows). */
+  --glass-fill-clear: color-mix(in srgb, var(--bg-1) 40%, transparent);
+
+  /* Hover and pressed washes for rows and controls on glass or material: a
+     neutral tint of the text colour, so they read the same over any tint and
+     leave the accent for the things that need it. */
+  --fill-hover: color-mix(in srgb, var(--bg-12) 8%, transparent);
+  --fill-pressed: color-mix(in srgb, var(--bg-12) 12%, transparent);
+
+  /* Text entry wells (the rich-text editor, composer fields): a recessed,
+     darker translucent surface, so a field reads as a place to type rather
+     than as one more card. */
+  --field-fill: color-mix(in srgb, var(--bg-1) 55%, transparent);
+  --field-edge: color-mix(in srgb, var(--bg-12) 10%, transparent);
+
+  /* Dialogs and sheets: thinner than the panel glass, with a heavier blur
+     doing the legibility work, and a faint light catching the top edge. */
+  --glass-fill-dialog: color-mix(in srgb, var(--bg-2) 62%, transparent);
+  --glass-blur-dialog: 40px;
+  --glass-sheen: color-mix(in srgb, var(--bg-12) 9%, transparent);
+}
+
+/* Reduce Transparency: every glass and material surface goes opaque together. */
+@media (prefers-reduced-transparency: reduce) {
+  .page-container,
+  .dark,
+  .dark-theme {
+    --glass-blur: 0px;
+    --glass-saturate: 100%;
+    --glass-fill-bar: var(--bg-2);
+    --glass-fill-panel: var(--bg-2);
+    --glass-fill-clear: var(--bg-2);
+    --material-fill: var(--bg-3);
+    --material-fill-strong: var(--bg-2);
+    --material-highlight: transparent;
+    --field-fill: var(--bg-1);
+    --glass-fill-dialog: var(--bg-2);
+    --glass-blur-dialog: 0px;
+    --glass-sheen: transparent;
+  }
+}
+
+/* Increase Contrast: opaque fills and edges strong enough to see. */
+@media (prefers-contrast: more) {
+  .page-container,
+  .dark,
+  .dark-theme {
+    --glass-fill-bar: var(--bg-2);
+    --glass-fill-panel: var(--bg-2);
+    --glass-fill-clear: var(--bg-2);
+    --glass-edge: var(--bg-8);
+    --material-edge: var(--bg-8);
+    --field-edge: var(--bg-8);
+    --glass-fill-dialog: var(--bg-2);
+  }
+}
+
+/* END: Glass & material tokens */
+
+/* BEGIN: Custom classes for global styling */
+
+/* ── Toast redesign: top-center, card style ─────────────────────────── */
+
+/* 1. Reset toastify defaults when our class is present */
+div.toastify.nw-toast {
+  padding: 0;
+  background: none;
+  border-radius: 10px;
+  min-width: 300px;
+  max-width: 460px;
+  overflow: hidden;
+  display: flex;
+  align-items: stretch;
+  font-family: Montserrat, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  cursor: default;
+}
+
+/* 2. Inner layout */
+div.toastify.nw-toast .nw-toast-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 0 14px 16px;
+  flex-shrink: 0;
+}
+
+div.toastify.nw-toast .nw-toast-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+div.toastify.nw-toast .nw-toast-text {
+  flex: 1;
+  padding: 14px 12px;
+}
+
+div.toastify.nw-toast .toast-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px 0 0;
+  margin: 0;
+  font-size: 16px;
+  opacity: 0.45;
+  transition: opacity 0.15s ease;
+  align-self: center;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+div.toastify.nw-toast .toast-close:hover {
+  opacity: 1;
+  scale: 1;
+}
+
+/* 3. Type variants */
+div.toastify.nw-toast-success {
+  background: #141a15;
+  border: 1px solid rgba(98, 189, 114, 0.22);
+  border-left: 4px solid var(--grass-9);
+  color: #cdebd3;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.5),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+div.toastify.nw-toast-success .nw-toast-icon {
+  color: var(--grass-9);
+}
+
+div.toastify.nw-toast-error {
+  background: #1c1313;
+  border: 1px solid rgba(229, 78, 78, 0.22);
+  border-left: 4px solid var(--tomato-9);
+  color: #f0cecc;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.5),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+div.toastify.nw-toast-error .nw-toast-icon {
+  color: var(--tomato-9);
+}
+
+div.toastify.nw-toast-warning {
+  background: #1c1a12;
+  border: 1px solid rgba(224, 180, 60, 0.22);
+  border-left: 4px solid var(--amber-9);
+  color: #f0e5c0;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.5),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+div.toastify.nw-toast-warning .nw-toast-icon {
+  color: var(--amber-9);
+}
+
+div.toastify.nw-toast-info {
+  background: #121620;
+  border: 1px solid rgba(60, 154, 219, 0.22);
+  border-left: 4px solid var(--blue-9);
+  color: #c5d9f0;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.5),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+div.toastify.nw-toast-info .nw-toast-icon {
+  color: var(--blue-9);
+}

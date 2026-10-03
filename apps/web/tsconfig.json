@@ -1,0 +1,93 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@nw/animations": [
+        "../../packages/animations/src"
+      ],
+      "@nw/animations/*": [
+        "../../packages/animations/src/*"
+      ],
+      "@nw/api": [
+        "../../packages/api/src"
+      ],
+      "@nw/api/*": [
+        "../../packages/api/src/*"
+      ],
+      "@nw/badges": [
+        "../../packages/badges/src"
+      ],
+      "@nw/badges/*": [
+        "../../packages/badges/src/*"
+      ],
+      "@nw/chat": [
+        "../../packages/chat/src"
+      ],
+      "@nw/chat/*": [
+        "../../packages/chat/src/*"
+      ],
+      "@nw/features": [
+        "../../packages/features/src"
+      ],
+      "@nw/features/*": [
+        "../../packages/features/src/*"
+      ],
+      "@nw/richtext": [
+        "../../packages/richtext/src"
+      ],
+      "@nw/richtext/*": [
+        "../../packages/richtext/src/*"
+      ],
+      "@nw/store": [
+        "../../packages/store/src"
+      ],
+      "@nw/store/*": [
+        "../../packages/store/src/*"
+      ],
+      "@nw/theme": [
+        "../../packages/theme/src"
+      ],
+      "@nw/theme/*": [
+        "../../packages/theme/src/*"
+      ],
+      "@nw/types": [
+        "../../packages/types/src"
+      ],
+      "@nw/types/*": [
+        "../../packages/types/src/*"
+      ],
+      "@nw/utils": [
+        "../../packages/utils/src"
+      ],
+      "@nw/utils/*": [
+        "../../packages/utils/src/*"
+      ]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

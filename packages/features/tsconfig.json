@@ -1,0 +1,19 @@
+{
+  "extends": "@nw/config/tsconfig.react.json",
+  "compilerOptions": {
+    "types": ["react"],
+    "paths": {
+      "@nw/api": ["../api/src"],
+      "@nw/api/*": ["../api/src/*"],
+      "@nw/chat": ["../chat/src"],
+      "@nw/chat/*": ["../chat/src/*"],
+      "@nw/store": ["../store/src"],
+      "@nw/store/*": ["../store/src/*"],
+      "@nw/types": ["../types/src"],
+      "@nw/types/*": ["../types/src/*"],
+      "@nw/utils": ["../utils/src"],
+      "@nw/utils/*": ["../utils/src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "../config/universal-globals.d.ts"]
+}

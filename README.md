@@ -1,186 +1,101 @@
-# rp-webapp
+# novelist-world-app
 
-The Novelist World web app.
+The Novelist World client workspace. One repository, one dependency graph, two
+clients — the web app today, a React Native app next.
 
-A **Vite + React Router SPA**. There is no framework server and no backend of
-its own: the browser talks to the Kotlin services directly. One function under
-`api/` remains, and it is not an API — see [The `api/` function](#the-api-function).
-
-The migration off Next.js is complete; [REACT_MIGRATION_PLAN.md](../REACT_MIGRATION_PLAN.md)
-and [REACT_MIGRATION_STEPS.md](../REACT_MIGRATION_STEPS.md) record what changed
-and why, including several things worth knowing that were found along the way.
-
-## Prerequisites
-
-- **Node ≥ 18.16** (22 is what this is developed against)
-- **pnpm 10** — `corepack enable && corepack prepare pnpm@10.13.1 --activate`
-- **Git Bash** on Windows: the `dev` script uses `rm -rf`
-
-```bash
-pnpm install
+```
+apps/
+  web/        the Vite + React Router PWA        → apps/web/README.md
+  mobile/     the Expo app, iOS + Android        → apps/mobile/README.md
+packages/
+  types/      shared domain types (imports nothing)
+  theme/      design tokens — colours, geometry. No styling engine
+  utils/      formatters, validation, platform adapters, portable hooks
+  api/        the HTTP client and every endpoint, transport injected per app
+  store/      the global client-state store
+  features/   screen hooks: fetching, pagination, mutations. No views, no DOM
+  config/     shared biome + tsconfig bases
+tools/        workspace scripts: the boundary check, the Chrome finder
 ```
 
-## Running it
+The backend services are **separate repositories** — `rp-webapp-service`
+(Kotlin), `chat-server`, and `rp-webapp-nginx`. Nothing here builds or deploys
+them. `MONOREPO_MIGRATION_PLAN.md` §5 explains why they stayed out.
 
-```bash
-pnpm dev
-```
+## The rule that keeps this working
 
-The dev server listens on **port 3000**, deliberately. Three things outside this
-app are wired to that number — the backend's `APP_BASE_URL` and
-`OAUTH_REDIRECT_BASE`, and `VITE_RP_LOGIN_URL` here — so a different port breaks
-local OAuth in a way that looks like a backend fault.
+Arrows point inward. `types` imports nothing; `theme` and `utils` import
+`types`; `api` imports `types` and `utils`; `store` imports those; `features` imports all
+of them. **Apps import anything; nothing in `packages/` imports from an app.** No `styled-components`
+and no `window`/`document` inside `packages/` outside a `*.web.ts` file.
 
-The app needs a backend. Point `RP_SERVICE_URL` at the real API, or run the
-services locally — [LOCAL_DEV.md](../LOCAL_DEV.md) covers that end to end,
-including Discord OAuth linking.
+`pnpm check:boundaries` enforces it, and CI runs it on every push. The rule is
+not bureaucracy: a stray DOM reference in a shared package compiles fine on web
+and fails at runtime on a device, months later.
 
-Copy `.env.example` to `.env` first. **Only `VITE_`-prefixed names reach the
-browser** — that is what stops a secret being shipped by accident. The unprefixed
-names in the same file are read server-side by `api/`; never add a `VITE_` prefix
-to one of those to "make it work".
+### One React, pinned
 
-## Scripts
+`react` and `react-dom` are pinned to **19.1.0** in both apps and forced through
+`pnpm.overrides` in the root `package.json`. This is not tidiness — it is load-bearing.
+
+Expo SDK 54 pins react to an exact version. When the web app asked for a different one
+(`^19.1.1`), pnpm resolved `@tanstack/react-query`'s React peer against the *other* app and
+gave it a nested `node_modules/react`. Under `node-linker=hoisted` the web app then loaded
+react-query from the root — with its own React inside — and every hook in the tree threw
+`Invalid hook call`, pointing at react-query rather than at the version split that caused it.
+
+Nothing in a diff makes that visible: both apps type-check, both build, and the failure only
+appears in a browser after an unrelated reinstall reshuffles which peer copy wins. Whenever
+Expo's React version changes, change it in **both** apps and in the override together.
+
+## Commands
+
+Run these from the repository root.
 
 | Script | What it does |
 |---|---|
-| `pnpm dev` | Dev server on :3000 |
-| `pnpm build` | `vite build` → `dist/`, including the service worker |
-| `pnpm start` | Serves the built `dist/` on :3000 |
-| `pnpm verify` | Type-check (app + packages) + package boundaries + both smoke tests. **Run this on every commit.** |
-| `pnpm type-check` | `tsc --noEmit` for the app |
-| `pnpm smoke` | Both smoke tests below |
-| `pnpm smoke:bff` | Open Graph injection and its fallbacks |
-| `pnpm smoke:mw` | The `/{username}` short link and reserved paths |
-| `pnpm smoke:routes` | Renders all 66 routes in headless Chrome. Needs a build and a browser, so it is not in `verify` |
-| `pnpm lint` | `biome check` — **fails today**, pre-existing, see below |
+| `pnpm dev` | Web dev server on :3000 |
+| `pnpm dev:mobile` | Metro for the Expo app (needs a dev build installed) |
+| `pnpm build` | Production build of the web app |
+| `pnpm verify` | Type-check (app + packages) + boundaries + smoke tests. **Run on every commit** |
+| `pnpm check:boundaries` | The package dependency rule above |
+| `pnpm type-check` / `type-check:packages` | `tsc --noEmit`, both apps / every package |
+| `pnpm smoke` | The two silent-failure smoke tests (OG injection, short links) |
+| `pnpm smoke:routes` | Renders all 70 routes in headless Chrome |
+| `pnpm lint` | `biome check` — **fails today** on pre-existing CRLF formatting, see `apps/web/README.md` |
 
-### On the smoke tests
+Anything web-specific — env vars, the `api/` function, routing, the service worker — is in
+[apps/web/README.md](apps/web/README.md). The native session, the dev-build requirement and
+what is not built yet are in [apps/mobile/README.md](apps/mobile/README.md).
 
-There is no test suite, and these two scripts are not the start of one. They
-exist because two behaviours fail *silently* — no type error, no build failure,
-nothing in a log:
+## One screen, two views, one hook
 
-- **OG injection.** A wrong or duplicated `og:title` ships a generic card to
-  exactly the audience shared story links exist for, and you find out when
-  someone posts one in Discord.
-- **The `/{username}` short link.** If it stops matching, the app shell renders,
-  the client router matches nothing, and `not-found` redirects to Novelists. The
-  feature is simply gone, with nothing to notice.
+Views are written twice on purpose — 37% of the web app is styled-components and none of it
+runs on a phone. What is **not** written twice is everything that could differ by mistake:
+fetching, pagination, the end-of-list rule, mutations. That lives in `packages/features`,
+and the rule is that every hook there has a real consumer in both apps. A hook with one
+consumer is a guess; a hook both apps render is a contract.
 
-Both stub `fetch`, so they need no network and no credentials.
+## Deploying
 
-### On `pnpm lint`
+The web app deploys to Vercel from `apps/web`. Because the build reads
+`packages/`, the project settings must be:
 
-`biome check` fails with pre-existing style errors, and ~500 files are
-unformatted. That predates the migration. Formatting the repo is now safe to do
-— it was deliberately held off while two builds had to stay diffable — but do it
-as its own commit, touching nothing else.
+- **Root Directory:** `apps/web`
+- **Include source files outside of the Root Directory in the Build Step:** on
+- **Install Command:** `pnpm install --frozen-lockfile` (pnpm walks up to
+  `pnpm-workspace.yaml` and installs the whole workspace)
 
-## How it is put together
+`apps/web/vercel.json` holds the rewrites and the security headers;
+`apps/web/middleware.ts` is the edge middleware and `apps/web/api/` the one
+function. All three are resolved relative to the Root Directory, so they need no
+change — but **verify them on a preview deployment**, because none of them is
+exercised by a local build.
 
-```
-index.html         the document shell, including the site-wide meta tags
-src/main.tsx       entry: createRoot, providers, RouterProvider
-src/routes.tsx     the route table — 66 entries, written by hand, read top to
-                   bottom. Add new routes here.
-src/app/…          page components, one directory per route. The directory names
-                   still use Next's bracket convention ([slug]) because renaming
-                   them is a large mechanical diff that has not been worth doing
-                   yet; the brackets carry no meaning now.
-src/components/…   shared components
-src/lib/…          app-level plumbing: the API client, navigation helpers,
-                   cookies, config
-packages/          @nw/api, @nw/types, @nw/utils, @nw/config — framework-free,
-                   shared with the future mobile app. No build step: they ship
-                   TypeScript source.
-api/               the Open Graph function (see below)
-middleware-rules.ts the HTTP-layer rules — tracking-param stripping
-middleware.ts      edge entry point for those rules (production only)
-worker/            service worker — sw.ts is the worker, handlers.ts holds the
-                   push/notification/badge logic
-```
+## Adding a package
 
-### The `api/` function
-
-One route, and it is the only server-side code this repo owns:
-
-| Route | Why it exists |
-|---|---|
-| `/rp/story/:slug`, `/rp/story/event/:slug` | Open Graph injection. Crawlers do not run JS, so a shared story link would otherwise unfurl with the generic site card |
-
-It rewrites the HTML document before a crawler sees it, which has to happen
-wherever the document is served — the CDN edge, not the API. That is the whole
-reason it cannot live in the Kotlin backend with everything else.
-
-Everything else that used to be here has moved to `rp-webapp-service`:
-
-- **Discord sharing** and **Klipy media search** → the portfolio service, which
-  now holds `DISCORD_BOT_TOKEN` and `KLIPY_API_KEY`. The embed building went
-  with them: whoever holds the token decides what gets posted with it.
-- **Reactions** and the **landing feeds** were deleted rather than moved. They
-  proxied the portfolio service to itself, only to turn the JWT cookie into a
-  header — which the browser does itself now.
-
-**Do not add routes here.** New server work goes in the Kotlin backend.
-
-### Profile URLs
-
-A novelist's profile is `novelist.world/@tokyo`, at the root of the domain,
-next to the app's own routes.
-
-The `@` is what keeps those two namespaces apart. It is not a legal username
-character, so no username can collide with a path the app owns and no path the
-app owns can shadow a username — and neither can start to when someone adds a
-page or drops a file in `public/`. **Adding a route never requires checking the
-username table.** Build `/@` URLs with `ROUTES.Profile.View(username)`; the
-handle is parsed back with `usernameFromHandle` from
-`src/utils/constants/profile-handle.ts`.
-
-Two older forms still resolve, as redirects in the route table, because they
-are in already posted Discord embeds and notification payloads:
-
-| Old | New |
-|---|---|
-| `/rp/profile/tokyo` (and its five tabs) | `/@tokyo` |
-| `/tokyo` — the bare short link | `/@tokyo` |
-
-Both are client-side and cost nothing. The bare form used to be an edge
-redirect that asked the backend whether the name was a novelist, guarded by a
-hand-maintained list of every path and file served from the root; the `@`
-retired the lookup, the list and the 2s timeout on the hot path together.
-
-Expressing the `/rp/profile/:slug` redirect as a route rather than a rule at
-the HTTP layer is deliberate: a regex over `/rp/profile/([^/]+)` would also
-rewrite `edit`, `muses`, `music`, `story` and `referrals`, which are real
-pages. React Router ranks a static path above a dynamic one, so those match
-their own routes and never reach the redirect.
-
-### The HTTP-layer rules
-
-One rule left: tracking parameters (`fbclid`, `gclid` and friends) are stripped
-before the app loads. It is a redirect issued before any JS runs, so it cannot
-move into the router.
-
-It lives in `middleware-rules.ts` and runs in three places: Vercel Edge
-Middleware in production (`middleware.ts`), and the Vite dev and preview servers
-(the `middleware-rules-dev` plugin in `vite.config.ts`). **Vercel Edge
-Middleware does not run locally** — Next used to execute its middleware in the
-dev server, and that stopped silently when Next did. One copy of the rules, two
-entry points, because two copies would drift invisibly.
-
-`pnpm smoke:mw` covers the rules and the handle helpers. It calls them
-directly, so it cannot tell you whether they are *wired* to a running server;
-`pnpm smoke:routes` is what checks that, and it renders `/@name`, `/name` and
-`/rp/profile/name` in a real browser.
-
-## Deployment
-
-Vercel builds and serves this: the CDN serves `dist/` and `vercel.json` rewrites
-the two storyboard routes to the function. Same-origin by
-construction, which is why the client's relative `fetch("/api/…")` calls need no
-CORS.
-
-`vercel.json` also carries the security response headers (nosniff, frame
-options, referrer, permissions). They are not in nginx — `rp-webapp-nginx`
-fronts `api.novelist.world` only, not this app.
+`packages/<name>/` with a `package.json` (`@nw/<name>`, `"main": "./src/index.ts"`,
+a `type-check` script) and a `tsconfig.json` extending `@nw/config/tsconfig.base.json`
+— or `tsconfig.react.json` if it has hooks. Then add the alias in three places:
+`apps/web/tsconfig.json` paths, `apps/web/vite.config.ts` resolve.alias, and the
+app's `package.json` dependencies as `workspace:*`.

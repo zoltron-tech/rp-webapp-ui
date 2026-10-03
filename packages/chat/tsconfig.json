@@ -1,0 +1,10 @@
+{
+  "extends": "@nw/config/tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@nw/types": ["../types/src"],
+      "@nw/types/*": ["../types/src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "../config/universal-globals.d.ts"]
+}

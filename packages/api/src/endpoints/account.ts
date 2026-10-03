@@ -1,4 +1,5 @@
 import type {
+  AuthenticateResponsePayload,
   AuthSession,
   DiscordConnection,
   LoginPayload,
@@ -7,6 +8,7 @@ import type {
   SpotifyConnection,
   UpdateThemePayload,
   UpdateThemeResponse,
+  User,
   WsTicketPayload,
 } from "@nw/types";
 import { API_MESSAGE } from "@nw/types";
@@ -22,8 +24,9 @@ import type { ApiClient } from "../client";
  * either value. What comes back is the user record and a session id for the
  * Devices screen.
  *
- * A native client, which has no cookie jar, will need its own token-bearing
- * variants of these three — that is the reason `getToken` and the auth header
+ * A native client, which has no cookie jar, sends `X-NW-Client: native` and gets
+ * the token pair in the body instead; its social sign-in goes through
+ * `exchangeNativeOAuthCode`. That is the reason `getToken` and the auth header
  * survive in the client config at all.
  */
 
@@ -141,6 +144,29 @@ export const login = async (
   return (await response.json()) as LoginResponsePayload;
 };
 
+/**
+ * Trades a native social sign-in's one-time code for a session.
+ *
+ * The redirect back to the app carries only `code`. The tokens come back here,
+ * in the body, and only to the caller holding the PKCE `codeVerifier` whose
+ * challenge started the sign-in. Every failure is one 401: an expired code, a
+ * spent one and a wrong verifier look the same from outside.
+ */
+export const exchangeNativeOAuthCode = async (
+  api: ApiClient,
+  payload: { code: string; codeVerifier: string },
+): Promise<LoginResponsePayload> => {
+  const response = await api.raw(`${ACCOUNT}/oauth/native/token`, {
+    anonymous: true,
+    body: payload,
+    label: "exchangeNativeOAuthCode",
+    method: "POST",
+  });
+
+  if (!response.ok) return { message: API_MESSAGE.UncategorizedError };
+  return (await response.json()) as LoginResponsePayload;
+};
+
 export const signUp = async (
   api: ApiClient,
   payload: SignUpPayload & { referralUser?: string },
@@ -151,6 +177,18 @@ export const signUp = async (
     label: "signupAction",
     method: "POST",
   });
+
+  // nginx's own 429 is an HTML page, not JSON; user-service's carries a message
+  // saying which limit was hit.
+  if (response.status === 429) {
+    const result = (await response
+      .json()
+      .catch(() => ({}))) as Partial<LoginResponsePayload>;
+    return {
+      result: { message: result.message ?? "" } as LoginResponsePayload,
+      status: response.status,
+    };
+  }
 
   // The caller needs the status to tell a username conflict (409) from a bad
   // payload (400), and the body carries the server's own message in both cases.
@@ -296,11 +334,19 @@ export const refreshSession = async (api: ApiClient): Promise<boolean> => {
  * identifies the session, and the access token may well have expired. Never
  * throws — a user who asked to log out is logged out of this browser whether or
  * not the API was reachable.
+ *
+ * A native client has no refresh cookie, so it passes its refresh token in
+ * `headers` (`X-NW-REFRESH-TOKEN`). Without it the server has nothing to
+ * identify the session by, answers 200, and revokes nothing.
  */
-export const logout = async (api: ApiClient): Promise<boolean> => {
+export const logout = async (
+  api: ApiClient,
+  headers?: Record<string, string>,
+): Promise<boolean> => {
   try {
     const response = await api.raw(`${ACCOUNT}/logout`, {
       anonymous: true,
+      headers,
       label: "logout",
       method: "POST",
     });
@@ -389,4 +435,24 @@ export const getWebSocketTicket = async (
 
   const result = (await response.json()) as WsTicketPayload;
   return result.ticket ?? null;
+};
+
+/**
+ * The signed-in **account**, as distinct from their novelist profile.
+ *
+ * Two different objects with two different owners. The novelist is the public
+ * profile — name, about, muses. The account carries the settings a person picks
+ * for themselves, and `palette` is one of them: it is what the accent picker
+ * writes and what web reads to colour the whole app
+ * (`apps/web/src/app/rp/layout.tsx`). Reading the accent off the *novelist*
+ * instead is how a client ends up jade for someone who chose crimson.
+ *
+ * The endpoint doubles as the auth check, which is why it is also what
+ * `authenticateAction` calls on web — a 401 here means no live session.
+ */
+export const getAuthUser = async (api: ApiClient): Promise<User | null> => {
+  const response = await api.raw(`${ACCOUNT}/auth`, { label: "getAuthUser" });
+  if (!response.ok) return null;
+  const result = (await response.json()) as AuthenticateResponsePayload;
+  return result.user ?? null;
 };

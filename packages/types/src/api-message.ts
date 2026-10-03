@@ -11,4 +11,5 @@ export enum API_MESSAGE {
   BadPayload = "bad_payload",
   ServerError = "server_error",
   Conflict = "conflict",
+  TooManyRequests = "too_many_requests",
 }

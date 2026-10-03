@@ -41,6 +41,12 @@ declare function setInterval(
 ): number;
 declare function clearInterval(id: number | undefined): void;
 
+/**
+ * Present in browsers, in Node since 11, and in Hermes — so it is genuinely
+ * universal, just absent from the ES2022 lib.
+ */
+declare function queueMicrotask(callback: () => void): void;
+
 declare class URL {
   constructor(url: string, base?: string);
   hash: string;

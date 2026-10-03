@@ -1,0 +1,76 @@
+import { Ionicons } from "@expo/vector-icons";
+import { Stack, useRouter } from "expo-router";
+import { Pressable } from "react-native";
+import { space, useAppTheme } from "@/theme";
+import { glassHeaderOptions } from "@/theme/header";
+import { ambientScreenLayout } from "@/components/ambient-background";
+
+/**
+ * The Profile tab's own stack.
+ *
+ * Your friends and your characters are *your* pages, so opening them has to
+ * leave the Profile tab lit — pushing them into the Home stack (which is where
+ * every other novelist's are) lit Home instead, and the bar then disagreed with
+ * the screen. Same screens either way: the lists are components in
+ * `src/screens`, mounted by a thin route in whichever stack the person is in.
+ *
+ * The header is this stack's rather than the tab navigator's, for the reason
+ * the Home stack gives: leaving it to the tab puts a second header above the
+ * stack's own on every pushed screen.
+ */
+/**
+ * The profile page sits under anything opened into this stack from outside it
+ * — the menu's Characters and Badges — so those screens get a back button to
+ * your profile instead of being the bottom of an otherwise empty stack. Takes
+ * effect with `router.push(..., { withAnchor: true })`.
+ */
+export const unstable_settings = { initialRouteName: "index" };
+
+export default function ProfileStackLayout() {
+  const theme = useAppTheme();
+  const router = useRouter();
+
+  return (
+    <Stack
+      screenLayout={ambientScreenLayout}
+      screenOptions={{
+        contentStyle: { backgroundColor: theme.background },
+        headerRight: () => (
+          <Pressable
+            accessibilityLabel="Open menu"
+            accessibilityRole="button"
+            hitSlop={{ bottom: space.md, left: space.sm, right: space.sm, top: space.md }}
+            onPress={() => router.push("/menu")}
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.6 : 1,
+              paddingHorizontal: space.md,
+            })}
+          >
+            <Ionicons color={theme.text} name="menu" size={26} />
+          </Pressable>
+        ),
+        ...glassHeaderOptions(theme),
+      }}
+    >
+      <Stack.Screen name="index" options={{ title: "Profile" }} />
+      <Stack.Screen name="friends" options={{ title: "Friends" }} />
+      <Stack.Screen name="muses" options={{ title: "Characters" }} />
+      <Stack.Screen name="activity" options={{ title: "Activity" }} />
+      <Stack.Screen name="prompts" options={{ title: "Prompts" }} />
+      <Stack.Screen name="posts" options={{ title: "Posts" }} />
+      <Stack.Screen name="badges" options={{ title: "Badges" }} />
+      <Stack.Screen name="muse/[museId]" />
+      <Stack.Screen name="prompt/[promptId]" options={{ title: "Prompt" }} />
+      {/*
+        Shared with Home: whoever signed a card on this tab opens here rather
+        than in another tab's stack, so the back button stays honest.
+      */}
+      <Stack.Screen name="novelist/[username]/index" />
+      <Stack.Screen name="novelist/[username]/friends" />
+      <Stack.Screen name="novelist/[username]/muses" />
+      <Stack.Screen name="novelist/[username]/activity" />
+      <Stack.Screen name="novelist/[username]/prompts" />
+      <Stack.Screen name="novelist/[username]/posts" />
+    </Stack>
+  );
+}

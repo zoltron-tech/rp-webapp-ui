@@ -1,0 +1,2948 @@
+import { RadioGroup } from "radix-ui";
+import styled, { css, keyframes } from "styled-components";
+import {
+  DIALOG_SCRIM,
+  FIELD,
+  FOCUS_RING,
+  GLASS_DIALOG,
+  ICON_BUTTON,
+  MATERIAL_CARD,
+  PILL_PRIMARY,
+  PILL_SECONDARY,
+} from "@/theme";
+export const EditProfilePageRoot = styled.div``;
+
+export const Card = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin-block: 24px 48px;
+  margin-inline: auto;
+  max-width: 800px;
+  /* Content layer: an editor sheet is material, never glass. */
+  ${MATERIAL_CARD}
+  border-radius: 24px;
+  font-family: var(--font);
+  font-size: var(--font-size);
+  color: var(--text);
+  padding: 20px 24px 24px;
+
+  /* Below 800px the editor is the page: no sheet chrome, content to the edges. */
+  @media screen and (max-width: 800px) {
+    margin-block: 0px;
+    padding-inline: 12px;
+    padding-block: 10px;
+    border: none;
+    border-radius: 0;
+    background-color: transparent;
+    box-shadow: none;
+  }
+
+  .separator[data-orientation="horizontal"] {
+    height: 1px;
+    margin-top: var(--font-size-small);
+    margin-bottom: var(--font-size-xsmall);
+    background-color: var(--material-edge);
+  }
+`;
+
+export const BackButton = styled.button`
+  ${ICON_BUTTON}
+`;
+
+export const FormHeading = styled.div`
+  display: flex;
+  align-items: center;
+
+  h1 {
+    all: unset;
+    font-size: var(--font-size-h4);
+    font-weight: var(--font-weight-bold);
+    color: var(--text);
+  }
+
+  svg {
+    margin-right: var(--font-size-xsmall);
+    width: var(--font-size-h3);
+    height: var(--font-size-h3);
+    color: var(--accent-8);
+
+    &.success {
+      color: var(--grass-9);
+    }
+
+    &.error {
+      color: var(--tomato-9);
+    }
+
+    &.warning {
+      color: var(--amber-9);
+    }
+  }
+
+  @media screen and (max-width: 480px) {
+    h1 {
+      font-size: var(--font-size-h5);
+    }
+  }
+`;
+
+export const FormContainer = styled.div`
+
+
+  textarea {
+    background-color: var(--field-fill);
+    padding: 8px;
+    border-radius: 12px;
+    border: none;
+    color: var(--text);
+    font-size: var(--font-size-input);
+    font-family: var(--font);
+    resize: none;
+    min-height: 100px;
+
+    &:focus {
+      outline: 1.5px solid var(--accent);
+    }
+
+    &[data-invalid="true"] {
+      outline: 1.5px solid var(--tomato-a9);
+    }
+  }
+
+  form {
+    flex-direction: column;
+    width: 100%;
+    display: flex;
+    height: 100%;
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      color: var(--text);
+      font-size: var(--font-size);
+      font-family: var(--font);
+      margin-bottom: 8px;
+
+
+      label {
+        padding: 2px;
+        font-weight: var(--font-weight-regular);
+        margin-block: 4px;
+      }
+
+      .label-message {
+        color: var(--tomato-a9);
+        font-size: var(--font-size-small);
+        font-weight: var(--font-weight-medium);
+        font-family: var(--font);
+        text-align: end;
+
+        &::before {
+          content: "*";
+          color: var(--tomato-a9);
+          font-weight: var(--font-weight-bold);
+          margin-right: 2px;
+        }
+      }
+    }
+
+    input {
+      margin-bottom: 8px;
+      padding: 8px;
+      border-radius: 12px;
+      color: var(--text);
+      font-size: var(--font-size-input);
+      font-weight: var(--font-weight-regular);
+      background-color: var(--field-fill);
+      border: none;
+      font-family: var(--font);
+
+      &:not([readonly]) {
+        outline-offset: 2px;
+        border: 1px solid var(--material-edge);
+
+        &::placeholder {
+          color: var(--text-secondary);
+          opacity: 0.4;
+        }
+
+        &:hover {
+          outline: 1px solid var(--accent);
+        }
+
+        &:focus {
+          outline: 2px solid var(--accent);
+        }
+
+        &[data-invalid="true"] {
+          outline: 1.5px solid var(--tomato-a9);
+        }
+
+        &:-internal-autofill-selected {
+          background: var(--field-fill) !important;
+          background-color: var(--field-fill) !important;
+          color: var(--text) !important;
+          appearance: none !important;
+        }
+
+        &[disabled] {
+          background-color: transparent;
+          cursor: not-allowed;
+          color: var(--text-secondary);
+          font-weight: var(--font-weight-regular);
+          border: 1px solid var(--material-edge);
+        }
+      }
+    }
+
+    input[required] ~ label::before {
+      content: "*";
+      color: var(--tomato-a9);
+      font-weight: var(--font-weight-bold);
+      margin-right: 2px;
+    }
+
+    .submit-button {
+      width: 100px;
+      padding: 8px;
+      background-color: var(--accent);
+      color: var(--text);
+      font-size: var(--font-size);
+      font-weight: var(--font-weight-medium);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+
+      &[disabled] {
+        background-color: var(--fill-pressed);
+        cursor: not-allowed;
+        color: var(--text-secondary);
+      }
+
+      &:not([disabled]):hover {
+        background-color: var(--accent-hover);
+      }
+
+      &:not([disabled]):active {
+        background-color: var(--accent-active);
+      }
+
+      &:focus {
+        outline: 1.5px solid var(--accent);
+        outline-offset: 2px;
+      }
+    }
+  }
+`;
+
+export const BasicInfoFields = styled.div`
+
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    display: flex;
+
+
+
+  .avatar-field {
+    width: 150px;
+    height: 150px;
+    margin-block: 24px;
+
+  .avatar {
+    width: 150px;
+    height: 150px;
+    background-color: var(--bg-2);
+    border: 6px solid var(--bg-1);
+    z-index: 1;
+  }
+  }
+
+
+
+  .name-fields {
+    display: flex;
+    flex-direction: column;
+    width: 400px;
+  }
+
+  @media (max-width: 500px) {
+    .name-fields {
+      width: 300px;
+    }
+  }
+`;
+
+export const FieldHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+
+  .secondary-text {
+    font-size: var(--font-size-small);
+    color: var(--text-secondary);
+    font-weight: var(--font-weight-regular);
+  }
+`;
+
+export const PaletteGroup = styled(RadioGroup.Root)`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 8px;
+  background-color: var(--bg-2);
+`;
+
+export const PaletteRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  width: 100%;
+
+  @media (max-width: 768px) {
+    column-gap: 0;
+  }
+`;
+
+export const RadioItemContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  padding: 6px 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 56px;
+
+  &:hover {
+    background-color: var(--fill-hover);
+  }
+
+  .radio-item {
+    all: unset;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: var(--accent);
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: transform 0.15s ease, outline-color 0.15s ease;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+
+    &[aria-checked="true"] {
+      outline: 2px solid var(--accent-9);
+      outline-offset: 2px;
+    }
+  }
+
+  .palette-name {
+    font-size: 9px;
+    line-height: 1;
+    font-weight: var(--font-weight-medium);
+    letter-spacing: 0.04em;
+    text-transform: capitalize;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  &:has(.radio-item[aria-checked="true"]) .palette-name {
+    color: var(--text);
+  }
+
+  /* Mobile: fit narrow screens (375px baseline) — five columns per row */
+  @media (max-width: 768px) {
+    width: 20%;
+    padding: 4px 0;
+
+    .radio-item {
+      width: 24px;
+      height: 24px;
+    }
+
+    .palette-name {
+      font-size: 8px;
+    }
+  }
+`;
+
+export const FormActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: var(--font-size-small);
+  width: 100%;
+`;
+
+export const VerficationEmailButton = styled.button`
+      width: 120px;
+      padding: 8px;
+      background-color: var(--amber-a7);
+      color: var(--text);
+      font-size: var(--font-size);
+      font-weight: var(--font-weight-medium);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+
+      &[disabled] {
+        background-color: var(--fill-pressed);
+        cursor: not-allowed;
+        color: var(--text-secondary);
+      }
+
+      &:not([disabled]):hover {
+        background-color: var(--amber-8);
+      }
+
+      &:not([disabled]):active {
+        background-color: var(--amber-8);
+      }
+
+      &:focus {
+        outline: 1.5px solid var(--amber-a7);
+        outline-offset: 2px;
+      }
+`;
+
+export const InfoBox = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  border: 1px solid var(--blue-a6);
+  padding: 12px;
+  font-family: var(--font);
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-regular);
+  color: var(--blue-12);
+  background-color: var(--blue-a2);
+
+  margin-bottom: 22px;
+
+  div {
+    display: flex;
+    align-items: center;
+    color: var(--blue-12);
+    font-size: var(--font-size);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: 8px;
+  }
+
+  svg {
+    width: 22px;
+    height: 22px;
+    margin-right: 4px;
+    fill: var(--blue-9);
+  }
+
+  p {
+    margin: 0;
+    margin-block: 8px;
+    line-height: 1.4;
+  }
+
+  a {
+    color: var(--accent-7);
+    text-decoration: none;
+    font-weight: var(--font-weight-bold);
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: var(--accent-8);
+      text-decoration: underline;
+    }
+
+    &:focus {
+      outline: 1.5px solid var(--accent);
+      outline-offset: 2px;
+    }
+  }
+
+  strong {
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size);
+  }
+
+  &.error {
+    border-color: var(--tomato-a9);
+    background-color: var(--tomato-a2);
+    color: var(--tomato-12);
+
+    svg {
+      fill: var(--tomato-9);
+    }
+  }
+
+  &.not_found {
+    border-color: var(--amber-a9);
+    background-color: var(--amber-a2);
+    color: var(--amber-12);
+
+    svg {
+      fill: var(--amber-9);
+    }
+  }
+`;
+
+export const ResetButton = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 16px;
+  ${PILL_SECONDARY}
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  font-family: var(--font);
+  font-weight: var(--font-weight-semi-bold);
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    color: var(--text);
+  }
+
+  @media screen and (max-width: 380px) {
+    padding: 0 12px;
+  }
+`;
+
+export const MediaErrorWrapper = styled.div`
+display: flex;
+align-items: center;
+justify-content: center;
+padding-inline: 20px;
+padding-top: 20px;
+width: 100%;
+`;
+
+export const NoteDialogBodyWrapper = styled.div`
+  padding: 4px 12px 0;
+  max-height: 62vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+`;
+
+// ── Note editable bubble (preview + input combined) ──────────────────────────
+
+export const NoteEditableBubble = styled.div<{ $color: string | null }>`
+  position: relative;
+  isolation: isolate;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 22px;
+  background: ${({ $color }) =>
+    $color
+      ? $color
+      : "linear-gradient(135deg, var(--accent-4) 0%, var(--accent-3) 100%)"};
+  color: ${({ $color }) => ($color ? "#ffffff" : "inherit")};
+  border-radius: 16px;
+  padding: 10px 14px 10px 38px;
+  cursor: text;
+  /* always-visible dashed border signals "editable" */
+  border: 1.5px dashed ${({ $color }) =>
+    $color ? "rgba(255,255,255,0.35)" : "var(--accent-6)"};
+  transition: background 0.25s ease, color 0.25s ease,
+    border-color 0.18s ease, box-shadow 0.18s ease;
+
+  /* solid border + glow when the inner contenteditable is focused */
+  &:focus-within {
+    border-style: solid;
+    border-color: ${({ $color }) => ($color ? "rgba(255,255,255,0.6)" : "var(--accent)")};
+    box-shadow: 0 0 0 3px
+      ${({ $color }) =>
+        $color
+          ? "rgba(255,255,255,0.12)"
+          : "color-mix(in srgb, var(--accent) 18%, transparent)"};
+  }
+
+  /* Thought bubble tail — behind all content */
+  &::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    top: -18px;
+    left: 16px;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    border-left: 18px solid ${({ $color }) => $color ?? "var(--accent-4)"};
+    border-bottom: 18px solid ${({ $color }) => $color ?? "var(--accent-4)"};
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    top: -11px;
+    left: 4px;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    border-left: 10px solid ${({ $color }) => $color ?? "var(--accent-3)"};
+    border-bottom: 10px solid ${({ $color }) => $color ?? "var(--accent-3)"};
+  }
+`;
+
+export const NoteEditableContent = styled.div`
+  outline: none;
+  min-height: 3.6em;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  font-family: var(--font);
+  font-size: var(--font-size-input);
+  color: inherit;
+  background: transparent;
+  caret-color: currentColor;
+
+  &[data-empty]::before {
+    content: attr(data-placeholder);
+    opacity: 0.5;
+    font-style: italic;
+    pointer-events: none;
+    display: block;
+  }
+`;
+
+const noteEmojiWiggle = keyframes`
+  0%   { transform: rotate(45deg) scale(1); }
+  20%  { transform: rotate(10deg) scale(1.45); }
+  45%  { transform: rotate(75deg) scale(1.2); }
+  70%  { transform: rotate(20deg) scale(1.35); }
+  100% { transform: rotate(45deg) scale(1); }
+`;
+
+const notePickerWiggle = keyframes`
+  0%   { transform: scale(1.18); }
+  20%  { transform: scale(1.5) rotate(-12deg); }
+  45%  { transform: scale(1.25) rotate(10deg); }
+  70%  { transform: scale(1.4) rotate(-6deg); }
+  100% { transform: scale(1.18); }
+`;
+
+export const NotePreviewEmoji = styled.span<{
+  $wiggling?: boolean;
+  $rotate?: boolean;
+}>`
+  position: absolute;
+  top: -18px;
+  right: -12px;
+  font-size: 1.75rem;
+  display: inline-block;
+  transform: ${({ $rotate }) => ($rotate ? "rotate(45deg)" : "none")};
+  line-height: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.18));
+  ${({ $wiggling }) =>
+    $wiggling &&
+    css`
+      animation: ${noteEmojiWiggle} 0.5s ease;
+    `}
+`;
+
+// ── Note no-color swatch ──────────────────────────────────────────────────────
+
+export const NoteNoColorSwatch = styled.button<{ $active: boolean }>`
+  all: unset;
+  width: 18px;
+  height: 18px;
+  border-radius: 20%;
+  cursor: pointer;
+  border: ${({ $active }) =>
+    $active ? "3px solid var(--text)" : "2px solid var(--material-edge)"};
+  background: linear-gradient(
+      to bottom right,
+      transparent calc(50% - 1px),
+      #ef4444 calc(50% - 1px),
+      #ef4444 calc(50% + 1px),
+      transparent calc(50% + 1px)
+    ),
+    var(--bg-4);
+  transition: transform 0.1s ease, border-color 0.1s ease;
+
+  &:hover {
+    transform: scale(1.15);
+  }
+`;
+
+// ── Note emoji picker ─────────────────────────────────────────────────────────
+
+export const NoteEmojiPickerWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+export const NoteEmojiPickerArrow = styled.button`
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--material-edge);
+  border-radius: 50%;
+  background: var(--bg-2);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 14%, var(--bg-2));
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--bg-6));
+  }
+`;
+
+export const NoteEmojiPickerRow = styled.div`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  touch-action: pan-x;
+  scrollbar-width: none;
+  /* padding gives selected/scaled buttons room to render their
+     box-shadow and scale without being clipped by the scroll container */
+  padding-block: 8px;
+  padding-inline: 6px;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+export const NoteEmojiButton = styled.button<{
+  $selected: boolean;
+  $wiggling?: boolean;
+}>`
+  all: unset;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  font-size: ${({ $selected }) => ($selected ? "1.25rem" : "1.1rem")};
+  cursor: pointer;
+  transition: background 0.12s ease, transform 0.12s ease, box-shadow 0.12s ease, outline-color 0.12s ease;
+
+  /* Selected state is always red — signals "click to remove" */
+  background: ${({ $selected }) =>
+    $selected ? "color-mix(in srgb, #ef4444 22%, var(--bg-3))" : "transparent"};
+  outline: ${({ $selected }) => ($selected ? "2px solid #ef4444" : "1.5px solid transparent")};
+  box-shadow: ${({ $selected }) =>
+    $selected
+      ? "0 0 0 4px color-mix(in srgb, #ef4444 18%, transparent)"
+      : "none"};
+  transform: ${({ $selected }) => ($selected ? "scale(1.18)" : "scale(1)")};
+
+  /* "×" badge always visible when selected */
+  &[data-selected="true"]::after {
+    content: "✕";
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: #ef4444;
+    color: white;
+    font-size: 7px;
+    text-align: center;
+    line-height: 13px;
+    pointer-events: none;
+  }
+
+  &:not([data-selected="true"]):hover {
+    background: var(--fill-hover);
+    transform: scale(1.2);
+  }
+
+  &:active {
+    transform: scale(0.92);
+  }
+
+  ${({ $wiggling }) =>
+    $wiggling &&
+    css`
+      animation: ${notePickerWiggle} 0.5s ease;
+    `}
+`;
+
+export const NoteCharCount = styled.span`
+  display: block;
+  text-align: right;
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  margin-top: 4px;
+
+  &.warn {
+    color: var(--tomato-a9);
+  }
+`;
+
+export const NoteColorSection = styled.div`
+  margin-top: 14px;
+`;
+
+export const NoteEmojiSection = styled.div`
+  margin-top: 12px;
+`;
+
+export const NoteColorLabel = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+`;
+
+export const NoteLevelGate = styled.span`
+  font-size: var(--font-size-xsmall);
+  color: var(--accent);
+  opacity: 0.8;
+`;
+
+export const NoteColorGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+`;
+
+const colorRowSlideIn = keyframes`
+  from { opacity: 0; transform: translateY(-5px); }
+  to   { opacity: 1; transform: translateY(0); }
+`;
+
+const colorRowSwapIn = keyframes`
+  0%   { opacity: 0.5; transform: translateX(-5px) scale(0.97); }
+  60%  { transform: translateX(2px) scale(1.01); }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
+`;
+
+export const NoteColorGridExpandWrap = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+export const NoteColorGridRow = styled.div<{
+  $slideIn?: boolean;
+  $delay?: number;
+  $swap?: boolean;
+}>`
+  ${({ $slideIn, $delay }) =>
+    $slideIn &&
+    css`
+      animation: ${colorRowSlideIn} 0.18s ease ${($delay ?? 0) * 45}ms both;
+    `}
+  ${({ $swap }) =>
+    $swap &&
+    css`
+      animation: ${colorRowSwapIn} 0.26s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+    `}
+`;
+
+export const NoteColorToggle = styled.button`
+  all: unset;
+  display: block;
+  margin-top: 6px;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: var(--font);
+  user-select: none;
+  opacity: 0.7;
+  transition: color 0.15s ease, opacity 0.15s ease;
+  letter-spacing: 0.01em;
+
+  &:hover {
+    color: var(--accent);
+    opacity: 1;
+  }
+
+  &:focus-visible {
+    outline: 1.5px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+`;
+
+export const NoteColorSwatch = styled.button<{
+  $color: string;
+  $active: boolean;
+}>`
+  all: unset;
+  width: 18px;
+  height: 18px;
+  border-radius: 20%;
+  background: ${({ $color }) => $color};
+  cursor: pointer;
+  border: 3px solid
+    ${({ $active }) => ($active ? "var(--text)" : "transparent")};
+  transition: transform 0.1s ease, border-color 0.1s ease;
+
+  &:hover {
+    transform: scale(1.15);
+  }
+`;
+
+// ── Note level-3 perk box ─────────────────────────────────────────────────────
+
+const noteLockPulse = keyframes`
+  0%   { transform: scale(1);    box-shadow: 0 0 0 0   rgba(251,191,36,0); }
+  30%  { transform: scale(1.02); box-shadow: 0 0 0 4px rgba(251,191,36,0.25); }
+  60%  { transform: scale(0.99); box-shadow: 0 0 0 2px rgba(251,191,36,0.1); }
+  100% { transform: scale(1);    box-shadow: 0 0 0 0   rgba(251,191,36,0); }
+`;
+
+export const NotePerksBox = styled.div<{ $unlocked?: boolean }>`
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: ${({ $unlocked }) =>
+    $unlocked
+      ? "linear-gradient(135deg, color-mix(in srgb, var(--grass-9) 9%, transparent) 0%, color-mix(in srgb, var(--grass-9) 5%, transparent) 100%)"
+      : "linear-gradient(135deg, rgba(251, 191, 36, 0.09) 0%, rgba(245, 158, 11, 0.05) 100%)"};
+  border: 1px solid ${({ $unlocked }) =>
+    $unlocked
+      ? "color-mix(in srgb, var(--grass-9) 32%, transparent)"
+      : "rgba(251, 191, 36, 0.32)"};
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+`;
+
+export const NotePerksHeader = styled.div<{ $unlocked?: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: ${({ $unlocked }) => ($unlocked ? "var(--grass-9)" : "rgba(251, 191, 36, 0.85)")};
+`;
+
+export const NoteLockBanner = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: linear-gradient(
+    135deg,
+    rgba(251, 191, 36, 0.14) 0%,
+    rgba(245, 158, 11, 0.08) 100%
+  );
+  border: 1px solid rgba(251, 191, 36, 0.42);
+  animation: ${noteLockPulse} 0.45s ease;
+`;
+
+export const NoteLockBannerIcon = styled.span`
+  font-size: 0.95rem;
+  line-height: 1.4;
+  flex-shrink: 0;
+`;
+
+export const NoteLockBannerBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`;
+
+export const NoteLockBannerTitle = styled.span`
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: rgba(251, 191, 36, 0.95);
+  letter-spacing: 0.02em;
+`;
+
+export const NoteLockBannerDesc = styled.span`
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+`;
+
+export const NoteEditHint = styled.p`
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  margin: 0;
+  margin-left: 222px;
+  margin-top: 4px;
+  text-align: left;
+  opacity: 0.7;
+
+  @media (max-width: 480px) {
+    margin-left: 122px;
+  }
+`;
+
+// ── Username row ──────────────────────────────────────────────────────────────
+
+export const UsernameRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 16px;
+
+  .username-label {
+    font-size: var(--font-size);
+    color: var(--accent);
+    font-weight: var(--font-weight-bold);
+  }
+`;
+
+export const EditUsernameButton = styled.button`
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: color 0.15s ease, background 0.15s ease;
+
+  svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  &:hover {
+    color: var(--accent);
+    background: var(--fill-hover);
+  }
+
+  &:focus {
+    outline: 1.5px solid var(--accent);
+    outline-offset: 2px;
+  }
+`;
+
+// ── Change-username dialog ────────────────────────────────────────────────────
+
+export {
+  Content,
+  Overlay,
+  Title,
+} from "@/components/dialog/styled";
+
+export const DialogDescription = styled.p`
+  font-size: var(--font-size-input);
+  color: var(--text-secondary);
+  margin: 8px 12px 16px;
+  line-height: 1.5;
+`;
+
+export const DialogForm = styled.form`
+  padding: 8px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  label {
+    display: block;
+    font-size: var(--font-size-small);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+
+  input:not([type="hidden"]) {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid var(--material-edge);
+    background: var(--field-fill);
+    color: var(--text);
+    font-size: var(--font-size-input);
+    font-family: var(--font);
+    box-sizing: border-box;
+
+    &:focus {
+      outline: 2px solid var(--accent);
+    }
+
+    &:disabled {
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: not-allowed;
+    }
+  }
+`;
+
+export const DialogActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+`;
+
+export const DialogCancelButton = styled.button`
+  all: unset;
+  width: 90px;
+  padding: 8px;
+  text-align: center;
+  background-color: var(--material-fill);
+  color: var(--text-secondary);
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-regular);
+  border: 1px solid var(--material-edge);
+  border-radius: 999px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--fill-hover);
+  }
+
+  &:focus {
+    outline: 1.5px solid var(--accent);
+    outline-offset: 2px;
+  }
+`;
+
+export const DialogSubmitButton = styled.button`
+  min-width: 90px;
+  padding: 8px;
+  background-color: var(--accent);
+  color: var(--text);
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-medium);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:not([disabled]):hover {
+    background-color: var(--accent-hover);
+  }
+
+  &:not([disabled]):active {
+    background-color: var(--accent-active);
+  }
+
+  &:focus {
+    outline: 1.5px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  &[disabled] {
+    background-color: var(--fill-pressed);
+    cursor: not-allowed;
+    color: var(--text-secondary);
+  }
+`;
+
+export const UsernameFieldWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+export const AvailabilityIndicator = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--font-size-small);
+  margin-top: 4px;
+  font-weight: var(--font-weight-medium);
+
+  svg {
+    flex-shrink: 0;
+    width: 13px;
+    height: 13px;
+  }
+
+  &.available {
+    color: var(--grass-9);
+  }
+
+  &.taken {
+    color: var(--tomato-9);
+  }
+
+  &.checking {
+    color: var(--text-secondary);
+  }
+
+  &.invalid {
+    color: var(--amber-9);
+  }
+`;
+
+export const DialogErrorText = styled.p`
+  font-size: var(--font-size-small);
+  color: var(--tomato-9);
+  margin: 0;
+  font-weight: var(--font-weight-medium);
+`;
+
+// ── Top bar / wizard shared ──────────────────────────────────────────────────
+
+export const TopBar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  @media screen and (max-width: 600px) {
+    h1 {
+      font-size: var(--font-size-h6);
+    }
+
+    svg {
+      width: var(--font-size-h4);
+      height: var(--font-size-h4);
+    }
+  }
+`;
+
+// ── Landing hero ─────────────────────────────────────────────────────────────
+
+export const LandingHero = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 4px 12px;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 4px 8px;
+  }
+`;
+
+export const LandingHeroAvatarWrap = styled.div`
+  flex-shrink: 0;
+
+  label {
+    cursor: pointer;
+    display: block;
+  }
+
+  label > div {
+    width: 100px;
+    height: 100px;
+  }
+
+  .avatar {
+    height: 150px;
+    width: 150px;
+    border: 3px solid var(--accent-7);
+  }
+
+  @media (max-width: 600px) {
+    label > div {
+      width: 80px;
+      height: 80px;
+    }
+
+    > div {
+      width: 110px;
+      height: 110px;
+    }
+
+    .avatar {
+      width: 110px;
+      height: 110px;
+    }
+  }
+`;
+
+export const LandingHeroEditRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+
+  @media (max-width: 600px) {
+    align-items: center;
+  }
+`;
+
+export const LandingHeroNameRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+`;
+
+export const LandingHeroInput = styled.input`
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  ${FIELD}
+  font-size: var(--font-size-input);
+  font-weight: var(--font-weight-bold);
+  font-family: var(--font);
+  cursor: text;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &::placeholder {
+    font-weight: var(--font-weight-regular);
+  }
+
+  &:focus {
+    text-overflow: clip;
+  }
+`;
+
+export const LandingHeroMeta = styled.div`
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+`;
+
+export const LandingMetaPill = styled.span`
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-regular);
+  background: var(--material-fill);
+  color: var(--text-secondary);
+  border: 1px solid var(--material-edge);
+  white-space: nowrap;
+`;
+
+export const LandingHeroResetButton = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 16px;
+  ${PILL_SECONDARY}
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  font-family: var(--font);
+  font-weight: var(--font-weight-semi-bold);
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    color: var(--text);
+  }
+
+  @media screen and (max-width: 380px) {
+    padding: 0 12px;
+  }
+`;
+
+export const LandingHeroSaveButton = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 18px;
+  ${PILL_PRIMARY}
+  font-size: var(--font-size-small);
+  font-family: var(--font);
+  font-weight: var(--font-weight-semi-bold);
+  white-space: nowrap;
+
+  @media screen and (max-width: 380px) {
+    padding: 0 14px;
+  }
+`;
+
+export const LandingErrorBanner = styled.p`
+  margin: 4px 2px 0;
+  font-size: var(--font-size-small);
+  font-family: var(--font);
+  color: var(--tomato-9);
+`;
+
+export const LandingSubtitle = styled.p`
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  margin-block: 12px 14px;
+  margin-inline: 2px;
+`;
+
+export const LandingGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  align-items: stretch;
+
+  @media screen and (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const LandingCard = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  /* A tile on the editor sheet: a light wash and lit edge rather than a second
+     opaque slab, so it lifts off the sheet instead of stacking on it. */
+  background-color: var(--material-fill);
+  border: 1px solid var(--material-edge);
+  box-shadow: inset 0 1px 0 var(--material-highlight);
+  border-radius: 18px;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+
+  &:hover {
+    background-color: var(--fill-hover);
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    box-shadow:
+      inset 0 1px 0 var(--material-highlight),
+      0 14px 30px -18px rgb(0 0 0 / 0.7);
+    transform: translateY(-2px);
+  }
+
+  ${FOCUS_RING}
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &:hover {
+      transform: none;
+    }
+  }
+`;
+
+export const LandingCardIconArea = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 20px 22px;
+
+  &.appearance {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.18) 0%, rgba(139, 92, 246, 0.04) 100%);
+    border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+    .section-icon { color: rgb(139, 92, 246); }
+  }
+
+  &.about {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.18) 0%, rgba(59, 130, 246, 0.04) 100%);
+    border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+    .section-icon { color: rgb(59, 130, 246); }
+  }
+
+  &.account {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(16, 185, 129, 0.04) 100%);
+    border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+    .section-icon { color: rgb(16, 185, 129); }
+  }
+
+  .section-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  @media screen and (max-width: 600px) {
+    padding: 14px 16px 12px;
+
+    .section-icon {
+      width: 26px;
+      height: 26px;
+    }
+  }
+`;
+
+export const LandingCardBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px 10px;
+  flex: 1;
+
+  @media screen and (max-width: 600px) {
+    padding: 9px 14px 7px;
+  }
+`;
+
+export const LandingCardTitle = styled.span`
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-bold);
+  color: var(--text);
+`;
+
+export const LandingCardDesc = styled.span`
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  line-height: 1.45;
+`;
+
+export const LandingCardChips = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 10px 12px 14px;
+  border-top: 1px solid var(--material-edge);
+
+  @media screen and (max-width: 600px) {
+    padding: 6px 10px 10px;
+    gap: 4px;
+  }
+`;
+
+export const LandingCardChip = styled.span<{ $active?: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-family: var(--font);
+  font-weight: 500;
+  white-space: nowrap;
+  border: 1px solid
+    ${({ $active }) =>
+      $active
+        ? "color-mix(in srgb, var(--grass-9) 70%, transparent)"
+        : "var(--material-edge)"};
+  color: ${({ $active }) => ($active ? "var(--grass-11, var(--grass-9))" : "var(--text-secondary)")};
+  background: ${({ $active }) =>
+    $active
+      ? "color-mix(in srgb, var(--grass-9) 12%, transparent)"
+      : "var(--material-fill)"};
+`;
+
+// ── Account section ─────────────────────────────────────────────────────────
+
+export const AccountSectionBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 12px 4px;
+
+  @media screen and (max-width: 480px) {
+    gap: 10px;
+    padding: 8px 0;
+  }
+`;
+
+export const AccountRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 12px 14px;
+  background: var(--material-fill);
+  border: 1px solid var(--material-edge);
+  border-radius: 14px;
+
+  @media screen and (max-width: 480px) {
+    gap: 6px 8px;
+    padding: 8px 10px;
+    border-radius: 12px;
+  }
+`;
+
+export const AccountRowMain = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  /* 150px is the narrowest a label + value stays readable; below that the row
+     wraps and the button takes the second line rather than crushing the text. */
+  flex: 1 1 150px;
+
+  @media screen and (max-width: 480px) {
+    gap: 2px;
+  }
+`;
+
+export const AccountRowLabel = styled.span`
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  @media screen and (max-width: 480px) {
+    font-size: var(--font-size-xsmall);
+    letter-spacing: 0.4px;
+  }
+`;
+
+export const AccountRowValue = styled.span`
+  font-size: var(--font-size);
+  color: var(--text);
+  font-weight: var(--font-weight-medium);
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+
+  @media screen and (max-width: 480px) {
+    font-size: var(--font-size-small);
+  }
+`;
+
+export const AccountRowActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: auto;
+
+  @media screen and (max-width: 480px) {
+    gap: 6px;
+  }
+`;
+
+export const AccountActionButton = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 14px;
+  ${PILL_SECONDARY}
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+
+  &:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    color: var(--accent-11);
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  @media screen and (max-width: 480px) {
+    gap: 5px;
+    padding: 0 10px;
+    font-size: var(--font-size-xsmall);
+
+    svg {
+      width: 13px;
+      height: 13px;
+    }
+  }
+`;
+
+export const AccountActionButtonPrimary = styled(AccountActionButton)`
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--text);
+
+  &:hover:not(:disabled) {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    color: var(--text);
+  }
+`;
+
+export const VerifiedBadge = styled.span<{ $verified: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid
+    ${({ $verified }) => ($verified ? "var(--grass-9)" : "var(--amber-9)")};
+  color: ${({ $verified }) => ($verified ? "var(--grass-9)" : "var(--amber-9)")};
+  background: ${({ $verified }) =>
+    $verified
+      ? "color-mix(in srgb, var(--grass-9) 10%, transparent)"
+      : "color-mix(in srgb, var(--amber-9) 10%, transparent)"};
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  @media screen and (max-width: 480px) {
+    padding: 1px 6px;
+    font-size: 0.65rem;
+
+    svg {
+      width: 11px;
+      height: 11px;
+    }
+  }
+`;
+
+// ── Account sections ────────────────────────────────────────────────────────
+
+/**
+ * One titled group of account rows.
+ *
+ * The account screen is a long list of unrelated switches; grouping them —
+ * credentials, recognition, connections, devices, blocks — is what keeps it
+ * scannable. The panel is deliberately quieter than the rows it holds, so the
+ * rows still read as the clickable things.
+ */
+export const AccountGroup = styled.section`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--material-edge);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--bg-12) 2%, transparent);
+
+  @media screen and (max-width: 480px) {
+    gap: 6px;
+    padding: 8px;
+    border-radius: 16px;
+  }
+`;
+
+export const AccountGroupHeading = styled.h2`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 2px 2px 0;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  svg {
+    width: 15px;
+    height: 15px;
+    color: var(--accent-11);
+  }
+
+  @media screen and (max-width: 480px) {
+    gap: 6px;
+    padding: 0 2px;
+    font-size: var(--font-size-xsmall);
+
+    svg {
+      width: 13px;
+      height: 13px;
+    }
+  }
+`;
+
+// ── Connected accounts ──────────────────────────────────────────────────────
+
+/** Brand colours, straight from Discord's and Spotify's own guidelines. */
+const BRAND_COLOR = {
+  discord: "#5865f2",
+  spotify: "#1db954",
+} as const;
+
+export type ConnectionBrand = keyof typeof BRAND_COLOR;
+
+/**
+ * A connection row that wears its provider's colours once it is linked.
+ *
+ * Unconnected rows stay neutral on purpose: the tint is the status. Colour is
+ * mixed into `--bg-3` rather than laid over it so the row keeps its weight in
+ * every palette, and the gradient fades out to the left-to-right so the action
+ * button on the right sits on the plain surface it was designed for.
+ */
+export const ConnectionRow = styled(AccountRow)<{
+  $brand: ConnectionBrand;
+  $connected?: boolean;
+}>`
+  ${({ $brand, $connected }) => {
+    if (!$connected) return "";
+    const brand = BRAND_COLOR[$brand];
+    return css`
+      border-color: color-mix(in srgb, ${brand} 55%, transparent);
+      background: linear-gradient(
+        135deg,
+        color-mix(in srgb, ${brand} 24%, var(--bg-3)) 0%,
+        color-mix(in srgb, ${brand} 9%, var(--bg-3)) 45%,
+        var(--bg-3) 100%
+      );
+      box-shadow: inset 0 1px 0 color-mix(in srgb, ${brand} 20%, transparent);
+
+      ${AccountRowLabel} {
+        color: color-mix(in srgb, ${brand} 55%, var(--text));
+
+        svg {
+          color: ${brand};
+        }
+      }
+
+      ${AccountActionButton} {
+        background: color-mix(in srgb, ${brand} 12%, var(--bg-4));
+        border-color: color-mix(in srgb, ${brand} 40%, transparent);
+
+        &:hover:not(:disabled) {
+          background: color-mix(in srgb, ${brand} 22%, var(--bg-4));
+          border-color: ${brand};
+          color: ${brand};
+        }
+      }
+    `;
+  }}
+`;
+
+// ── Session-wide sign-out actions ───────────────────────────────────────────
+
+/**
+ * The two account-wide sign-outs, held apart from the device list.
+ *
+ * They are not devices, and mixing them into the same card shape invites the
+ * misread that "Sign out of everything" ends one row. The dashed, tomato-tinted
+ * panel says: these are the blunt instruments.
+ */
+export const SessionActionsPanel = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 2px;
+  padding: 12px 14px;
+  border: 1px dashed color-mix(in srgb, var(--tomato-9) 45%, var(--bg-5));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--tomato-9) 6%, transparent);
+
+  @media screen and (max-width: 480px) {
+    gap: 10px;
+    padding: 10px;
+  }
+`;
+
+export const SessionActionItem = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+
+  & + & {
+    padding-top: 12px;
+    border-top: 1px solid color-mix(in srgb, var(--tomato-9) 20%, transparent);
+  }
+
+  @media screen and (max-width: 480px) {
+    gap: 6px 8px;
+
+    & + & {
+      padding-top: 10px;
+    }
+  }
+`;
+
+export const SessionActionMain = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1 1 160px;
+
+  @media screen and (max-width: 480px) {
+    gap: 2px;
+  }
+`;
+
+export const SessionActionTitle = styled.span<{ $danger?: boolean }>`
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.3;
+  color: ${({ $danger }) => ($danger ? "var(--tomato-11)" : "var(--text)")};
+
+  @media screen and (max-width: 480px) {
+    font-size: var(--font-size-small);
+  }
+`;
+
+export const SessionActionDesc = styled.span`
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  line-height: 1.35;
+
+  @media screen and (max-width: 480px) {
+    font-size: var(--font-size-xsmall);
+  }
+`;
+
+export const SessionActionButton = styled.button<{ $danger?: boolean }>`
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 6px;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  border: 1px solid
+    ${({ $danger }) => ($danger ? "var(--tomato-9)" : "var(--amber-9)")};
+  color: ${({ $danger }) => ($danger ? "var(--tomato-11)" : "var(--amber-11)")};
+  background: ${({ $danger }) =>
+    $danger
+      ? "color-mix(in srgb, var(--tomato-9) 12%, transparent)"
+      : "color-mix(in srgb, var(--amber-9) 12%, transparent)"};
+
+  &:hover:not(:disabled) {
+    background: ${({ $danger }) =>
+      $danger ? "var(--tomato-9)" : "var(--amber-9)"};
+    color: var(--text-contrast, #fff);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  @media screen and (max-width: 480px) {
+    gap: 5px;
+    padding: 6px 10px;
+    font-size: var(--font-size-xsmall);
+
+    svg {
+      width: 13px;
+      height: 13px;
+    }
+  }
+`;
+
+// ── Blocked novelists list ───────────────────────────────────────────────────
+
+export const BlockedList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  @media screen and (max-width: 480px) {
+    gap: 6px;
+  }
+`;
+
+export const BlockedItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--material-fill);
+  border: 1px solid var(--material-edge);
+  border-radius: 14px;
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  @media screen and (max-width: 480px) {
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: 7px;
+
+    .avatar {
+      width: 30px;
+      height: 30px;
+    }
+  }
+`;
+
+export const BlockedItemInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+`;
+
+export const BlockedItemName = styled.span`
+  font-size: var(--font-size);
+  line-height: 1.3;
+  color: var(--text);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  @media screen and (max-width: 480px) {
+    font-size: var(--font-size-small);
+  }
+`;
+
+export const BlockedItemUsername = styled.span`
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+
+  @media screen and (max-width: 480px) {
+    font-size: var(--font-size-xsmall);
+  }
+`;
+
+export const UnblockButton = styled.button`
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--tomato-9) 10%, transparent);
+  color: var(--tomato-9);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  border: 1px solid var(--tomato-9);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover:not(:disabled) {
+    background: var(--tomato-9);
+    color: var(--text-contrast, #fff);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  @media screen and (max-width: 480px) {
+    gap: 5px;
+    padding: 5px 9px;
+    font-size: var(--font-size-xsmall);
+
+    svg {
+      width: 13px;
+      height: 13px;
+    }
+  }
+`;
+
+// ── About section ───────────────────────────────────────────────────────────
+
+export const AboutSectionBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 0;
+`;
+
+export const AboutToolbar = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+`;
+
+const aboutToolButtonStyles = css`
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  background: var(--material-fill);
+  border: 1px solid var(--material-edge);
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+
+  svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  &:hover {
+    background: var(--fill-hover);
+    color: var(--accent);
+    border-color: var(--accent-7);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* Keep the tap target comfortable at the iPhone SE (375px) baseline. */
+  @media (max-width: 480px) {
+    width: 36px;
+    height: 36px;
+  }
+`;
+
+export const AboutAttachLabel = styled.label`
+  ${aboutToolButtonStyles}
+`;
+
+export const AboutToolButton = styled.button`
+  ${aboutToolButtonStyles}
+`;
+
+// ── Appearance section ──────────────────────────────────────────────────────
+
+export const AppearanceSectionBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 12px 0;
+`;
+
+export const BannerAvatarContainer = styled.div`
+  position: relative;
+  overflow: visible;
+`;
+
+export const AvatarHangRow = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  padding-left: 64px;
+  overflow: visible;
+  pointer-events: none;
+
+  > * {
+    pointer-events: auto;
+  }
+
+  @media (max-width: 480px) {
+    padding-left: 24px;
+  }
+`;
+
+export const HangingAvatarWrap = styled.div`
+  transform: translateY(50%);
+  flex-shrink: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 5px var(--bg-2);
+
+  @media (max-width: 480px) {
+    transform: translateY(70%);
+    > div:first-child {
+      width: 90px;
+      height: 90px;
+    }
+  }
+`;
+
+export const AvatarHangSpacer = styled.div`
+  padding-top: 72px;
+  padding-left: 64px;
+
+  @media (max-width: 480px) {
+    padding-top: 54px;
+    padding-left: 24px;
+  }
+`;
+
+/**
+ * Wraps the parts of the Appearance section that should preview the
+ * currently-selected accent (palette swatches + Save button). Adding the
+ * radix accent class ("jade", "cyan", "iris", "crimson") on this wrapper
+ * scopes the new --accent-* variables to its subtree without changing the
+ * global app accent until the user actually saves.
+ */
+export const AppearancePreviewScope = styled.div`
+  display: contents;
+`;
+
+export const AppearanceFieldGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+export const AppearanceFieldLabel = styled.label`
+  font-size: var(--font-size-small);
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
+export const PaletteLockBadge = styled.span`
+  position: absolute;
+  bottom: -3px;
+  right: -3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--bg-2);
+  border: 1.5px solid var(--amber-9);
+  color: var(--amber-9);
+  font-size: 9px;
+  font-weight: var(--font-weight-bold);
+  font-family: var(--font);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  line-height: 1;
+`;
+
+export const PaletteLockNote = styled.p`
+  font-size: var(--font-size-small);
+  color: var(--amber-9);
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font);
+  margin: 2px 2px 0;
+`;
+
+// ── Banner edit field ────────────────────────────────────────────────────────
+
+export const BannerEditWrap = styled.div<{
+  $src: string | null;
+  $x: number;
+  $y: number;
+  $scale: number;
+  $locked?: boolean;
+}>`
+  position: relative;
+  width: 100%;
+  aspect-ratio: 5 / 2;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: ${({ $locked }) => ($locked ? "default" : "pointer")};
+  border: 1.5px dashed var(--bg-7);
+  background-color: var(--field-fill);
+  transition: border-color 0.15s ease;
+
+  ${({ $src, $x, $y, $scale }) =>
+    $src
+      ? `
+        background-image: url(${$src});
+        background-repeat: no-repeat;
+        background-size: ${$scale * 100}% auto;
+        background-position: ${$x}% ${$y}%;
+        border-style: solid;
+        border-color: var(--bg-6);
+      `
+      : ""}
+
+  &:hover {
+    ${({ $locked }) => !$locked && "border-color: var(--accent);"}
+  }
+`;
+
+export const BannerDeleteButton = styled.button`
+  all: unset;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: rgba(220, 38, 38, 0.85);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+`;
+
+export const BannerEditHint = styled.span`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  color: #fff;
+  background: rgba(0, 0, 0, 0.42);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+
+  ${BannerEditWrap}:hover & {
+    opacity: 1;
+  }
+`;
+
+export const BannerEmptyContent = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  pointer-events: none;
+  color: var(--text-secondary);
+  transition: color 0.18s ease;
+
+  ${BannerEditWrap}:hover & {
+    color: var(--accent);
+  }
+
+  @media (max-width: 480px) {
+    justify-content: center;
+    padding-left: 120px;
+  }
+`;
+
+export const BannerLockNote = styled.p`
+  font-size: var(--font-size-small);
+  color: var(--amber-9);
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font);
+  margin: 2px 2px 0;
+`;
+
+export const BannerLockBadge = styled.span`
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(35, 35, 35, 0.82);
+  border: 1px solid rgba(180, 180, 180, 0.2);
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: rgba(251, 191, 36, 1);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+  z-index: 1;
+`;
+
+export const BannerLockedStrip = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 8px 12px;
+  background: linear-gradient(
+    to top,
+    rgba(20, 20, 20, 0.88) 0%,
+    rgba(60, 60, 60, 0.45) 100%
+  );
+  border-top: 1px solid rgba(180, 180, 180, 0.2);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: rgba(251, 191, 36, 1);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+  text-align: right;
+  pointer-events: none;
+  z-index: 1;
+
+  @media (max-width: 480px) {
+    font-size: var(--font-size-xxsmall);
+    padding: 6px 10px;
+  }
+`;
+
+export const BannerEmptyIcon = styled.span`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.45;
+  margin-bottom: 4px;
+  transition: opacity 0.18s ease;
+
+  ${BannerEditWrap}:hover & {
+    opacity: 0.85;
+  }
+`;
+
+export const BannerEmptyLabel = styled.span`
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  color: inherit;
+`;
+
+export const BannerFormatLine = styled.span`
+  font-size: 0.65rem;
+  color: inherit;
+  opacity: 0.65;
+  letter-spacing: 0.02em;
+`;
+
+// ── Avatar crop dialog ───────────────────────────────────────────────────────
+
+export const AvatarCropBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 12px;
+
+  @media (max-width: 480px) {
+    padding: 4px 2px;
+  }
+`;
+
+/** Circular viewport that clips the image preview */
+export const AvatarCropViewport = styled.div`
+  position: relative;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  background-color: var(--bg-1);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  align-self: center;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  @media (max-width: 460px) {
+    width: clamp(140px, 44vw, 180px);
+    height: clamp(140px, 44vw, 180px);
+  }
+`;
+
+/** Background-image layer that moves around inside the viewport */
+export const AvatarCropImage = styled.div<{
+  $src: string;
+  $x: number;
+  $y: number;
+  $scale: number;
+}>`
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url(${({ $src }) => $src});
+  background-repeat: no-repeat;
+  background-size: ${({ $scale }) => $scale * 100}% auto;
+  background-position: ${({ $x, $y }) => `${$x}% ${$y}%`};
+  pointer-events: none;
+`;
+
+export const AvatarCropScaleRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+
+  label {
+    font-family: var(--font);
+    font-size: 11px;
+    color: var(--text-secondary);
+    min-width: 62px;
+    flex-shrink: 0;
+    display: flex;
+    gap: 4px;
+  }
+
+  .value {
+    font-family: var(--font);
+    font-size: 11px;
+    font-weight: var(--font-weight-bold);
+    color: var(--text);
+    min-width: 32px;
+    text-align: right;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  input[type="range"] {
+    flex: 1;
+    height: 16px;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+  }
+`;
+
+// ── Note edit tray (mobile bottom sheet) ─────────────────────────────────────
+
+const noteTraySlideIn = keyframes`
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+`;
+
+const noteTraySlideOut = keyframes`
+  from { transform: translateY(0); }
+  to   { transform: translateY(100%); }
+`;
+
+const noteTrayOverlayIn = keyframes`
+  from { opacity: 0; }
+  to   { opacity: 1; }
+`;
+
+const noteTrayOverlayOut = keyframes`
+  from { opacity: 1; }
+  to   { opacity: 0; }
+`;
+
+export const NoteTrayOverlay = styled.div<{ $closing: boolean }>`
+  position: fixed;
+  inset: 0;
+  ${DIALOG_SCRIM}
+  z-index: 200;
+  animation: ${({ $closing }) => ($closing ? noteTrayOverlayOut : noteTrayOverlayIn)} 0.28s ease both;
+`;
+
+export const NoteTraySheet = styled.div<{ $closing: boolean }>`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 201;
+  ${GLASS_DIALOG}
+  border-bottom: none;
+  border-radius: 22px 22px 0 0;
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight, rgb(255 255 255 / 0.07)),
+    0 -18px 50px -20px rgb(0 0 0 / 0.7);
+  max-height: 88svh;
+  display: flex;
+  flex-direction: column;
+  animation: ${({ $closing }) => ($closing ? noteTraySlideOut : noteTraySlideIn)} 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+  color: var(--text);
+  font-family: var(--font);
+  padding-bottom: 60px; /* space for safe-area-inset-bottom on iOS 15+ */
+`;
+
+export const NoteTrayHandle = styled.div`
+  flex-shrink: 0;
+  width: 36px;
+  height: 4px;
+  background: var(--fill-pressed);
+  border-radius: 2px;
+  margin: 10px auto 2px;
+`;
+
+export const NoteTrayHeaderBar = styled.div`
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 6px 12px 8px;
+  border-bottom: 1px solid var(--material-edge);
+`;
+
+export const NoteTrayTitle = styled.span`
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-semi-bold);
+  color: var(--text);
+  flex: 1;
+`;
+
+export const NoteTrayActions = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+`;
+
+export const NoteTrayActionButton = styled.button<{
+  $variant: "cancel" | "confirm";
+}>`
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  background: ${({ $variant }) =>
+    $variant === "confirm" ? "var(--accent)" : "var(--bg-3)"};
+  color: ${({ $variant }) =>
+    $variant === "confirm" ? "var(--text-primary)" : "var(--text-secondary)"};
+  border: 1px solid
+    ${({ $variant }) => ($variant === "confirm" ? "transparent" : "var(--bg-5)")};
+
+  &:hover {
+    background: ${({ $variant }) =>
+      $variant === "confirm" ? "var(--accent)" : "var(--bg-4)"};
+    color: var(--text);
+  }
+
+  &:active {
+    transform: scale(0.92);
+  }
+`;
+
+export const NoteTrayBody = styled.div`
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+`;
+
+// ─── Profile-song picker dialog ──────────────────────────────────────────────
+
+const songPickerFade = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+export const SongPickerOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  ${DIALOG_SCRIM}
+  z-index: 100000;
+  animation: ${songPickerFade} 120ms ease-out;
+`;
+
+export const SongPickerContent = styled.div`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(480px, calc(100vw - 32px));
+  max-height: min(640px, calc(100vh - 48px));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  ${GLASS_DIALOG}
+  border-radius: 22px;
+  font-family: var(--font);
+  z-index: 100001;
+  animation: ${songPickerFade} 140ms ease-out;
+`;
+
+export const SongPickerTitle = styled.h2`
+  margin: 0;
+  font-size: var(--font-size-large);
+  font-weight: var(--font-weight-bold);
+`;
+
+export const SongPickerTabs = styled.div`
+  display: flex;
+  gap: 6px;
+`;
+
+export const SongPickerTab = styled.button<{ $active: boolean }>`
+  all: unset;
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: var(--font-size-small);
+  background: ${({ $active }) => ($active ? "var(--bg-4)" : "var(--bg-3)")};
+  color: ${({ $active }) => ($active ? "var(--text)" : "var(--text-secondary)")};
+  border: 1px solid ${({ $active }) => ($active ? "var(--accent)" : "var(--bg-6)")};
+
+  &:hover {
+    background: var(--fill-hover);
+  }
+`;
+
+export const SongPickerSearch = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--field-fill);
+  border: 1px solid var(--material-edge);
+  border-radius: 8px;
+  color: var(--text-secondary);
+
+  input {
+    all: unset;
+    flex: 1;
+    color: var(--text);
+    font-size: var(--font-size-input);
+  }
+`;
+
+export const SongPickerList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  min-height: 120px;
+`;
+
+export const SongPickerEmpty = styled.div`
+  padding: 24px 8px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+`;
+
+export const SongPickerRow = styled.div<{
+  $disabled?: boolean;
+  $active?: boolean;
+}>`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    background: var(--material-fill);
+  }
+
+  ${({ $active }) =>
+    $active &&
+    css`
+      background: var(--material-fill);
+      border-color: var(--accent);
+    `}
+
+  ${({ $disabled }) =>
+    $disabled &&
+    css`
+      opacity: 0.6;
+    `}
+
+  /* Top line: art + title + play/pause (or saving). */
+  .row-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .saving {
+    font-size: var(--font-size-xsmall);
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+`;
+
+/** The text area of a row — clicking it plays/pauses the preview. */
+export const SongPickerSelect = styled.button`
+  all: unset;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: default;
+  }
+`;
+
+/** Seek bar + elapsed/total time, shown on the active (selected) row. */
+export const SongPickerSeek = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 2px;
+
+  time {
+    font-size: var(--font-size-xsmall);
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+    min-width: 34px;
+    flex-shrink: 0;
+
+    &.end {
+      text-align: right;
+    }
+  }
+
+  input[type="range"] {
+    flex: 1;
+    min-width: 0;
+    height: 4px;
+    border-radius: 2px;
+    cursor: pointer;
+    accent-color: var(--accent);
+  }
+`;
+
+const songPickerSpin = keyframes`
+  to { transform: rotate(360deg); }
+`;
+
+export const SongPickerArt = styled.div`
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fill-pressed);
+  color: var(--text-secondary);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+`;
+
+const songPickerPulse = keyframes`
+  0% { box-shadow: 0 0 0 0 var(--accent); }
+  70% { box-shadow: 0 0 0 6px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+`;
+
+/** Explicit round play/pause button on each row. */
+export const SongPickerPlay = styled.button<{
+  $active?: boolean;
+  $loading?: boolean;
+}>`
+  all: unset;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: ${({ $active }) => ($active ? "#fff" : "var(--accent)")};
+  background: ${({ $active }) => ($active ? "var(--accent)" : "var(--bg-4)")};
+  transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+
+  /* Playing: soft pulsing ring so it reads as live, not just "paused". */
+  ${({ $active }) =>
+    $active &&
+    css`
+      animation: ${songPickerPulse} 1.6s ease-out infinite;
+    `}
+
+  &:hover:not(:disabled) {
+    opacity: 0.85;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid color-mix(in srgb, currentColor 25%, transparent);
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: ${songPickerSpin} 0.7s linear infinite;
+  }
+`;
+
+export const SongPickerMeta = styled.div`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+
+  .title {
+    font-size: var(--font-size-small);
+    font-weight: 600;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sub {
+    font-size: var(--font-size-xsmall);
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+`;
+
+export const SongPickerActions = styled.div`
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+`;
+
+export const ProfileSongCurrent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+`;
+
+export const ProfileSongButtons = styled.div`
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  @media screen and (max-width: 800px) {
+    margin-top: 22px;
+  }
+`;

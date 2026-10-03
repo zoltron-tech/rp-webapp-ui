@@ -1,0 +1,130 @@
+import styled, { keyframes } from "styled-components";
+import { DIALOG_SCRIM, GLASS_DIALOG } from "@/theme";
+import { fadeIn as overlayFadeIn } from "@/theme/animations";
+
+/* Carries the accent + theme classes so fixed children resolve CSS variables
+   (e.g. --bg-2) even when portaled to document.body. Takes no layout space. */
+export const PortalRoot = styled.div``;
+
+const dialogPopIn = keyframes`
+  from { opacity: 0; transform: translate(-50%, -46%) scale(0.96); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+`;
+
+// ─── Desktop dialog ────────────────────────────────────────────────────────
+
+export const DesktopBackdrop = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  ${DIALOG_SCRIM}
+  animation: ${overlayFadeIn} 0.2s ease both;
+
+  @media (max-width: 800px) {
+    display: none;
+  }
+`;
+
+export const DesktopPanel = styled.div`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 501;
+  width: min(520px, calc(100vw - 40px));
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  ${GLASS_DIALOG}
+  border-radius: 22px;
+  padding: 20px;
+  animation: ${dialogPopIn} 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+
+  @media (max-width: 800px) {
+    display: none;
+  }
+`;
+
+// ─── Mobile slide-up tray ──────────────────────────────────────────────────
+
+export const MobileBackdrop = styled.div<{ $open: boolean }>`
+  position: fixed;
+  inset: 0;
+  ${DIALOG_SCRIM}
+  z-index: 99998;
+  opacity: ${(p) => (p.$open ? 1 : 0)};
+  transition: opacity 250ms ease-out;
+
+  @media (min-width: 801px) {
+    display: none;
+  }
+`;
+
+export const MobileSheet = styled.div<{ $open: boolean }>`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  ${GLASS_DIALOG}
+  border-bottom: none;
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight, rgb(255 255 255 / 0.07)),
+    0 -18px 50px -20px rgb(0 0 0 / 0.7);
+  /* Portaled straight to document.body, outside the app's color inheritance —
+     without this, unstyled text falls back to the browser default instead of
+     the theme's text color. */
+  color: var(--text);
+  border-radius: 22px 22px 0 0;
+  z-index: 99999;
+
+  transform: translateY(${(p) => (p.$open ? "0" : "100%")});
+  opacity: ${(p) => (p.$open ? 1 : 0)};
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1), opacity 300ms ease-out;
+  pointer-events: ${(p) => (p.$open ? "auto" : "none")};
+
+  @media (min-width: 801px) {
+    display: none;
+  }
+`;
+
+/* Grab handle strip; owns the drag-to-dismiss touch target. */
+export const DragArea = styled.div`
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0 6px;
+  cursor: grab;
+  touch-action: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+`;
+
+export const DragHandle = styled.div`
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background-color: var(--bg-9);
+`;
+
+/* Scroll container for the list body inside the tray. */
+export const MobileScroll = styled.div`
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 16px max(20px, env(safe-area-inset-bottom));
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--bg-5);
+    border-radius: 3px;
+  }
+`;

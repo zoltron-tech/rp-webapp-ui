@@ -169,7 +169,7 @@ export const search = (
   type = "novelist",
 ): Promise<DataType<SearchResult[]>> =>
   api.requestNullable<SearchResult[]>(
-    `/rp/portfolio/${type}/search?prefix=${searchTerm}`,
+    `/rp/portfolio/${type}/search?prefix=${encodeURIComponent(searchTerm)}`,
     { label: "searchAction", notFound: "empty-array" },
   );
 
@@ -178,7 +178,7 @@ export const getChatMessages = (
   targetUserName: string,
 ): Promise<DataType<Message[]>> =>
   api.requestNullable<Message[]>(
-    `/rp/portfolio/chat/getMessages/${targetUserName}`,
+    `/rp/portfolio/chat/getMessages/${encodeURIComponent(targetUserName)}`,
     { label: "chatAction", notFound: "empty-array" },
   );
 
@@ -211,6 +211,11 @@ export const deleteBanner = (api: ApiClient) =>
 export const deleteNote = (api: ApiClient) =>
   deleteIgnoringMissing(api, "/rp/portfolio/note", "deleteNoteAction");
 
+/**
+ * `"row"` rather than `"feed"`: every consumer of this endpoint draws the
+ * result as a list row, on both clients, and `"feed"` was sizing the banner for
+ * a web card four times as wide as the row it actually lands in.
+ */
 const friendsOrEmpty = async (
   api: ApiClient,
   path: string,
@@ -219,7 +224,7 @@ const friendsOrEmpty = async (
   const response = await api.raw(path, { label });
   if (!response.ok) return [];
   const friends = (await response.json()) as Friend[];
-  for (const f of friends) transformFriend(f, "feed");
+  for (const f of friends) transformFriend(f, "row");
   return friends;
 };
 
@@ -249,7 +254,7 @@ export const setReaction = (
   targetType: string,
 ): Promise<ReactionResponse | WithMessage> =>
   api.request<ReactionResponse>(
-    `/rp/portfolio/react/${targetId}?targetType=${targetType}`,
+    `/rp/portfolio/react/${encodeURIComponent(targetId)}?targetType=${encodeURIComponent(targetType)}`,
     { label: "setReaction", method: "PATCH", requireAuth: true },
   );
 
@@ -257,11 +262,14 @@ export const removeReaction = (
   api: ApiClient,
   targetId: string,
 ): Promise<ReactionResponse | WithMessage> =>
-  api.request<ReactionResponse>(`/rp/portfolio/react/${targetId}`, {
-    label: "removeReaction",
-    method: "DELETE",
-    requireAuth: true,
-  });
+  api.request<ReactionResponse>(
+    `/rp/portfolio/react/${encodeURIComponent(targetId)}`,
+    {
+      label: "removeReaction",
+      method: "DELETE",
+      requireAuth: true,
+    },
+  );
 
 export const getReactionLikers = (
   api: ApiClient,
@@ -271,7 +279,7 @@ export const getReactionLikers = (
 ) =>
   friendsOrEmpty(
     api,
-    `/rp/portfolio/react/${targetId}/likers?pageNumber=${pageNumber}&pageSize=${pageSize}`,
+    `/rp/portfolio/react/${encodeURIComponent(targetId)}/likers?pageNumber=${pageNumber}&pageSize=${pageSize}`,
     "getReactionLikersAction",
   );
 

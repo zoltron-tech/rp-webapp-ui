@@ -70,7 +70,7 @@ export const getUserActivities = async (
 ): Promise<DataType<Activity[]>> =>
   mapFeed(
     await api.requestNullable<Activity[]>(
-      `/rp/portfolio/activity/${username}?pageNumber=${pageNumber}&pageSize=${pageSize}`,
+      `/rp/portfolio/activity/${encodeURIComponent(username)}?pageNumber=${pageNumber}&pageSize=${pageSize}`,
       { label: "getUserActivities", notFound: "null" },
     ),
     (a) => transformActivity(a, "feed"),

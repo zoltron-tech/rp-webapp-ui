@@ -1,0 +1,23 @@
+{
+  "name": "@nw/animations",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Standard animated scenes drawn once against injected SVG primitives, plus the clock both clients animate them with.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "devDependencies": {
+    "@nw/config": "workspace:*",
+    "@types/react": "^19.1.9"
+  }
+}

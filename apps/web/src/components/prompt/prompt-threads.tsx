@@ -183,16 +183,16 @@ export const PromptThreads: FC = () => {
     return () => offPromptEvent(EVENTS.PROMPT.OPEN_THREADS, handleOpenThreads);
   }, [onPromptEvent, offPromptEvent, promptId]);
 
-  const buttonText = useMemo(() => {
-    if (isMobile) {
-      return open ? "Hide" : comments.length === 0 ? "New thread" : "Threads";
-    }
-    return open
-      ? "Hide Threads"
-      : comments.length === 0
-        ? "Start new thread"
-        : "View Threads";
-  }, [open, comments.length, isMobile]);
+  // Both labels, not only the current one: the toggle is sized to the wider
+  // of the two (see `ToggleLabel`), so it does not change width as it flips.
+  // It is only drawn when there are threads, so there is no "new thread" case.
+  const toggleLabels = useMemo(
+    () =>
+      isMobile
+        ? { closed: "Threads", open: "Hide" }
+        : { closed: "View Threads", open: "Hide Threads" },
+    [isMobile],
+  );
 
   const isOOCPost = promptSource.sourceType === "NOVELIST";
 
@@ -265,7 +265,11 @@ export const PromptThreads: FC = () => {
               <S.PromptThreads.Divider />
               <Collapsible.Trigger asChild>
                 <S.PromptThreads.Toggle $active={open}>
-                  {buttonText}
+                  <S.PromptThreads.ToggleLabel>
+                    <span aria-hidden="true">{toggleLabels.closed}</span>
+                    <span aria-hidden="true">{toggleLabels.open}</span>
+                    <span>{open ? toggleLabels.open : toggleLabels.closed}</span>
+                  </S.PromptThreads.ToggleLabel>
                   <S.ThreadsCounter>{comments.length}</S.ThreadsCounter>
                   <span className="toggle-caret">
                     <MdOutlineKeyboardArrowDown size={14} />

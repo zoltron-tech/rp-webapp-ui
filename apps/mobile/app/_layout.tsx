@@ -16,9 +16,14 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import { KeyboardProvider } from "react-native-keyboard-controller";
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { SchedulerHeartbeat } from "@/components/scheduler-heartbeat";
 import { ChatSocketProvider } from "@/context/socket";
+import { setKeyboardNavigationInset } from "@/hooks/use-keyboard-height";
 import { api, setSessionLostHandler } from "@/lib/api";
 import { useEditorFonts } from "@/lib/editor-fonts";
 import { chatCrypto } from "@/lib/chat-crypto";
@@ -107,6 +112,22 @@ const GlobalStoreProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+/**
+ * Tells the keyboard store how tall the navigation bar is.
+ *
+ * The store is a module, not a component, and cannot read the safe area for
+ * itself. See `use-keyboard-height.ts` for why it needs the number.
+ */
+const KeyboardInsetBridge = () => {
+  const { bottom } = useSafeAreaInsets();
+
+  useEffect(() => {
+    setKeyboardNavigationInset(bottom);
+  }, [bottom]);
+
+  return null;
+};
+
 export default function RootLayout() {
   const theme = useTheme();
 
@@ -132,6 +153,12 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
+      <KeyboardInsetBridge />
+      {/*
+        Where the keyboard is, frame by frame, from the window's own inset
+        animation — what every bar that sits on the keyboard is moved by.
+      */}
+      <KeyboardProvider>
       {/*
         The cache is restored from disk before anything renders against it, so
         a screen someone has already visited paints from what it knew rather
@@ -215,6 +242,7 @@ export default function RootLayout() {
           </ChatCryptoProvider>
         </ApiProvider>
       </PersistQueryClientProvider>
+      </KeyboardProvider>
     </SafeAreaProvider>
   );
 }

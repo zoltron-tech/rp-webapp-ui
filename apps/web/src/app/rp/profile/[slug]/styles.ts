@@ -1105,6 +1105,26 @@ export const FeedTabBar = styled(SegmentedTabs)`
   margin-top: 8px;
 ` as typeof SegmentedTabs;
 
+/**
+ * Whatever the selected tab shows, under the tab bar.
+ *
+ * At least a screen tall, always. Switching tabs swaps a long list for a
+ * shimmer or a short one, the page became shorter than where it was scrolled
+ * to, and the browser pulled the scroll back up to the new end — which left
+ * the tabs that had just been pressed at the bottom of the screen, or off it.
+ * With a screen of room guaranteed below the bar, the page is never shorter
+ * than the current scroll position and nothing moves.
+ */
+export const FeedBody = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 100vh;
+  min-height: 100dvh;
+`;
+
 export const PostsContainer = styled.div`
   width: 95%;
   display: flex;

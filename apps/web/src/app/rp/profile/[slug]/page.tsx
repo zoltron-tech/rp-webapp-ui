@@ -1485,6 +1485,7 @@ export default function UserProfilePage({}) {
               onChange={setFeedTab}
               ariaLabel="Profile updates"
             />
+            <S.FeedBody>
             {feedTab === "activities" &&
               (activities === undefined ? (
                 <FeedShimmer />
@@ -1545,6 +1546,7 @@ export default function UserProfilePage({}) {
                   />
                 </>
               ))}
+            </S.FeedBody>
           </S.FeedSection>
         </S.ContentRight>
       </S.Content>

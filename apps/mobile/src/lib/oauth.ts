@@ -5,6 +5,7 @@ import * as AuthSession from "expo-auth-session";
 import { getRandomBytes } from "expo-crypto";
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
+import { Platform } from "react-native";
 import { api, markSessionEstablished } from "@/lib/api";
 import { env } from "@/lib/env";
 import { saveSession } from "@/lib/session-store";
@@ -40,6 +41,18 @@ import { saveSession } from "@/lib/session-store";
  * Server side: `NativeOAuthService` and `NativeOAuthStartFilter` in
  * user-service. The redirect URI below must be on its allowlist exactly
  * (`AUTH_NATIVE_OAUTH_REDIRECT_URIS`).
+ *
+ * ## Discord, in the Discord app
+ *
+ * On a phone people are signed in to the Discord *app*, not to discord.com in
+ * a browser, and the web consent page asked them for a password to prove what
+ * the app already knew. Android does not hand that page to the app — Discord's
+ * app does not claim the address — so on Android the start request says
+ * `provider_app=android` and user-service answers with an `intent:` redirect
+ * that opens the app's own consent screen, falling back to the web page when
+ * the app is not installed (`ProviderAppRedirectStrategy`). The round trip
+ * still begins and ends in the browser tab opened here, which is what holds
+ * the server's session; only the consent in the middle moves.
  */
 
 // Required so the auth session is dismissed when the browser redirects back.
@@ -98,6 +111,11 @@ export const startOAuth = async (provider: OAuthProvider): Promise<void> => {
       code_challenge_method: "S256",
       redirect_uri: redirectUri,
       state,
+      // See "Discord, in the Discord app". A server that does not know the
+      // parameter ignores it and sends the web page, as before.
+      ...(provider === "discord" && Platform.OS === "android"
+        ? { provider_app: "android" }
+        : {}),
     });
 
   const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);

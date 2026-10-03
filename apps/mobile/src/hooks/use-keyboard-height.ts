@@ -1,11 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSyncExternalStore } from "react";
+import { Dimensions, Platform } from "react-native";
 import {
-  Dimensions,
-  Keyboard,
-  type KeyboardEvent,
-  Platform,
-} from "react-native";
+  KeyboardController,
+  KeyboardEvents,
+} from "react-native-keyboard-controller";
+import { initialWindowMetrics } from "react-native-safe-area-context";
 
 /**
  * How much of the screen the software keyboard is covering, in dp.
@@ -24,14 +24,31 @@ import {
  * `behavior="padding"` on iOS did work, which is why the bug was Android-only
  * and easy to miss.
  *
- * The keyboard *events* are unaffected by any of that: `endCoordinates.height`
- * is reported correctly on both platforms regardless of window resizing,
- * because it describes the keyboard rather than the window. Reading it directly
- * is fewer moving parts than `react-native-keyboard-controller`, needs no
- * native module, and behaves identically in the Expo dev client.
+ * ## Where the height comes from
  *
- * iOS gets the `Will` events so the layout moves with the keyboard animation
- * instead of snapping after it; Android only emits `Did`.
+ * `react-native-keyboard-controller`, not React Native's own `Keyboard`
+ * events. The first version read `keyboardDidShow`, and on Android that event
+ * cannot be trusted for the first keyboard of a session. React Native raises
+ * it once, from the first layout pass after the keyboard is requested, and
+ * reads the inset there and then — before a keyboard that is starting cold
+ * has been measured. Logged on a release build (Gboard, Android 13): the
+ * first `keyboardDidShow` after launch carried a height of **0** and nothing
+ * followed it, so the chat composer stayed underneath a keyboard the app
+ * believed was not there. Every later keyboard reported correctly, which is
+ * what made it look intermittent.
+ *
+ * The library listens to the window's inset *animation* instead and reports
+ * again when it ends. On that same first keyboard it too starts from the
+ * unmeasured inset, and then corrects itself — `keyboardDidShow` with the
+ * real height, about 300 ms later. It also gives Android a
+ * `keyboardWillShow`, which React Native does not have.
+ *
+ * ## What the number means
+ *
+ * Unchanged from the first version, because a dozen bars are laid out by it:
+ * on Android the keyboard *less the navigation bar*, on iOS the whole
+ * keyboard. The library reports the whole inset on both, so the navigation
+ * bar is taken off here (see `setKeyboardNavigationInset`).
  */
 /**
  * One listener for the app, read through `useSyncExternalStore`.
@@ -47,17 +64,26 @@ import {
  * shared by everything that reads it, so no two bars can disagree about where
  * the keyboard is.
  *
- * Seeded from `Keyboard.metrics()` so a screen mounted while the keyboard is
- * already up starts at the right height rather than at zero.
+ * Seeded from the library's own state so a screen mounted while the keyboard
+ * is already up starts at the right height rather than at zero.
  */
 let current = 0;
+/** What the library last reported: the whole inset, navigation bar included. */
+let reported = 0;
+/**
+ * The navigation bar's height, which Android's number has to lose.
+ *
+ * Seeded from the launch metrics so the first keyboard is right, and kept
+ * live by `setKeyboardNavigationInset` — switching between gesture and
+ * button navigation changes it without restarting the app.
+ */
+let navigationInset = initialWindowMetrics?.insets.bottom ?? 0;
 /**
  * The last non-zero height seen, kept after the keyboard closes.
  *
- * Android only says where the keyboard *was* once it has finished arriving
- * (`keyboardDidShow`, no `Will` event), so anything that wants to move with
- * it has to guess first and correct later. The guess is the last height; on
- * one device with one keyboard it is right every time after the first.
+ * For anything that has to be sized like the keyboard while there is none —
+ * the media tray that takes its place — and for the bars that still rise on
+ * focus, a moment ahead of `keyboardWillShow`.
  */
 let last = 0;
 const listeners = new Set<() => void>();
@@ -83,11 +109,29 @@ const emit = () => {
   for (const listener of listeners) listener();
 };
 
+const report = (height: number) => {
+  reported = height;
+  const next =
+    Platform.OS === "android" ? Math.max(0, height - navigationInset) : height;
+  if (next === current) return;
+  current = next;
+  remember(current);
+  emit();
+};
+
+/** Told the navigation bar's height by the root layout, whenever it changes. */
+export const setKeyboardNavigationInset = (inset: number) => {
+  if (inset === navigationInset) return;
+  navigationInset = inset;
+  report(reported);
+};
+
 const attach = () => {
   if (attached) return;
   attached = true;
-  current = Keyboard.isVisible() ? (Keyboard.metrics()?.height ?? 0) : 0;
-  remember(current);
+  report(
+    KeyboardController.isVisible() ? KeyboardController.state().height : 0,
+  );
   // A keyboard seen this session wins over one remembered from the last.
   void AsyncStorage.getItem(STORAGE_KEY)
     .then((stored) => {
@@ -95,19 +139,13 @@ const attach = () => {
       if (last === 0 && height > 0) last = height;
     })
     .catch(() => {});
-  const showEvent =
-    Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-  const hideEvent =
-    Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
-  Keyboard.addListener(showEvent, (event: KeyboardEvent) => {
-    current = event.endCoordinates.height;
-    remember(current);
-    emit();
-  });
-  Keyboard.addListener(hideEvent, () => {
-    current = 0;
-    emit();
-  });
+  // `Will` moves everything with the keyboard; `Did` is the correction for a
+  // keyboard that settled somewhere else — the first of a session always does
+  // (see above) — and costs nothing when it did not.
+  KeyboardEvents.addListener("keyboardWillShow", (e) => report(e.height));
+  KeyboardEvents.addListener("keyboardDidShow", (e) => report(e.height));
+  KeyboardEvents.addListener("keyboardWillHide", () => report(0));
+  KeyboardEvents.addListener("keyboardDidHide", () => report(0));
 };
 
 const subscribe = (listener: () => void) => {

@@ -64,7 +64,8 @@ import {
   LIST_BUTTONS,
   ORDERED_LIST_STYLES,
   QUOTATION_MARK_CATEGORIES,
-  toImageWrap,
+  imageWrapOf,
+  setImageWrapOn,
   UNORDERED_LIST_STYLES,
 } from "./editor-config";
 import { createMentionChip } from "./mention-chip";
@@ -1259,7 +1260,7 @@ export const RichTextEditor = forwardRef<
       const align =
         raw === "left" || raw === "center" || raw === "right" ? raw : "left";
       setImageAlign(align);
-      setImageWrap(toImageWrap(container?.getAttribute("data-wrap")));
+      setImageWrap(imageWrapOf(container));
       setImageAlt(img.getAttribute("alt") ?? "");
       setShowImageAlt(false);
       const wrapper = editorRef.current?.parentElement;
@@ -1317,8 +1318,8 @@ export const RichTextEditor = forwardRef<
         imgContainer.style.width = `${defaultPct}%`;
         // New images start in the historical full-width flow; the author opts
         // into text wrap from the image toolbar.
-        imgContainer.setAttribute("data-wrap", DEFAULT_IMAGE_WRAP);
         imgContainer.appendChild(img);
+        setImageWrapOn(imgContainer, DEFAULT_IMAGE_WRAP);
 
         // Place image in its own block after the current block
         const imageBlock = document.createElement("div");
@@ -1760,7 +1761,7 @@ export const RichTextEditor = forwardRef<
           ".inline-image-container",
         ) as HTMLElement | null;
         if (!container) return;
-        container.setAttribute("data-wrap", wrap);
+        setImageWrapOn(container, wrap);
         // A floated image ignores its block's text-align; drop the stale
         // alignment so switching back to `full` doesn't restore a surprise.
         if (wrap !== "full") {

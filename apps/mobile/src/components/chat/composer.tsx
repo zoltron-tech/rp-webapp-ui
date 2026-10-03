@@ -11,7 +11,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
-  Easing,
   Image,
   Keyboard,
   Platform,
@@ -22,6 +21,10 @@ import {
   type TextInput,
   View,
 } from "react-native";
+import {
+  KeyboardController,
+  useKeyboardAnimation,
+} from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Avatar } from "@/components/avatar";
 import { GlassSurface } from "@/components/glass-surface";
@@ -67,30 +70,24 @@ import { fontSize, radius, space, useAppTheme } from "@/theme";
  * window is never resized and the avoiding view has nothing to measure. See
  * `use-keyboard-height.ts` for the full account.
  *
- * The lift is a **transform**, driven by one animated value the keyboard and
- * the media tray both write into, and it moves *before it is told to*:
+ * The lift is a **transform**, the sum of two native values:
  *
- *  - Android only says where the keyboard is once it has finished arriving
- *    (`keyboardDidShow`; there is no `Will` event). Waiting for that left the
- *    composer behind the keyboard for the whole slide and then snapped it up.
- *    So the moment the field is focused the composer rises by the keyboard's
- *    *last* height, in step with the keyboard's own animation, and corrects
- *    itself when the real number lands — on one device with one keyboard
- *    that is a correction of zero.
- *  - The tray writes its height into the same value as it slides, so a tray
- *    replacing a keyboard is one continuous movement rather than a drop and
- *    a rise by two different mechanisms.
+ *  - The keyboard's own position, frame by frame, from
+ *    `react-native-keyboard-controller`. The composer is not animated *to*
+ *    where the keyboard will be; it is where the keyboard is. No JavaScript
+ *    runs between the keyboard moving and the composer moving, so nothing in
+ *    React can leave it behind. The first version was a timed animation
+ *    started from a guess on focus and corrected by `keyboardDidShow`, and
+ *    it sank back under the keyboard whenever that event was wrong (see
+ *    `use-keyboard-height.ts`).
+ *  - The tray's height while it is open, written by the tray as it slides, so
+ *    a tray replacing a keyboard is one continuous movement rather than a
+ *    drop and a rise by two different mechanisms.
  *
  * A margin would have re-laid out the list on every frame of that. The
  * message list is told the settled amount once (`onInsetChange`) and pads
  * its foot by it, which is the only layout the whole exchange costs.
  */
-
-/** About the Android keyboard's own slide, so the two move as one. */
-const KEYBOARD_IN_MS = 220;
-const KEYBOARD_OUT_MS = 160;
-/** How long to hold a guessed lift before deciding no keyboard is coming. */
-const PREDICTION_GRACE_MS = 700;
 
 /**
  * The field grows with the text between these, then scrolls.
@@ -164,22 +161,16 @@ export const Composer = ({
    * the keyboard: Android reports the keyboard less the navigation bar, and
    * the composer keeps its own navigation-bar padding, so the two cancel and
    * the lift is the reported height itself; iOS reports the whole keyboard,
-   * so the padding is taken back off. `predicted` is the guess made on focus
-   * from the last keyboard seen, retired when the real height arrives or
-   * when none does.
+   * so the padding is taken back off. It is the *settled* lift, known from
+   * the moment the keyboard starts to move — what the list pads by and what
+   * decides the format bar. The movement itself is `keyboardShift`.
    */
-  const [predicted, setPredicted] = useState(false);
   const liftOf = useCallback(
     (height: number) =>
       Platform.OS === "ios" ? Math.max(0, height - insets.bottom) : height,
     [insets.bottom],
   );
-  const keyboardLift =
-    keyboardHeight > 0
-      ? liftOf(keyboardHeight)
-      : predicted
-        ? liftOf(lastKeyboardHeight())
-        : 0;
+  const keyboardLift = keyboardHeight > 0 ? liftOf(keyboardHeight) : 0;
   const keyboardUp = keyboardLift > 0;
   /** The keyboard's top edge from the screen's bottom, for the tray. */
   const keyboardTop =
@@ -189,24 +180,23 @@ export const Composer = ({
         : keyboardHeight + insets.bottom
       : 0;
 
-  const keyboardAnim = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.timing(keyboardAnim, {
-      duration: keyboardLift > 0 ? KEYBOARD_IN_MS : KEYBOARD_OUT_MS,
-      easing: Easing.out(Easing.cubic),
-      toValue: keyboardLift,
-      useNativeDriver: true,
-    }).start();
-  }, [keyboardAnim, keyboardLift]);
-
-  useEffect(() => {
-    if (keyboardHeight > 0) setPredicted(false);
-  }, [keyboardHeight]);
-  useEffect(() => {
-    if (!predicted || keyboardHeight > 0) return;
-    const id = setTimeout(() => setPredicted(false), PREDICTION_GRACE_MS);
-    return () => clearTimeout(id);
-  }, [keyboardHeight, predicted]);
+  /*
+   * The keyboard's share of the transform, already negative (upwards).
+   *
+   * The library's `height` is the whole inset — navigation bar included, on
+   * both platforms — and the composer's own padding already covers that bar,
+   * so the bar's height is given back in proportion as the keyboard rises:
+   * `-(inset − bar) × progress`, exactly `keyboardLift` once it has arrived.
+   */
+  const keyboard = useKeyboardAnimation();
+  const keyboardShift = useMemo(
+    () =>
+      Animated.add(
+        keyboard.height,
+        Animated.multiply(keyboard.progress, insets.bottom),
+      ),
+    [insets.bottom, keyboard.height, keyboard.progress],
+  );
 
   // The tray's share of the lift: its height while it is open (`progress`
   // 0 → 1), both written by the tray itself. See `MediaTray`.
@@ -215,11 +205,11 @@ export const Composer = ({
   const [traySettled, setTraySettled] = useState(0);
   const liftUp = useMemo(
     () =>
-      Animated.multiply(
-        Animated.add(keyboardAnim, Animated.multiply(trayProgress, trayHeight)),
-        -1,
+      Animated.subtract(
+        keyboardShift,
+        Animated.multiply(trayProgress, trayHeight),
       ),
-    [keyboardAnim, trayHeight, trayProgress],
+    [keyboardShift, trayHeight, trayProgress],
   );
 
   useEffect(() => {
@@ -314,17 +304,15 @@ export const Composer = ({
   // space, and both at once would push the composer off the top of the screen.
   const openTray = useCallback((tab: TrayTab) => {
     Keyboard.dismiss();
-    setPredicted(false);
     setActionsOpen(false);
     setTrayTab(tab);
   }, []);
 
   const closeTrayToKeyboard = useCallback(() => {
-    // The keyboard is on its way; start rising for it now, and pad the list
-    // for it in the same render the tray starts to leave (see `closeTray`).
+    // The keyboard is on its way; pad the list for it in the same render the
+    // tray starts to leave (see `closeTray`).
     onInsetChange?.(liftOf(lastKeyboardHeight()));
     setTrayTab(null);
-    setPredicted(true);
     inputRef.current?.focus();
   }, [liftOf, onInsetChange]);
 
@@ -352,9 +340,8 @@ export const Composer = ({
   // then having to tap the field is a step nobody wants.
   //
   // One movement, whatever state the field is in. The first version always
-  // blurred a focused field and focused it again, and the blur dropped the
-  // lift it had just predicted — the composer rose, fell and rose again, and
-  // with the keyboard already open the keyboard itself went down and back up.
+  // blurred a focused field and focused it again, and with the keyboard
+  // already open the keyboard itself went down and back up.
   useEffect(() => {
     if (!replyingTo) return;
     setTrayTab(null);
@@ -362,13 +349,11 @@ export const Composer = ({
     if (!input) return;
 
     // Already typing: the keyboard is where the reply wants it.
-    if (input.isFocused() && Keyboard.isVisible()) return;
+    if (input.isFocused() && KeyboardController.isVisible()) return;
 
-    setPredicted(true);
     // Android keeps the field focused when the keyboard is dismissed with
     // the back button, and `focus()` on a focused field does nothing — so
-    // the keyboard would not come back for the reply. Let go first, without
-    // telling the lift.
+    // the keyboard would not come back for the reply. Let go first.
     if (input.isFocused()) {
       refocusing.current = true;
       input.blur();
@@ -784,21 +769,12 @@ export const Composer = ({
                 // Let go of only to be focused again for a reply: stay up.
                 if (refocusing.current) return;
                 setFocused(false);
-                setPredicted(false);
               }}
               onChangeText={setDraft}
               onFocus={() => {
                 refocusing.current = false;
                 setFocused(true);
                 setTrayTab(null);
-                // Rise now, ahead of the keyboard's report.
-                setPredicted(true);
-              }}
-              // Android keeps a field focused after the back button dismisses
-              // the keyboard, so tapping it again is not a focus — but it is
-              // a keyboard on its way, all the same.
-              onPressIn={() => {
-                if (focused && !keyboardUp) setPredicted(true);
               }}
               onSelectionChange={(event) => {
                 selectionRef.current = event.nativeEvent.selection;

@@ -967,12 +967,16 @@ const richTextContentBase = css`
      old block behaviour; \`inline-left\`/\`inline-right\` float it so the
      following paragraphs run alongside. The width stays the container's
      inline percentage, so wrapping is page-format independent. */
-  .inline-image-container[data-wrap="inline-left"] {
+  /* Matched on the image as well as on its container: the container's
+     attribute does not survive a save. See ImageWrap in editor-config. */
+  .inline-image-container[data-wrap="inline-left"],
+  .inline-image-container:has(> img[data-wrap="inline-left"]) {
     float: left;
     margin: 0.15em 14px 8px 0;
   }
 
-  .inline-image-container[data-wrap="inline-right"] {
+  .inline-image-container[data-wrap="inline-right"],
+  .inline-image-container:has(> img[data-wrap="inline-right"]) {
     float: right;
     margin: 0.15em 0 8px 14px;
   }
@@ -990,7 +994,9 @@ const richTextContentBase = css`
      375px baseline). */
   @media (max-width: 480px) {
     .inline-image-container[data-wrap="inline-left"],
-    .inline-image-container[data-wrap="inline-right"] {
+    .inline-image-container[data-wrap="inline-right"],
+    .inline-image-container:has(> img[data-wrap="inline-left"]),
+    .inline-image-container:has(> img[data-wrap="inline-right"]) {
       max-width: 50%;
     }
   }

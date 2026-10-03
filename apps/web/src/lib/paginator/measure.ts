@@ -1,3 +1,4 @@
+import { wrappedImageSelector } from "@/components/rich-text-editor-input/editor-config";
 import type { FlowKey, Page, PageItem, PageMap } from "./types";
 
 /**
@@ -58,7 +59,7 @@ const protectedSpans = (root: HTMLElement, rootTop: number): Span[] => {
   // float clears, so break there or before it — never in the middle.
   root
     .querySelectorAll<HTMLElement>(
-      '.inline-image-container[data-wrap="inline-left"], .inline-image-container[data-wrap="inline-right"]',
+      `${wrappedImageSelector("left")}, ${wrappedImageSelector("right")}`,
     )
     .forEach((float) => {
       const from = topOf(float, rootTop);

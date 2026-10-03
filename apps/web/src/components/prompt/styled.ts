@@ -697,6 +697,28 @@ const PromptThreadsToggle = styled.button<{ $active: boolean }>`
   }
 `;
 
+/**
+ * The toggle's words, held at one width.
+ *
+ * "Hide" and "Threads" are different lengths, so the pill grew and shrank as
+ * it was pressed and pushed the divider beside it around. Both labels are laid
+ * in the same grid cell with only the current one visible: the cell is as wide
+ * as the longer, in whatever font and size the page is using, with no width to
+ * keep in step by hand.
+ */
+const PromptThreadsToggleLabel = styled.span`
+  display: inline-grid;
+  justify-items: center;
+
+  > span {
+    grid-area: 1 / 1;
+  }
+
+  > span[aria-hidden="true"] {
+    visibility: hidden;
+  }
+`;
+
 const slideDown = keyframes`
   from {
     height: 0;
@@ -813,6 +835,7 @@ export const PromptThreads = Object.assign(
     Header: PromptThreadsHeader,
     Root: PromptThreadsRoot,
     Toggle: PromptThreadsToggle,
+    ToggleLabel: PromptThreadsToggleLabel,
   },
 );
 

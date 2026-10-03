@@ -372,8 +372,15 @@ export const DEFAULT_ORDERED_LIST_STYLE = "decimal";
 
 /**
  * How prose flows around an inline image (Word's "Wrap Text"). Stored as
- * `data-wrap` on the image's container span; `full` is the historical
- * behaviour and therefore what any image without the attribute means.
+ * `data-wrap` on the image's container span *and on the image itself*;
+ * `full` is the historical behaviour and therefore what any image without
+ * the attribute means.
+ *
+ * On both, because the server's sanitizer keeps `data-wrap` on `<img>` and
+ * `<div>` but strips it from `<span>` (`HtmlSanitizer` in portfolio). With
+ * the container alone carrying it, a wrapped image came back from every save
+ * as `full` and its text dropped underneath. The styles and `imageWrapOf`
+ * read either.
  */
 export type ImageWrap = "full" | "inline-left" | "inline-right";
 
@@ -384,3 +391,20 @@ const IMAGE_WRAPS: ImageWrap[] = ["full", "inline-left", "inline-right"];
 /** Reads the wrap mode off an image container, defaulting old content to `full`. */
 export const toImageWrap = (value: string | null | undefined): ImageWrap =>
   IMAGE_WRAPS.find((wrap) => wrap === value) ?? DEFAULT_IMAGE_WRAP;
+
+/** The wrap mode of an image container, from itself or from its image. */
+export const imageWrapOf = (container: Element | null | undefined): ImageWrap =>
+  toImageWrap(
+    container?.getAttribute("data-wrap") ??
+      container?.querySelector(":scope > img")?.getAttribute("data-wrap"),
+  );
+
+/** Writes the wrap mode everywhere it is read from. See `ImageWrap`. */
+export const setImageWrapOn = (container: Element, wrap: ImageWrap) => {
+  container.setAttribute("data-wrap", wrap);
+  container.querySelector(":scope > img")?.setAttribute("data-wrap", wrap);
+};
+
+/** Selects image containers floated to one side, however that was recorded. */
+export const wrappedImageSelector = (side: "left" | "right") =>
+  `.inline-image-container[data-wrap="inline-${side}"], .inline-image-container:has(> img[data-wrap="inline-${side}"])`;

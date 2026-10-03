@@ -63,6 +63,7 @@ import { GallerySection } from "./sections/gallery-section";
 import { MoreSection } from "./sections/more-section";
 import { MuseInfoSection } from "./sections/muse-info-section";
 import { PromptsSection } from "./sections/prompts-section";
+import { MissingMuse } from "./missing-muse";
 import * as S from "./styles";
 
 type CARD_STATE =
@@ -433,6 +434,10 @@ export default function MuseProfilePage({}) {
     user?.username && muse?.pennedBy?.username === user.username,
   );
   const museLoading = muse === null;
+  // Asked for and not there. Without this a deleted character — an old link,
+  // a stale notification — was indistinguishable from one still loading, and
+  // the page shimmered for ever.
+  const [museMissing, setMuseMissing] = useState(false);
   // Kept across navigation so the prev/next nav stays visible while the next
   // muse loads in; `navLoading` swaps the cards/buttons to a shimmer/spinner.
   const [nav, setNav] = useState<{
@@ -485,6 +490,7 @@ export default function MuseProfilePage({}) {
     // Navigating between muses via prev/next reuses this component instance
     // (same route segment), so per-muse state must be reset explicitly.
     setMuse(null);
+    setMuseMissing(false);
     setPrompts(null);
     setAboutSections(null);
     setMedia(null);
@@ -495,7 +501,10 @@ export default function MuseProfilePage({}) {
     // (e.g. a direct link while a prev/next fetch was still in flight).
     setPreviewMuse((p) => (p?.id === username ? p : null));
     baseDataLoader(() => getMuseAction(username)).then((data) => {
+      // Answered for a character this page has since moved on from.
+      if (fetchedForRef.current !== username) return;
       setMuse(data);
+      setMuseMissing(!data);
       setNavLoading(false);
       setPreviewMuse(null);
       navDirectionRef.current = null;
@@ -730,6 +739,10 @@ export default function MuseProfilePage({}) {
 
   const navPrevVisual = nav.prev ? navCardVisual(nav.prev) : null;
   const navNextVisual = nav.next ? navCardVisual(nav.next) : null;
+
+  if (museMissing) {
+    return <MissingMuse />;
+  }
 
   return (
     <S.MuseContainer>

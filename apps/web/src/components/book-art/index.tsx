@@ -1705,6 +1705,181 @@ export const NoNotificationsArt = ({ className, accent }: ArtProps) => {
 };
 
 /**
+ * A character card with nobody on it any more: the portrait's figure thins
+ * out and comes away as dust off the top corner, over a name that has been
+ * struck through. For a muse that was deleted — the blank card
+ * (`BlankCardArt`) is a character not yet written; this is one that was.
+ */
+export const VanishedMuseArt = ({ className, accent }: ArtProps) => {
+  const gid = useId();
+  const glowId = `${gid}-glow`;
+  const paperId = `${gid}-paper`;
+  const figureId = `${gid}-figure`;
+
+  return (
+    <S.VanishedMuseSvg
+      className={className}
+      $accent={accent}
+      viewBox="0 0 180 137"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <defs>
+        <GlowGradient id={glowId} />
+        <PaperGradient id={paperId} />
+        {/* The figure is solid at the shoulders and already thin at the
+            crown, which is the end it is leaving from. */}
+        <linearGradient id={figureId} x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stopColor="var(--accent-8)" stopOpacity="0.9" />
+          <stop offset="60%" stopColor="var(--accent)" stopOpacity="0.7" />
+          <stop offset="100%" stopColor="var(--accent-11)" stopOpacity="0.3" />
+        </linearGradient>
+      </defs>
+      {/* Glow */}
+      <ellipse
+        className="glow"
+        cx="90"
+        cy="68"
+        rx="80"
+        ry="56"
+        fill={`url(#${glowId})`}
+      />
+      {/* Shadow */}
+      <ellipse
+        className="shadow"
+        cx="90"
+        cy="130"
+        rx="40"
+        ry="4.5"
+        fill="var(--bg-4)"
+      />
+      <g className="tilt">
+        <g className="scene">
+          {/* A second card behind, so this reads as one of a deck */}
+          <rect
+            x="62"
+            y="20"
+            width="64"
+            height="96"
+            rx="9"
+            transform="rotate(7 94 68)"
+            fill="var(--bg-4)"
+            stroke="var(--bg-5)"
+            strokeWidth="1.2"
+            opacity="0.7"
+          />
+          {/* The card */}
+          <rect
+            x="58"
+            y="18"
+            width="64"
+            height="98"
+            rx="9"
+            fill={`url(#${paperId})`}
+            stroke="var(--bg-5)"
+            strokeWidth="1.5"
+          />
+          {/* Portrait window */}
+          <rect
+            x="66"
+            y="26"
+            width="48"
+            height="52"
+            rx="6"
+            fill="var(--bg-4)"
+            opacity="0.55"
+          />
+          {/* Where the figure stood — the outline it leaves behind */}
+          <g
+            stroke="var(--bg-6)"
+            strokeWidth="1.2"
+            strokeDasharray="2.5 3"
+            strokeLinecap="round"
+          >
+            <circle cx="90" cy="45" r="9.5" />
+            <path d="M71 78 C71 65 79 59 90 59 C101 59 109 65 109 78" />
+          </g>
+          {/* The figure itself, thinning */}
+          <g className="vanish" fill={`url(#${figureId})`}>
+            <circle cx="90" cy="45" r="9.5" />
+            <path d="M71 78 C71 65 79 59 90 59 C101 59 109 65 109 78 Z" />
+          </g>
+          {/* Name and two lines of who they were */}
+          <g
+            className="lines"
+            stroke="var(--bg-5)"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+          >
+            <path d="M68 88 L104 88" pathLength="1" />
+            <path d="M68 98 L112 98" pathLength="1" />
+            <path d="M68 106 L94 106" pathLength="1" />
+          </g>
+          {/* The name, struck through */}
+          <path
+            d="M65 90 C76 85 92 92 108 86"
+            stroke="var(--accent-9)"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            opacity="0.85"
+          />
+          {/* Dust coming off the crown and out past the card's corner */}
+          <g fill="var(--accent-10)">
+            <circle className="mote" cx="86" cy="38" r="1.7" />
+            <circle className="mote mote2" cx="95" cy="34" r="1.3" />
+            <path
+              className="mote mote3"
+              d="M100 42 l3 -1.4 l0.8 3 l-3 1 z"
+              fill="var(--accent-11)"
+            />
+            <circle className="mote mote4" cx="91" cy="30" r="1.1" />
+            <path
+              className="mote mote5"
+              d="M104 33 l2.6 -1.2 l0.7 2.6 l-2.6 0.9 z"
+              fill="var(--accent-9)"
+            />
+          </g>
+        </g>
+      </g>
+      {/* Sparkle field */}
+      <Star x={20} y={38} scale={0.8} fill="var(--accent)" delay="s1" />
+      <Star x={160} y={30} scale={0.7} fill="var(--accent-8)" delay="s4" />
+      <Star x={24} y={102} scale={0.55} fill="var(--accent-10)" delay="s7" />
+      <Star x={158} y={98} scale={0.5} fill="var(--accent-11)" delay="s10" />
+      <circle
+        className="sparkle s2"
+        cx="10"
+        cy="68"
+        r="1.4"
+        fill="var(--accent-8)"
+      />
+      <circle
+        className="sparkle s5"
+        cx="172"
+        cy="64"
+        r="1.3"
+        fill="var(--accent-10)"
+      />
+      <circle
+        className="sparkle s8"
+        cx="40"
+        cy="18"
+        r="1.3"
+        fill="var(--accent)"
+      />
+      <circle
+        className="sparkle s11"
+        cx="140"
+        cy="14"
+        r="1.2"
+        fill="var(--accent-11)"
+      />
+    </S.VanishedMuseSvg>
+  );
+};
+
+/**
  * A thread page torn in two — the top half still pinned in place, the piece
  * carrying the rest of the words drifting off below it, paper flakes coming
  * away at the tear. For a thread the novelist deleted: the other blank-paper

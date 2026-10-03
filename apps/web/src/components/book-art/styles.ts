@@ -94,6 +94,19 @@ const flakeLift = keyframes`
   100% { opacity: 0; transform: translate(6px, -12px) rotate(35deg) scale(1); }
 `;
 
+/** The figure on the card thins to almost nothing and gathers again. */
+const figureFade = keyframes`
+  0%, 100% { opacity: 0.85; transform: translateY(0); }
+  50%      { opacity: 0.16; transform: translateY(-2px); }
+`;
+
+/** What the figure is made of, leaving: up and off the card's corner. */
+const moteRise = keyframes`
+  0%   { opacity: 0; transform: translate(0, 3px) scale(0.5); }
+  22%  { opacity: 0.95; }
+  100% { opacity: 0; transform: translate(11px, -24px) scale(1); }
+`;
+
 /** Smaller, colder bob than bookFloat — this scene renders at rail size. */
 const iceDrift = keyframes`
   0%, 100% { transform: translateY(0) rotate(0deg); }
@@ -265,6 +278,24 @@ export const Art = styled.svg<{ $accent?: string | null }>`
   .flake2 { animation: ${flakeLift} 3.6s ease-in-out 1.2s infinite; }
   .flake3 { animation: ${flakeLift} 3.6s ease-in-out 2.4s infinite; }
 
+  /* The character on a card, going — and the dust it goes as. */
+  .vanish {
+    transform-box: fill-box;
+    transform-origin: center bottom;
+    animation: ${figureFade} 5.6s ease-in-out infinite;
+  }
+
+  .mote {
+    transform-box: fill-box;
+    transform-origin: center;
+    opacity: 0;
+    animation: ${moteRise} 3.8s ease-out infinite;
+  }
+  .mote2 { animation-delay: 0.75s; }
+  .mote3 { animation-delay: 1.5s; }
+  .mote4 { animation-delay: 2.25s; }
+  .mote5 { animation-delay: 3s; }
+
   .crack path {
     stroke-dasharray: 1;
     stroke-dashoffset: 1;
@@ -355,6 +386,8 @@ export const Art = styled.svg<{ $accent?: string | null }>`
     .ice,
     .scrap,
     .flake,
+    .vanish,
+    .mote,
     .crack path,
     .ghost,
     .note,
@@ -385,6 +418,8 @@ export const Art = styled.svg<{ $accent?: string | null }>`
     .crack path { stroke-dashoffset: 0; opacity: 0.8; }
     .scrap { opacity: 0.7; transform: translate(3px, 4px) rotate(-3deg); }
     .flake { opacity: 0.6; }
+    .vanish { opacity: 0.45; }
+    .mote { opacity: 0.6; }
     .note { opacity: 0.6; }
     .z { opacity: 0.6; }
     .star,
@@ -498,6 +533,14 @@ export const FriendsRailSvg = styled(Art)`
 export const FrozenBubbleSvg = styled(Art)`
   width: 50px;
   height: 44px;
+`;
+
+/** A character card whose character is leaving it — the missing-muse page.
+ *  The page sizes it itself (`missing-muse.tsx`); this is the size it has
+ *  anywhere else. */
+export const VanishedMuseSvg = styled(Art)`
+  width: 152px;
+  height: 116px;
 `;
 
 /** A thread page torn in two — the deleted-thread placeholder. */

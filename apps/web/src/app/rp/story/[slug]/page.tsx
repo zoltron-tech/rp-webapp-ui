@@ -17,7 +17,8 @@ import { getNovelistAction } from "@/app/rp/novelists/actions";
 import { reportAction } from "@/app/rp/thread/actions";
 import { CoverImage, ShouldRender, Username } from "@/components/common";
 import { Button as AddNewButtonStyle } from "@/components/common/add-new-button/styles";
-import { DeletedContent } from "@/components/deleted-content";
+import { BlankStoryboardArt } from "@/components/book-art";
+import { MissingPage } from "@/components/deleted-content/missing-page";
 import { AppAlertDialog } from "@/components/dialog";
 import { EditStoryboardEventOverlay } from "@/components/edit-storyboard-event-card/edit-storyboard-event-overlay";
 import { AppDropdownMenuResponsive } from "@/components/profile-more-dropdown";
@@ -311,7 +312,18 @@ export default function UserProfilePage({}) {
     novelist?.tier.eventLimit,
   ]);
 
-  if (notFound) return <DeletedContent label="Story" />;
+  if (notFound) {
+    return (
+      <MissingPage
+        art={<BlankStoryboardArt />}
+        title="This story reached The End early"
+        message="No cliffhanger, no epilogue, not even a sequel hook. The author shut the book and took the whole shelf along."
+        aside="(Or the link is wrong. Stories do love an unreliable narrator.)"
+        actionLabel="Open a story that's still going"
+        onAction={() => routeToPage(ROUTES.Library)}
+      />
+    );
+  }
 
   return (
     <>

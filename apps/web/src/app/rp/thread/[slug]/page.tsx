@@ -14,7 +14,8 @@ import { ShouldRender } from "@/components/common";
 import { LikeButton } from "@/components/common/like-button";
 import { MuseAvatar } from "@/components/common/muse-avatar";
 import { NovelistAvatar } from "@/components/common/novelist-avatar";
-import { DeletedContent } from "@/components/deleted-content";
+import { DeletedThreadArt } from "@/components/book-art";
+import { MissingPage } from "@/components/deleted-content/missing-page";
 import { AppAlertDialog } from "@/components/dialog";
 import {
   museToSource,
@@ -840,10 +841,17 @@ export default function ThreadPage({}) {
 
   if (!loadingComments && notFound) {
     return (
+      // On the canvas, not inside the conversation's sheet: there is no
+      // conversation for the sheet to hold.
       <S.ParentContainer>
-        <S.RepliesContainer>
-          <DeletedContent label="Thread" />
-        </S.RepliesContainer>
+        <MissingPage
+          art={<DeletedThreadArt />}
+          title="This thread has come unravelled"
+          message="Somebody pulled the loose end and the whole conversation went with it. The words were right here a moment ago, we swear."
+          aside="(Or the link is wrong. Threads are slippery like that.)"
+          actionLabel="Find a thread still in one piece"
+          onAction={() => routeToPage(ROUTES.Home)}
+        />
       </S.ParentContainer>
     );
   }

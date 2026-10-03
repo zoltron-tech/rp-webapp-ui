@@ -26,7 +26,8 @@ import {
   ScrollJumpButton,
   SideControlsToggle,
 } from "@/components/common";
-import { DeletedContent } from "@/components/deleted-content";
+import { DeletedThreadArt } from "@/components/book-art";
+import { MissingPage } from "@/components/deleted-content/missing-page";
 import { AppAlertDialog } from "@/components/dialog";
 import EventThreadInput from "@/components/event-thread-input";
 import { ProfileSongPlayer } from "@/components/profile-song";
@@ -652,7 +653,18 @@ export default function StoryboardEventPage({}) {
     />
   ) : null;
 
-  if (notFound) return <DeletedContent label="Chapter" />;
+  if (notFound) {
+    return (
+      <MissingPage
+        art={<DeletedThreadArt />}
+        title="This chapter was torn out"
+        message="Somewhere a novelist is muttering about pacing. The page numbers now skip, and everyone is politely pretending not to notice."
+        aside="(Or the link is wrong. Chapters get lost between drafts.)"
+        actionLabel="Turn to a chapter that made the cut"
+        onAction={() => routeToPage(ROUTES.Library)}
+      />
+    );
+  }
 
   return (
     <S.ParentContainer className={classNames([accent, theme])}>

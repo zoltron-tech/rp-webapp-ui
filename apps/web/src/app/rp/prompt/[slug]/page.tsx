@@ -3,9 +3,11 @@
 import type { Prompt as PromptType } from "@nw/types";
 import { useParams, useSearchParams } from "@/lib/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { DeletedContent } from "@/components/deleted-content";
+import { DeletedThreadArt } from "@/components/book-art";
+import { MissingPage } from "@/components/deleted-content/missing-page";
 import { Prompt } from "@/components/prompt";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { ROUTES } from "@/utils/constants/routes";
 import { getPromptAction } from "../actions";
 
 /* The action returns null for a prompt that is gone and a `message` payload
@@ -45,8 +47,20 @@ export default function PromptPage({}) {
   const promptId = params?.slug as string;
   const threadOpen = searchParams?.get("threadOpen") === "true";
   const { notFound, prompt } = useGetPrompt(promptId);
+  const { routeToPage } = usePageRouter();
 
-  if (notFound) return <DeletedContent label="Prompt" />;
+  if (notFound) {
+    return (
+      <MissingPage
+        art={<DeletedThreadArt />}
+        title="This prompt missed its cue"
+        message="It was meant to enter stage left. Instead it left the stage, the building, and quite possibly the genre."
+        aside="(Or the link is wrong. Prompts rarely leave a forwarding address.)"
+        actionLabel="Find a prompt that showed up"
+        onAction={() => routeToPage(ROUTES.explorePrompts)}
+      />
+    );
+  }
 
   if (!prompt) return null;
 

@@ -12,7 +12,7 @@ export const getE2EConversationSecret = async (
   conversationId: string,
 ): Promise<E2EConversationSecret | null> => {
   const response = await api.raw(
-    `/rp/portfolio/chat/e2e/conversation/${conversationId}/key`,
+    `/rp/portfolio/chat/e2e/conversation/${encodeURIComponent(conversationId)}/key`,
     { label: "getE2EConversationSecretAction" },
   );
   if (!response.ok) return null;

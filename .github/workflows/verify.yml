@@ -1,0 +1,75 @@
+name: verify
+
+# The workspace has no test suite. What it has is a type-checker, a package
+# boundary rule, and three smoke tests — and until now nothing ran them except a
+# person remembering to. Two apps sharing `packages/` is exactly the situation
+# where a regression surfaces on a device weeks later, so this runs on every
+# push and every pull request.
+#
+# See MONOREPO_MIGRATION_PLAN.md Phase 1.8.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # type-check (web + mobile) + type-check:packages + check:boundaries + smoke
+      - run: pnpm verify
+
+  routes:
+    # The 70-route render pass needs a real browser, so it is a separate job:
+    # it is slower, and its failures mean something different from a type error.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: browser-actions/setup-chrome@v1
+        id: chrome
+
+      # The pass renders the built app: `route-smoke.mts` spawns `vite preview`,
+      # which serves `dist/`. Without this step preview exits immediately and the
+      # failure reads "vite preview did not come up", which says nothing about
+      # the missing build.
+      - run: pnpm build
+        env:
+          # Vite inlines env at build time and CI has no `.env`, so without this
+          # `lib/api.ts` throws on import and all 70 routes render empty. The
+          # pass blocks every backend request, so the value only has to be a
+          # syntactically valid URL — `.invalid` is reserved and cannot resolve,
+          # which keeps a stray request from reaching anything real.
+          VITE_RP_SERVICE_URL: https://api.invalid
+
+      - run: pnpm smoke:routes
+        env:
+          # tools/find-chrome.mjs reads this first.
+          PUPPETEER_EXECUTABLE_PATH: ${{ steps.chrome.outputs.chrome-path }}
+
+# Deliberately not here: `pnpm lint`. Biome fails on ~850 pre-existing
+# CRLF-vs-LF formatting diagnostics across files nobody has reformatted, and
+# REACT_MIGRATION_STEPS.md forbids a blanket `biome format --write` while the
+# migration diffs still need to be readable. Add it as a required check after
+# that reformat lands, not before.

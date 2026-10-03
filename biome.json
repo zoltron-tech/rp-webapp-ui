@@ -3,6 +3,6 @@
   "extends": ["./packages/config/biome.base.json"],
   "files": {
     "ignoreUnknown": true,
-    "includes": ["src/**/*", "packages/*/src/**/*"]
+    "includes": ["apps/*/src/**/*", "packages/*/src/**/*", "tools/**/*"]
   }
 }

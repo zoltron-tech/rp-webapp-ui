@@ -82,6 +82,15 @@ export interface ApiConfig {
    */
   withCredentials?: boolean;
   /**
+   * Headers sent on every request from this client.
+   *
+   * Exists for one thing: the native app identifies itself with
+   * `X-NW-Client: native`, which is what makes user-service return the token
+   * pair in the response body instead of only setting cookies a phone has
+   * nowhere to keep. Per-request `options.headers` still win over these.
+   */
+  defaultHeaders?: Record<string, string>;
+  /**
    * Try to renew an expired session, once, and say whether it worked.
    *
    * This is the seam that makes a 15-minute access token invisible. When a
@@ -207,7 +216,7 @@ export const createApiClient = (config: ApiConfig): ApiClient => {
 
     if (token) headers[config.authHeaderName] = token;
 
-    return { ...headers, ...options.headers };
+    return { ...headers, ...config.defaultHeaders, ...options.headers };
   };
 
   const raw = async (

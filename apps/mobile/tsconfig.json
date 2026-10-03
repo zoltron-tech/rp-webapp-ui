@@ -1,0 +1,84 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "jsx": "react-jsx",
+    "moduleResolution": "bundler",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@nw/animations": [
+        "../../packages/animations/src"
+      ],
+      "@nw/animations/*": [
+        "../../packages/animations/src/*"
+      ],
+      "@nw/api": [
+        "../../packages/api/src"
+      ],
+      "@nw/api/*": [
+        "../../packages/api/src/*"
+      ],
+      "@nw/badges": [
+        "../../packages/badges/src"
+      ],
+      "@nw/badges/*": [
+        "../../packages/badges/src/*"
+      ],
+      "@nw/chat": [
+        "../../packages/chat/src"
+      ],
+      "@nw/chat/*": [
+        "../../packages/chat/src/*"
+      ],
+      "@nw/features": [
+        "../../packages/features/src"
+      ],
+      "@nw/features/*": [
+        "../../packages/features/src/*"
+      ],
+      "@nw/richtext": [
+        "../../packages/richtext/src"
+      ],
+      "@nw/richtext/*": [
+        "../../packages/richtext/src/*"
+      ],
+      "@nw/store": [
+        "../../packages/store/src"
+      ],
+      "@nw/store/*": [
+        "../../packages/store/src/*"
+      ],
+      "@nw/theme": [
+        "../../packages/theme/src"
+      ],
+      "@nw/theme/*": [
+        "../../packages/theme/src/*"
+      ],
+      "@nw/types": [
+        "../../packages/types/src"
+      ],
+      "@nw/types/*": [
+        "../../packages/types/src/*"
+      ],
+      "@nw/utils": [
+        "../../packages/utils/src"
+      ],
+      "@nw/utils/*": [
+        "../../packages/utils/src/*"
+      ]
+    }
+  },
+  "include": [
+    "../../packages/animations/src/primitives.native.tsx",
+    "../../packages/animations/src/motion-kit.native.tsx",
+    "../../packages/animations/src/end-of-list.motion.native.tsx",
+    "../../packages/animations/src/muse-scenes.motion.native.tsx",
+    "../../packages/badges/src/motion.native.tsx",
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ]
+}

@@ -1,0 +1,184 @@
+import styled from "styled-components";
+import {
+  BASE_TRANSITION,
+  DEV_MODE_BORDER,
+  GLASS,
+  Z_INDEX,
+} from "@/theme";
+
+export const PositionContainer = styled.div`
+  ${DEV_MODE_BORDER("red")}
+  position: absolute;
+  margin-top: 6px;
+  right: 7.8rem;
+`;
+
+export const IconWrapper = styled.div`
+  position: relative;
+  right: 30px;
+  container-type: inline-size;
+
+  .menu-icon {
+    height: 38px;
+    width: 38px;
+  }
+
+  @media (max-width: 700px) {
+    .menu-icon {
+      height: 30px;
+      width: 30px;
+    }
+  }
+`;
+
+export const Menu = styled.div`
+  position: absolute;
+  top: 55px;
+  right: -10px;
+  padding-inline: 5px;
+
+  display: flex;
+  flex-direction: column;
+  ${GLASS("panel")}
+  border: 1px solid var(--glass-edge);
+
+  width: max-content;
+  height: max-content;
+  opacity: 0;
+  pointer-events: none;
+  transition-property: opacity, width, height;
+  ${BASE_TRANSITION}
+
+  border-radius: var(--border-radius);
+
+  &.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  hr {
+    height: 1px;
+    opacity: 0.6;
+  }
+
+  @media (max-width: 700px) {
+    & {
+      top: 45px;
+    }
+  }
+`;
+
+export const UnreadBadge = styled.div`
+  position: absolute;
+  top: 0;
+  right: -5px;
+  transform: translate(10%, -10%);
+  background-color: ${({ theme }: any) => theme.unreadBadge};
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 100%;
+  padding: 6px;
+  min-width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+`;
+
+export const UnreadMessageIcon = styled.div`
+  background-color: ${({ theme }: any) => theme.unreadMark};
+  border-radius: 100%;
+  min-width: 8px;
+  height: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+`;
+
+export const ContentContainer = styled.div`
+  ${DEV_MODE_BORDER("blue")}
+  position: relative;
+  width: max-content;
+  height: max-content;
+  cursor: pointer;
+`;
+
+export const Heading = styled.div`
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+`;
+
+export const Text = styled.div`
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--text);
+
+  &.unread {
+    font-size: 10px;
+    font-weight: 600;
+  }
+`;
+
+export const StyledDate = styled.div`
+  font-size: 8px;
+  align-self: flex-end;
+`;
+
+export const NotificationBox = styled.div`
+  width: 100%;
+  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  justify-content: center;
+  margin-left: 10px;
+  margin-top: 10px;
+  font-size: 18px;
+`;
+
+export const CardWrapper = styled.div`
+  position: relative;
+  min-width: 250px;
+  width: max-content;
+  height: 55px;
+  border-radius: var(--border-radius);
+  transition: all 0.3s ease-in-out;
+  z-index: ${Z_INDEX.CARD};
+  padding: 5px;
+
+  container-name: muse-card;
+  container-type: size;
+
+  &:hover {
+    background-color: var(--accent);
+  }
+
+  &.end {
+    height: 40px;
+  }
+`;
+
+export const Card = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  position: relative;
+  height: 100%;
+
+  &.more-items-box {
+    justify-content: center;
+  }
+`;
+
+export const CardHeader = styled.div`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  position: relative;
+`;

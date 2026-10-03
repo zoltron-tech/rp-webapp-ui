@@ -14,20 +14,33 @@ export interface PresignedFileUploadObject {
   method: string;
 }
 
-export const getPresignedFileUploadObject = async (
-  api: ApiClient,
-  formData: FormData,
-): Promise<PresignedFileUploadObject | API_MESSAGE.MediaError> => {
-  const contentType = formData.get("contentType") as string;
-  const prefix = formData.get("prefix") as string | null;
-  const mediaBucket = formData.get("mediaBucket") as string | null;
-  // "false" drops the per-user id segment from the key (admin thread-generator).
-  const scoped = formData.get("scoped") as string | null;
+/**
+ * What the service needs in order to sign an upload.
+ *
+ * The plain-object form of the request, and the one every caller should reach
+ * for. `getPresignedFileUploadObject` below takes a `FormData` instead, because
+ * on web it is called straight from a server action that receives one — but
+ * React Native's `FormData` implements `append` and nothing else (no `get`), so
+ * a native caller handed one back gets `undefined` for every field and an
+ * unsigned request. Splitting the two is what stops that being discovered at
+ * runtime on a phone.
+ */
+export interface PresignedUploadRequest {
+  contentType: string;
+  prefix?: string | null;
+  mediaBucket?: string | null;
+  /** False drops the per-user id segment from the key (admin thread-generator). */
+  scoped?: boolean;
+}
 
+export const requestPresignedUpload = async (
+  api: ApiClient,
+  { contentType, mediaBucket, prefix, scoped }: PresignedUploadRequest,
+): Promise<PresignedFileUploadObject | API_MESSAGE.MediaError> => {
   const queryParams = new URLSearchParams({ contentType });
   if (prefix) queryParams.append("prefix", prefix);
   queryParams.append("mediaBucket", mediaBucket ?? "APP_MEDIA");
-  if (scoped === "false") queryParams.append("scoped", "false");
+  if (scoped === false) queryParams.append("scoped", "false");
 
   const response = await api.raw(
     `${PORTFOLIO}/s3/presigned-url?${queryParams.toString()}`,
@@ -41,6 +54,18 @@ export const getPresignedFileUploadObject = async (
 
   return { fileUrl, method, uploadUrl };
 };
+
+/** The `FormData` front door, for the web server actions that already hold one. */
+export const getPresignedFileUploadObject = (
+  api: ApiClient,
+  formData: FormData,
+): Promise<PresignedFileUploadObject | API_MESSAGE.MediaError> =>
+  requestPresignedUpload(api, {
+    contentType: formData.get("contentType") as string,
+    mediaBucket: formData.get("mediaBucket") as string | null,
+    prefix: formData.get("prefix") as string | null,
+    scoped: formData.get("scoped") !== "false",
+  });
 
 export const uploadMedia = async (
   api: ApiClient,

@@ -1,0 +1,7 @@
+{
+  "extends": "@nw/config/tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx"
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "../config/universal-globals.d.ts"]
+}

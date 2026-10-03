@@ -1,0 +1,28 @@
+{
+  "extends": "@nw/config/tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "paths": {
+      "@nw/animations": [
+        "../animations/src"
+      ],
+      "@nw/animations/*": [
+        "../animations/src/*"
+      ],
+      "@nw/types": [
+        "../types/src"
+      ],
+      "@nw/types/*": [
+        "../types/src/*"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "../config/universal-globals.d.ts"
+  ],
+  "exclude": [
+    "src/**/*.native.tsx"
+  ]
+}

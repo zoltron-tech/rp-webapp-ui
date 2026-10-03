@@ -1,0 +1,146 @@
+import { Ionicons } from "@expo/vector-icons";
+import type { Novelist } from "@nw/types";
+import { wsrvImage } from "@nw/utils";
+import { useRouter } from "expo-router";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Avatar } from "@/components/avatar";
+import { PANEL } from "@/components/muse/panel";
+import { withAlpha } from "@/lib/color";
+import { space } from "@/theme";
+
+/**
+ * The byline — whose pen this character came from — above the verses.
+ *
+ * A chapter divider rather than a button: two ruled lines closing on a small
+ * signature, "From the pen of", the author's face and name, and a chevron
+ * that says the signature goes somewhere. The name sits in the same chip the
+ * card's "Penned by" uses — the accent at eighteen percent, a hairline of it
+ * round — so it reads as the same control in a second place, and as a control
+ * at all. Web draws the same line above its verse header.
+ *
+ * Routes through `/novelist/[username]`, which redirects your own handle to
+ * the Profile tab.
+ */
+export const Byline = ({
+  accent,
+  author,
+  textColor,
+}: {
+  /** The muse's accent, for the rules and the pen. */
+  accent?: string;
+  author: Pick<
+    Novelist,
+    "username" | "firstName" | "lastName" | "image" | "avatar"
+  >;
+  /** The muse's `pennedByColor` override, when the author set one. */
+  textColor?: string;
+}) => {
+  const router = useRouter();
+  const tint = accent ?? "#ffffff";
+  const name = [author.firstName, author.lastName].filter(Boolean).join(" ");
+
+  return (
+    <View style={styles.bar}>
+      <View style={[styles.rule, { backgroundColor: withAlpha(tint, 0.35) }]} />
+      <Pressable
+        accessibilityHint="Opens the novelist who writes this character"
+        accessibilityLabel={`From the pen of ${name || author.username}`}
+        accessibilityRole="link"
+        hitSlop={space.xs}
+        onPress={() =>
+          router.push({
+            params: { username: author.username },
+            pathname: "/novelist/[username]",
+          })
+        }
+        style={({ pressed }) => [
+          styles.signature,
+          { opacity: pressed ? 0.6 : 1 },
+        ]}
+      >
+        <Ionicons color={tint} name="pencil-outline" size={11} />
+        <Text style={styles.lead}>From the pen of</Text>
+        <View
+          style={[
+            styles.chip,
+            {
+              backgroundColor: accent ? withAlpha(accent, 0.18) : PANEL.pill,
+              borderColor: accent ? withAlpha(accent, 0.4) : PANEL.pillBorder,
+            },
+          ]}
+        >
+          <Avatar
+            image={author.avatar}
+            name={author.username}
+            size={18}
+            uri={wsrvImage(author.avatar?.src ?? author.image, {
+              fit: "inside",
+              h: 54,
+              w: 54,
+            })}
+          />
+          <Text
+            numberOfLines={1}
+            style={[styles.name, textColor ? { color: textColor } : null]}
+          >
+            {name || author.username}
+          </Text>
+          <Ionicons
+            color="rgba(255,255,255,0.7)"
+            name="chevron-forward"
+            size={12}
+          />
+        </View>
+      </Pressable>
+      <View style={[styles.rule, { backgroundColor: withAlpha(tint, 0.35) }]} />
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  bar: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: space.sm + 2,
+    paddingHorizontal: space.md,
+    paddingTop: space.xs,
+    width: "100%",
+  },
+  chip: {
+    alignItems: "center",
+    borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
+    flexDirection: "row",
+    flexShrink: 1,
+    gap: 5,
+    paddingLeft: 3,
+    paddingRight: 5,
+    paddingVertical: 3,
+  },
+  lead: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 11,
+    fontStyle: "italic",
+    textShadowColor: "rgba(0,0,0,0.9)",
+    textShadowOffset: { height: 1, width: 0 },
+    textShadowRadius: 3,
+  },
+  name: {
+    color: "#ffffff",
+    flexShrink: 1,
+    fontSize: 12,
+    fontWeight: "700",
+    textShadowColor: "rgba(0,0,0,0.9)",
+    textShadowOffset: { height: 1, width: 0 },
+    textShadowRadius: 3,
+  },
+  rule: { borderRadius: 1, flex: 1, height: 1 },
+  signature: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexShrink: 1,
+    gap: 6,
+    maxWidth: "80%",
+    minHeight: 28,
+  },
+});

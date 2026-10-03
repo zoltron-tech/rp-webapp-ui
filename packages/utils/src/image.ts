@@ -101,13 +101,37 @@ export function cropBackgroundStyle(crop?: ImageCropFilter | null): {
 // ──────────────────────────────────────────────────────────────────────────
 
 /**
+ * The S3 bucket, under whichever name this bundler was able to inline.
+ *
+ * Both reads must be written as literal `process.env.X` member expressions and
+ * both must be declared by every bundler that builds this file, because neither
+ * Vite nor Metro shims `process` at runtime — they *substitute* these exact
+ * expressions at build time, and anything left over throws
+ * `ReferenceError: process is not defined` in a browser.
+ *
+ * - Web supplies `RP_BUCKET_NAME` through `define` in `vite.config.ts`.
+ * - Metro inlines nothing but `EXPO_PUBLIC_*`, which is why the native app
+ *   needs the second name. `vite.config.ts` defines that one as `""` so the
+ *   fallback is a folded constant on web rather than a live lookup.
+ *
+ * Getting this wrong does not fail loudly: `wsrvImage` simply returns the
+ * source URL untouched, and the app renders un-resized S3 originals. The native
+ * app did exactly that for every avatar and banner in every list — a banner
+ * that should be 3KB of WebP arrived as 79KB of JPEG, and the decoded bitmap
+ * behind it was the full-resolution one. A list evicts a cache like that in a
+ * handful of rows, which is why scrolling back re-downloaded everything.
+ */
+const bucketName = (): string =>
+  process.env.RP_BUCKET_NAME || process.env.EXPO_PUBLIC_RP_BUCKET_NAME || "";
+
+/**
  * Returns true when `url` is a virtual-hosted-style S3 URL belonging to our
  * bucket.  Accepts both the global endpoint and any regional variant:
  *   https://<bucket>.s3.amazonaws.com/…
  *   https://<bucket>.s3.<region>.amazonaws.com/…
  */
 const isOurS3Url = (url: string): boolean => {
-  const bucket = process.env.RP_BUCKET_NAME;
+  const bucket = bucketName();
   if (!bucket) return false;
   const afterHttps = url.startsWith("https://") ? url.slice(8) : null;
   if (!afterHttps?.startsWith(`${bucket}.s3`)) return false;
@@ -147,6 +171,10 @@ export const IMAGE_SIZES = {
   // without touching the aspect ratio the crop math depends on.
   BANNER_LARGE: { fit: "inside" as const, h: 480, w: 1200 },
   BANNER_MEDIUM: { fit: "inside" as const, h: 240, w: 600 },
+  // A banner washed behind a phone list row, never looked at directly. Same
+  // 5:2 bounding box and the same `inside` fit as the others, so the stored
+  // crop math is untouched; `q: 60` because it renders under an 0.86 scrim.
+  BANNER_ROW: { fit: "inside" as const, h: 160, q: 60, w: 400 },
   // Card backgrounds must preserve the original aspect ratio (no cropping) so
   // the stored CSS crop (background-size/position) frames the image exactly as
   // it was set in the editor, which positions against the un-cropped image.
@@ -161,6 +189,12 @@ type WsrvOptions = {
   h?: number;
   fit?: "cover" | "contain" | "fill" | "inside" | "outside";
   q?: number;
+  /**
+   * Keep every frame of an animated source (`n=-1`). Off by default: a list
+   * face has no business animating, and a still first frame is a fraction of
+   * the bytes. On for a hero the person chose *because* it moves.
+   */
+  animated?: boolean;
 };
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -187,14 +221,14 @@ export function wsrvImage<T extends string | null | undefined>(
 ): T {
   if (!s3Url) return s3Url;
   if (!opts) return s3Url; // null sizing profile → caller wants the source untouched
-  if (!process.env.RP_BUCKET_NAME) return s3Url; // env not configured → no-op
+  if (!bucketName()) return s3Url; // env not configured → no-op
   if (!isOurS3Url(s3Url as string)) return s3Url; // foreign URL → untouched
 
-  const { fit = "cover", h, q = 80, w } = opts;
+  const { animated = false, fit = "cover", h, q = 80, w } = opts;
   // Normalise to the global S3 endpoint (no region) so both
   // s3.amazonaws.com and s3.<region>.amazonaws.com produce the same
   // wsrv.nl cache key.
-  const bucket = process.env.RP_BUCKET_NAME as string;
+  const bucket = bucketName();
   const stripped = (s3Url as string)
     .replace("https://", "")
     .replace(
@@ -209,6 +243,7 @@ export function wsrvImage<T extends string | null | undefined>(
     we: "1",
     ...(w ? { w: String(w) } : {}),
     ...(h ? { h: String(h) } : {}),
+    ...(animated ? { n: "-1" } : {}),
   });
   return `https://wsrv.nl/?${params.toString()}` as T;
 }
@@ -220,11 +255,26 @@ export function wsrvImage<T extends string | null | undefined>(
 // "feed"     — /rp/home & /rp/explore cards: smaller, denser layouts.
 // "hero"     — /rp/novelists landing muse rows.
 // "carousel" — /rp/novelists landing novelist carousel cards.
+// "row"      — a single list row on a phone: the smallest thing we ship.
 // ──────────────────────────────────────────────────────────────────────────
 
-type Context = "profile" | "feed" | "hero" | "carousel";
+type Context = "profile" | "feed" | "hero" | "carousel" | "row";
 
 const sizesFor = (ctx: Context) => {
+  if (ctx === "row")
+    return {
+      // A native list row. The friends list draws a 56px face and washes the
+      // banner behind a ~343×76 row, and it was asking for `BANNER_MEDIUM` —
+      // 600×240, roughly 4.5× oversampled and about 576KB of decoded bitmap
+      // per visible row, times eight rows on screen.
+      //
+      // A separate context rather than a smaller `"feed"`, because `"feed"` is
+      // also the web home and explore cards, which really are that wide.
+      avatar: IMAGE_SIZES.AVATAR_SMALL, // 120 — 56px face at 2x
+      banner: IMAGE_SIZES.BANNER_ROW, // bounded to 400x160, aspect preserved
+      cardBg: IMAGE_SIZES.COVER_MEDIUM, // 300x300
+      cover: IMAGE_SIZES.COVER_MEDIUM, // 300x300
+    };
   if (ctx === "profile")
     return {
       // Untouched: full profile avatar and banner are hero images — skip wsrv

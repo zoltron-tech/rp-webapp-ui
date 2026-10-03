@@ -122,3 +122,82 @@ export const parseTextContent = (
   }
   return processed.split(lineBreak);
 };
+
+/**
+ * A chat timestamp: the clock time today, the date as well before that.
+ *
+ * Chat is the one place `toFormattedDate`'s relative wording is wrong. "2 hours
+ * ago" on every bubble makes a conversation impossible to read back, because
+ * the reader is trying to establish an order and a gap, not a distance from
+ * now. The web bubble already formats it this way
+ * (`chat-bubble/index.tsx`: `h:mm A`, `MMM D, h:mm A`); this is that rule,
+ * named, so both clients cannot drift apart on it.
+ */
+export const toChatTime = (
+  dateTimeString: string | number | undefined,
+): string => {
+  const date = toLocalDate(dateTimeString);
+  if (!date) return "";
+  return date.isSame(moment(), "day")
+    ? date.format("h:mm A")
+    : date.format("MMM D, h:mm A");
+};
+
+/**
+ * A timestamp for an inbox row, which has a corner rather than a line.
+ *
+ * `toChatTime` is right inside a conversation and wrong in a list of them: it
+ * produces "Mar 4, 2:15 PM", which is fourteen characters competing with the
+ * name for the width of a phone. A list only has to answer "how long ago,
+ * roughly", and it answers it at the resolution people actually use — the clock
+ * for today, the word for yesterday, the weekday within the last week, and a
+ * short date beyond that.
+ */
+export const toInboxTime = (
+  dateTimeString: string | number | undefined,
+): string => {
+  const date = toLocalDate(dateTimeString);
+  // `toLocalDate` returns null only for a *missing* value; an unparseable one
+  // comes back as an invalid moment, which formats as the literal string
+  // "Invalid date". A row with no timestamp beats a row claiming that.
+  if (!date?.isValid()) return "";
+  const now = moment();
+  if (date.isSame(now, "day")) return date.format("h:mm A");
+  if (date.isSame(now.clone().subtract(1, "day"), "day")) return "Yesterday";
+  // Seven days rather than "this week": on a Monday, a calendar week would
+  // reduce everything older than yesterday to a date.
+  if (date.isAfter(now.clone().subtract(7, "days"))) return date.format("ddd");
+  return date.isSame(now, "year")
+    ? date.format("D MMM")
+    : date.format("DD/MM/YY");
+};
+
+/**
+ * The label for a day separator in a conversation: Today, Yesterday, or a date.
+ *
+ * Returns an empty string for an unparseable timestamp, so a broken date is a
+ * missing separator rather than a separator reading "Invalid date".
+ */
+export const toChatDayLabel = (
+  dateTimeString: string | number | undefined,
+): string => {
+  const date = toLocalDate(dateTimeString);
+  if (!date) return "";
+  const now = moment();
+  if (date.isSame(now, "day")) return "Today";
+  if (date.isSame(now.clone().subtract(1, "day"), "day")) return "Yesterday";
+  return date.isSame(now, "year")
+    ? date.format("MMMM D")
+    : date.format("MMMM D, YYYY");
+};
+
+/** Do two timestamps fall on the same local day? */
+export const isSameChatDay = (
+  a: string | number | undefined,
+  b: string | number | undefined,
+): boolean => {
+  const left = toLocalDate(a);
+  const right = toLocalDate(b);
+  if (!left || !right) return false;
+  return left.isSame(right, "day");
+};

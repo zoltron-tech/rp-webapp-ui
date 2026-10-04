@@ -1,15 +1,19 @@
 import { styled } from "styled-components";
-import { Button } from "../common";
+import { FOCUS_RING, MATERIAL_CARD, NO_SCROLLBAR } from "@/theme";
+
+/* The notifications page: one material card holding inset, rounded rows.
+   The rows themselves are in row.styles.ts, shared with the bell's dropdown. */
 
 export const ListRoot = styled.div`
   display: flex;
   flex-direction: column;
+  width: 100%;
   max-width: 580px;
+  min-width: 0;
   margin-inline: auto;
   margin-top: 40px;
-  background-color: var(--bg-2);
-  border: 1px solid var(--bg-5);
-  border-radius: 12px;
+  ${MATERIAL_CARD}
+  border-radius: 18px;
   overflow: hidden;
   color: var(--text);
   font-size: var(--font-size);
@@ -21,6 +25,7 @@ export const ListRoot = styled.div`
     border-radius: 0;
     border-left: none;
     border-right: none;
+    box-shadow: none;
   }
 `;
 
@@ -28,137 +33,131 @@ export const NotificationsHeaderRoot = styled.header`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px 12px;
-  border-bottom: 1px solid var(--bg-4);
+  gap: 12px;
+  padding: 16px 18px 10px;
   flex-shrink: 0;
+
+  @media screen and (max-width: 800px) {
+    padding: 12px 14px 8px;
+  }
+`;
+
+export const HeaderText = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 `;
 
 export const NotificationsHeaderTitle = styled.h2`
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--text);
   margin: 0;
   font-family: var(--font);
 `;
 
-export const NotificationHeaderText = styled(Button)`
-  max-width: 150px;
-  height: 30px;
+export const HeaderSummary = styled.p`
+  margin: 0;
   font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-secondary);
 `;
 
-export const NotificationsBoxRoot = styled.div`
+export const MarkAllButton = styled.button`
   display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  padding: 14px 16px;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 999px;
+  background: none;
   cursor: pointer;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-11);
+  white-space: nowrap;
   transition: background-color 0.15s ease;
-  border-bottom: 1px solid var(--bg-4);
-  position: relative;
-
-  &[data-unread] {
-    background-color: var(--accent-a2);
-    border-left: 3px solid var(--accent-7);
-    padding-left: 13px;
-  }
 
   &:hover {
-    background-color: var(--bg-3);
+    background-color: var(--fill-hover);
   }
 
-  &:last-of-type {
-    border-bottom: none;
-  }
+  ${FOCUS_RING}
 
-  .avatar {
-    width: 48px;
-    height: 48px;
-    flex-shrink: 0;
-  }
-
-  @media screen and (max-width: 430px) {
-    padding: 10px 12px;
-    gap: 10px;
-
-    &[data-unread] {
-      padding-left: 9px;
-    }
-
-    .avatar {
-      width: 36px;
-      height: 36px;
-    }
-  }
-`;
-
-export const Content = styled.div`
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding-top: 2px;
-`;
-
-export const Text = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-`;
-
-export const Extras = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: flex-start;
-  gap: 6px;
-  padding-top: 2px;
-  flex-shrink: 0;
-`;
-
-export const Title = styled.div`
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-`;
-
-export const Subtext = styled.div`
-  font-size: 12px;
-  color: var(--text-secondary);
-  line-height: 1.4;
-`;
-
-export const StyledDate = styled.time`
-  font-size: 10px;
-  color: var(--text-secondary);
-  opacity: 0.65;
-  margin-top: 2px;
-`;
-
-export const unReadBadge = styled.div`
-  background-color: var(--accent-9);
-  border-radius: 50%;
-  width: 8px;
-  height: 8px;
-  flex-shrink: 0;
-`;
-
-export const ButtonRow = styled.div`
-  display: flex;
-  gap: 6px;
-  margin-top: 8px;
-
-  .button {
-    font-size: 12px !important;
-    padding: 6px 12px !important;
-  }
-
-  .button.messaging {
-    background-color: var(--accent-hover);
+  &:disabled {
+    opacity: 0.5;
     cursor: wait;
-    pointer-events: none;
   }
+`;
+
+/* One line of chips that scrolls sideways rather than wrapping: six of them
+   do not fit across 375px, and a second line would cost a whole row. */
+export const Filters = styled.div`
+  display: flex;
+  gap: 6px;
+  padding: 4px 14px 10px;
+  overflow-x: auto;
+  flex-shrink: 0;
+  ${NO_SCROLLBAR}
+`;
+
+export const FilterChip = styled.button`
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border: 1px solid var(--material-edge);
+  border-radius: 999px;
+  background-color: var(--material-fill);
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+
+  &:hover {
+    background-color: var(--fill-hover);
+  }
+
+  &[aria-pressed="true"] {
+    border-color: transparent;
+    background-color: var(--accent-9, var(--accent));
+    color: var(--accent-contrast, #fff);
+  }
+
+  ${FOCUS_RING}
+`;
+
+export const Section = styled.section`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 6px 6px;
+`;
+
+export const SectionTitle = styled.h3`
+  margin: 0;
+  padding: 8px 12px 4px;
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+`;
+
+export const FilterEmpty = styled.p`
+  margin: 0;
+  padding: 28px 20px;
+  font-family: var(--font);
+  font-size: var(--font-size-small);
+  line-height: 1.5;
+  color: var(--text-secondary);
+  text-align: center;
 `;
 
 /** Empty state for the full notifications page — art over a title and a line,

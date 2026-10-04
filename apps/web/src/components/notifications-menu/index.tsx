@@ -1,6 +1,5 @@
 "use client";
 
-import type { NovelistWorldNotification } from "@nw/types";
 import { useNotificationCounts, useNotificationReadState } from "@nw/features";
 import { isCompactViewport } from "@nw/utils/platform";
 import classNames from "classnames";
@@ -19,7 +18,7 @@ import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
 import { Logger } from "@/utils/services";
-import { FriendRequestNotification } from "../friend-request-notification";
+import { NotificationRow } from "../notification/notification-row";
 import * as S from "./styles";
 
 /** Rows shown in the dropdown; the page has the rest. */
@@ -85,18 +84,6 @@ export const NotificationsMenu: FC = () => {
     setMarkingRead(false);
   }, [authState, markingRead, baseDataLoader, set, refreshCounts]);
 
-  const removeFriendRequestNotification = useCallback(
-    (novelistToRemove: NovelistWorldNotification) => {
-      if (!notifications) return;
-      set({
-        notifications: notifications.filter(
-          (n) => n.id !== novelistToRemove.id,
-        ),
-      });
-    },
-    [notifications, set],
-  );
-
   useEffect(() => {
     if (authState === "LOADING" || notifications) return;
     fetchNotifications();
@@ -160,17 +147,17 @@ export const NotificationsMenu: FC = () => {
             <S.ScrollArea>
               {latest.length > 0 ? (
                 latest.map((n) => (
-                  <FriendRequestNotification
+                  <NotificationRow
                     key={n.id}
                     notification={n}
-                    removeMethod={removeFriendRequestNotification}
-                    onClose={() => setOpen(false)}
+                    compact
+                    onNavigate={() => setOpen(false)}
                   />
                 ))
               ) : (
                 <S.EmptyState>
                   <NoNotificationsArt />
-                  <span>No notifications yet</span>
+                  <span>Quiet as a blank page</span>
                 </S.EmptyState>
               )}
             </S.ScrollArea>

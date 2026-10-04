@@ -12,6 +12,7 @@ import { ListStatus } from "@/components/list-status";
 import { NovelistRow } from "@/components/novelist-row";
 import { BottomSheet } from "@/components/sheet";
 import { space } from "@/theme";
+import { RowSeparator } from "@/components/list-parts";
 
 /**
  * Who liked this — web's `ReactionLikersDialog`, as a tray.
@@ -44,8 +45,6 @@ import { space } from "@/theme";
 const PAGE_SIZE = 12;
 
 const keyExtractor = (item: Friend) => item.id;
-
-const Separator = () => <View style={styles.separator} />;
 
 export const LikersSheet = ({
   count,
@@ -114,7 +113,7 @@ export const LikersSheet = ({
       <FlashList
         contentContainerStyle={styles.content}
         data={likers}
-        ItemSeparatorComponent={Separator}
+        ItemSeparatorComponent={RowSeparator}
         keyExtractor={keyExtractor}
         ListEmptyComponent={
           <ListStatus
@@ -147,5 +146,4 @@ export const LikersSheet = ({
 const styles = StyleSheet.create({
   content: { paddingBottom: space.lg, paddingHorizontal: space.md },
   footerGhost: { paddingTop: space.sm },
-  separator: { height: space.sm },
 });

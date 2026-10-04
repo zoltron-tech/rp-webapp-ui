@@ -7,9 +7,9 @@ import {
   Alert,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { type ActionItem, ActionMenu } from "@/components/action-menu";
 import { ScoreIcon } from "@/components/badges";
 import { PRIVACY_ICON, PRIVACY_LABEL } from "@/components/feed/privacy";
@@ -36,7 +36,7 @@ import type { MuseEdit } from "@/hooks/use-muse-edit";
 import { asColor, withAlpha } from "@/lib/color";
 import type { MuseLook } from "@/lib/muse-appearance";
 import { museName } from "@/lib/muse-appearance";
-import { fontSize, radius, space } from "@/theme";
+import { border, fontSize, radius, space } from "@/theme";
 
 /**
  * Web's `MuseInfoSection`.
@@ -531,26 +531,30 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderColor: "rgba(255,255,255,0.3)",
     borderRadius: radius.full,
-    borderStyle: "dashed",
+    borderStyle: "solid",
     borderWidth: 1,
     flexDirection: "row",
-    gap: 4,
-    paddingHorizontal: space.sm + 2,
-    paddingVertical: 4,
+    gap: space.xs,
+    paddingHorizontal: space.ms,
+    paddingVertical: space.xs,
   },
-  addLabel: { color: PANEL.secondary, fontSize: 11, fontWeight: "600" },
+  addLabel: {
+    color: PANEL.secondary,
+    fontSize: fontSize.meta,
+    fontWeight: "500",
+  },
   attribute: {
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexBasis: "48%",
     flexGrow: 1,
     gap: 3,
-    paddingHorizontal: space.sm + 2,
+    paddingHorizontal: space.ms,
     paddingVertical: space.sm,
   },
   attributeKey: {
     color: PANEL.muted,
-    fontSize: 10,
+    fontSize: fontSize.meta,
     fontWeight: "600",
     letterSpacing: 0.8,
     paddingRight: 14,
@@ -583,18 +587,20 @@ const styles = StyleSheet.create({
   },
   fandom: {
     alignItems: "center",
-    borderRadius: radius.full,
+    borderRadius: radius.xs,
     flexDirection: "row",
     gap: 5,
     maxWidth: "80%",
-    paddingHorizontal: space.sm + 2,
+    paddingLeft: 7,
+    paddingRight: space.ms,
     paddingVertical: 3,
   },
   fandomLabel: {
     color: "#ffffff",
     flexShrink: 1,
-    fontSize: 10,
+    fontSize: fontSize.meta,
     fontWeight: "700",
+    // Web's is 1.1; at that a long fandom no longer fits this panel.
     letterSpacing: 0.6,
     textTransform: "uppercase",
   },
@@ -607,11 +613,11 @@ const styles = StyleSheet.create({
   header: {
     alignItems: "center",
     gap: space.sm,
-    paddingTop: space.xs,
+    paddingTop: space.s,
     width: "100%",
   },
   name: {
-    fontSize: fontSize.title,
+    fontSize: 18,
     fontWeight: "600",
     textAlign: "center",
   },
@@ -619,26 +625,26 @@ const styles = StyleSheet.create({
     backgroundColor: PANEL.pill,
     borderColor: PANEL.pillBorder,
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: space.sm + 2,
-    paddingVertical: 2,
+    borderWidth: border.edge,
+    paddingHorizontal: space.ms,
+    paddingVertical: space.xxs,
   },
   nicknameAdd: {
     alignItems: "center",
     borderStyle: "dashed",
     flexDirection: "row",
-    gap: 2,
+    gap: space.xxs,
   },
   nicknameLabel: {
     color: PANEL.secondary,
-    fontSize: 11,
+    fontSize: fontSize.meta,
     fontStyle: "italic",
     letterSpacing: 0.3,
   },
   nicknames: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6,
+    gap: space.s,
     justifyContent: "center",
   },
   privacy: {
@@ -646,7 +652,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.35)",
     borderRadius: 14,
     flexDirection: "row",
-    gap: 2,
+    gap: space.xxs,
     height: 28,
     justifyContent: "center",
     minWidth: 28,
@@ -656,16 +662,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(0,0,0,0.35)",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: 4,
-    paddingLeft: 6,
-    paddingRight: space.sm + 2,
+    gap: space.xs,
+    paddingLeft: space.s,
+    paddingRight: space.ms,
     paddingVertical: 3,
   },
   scoreLabel: {
     color: "rgba(255,255,255,0.85)",
-    fontSize: 11,
+    fontSize: fontSize.meta,
     fontWeight: "700",
     letterSpacing: 0.2,
   },

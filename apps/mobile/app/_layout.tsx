@@ -35,6 +35,7 @@ import {
   shouldPersistQuery,
 } from "@/lib/query-persister";
 import { loadSession } from "@/lib/session-store";
+import { loadUiFonts } from "@/lib/ui-fonts";
 import { AppThemeProvider, useTheme } from "@/theme";
 import { ambientScreenLayout } from "@/components/ambient-background";
 
@@ -144,7 +145,11 @@ export default function RootLayout() {
   const [sessionLoaded, setSessionLoaded] = useState(false);
 
   useEffect(() => {
-    void loadSession().finally(() => setSessionLoaded(true));
+    // The interface faces load alongside it: both are short, and a first
+    // frame drawn before either would have to be drawn again.
+    void Promise.all([loadSession(), loadUiFonts()]).finally(() =>
+      setSessionLoaded(true),
+    );
   }, []);
 
   if (!sessionLoaded) {

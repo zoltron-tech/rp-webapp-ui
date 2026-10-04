@@ -5,9 +5,9 @@ import {
   PanResponder,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { fontSize, space } from "@/theme";
 
 /**
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
   },
   paneButton: {
     alignItems: "center",
-    gap: 2,
+    gap: space.xxs,
     justifyContent: "center",
     paddingHorizontal: space.lg,
     paddingVertical: space.sm,

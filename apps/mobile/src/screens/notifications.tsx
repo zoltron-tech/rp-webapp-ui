@@ -1,10 +1,16 @@
-import { Ionicons } from "@expo/vector-icons";
 import { patchNotifications } from "@nw/api/endpoints/novelists";
-import { queryKeys, useApi, useNotifications } from "@nw/features";
-import type { NovelistWorldNotification } from "@nw/types";
+import {
+  queryKeys,
+  useApi,
+  useNotificationReadState,
+  useNotifications,
+} from "@nw/features";
+import type { NotificationFeed, NovelistWorldNotification } from "@nw/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { EndOfList } from "@/components/end-of-list";
 import {
   NotificationRowSkeleton,
@@ -15,7 +21,18 @@ import { NotificationRow } from "@/components/notification-row";
 import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { useTabTop } from "@/hooks/use-tab-top";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { fontSize, space, type, useAppTheme } from "@/theme";
+import { Button } from "@/components/button";
+
+/** Which stretch of time a notification belongs to, newest first. */
+const DAY = 24 * 60 * 60;
+const periodOf = (epochSeconds: number): string => {
+  const age = Date.now() / 1000 - epochSeconds;
+  if (age < DAY) return "Today";
+  if (age < 7 * DAY) return "This week";
+  if (age < 30 * DAY) return "This month";
+  return "Earlier";
+};
 
 /**
  * Notifications, from the same `useNotifications` the web page renders.
@@ -59,6 +76,15 @@ export const NotificationsScreen = () => {
   // fetched a minute ago refetches it — silently, under the rows.
   const pull = usePullToRefresh(refetch);
 
+  // Opening the tab is seeing the list: the tab's badge clears, and the rows
+  // stay highlighted until each is opened or all are marked read.
+  const { markSeen, refreshCounts } = useNotificationReadState();
+  useFocusEffect(
+    useCallback(() => {
+      void markSeen();
+    }, [markSeen]),
+  );
+
   /** Friend requests answered on this screen; their rows are gone. */
   const [answered, setAnswered] = useState<string[]>([]);
   const onAnswered = useCallback((id: string) => {
@@ -97,14 +123,15 @@ export const NotificationsScreen = () => {
       const previous = queryClient.getQueryData(queryKeys.notifications());
       queryClient.setQueryData<{
         pageParams: unknown[];
-        pages: NovelistWorldNotification[][];
+        pages: NotificationFeed[];
       }>(queryKeys.notifications(), (data) =>
         data
           ? {
               ...data,
-              pages: data.pages.map((page) =>
-                page.map((item) => ({ ...item, isRead: true })),
-              ),
+              pages: data.pages.map((page) => ({
+                ...page,
+                items: page.items.map((item) => ({ ...item, isRead: true })),
+              })),
             }
           : data,
       );
@@ -114,6 +141,7 @@ export const NotificationsScreen = () => {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.notifications(),
       });
+      void refreshCounts();
     },
   });
 
@@ -130,38 +158,58 @@ export const NotificationsScreen = () => {
     if (unread === 0) return null;
     return (
       <View style={styles.header}>
-        <Text style={[styles.count, { color: theme.textGray }]}>
+        <Text style={[styles.count, { color: theme.text }]}>
           {unread} unread
         </Text>
-        <Pressable
+        <Button
           accessibilityLabel="Mark all as read"
-          accessibilityRole="button"
-          disabled={markRead.isPending}
+          busy={markRead.isPending}
           hitSlop={space.sm}
+          icon="checkmark-done"
+          label="Mark all read"
           onPress={() => markRead.mutate()}
-          style={({ pressed }) => [
-            styles.markAll,
-            {
-              backgroundColor: theme.material.fill,
-              borderColor: theme.material.edge,
-              opacity: pressed || markRead.isPending ? 0.6 : 1,
-            },
-          ]}
-        >
-          <Ionicons color={theme.accent.text} name="checkmark-done" size={14} />
-          <Text style={[styles.markAllLabel, { color: theme.accent.text }]}>
-            Mark all read
-          </Text>
-        </Pressable>
+          size="sm"
+        />
       </View>
     );
   }, [markRead, theme, unread]);
 
+  /*
+   * Rows under the date they belong to: "Today", "This week", "This month",
+   * "Earlier". The list is already newest first, so a label is drawn wherever
+   * a row's period differs from the one above it — nothing is reordered, and a
+   * page arriving later simply continues the last group.
+   */
   const renderItem = useCallback(
-    ({ item }: { item: NovelistWorldNotification }) => (
-      <NotificationRow notification={item} onAnswered={onAnswered} />
-    ),
-    [onAnswered],
+    ({ index, item }: { index: number; item: NovelistWorldNotification }) => {
+      const period = periodOf(item.date);
+      const previous = index > 0 ? rows[index - 1] : undefined;
+      const next = rows[index + 1];
+      const starts = !previous || periodOf(previous.date) !== period;
+      const ends = !next || periodOf(next.date) !== period;
+      const place = starts ? (ends ? "only" : "first") : ends ? "last" : "middle";
+
+      return (
+        <>
+          {starts ? (
+            <View style={[styles.period, index > 0 && styles.periodNext]}>
+              <Text style={[styles.periodTitle, { color: theme.textGray }]}>
+                {period}
+              </Text>
+              <View
+                style={[styles.rule, { backgroundColor: theme.material.edge }]}
+              />
+            </View>
+          ) : null}
+          <NotificationRow
+            notification={item}
+            onAnswered={onAnswered}
+            place={place}
+          />
+        </>
+      );
+    },
+    [onAnswered, rows, theme],
   );
 
   return (
@@ -205,22 +253,24 @@ export const NotificationsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  content: { gap: space.sm, padding: space.md },
-  count: { fontSize: fontSize.caption, fontWeight: "600" },
+  // Rows run edge to edge and carry their own gutters; see `NotificationRow`.
+  content: { paddingBottom: space.md, paddingTop: space.m },
+  period: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: space.m,
+    paddingBottom: space.ms,
+    paddingHorizontal: space.md,
+  },
+  periodNext: { paddingTop: space.lg },
+  periodTitle: type.eyebrow,
+  rule: { flex: 1, height: StyleSheet.hairlineWidth },
+  count: { fontSize: fontSize.label, fontWeight: "600" },
   header: {
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingBottom: space.xs,
+    paddingBottom: space.m,
+    paddingHorizontal: space.md,
   },
-  markAll: {
-    alignItems: "center",
-    borderRadius: radius.sm,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    gap: space.xs + 1,
-    paddingHorizontal: space.sm + 2,
-    paddingVertical: space.xs + 2,
-  },
-  markAllLabel: { fontSize: fontSize.caption, fontWeight: "700" },
 });

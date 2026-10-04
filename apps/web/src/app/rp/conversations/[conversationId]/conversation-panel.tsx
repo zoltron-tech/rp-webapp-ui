@@ -3,6 +3,7 @@
 import { helloNoticeFor, retentionNoticeFor } from "@nw/chat";
 import type { Conversation, MentionDataItem, Message } from "@nw/types";
 import type { MessageSender, Reaction } from "@nw/types/conversation";
+import { suggestPushPrimer } from "@/lib/push";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { FaChevronDown } from "react-icons/fa";
@@ -565,6 +566,8 @@ export function ConversationPanel({
       // renders without waiting on the conversation key fetch.
       socketPayload.message = await encryptMessageText(conversationId, text);
       socket.send(JSON.stringify({ payload: socketPayload, type: "message" }));
+      // They will want to hear when this is answered.
+      suggestPushPrimer();
     } catch {
       setOptimisticMessages((prev) =>
         prev.map((o) => (o.id === tempId ? { ...o, failed: true } : o)),

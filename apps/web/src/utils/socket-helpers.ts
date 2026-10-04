@@ -20,6 +20,7 @@ export {
   HEARTBEAT_TIMEOUT_MS,
   isServerEdit,
   isServerMessage,
+  isServerNotification,
   isServerPing,
   isServerReaction,
   type ReactionPayload as ReactionSocketPayload,

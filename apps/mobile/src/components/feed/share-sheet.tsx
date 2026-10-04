@@ -13,13 +13,13 @@ import {
   Pressable,
   Share,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { BottomSheet } from "@/components/sheet";
 import { env } from "@/lib/env";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * Web's `SharePromptDialog` — already a tray on a phone there, and a tray
@@ -174,9 +174,9 @@ export const ShareSheet = ({
                   styles.button,
                   {
                     backgroundColor: pressed
-                      ? theme.accent.solidHover
-                      : theme.accent.solid,
-                    borderColor: theme.accent.solid,
+                      ? theme.accent.fillPressed
+                      : theme.accent.fill,
+                    borderColor: theme.accent.fill,
                   },
                 ]}
               >
@@ -355,11 +355,11 @@ export const ShareSheet = ({
 };
 
 const styles = StyleSheet.create({
-  body: { gap: space.sm + 2, padding: space.md, paddingBottom: space.xl },
+  body: { gap: space.ms, padding: space.md, paddingBottom: space.xl },
   button: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.sm,
     justifyContent: "center",
@@ -370,11 +370,11 @@ const styles = StyleSheet.create({
   copy: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.xs,
     height: 40,
-    paddingHorizontal: space.sm + 2,
+    paddingHorizontal: space.ms,
   },
   error: {
     alignItems: "center",
@@ -386,12 +386,12 @@ const styles = StyleSheet.create({
   link: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flex: 1,
     flexDirection: "row",
-    gap: space.xs + 2,
+    gap: space.s,
     height: 40,
-    paddingHorizontal: space.sm + 2,
+    paddingHorizontal: space.ms,
   },
   linkRow: { alignItems: "center", flexDirection: "row", gap: space.sm },
   linkText: { flex: 1, fontSize: fontSize.caption },
@@ -399,26 +399,26 @@ const styles = StyleSheet.create({
   preview: {
     alignItems: "flex-start",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: space.sm + 2,
-    padding: space.sm + 2,
+    gap: space.ms,
+    padding: space.ms,
   },
   previewBody: { fontSize: fontSize.caption, lineHeight: 17 },
-  previewDate: { fontSize: 10 },
+  previewDate: { fontSize: fontSize.meta },
   previewMeta: {
     alignItems: "center",
     flexDirection: "row",
-    gap: space.xs + 2,
+    gap: space.s,
   },
   previewName: { flexShrink: 1, fontSize: fontSize.label, fontWeight: "700" },
-  previewText: { flex: 1, gap: 2 },
+  previewText: { flex: 1, gap: space.xxs },
   result: { alignItems: "center", gap: space.sm, paddingVertical: space.md },
   resultBody: { fontSize: fontSize.label, textAlign: "center" },
   resultIcon: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     height: 56,
     justifyContent: "center",
     width: 56,

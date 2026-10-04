@@ -7,7 +7,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { Bone, SkeletonPulse } from "@/components/skeleton";
-import { radius, space, useAppTheme } from "@/theme";
+import { border, radius, space, useAppTheme } from "@/theme";
 
 /**
  * Ghosts for the sheets and the secondary screens — the song picker, the fandom
@@ -240,54 +240,54 @@ const styles = StyleSheet.create({
   board: {
     borderRadius: radius.md + 4,
     height: 240,
-    marginHorizontal: space.sm + 4,
+    marginHorizontal: space.m,
     overflow: "hidden",
   },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
   codex: { flex: 1 },
-  codexBody: { gap: space.md, paddingHorizontal: space.sm + 4 },
+  codexBody: { gap: space.md, paddingHorizontal: space.m },
   divider: { height: StyleSheet.hairlineWidth, marginLeft: 62 },
   entry: { borderRadius: radius.md + 4, gap: space.sm, padding: space.md },
-  entryHead: { alignItems: "center", flexDirection: "row", gap: space.sm + 4 },
+  entryHead: { alignItems: "center", flexDirection: "row", gap: space.m },
   fandom: {
     alignItems: "center",
     borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
-    gap: space.sm + 2,
+    gap: space.ms,
     paddingHorizontal: space.xs,
-    paddingVertical: space.sm + 4,
+    paddingVertical: space.m,
   },
-  frame: { borderWidth: StyleSheet.hairlineWidth },
+  frame: { borderWidth: border.edge },
   friend: {
     alignItems: "center",
     borderRadius: radius.md,
     flexDirection: "row",
-    gap: space.sm + 2,
+    gap: space.ms,
     padding: space.sm,
   },
   group: { gap: space.sm },
   groupCard: { borderRadius: radius.md + 4, overflow: "hidden" },
-  hint: { gap: 6, paddingHorizontal: space.md, paddingVertical: space.sm + 4 },
+  hint: { gap: space.s, paddingHorizontal: space.md, paddingVertical: space.m },
   map: { flex: 1 },
-  mapHint: { alignSelf: "center", marginVertical: space.sm + 2 },
+  mapHint: { alignSelf: "center", marginVertical: space.ms },
   page: { gap: space.lg },
   settingsRow: {
     alignItems: "center",
     flexDirection: "row",
-    gap: space.sm + 4,
+    gap: space.m,
     paddingHorizontal: space.md,
-    paddingVertical: space.sm + 4,
+    paddingVertical: space.m,
   },
   shelf: {
     gap: space.sm,
-    paddingHorizontal: space.sm + 4,
+    paddingHorizontal: space.m,
     paddingTop: space.lg,
   },
   song: {
     alignItems: "center",
     borderRadius: radius.md,
     flexDirection: "row",
-    gap: space.sm + 2,
+    gap: space.ms,
     padding: space.sm,
   },
   spine: {
@@ -300,15 +300,15 @@ const styles = StyleSheet.create({
   stage: {
     borderRadius: radius.md + 4,
     flex: 1,
-    marginHorizontal: space.sm + 4,
+    marginHorizontal: space.m,
     marginTop: space.sm,
   },
   tabs: {
     flexDirection: "row",
     gap: space.sm,
-    paddingHorizontal: space.sm + 4,
-    paddingVertical: space.sm + 2,
+    paddingHorizontal: space.m,
+    paddingVertical: space.ms,
   },
-  text: { flex: 1, gap: 6, minWidth: 0 },
+  text: { flex: 1, gap: space.s, minWidth: 0 },
   timeline: { flex: 1 },
 });

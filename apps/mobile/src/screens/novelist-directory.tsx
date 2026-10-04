@@ -3,7 +3,8 @@ import { useNovelistLeaderboard } from "@nw/features";
 import type { NovelistLeaderboardEntry } from "@nw/types";
 import { useRouter } from "expo-router";
 import { useMemo } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { EndOfList } from "@/components/end-of-list";
 import { ListStatus } from "@/components/list-status";
@@ -135,7 +136,7 @@ export const NovelistDirectory = () => {
 const styles = StyleSheet.create({
   content: { gap: space.sm, padding: space.md },
   handle: { fontSize: fontSize.caption },
-  identity: { flex: 1, gap: 2 },
+  identity: { flex: 1, gap: space.xxs },
   level: { fontSize: fontSize.caption },
   name: { fontSize: fontSize.body, fontWeight: "600" },
   points: { fontSize: fontSize.body, fontWeight: "700" },

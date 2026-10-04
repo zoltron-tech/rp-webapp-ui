@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { fontSize, space, useAppTheme } from "@/theme";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
+import { fontSize, space, type, useAppTheme } from "@/theme";
 
 /**
  * Web's `SubText`: the small uppercase eyebrow over each block of the home
@@ -19,6 +20,8 @@ export const SectionHeader = ({
   return (
     <View style={styles.row}>
       <Text style={[styles.title, { color: theme.textGray }]}>{title}</Text>
+      {/* Web's `SubText::after`: a rule that runs out the rest of the row. */}
+      <View style={[styles.rule, { backgroundColor: theme.material.edge }]} />
       {action ? (
         <Pressable
           accessibilityRole="link"
@@ -44,19 +47,15 @@ export const SectionHeader = ({
 };
 
 const styles = StyleSheet.create({
-  action: { alignItems: "center", flexDirection: "row", gap: 2 },
+  action: { alignItems: "center", flexDirection: "row", gap: space.xxs },
   actionLabel: { fontSize: fontSize.caption, fontWeight: "600" },
   row: {
     alignItems: "center",
     flexDirection: "row",
-    justifyContent: "space-between",
+    gap: space.m,
     paddingBottom: space.sm,
     paddingHorizontal: space.md,
   },
-  title: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
-  },
+  rule: { flex: 1, height: StyleSheet.hairlineWidth },
+  title: type.eyebrow,
 });

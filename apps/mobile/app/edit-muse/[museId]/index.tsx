@@ -3,15 +3,8 @@ import type { Muse } from "@nw/types";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useRef, useState } from "react";
-import {
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  type TextInput,
-  View,
-} from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Text, type TextInput } from "@/components/text";
 import { type ActionItem, ActionMenu } from "@/components/action-menu";
 import { Avatar } from "@/components/avatar";
 import {
@@ -40,7 +33,7 @@ import { useMuseEdit } from "@/hooks/use-muse-edit";
 import { useMuseForm } from "@/hooks/use-muse-form";
 import { asColor } from "@/lib/color";
 import { museLook } from "@/lib/muse-appearance";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * Web's `LandingSection`: the character you are editing, then the sections
@@ -495,7 +488,7 @@ const styles = StyleSheet.create({
     right: 0,
     width: 30,
   },
-  avatarWrap: { borderRadius: radius.full, marginTop: -44, padding: 4 },
+  avatarWrap: { borderRadius: radius.full, marginTop: -44, padding: space.xs },
   banner: { aspectRatio: 5 / 2, overflow: "hidden", width: "100%" },
   bannerBadge: {
     alignItems: "center",
@@ -503,7 +496,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
     flexDirection: "row",
     gap: 5,
-    paddingHorizontal: space.sm + 2,
+    paddingHorizontal: space.ms,
     paddingVertical: 5,
     position: "absolute",
     right: space.sm,
@@ -514,45 +507,45 @@ const styles = StyleSheet.create({
     fontSize: fontSize.caption,
     fontWeight: "700",
   },
-  body: { gap: space.lg, padding: space.sm + 4 },
+  body: { gap: space.lg, padding: space.m },
   chips: {
     alignItems: "center",
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 4,
+    gap: space.xs,
   },
   fandom: {
     borderRadius: radius.full,
     maxWidth: 200,
     paddingHorizontal: space.sm,
-    paddingVertical: 2,
+    paddingVertical: space.xxs,
   },
   fandomLabel: {
     color: "#ffffff",
-    fontSize: 10,
+    fontSize: fontSize.meta,
     fontWeight: "700",
     letterSpacing: 0.4,
     textTransform: "uppercase",
   },
   hero: {
     borderRadius: radius.md + 4,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     overflow: "hidden",
     paddingBottom: space.md,
   },
-  heroIdentity: { flex: 1, gap: 4, minWidth: 0, paddingBottom: space.xs },
+  heroIdentity: { flex: 1, gap: space.xs, minWidth: 0, paddingBottom: space.xs },
   heroName: { fontSize: fontSize.title - 2, fontWeight: "700" },
   heroRow: {
     alignItems: "flex-end",
     flexDirection: "row",
-    gap: space.sm + 4,
+    gap: space.m,
     paddingHorizontal: space.md,
   },
   nameCaption: { fontSize: fontSize.caption },
   nameError: { fontSize: fontSize.caption },
-  nameHeader: { gap: 2 },
+  nameHeader: { gap: space.xxs },
   nameSection: {
-    gap: space.sm + 4,
+    gap: space.m,
     paddingHorizontal: space.md,
     paddingTop: space.md,
   },

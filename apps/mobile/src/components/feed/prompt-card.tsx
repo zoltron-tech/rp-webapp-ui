@@ -4,7 +4,8 @@ import type { Prompt } from "@nw/types";
 import { pluralize, toFormattedDate } from "@nw/utils";
 import { Image } from "expo-image";
 import { memo, useCallback, useMemo } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { CollapsibleRichText } from "@/components/collapsible-rich-text";
 import {
@@ -19,7 +20,8 @@ import { HeartButton } from "@/components/heart-button";
 import { FOLDED_BLOCKS } from "@/components/rich-text";
 import { sourceLinkLabel, useOpenSource } from "@/hooks/use-open-source";
 import { useToggleReaction } from "@/hooks/use-toggle-reaction";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
+import { useGlobalState } from "@nw/store";
 
 /**
  * One post in a feed — Explore's two tabs, and a novelist's prompts and
@@ -78,7 +80,11 @@ import { fontSize, radius, space, useAppTheme } from "@/theme";
  * `prompt-comments.tsx`.
  */
 
-const AVATAR = 40;
+/** Web's face at phone width (`prompt/styled.ts`). */
+const AVATAR = 44;
+
+/** Web's footer glyphs. */
+const ACTION_ICON = 17;
 
 /** Web folds a prompt at 100px; seven lines here, so a short post never folds. */
 const FEED_COLLAPSED_HEIGHT = 168;
@@ -163,7 +169,9 @@ const PromptCardView = ({
    * your first character on an in-character one, since only a character may
    * answer a character. The composer opens on the same choice.
    */
-  const { novelist: me } = useSession();
+  // The store's copy, not `useSession()`: that is two query observers per
+  // row, and every one of them re-rendered when the session settled.
+  const me = useGlobalState("novelist");
   const replyAs = isMuse ? (me?.muses?.[0] ?? me) : me;
   const openSource = useOpenSource();
 
@@ -185,10 +193,7 @@ const PromptCardView = ({
     <View
       style={[
         styles.card,
-        {
-          backgroundColor: theme.material.fill,
-          borderColor: theme.material.edge,
-        },
+        theme.material.card,
       ]}
     >
       {/* ── Who, and when ─────────────────────────────────────────────── */}
@@ -285,7 +290,7 @@ const PromptCardView = ({
       <CollapsibleRichText
         collapsedHeight={FEED_COLLAPSED_HEIGHT}
         expanded={unfolded}
-        fadeColor={theme.material.fill}
+        fadeColor={theme.material.card.backgroundColor}
         html={prompt.text}
         maxBlocks={FOLDED_BLOCKS}
         onToggle={() => onUnfold(id)}
@@ -352,7 +357,7 @@ const PromptCardView = ({
       ) : null}
 
       {/* ── Actions ───────────────────────────────────────────────────── */}
-      <View style={styles.actions}>
+      <View style={[styles.actions, { borderTopColor: theme.material.edge }]}>
         {/*
           Web's sentence, and web's tap on it: "3 novelists like this" opens the
           list of who. The sentence yields width first — it can shorten to an
@@ -385,7 +390,7 @@ const PromptCardView = ({
           <Ionicons
             color={expanded ? theme.accent.text : theme.textGray}
             name={expanded ? "chatbubble" : "chatbubble-outline"}
-            size={19}
+            size={ACTION_ICON}
           />
           {commentCount > 0 ? (
             <Text
@@ -416,7 +421,7 @@ const PromptCardView = ({
             <Ionicons
               color={theme.textGray}
               name="share-social-outline"
-              size={19}
+              size={ACTION_ICON}
             />
           </Pressable>
         ) : null}
@@ -484,47 +489,50 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.xs,
   },
   actionCount: {
-    fontSize: fontSize.label,
+    fontSize: fontSize.caption,
     fontVariant: ["tabular-nums"],
     fontWeight: "600",
   },
   actions: {
     alignItems: "center",
     flexDirection: "row",
-    gap: space.sm + 4,
-    // The row is the card's bottom edge: pulled in a little so the targets
-    // sit on the padding line rather than a row below it.
-    marginTop: -space.xs,
+    // Web's footer: a rule over the actions, which is what separates what
+    // was written from what you can do about it.
+    borderTopWidth: border.edge,
+    gap: space.m,
+    marginTop: space.xs,
+    paddingTop: space.xs,
   },
   card: {
-    borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
-    gap: space.sm + 2,
+    borderRadius: radius.card,
+    borderWidth: border.edge,
+    gap: space.ms,
+    // Web's card at phone width: 18 over the header, 14 at the sides.
+    paddingBottom: space.m,
     paddingHorizontal: space.md - 2,
-    paddingVertical: space.sm + 4,
+    paddingTop: 18,
   },
   comments: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: space.sm + 2,
+    paddingTop: space.ms,
   },
-  header: { alignItems: "center", flexDirection: "row", gap: space.sm + 2 },
-  identity: { flex: 1, gap: 2, minWidth: 0 },
-  meta: { fontSize: fontSize.caption },
+  header: { alignItems: "center", flexDirection: "row", gap: space.ms },
+  identity: { flex: 1, gap: space.xxs, minWidth: 0 },
+  meta: { fontSize: fontSize.meta },
   metaRole: { fontWeight: "600" },
   metaRow: { alignItems: "center", flexDirection: "row", gap: 5 },
   metaWhen: { flexShrink: 1 },
-  more: { alignSelf: "flex-start", paddingTop: 2 },
-  name: { fontSize: fontSize.body, fontWeight: "600" },
+  more: { alignSelf: "flex-start", paddingTop: space.xxs },
+  name: { fontSize: fontSize.body, fontWeight: "600", letterSpacing: -0.14 },
   song: {
     alignItems: "center",
-    borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.cardSm,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: space.sm + 2,
-    paddingHorizontal: space.sm + 2,
-    paddingVertical: space.sm,
+    gap: space.ms,
+    padding: space.ms,
   },
-  songArt: { borderRadius: radius.sm, height: 32, width: 32 },
+  songArt: { borderRadius: 9, height: 44, width: 44 },
   songArtFallback: { alignItems: "center", justifyContent: "center" },
   songArtist: { fontSize: fontSize.caption },
   songText: { flex: 1, minWidth: 0 },
@@ -534,7 +542,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flex: 1,
     flexDirection: "row",
-    gap: space.sm + 2,
+    gap: space.ms,
     minWidth: 0,
   },
 });

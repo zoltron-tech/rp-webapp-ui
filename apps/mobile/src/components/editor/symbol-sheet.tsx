@@ -1,7 +1,8 @@
 import type { SymbolCategory } from "@nw/richtext";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { BottomSheet } from "@/components/sheet";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * A grid of glyphs, grouped — web's bullet, numbering and quotation popovers.
@@ -34,6 +35,7 @@ export const SymbolSheet = ({
 
   return (
     <BottomSheet
+      ignoreKeyboard
       fill
       maxHeightRatio={0.7}
       onClose={onClose}
@@ -51,14 +53,15 @@ export const SymbolSheet = ({
               {category.name.toUpperCase()}
             </Text>
             <View style={styles.grid}>
-              {category.symbols.map((symbol) => {
+              {category.symbols.map((symbol, position) => {
                 const active = selected === symbol.value;
                 return (
                   <Pressable
                     accessibilityLabel={symbol.value}
                     accessibilityRole="button"
                     accessibilityState={{ selected: active }}
-                    key={symbol.value}
+                    // A glyph can sit twice in one group (the straight double quote).
+                    key={`${position}-${symbol.value}`}
                     onPress={() => onSelect(symbol.value)}
                     style={({ pressed }) => [
                       styles.cell,
@@ -104,13 +107,13 @@ const styles = StyleSheet.create({
   cell: {
     alignItems: "center",
     borderRadius: radius.sm,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     height: 44,
     justifyContent: "center",
     minWidth: 44,
     paddingHorizontal: space.xs,
   },
   glyph: { fontSize: fontSize.title },
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: space.xs + 2 },
-  heading: { fontSize: 10, fontWeight: "700", letterSpacing: 0.8 },
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: space.s },
+  heading: { fontSize: fontSize.meta, fontWeight: "700", letterSpacing: 0.8 },
 });

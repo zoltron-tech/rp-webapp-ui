@@ -12,7 +12,7 @@ import {
   useConnectionActions,
   useOpenConversation,
 } from "@/hooks/use-connection";
-import { radius, space, useAppTheme } from "@/theme";
+import { border, radius, space, useAppTheme } from "@/theme";
 
 /**
  * The two buttons over a profile's banner.
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
   button: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     height: 34,
     justifyContent: "center",
     width: 34,
@@ -390,8 +390,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: space.sm,
     position: "absolute",
-    right: space.sm + 2,
-    top: space.sm + 2,
+    right: space.ms,
+    top: space.ms,
     zIndex: 2,
   },
 });

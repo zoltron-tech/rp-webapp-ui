@@ -8,10 +8,10 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
-  Text,
   useWindowDimensions,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Line } from "react-native-svg";
 import { CroppedImage } from "@/components/cropped-image";
@@ -23,7 +23,7 @@ import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { useStoryTimeline } from "@/hooks/use-story";
 import { asColor } from "@/lib/color";
 import { chapterColor, plainText, storyClock, storyDate } from "@/lib/story";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, type, useAppTheme } from "@/theme";
 
 /**
  * The timelines — web's `StoryTimelineView`, read-only.
@@ -567,24 +567,24 @@ const styles = StyleSheet.create({
     gap: 1,
     height: BAR_HEIGHT,
     justifyContent: "center",
-    paddingHorizontal: 8,
+    paddingHorizontal: space.sm,
     position: "absolute",
   },
-  barDate: { color: "rgba(255,255,255,0.85)", fontSize: 10 },
+  barDate: { color: "rgba(255,255,255,0.85)", fontSize: fontSize.meta },
   barLabel: { color: "#fff", flexShrink: 1, fontSize: fontSize.caption, fontWeight: "700" },
-  barTop: { alignItems: "center", flexDirection: "row", gap: 4 },
+  barTop: { alignItems: "center", flexDirection: "row", gap: space.xs },
   board: {
     borderRadius: radius.md + 4,
-    borderWidth: StyleSheet.hairlineWidth,
-    marginHorizontal: space.sm + 4,
+    borderWidth: border.edge,
+    marginHorizontal: space.m,
   },
   boardContent: { paddingTop: MARKER_ROW },
   emptyBoard: {
     alignItems: "center",
     borderRadius: radius.md + 4,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     gap: space.sm,
-    marginHorizontal: space.sm + 4,
+    marginHorizontal: space.m,
     padding: space.xl,
   },
   emptyText: { fontSize: fontSize.body, textAlign: "center" },
@@ -594,10 +594,10 @@ const styles = StyleSheet.create({
     fontSize: fontSize.caption,
     lineHeight: 17,
     paddingHorizontal: space.md,
-    paddingVertical: space.sm + 4,
+    paddingVertical: space.m,
   },
   laneName: {
-    fontSize: 10,
+    fontSize: fontSize.meta,
     fontWeight: "700",
     left: 6,
     letterSpacing: 0.6,
@@ -626,7 +626,7 @@ const styles = StyleSheet.create({
   markerRule: { position: "absolute", width: 1 },
   node: {
     borderColor: "#fff",
-    borderRadius: 5,
+    borderRadius: radius.sm,
     borderWidth: 1.5,
     height: 10,
     position: "absolute",
@@ -637,29 +637,24 @@ const styles = StyleSheet.create({
   sheetCover: { aspectRatio: 2 / 3, borderRadius: radius.md, overflow: "hidden", width: 64 },
   sheetFact: { fontSize: fontSize.caption },
   sheetHead: { flexDirection: "row", gap: space.md },
-  sheetMeta: { gap: 2, marginTop: 2 },
+  sheetMeta: { gap: space.xxs, marginTop: space.xxs },
   sheetName: { fontSize: fontSize.title - 2, fontWeight: "700" },
   sheetPreview: { fontSize: fontSize.label, lineHeight: 19 },
   sheetText: { flex: 1, gap: 3 },
-  shelf: { gap: space.sm, paddingHorizontal: space.sm + 4, paddingTop: space.lg },
+  shelf: { gap: space.sm, paddingHorizontal: space.m, paddingTop: space.lg },
   shelfChip: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: 6,
+    gap: space.s,
     maxWidth: "100%",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: space.m,
+    paddingVertical: space.s,
   },
   shelfLabel: { flexShrink: 1, fontSize: fontSize.label, fontWeight: "600" },
   shelfOrdinal: { fontSize: fontSize.caption, fontWeight: "700" },
-  shelfRow: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
-  shelfTitle: {
-    fontSize: fontSize.caption,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-  },
+  shelfRow: { flexDirection: "row", flexWrap: "wrap", gap: space.s },
+  shelfTitle: type.eyebrow,
   spine: { height: 2, left: 0, position: "absolute", right: 0 },
 });

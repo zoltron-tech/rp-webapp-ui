@@ -2,7 +2,7 @@ import { Fragment, type ReactNode } from "react";
 import { type StyleProp, StyleSheet, View, type ViewStyle } from "react-native";
 import { ROW_HEIGHT } from "@/components/novelist-row";
 import { Bone, SkeletonPulse } from "@/components/skeleton";
-import { radius, space, useAppTheme } from "@/theme";
+import { border, radius, space, useAppTheme } from "@/theme";
 
 /**
  * Ghost rows for the lists — each in the geometry of the row it stands in for.
@@ -79,7 +79,7 @@ const Frame = ({
 export const NotificationRowSkeleton = () => (
   <SkeletonPulse label="Loading a notification">
     <Frame style={styles.notification}>
-      <Bone circle height={44} />
+      <Bone circle height={40} />
       <View style={styles.body}>
         <Bone height={13} width="85%" />
         <Bone height={13} width="55%" />
@@ -175,48 +175,50 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: radius.md,
     flex: 1,
-    gap: space.xs + 2,
-    padding: space.sm + 4,
+    gap: space.s,
+    padding: space.m,
   },
-  body: { flex: 1, gap: 6, minWidth: 0 },
+  body: { flex: 1, gap: space.s, minWidth: 0 },
   chips: { flexDirection: "row", gap: 5 },
-  frame: { borderWidth: StyleSheet.hairlineWidth },
+  frame: { borderWidth: border.edge },
   muse: {
     alignItems: "center",
     borderRadius: radius.md + 4,
     flexDirection: "row",
-    gap: space.sm + 4,
+    gap: space.m,
     paddingLeft: space.md,
-    paddingRight: space.sm + 2,
-    paddingVertical: space.sm + 2,
+    paddingRight: space.ms,
+    paddingVertical: space.ms,
   },
   museBody: { gap: space.sm },
   notification: {
-    borderRadius: radius.md,
+    borderRadius: radius.card,
     flexDirection: "row",
-    gap: space.sm + 4,
-    paddingHorizontal: space.sm + 4,
-    paddingVertical: space.sm + 4,
+    gap: space.m,
+    marginBottom: space.sm,
+    marginHorizontal: space.md,
+    paddingHorizontal: space.m,
+    paddingVertical: space.m,
   },
   novelist: {
     alignItems: "center",
     borderRadius: radius.lg,
     flexDirection: "row",
-    gap: space.sm + 4,
+    gap: space.m,
     height: ROW_HEIGHT,
     paddingHorizontal: space.md - 2,
   },
   page: { flex: 1, padding: space.md },
   quote: {
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    gap: 6,
-    padding: space.sm + 2,
+    borderWidth: border.edge,
+    gap: space.s,
+    padding: space.ms,
   },
   rule: { height: StyleSheet.hairlineWidth, width: "100%" },
-  shelf: { gap: space.sm + 2 },
-  shelfRow: { flexDirection: "row", gap: space.sm + 2 },
-  thread: { borderRadius: radius.md, gap: space.sm, padding: space.sm + 2 },
-  threadFoot: { alignItems: "center", flexDirection: "row", gap: space.xs + 2 },
-  threadHead: { alignItems: "center", flexDirection: "row", gap: space.sm + 2 },
+  shelf: { gap: space.ms },
+  shelfRow: { flexDirection: "row", gap: space.ms },
+  thread: { borderRadius: radius.md, gap: space.sm, padding: space.ms },
+  threadFoot: { alignItems: "center", flexDirection: "row", gap: space.s },
+  threadHead: { alignItems: "center", flexDirection: "row", gap: space.ms },
 });

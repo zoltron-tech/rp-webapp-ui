@@ -28,7 +28,12 @@ import {
   useContext,
   useMemo,
 } from "react";
-import { Platform, useColorScheme } from "react-native";
+import {
+  Platform,
+  StyleSheet,
+  type TextStyle,
+  useColorScheme,
+} from "react-native";
 
 /**
  * The same palette and the same accent the web app renders, read directly.
@@ -264,6 +269,21 @@ export interface MaterialTokens {
   fillTranslucent: string;
   /** `edge` as a wash of the text colour, for cards and dividers on glass. */
   edgeTranslucent: string;
+  /**
+   * A content card's colours, ready to drop into a style array: web's
+   * `MATERIAL_CARD`. The strong fill, the edge, and the top edge one step
+   * lighter — web's `inset 0 1px 0` highlight, drawn as the border it sits on.
+   *
+   * One object per theme, so a memoised card's style compares equal.
+   *
+   * Web also casts a wide, mostly hidden drop shadow. Left out: on Android
+   * that is an elevation layer per card in a feed of dozens.
+   */
+  card: {
+    backgroundColor: string;
+    borderColor: string;
+    borderTopColor: string;
+  };
 }
 
 const glassVariants = (
@@ -308,6 +328,15 @@ const glassFor = ({ base, ink, page, strongEdge }: GlassBases): GlassTokens => (
 });
 
 const materialFor = ({ base, ink, page }: GlassBases): MaterialTokens => ({
+  card: {
+    backgroundColor: mixColors(base, MATERIAL_ALPHA.fillStrong, page),
+    borderColor: mixColors(ink, MATERIAL_ALPHA.edge, page),
+    borderTopColor: mixColors(
+      ink,
+      MATERIAL_ALPHA.edge + MATERIAL_ALPHA.highlight,
+      page,
+    ),
+  },
   edge: mixColors(ink, MATERIAL_ALPHA.edge, page),
   edgeTranslucent: withAlpha(ink, MATERIAL_ALPHA.edge),
   fillTranslucent: withAlpha(ink, MATERIAL_ALPHA.fill),
@@ -353,6 +382,28 @@ export type AppAccent = Accent & {
    * contrast-tuned `text`, since a dark-scale step 8 on a white bar does not read.
    */
   brand: string;
+  /**
+   * A primary button's fill, and the same under a finger.
+   *
+   * Web's `--accent`, which is `surface` here: step 6 for the six deep accents
+   * and step 9 for the six bright ones, so a primary button is the accent at
+   * rest rather than the accent shouting. `solid` (always step 9) stays what
+   * web keeps `--accent-9` for — unread dots, rails, progress, focus rings.
+   *
+   * The light theme has no step 6 to speak of (its `surface` is a pale wash),
+   * so there a button keeps the solid colour.
+   */
+  fill: string;
+  fillPressed: string;
+  /** A label or icon on `fill`. Web's `--text` in the dark theme. */
+  onFill: string;
+  /**
+   * A primary button that cannot be pressed, and the ink on it. Web's
+   * `PILL_PRIMARY:disabled`: the pressed wash and secondary text, no accent —
+   * one rule in place of the dimmed, half-opaque and swapped-fill variants.
+   */
+  fillDisabled: string;
+  onFillDisabled: string;
 };
 
 /**
@@ -397,19 +448,40 @@ const lightAccent = (accent: Accent): Accent => {
   };
 };
 
+interface FillInks {
+  /** Ink on a solid fill where white does not reach 3:1. */
+  darkInk: string;
+  brand: string;
+  light: boolean;
+  /** The theme's primary and secondary text. */
+  text: string;
+  textGray: string;
+  /** `glass.fillPressed`: what a disabled button is filled with. */
+  disabledFill: string;
+}
+
 const withInks = (
   accent: Accent,
-  darkInk: string,
-  brand: string,
-): AppAccent => ({
+  { brand, darkInk, disabledFill, light, text, textGray }: FillInks,
+): AppAccent => {
+  const onSolid =
+    contrastRatio("#ffffff", accent.solid) >= 3 ? "#ffffff" : darkInk;
+
+  return {
   ...accent,
   brand,
-  onSolid: contrastRatio("#ffffff", accent.solid) >= 3 ? "#ffffff" : darkInk,
+  fill: light ? accent.solid : accent.surface,
+  fillDisabled: disabledFill,
+  fillPressed: light ? accent.solidHover : accent.surfaceHover,
+  onFill: light ? onSolid : text,
+  onFillDisabled: textGray,
+  onSolid,
   onSurface:
     contrastRatio(accent.textStrong, accent.surface) >= 3
       ? accent.textStrong
       : "#ffffff",
-});
+  };
+};
 
 export type AppTheme = Theme & {
   accent: AppAccent;
@@ -433,16 +505,20 @@ const buildAppTheme = (theme: Theme, baseAccent: Accent): AppTheme => {
   const neutral = getNeutral(baseAccent.name);
   const glassBases = light ? lightGlassBases() : darkGlassBases(neutral);
   const shaded = light ? lightAccent(baseAccent) : baseAccent;
-  const accent = withInks(
-    shaded,
-    light ? THEME_LIGHT.text : neutral[0],
-    light ? shaded.text : ACCENT_DEFINITIONS[baseAccent.name].accent[7],
-  );
+  const glass = glassFor(glassBases);
+  const accent = withInks(shaded, {
+    brand: light ? shaded.text : ACCENT_DEFINITIONS[baseAccent.name].accent[7],
+    darkInk: light ? THEME_LIGHT.text : neutral[0],
+    disabledFill: glass.fillPressed,
+    light,
+    text: light ? THEME_LIGHT.text : neutral[11],
+    textGray: light ? LIGHT_TEXT_GRAY : neutral[10],
+  });
 
   return {
     ...theme,
     accent,
-    glass: glassFor(glassBases),
+    glass,
     material: materialFor(glassBases),
     /*
      * In the dark theme the page itself belongs to the accent's pairing.
@@ -520,11 +596,18 @@ export const AppThemeProvider = ({ children }: { children: ReactNode }) => {
 
 export const useAppTheme = (): AppTheme => useContext(AppThemeContext);
 
+/**
+ * A chip or control sitting straight on a photo or cover art: web's
+ * `MEDIA_CHIP`. A fixed dark dim in both themes, because what is behind it is
+ * an image and not the page. Module-level so a `StyleSheet` can use it.
+ */
+export const MEDIA_CHIP = `rgba(0,0,0,${SCRIM_ALPHA.mediaChip})`;
+
+/** A filled heart: web's `--tomato-9`. The same red in every accent. */
+export const TOMATO = "#e54d2e";
+
 /** The neutral scale jade is paired with on web, for borders and dividers. */
 export const neutral = OLIVE;
-
-/** The neutral scale in force, which follows the accent. */
-export const useNeutral = (): ColorScale => getNeutral(useAccent().name);
 
 /**
  * Spacing and type scale.
@@ -537,17 +620,60 @@ export const useNeutral = (): ColorScale => getNeutral(useAccent().name);
 export const space = {
   lg: 24,
   md: 16,
+  /** Between `sm` and `md`: web's 12px, the gap inside most cards. */
+  m: 12,
+  /** Between `md` and `lg`. */
+  ml: 20,
+  /** Between `sm` and `m`. */
+  ms: 10,
+  /** Between `xs` and `sm`. */
+  s: 6,
   sm: 8,
   xl: 32,
   xs: 4,
+  xxs: 2,
 } as const;
 
+/**
+ * Corner radii, named for what they round.
+ *
+ * `sm`/`md`/`lg` are the original three steps; the named ones are web's
+ * component radii (`common.styled.ts`, the card and dialog styles) so a native
+ * card and the web card it mirrors share a number rather than a guess.
+ */
 export const radius = {
+  /** A chat bubble's outer corners. */
+  bubble: 16,
+  /** A feed card at phone width. */
+  card: 16,
+  /** A rail card. */
+  cardSm: 14,
+  /** Text fields. Web's `FIELD`. */
+  field: 12,
   full: 999,
   lg: 16,
   md: 8,
+  /** A grouped block of rows: a settings group, the menu's sections. */
+  group: 18,
+  /** Menus and popover panels. */
+  menu: 14,
+  /** A bottom sheet's top corners. */
+  sheet: 22,
   /** The design system's `BORDER_RADIUS`, which is 5px. */
   sm: 5,
+  xs: 4,
+} as const;
+
+/**
+ * Line weights.
+ *
+ * Web draws every card, field and chip edge at 1px. A hairline is thinner than
+ * that on any phone denser than 1x, which is all of them, so it is kept for the
+ * one thing it suits: a divider between rows of a list.
+ */
+export const border = {
+  divider: StyleSheet.hairlineWidth,
+  edge: 1,
 } as const;
 
 /**
@@ -565,11 +691,107 @@ export const monospace = Platform.select({
   ios: "Menlo",
 });
 
+/**
+ * The interface face: Montserrat, as on web (`globals.css`).
+ *
+ * One entry per *file*. A face loaded at runtime is a single weight, and
+ * Android answers `fontWeight: "700"` on one by smearing the regular outline
+ * rather than switching file — so weight is chosen by naming the file and
+ * `fontWeight` is left alone. `components/text.tsx` does that mapping for
+ * anything that sets `fontWeight`; use these directly only where a style goes
+ * to something that is not that component (a native header, `Animated.Text`).
+ */
+export const font = {
+  bold: "Montserrat-Bold",
+  boldItalic: "Montserrat-BoldItalic",
+  italic: "Montserrat-Italic",
+  medium: "Montserrat-Medium",
+  mediumItalic: "Montserrat-MediumItalic",
+  regular: "Montserrat-Regular",
+  semibold: "Montserrat-SemiBold",
+  semiboldItalic: "Montserrat-SemiBoldItalic",
+} as const;
+
+/** Web's four weights (`--font-weight-*`). */
+export const weight = {
+  bold: "700",
+  medium: "500",
+  regular: "400",
+  semibold: "600",
+} as const;
+
 export const fontSize = {
-  body: 15,
+  /** Web's base size. */
+  body: 14,
   caption: 12,
   display: 28,
+  /** Uppercase section labels. The smallest text the app draws. */
+  eyebrow: 11,
   h2: 22,
+  /** Text entry. 16 is what stops iOS zooming a focused field on web. */
+  input: 16,
   label: 13,
+  /** A menu or sheet row's label, and a sheet's title: web's 16. */
+  lead: 16,
+  /**
+   * Authored content: rich text, the editor, story dialogue. Reading text, so
+   * it stays a step above the interface size, and the editor scales every
+   * author-chosen size against it.
+   */
+  prose: 15,
+  /** Timestamps and counts beside a name. */
+  meta: 11,
   title: 20,
 } as const;
+
+/**
+ * Text presets: web's recurring size / weight / line-height combinations.
+ *
+ * Line heights are web's ratios (1.2 for titles, 1.4 to 1.55 for running text)
+ * multiplied out, because React Native wants pixels. Tracking likewise: web
+ * writes `0.12em`, which at 11px is 1.3.
+ */
+export const type = {
+  body: { fontSize: fontSize.body, fontWeight: weight.regular, lineHeight: 21 },
+  bodyStrong: {
+    fontSize: fontSize.body,
+    fontWeight: weight.semibold,
+    lineHeight: 21,
+  },
+  button: { fontSize: fontSize.body, fontWeight: weight.medium },
+  caption: {
+    fontSize: fontSize.caption,
+    fontWeight: weight.regular,
+    lineHeight: 17,
+  },
+  cardTitle: {
+    fontSize: fontSize.body,
+    fontWeight: weight.semibold,
+    lineHeight: 18,
+  },
+  display: {
+    fontSize: fontSize.display,
+    fontWeight: weight.bold,
+    lineHeight: 34,
+  },
+  eyebrow: {
+    fontSize: fontSize.eyebrow,
+    fontWeight: weight.semibold,
+    letterSpacing: 1.3,
+    textTransform: "uppercase",
+  },
+  input: { fontSize: fontSize.input, fontWeight: weight.regular },
+  meta: { fontSize: fontSize.meta, fontWeight: weight.regular, lineHeight: 15 },
+  pageTitle: {
+    fontSize: fontSize.h2,
+    fontWeight: weight.bold,
+    lineHeight: 27,
+  },
+  sectionTitle: {
+    fontSize: fontSize.title,
+    fontWeight: weight.bold,
+    lineHeight: 24,
+  },
+} as const satisfies Record<string, TextStyle>;
+
+export type TypeVariant = keyof typeof type;

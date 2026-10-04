@@ -1,6 +1,15 @@
+import { memo } from "react";
 import type { MarkdownMark } from "@nw/chat";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { fontSize, monospace, radius, space, useAppTheme } from "@/theme";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
+import {
+  border,
+  fontSize,
+  monospace,
+  radius,
+  space,
+  useAppTheme,
+} from "@/theme";
 
 /**
  * Bold, italic, strike and code, for people who do not type asterisks.
@@ -80,7 +89,7 @@ export const applyFormat = (
   };
 };
 
-export const FormatBar = ({
+const FormatBarView = ({
   onFormat,
 }: {
   onFormat: (token: string) => void;
@@ -123,12 +132,18 @@ export const FormatBar = ({
   );
 };
 
+/**
+ * Memoised: the composer re-renders on every character of the draft, and
+ * nothing here depends on the draft.
+ */
+export const FormatBar = memo(FormatBarView);
+
 const styles = StyleSheet.create({
   bold: { fontWeight: "800" },
   button: {
     alignItems: "center",
     borderRadius: radius.sm,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     height: 28,
     justifyContent: "center",
     width: 32,

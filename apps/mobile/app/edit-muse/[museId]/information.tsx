@@ -1,15 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { Muse } from "@nw/types";
 import { useRef, useState } from "react";
-import {
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  type TextInput,
-  View,
-} from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Text, type TextInput } from "@/components/text";
 import { type ActionItem, ActionMenu } from "@/components/action-menu";
 import {
   MuseGate,
@@ -29,7 +22,7 @@ import { SettingsGroup, SettingsRow } from "@/components/settings";
 import { useMuseEdit } from "@/hooks/use-muse-edit";
 import { useMuseForm } from "@/hooks/use-muse-form";
 import { asColor } from "@/lib/color";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * Web's `InformationSection`: the name, the fandom, the nicknames and the
@@ -322,23 +315,23 @@ const OrderButton = ({
 };
 
 const styles = StyleSheet.create({
-  body: { gap: space.lg, padding: space.sm + 4 },
+  body: { gap: space.lg, padding: space.m },
   error: { fontSize: fontSize.caption },
   fandomDot: { borderRadius: 7, height: 14, width: 14 },
-  names: { gap: space.sm + 4, padding: space.md },
-  order: { flexDirection: "row", gap: 6 },
+  names: { gap: space.m, padding: space.md },
+  order: { flexDirection: "row", gap: space.s },
   orderButton: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     height: 30,
     justifyContent: "center",
     width: 30,
   },
   pill: {
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: space.sm + 4,
+    borderWidth: border.edge,
+    paddingHorizontal: space.m,
     paddingVertical: 5,
   },
   pillLabel: { fontSize: fontSize.label, fontStyle: "italic", fontWeight: "600" },

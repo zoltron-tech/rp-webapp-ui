@@ -7,7 +7,8 @@ import type {
   StoryCharacter,
 } from "@nw/types";
 import { useEffect, useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Avatar } from "@/components/avatar";
 import { Chip, PillButton } from "@/components/settings";
@@ -19,7 +20,7 @@ import {
   RELATIONSHIP_TONES,
   speakerAvatarUrl,
 } from "@/lib/story";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, type, useAppTheme } from "@/theme";
 
 /**
  * One face in a story, whichever pool it came from — web's `StoryFace`.
@@ -354,9 +355,9 @@ const Fact = ({ label, value }: { label: string; value: string }) => {
 
 const styles = StyleSheet.create({
   body: { gap: space.md, paddingHorizontal: space.md, paddingTop: space.xs },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
-  dot: { borderRadius: 4, height: 8, width: 8 },
-  fact: { gap: 2 },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: space.s },
+  dot: { borderRadius: radius.xs, height: 8, width: 8 },
+  fact: { gap: space.xxs },
   factLabel: {
     fontSize: fontSize.caption,
     fontWeight: "600",
@@ -364,7 +365,7 @@ const styles = StyleSheet.create({
   },
   facts: {
     borderRadius: radius.md + 4,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     gap: space.sm,
     padding: space.md,
   },
@@ -374,13 +375,13 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
     borderWidth: 1,
     flexDirection: "row",
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    gap: space.s,
+    paddingHorizontal: space.ms,
+    paddingVertical: space.xs,
   },
   groupLabel: { fontSize: fontSize.caption, fontWeight: "600" },
   head: { alignItems: "center", flexDirection: "row", gap: space.md },
-  headText: { flex: 1, gap: 6 },
+  headText: { flex: 1, gap: space.s },
   hint: { fontSize: fontSize.body },
   name: { fontSize: fontSize.title, fontWeight: "700" },
   relationship: {
@@ -388,22 +389,17 @@ const styles = StyleSheet.create({
     borderLeftWidth: 3,
     borderRadius: radius.md,
     flexDirection: "row",
-    gap: space.sm + 2,
-    padding: space.sm + 2,
+    gap: space.ms,
+    padding: space.ms,
   },
   relationshipLabel: { fontSize: fontSize.caption },
   relationshipName: { fontSize: fontSize.label + 1, fontWeight: "600" },
-  relationshipText: { flex: 1, gap: 2, minWidth: 0 },
-  ring: { borderRadius: radius.full, borderWidth: 2, padding: 2 },
+  relationshipText: { flex: 1, gap: space.xxs, minWidth: 0 },
+  ring: { borderRadius: radius.full, borderWidth: 2, padding: space.xxs },
   section: { gap: space.sm },
-  sectionTitle: {
-    fontSize: fontSize.caption,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-  },
+  sectionTitle: type.eyebrow,
   strength: { flexDirection: "row", gap: 3 },
   strengthDot: { borderRadius: 3, height: 6, width: 6 },
-  toneColumn: { alignItems: "flex-end", gap: 4 },
+  toneColumn: { alignItems: "flex-end", gap: space.xs },
   toneLabel: { fontSize: fontSize.caption, fontWeight: "700" },
 });

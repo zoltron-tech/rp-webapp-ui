@@ -133,7 +133,43 @@ export const isServerEdit = (data: unknown): data is ServerEdit => {
   );
 };
 
+/**
+ * Something happened that the notification list should show.
+ *
+ * It says only that the list is stale and what the badge now is; the list
+ * itself is fetched. Everything is under `payload` on purpose: a frame with a
+ * top-level `id`, `conversationId` and `message` is a chat message.
+ */
+export interface ServerNotification {
+  payload: {
+    /** The notification type, e.g. `REACTION`. */
+    kind: string;
+    notificationId: string | null;
+    /** Unread conversations plus unseen notifications, as the server counts them. */
+    badge: number;
+  };
+  type: "NOTIFICATION";
+}
+
+export const isServerNotification = (
+  data: unknown,
+): data is ServerNotification => {
+  const frame = record(data);
+  if (frame?.type !== "NOTIFICATION") return false;
+  return typeof record(frame.payload)?.kind === "string";
+};
+
 // ─── Builders ────────────────────────────────────────────────────────────────
+
+/**
+ * `foreground` tells the server whether the app is in front of the person: a
+ * visible tab, an active app. The server pushes to a device only when the app
+ * is in front of them nowhere, so a client that leaves this out is taken to be
+ * present for as long as its socket is open — which is how a hidden tab used to
+ * silence a phone.
+ */
+const heartbeatPayload = (usernames: string[], foreground?: boolean) =>
+  foreground === undefined ? { usernames } : { foreground, usernames };
 
 /**
  * The reply to a server ping.
@@ -143,8 +179,11 @@ export const isServerEdit = (data: unknown): data is ServerEdit => {
  * of which usernames this client is asking about. Both happen on every pong, so
  * the username list has to be complete each time rather than incremental.
  */
-export const createHeartbeatPong = (usernames: string[] = []) => ({
-  payload: { usernames },
+export const createHeartbeatPong = (
+  usernames: string[] = [],
+  foreground?: boolean,
+) => ({
+  payload: heartbeatPayload(usernames, foreground),
   type: "pong" as const,
 });
 
@@ -155,8 +194,11 @@ export const createHeartbeatPong = (usernames: string[] = []) => ({
  * set of people on screen changes — otherwise opening a conversation shows
  * everyone as offline until the next heartbeat lands.
  */
-export const createHeartbeatQuery = (usernames: string[] = []) => ({
-  payload: { usernames },
+export const createHeartbeatQuery = (
+  usernames: string[] = [],
+  foreground?: boolean,
+) => ({
+  payload: heartbeatPayload(usernames, foreground),
   type: "query-heartbeats" as const,
 });
 

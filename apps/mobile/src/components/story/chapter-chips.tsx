@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { StoryBoardEvent } from "@nw/types";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { fontSize, radius, space, useAppTheme } from "@/theme";
 
 /** "Used in" — the chapters a codex entry or pin appears in, each a way in. */
@@ -52,7 +53,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: radius.full,
     flexDirection: "row",
-    gap: 4,
+    gap: space.xs,
     maxWidth: "100%",
     paddingHorizontal: 9,
     paddingVertical: 5,
@@ -63,7 +64,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6,
+    gap: space.s,
     marginTop: space.sm,
   },
 });

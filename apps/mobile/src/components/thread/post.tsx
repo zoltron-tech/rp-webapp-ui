@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { PromptSource } from "@nw/types";
-import { toFormattedDate } from "@nw/utils";
+import { toFormattedDate, wsrvImage } from "@nw/utils";
 import { Image } from "expo-image";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { ClipPlayer } from "@/components/chat/clip-player";
 import { HeartButton } from "@/components/heart-button";
@@ -10,7 +11,8 @@ import { RichText } from "@/components/rich-text";
 import { sourceLinkLabel, useOpenSource } from "@/hooks/use-open-source";
 import type { ReactionTarget } from "@/hooks/use-toggle-reaction";
 import { useToggleReaction } from "@/hooks/use-toggle-reaction";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
+import { memo, useMemo } from "react";
 
 /**
  * One post — the prompt a thread hangs off, the reply that opened it, any reply
@@ -73,7 +75,8 @@ import { fontSize, radius, space, useAppTheme } from "@/theme";
  */
 
 /** Faces are 36pt here rather than the outgoing card's 44 — many of these stack. */
-const AVATAR = 36;
+/** Web's 40 at phone width. */
+const AVATAR = 40;
 
 /**
  * The accent rule down the prompt, and the fainter one down a reply.
@@ -108,11 +111,12 @@ const REACTION_TARGET: Record<PostVariant, ReactionTarget> = {
   reply: "reply",
 };
 
-export const ThreadPost = ({
+const ThreadPostView = ({
   author,
   commentCount,
   concluded = false,
   createdOn,
+  flat = false,
   id,
   media,
   onMore,
@@ -136,6 +140,13 @@ export const ThreadPost = ({
   /** Draws the closed-thread chip beside the date. Only the opening reply has one. */
   concluded?: boolean;
   createdOn: string;
+  /**
+   * A message inside the conversation sheet rather than a card of its own:
+   * no frame, no fill, no indent. Web's thread is one sheet with the messages
+   * ruled apart inside it; a column of separate cards, each indented and
+   * edged, read as a list of unrelated posts.
+   */
+  flat?: boolean;
   id: string;
   media?: string | null;
   /** Omitted when there is nothing this viewer may do — the menu is then hidden. */
@@ -148,6 +159,11 @@ export const ThreadPost = ({
   variant: PostVariant;
 }) => {
   const theme = useAppTheme();
+  // A `moment()` and its diffs, once per post rather than once per render.
+  const when = useMemo(
+    () => (createdOn ? toFormattedDate(createdOn) : ""),
+    [createdOn],
+  );
   const openSource = useOpenSource();
 
   const reaction = useToggleReaction({
@@ -164,21 +180,23 @@ export const ThreadPost = ({
 
   return (
     <View
-      style={[
-        styles.card,
-        {
-          backgroundColor: isPrompt
-            ? theme.glass.field
-            : theme.material.fill,
-          borderColor: theme.material.edge,
-          borderLeftColor: isPrompt
-            ? theme.accent.solid
-            : isReply
-              ? theme.accent.surfaceHover
-              : "transparent",
-        },
-        isReply && { marginLeft: REPLY_INDENT },
-      ]}
+      style={
+        flat
+          ? styles.flat
+          : [
+              styles.card,
+              {
+                backgroundColor: theme.material.card.backgroundColor,
+                borderColor: theme.material.edge,
+                borderLeftColor: isPrompt
+                  ? theme.accent.solid
+                  : isReply
+                    ? theme.accent.surfaceHover
+                    : "transparent",
+              },
+              isReply && { marginLeft: REPLY_INDENT },
+            ]
+      }
     >
       <View style={styles.header}>
         {/* The face and the name go to the author — muse page or profile. */}
@@ -235,7 +253,7 @@ export const ThreadPost = ({
                 numberOfLines={1}
                 style={[styles.meta, { color: theme.textGray }]}
               >
-                {createdOn ? toFormattedDate(createdOn) : ""}
+                {when}
               </Text>
 
               {concluded ? (
@@ -281,7 +299,15 @@ export const ThreadPost = ({
       <RichText html={text} />
 
       {media ? (
-        <View style={[styles.media, { backgroundColor: theme.glass.field }]}>
+        <View
+          style={[
+            styles.media,
+            {
+              backgroundColor: theme.glass.field,
+              borderColor: theme.material.edge,
+            },
+          ]}
+        >
           {isVideo ? (
             <ClipPlayer url={media} />
           ) : (
@@ -289,7 +315,9 @@ export const ThreadPost = ({
               cachePolicy="memory-disk"
               contentFit="contain"
               recyclingKey={media}
-              source={{ uri: media }}
+              // Bounded to the screen, shape kept; the original was a
+              // full-size decode per post.
+              source={{ uri: wsrvImage(media, POST_IMAGE) }}
               style={styles.image}
               transition={0}
             />
@@ -324,17 +352,28 @@ export const ThreadPost = ({
   );
 };
 
+/**
+ * Memoised: the thread screen holds the menu, the likers sheet, the composer
+ * and the share sheet, and opening any of them re-rendered every post on the
+ * page — rich text, media and all. The screen passes stable callbacks.
+ */
+export const ThreadPost = memo(ThreadPostView);
+
+/** Three device pixels per point across a phone-width post. */
+const POST_IMAGE = { fit: "inside", w: 1080 } as const;
+
 const styles = StyleSheet.create({
   card: {
     // Reserved on every variant, coloured on two. See `RULE`.
     borderLeftWidth: RULE,
-    borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.card,
+    borderWidth: border.edge,
     gap: space.sm,
-    padding: space.sm + 4,
+    padding: space.m,
   },
   concluded: { alignItems: "center", flexDirection: "row", gap: 3 },
-  concludedLabel: { fontSize: 11, fontWeight: "600" },
+  concludedLabel: { fontSize: fontSize.meta, fontWeight: "600" },
+  flat: { gap: space.ms, paddingHorizontal: space.md, paddingVertical: space.md },
   footer: {
     alignItems: "center",
     flexDirection: "row",
@@ -352,22 +391,27 @@ const styles = StyleSheet.create({
    * behind it means a picture narrower than the post sits on a surface rather
    * than a hole.
    */
-  media: { borderRadius: radius.sm, height: 240, overflow: "hidden" },
-  meta: { flexShrink: 1, fontSize: 11 },
-  metaRow: { alignItems: "center", flexDirection: "row", gap: space.xs + 2 },
+  media: {
+    borderRadius: radius.cardSm,
+    borderWidth: border.edge,
+    height: 240,
+    overflow: "hidden",
+  },
+  meta: { flexShrink: 1, fontSize: fontSize.meta },
+  metaRow: { alignItems: "center", flexDirection: "row", gap: space.s },
   more: { alignSelf: "flex-start" },
   name: { fontSize: fontSize.body, fontWeight: "700" },
   replies: { alignItems: "center", flexDirection: "row", gap: space.xs },
   repliesLabel: { fontSize: fontSize.caption, fontWeight: "600" },
   tag: {
-    borderRadius: 4,
-    borderWidth: StyleSheet.hairlineWidth,
-    fontSize: 9,
+    borderRadius: radius.xs,
+    borderWidth: border.edge,
+    fontSize: fontSize.meta,
     fontWeight: "700",
     letterSpacing: 0.3,
     overflow: "hidden",
     paddingHorizontal: 5,
-    paddingVertical: 2,
+    paddingVertical: space.xxs,
   },
   who: {
     alignItems: "center",

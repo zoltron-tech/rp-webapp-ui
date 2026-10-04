@@ -17,16 +17,15 @@ import {
 import {
   type LayoutChangeEvent,
   StyleSheet,
-  type TextInput,
   type TextLayoutLine,
   View,
 } from "react-native";
+import { type TextInput } from "@/components/text";
 import {
   BlockInput,
   type BlockInputProps,
   BlockMeasure,
 } from "@/components/editor/block-input";
-import { space } from "@/theme";
 
 /**
  * The line after a picture set to "Text right" or "Text left", wrapping it
@@ -155,7 +154,7 @@ export const WrappedBlockInput = ({
     let offset = 0;
     for (let i = 0; i < lines.length; i += 1) {
       const line = lines[i];
-      if (i > 0 && space.xs + line.y + line.height > pictureHeight) break;
+      if (i > 0 && line.y + line.height > pictureHeight) break;
       offset += line.text.length;
     }
     return safeCut(block, clamp(offset, total));

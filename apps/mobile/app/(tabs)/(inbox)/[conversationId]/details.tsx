@@ -19,14 +19,14 @@ import {
   FlatList,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { ListStatus } from "@/components/list-status";
 import { useChatSocket, useIsOnline, useTrackOnline } from "@/context/socket";
 import { useHideTabBar } from "@/hooks/use-hide-tab-bar";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * Conversation details: who is in it, and the ways out of it.
@@ -359,8 +359,8 @@ export default function ConversationDetailsScreen() {
                   styles.primaryButton,
                   {
                     backgroundColor: pressed
-                      ? theme.accent.solidHover
-                      : theme.accent.solid,
+                      ? theme.accent.fillPressed
+                      : theme.accent.fill,
                   },
                 ]}
               >
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
   dangerButton: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.sm,
     justifyContent: "center",
@@ -405,12 +405,12 @@ const styles = StyleSheet.create({
   memberRow: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.sm,
     padding: space.sm,
   },
-  memberText: { flex: 1, gap: 2 },
+  memberText: { flex: 1, gap: space.xxs },
   primaryButton: {
     alignItems: "center",
     borderRadius: radius.full,
@@ -423,15 +423,15 @@ const styles = StyleSheet.create({
   primaryLabel: { color: "#ffffff", fontSize: fontSize.body, fontWeight: "600" },
   roleChip: {
     borderRadius: radius.sm,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     paddingHorizontal: space.xs,
     paddingVertical: 1,
   },
-  roleLabel: { fontSize: 10, fontWeight: "700" },
+  roleLabel: { fontSize: fontSize.meta, fontWeight: "700" },
   secondaryButton: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.sm,
     justifyContent: "center",

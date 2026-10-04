@@ -13,7 +13,7 @@ import { radius, space, useAppTheme } from "@/theme";
  */
 
 const ROWS = 7;
-const AVATAR = 52;
+const AVATAR = 48;
 
 export const ConversationSkeleton = () => {
   const theme = useAppTheme();
@@ -92,9 +92,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
-    gap: space.sm,
+    gap: space.m,
     paddingHorizontal: space.md,
-    paddingVertical: space.sm + 2,
+    paddingVertical: space.ms,
   },
   time: { borderRadius: radius.sm, height: 10, width: 44 },
   titleRow: {

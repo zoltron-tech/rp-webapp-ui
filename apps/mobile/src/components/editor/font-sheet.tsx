@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { DEFAULT_FONT, EDITOR_FONTS } from "@nw/fonts";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { BottomSheet } from "@/components/sheet";
 import { nativeFace } from "@/lib/editor-fonts";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * Web's font menu, as a tray: every family in `@nw/fonts`, each drawn in its
@@ -28,6 +29,7 @@ export const FontSheet = ({
 
   return (
     <BottomSheet
+      ignoreKeyboard
       maxHeightRatio={0.7}
       onClose={onClose}
       subtitle="For the selected words, or what you type next"
@@ -92,7 +94,7 @@ const styles = StyleSheet.create({
   row: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     minHeight: 50,
     paddingHorizontal: space.md,

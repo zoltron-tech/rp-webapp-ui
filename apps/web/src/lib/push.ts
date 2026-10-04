@@ -47,8 +47,26 @@ async function sendSubscriptionToBackend(
 
 // ── No registerServiceWorker() — the library handles it ──
 
-export async function initialisePushNotifications(): Promise<void> {
-  if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+/**
+ * Registers this browser for push.
+ *
+ * `prompt: false` is the silent path, for a cold start: it only ever acts when
+ * permission is already granted, re-posting the subscription (and recreating
+ * one the browser dropped) without showing anything. Asking on every launch,
+ * as this did, is what gets a site's prompt throttled or auto-denied.
+ *
+ * `prompt: true` may show the browser's permission prompt.
+ */
+export async function initialisePushNotifications(
+  options: { prompt?: boolean } = {},
+): Promise<void> {
+  const { prompt = true } = options;
+
+  if (
+    !("serviceWorker" in navigator) ||
+    !("PushManager" in window) ||
+    !("Notification" in window)
+  ) {
     console.warn("[Push] Not supported in this browser");
     return;
   }
@@ -60,21 +78,20 @@ export async function initialisePushNotifications(): Promise<void> {
     return;
   }
 
-  console.log("[Push] Initialising...");
+  if (!prompt && Notification.permission !== "granted") return;
 
   try {
     // The library already registered the SW — just wait for it to be ready
     const registration = await navigator.serviceWorker.ready;
 
-    console.log("[Push] Service Worker ready, checking subscription...");
-
     // Re-use if already subscribed (e.g. user logs out and back in)
     let subscription = await registration.pushManager.getSubscription();
 
-    console.log("[Push] Current subscription:", subscription);
-
     if (!subscription) {
-      const permission = await Notification.requestPermission();
+      const permission =
+        Notification.permission === "granted"
+          ? "granted"
+          : await Notification.requestPermission();
       if (permission !== "granted") {
         console.warn("[Push] Permission denied by user");
         return;
@@ -88,12 +105,24 @@ export async function initialisePushNotifications(): Promise<void> {
       });
     }
 
-    console.log("[Push] New subscription obtained:", subscription);
     await sendSubscriptionToBackend(subscription);
-    console.log("[Push] Subscription active");
   } catch (err) {
     console.error("[Push] Initialisation failed:", err);
   }
+}
+
+/** The event `PushPrimer` listens for. */
+export const PUSH_PRIMER_EVENT = "nw:push-primer";
+
+/**
+ * Says "now would be a good moment to offer notifications": the person has
+ * just sent a message and will want to know when it is answered. The primer
+ * decides whether to appear — never if permission is already decided, and not
+ * again for a while after "Not now".
+ */
+export function suggestPushPrimer(): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event(PUSH_PRIMER_EVENT));
 }
 
 export async function unsubscribeFromPush(): Promise<void> {
@@ -104,13 +133,20 @@ export async function unsubscribeFromPush(): Promise<void> {
     const subscription = await registration.pushManager.getSubscription();
 
     if (subscription) {
+      // Read before unsubscribing: the endpoint is how the server knows which
+      // of the novelist's browsers this is. Without it the server removes them
+      // all, and logging out here would silence every other browser too.
+      const endpoint = encodeURIComponent(subscription.endpoint);
       await subscription.unsubscribe();
       // Called during logout, while the session cookies are still present —
       // `usePostLogout` runs this before `logoutAction` for exactly that reason.
-      await authedApi.raw("/rp/portfolio/push/unsubscribe", {
-        label: "pushUnsubscribe",
-        method: "DELETE",
-      });
+      await authedApi.raw(
+        `/rp/portfolio/push/unsubscribe?endpoint=${endpoint}`,
+        {
+          label: "pushUnsubscribe",
+          method: "DELETE",
+        },
+      );
     }
   } catch (err) {
     console.error("[Push] Unsubscribe failed:", err);

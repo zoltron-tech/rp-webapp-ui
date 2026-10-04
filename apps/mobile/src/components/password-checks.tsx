@@ -6,8 +6,9 @@ import {
   verifyPasswordsMatch,
   verifyPasswordUpperCase,
 } from "@nw/utils";
-import { StyleSheet, Text, View } from "react-native";
-import { radius, space, useAppTheme } from "@/theme";
+import { StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
+import { fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * The six password rules, live.
@@ -99,6 +100,6 @@ const styles = StyleSheet.create({
    * — exactly when the fields below it still need to be reachable. The wording
    * stays byte-for-byte web's; only the leading does.
    */
-  root: { borderRadius: radius.md, gap: 1, padding: space.xs + 2 },
-  rule: { fontSize: 11, lineHeight: 15 },
+  root: { borderRadius: radius.md, gap: 1, padding: space.s },
+  rule: { fontSize: fontSize.meta, lineHeight: 15 },
 });

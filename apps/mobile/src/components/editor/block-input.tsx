@@ -1,16 +1,20 @@
-import { blockText, type RichBlock, type RichInline } from "@nw/richtext";
+import {
+  blockText,
+  type RichBlock,
+  type RichInline,
+  type RunStyle,
+} from "@nw/richtext";
 import { memo, type ReactNode, useMemo } from "react";
 import {
   type NativeSyntheticEvent,
   StyleSheet,
-  Text,
-  TextInput,
   type TextInputKeyPressEventData,
   type TextInputSelectionChangeEventData,
   type TextLayoutLine,
   type TextStyle,
   View,
 } from "react-native";
+import { Text, TextInput } from "@/components/text";
 import { nativeFace } from "@/lib/editor-fonts";
 import {
   type AppTheme,
@@ -68,7 +72,7 @@ import {
 const WEB_BASE_PX = 16;
 
 export const toNativeSize = (px: number | undefined): number =>
-  px ? Math.round((px / WEB_BASE_PX) * fontSize.body) : fontSize.body;
+  px ? Math.round((px / WEB_BASE_PX) * fontSize.prose) : fontSize.prose;
 
 /** Web's `line-height: 1.6` on saved content; a touch tighter for headings. */
 const lineHeightFor = (size: number): number =>
@@ -184,9 +188,23 @@ const BlockFrame = ({
 }) => {
   const theme = useAppTheme();
 
-  if (block.type === "listItem") {
-    return (
-      <View style={styles.listRow}>
+  /*
+   * One tree for every kind of line. A list item, a quote and a paragraph
+   * used to return three different shapes, so turning one into another
+   * (the list button, Return on an empty item) unmounted the field and
+   * mounted a new one: focus went, and the keyboard with it.
+   */
+  return (
+    <View
+      style={[
+        styles.row,
+        block.type === "quote" && [
+          styles.quote,
+          { borderLeftColor: theme.accent.surface },
+        ],
+      ]}
+    >
+      {block.type === "listItem" ? (
         <Text
           style={[
             styles.marker,
@@ -195,20 +213,10 @@ const BlockFrame = ({
         >
           {block.marker ?? "•"}
         </Text>
-        <View style={styles.fill}>{children}</View>
-      </View>
-    );
-  }
-
-  if (block.type === "quote") {
-    return (
-      <View style={[styles.quote, { borderLeftColor: theme.accent.surface }]}>
-        {children}
-      </View>
-    );
-  }
-
-  return <>{children}</>;
+      ) : null}
+      <View style={styles.fill}>{children}</View>
+    </View>
+  );
 };
 
 export interface BlockInputProps {
@@ -222,8 +230,18 @@ export interface BlockInputProps {
     selection: { start: number; end: number },
   ) => void;
   onKeyPress: (index: number, key: string) => void;
+  /**
+   * Return was pressed. The field does not take the newline itself — see
+   * `submitBehavior` below.
+   */
+  onSubmit?: (index: number) => void;
   onFocus: (index: number) => void;
   onBlur: (index: number) => void;
+  /**
+   * For an empty line with the caret: the style its first character will be
+   * in, so the field draws it that way itself. See `emptyTyping`.
+   */
+  typing?: RunStyle;
   /** Set for one render to place the caret; cleared by the editor after. */
   selection?: { start: number; end: number };
   inputRef: (index: number, input: TextInput | null) => void;
@@ -240,8 +258,10 @@ const BlockInputView = ({
   onFocus,
   onKeyPress,
   onSelectionChange,
+  onSubmit,
   placeholder,
   selection,
+  typing,
 }: BlockInputProps) => {
   const theme = useAppTheme();
 
@@ -249,13 +269,40 @@ const BlockInputView = ({
   const { lineHeight, size } = blockSizing(block);
   const children = useMemo(() => blockRuns(block, theme), [block, theme]);
 
+  // Only while the line is empty: once it has text, the runs carry the style.
+  const typingStyle = useMemo(() => {
+    if (!typing || text.length > 0) return null;
+    const bold = typing.marks.includes("bold");
+    const italic = typing.marks.includes("italic");
+    const face = nativeFace(typing.fontFamily, bold, italic);
+    return [
+      face ? { fontFamily: face.fontFamily } : null,
+      bold && !face?.baked ? styles.bold : null,
+      italic && !face?.baked ? styles.italic : null,
+      typing.color ? { color: typing.color } : null,
+    ];
+  }, [text.length, typing]);
+
   return (
     <BlockFrame block={block} lineHeight={lineHeight} size={size}>
       <TextInput
         autoCapitalize="sentences"
         // The outer list scrolls; a field that scrolled too would trap the
         // finger on long paragraphs.
-        blurOnSubmit={false}
+        /*
+         * Return is reported, not typed. Left to the field, the newline was
+         * inserted natively and then the block was split in JS — but the
+         * upper line's block had not changed, so nothing told its field to
+         * drop the newline it had just been given. It stayed: one Return
+         * showed as two lines, and Backspace then had two to cross. With
+         * `submit` the field never holds the newline; the editor splits the
+         * block at the caret and there is nothing to take back out.
+         */
+        onSubmitEditing={() => onSubmit?.(index)}
+        // The key keeps its Return arrow: left to the default, a field that
+        // submits is given a tick, which reads as "send".
+        returnKeyType="none"
+        submitBehavior="submit"
         editable={editable}
         multiline
         onBlur={() => onBlur(index)}
@@ -280,6 +327,7 @@ const BlockInputView = ({
             lineHeight,
             textAlign: block.align ?? "left",
           },
+          typingStyle,
         ]}
         // No `value`. See the note above — with children it is a crash on
         // Android, not a preference.
@@ -338,12 +386,19 @@ const styles = StyleSheet.create({
   input: {
     // Android adds its own vertical padding to a multiline field; zeroing it
     // is what lets the marker's line height line up with the text's.
+    //
+    // No vertical padding at all: a line break inside a field is one line
+    // height, and with padding a break *between* fields was a line height
+    // plus eight points. Return shows the first for a frame (the keyboard's
+    // newline, in the field) and then the second (the new field) — the caret
+    // landed and then stepped down. Equal, there is nothing to step. It is
+    // also what the published post does: paragraphs there have no gap.
     paddingHorizontal: 0,
-    paddingVertical: space.xs,
+    paddingVertical: 0,
     textAlignVertical: "top",
   },
   italic: { fontStyle: "italic" },
-  listRow: { flexDirection: "row", gap: space.sm },
-  marker: { minWidth: 18, paddingTop: space.xs, textAlign: "right" },
+  row: { flexDirection: "row", gap: space.sm },
+  marker: { minWidth: 18, textAlign: "right" },
   quote: { borderLeftWidth: 3, paddingLeft: space.sm },
 });

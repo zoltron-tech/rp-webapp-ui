@@ -8,9 +8,9 @@ import {
   Alert,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { type ActionItem, ActionMenu } from "@/components/action-menu";
 import { Avatar } from "@/components/avatar";
 import { CroppedImage } from "@/components/cropped-image";
@@ -20,7 +20,7 @@ import { getNoteEmojiRotate, NoteEmojiIcon } from "@/components/note-emoji";
 import { useImageCropFlow } from "@/hooks/use-image-crop-flow";
 import { existingAvatar, type ProfileEdit } from "@/hooks/use-profile-edit";
 import { asColor, withAlpha } from "@/lib/color";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * The top of your profile — cover, photo and note — edited where it is drawn.
@@ -512,7 +512,7 @@ const styles = StyleSheet.create({
   avatarWrap: {
     borderRadius: radius.full,
     marginTop: -(AVATAR / 2),
-    padding: 4,
+    padding: space.xs,
   },
   banner: { aspectRatio: 5 / 2, overflow: "hidden", width: "100%" },
   bubble: {
@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     bottom: space.sm,
     flexDirection: "row",
-    gap: 6,
+    gap: space.s,
     justifyContent: "center",
     left: AVATAR + space.lg,
     position: "absolute",
@@ -550,7 +550,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
     flexDirection: "row",
     gap: 5,
-    paddingHorizontal: space.sm + 2,
+    paddingHorizontal: space.ms,
     paddingVertical: 5,
     position: "absolute",
     right: space.sm,
@@ -605,7 +605,7 @@ const styles = StyleSheet.create({
   noteEdit: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     bottom: -7,
     height: 20,
     justifyContent: "center",
@@ -618,13 +618,13 @@ const styles = StyleSheet.create({
   noteText: { fontSize: fontSize.label, lineHeight: 18 },
   pressed: { opacity: 0.85 },
   statusDot: { borderRadius: 3.5, height: 7, width: 7 },
-  statusLabel: { fontSize: 11 },
+  statusLabel: { fontSize: fontSize.meta },
   tilted: { transform: [{ rotate: "45deg" }] },
   tool: {
     alignItems: "center",
     flex: 1,
-    gap: 4,
-    paddingVertical: space.sm + 4,
+    gap: space.xs,
+    paddingVertical: space.m,
   },
   toolbar: { borderTopWidth: StyleSheet.hairlineWidth, flexDirection: "row" },
   toolIcon: {
@@ -636,5 +636,5 @@ const styles = StyleSheet.create({
   },
   toolLabel: { fontSize: fontSize.label, fontWeight: "700" },
   toolRule: { marginVertical: space.md, width: StyleSheet.hairlineWidth },
-  toolStatus: { alignItems: "center", flexDirection: "row", gap: 4 },
+  toolStatus: { alignItems: "center", flexDirection: "row", gap: space.xs },
 });

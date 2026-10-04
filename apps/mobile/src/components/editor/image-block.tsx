@@ -14,11 +14,12 @@ import {
   PanResponder,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { Text } from "@/components/text";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 import { AlignGlyph } from "./toolbar";
+import { IconButton } from "@/components/icon-button";
 
 /**
  * A picture in the document, and the controls web puts in a floating bar
@@ -246,22 +247,15 @@ export const ImageControls = ({
         <Text style={[styles.percent, { color: theme.textGray }]}>
           {width}%
         </Text>
-        <Pressable
+        <IconButton
           accessibilityLabel="Done, back to typing"
-          accessibilityRole="button"
           hitSlop={space.xs}
+          icon="checkmark"
           onPress={() => (onDone ? onDone(index) : onSelect(null))}
-          style={({ pressed }) => [
-            styles.done,
-            {
-              backgroundColor: pressed
-                ? theme.accent.solidHover
-                : theme.accent.solid,
-            },
-          ]}
-        >
-          <Ionicons color="#ffffff" name="checkmark" size={18} />
-        </Pressable>
+          size={30}
+          style={styles.done}
+          tone="primary"
+        />
       </View>
 
       <View style={[styles.rule, { backgroundColor: theme.material.edge }]} />
@@ -400,7 +394,7 @@ export const ImageBlock = memo(ImageBlockView);
 const styles = StyleSheet.create({
   bar: {
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     gap: space.xs,
     marginTop: space.xs,
     padding: space.xs,
@@ -412,24 +406,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     minHeight: 30,
     minWidth: 30,
-    paddingHorizontal: space.xs + 2,
+    paddingHorizontal: space.s,
   },
   chipLabel: { fontSize: fontSize.caption, fontWeight: "600" },
-  done: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    height: 30,
-    justifyContent: "center",
-    marginLeft: 2,
-    width: 30,
-  },
+  done: { marginLeft: space.xxs },
   fill: { borderRadius: 2, height: "100%" },
   frame: {
     borderRadius: radius.sm,
     borderWidth: 2,
     overflow: "hidden",
   },
-  group: { alignItems: "center", flexDirection: "row", gap: 2 },
+  group: { alignItems: "center", flexDirection: "row", gap: space.xxs },
   image: { aspectRatio: 16 / 9, width: "100%" },
   overlay: {
     alignItems: "center",

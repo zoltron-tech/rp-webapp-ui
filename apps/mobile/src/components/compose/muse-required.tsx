@@ -1,16 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { Muse } from "@nw/types";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { Text, TextInput } from "@/components/text";
 import { useQuickAddMuse } from "@/hooks/use-quick-add-muse";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * Web's `IcMuseRequiredForm`: the composer, replaced, when an in-character
@@ -100,16 +94,30 @@ export const MuseRequired = ({
             {
               backgroundColor: canCreate
                 ? pressed
-                  ? theme.accent.solidHover
-                  : theme.accent.solid
-                : theme.accent.surfaceActive,
+                  ? theme.accent.fillPressed
+                  : theme.accent.fill
+                : theme.accent.fillDisabled,
             },
           ]}
         >
           {quickAdd.isPending ? (
-            <ActivityIndicator color="#ffffff" size="small" />
+            <ActivityIndicator
+              color={theme.accent.onFillDisabled}
+              size="small"
+            />
           ) : (
-            <Text style={styles.buttonLabel}>Create character & continue</Text>
+            <Text
+              style={[
+                styles.buttonLabel,
+                {
+                  color: canCreate
+                    ? theme.accent.onFill
+                    : theme.accent.onFillDisabled,
+                },
+              ]}
+            >
+              Create character & continue
+            </Text>
           )}
         </Pressable>
       </View>
@@ -127,19 +135,19 @@ const styles = StyleSheet.create({
   buttonLabel: { color: "#ffffff", fontSize: fontSize.body, fontWeight: "700" },
   card: {
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     gap: space.md,
     padding: space.md,
   },
   desc: { fontSize: fontSize.caption, lineHeight: 17 },
   error: { fontSize: fontSize.caption },
-  header: { flexDirection: "row", gap: space.sm + 2 },
-  headerText: { flex: 1, gap: 2 },
+  header: { flexDirection: "row", gap: space.ms },
+  headerText: { flex: 1, gap: space.xxs },
   input: {
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     fontSize: fontSize.body,
-    paddingHorizontal: space.sm + 2,
+    paddingHorizontal: space.ms,
     paddingVertical: space.sm,
   },
   root: { padding: space.md },

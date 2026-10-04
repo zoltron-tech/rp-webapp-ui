@@ -6,11 +6,11 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * Who `@` could mean — web's `MentionDropdown`, with its tabs.
@@ -171,11 +171,11 @@ const styles = StyleSheet.create({
   // Four rows, then it scrolls: taller and it is the keyboard's rival for
   // the screen rather than a strip above it.
   list: { maxHeight: 4 * 44 },
-  meta: { fontSize: 10 },
+  meta: { fontSize: fontSize.meta },
   name: { fontSize: fontSize.label, fontWeight: "600" },
   root: {
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     overflow: "hidden",
   },
   row: {
@@ -189,8 +189,8 @@ const styles = StyleSheet.create({
   spinner: { marginLeft: "auto", marginRight: space.sm },
   tab: {
     borderBottomWidth: 2,
-    paddingHorizontal: space.sm + 2,
-    paddingVertical: space.xs + 2,
+    paddingHorizontal: space.ms,
+    paddingVertical: space.s,
   },
   tabLabel: { fontSize: fontSize.caption, fontWeight: "700" },
   tabs: {

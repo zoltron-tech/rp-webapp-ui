@@ -3,7 +3,8 @@ import { IMAGE_SIZES, wsrvImage } from "@nw/utils/image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { memo } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import {
   firstWorkingImage,
   markImageBroken,
@@ -13,7 +14,7 @@ import { CroppedImage } from "@/components/cropped-image";
 import { FallbackArt } from "@/components/fallback-art";
 import { asHex, withAlpha } from "@/lib/color";
 import { museName } from "@/lib/muse-appearance";
-import { radius, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * Web's `MusePreviewCard`, at the size its home page draws it on a phone.
@@ -26,14 +27,13 @@ import { radius, useAppTheme } from "@/theme";
  *
  * ## The size
  *
- * Web's home rail is 120 × 220 on a phone — the 240 × 420 desktop card at
- * half, keeping its 1.75 ratio so the crop frames the same picture. Here it
- * is a step larger: at 120 the fandom tag is eight-point type, and the rail is
- * the first thing on the page. 132 × 231 keeps the ratio and lets a 375pt
- * screen show two and a half cards, which is what says "this scrolls".
+ * Web's rail card at phone width: 140 × 245, the 240 × 420 desktop card
+ * keeping its 1.75 ratio so the crop frames the same picture. A 375pt screen
+ * shows two and a third of them, which is what says "this scrolls", and the
+ * fandom tag has room to be eleven-point type.
  */
-export const MUSE_CARD_WIDTH = 132;
-export const MUSE_CARD_HEIGHT = 231;
+export const MUSE_CARD_WIDTH = 140;
+export const MUSE_CARD_HEIGHT = 245;
 /** Web's `padding: 2px` frame round the picture. */
 const FRAME = 2;
 
@@ -114,7 +114,13 @@ const MuseCardView = ({ muse }: { muse: Muse }) => {
           {fandom ? (
             <View style={[styles.tag, { backgroundColor: fandom.color }]}>
               <View style={styles.tagDot} />
-              <Text numberOfLines={1} style={styles.tagLabel}>
+              <Text
+                // A label on a 140pt card: it grows a step with the reader's
+                // text size, not the whole way, or a fandom loses its ending.
+                maxFontSizeMultiplier={1.1}
+                numberOfLines={1}
+                style={styles.tagLabel}
+              >
                 {fandom.name}
               </Text>
             </View>
@@ -149,14 +155,14 @@ export const MuseCardShimmer = () => {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: radius.md,
+    borderRadius: radius.cardSm,
     flex: 1,
     overflow: "hidden",
   },
   fill: { height: "100%", width: "100%" },
   frame: {
-    borderRadius: radius.md + FRAME,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.cardSm + FRAME,
+    borderWidth: border.edge,
     height: MUSE_CARD_HEIGHT,
     overflow: "hidden",
     padding: FRAME,
@@ -164,7 +170,7 @@ const styles = StyleSheet.create({
   },
   name: {
     color: "#ffffff",
-    fontSize: 13,
+    fontSize: fontSize.label,
     fontWeight: "700",
     lineHeight: 16,
     textShadowColor: "rgba(0,0,0,0.8)",
@@ -174,20 +180,20 @@ const styles = StyleSheet.create({
   nameBlock: {
     bottom: 8,
     gap: 3,
-    left: 8,
+    left: 6,
     position: "absolute",
-    right: 8,
+    right: 6,
   },
   shimmer: { opacity: 0.6 },
   tag: {
     alignItems: "center",
     alignSelf: "flex-start",
-    borderRadius: 4,
+    borderRadius: radius.sm,
     flexDirection: "row",
-    gap: 4,
+    gap: 3,
     maxWidth: "100%",
     paddingHorizontal: 5,
-    paddingVertical: 2,
+    paddingVertical: space.xxs,
   },
   tagDot: {
     backgroundColor: "rgba(255,255,255,0.8)",
@@ -198,9 +204,11 @@ const styles = StyleSheet.create({
   tagLabel: {
     color: "#ffffff",
     flexShrink: 1,
-    fontSize: 8,
+    fontSize: fontSize.meta,
     fontWeight: "700",
-    letterSpacing: 0.7,
+    // Tight for uppercase, but 11px type on a 140pt card has no room for
+    // more: at 0.7 "Supernatural" lost its last two letters.
+    letterSpacing: 0.3,
     textTransform: "uppercase",
   },
 });

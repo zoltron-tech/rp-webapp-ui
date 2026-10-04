@@ -19,9 +19,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MuseGate, useOwnedMuse } from "@/components/edit-muse/shared";
 import {
@@ -32,7 +32,7 @@ import {
 import { Notice, PillButton, SettingsGroup } from "@/components/settings";
 import { useMuseMedia, useMuseMediaMetadata } from "@/hooks/use-muse";
 import { MAX_GALLERY_BYTES, pickMedia, uploadFile } from "@/lib/media-upload";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { fontSize, radius, space, type, useAppTheme } from "@/theme";
 
 /**
  * Web's `GallerySection`: upload new media, manage what is there.
@@ -334,7 +334,7 @@ const Gallery = ({ muse }: { muse: Muse }) => {
 const styles = StyleSheet.create({
   badge: {
     backgroundColor: "rgba(0,0,0,0.6)",
-    borderRadius: 4,
+    borderRadius: radius.xs,
     bottom: 4,
     paddingHorizontal: 5,
     paddingVertical: 1,
@@ -343,11 +343,11 @@ const styles = StyleSheet.create({
   },
   badgeLabel: {
     color: "#ffffff",
-    fontSize: 9,
+    fontSize: fontSize.meta,
     fontWeight: "800",
     letterSpacing: 0.6,
   },
-  body: { gap: space.md, padding: space.sm + 4 },
+  body: { gap: space.md, padding: space.m },
   delete: {
     alignItems: "center",
     backgroundColor: "rgba(0,0,0,0.65)",
@@ -362,15 +362,12 @@ const styles = StyleSheet.create({
   fill: { height: "100%", width: "100%" },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: GAP },
   groupTitle: {
-    fontSize: fontSize.caption,
-    fontWeight: "700",
-    letterSpacing: 0.6,
+    ...type.eyebrow,
     paddingHorizontal: space.xs,
-    textTransform: "uppercase",
   },
   inUse: {
     backgroundColor: "rgba(0,0,0,0.6)",
-    borderRadius: 4,
+    borderRadius: radius.xs,
     left: 4,
     maxWidth: "70%",
     paddingHorizontal: 5,
@@ -387,7 +384,7 @@ const styles = StyleSheet.create({
     gap: space.sm,
     padding: space.md,
   },
-  uploadText: { flex: 1, gap: 2 },
+  uploadText: { flex: 1, gap: space.xxs },
   uploadTitle: { fontSize: fontSize.body, fontWeight: "600" },
   video: {
     alignItems: "center",

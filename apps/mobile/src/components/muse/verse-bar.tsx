@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { MuseNavItem } from "@nw/types";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { asHex, withAlpha } from "@/lib/color";
 import { museName } from "@/lib/muse-appearance";
-import { space } from "@/theme";
+import { fontSize, space } from "@/theme";
 
 /**
  * Web's `VerseHeaderBar`: flip between the alternative verses of a character.
@@ -163,9 +164,9 @@ const styles = StyleSheet.create({
   bar: {
     alignItems: "center",
     flexDirection: "row",
-    gap: space.sm + 2,
+    gap: space.ms,
     paddingHorizontal: space.md,
-    paddingVertical: 6,
+    paddingVertical: space.s,
     width: "100%",
   },
   circle: { alignItems: "center", justifyContent: "center" },
@@ -181,7 +182,7 @@ const styles = StyleSheet.create({
   },
   label: {
     color: "rgba(255,255,255,0.75)",
-    fontSize: 10,
+    fontSize: fontSize.meta,
     fontWeight: "900",
     letterSpacing: 1.4,
     textShadowColor: "rgba(0,0,0,0.9)",

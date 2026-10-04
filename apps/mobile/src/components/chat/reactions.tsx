@@ -1,8 +1,9 @@
 import { reactionGlyph, reactionLabel } from "@nw/chat";
 import type { Message, Reaction } from "@nw/types";
 import { useEffect, useMemo, useRef } from "react";
-import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
-import { radius, space, useAppTheme } from "@/theme";
+import { Animated, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * The reactions on a message.
@@ -195,14 +196,14 @@ const styles = StyleSheet.create({
   chip: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: 3,
-    paddingHorizontal: space.xs + 2,
-    paddingVertical: 2,
+    paddingHorizontal: space.s,
+    paddingVertical: space.xxs,
   },
-  count: { fontSize: 10, fontWeight: "800" },
-  glyph: { fontSize: 12 },
+  count: { fontSize: fontSize.meta, fontWeight: "700" },
+  glyph: { fontSize: fontSize.body },
   row: {
     bottom: -REACTION_OVERHANG,
     flexDirection: "row",

@@ -1,10 +1,10 @@
-import { SCRIM_ALPHA } from "@nw/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useEventListener } from "expo";
 import { useVideoPlayer, type VideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { PanResponder, Pressable, StyleSheet, Text, View } from "react-native";
-import { radius, space, useAppTheme } from "@/theme";
+import { PanResponder, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
+import { fontSize, MEDIA_CHIP, radius, space, useAppTheme } from "@/theme";
 
 /**
  * A clip, with controls worth having.
@@ -383,7 +383,6 @@ export const ClipPlayer = ({
 export const CLIP_GRID_SIZE = 110;
 
 /** Chips straight on media: web's `MEDIA_CHIP`, no blur. */
-const MEDIA_CHIP = `rgba(0,0,0,${SCRIM_ALPHA.mediaChip})`;
 
 const styles = StyleSheet.create({
   box: {
@@ -404,7 +403,7 @@ const styles = StyleSheet.create({
     width: 44,
   },
   clock: {
-    fontSize: 10,
+    fontSize: fontSize.meta,
     fontVariant: ["tabular-nums"],
     fontWeight: "700",
   },
@@ -439,7 +438,7 @@ const styles = StyleSheet.create({
   },
   surface: { height: "100%", width: "100%" },
   thumb: {
-    borderRadius: 5,
+    borderRadius: radius.sm,
     height: 10,
     marginLeft: -5,
     position: "absolute",

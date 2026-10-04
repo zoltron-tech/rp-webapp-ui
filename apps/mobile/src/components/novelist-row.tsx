@@ -6,14 +6,8 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { memo, useMemo } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import {
   type Connection,
@@ -22,11 +16,16 @@ import {
 } from "@/hooks/use-connection";
 import {
   accentFromPalette,
+  border,
   fontSize,
   radius,
   space,
   useAppTheme,
 } from "@/theme";
+import { fullName } from "@/lib/names";
+import { Button } from "@/components/button";
+import { IconButton } from "@/components/icon-button";
+import { useGlobalState } from "@nw/store";
 
 /**
  * One novelist, as a row.
@@ -58,10 +57,10 @@ import {
  *
  * | State | Control |
  * | --- | --- |
- * | none | Add |
- * | `FRIEND_REQUEST_SENT` | Pending (tap to cancel) |
+ * | none | Add (icon) |
+ * | `FRIEND_REQUEST_SENT` | Pending (icon; tap to cancel) |
  * | `FRIEND_REQUEST_RECEIVED` | ✓ and ✕, side by side |
- * | `FRIEND` | Message |
+ * | `FRIEND` | Message (icon) |
  *
  * Read straight off the prop, which comes straight out of the query cache.
  * `useConnectionAction` patches every cached friends page this novelist appears
@@ -108,9 +107,6 @@ const AVATAR = 56;
  */
 export const ROW_HEIGHT = AVATAR + (space.md - 2) * 2;
 
-const fullName = (person: { firstName?: string; lastName?: string | null }) =>
-  [person.firstName, person.lastName].filter(Boolean).join(" ");
-
 const NovelistRowView = ({
   novelist,
   onOpen,
@@ -122,7 +118,9 @@ const NovelistRowView = ({
   const theme = useAppTheme();
   const router = useRouter();
   const action = useConnectionAction();
-  const { novelist: me } = useSession();
+  // The store's copy, not `useSession()`: that is two query observers per
+  // row, and every one of them re-rendered when the session settled.
+  const me = useGlobalState("novelist");
 
   const connection = (novelist.connection ?? null) as Connection;
   // You can be in a list of likers or of somebody's friends, and there is
@@ -288,23 +286,24 @@ const NovelistRowView = ({
               </View>
             ) : null}
 
-            {muses.length > 0 ? (
-              <Text style={[styles.metaText, { color: theme.textGray }]}>
-                {muses.length} {muses.length === 1 ? "character" : "characters"}
-              </Text>
-            ) : null}
-
-            {muses.length > 0 && mutual > 0 ? (
-              <Text style={[styles.metaText, { color: theme.textGray }]}>
-                ·
-              </Text>
-            ) : null}
-
-            {mutual > 0 ? (
-              <Text style={[styles.metaText, { color: theme.textGray }]}>
-                {mutual} mutual
-              </Text>
-            ) : null}
+            {/*
+              One line that gives way: the counts are the least important
+              thing in the row, and written as separate labels they could not
+              shorten — they ran on under the button instead.
+            */}
+            <Text
+              numberOfLines={1}
+              style={[styles.metaText, { color: theme.textGray }]}
+            >
+              {[
+                muses.length > 0
+                  ? `${muses.length} ${muses.length === 1 ? "character" : "characters"}`
+                  : null,
+                mutual > 0 ? `${mutual} mutual` : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </Text>
           </View>
         ) : null}
       </View>
@@ -316,6 +315,7 @@ const NovelistRowView = ({
           <RowButton
             busy={running === "message"}
             icon="chatbubble-ellipses"
+            iconOnly
             label="Message"
             onPress={message}
             tone="primary"
@@ -324,13 +324,14 @@ const NovelistRowView = ({
           <RowButton
             busy={running === "cancel"}
             icon="time"
-            label="Pending"
+            iconOnly
+            label="Cancel friend request"
             onPress={() => run("cancel", "Cancelling the request")}
             tone="quiet"
           />
         ) : connection === "FRIEND_REQUEST_RECEIVED" ? (
-          // Two round buttons rather than two labelled ones: at this width a
-          // pair of pills would push the name to one word.
+          // Round buttons, as every action in this row is: a labelled pill
+          // took a third of the row and the line under the name ran beneath it.
           <>
             <RowButton
               busy={running === "accept"}
@@ -349,7 +350,8 @@ const NovelistRowView = ({
           <RowButton
             busy={running === "send"}
             icon="person-add"
-            label="Add"
+            iconOnly
+            label="Add friend"
             onPress={() => run("send", "The friend request")}
             tone="primary"
           />
@@ -370,116 +372,74 @@ export const RowButton = memo(
   ({
     busy,
     icon,
+    iconOnly = false,
     label,
     onPress,
     tone,
   }: {
     busy: boolean;
     icon: keyof typeof Ionicons.glyphMap;
+    /** Draw the circle and keep `label` as what a screen reader says. */
+    iconOnly?: boolean;
     label?: string;
     onPress: () => void;
     tone: "primary" | "positive" | "danger" | "quiet";
-  }) => {
-    const theme = useAppTheme();
-
-    // The same tonal pairs the suggestion card uses; see `Tones` in `@/theme`.
-    const fill =
-      tone === "primary"
-        ? theme.accent.solid
-        : tone === "positive"
-          ? theme.tones.positive.fill
-          : tone === "danger"
-            ? theme.tones.danger.fill
-            : theme.material.fillPressed;
-    const ink =
-      tone === "primary"
-        ? "#ffffff"
-        : tone === "positive"
-          ? theme.tones.positive.ink
-          : tone === "danger"
-            ? theme.tones.danger.ink
-            : theme.textGray;
-
-    return (
-      <Pressable
+  }) =>
+    label && !iconOnly ? (
+      <Button
+        busy={busy}
+        hitSlop={space.xs}
+        icon={icon}
+        label={label}
+        onPress={onPress}
+        size="xs"
+        variant={tone}
+      />
+    ) : (
+      <IconButton
         accessibilityLabel={
           label ?? (tone === "positive" ? "Accept" : "Decline")
         }
-        accessibilityRole="button"
-        disabled={busy}
+        busy={busy}
         hitSlop={space.xs}
+        icon={icon}
+        iconSize={17}
         onPress={onPress}
-        style={({ pressed }) => [
-          label ? styles.pill : styles.circle,
-          {
-            backgroundColor: fill,
-            borderColor:
-              tone === "quiet" ? theme.material.edge : "transparent",
-            opacity: pressed || busy ? 0.75 : 1,
-          },
-        ]}
-      >
-        {busy ? (
-          <ActivityIndicator color={ink} size="small" />
-        ) : (
-          <Ionicons color={ink} name={icon} size={label ? 13 : 16} />
-        )}
-        {label ? (
-          <Text numberOfLines={1} style={[styles.buttonLabel, { color: ink }]}>
-            {label}
-          </Text>
-        ) : null}
-      </Pressable>
-    );
-  },
+        size={38}
+        tone={tone}
+      />
+    ),
 );
 
 const styles = StyleSheet.create({
-  actions: { alignItems: "center", flexDirection: "row", gap: space.xs + 2 },
+  actions: { alignItems: "center", flexDirection: "row", gap: space.s },
   bannerImage: { height: "100%", width: "100%" },
-  buttonLabel: { fontSize: 11, fontWeight: "700" },
-  circle: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    height: 34,
-    justifyContent: "center",
-    width: 34,
-  },
   handle: { fontSize: fontSize.caption },
   identity: { flex: 1, gap: 1, minWidth: 0 },
   meta: {
     alignItems: "center",
     flexDirection: "row",
-    gap: space.xs + 2,
+    gap: space.s,
     marginTop: 3,
+    // The faces keep their size; the text beside them is what shortens.
+    overflow: "hidden",
   },
-  metaText: { fontSize: 11 },
+  metaText: { flexShrink: 1, fontSize: fontSize.meta },
   museFace: {
     borderRadius: (MUSE_AVATAR + 3) / 2,
     borderWidth: 1.5,
     // Lapped, so three faces read as a group rather than three dots.
     marginRight: -7,
   },
-  museStack: { flexDirection: "row", paddingRight: 7 },
+  museStack: { flexDirection: "row", flexShrink: 0, paddingRight: 7 },
   name: { flexShrink: 1, fontSize: fontSize.body + 1, fontWeight: "700" },
   nameRow: { alignItems: "center", flexDirection: "row", gap: space.xs },
-  pill: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    gap: 4,
-    height: 34,
-    justifyContent: "center",
-    paddingHorizontal: space.sm + 4,
-  },
   row: {
     alignItems: "center",
     borderRadius: radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: space.sm + 4,
+    gap: space.m,
     height: ROW_HEIGHT,
     // Clipped, because the banner and the gradient behind it are square.
     overflow: "hidden",

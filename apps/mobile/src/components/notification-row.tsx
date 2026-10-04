@@ -1,19 +1,20 @@
 import { Ionicons } from "@expo/vector-icons";
+import {
+  isStoredNotification,
+  queryKeys,
+  useNotificationReadState,
+} from "@nw/features";
 import type { NovelistWorldNotification } from "@nw/types";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { memo } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { useConnectionAction } from "@/hooks/use-connection";
 import { notificationHref, notificationLook } from "@/lib/notification-target";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
+import { Button } from "@/components/button";
 
 /**
  * One notification.
@@ -54,7 +55,8 @@ import { fontSize, radius, space, useAppTheme } from "@/theme";
  * request back that has already been dealt with.
  */
 
-const AVATAR = 44;
+/** Web's 36, a step up for a touch row. */
+const AVATAR = 40;
 const MARK = 18;
 
 /** Same relative-time vocabulary the web notification card uses. */
@@ -72,10 +74,22 @@ export const relativeTime = (epochSeconds: number): string => {
   return `${Math.floor(weeks / 52)}y`;
 };
 
+/**
+ * Where a row sits in its group, which is what shapes it.
+ *
+ * The rows of one period are drawn as a single panel: the first rounds the
+ * top, the last rounds the bottom and closes the edge, the ones between are
+ * ruled apart. Each row draws its own slice, so the list stays a flat,
+ * windowed list rather than a list of containers.
+ */
+export type RowPlace = "only" | "first" | "middle" | "last";
+
 const NotificationRowView = ({
   notification,
   onAnswered,
+  place = "only",
 }: {
+  place?: RowPlace;
   notification: NovelistWorldNotification;
   /** A friend request answered here: the row goes. */
   onAnswered?: (id: string) => void;
@@ -83,6 +97,8 @@ const NotificationRowView = ({
   const theme = useAppTheme();
   const router = useRouter();
   const action = useConnectionAction();
+  const { markRead } = useNotificationReadState();
+  const queryClient = useQueryClient();
 
   const { source } = notification;
   const href = notificationHref(notification);
@@ -117,19 +133,41 @@ const NotificationRowView = ({
       accessibilityLabel={`${source?.title ?? "Someone"} ${notification.notificationText}`}
       accessibilityRole={href ? "button" : "text"}
       disabled={!href}
-      onPress={() => href && router.push(href)}
+      onPress={() => {
+        if (!href) return;
+        // Opening a row is reading it. A pending request is cleared by
+        // answering it instead; it has no stored row to mark.
+        if (!notification.isRead && isStoredNotification(notification.type)) {
+          void markRead(notification.id).then(() =>
+            queryClient.invalidateQueries({
+              queryKey: queryKeys.notifications(),
+            }),
+          );
+        }
+        router.push(href);
+      }}
       style={({ pressed }) => [
         styles.row,
+        (place === "first" || place === "only") && styles.rowTop,
+        (place === "last" || place === "only") && styles.rowBottom,
         {
+          // A slice of the group's panel: the card fill, with an unread row
+          // washed in the accent over it.
           backgroundColor:
-            pressed && href ? theme.material.fillPressed : theme.material.fill,
+            pressed && href
+              ? theme.material.fillPressed
+              : notification.isRead
+                ? theme.material.card.backgroundColor
+                : theme.accent.tint,
           borderColor: theme.material.edge,
         },
       ]}
     >
       {/* The unread rail: the leading edge of the row, not a wash over it. */}
       {notification.isRead ? null : (
-        <View style={[styles.rail, { backgroundColor: theme.accent.solid }]} />
+        <View
+          style={[styles.rail, { backgroundColor: theme.accent.surfaceHover }]}
+        />
       )}
 
       <View>
@@ -143,7 +181,10 @@ const NotificationRowView = ({
         <View
           style={[
             styles.mark,
-            { backgroundColor: markTone, borderColor: theme.material.fill },
+            {
+              backgroundColor: markTone,
+              borderColor: theme.material.card.backgroundColor,
+            },
           ]}
         >
           <Ionicons color="#ffffff" name={look.icon} size={10} />
@@ -170,19 +211,23 @@ const NotificationRowView = ({
 
         {isRequest ? (
           <View style={styles.actions}>
-            <AnswerButton
+            <Button
               busy={running === "accept"}
               icon="checkmark"
               label="Accept"
               onPress={() => answer("accept", "Accepting")}
-              tone="positive"
+              hitSlop={space.xs}
+              size="xs"
+              variant="positive"
             />
-            <AnswerButton
+            <Button
               busy={running === "reject"}
               icon="close"
               label="Decline"
               onPress={() => answer("reject", "Declining")}
-              tone="quiet"
+              hitSlop={space.xs}
+              size="xs"
+              variant="quiet"
             />
           </View>
         ) : null}
@@ -211,79 +256,15 @@ const NotificationRowView = ({
  */
 export const NotificationRow = memo(NotificationRowView);
 
-/** Accept / Decline, squared off to match the rest of the app's buttons. */
-const AnswerButton = memo(
-  ({
-    busy,
-    icon,
-    label,
-    onPress,
-    tone,
-  }: {
-    busy: boolean;
-    icon: keyof typeof Ionicons.glyphMap;
-    label: string;
-    onPress: () => void;
-    tone: "positive" | "quiet";
-  }) => {
-    const theme = useAppTheme();
-    // A tonal pair rather than the signal green with white on it; see `Tones`.
-    const fill =
-      tone === "positive"
-        ? theme.tones.positive.fill
-        : theme.material.fillPressed;
-    const ink = tone === "positive" ? theme.tones.positive.ink : theme.textGray;
-
-    return (
-      <Pressable
-        accessibilityLabel={label}
-        accessibilityRole="button"
-        disabled={busy}
-        hitSlop={space.xs}
-        onPress={onPress}
-        style={({ pressed }) => [
-          styles.button,
-          {
-            backgroundColor: fill,
-            borderColor:
-              tone === "quiet" ? theme.material.edge : "transparent",
-            opacity: pressed || busy ? 0.75 : 1,
-          },
-        ]}
-      >
-        {busy ? (
-          <ActivityIndicator color={ink} size="small" />
-        ) : (
-          <>
-            <Ionicons color={ink} name={icon} size={13} />
-            <Text style={[styles.buttonLabel, { color: ink }]}>{label}</Text>
-          </>
-        )}
-      </Pressable>
-    );
-  },
-);
-
 const styles = StyleSheet.create({
   actions: {
     flexDirection: "row",
-    gap: space.sm - 2,
+    gap: space.s,
     marginTop: space.sm,
   },
-  body: { flex: 1, gap: 2, minWidth: 0 },
-  button: {
-    alignItems: "center",
-    borderRadius: radius.sm,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    gap: 5,
-    height: 32,
-    justifyContent: "center",
-    paddingHorizontal: space.sm + 2,
-  },
-  buttonLabel: { fontSize: 12, fontWeight: "700" },
+  body: { flex: 1, gap: space.xxs, minWidth: 0 },
   chevron: { opacity: 0.6 },
-  dot: { borderRadius: 4, height: 8, width: 8 },
+  dot: { borderRadius: radius.xs, height: 8, width: 8 },
   mark: {
     alignItems: "center",
     borderRadius: MARK / 2,
@@ -297,8 +278,6 @@ const styles = StyleSheet.create({
   },
   name: { fontWeight: "700" },
   rail: {
-    borderBottomLeftRadius: radius.md,
-    borderTopLeftRadius: radius.md,
     bottom: 0,
     left: 0,
     position: "absolute",
@@ -307,16 +286,30 @@ const styles = StyleSheet.create({
   },
   row: {
     alignItems: "flex-start",
-    borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    // A rule under every row but the group's last, which takes the panel's
+    // own edge instead.
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderLeftWidth: border.edge,
+    borderRightWidth: border.edge,
     flexDirection: "row",
-    gap: space.sm + 4,
-    // Clipped, so the unread rail follows the corner rather than crossing it.
+    gap: space.m,
+    marginHorizontal: space.md,
+    // Clipped, so the unread rail follows the panel's corners.
     overflow: "hidden",
-    paddingHorizontal: space.sm + 4,
-    paddingVertical: space.sm + 4,
+    paddingHorizontal: space.m,
+    paddingVertical: space.m,
   },
-  tail: { alignItems: "center", gap: space.xs, paddingTop: 2 },
+  rowBottom: {
+    borderBottomLeftRadius: radius.card,
+    borderBottomRightRadius: radius.card,
+    borderBottomWidth: border.edge,
+  },
+  rowTop: {
+    borderTopLeftRadius: radius.card,
+    borderTopRightRadius: radius.card,
+    borderTopWidth: border.edge,
+  },
+  tail: { alignItems: "center", gap: space.xs, paddingTop: space.xxs },
   text: { fontSize: fontSize.body, lineHeight: 20 },
   when: { fontSize: fontSize.caption },
 });

@@ -13,16 +13,20 @@ import {
   ScrollView,
   StyleSheet,
   Switch,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { type ActionItem, ActionMenu } from "@/components/action-menu";
 import { Avatar } from "@/components/avatar";
 import { SongSheet } from "@/components/compose/song-sheet";
 import { CroppedImage } from "@/components/cropped-image";
 import { ColorSheet } from "@/components/edit-muse/color-sheet";
-import { MuseGate, useOwnedMuse } from "@/components/edit-muse/shared";
+import {
+  MuseGate,
+  PRIVACY_CHOICES,
+  useOwnedMuse,
+} from "@/components/edit-muse/shared";
 import { PRIVACY_ICON, PRIVACY_LABEL } from "@/components/feed/privacy";
 import { isVideoUrl } from "@/components/muse/media-viewer";
 import { FormSheet } from "@/components/muse/edit/form-sheet";
@@ -41,7 +45,7 @@ import { type MuseFormChanges, useMuseForm } from "@/hooks/use-muse-form";
 import { asHex } from "@/lib/color";
 import { MAX_IMAGE_BYTES, pickImage, uploadFile } from "@/lib/media-upload";
 import { museLook } from "@/lib/muse-appearance";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * Web's `AppearanceSection`, laid out as settings.
@@ -60,7 +64,6 @@ import { fontSize, radius, space, useAppTheme } from "@/theme";
  * page is one more thing to dismiss on a phone.
  */
 
-const PRIVACY_CHOICES: PrivacyLevel[] = ["PUBLIC", "FRIENDS", "ONLY_ME"];
 const NEUTRAL: ImageFilter = { blur: 0, brightness: 100, greyscale: 0 };
 
 const ADVANCED = [
@@ -890,7 +893,7 @@ const Appearance = ({ muse }: { muse: Muse }) => {
 };
 
 const styles = StyleSheet.create({
-  body: { gap: space.lg, padding: space.sm + 4 },
+  body: { gap: space.lg, padding: space.m },
   emptyGallery: { alignItems: "center", gap: space.md, paddingTop: space.lg },
   fill: { height: "100%", width: "100%" },
   grid: {
@@ -926,7 +929,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.08)",
     borderColor: "rgba(255,255,255,0.3)",
     borderRadius: radius.sm + 2,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     height: "100%",
     overflow: "hidden",
   },
@@ -954,8 +957,8 @@ const styles = StyleSheet.create({
   previewRow: {
     ...StyleSheet.absoluteFillObject,
     flexDirection: "row",
-    gap: space.sm + 2,
-    padding: space.sm + 4,
+    gap: space.ms,
+    padding: space.m,
   },
   sliders: { gap: space.xs },
   songBlock: { paddingHorizontal: space.md, paddingTop: space.md },

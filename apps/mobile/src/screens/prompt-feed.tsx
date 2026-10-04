@@ -22,6 +22,7 @@ import { PromptCardSkeleton } from "@/components/skeleton";
 import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { space, useAppTheme } from "@/theme";
+import { FeedSeparator } from "@/components/list-parts";
 
 /**
  * A novelist's prompts, or their out-of-character posts.
@@ -85,8 +86,6 @@ const EMPTY: Record<FeedKind, string> = {
 };
 
 const keyExtractor = (item: Prompt) => item.id;
-
-const Separator = () => <View style={styles.separator} />;
 
 /** One frozen empty set, so resetting an open set is not a new allocation. */
 const EMPTY_SET: ReadonlySet<string> = new Set();
@@ -242,7 +241,7 @@ export const PromptFeed = ({
     // The next page's ghost, in the separator's rhythm.
     if (isFetchingNextPage) {
       return (
-        <View style={{ paddingTop: space.sm + 2 }}>
+        <View style={{ paddingTop: space.ms }}>
           <PromptCardSkeleton />
         </View>
       );
@@ -257,7 +256,7 @@ export const PromptFeed = ({
         {...tabBarScroll}
         contentContainerStyle={contentStyle}
         data={items}
-        ItemSeparatorComponent={Separator}
+        ItemSeparatorComponent={FeedSeparator}
         keyExtractor={keyExtractor}
         ListEmptyComponent={
           <ListStatus
@@ -268,7 +267,7 @@ export const PromptFeed = ({
             skeleton={
               <SkeletonRows
                 count={3}
-                gap={space.sm + 2}
+                gap={space.ms}
                 render={() => <PromptCardSkeleton />}
               />
             }
@@ -298,5 +297,4 @@ export const PromptFeed = ({
 const styles = StyleSheet.create({
   content: { padding: space.md },
   fill: { flex: 1 },
-  separator: { height: space.sm + 2 },
 });

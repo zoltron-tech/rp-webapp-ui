@@ -10,9 +10,9 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Avatar } from "@/components/avatar";
 import { CroppedImage } from "@/components/cropped-image";
@@ -37,8 +37,13 @@ import {
 } from "@/hooks/use-story";
 import { useStoryReaction } from "@/hooks/use-story-reaction";
 import { asColor, withAlpha } from "@/lib/color";
-import { fandomLabel, plainText, storyAuthors } from "@/lib/story";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import {
+  fandomLabel,
+  plainText,
+  STORY_COVER_ZOOM_MAX_PCT,
+  storyAuthors,
+} from "@/lib/story";
+import { border, fontSize, radius, space, type, useAppTheme } from "@/theme";
 
 /**
  * A storyboard's front page — web's `/rp/story/:id`, read-only.
@@ -58,7 +63,6 @@ import { fontSize, radius, space, useAppTheme } from "@/theme";
 
 const COVER_WIDTH = 116;
 const COVER_SIZE = { fit: "inside" as const, h: 900, w: 600 };
-const STORY_COVER_ZOOM_MAX_PCT = 800;
 
 export default function StoryScreen() {
   const theme = useAppTheme();
@@ -587,17 +591,17 @@ const ChapterRow = ({
 };
 
 const styles = StyleSheet.create({
-  actions: { paddingHorizontal: space.md - 4, paddingTop: space.xs },
+  actions: { paddingHorizontal: space.m, paddingTop: space.xs },
   banner: { height: 180, left: 0, position: "absolute", right: 0, top: 0 },
   byline: { fontSize: fontSize.label },
   chapter: {
     alignItems: "center",
     borderRadius: radius.md + 4,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: space.sm + 4,
+    gap: space.m,
     padding: space.sm,
-    paddingRight: space.sm + 4,
+    paddingRight: space.m,
   },
   chapterCover: {
     aspectRatio: 2 / 3,
@@ -606,7 +610,7 @@ const styles = StyleSheet.create({
     width: 52,
   },
   chapterEyebrow: {
-    fontSize: 11,
+    fontSize: fontSize.meta,
     fontWeight: "700",
     letterSpacing: 0.6,
     textTransform: "uppercase",
@@ -614,41 +618,41 @@ const styles = StyleSheet.create({
   chapterName: { fontSize: fontSize.body, fontWeight: "700" },
   chapterNumberBig: { fontSize: fontSize.title, fontWeight: "700" },
   chapterPreview: { fontSize: fontSize.caption, lineHeight: 16 },
-  chapterText: { flex: 1, gap: 2, minWidth: 0 },
+  chapterText: { flex: 1, gap: space.xxs, minWidth: 0 },
   cover: {
     aspectRatio: 2 / 3,
     borderCurve: "continuous",
     borderRadius: radius.md + 4,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     overflow: "hidden",
     width: COVER_WIDTH,
   },
   coverEmpty: { alignItems: "center", flex: 1, justifyContent: "center" },
   description: {
     borderRadius: radius.md + 4,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     padding: space.md,
   },
   empty: { fontSize: fontSize.body, paddingHorizontal: space.xs },
   face: { alignItems: "center", gap: 3, width: 72 },
   faceName: { fontSize: fontSize.caption, fontWeight: "600" },
-  facePool: { fontSize: 10 },
-  faceRing: { borderRadius: radius.full, borderWidth: 2, padding: 2 },
+  facePool: { fontSize: fontSize.meta },
+  faceRing: { borderRadius: radius.full, borderWidth: 2, padding: space.xxs },
   faces: { gap: space.sm, paddingHorizontal: space.xs },
   fandom: {
     alignItems: "center",
     alignSelf: "flex-start",
-    borderRadius: 4,
+    borderRadius: radius.xs,
     flexDirection: "row",
     gap: 5,
     maxWidth: "100%",
-    paddingHorizontal: 8,
+    paddingHorizontal: space.sm,
     paddingVertical: 3,
   },
   fandomLabel: {
     color: "#fff",
     flexShrink: 1,
-    fontSize: 10,
+    fontSize: fontSize.meta,
     fontWeight: "700",
     letterSpacing: 0.8,
     textTransform: "uppercase",
@@ -663,22 +667,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     paddingVertical: 3,
   },
-  genreDot: { borderRadius: 4, height: 7, width: 7 },
+  genreDot: { borderRadius: radius.xs, height: 7, width: 7 },
   genreLabel: { fontSize: fontSize.caption, fontWeight: "600" },
   genres: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6,
+    gap: space.s,
     paddingHorizontal: space.md,
     paddingTop: space.md,
   },
   group: { gap: space.sm },
   groupTitle: {
-    fontSize: fontSize.caption,
-    fontWeight: "700",
-    letterSpacing: 0.5,
+    ...type.eyebrow,
     paddingHorizontal: space.xs,
-    textTransform: "uppercase",
   },
   hero: {
     alignItems: "flex-end",
@@ -687,24 +688,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.md,
     paddingTop: space.lg,
   },
-  heroInfo: { flex: 1, gap: 6, minWidth: 0, paddingBottom: space.xs },
+  heroInfo: { flex: 1, gap: space.s, minWidth: 0, paddingBottom: space.xs },
   name: { fontSize: fontSize.h2, fontWeight: "700", lineHeight: 28 },
   personName: { flex: 1, fontSize: fontSize.body, fontWeight: "600" },
   personRow: {
     alignItems: "center",
     flexDirection: "row",
-    gap: space.sm + 4,
+    gap: space.m,
     paddingHorizontal: space.md,
-    paddingVertical: space.sm + 2,
+    paddingVertical: space.ms,
   },
-  sections: { gap: space.lg, paddingHorizontal: space.sm + 4, paddingTop: space.lg },
+  sections: { gap: space.lg, paddingHorizontal: space.m, paddingTop: space.lg },
   stat: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: 5,
-    paddingHorizontal: 10,
+    paddingHorizontal: space.ms,
     paddingVertical: 5,
   },
   statLabel: { fontSize: fontSize.caption },
@@ -712,7 +713,7 @@ const styles = StyleSheet.create({
   stats: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6,
+    gap: space.s,
     paddingHorizontal: space.md,
     paddingTop: space.md,
   },

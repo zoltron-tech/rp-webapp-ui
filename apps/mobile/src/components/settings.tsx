@@ -1,13 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Children, Fragment, isValidElement, type ReactNode } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
+import { border, fontSize, radius, space, type, useAppTheme } from "@/theme";
+import { Button } from "@/components/button";
 
 /**
  * The grouped-list pieces the menu and the profile settings are built from.
@@ -242,7 +238,7 @@ export const Chip = ({
   );
 };
 
-/** A small outlined action that sits at the end of a row. */
+/** A small action that sits at the end of a row: `Button`, at its row size. */
 export const PillButton = ({
   busy,
   disabled,
@@ -257,49 +253,24 @@ export const PillButton = ({
   label: string;
   onPress: () => void;
   tone?: "neutral" | "accent" | "danger";
-}) => {
-  const theme = useAppTheme();
-  const ink =
-    tone === "accent"
-      ? theme.accent.onSolid
-      : tone === "danger"
-        ? theme.error
-        : theme.text;
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ busy, disabled }}
-      disabled={disabled || busy}
-      hitSlop={space.xs}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.pill,
-        tone === "accent"
-          ? {
-              backgroundColor: pressed
-                ? theme.accent.solidHover
-                : theme.accent.solid,
-              borderColor: theme.accent.solid,
-            }
-          : {
-              backgroundColor: pressed
-                ? theme.glass.fillPressed
-                : theme.glass.fillHover,
-              borderColor: tone === "danger" ? theme.error : theme.glass.edge,
-            },
-        (disabled || busy) && { opacity: 0.55 },
-      ]}
-    >
-      {busy ? (
-        <ActivityIndicator color={ink} size="small" />
-      ) : icon ? (
-        <Ionicons color={ink} name={icon} size={14} />
-      ) : null}
-      <Text style={[styles.pillLabel, { color: ink }]}>{label}</Text>
-    </Pressable>
-  );
-};
+}) => (
+  <Button
+    busy={busy}
+    disabled={disabled}
+    hitSlop={space.xs}
+    icon={icon}
+    label={label}
+    onPress={onPress}
+    size="sm"
+    variant={
+      tone === "accent"
+        ? "primary"
+        : tone === "danger"
+          ? "dangerOutline"
+          : "secondary"
+    }
+  />
+);
 
 /** Web's `InlineMessage`: an outcome, said in place rather than in a toast. */
 export const Notice = ({
@@ -337,13 +308,13 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
     justifyContent: "center",
     minWidth: 20,
-    paddingHorizontal: 6,
+    paddingHorizontal: space.s,
     paddingVertical: 1,
   },
-  badgeLabel: { color: "#ffffff", fontSize: 11, fontWeight: "700" },
+  badgeLabel: { color: "#ffffff", fontSize: fontSize.meta, fontWeight: "700" },
   card: {
-    borderRadius: radius.md + 4,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.group,
+    borderWidth: border.edge,
     overflow: "hidden",
   },
   chip: {
@@ -351,24 +322,21 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     borderRadius: radius.full,
     flexDirection: "row",
-    gap: 4,
+    gap: space.xs,
     paddingHorizontal: space.sm,
-    paddingVertical: 2,
+    paddingVertical: space.xxs,
   },
-  chipLabel: { fontSize: 11, fontWeight: "700" },
+  chipLabel: { fontSize: fontSize.meta, fontWeight: "700" },
   divider: { height: StyleSheet.hairlineWidth, marginLeft: 62 },
-  group: { gap: 6 },
+  group: { gap: space.s },
   groupFooter: {
     fontSize: fontSize.caption,
     lineHeight: 17,
     paddingHorizontal: space.xs,
   },
   groupTitle: {
-    fontSize: fontSize.caption,
-    fontWeight: "700",
-    letterSpacing: 0.6,
+    ...type.eyebrow,
     paddingHorizontal: space.xs,
-    textTransform: "uppercase",
   },
   notice: {
     alignItems: "flex-start",
@@ -377,29 +345,19 @@ const styles = StyleSheet.create({
     gap: space.sm,
     marginHorizontal: space.md,
     marginVertical: space.sm,
-    padding: space.sm + 2,
+    padding: space.ms,
   },
   noticeText: { flex: 1, fontSize: fontSize.label, lineHeight: 18 },
-  pill: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    gap: 5,
-    paddingHorizontal: space.sm + 4,
-    paddingVertical: 6,
-  },
-  pillLabel: { fontSize: fontSize.label, fontWeight: "600" },
   row: {
     alignItems: "center",
     flexDirection: "row",
-    gap: space.sm + 4,
+    gap: space.m,
     minHeight: 56,
     paddingHorizontal: space.md,
-    paddingVertical: space.sm + 2,
+    paddingVertical: space.ms,
   },
-  rowLabel: { fontSize: fontSize.body, fontWeight: "600" },
+  rowLabel: { fontSize: fontSize.lead, fontWeight: "500" },
   rowSubtitle: { fontSize: fontSize.caption, lineHeight: 16 },
-  rowText: { flex: 1, gap: 2, minWidth: 0 },
+  rowText: { flex: 1, gap: space.xxs, minWidth: 0 },
   tile: { alignItems: "center", justifyContent: "center" },
 });

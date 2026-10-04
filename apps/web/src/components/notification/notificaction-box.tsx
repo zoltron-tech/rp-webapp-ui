@@ -1,4 +1,5 @@
 import { ShouldRender } from "@novelist-world/ui";
+import { isStoredNotification, useNotificationReadState } from "@nw/features";
 import type { NovelistWorldNotification } from "@nw/types";
 import { type FC, type MouseEventHandler, useCallback, useState } from "react";
 import { reactToMuseConnectionAction } from "@/app/rp/muse/connection-actions";
@@ -11,8 +12,8 @@ import { useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { API_MESSAGE } from "@/utils/constants";
-import { ROUTES } from "@/utils/constants/routes";
 import { toFormattedDateFromUnix } from "@/utils/helpers";
+import { notificationRoute } from "@/utils/notification-route";
 import { AvatarNew } from "../common/avatar-new";
 import * as S from "./styled";
 
@@ -25,6 +26,7 @@ export const NotificationBox: FC<NotificationBoxProps> = ({ notification }) => {
   const { errorToast, successToast } = useUIContext();
   const set = useGlobalStoreSet();
   const [loading, setLoading] = useState(false);
+  const { markRead } = useNotificationReadState();
 
   const removeFromStore = () => {
     set((prev) => ({
@@ -79,35 +81,20 @@ export const NotificationBox: FC<NotificationBoxProps> = ({ notification }) => {
 
   const handleClick: MouseEventHandler<HTMLElement> = useCallback(
     (_e) => {
-      if (
-        ["MUSE_CONNECTION_REQUEST", "MUSE_CONNECTION_UPDATE"].includes(
-          notification.type,
-        )
-      )
-        routeToPage(ROUTES.Muse.View(notification.target.urlProp));
-      else if (
-        ["PROMPT_COMMENT", "PROMPT_COMMENT_REPLY", "REPLY"].includes(
-          notification.type,
-        )
-      )
-        routeToPage(ROUTES.Thread.View(notification.target.urlProp));
-      else if (notification.type === "FRIEND_REQUEST")
-        routeToPage(ROUTES.Profile.View(notification.source.urlProp).Index);
-      else if (notification.type === "STORYBOARD_UPDATE")
-        routeToPage(ROUTES.Story.View(notification.target.urlProp));
-      else if (notification.type === "STORYBOARD_EVENT_UPDATE")
-        routeToPage(ROUTES.Story.Event.View(notification.target.urlProp));
-      else if (notification.type === "REACTION")
-        if (["COMMENT", "REPLY"].includes(notification.target.targetType))
-          routeToPage(ROUTES.Thread.View(notification.target.urlProp));
-        else if (notification.target.targetType === "PROMPT")
-          routeToPage(ROUTES.Prompt.View(notification.target.urlProp));
-        else if (notification.target.targetType === "STORY_BOARD")
-          routeToPage(ROUTES.Story.View(notification.target.urlProp));
-        else if (notification.target.targetType === "STORY_BOARD_EVENT")
-          routeToPage(ROUTES.Story.Event.View(notification.target.urlProp));
+      if (!notification.isRead && isStoredNotification(notification.type)) {
+        void markRead(notification.id);
+        set((prev) => ({
+          notifications:
+            prev.notifications?.map((n) =>
+              n.id === notification.id ? { ...n, isRead: true } : n,
+            ) ?? null,
+        }));
+      }
+
+      const route = notificationRoute(notification);
+      if (route) routeToPage(route);
     },
-    [notification],
+    [notification, routeToPage, markRead, set],
   );
 
   return (

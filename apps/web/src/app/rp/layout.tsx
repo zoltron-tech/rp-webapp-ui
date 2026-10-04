@@ -6,6 +6,7 @@ import { HELLO_STICKER_QUERIES } from "@nw/chat";
 import type { StoreState } from "@nw/types/state";
 import { ACCENT_MAP } from "@nw/types/theme";
 import classNames from "classnames";
+import { useNotificationCounts } from "@nw/features";
 import type React from "react";
 import { type FC, type HTMLProps, useEffect, useMemo } from "react";
 import { useCookies } from "react-cookie";
@@ -17,6 +18,8 @@ import {
 } from "@/app/rp/conversations/actions";
 import { GlobalMusicPlayer } from "@/components/global-music-player";
 import { InstallAppPrompt } from "@/components/install-app-prompt";
+import { PushPrimer } from "@/components/push-primer";
+import { usePushClicks } from "@/hooks/use-push-clicks";
 import { JoinDiscordPrompt } from "@/components/join-discord-prompt";
 import {
   ContentContainer,
@@ -152,11 +155,24 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
   // In whatever component/hook owns your global state
   // e.g. your GlobalStateProvider or root layout
 
+  // Unread conversations plus notifications not yet seen — the same number
+  // the server sends with every push, so the icon does not change meaning
+  // between a push arriving and the app being opened. Threads awaiting a reply
+  // have their own counter in the app and are not part of it. Against a server
+  // without the count, the old sum stands in.
+  usePushClicks();
+
+  const { data: notificationCounts } = useNotificationCounts({
+    enabled: authState === "LOGGED_IN",
+  });
   useEffect(() => {
-    const unreadCount =
-      (unreadConversationIds?.length ?? 0) + (unreadReplyCount ?? 0);
-    setBadgeCount(unreadCount);
-  }, [unreadConversationIds, unreadReplyCount]);
+    const unreadConversations = unreadConversationIds?.length ?? 0;
+    setBadgeCount(
+      notificationCounts
+        ? unreadConversations + notificationCounts.unseen
+        : unreadConversations + (unreadReplyCount ?? 0),
+    );
+  }, [unreadConversationIds, unreadReplyCount, notificationCounts]);
 
   useEffect(() => {
     if (authState !== "LOGGED_IN") return;
@@ -186,6 +202,7 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
       <TopBar />
       <GlobalMusicPlayer />
       <InstallAppPrompt />
+      <PushPrimer />
       <JoinDiscordPrompt />
       {/* LeftNav/RightSidebar are position:fixed and live outside AppGrid
           entirely (see their styles) so they never scroll with the page —

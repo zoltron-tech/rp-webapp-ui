@@ -9,10 +9,10 @@ import {
   FlatList,
   Pressable,
   StyleSheet,
-  Text,
   useWindowDimensions,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EndOfList } from "@/components/end-of-list";
 import { LikersSheet } from "@/components/feed/likers-sheet";
@@ -186,5 +186,5 @@ const styles = StyleSheet.create({
   footer: { alignItems: "center", paddingVertical: space.md },
   pressed: { opacity: 0.8, transform: [{ scale: 0.98 }] },
   row: { gap: GUTTER },
-  subtitle: { fontSize: fontSize.label },
+  subtitle: { fontSize: fontSize.body },
 });

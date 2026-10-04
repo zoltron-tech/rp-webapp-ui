@@ -24,7 +24,6 @@ export default function StoryLayout() {
       screenOptions={{
         contentStyle: { backgroundColor: theme.background },
         ...glassHeaderOptions(theme),
-        headerTitleStyle: { fontWeight: "700" },
       }}
     >
       <Stack.Screen name="[storyId]/index" options={{ title: "Story" }} />

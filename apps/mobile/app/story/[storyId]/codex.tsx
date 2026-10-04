@@ -7,9 +7,9 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ListStatus } from "@/components/list-status";
 import { CodexSkeleton } from "@/components/sheet-skeletons";
@@ -25,7 +25,7 @@ import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { useStory, useStoryCodex } from "@/hooks/use-story";
 import { asColor, withAlpha } from "@/lib/color";
 import { codexIcon, plainText } from "@/lib/story";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, type, useAppTheme } from "@/theme";
 
 /**
  * The codex — web's `StoryCodexView`, read-only.
@@ -404,14 +404,14 @@ const EntryCard = ({
 };
 
 const styles = StyleSheet.create({
-  body: { gap: space.md, paddingHorizontal: space.sm + 4, paddingTop: space.sm },
+  body: { gap: space.md, paddingHorizontal: space.m, paddingTop: space.sm },
   card: {
     borderRadius: radius.md + 4,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     padding: space.md,
   },
   cardBody: { fontSize: fontSize.label, lineHeight: 19, marginTop: space.sm },
-  cardHead: { alignItems: "center", flexDirection: "row", gap: space.sm + 4 },
+  cardHead: { alignItems: "center", flexDirection: "row", gap: space.m },
   cardName: { flex: 1, fontSize: fontSize.body, fontWeight: "700" },
   cardOpen: {},
   empty: { fontSize: fontSize.body, padding: space.md, textAlign: "center" },
@@ -420,10 +420,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
     borderWidth: 1,
     flexDirection: "row",
-    gap: 6,
+    gap: space.s,
     maxWidth: "100%",
     paddingLeft: 3,
-    paddingRight: 12,
+    paddingRight: space.m,
     paddingVertical: 3,
   },
   faceGrid: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
@@ -433,34 +433,29 @@ const styles = StyleSheet.create({
     borderRadius: radius.md + 4,
     borderWidth: 1,
     gap: space.sm,
-    padding: space.sm + 4,
+    padding: space.m,
   },
-  groupDot: { borderRadius: 5, height: 10, width: 10 },
+  groupDot: { borderRadius: radius.sm, height: 10, width: 10 },
   groupHead: { alignItems: "center", flexDirection: "row", gap: space.sm },
-  groupMembers: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  groupMembers: { flexDirection: "row", flexWrap: "wrap", gap: space.s },
   groupName: { flex: 1, fontSize: fontSize.body, fontWeight: "700" },
   note: { fontSize: fontSize.caption, lineHeight: 17 },
   pool: { gap: space.sm },
-  poolLabel: {
-    fontSize: fontSize.caption,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-  },
+  poolLabel: type.eyebrow,
   tab: {
     alignItems: "center",
     borderRadius: radius.full,
     borderWidth: 1,
     flexDirection: "row",
-    gap: 6,
-    paddingHorizontal: 12,
+    gap: space.s,
+    paddingHorizontal: space.m,
     paddingVertical: 7,
   },
   tabCount: { fontSize: fontSize.caption, fontWeight: "600" },
   tabLabel: { fontSize: fontSize.label, fontWeight: "600" },
   tabs: {
     gap: space.sm,
-    paddingHorizontal: space.sm + 4,
-    paddingVertical: space.sm + 2,
+    paddingHorizontal: space.m,
+    paddingVertical: space.ms,
   },
 });

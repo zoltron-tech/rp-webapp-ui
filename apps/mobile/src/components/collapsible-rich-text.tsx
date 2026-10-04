@@ -1,6 +1,7 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { RichText, richTextBlockCount } from "@/components/rich-text";
 import { fontSize, space, useAppTheme } from "@/theme";
 

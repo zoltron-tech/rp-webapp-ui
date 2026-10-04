@@ -6,14 +6,8 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { memo, useMemo } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import {
   type Connection,
@@ -22,11 +16,15 @@ import {
 } from "@/hooks/use-connection";
 import {
   accentFromPalette,
+  border,
   fontSize,
   radius,
   space,
   useAppTheme,
 } from "@/theme";
+import { fullName } from "@/lib/names";
+import { Button } from "@/components/button";
+import { useGlobalState } from "@nw/store";
 
 /**
  * Web's `NovelistPreviewCard`, at phone width.
@@ -112,9 +110,6 @@ const MUSE_FACE = 26;
 /** How far each face laps over the one before it. */
 const MUSE_LAP = 8;
 
-const fullName = (person: { firstName?: string; lastName?: string | null }) =>
-  [person.firstName, person.lastName].filter(Boolean).join(" ");
-
 /**
  * The card's button: a rectangle that spans what it is given.
  *
@@ -125,77 +120,35 @@ const fullName = (person: { firstName?: string; lastName?: string | null }) =>
  */
 const CardButton = memo(
   ({
+    accessibilityLabel,
     busy,
     icon,
     label,
     onPress,
     tone,
   }: {
+    /** What an icon-only button is called. Defaults to "Open profile". */
+    accessibilityLabel?: string;
     busy: boolean;
     icon: keyof typeof Ionicons.glyphMap;
-    /** Absent for the square icon-only button beside "Message". */
+    /** Absent for the square icon-only button beside the labelled one. */
     label?: string;
     onPress: () => void;
     tone: "primary" | "positive" | "danger" | "quiet";
-  }) => {
-    const theme = useAppTheme();
-
-    // Positive and danger are tonal pairs — a deep fill and a pale label of
-    // the same hue — rather than the signal colours with white on them;
-    // see `Tones` in `@/theme`. Primary stays the accent's own solid
-    // step, which is built to carry white.
-    const fill =
-      tone === "primary"
-        ? theme.accent.solid
-        : tone === "positive"
-          ? theme.tones.positive.fill
-          : tone === "danger"
-            ? theme.tones.danger.fill
-            : theme.material.fillPressed;
-    const ink =
-      tone === "primary"
-        ? "#ffffff"
-        : tone === "positive"
-          ? theme.tones.positive.ink
-          : tone === "danger"
-            ? theme.tones.danger.ink
-            : theme.textGray;
-
-    return (
-      <Pressable
-        accessibilityLabel={label ?? "Open profile"}
-        accessibilityRole="button"
-        disabled={busy}
-        onPress={onPress}
-        style={({ pressed }) => [
-          styles.button,
-          label ? styles.buttonWide : styles.buttonSquare,
-          {
-            backgroundColor: fill,
-            borderColor:
-              tone === "quiet" ? theme.material.edge : "transparent",
-            opacity: pressed || busy ? 0.75 : 1,
-          },
-        ]}
-      >
-        {busy ? (
-          <ActivityIndicator color={ink} size="small" />
-        ) : (
-          <>
-            <Ionicons color={ink} name={icon} size={13} />
-            {label ? (
-              <Text
-                numberOfLines={1}
-                style={[styles.buttonLabel, { color: ink }]}
-              >
-                {label}
-              </Text>
-            ) : null}
-          </>
-        )}
-      </Pressable>
-    );
-  },
+  }) => (
+    <Button
+      accessibilityLabel={label ?? accessibilityLabel ?? "Open profile"}
+      busy={busy}
+      icon={icon}
+      label={label}
+      onPress={onPress}
+      shape="rect"
+      size="xs"
+      stretch={Boolean(label)}
+      style={label ? styles.buttonWide : styles.buttonSquare}
+      variant={tone}
+    />
+  ),
 );
 
 const NovelistCardView = ({
@@ -213,7 +166,9 @@ const NovelistCardView = ({
   const theme = useAppTheme();
   const router = useRouter();
   const action = useConnectionAction();
-  const { novelist: me } = useSession();
+  // The store's copy, not `useSession()`: that is two query observers per
+  // row, and every one of them re-rendered when the session settled.
+  const me = useGlobalState("novelist");
 
   const connection = (person.connection ?? null) as Connection;
   const isSelf = me?.id === person.id;
@@ -367,18 +322,16 @@ const NovelistCardView = ({
                 name="pencil-outline"
                 size={11}
               />
-              <Text style={[styles.statText, { color: theme.textGray }]}>
+              <Text
+                numberOfLines={1}
+                style={[styles.statText, { color: theme.textGray }]}
+              >
                 <Text style={[styles.statValue, { color: theme.text }]}>
                   {muses.length}
                 </Text>{" "}
                 {muses.length === 1 ? "character" : "characters"}
               </Text>
             </View>
-          ) : null}
-          {muses.length > 0 && mutual > 0 ? (
-            <View
-              style={[styles.statDot, { backgroundColor: theme.material.edge }]}
-            />
           ) : null}
           {mutual > 0 ? (
             <View style={styles.stat}>
@@ -387,7 +340,10 @@ const NovelistCardView = ({
                 name="people-outline"
                 size={11}
               />
-              <Text style={[styles.statText, { color: theme.textGray }]}>
+              <Text
+                numberOfLines={1}
+                style={[styles.statText, { color: theme.textGray }]}
+              >
                 <Text style={[styles.statValue, { color: theme.text }]}>
                   {mutual}
                 </Text>{" "}
@@ -498,10 +454,13 @@ const NovelistCardView = ({
                 onPress={() => run("accept", "FRIEND", "Accepting")}
                 tone="positive"
               />
+              {/* A square, as the profile button beside Message is: two
+                  labelled halves of a 176pt card had room for neither word,
+                  and the one you are being asked for is Accept. */}
               <CardButton
+                accessibilityLabel="Decline"
                 busy={running === "reject"}
                 icon="close"
-                label="Decline"
                 onPress={() => run("reject", null, "Declining")}
                 tone="danger"
               />
@@ -601,7 +560,7 @@ export const NovelistCardShimmer = () => {
 const styles = StyleSheet.create({
   actions: {
     flexDirection: "row",
-    gap: space.sm - 2,
+    gap: space.s,
     // Web's `margin-top: auto`: the buttons sit on the card's floor whatever
     // the content above them came to.
     marginTop: "auto",
@@ -612,28 +571,25 @@ const styles = StyleSheet.create({
   body: {
     alignItems: "center",
     flex: 1,
-    paddingBottom: space.sm + 2,
-    paddingHorizontal: space.sm + 2,
+    paddingBottom: space.ms,
+    paddingHorizontal: space.ms,
     width: "100%",
   },
   button: {
     alignItems: "center",
     borderRadius: radius.sm,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: 5,
     height: 34,
     justifyContent: "center",
   },
-  // 11, which is web's `--font-size-xsmall` on the same buttons at this
-  // breakpoint — and what lets "Decline" sit on half a card without clipping.
-  buttonLabel: { flexShrink: 1, fontSize: 11, fontWeight: "700" },
   /** The icon-only button: square, so a pair of them cannot look like a pill. */
-  buttonSquare: { width: 36 },
-  buttonWide: { flex: 1, paddingHorizontal: space.xs + 2 },
+  buttonSquare: { height: 34, paddingHorizontal: 0, width: 36 },
+  buttonWide: { height: 34, paddingHorizontal: space.s },
   card: {
-    borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.cardSm,
+    borderWidth: border.edge,
     minHeight: NOVELIST_CARD_MIN_HEIGHT,
     // Clipped: the banner is square and the card's corners are not.
     overflow: "hidden",
@@ -649,9 +605,9 @@ const styles = StyleSheet.create({
     width: AVATAR + (RING + RING_OUT) * 2,
   },
   ghostFaces: { height: MUSE_FACE, width: 96 },
-  ghostHandle: { height: 10, marginTop: 6, width: "45%" },
+  ghostHandle: { height: 10, marginTop: space.s, width: "45%" },
   ghostLine: { borderRadius: radius.sm },
-  ghostName: { height: 12, marginTop: 2, width: "70%" },
+  ghostName: { height: 12, marginTop: space.xxs, width: "70%" },
   handle: { fontSize: fontSize.caption, marginTop: 1, opacity: 0.9 },
   museBlock: {
     alignItems: "center",
@@ -675,13 +631,13 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   museLabel: {
-    fontSize: 9,
+    fontSize: fontSize.meta,
     fontWeight: "700",
     letterSpacing: 1.3,
     opacity: 0.7,
   },
   museLapped: { marginLeft: -MUSE_LAP },
-  museMore: { fontSize: 10, fontWeight: "700" },
+  museMore: { fontSize: fontSize.meta, fontWeight: "700" },
   museOverflow: {
     alignItems: "center",
     height: MUSE_FACE + 4,
@@ -698,20 +654,31 @@ const styles = StyleSheet.create({
   ring: {
     borderRadius: (AVATAR + (RING + RING_OUT) * 2) / 2,
     borderWidth: RING_OUT,
-    marginBottom: space.xs + 2,
+    marginBottom: space.s,
     // Half over the banner, as web's `margin-top: -26px` on a 52px avatar.
     marginTop: -(AVATAR / 2 + RING + RING_OUT),
   },
-  stat: { alignItems: "center", flexDirection: "row", gap: 4 },
-  statDot: { borderRadius: 2, height: 3, width: 3 },
+  // Shrinks: two counts on a 176pt card are a tight fit, and a word that
+  // shortens is better than a row that runs to the card's edges.
+  stat: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexShrink: 1,
+    gap: 3,
+    minWidth: 0,
+  },
   stats: {
     alignItems: "center",
     flexDirection: "row",
-    gap: space.sm - 2,
+    // The gap is the separator: a dot between the two cost the eleven points
+    // that decided whether both counts fit.
+    gap: space.sm,
     height: 16,
+    justifyContent: "center",
+    maxWidth: "100%",
     marginTop: space.xs + 1,
   },
-  statText: { fontSize: 11 },
+  statText: { flexShrink: 1, fontSize: fontSize.meta },
   statValue: { fontWeight: "700" },
   verified: {
     borderRadius: radius.full,

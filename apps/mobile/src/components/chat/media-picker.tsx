@@ -1,4 +1,3 @@
-import { SCRIM_ALPHA } from "@nw/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback } from "react";
 import {
@@ -7,11 +6,10 @@ import {
   Image,
   Pressable,
   StyleSheet,
-  Text,
-  TextInput,
   useWindowDimensions,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { rememberPreview } from "@/components/chat/message-media";
 import {
   type MediaSearch,
@@ -19,7 +17,15 @@ import {
   useGifSearch,
   useStickerSearch,
 } from "@/hooks/use-media-search";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import {
+  border,
+  fontSize,
+  MEDIA_CHIP,
+  radius,
+  space,
+  useAppTheme,
+} from "@/theme";
+import { SearchField as SearchPill } from "@/components/search-field";
 
 /**
  * The GIF, sticker and clip grids, as they appear inside the composer's tray.
@@ -72,38 +78,15 @@ const SearchField = ({
 
   return (
     <View style={styles.searchRow}>
-      <View
-        style={[
-          styles.search,
-          {
-            backgroundColor: theme.glass.field,
-            borderColor: theme.glass.edge,
-          },
-        ]}
-      >
-        <Ionicons color={theme.textGray} name="search" size={16} />
-        <TextInput
-          // Never autofocused. The tray opens *because* the keyboard was
-          // dismissed to make room for it; focusing the field here brings the
-          // keyboard straight back over the grid the tray just opened to show.
-          autoCorrect={false}
-          onChangeText={onChange}
-          placeholder={placeholder}
-          placeholderTextColor={theme.textGray}
-          returnKeyType="search"
-          style={[styles.searchInput, { color: theme.text }]}
-          value={value}
-        />
-        {value ? (
-          <Pressable
-            accessibilityLabel="Clear search"
-            hitSlop={space.sm}
-            onPress={() => onChange("")}
-          >
-            <Ionicons color={theme.textGray} name="close-circle" size={16} />
-          </Pressable>
-        ) : null}
-      </View>
+      <SearchPill
+        // Never autofocused. The tray opens *because* the keyboard was
+        // dismissed to make room for it; focusing the field here brings the
+        // keyboard straight back over the grid the tray just opened to show.
+        onChangeText={onChange}
+        placeholder={placeholder}
+        returnKeyType="search"
+        value={value}
+      />
     </View>
   );
 };
@@ -388,7 +371,6 @@ export const ClipGrid = ({ onSelect }: { onSelect: (url: string) => void }) => {
 };
 
 /** Chips straight on media: web's `MEDIA_CHIP`, no blur. */
-const MEDIA_CHIP = `rgba(0,0,0,${SCRIM_ALPHA.mediaChip})`;
 
 const styles = StyleSheet.create({
   body: { flex: 1 },
@@ -413,23 +395,14 @@ const styles = StyleSheet.create({
   empty: { alignItems: "center", gap: space.sm, padding: space.lg },
   emptyAction: {
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     paddingHorizontal: space.md,
-    paddingVertical: space.xs + 2,
+    paddingVertical: space.s,
   },
   emptyLabel: { fontSize: fontSize.caption, fontWeight: "600" },
   grid: { gap: space.xs, paddingBottom: space.md, paddingHorizontal: space.sm },
   progress: { height: 2, marginHorizontal: space.sm },
   reloading: { opacity: 0.45 },
-  search: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    gap: space.sm,
-    paddingHorizontal: space.md,
-  },
-  searchInput: { flex: 1, fontSize: fontSize.body, paddingVertical: space.sm },
   searchRow: { paddingBottom: space.sm, paddingHorizontal: space.sm },
   skeleton: {
     flexDirection: "row",

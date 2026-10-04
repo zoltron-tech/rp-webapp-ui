@@ -2,6 +2,7 @@ import { getWebSocketTicket } from "@nw/api/endpoints/account";
 import {
   createHeartbeatPong,
   createHeartbeatQuery,
+  isServerNotification,
   createMessageSocketMessage,
   createReactionSocketMessage,
   HEARTBEAT_TIMEOUT_MS,
@@ -231,6 +232,9 @@ const ChatSocketContext = createContext<ChatSocketValue>({
   sendReaction: () => false,
   trackUsernames: () => () => {},
 });
+
+/** Whether the app is in front of the person right now. */
+const isAppActive = () => AppState.currentState === "active";
 
 export const useChatSocket = (): ChatSocketValue =>
   useContext(ChatSocketContext);
@@ -490,7 +494,17 @@ export const ChatSocketProvider = ({ children }: { children: ReactNode }) => {
           socketRef.current?.close();
         }, HEARTBEAT_TIMEOUT_MS);
 
-        rawSend(createHeartbeatPong(questionUsernames()));
+        rawSend(createHeartbeatPong(questionUsernames(), isAppActive()));
+        return;
+      }
+
+      if (isServerNotification(frame)) {
+        void queryClient.invalidateQueries({
+          queryKey: queryKeys.notifications(),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: queryKeys.notificationCounts(),
+        });
         return;
       }
 
@@ -580,7 +594,7 @@ export const ChatSocketProvider = ({ children }: { children: ReactNode }) => {
         setIsConnected(true);
         // Ask immediately: otherwise every avatar is grey until the server's
         // first ping, up to thirty seconds after the socket opens.
-        rawSend(createHeartbeatQuery(questionUsernames()));
+        rawSend(createHeartbeatQuery(questionUsernames(), isAppActive()));
       };
 
       socket.onmessage = (event: { data: unknown }) => {
@@ -661,7 +675,13 @@ export const ChatSocketProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const onChange = (next: AppStateStatus) => {
-      if (next !== "active") return;
+      if (next !== "active") {
+        // Say so while the socket is still up. The server pushes to this
+        // phone only once the app is in front of the person nowhere, and the
+        // socket outlives the app going to the background by up to a minute.
+        rawSend(createHeartbeatQuery(questionUsernames(), false));
+        return;
+      }
       // Android drops sockets during doze without a close frame, so the app can
       // come back believing it is connected. Reconnect if the socket is gone,
       // and re-ask for presence if it survived — the answer is up to thirty
@@ -670,7 +690,7 @@ export const ChatSocketProvider = ({ children }: { children: ReactNode }) => {
         attemptRef.current = 0;
         ensureConnected();
       } else {
-        rawSend(createHeartbeatQuery(questionUsernames()));
+        rawSend(createHeartbeatQuery(questionUsernames(), true));
       }
       void queryClient.invalidateQueries({
         queryKey: queryKeys.unreadConversations(),

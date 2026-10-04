@@ -6,10 +6,10 @@ import {
   PanResponder,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { Text } from "@/components/text";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * A row that slides left to reveal buttons, and stays open until you choose.
@@ -210,8 +210,8 @@ const styles = StyleSheet.create({
   button: {
     alignItems: "center",
     borderRadius: radius.md + 4,
-    borderWidth: StyleSheet.hairlineWidth,
-    gap: 4,
+    borderWidth: border.edge,
+    gap: space.xs,
     justifyContent: "center",
     width: BUTTON_WIDTH,
   },

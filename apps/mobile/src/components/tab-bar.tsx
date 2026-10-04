@@ -6,16 +6,17 @@ import {
   Platform,
   Pressable,
   StyleSheet,
-  Text,
   useWindowDimensions,
   View,
   type ViewStyle,
 } from "react-native";
+import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GlassSurface, getGlassTier } from "@/components/glass-surface";
 import {
   BAR_GAP_TOP,
   BAR_HEIGHT,
+  BAR_ROW_PAD,
   BAR_INSET_X,
   barMetrics,
   LABEL_LIFT,
@@ -26,7 +27,7 @@ import {
   useTabBarChrome,
 } from "@/context/tab-bar";
 import { useA11ySettings } from "@/lib/a11y-settings";
-import { radius, useAppTheme } from "@/theme";
+import { font, fontSize, radius, useAppTheme } from "@/theme";
 
 /**
  * The bottom bar.
@@ -144,8 +145,14 @@ import { radius, useAppTheme } from "@/theme";
  * back to the centre, the same minimise-on-scroll the system tab bar does.
  */
 
-/** How far the active icon swells. Enough to notice, not enough to jump. */
-const ACTIVE_SCALE = 1.12;
+/**
+ * How far the active icon swells. Barely: it sits inside the indicator now,
+ * and a glyph that grows to the indicator's edges reads as crowded.
+ */
+const ACTIVE_SCALE = 1.04;
+
+/** The glyph. 22 in a 30pt indicator leaves it room on every side. */
+const ICON_SIZE = 22;
 
 /** Tab titles barely need to grow with text size; content does. */
 const LABEL_MAX_SCALE = 1.2;
@@ -287,7 +294,7 @@ const Tab = memo(
           */}
           <View>
             <Animated.View style={{ opacity: Animated.subtract(1, nearness) }}>
-              {icon?.({ color: theme.textGray, focused: false, size: 24 })}
+              {icon?.({ color: theme.textGray, focused: false, size: ICON_SIZE })}
             </Animated.View>
 
             <Animated.View
@@ -300,7 +307,7 @@ const Tab = memo(
                 // `onSurface` is that step, or white where it is under 3:1.
                 color: theme.accent.onSurface,
                 focused: true,
-                size: 24,
+                size: ICON_SIZE,
               })}
             </Animated.View>
           </View>
@@ -330,7 +337,10 @@ const Tab = memo(
           style={[
             styles.label,
             {
-              color: selected ? theme.accent.onSurface : theme.textGray,
+              // The accent's text step on the bar, not the ink that sits on
+              // the indicator: the label is on the glass now.
+              color: selected ? theme.accent.text : theme.textGray,
+              fontFamily: selected ? font.semibold : font.medium,
               opacity: labelOpacity,
             },
           ]}
@@ -551,6 +561,9 @@ export const TabBar = ({
                 transform: [
                   { translateX: anim.pillTravel },
                   { translateY: anim.drop },
+                  // With the icon: lifted while the label is under it, centred
+                  // once the bar is compact and the label has gone.
+                  { translateY: anim.iconLift },
                 ],
                 width: column,
               },
@@ -561,7 +574,6 @@ export const TabBar = ({
                 styles.pill,
                 {
                   backgroundColor: theme.accent.surface,
-                  borderColor: theme.accent.surfaceHover,
                   transform: [
                     { scaleX: anim.pillScaleX },
                     { scaleY: anim.pillScaleY },
@@ -664,23 +676,22 @@ const styles = StyleSheet.create({
     right: 0,
   },
 
-  /**
-   * Under the lifted icon: half the bar, less the lift, plus half the 24pt
-   * glyph and a 2pt gap. Absolute, so the label never moves the icon.
-   */
+  /** Absolute, so the label never moves the icon. */
   label: {
-    fontSize: 11,
-    fontWeight: "600",
+    // `Animated.Text` is not `components/text`, so the face is named where
+    // the label is drawn (medium, and semibold on the tab you are on).
+    fontSize: fontSize.meta,
     left: 0,
     position: "absolute",
     right: 0,
     textAlign: "center",
-    top: BAR_HEIGHT / 2 - LABEL_LIFT + 12 + 2,
+    // Under the indicator: its centre is the lifted icon's, then half its
+    // height and a 3pt gap.
+    top: BAR_HEIGHT / 2 - LABEL_LIFT + PILL_HEIGHT / 2 + 3,
   },
 
   pill: {
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
     height: PILL_HEIGHT,
     width: PILL_WIDTH,
   },
@@ -688,12 +699,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     bottom: 0,
     justifyContent: "center",
-    left: 0,
+    left: BAR_ROW_PAD,
     position: "absolute",
     top: 0,
   },
 
-  row: { alignItems: "center", flex: 1, flexDirection: "row" },
+  row: {
+    alignItems: "center",
+    flex: 1,
+    flexDirection: "row",
+    paddingHorizontal: BAR_ROW_PAD,
+  },
 
   /**
    * The capsule's frame: the transform and the iOS shadow, and nothing else.

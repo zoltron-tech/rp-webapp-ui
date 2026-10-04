@@ -37,7 +37,8 @@ import { space, useAppTheme } from "@/theme";
 /** Web's `STORIES_PAGE_SIZE` on the home page. */
 const PAGE_SIZE = 16;
 /** Two cards and a sliver of the third on a 375pt phone: says "this scrolls". */
-const STORY_CARD_WIDTH = 150;
+/** Web's 158. */
+const STORY_CARD_WIDTH = 158;
 const GAP = space.sm + 2;
 const SHIMMER = [0, 1, 2];
 

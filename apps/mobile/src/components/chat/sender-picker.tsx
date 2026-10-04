@@ -1,17 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { MessageSenderChoice } from "@nw/chat";
-import { useEffect, useMemo, useState } from "react";
-import {
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { memo, useEffect, useMemo, useState } from "react";
+import { FlatList, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { BottomSheet } from "@/components/sheet";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
+import { SearchField } from "@/components/search-field";
 
 /**
  * Who am I speaking as?
@@ -94,7 +89,7 @@ const SenderCard = ({
   );
 };
 
-export const SenderPicker = ({
+const SenderPickerView = ({
   onClose,
   onSelect,
   selected,
@@ -218,25 +213,11 @@ export const SenderPicker = ({
             </View>
 
             {muses.length >= SEARCH_THRESHOLD ? (
-              <View
-                style={[
-                  styles.search,
-                  {
-                    backgroundColor: theme.glass.field,
-                    borderColor: theme.material.edgeTranslucent,
-                  },
-                ]}
-              >
-                <Ionicons color={theme.textGray} name="search" size={16} />
-                <TextInput
-                  autoCorrect={false}
-                  onChangeText={setSearch}
-                  placeholder="Search characters"
-                  placeholderTextColor={theme.textGray}
-                  style={[styles.searchInput, { color: theme.text }]}
-                  value={search}
-                />
-              </View>
+              <SearchField
+                onChangeText={setSearch}
+                placeholder="Search characters"
+                value={search}
+              />
             ) : null}
 
             <FlatList
@@ -273,6 +254,12 @@ export const SenderPicker = ({
   );
 };
 
+/**
+ * Memoised: the composer re-renders on every character of the draft, and
+ * nothing here depends on the draft.
+ */
+export const SenderPicker = memo(SenderPickerView);
+
 const styles = StyleSheet.create({
   body: { flex: 1, gap: space.sm, paddingHorizontal: space.md },
   card: {
@@ -308,15 +295,6 @@ const styles = StyleSheet.create({
   grid: { gap: space.sm, paddingBottom: space.md },
   gridBox: { flex: 1 },
   kind: { fontSize: fontSize.caption },
-  search: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    gap: space.sm,
-    paddingHorizontal: space.md,
-  },
-  searchInput: { flex: 1, fontSize: fontSize.body, paddingVertical: space.sm },
   section: { flex: 1, fontSize: fontSize.caption, fontWeight: "700" },
   sectionRow: {
     alignItems: "center",
@@ -327,7 +305,7 @@ const styles = StyleSheet.create({
   selfRow: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.sm,
     padding: space.sm,

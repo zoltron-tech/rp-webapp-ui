@@ -4,7 +4,8 @@ import { queryKeys, useApi } from "@nw/features";
 import type { Muse, MuseAboutSection } from "@nw/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { type ActionItem, ActionMenu } from "@/components/action-menu";
 import { FeedMedia } from "@/components/feed/feed-media";
 import { NoteSheet } from "@/components/muse/edit/note-sheet";
@@ -298,15 +299,16 @@ const styles = StyleSheet.create({
   quote: {
     color: PANEL.secondary,
     flexShrink: 1,
-    fontSize: fontSize.body,
+    fontSize: fontSize.label,
     fontStyle: "italic",
+    letterSpacing: 0.2,
     lineHeight: 22,
-    textAlign: "center",
+    textAlign: "left",
   },
   section: { gap: space.sm, paddingBottom: space.md, position: "relative" },
   sectionMore: {
     alignSelf: "flex-end",
-    paddingBottom: 2,
+    paddingBottom: space.xxs,
   },
   shimmer: { gap: space.sm, paddingTop: space.xs },
 });

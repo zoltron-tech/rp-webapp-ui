@@ -10,12 +10,12 @@ import {
   Pressable,
   type ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { CUSTOM_EMOJI_SET } from "@/components/note-emoji";
 import { withAlpha } from "@/lib/color";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * The note emoji, in a row that says it scrolls.
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
   arrow: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     elevation: 3,
     height: 30,
     justifyContent: "center",
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 7,
     paddingVertical: 1,
   },
-  countLabel: { fontSize: 11, fontWeight: "700" },
+  countLabel: { fontSize: fontSize.meta, fontWeight: "700" },
   edge: {
     bottom: 0,
     justifyContent: "center",
@@ -378,8 +378,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
   },
-  headerLeft: { alignItems: "center", flexDirection: "row", gap: 6 },
-  hint: { alignItems: "center", flexDirection: "row", gap: 4 },
+  headerLeft: { alignItems: "center", flexDirection: "row", gap: space.s },
+  hint: { alignItems: "center", flexDirection: "row", gap: space.xs },
   hintLabel: { fontSize: fontSize.caption, fontWeight: "600" },
   item: {
     alignItems: "center",

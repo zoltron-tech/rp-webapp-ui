@@ -16,9 +16,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import {
   IceBreakerTrail,
@@ -38,7 +38,8 @@ import {
   useReplyToIceBreaker,
 } from "@/hooks/use-ice-breakers";
 import { useQuickAddMuse } from "@/hooks/use-quick-add-muse";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
+import { IconButton } from "@/components/icon-button";
 
 /**
  * One ice breaker, opened.
@@ -334,28 +335,17 @@ export const IceBreakerSheet = ({
                     style={styles.replyInput}
                     value={message}
                   />
-                  <Pressable
+                  <IconButton
                     accessibilityLabel="Send reply"
-                    accessibilityRole="button"
+                    busy={sending}
                     disabled={!canSend}
                     hitSlop={space.sm}
+                    icon="send"
+                    iconSize={15}
                     onPress={() => void send()}
-                    style={({ pressed }) => [
-                      styles.send,
-                      {
-                        backgroundColor: canSend
-                          ? theme.accent.solid
-                          : theme.accent.surfaceActive,
-                        opacity: pressed && canSend ? 0.8 : 1,
-                      },
-                    ]}
-                  >
-                    {sending ? (
-                      <ActivityIndicator color="#ffffff" size="small" />
-                    ) : (
-                      <Ionicons color="#ffffff" name="send" size={15} />
-                    )}
-                  </Pressable>
+                    style={styles.send}
+                    tone="primary"
+                  />
                 </View>
               </View>
 
@@ -381,15 +371,15 @@ const styles = StyleSheet.create({
   },
   bubble: {
     borderRadius: radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     paddingHorizontal: space.md,
     paddingRight: space.lg,
-    paddingVertical: space.sm + 2,
+    paddingVertical: space.ms,
   },
   delete: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.sm,
     justifyContent: "center",
@@ -398,7 +388,7 @@ const styles = StyleSheet.create({
   deleteLabel: { fontSize: fontSize.body, fontWeight: "600" },
   hero: { alignItems: "center", gap: space.xs },
   message: { fontSize: fontSize.body, lineHeight: 21 },
-  note: { fontSize: 10, textAlign: "center" },
+  note: { fontSize: fontSize.meta, textAlign: "center" },
   quote: { gap: space.xs },
   replyInput: {
     flex: 1,
@@ -412,20 +402,13 @@ const styles = StyleSheet.create({
   replyRow: {
     alignItems: "flex-end",
     borderRadius: radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flex: 1,
     flexDirection: "row",
     paddingBottom: space.xs,
     paddingRight: space.xs,
   },
-  send: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    height: 32,
-    justifyContent: "center",
-    marginBottom: 2,
-    width: 32,
-  },
+  send: { marginBottom: space.xxs },
   watermark: { position: "absolute", right: space.sm, top: space.sm },
   when: { alignSelf: "flex-end", fontSize: fontSize.caption },
 });

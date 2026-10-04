@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { forwardRef, useState } from "react";
 import type { TextInput as RNTextInput, TextInputProps } from "react-native";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text, TextInput } from "@/components/text";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * A labelled input, matching the web login form's field.
@@ -37,11 +38,24 @@ export const TextField = forwardRef<
   }
 >(
   (
-    { counterMax, hint, invalid, label, secureTextEntry, style, ...props },
+    {
+      counterMax,
+      hint,
+      invalid,
+      label,
+      onBlur,
+      onFocus,
+      secureTextEntry,
+      style,
+      ...props
+    },
     ref,
   ) => {
     const theme = useAppTheme();
     const [revealed, setRevealed] = useState(false);
+    // Web's `FIELD:focus-visible`: the edge turns to the accent. Appearance
+    // only; the caller's own focus handlers still run.
+    const [focused, setFocused] = useState(false);
 
     const isPassword = Boolean(secureTextEntry);
     const length = typeof props.value === "string" ? props.value.length : 0;
@@ -74,12 +88,24 @@ export const TextField = forwardRef<
             styles.inputRow,
             {
               backgroundColor: theme.glass.field,
-              borderColor: invalid ? theme.error : "transparent",
+              borderColor: invalid
+                ? theme.error
+                : focused
+                  ? theme.accent.solid
+                  : theme.glass.fieldEdge,
             },
           ]}
         >
           <TextInput
             ref={ref}
+            onBlur={(event) => {
+              setFocused(false);
+              onBlur?.(event);
+            }}
+            onFocus={(event) => {
+              setFocused(true);
+              onFocus?.(event);
+            }}
             placeholderTextColor={theme.textGray}
             secureTextEntry={isPassword && !revealed}
             style={[styles.input, { color: theme.text }, style]}
@@ -131,14 +157,14 @@ const styles = StyleSheet.create({
   hint: { fontSize: fontSize.caption },
   input: {
     flex: 1,
-    fontSize: fontSize.body,
+    fontSize: fontSize.input,
     paddingHorizontal: space.md,
-    paddingVertical: space.sm + 2,
+    paddingVertical: space.ms,
   },
   inputRow: {
     alignItems: "center",
-    borderRadius: radius.md,
-    borderWidth: 1,
+    borderRadius: radius.field,
+    borderWidth: border.edge,
     flexDirection: "row",
     /*
      * 48, which is the floor rather than a preference: it is Android's minimum

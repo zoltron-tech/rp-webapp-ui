@@ -25,17 +25,24 @@ import {
   PanResponder,
   Pressable,
   StyleSheet,
-  Text,
-  TextInput,
   useWindowDimensions,
   View,
 } from "react-native";
+import { Text, TextInput } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LikersSheet } from "@/components/feed/likers-sheet";
 import { HeartButton } from "@/components/heart-button";
 import { useKeyboardHeight } from "@/hooks/use-keyboard-height";
 import { useToggleReaction } from "@/hooks/use-toggle-reaction";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import {
+  border,
+  fontSize,
+  MEDIA_CHIP,
+  radius,
+  space,
+  useAppTheme,
+} from "@/theme";
+import { formatTime } from "@nw/utils";
 
 /**
  * The gallery's viewer — web's `AppImageViewer` / `VideoViewer` with
@@ -176,12 +183,6 @@ const rubber = (value: number, min: number, max: number) => {
   if (value < min) return min - (min - value) * RUBBER;
   if (value > max) return max + (value - max) * RUBBER;
   return value;
-};
-
-const formatClock = (seconds: number): string => {
-  if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
-  const whole = Math.floor(seconds);
-  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
 };
 
 type Touches = GestureResponderEvent["nativeEvent"]["touches"];
@@ -909,11 +910,11 @@ export const MediaViewer = ({
 
         {currentIsVideo ? (
           <View style={styles.progressRow}>
-            <Text style={styles.clock}>{formatClock(clock.time)}</Text>
+            <Text style={styles.clock}>{formatTime(clock.time)}</Text>
             <View style={styles.track}>
               <View style={[styles.fillBar, { width: `${progress * 100}%` }]} />
             </View>
-            <Text style={styles.clock}>{formatClock(clock.duration)}</Text>
+            <Text style={styles.clock}>{formatTime(clock.duration)}</Text>
           </View>
         ) : null}
 
@@ -1307,7 +1308,6 @@ const CaptionBar = ({
  * `MEDIA_CHIP`, black with no blur — rather than theme-tinted glass, which in
  * the light theme would be white chips under white icons.
  */
-const MEDIA_CHIP = `rgba(0,0,0,${SCRIM_ALPHA.mediaChip})`;
 const MEDIA_DIM = `rgba(0,0,0,${SCRIM_ALPHA.dim})`;
 
 const styles = StyleSheet.create({
@@ -1315,7 +1315,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     alignSelf: "flex-start",
     flexDirection: "row",
-    gap: space.xs + 2,
+    gap: space.s,
     minHeight: 24,
   },
   addCaptionLabel: {
@@ -1337,14 +1337,14 @@ const styles = StyleSheet.create({
   },
   captionBar: {
     backgroundColor: MEDIA_CHIP,
-    gap: space.xs + 2,
+    gap: space.s,
     paddingHorizontal: space.md,
-    paddingTop: space.sm + 2,
+    paddingTop: space.ms,
   },
   captionButton: {
     alignItems: "center",
     backgroundColor: "rgba(255,255,255,0.15)",
-    borderRadius: 16,
+    borderRadius: radius.lg,
     height: 32,
     justifyContent: "center",
     width: 32,
@@ -1357,19 +1357,19 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: fontSize.label,
     maxHeight: 96,
-    paddingHorizontal: space.sm + 4,
+    paddingHorizontal: space.m,
     paddingVertical: space.sm,
   },
   clock: {
     color: "rgba(255,255,255,0.75)",
-    fontSize: 11,
+    fontSize: fontSize.meta,
     fontVariant: ["tabular-nums"],
     minWidth: 34,
     textAlign: "center",
   },
   counter: {
     color: "rgba(255,255,255,0.85)",
-    fontSize: 12,
+    fontSize: fontSize.caption,
     fontWeight: "600",
   },
   dot: {
@@ -1385,7 +1385,7 @@ const styles = StyleSheet.create({
   dots: {
     alignItems: "center",
     flexDirection: "row",
-    gap: 6,
+    gap: space.s,
     justifyContent: "center",
     paddingBottom: space.sm,
   },
@@ -1440,13 +1440,13 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.14)",
     borderColor: "rgba(255,255,255,0.25)",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: 5,
-    paddingHorizontal: space.sm + 2,
-    paddingVertical: 4,
+    paddingHorizontal: space.ms,
+    paddingVertical: space.xs,
   },
-  modeLabel: { color: "#ffffff", fontSize: 11, fontWeight: "600" },
+  modeLabel: { color: "#ffffff", fontSize: fontSize.meta, fontWeight: "600" },
   page: {
     alignItems: "center",
     height: "100%",
@@ -1486,7 +1486,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     color: "rgba(255,255,255,0.7)",
-    fontSize: 11,
+    fontSize: fontSize.meta,
     fontVariant: ["tabular-nums"],
   },
   title: { color: "#ffffff", fontSize: fontSize.label, fontWeight: "700" },

@@ -2,11 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import type { Muse } from "@nw/types";
 import { LinearGradient } from "expo-linear-gradient";
 import { createContext, memo, useContext, useMemo } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { RevealRow } from "@/components/reveal-row";
 import { asColor, asHex, withAlpha } from "@/lib/color";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * One character in a novelist's list of characters.
@@ -298,24 +299,24 @@ const styles = StyleSheet.create({
   badge: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: 3,
-    paddingHorizontal: 6,
+    paddingHorizontal: space.s,
     paddingVertical: 1.5,
   },
-  badgeLabel: { fontSize: 10, fontWeight: "700" },
-  body: { flex: 1, gap: 6, minWidth: 0 },
+  badgeLabel: { fontSize: fontSize.meta, fontWeight: "700" },
+  body: { flex: 1, gap: space.s, minWidth: 0 },
   card: {
     alignItems: "center",
     borderRadius: radius.md + 4,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: space.sm + 4,
+    gap: space.m,
     overflow: "hidden",
     paddingLeft: space.md,
-    paddingRight: space.sm + 2,
-    paddingVertical: space.sm + 2,
+    paddingRight: space.ms,
+    paddingVertical: space.ms,
   },
   chips: {
     alignItems: "center",
@@ -324,7 +325,7 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   edge: { bottom: 0, left: 0, position: "absolute", top: 0, width: 3 },
-  face: { borderRadius: radius.full, borderWidth: 2, padding: 2 },
+  face: { borderRadius: radius.full, borderWidth: 2, padding: space.xxs },
   fandom: {
     alignItems: "center",
     borderRadius: radius.full,
@@ -332,8 +333,8 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     gap: space.xs,
     maxWidth: "100%",
-    paddingHorizontal: space.sm - 2,
-    paddingVertical: 2,
+    paddingHorizontal: space.s,
+    paddingVertical: space.xxs,
   },
   fandomDot: {
     backgroundColor: "rgba(255,255,255,0.9)",
@@ -344,7 +345,7 @@ const styles = StyleSheet.create({
   fandomLabel: {
     color: "#ffffff",
     flexShrink: 1,
-    fontSize: 10,
+    fontSize: fontSize.meta,
     fontWeight: "700",
     letterSpacing: 0.4,
     textTransform: "uppercase",
@@ -359,13 +360,13 @@ const styles = StyleSheet.create({
   xp: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: 3,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: space.s,
+    paddingVertical: space.xxs,
   },
-  xpLabel: { fontSize: 10, fontVariant: ["tabular-nums"], fontWeight: "700" },
+  xpLabel: { fontSize: fontSize.meta, fontVariant: ["tabular-nums"], fontWeight: "700" },
   xpMark: {
     alignItems: "center",
     backgroundColor: "#F79E1B",

@@ -3,10 +3,11 @@ import { type MarkdownMark, tokenizeMarkdown } from "@nw/chat";
 import { mixColors } from "@nw/theme";
 import type { IceBreaker } from "@nw/types";
 import { useMemo } from "react";
-import { StyleSheet, Text, type TextStyle, View } from "react-native";
+import { StyleSheet, type TextStyle, View } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { GradientSurface } from "@/components/gradient-surface";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * "This answers an ice breaker" — the tab above a reply.
@@ -124,17 +125,17 @@ const styles = StyleSheet.create({
     // square-cornered panel a quoted message gets.
     borderColor: "rgba(255,255,255,0.3)",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: space.xs + 2,
+    gap: space.s,
     paddingHorizontal: space.xs,
-    paddingRight: space.sm + 2,
+    paddingRight: space.ms,
     paddingVertical: space.xs - 1,
   },
-  tag: { alignItems: "center", flexDirection: "row", gap: 2 },
+  tag: { alignItems: "center", flexDirection: "row", gap: space.xxs },
   tagLabel: {
     color: "rgba(255,255,255,0.85)",
-    fontSize: 8,
+    fontSize: fontSize.meta,
     fontWeight: "700",
     letterSpacing: 0.5,
     textTransform: "uppercase",

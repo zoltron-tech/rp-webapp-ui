@@ -6,15 +6,8 @@ import {
 } from "@nw/chat";
 import { useSession } from "@nw/features";
 import { useEffect, useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { useIceBreakerPaint } from "@/components/chat/ice-breaker-paint";
 import { MarkdownInput } from "@/components/chat/markdown-input";
 import {
@@ -27,6 +20,7 @@ import { BottomSheet } from "@/components/sheet";
 import { useCreateIceBreaker } from "@/hooks/use-ice-breakers";
 import { useQuickAddMuse } from "@/hooks/use-quick-add-muse";
 import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { IconButton } from "@/components/icon-button";
 
 /**
  * Writing an ice breaker.
@@ -192,28 +186,16 @@ export const CreateIceBreakerSheet = ({
   return (
     <BottomSheet
       headerAction={
-        <Pressable
+        <IconButton
           accessibilityLabel="Post ice breaker"
-          accessibilityRole="button"
+          busy={create.isPending}
           disabled={!canCreate}
           hitSlop={space.sm}
+          icon="send"
+          iconSize={16}
           onPress={() => void submit()}
-          style={({ pressed }) => [
-            styles.confirm,
-            {
-              backgroundColor: canCreate
-                ? theme.accent.solid
-                : theme.accent.surfaceActive,
-              opacity: pressed && canCreate ? 0.8 : 1,
-            },
-          ]}
-        >
-          {create.isPending ? (
-            <ActivityIndicator color="#ffffff" size="small" />
-          ) : (
-            <Ionicons color="#ffffff" name="send" size={16} />
-          )}
-        </Pressable>
+          tone="primary"
+        />
       }
       maxHeightRatio={0.82}
       onClose={onClose}
@@ -360,16 +342,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.md,
     paddingVertical: space.sm,
   },
-  confirm: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    height: 32,
-    justifyContent: "center",
-    width: 32,
-  },
   counter: {
     alignSelf: "flex-end",
-    fontSize: 10,
+    fontSize: fontSize.meta,
     fontWeight: "700",
   },
   input: {
@@ -378,7 +353,7 @@ const styles = StyleSheet.create({
     padding: 0,
     textAlignVertical: "top",
   },
-  label: { fontSize: 10, fontWeight: "700", textTransform: "uppercase" },
+  label: { fontSize: fontSize.meta, fontWeight: "700", textTransform: "uppercase" },
   section: { gap: space.xs },
   swatch: {
     alignItems: "center",

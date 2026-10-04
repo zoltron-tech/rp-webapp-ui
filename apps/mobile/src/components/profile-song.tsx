@@ -1,4 +1,3 @@
-import { SCRIM_ALPHA } from "@nw/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { mixColors } from "@nw/theme";
 import type { ProfileSong } from "@nw/types/music";
@@ -12,13 +11,21 @@ import {
   Image,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { GradientSurface } from "@/components/gradient-surface";
 import { useSpotifyEmbed } from "@/components/spotify-embed";
 import { isHttpsUrlOn } from "@/lib/safe-link";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import {
+  border,
+  fontSize,
+  MEDIA_CHIP,
+  radius,
+  space,
+  useAppTheme,
+} from "@/theme";
+import { formatTime } from "@nw/utils";
 
 const SPOTIFY_HOSTS = ["open.spotify.com"] as const;
 
@@ -53,12 +60,6 @@ const ART = 40;
 /** The three equalizer bars, at rest and at full height. */
 const BAR_MIN = 0.3;
 const BAR_HEIGHT = 12;
-
-const formatClock = (seconds: number): string => {
-  if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
-  const whole = Math.floor(seconds);
-  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
-};
 
 /**
  * Three bars that rise and fall while something is playing.
@@ -317,7 +318,7 @@ export const ProfileSongPill = ({
 
       {playable && duration > 0 ? (
         <Text style={[styles.clock, { color: theme.textGray }]}>
-          {formatClock(time)}
+          {formatTime(time)}
         </Text>
       ) : null}
 
@@ -364,7 +365,6 @@ export const ProfileSongPill = ({
 };
 
 /** Chips straight on artwork: web's `MEDIA_CHIP`, no blur. */
-const MEDIA_CHIP = `rgba(0,0,0,${SCRIM_ALPHA.mediaChip})`;
 
 const styles = StyleSheet.create({
   art: {
@@ -378,27 +378,27 @@ const styles = StyleSheet.create({
   artImage: { height: "100%", position: "absolute", width: "100%" },
   artist: { fontSize: fontSize.caption },
   bar: { borderRadius: 1, height: BAR_HEIGHT, width: 2.5 },
-  clock: { fontSize: 10, fontVariant: ["tabular-nums"] },
+  clock: { fontSize: fontSize.meta, fontVariant: ["tabular-nums"] },
   equalizer: {
     alignItems: "center",
     backgroundColor: MEDIA_CHIP,
     flexDirection: "row",
-    gap: 2,
+    gap: space.xxs,
     height: "100%",
     justifyContent: "center",
     position: "absolute",
     width: "100%",
   },
-  info: { flex: 1, gap: 2 },
+  info: { flex: 1, gap: space.xxs },
   pill: {
     alignItems: "center",
     borderTopLeftRadius: radius.md + 2,
     borderTopRightRadius: radius.md + 2,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.sm,
-    padding: space.sm - 2,
-    paddingRight: space.sm + 2,
+    padding: space.s,
+    paddingRight: space.ms,
   },
   play: {
     alignItems: "center",
@@ -408,6 +408,6 @@ const styles = StyleSheet.create({
     width: 34,
   },
   title: { fontSize: fontSize.label, fontWeight: "700" },
-  track: { borderRadius: radius.full, height: 3, marginTop: 4, width: "100%" },
+  track: { borderRadius: radius.full, height: 3, marginTop: space.xs, width: "100%" },
   trackFill: { borderRadius: radius.full, height: "100%" },
 });

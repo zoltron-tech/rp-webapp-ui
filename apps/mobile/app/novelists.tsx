@@ -1,9 +1,11 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Logo } from "@/components/logo";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
+import { PRIVACY_URL, TERMS_URL } from "@/lib/links";
 
 /**
  * `/rp/novelists` — the public landing screen.
@@ -41,8 +43,6 @@ import { fontSize, radius, space, useAppTheme } from "@/theme";
  * reach.
  */
 
-const TERMS_URL = "https://novelist.world/rp/terms";
-const PRIVACY_URL = "https://novelist.world/rp/privacy-policy";
 
 export default function NovelistsScreen() {
   const theme = useAppTheme();
@@ -104,8 +104,8 @@ export default function NovelistsScreen() {
               styles.primary,
               {
                 backgroundColor: pressed
-                  ? theme.accent.solidHover
-                  : theme.accent.solid,
+                  ? theme.accent.fillPressed
+                  : theme.accent.fill,
               },
             ]}
           >
@@ -155,7 +155,7 @@ export default function NovelistsScreen() {
 }
 
 const styles = StyleSheet.create({
-  actions: { gap: space.sm + 2 },
+  actions: { gap: space.ms },
   brand: { alignItems: "center", gap: space.md },
   lede: {
     fontSize: fontSize.body,
@@ -182,12 +182,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderCurve: "continuous",
     borderRadius: radius.lg - 2,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     justifyContent: "center",
     minHeight: 50,
   },
   secondaryLabel: { fontSize: fontSize.body, fontWeight: "600" },
   spacer: { flex: 1 },
-  terms: { fontSize: 11, lineHeight: 15, paddingTop: space.xs, textAlign: "center" },
+  terms: { fontSize: fontSize.meta, lineHeight: 15, paddingTop: space.xs, textAlign: "center" },
   title: { fontSize: fontSize.display, fontWeight: "700", lineHeight: 34 },
 });

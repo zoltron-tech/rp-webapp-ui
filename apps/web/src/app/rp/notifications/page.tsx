@@ -1,6 +1,6 @@
 "use client";
 
-import { useNotifications } from "@nw/features";
+import { useNotificationReadState, useNotifications } from "@nw/features";
 import { useEffect } from "react";
 import { NotificcationsList } from "@/components/notification";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
@@ -22,6 +22,12 @@ export default function NotifiactionsPage() {
   useEffect(() => {
     set({ notifications });
   }, [notifications, set]);
+
+  // Clears the badge; the rows stay highlighted until opened or marked read.
+  const { markSeen } = useNotificationReadState();
+  useEffect(() => {
+    if (authState === "LOGGED_IN") void markSeen();
+  }, [authState, markSeen]);
 
   return (
     <NotificcationsList

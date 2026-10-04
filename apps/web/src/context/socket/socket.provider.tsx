@@ -12,15 +12,18 @@ import {
 } from "react";
 import { getSocketTicketAction } from "@/app/actions";
 import { getUnreadConversationIdsAction } from "@/app/rp/conversations/actions";
+import { getNotifications } from "@/app/rp/novelists/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import type { WebSocketExt } from "@/types/socket";
 import { SOCKET_URL } from "@/utils/constants";
 import { decryptMessage } from "@/utils/e2e-crypto";
 import {
   createHeartbeatPong,
+  createHeartbeatQuery,
   HEARTBEAT_TIMEOUT_MS,
   isServerEdit,
   isServerMessage,
+  isServerNotification,
   isServerPing,
   isServerReaction,
   type ReactionSocketPayload,
@@ -84,6 +87,9 @@ type SocketProviderProps = {
 export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
   const authState = useGlobalState("authState");
   const novelist = useGlobalState("novelist");
+  /** The usernames the heartbeat asks about, for handlers that outlive a render. */
+  const friendUsernamesRef = useRef<string[]>([]);
+  friendUsernamesRef.current = novelist?.friends?.map((f) => f.username) ?? [];
   const setGlobalState = useGlobalStoreSet();
   const [socket, setSocket] = useState<WebSocketExt | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -183,6 +189,19 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
   // Now place the visibilitychange effect after ensureConnected is defined
   useEffect(() => {
     const handleVisibilityChange = () => {
+      // Tell the server at once, in both directions. It pushes to a device
+      // only when the app is in front of the person nowhere, and a hidden tab
+      // that still counted as present would keep their phone silent.
+      if (socketRef.current?.readyState === 1) {
+        socketRef.current.send(
+          JSON.stringify(
+            createHeartbeatQuery(
+              friendUsernamesRef.current,
+              document.visibilityState === "visible",
+            ),
+          ),
+        );
+      }
       if (document.visibilityState === "visible") {
         if (!socketRef.current && authStateRef.current === "LOGGED_IN") {
           ensureConnected();
@@ -295,6 +314,15 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
         return;
       }
 
+      if (isServerNotification(data)) {
+        // The bell reads the store, which is otherwise loaded once per
+        // session; refetch so a notification shows up while the app is open.
+        void getNotifications(1, 30).then((notifications) => {
+          if (Array.isArray(notifications)) setGlobalState({ notifications });
+        });
+        return;
+      }
+
       if (!isServerPing(data)) return;
 
       // Track which users the server reports as online
@@ -313,7 +341,14 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
 
       // Reply so the server resets its own heartbeat flag and records this user
       const usernames = novelist?.friends?.map((f) => f.username) ?? [];
-      socket.send(JSON.stringify(createHeartbeatPong(usernames)));
+      socket.send(
+        JSON.stringify(
+          createHeartbeatPong(
+            usernames,
+            document.visibilityState === "visible",
+          ),
+        ),
+      );
     };
 
     socket.addEventListener("message", onMessage);

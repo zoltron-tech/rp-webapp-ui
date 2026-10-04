@@ -4,7 +4,7 @@ import { submitPrompt } from "@nw/api/endpoints/profile";
 import { updatePromptComment } from "@nw/api/endpoints/prompt";
 import type { MessageSenderChoice } from "@nw/chat";
 import { useApi, useSession } from "@nw/features";
-import { imageSources } from "@nw/richtext";
+import { imageSources, type RichDocument } from "@nw/richtext";
 import {
   API_MESSAGE,
   type Friend,
@@ -38,10 +38,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from "react-native";
+import { Text, TextInput } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ActionMenu } from "@/components/action-menu";
 import { Avatar } from "@/components/avatar";
@@ -73,12 +72,10 @@ import {
 import { PRIVACY_ICON, PRIVACY_LABEL } from "@/components/feed/privacy";
 import { ThreadPost } from "@/components/thread/post";
 import { useComposerMedia } from "@/hooks/use-composer-media";
-import {
-  lastKeyboardHeight as lastSeenKeyboardHeight,
-  useKeyboardHeight,
-  useKeyboardOffset,
-} from "@/hooks/use-keyboard-height";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { lastKeyboardHeight as lastSeenKeyboardHeight } from "@/hooks/use-keyboard-height";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
+import { IconButton } from "@/components/icon-button";
 
 /**
  * The composer — web's `FullPagePromptInput`, which is what web shows on a
@@ -201,7 +198,6 @@ const AS_LABEL: Record<SubmitPromptType, string> = {
 };
 
 /** How long a guessed lift is held before deciding no keyboard is coming. */
-const PREDICTION_GRACE_MS = 700;
 
 const toChoice = (source: PromptSource): MessageSenderChoice => ({
   id: source.sourceId,
@@ -252,7 +248,20 @@ const ComposerScreen = ({
   const liftRef = useRef<KeyboardLiftHandle>(null);
 
   const editor = useRef<RichTextEditorHandle>(null);
-  const [html, setHtml] = useState(mode.kind === "edit" ? mode.html : "");
+  /*
+   * Whether there is text, not the text. The HTML used to live here as state,
+   * set on every keystroke — which re-rendered this whole screen, handed the
+   * editor new props and re-rendered it too, for each character. The editor
+   * holds the document; this asks for the HTML when it is sending or closing.
+   */
+  const [hasText, setHasText] = useState(
+    mode.kind === "edit" ? mode.html.length > 0 : false,
+  );
+  const currentHtml = useCallback(
+    () =>
+      editor.current?.getHtml() ?? (mode.kind === "edit" ? mode.html : ""),
+    [mode],
+  );
   const [sending, setSending] = useState(false);
   const [trayTab, setTrayTab] = useState<TrayTab | null>(null);
   const [sheet, setSheet] = useState<
@@ -355,7 +364,18 @@ const ComposerScreen = ({
 
   // ─── Sending ─────────────────────────────────────────────────────────────
 
-  const hasContent = html.length > 0 || Boolean(media.attachment?.url);
+  const reconcileMedia = media.reconcile;
+  const onDocumentChange = useCallback(
+    (doc: RichDocument, empty: boolean) => {
+      // Same boolean, no render: this only moves when the page goes from
+      // empty to not, or back.
+      setHasText(!empty);
+      reconcileMedia(imageSources(doc));
+    },
+    [reconcileMedia],
+  );
+
+  const hasContent = hasText || Boolean(media.attachment?.url);
   const canSend = hasContent && !media.isUploading && !sending;
 
   const send = useCallback(
@@ -364,7 +384,7 @@ const ComposerScreen = ({
       const payload: SubmitPromptInput = {
         media: media.attachment?.url ?? "",
         source: from,
-        text: html,
+        text: currentHtml(),
       };
       if (type === "prompt") {
         payload.privacy = privacy;
@@ -397,12 +417,24 @@ const ComposerScreen = ({
       );
       onClose();
     },
-    [api, html, media, mode, onClose, onSent, privacy, sharedWith, song, type],
+    [
+      api,
+      currentHtml,
+      media,
+      mode,
+      onClose,
+      onSent,
+      privacy,
+      sharedWith,
+      song,
+      type,
+    ],
   );
 
   const save = useCallback(async () => {
     if (mode.kind !== "edit") return;
     setSending(true);
+    const html = currentHtml();
     const result = await updatePromptComment(api, mode.id, html, type).catch(
       () => ({ message: API_MESSAGE.Error }),
     );
@@ -414,10 +446,10 @@ const ComposerScreen = ({
     media.commit();
     onEdited?.(mode.id, html, type);
     onClose();
-  }, [api, html, media, mode, onClose, onEdited, type]);
+  }, [api, currentHtml, media, mode, onClose, onEdited, type]);
 
   const submit = useCallback(() => {
-    if (!html) {
+    if (!currentHtml()) {
       Alert.alert("Nothing to send", "Prompt body cannot be empty.");
       return;
     }
@@ -433,10 +465,11 @@ const ComposerScreen = ({
       return;
     }
     void send(source);
-  }, [html, mode.kind, save, selection, send, source]);
+  }, [currentHtml, mode.kind, save, selection, send, source]);
 
   const requestClose = useCallback(() => {
-    const dirty = mode.kind === "edit" ? html !== mode.html : hasContent;
+    const dirty =
+      mode.kind === "edit" ? currentHtml() !== mode.html : hasContent;
     if (!dirty) {
       onClose();
       return;
@@ -456,7 +489,7 @@ const ComposerScreen = ({
         },
       ],
     );
-  }, [hasContent, html, media, mode, onClose]);
+  }, [currentHtml, hasContent, media, mode, onClose]);
 
   const onCharacterCreated = useCallback(
     (muse: Muse) => setSource(museToSource(muse)),
@@ -524,23 +557,15 @@ const ComposerScreen = ({
           {/* ── Top bar ─────────────────────────────────────────────────── */}
           {/* A glass bar with an edge along its foot, like the other bars. */}
           <GlassSurface bordered="bottom" style={styles.topBar} variant="bar">
-            <Pressable
+            <IconButton
               accessibilityLabel="Close"
-              accessibilityRole="button"
               hitSlop={space.sm}
+              icon="close"
+              iconSize={20}
               onPress={requestClose}
-              style={({ pressed }) => [
-                styles.iconButton,
-                {
-                  backgroundColor: pressed
-                    ? theme.glass.fillPressed
-                    : theme.glass.fillHover,
-                  borderColor: theme.glass.edge,
-                },
-              ]}
-            >
-              <Ionicons color={theme.text} name="close" size={20} />
-            </Pressable>
+              size={36}
+              tone="glass"
+            />
 
             <Text
               numberOfLines={1}
@@ -597,16 +622,28 @@ const ComposerScreen = ({
                     {
                       backgroundColor: canSend
                         ? pressed
-                          ? theme.accent.solidHover
-                          : theme.accent.solid
-                        : theme.accent.surfaceActive,
+                          ? theme.accent.fillPressed
+                          : theme.accent.fill
+                        : theme.accent.fillDisabled,
                     },
                   ]}
                 >
                   {sending ? (
-                    <ActivityIndicator color={theme.accent.onSolid} size="small" />
+                    <ActivityIndicator
+                      color={theme.accent.onFillDisabled}
+                      size="small"
+                    />
                   ) : (
-                    <Text style={[styles.sendLabel, { color: theme.accent.onSolid }]}>
+                    <Text
+                      style={[
+                        styles.sendLabel,
+                        {
+                          color: canSend
+                            ? theme.accent.onFill
+                            : theme.accent.onFillDisabled,
+                        },
+                      ]}
+                    >
                       {buttonLabel}
                     </Text>
                   )}
@@ -826,33 +863,17 @@ const ComposerScreen = ({
                         <Animated.View
                           style={{ transform: [{ scale: sendScale }] }}
                         >
-                          <Pressable
+                          <IconButton
                             accessibilityLabel={buttonLabel}
-                            accessibilityRole="button"
-                            accessibilityState={{
-                              busy: sending,
-                              disabled: !canSend,
-                            }}
+                            busy={sending || media.isUploading}
                             disabled={!canSend}
                             hitSlop={space.xs}
+                            icon="send"
+                            iconSize={16}
                             onPress={submit}
-                            style={({ pressed }) => [
-                              styles.sendRound,
-                              {
-                                backgroundColor: canSend
-                                  ? pressed
-                                    ? theme.accent.solidHover
-                                    : theme.accent.solid
-                                  : theme.accent.surfaceActive,
-                              },
-                            ]}
-                          >
-                            {sending || media.isUploading ? (
-                              <ActivityIndicator color="#ffffff" size="small" />
-                            ) : (
-                              <Ionicons color="#ffffff" name="send" size={16} />
-                            )}
-                          </Pressable>
+                            size={36}
+                            tone="primary"
+                          />
                         </Animated.View>
                       ) : null}
                     </View>
@@ -1004,10 +1025,7 @@ const ComposerScreen = ({
                   }
                   initialHtml={mode.kind === "edit" ? mode.html : undefined}
                   mentionTabs={mentionTabs}
-                  onChange={(next, doc) => {
-                    setHtml(next);
-                    media.reconcile(imageSources(doc));
-                  }}
+                  onDocumentChange={onDocumentChange}
                   onFocusChange={(focused) => liftRef.current?.predict(focused)}
                   compact={Boolean(parent)}
                   placeholder={placeholder}
@@ -1138,66 +1156,37 @@ const KeyboardLift = forwardRef<
   { backgroundColor, children, insetBottom, insetTop, trayOpen },
   ref,
 ) {
-  const keyboardHeight = useKeyboardHeight();
-  const keyboardOffset = useKeyboardOffset(insetBottom);
-  const [predicted, setPredicted] = useState(false);
-
-  useImperativeHandle(ref, () => ({ predict: setPredicted }), []);
-
-  // The real height has landed: it takes over from the guess.
-  useEffect(() => {
-    if (keyboardHeight > 0) setPredicted(false);
-  }, [keyboardHeight]);
-
-  // A focus that no keyboard follows (a hardware keyboard, say) stops rising.
-  useEffect(() => {
-    if (!predicted || keyboardHeight > 0) return;
-    const id = setTimeout(() => setPredicted(false), PREDICTION_GRACE_MS);
-    return () => clearTimeout(id);
-  }, [keyboardHeight, predicted]);
+  // Kept so the composer's calls stay valid; there is nothing to predict any
+  // more. The page follows the keyboard itself, below.
+  useImperativeHandle(ref, () => ({ predict: () => undefined }), []);
 
   /*
-   * Android's back button puts the keyboard away but leaves the line focused,
-   * so tapping the line again is not a focus and nothing would predict the
-   * lift. The keyboard leaving takes the focus with it, which makes the next
-   * tap a real focus — and a predicted rise.
+   * The page's foot rides the keyboard, frame by frame, on the UI thread.
+   *
+   * It used to be a `marginBottom` set from React state when the keyboard was
+   * *about* to show: the toolbar arrived at its final position in one frame
+   * and waited over an empty gap while the keyboard slid up underneath it,
+   * and the guess that got it there needed a grace timer and a forced blur to
+   * stay honest. `KeyboardAvoidingView` here is keyboard-controller's — the
+   * one written for an edge-to-edge window — and its padding is the
+   * keyboard's own animated height, so there is no guess to be wrong.
+   *
+   * The offset gives back the navigation bar: the keyboard's height includes
+   * it, and the page's own bottom padding already covers it.
    */
-  const hadKeyboard = useRef(false);
-  useEffect(() => {
-    if (keyboardHeight > 0) {
-      hadKeyboard.current = true;
-      return;
-    }
-    if (!hadKeyboard.current) return;
-    hadKeyboard.current = false;
-    const input = TextInput.State.currentlyFocusedInput();
-    if (input) TextInput.State.blurTextInput(input);
-  }, [keyboardHeight]);
-
-  const guess = predicted ? lastSeenKeyboardHeight() : 0;
-  const lift =
-    keyboardOffset > 0
-      ? keyboardOffset
-      : guess > 0
-        ? Platform.OS === "ios"
-          ? guess
-          : guess + insetBottom
-        : 0;
-
   return (
-    <View
-      style={[
-        styles.root,
-        {
-          backgroundColor,
-          marginBottom: trayOpen ? 0 : lift,
-          paddingBottom: lift > 0 || trayOpen ? 0 : insetBottom,
-          paddingTop: insetTop,
-        },
-      ]}
+    <KeyboardAvoidingView
+      behavior="padding"
+      enabled={!trayOpen}
+      keyboardVerticalOffset={-insetBottom}
+      style={[styles.root, { backgroundColor, paddingTop: insetTop }]}
     >
-      {children}
-    </View>
+      <View
+        style={[styles.root, { paddingBottom: trayOpen ? 0 : insetBottom }]}
+      >
+        {children}
+      </View>
+    </KeyboardAvoidingView>
   );
 });
 
@@ -1205,10 +1194,10 @@ const styles = StyleSheet.create({
   attachment: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.sm,
-    padding: space.sm + 2,
+    padding: space.ms,
   },
   attachmentLabel: {
     flexShrink: 1,
@@ -1221,25 +1210,25 @@ const styles = StyleSheet.create({
   chip: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.xs,
     height: 32,
-    paddingHorizontal: space.sm + 2,
+    paddingHorizontal: space.ms,
   },
   chipLabel: { fontSize: fontSize.caption, fontWeight: "600" },
   fill: { flex: 1 },
   footer: { gap: space.sm, paddingBottom: space.md },
-  gifLabel: { fontSize: 10, fontWeight: "800", letterSpacing: 0.5 },
+  gifLabel: { fontSize: fontSize.meta, fontWeight: "800", letterSpacing: 0.5 },
   iconButton: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     height: 36,
     justifyContent: "center",
     width: 36,
   },
-  lockedLabel: { fontSize: 10, fontWeight: "700" },
+  lockedLabel: { fontSize: fontSize.meta, fontWeight: "700" },
   meta: {
     alignItems: "center",
     flexDirection: "row",
@@ -1247,7 +1236,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.md,
     paddingTop: space.sm,
   },
-  metaRight: { flexDirection: "row", gap: space.xs + 2 },
+  metaRight: { flexDirection: "row", gap: space.s },
   parent: { flex: 1 },
   parentContent: { padding: space.md },
   replyDock: { borderTopWidth: StyleSheet.hairlineWidth },
@@ -1263,31 +1252,24 @@ const styles = StyleSheet.create({
   sender: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flex: 1,
     flexDirection: "row",
     gap: space.sm,
     minHeight: 44,
-    paddingLeft: space.xs + 2,
-    paddingRight: space.sm + 2,
+    paddingLeft: space.s,
+    paddingRight: space.ms,
   },
-  senderEyebrow: { fontSize: 9, fontWeight: "700", letterSpacing: 0.6 },
+  senderEyebrow: { fontSize: fontSize.meta, fontWeight: "700", letterSpacing: 0.6 },
   senderName: { fontSize: fontSize.label, fontWeight: "700" },
   senderText: { flex: 1, gap: 1, minWidth: 0 },
   sendLabel: { color: "#ffffff", fontSize: fontSize.label, fontWeight: "700" },
-  sendRound: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    height: 36,
-    justifyContent: "center",
-    width: 36,
-  },
-  sharedFaces: { flexDirection: "row", gap: 2 },
+  sharedFaces: { flexDirection: "row", gap: space.xxs },
   sharedLabel: { fontSize: fontSize.caption },
   sharedWith: {
     alignItems: "center",
     flexDirection: "row",
-    gap: space.xs + 2,
+    gap: space.s,
     paddingHorizontal: space.md,
     paddingTop: space.sm,
   },

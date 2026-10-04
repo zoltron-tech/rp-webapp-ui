@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { getExplorePrompts, getNewsFeedPage } from "@nw/api/endpoints/feed";
 import { getFriendActivities } from "@nw/api/endpoints/home";
 import { queryKeys, useApi, useSession } from "@nw/features";
@@ -6,7 +5,7 @@ import type { Prompt } from "@nw/types";
 import type { Activity } from "@nw/types/activity";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import { FlatList, StyleSheet, View } from "react-native";
 import { ActivityBox } from "@/components/activity/box";
 import { EndOfList } from "@/components/end-of-list";
 import { PromptCard } from "@/components/feed/prompt-card";
@@ -22,7 +21,9 @@ import { usePromptFeedActions } from "@/hooks/use-prompt-feed-actions";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { useTabTop } from "@/hooks/use-tab-top";
 import { dedupeById, interleave } from "@/lib/feed";
-import { fontSize, space, useAppTheme } from "@/theme";
+import { space, useAppTheme } from "@/theme";
+import { EmptyState, FeedSeparator } from "@/components/list-parts";
+import { ComposeTrigger } from "@/components/compose/compose-trigger";
 
 /**
  * Home — the news feed.
@@ -150,8 +151,6 @@ const SKELETON_ITEMS: FeedItem[] = (() => {
 })();
 
 const keyExtractor = (item: FeedItem) => item.key;
-const Separator = () => <View style={styles.separator} />;
-
 /** A `null` page is a 404 — nothing there; a `message` is a real failure. */
 const unwrap = <T,>(result: T[] | { message: unknown } | null): T[] => {
   if (result === null) return [];
@@ -204,7 +203,15 @@ export const HomeScreen = () => {
   });
 
   const actions = usePromptFeedActions();
-  const { cardProps, expandedIds, showLikers, unfoldedIds } = actions;
+  const {
+    canAct,
+    cardProps,
+    expandedIds,
+    novelist: me,
+    openCompose,
+    showLikers,
+    unfoldedIds,
+  } = actions;
 
   /** A picture from a media activity, opened full screen. */
   const [viewing, setViewing] = useState<string | null>(null);
@@ -355,13 +362,27 @@ export const HomeScreen = () => {
   const header = useMemo(
     () => (
       <View style={styles.header}>
+        {/*
+          The way in to writing, at the top of the page you land on. Explore
+          had it and Home did not, so the first thing the app offered a
+          returning writer was other people's work and no pen.
+        */}
+        {canAct ? (
+          <View style={styles.compose}>
+            <ComposeTrigger
+              avatarUri={me?.avatar?.src ?? me?.image}
+              name={me?.firstName}
+              onPress={openCompose}
+            />
+          </View>
+        ) : null}
         <MuseRail title="Characters by your friends" type="friends" />
         {feedPending || postCount > 0 ? (
           <SectionHeader title="Updates from your friends" />
         ) : null}
       </View>
     ),
-    [feedPending, postCount],
+    [canAct, feedPending, me?.avatar?.src, me?.firstName, me?.image, openCompose, postCount],
   );
 
   const footer = useMemo(() => {
@@ -394,22 +415,17 @@ export const HomeScreen = () => {
         // Ghosts while pending; nothing at all when every source failed, so
         // the retry below is shown instead of three rails over an empty feed.
         data={feedPending ? SKELETON_ITEMS : feedError ? [] : items}
-        ItemSeparatorComponent={Separator}
+        ItemSeparatorComponent={FeedSeparator}
         keyExtractor={keyExtractor}
         ListEmptyComponent={
           feedError ? (
             <ListStatus error={feedError} onRetry={refresh} />
           ) : (
-            <View style={styles.empty}>
-              <Ionicons color={theme.textGray} name="home-outline" size={40} />
-              <Text style={[styles.emptyTitle, { color: theme.text }]}>
-                Nothing here yet
-              </Text>
-              <Text style={[styles.emptyBody, { color: theme.textGray }]}>
-                When your friends write, their updates land here. Find some
-                novelists to follow along.
-              </Text>
-            </View>
+            <EmptyState
+              body="When your friends write, their updates land here. Find some novelists to follow along."
+              icon="home-outline"
+              title="Nothing here yet"
+            />
           )
         }
         ListFooterComponent={footer}
@@ -451,23 +467,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.md,
     paddingTop: space.md,
   },
-  empty: {
-    alignItems: "center",
-    gap: space.sm,
-    paddingHorizontal: space.lg,
-    paddingVertical: space.xl,
-  },
-  emptyBody: {
-    fontSize: fontSize.label,
-    lineHeight: 19,
-    textAlign: "center",
-  },
-  emptyTitle: { fontSize: fontSize.title, fontWeight: "700" },
   fill: { flex: 1 },
-  footerGhost: { paddingTop: space.sm + 2 },
+  footerGhost: { paddingTop: space.ms },
+  compose: { paddingBottom: space.m, paddingHorizontal: space.md },
   header: { gap: space.xs, marginHorizontal: -space.md },
   // A rail runs edge to edge inside the padded feed; it carries its own
   // gutters, so the card row can bleed past the posts' margins.
-  rail: { marginHorizontal: -space.md },
-  separator: { height: space.sm + 2 },
+  // Air above and below: a rail is a change of subject in a column of posts,
+  // and at the posts' own spacing it read as one more card.
+  rail: { marginHorizontal: -space.md, paddingVertical: space.sm },
 });

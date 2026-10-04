@@ -1,5 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { withAlpha } from "@/lib/color";
 import { resolveAsterism } from "@/lib/story";
 import { fontSize, space, useAppTheme } from "@/theme";
@@ -91,7 +92,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-evenly",
   },
-  double: { flex: 1, gap: 2 },
+  double: { flex: 1, gap: space.xxs },
   glyph: { fontSize: fontSize.title - 2 },
   gradient: { flex: 1, height: 1 },
   hair: { height: StyleSheet.hairlineWidth * 2 },
@@ -99,7 +100,7 @@ const styles = StyleSheet.create({
   row: {
     alignItems: "center",
     flexDirection: "row",
-    gap: space.sm + 2,
+    gap: space.ms,
     marginVertical: space.lg,
     paddingHorizontal: space.lg,
   },

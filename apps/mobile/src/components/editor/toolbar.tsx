@@ -14,11 +14,12 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { nativeFace } from "@/lib/editor-fonts";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
+import { memo } from "react";
 
 /**
  * The formatting bar — web's toolbar, rearranged for a thumb.
@@ -146,7 +147,7 @@ const Button = ({
   );
 };
 
-export const EditorToolbar = ({
+const EditorToolbarView = ({
   actions,
   state,
 }: {
@@ -171,11 +172,6 @@ export const EditorToolbar = ({
   const bulletStyle = state.list && !state.list.ordered ? state.list : null;
   const orderedStyle = state.list?.ordered ? state.list : null;
 
-  const Divider = () => (
-    <View
-      style={[styles.divider, { backgroundColor: theme.glass.edge }]}
-    />
-  );
 
   return (
     <View
@@ -420,14 +416,30 @@ export const EditorToolbar = ({
   );
 };
 
+/** A rule between groups. At module scope: declared inside the bar it was a
+ *  new component type every render, and its views were remounted each time. */
+const Divider = () => {
+  const theme = useAppTheme();
+  return (
+    <View style={[styles.divider, { backgroundColor: theme.glass.edge }]} />
+  );
+};
+
+/**
+ * Memoised: its two props are a memoised state object and a stable set of
+ * actions, so it re-renders when the format at the caret changes and not for
+ * every character typed.
+ */
+export const EditorToolbar = memo(EditorToolbarView);
+
 const styles = StyleSheet.create({
   bar: { borderRadius: 1, height: 2 },
-  bars: { gap: 2, justifyContent: "center", width: 16 },
+  bars: { gap: space.xxs, justifyContent: "center", width: 16 },
   bold: { fontWeight: "800" },
   button: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     // 38 rather than 34: the bar sits above the keyboard where thumbs are
     // already, and four points is the difference between a hit and a miss
@@ -460,7 +472,7 @@ const styles = StyleSheet.create({
   fontLabel: { fontSize: fontSize.body + 1 },
   glyph: { fontSize: fontSize.body, fontWeight: "600" },
   italic: { fontStyle: "italic" },
-  pair: { alignItems: "center", flexDirection: "row", gap: 2 },
+  pair: { alignItems: "center", flexDirection: "row", gap: space.xxs },
   root: {
     alignItems: "stretch",
     borderTopWidth: StyleSheet.hairlineWidth,
@@ -472,7 +484,7 @@ const styles = StyleSheet.create({
     gap: 3,
     paddingLeft: space.sm,
     paddingRight: space.lg,
-    paddingVertical: space.xs + 2,
+    paddingVertical: space.s,
   },
   scroller: { flex: 1 },
   sizeLabel: { fontSize: fontSize.label, fontWeight: "700" },

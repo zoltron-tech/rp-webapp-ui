@@ -3,8 +3,9 @@ import { type StickerItem, searchStickers } from "@nw/api/endpoints/community";
 import { HELLO_STICKER_QUERIES, helloNoticeFor, pickNotice } from "@nw/chat";
 import { useApi } from "@nw/features";
 import { useEffect, useMemo, useState } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { Image, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * What an empty conversation offers instead of "No messages yet".
@@ -135,7 +136,7 @@ const styles = StyleSheet.create({
   card: {
     alignItems: "center",
     borderRadius: radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     gap: space.xs,
     maxWidth: 320,
     padding: space.lg,
@@ -143,12 +144,12 @@ const styles = StyleSheet.create({
   cta: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.xs,
     marginTop: space.xs,
     paddingHorizontal: space.md,
-    paddingVertical: space.xs + 2,
+    paddingVertical: space.s,
   },
   ctaLabel: { fontSize: fontSize.caption, fontWeight: "700" },
   line1: { fontSize: fontSize.body, fontWeight: "700", textAlign: "center" },

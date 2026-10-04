@@ -1,15 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { pluralize } from "@nw/utils";
 import { useEffect, useRef, useState } from "react";
-import {
-  Animated,
-  Easing,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import { fontSize, space, useAppTheme } from "@/theme";
+import { Animated, Easing, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
+import { fontSize, space, TOMATO, useAppTheme } from "@/theme";
 
 /**
  * The heart, as web draws it.
@@ -62,7 +56,6 @@ import { fontSize, space, useAppTheme } from "@/theme";
  */
 
 /** Radix `--tomato-9`. Identical in both themes, which is why it is a constant. */
-const TOMATO = "#e54d2e";
 
 /** Web's `blink` and `wiggle`, both `0.5s ease-in-out`. */
 const DURATION = 500;

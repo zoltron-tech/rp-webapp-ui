@@ -1,3 +1,4 @@
+import type { PrivacyLevel } from "@nw/types/prompt";
 import { Ionicons } from "@expo/vector-icons";
 import { useSession } from "@nw/features";
 import type { Muse } from "@nw/types";
@@ -8,17 +9,19 @@ import {
   Alert,
   Pressable,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from "react-native";
+import { Text, TextInput } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ListStatus } from "@/components/list-status";
 import { PillButton } from "@/components/settings";
 import { useKeyboardOffset } from "@/hooks/use-keyboard-height";
 import { useMuse } from "@/hooks/use-muse";
 import type { MuseForm } from "@/hooks/use-muse-form";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
+
+/** Who can see a character, in the order the picker lists them. */
+export const PRIVACY_CHOICES: PrivacyLevel[] = ["PUBLIC", "FRIENDS", "ONLY_ME"];
 
 /**
  * What every character-settings screen shares: loading the character from the
@@ -300,11 +303,11 @@ const styles = StyleSheet.create({
   nameField: { gap: 5 },
   nameFrame: {
     alignItems: "center",
-    borderRadius: radius.md + 2,
-    borderWidth: 1,
+    borderRadius: radius.field,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.sm,
-    paddingHorizontal: space.sm + 4,
+    paddingHorizontal: space.m,
   },
   nameInput: {
     flex: 1,

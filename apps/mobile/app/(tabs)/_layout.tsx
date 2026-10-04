@@ -1,14 +1,19 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useSession, useUnreadConversations } from "@nw/features";
+import {
+  useNotificationCounts,
+  useSession,
+  useUnreadConversations,
+} from "@nw/features";
 import { Redirect, Tabs, useRouter } from "expo-router";
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Avatar } from "@/components/avatar";
 import { TabBar } from "@/components/tab-bar";
 import { TabBarChromeProvider } from "@/context/tab-bar";
 import { readAccessToken } from "@/lib/session-store";
-import { radius, space, useAppTheme } from "@/theme";
+import { radius, useAppTheme } from "@/theme";
 import { glassHeaderOptions } from "@/theme/header";
 import { tabBarStyle } from "@/theme/tab-bar";
+import { MenuButton } from "@/components/menu-button";
 
 /**
  * The signed-in shell.
@@ -53,6 +58,9 @@ export default function TabsLayout() {
   const router = useRouter();
   const { novelist, status } = useSession();
   const { unreadCount } = useUnreadConversations();
+  // What has arrived since the Alerts tab was last opened, counted by the server.
+  const { data: notificationCounts } = useNotificationCounts();
+  const unseenNotifications = notificationCounts?.unseen ?? 0;
 
   if (status === "loading" && !readAccessToken()) return null;
   if (status !== "signed-in" && status !== "loading") {
@@ -65,18 +73,7 @@ export default function TabsLayout() {
         tabBar={(props) => <TabBar {...props} />}
         screenOptions={{
           headerRight: () => (
-            <Pressable
-              accessibilityLabel="Open menu"
-              accessibilityRole="button"
-              hitSlop={{ bottom: space.md, left: space.sm, right: space.sm, top: space.md }}
-              onPress={() => router.push("/menu")}
-              style={({ pressed }) => ({
-                opacity: pressed ? 0.6 : 1,
-                paddingHorizontal: space.md,
-              })}
-            >
-              <Ionicons color={theme.text} name="menu" size={26} />
-            </Pressable>
+            <MenuButton />
           ),
           ...glassHeaderOptions(theme),
           sceneStyle: { backgroundColor: theme.background },
@@ -186,6 +183,8 @@ export default function TabsLayout() {
           name="(notifications)"
           options={{
             headerShown: false,
+            tabBarBadge:
+              unseenNotifications > 0 ? unseenNotifications : undefined,
             tabBarIcon: ({ color, focused, size }) => (
               <Ionicons
                 color={color}

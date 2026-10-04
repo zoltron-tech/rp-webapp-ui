@@ -5,13 +5,13 @@ import {
   type LayoutChangeEvent,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withAlpha } from "@/lib/color";
 import type { MuseLook } from "@/lib/muse-appearance";
-import { radius, space, useAppTheme } from "@/theme";
+import { border, radius, space, useAppTheme } from "@/theme";
 
 /**
  * The seven sections of a character's profile, and where the reader is.
@@ -118,7 +118,7 @@ export const SectionMenu = ({
             ? {
                 backgroundColor: look.menuBackground ?? "rgba(10, 10, 14, 0.7)",
                 borderColor: "rgba(255,255,255,0.16)",
-                borderWidth: StyleSheet.hairlineWidth,
+                borderWidth: border.edge,
               }
             : null,
         ]}
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   highlight: {
-    borderRadius: 12,
+    borderRadius: 10,
     bottom: PAD,
     position: "absolute",
     shadowOffset: { height: 0, width: 0 },
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   },
   host: {
     paddingHorizontal: space.sm,
-    paddingTop: space.sm,
+    paddingTop: space.m,
   },
   indicator: {
     alignSelf: "center",
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
     bottom: -1,
     height: 3,
     position: "absolute",
-    width: "50%",
+    width: "55%",
   },
   item: {
     alignItems: "center",

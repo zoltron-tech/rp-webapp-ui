@@ -3,20 +3,16 @@ import type { Friend } from "@nw/types";
 import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import { useCallback } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { EndOfList } from "@/components/end-of-list";
 import { NovelistRowSkeleton, SkeletonRows } from "@/components/list-skeletons";
 import { ListStatus } from "@/components/list-status";
 import { NovelistRow, ROW_HEIGHT } from "@/components/novelist-row";
 import { useTrackOnline } from "@/context/socket";
 import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { space, useAppTheme } from "@/theme";
+import { LoadMore, RowSeparator } from "@/components/list-parts";
 
 /**
  * Everyone a novelist is friends with.
@@ -137,7 +133,7 @@ export const FriendsList = ({ username }: { username: string }) => {
         // `contentContainerStyle` has no `gap` in FlashList — the space between
         // rows is a separator, which is also what keeps `ROW_HEIGHT` the whole
         // truth about a cell.
-        ItemSeparatorComponent={Separator}
+        ItemSeparatorComponent={RowSeparator}
         keyExtractor={keyExtractor}
         ListEmptyComponent={
           <ListStatus
@@ -152,28 +148,10 @@ export const FriendsList = ({ username }: { username: string }) => {
         }
         ListFooterComponent={
           hasNextPage ? (
-            <Pressable
-              disabled={isFetchingNextPage}
+            <LoadMore
+              busy={isFetchingNextPage}
               onPress={() => void fetchNextPage()}
-              style={({ pressed }) => [
-                styles.loadMore,
-                {
-                  backgroundColor: pressed
-                    ? theme.material.fillPressed
-                    : theme.material.fill,
-                  borderColor: theme.material.edge,
-                },
-              ]}
-            >
-              {isFetchingNextPage ? (
-                <ActivityIndicator color={theme.accent.text} size="small" />
-              ) : null}
-              <Text
-                style={[styles.loadMoreLabel, { color: theme.accent.text }]}
-              >
-                {isFetchingNextPage ? "Loading..." : "Load more"}
-              </Text>
-            </Pressable>
+            />
           ) : friends.length > 0 ? (
             <EndOfList />
           ) : null
@@ -190,21 +168,7 @@ export const FriendsList = ({ username }: { username: string }) => {
 
 const keyExtractor = (item: Friend) => item.id;
 
-const Separator = () => <View style={styles.separator} />;
-
 const styles = StyleSheet.create({
   content: { padding: space.md },
   fill: { flex: 1 },
-  loadMore: {
-    alignItems: "center",
-    borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    gap: space.sm,
-    justifyContent: "center",
-    marginTop: space.sm,
-    paddingVertical: space.md,
-  },
-  loadMoreLabel: { fontSize: fontSize.body, fontWeight: "600" },
-  separator: { height: space.sm },
 });

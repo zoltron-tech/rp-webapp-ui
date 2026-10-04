@@ -1,6 +1,7 @@
 "use client";
 
 import type { NovelistWorldNotification } from "@nw/types";
+import { useNotificationCounts, useNotificationReadState } from "@nw/features";
 import { isCompactViewport } from "@nw/utils/platform";
 import classNames from "classnames";
 import { usePathname } from "@/lib/navigation";
@@ -21,6 +22,9 @@ import { Logger } from "@/utils/services";
 import { FriendRequestNotification } from "../friend-request-notification";
 import * as S from "./styles";
 
+/** Rows shown in the dropdown; the page has the rest. */
+const MENU_SIZE = 8;
+
 export const NotificationsMenu: FC = () => {
   const authState = useGlobalState("authState");
   const notifications = useGlobalState("notifications");
@@ -40,16 +44,30 @@ export const NotificationsMenu: FC = () => {
     routeToPage(ROUTES.Notification);
   }, [routeToPage, pathname]);
 
+  const { data: counts } = useNotificationCounts({
+    enabled: authState === "LOGGED_IN",
+  });
+  const { markSeen, refreshCounts } = useNotificationReadState();
+
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
       if (nextOpen && isMobile) {
         handleSeeAllClick();
         return;
       }
+      // Opening the list is seeing it: the badge clears, the rows stay
+      // highlighted until each is opened or all are marked read.
+      if (nextOpen) void markSeen();
       setOpen(nextOpen);
     },
-    [isMobile, handleSeeAllClick],
+    [isMobile, handleSeeAllClick, markSeen],
   );
+
+  // The list in the store changes when a notification arrives over the socket
+  // or a request is answered; either moves the numbers.
+  useEffect(() => {
+    void refreshCounts();
+  }, [notifications, refreshCounts]);
 
   const fetchNotifications = useCallback(async () => {
     if (authState !== "LOGGED_IN") return;
@@ -63,8 +81,9 @@ export const NotificationsMenu: FC = () => {
     await patchNotifications();
     const _notifications = await baseDataLoader(() => getNotifications(1, 30));
     set({ notifications: _notifications });
+    void refreshCounts();
     setMarkingRead(false);
-  }, [authState, markingRead, baseDataLoader, set]);
+  }, [authState, markingRead, baseDataLoader, set, refreshCounts]);
 
   const removeFriendRequestNotification = useCallback(
     (novelistToRemove: NovelistWorldNotification) => {
@@ -88,14 +107,24 @@ export const NotificationsMenu: FC = () => {
   if (!user) return <></>;
 
   const unreadCount = notifications?.filter((n) => !n.isRead).length ?? 0;
+  // The server's count of what has not been seen. What is loaded here is at
+  // most a page, so counting it is only the fallback for an older server.
+  const badgeCount = counts?.unseen ?? unreadCount;
+
+  // The feed arrives with every pending request first. Taking the first eight
+  // of that let eight requests fill the menu and hide everything else, so the
+  // menu shows the eight newest of whatever kind.
+  const latest = [...(notifications ?? [])]
+    .sort((a, b) => (b.date ?? 0) - (a.date ?? 0))
+    .slice(0, MENU_SIZE);
 
   return (
     <S.PositionContainer>
       <Popover.Root open={open} onOpenChange={handleOpenChange}>
         <S.TriggerArea>
-          {unreadCount > 0 && (
+          {badgeCount > 0 && (
             <S.NotificationBadge>
-              {unreadCount > 99 ? "99+" : unreadCount}
+              {badgeCount > 99 ? "99+" : badgeCount}
             </S.NotificationBadge>
           )}
           <Popover.Trigger asChild>
@@ -129,17 +158,15 @@ export const NotificationsMenu: FC = () => {
             <S.Divider orientation="horizontal" />
 
             <S.ScrollArea>
-              {notifications && notifications.length > 0 ? (
-                notifications
-                  .slice(0, 8)
-                  .map((n) => (
-                    <FriendRequestNotification
-                      key={n.id}
-                      notification={n}
-                      removeMethod={removeFriendRequestNotification}
-                      onClose={() => setOpen(false)}
-                    />
-                  ))
+              {latest.length > 0 ? (
+                latest.map((n) => (
+                  <FriendRequestNotification
+                    key={n.id}
+                    notification={n}
+                    removeMethod={removeFriendRequestNotification}
+                    onClose={() => setOpen(false)}
+                  />
+                ))
               ) : (
                 <S.EmptyState>
                   <NoNotificationsArt />

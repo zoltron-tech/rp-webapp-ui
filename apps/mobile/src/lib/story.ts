@@ -322,4 +322,11 @@ const CHAPTER_COLORS = [
 
 /** The accent for the chapter at 1-based reading position `order`. */
 export const chapterColor = (order: number) =>
-  CHAPTER_COLORS[Math.max(0, order - 1) % CHAPTER_COLORS.length];
+  CHAPTER_COLORS[Math.max(0, order - 1) % CHAPTER_COLORS.length];
+
+/**
+ * Web's `STORY_COVER_ZOOM_MAX` (8x), as the crop stores it. Story covers zoom
+ * further than avatars, so `CroppedImage`'s default limit would drop the crop of
+ * a tightly framed cover.
+ */
+export const STORY_COVER_ZOOM_MAX_PCT = 800;

@@ -1,6 +1,7 @@
 import { faceName, faceOf, fontOf } from "@nw/fonts";
-import { useFonts } from "expo-font";
-import { Platform } from "react-native";
+import { loadAsync } from "expo-font";
+import { useEffect, useState } from "react";
+import { InteractionManager, Platform } from "react-native";
 
 /**
  * The editor's faces, on the phone.
@@ -59,7 +60,25 @@ const FILES: Record<string, number> = {
  * arrives falls back to the system font for a frame or two, which is better
  * than holding the whole app on a font decode.
  */
-export const useEditorFonts = () => useFonts(FILES);
+export const useEditorFonts = () => {
+  const [, setLoaded] = useState(false);
+
+  useEffect(() => {
+    // After the first screen has settled, not beside it: these are the faces
+    // an author *can* pick, thirty-six files, and registering them competed
+    // with the first paint for text that almost never uses them. A post set
+    // in one draws in the interface face until its file lands, as it already
+    // did for the frames before the load finished.
+    const task = InteractionManager.runAfterInteractions(() => {
+      void loadAsync(FILES)
+        .catch(() => undefined)
+        // A render from the root once they are in, as `useFonts` gave: text
+        // already on screen in one of these faces is drawn again with it.
+        .then(() => setLoaded(true));
+    });
+    return () => task.cancel();
+  }, []);
+};
 
 /**
  * What to put in `fontFamily` for a run in this family with these marks.

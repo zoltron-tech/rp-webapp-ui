@@ -1,16 +1,25 @@
-import { SCRIM_ALPHA } from "@nw/theme";
 import { Ionicons } from "@expo/vector-icons";
 import type { StoryBoard } from "@nw/types";
 import { wsrvImage } from "@nw/utils";
 import { LinearGradient } from "expo-linear-gradient";
 import { memo, useMemo } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { CroppedImage } from "@/components/cropped-image";
 import { FallbackArt } from "@/components/fallback-art";
 import { useStoryReaction } from "@/hooks/use-story-reaction";
 import { asColor, withAlpha } from "@/lib/color";
-import { fontSize, radius, useAppTheme } from "@/theme";
+import {
+  border,
+  fontSize,
+  MEDIA_CHIP,
+  radius,
+  space,
+  TOMATO,
+  useAppTheme,
+} from "@/theme";
+import { STORY_COVER_ZOOM_MAX_PCT } from "@/lib/story";
 
 /**
  * A story on a shelf — web's `StoryCard` face.
@@ -35,13 +44,11 @@ const GENRE_CHIP_CHAR_BUDGET = 14;
  * further than avatars, so `CroppedImage`'s default limit would drop the crop of
  * a tightly framed cover.
  */
-const STORY_COVER_ZOOM_MAX_PCT = 800;
 
 /** Bounded, never cropped: the stored crop is against the original's shape. */
 const COVER_SIZE = { fit: "inside" as const, h: 900, w: 600 };
 
 /** Radix `--tomato-9`, the heart's fill on web. */
-const TOMATO = "#e54d2e";
 
 const FANDOMLESS_COLOR = "#555";
 
@@ -152,7 +159,7 @@ export const StoryCoverCard = memo(function StoryCoverCard({
                 key={member.username}
                 style={[styles.author, index > 0 && styles.authorOverlap]}
               >
-                <Avatar name={member.username} size={20} uri={member.image} />
+                <Avatar name={member.username} size={24} uri={member.image} />
               </View>
             ))}
             {memberOverflow > 0 ? (
@@ -310,7 +317,6 @@ export const StoryCoverCardShimmer = () => {
 };
 
 /** Chips straight on cover art or video: web's `MEDIA_CHIP`, no blur. */
-const MEDIA_CHIP = `rgba(0,0,0,${SCRIM_ALPHA.mediaChip})`;
 
 const styles = StyleSheet.create({
   author: {
@@ -325,34 +331,34 @@ const styles = StyleSheet.create({
     backgroundColor: MEDIA_CHIP,
     borderRadius: radius.full,
     flexDirection: "row",
-    gap: 4,
+    gap: space.xs,
     paddingHorizontal: 7,
     paddingVertical: 3,
     position: "absolute",
   },
   badgeLabel: {
     color: "#fff",
-    fontSize: 9,
-    fontWeight: "700",
+    fontSize: fontSize.meta,
+    fontWeight: "600",
     letterSpacing: 0.4,
     textTransform: "uppercase",
   },
   bar: { borderRadius: radius.sm, height: 10 },
   card: {
     borderCurve: "continuous",
-    borderRadius: radius.md + 4,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.card,
+    borderWidth: border.edge,
     flex: 1,
     overflow: "hidden",
   },
   chapters: { bottom: 8, right: 8 },
-  count: { color: "#fff", fontSize: 11, fontWeight: "600" },
+  count: { color: "#fff", fontSize: fontSize.meta, fontWeight: "600" },
   cover: { aspectRatio: 2 / 3, overflow: "hidden", width: "100%" },
   emptyCover: { alignItems: "center", flex: 1, justifyContent: "center" },
   fandom: {
     alignItems: "center",
     alignSelf: "flex-start",
-    borderRadius: 4,
+    borderRadius: radius.xs,
     flexDirection: "row",
     gap: 5,
     maxWidth: "100%",
@@ -369,7 +375,7 @@ const styles = StyleSheet.create({
   fandomLabel: {
     color: "#fff",
     flexShrink: 1,
-    fontSize: 10,
+    fontSize: fontSize.meta,
     fontWeight: "700",
     letterSpacing: 0.8,
     textTransform: "uppercase",
@@ -380,20 +386,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     flexDirection: "row",
     flexShrink: 1,
-    gap: 4,
+    gap: space.xs,
     paddingHorizontal: 7,
-    paddingVertical: 2,
+    paddingVertical: space.xxs,
   },
   genreDot: { borderRadius: 3, height: 6, width: 6 },
-  genreLabel: { flexShrink: 1, fontSize: 11, fontWeight: "600" },
-  genreOnlyDot: { borderRadius: 4, height: 8, width: 8 },
+  genreLabel: { flexShrink: 1, fontSize: fontSize.meta, fontWeight: "600" },
+  genreOnlyDot: { borderRadius: radius.xs, height: 8, width: 8 },
   genres: {
     alignItems: "center",
     flexDirection: "row",
     gap: 5,
     overflow: "hidden",
   },
-  info: { gap: 7, paddingBottom: 12, paddingHorizontal: 10, paddingTop: 10 },
+  info: { gap: 7, paddingBottom: space.m, paddingHorizontal: space.ms, paddingTop: space.ms },
   likes: { bottom: 8, left: 8 },
   overflow: {
     alignItems: "center",
@@ -402,7 +408,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 24,
   },
-  overflowLabel: { color: "#fff", fontSize: 9, fontWeight: "600" },
-  title: { fontSize: fontSize.label + 1, fontWeight: "700" },
+  overflowLabel: { color: "#fff", fontSize: fontSize.meta, fontWeight: "600" },
+  // Web's card title: 12/700.
+  title: { fontSize: fontSize.caption, fontWeight: "700" },
   visibility: { right: 8, top: 8 },
 });

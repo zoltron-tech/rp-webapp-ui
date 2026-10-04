@@ -9,7 +9,13 @@ import {
 } from "@nw/features";
 import type { Conversation, IceBreaker } from "@nw/types";
 import { useRouter } from "expo-router";
-import { type ComponentProps, useCallback, useMemo, useState } from "react";
+import {
+  type ComponentProps,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -17,10 +23,9 @@ import {
   Pressable,
   RefreshControl,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { ConversationRow } from "@/components/chat/conversation-row";
 import { ConversationSkeleton } from "@/components/chat/conversation-skeleton";
 import { CreateGroupSheet } from "@/components/chat/create-group-sheet";
@@ -38,7 +43,9 @@ import {
 import { InboxParallax } from "@/context/inbox-reveal";
 import { useIceBreakers } from "@/hooks/use-ice-breakers";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, type, useAppTheme } from "@/theme";
+import { SearchField } from "@/components/search-field";
+import { IconButton } from "@/components/icon-button";
 
 /**
  * The inbox.
@@ -87,6 +94,8 @@ const FILTERS: { id: Filter; label: string }[] = [
 /** Below this, scrolling the list is faster than typing a name. */
 const SEARCH_THRESHOLD = 8;
 
+const keyExtractor = (item: Conversation) => item.id;
+
 /**
  * Two layers: the parallax host, which never re-renders, and the content,
  * which does. See `InboxParallax` for why they are separate.
@@ -130,16 +139,41 @@ function InboxContent() {
   );
   const [search, setSearch] = useState("");
 
+  /*
+   * Resolved once per conversation *object*, not once per list change. Every
+   * incoming message refetches the list; rebuilding each target then handed
+   * every row a new object and re-rendered all of them through their `memo`.
+   * The query keeps the object for a conversation that did not change, so its
+   * target is found again here and the row is left alone.
+   */
+  const targetCache = useRef(
+    new WeakMap<
+      Conversation,
+      { target: ReturnType<typeof resolveConversationTarget>; username?: string }
+    >(),
+  );
   const targets = useMemo(
     () =>
       new Map(
-        conversations.map((conversation) => [
-          conversation.id,
-          resolveConversationTarget(conversation, novelist?.username),
-        ]),
+        conversations.map((conversation) => {
+          const hit = targetCache.current.get(conversation);
+          if (hit && hit.username === novelist?.username) {
+            return [conversation.id, hit.target] as const;
+          }
+          const target = resolveConversationTarget(
+            conversation,
+            novelist?.username,
+          );
+          targetCache.current.set(conversation, {
+            target,
+            username: novelist?.username,
+          });
+          return [conversation.id, target] as const;
+        }),
       ),
     [conversations, novelist?.username],
   );
+  const unreadSet = useMemo(() => new Set(unreadIds), [unreadIds]);
 
   // Everyone visible in the list, so the green rings mean something. The server
   // only answers about usernames it has been asked about.
@@ -162,7 +196,7 @@ function InboxContent() {
     const query = search.trim().toLowerCase();
 
     return conversations.filter((conversation) => {
-      if (filter === "unread" && !unreadIds.includes(conversation.id)) {
+      if (filter === "unread" && !unreadSet.has(conversation.id)) {
         return false;
       }
       if (filter === "groups" && !conversation.isGroup) return false;
@@ -230,7 +264,7 @@ function InboxContent() {
         onOpenDetails={openDetails}
         onPrefetch={prefetch}
         target={targets.get(item.id)}
-        unread={unreadIds.includes(item.id)}
+        unread={unreadSet.has(item.id)}
       />
     ),
     [
@@ -244,65 +278,79 @@ function InboxContent() {
     ],
   );
 
+  /*
+   * The list's head: ice breakers, then the conversations' own title.
+   *
+   * The rail used to be pinned in the toolbar, between the search field and
+   * the filters. Pinned, it held about a third of a 667pt screen whether or
+   * not it was wanted, and the conversations scrolled in what was left. It is
+   * the way to start a conversation, not a control over this list — so it
+   * scrolls with the list, under a title that says what it is, and the
+   * toolbar keeps only what acts on the rows: search and the filters.
+   *
+   * Hidden while searching, when the reader is after one conversation.
+   */
+  const header = useMemo(
+    () => (
+      <View style={styles.head}>
+        {search ? null : (
+          <>
+            <View style={styles.headRow}>
+              <Text style={[styles.headTitle, { color: theme.textGray }]}>
+                Ice breakers
+              </Text>
+              <View
+                style={[styles.rule, { backgroundColor: theme.material.edge }]}
+              />
+            </View>
+            <Text style={[styles.headBody, { color: theme.textGray }]}>
+              Openers from novelists looking for someone to talk to.
+            </Text>
+            <IceBreakerRail
+              iceBreakers={iceBreakers}
+              isPending={iceBreakersPending}
+              onCreate={() => setIceBreakerOpen(true)}
+              onOpen={setViewingIceBreaker}
+            />
+          </>
+        )}
+        <View style={[styles.headRow, search ? null : styles.headSecond]}>
+          <Text style={[styles.headTitle, { color: theme.textGray }]}>
+            Conversations
+          </Text>
+          <View
+            style={[styles.rule, { backgroundColor: theme.material.edge }]}
+          />
+        </View>
+      </View>
+    ),
+    [iceBreakers, iceBreakersPending, search, theme],
+  );
+
   const showSearch = conversations.length >= SEARCH_THRESHOLD;
 
   return (
     <View style={styles.screen}>
       <View
-        style={[styles.toolbar, { borderBottomColor: theme.material.edge }]}
+        style={[
+          styles.toolbar,
+          {
+            // The header's own surface: title, search and filters are one
+            // bar with one edge, and the list passes under it.
+            backgroundColor: theme.glass.opaque,
+            borderBottomColor: theme.glass.edge,
+          },
+        ]}
       >
 
         {showSearch ? (
-          <View
-            style={[
-              styles.search,
-              {
-                backgroundColor: theme.glass.field,
-                borderColor: theme.material.edge,
-              },
-            ]}
-          >
-            <Ionicons color={theme.textGray} name="search" size={16} />
-            <TextInput
-              autoCorrect={false}
-              onChangeText={setSearch}
-              placeholder="Search conversations"
-              placeholderTextColor={theme.textGray}
-              returnKeyType="search"
-              style={[styles.searchInput, { color: theme.text }]}
-              value={search}
-            />
-            {search ? (
-              <Pressable
-                accessibilityLabel="Clear search"
-                hitSlop={space.sm}
-                onPress={() => setSearch("")}
-              >
-                <Ionicons
-                  color={theme.textGray}
-                  name="close-circle"
-                  size={16}
-                />
-              </Pressable>
-            ) : null}
-          </View>
+          <SearchField
+            onChangeText={setSearch}
+            placeholder="Search conversations"
+            returnKeyType="search"
+            value={search}
+          />
         ) : null}
-
-        {/*
-          Between the search field and the filters, not below them.
-
-          The pills filter the list underneath; a rail sitting between a filter
-          and the thing it filters reads as though "Unread" applies to the
-          prompts. Above them it is plainly its own row — and it is the only way
-          to start a conversation with someone you had not thought of, so it
-          belongs where the eye lands before the familiar names below.
-        */}
-        <IceBreakerRail
-          iceBreakers={iceBreakers}
-          isPending={iceBreakersPending}
-          onCreate={() => setIceBreakerOpen(true)}
-          onOpen={setViewingIceBreaker}
-        />
 
         <View style={styles.controlRow}>
           <View style={styles.filters}>
@@ -321,7 +369,7 @@ function InboxContent() {
                   styles.filter,
                   {
                     backgroundColor: active
-                      ? theme.accent.surface
+                      ? theme.accent.tintStrong
                       : theme.material.fill,
                     borderColor: active
                       ? theme.accent.surfaceHover
@@ -377,7 +425,13 @@ function InboxContent() {
         {...tabBarScroll}
         contentContainerStyle={contentStyle}
         data={visible}
-        keyExtractor={(item) => item.id}
+        ListHeaderComponent={header}
+        // A screen and a half of rows first, not the default ten; each row is
+        // a swipeable with a responder of its own.
+        initialNumToRender={8}
+        keyExtractor={keyExtractor}
+        maxToRenderPerBatch={8}
+        windowSize={7}
         ListEmptyComponent={
           isPending && !error ? (
             // Ghost rows in the rows' own geometry, not a spinner: the
@@ -470,40 +524,20 @@ const ToolbarButton = ({
   const theme = useAppTheme();
 
   return (
-    <Pressable
+    <IconButton
       accessibilityLabel={label}
-      accessibilityRole="button"
-      disabled={busy}
+      busy={busy}
+      color={theme.accent.text}
       hitSlop={space.xs}
+      icon={icon}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.actionButton,
-        {
-          backgroundColor: pressed
-            ? theme.material.fillPressed
-            : theme.material.fill,
-          borderColor: theme.material.edge,
-        },
-      ]}
-    >
-      {busy ? (
-        <ActivityIndicator color={theme.accent.text} size="small" />
-      ) : (
-        <Ionicons color={theme.accent.text} name={icon} size={18} />
-      )}
-    </Pressable>
+      size={34}
+      tone="surface"
+    />
   );
 };
 
 const styles = StyleSheet.create({
-  actionButton: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    height: 34,
-    justifyContent: "center",
-    width: 34,
-  },
   /* The rows carry their own padding; this exists only to be added to. */
   content: { paddingBottom: space.sm },
   controlRow: { alignItems: "center", flexDirection: "row", gap: space.xs },
@@ -520,13 +554,13 @@ const styles = StyleSheet.create({
   filter: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.xs,
     paddingHorizontal: space.md,
-    paddingVertical: space.xs + 2,
+    paddingVertical: space.s,
   },
-  filterLabel: { fontSize: fontSize.caption, fontWeight: "700" },
+  filterLabel: { fontSize: fontSize.caption, fontWeight: "500" },
   filters: { flex: 1, flexDirection: "row", gap: space.xs },
   footer: { padding: space.md },
   name: { flexShrink: 1, fontSize: fontSize.body },
@@ -538,26 +572,28 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: space.sm,
     paddingHorizontal: space.md,
-    paddingVertical: space.sm + 2,
+    paddingVertical: space.ms,
   },
   screen: { flex: 1 },
-  search: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    gap: space.sm,
-    paddingHorizontal: space.md,
-  },
-  searchInput: { flex: 1, fontSize: fontSize.body, paddingVertical: space.sm },
   time: { fontSize: fontSize.caption },
   titleRow: { alignItems: "center", flexDirection: "row", gap: space.xs },
+  head: { paddingHorizontal: space.md, paddingTop: space.md },
+  headBody: {
+    fontSize: fontSize.caption,
+    lineHeight: 17,
+    paddingBottom: space.m,
+    paddingTop: space.xs,
+  },
+  headRow: { alignItems: "center", flexDirection: "row", gap: space.m },
+  headSecond: { paddingTop: space.md },
+  headTitle: type.eyebrow,
+  rule: { flex: 1, height: StyleSheet.hairlineWidth },
   toolbar: {
     borderBottomWidth: StyleSheet.hairlineWidth,
     gap: space.sm,
-    paddingBottom: space.sm,
+    paddingBottom: space.ms,
     paddingHorizontal: space.md,
-    paddingTop: space.sm,
+    paddingTop: space.xs,
   },
-  unreadDot: { borderRadius: 4, height: 8, width: 8 },
+  unreadDot: { borderRadius: radius.xs, height: 8, width: 8 },
 });

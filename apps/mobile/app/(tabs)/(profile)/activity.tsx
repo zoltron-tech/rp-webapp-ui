@@ -13,7 +13,7 @@ export default function MyActivityScreen() {
     return (
       <ListPageSkeleton
         count={3}
-        gap={space.sm + 2}
+        gap={space.ms}
         render={() => <ActivityCardSkeleton />}
       />
     );

@@ -1,8 +1,9 @@
 import { RETENTION_PERIOD, retentionNoticeFor } from "@nw/chat";
 import { mixColors } from "@nw/theme";
 import { useMemo } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * "These messages fade away after 14 days."
@@ -85,8 +86,8 @@ const styles = StyleSheet.create({
   },
   notice: {
     borderRadius: radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    gap: 2,
+    borderWidth: border.edge,
+    gap: space.xxs,
     maxWidth: "90%",
     paddingHorizontal: space.lg,
     paddingVertical: space.sm,

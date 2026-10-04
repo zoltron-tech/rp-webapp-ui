@@ -1,4 +1,5 @@
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
@@ -94,7 +95,7 @@ const styles = StyleSheet.create({
   headerNovelist: { fontSize: 18, fontStyle: "italic", fontWeight: "400" },
   headerRow: { gap: 7 },
   headerWordmark: { flexShrink: 1 },
-  headerWorld: { fontSize: 20, fontStyle: "italic", fontWeight: "700" },
+  headerWorld: { fontSize: fontSize.title, fontStyle: "italic", fontWeight: "700" },
   row: { alignItems: "center", flexDirection: "row", gap: space.sm },
   tile: {
     alignItems: "center",

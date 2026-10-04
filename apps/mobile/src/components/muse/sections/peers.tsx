@@ -15,9 +15,9 @@ import {
   Alert,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import {
   ConnectionEditor,
@@ -39,7 +39,7 @@ import { useMuseConnections } from "@/hooks/use-muse";
 import { withAlpha } from "@/lib/color";
 import type { MuseLook } from "@/lib/muse-appearance";
 import { museName } from "@/lib/muse-appearance";
-import { fontSize, radius, space } from "@/theme";
+import { border, fontSize, radius, space } from "@/theme";
 
 /**
  * Web's `ConnectionsSection`: the bonds between this character and others.
@@ -573,19 +573,20 @@ const styles = StyleSheet.create({
     gap: space.sm,
     paddingTop: space.xs,
   },
-  approval: { alignItems: "center", flexDirection: "row", gap: 6 },
+  approval: { alignItems: "center", flexDirection: "row", gap: space.s },
   approvalLabel: { color: PANEL.secondary, fontSize: fontSize.caption },
-  approvals: { gap: 4 },
+  approvals: { gap: space.xs },
   body: {
     borderTopColor: PANEL.line,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopWidth: border.edge,
     gap: space.sm,
-    paddingHorizontal: space.sm + 2,
-    paddingVertical: space.sm + 2,
+    paddingBottom: space.m,
+    paddingHorizontal: space.m,
+    paddingVertical: space.ms,
   },
   card: {
-    borderRadius: radius.md + 2,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.field,
+    borderWidth: border.edge,
     overflow: "hidden",
   },
   face: {
@@ -596,18 +597,18 @@ const styles = StyleSheet.create({
   header: {
     alignItems: "center",
     flexDirection: "row",
-    gap: space.sm + 2,
-    paddingHorizontal: space.sm + 2,
-    paddingVertical: space.sm + 2,
+    gap: space.sm,
+    paddingHorizontal: space.ms,
+    paddingVertical: space.sm,
   },
-  list: { gap: space.sm + 2 },
+  list: { gap: space.ms },
   member: {
     alignItems: "center",
     borderRadius: radius.md,
     flexDirection: "row",
     gap: space.sm,
     paddingHorizontal: space.sm,
-    paddingVertical: 6,
+    paddingVertical: space.s,
   },
   memberBy: { color: PANEL.muted, fontSize: fontSize.caption },
   memberName: {
@@ -625,23 +626,23 @@ const styles = StyleSheet.create({
     marginLeft: -8,
     width: FACE,
   },
-  overflowLabel: { color: "#ffffff", fontSize: 10, fontWeight: "700" },
+  overflowLabel: { color: "#ffffff", fontSize: fontSize.meta, fontWeight: "700" },
   pill: {
     alignItems: "center",
     backgroundColor: "rgba(255,255,255,0.08)",
     borderColor: "rgba(255,255,255,0.18)",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: 5,
-    paddingHorizontal: space.sm + 4,
-    paddingVertical: 6,
+    paddingHorizontal: space.m,
+    paddingVertical: space.s,
   },
   pillDanger: {
     backgroundColor: "rgba(229,72,77,0.12)",
     borderColor: "rgba(229,72,77,0.4)",
   },
-  pillLabel: { color: PANEL.secondary, fontSize: 12, fontWeight: "600" },
+  pillLabel: { color: PANEL.secondary, fontSize: fontSize.caption, fontWeight: "600" },
   react: {
     alignItems: "center",
     borderRadius: 15,
@@ -649,16 +650,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 30,
   },
-  reactRow: { flexDirection: "row", gap: 6 },
-  roster: { gap: 4 },
+  reactRow: { flexDirection: "row", gap: space.s },
+  roster: { gap: space.xs },
   stack: { alignItems: "center", flexDirection: "row" },
-  status: { fontSize: 10, fontWeight: "700", letterSpacing: 0.6 },
+  status: { fontSize: fontSize.meta, fontWeight: "700", letterSpacing: 0.6 },
   statusDot: { borderRadius: 3, height: 6, width: 6 },
   statusRow: { alignItems: "center", flexDirection: "row", gap: 5 },
   title: {
     color: "rgba(255,255,255,0.92)",
-    fontSize: fontSize.body,
-    fontWeight: "600",
+    fontSize: fontSize.label,
+    fontWeight: "700",
   },
   titleWrap: { flex: 1, gap: 3, minWidth: 0 },
 });

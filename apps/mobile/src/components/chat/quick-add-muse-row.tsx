@@ -1,13 +1,7 @@
-import { Ionicons } from "@expo/vector-icons";
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { StyleSheet, View } from "react-native";
+import { Text, TextInput } from "@/components/text";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
+import { IconButton } from "@/components/icon-button";
 
 /**
  * "What is their name?" — the whole of creating a character from here.
@@ -54,46 +48,26 @@ export const QuickAddMuseRow = ({
         value={value}
       />
 
-      <Pressable
+      <IconButton
         accessibilityLabel="Create character"
-        accessibilityRole="button"
+        busy={busy}
         disabled={!canConfirm}
         hitSlop={space.xs}
+        icon="checkmark"
+        iconSize={16}
         onPress={onConfirm}
-        style={({ pressed }) => [
-          styles.button,
-          {
-            backgroundColor: canConfirm
-              ? theme.accent.solid
-              : theme.accent.surfaceActive,
-            opacity: pressed && canConfirm ? 0.8 : 1,
-          },
-        ]}
-      >
-        {busy ? (
-          <ActivityIndicator color="#ffffff" size="small" />
-        ) : (
-          <Ionicons color="#ffffff" name="checkmark" size={16} />
-        )}
-      </Pressable>
+        tone="primary"
+      />
 
-      <Pressable
+      <IconButton
         accessibilityLabel="Cancel"
-        accessibilityRole="button"
+        color={theme.textGray}
         hitSlop={space.xs}
+        icon="close"
+        iconSize={16}
         onPress={onCancel}
-        style={({ pressed }) => [
-          styles.button,
-          {
-            backgroundColor: theme.material.fillTranslucent,
-            borderColor: theme.material.edgeTranslucent,
-            borderWidth: StyleSheet.hairlineWidth,
-            opacity: pressed ? 0.8 : 1,
-          },
-        ]}
-      >
-        <Ionicons color={theme.textGray} name="close" size={16} />
-      </Pressable>
+        tone="material"
+      />
     </View>
   );
 };
@@ -106,21 +80,14 @@ export const QuickAddMuseError = ({ message }: { message: string }) => {
 };
 
 const styles = StyleSheet.create({
-  button: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    height: 32,
-    justifyContent: "center",
-    width: 32,
-  },
   error: { fontSize: fontSize.caption },
   input: {
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flex: 1,
     fontSize: fontSize.body,
     paddingHorizontal: space.sm,
-    paddingVertical: space.sm - 2,
+    paddingVertical: space.s,
   },
   row: { alignItems: "center", flexDirection: "row", gap: space.sm },
 });

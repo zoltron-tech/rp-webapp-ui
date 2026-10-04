@@ -11,9 +11,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ListStatus } from "@/components/list-status";
 import { MapSkeleton } from "@/components/sheet-skeletons";
@@ -22,7 +22,8 @@ import { EntryGlyph, EntrySheet } from "@/components/story/entry-sheet";
 import { useStory, useStoryCodex, useStoryMaps } from "@/hooks/use-story";
 import { asColor } from "@/lib/color";
 import { plainText } from "@/lib/story";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
+import { IconButton } from "@/components/icon-button";
 
 /**
  * The map — web's `StoryMapView`, read-only.
@@ -397,23 +398,14 @@ export default function MapScreen() {
             { icon: "remove" as const, label: "Zoom out", onPress: () => zoomBy(1 / 1.5) },
             { icon: "scan-outline" as const, label: "Fit the map", onPress: () => settle({ s: 1, tx: 0, ty: 0 }) },
           ].map((control) => (
-            <Pressable
+            <IconButton
               accessibilityLabel={control.label}
-              accessibilityRole="button"
+              icon={control.icon}
               key={control.label}
               onPress={control.onPress}
-              style={({ pressed }) => [
-                styles.control,
-                {
-                  backgroundColor: pressed
-                    ? theme.material.fillPressed
-                    : theme.material.fill,
-                  borderColor: theme.material.edge,
-                },
-              ]}
-            >
-              <Ionicons color={theme.text} name={control.icon} size={18} />
-            </Pressable>
+              size={36}
+              tone="surface"
+            />
           ))}
         </View>
 
@@ -424,7 +416,7 @@ export default function MapScreen() {
               {
                 backgroundColor: theme.material.fill,
                 borderColor: theme.material.edge,
-                bottom: space.sm + 4,
+                bottom: space.m,
               },
             ]}
           >
@@ -517,27 +509,19 @@ const styles = StyleSheet.create({
   anchor: { height: ANCHOR_HEIGHT, position: "absolute", width: ANCHOR_WIDTH },
   card: {
     borderRadius: radius.md + 4,
-    borderWidth: StyleSheet.hairlineWidth,
-    left: space.sm + 4,
+    borderWidth: border.edge,
+    left: space.m,
     padding: space.md,
     position: "absolute",
-    right: space.sm + 4,
+    right: space.m,
   },
   cardBody: { fontSize: fontSize.label, lineHeight: 19, marginTop: space.sm },
   cardCategory: { fontSize: fontSize.caption, textTransform: "uppercase" },
-  cardHead: { alignItems: "center", flexDirection: "row", gap: space.sm + 2 },
+  cardHead: { alignItems: "center", flexDirection: "row", gap: space.ms },
   cardName: { fontSize: fontSize.body, fontWeight: "700" },
   cardText: { flex: 1, minWidth: 0 },
   content: { position: "absolute" },
-  control: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    height: 36,
-    justifyContent: "center",
-    width: 36,
-  },
-  controls: { gap: space.sm, position: "absolute", right: space.sm + 4, top: space.sm + 4 },
+  controls: { gap: space.sm, position: "absolute", right: space.m, top: space.m },
   empty: { alignItems: "center", flex: 1, gap: space.sm, justifyContent: "center", padding: space.xl },
   emptyText: { fontSize: fontSize.body, textAlign: "center" },
   emptyTitle: { fontSize: fontSize.title, fontWeight: "700" },
@@ -551,36 +535,36 @@ const styles = StyleSheet.create({
     gap: 5,
     left: ANCHOR_WIDTH / 2 - 8,
     maxWidth: ANCHOR_WIDTH / 2,
-    paddingLeft: 4,
+    paddingLeft: space.xs,
     paddingRight: 9,
     paddingVertical: 3,
     position: "absolute",
     top: ANCHOR_HEIGHT / 2 - 12,
   },
-  pinDot: { borderRadius: 4, height: 8, width: 8 },
+  pinDot: { borderRadius: radius.xs, height: 8, width: 8 },
   pinLabel: { fontSize: fontSize.caption, fontWeight: "700" },
   readMore: {
     alignItems: "center",
     alignSelf: "flex-start",
     flexDirection: "row",
-    gap: 4,
-    marginTop: space.sm + 2,
+    gap: space.xs,
+    marginTop: space.ms,
   },
   readMoreLabel: { fontSize: fontSize.label, fontWeight: "700" },
   stage: {
     borderRadius: radius.md + 4,
     flex: 1,
-    marginHorizontal: space.sm + 4,
+    marginHorizontal: space.m,
     marginTop: space.sm,
     overflow: "hidden",
   },
   tab: {
     borderRadius: radius.full,
     borderWidth: 1,
-    paddingHorizontal: 12,
+    paddingHorizontal: space.m,
     paddingVertical: 7,
   },
   tabLabel: { fontSize: fontSize.label, fontWeight: "600" },
-  tabs: { gap: space.sm, paddingHorizontal: space.sm + 4, paddingVertical: space.sm },
+  tabs: { gap: space.sm, paddingHorizontal: space.m, paddingVertical: space.sm },
   tabsBar: { flexGrow: 0 },
 });

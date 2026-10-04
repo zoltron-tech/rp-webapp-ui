@@ -3,7 +3,8 @@ import type { NWImage } from "@nw/types";
 import { wsrvImage } from "@nw/utils";
 import { IMAGE_SIZES } from "@nw/utils/image";
 import type { QueryClient } from "@tanstack/react-query";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { CroppedImage } from "@/components/cropped-image";
 import { Bone, SkeletonPulse } from "@/components/skeleton";
@@ -197,13 +198,13 @@ const styles = StyleSheet.create({
   headerRow: {
     alignItems: "center",
     flexDirection: "row",
-    gap: 12,
+    gap: space.m,
     marginTop: HEADER_LIFT,
     paddingHorizontal: space.md,
   },
-  identity: { gap: space.sm, paddingHorizontal: space.md, paddingTop: 12 },
+  identity: { gap: space.sm, paddingHorizontal: space.md, paddingTop: space.m },
   lines: { gap: space.sm },
   name: { fontSize: fontSize.h2, fontWeight: "700" },
-  row: { alignItems: "center", flexDirection: "row", gap: space.sm + 4 },
+  row: { alignItems: "center", flexDirection: "row", gap: space.m },
   stats: { flexDirection: "row", flexWrap: "wrap", gap: space.md },
 });

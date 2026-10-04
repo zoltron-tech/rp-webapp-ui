@@ -12,9 +12,9 @@ import {
   InteractionManager,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { SongSheet } from "@/components/compose/song-sheet";
 import { ListStatus } from "@/components/list-status";
 import { Byline } from "@/components/muse/byline";
@@ -42,7 +42,14 @@ import { type MuseEdit, useMuseEdit } from "@/hooks/use-muse-edit";
 import { findCached } from "@/lib/cache-seed";
 import { withAlpha } from "@/lib/color";
 import { type MuseLook, museLook, museName } from "@/lib/muse-appearance";
-import { AccentProvider, fontSize, radius, space, useAppTheme } from "@/theme";
+import {
+  AccentProvider,
+  border,
+  fontSize,
+  radius,
+  space,
+  useAppTheme,
+} from "@/theme";
 
 /**
  * A character's profile — web's `/rp/muse/[slug]`.
@@ -662,7 +669,7 @@ const styles = StyleSheet.create({
     borderStyle: "dashed",
     borderWidth: 1.5,
     flexDirection: "row",
-    gap: 6,
+    gap: space.s,
     justifyContent: "center",
     paddingVertical: space.sm + 1,
   },
@@ -686,7 +693,7 @@ const styles = StyleSheet.create({
   songControls: {
     backgroundColor: "rgba(0,0,0,0.62)",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     overflow: "hidden",
   },
   songPill: { flex: 1 },

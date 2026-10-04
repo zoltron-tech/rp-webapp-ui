@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
@@ -80,7 +80,7 @@ const MIN_HEIGHT = 160;
 const OPEN_MS = 240;
 const CLOSE_MS = 180;
 
-export const MediaTray = ({
+const MediaTrayView = ({
   height,
   keyboardTop,
   onClose,
@@ -318,6 +318,12 @@ export const MediaTray = ({
     </>
   );
 };
+
+/**
+ * Memoised: the composer re-renders on every character of the draft, and
+ * nothing here depends on the draft.
+ */
+export const MediaTray = memo(MediaTrayView);
 
 const styles = StyleSheet.create({
   body: { flex: 1, overflow: "hidden", paddingTop: space.sm },

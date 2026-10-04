@@ -1,17 +1,22 @@
 import { Ionicons } from "@expo/vector-icons";
 import { HIGHLIGHT_COLORS } from "@nw/richtext";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import {
+  type HighlightSwatch,
+  highlightStyle,
+  THEME_HIGHLIGHT_COLORS,
+} from "@/components/editor/highlight";
 import { BottomSheet } from "@/components/sheet";
-import { radius, space, useAppTheme } from "@/theme";
+import { Text } from "@/components/text";
+import { fontSize, radius, space, type, useAppTheme } from "@/theme";
 
 /**
- * Web's `HighlightSwatchGrid`: fifteen swatches and a "remove" cell, four by
- * four.
+ * Web's highlight dropdown: the fifteen colours and a "remove" cell, then one
+ * swatch per profile palette under "Themes".
  *
- * The same fifteen values from `@nw/richtext`, so a highlight chosen here is
- * the one web's toolbar will light up as active — it compares the stored
- * colour against its own table, and a swatch that was nearly the same would be
- * a highlight web could not see.
+ * Each cell is the highlight itself — the tinted ground and the brightened
+ * letters that will be written — rather than a block of the swatch colour, so
+ * what is chosen is what appears in the post.
  */
 export const HighlightSheet = ({
   active,
@@ -19,7 +24,7 @@ export const HighlightSheet = ({
   onSelect,
   visible,
 }: {
-  /** The current highlight, or null. Marks the swatch. */
+  /** The swatch (hex) of the current highlight, or null. */
   active: string | null;
   onClose: () => void;
   /** `null` removes the highlight. */
@@ -28,78 +33,97 @@ export const HighlightSheet = ({
 }) => {
   const theme = useAppTheme();
 
+  const cell = (colour: HighlightSwatch) => {
+    const selected = active?.toLowerCase() === colour.value.toLowerCase();
+    const look = highlightStyle(colour.value);
+    return (
+      <Pressable
+        accessibilityLabel={`${colour.name} highlight`}
+        accessibilityRole="button"
+        accessibilityState={{ selected }}
+        key={colour.value}
+        onPress={() => onSelect(colour.value)}
+        style={({ pressed }) => [
+          styles.swatch,
+          {
+            backgroundColor: look.background,
+            borderColor: selected ? colour.value : "transparent",
+            opacity: pressed ? 0.6 : 1,
+          },
+        ]}
+      >
+        <Text style={[styles.sample, { color: look.color }]}>Aa</Text>
+        <View style={[styles.ink, { backgroundColor: colour.value }]} />
+      </Pressable>
+    );
+  };
+
   return (
     <BottomSheet
-      maxHeightRatio={0.5}
+      ignoreKeyboard
+      maxHeightRatio={0.7}
       onClose={onClose}
       subtitle="Behind the selected words"
       title="Highlight"
       visible={visible}
     >
-      <View style={styles.grid}>
-        {HIGHLIGHT_COLORS.map((colour) => {
-          const selected = active?.toLowerCase() === colour.value.toLowerCase();
-          return (
+      <ScrollView
+        contentContainerStyle={styles.body}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.group}>
+          <Text style={[styles.heading, { color: theme.textGray }]}>
+            Colours
+          </Text>
+          <View style={styles.grid}>
+            {HIGHLIGHT_COLORS.map(cell)}
             <Pressable
-              accessibilityLabel={colour.name}
+              accessibilityLabel="Remove highlight"
               accessibilityRole="button"
-              accessibilityState={{ selected }}
-              key={colour.value}
-              onPress={() => onSelect(colour.value)}
+              onPress={() => onSelect(null)}
               style={({ pressed }) => [
                 styles.swatch,
                 {
-                  backgroundColor: colour.value,
-                  borderColor: selected ? theme.text : "transparent",
-                  opacity: pressed ? 0.7 : 1,
+                  backgroundColor: pressed
+                    ? theme.glass.fillPressed
+                    : theme.material.fillTranslucent,
+                  borderColor: theme.material.edgeTranslucent,
+                  borderStyle: "dashed",
                 },
               ]}
             >
-              {selected ? (
-                <Ionicons color="#ffffff" name="checkmark" size={18} />
-              ) : null}
+              <Ionicons color={theme.textGray} name="close" size={18} />
             </Pressable>
-          );
-        })}
-        <Pressable
-          accessibilityLabel="Remove highlight"
-          accessibilityRole="button"
-          onPress={() => onSelect(null)}
-          style={({ pressed }) => [
-            styles.swatch,
-            {
-              backgroundColor: pressed
-                ? theme.glass.fillPressed
-                : theme.material.fillTranslucent,
-              borderColor: theme.material.edgeTranslucent,
-              borderStyle: "dashed",
-            },
-          ]}
-        >
-          <Ionicons color={theme.textGray} name="close" size={18} />
-        </Pressable>
-      </View>
+          </View>
+        </View>
+        <View style={styles.group}>
+          <Text style={[styles.heading, { color: theme.textGray }]}>
+            Themes
+          </Text>
+          <View style={styles.grid}>{THEME_HIGHLIGHT_COLORS.map(cell)}</View>
+        </View>
+      </ScrollView>
     </BottomSheet>
   );
 };
 
 const styles = StyleSheet.create({
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: space.ms,
-    justifyContent: "center",
-    padding: space.md,
-    paddingBottom: space.xl,
-  },
-  // Four across at 375pt with the gaps above: (375 - 32 - 30) / 4 ≈ 78, so
-  // 64 leaves the grid centred with air rather than edge to edge.
+  body: { gap: space.md, padding: space.md, paddingBottom: space.xl },
+  // Six across at 375pt: 6 × 50 + 5 × 8 = 340 of the 343 inside the gutters.
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
+  group: { gap: space.sm },
+  heading: type.eyebrow,
+  // The swatch's own colour, under the sample: the tint alone is too quiet to
+  // tell amber from yellow.
+  ink: { borderRadius: radius.full, height: 3, width: 18 },
+  sample: { fontSize: fontSize.body, fontWeight: "700" },
   swatch: {
     alignItems: "center",
     borderRadius: radius.md,
     borderWidth: 2,
-    height: 56,
+    gap: space.xs,
+    height: 48,
     justifyContent: "center",
-    width: 64,
+    width: 50,
   },
 });

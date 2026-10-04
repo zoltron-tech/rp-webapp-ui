@@ -29,6 +29,7 @@ export const FontSheet = ({
 
   return (
     <BottomSheet
+      ignoreKeyboard
       maxHeightRatio={0.7}
       onClose={onClose}
       subtitle="For the selected words, or what you type next"

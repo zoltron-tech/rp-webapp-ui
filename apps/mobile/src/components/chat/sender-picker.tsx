@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { MessageSenderChoice } from "@nw/chat";
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
@@ -89,7 +89,7 @@ const SenderCard = ({
   );
 };
 
-export const SenderPicker = ({
+const SenderPickerView = ({
   onClose,
   onSelect,
   selected,
@@ -253,6 +253,12 @@ export const SenderPicker = ({
     </BottomSheet>
   );
 };
+
+/**
+ * Memoised: the composer re-renders on every character of the draft, and
+ * nothing here depends on the draft.
+ */
+export const SenderPicker = memo(SenderPickerView);
 
 const styles = StyleSheet.create({
   body: { flex: 1, gap: space.sm, paddingHorizontal: space.md },

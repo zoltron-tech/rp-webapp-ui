@@ -95,6 +95,8 @@ export interface SheetProps {
   fill?: boolean;
   /** Rendered on the right of the header, in place of the close button. */
   headerAction?: ReactNode;
+  /** For a sheet with no text field: stay at the foot of the screen. */
+  ignoreKeyboard?: boolean;
   onClose: () => void;
   /**
    * How much of the screen the sheet may occupy, 0–1.
@@ -114,6 +116,7 @@ export const BottomSheet = ({
   children,
   fill = false,
   headerAction,
+  ignoreKeyboard = false,
   onClose,
   maxHeightRatio = 0.72,
   subtitle,
@@ -122,7 +125,11 @@ export const BottomSheet = ({
 }: SheetProps) => {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
-  const keyboardOffset = useKeyboardOffset(insets.bottom);
+  const liveKeyboardOffset = useKeyboardOffset(insets.bottom);
+  // A sheet with nothing to type into does not ride the keyboard: opening it
+  // puts the keyboard away, and a height reported a moment late left the
+  // sheet floating over an empty band where the keyboard had been.
+  const keyboardOffset = ignoreKeyboard ? 0 : liveKeyboardOffset;
 
   // What is left for the sheet once the keyboard has taken its share. The 24
   // keeps a sliver of backdrop visible above it, so it still reads as a sheet

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { MarkdownMark } from "@nw/chat";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "@/components/text";
@@ -88,7 +89,7 @@ export const applyFormat = (
   };
 };
 
-export const FormatBar = ({
+const FormatBarView = ({
   onFormat,
 }: {
   onFormat: (token: string) => void;
@@ -130,6 +131,12 @@ export const FormatBar = ({
     </View>
   );
 };
+
+/**
+ * Memoised: the composer re-renders on every character of the draft, and
+ * nothing here depends on the draft.
+ */
+export const FormatBar = memo(FormatBarView);
 
 const styles = StyleSheet.create({
   bold: { fontWeight: "800" },

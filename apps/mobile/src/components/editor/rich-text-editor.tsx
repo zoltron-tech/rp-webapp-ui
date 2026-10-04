@@ -1,9 +1,9 @@
 import {
   applyTextChange,
-  BULLET_POINT_CATEGORIES,
   backgroundIn,
   blockLength,
   blockText,
+  BULLET_POINT_CATEGORIES,
   DEFAULT_ORDERED_LIST_STYLE,
   DEFAULT_UNORDERED_LIST_STYLE,
   diffText,
@@ -12,7 +12,6 @@ import {
   emptyParagraph,
   FONT_SIZES,
   fontFamilyIn,
-  highlightTextColor,
   insertImageAfter,
   insertMention,
   marksIn,
@@ -21,16 +20,17 @@ import {
   normalizeDocument,
   ORDERED_LIST_STYLES,
   QUOTATION_MARK_CATEGORIES,
+  removeBlock,
+  replaceBlock,
+  replaceRange,
   type RichAlign,
   type RichBlock,
   type RichDocument,
   type RichImageBlock,
   type RichMark,
   type RichRange,
+  richTextIsEmpty,
   type RunStyle,
-  removeBlock,
-  replaceBlock,
-  replaceRange,
   setBlockAlign,
   setBlockFontSize,
   setFontFamily,
@@ -50,6 +50,7 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -61,9 +62,17 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { Text, type TextInput } from "@/components/text";
+import {
+  KeyboardController,
+  KeyboardEvents,
+} from "react-native-keyboard-controller";
+import { Text, TextInput } from "@/components/text";
 import { BlockInput } from "@/components/editor/block-input";
 import { FontSheet } from "@/components/editor/font-sheet";
+import {
+  highlightStyle,
+  highlightSwatch,
+} from "@/components/editor/highlight";
 import { HighlightSheet } from "@/components/editor/highlight-sheet";
 import { ImageBlock, ImageControls } from "@/components/editor/image-block";
 import { MentionList } from "@/components/editor/mention-list";
@@ -143,7 +152,17 @@ export interface RichTextEditorProps {
   /** The saved HTML to start from. Read once, on mount. */
   initialHtml?: string;
   /** Called with the saved HTML — "" when the document is empty — on edit. */
-  onChange: (html: string, doc: RichDocument) => void;
+  /** The serialised document, on every change. Costs a full serialise. */
+  onChange?: (html: string, doc: RichDocument) => void;
+  /**
+   * The document and whether it is empty, on every change — without the HTML.
+   *
+   * For a caller that only needs to know *whether* there is something to send
+   * while the writer types, and asks for the HTML (`getHtml`) when it sends.
+   * Serialising the whole document on every keystroke was the single largest
+   * fixed cost of a character.
+   */
+  onDocumentChange?: (doc: RichDocument, empty: boolean) => void;
   placeholder: string;
   mentionTabs?: MentionTab[];
   /** Image sources still on their way to storage; drawn with a spinner. */
@@ -183,6 +202,62 @@ interface Caret {
 
 const ALIGN_CYCLE: RichAlign[] = ["left", "center", "right", "justify"];
 
+let blockKeySeed = 0;
+// The suffix keeps keys unique across a Fast Refresh, which resets the counter
+// while the editor keeps the keys it already handed out.
+const nextBlockKey = () =>
+  `b${(blockKeySeed += 1)}-${Math.random().toString(36).slice(2, 6)}`;
+
+const sameKind = (a: RichDocument[number], b: RichDocument[number]) =>
+  (a.type === "image") === (b.type === "image");
+
+/**
+ * The keys for `next`, carried over from `previous` wherever a block is the
+ * same block.
+ *
+ * Document operations are immutable and leave untouched blocks as the same
+ * objects, so the blocks before and after an edit match by identity. What is
+ * left in the middle is the edit: its blocks take the old middle's keys in
+ * order while they are the same kind of thing, and new keys after that — a
+ * split keeps the upper line's field and mounts one below, a merge keeps the
+ * upper line's and removes the lower.
+ */
+const carryKeys = (
+  previous: RichDocument,
+  keys: string[],
+  next: RichDocument,
+): string[] => {
+  let head = 0;
+  while (
+    head < previous.length &&
+    head < next.length &&
+    previous[head] === next[head]
+  ) {
+    head += 1;
+  }
+  let tail = 0;
+  while (
+    tail < previous.length - head &&
+    tail < next.length - head &&
+    previous[previous.length - 1 - tail] === next[next.length - 1 - tail]
+  ) {
+    tail += 1;
+  }
+
+  const out: string[] = keys.slice(0, head);
+  const oldEnd = previous.length - tail;
+  const newEnd = next.length - tail;
+  for (let at = head; at < newEnd; at += 1) {
+    const from = head + (at - head);
+    out.push(
+      from < oldEnd && sameKind(previous[from], next[at])
+        ? keys[from]
+        : nextBlockKey(),
+    );
+  }
+  return out.concat(keys.slice(oldEnd));
+};
+
 /** Web's small-screen cap on a picture text wraps around: half the width. */
 const FLOAT_MAX_PERCENT = 50;
 
@@ -201,6 +276,7 @@ export const RichTextEditor = forwardRef<
     initialHtml,
     mentionTabs = [],
     onChange,
+    onDocumentChange,
     onFocusChange,
     placeholder,
     uploadingSources,
@@ -215,11 +291,100 @@ export const RichTextEditor = forwardRef<
   const docRef = useRef(doc);
   docRef.current = doc;
 
+  /*
+   * A key per block that survives the blocks around it changing.
+   *
+   * Keys used to be positions. Take a line out — a merge on Backspace, a
+   * picture removed — and every line after it was handed the next one's text,
+   * while the last key, often the line with the caret, was unmounted. A
+   * focused field leaving the tree takes the keyboard with it, which is what
+   * closed it mid-delete. Carried over by identity, the lines that did not
+   * change keep their fields and only the one that went is removed.
+   */
+  const keyed = useRef<{ doc: RichDocument; keys: string[] } | null>(null);
+  /**
+   * A split made this render, by the index of its upper line.
+   *
+   * The field the writer is in becomes the *new* line, and the line above
+   * gets a fresh field. Two reasons, both about not moving the focus:
+   *
+   * - The keyboard stays exactly where it is. Handing the caret to a newly
+   *   mounted field is a focus change, and on Android that restarts the
+   *   keyboard's connection — it dipped and came back on every Return.
+   * - A keyboard that types the newline leaves it in the field. Kept as the
+   *   upper line, that field's block was unchanged, so nothing told it to
+   *   drop the newline and one Return showed as two lines. As the lower line
+   *   its block is different, so its text is replaced and the newline goes.
+   *
+   * Not when the lower line's text is what the field already held (Return at
+   * the very start of a line): then it is the upper line whose text changes,
+   * and the keys stay as they are.
+   */
+  const splitAt = useRef<number | null>(null);
+  /** The line whose field is emptied right after the next commit. */
+  const clearAfterCommit = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    const at = clearAfterCommit.current;
+    if (at === null) return;
+    clearAfterCommit.current = null;
+    inputs.current.get(at)?.clear();
+  });
+  if (!keyed.current) {
+    keyed.current = { doc, keys: doc.map(() => nextBlockKey()) };
+  } else if (keyed.current.doc !== doc) {
+    const before = keyed.current.keys.length;
+    const keys = carryKeys(keyed.current.doc, keyed.current.keys, doc);
+    const at = splitAt.current;
+    if (at !== null && keys.length === before + 1 && at + 1 < keys.length) {
+      [keys[at], keys[at + 1]] = [keys[at + 1], keys[at]];
+    }
+    splitAt.current = null;
+    keyed.current = { doc, keys };
+  }
+  const blockKeys = keyed.current.keys;
+
   const [active, setActive] = useState<Caret | null>(null);
   const activeRef = useRef<Caret | null>(null);
   const [pending, setPending] = useState<
     (Caret & { offset: number; style: RunStyle }) | null
   >(null);
+  /*
+   * Read by the handlers below through a ref. As a dependency it gave
+   * `handleChangeText` a new identity every time a style was pinned and again
+   * when the next character spent it — and that handler is a prop of every
+   * line, so each of those re-rendered the whole document.
+   */
+  const pendingRef = useRef(pending);
+  pendingRef.current = pending;
+
+  /**
+   * The style the writer is typing in, remembered.
+   *
+   * A character takes its style from the one before it, and an empty line has
+   * none — so a font chosen for a post was lost on any empty line reached
+   * without typing into it: Return a few times and Backspace back, or delete
+   * a line's text and start again, and the writing was in the default face.
+   * This is what an empty line types in instead: the last style chosen from
+   * the toolbar, typed in, or found under the caret. It changes when the
+   * writer changes it, or moves the caret into text set differently.
+   */
+  const sticky = useRef<RunStyle>({ marks: [] });
+
+  /** What a character typed at this caret would be set in. */
+  const typingStyleAt = useCallback(
+    (block: RichBlock, index: number, offset: number): RunStyle => {
+      const pinned = pendingRef.current;
+      if (pinned && pinned.index === index && pinned.offset === offset) {
+        return pinned.style;
+      }
+      if (blockLength(block) === 0) {
+        // Size is the line's own property, not the remembered style's.
+        return { ...sticky.current, fontSize: block.fontSize };
+      }
+      return styleAt(block, offset);
+    },
+    [],
+  );
   const [caret, setCaret] = useState<Caret | null>(null);
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [mention, setMention] = useState<{
@@ -256,18 +421,50 @@ export const RichTextEditor = forwardRef<
   /** Looks again a moment after a focus, and raises the keyboard if it is not up. */
   const ensureKeyboard = useCallback((index: number) => {
     if (focusRetry.current) clearTimeout(focusRetry.current);
-    focusRetry.current = setTimeout(() => {
+    /*
+     * Looks after a sheet has had time to leave (its slide is 180ms), and if
+     * the keyboard is not up, takes the focus properly: lets go of whatever
+     * focus React believes the field has — one taken while the sheet's window
+     * was still up never reached it — and focuses a moment later, as two
+     * steps. Then looks once more, for the phone that was slower than that.
+     *
+     * Two steps and not a blur-and-focus in one go: the keyboard-hidden
+     * listener below answers a blur by blurring whatever is focused, and
+     * would take the new focus away with it.
+     */
+    const raise = (attemptsLeft: number) => {
       focusRetry.current = null;
+      if (KeyboardController.isVisible()) return;
       const field = inputs.current.get(index);
       if (!field) return;
-      if (!field.isFocused()) {
-        field.focus();
-      } else if (!Keyboard.isVisible()) {
-        field.blur();
-        field.focus();
-      }
-    }, 120);
+      if (field.isFocused()) field.blur();
+      focusRetry.current = setTimeout(() => {
+        inputs.current.get(index)?.focus();
+        focusRetry.current =
+          attemptsLeft > 0
+            ? setTimeout(() => raise(attemptsLeft - 1), 700)
+            : null;
+      }, 80);
+    };
+    focusRetry.current = setTimeout(() => raise(1), 280);
   }, []);
+  /*
+   * A line never stays focused without a keyboard.
+   *
+   * Android can put the keyboard away and leave the field focused — the back
+   * button does, and so does a sheet opening over the editor. Tapping a field
+   * that is already focused is not a focus, so nothing brought the keyboard
+   * back: the writer tapped the page and nothing happened. When the keyboard
+   * goes, the focus goes with it, and the next tap or `focus()` is a real one.
+   */
+  useEffect(() => {
+    const subscription = KeyboardEvents.addListener("keyboardDidHide", () => {
+      const input = TextInput.State.currentlyFocusedInput();
+      if (input) TextInput.State.blurTextInput(input);
+    });
+    return () => subscription.remove();
+  }, []);
+
   const lastBulletStyle = useRef(DEFAULT_UNORDERED_LIST_STYLE);
   const lastOrderedStyle = useRef(DEFAULT_ORDERED_LIST_STYLE);
 
@@ -275,6 +472,8 @@ export const RichTextEditor = forwardRef<
   // the composer rebuilt an inline function.
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+  const onDocumentChangeRef = useRef(onDocumentChange);
+  onDocumentChangeRef.current = onDocumentChange;
   const mounted = useRef(false);
 
   useEffect(() => {
@@ -282,7 +481,8 @@ export const RichTextEditor = forwardRef<
       mounted.current = true;
       return;
     }
-    onChangeRef.current(documentToHtml(doc), doc);
+    onDocumentChangeRef.current?.(doc, richTextIsEmpty(doc));
+    onChangeRef.current?.(documentToHtml(doc), doc);
   }, [doc]);
 
   // A block that was created or merged this render gets the caret once its
@@ -313,6 +513,19 @@ export const RichTextEditor = forwardRef<
   );
 
   const setActiveBoth = useCallback((next: Caret | null) => {
+    const current = activeRef.current;
+    // The same caret is not news: a text change and the selection event that
+    // follows it both report it, and a new object here re-rendered the editor
+    // and its toolbar a second time for one character.
+    if (
+      current &&
+      next &&
+      current.index === next.index &&
+      current.selection.start === next.selection.start &&
+      current.selection.end === next.selection.end
+    ) {
+      return;
+    }
     activeRef.current = next;
     setActive(next);
   }, []);
@@ -328,25 +541,88 @@ export const RichTextEditor = forwardRef<
       const current = docRef.current;
       const block = current[index];
       if (!isTextBlock(block)) return;
+      const pending = pendingRef.current;
 
+      const diff = diffText(previous, next);
+      const at = diff.start;
+      /*
+       * What the inserted text is set in.
+       *
+       * A pinned style, when the caret is where it was pinned. Otherwise, for
+       * a *replacement* — the keyboard correcting a word, or swapping it for
+       * a suggestion — the style of the text being replaced. Left to the
+       * default, a replacement took the style of whatever came before it: the
+       * space in front of the word, usually, so a corrected word dropped its
+       * font and its bold. A plain insertion takes the style at the caret, as
+       * before.
+       */
       const typing =
-        pending &&
-        pending.index === index &&
-        pending.offset === diffText(previous, next).start
+        pending && pending.index === index && pending.offset === at
           ? pending.style
-          : undefined;
-
-      const change = applyTextChange(block, previous, next, typing);
+          : diff.end > diff.start && diff.inserted.length > 0
+            ? styleAt(block, diff.start + 1)
+            : blockLength(block) === 0
+              ? typingStyleAt(block, index, at)
+              : undefined;
+            const change = applyTextChange(block, previous, next, typing);
+      // What was just typed in is what the next empty line types in.
+      if (diff.inserted.length > 0 && diff.inserted !== "\n") {
+        sticky.current = typing ?? styleAt(block, at);
+      }
 
       if (change.kind === "split") {
+        // Return on an empty list item ends the list: the item becomes a
+        // plain line where it stands, rather than that and a blank one under.
+        if (block.type === "listItem" && blockLength(block) === 0) {
+          setDoc(normalizeDocument(replaceBlock(current, index, change.left)));
+          clearAfterCommit.current = index;
+          setMention(null);
+          return;
+        }
         setDoc(
           normalizeDocument(
             replaceBlock(current, index, change.left, change.right),
           ),
         );
-        setPending(null);
+        /*
+         * A keyboard that reports Return as an action goes through
+         * `handleSubmit` instead and never types the newline. One that types
+         * it lands here; see `splitAt` for how the newline leaves the field.
+         *
+         * The new line types in what the old one was typing in: the font, the
+         * marks, the highlight. An empty line has no character to take a style
+         * from, so without this Enter dropped back to the default face — a
+         * post set in Times New Roman went back to the interface font on
+         * every new paragraph. Pinned at the start of the new line, it is
+         * spent on the first character and inherited from there; moving the
+         * caret elsewhere clears it, as any pinned style is cleared.
+         */
+        if (previous.length === 0) {
+          /*
+           * Return on an empty line. Both halves are empty, so whichever
+           * line this field becomes, its text is what it was before the key
+           * and React has nothing to send it: the newline the keyboard typed
+           * stayed, and the caret went down one line and then another.
+           * `clear()` is the field's own way of being emptied, and keeps the
+           * keyboard's connection. It is called once the new line above has
+           * been committed (`clearAfterCommit`), so the two land together:
+           * called here it raced the commit, and for a frame the caret sat a
+           * line too low.
+           */
+          clearAfterCommit.current = index + 1;
+          splitAt.current = index;
+        } else if (blockText(change.right) !== previous) {
+          splitAt.current = index;
+        }
+        const start = { end: 0, start: 0 };
+        setPending({
+          index: index + 1,
+          offset: 0,
+          selection: start,
+          style: typing ?? typingStyleAt(block, index, at),
+        });
         setMention(null);
-        focusBlock(index + 1, { end: 0, start: 0 });
+        focusBlock(index + 1, start);
         return;
       }
 
@@ -370,7 +646,63 @@ export const RichTextEditor = forwardRef<
       const query = mentionQuery(blockText(change.block), change.caret);
       setMention(query ? { ...query, index } : null);
     },
-    [focusBlock, pending, setActiveBoth],
+    [focusBlock, setActiveBoth, typingStyleAt],
+  );
+
+  /**
+   * Return: the block splits at the caret, and the new line takes the caret.
+   *
+   * The field reports the key and does not insert anything (`BlockInput`), so
+   * the split is made here from the caret the editor already tracks. A
+   * selection is deleted first, as typing over it would.
+   */
+  const handleSubmit = useCallback(
+    (index: number) => {
+      const current = docRef.current;
+      let block = current[index];
+      if (!isTextBlock(block)) return;
+
+      const at = activeRef.current;
+      const length = blockLength(block);
+      const selection =
+        at && at.index === index
+          ? {
+              end: Math.min(Math.max(at.selection.start, at.selection.end), length),
+              start: Math.min(Math.min(at.selection.start, at.selection.end), length),
+            }
+          : { end: length, start: length };
+
+      const style = typingStyleAt(block, index, selection.start);
+
+      let offset = selection.start;
+      if (selection.end > selection.start) {
+        const cut = replaceRange(block, selection, "", style);
+        block = cut.block;
+        offset = cut.caret;
+      }
+
+      const text = blockText(block);
+      const change = applyTextChange(
+        block,
+        text,
+        `${text.slice(0, offset)}
+${text.slice(offset)}`,
+      );
+      if (change.kind !== "split") return;
+
+      if (blockText(change.right) !== text) splitAt.current = index;
+      setDoc(
+        normalizeDocument(
+          replaceBlock(current, index, change.left, change.right),
+        ),
+      );
+      // The new line types in what this one was typing in.
+      const start = { end: 0, start: 0 };
+      setPending({ index: index + 1, offset: 0, selection: start, style });
+      setMention(null);
+      focusBlock(index + 1, start);
+    },
+    [focusBlock],
   );
 
   const handleSelectionChange = useCallback(
@@ -378,10 +710,18 @@ export const RichTextEditor = forwardRef<
       setActiveBoth({ index, selection });
       // Handing the caret back to the platform: it has been placed.
       setCaret((placed) => (placed?.index === index ? null : placed));
+      /*
+       * A pinned style is dropped when the caret leaves the spot it was
+       * pinned at — judged only by the line it was pinned on. Another line's
+       * selection event says nothing about it: after Return the line above
+       * still reports its caret moving past the newline, and that used to
+       * clear the style just carried down to the new line. Moving to another
+       * line is a focus, and `handleFocus` clears it there.
+       */
       setPending((current) =>
         current &&
-        (current.index !== index ||
-          current.offset !== selection.start ||
+        current.index === index &&
+        (current.offset !== selection.start ||
           selection.start !== selection.end)
           ? null
           : current,
@@ -391,6 +731,20 @@ export const RichTextEditor = forwardRef<
       if (!isTextBlock(block) || selection.start !== selection.end) {
         setMention(null);
         return;
+      }
+      // The caret is in text: that text's style is the one being typed in
+      // now. Not while a style is pinned right here — it has not been typed
+      // yet, and the text beside it would overwrite the choice.
+      const pinned = pendingRef.current;
+      if (
+        blockLength(block) > 0 &&
+        !(
+          pinned &&
+          pinned.index === index &&
+          pinned.offset === selection.start
+        )
+      ) {
+        sticky.current = styleAt(block, selection.start);
       }
       const query = mentionQuery(blockText(block), selection.start);
       setMention(query ? { ...query, index } : null);
@@ -422,6 +776,10 @@ export const RichTextEditor = forwardRef<
 
       const joinAt = blockLength(above);
       const merged = mergeBlocks(above, block);
+      // The focus goes up first, while both lines still exist. Left where it
+      // was, the line being removed would leave the tree focused and the
+      // keyboard would close under a writer who is still deleting.
+      inputs.current.get(index - 1)?.focus();
       setDoc(
         normalizeDocument([
           ...current.slice(0, index - 1),
@@ -439,6 +797,10 @@ export const RichTextEditor = forwardRef<
     (index: number) => {
       setSelectedImage(null);
       setFocused(true);
+      // A style pinned on another line does not follow the caret here.
+      setPending((current) =>
+        current && current.index !== index ? null : current,
+      );
       onFocusChangeRef.current?.(true);
       if (activeRef.current?.index !== index) {
         setActiveBoth({ index, selection: { end: 0, start: 0 } });
@@ -490,7 +852,10 @@ export const RichTextEditor = forwardRef<
       pending.offset === target.selection.start &&
       target.selection.start === target.selection.end
         ? pending.style
-        : null;
+        : blockLength(target.block) === 0
+          ? // An empty line shows what it will type in.
+            sticky.current
+          : null;
     return {
       align: target.block.align ?? "left",
       fontFamily: pinned
@@ -498,9 +863,13 @@ export const RichTextEditor = forwardRef<
         : fontFamilyIn(target.block, target.selection),
       fontSize: target.block.fontSize,
       hasText: true,
-      highlight: pinned
-        ? (pinned.background ?? null)
-        : backgroundIn(target.block, target.selection),
+      // The swatch, not the stored tint: it colours the toolbar's button and
+      // marks the cell in the sheet.
+      highlight: highlightSwatch(
+        pinned
+          ? (pinned.background ?? null)
+          : backgroundIn(target.block, target.selection),
+      ),
       list:
         target.block.type === "listItem"
           ? (target.block.list ?? { ordered: false })
@@ -532,22 +901,31 @@ export const RichTextEditor = forwardRef<
       if (!at) return;
       const block = docRef.current[at.index];
       if (!isTextBlock(block)) return;
-      const base =
-        pending &&
-        pending.index === at.index &&
-        pending.offset === at.selection.start
-          ? pending.style
-          : styleAt(block, at.selection.start);
+      const style = change(
+        typingStyleAt(block, at.index, at.selection.start),
+      );
+      sticky.current = style;
       setPending({
         index: at.index,
         offset: at.selection.start,
         selection: at.selection,
-        style: change(base),
+        style,
       });
       inputs.current.get(at.index)?.focus();
+      // Called as a sheet closes, when the first focus can be dropped.
+      ensureKeyboard(at.index);
     },
-    [pending],
+    [ensureKeyboard, typingStyleAt],
   );
+
+  /** A sheet dismissed without a choice: back to the line, keyboard up. */
+  const closeSheet = useCallback(() => {
+    setSheet(null);
+    const at = activeRef.current;
+    if (!at) return;
+    inputs.current.get(at.index)?.focus();
+    ensureKeyboard(at.index);
+  }, [ensureKeyboard]);
 
   const actions = useMemo<ToolbarActions>(
     () => ({
@@ -638,9 +1016,7 @@ export const RichTextEditor = forwardRef<
       setSheet(null);
       const at = activeRef.current;
       if (!at) return;
-      const swatch = value
-        ? { background: value, color: highlightTextColor(value) }
-        : null;
+      const swatch = value ? highlightStyle(value) : null;
       if (at.selection.start === at.selection.end) {
         pinStyle((style) => ({
           ...style,
@@ -821,6 +1197,31 @@ export const RichTextEditor = forwardRef<
 
   const firstText = doc.findIndex((node) => node.type !== "image");
 
+  // Declared before the rows that read it: it sat after the loop, where the
+  // rows saw it undefined and the placeholder never showed.
+  const empty =
+    doc.length === 1 && doc[0].type !== "image" && blockLength(doc[0]) === 0;
+
+  /*
+   * The style an empty line with the caret is about to type in, handed to its
+   * field so the first character is *drawn* in it. Without this the keyboard
+   * draws the character in the default face and the style arrives a moment
+   * later, when the block comes back from here: a visible flick from one font
+   * to another at the start of every line.
+   */
+  const emptyTyping = useMemo<RunStyle | null>(() => {
+    if (!target || blockLength(target.block) > 0) return null;
+    const pinned =
+      pending &&
+      pending.index === target.index &&
+      pending.offset === target.selection.start
+        ? pending.style
+        : sticky.current;
+    return { ...pinned };
+    // `toolbarState` moves whenever the remembered style could have.
+    // biome-ignore lint/correctness/useExhaustiveDependencies: see above
+  }, [pending, target, toolbarState]);
+
   const textProps = (node: RichBlock, index: number) => ({
     block: node,
     editable,
@@ -831,15 +1232,14 @@ export const RichTextEditor = forwardRef<
     onFocus: handleFocus,
     onKeyPress: handleKeyPress,
     onSelectionChange: handleSelectionChange,
+    onSubmit: handleSubmit,
     placeholder: index === firstText && empty ? placeholder : undefined,
+    typing: emptyTyping && active?.index === index ? emptyTyping : undefined,
     selection: caret?.index === index ? caret.selection : undefined,
   });
 
-  // Index keys: a block's identity is its position — there is nothing else
-  // stable about it, and a field re-keyed on its content would lose focus on
-  // every keystroke.
   const renderText = (node: RichBlock, index: number) => (
-    <BlockInput key={`block-${index}`} {...textProps(node, index)} />
+    <BlockInput key={blockKeys[index]} {...textProps(node, index)} />
   );
 
   /*
@@ -880,7 +1280,7 @@ export const RichTextEditor = forwardRef<
         FLOAT_MAX_PERCENT,
       );
       blocks.push(
-        <View key={`float-${index}`} style={styles.float}>
+        <View key={`float-${blockKeys[index]}`} style={styles.float}>
           <WrappedBlockInput
             {...textProps(next, index + 1)}
             percent={percent}
@@ -904,14 +1304,12 @@ export const RichTextEditor = forwardRef<
     blocks.push(
       <ImageBlock
         {...imageProps}
-        key={`image-${index}`}
+        key={blockKeys[index]}
         selected={selected}
         uploading={uploading}
       />,
     );
   }
-  const empty =
-    doc.length === 1 && doc[0].type !== "image" && blockLength(doc[0]) === 0;
 
   return (
     <View style={compact ? styles.rootCompact : styles.root}>
@@ -988,8 +1386,10 @@ export const RichTextEditor = forwardRef<
       ) : null}
 
       <BottomSheet
+
+        ignoreKeyboard
         maxHeightRatio={0.4}
-        onClose={() => setSheet(null)}
+        onClose={closeSheet}
         title="Text size"
         visible={sheet === "size"}
       >
@@ -1038,21 +1438,21 @@ export const RichTextEditor = forwardRef<
 
       <FontSheet
         active={toolbarState.fontFamily}
-        onClose={() => setSheet(null)}
+        onClose={closeSheet}
         onSelect={pickFont}
         visible={sheet === "font"}
       />
 
       <HighlightSheet
         active={toolbarState.highlight}
-        onClose={() => setSheet(null)}
+        onClose={closeSheet}
         onSelect={pickHighlight}
         visible={sheet === "highlight"}
       />
 
       <SymbolSheet
         categories={BULLET_POINT_CATEGORIES}
-        onClose={() => setSheet(null)}
+        onClose={closeSheet}
         onSelect={(value) => pickListStyle(false, value)}
         selected={toolbarState.list?.style ?? DEFAULT_UNORDERED_LIST_STYLE}
         subtitle="For the list the caret is in"
@@ -1062,7 +1462,7 @@ export const RichTextEditor = forwardRef<
 
       <SymbolSheet
         categories={[{ name: "Numbering", symbols: ORDERED_LIST_STYLES }]}
-        onClose={() => setSheet(null)}
+        onClose={closeSheet}
         onSelect={(value) => pickListStyle(true, value)}
         selected={toolbarState.list?.style ?? DEFAULT_ORDERED_LIST_STYLE}
         subtitle="For the list the caret is in"
@@ -1072,7 +1472,7 @@ export const RichTextEditor = forwardRef<
 
       <SymbolSheet
         categories={QUOTATION_MARK_CATEGORIES}
-        onClose={() => setSheet(null)}
+        onClose={closeSheet}
         onSelect={pickQuote}
         subtitle="Inserted at the caret"
         title="Quotation marks"

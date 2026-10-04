@@ -19,6 +19,7 @@ import {
 import { Text } from "@/components/text";
 import { nativeFace } from "@/lib/editor-fonts";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
+import { memo } from "react";
 
 /**
  * The formatting bar — web's toolbar, rearranged for a thumb.
@@ -146,7 +147,7 @@ const Button = ({
   );
 };
 
-export const EditorToolbar = ({
+const EditorToolbarView = ({
   actions,
   state,
 }: {
@@ -171,11 +172,6 @@ export const EditorToolbar = ({
   const bulletStyle = state.list && !state.list.ordered ? state.list : null;
   const orderedStyle = state.list?.ordered ? state.list : null;
 
-  const Divider = () => (
-    <View
-      style={[styles.divider, { backgroundColor: theme.glass.edge }]}
-    />
-  );
 
   return (
     <View
@@ -419,6 +415,22 @@ export const EditorToolbar = ({
     </View>
   );
 };
+
+/** A rule between groups. At module scope: declared inside the bar it was a
+ *  new component type every render, and its views were remounted each time. */
+const Divider = () => {
+  const theme = useAppTheme();
+  return (
+    <View style={[styles.divider, { backgroundColor: theme.glass.edge }]} />
+  );
+};
+
+/**
+ * Memoised: its two props are a memoised state object and a stable set of
+ * actions, so it re-renders when the format at the caret changes and not for
+ * every character typed.
+ */
+export const EditorToolbar = memo(EditorToolbarView);
 
 const styles = StyleSheet.create({
   bar: { borderRadius: 1, height: 2 },

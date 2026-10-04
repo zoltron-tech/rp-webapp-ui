@@ -35,6 +35,7 @@ export const SymbolSheet = ({
 
   return (
     <BottomSheet
+      ignoreKeyboard
       fill
       maxHeightRatio={0.7}
       onClose={onClose}
@@ -52,14 +53,15 @@ export const SymbolSheet = ({
               {category.name.toUpperCase()}
             </Text>
             <View style={styles.grid}>
-              {category.symbols.map((symbol) => {
+              {category.symbols.map((symbol, position) => {
                 const active = selected === symbol.value;
                 return (
                   <Pressable
                     accessibilityLabel={symbol.value}
                     accessibilityRole="button"
                     accessibilityState={{ selected: active }}
-                    key={symbol.value}
+                    // A glyph can sit twice in one group (the straight double quote).
+                    key={`${position}-${symbol.value}`}
                     onPress={() => onSelect(symbol.value)}
                     style={({ pressed }) => [
                       styles.cell,

@@ -154,6 +154,13 @@ export const Composer = ({
   const keyboardHeight = useKeyboardHeight();
 
   const [draft, setDraft] = useState("");
+  /*
+   * The draft for handlers, without making them depend on it. As a dependency
+   * it gave `format` a new identity on every character, and the format bar —
+   * which takes it as a prop — was drawn again for each one.
+   */
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
   const [pickerOpen, setPickerOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [trayTab, setTrayTab] = useState<TrayTab | null>(null);
@@ -325,16 +332,33 @@ export const Composer = ({
   const format = useCallback(
     (token: string) => {
       const { caret: next, text } = applyFormat(
-        draft,
+        draftRef.current,
         selectionRef.current,
         token,
       );
       setDraft(text);
-      setCaret({ end: next, start: next });
+      placeCaret.current = next;
       selectionRef.current = { end: next, start: next };
     },
-    [draft],
+    [],
   );
+
+  /*
+   * The caret goes in one render after the text it belongs to.
+   *
+   * Handed over together, the field was given the caret before the new text:
+   * a position inside a pair just opened at the end of the draft is past the
+   * end of the text the field still held, so it was dropped, and the caret
+   * sat after `****` instead of inside it — the next words were not bold.
+   */
+  const placeCaret = useRef<number | null>(null);
+  // Runs when a draft has been committed.
+  useEffect(() => {
+    const at = placeCaret.current;
+    if (at === null) return;
+    placeCaret.current = null;
+    setCaret({ end: at, start: at });
+  }, [draft]);
 
   /**
    * Set while the field is let go of only to be taken straight back, so the
@@ -440,6 +464,13 @@ export const Composer = ({
     },
     [closeTray, keyboardLift, onSend],
   );
+
+  // Stable, for the memoised tray and picker below.
+  const closeTrayHere = useCallback(
+    () => closeTray(keyboardLift),
+    [closeTray, keyboardLift],
+  );
+  const closePicker = useCallback(() => setPickerOpen(false), []);
 
   return (
     <>
@@ -864,7 +895,7 @@ export const Composer = ({
       <MediaTray
         height={trayHeight}
         keyboardTop={keyboardTop}
-        onClose={() => closeTray(keyboardLift)}
+        onClose={closeTrayHere}
         onHeightChange={setTraySettled}
         onRequestKeyboard={closeTrayToKeyboard}
         onSelect={sendMedia}
@@ -875,7 +906,7 @@ export const Composer = ({
 
       {selectedSender && onSelectSender ? (
         <SenderPicker
-          onClose={() => setPickerOpen(false)}
+          onClose={closePicker}
           onSelect={onSelectSender}
           selected={selectedSender}
           senders={senders}

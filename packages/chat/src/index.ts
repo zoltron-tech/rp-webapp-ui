@@ -111,6 +111,7 @@ export {
   type HeartbeatPayload,
   isServerEdit,
   isServerMessage,
+  isServerNotification,
   isServerPing,
   isServerReaction,
   type OutgoingMessagePayload,

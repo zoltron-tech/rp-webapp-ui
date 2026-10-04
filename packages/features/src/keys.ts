@@ -74,7 +74,12 @@ export const queryKeys = {
    * something the endpoint cannot do.
    */
   myBadges: () => ["badges", "me"] as const,
-  notifications: () => ["notifications"] as const,
+  /** Not under `notifications`: refreshing the badge must not refetch every page of the list. */
+  notificationCounts: () => ["notification-counts"] as const,
+  // "feed": the pages changed shape when the list moved to a cursor, and
+  // the mobile app restores this cache from disk — under the old key it would
+  // hand the new code pages it cannot read.
+  notifications: () => ["notifications", "feed"] as const,
   /** One novelist's activity feed, paged. */
   novelistActivity: (username: string) =>
     ["profile", username, "activity"] as const,

@@ -1,5 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useSession, useUnreadConversations } from "@nw/features";
+import {
+  useNotificationCounts,
+  useSession,
+  useUnreadConversations,
+} from "@nw/features";
 import { Redirect, Tabs, useRouter } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { Avatar } from "@/components/avatar";
@@ -54,6 +58,9 @@ export default function TabsLayout() {
   const router = useRouter();
   const { novelist, status } = useSession();
   const { unreadCount } = useUnreadConversations();
+  // What has arrived since the Alerts tab was last opened, counted by the server.
+  const { data: notificationCounts } = useNotificationCounts();
+  const unseenNotifications = notificationCounts?.unseen ?? 0;
 
   if (status === "loading" && !readAccessToken()) return null;
   if (status !== "signed-in" && status !== "loading") {
@@ -176,6 +183,8 @@ export default function TabsLayout() {
           name="(notifications)"
           options={{
             headerShown: false,
+            tabBarBadge:
+              unseenNotifications > 0 ? unseenNotifications : undefined,
             tabBarIcon: ({ color, focused, size }) => (
               <Ionicons
                 color={color}

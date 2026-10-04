@@ -1,5 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
+import {
+  isStoredNotification,
+  queryKeys,
+  useNotificationReadState,
+} from "@nw/features";
 import type { NovelistWorldNotification } from "@nw/types";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { memo } from "react";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
@@ -91,6 +97,8 @@ const NotificationRowView = ({
   const theme = useAppTheme();
   const router = useRouter();
   const action = useConnectionAction();
+  const { markRead } = useNotificationReadState();
+  const queryClient = useQueryClient();
 
   const { source } = notification;
   const href = notificationHref(notification);
@@ -125,7 +133,19 @@ const NotificationRowView = ({
       accessibilityLabel={`${source?.title ?? "Someone"} ${notification.notificationText}`}
       accessibilityRole={href ? "button" : "text"}
       disabled={!href}
-      onPress={() => href && router.push(href)}
+      onPress={() => {
+        if (!href) return;
+        // Opening a row is reading it. A pending request is cleared by
+        // answering it instead; it has no stored row to mark.
+        if (!notification.isRead && isStoredNotification(notification.type)) {
+          void markRead(notification.id).then(() =>
+            queryClient.invalidateQueries({
+              queryKey: queryKeys.notifications(),
+            }),
+          );
+        }
+        router.push(href);
+      }}
       style={({ pressed }) => [
         styles.row,
         (place === "first" || place === "only") && styles.rowTop,

@@ -1,7 +1,13 @@
 import { patchNotifications } from "@nw/api/endpoints/novelists";
-import { queryKeys, useApi, useNotifications } from "@nw/features";
-import type { NovelistWorldNotification } from "@nw/types";
+import {
+  queryKeys,
+  useApi,
+  useNotificationReadState,
+  useNotifications,
+} from "@nw/features";
+import type { NotificationFeed, NovelistWorldNotification } from "@nw/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { FlatList, StyleSheet, View } from "react-native";
 import { Text } from "@/components/text";
@@ -70,6 +76,15 @@ export const NotificationsScreen = () => {
   // fetched a minute ago refetches it — silently, under the rows.
   const pull = usePullToRefresh(refetch);
 
+  // Opening the tab is seeing the list: the tab's badge clears, and the rows
+  // stay highlighted until each is opened or all are marked read.
+  const { markSeen, refreshCounts } = useNotificationReadState();
+  useFocusEffect(
+    useCallback(() => {
+      void markSeen();
+    }, [markSeen]),
+  );
+
   /** Friend requests answered on this screen; their rows are gone. */
   const [answered, setAnswered] = useState<string[]>([]);
   const onAnswered = useCallback((id: string) => {
@@ -108,14 +123,15 @@ export const NotificationsScreen = () => {
       const previous = queryClient.getQueryData(queryKeys.notifications());
       queryClient.setQueryData<{
         pageParams: unknown[];
-        pages: NovelistWorldNotification[][];
+        pages: NotificationFeed[];
       }>(queryKeys.notifications(), (data) =>
         data
           ? {
               ...data,
-              pages: data.pages.map((page) =>
-                page.map((item) => ({ ...item, isRead: true })),
-              ),
+              pages: data.pages.map((page) => ({
+                ...page,
+                items: page.items.map((item) => ({ ...item, isRead: true })),
+              })),
             }
           : data,
       );
@@ -125,6 +141,7 @@ export const NotificationsScreen = () => {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.notifications(),
       });
+      void refreshCounts();
     },
   });
 

@@ -1,5 +1,7 @@
 import type {
   Friend,
+  NotificationCounts,
+  NotificationFeed,
   Novelist,
   NovelistNote,
   NovelistWorldNotification,
@@ -95,6 +97,49 @@ export const getNotifications = (
     `/rp/portfolio/notification?pageNumber=${pageNumber}&pageSize=${pageSize}`,
     { label: "getNotifications", notFound: "null" },
   );
+
+/**
+ * The feed by cursor: leave `cursor` out for the newest rows, then pass back
+ * each page's `nextCursor` until it is null.
+ */
+export const getNotificationFeed = (
+  api: ApiClient,
+  cursor: string | null,
+  limit: number,
+): Promise<DataType<NotificationFeed>> => {
+  const query = new URLSearchParams({ limit: String(limit) });
+  if (cursor) query.set("cursor", cursor);
+  return api.requestNullable<NotificationFeed>(
+    `/rp/portfolio/notification/feed?${query.toString()}`,
+    { label: "getNotificationFeed", notFound: "null" },
+  );
+};
+
+/** `null` from a server that has no such endpoint yet. */
+export const getNotificationCounts = (
+  api: ApiClient,
+): Promise<DataType<NotificationCounts>> =>
+  api.requestNullable<NotificationCounts>(
+    "/rp/portfolio/notification/unread-count",
+    { label: "getNotificationCounts", notFound: "null" },
+  );
+
+/** The list was opened: clears the badge, leaves the rows highlighted. */
+export const markNotificationsSeen = (api: ApiClient): Promise<Response> =>
+  api.raw("/rp/portfolio/notification/seen", {
+    label: "markNotificationsSeen",
+    method: "POST",
+  });
+
+/** One row was opened. A pending request has no stored row and is not sent here. */
+export const markNotificationRead = (
+  api: ApiClient,
+  notificationId: string,
+): Promise<Response> =>
+  api.raw(`/rp/portfolio/notification/${notificationId}/read`, {
+    label: "markNotificationRead",
+    method: "PATCH",
+  });
 
 export const patchNotifications = async (
   api: ApiClient,

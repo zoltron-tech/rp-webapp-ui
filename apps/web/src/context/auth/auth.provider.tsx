@@ -128,7 +128,9 @@ export const AuthProvider: FC<Props> = ({ children }) => {
             novelistRank: "message" in rankResult ? undefined : rankResult.rank,
           });
         });
-        initialisePushNotifications(); // fire-and-forget — errors caught inside
+        // Silent: keeps an already-granted subscription registered, and
+        // never asks. Fire-and-forget — errors are caught inside.
+        void initialisePushNotifications({ prompt: false });
       }
     } catch (_e) {
       transition("LOGGED_OUT");

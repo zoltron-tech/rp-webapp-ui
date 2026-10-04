@@ -54,9 +54,10 @@ export const usePostLogin = () => {
       // Callers on other pages (e.g. OAuth callback) must navigate explicitly.
       setGlobalState({ authState: "LOGGED_IN" });
 
-      // Defer push init so its internal server action (authenticateAndGetJWT)
-      // does not race with the fetches above or the navigation triggered above.
-      setTimeout(() => initialisePushNotifications(), 0);
+      // Silent: re-registers a browser that already has permission, and never
+      // asks. Asking is `PushPrimer`'s job, from a click — a prompt fired from
+      // here is not a user gesture, which Safari refuses outright.
+      setTimeout(() => initialisePushNotifications({ prompt: false }), 0);
 
       return true;
     },

@@ -8,9 +8,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SongSheet } from "@/components/compose/song-sheet";
 import { ProfileHeaderEditor } from "@/components/edit-profile/profile-header-editor";
@@ -253,15 +253,15 @@ export default function AppearanceScreen() {
 }
 
 const styles = StyleSheet.create({
-  body: { gap: space.lg, padding: space.sm + 4 },
+  body: { gap: space.lg, padding: space.m },
   inlineActionsPadded: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: space.sm,
     padding: space.md,
   },
-  palette: { alignItems: "center", gap: 4, width: "25%" },
-  paletteName: { fontSize: 11, textTransform: "capitalize" },
+  palette: { alignItems: "center", gap: space.xs, width: "25%" },
+  paletteName: { fontSize: fontSize.meta, textTransform: "capitalize" },
   palettes: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -277,5 +277,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 38,
   },
-  swatchRing: { borderRadius: radius.full, borderWidth: 2, padding: 2 },
+  swatchRing: { borderRadius: radius.full, borderWidth: 2, padding: space.xxs },
 });

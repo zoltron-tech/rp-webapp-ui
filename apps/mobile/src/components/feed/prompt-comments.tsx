@@ -6,7 +6,8 @@ import { pluralize, toFormattedDate } from "@nw/utils";
 import { transformComment } from "@nw/utils/image";
 import { useQuery } from "@tanstack/react-query";
 import { memo, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { CollapsibleRichText } from "@/components/collapsible-rich-text";
 import { FeedMedia } from "@/components/feed/feed-media";
@@ -165,7 +166,7 @@ const CommentRowView = ({
       </View>
 
       <CollapsibleRichText
-        fadeColor={theme.material.fill}
+        fadeColor={theme.material.card.backgroundColor}
         html={comment.text}
       />
 
@@ -351,8 +352,8 @@ const styles = StyleSheet.create({
   comment: {
     borderLeftWidth: 2,
     borderRadius: radius.sm,
-    gap: space.sm - 2,
-    paddingLeft: space.sm + 2,
+    gap: space.s,
+    paddingLeft: space.ms,
     paddingRight: space.xs,
     paddingVertical: space.xs,
   },
@@ -360,7 +361,7 @@ const styles = StyleSheet.create({
   footer: {
     alignItems: "center",
     flexDirection: "row",
-    gap: space.sm + 4,
+    gap: space.m,
   },
   header: { alignItems: "center", flexDirection: "row", gap: space.sm },
   list: { gap: space.sm },
@@ -369,9 +370,9 @@ const styles = StyleSheet.create({
   more: {
     alignItems: "center",
     flexDirection: "row",
-    gap: 2,
+    gap: space.xxs,
     minHeight: 32,
-    paddingLeft: space.sm + 4,
+    paddingLeft: space.m,
   },
   moreLabel: { fontSize: fontSize.label, fontWeight: "600" },
   name: { flexShrink: 1, fontSize: fontSize.label, fontWeight: "600" },

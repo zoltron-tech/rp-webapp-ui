@@ -1,11 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { BottomSheet } from "@/components/sheet";
 import { fontSize, radius, space, useAppTheme } from "@/theme";
 
@@ -104,7 +99,7 @@ export const ActionMenu = ({
                 <Ionicons
                   color={colour}
                   name={item.icon ?? "ellipse-outline"}
-                  size={20}
+                  size={22}
                 />
               )}
               <Text style={[styles.label, { color: colour }]}>
@@ -120,14 +115,16 @@ export const ActionMenu = ({
 
 const styles = StyleSheet.create({
   body: { paddingBottom: space.lg, paddingHorizontal: space.sm },
-  label: { flexShrink: 1, fontSize: fontSize.body, fontWeight: "600" },
+  // Web's sheet rows: 16/500, 44 high.
+  label: { flexShrink: 1, fontSize: fontSize.lead, fontWeight: "500" },
   row: {
     alignItems: "center",
-    borderRadius: radius.md,
+    borderRadius: radius.md + 2,
     flexDirection: "row",
     gap: space.md,
-    paddingHorizontal: space.sm,
-    paddingVertical: space.md - 2,
+    minHeight: 44,
+    paddingHorizontal: space.m,
+    paddingVertical: space.ms,
   },
   separator: {
     height: StyleSheet.hairlineWidth,

@@ -1,14 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useSession, useUnreadConversations } from "@nw/features";
 import { Redirect, Tabs, useRouter } from "expo-router";
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Avatar } from "@/components/avatar";
 import { TabBar } from "@/components/tab-bar";
 import { TabBarChromeProvider } from "@/context/tab-bar";
 import { readAccessToken } from "@/lib/session-store";
-import { radius, space, useAppTheme } from "@/theme";
+import { radius, useAppTheme } from "@/theme";
 import { glassHeaderOptions } from "@/theme/header";
 import { tabBarStyle } from "@/theme/tab-bar";
+import { MenuButton } from "@/components/menu-button";
 
 /**
  * The signed-in shell.
@@ -65,18 +66,7 @@ export default function TabsLayout() {
         tabBar={(props) => <TabBar {...props} />}
         screenOptions={{
           headerRight: () => (
-            <Pressable
-              accessibilityLabel="Open menu"
-              accessibilityRole="button"
-              hitSlop={{ bottom: space.md, left: space.sm, right: space.sm, top: space.md }}
-              onPress={() => router.push("/menu")}
-              style={({ pressed }) => ({
-                opacity: pressed ? 0.6 : 1,
-                paddingHorizontal: space.md,
-              })}
-            >
-              <Ionicons color={theme.text} name="menu" size={26} />
-            </Pressable>
+            <MenuButton />
           ),
           ...glassHeaderOptions(theme),
           sceneStyle: { backgroundColor: theme.background },

@@ -46,7 +46,6 @@ const EditProfileStack = () => {
       screenOptions={{
         contentStyle: { backgroundColor: theme.background },
         ...glassHeaderOptions(theme),
-        headerTitleStyle: { fontWeight: "700" },
       }}
     >
       <Stack.Screen name="index" options={{ title: "Edit profile" }} />

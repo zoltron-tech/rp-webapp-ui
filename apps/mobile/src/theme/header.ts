@@ -1,6 +1,6 @@
 import type { NativeStackNavigationOptions } from "@react-navigation/native-stack";
 import { Platform } from "react-native";
-import type { AppTheme } from "@/theme";
+import { type AppTheme, font } from "@/theme";
 
 /**
  * Stack headers in the glass language. Every stack layout spreads this into its
@@ -29,12 +29,19 @@ import type { AppTheme } from "@/theme";
  */
 export const IOS_GLASS_HEADERS = false;
 
+/**
+ * The title in the interface face. A native header is not `components/text`,
+ * so it is given the bold file by name; `fontWeight` on top would bold it twice.
+ */
+const TITLE_STYLE = { fontFamily: font.bold } as const;
+
 type GlassHeaderOptions = Pick<
   NativeStackNavigationOptions,
   | "headerBlurEffect"
   | "headerShadowVisible"
   | "headerStyle"
   | "headerTintColor"
+  | "headerTitleStyle"
   | "headerTransparent"
 >;
 
@@ -48,6 +55,7 @@ export const glassHeaderOptions = (theme: AppTheme): GlassHeaderOptions => {
       headerShadowVisible: false,
       headerStyle: { backgroundColor: "transparent" },
       headerTintColor: theme.text,
+      headerTitleStyle: TITLE_STYLE,
       headerTransparent: true,
     };
   }
@@ -56,5 +64,6 @@ export const glassHeaderOptions = (theme: AppTheme): GlassHeaderOptions => {
     headerShadowVisible: false,
     headerStyle: { backgroundColor: theme.glass.opaque },
     headerTintColor: theme.text,
+    headerTitleStyle: TITLE_STYLE,
   };
 };

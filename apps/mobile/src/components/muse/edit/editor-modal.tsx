@@ -1,16 +1,16 @@
-import { Ionicons } from "@expo/vector-icons";
 import type { ReactNode } from "react";
 import {
   ActivityIndicator,
   Modal,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useKeyboardOffset } from "@/hooks/use-keyboard-height";
 import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { IconButton } from "@/components/icon-button";
 
 /**
  * A full-screen editor, for the two muse forms too long for a tray: a story
@@ -83,24 +83,15 @@ export const EditorModal = ({
               { borderBottomColor: theme.material.edge },
             ]}
           >
-            <Pressable
+            <IconButton
               accessibilityLabel="Close"
-              accessibilityRole="button"
               disabled={busy}
               hitSlop={space.sm}
+              icon="close"
               onPress={onClose}
-              style={({ pressed }) => [
-                styles.iconButton,
-                {
-                  backgroundColor: pressed
-                    ? theme.material.fillPressed
-                    : theme.material.fill,
-                  borderColor: theme.material.edge,
-                },
-              ]}
-            >
-              <Ionicons color={theme.text} name="close" size={20} />
-            </Pressable>
+              size={36}
+              tone="surface"
+            />
 
             <Text
               numberOfLines={1}
@@ -120,18 +111,31 @@ export const EditorModal = ({
                 {
                   backgroundColor:
                     !canConfirm || busy
-                      ? theme.accent.surface
+                      ? theme.accent.fillDisabled
                       : pressed
-                        ? theme.accent.solidHover
-                        : theme.accent.solid,
-                  opacity: !canConfirm && !busy ? 0.6 : 1,
+                        ? theme.accent.fillPressed
+                        : theme.accent.fill,
                 },
               ]}
             >
               {busy ? (
-                <ActivityIndicator color="#ffffff" size="small" />
+                <ActivityIndicator
+                  color={theme.accent.onFillDisabled}
+                  size="small"
+                />
               ) : (
-                <Text style={styles.confirmLabel}>{confirmLabel}</Text>
+                <Text
+                  style={[
+                    styles.confirmLabel,
+                    {
+                      color: canConfirm
+                        ? theme.accent.onFill
+                        : theme.accent.onFillDisabled,
+                    },
+                  ]}
+                >
+                  {confirmLabel}
+                </Text>
               )}
             </Pressable>
           </View>
@@ -169,14 +173,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.md,
     paddingTop: space.sm,
   },
-  iconButton: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    height: 36,
-    justifyContent: "center",
-    width: 36,
-  },
   root: { flex: 1 },
   shell: { flex: 1 },
   title: { flex: 1, fontSize: fontSize.title, fontWeight: "700" },
@@ -184,8 +180,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
-    gap: space.sm + 2,
+    gap: space.ms,
     paddingHorizontal: space.md,
-    paddingVertical: space.sm + 2,
+    paddingVertical: space.ms,
   },
 });

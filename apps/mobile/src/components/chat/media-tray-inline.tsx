@@ -14,7 +14,7 @@ import {
   type TrayTab,
 } from "@/components/chat/media-tray-header";
 import { useKeyboardOffset } from "@/hooks/use-keyboard-height";
-import { radius, useAppTheme } from "@/theme";
+import { radius, space, useAppTheme } from "@/theme";
 
 /**
  * The media drawer as a row in a column: GIFs, stickers and clips.
@@ -186,7 +186,7 @@ export const MediaTrayInline = ({
 };
 
 const styles = StyleSheet.create({
-  body: { flex: 1, overflow: "hidden", paddingTop: 8 },
+  body: { flex: 1, overflow: "hidden", paddingTop: space.sm },
   tray: {
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,

@@ -12,13 +12,12 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
-  type TextInput,
   View,
 } from "react-native";
+import { Text, type TextInput } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Avatar } from "@/components/avatar";
-import { NameInput } from "@/components/edit-muse/shared";
+import { NameInput, PRIVACY_CHOICES } from "@/components/edit-muse/shared";
 import { PRIVACY_ICON, PRIVACY_LABEL } from "@/components/feed/privacy";
 import { FandomSheet } from "@/components/muse/edit/fandom-sheet";
 import { ImageCropEditor } from "@/components/muse/edit/image-crop-editor";
@@ -34,7 +33,7 @@ import type { CropState } from "@/hooks/use-muse-edit";
 import { FANDOMLESS, useCreateMuse } from "@/hooks/use-muse-form";
 import { asColor } from "@/lib/color";
 import { museName } from "@/lib/muse-appearance";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * Web's `CreateInitialSection`: the first step of a new character, or of a
@@ -55,7 +54,6 @@ import { fontSize, radius, space, useAppTheme } from "@/theme";
  * Skip.
  */
 
-const PRIVACY_CHOICES: PrivacyLevel[] = ["PUBLIC", "FRIENDS", "ONLY_ME"];
 
 export default function NewMuseScreen() {
   const theme = useAppTheme();
@@ -380,8 +378,8 @@ export default function NewMuseScreen() {
             styles.create,
             {
               backgroundColor: pressed
-                ? theme.accent.solidHover
-                : theme.accent.solid,
+                ? theme.accent.fillPressed
+                : theme.accent.fill,
               opacity: canCreate || creating ? 1 : 0.5,
             },
           ]}
@@ -448,10 +446,10 @@ const styles = StyleSheet.create({
   },
   avatarHint: { fontSize: fontSize.caption, textAlign: "center" },
   avatarPick: { alignSelf: "center" },
-  body: { gap: space.lg, padding: space.sm + 4 },
+  body: { gap: space.lg, padding: space.m },
   card: {
     borderRadius: radius.md + 4,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     gap: space.sm,
     paddingVertical: space.lg,
   },
@@ -473,15 +471,15 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 0,
   },
-  names: { gap: space.sm + 4, paddingHorizontal: space.md, paddingTop: space.sm },
+  names: { gap: space.m, paddingHorizontal: space.md, paddingTop: space.sm },
   root: { flex: 1 },
   usage: { fontSize: fontSize.caption, paddingHorizontal: space.xs },
   verse: {
     alignItems: "center",
     borderRadius: radius.md + 4,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: space.sm + 4,
+    gap: space.m,
     padding: space.md,
   },
   verseLabel: {
@@ -491,5 +489,5 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   verseName: { fontSize: fontSize.body, fontWeight: "700" },
-  verseText: { flex: 1, gap: 2, minWidth: 0 },
+  verseText: { flex: 1, gap: space.xxs, minWidth: 0 },
 });

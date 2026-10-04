@@ -1,11 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { Activity } from "@nw/types/activity";
-import { toFormattedDateFromUnix } from "@nw/utils";
+import { toFormattedDateFromUnix, wsrvImage } from "@nw/utils";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import type { ComponentProps } from "react";
 import { memo } from "react";
-import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { FeedClip, FeedImage } from "@/components/feed/feed-media";
 import { HeartButton } from "@/components/heart-button";
@@ -14,7 +15,7 @@ import { sourceLinkLabel, useOpenSource } from "@/hooks/use-open-source";
 import type { ReactionTarget } from "@/hooks/use-toggle-reaction";
 import { useToggleReaction } from "@/hooks/use-toggle-reaction";
 import { env } from "@/lib/env";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * One entry in a novelist's activity feed.
@@ -223,10 +224,7 @@ const ActivityBoxView = ({
     <View
       style={[
         styles.card,
-        {
-          backgroundColor: theme.material.fill,
-          borderColor: theme.material.edge,
-        },
+        theme.material.card,
       ]}
     >
       {/* ── Who, and what they did ─────────────────────────────────────── */}
@@ -250,12 +248,15 @@ const ActivityBoxView = ({
           }
           style={({ pressed }) => [styles.who, { opacity: pressed ? 0.6 : 1 }]}
         >
-          <Avatar
-            name={activity.source?.title}
-            size={AVATAR}
-            image={activity.source?.avatar}
-            uri={activity.source?.avatar?.src ?? activity.source?.image}
-          />
+          {/* Web's double ring: the card's own colour, then the accent. */}
+          <View style={[styles.ring, { borderColor: theme.accent.surfaceHover }]}>
+            <Avatar
+              name={activity.source?.title}
+              size={AVATAR}
+              image={activity.source?.avatar}
+              uri={activity.source?.avatar?.src ?? activity.source?.image}
+            />
+          </View>
 
           <View style={styles.identity}>
             <Text
@@ -281,7 +282,9 @@ const ActivityBoxView = ({
                 {activity.activityText}
               </Text>
               {when ? (
-                <>
+                // One unit, so a wrap takes the dot down with the date and
+                // never leaves it hanging off the end of the verb.
+                <View style={styles.metaWhen}>
                   <Text style={[styles.meta, { color: theme.textGray }]}>
                     ·
                   </Text>
@@ -291,14 +294,20 @@ const ActivityBoxView = ({
                   >
                     {when}
                   </Text>
-                </>
+                </View>
               ) : null}
             </View>
           </View>
         </Pressable>
 
-        {/* What kind of thing it was about, where a post keeps its menu. */}
+        {/*
+          What kind of thing it was about, where a post keeps its menu — as a
+          glyph. The sentence under the name already says the word ("updated a
+          character"); spelling it out again beside it took the width that
+          sentence needed, and pushed the date onto a second line.
+        */}
         <View
+          accessibilityLabel={kind.label}
           style={[
             styles.badge,
             {
@@ -310,11 +319,8 @@ const ActivityBoxView = ({
           <Ionicons
             color={theme.accent.textStrong}
             name={kind.icon}
-            size={11}
+            size={15}
           />
-          <Text style={[styles.badgeLabel, { color: theme.accent.textStrong }]}>
-            {kind.label}
-          </Text>
         </View>
       </View>
 
@@ -479,7 +485,9 @@ const ActivityBody = ({
             contentFit="cover"
             pointerEvents="none"
             recyclingKey={`${url}#backdrop`}
-            source={{ uri: url }}
+            // A small copy: it is only ever seen blurred, and blurring the
+            // original meant decoding it a second time at full size.
+            source={{ uri: wsrvImage(url, BACKDROP) }}
             style={StyleSheet.absoluteFill}
             transition={0}
           />
@@ -488,7 +496,7 @@ const ActivityBody = ({
             cachePolicy="memory-disk"
             contentFit="contain"
             recyclingKey={url}
-            source={{ uri: url }}
+            source={{ uri: wsrvImage(url, STAGE) }}
             style={styles.targetImage}
             transition={0}
           />
@@ -526,7 +534,12 @@ const ActivityBody = ({
 export const ActivityBox = memo(ActivityBoxView);
 
 /** The prompt card's own, so the two cards' faces line up in one feed. */
-const AVATAR = 40;
+/** Web's 36, less the ring drawn round it here. */
+const AVATAR = 36;
+
+/** The stage picture, bounded to the screen; and its blurred backdrop. */
+const STAGE = { fit: "inside", w: 1080 } as const;
+const BACKDROP = { fit: "inside", q: 60, w: 240 } as const;
 
 /** Tall enough for a portrait to read, short enough to keep the feed moving. */
 const STAGE_HEIGHT = 200;
@@ -541,36 +554,44 @@ const styles = StyleSheet.create({
   },
   badge: {
     alignItems: "center",
-    alignSelf: "flex-start",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    gap: 3,
-    marginTop: 2,
-    paddingHorizontal: space.xs + 2,
-    paddingVertical: 3,
+    borderWidth: border.edge,
+    height: 30,
+    justifyContent: "center",
+    width: 30,
   },
-  badgeLabel: { fontSize: 10, fontWeight: "700" },
   caption: { fontSize: fontSize.body, lineHeight: 21 },
   /* The prompt card's frame, so the two read as one kind of thing. */
   card: {
-    borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
-    gap: space.sm + 2,
+    borderRadius: radius.card,
+    borderWidth: border.edge,
+    gap: space.ms,
+    paddingBottom: space.m,
     paddingHorizontal: space.md - 2,
-    paddingVertical: space.sm + 4,
+    paddingTop: 18,
   },
-  header: { alignItems: "center", flexDirection: "row", gap: space.sm + 2 },
-  identity: { flex: 1, gap: 2, minWidth: 0 },
+  header: { alignItems: "center", flexDirection: "row", gap: space.ms },
+  identity: { flex: 1, gap: space.xxs, minWidth: 0 },
   mediaGroup: { gap: space.sm },
-  meta: { fontSize: fontSize.caption },
-  metaRow: { alignItems: "center", flexDirection: "row", gap: 5 },
+  // Web's meta size. Montserrat is wider than the system face this row was
+  // measured in, and at 12 "updated a character" no longer fit beside a date.
+  meta: { fontSize: fontSize.meta },
+  // Wraps: when the verb and the date do not fit beside the kind badge, the
+  // date drops to a second line rather than the verb losing its last word.
+  metaRow: {
+    alignItems: "center",
+    columnGap: 5,
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
   metaVerb: { flexShrink: 1 },
-  name: { fontSize: fontSize.body, fontWeight: "600" },
+  metaWhen: { alignItems: "center", columnGap: 5, flexDirection: "row" },
+  name: { fontSize: fontSize.body, fontWeight: "600", letterSpacing: -0.14 },
+  ring: { borderRadius: radius.full, borderWidth: 1.5, padding: space.xxs },
   placeholder: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     gap: space.xs,
     height: 120,
     justifyContent: "center",
@@ -581,20 +602,20 @@ const styles = StyleSheet.create({
   quote: {
     borderLeftWidth: 2,
     borderRadius: radius.sm,
-    paddingHorizontal: space.sm + 2,
+    paddingHorizontal: space.ms,
     paddingVertical: space.sm,
   },
   target: {
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     overflow: "hidden",
   },
   targetCaption: {
     alignItems: "center",
     flexDirection: "row",
-    gap: space.xs + 2,
-    paddingHorizontal: space.sm + 4,
-    paddingVertical: space.sm + 2,
+    gap: space.s,
+    paddingHorizontal: space.m,
+    paddingVertical: space.ms,
   },
   targetImage: { height: "100%", width: "100%" },
   targetStage: {
@@ -615,7 +636,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flex: 1,
     flexDirection: "row",
-    gap: space.sm + 2,
+    gap: space.ms,
     minWidth: 0,
   },
 });

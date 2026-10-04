@@ -3,14 +3,13 @@ import { memo, type ReactNode, useMemo } from "react";
 import {
   type NativeSyntheticEvent,
   StyleSheet,
-  Text,
-  TextInput,
   type TextInputKeyPressEventData,
   type TextInputSelectionChangeEventData,
   type TextLayoutLine,
   type TextStyle,
   View,
 } from "react-native";
+import { Text, TextInput } from "@/components/text";
 import { nativeFace } from "@/lib/editor-fonts";
 import {
   type AppTheme,
@@ -68,7 +67,7 @@ import {
 const WEB_BASE_PX = 16;
 
 export const toNativeSize = (px: number | undefined): number =>
-  px ? Math.round((px / WEB_BASE_PX) * fontSize.body) : fontSize.body;
+  px ? Math.round((px / WEB_BASE_PX) * fontSize.prose) : fontSize.prose;
 
 /** Web's `line-height: 1.6` on saved content; a touch tighter for headings. */
 const lineHeightFor = (size: number): number =>

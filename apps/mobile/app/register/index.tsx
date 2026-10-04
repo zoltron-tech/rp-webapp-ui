@@ -1,7 +1,8 @@
 import { verifyEmailPattern } from "@nw/utils";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import {
   AuthScreen,
   SubmitButton,

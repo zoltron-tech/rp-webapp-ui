@@ -13,7 +13,7 @@ export default function MyPostsScreen() {
     return (
       <ListPageSkeleton
         count={3}
-        gap={space.sm + 2}
+        gap={space.ms}
         render={() => <PromptCardSkeleton />}
       />
     );

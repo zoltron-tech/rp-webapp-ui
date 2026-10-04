@@ -96,5 +96,5 @@ export default function RegisterPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  form: { gap: space.sm + 4 },
+  form: { gap: space.m },
 });

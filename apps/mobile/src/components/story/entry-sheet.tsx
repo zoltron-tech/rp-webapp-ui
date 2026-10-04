@@ -3,7 +3,8 @@ import type { CodexEntry, StoryBoardEvent } from "@nw/types";
 import { wsrvImage } from "@nw/utils";
 import { Image } from "expo-image";
 import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BottomSheet } from "@/components/sheet";
 import { ChapterChips } from "@/components/story/chapter-chips";
@@ -135,7 +136,7 @@ const styles = StyleSheet.create({
   category: { fontSize: fontSize.caption, textTransform: "uppercase" },
   glyph: { alignItems: "center", justifyContent: "center" },
   head: { alignItems: "center", flexDirection: "row", gap: space.md },
-  headText: { flex: 1, gap: 2 },
+  headText: { flex: 1, gap: space.xxs },
   hint: { fontSize: fontSize.body },
   name: { fontSize: fontSize.title, fontWeight: "700" },
   thumb: { borderRadius: radius.md },

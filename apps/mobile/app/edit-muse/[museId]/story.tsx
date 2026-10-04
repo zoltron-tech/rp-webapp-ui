@@ -12,9 +12,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { type ActionItem, ActionMenu } from "@/components/action-menu";
 import { MuseGate, useOwnedMuse } from "@/components/edit-muse/shared";
@@ -28,7 +28,7 @@ import {
 } from "@/components/settings";
 import { useMuseAboutSections } from "@/hooks/use-muse";
 import { useMuseEdit } from "@/hooks/use-muse-edit";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, type, useAppTheme } from "@/theme";
 
 /**
  * Web's Story page (`/rp/profile/muses/edit/[id]/about`): the favourite quote,
@@ -292,10 +292,10 @@ const Story = ({ muse }: { muse: Muse }) => {
 
 const styles = StyleSheet.create({
   actions: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
-  body: { gap: space.md, padding: space.sm + 4 },
+  body: { gap: space.md, padding: space.m },
   card: {
     borderRadius: radius.md + 4,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     gap: space.sm,
     overflow: "hidden",
     padding: space.md,
@@ -317,12 +317,7 @@ const styles = StyleSheet.create({
   },
   emptyText: { fontSize: fontSize.label, lineHeight: 20, textAlign: "center" },
   emptyTitle: { fontSize: fontSize.body, fontWeight: "700" },
-  groupTitle: {
-    fontSize: fontSize.caption,
-    fontWeight: "700",
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
-  },
+  groupTitle: type.eyebrow,
   ordinal: {
     fontSize: fontSize.caption,
     fontWeight: "800",

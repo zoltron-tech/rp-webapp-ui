@@ -6,12 +6,14 @@ import {
   isDirectImageUrl,
 } from "@nw/chat";
 import type { Conversation } from "@nw/types";
-import { toInboxTime } from "@nw/utils";
+import { toInboxTime, wsrvImage } from "@nw/utils";
 import { memo } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image } from "expo-image";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { SwipeableRow } from "@/components/swipeable-row";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * One conversation in the inbox.
@@ -38,7 +40,12 @@ import { fontSize, radius, space, useAppTheme } from "@/theme";
  */
 
 /** A face-sized avatar; the row is built to that height. */
-const AVATAR = 52;
+/** Web's 46, on the even side. */
+const AVATAR = 48;
+/** The preview picture, at three device pixels per point. */
+const THUMB_IMAGE = { fit: "cover", h: 132, w: 132 } as const;
+/** The unread rule down a row's leading edge. */
+const RAIL = 3;
 
 /** The picture at the trailing edge, when the last message had one. */
 const THUMB = 40;
@@ -171,6 +178,9 @@ const ConversationRowComponent = ({
                 ? theme.accent.tint
                 : theme.background,
             borderBottomColor: theme.material.edge,
+            // Web's unread row: the wash, and a 3px rule down its leading
+            // edge. Reserved on every row so the faces share one left edge.
+            borderLeftColor: unread ? theme.accent.surfaceHover : "transparent",
           },
         ]}
       >
@@ -279,8 +289,13 @@ const ConversationRowComponent = ({
 
         {thumb ? (
           <Image
-            source={{ uri: thumb }}
+            cachePolicy="memory-disk"
+            contentFit="cover"
+            recyclingKey={thumb}
+            // The conversation's own thumbnail size, as the thread draws it.
+            source={{ uri: wsrvImage(thumb, THUMB_IMAGE) }}
             style={[styles.thumb, { borderColor: theme.material.edge }]}
+            transition={0}
           />
         ) : null}
       </Pressable>
@@ -295,30 +310,32 @@ const styles = StyleSheet.create({
   groupAvatar: {
     alignItems: "center",
     borderRadius: AVATAR / 2,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     height: AVATAR,
     justifyContent: "center",
     width: AVATAR,
   },
   name: { flexShrink: 1, fontSize: fontSize.body },
-  preview: { flex: 1, fontSize: fontSize.label },
+  preview: { flex: 1, fontSize: fontSize.caption },
   previewRow: { alignItems: "center", flexDirection: "row", gap: space.xs },
   row: {
     alignItems: "center",
     borderBottomWidth: StyleSheet.hairlineWidth,
+    borderLeftWidth: RAIL,
     flexDirection: "row",
-    gap: space.sm,
-    paddingHorizontal: space.md,
-    paddingVertical: space.sm + 2,
+    gap: space.m,
+    paddingLeft: space.md - RAIL,
+    paddingRight: space.md,
+    paddingVertical: space.ms,
   },
   thumb: {
     backgroundColor: "transparent",
     borderRadius: radius.sm,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     height: THUMB,
     width: THUMB,
   },
-  time: { fontSize: fontSize.caption },
+  time: { fontSize: fontSize.meta },
   titleRow: { alignItems: "center", flexDirection: "row", gap: space.sm },
-  unreadDot: { borderRadius: 4, height: 8, width: 8 },
+  unreadDot: { borderRadius: radius.xs, height: 8, width: 8 },
 });

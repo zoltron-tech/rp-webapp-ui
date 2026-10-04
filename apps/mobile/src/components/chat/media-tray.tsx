@@ -15,7 +15,7 @@ import {
   type TrayTab,
 } from "@/components/chat/media-tray-header";
 import { lastKeyboardHeight } from "@/hooks/use-keyboard-height";
-import { radius, useAppTheme } from "@/theme";
+import { radius, space, useAppTheme } from "@/theme";
 
 /**
  * The media drawer under the conversation's composer: GIFs, stickers, clips.
@@ -320,7 +320,7 @@ export const MediaTray = ({
 };
 
 const styles = StyleSheet.create({
-  body: { flex: 1, overflow: "hidden", paddingTop: 8 },
+  body: { flex: 1, overflow: "hidden", paddingTop: space.sm },
   /** The navigation-bar strip under the tray, in the tray's colour. */
   inset: { bottom: 0, left: 0, position: "absolute", right: 0 },
   tray: {

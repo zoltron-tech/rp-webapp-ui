@@ -1,17 +1,19 @@
-import { SCRIM_ALPHA } from "@nw/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { createVideoPlayer, type VideoThumbnail } from "expo-video";
-import { memo, useEffect, useState } from "react";
-import {
-  InteractionManager,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { memo, useEffect, useMemo, useState } from "react";
+import { InteractionManager, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { ClipPlayer } from "@/components/chat/clip-player";
-import { radius, space, useAppTheme } from "@/theme";
+import {
+  border,
+  fontSize,
+  MEDIA_CHIP,
+  radius,
+  space,
+  useAppTheme,
+} from "@/theme";
+import { wsrvImage } from "@nw/utils";
 
 /**
  * A post's attachment — one picture, or one clip — as a feed draws it.
@@ -140,11 +142,27 @@ const DEFAULT_RATIO = 4 / 3;
 const clampRatio = (ratio: number) =>
   Math.max(MIN_RATIO, Math.min(MAX_RATIO, ratio));
 
+/** Three device pixels per point across a 360pt card. */
+const FEED_IMAGE_WIDTH = 1080;
+
 const isVideoUrl = (url: string) => url.toLowerCase().endsWith("mp4");
 
 const FeedImageView = ({ src }: { src: string }) => {
   const theme = useAppTheme();
   const [ratio, setRatio] = useState(() => RATIOS.get(src) ?? DEFAULT_RATIO);
+  // Bounded to what a phone can show, shape kept, never enlarged. The original
+  // was a multi-megapixel decode per card. `src` stays the key for the ratio
+  // cache and for recycling; only what is fetched changes. A GIF keeps its
+  // frames; a URL that is not ours passes through untouched.
+  const uri = useMemo(
+    () =>
+      wsrvImage(src, {
+        animated: src.toLowerCase().endsWith(".gif"),
+        fit: "inside",
+        w: FEED_IMAGE_WIDTH,
+      }),
+    [src],
+  );
 
   return (
     <Image
@@ -157,7 +175,7 @@ const FeedImageView = ({ src }: { src: string }) => {
         if (next !== ratio) setRatio(next);
       }}
       recyclingKey={src}
-      source={{ uri: src }}
+      source={{ uri }}
       style={[
         styles.image,
         { aspectRatio: ratio, backgroundColor: theme.glass.field },
@@ -246,7 +264,6 @@ export const FeedMedia = ({ url }: { url: string }) =>
   );
 
 /** Chips straight on cover art or video: web's `MEDIA_CHIP`, no blur. */
-const MEDIA_CHIP = `rgba(0,0,0,${SCRIM_ALPHA.mediaChip})`;
 
 const styles = StyleSheet.create({
   clip: { borderRadius: radius.md, overflow: "hidden", width: "100%" },
@@ -255,7 +272,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: MEDIA_CHIP,
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     height: 56,
     justifyContent: "center",
     // The glyph is not symmetric; nudged so it reads as centred.
@@ -270,7 +287,7 @@ const styles = StyleSheet.create({
   },
   posterLabel: {
     color: "rgba(255,255,255,0.8)",
-    fontSize: 12,
+    fontSize: fontSize.caption,
     fontWeight: "600",
     letterSpacing: 0.4,
   },

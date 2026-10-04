@@ -1,4 +1,3 @@
-import { SCRIM_ALPHA } from "@nw/theme";
 import { Ionicons } from "@expo/vector-icons";
 import {
   isMediaOnlyMessage,
@@ -13,9 +12,9 @@ import {
   PanResponder,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import {
   AttachmentMosaic,
@@ -33,7 +32,14 @@ import {
 } from "@/components/chat/reactions";
 import { RepliedIceBreaker } from "@/components/chat/replied-ice-breaker";
 import { RichText } from "@/components/rich-text";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import {
+  border,
+  fontSize,
+  MEDIA_CHIP,
+  radius,
+  space,
+  useAppTheme,
+} from "@/theme";
 
 /**
  * One message.
@@ -583,7 +589,7 @@ const MessageBubbleComponent = ({
                     : mine
                       ? theme.accent.surfaceHover
                       : theme.material.edge,
-                  borderWidth: StyleSheet.hairlineWidth,
+                  borderWidth: border.edge,
                   ...cornerStyle(mine, position),
                 },
             // An album fills the bubble to a thin frame; the words around it
@@ -813,7 +819,6 @@ export const DaySeparator = ({ label }: { label: string }) => {
 };
 
 /** Chips straight on media: web's `MEDIA_CHIP`, no blur. */
-const MEDIA_CHIP = `rgba(0,0,0,${SCRIM_ALPHA.mediaChip})`;
 
 const styles = StyleSheet.create({
   // Reserved even when the avatar is hidden, so a run of messages from one
@@ -852,7 +857,7 @@ const styles = StyleSheet.create({
   bubbleWrap: { maxWidth: "80%" },
   // The words under an album: the bubble's own padding, less the frame.
   caption: {
-    paddingBottom: 2,
+    paddingBottom: space.xxs,
     paddingHorizontal: space.md - MOSAIC_FRAME,
   },
   dayLabel: { fontSize: fontSize.caption, fontWeight: "700" },
@@ -860,7 +865,7 @@ const styles = StyleSheet.create({
   // behind it, and a hairline across a busy background reads as an artefact.
   dayPill: {
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     paddingHorizontal: space.md,
     paddingVertical: 3,
   },
@@ -894,7 +899,7 @@ const styles = StyleSheet.create({
     backgroundColor: MEDIA_CHIP,
     borderRadius: radius.full,
     bottom: space.xs,
-    paddingHorizontal: space.xs + 2,
+    paddingHorizontal: space.s,
     paddingVertical: 1,
     position: "absolute",
     right: space.xs,
@@ -903,7 +908,7 @@ const styles = StyleSheet.create({
   persona: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: 5,
     marginBottom: 3,
@@ -922,7 +927,7 @@ const styles = StyleSheet.create({
    */
   personaName: {
     flexShrink: 1,
-    fontSize: 11,
+    fontSize: fontSize.meta,
     fontStyle: "italic",
     fontWeight: "600",
   },
@@ -942,5 +947,5 @@ const styles = StyleSheet.create({
   rowMine: { justifyContent: "flex-end" },
   rowReacted: { marginBottom: REACTION_OVERHANG + 4 },
   sender: { fontSize: fontSize.caption, fontWeight: "700" },
-  time: { fontSize: 10 },
+  time: { fontSize: fontSize.meta },
 });

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { type LayoutChangeEvent, StyleSheet, View } from "react-native";
 import { NAV_TAB_WIDTH } from "@/components/muse/nav-tabs";
-import { space } from "@/theme";
+import { radius, space } from "@/theme";
 
 /**
  * The 9:16 frame every section is drawn in — web's `CardExpandedWrapper`.
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
    * the frame rather than as depth under it.
    */
   frame: {
-    borderRadius: 8,
+    borderRadius: radius.md,
     overflow: "hidden",
   },
   stage: {

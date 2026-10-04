@@ -9,16 +9,17 @@ import {
   FlatList,
   Pressable,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from "react-native";
+import { Text, TextInput } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { SkeletonRows } from "@/components/list-skeletons";
 import { BottomSheet } from "@/components/sheet";
 import { FriendPickRowSkeleton } from "@/components/sheet-skeletons";
 import { useCreateGroup } from "@/hooks/use-inbox-actions";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
+import { IconButton } from "@/components/icon-button";
+import { SearchField } from "@/components/search-field";
 
 /**
  * Creating a group.
@@ -128,28 +129,15 @@ export const CreateGroupSheet = ({
       // costs a row of the list on a 667pt screen, and `AGENTS.md` calls for
       // the compact header instead.
       headerAction={
-        <Pressable
+        <IconButton
           accessibilityLabel="Create group"
-          accessibilityRole="button"
+          busy={createGroup.isPending}
           disabled={!canCreate}
           hitSlop={space.sm}
+          icon="checkmark"
           onPress={() => void submit()}
-          style={({ pressed }) => [
-            styles.confirm,
-            {
-              backgroundColor: canCreate
-                ? theme.accent.solid
-                : theme.accent.surfaceActive,
-              opacity: pressed && canCreate ? 0.8 : 1,
-            },
-          ]}
-        >
-          {createGroup.isPending ? (
-            <ActivityIndicator color="#ffffff" size="small" />
-          ) : (
-            <Ionicons color="#ffffff" name="checkmark" size={18} />
-          )}
-        </Pressable>
+          tone="primary"
+        />
       }
       maxHeightRatio={0.88}
       onClose={close}
@@ -239,25 +227,11 @@ export const CreateGroupSheet = ({
           />
         ) : null}
 
-        <View
-          style={[
-            styles.search,
-            {
-              backgroundColor: theme.glass.field,
-              borderColor: theme.material.edgeTranslucent,
-            },
-          ]}
-        >
-          <Ionicons color={theme.textGray} name="search" size={16} />
-          <TextInput
-            autoCorrect={false}
-            onChangeText={setSearch}
-            placeholder="Search friends"
-            placeholderTextColor={theme.textGray}
-            style={[styles.searchInput, { color: theme.text }]}
-            value={search}
-          />
-        </View>
+        <SearchField
+          onChangeText={setSearch}
+          placeholder="Search friends"
+          value={search}
+        />
 
         <FlatList
           contentContainerStyle={styles.list}
@@ -356,7 +330,7 @@ const styles = StyleSheet.create({
   chip: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.xs,
     paddingLeft: 3,
@@ -366,13 +340,6 @@ const styles = StyleSheet.create({
   chipLabel: { fontSize: fontSize.caption, fontWeight: "700", maxWidth: 90 },
   chips: { alignItems: "center", gap: space.xs },
   chipsBox: { flexGrow: 0 },
-  confirm: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    height: 32,
-    justifyContent: "center",
-    width: 32,
-  },
   empty: {
     fontSize: fontSize.caption,
     padding: space.lg,
@@ -380,7 +347,7 @@ const styles = StyleSheet.create({
   },
   field: {
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     fontSize: fontSize.body,
     paddingHorizontal: space.md,
     paddingVertical: space.sm,
@@ -388,7 +355,7 @@ const styles = StyleSheet.create({
   friend: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.sm,
     padding: space.sm,
@@ -398,20 +365,11 @@ const styles = StyleSheet.create({
   friendText: { flex: 1, gap: 1, minWidth: 0 },
   list: { gap: space.xs, paddingBottom: space.md },
   listBox: { flex: 1 },
-  search: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    gap: space.sm,
-    paddingHorizontal: space.md,
-  },
-  searchInput: { flex: 1, fontSize: fontSize.body, paddingVertical: space.sm },
   status: { padding: space.md },
   warning: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.sm,
     padding: space.sm,

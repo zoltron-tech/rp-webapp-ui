@@ -165,7 +165,7 @@ export const IceBreakerTrail = ({
 const styles = StyleSheet.create({
   dot: { borderRadius: radius.full, borderWidth: StyleSheet.hairlineWidth },
   // Offset from the smaller one so the pair drifts rather than stacking.
-  dotBig: { height: 9, marginLeft: 4, width: 9 },
+  dotBig: { height: 9, marginLeft: space.xs, width: 9 },
   dotSmall: { height: 5, width: 5 },
-  trail: { alignItems: "flex-start", gap: 3, paddingLeft: space.sm + 2 },
+  trail: { alignItems: "flex-start", gap: 3, paddingLeft: space.ms },
 });

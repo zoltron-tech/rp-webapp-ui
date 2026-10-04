@@ -6,9 +6,9 @@ import {
   Alert,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   RichTextEditor,
@@ -130,18 +130,32 @@ export default function AboutScreen() {
                 {
                   backgroundColor:
                     !dirty || busy
-                      ? theme.accent.surface
+                      ? theme.accent.fillDisabled
                       : pressed
-                        ? theme.accent.solidHover
-                        : theme.accent.solid,
-                  opacity: !dirty && !busy ? 0.6 : 1,
+                        ? theme.accent.fillPressed
+                        : theme.accent.fill,
                 },
               ]}
             >
               {saving ? (
-                <ActivityIndicator color="#ffffff" size="small" />
+                <ActivityIndicator
+                  color={theme.accent.onFillDisabled}
+                  size="small"
+                />
               ) : (
-                <Text style={styles.saveLabel}>Save</Text>
+                <Text
+                  style={[
+                    styles.saveLabel,
+                    {
+                      color:
+                        !dirty || busy
+                          ? theme.accent.onFillDisabled
+                          : theme.accent.onFill,
+                    },
+                  ]}
+                >
+                  Save
+                </Text>
               )}
             </Pressable>
           ),
@@ -184,7 +198,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     minWidth: 68,
     paddingHorizontal: space.md,
-    paddingVertical: 6,
+    paddingVertical: space.s,
   },
   saveLabel: { color: "#ffffff", fontSize: fontSize.label, fontWeight: "700" },
   toolbar: {

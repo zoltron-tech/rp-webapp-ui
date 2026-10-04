@@ -2,7 +2,8 @@ import { parseRichText } from "@nw/richtext";
 import type { StoryBoardEventThread } from "@nw/types";
 import { Image } from "expo-image";
 import { memo, type ReactNode, useMemo, useState } from "react";
-import { StyleSheet, Text, type TextStyle, View } from "react-native";
+import { StyleSheet, type TextStyle, View } from "react-native";
+import { Text } from "@/components/text";
 import { asColor, withAlpha } from "@/lib/color";
 import { nativeFace } from "@/lib/editor-fonts";
 import {
@@ -239,35 +240,35 @@ const styles = StyleSheet.create({
   attribution: { fontSize: fontSize.label, fontStyle: "normal" },
   bold: { fontWeight: "700" },
   bubble: {
-    borderRadius: 16,
+    borderRadius: radius.lg,
     overflow: "hidden",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: space.m,
+    paddingVertical: space.sm,
   },
   bubbleContent: { flexShrink: 1, gap: 3, maxWidth: "80%" },
-  bubbleLeft: { borderBottomLeftRadius: 4 },
-  bubbleRight: { borderBottomRightRadius: 4 },
+  bubbleLeft: { borderBottomLeftRadius: radius.xs },
+  bubbleRight: { borderBottomRightRadius: radius.xs },
   bubbleRow: {
     alignItems: "flex-end",
     flexDirection: "row",
     gap: space.sm,
-    marginVertical: 6,
+    marginVertical: space.s,
   },
-  bubbleSender: { fontSize: fontSize.caption, marginHorizontal: 10 },
+  bubbleSender: { fontSize: fontSize.caption, marginHorizontal: space.ms },
   card: {
     alignItems: "flex-start",
     borderRadius: radius.md + 4,
     flexDirection: "row",
-    gap: 10,
+    gap: space.ms,
     marginVertical: space.sm,
-    padding: 10,
+    padding: space.ms,
   },
-  cardBody: { flex: 1, gap: 2, minWidth: 0 },
+  cardBody: { flex: 1, gap: space.xxs, minWidth: 0 },
   cardSender: { fontSize: fontSize.label, fontWeight: "600" },
   fallback: { alignItems: "center", justifyContent: "center" },
   initial: { color: "#fff", fontWeight: "700" },
   italic: { fontStyle: "italic" },
-  line: { fontSize: fontSize.body, lineHeight: 24 },
+  line: { fontSize: fontSize.prose, lineHeight: 24 },
   mark: { fontStyle: "normal", opacity: 0.7 },
   quote: { marginVertical: space.sm, paddingHorizontal: space.md },
   reverse: { flexDirection: "row-reverse" },

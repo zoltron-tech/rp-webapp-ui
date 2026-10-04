@@ -9,7 +9,8 @@ import type { MuseAboutSection } from "@nw/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Keyboard, Pressable, StyleSheet, Text, View } from "react-native";
+import { Keyboard, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import {
   MediaTrayInline,
   type TrayTab,
@@ -22,7 +23,7 @@ import { EditorModal } from "@/components/muse/edit/editor-modal";
 import { isVideoUrl } from "@/components/muse/media-viewer";
 import { useComposerMedia } from "@/hooks/use-composer-media";
 import { useKeyboardHeight } from "@/hooks/use-keyboard-height";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * Web's `MuseAboutSectionForm`: one section of the story, created or edited.
@@ -297,12 +298,12 @@ const styles = StyleSheet.create({
   action: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: 4,
+    gap: space.xs,
     height: 36,
     justifyContent: "center",
-    paddingHorizontal: space.sm + 4,
+    paddingHorizontal: space.m,
   },
   actionLabel: { fontSize: fontSize.label, fontWeight: "600" },
   actions: {
@@ -316,15 +317,15 @@ const styles = StyleSheet.create({
   attachment: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: space.sm + 2,
+    gap: space.ms,
     marginHorizontal: space.md,
     marginTop: space.sm,
     padding: space.sm,
   },
   attachmentLabel: { flex: 1, fontSize: fontSize.label, fontWeight: "600" },
-  gif: { fontSize: 12, fontWeight: "800", letterSpacing: 0.5 },
+  gif: { fontSize: fontSize.caption, fontWeight: "800", letterSpacing: 0.5 },
   hint: { flex: 1, fontSize: fontSize.caption, lineHeight: 15 },
   remove: { fontSize: fontSize.label, fontWeight: "700" },
   thumb: { borderRadius: radius.sm, height: 40, width: 40 },

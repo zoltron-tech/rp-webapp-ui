@@ -3,7 +3,8 @@ import { mixColors } from "@nw/theme";
 import type { Muse, Prompt } from "@nw/types";
 import { toFormattedDate } from "@nw/utils";
 import { memo, useMemo, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { CollapsibleRichText } from "@/components/collapsible-rich-text";
 import { FeedMedia } from "@/components/feed/feed-media";
 import { LikersSheet } from "@/components/feed/likers-sheet";
@@ -23,7 +24,7 @@ import { useMusePrompts } from "@/hooks/use-muse";
 import { useToggleReaction } from "@/hooks/use-toggle-reaction";
 import { withAlpha } from "@/lib/color";
 import type { MuseLook } from "@/lib/muse-appearance";
-import { fontSize, radius, space } from "@/theme";
+import { border, fontSize, radius, space } from "@/theme";
 
 /**
  * Web's `PromptsSection`: the open starters this character has written.
@@ -194,22 +195,22 @@ const MusePromptCard = memo(function MusePromptCard({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: radius.md + 2,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.field,
+    borderWidth: border.edge,
     gap: space.sm,
-    padding: space.sm + 4,
+    padding: space.m,
   },
   comments: {
     alignItems: "center",
     flexDirection: "row",
     flexShrink: 1,
-    gap: 5,
+    gap: space.s,
   },
   commentsLabel: { fontSize: fontSize.caption, fontWeight: "600" },
   date: {
-    fontSize: 10.5,
+    fontSize: fontSize.meta,
     fontWeight: "700",
-    letterSpacing: 0.8,
+    letterSpacing: 1.5,
     textTransform: "uppercase",
   },
   footer: {
@@ -218,19 +219,19 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingTop: space.xs,
   },
-  list: { gap: space.sm + 2 },
+  list: { gap: space.ms },
   privacy: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: 4,
-    paddingHorizontal: space.sm,
-    paddingVertical: 2,
+    gap: space.s,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
   },
   privacyLabel: {
     color: PANEL.secondary,
-    fontSize: 10,
+    fontSize: fontSize.meta,
     fontWeight: "600",
   },
   topRow: {

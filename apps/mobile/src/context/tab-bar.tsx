@@ -79,16 +79,23 @@ import { space } from "@/theme";
  */
 
 /** The bar's own height, expanded and compact. Not counting what is under it. */
-export const BAR_HEIGHT = 58;
+export const BAR_HEIGHT = 62;
 export const BAR_HEIGHT_COMPACT = 44;
 
 /**
- * The lozenge behind the active tab, at both sizes. Expanded it holds the icon
- * and its label; compact, the label is gone and it holds the icon alone.
+ * The indicator behind the active tab's *icon*, at both sizes.
+ *
+ * It holds the icon and nothing else. It used to hold the label too, in a
+ * lozenge 56 points wide, and a word is not a fixed width: "Threads" set in
+ * the interface face ran past both ends of it. With the label under the
+ * indicator, on the bar itself, there is no edge for a word to cross — which
+ * is how Material's navigation bar and the system tab bars both draw it.
+ *
+ * One height at both sizes, so the collapse narrows it and nothing more.
  */
-export const PILL_HEIGHT = 50;
-export const PILL_HEIGHT_COMPACT = 32;
-export const PILL_WIDTH = 56;
+export const PILL_HEIGHT = 30;
+export const PILL_HEIGHT_COMPACT = 30;
+export const PILL_WIDTH = 50;
 export const PILL_WIDTH_COMPACT = 44;
 
 /**
@@ -110,7 +117,7 @@ export const ICON_SCALE_COMPACT = 0.84;
  * How far the icon rises in the expanded bar to make room for its label under
  * it. Compact, the label fades and the icon settles back to the centre.
  */
-export const LABEL_LIFT = 8;
+export const LABEL_LIFT = 9;
 
 /**
  * Air above the bar, and the screen edges it is held off.
@@ -438,4 +445,12 @@ export const barMetrics = (safeBottom: number) => ({
  * the display can show.
  */
 export const tabWidth = (windowWidth: number, count: number): number =>
-  (windowWidth - 2 * BAR_INSET_X) / Math.max(count, 1);
+  (windowWidth - 2 * BAR_INSET_X - 2 * BAR_ROW_PAD) / Math.max(count, 1);
+
+/**
+ * Room inside the capsule at each end of the row.
+ *
+ * The capsule's ends are half-circles; without this the first and last
+ * indicators sat in the curve, a couple of points from the edge.
+ */
+export const BAR_ROW_PAD = 8;

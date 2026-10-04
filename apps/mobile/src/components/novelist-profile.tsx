@@ -11,10 +11,10 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
   type ViewStyle,
 } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { BadgeSheet } from "@/components/badge-sheet";
 import { BadgeRow, ScoreIcon } from "@/components/badges";
@@ -25,7 +25,8 @@ import { ProfileActions } from "@/components/profile-actions";
 import { ProfileSongPill } from "@/components/profile-song";
 import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
 import { useProfileSong } from "@/hooks/use-profile-song";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, type, useAppTheme } from "@/theme";
+import { fullName } from "@/lib/names";
 
 /**
  * A novelist's profile, laid out the way the web profile page is.
@@ -146,9 +147,6 @@ const asColor = (value: string | null | undefined): string | undefined => {
     ? trimmed
     : undefined;
 };
-
-const fullName = (person: { firstName?: string; lastName?: string | null }) =>
-  [person.firstName, person.lastName].filter(Boolean).join(" ");
 
 export const NovelistProfile = ({
   novelist,
@@ -970,7 +968,7 @@ const styles = StyleSheet.create({
   about: {
     borderBottomLeftRadius: radius.md + 2,
     borderBottomRightRadius: radius.md + 2,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     gap: space.xs,
     padding: space.md,
   },
@@ -986,19 +984,19 @@ const styles = StyleSheet.create({
   chip: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: space.xs + 2,
+    gap: space.s,
     maxWidth: "100%",
-    paddingHorizontal: space.sm + 2,
+    paddingHorizontal: space.ms,
     paddingVertical: 3,
   },
   chipDot: { borderRadius: 3, height: 6, width: 6 },
   chipLabel: { flexShrink: 1, fontSize: fontSize.caption },
-  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: space.xs + 2 },
+  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: space.s },
   content: { paddingBottom: space.xl },
   eyebrow: {
-    fontSize: 10,
+    fontSize: fontSize.meta,
     fontWeight: "700",
     letterSpacing: 0.8,
     textTransform: "uppercase",
@@ -1020,11 +1018,17 @@ const styles = StyleSheet.create({
   feedRow: {
     alignItems: "center",
     flexDirection: "row",
-    gap: space.sm + 2,
+    gap: space.ms,
     minHeight: 60,
-    paddingHorizontal: space.sm + 4,
+    paddingHorizontal: space.m,
   },
-  feedSection: { gap: space.sm, marginTop: space.md },
+  // The page's gutter, as every other block here has: without it the label
+  // and the list ran to the screen's edges.
+  feedSection: {
+    gap: space.sm,
+    marginTop: space.md,
+    paddingHorizontal: space.md,
+  },
   feedText: { flex: 1, gap: 1 },
   friendsLabel: {
     flex: 1,
@@ -1036,13 +1040,13 @@ const styles = StyleSheet.create({
   friendsPill: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.sm,
     marginHorizontal: space.md,
     marginTop: space.lg,
     minHeight: 50,
-    paddingHorizontal: space.md + 4,
+    paddingHorizontal: space.ml,
     paddingVertical: space.sm,
   },
   handle: { fontSize: fontSize.body },
@@ -1055,14 +1059,14 @@ const styles = StyleSheet.create({
   headerRow: {
     alignItems: "center",
     flexDirection: "row",
-    gap: 12,
+    gap: space.m,
     marginTop: HEADER_LIFT,
     paddingHorizontal: space.md,
   },
-  identity: { gap: space.sm, paddingHorizontal: space.md, paddingTop: 12 },
+  identity: { gap: space.sm, paddingHorizontal: space.md, paddingTop: space.m },
   list: {
     borderRadius: radius.md + 2,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     overflow: "hidden",
   },
   mediaStack: { marginHorizontal: space.md, marginTop: space.md },
@@ -1074,8 +1078,8 @@ const styles = StyleSheet.create({
     gap: space.xs,
     marginTop: 3,
     maxWidth: "100%",
-    paddingHorizontal: space.sm - 2,
-    paddingVertical: 2,
+    paddingHorizontal: space.s,
+    paddingVertical: space.xxs,
   },
   museFandomDot: {
     backgroundColor: "rgba(255,255,255,0.9)",
@@ -1086,7 +1090,7 @@ const styles = StyleSheet.create({
   museFandomLabel: {
     color: "#ffffff",
     flexShrink: 1,
-    fontSize: 9,
+    fontSize: fontSize.meta,
     fontWeight: "700",
     letterSpacing: 0.4,
     textTransform: "uppercase",
@@ -1096,18 +1100,19 @@ const styles = StyleSheet.create({
   museRow: {
     alignItems: "center",
     flexDirection: "row",
-    gap: space.sm + 4,
-    paddingHorizontal: space.sm + 4,
-    paddingVertical: space.sm + 4,
+    gap: space.m,
+    paddingHorizontal: space.m,
+    paddingVertical: space.m,
   },
   museSurname: { fontSize: fontSize.caption },
   museText: { flex: 1, minWidth: 0 },
   mutualRow: { alignItems: "center", flexDirection: "row", gap: space.sm },
-  name: { fontSize: fontSize.h2, fontWeight: "700" },
+  // Web's 24 at phone width.
+  name: { fontSize: 24, fontWeight: "700", lineHeight: 29 },
   note: {
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    borderRadius: radius.lg,
+    paddingHorizontal: space.m,
+    paddingVertical: space.s,
   },
   noteDotLarge: {
     borderRadius: 6.5,
@@ -1122,7 +1127,7 @@ const styles = StyleSheet.create({
     borderRadius: 3.5,
     height: 7,
     left: -21,
-    marginTop: 6,
+    marginTop: space.s,
     position: "absolute",
     top: "50%",
     width: 7,
@@ -1139,24 +1144,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: space.sm,
   },
-  sectionLabel: {
-    fontSize: fontSize.caption,
-    fontWeight: "700",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-  },
-  sectionTitle: {
-    fontSize: fontSize.caption,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-  },
+  sectionLabel: type.eyebrow,
+  sectionTitle: type.eyebrow,
   seeMore: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: space.xs + 2,
+    gap: space.s,
     paddingHorizontal: space.md,
     paddingVertical: space.sm - 1,
   },
@@ -1177,16 +1172,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     bottom: -8,
     flexDirection: "row",
-    gap: 4,
+    gap: space.xs,
     paddingBottom: 3,
     paddingLeft: 7,
-    paddingRight: 10,
+    paddingRight: space.ms,
     paddingTop: 3,
     position: "absolute",
     right: -12,
   },
   xpLabel: {
-    fontSize: 10.5,
+    fontSize: fontSize.meta,
     fontWeight: "700",
     letterSpacing: 0.5,
     textTransform: "uppercase",

@@ -2,11 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import type { Novelist } from "@nw/types";
 import { wsrvImage } from "@nw/utils";
 import { useRouter } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { PANEL } from "@/components/muse/panel";
 import { withAlpha } from "@/lib/color";
-import { space } from "@/theme";
+import { border, fontSize, radius, space } from "@/theme";
 
 /**
  * The byline — whose pen this character came from — above the verses.
@@ -101,15 +102,15 @@ const styles = StyleSheet.create({
   bar: {
     alignItems: "center",
     flexDirection: "row",
-    gap: space.sm + 2,
+    gap: space.ms,
     paddingHorizontal: space.md,
     paddingTop: space.xs,
     width: "100%",
   },
   chip: {
     alignItems: "center",
-    borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.full,
+    borderWidth: border.edge,
     flexDirection: "row",
     flexShrink: 1,
     gap: 5,
@@ -119,7 +120,7 @@ const styles = StyleSheet.create({
   },
   lead: {
     color: "rgba(255,255,255,0.7)",
-    fontSize: 11,
+    fontSize: fontSize.meta,
     fontStyle: "italic",
     textShadowColor: "rgba(0,0,0,0.9)",
     textShadowOffset: { height: 1, width: 0 },
@@ -128,7 +129,7 @@ const styles = StyleSheet.create({
   name: {
     color: "#ffffff",
     flexShrink: 1,
-    fontSize: 12,
+    fontSize: fontSize.caption,
     fontWeight: "700",
     textShadowColor: "rgba(0,0,0,0.9)",
     textShadowOffset: { height: 1, width: 0 },
@@ -139,7 +140,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     flexShrink: 1,
-    gap: 6,
+    gap: space.s,
     maxWidth: "80%",
     minHeight: 28,
   },

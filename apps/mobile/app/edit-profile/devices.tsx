@@ -231,5 +231,5 @@ export default function DevicesScreen() {
 }
 
 const styles = StyleSheet.create({
-  body: { gap: space.lg, padding: space.sm + 4 },
+  body: { gap: space.lg, padding: space.m },
 });

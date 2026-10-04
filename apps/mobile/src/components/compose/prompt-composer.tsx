@@ -38,10 +38,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from "react-native";
+import { Text, TextInput } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ActionMenu } from "@/components/action-menu";
 import { Avatar } from "@/components/avatar";
@@ -78,7 +77,8 @@ import {
   useKeyboardHeight,
   useKeyboardOffset,
 } from "@/hooks/use-keyboard-height";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
+import { IconButton } from "@/components/icon-button";
 
 /**
  * The composer — web's `FullPagePromptInput`, which is what web shows on a
@@ -524,23 +524,15 @@ const ComposerScreen = ({
           {/* ── Top bar ─────────────────────────────────────────────────── */}
           {/* A glass bar with an edge along its foot, like the other bars. */}
           <GlassSurface bordered="bottom" style={styles.topBar} variant="bar">
-            <Pressable
+            <IconButton
               accessibilityLabel="Close"
-              accessibilityRole="button"
               hitSlop={space.sm}
+              icon="close"
+              iconSize={20}
               onPress={requestClose}
-              style={({ pressed }) => [
-                styles.iconButton,
-                {
-                  backgroundColor: pressed
-                    ? theme.glass.fillPressed
-                    : theme.glass.fillHover,
-                  borderColor: theme.glass.edge,
-                },
-              ]}
-            >
-              <Ionicons color={theme.text} name="close" size={20} />
-            </Pressable>
+              size={36}
+              tone="glass"
+            />
 
             <Text
               numberOfLines={1}
@@ -597,16 +589,28 @@ const ComposerScreen = ({
                     {
                       backgroundColor: canSend
                         ? pressed
-                          ? theme.accent.solidHover
-                          : theme.accent.solid
-                        : theme.accent.surfaceActive,
+                          ? theme.accent.fillPressed
+                          : theme.accent.fill
+                        : theme.accent.fillDisabled,
                     },
                   ]}
                 >
                   {sending ? (
-                    <ActivityIndicator color={theme.accent.onSolid} size="small" />
+                    <ActivityIndicator
+                      color={theme.accent.onFillDisabled}
+                      size="small"
+                    />
                   ) : (
-                    <Text style={[styles.sendLabel, { color: theme.accent.onSolid }]}>
+                    <Text
+                      style={[
+                        styles.sendLabel,
+                        {
+                          color: canSend
+                            ? theme.accent.onFill
+                            : theme.accent.onFillDisabled,
+                        },
+                      ]}
+                    >
                       {buttonLabel}
                     </Text>
                   )}
@@ -826,33 +830,17 @@ const ComposerScreen = ({
                         <Animated.View
                           style={{ transform: [{ scale: sendScale }] }}
                         >
-                          <Pressable
+                          <IconButton
                             accessibilityLabel={buttonLabel}
-                            accessibilityRole="button"
-                            accessibilityState={{
-                              busy: sending,
-                              disabled: !canSend,
-                            }}
+                            busy={sending || media.isUploading}
                             disabled={!canSend}
                             hitSlop={space.xs}
+                            icon="send"
+                            iconSize={16}
                             onPress={submit}
-                            style={({ pressed }) => [
-                              styles.sendRound,
-                              {
-                                backgroundColor: canSend
-                                  ? pressed
-                                    ? theme.accent.solidHover
-                                    : theme.accent.solid
-                                  : theme.accent.surfaceActive,
-                              },
-                            ]}
-                          >
-                            {sending || media.isUploading ? (
-                              <ActivityIndicator color="#ffffff" size="small" />
-                            ) : (
-                              <Ionicons color="#ffffff" name="send" size={16} />
-                            )}
-                          </Pressable>
+                            size={36}
+                            tone="primary"
+                          />
                         </Animated.View>
                       ) : null}
                     </View>
@@ -1205,10 +1193,10 @@ const styles = StyleSheet.create({
   attachment: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.sm,
-    padding: space.sm + 2,
+    padding: space.ms,
   },
   attachmentLabel: {
     flexShrink: 1,
@@ -1221,25 +1209,25 @@ const styles = StyleSheet.create({
   chip: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.xs,
     height: 32,
-    paddingHorizontal: space.sm + 2,
+    paddingHorizontal: space.ms,
   },
   chipLabel: { fontSize: fontSize.caption, fontWeight: "600" },
   fill: { flex: 1 },
   footer: { gap: space.sm, paddingBottom: space.md },
-  gifLabel: { fontSize: 10, fontWeight: "800", letterSpacing: 0.5 },
+  gifLabel: { fontSize: fontSize.meta, fontWeight: "800", letterSpacing: 0.5 },
   iconButton: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     height: 36,
     justifyContent: "center",
     width: 36,
   },
-  lockedLabel: { fontSize: 10, fontWeight: "700" },
+  lockedLabel: { fontSize: fontSize.meta, fontWeight: "700" },
   meta: {
     alignItems: "center",
     flexDirection: "row",
@@ -1247,7 +1235,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.md,
     paddingTop: space.sm,
   },
-  metaRight: { flexDirection: "row", gap: space.xs + 2 },
+  metaRight: { flexDirection: "row", gap: space.s },
   parent: { flex: 1 },
   parentContent: { padding: space.md },
   replyDock: { borderTopWidth: StyleSheet.hairlineWidth },
@@ -1263,31 +1251,24 @@ const styles = StyleSheet.create({
   sender: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flex: 1,
     flexDirection: "row",
     gap: space.sm,
     minHeight: 44,
-    paddingLeft: space.xs + 2,
-    paddingRight: space.sm + 2,
+    paddingLeft: space.s,
+    paddingRight: space.ms,
   },
-  senderEyebrow: { fontSize: 9, fontWeight: "700", letterSpacing: 0.6 },
+  senderEyebrow: { fontSize: fontSize.meta, fontWeight: "700", letterSpacing: 0.6 },
   senderName: { fontSize: fontSize.label, fontWeight: "700" },
   senderText: { flex: 1, gap: 1, minWidth: 0 },
   sendLabel: { color: "#ffffff", fontSize: fontSize.label, fontWeight: "700" },
-  sendRound: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    height: 36,
-    justifyContent: "center",
-    width: 36,
-  },
-  sharedFaces: { flexDirection: "row", gap: 2 },
+  sharedFaces: { flexDirection: "row", gap: space.xxs },
   sharedLabel: { fontSize: fontSize.caption },
   sharedWith: {
     alignItems: "center",
     flexDirection: "row",
-    gap: space.xs + 2,
+    gap: space.s,
     paddingHorizontal: space.md,
     paddingTop: space.sm,
   },

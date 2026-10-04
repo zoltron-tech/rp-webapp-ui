@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { Muse, PromptSource } from "@nw/types";
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import {
   QuickAddMuseError,
@@ -9,7 +10,7 @@ import {
 } from "@/components/chat/quick-add-muse-row";
 import { BottomSheet } from "@/components/sheet";
 import { useQuickAddMuse } from "@/hooks/use-quick-add-muse";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * "Who's posting?" — web's `NovelistConfirm`, which is already a sheet on a
@@ -193,19 +194,19 @@ const styles = StyleSheet.create({
   option: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: space.sm + 2,
-    padding: space.sm + 4,
+    gap: space.ms,
+    padding: space.m,
   },
   optionIcon: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     height: 40,
     justifyContent: "center",
     width: 40,
   },
-  optionText: { flex: 1, gap: 2 },
+  optionText: { flex: 1, gap: space.xxs },
   optionTitle: { fontSize: fontSize.body, fontWeight: "700" },
 });

@@ -7,7 +7,7 @@
  */
 /* biome-ignore-all lint: generated artwork */
 import type { FC } from "react";
-import { Text } from "react-native";
+import { Text } from "@/components/text";
 import Svg, {
   Circle,
   Defs,

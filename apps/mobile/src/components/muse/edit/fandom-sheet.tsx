@@ -10,16 +10,16 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { SkeletonRows } from "@/components/list-skeletons";
 import { FormSheet } from "@/components/muse/edit/form-sheet";
 import { FandomRowSkeleton } from "@/components/sheet-skeletons";
 import type { MuseEdit } from "@/hooks/use-muse-edit";
 import { asColor } from "@/lib/color";
 import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { SearchField } from "@/components/search-field";
 
 /**
  * Web's fandom picker: type, choose. The search is the public fandom
@@ -93,27 +93,12 @@ export const FandomSheet = ({
       title="Fandom"
       visible={visible}
     >
-      <View style={[styles.search, { backgroundColor: theme.glass.field }]}>
-        <Ionicons color={theme.textGray} name="search" size={16} />
-        <TextInput
-          autoCorrect={false}
-          autoFocus
-          onChangeText={setQuery}
-          placeholder="Search fandoms…"
-          placeholderTextColor={theme.textGray}
-          style={[styles.input, { color: theme.text }]}
-          value={query}
-        />
-        {query ? (
-          <Pressable
-            accessibilityLabel="Clear"
-            hitSlop={space.sm}
-            onPress={() => setQuery("")}
-          >
-            <Ionicons color={theme.textGray} name="close-circle" size={16} />
-          </Pressable>
-        ) : null}
-      </View>
+      <SearchField
+        autoFocus
+        onChangeText={setQuery}
+        placeholder="Search fandoms…"
+        value={query}
+      />
 
       <ScrollView keyboardShouldPersistTaps="handled" style={styles.list}>
         {results.isFetching && !results.data ? (
@@ -177,29 +162,21 @@ export const FandomSheet = ({
 };
 
 const styles = StyleSheet.create({
-  dot: { borderRadius: 5, height: 10, width: 10 },
+  dot: { borderRadius: radius.sm, height: 10, width: 10 },
   hint: {
     fontSize: fontSize.label,
     fontStyle: "italic",
     paddingVertical: space.md,
     textAlign: "center",
   },
-  input: { flex: 1, fontSize: fontSize.body, paddingVertical: space.sm + 2 },
   list: { flex: 1 },
   name: { flex: 1, fontSize: fontSize.body },
   row: {
     alignItems: "center",
     borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
-    gap: space.sm + 2,
+    gap: space.ms,
     paddingHorizontal: space.xs,
-    paddingVertical: space.sm + 4,
-  },
-  search: {
-    alignItems: "center",
-    borderRadius: radius.md,
-    flexDirection: "row",
-    gap: space.sm,
-    paddingHorizontal: space.sm + 4,
+    paddingVertical: space.m,
   },
 });

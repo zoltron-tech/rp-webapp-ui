@@ -6,19 +6,13 @@ import type { ProfileSong, Song, SpotifyTrack } from "@nw/types/music";
 import { useDebounce } from "@nw/utils/hooks/use-debounce";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import {
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { SkeletonRows } from "@/components/list-skeletons";
 import { BottomSheet } from "@/components/sheet";
 import { SongRowSkeleton } from "@/components/sheet-skeletons";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
+import { SearchField } from "@/components/search-field";
 
 /**
  * A song for the post — web's `SongPickerDialog` in resolve-only mode.
@@ -210,26 +204,13 @@ export const SongSheet = ({
       </View>
 
       {tab === "spotify" ? (
-        <View
-          style={[
-            styles.search,
-            {
-              backgroundColor: theme.glass.field,
-              borderColor: theme.material.edgeTranslucent,
-            },
-          ]}
-        >
-          <Ionicons color={theme.textGray} name="search" size={16} />
-          <TextInput
-            autoCorrect={false}
-            onChangeText={setQuery}
-            placeholder="Search songs and artists"
-            placeholderTextColor={theme.textGray}
-            returnKeyType="search"
-            style={[styles.searchInput, { color: theme.text }]}
-            value={query}
-          />
-        </View>
+        <SearchField
+          containerStyle={styles.search}
+          onChangeText={setQuery}
+          placeholder="Search songs and artists"
+          returnKeyType="search"
+          value={query}
+        />
       ) : null}
 
       <ScrollView
@@ -300,28 +281,18 @@ const styles = StyleSheet.create({
   row: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: space.sm + 2,
+    gap: space.ms,
     padding: space.sm,
   },
   rowText: { flex: 1, gap: 1 },
-  search: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    gap: space.sm,
-    marginHorizontal: space.md,
-    marginTop: space.sm,
-    paddingHorizontal: space.md,
-  },
-  searchInput: { flex: 1, fontSize: fontSize.body, paddingVertical: space.sm },
+  search: { marginHorizontal: space.md, marginTop: space.sm },
   subtitle: { fontSize: fontSize.caption },
   tab: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flex: 1,
     flexDirection: "row",
     gap: space.xs,

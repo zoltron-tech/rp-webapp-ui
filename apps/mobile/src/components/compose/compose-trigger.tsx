@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Animated, Pressable, StyleSheet, View } from "react-native";
 import { Avatar } from "@/components/avatar";
 import { useA11ySettings } from "@/lib/a11y-settings";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, font, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * Web's `PromptComposeTrigger`: your face beside a field that is not a field.
@@ -112,20 +112,16 @@ export const ComposeTrigger = ({
       onPress={onPress}
       style={({ pressed }) => [
         compact ? styles.rootCompact : styles.root,
-        compact
-          ? { opacity: pressed ? 0.7 : 1 }
-          : {
-              backgroundColor: pressed
-                ? theme.material.fillPressed
-                : theme.material.fill,
-              borderColor: theme.material.edge,
-            },
+        // Web's trigger has no surface of its own: a face and a field on the
+        // page. The field is the thing you tap; a card around it was a second
+        // frame around a frame.
+        { opacity: pressed ? 0.7 : 1 },
       ]}
     >
       <Avatar
         image={avatarImage}
         name={name}
-        size={compact ? 30 : 36}
+        size={compact ? 30 : 40}
         uri={avatarUri}
       />
       <View
@@ -142,7 +138,9 @@ export const ComposeTrigger = ({
           numberOfLines={1}
           style={[styles.placeholder, { color: theme.textGray, opacity }]}
         >
-          {placeholders[index]}
+          {/* Wrapped: a recycled feed cell keeps its index and can be handed
+              a shorter list, and an index past its end drew nothing. */}
+          {placeholders[index % placeholders.length]}
         </Animated.Text>
       </View>
     </Pressable>
@@ -152,21 +150,20 @@ export const ComposeTrigger = ({
 const styles = StyleSheet.create({
   field: {
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flex: 1,
     justifyContent: "center",
-    minHeight: 38,
+    minHeight: 42,
     paddingHorizontal: space.md,
   },
-  fieldCompact: { minHeight: 34, paddingHorizontal: space.sm + 4 },
-  placeholder: { fontSize: fontSize.label },
+  fieldCompact: { minHeight: 34, paddingHorizontal: space.m },
+  // `Animated.Text` is not `components/text`, so the face is named here.
+  placeholder: { fontFamily: font.regular, fontSize: fontSize.label },
   root: {
     alignItems: "center",
-    borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
-    gap: space.sm + 2,
-    padding: space.sm + 2,
+    gap: space.ms,
+    paddingVertical: space.xs,
   },
   rootCompact: {
     alignItems: "center",

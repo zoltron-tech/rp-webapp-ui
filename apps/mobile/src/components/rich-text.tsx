@@ -13,6 +13,7 @@ import {
 import { Image } from "expo-image";
 import {
   createContext,
+  memo,
   type ReactNode,
   useCallback,
   useContext,
@@ -24,11 +25,11 @@ import {
   type LayoutChangeEvent,
   type StyleProp,
   StyleSheet,
-  Text,
   type TextLayoutLine,
   type TextStyle,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { nativeFace } from "@/lib/editor-fonts";
 import { openExternalLink } from "@/lib/safe-link";
 import {
@@ -117,7 +118,7 @@ export const richTextBlockCount = (html: string | null | undefined): number =>
 const RATIOS = new Map<string, number>();
 
 /** Web's `richTextContentBase`: `line-height: 1.6`. */
-const LINE_HEIGHT = Math.round(fontSize.body * 1.6);
+const LINE_HEIGHT = Math.round(fontSize.prose * 1.6);
 
 /** The editor's "Normal" size, which everything else is authored relative to. */
 const WEB_BASE_PX = 16;
@@ -140,7 +141,7 @@ const LINES_TIMEOUT_MS = 250;
  * larger than the text around it. The ratio is what the author picked.
  */
 const toNativeSize = (px: number | undefined): number | undefined =>
-  px ? Math.round((px / WEB_BASE_PX) * fontSize.body) : undefined;
+  px ? Math.round((px / WEB_BASE_PX) * fontSize.prose) : undefined;
 
 /** Flex mapping of `text-align`, for laying an image out in its block. */
 const ALIGN_ITEMS: Record<RichAlign, "flex-start" | "center" | "flex-end"> = {
@@ -734,7 +735,7 @@ const LONG_BLOCKS = 8;
 /** How much of a folded document is drawn. */
 export const FOLDED_BLOCKS = 6;
 
-export const RichText = ({
+const RichTextView = ({
   html,
   maxBlocks,
 }: {
@@ -781,6 +782,13 @@ export const RichText = ({
   );
 };
 
+/**
+ * Memoised: both props are primitives, and the walk above is the whole
+ * document. A heart on a card, a menu opening on a thread, a profile's scroll
+ * flag — each re-rendered the parent and re-walked text that had not changed.
+ */
+export const RichText = memo(RichTextView);
+
 const styles = StyleSheet.create({
   /*
    * Only the text beside a list marker takes the remaining width. `flex: 1`
@@ -792,19 +800,19 @@ const styles = StyleSheet.create({
   bold: { fontWeight: "700" },
   // Body size, not `label`: a smaller face inside a line of normal text drops
   // below the baseline and reads as a rendering fault rather than as a style.
-  code: { fontFamily: monospace, fontSize: fontSize.body },
-  floatImage: { marginBottom: FLOAT_BOTTOM, marginTop: 2, width: "100%" },
+  code: { fontFamily: monospace, fontSize: fontSize.prose },
+  floatImage: { marginBottom: FLOAT_BOTTOM, marginTop: space.xxs, width: "100%" },
   floatRow: { alignItems: "flex-start", gap: FLOAT_GAP, width: "100%" },
   heading: { fontWeight: "700", lineHeight: 28, marginTop: space.sm },
   image: { borderRadius: radius.md },
   imageRow: { marginVertical: space.xs, width: "100%" },
   italic: { fontStyle: "italic" },
   listItem: { flexDirection: "row", gap: space.sm },
-  marker: { fontSize: fontSize.body, lineHeight: LINE_HEIGHT, minWidth: 16 },
+  marker: { fontSize: fontSize.prose, lineHeight: LINE_HEIGHT, minWidth: 16 },
   /** The measuring pass is laid out but not seen. */
   measuring: { opacity: 0 },
   mention: { fontWeight: "600" },
-  paragraph: { fontSize: fontSize.body, lineHeight: LINE_HEIGHT },
+  paragraph: { fontSize: fontSize.prose, lineHeight: LINE_HEIGHT },
   quote: {
     borderLeftWidth: 3,
     marginVertical: space.xs,

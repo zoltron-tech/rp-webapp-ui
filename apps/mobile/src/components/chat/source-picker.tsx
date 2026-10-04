@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { PromptSource } from "@nw/types";
 import type { ReactNode } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
-import { radius, space, useAppTheme } from "@/theme";
+import { fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * "Who is this from?" — a row of faces.
@@ -190,7 +191,7 @@ const styles = StyleSheet.create({
     width: 52,
   },
   caption: {
-    fontSize: 9,
+    fontSize: fontSize.meta,
     fontWeight: "700",
     letterSpacing: 0.6,
     paddingLeft: space.xs,
@@ -218,10 +219,10 @@ const styles = StyleSheet.create({
   group: { gap: space.xs },
   groupRow: { flexDirection: "row", gap: space.xs },
   item: { alignItems: "center", gap: space.xs, width: 60 },
-  label: { fontSize: 10, fontWeight: "700", textTransform: "uppercase" },
+  label: { fontSize: fontSize.meta, fontWeight: "700", textTransform: "uppercase" },
   list: { flexGrow: 0 },
-  name: { fontSize: 10, maxWidth: 58, textAlign: "center" },
-  ring: { borderRadius: radius.full, borderWidth: 2, padding: 2 },
-  row: { paddingVertical: 2 },
+  name: { fontSize: fontSize.meta, maxWidth: 58, textAlign: "center" },
+  ring: { borderRadius: radius.full, borderWidth: 2, padding: space.xxs },
+  row: { paddingVertical: space.xxs },
   section: { gap: space.xs },
 });

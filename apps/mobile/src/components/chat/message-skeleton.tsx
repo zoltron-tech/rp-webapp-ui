@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   avatar: { borderRadius: AVATAR / 2, height: AVATAR, width: AVATAR },
   bubble: { borderRadius: radius.lg, maxWidth: "80%" },
   column: { gap: space.sm, paddingVertical: space.md },
-  row: { alignItems: "flex-end", flexDirection: "row", gap: space.xs + 2 },
+  row: { alignItems: "flex-end", flexDirection: "row", gap: space.s },
   rowMine: { justifyContent: "flex-end" },
   rowTheirs: { justifyContent: "flex-start" },
 });

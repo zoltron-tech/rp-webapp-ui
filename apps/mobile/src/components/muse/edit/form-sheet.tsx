@@ -1,14 +1,9 @@
-import { Ionicons } from "@expo/vector-icons";
 import type { ReactNode } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { BottomSheet } from "@/components/sheet";
-import { radius, space, useAppTheme } from "@/theme";
+import { fontSize, space, useAppTheme } from "@/theme";
+import { IconButton } from "@/components/icon-button";
 
 /**
  * A form in a tray, with the header this app's trays share: the title on the
@@ -56,52 +51,24 @@ export const FormSheet = ({
       fill={fill}
       headerAction={
         <View style={styles.actions}>
-          <Pressable
+          <IconButton
             accessibilityLabel="Cancel"
-            accessibilityRole="button"
             disabled={busy}
             hitSlop={space.xs}
+            icon="close"
             onPress={onClose}
-            style={({ pressed }) => [
-              styles.circle,
-              {
-                backgroundColor: pressed
-                  ? theme.glass.fillPressed
-                  : theme.material.fillTranslucent,
-                borderColor: theme.material.edgeTranslucent,
-              },
-            ]}
-          >
-            <Ionicons color={theme.text} name="close" size={18} />
-          </Pressable>
+            tone="material"
+          />
           {onConfirm ? (
-            <Pressable
+            <IconButton
               accessibilityLabel={confirmLabel}
-              accessibilityRole="button"
-              accessibilityState={{ busy, disabled: !canConfirm || busy }}
+              busy={busy}
               disabled={!canConfirm || busy}
               hitSlop={space.xs}
+              icon="checkmark"
               onPress={onConfirm}
-              style={({ pressed }) => [
-                styles.circle,
-                {
-                  backgroundColor:
-                    !canConfirm || busy
-                      ? theme.accent.surface
-                      : pressed
-                        ? theme.accent.solidHover
-                        : theme.accent.solid,
-                  borderColor: theme.accent.solid,
-                  opacity: !canConfirm && !busy ? 0.5 : 1,
-                },
-              ]}
-            >
-              {busy ? (
-                <ActivityIndicator color="#ffffff" size="small" />
-              ) : (
-                <Ionicons color="#ffffff" name="checkmark" size={18} />
-              )}
-            </Pressable>
+              tone="primary"
+            />
           ) : null}
         </View>
       }
@@ -132,16 +99,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.md,
     paddingVertical: space.sm,
   },
-  circle: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    height: 32,
-    justifyContent: "center",
-    width: 32,
-  },
   error: {
-    fontSize: 13,
+    fontSize: fontSize.label,
     paddingHorizontal: space.md,
     paddingTop: space.xs,
   },

@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { getOutgoingThreads } from "@nw/api/endpoints/feed";
 import { queryKeys, useApi } from "@nw/features";
 import type { PromptThreadComment } from "@nw/types";
@@ -7,13 +6,8 @@ import { FlashList } from "@shopify/flash-list";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useCallback, useMemo } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { EndOfList } from "@/components/end-of-list";
 import {
   OutgoingThreadCardSkeleton,
@@ -23,7 +17,8 @@ import { ListStatus } from "@/components/list-status";
 import { OutgoingThreadCard } from "@/components/outgoing-thread-card";
 import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { fontSize, space, type, useAppTheme } from "@/theme";
+import { EmptyState, FeedSeparator, LoadMore } from "@/components/list-parts";
 
 /**
  * Interactions — the threads this novelist has replied into.
@@ -129,6 +124,9 @@ export default function InteractionsScreen() {
   const contentStyle = useTabBarContentStyle(styles.content);
 
   /** Web's `headerSubtitle`, including its counting. */
+  /** Whether anything here is waiting on a reply from you. */
+  const waiting = threads.some((t) => t.replyCount > 0);
+
   const subtitle = query.isPending
     ? "Loading your threads…"
     : threads.length === 0
@@ -154,30 +152,29 @@ export default function InteractionsScreen() {
   const header = useMemo(
     () => (
       <View style={styles.header}>
-        <View
-          style={[
-            styles.headerIcon,
-            {
-              backgroundColor: theme.accent.tint,
-              borderColor: theme.accent.surfaceHover,
-            },
-          ]}
-        >
-          <Ionicons
-            color={theme.accent.text}
-            name="chatbubbles-outline"
-            size={18}
+        {/*
+          The same head every feed has: what this list is, a rule, and the one
+          line of news under it. The bar above already says "Interactions".
+        */}
+        <View style={styles.headerRow}>
+          <Text style={[styles.headerTitle, { color: theme.textGray }]}>
+            Your threads
+          </Text>
+          <View
+            style={[styles.rule, { backgroundColor: theme.material.edge }]}
           />
         </View>
-        <View style={styles.headerText}>
-          {/* The bar above already says "Interactions"; the count is the news. */}
-          <Text style={[styles.headerSubtitle, { color: theme.text }]}>
-            {subtitle}
-          </Text>
-        </View>
+        <Text
+          style={[
+            styles.headerSubtitle,
+            { color: waiting ? theme.text : theme.textGray },
+          ]}
+        >
+          {subtitle}
+        </Text>
       </View>
     ),
-    [subtitle, theme],
+    [subtitle, theme, waiting],
   );
 
   const { fetchNextPage, hasNextPage, isFetchingNextPage } = query;
@@ -186,26 +183,10 @@ export default function InteractionsScreen() {
   const footer = useMemo(() => {
     if (hasNextPage) {
       return (
-        <Pressable
-          disabled={isFetchingNextPage}
+        <LoadMore
+          busy={isFetchingNextPage}
           onPress={() => void fetchNextPage()}
-          style={({ pressed }) => [
-            styles.loadMore,
-            {
-              backgroundColor: pressed
-                ? theme.material.fillPressed
-                : theme.material.fill,
-              borderColor: theme.material.edge,
-            },
-          ]}
-        >
-          {isFetchingNextPage ? (
-            <ActivityIndicator color={theme.accent.text} size="small" />
-          ) : null}
-          <Text style={[styles.loadMoreLabel, { color: theme.accent.text }]}>
-            {isFetchingNextPage ? "Loading..." : "Load more"}
-          </Text>
-        </Pressable>
+        />
       );
     }
 
@@ -221,7 +202,7 @@ export default function InteractionsScreen() {
         {...tabBarScroll}
         contentContainerStyle={contentStyle}
         data={threads}
-        ItemSeparatorComponent={Separator}
+        ItemSeparatorComponent={FeedSeparator}
         keyExtractor={keyExtractor}
         ListEmptyComponent={
           query.isPending || query.error ? (
@@ -232,26 +213,17 @@ export default function InteractionsScreen() {
               skeleton={
                 <SkeletonRows
                   count={4}
-                  gap={space.sm + 2}
+                  gap={space.ms}
                   render={() => <OutgoingThreadCardSkeleton />}
                 />
               }
             />
           ) : (
-            <View style={styles.empty}>
-              <Ionicons
-                color={theme.textGray}
-                name="chatbubbles-outline"
-                size={40}
-              />
-              <Text style={[styles.emptyTitle, { color: theme.text }]}>
-                No active interactions
-              </Text>
-              <Text style={[styles.emptyBody, { color: theme.textGray }]}>
-                Nothing is running right now. Find a starter someone else has
-                posted and reply to spark one.
-              </Text>
-            </View>
+            <EmptyState
+              body="Nothing is running right now. Find a starter someone else has posted and reply to spark one."
+              icon="chatbubbles-outline"
+              title="No active interactions"
+            />
           )
         }
         ListFooterComponent={footer}
@@ -272,54 +244,17 @@ export default function InteractionsScreen() {
 
 const keyExtractor = (item: PromptThreadComment) => item.id;
 
-const Separator = () => <View style={styles.separator} />;
-
 const styles = StyleSheet.create({
   content: { padding: space.md },
-  empty: {
-    alignItems: "center",
-    gap: space.sm,
-    paddingHorizontal: space.lg,
-    paddingVertical: space.xl,
-  },
-  emptyBody: {
-    fontSize: fontSize.label,
-    lineHeight: 19,
-    textAlign: "center",
-  },
-  emptyTitle: { fontSize: fontSize.title, fontWeight: "700" },
   end: {
     fontSize: fontSize.caption,
     paddingTop: space.md,
     textAlign: "center",
   },
   fill: { flex: 1 },
-  header: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: space.sm + 2,
-    paddingBottom: space.md,
-  },
-  headerIcon: {
-    alignItems: "center",
-    borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    height: 38,
-    justifyContent: "center",
-    width: 38,
-  },
-  headerSubtitle: { fontSize: fontSize.body, fontWeight: "600" },
-  headerText: { flex: 1, gap: 1 },
-  loadMore: {
-    alignItems: "center",
-    borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    gap: space.sm,
-    justifyContent: "center",
-    marginTop: space.sm,
-    paddingVertical: space.md,
-  },
-  loadMoreLabel: { fontSize: fontSize.body, fontWeight: "600" },
-  separator: { height: space.sm + 2 },
+  header: { gap: space.xs, paddingBottom: space.m },
+  headerRow: { alignItems: "center", flexDirection: "row", gap: space.m },
+  headerSubtitle: { fontSize: fontSize.label, fontWeight: "500" },
+  headerTitle: type.eyebrow,
+  rule: { flex: 1, height: StyleSheet.hairlineWidth },
 });

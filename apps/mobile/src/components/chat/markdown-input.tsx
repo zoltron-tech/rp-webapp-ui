@@ -3,11 +3,10 @@ import { forwardRef, useMemo } from "react";
 import {
   type NativeSyntheticEvent,
   StyleSheet,
-  Text,
-  TextInput,
   type TextInputSelectionChangeEventData,
   type TextStyle,
 } from "react-native";
+import { Text, TextInput } from "@/components/text";
 import { fontSize, monospace, useAppTheme } from "@/theme";
 
 /**

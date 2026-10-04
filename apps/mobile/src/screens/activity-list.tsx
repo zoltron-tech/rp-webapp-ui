@@ -111,7 +111,12 @@ export const ActivityList = ({ username }: { username: string }) => {
         {...tabBarScroll}
         contentContainerStyle={contentStyle}
         data={activities}
+        // Tall media cards: three fill a screen, so ten was three screens of
+        // pictures decoded before the first frame.
+        initialNumToRender={4}
         keyExtractor={(item, index) => item.id ?? `activity-${index}`}
+        maxToRenderPerBatch={3}
+        windowSize={5}
         ListEmptyComponent={
           <ListStatus
             empty="Nothing here yet."
@@ -121,7 +126,7 @@ export const ActivityList = ({ username }: { username: string }) => {
             skeleton={
               <SkeletonRows
                 count={3}
-                gap={space.sm + 2}
+                gap={space.ms}
                 render={() => <ActivityCardSkeleton />}
               />
             }
@@ -172,6 +177,6 @@ export const ActivityList = ({ username }: { username: string }) => {
 const EMPTY_META = new Map();
 
 const styles = StyleSheet.create({
-  content: { gap: space.sm + 2, padding: space.md },
+  content: { gap: space.ms, padding: space.md },
   fill: { flex: 1 },
 });

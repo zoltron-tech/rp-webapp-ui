@@ -12,14 +12,14 @@ import {
   ActivityIndicator,
   ScrollView,
   StyleSheet,
-  Text,
   View,
   type ViewStyle,
 } from "react-native";
+import { Text } from "@/components/text";
 import { SceneArt, type SceneName } from "@/components/scene-art";
 import { markScrolling } from "@/context/scroll-activity";
 import { withAlpha } from "@/lib/color";
-import { fontSize, radius, space } from "@/theme";
+import { border, fontSize, radius, space, type } from "@/theme";
 
 /**
  * The glass panel every muse section is drawn on, and the small pieces they
@@ -228,13 +228,6 @@ export const SectionEmpty = ({
   </View>
 );
 
-/** A block of the panel still on its way. */
-export const PanelLoading = () => (
-  <View style={styles.loading}>
-    <ActivityIndicator color={PANEL.secondary} />
-  </View>
-);
-
 /** Web's `ShimmerBlock`, for a list still loading. */
 export const Shimmer = ({
   height,
@@ -257,13 +250,13 @@ export const Shimmer = ({
 
 const styles = StyleSheet.create({
   divider: {
-    height: StyleSheet.hairlineWidth * 2,
-    marginVertical: space.sm + 2,
+    height: border.edge,
+    marginVertical: space.ms,
     width: "100%",
   },
   empty: {
     alignItems: "center",
-    gap: space.sm + 2,
+    gap: space.ms,
     justifyContent: "center",
     minHeight: 260,
     paddingVertical: space.lg,
@@ -273,22 +266,23 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.4)",
     fontSize: fontSize.label,
     fontStyle: "italic",
-    paddingTop: space.md,
+    paddingBottom: space.sm,
+    paddingTop: space.lg,
     textAlign: "center",
   },
   fill: { flex: 1 },
   label: {
+    ...type.eyebrow,
     color: PANEL.faint,
-    fontSize: 10,
+    // Web's section label here: bolder and wider than the app's eyebrow.
     fontWeight: "700",
-    letterSpacing: 1.4,
-    textTransform: "uppercase",
+    letterSpacing: 1.5,
   },
   labelRow: {
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: space.sm + 2,
+    marginBottom: space.ms,
     width: "100%",
   },
   loading: { alignItems: "center", paddingVertical: space.xl },
@@ -300,7 +294,7 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   scrollContent: {
     paddingBottom: space.lg,
-    paddingHorizontal: space.sm + 4,
-    paddingTop: space.sm,
+    paddingHorizontal: space.md,
+    paddingTop: space.md,
   },
 });

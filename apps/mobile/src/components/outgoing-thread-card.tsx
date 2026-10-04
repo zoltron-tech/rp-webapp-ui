@@ -2,11 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import type { PromptThreadComment } from "@nw/types";
 import { pluralize, toFormattedDateFromUnix } from "@nw/utils";
 import { Image } from "expo-image";
-import { memo, useMemo } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { memo, type ReactNode, useMemo, useState } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { RichText } from "@/components/rich-text";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * One outgoing thread, as web's `components/outgoing-reply` draws it.
@@ -82,11 +84,14 @@ const OutgoingThreadCardView = ({
       style={[
         styles.card,
         {
-          backgroundColor: theme.material.fill,
+          backgroundColor: theme.material.card.backgroundColor,
           // Web: `[data-has-replies]` takes the accent on the border and a 4px
           // accent rule down the left, so a thread waiting on you is findable
           // by colour alone in a column of cards.
-          borderColor: hasReplies ? theme.accent.solid : theme.material.edge,
+          // At 1px the saturated step outlines the whole card; the rail carries it.
+          borderColor: hasReplies
+            ? theme.accent.surfaceHover
+            : theme.material.edge,
           borderLeftColor: hasReplies
             ? theme.accent.solid
             : theme.material.edge,
@@ -198,22 +203,12 @@ const OutgoingThreadCardView = ({
 
       <View style={[styles.rule, { backgroundColor: theme.material.edge }]} />
 
-      <View
-        style={[
-          styles.content,
-          {
-            backgroundColor: theme.glass.field,
-            borderColor: theme.material.edge,
-          },
-        ]}
-      >
-        <RichText html={thread.text} />
+      <Excerpt key={thread.id}>
+        <RichText html={thread.text} maxBlocks={EXCERPT_BLOCKS} />
 
         {thread.media ? (
           <View style={styles.mediaBox}>
             {isVideo ? (
-              // No player: nothing on this card is interactive yet, and a video
-              // that cannot be played is better shown as what it is.
               <View
                 style={[styles.video, { borderColor: theme.material.edge }]}
               >
@@ -234,7 +229,7 @@ const OutgoingThreadCardView = ({
             )}
           </View>
         ) : null}
-      </View>
+      </Excerpt>
 
       <View style={styles.footer}>
         <Ionicons color={theme.textGray} name="chatbubbles-outline" size={14} />
@@ -284,54 +279,107 @@ const OutgoingThreadCardView = ({
  */
 export const OutgoingThreadCard = memo(OutgoingThreadCardView);
 
+/** How much of a post a list of threads shows. */
+const EXCERPT_HEIGHT = 168;
+const EXCERPT_BLOCKS = 5;
+const EXCERPT_FADE = 44;
+
+/**
+ * What was written, as a quote and as an excerpt.
+ *
+ * This is a list of threads, and a card in it used to draw its whole post: one
+ * long reply was three screens of scrolling to reach the next thread. Now it
+ * is capped, and fades out at the cap when there is more — "View thread" is
+ * where the rest is read.
+ *
+ * A rule down the leading edge rather than a box in a box: the card is already
+ * a frame.
+ *
+ * Whether it overflowed is measured, and the state is this component's own;
+ * the card keys it by thread, so a recycled cell starts again.
+ */
+const Excerpt = ({ children }: { children: ReactNode }) => {
+  const theme = useAppTheme();
+  const [clipped, setClipped] = useState(false);
+  const fade = theme.material.card.backgroundColor;
+
+  return (
+    <View style={[styles.excerpt, { borderLeftColor: theme.material.edge }]}>
+      <View
+        onLayout={(event) => {
+          const over = event.nativeEvent.layout.height > EXCERPT_HEIGHT;
+          if (over !== clipped) setClipped(over);
+        }}
+      >
+        {children}
+      </View>
+      {clipped ? (
+        <LinearGradient
+          colors={[`${fade}00`, fade]}
+          pointerEvents="none"
+          style={styles.excerptFade}
+        />
+      ) : null}
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   avatarGroup: { height: PRIMARY_AVATAR, width: PRIMARY_AVATAR },
   card: {
-    borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    gap: space.sm,
-    padding: space.sm + 2,
+    borderRadius: radius.card,
+    borderWidth: border.edge,
+    gap: space.ms,
+    padding: space.m,
   },
   concluded: {
     alignItems: "center",
     alignSelf: "flex-start",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: 4,
+    gap: space.xs,
     paddingHorizontal: space.sm,
     paddingVertical: 3,
   },
-  concludedLabel: { fontSize: 11, fontWeight: "600" },
-  content: {
-    borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: space.sm + 2,
+  concludedLabel: { fontSize: fontSize.meta, fontWeight: "600" },
+  excerpt: {
+    borderLeftWidth: 2,
+    maxHeight: EXCERPT_HEIGHT,
+    overflow: "hidden",
+    paddingLeft: space.m,
   },
-  footer: { alignItems: "center", flexDirection: "row", gap: space.xs + 2 },
+  excerptFade: {
+    bottom: 0,
+    height: EXCERPT_FADE,
+    left: 0,
+    position: "absolute",
+    right: 0,
+  },
+  footer: { alignItems: "center", flexDirection: "row", gap: space.s },
   footerLabel: { flex: 1, fontSize: fontSize.caption, fontWeight: "500" },
-  header: { alignItems: "center", flexDirection: "row", gap: space.sm + 2 },
-  identity: { flex: 1, gap: 2, minWidth: 0 },
+  header: { alignItems: "center", flexDirection: "row", gap: space.ms },
+  identity: { flex: 1, gap: space.xxs, minWidth: 0 },
   image: { height: 160, width: "100%" },
   mediaBox: { marginTop: space.sm, maxWidth: 220 },
-  meta: { fontSize: 11 },
+  meta: { fontSize: fontSize.meta },
   metaRow: { alignItems: "center", flexDirection: "row", gap: 5 },
   metaTarget: { flexShrink: 1 },
   name: { flexShrink: 1, fontSize: fontSize.body, fontWeight: "700" },
-  nameRow: { alignItems: "center", flexDirection: "row", gap: space.xs + 2 },
+  nameRow: { alignItems: "center", flexDirection: "row", gap: space.s },
   open: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: 4,
+    gap: space.xs,
     // 32 rather than 44: it sits inside a card in a scrolling list, where a
     // taller control would push every card down a row. `hitSlop` makes up the
     // difference without costing the layout anything.
     minHeight: 32,
-    paddingHorizontal: space.sm + 2,
+    paddingHorizontal: space.ms,
   },
-  openLabel: { fontSize: 11, fontWeight: "700" },
+  openLabel: { fontSize: fontSize.meta, fontWeight: "700" },
   rule: { height: StyleSheet.hairlineWidth, width: "100%" },
   targetAvatar: {
     borderRadius: radius.full,
@@ -341,14 +389,14 @@ const styles = StyleSheet.create({
     right: -3,
   },
   typeTag: {
-    borderRadius: 4,
-    borderWidth: StyleSheet.hairlineWidth,
-    fontSize: 9,
+    borderRadius: radius.xs,
+    borderWidth: border.edge,
+    fontSize: fontSize.meta,
     fontWeight: "600",
     letterSpacing: 0.2,
     overflow: "hidden",
     paddingHorizontal: 5,
-    paddingVertical: 2,
+    paddingVertical: space.xxs,
   },
   unread: {
     alignItems: "center",
@@ -358,16 +406,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     minWidth: 24,
   },
-  unreadLabel: { color: "#fff", fontSize: 11, fontWeight: "700" },
+  unreadLabel: { color: "#fff", fontSize: fontSize.meta, fontWeight: "700" },
   video: {
     alignItems: "center",
     backgroundColor: "#000",
     borderRadius: radius.sm,
-    borderWidth: StyleSheet.hairlineWidth,
-    gap: 4,
+    borderWidth: border.edge,
+    gap: space.xs,
     height: 96,
     justifyContent: "center",
     width: "100%",
   },
-  videoLabel: { fontSize: 11, fontWeight: "600" },
+  videoLabel: { fontSize: fontSize.meta, fontWeight: "600" },
 });

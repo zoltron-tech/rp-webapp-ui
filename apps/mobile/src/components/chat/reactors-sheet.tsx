@@ -1,8 +1,9 @@
 import { pluralize } from "@nw/utils";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import type { ReactionGroup } from "@/components/chat/reactions";
 import { BottomSheet } from "@/components/sheet";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * Who reacted, and with what.
@@ -81,20 +82,20 @@ export const ReactorsSheet = ({
 
 const styles = StyleSheet.create({
   body: { gap: space.sm, paddingBottom: space.md, paddingHorizontal: space.md },
-  glyph: { fontSize: 22 },
+  glyph: { fontSize: fontSize.h2 },
   // The name under the emoji, because the two clients draw these differently
   // and "Haha" is the part both of them agree on.
   glyphColumn: { alignItems: "center", minWidth: 44 },
-  glyphLabel: { fontSize: 9, fontWeight: "700" },
+  glyphLabel: { fontSize: fontSize.meta, fontWeight: "700" },
   group: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.sm,
     padding: space.sm,
   },
   name: { fontSize: fontSize.body, fontWeight: "600" },
-  names: { flex: 1, gap: 2 },
+  names: { flex: 1, gap: space.xxs },
   you: { fontSize: fontSize.caption, fontWeight: "700" },
 });

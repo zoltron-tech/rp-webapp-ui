@@ -4,11 +4,13 @@ import {
   EndOfListArt,
   MotionProvider,
 } from "@nw/animations";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import Svg from "react-native-svg";
 import { useScenePalette } from "@/components/scene-art";
 import { useScrollIdle } from "@/context/scroll-activity";
 import { fontSize, space, useAppTheme } from "@/theme";
+import { useIsFocused } from "@react-navigation/native";
 
 /**
  * "You've made it to the end", at the foot of a list that has run out.
@@ -59,10 +61,13 @@ export const EndOfList = ({
   // The theme as the drawing asks for it — shared with the muse scenes.
   const palette = useScenePalette();
   const idle = useScrollIdle();
+  // Not while another screen or tab is in front: the scene is a dozen SVG
+  // groups re-rendered through React every frame, for nobody.
+  const focused = useIsFocused();
 
   return (
     <View accessibilityRole="text" style={styles.root}>
-      <MotionProvider enabled={motion ?? idle}>
+      <MotionProvider enabled={motion ?? (idle && focused)}>
         <Svg height={HEIGHT} viewBox={END_OF_LIST_VIEW_BOX} width={WIDTH}>
           <EndOfListArt palette={palette} />
         </Svg>

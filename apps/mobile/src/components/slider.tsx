@@ -3,9 +3,9 @@ import {
   type LayoutChangeEvent,
   PanResponder,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
   },
   hit: { height: THUMB + space.sm * 2, justifyContent: "center" },
   label: { fontSize: fontSize.label, fontWeight: "600" },
-  root: { gap: 2 },
+  root: { gap: space.xxs },
   thumb: {
     borderRadius: radius.full,
     borderWidth: 3,

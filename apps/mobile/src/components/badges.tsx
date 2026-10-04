@@ -10,9 +10,10 @@ import {
 } from "@nw/badges";
 import type { Badge, BadgeCode } from "@nw/types/badge";
 import { memo } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import Svg, { Circle } from "react-native-svg";
-import { radius, space, useAppTheme } from "@/theme";
+import { border, radius, space, useAppTheme } from "@/theme";
 
 /**
  * Badge crests on a phone, drawn from `@nw/badges` — the same twelve SVGs the
@@ -210,7 +211,7 @@ const styles = StyleSheet.create({
   overflow: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     justifyContent: "center",
     paddingHorizontal: 5,
   },

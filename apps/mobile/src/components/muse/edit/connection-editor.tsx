@@ -16,10 +16,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import {
   RichTextEditor,
@@ -28,7 +27,9 @@ import {
 import { EditorModal } from "@/components/muse/edit/editor-modal";
 import { TextField } from "@/components/text-field";
 import { MAX_IMAGE_BYTES, pickImage, uploadFile } from "@/lib/media-upload";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
+import { SearchField } from "@/components/search-field";
+import { IconButton } from "@/components/icon-button";
 
 /**
  * Web's `MuseConnectionForm`: a titled, described bond between characters.
@@ -356,26 +357,15 @@ export const ConnectionEditor = ({
               })}
             </View>
 
-            <View
-              style={[
-                styles.search,
-                { backgroundColor: theme.glass.field },
-              ]}
-            >
-              <Ionicons color={theme.textGray} name="search" size={16} />
-              <TextInput
-                autoCorrect={false}
-                onChangeText={setSearch}
-                placeholder={
-                  tab === "own"
-                    ? "Filter your characters…"
-                    : "Search a friend's character…"
-                }
-                placeholderTextColor={theme.textGray}
-                style={[styles.searchInput, { color: theme.text }]}
-                value={search}
-              />
-            </View>
+            <SearchField
+              onChangeText={setSearch}
+              placeholder={
+                tab === "own"
+                ? "Filter your characters…"
+                : "Search a friend's character…"
+              }
+              value={search}
+            />
 
             <View style={styles.results}>
               {tab === "own" ? (
@@ -416,23 +406,15 @@ export const ConnectionEditor = ({
             <Text style={[styles.label, { color: theme.textGray }]}>
               Description
             </Text>
-            <Pressable
+            <IconButton
               accessibilityLabel="Add a picture"
-              accessibilityRole="button"
               hitSlop={space.xs}
+              icon="image-outline"
+              iconSize={16}
               onPress={() => void attachImage()}
-              style={({ pressed }) => [
-                styles.attach,
-                {
-                  backgroundColor: pressed
-                    ? theme.material.fillPressed
-                    : theme.material.fill,
-                  borderColor: theme.material.edge,
-                },
-              ]}
-            >
-              <Ionicons color={theme.text} name="image-outline" size={16} />
-            </Pressable>
+              size={30}
+              tone="surface"
+            />
           </View>
           <View
             style={[
@@ -504,32 +486,24 @@ const ResultRow = ({
 };
 
 const styles = StyleSheet.create({
-  attach: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    height: 30,
-    justifyContent: "center",
-    width: 30,
-  },
   block: { gap: space.sm },
   chip: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: 6,
+    gap: space.s,
     paddingLeft: 3,
-    paddingRight: space.sm + 2,
+    paddingRight: space.ms,
     paddingVertical: 3,
   },
   chipLabel: { fontSize: fontSize.label, fontWeight: "600", maxWidth: 110 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
-  chipTag: { fontSize: 10, fontStyle: "italic" },
+  chipTag: { fontSize: fontSize.meta, fontStyle: "italic" },
   content: { gap: space.md, padding: space.md, paddingBottom: space.xl },
   editor: {
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     minHeight: 160,
     overflow: "hidden",
   },
@@ -540,34 +514,22 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
   },
-  results: { gap: 2 },
+  results: { gap: space.xxs },
   row: {
     alignItems: "center",
     borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
-    gap: space.sm + 2,
+    gap: space.ms,
     paddingVertical: space.sm,
   },
   rowBy: { fontSize: fontSize.caption },
   rowName: { fontSize: fontSize.body, fontWeight: "500" },
   rowText: { flex: 1, minWidth: 0 },
   scroll: { flex: 1 },
-  search: {
-    alignItems: "center",
-    borderRadius: radius.md,
-    flexDirection: "row",
-    gap: space.sm,
-    paddingHorizontal: space.sm + 4,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: fontSize.body,
-    paddingVertical: space.sm + 2,
-  },
   tab: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flex: 1,
     paddingVertical: 7,
   },

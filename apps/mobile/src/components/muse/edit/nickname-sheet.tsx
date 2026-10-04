@@ -1,16 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { Text, TextInput } from "@/components/text";
 import { FormSheet } from "@/components/muse/edit/form-sheet";
 import type { MuseEdit } from "@/hooks/use-muse-edit";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * Web's nickname pills, editable: tap one to rename it, the × to remove it,
@@ -190,8 +184,8 @@ export const NicknameSheet = ({
             styles.action,
             {
               backgroundColor: pressed
-                ? theme.accent.solidHover
-                : theme.accent.solid,
+                ? theme.accent.fillPressed
+                : theme.accent.fill,
               opacity: !draft.trim() || (!canAdd && !renaming) ? 0.5 : 1,
             },
           ]}
@@ -225,17 +219,17 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: fontSize.body,
     paddingHorizontal: space.md,
-    paddingVertical: space.sm + 2,
+    paddingVertical: space.ms,
   },
   pill: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: 6,
-    paddingLeft: space.sm + 4,
+    gap: space.s,
+    paddingLeft: space.m,
     paddingRight: space.sm,
-    paddingVertical: 6,
+    paddingVertical: space.s,
   },
   pillLabel: { fontSize: fontSize.label, fontStyle: "italic" },
   pillLabelWrap: { flexShrink: 1 },

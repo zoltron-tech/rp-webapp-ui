@@ -2,12 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useUnreadConversations } from "@nw/features";
 import type { Conversation } from "@nw/types";
 import { pluralize } from "@nw/utils";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Avatar } from "@/components/avatar";
 import { GlassSurface } from "@/components/glass-surface";
 import { useChatSocket, useIsOnline } from "@/context/socket";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * The bar above a conversation.
@@ -203,7 +204,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     justifyContent: "center",
     minWidth: 18,
-    paddingHorizontal: 4,
+    paddingHorizontal: space.xs,
     position: "absolute",
     right: -2,
     top: -1,
@@ -220,7 +221,7 @@ const styles = StyleSheet.create({
   groupAvatar: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     height: 38,
     justifyContent: "center",
     width: 38,
@@ -236,7 +237,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
     paddingVertical: space.xs,
   },
-  name: { fontSize: fontSize.body, fontWeight: "700" },
+  name: { fontSize: 16, fontWeight: "700" },
   subtitle: { flexShrink: 1, fontSize: fontSize.caption },
   subtitleRow: { alignItems: "center", flexDirection: "row", gap: space.xs },
   text: { flex: 1, gap: 1, minWidth: 0 },

@@ -21,9 +21,9 @@ import {
   Linking,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Avatar } from "@/components/avatar";
 import { UsernameSheet } from "@/components/edit-profile/username-sheet";
@@ -36,6 +36,7 @@ import {
 } from "@/components/settings";
 import { env } from "@/lib/env";
 import { fontSize, space, useAppTheme } from "@/theme";
+import { WEB_URL } from "@/lib/links";
 
 /**
  * Web's `AccountSection`: sign-in and security, badges and your circle,
@@ -49,7 +50,6 @@ import { fontSize, space, useAppTheme } from "@/theme";
 type Async = "idle" | "loading" | "success" | "error";
 
 const PAGE_SIZE = 5;
-const WEB_URL = env.WEB_URL || "https://novelist.world";
 
 export default function AccountScreen() {
   const theme = useAppTheme();
@@ -397,13 +397,13 @@ const styles = StyleSheet.create({
   blockedRow: {
     alignItems: "center",
     flexDirection: "row",
-    gap: space.sm + 4,
+    gap: space.m,
     paddingHorizontal: space.md,
-    paddingVertical: space.sm + 2,
+    paddingVertical: space.ms,
   },
   blockedText: { flex: 1, minWidth: 0 },
-  body: { gap: space.lg, padding: space.sm + 4 },
-  detail: { alignItems: "flex-start", gap: 4 },
+  body: { gap: space.lg, padding: space.m },
+  detail: { alignItems: "flex-start", gap: space.xs },
   loading: { padding: space.lg },
   value: { fontSize: fontSize.caption },
 });

@@ -7,7 +7,7 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
-import { radius, space, useAppTheme } from "@/theme";
+import { border, radius, space, useAppTheme } from "@/theme";
 
 /**
  * Ghosts of what is on its way.
@@ -141,10 +141,7 @@ const CardFrame = ({ children }: { children: ReactNode }) => {
     <View
       style={[
         styles.card,
-        {
-          backgroundColor: theme.material.fill,
-          borderColor: theme.material.edge,
-        },
+        theme.material.card,
       ]}
     >
       {children}
@@ -155,7 +152,7 @@ const CardFrame = ({ children }: { children: ReactNode }) => {
 /** Face, name and the meta line under it — the head of every feed card. */
 const CardHeader = ({ metaWidth }: { metaWidth: DimensionValue }) => (
   <View style={styles.header}>
-    <Bone circle height={40} />
+    <Bone circle height={44} />
     <View style={styles.identity}>
       <Bone height={14} width="45%" />
       <Bone height={10} width={metaWidth} />
@@ -228,18 +225,19 @@ export const FeedCardSkeleton = ({
   variant === "activity" ? <ActivityCardSkeleton /> : <PromptCardSkeleton />;
 
 const styles = StyleSheet.create({
-  actions: { alignItems: "center", flexDirection: "row", gap: space.sm + 4 },
+  actions: { alignItems: "center", flexDirection: "row", gap: space.m },
   // `prompt-card.tsx`'s `card`, verbatim.
   card: {
-    borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
-    gap: space.sm + 2,
+    borderRadius: radius.card,
+    borderWidth: border.edge,
+    gap: space.ms,
+    paddingBottom: space.m,
     paddingHorizontal: space.md - 2,
-    paddingVertical: space.sm + 4,
+    paddingTop: 18,
   },
   fill: { flex: 1 },
-  header: { alignItems: "center", flexDirection: "row", gap: space.sm + 2 },
-  identity: { flex: 1, gap: 6, minWidth: 0 },
+  header: { alignItems: "center", flexDirection: "row", gap: space.ms },
+  identity: { flex: 1, gap: space.s, minWidth: 0 },
   lines: { gap: space.sm },
   reply: { alignItems: "center", flexDirection: "row", gap: space.sm },
   spacer: { flex: 1 },

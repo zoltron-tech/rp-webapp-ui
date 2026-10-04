@@ -4,10 +4,11 @@ import { parseRichText, richTextToPlainText } from "@nw/richtext";
 import type { Message } from "@nw/types";
 import * as Clipboard from "expo-clipboard";
 import type { ComponentProps } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { MessageThumb, messageMediaOf } from "@/components/chat/message-media";
 import { BottomSheet } from "@/components/sheet";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * What a long press on a message offers.
@@ -270,7 +271,7 @@ const styles = StyleSheet.create({
   action: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.sm,
     padding: space.md,
@@ -296,6 +297,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 46,
   },
-  reactionGlyph: { fontSize: 22 },
+  reactionGlyph: { fontSize: fontSize.h2 },
   reactions: { gap: space.sm, paddingBottom: space.xs },
 });

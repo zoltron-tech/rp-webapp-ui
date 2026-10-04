@@ -1,6 +1,14 @@
 import type { MarkdownMark } from "@nw/chat";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { fontSize, monospace, radius, space, useAppTheme } from "@/theme";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
+import {
+  border,
+  fontSize,
+  monospace,
+  radius,
+  space,
+  useAppTheme,
+} from "@/theme";
 
 /**
  * Bold, italic, strike and code, for people who do not type asterisks.
@@ -128,7 +136,7 @@ const styles = StyleSheet.create({
   button: {
     alignItems: "center",
     borderRadius: radius.sm,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     height: 28,
     justifyContent: "center",
     width: 32,

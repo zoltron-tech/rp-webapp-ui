@@ -5,12 +5,11 @@ import {
   PanResponder,
   Pressable,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from "react-native";
+import { Text, TextInput } from "@/components/text";
 import { asHex } from "@/lib/color";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * Web's `HexColorPicker` plus its hex field, for a muse's profile colour and
@@ -313,7 +312,7 @@ export const ColorPicker = ({
 const styles = StyleSheet.create({
   hexInput: {
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flex: 1,
     fontSize: fontSize.body,
     fontVariant: ["tabular-nums"],
@@ -336,7 +335,7 @@ const styles = StyleSheet.create({
   },
   preset: {
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     height: 26,
     width: 26,
   },

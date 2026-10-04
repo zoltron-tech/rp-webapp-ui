@@ -1,7 +1,8 @@
 import type { SymbolCategory } from "@nw/richtext";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { BottomSheet } from "@/components/sheet";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * A grid of glyphs, grouped — web's bullet, numbering and quotation popovers.
@@ -104,13 +105,13 @@ const styles = StyleSheet.create({
   cell: {
     alignItems: "center",
     borderRadius: radius.sm,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     height: 44,
     justifyContent: "center",
     minWidth: 44,
     paddingHorizontal: space.xs,
   },
   glyph: { fontSize: fontSize.title },
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: space.xs + 2 },
-  heading: { fontSize: 10, fontWeight: "700", letterSpacing: 0.8 },
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: space.s },
+  heading: { fontSize: fontSize.meta, fontWeight: "700", letterSpacing: 0.8 },
 });

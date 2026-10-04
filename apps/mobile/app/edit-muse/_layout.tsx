@@ -27,7 +27,6 @@ export default function EditMuseLayout() {
       screenOptions={{
         contentStyle: { backgroundColor: theme.background },
         ...glassHeaderOptions(theme),
-        headerTitleStyle: { fontWeight: "700" },
       }}
     >
       <Stack.Screen name="new" options={{ title: "New character" }} />

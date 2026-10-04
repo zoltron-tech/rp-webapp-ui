@@ -18,9 +18,9 @@ import {
   type LayoutChangeEvent,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import {
   isGifUrl,
   isVideoUrl,
@@ -39,7 +39,7 @@ import { AddButton } from "@/components/muse/sections/info";
 import { useMuseMedia, useMuseMediaMetadata } from "@/hooks/use-muse";
 import { MAX_GALLERY_BYTES, pickMedia, uploadFile } from "@/lib/media-upload";
 import type { MuseLook } from "@/lib/muse-appearance";
-import { radius } from "@/theme";
+import { fontSize, radius, space } from "@/theme";
 
 /**
  * Web's `GallerySection`: everything uploaded to this character.
@@ -330,7 +330,7 @@ export const MuseGallerySection = ({
 const styles = StyleSheet.create({
   badge: {
     backgroundColor: "rgba(0,0,0,0.6)",
-    borderRadius: 4,
+    borderRadius: radius.xs,
     bottom: 4,
     paddingHorizontal: 5,
     paddingVertical: 1,
@@ -339,9 +339,9 @@ const styles = StyleSheet.create({
   },
   badgeLabel: {
     color: "#ffffff",
-    fontSize: 9,
-    fontWeight: "800",
-    letterSpacing: 0.6,
+    fontSize: fontSize.meta,
+    fontWeight: "600",
+    letterSpacing: 0.3,
   },
   fill: { height: "100%", width: "100%" },
   grid: {
@@ -350,11 +350,11 @@ const styles = StyleSheet.create({
     gap: GAP,
     width: "100%",
   },
-  progress: { alignItems: "center", flexDirection: "row", gap: 6 },
-  progressLabel: { color: PANEL.secondary, fontSize: 11, fontWeight: "600" },
+  progress: { alignItems: "center", flexDirection: "row", gap: space.s },
+  progressLabel: { color: PANEL.secondary, fontSize: fontSize.meta, fontWeight: "600" },
   tile: {
     backgroundColor: PANEL.shimmer,
-    borderRadius: radius.sm,
+    borderRadius: 6,
     overflow: "hidden",
   },
   video: {

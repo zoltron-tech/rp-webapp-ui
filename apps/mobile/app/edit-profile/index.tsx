@@ -3,15 +3,8 @@ import { useSession } from "@nw/features";
 import { IMAGE_SIZES, wsrvImage } from "@nw/utils/image";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import {
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Text, TextInput } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Avatar } from "@/components/avatar";
 import { CroppedImage } from "@/components/cropped-image";
@@ -25,7 +18,7 @@ import {
 import { useImageCropFlow } from "@/hooks/use-image-crop-flow";
 import { useKeyboardOffset } from "@/hooks/use-keyboard-height";
 import { existingAvatar, useProfileEdit } from "@/hooks/use-profile-edit";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * Web's `LandingSection`: the face, cover and name you are editing, then the
@@ -446,18 +439,18 @@ const styles = StyleSheet.create({
   avatarWrap: {
     borderRadius: radius.full,
     marginTop: -44,
-    padding: 4,
+    padding: space.xs,
   },
   banner: { aspectRatio: 5 / 2, overflow: "hidden", width: "100%" },
-  body: { gap: space.lg, padding: space.sm + 4 },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: 4 },
+  body: { gap: space.lg, padding: space.m },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: space.xs },
   coverBadge: {
     alignItems: "center",
     backgroundColor: "rgba(0, 0, 0, 0.55)",
     borderRadius: radius.full,
     flexDirection: "row",
     gap: 5,
-    paddingHorizontal: space.sm + 2,
+    paddingHorizontal: space.ms,
     paddingVertical: 5,
     position: "absolute",
     right: space.sm,
@@ -474,7 +467,7 @@ const styles = StyleSheet.create({
     borderStyle: "dashed",
     borderWidth: 1.5,
     flex: 1,
-    gap: 2,
+    gap: space.xxs,
     justifyContent: "center",
     margin: space.sm,
   },
@@ -482,16 +475,16 @@ const styles = StyleSheet.create({
   coverEmptyTitle: { fontSize: fontSize.label, fontWeight: "700" },
   hero: {
     borderRadius: radius.md + 4,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     overflow: "hidden",
     paddingBottom: space.md,
   },
-  heroIdentity: { flex: 1, gap: 4, minWidth: 0, paddingBottom: space.xs },
+  heroIdentity: { flex: 1, gap: space.xs, minWidth: 0, paddingBottom: space.xs },
   heroName: { fontSize: fontSize.title - 2, fontWeight: "700" },
   heroRow: {
     alignItems: "flex-end",
     flexDirection: "row",
-    gap: space.sm + 4,
+    gap: space.m,
     paddingHorizontal: space.md,
   },
   nameCaption: { fontSize: fontSize.caption },
@@ -499,13 +492,13 @@ const styles = StyleSheet.create({
   nameField: { gap: 5 },
   nameFrame: {
     alignItems: "center",
-    borderRadius: radius.md + 2,
-    borderWidth: 1,
+    borderRadius: radius.field,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.sm,
-    paddingHorizontal: space.sm + 4,
+    paddingHorizontal: space.m,
   },
-  nameHeader: { gap: 2 },
+  nameHeader: { gap: space.xxs },
   nameInput: {
     flex: 1,
     fontSize: fontSize.body,
@@ -514,7 +507,7 @@ const styles = StyleSheet.create({
   },
   nameLabel: { fontSize: fontSize.caption, fontWeight: "600" },
   nameSection: {
-    gap: space.sm + 4,
+    gap: space.m,
     paddingHorizontal: space.md,
     paddingTop: space.md,
   },

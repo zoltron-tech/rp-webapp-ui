@@ -12,9 +12,9 @@ import {
   Alert,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MuseGate, useOwnedMuse } from "@/components/edit-muse/shared";
 import {
@@ -25,7 +25,7 @@ import { ConnectionCard } from "@/components/muse/sections/peers";
 import { Notice, PillButton } from "@/components/settings";
 import { useMuseConnections } from "@/hooks/use-muse";
 import { museLook, museName } from "@/lib/muse-appearance";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { fontSize, radius, space, type, useAppTheme } from "@/theme";
 
 /**
  * Web's `ConnectionsSection`: titled bonds between this character and yours or
@@ -200,19 +200,14 @@ const Connections = ({ muse }: { muse: Muse }) => {
 };
 
 const styles = StyleSheet.create({
-  body: { gap: space.md, padding: space.sm + 4 },
+  body: { gap: space.md, padding: space.m },
   dark: {
     backgroundColor: "rgba(10,11,14,0.82)",
     borderRadius: radius.md + 2,
-    gap: space.sm + 2,
-    padding: space.sm + 2,
+    gap: space.ms,
+    padding: space.ms,
   },
-  groupTitle: {
-    fontSize: fontSize.caption,
-    fontWeight: "700",
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
-  },
+  groupTitle: type.eyebrow,
   head: {
     alignItems: "center",
     flexDirection: "row",

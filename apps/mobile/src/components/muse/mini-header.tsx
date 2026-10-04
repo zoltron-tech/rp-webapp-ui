@@ -1,6 +1,7 @@
 import type { Muse } from "@nw/types";
 import { wsrvImage } from "@nw/utils";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { PANEL, Shimmer } from "@/components/muse/panel";
 import { PennedBy } from "@/components/muse/penned-by";
@@ -102,7 +103,7 @@ const styles = StyleSheet.create({
   row: {
     alignItems: "center",
     flexDirection: "row",
-    gap: space.sm + 2,
+    gap: space.ms,
     paddingHorizontal: space.xs,
     paddingVertical: space.sm,
     width: "100%",

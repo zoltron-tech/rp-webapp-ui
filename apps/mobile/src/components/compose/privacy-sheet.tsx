@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { Friend, PrivacyLevel } from "@nw/types";
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import {
   PRIVACY_ICON,
@@ -9,7 +10,8 @@ import {
   PRIVACY_OPTIONS,
 } from "@/components/feed/privacy";
 import { BottomSheet } from "@/components/sheet";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
+import { IconButton } from "@/components/icon-button";
 
 /**
  * Who can see the post — web's `PromptPrivacySelect` and the "Share with"
@@ -65,22 +67,13 @@ export const PrivacySheet = ({
       fill={choosing}
       headerAction={
         choosing ? (
-          <Pressable
+          <IconButton
             accessibilityLabel="Done"
-            accessibilityRole="button"
             hitSlop={space.sm}
+            icon="checkmark"
             onPress={finishCustom}
-            style={({ pressed }) => [
-              styles.done,
-              {
-                backgroundColor: pressed
-                  ? theme.accent.solidHover
-                  : theme.accent.solid,
-              },
-            ]}
-          >
-            <Ionicons color="#ffffff" name="checkmark" size={18} />
-          </Pressable>
+            tone="primary"
+          />
         ) : undefined
       }
       maxHeightRatio={choosing ? 0.75 : 0.6}
@@ -218,21 +211,14 @@ export const PrivacySheet = ({
 
 const styles = StyleSheet.create({
   body: { gap: space.sm, padding: space.md, paddingBottom: space.xl },
-  done: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    height: 32,
-    justifyContent: "center",
-    width: 32,
-  },
   hint: { fontSize: fontSize.caption },
   name: { fontSize: fontSize.body, fontWeight: "600" },
   row: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: space.sm + 2,
+    gap: space.ms,
     minHeight: 52,
     paddingHorizontal: space.md,
     paddingVertical: space.sm,

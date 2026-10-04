@@ -1,4 +1,3 @@
-import { SCRIM_ALPHA } from "@nw/theme";
 import { Ionicons } from "@expo/vector-icons";
 import {
   type AttachmentKind,
@@ -24,10 +23,10 @@ import {
   ActivityIndicator,
   Pressable,
   StyleSheet,
-  Text,
   useWindowDimensions,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { ClipPlayer } from "@/components/chat/clip-player";
 import { cachedThumbnail, thumbnailFor } from "@/components/feed/feed-media";
 import {
@@ -35,7 +34,14 @@ import {
   setViewerPlaceholder,
 } from "@/components/muse/media-viewer";
 import { openExternalLink } from "@/lib/safe-link";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import {
+  border,
+  fontSize,
+  MEDIA_CHIP,
+  radius,
+  space,
+  useAppTheme,
+} from "@/theme";
 
 /**
  * The media in a message: GIFs, images, and everything that is not one.
@@ -927,24 +933,23 @@ export const AttachmentMosaic = ({
 };
 
 /** Chips straight on media: web's `MEDIA_CHIP`, no blur. */
-const MEDIA_CHIP = `rgba(0,0,0,${SCRIM_ALPHA.mediaChip})`;
 
 const styles = StyleSheet.create({
   card: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.sm,
     padding: space.sm,
   },
-  cardKind: { fontSize: 10 },
+  cardKind: { fontSize: fontSize.meta },
   cardName: { fontSize: fontSize.caption, fontWeight: "600" },
   cardText: { flex: 1, gap: 1 },
   chip: {
     alignItems: "center",
     borderRadius: radius.sm,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.xs,
     paddingHorizontal: space.sm,
@@ -964,18 +969,18 @@ const styles = StyleSheet.create({
     backgroundColor: MEDIA_CHIP,
     borderRadius: radius.full,
     flexDirection: "row",
-    gap: 4,
-    left: space.xs + 2,
+    gap: space.xs,
+    left: space.s,
     paddingHorizontal: space.xs + 3,
-    paddingVertical: 2,
+    paddingVertical: space.xxs,
     position: "absolute",
-    top: space.xs + 2,
+    top: space.s,
   },
-  countLabel: { color: "#ffffff", fontSize: 10, fontWeight: "700" },
+  countLabel: { color: "#ffffff", fontSize: fontSize.meta, fontWeight: "700" },
   fallback: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.xs,
     paddingHorizontal: space.sm,
@@ -1012,7 +1017,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
     bottom: 2,
     minWidth: 16,
-    paddingHorizontal: 4,
+    paddingHorizontal: space.xs,
     position: "absolute",
     right: 2,
   },
@@ -1022,7 +1027,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
     height: 22,
     justifyContent: "center",
-    paddingLeft: 2,
+    paddingLeft: space.xxs,
     width: 22,
   },
   tile: { overflow: "hidden" },

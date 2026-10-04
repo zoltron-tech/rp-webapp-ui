@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: space.sm + 2,
+    gap: space.ms,
     justifyContent: "center",
     padding: space.md,
     paddingBottom: space.xl,

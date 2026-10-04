@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useSession, useUnreadConversations } from "@nw/features";
 import { type Href, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef } from "react";
@@ -13,9 +12,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Avatar } from "@/components/avatar";
 import { GlassSurface } from "@/components/glass-surface";
@@ -27,7 +26,9 @@ import {
 } from "@/components/settings";
 import { useSignOut } from "@/hooks/use-sign-out";
 import { env } from "@/lib/env";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
+import { PRIVACY_URL, TERMS_URL, WEB_URL } from "@/lib/links";
+import { IconButton } from "@/components/icon-button";
 
 /**
  * The user menu, as a sheet.
@@ -64,9 +65,6 @@ const CLOSE_DISTANCE = 110;
 const CLOSE_VELOCITY = 0.75;
 const DRAG_SLOP = 6;
 
-const WEB_URL = env.WEB_URL || "https://novelist.world";
-const TERMS_URL = `${WEB_URL}/rp/terms`;
-const PRIVACY_URL = `${WEB_URL}/rp/privacy-policy`;
 
 const stripHtml = (html: string | null | undefined) =>
   (html ?? "").replace(/<[^>]*>/g, "").trim();
@@ -200,22 +198,13 @@ export default function MenuScreen() {
         ]}
       >
         <Text style={[styles.headerTitle, { color: theme.text }]}>Menu</Text>
-        <Pressable
+        <IconButton
           accessibilityLabel="Close menu"
           hitSlop={space.sm}
+          icon="close"
           onPress={close}
-          style={({ pressed }) => [
-            styles.closeButton,
-            {
-              backgroundColor: pressed
-                ? theme.glass.fillPressed
-                : theme.glass.fillHover,
-              borderColor: theme.glass.edge,
-            },
-          ]}
-        >
-          <Ionicons color={theme.text} name="close" size={18} />
-        </Pressable>
+          tone="glass"
+        />
       </View>
 
       <ScrollView
@@ -427,18 +416,10 @@ const styles = StyleSheet.create({
   avatarRing: {
     borderRadius: radius.full,
     borderWidth: 2,
-    padding: 2,
+    padding: space.xxs,
   },
-  body: { gap: space.md, padding: space.sm + 4, paddingTop: space.md },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: 4, marginTop: 3 },
-  closeButton: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    height: 32,
-    justifyContent: "center",
-    width: 32,
-  },
+  body: { gap: space.md, padding: space.m, paddingTop: space.md },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: space.xs, marginTop: 3 },
   handle: { fontSize: fontSize.caption },
   header: {
     alignItems: "center",
@@ -449,16 +430,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.md,
   },
   headerTitle: { fontSize: fontSize.title, fontWeight: "700" },
-  identity: { flex: 1, gap: 2, minWidth: 0 },
+  identity: { flex: 1, gap: space.xxs, minWidth: 0 },
   identityAction: { flex: 1 },
   identityActions: { flexDirection: "row", gap: space.sm },
   identityCard: {
-    borderRadius: radius.md + 4,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.group,
+    borderWidth: border.edge,
     gap: space.md,
     padding: space.md,
   },
-  identityChips: { flexDirection: "row", gap: 6, marginTop: 4 },
+  identityChips: { flexDirection: "row", gap: space.s, marginTop: space.xs },
   identityTop: { alignItems: "center", flexDirection: "row", gap: space.md },
   name: { fontSize: fontSize.title - 2, fontWeight: "700" },
   screen: { flex: 1 },

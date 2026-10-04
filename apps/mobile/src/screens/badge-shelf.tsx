@@ -5,12 +5,13 @@ import type { Badge } from "@nw/types/badge";
 import { toFormattedDate } from "@nw/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { BadgeCrest } from "@/components/badges";
 import { BadgeShelfSkeleton } from "@/components/list-skeletons";
 import { ListStatus } from "@/components/list-status";
 import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * Every badge there is — earned first, then the ones still to come.
@@ -198,10 +199,10 @@ const BadgeTile = ({ badge }: { badge: Badge }) => {
 };
 
 const styles = StyleSheet.create({
-  awarded: { fontSize: 10, fontWeight: "700" },
+  awarded: { fontSize: fontSize.meta, fontWeight: "700" },
   body: { fontSize: fontSize.caption, lineHeight: 16, textAlign: "center" },
-  column: { gap: space.sm + 2 },
-  content: { gap: space.sm + 2, padding: space.md },
+  column: { gap: space.ms },
+  content: { gap: space.ms, padding: space.md },
   count: { fontSize: fontSize.body, fontWeight: "700" },
   fill: { flex: 1 },
   header: {
@@ -213,20 +214,20 @@ const styles = StyleSheet.create({
   refresh: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.xs,
     minHeight: 32,
-    paddingHorizontal: space.sm + 2,
+    paddingHorizontal: space.ms,
   },
   refreshLabel: { fontSize: fontSize.caption, fontWeight: "600" },
   tile: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flex: 1,
-    gap: space.xs + 2,
-    padding: space.sm + 4,
+    gap: space.s,
+    padding: space.m,
   },
   title: { fontSize: fontSize.label, fontWeight: "700", textAlign: "center" },
 });

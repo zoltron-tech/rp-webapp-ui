@@ -21,9 +21,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { MuseListRowSkeleton, SkeletonRows } from "@/components/list-skeletons";
 import { ListStatus } from "@/components/list-status";
 import { InFandomGroup, MuseListRow } from "@/components/muse-list-row";
@@ -31,7 +31,7 @@ import { closeOpenRevealRow } from "@/components/reveal-row";
 import { PillButton } from "@/components/settings";
 import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
 import { asColor, asHex, withAlpha } from "@/lib/color";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { fontSize, radius, space, type, useAppTheme } from "@/theme";
 
 /**
  * Every character a novelist writes — web's `/rp/profile/[handle]/muses`.
@@ -847,7 +847,7 @@ const GROUP_GAP = space.sm + 4;
 
 const styles = StyleSheet.create({
   bar: {
-    gap: space.sm + 2,
+    gap: space.ms,
     marginBottom: GROUP_GAP,
     paddingBottom: space.xs,
   },
@@ -865,7 +865,7 @@ const styles = StyleSheet.create({
   cell: { marginBottom: GROUP_GAP },
   checkbox: {
     alignItems: "center",
-    borderRadius: 5,
+    borderRadius: radius.sm,
     borderWidth: 1.5,
     height: 20,
     justifyContent: "center",
@@ -876,9 +876,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
     borderWidth: 1,
     flexDirection: "row",
-    gap: 6,
+    gap: space.s,
     maxWidth: 220,
-    paddingLeft: space.sm + 2,
+    paddingLeft: space.ms,
     paddingRight: 5,
     paddingVertical: 5,
   },
@@ -886,11 +886,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: radius.full,
     minWidth: 20,
-    paddingHorizontal: 6,
+    paddingHorizontal: space.s,
     paddingVertical: 1,
   },
-  chipCountLabel: { fontSize: 11, fontWeight: "700" },
-  chipDot: { borderRadius: 4, height: 8, width: 8 },
+  chipCountLabel: { fontSize: fontSize.meta, fontWeight: "700" },
+  chipDot: { borderRadius: radius.xs, height: 8, width: 8 },
   chipLabel: { flexShrink: 1, fontSize: fontSize.label, fontWeight: "600" },
   chipScroller: { marginHorizontal: -space.md },
   chips: { gap: space.sm, paddingHorizontal: space.md },
@@ -909,16 +909,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: space.sm,
     paddingHorizontal: space.xs,
-    paddingVertical: 2,
+    paddingVertical: space.xxs,
   },
   groupLabel: { fontSize: fontSize.label, fontWeight: "600" },
   groupMark: { borderRadius: 2, height: 16, width: 4 },
   groupTitle: {
+    ...type.eyebrow,
     flexShrink: 1,
-    fontSize: fontSize.label,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
   },
   groupToggle: {
     alignItems: "center",
@@ -948,6 +945,6 @@ const styles = StyleSheet.create({
   },
   summary: { fontSize: fontSize.caption, fontWeight: "600" },
   summaryRow: { alignItems: "center", flexDirection: "row", gap: space.sm },
-  swipeTip: { alignItems: "center", flexDirection: "row", gap: 4 },
+  swipeTip: { alignItems: "center", flexDirection: "row", gap: space.xs },
   swipeTipLabel: { fontSize: fontSize.caption },
 });

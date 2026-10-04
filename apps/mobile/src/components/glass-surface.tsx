@@ -4,7 +4,7 @@ import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import { createContext, memo, useContext } from "react";
 import { Platform, StyleSheet, View, type ViewProps } from "react-native";
 import { useA11ySettings } from "@/lib/a11y-settings";
-import { useAppTheme } from "@/theme";
+import { border, useAppTheme } from "@/theme";
 
 /**
  * The one glass primitive. Nothing else in the app imports `expo-blur` or
@@ -165,7 +165,7 @@ export const GlassSurface = memo(function GlassSurface({
               borderBottomColor: edgeColor,
               borderBottomWidth: StyleSheet.hairlineWidth,
             }
-          : { borderColor: edgeColor, borderWidth: StyleSheet.hairlineWidth };
+          : { borderColor: edgeColor, borderWidth: border.edge };
 
   // Over a blur the fill is its own layer, above the blur view. Anywhere else
   // it is the container's background — one view fewer, and on Android the only

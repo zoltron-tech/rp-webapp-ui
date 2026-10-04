@@ -13,9 +13,9 @@ import {
   Pressable,
   Share,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { MiniHeader } from "@/components/muse/mini-header";
 import {
   Divider,
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: radius.md,
     flexDirection: "row",
-    gap: space.sm + 4,
+    gap: space.m,
     paddingHorizontal: space.md + 2,
     paddingVertical: space.sm + 6,
   },

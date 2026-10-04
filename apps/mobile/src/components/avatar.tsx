@@ -1,8 +1,9 @@
 import type { NWImage } from "@nw/types";
 import { hasUsableCrop, wsrvImage } from "@nw/utils";
 import { Image } from "expo-image";
-import { memo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { memo, useMemo } from "react";
+import { StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { CroppedImage } from "@/components/cropped-image";
 import { useIsOnline } from "@/context/socket";
 import { fontSize, useAppTheme } from "@/theme";
@@ -81,7 +82,10 @@ export const Avatar = memo(function Avatar({
    * the API already proxied is left alone (it is not an S3 URL any more),
    * and `inside` never crops, so the stored pan and zoom still apply.
    */
-  const src = wsrvImage(uri, { fit: "inside", h: size * 3, w: size * 3 });
+  const src = useMemo(
+    () => wsrvImage(uri, { fit: "inside", h: size * 3, w: size * 3 }),
+    [size, uri],
+  );
 
   const inner = src ? (
     hasUsableCrop(image?.crop) ? (

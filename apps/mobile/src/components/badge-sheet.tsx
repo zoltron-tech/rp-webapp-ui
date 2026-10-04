@@ -1,9 +1,10 @@
 import type { Badge } from "@nw/types/badge";
 import { toFormattedDate } from "@nw/utils";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import { FlatList, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { BadgeCrest, hasVisibleBadges } from "@/components/badges";
 import { BottomSheet } from "@/components/sheet";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * Somebody else's badges, as a tray.
@@ -118,7 +119,7 @@ const BadgeSheetRow = ({ badge }: { badge: Badge }) => {
 };
 
 const styles = StyleSheet.create({
-  awarded: { fontSize: 10, fontWeight: "700" },
+  awarded: { fontSize: fontSize.meta, fontWeight: "700" },
   body: { fontSize: fontSize.caption, lineHeight: 16 },
   content: { gap: space.sm, paddingBottom: space.sm },
   empty: {
@@ -129,11 +130,11 @@ const styles = StyleSheet.create({
   row: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: space.sm + 2,
-    padding: space.sm + 2,
+    gap: space.ms,
+    padding: space.ms,
   },
-  text: { flex: 1, gap: 2 },
+  text: { flex: 1, gap: space.xxs },
   title: { fontSize: fontSize.body, fontWeight: "700" },
 });

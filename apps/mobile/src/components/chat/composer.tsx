@@ -1,4 +1,3 @@
-import { SCRIM_ALPHA } from "@nw/theme";
 import { Ionicons } from "@expo/vector-icons";
 import {
   hasMarkdown,
@@ -17,10 +16,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
-  type TextInput,
   View,
 } from "react-native";
+import { Text, type TextInput } from "@/components/text";
 import {
   KeyboardController,
   useKeyboardAnimation,
@@ -39,7 +37,15 @@ import {
   lastKeyboardHeight,
   useKeyboardHeight,
 } from "@/hooks/use-keyboard-height";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import {
+  border,
+  fontSize,
+  MEDIA_CHIP,
+  radius,
+  space,
+  useAppTheme,
+} from "@/theme";
+import { IconButton } from "@/components/icon-button";
 
 /**
  * The message composer.
@@ -837,28 +843,18 @@ export const Composer = ({
                 lit send on an empty composer invites a tap that does nothing. */}
             {sendVisible ? (
               <Animated.View style={{ transform: [{ scale: sendScale }] }}>
-                <Pressable
+                <IconButton
                   accessibilityLabel="Send message"
-                  accessibilityRole="button"
+                  busy={sending || media.isUploading}
                   disabled={!canSend}
                   hitSlop={space.sm}
+                  icon="send"
+                  iconSize={15}
                   onPress={() => void submit()}
-                  style={({ pressed }) => [
-                    styles.send,
-                    {
-                      backgroundColor: canSend
-                        ? theme.accent.solid
-                        : theme.accent.surfaceActive,
-                      opacity: pressed && canSend ? 0.8 : 1,
-                    },
-                  ]}
-                >
-                  {sending || media.isUploading ? (
-                    <ActivityIndicator color={theme.accent.onSolid} size="small" />
-                  ) : (
-                    <Ionicons color={theme.accent.onSolid} name="send" size={15} />
-                  )}
-                </Pressable>
+                  size={30}
+                  style={styles.send}
+                  tone="primary"
+                />
               </Animated.View>
             ) : null}
           </View>
@@ -927,10 +923,9 @@ const ActionButton = ({
 };
 
 /** Chips straight on media: web's `MEDIA_CHIP`, no blur. */
-const MEDIA_CHIP = `rgba(0,0,0,${SCRIM_ALPHA.mediaChip})`;
 
 const styles = StyleSheet.create({
-  action: { alignItems: "center", flex: 1, gap: 2 },
+  action: { alignItems: "center", flex: 1, gap: space.xxs },
   actionIcon: {
     alignItems: "center",
     borderRadius: radius.full,
@@ -939,14 +934,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 40,
   },
-  actionLabel: { fontSize: 10, fontWeight: "600" },
+  actionLabel: { fontSize: fontSize.meta, fontWeight: "600" },
   actions: {
     flexDirection: "row",
     gap: space.xs,
     paddingBottom: space.sm,
     paddingTop: space.xs,
   },
-  attachmentCount: { flex: 1, fontSize: 10, fontWeight: "700" },
+  attachmentCount: { flex: 1, fontSize: fontSize.meta, fontWeight: "700" },
   attachmentHeader: {
     alignItems: "center",
     flexDirection: "row",
@@ -954,7 +949,7 @@ const styles = StyleSheet.create({
   },
   attachmentRow: { gap: space.xs },
   attachments: { gap: space.xs, paddingBottom: space.sm },
-  clearAll: { fontSize: 10, fontWeight: "700" },
+  clearAll: { fontSize: fontSize.meta, fontWeight: "700" },
   container: {
     gap: space.xs,
     paddingHorizontal: space.md,
@@ -963,7 +958,7 @@ const styles = StyleSheet.create({
   field: {
     alignItems: "flex-end",
     borderRadius: radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flex: 1,
     flexDirection: "row",
     paddingRight: space.xs,
@@ -972,14 +967,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     alignSelf: "flex-start",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.xs,
     maxWidth: "100%",
     paddingHorizontal: space.sm,
     paddingVertical: 3,
   },
-  inCharacterLabel: { flexShrink: 1, fontSize: 10, fontWeight: "700" },
+  inCharacterLabel: { flexShrink: 1, fontSize: fontSize.meta, fontWeight: "700" },
   inlineAction: { paddingBottom: space.sm },
   input: {
     maxHeight: MAX_INPUT_HEIGHT,
@@ -1001,39 +996,31 @@ const styles = StyleSheet.create({
   replyIcon: { marginTop: 1 },
   replyText: { flex: 1, gap: 1 },
   row: { alignItems: "flex-end", flexDirection: "row", gap: space.sm },
-  send: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    height: 30,
-    justifyContent: "center",
-    marginBottom: space.sm + 1,
-    marginLeft: space.xs,
-    width: 30,
-  },
+  send: { marginBottom: space.sm + 1, marginLeft: space.xs },
   senderButton: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: 2,
+    gap: space.xxs,
     height: 40,
     paddingLeft: space.xs,
-    paddingRight: space.xs + 2,
+    paddingRight: space.s,
   },
   status: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.xs,
     paddingHorizontal: space.sm,
     paddingVertical: 3,
   },
-  statusLabel: { fontSize: 10, fontWeight: "600" },
+  statusLabel: { fontSize: fontSize.meta, fontWeight: "600" },
   statusRow: { alignItems: "center", paddingBottom: space.xs },
   thumb: {
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     height: 56,
     overflow: "hidden",
     width: 56,

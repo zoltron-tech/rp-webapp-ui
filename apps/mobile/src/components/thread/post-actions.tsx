@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { ComponentProps } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { BottomSheet } from "@/components/sheet";
 import type { PostVariant } from "@/components/thread/post";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * What the three dots on a thread post offer.
@@ -239,9 +240,9 @@ const styles = StyleSheet.create({
   action: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: space.sm + 2,
+    gap: space.ms,
     minHeight: 52,
     paddingHorizontal: space.md,
     paddingVertical: space.sm,

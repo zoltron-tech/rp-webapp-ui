@@ -2,7 +2,8 @@ import { queryKeys } from "@nw/features";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import {
   AuthScreen,
   ErrorBox,
@@ -154,7 +155,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   forgot: { alignItems: "center", paddingVertical: space.xs },
   forgotLabel: { fontSize: fontSize.label, fontWeight: "600" },
-  form: { gap: space.sm + 4 },
+  form: { gap: space.m },
   switch: { alignItems: "center", justifyContent: "center", minHeight: 44 },
   switchLabel: { fontSize: fontSize.label },
 });

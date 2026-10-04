@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { NovelistNote } from "@nw/types/novelist";
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { EmojiSlider } from "@/components/edit-profile/emoji-slider";
 import { FormSheet } from "@/components/muse/edit/form-sheet";
 import { getNoteEmojiRotate, NoteEmojiIcon } from "@/components/note-emoji";
@@ -216,11 +217,11 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     maxWidth: "88%",
     paddingHorizontal: space.md,
-    paddingVertical: space.sm + 2,
+    paddingVertical: space.ms,
   },
   /** Web's `NotePreviewEmoji`: over the bubble's top-right corner. */
   previewEmoji: { position: "absolute", right: -12, top: -16 },
-  previewRow: { alignItems: "center", paddingTop: space.sm + 4 },
+  previewRow: { alignItems: "center", paddingTop: space.m },
   previewText: {
     fontSize: fontSize.label,
     lineHeight: 18,
@@ -234,6 +235,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 30,
   },
-  swatches: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  swatches: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
   tilted: { transform: [{ rotate: "45deg" }] },
 });

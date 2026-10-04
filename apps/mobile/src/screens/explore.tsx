@@ -11,13 +11,7 @@ import {
   useRef,
   useState,
 } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { StyleSheet, View } from "react-native";
 import { ComposeTrigger } from "@/components/compose/compose-trigger";
 import { EndOfList } from "@/components/end-of-list";
 import { PromptCard } from "@/components/feed/prompt-card";
@@ -29,7 +23,10 @@ import { usePromptFeedActions } from "@/hooks/use-prompt-feed-actions";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { useTabTop } from "@/hooks/use-tab-top";
 import { dedupeById } from "@/lib/feed";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { fontSize, space, type, useAppTheme } from "@/theme";
+import { EmptyState, FeedSeparator, LoadMore } from "@/components/list-parts";
+import { SegmentedTabs } from "@/components/segmented-tabs";
+import { Text } from "@/components/text";
 
 /**
  * Explore — the discovery feed, in two halves.
@@ -107,10 +104,10 @@ type ExploreMode = "NEWSFEED" | "PROMPTS";
 const MODES: {
   icon: ComponentProps<typeof Ionicons>["name"];
   label: string;
-  mode: ExploreMode;
+  value: ExploreMode;
 }[] = [
-  { icon: "eye-off-outline", label: "OOC", mode: "NEWSFEED" },
-  { icon: "bookmarks-outline", label: "Prompts", mode: "PROMPTS" },
+  { icon: "eye-off-outline", label: "OOC", value: "NEWSFEED" },
+  { icon: "bookmarks-outline", label: "Prompts", value: "PROMPTS" },
 ];
 
 const EMPTY: Record<ExploreMode, { body: string; title: string }> = {
@@ -124,9 +121,25 @@ const EMPTY: Record<ExploreMode, { body: string; title: string }> = {
   },
 };
 
-const keyExtractor = (item: Prompt) => item.id;
+/**
+ * What each feed is, at its head.
+ *
+ * "OOC" and "Prompts" are the product's own words, and the switcher can only
+ * afford one of them each. The line under the title is for the reader who does
+ * not yet know which is which — the difference is who is speaking.
+ */
+const INTRO: Record<ExploreMode, { body: string; title: string }> = {
+  NEWSFEED: {
+    body: "Novelists speaking as themselves.",
+    title: "Out of character",
+  },
+  PROMPTS: {
+    body: "Openers from characters, waiting for someone to answer.",
+    title: "Open prompts",
+  },
+};
 
-const Separator = () => <View style={styles.separator} />;
+const keyExtractor = (item: Prompt) => item.id;
 
 export const ExploreScreen = () => {
   const theme = useAppTheme();
@@ -203,27 +216,42 @@ export const ExploreScreen = () => {
    * refetch flag does not rebuild it.
    */
   const header = useMemo(
-    () =>
-      canAct ? (
-        <View style={styles.trigger}>
+    () => (
+      <View style={styles.header}>
+        {canAct ? (
           <ComposeTrigger
             avatarUri={novelist?.avatar?.src ?? novelist?.image}
             name={novelist?.firstName}
             onPress={openCompose}
           />
+        ) : null}
+
+        <View style={styles.intro}>
+          <View style={styles.introRow}>
+            <Text style={[styles.introTitle, { color: theme.textGray }]}>
+              {INTRO[mode].title}
+            </Text>
+            <View
+              style={[styles.rule, { backgroundColor: theme.material.edge }]}
+            />
+          </View>
+          <Text style={[styles.introBody, { color: theme.textGray }]}>
+            {INTRO[mode].body}
+          </Text>
         </View>
-      ) : null,
+      </View>
+    ),
     [
       canAct,
+      mode,
       novelist?.avatar?.src,
       novelist?.firstName,
       novelist?.image,
       openCompose,
+      theme,
     ],
   );
 
-  // The bar floats over this list: `tabBarScroll` is what sizes it as the list
-  // moves, and the content style is what keeps the last card reachable under it.
   const tabBarScroll = useTabBarScroll();
   const contentStyle = useTabBarContentStyle(styles.content);
 
@@ -245,26 +273,10 @@ export const ExploreScreen = () => {
   const footer = useMemo(() => {
     if (hasNextPage) {
       return (
-        <Pressable
-          disabled={isFetchingNextPage}
+        <LoadMore
+          busy={isFetchingNextPage}
           onPress={() => void fetchNextPage()}
-          style={({ pressed }) => [
-            styles.loadMore,
-            {
-              backgroundColor: pressed
-                ? theme.material.fillPressed
-                : theme.material.fill,
-              borderColor: theme.material.edge,
-            },
-          ]}
-        >
-          {isFetchingNextPage ? (
-            <ActivityIndicator color={theme.accent.text} size="small" />
-          ) : null}
-          <Text style={[styles.loadMoreLabel, { color: theme.accent.text }]}>
-            {isFetchingNextPage ? "Loading..." : "Load more"}
-          </Text>
-        </Pressable>
+        />
       );
     }
 
@@ -286,60 +298,25 @@ export const ExploreScreen = () => {
         style={[
           styles.switcher,
           {
-            borderBottomColor: theme.material.edge,
+            // The header's own surface, so the title and the control under
+            // it read as one bar with one edge, and the feed passes under it.
+            backgroundColor: theme.glass.opaque,
+            borderBottomColor: theme.glass.edge,
           },
         ]}
       >
-        {MODES.map((item) => {
-          const active = mode === item.mode;
-          return (
-            <Pressable
-              accessibilityRole="tab"
-              accessibilityState={{ selected: active }}
-              key={item.mode}
-              onPress={() => {
-                if (item.mode === mode) return;
-                setMode(item.mode);
-                // The open sets are ids from the feed being left. Carrying
-                // them over would open whichever cards of the *other* feed
-                // happened to share an id — and hold their comment queries
-                // open for a list nobody is reading.
-                actions.reset();
-              }}
-              style={({ pressed }) => [
-                styles.tab,
-                {
-                  // One tinted segment: the one you are on. Tinting both
-                  // left two accent controls competing for the same glance.
-                  backgroundColor: active
-                    ? theme.accent.surfaceActive
-                    : pressed
-                      ? theme.material.fillPressed
-                      : theme.material.fill,
-                  borderColor: active
-                    ? theme.accent.solid
-                    : theme.material.edge,
-                },
-              ]}
-            >
-              <Ionicons
-                color={active ? theme.accent.textStrong : theme.textGray}
-                name={item.icon}
-                size={16}
-              />
-              <Text
-                style={[
-                  styles.tabLabel,
-                  {
-                    color: active ? theme.accent.textStrong : theme.textGray,
-                  },
-                ]}
-              >
-                {item.label}
-              </Text>
-            </Pressable>
-          );
-        })}
+        <SegmentedTabs
+          onChange={(next) => {
+            setMode(next);
+            // The open sets are ids from the feed being left. Carrying
+            // them over would open whichever cards of the *other* feed
+            // happened to share an id — and hold their comment queries
+            // open for a list nobody is reading.
+            actions.reset();
+          }}
+          options={MODES}
+          value={mode}
+        />
       </View>
 
       <FlashList
@@ -354,7 +331,7 @@ export const ExploreScreen = () => {
          * into the cell still holding the first prompt's expanded comments.
          */
         extraData={mode}
-        ItemSeparatorComponent={Separator}
+        ItemSeparatorComponent={FeedSeparator}
         keyExtractor={keyExtractor}
         ListEmptyComponent={
           query.isPending || query.error ? (
@@ -365,25 +342,17 @@ export const ExploreScreen = () => {
               skeleton={
                 <SkeletonRows
                   count={3}
-                  gap={space.sm + 2}
+                  gap={space.ms}
                   render={() => <PromptCardSkeleton />}
                 />
               }
             />
           ) : (
-            <View style={styles.empty}>
-              <Ionicons
-                color={theme.textGray}
-                name="compass-outline"
-                size={40}
-              />
-              <Text style={[styles.emptyTitle, { color: theme.text }]}>
-                {EMPTY[mode].title}
-              </Text>
-              <Text style={[styles.emptyBody, { color: theme.textGray }]}>
-                {EMPTY[mode].body}
-              </Text>
-            </View>
+            <EmptyState
+              body={EMPTY[mode].body}
+              icon="compass-outline"
+              title={EMPTY[mode].title}
+            />
           )
         }
         ListFooterComponent={footer}
@@ -406,55 +375,17 @@ export const ExploreScreen = () => {
 
 const styles = StyleSheet.create({
   content: { padding: space.md },
-  empty: {
-    alignItems: "center",
-    gap: space.sm,
-    paddingHorizontal: space.lg,
-    paddingVertical: space.xl,
-  },
-  emptyBody: {
-    fontSize: fontSize.label,
-    lineHeight: 19,
-    textAlign: "center",
-  },
-  emptyTitle: { fontSize: fontSize.title, fontWeight: "700" },
   fill: { flex: 1 },
-  loadMore: {
-    alignItems: "center",
-    borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    gap: space.sm,
-    justifyContent: "center",
-    marginTop: space.sm,
-    paddingVertical: space.md,
-  },
-  loadMoreLabel: { fontSize: fontSize.body, fontWeight: "600" },
-  separator: { height: space.sm + 2 },
+  header: { gap: space.md, paddingBottom: space.m },
+  intro: { gap: space.xs },
+  introBody: { fontSize: fontSize.caption, lineHeight: 17 },
+  introRow: { alignItems: "center", flexDirection: "row", gap: space.m },
+  introTitle: type.eyebrow,
+  rule: { flex: 1, height: StyleSheet.hairlineWidth },
   switcher: {
     borderBottomWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    gap: space.sm,
+    paddingBottom: space.ms,
     paddingHorizontal: space.md,
-    paddingVertical: space.sm,
+    paddingTop: space.xs,
   },
-  tab: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    flex: 1,
-    flexDirection: "row",
-    gap: space.xs + 2,
-    justifyContent: "center",
-    // 36 rather than 44: two of these sit between the nav bar and the first
-    // card, and every point they take is a point off a 667pt screen's feed.
-    minHeight: 36,
-    paddingHorizontal: space.sm,
-  },
-  tabLabel: {
-    fontSize: fontSize.label,
-    fontStyle: "italic",
-    fontWeight: "600",
-  },
-  trigger: { paddingBottom: space.sm + 2 },
 });

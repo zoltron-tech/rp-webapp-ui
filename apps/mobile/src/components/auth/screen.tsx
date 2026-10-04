@@ -2,17 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { type ReactNode, useCallback } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useKeyboardOffset } from "@/hooks/use-keyboard-height";
 import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { Button } from "@/components/button";
 
 /**
  * The frame every signed-out screen is built in.
@@ -225,48 +220,17 @@ export const SubmitButton = ({
   label: string;
   loadingLabel?: string;
   onPress: () => void;
-}) => {
-  const theme = useAppTheme();
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ busy, disabled }}
-      disabled={disabled}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.submit,
-        {
-          /*
-           * A disabled primary must not read as a dark *enabled* one. The
-           * accent's own step 9 is still saturated enough to look like a filled
-           * button, so the disabled state drops to a neutral surface and takes
-           * the muted label with it — the difference has to be legible without
-           * tapping it to find out.
-           */
-          backgroundColor: disabled
-            ? theme.material.fill
-            : pressed
-              ? theme.accent.solidHover
-              : theme.accent.solid,
-        },
-      ]}
-    >
-      {busy ? (
-        <>
-          <ActivityIndicator color="#fff" size="small" />
-          <Text style={styles.submitLabel}>{loadingLabel ?? label}</Text>
-        </>
-      ) : (
-        <Text
-          style={[styles.submitLabel, disabled && { color: theme.textGray }]}
-        >
-          {label}
-        </Text>
-      )}
-    </Pressable>
-  );
-};
+}) => (
+  <Button
+    busy={busy}
+    busyLabel={loadingLabel}
+    disabled={disabled}
+    label={label}
+    onPress={onPress}
+    size="lg"
+    variant="primary"
+  />
+);
 
 /** A refusal, said where the thing was refused. */
 export const ErrorBox = ({ message }: { message: string | null }) => {
@@ -308,25 +272,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     flexDirection: "row",
     gap: space.sm,
-    padding: space.sm + 2,
+    padding: space.ms,
   },
   errorIcon: { marginTop: 1 },
   errorText: { flex: 1, fontSize: fontSize.label, lineHeight: 18 },
   footer: { gap: space.sm, paddingHorizontal: space.lg, paddingTop: space.sm },
-  intro: { gap: 4, paddingBottom: space.xs, paddingTop: space.sm },
+  intro: { gap: space.xs, paddingBottom: space.xs, paddingTop: space.sm },
   page: { flexGrow: 1, gap: space.md, paddingHorizontal: space.lg },
   root: { flex: 1 },
   scroll: { backgroundColor: "transparent", flex: 1 },
-  submit: {
-    alignItems: "center",
-    borderCurve: "continuous",
-    borderRadius: radius.lg - 2,
-    flexDirection: "row",
-    gap: space.sm,
-    justifyContent: "center",
-    minHeight: 50,
-  },
-  submitLabel: { color: "#fff", fontSize: fontSize.body, fontWeight: "600" },
   subtitle: { fontSize: fontSize.label, lineHeight: 19 },
   /* iOS Title 1 — 28/34, the largest step these screens have room for. */
   title: { fontSize: fontSize.display, fontWeight: "700", lineHeight: 34 },

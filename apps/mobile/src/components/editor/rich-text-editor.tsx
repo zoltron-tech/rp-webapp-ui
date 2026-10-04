@@ -59,10 +59,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
-  type TextInput,
   View,
 } from "react-native";
+import { Text, type TextInput } from "@/components/text";
 import { BlockInput } from "@/components/editor/block-input";
 import { FontSheet } from "@/components/editor/font-sheet";
 import { HighlightSheet } from "@/components/editor/highlight-sheet";
@@ -76,7 +75,7 @@ import {
 } from "@/components/editor/toolbar";
 import { WrappedBlockInput } from "@/components/editor/wrapped-block-input";
 import { BottomSheet } from "@/components/sheet";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * The rich-text editor — web's `RichTextEditor`, without a browser.
@@ -1025,7 +1024,7 @@ export const RichTextEditor = forwardRef<
                         ? 26
                         : entry.px === 27
                           ? 20
-                          : fontSize.body,
+                          : fontSize.prose,
                     fontWeight: entry.px ? "700" : "400",
                   }}
                 >
@@ -1085,14 +1084,14 @@ export const RichTextEditor = forwardRef<
 
 const styles = StyleSheet.create({
   canvas: {
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
-    marginHorizontal: space.sm + 4,
+    borderRadius: radius.lg,
+    borderWidth: border.edge,
+    marginHorizontal: space.m,
     overflow: "hidden",
   },
   canvasCompact: { marginBottom: space.sm, marginTop: space.sm },
   canvasFull: { flex: 1, marginBottom: space.sm, marginTop: space.sm },
-  content: { paddingHorizontal: space.md - 2, paddingTop: space.sm + 2 },
+  content: { paddingHorizontal: space.md - 2, paddingTop: space.ms },
   contentFill: { flexGrow: 1 },
   float: { marginVertical: space.xs },
   mention: { paddingHorizontal: space.sm, paddingVertical: space.xs },
@@ -1108,7 +1107,7 @@ const styles = StyleSheet.create({
   sizeRow: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     minHeight: 52,
     paddingHorizontal: space.md,
     paddingVertical: space.sm,

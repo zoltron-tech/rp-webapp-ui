@@ -3,7 +3,8 @@ import { useSession } from "@nw/features";
 import type { IceBreaker } from "@nw/types";
 import { truncate } from "@nw/utils";
 import type { ReactNode } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import {
   IceBreakerTrail,
@@ -343,7 +344,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     // The watermark sits in the top-right corner; without this the first line
     // runs underneath it.
-    paddingRight: space.sm + 4,
+    paddingRight: space.m,
   },
   plusBadge: {
     alignItems: "center",
@@ -356,20 +357,20 @@ const styles = StyleSheet.create({
     right: -3,
     width: 12,
   },
-  row: { gap: space.sm, paddingBottom: 2 },
+  row: { gap: space.sm, paddingBottom: space.xxs },
   skeleton: { opacity: 0.6 },
   skeletonFace: { borderRadius: radius.full, height: 20, width: 20 },
   skeletonName: { borderRadius: radius.sm, height: 8, width: 44 },
   speaker: {
     alignItems: "center",
     flexDirection: "row",
-    gap: space.xs + 2,
+    gap: space.s,
     // Lines the face up under the trail, which the dots drift toward.
-    paddingLeft: space.sm - 2,
+    paddingLeft: space.s,
     paddingTop: space.xs,
   },
-  speakerName: { flexShrink: 1, fontSize: 10, fontWeight: "700" },
+  speakerName: { flexShrink: 1, fontSize: fontSize.meta, fontWeight: "700" },
   tile: { width: CARD_WIDTH },
   trail: { paddingTop: space.xs },
-  watermark: { position: "absolute", right: space.xs + 2, top: space.xs + 2 },
+  watermark: { position: "absolute", right: space.s, top: space.s },
 });

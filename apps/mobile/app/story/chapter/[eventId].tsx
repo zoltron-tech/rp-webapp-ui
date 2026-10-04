@@ -8,9 +8,9 @@ import {
   FlatList,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CroppedImage } from "@/components/cropped-image";
 import { ListStatus } from "@/components/list-status";
@@ -22,8 +22,8 @@ import {
   useStoryChapter,
   useStoryChapterThreads,
 } from "@/hooks/use-story";
-import { storyClock, storyDate } from "@/lib/story";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { STORY_COVER_ZOOM_MAX_PCT, storyClock, storyDate } from "@/lib/story";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * A chapter, read — web's `/rp/story/event/:id` in its scrolling manuscript
@@ -42,7 +42,6 @@ import { fontSize, radius, space, useAppTheme } from "@/theme";
  * can be read end to end without going back to its page.
  */
 
-const STORY_COVER_ZOOM_MAX_PCT = 800;
 
 export default function ChapterScreen() {
   const theme = useAppTheme();
@@ -343,7 +342,7 @@ const styles = StyleSheet.create({
     aspectRatio: 2 / 3,
     borderCurve: "continuous",
     borderRadius: radius.md + 4,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     marginBottom: space.sm,
     overflow: "hidden",
     width: "52%",
@@ -364,27 +363,27 @@ const styles = StyleSheet.create({
     gap: space.md,
     justifyContent: "center",
   },
-  metaItem: { alignItems: "center", flexDirection: "row", gap: 4 },
+  metaItem: { alignItems: "center", flexDirection: "row", gap: space.xs },
   metaText: { fontSize: fontSize.caption },
   overture: { marginBottom: space.sm },
   pager: { gap: space.sm },
   pagerCard: {
     alignItems: "center",
     borderRadius: radius.md + 4,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.sm,
     padding: space.md,
   },
   pagerEyebrow: {
-    fontSize: 11,
+    fontSize: fontSize.meta,
     fontWeight: "700",
     letterSpacing: 0.5,
     textTransform: "uppercase",
   },
   pagerLabel: { fontSize: fontSize.body, fontWeight: "600" },
   pagerNext: { justifyContent: "flex-end" },
-  pagerText: { flex: 1, gap: 2 },
+  pagerText: { flex: 1, gap: space.xxs },
   song: { alignSelf: "stretch", marginTop: space.sm },
   title: {
     fontSize: fontSize.display - 2,

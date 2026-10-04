@@ -18,9 +18,9 @@ import {
   Keyboard,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { ChatBackground } from "@/components/chat/chat-background";
 import { Composer, type ComposerSubmission } from "@/components/chat/composer";
 import { ConversationHeader } from "@/components/chat/conversation-header";
@@ -42,7 +42,7 @@ import { useInboxReveal } from "@/context/inbox-reveal";
 import { useChatSocket, useTrackOnline } from "@/context/socket";
 import { useSendChatMessage } from "@/hooks/use-send-chat-message";
 import { useSwipeBack } from "@/hooks/use-swipe-back";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * One conversation.
@@ -907,7 +907,7 @@ const styles = StyleSheet.create({
   jump: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.xs,
     paddingHorizontal: space.md,

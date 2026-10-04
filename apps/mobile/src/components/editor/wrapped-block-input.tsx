@@ -17,10 +17,10 @@ import {
 import {
   type LayoutChangeEvent,
   StyleSheet,
-  type TextInput,
   type TextLayoutLine,
   View,
 } from "react-native";
+import { type TextInput } from "@/components/text";
 import {
   BlockInput,
   type BlockInputProps,

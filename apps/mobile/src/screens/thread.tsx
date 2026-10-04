@@ -22,16 +22,16 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import {
   type ComposerMode,
   PromptComposer,
@@ -47,7 +47,11 @@ import {
 } from "@/components/thread/post-actions";
 import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
 import { findCached } from "@/lib/cache-seed";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
+import { Avatar } from "@/components/avatar";
+import { Button } from "@/components/button";
+import { useHideTabBar } from "@/hooks/use-hide-tab-bar";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 /**
  * `/threads/:threadId` — one thread, read top to bottom.
@@ -160,7 +164,9 @@ export const ThreadScreen = () => {
   const { threadId } = useLocalSearchParams<{ threadId: string }>();
 
   const tabBarScroll = useTabBarScroll();
-  const contentStyle = useTabBarContentStyle(styles.content);
+  // The tab bar steps aside here: the reply bar takes its place.
+  useHideTabBar();
+  const insets = useSafeAreaInsets();
 
   const thread = useQuery({
     enabled: Boolean(threadId),
@@ -365,6 +371,51 @@ export const ThreadScreen = () => {
   const comment = thread.data;
   const prompt = comment?.prompt ?? null;
 
+  /** Who the reply bar shows: yourself, or your first character in an in-character thread. */
+  const replyAs =
+    comment?.source.sourceType === "NOVELIST"
+      ? novelist
+      : (novelist?.muses?.[0] ?? novelist);
+
+  const openReply = () => {
+    if (!comment) return;
+    setComposer({
+                // Web's rule: an out-of-character thread takes only
+                // out-of-character replies, an in-character one only muses.
+                dropdownSelection:
+                  comment.source.sourceType === "NOVELIST"
+                    ? "NOVELIST"
+                    : "MUSE",
+                kind: "create",
+                // What is being answered is the last turn, not the opening
+                // one: the newest reply when there is one, the comment
+                // otherwise. `replies` is oldest-first, so the newest is last.
+                parent: latest
+                  ? {
+                      author: latest.source,
+                      createdOn: latest.createdOn,
+                      id: latest.id,
+                      media: latest.media,
+                      reacted: latest.reacted,
+                      reactions: latest.reactions,
+                      text: latest.text,
+                      variant: "reply",
+                    }
+                  : {
+                      author: comment.source,
+                      createdOn: comment.createdOn,
+                      id: comment.id,
+                      media: comment.media,
+                      reacted: comment.reacted,
+                      reactions: comment.reactions,
+                      text: comment.text,
+                      variant: "comment",
+                    },
+                parentId: comment.id,
+                type: "reply",
+    });
+  };
+
   // Only a signed-in novelist has anything to do in the menu: reporting needs
   // an account and deleting needs to be your own. Hiding the dots is better
   // than opening a sheet with nothing in it.
@@ -374,7 +425,7 @@ export const ThreadScreen = () => {
   if (thread.isPending) {
     return (
       <ScrollView
-        contentContainerStyle={contentStyle}
+        contentContainerStyle={styles.content}
       >
         <View style={{ gap: space.lg }}>
           <PromptCardSkeleton reply={false} />
@@ -393,10 +444,10 @@ export const ThreadScreen = () => {
   if (!comment) return <ListStatus empty="This thread is no longer here." />;
 
   return (
-    <>
+    <View style={styles.screen}>
       <ScrollView
-        {...tabBarScroll}
-        contentContainerStyle={contentStyle}
+        contentContainerStyle={styles.content}
+        style={styles.scroll}
       >
         {prompt ? (
           <ThreadPost
@@ -447,10 +498,14 @@ export const ThreadScreen = () => {
 
         <Spine />
 
+        <View
+          style={[styles.sheet, theme.material.card]}
+        >
         <ThreadPost
           author={comment.source}
           concluded={comment.concluded}
           createdOn={comment.createdOn}
+          flat
           id={comment.id}
           media={comment.media}
           onMore={
@@ -467,9 +522,12 @@ export const ThreadScreen = () => {
           variant="comment"
         />
 
-        <Spine />
-
-        <View style={styles.repliesHeader}>
+        <View
+          style={[
+            styles.repliesHeader,
+            { borderTopColor: theme.material.edge },
+          ]}
+        >
           <Ionicons
             color={theme.textGray}
             name="return-down-forward-outline"
@@ -486,7 +544,7 @@ export const ThreadScreen = () => {
         </View>
 
         {repliesQuery.isPending ? (
-          <View style={{ gap: space.sm + 2 }}>
+          <View style={styles.pending}>
             <PromptCardSkeleton reply={false} />
             <PromptCardSkeleton reply={false} />
           </View>
@@ -500,21 +558,11 @@ export const ThreadScreen = () => {
           finished.
         */}
         {!repliesQuery.isPending && replies.length === 0 ? (
-          <View
-            style={[
-              styles.empty,
-              {
-                backgroundColor: theme.material.fill,
-                borderColor: theme.material.edge,
-              },
-            ]}
-          >
-            <Text style={[styles.emptyBody, { color: theme.textGray }]}>
-              {comment.concluded
-                ? "This thread was closed before anyone replied."
-                : "Nothing has come back yet. When someone answers, it lands here."}
-            </Text>
-          </View>
+          <Text style={[styles.emptyBody, { color: theme.textGray }]}>
+            {comment.concluded
+              ? "This thread was closed before anyone replied."
+              : "Nothing has come back yet. When someone answers, it lands here."}
+          </Text>
         ) : null}
 
         {/*
@@ -523,117 +571,34 @@ export const ThreadScreen = () => {
           there too — under the reader's thumb, mid-sentence.
         */}
         {repliesQuery.hasNextPage ? (
-          <Pressable
-            accessibilityRole="button"
-            disabled={repliesQuery.isFetchingNextPage}
-            onPress={() => void repliesQuery.fetchNextPage()}
-            style={({ pressed }) => [
-              styles.loadMore,
-              {
-                backgroundColor: pressed
-                  ? theme.material.fillPressed
-                  : theme.material.fill,
-                borderColor: theme.material.edge,
-              },
-            ]}
-          >
-            {repliesQuery.isFetchingNextPage ? (
-              <ActivityIndicator color={theme.primary} size="small" />
-            ) : (
-              <Ionicons color={theme.textGray} name="arrow-up" size={14} />
-            )}
-            <Text style={[styles.loadMoreLabel, { color: theme.text }]}>
-              {repliesQuery.isFetchingNextPage
-                ? "Loading…"
-                : "Load earlier replies"}
-            </Text>
-          </Pressable>
+          <View style={styles.earlier}>
+            <View
+              style={[styles.rule, { backgroundColor: theme.material.edge }]}
+            />
+            <Button
+              busy={repliesQuery.isFetchingNextPage}
+              busyLabel="Loading…"
+              icon="arrow-up"
+              label="Earlier replies"
+              onPress={() => void repliesQuery.fetchNextPage()}
+              size="sm"
+            />
+            <View
+              style={[styles.rule, { backgroundColor: theme.material.edge }]}
+            />
+          </View>
         ) : null}
 
         {replies.map((reply) => (
-          <ThreadPost
-            author={reply.source}
-            createdOn={reply.createdOn}
-            id={reply.id}
+          <ThreadReply
+            canAct={canAct}
             key={reply.id}
-            media={reply.media}
-            onMore={
-              canAct
-                ? () => openMenu(reply.id, "reply", reply.source)
-                : undefined
-            }
-            onShowLikers={() =>
-              setLikers({ count: reply.reactions, id: reply.id })
-            }
-            reacted={reply.reacted}
-            reactions={reply.reactions}
-            text={reply.text}
-            variant="reply"
+            onMenu={openMenu}
+            onShowLikers={setLikers}
+            reply={reply}
           />
         ))}
-
-        {canAct && !comment.concluded ? (
-          <Pressable
-            accessibilityRole="button"
-            onPress={() =>
-              setComposer({
-                // Web's rule: an out-of-character thread takes only
-                // out-of-character replies, an in-character one only muses.
-                dropdownSelection:
-                  comment.source.sourceType === "NOVELIST"
-                    ? "NOVELIST"
-                    : "MUSE",
-                kind: "create",
-                // What is being answered is the last turn, not the opening
-                // one: the newest reply when there is one, the comment
-                // otherwise. `replies` is oldest-first, so the newest is last.
-                parent: latest
-                  ? {
-                      author: latest.source,
-                      createdOn: latest.createdOn,
-                      id: latest.id,
-                      media: latest.media,
-                      reacted: latest.reacted,
-                      reactions: latest.reactions,
-                      text: latest.text,
-                      variant: "reply",
-                    }
-                  : {
-                      author: comment.source,
-                      createdOn: comment.createdOn,
-                      id: comment.id,
-                      media: comment.media,
-                      reacted: comment.reacted,
-                      reactions: comment.reactions,
-                      text: comment.text,
-                      variant: "comment",
-                    },
-                parentId: comment.id,
-                type: "reply",
-              })
-            }
-            style={({ pressed }) => [
-              styles.reply,
-              {
-                backgroundColor: pressed
-                  ? theme.accent.surfaceHover
-                  : theme.accent.surface,
-                borderColor: theme.accent.surfaceHover,
-              },
-            ]}
-          >
-            <Ionicons
-              color={theme.accent.textStrong}
-              name="create-outline"
-              size={16}
-            />
-            <Text
-              style={[styles.replyLabel, { color: theme.accent.textStrong }]}
-            >
-              Reply to this thread
-            </Text>
-          </Pressable>
-        ) : null}
+        </View>
 
         {comment.concluded ? (
           <View
@@ -656,6 +621,68 @@ export const ThreadScreen = () => {
           </View>
         ) : null}
       </ScrollView>
+
+      {/*
+        Web's fixed reply bar: your face and a field that is not a field, docked
+        under the conversation. It was a button at the very end of the thread,
+        which on a long one meant scrolling past every reply to answer any of
+        them. The tab bar steps aside for it, as it does in a conversation.
+      */}
+      {canAct && !comment.concluded ? (
+        <View
+          style={[
+            styles.replyBar,
+            {
+              backgroundColor: theme.glass.opaque,
+              borderTopColor: theme.glass.edge,
+              paddingBottom: Math.max(insets.bottom, space.m),
+            },
+          ]}
+        >
+          <Pressable
+            accessibilityHint="Opens the composer"
+            accessibilityLabel="Reply to this thread"
+            accessibilityRole="button"
+            onPress={openReply}
+            style={({ pressed }) => [
+              styles.replyRow,
+              { opacity: pressed ? 0.7 : 1 },
+            ]}
+          >
+            <Avatar
+              image={replyAs?.avatar}
+              name={replyAs?.firstName}
+              size={36}
+              uri={replyAs?.avatar?.src ?? replyAs?.image}
+            />
+            <View
+              style={[
+                styles.replyField,
+                {
+                  backgroundColor: theme.glass.field,
+                  borderColor: theme.glass.fieldEdge,
+                },
+              ]}
+            >
+              <Text
+                numberOfLines={1}
+                style={[styles.replyPlaceholder, { color: theme.textGray }]}
+              >
+                Reply to {(latest ?? comment).source.name.trim()}…
+              </Text>
+            </View>
+            <View
+              style={[styles.replySend, { backgroundColor: theme.accent.fill }]}
+            >
+              <Ionicons
+                color={theme.accent.onFill}
+                name="arrow-up"
+                size={18}
+              />
+            </View>
+          </Pressable>
+        </View>
+      ) : null}
 
       <PostActions
         onClose={closeMenu}
@@ -704,18 +731,75 @@ export const ThreadScreen = () => {
         onClose={() => setSharing(false)}
         prompt={sharing ? prompt : null}
       />
-    </>
+    </View>
   );
 };
+
+/**
+ * One reply, with callbacks that are its own.
+ *
+ * The list used to build two closures per reply per render, which is what
+ * kept `ThreadPost`'s memo from ever holding. Here they are made once per
+ * reply and change only when the reply does.
+ */
+const ThreadReply = memo(
+  ({
+    canAct,
+    onMenu,
+    onShowLikers,
+    reply,
+  }: {
+    canAct: boolean;
+    onMenu: (
+      id: string,
+      variant: PostVariant,
+      source: PromptSource | undefined,
+    ) => void;
+    onShowLikers: (likers: { count: number; id: string }) => void;
+    reply: Reply;
+  }) => {
+    const edge = useAppTheme().material.edge;
+    const { id, reactions, source } = reply;
+    const more = useCallback(
+      () => onMenu(id, "reply", source),
+      [id, onMenu, source],
+    );
+    const likers = useCallback(
+      () => onShowLikers({ count: reactions, id }),
+      [id, onShowLikers, reactions],
+    );
+
+    return (
+      <>
+        <View
+          style={[styles.messageRule, { backgroundColor: edge }]}
+        />
+      <ThreadPost
+        author={source}
+        createdOn={reply.createdOn}
+        flat
+        id={id}
+        media={reply.media}
+        onMore={canAct ? more : undefined}
+        onShowLikers={likers}
+        reacted={reply.reacted}
+        reactions={reactions}
+        text={reply.text}
+        variant="reply"
+      />
+      </>
+    );
+  },
+);
 
 const styles = StyleSheet.create({
   concluded: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.sm,
-    padding: space.sm + 4,
+    padding: space.m,
   },
   concludedLabel: { flex: 1, fontSize: fontSize.label, lineHeight: 18 },
   /*
@@ -723,18 +807,27 @@ const styles = StyleSheet.create({
    * blocks; a wide gap *and* a connector reads as two ideas about the same
    * space.
    */
-  content: { gap: space.sm, padding: space.md },
-  empty: {
-    borderRadius: radius.md,
-    borderStyle: "dashed",
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: space.md,
+  content: { gap: space.sm, padding: space.md, paddingBottom: space.lg },
+  earlier: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: space.sm,
+    paddingHorizontal: space.md,
+    paddingVertical: space.sm,
   },
-  emptyBody: { fontSize: fontSize.label, lineHeight: 19 },
+  emptyBody: {
+    fontSize: fontSize.label,
+    lineHeight: 19,
+    paddingBottom: space.ml,
+    paddingHorizontal: space.md,
+    paddingTop: space.xs,
+    textAlign: "center",
+  },
+  pending: { gap: space.ms, padding: space.m },
   loadMore: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.sm,
     justifyContent: "center",
@@ -742,13 +835,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.md,
   },
   loadMoreLabel: { fontSize: fontSize.label, fontWeight: "600" },
+  /* Web's inset divider between messages. */
+  messageRule: {
+    height: StyleSheet.hairlineWidth,
+    marginHorizontal: space.md,
+  },
   missing: {
     alignItems: "center",
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.sm,
-    padding: space.sm + 4,
+    padding: space.m,
   },
   missingLabel: { flex: 1, fontSize: fontSize.label, lineHeight: 18 },
   /*
@@ -758,26 +856,49 @@ const styles = StyleSheet.create({
    */
   repliesHeader: {
     alignItems: "center",
+    borderTopWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
-    gap: space.xs + 2,
+    gap: space.s,
+    marginHorizontal: space.md,
+    paddingBottom: space.xs,
+    paddingTop: space.m,
   },
   repliesLabel: { fontSize: fontSize.caption, fontWeight: "700" },
-  reply: {
-    alignItems: "center",
-    borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    gap: space.sm,
-    justifyContent: "center",
-    marginTop: space.xs,
-    minHeight: 44,
+  replyBar: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: space.md,
+    paddingTop: space.ms,
   },
-  replyLabel: { fontSize: fontSize.label, fontWeight: "700" },
+  replyField: {
+    borderRadius: radius.full,
+    borderWidth: border.edge,
+    flex: 1,
+    justifyContent: "center",
+    minHeight: 42,
+    paddingHorizontal: space.md,
+  },
+  replyPlaceholder: { fontSize: fontSize.body },
+  replyRow: { alignItems: "center", flexDirection: "row", gap: space.ms },
+  replySend: {
+    alignItems: "center",
+    borderRadius: radius.full,
+    height: 36,
+    justifyContent: "center",
+    width: 36,
+  },
+  screen: { flex: 1 },
+  scroll: { flex: 1 },
+  /* Web's conversation sheet: one material pane, the messages inside it. */
+  sheet: {
+    borderRadius: radius.sheet,
+    borderWidth: border.edge,
+    overflow: "hidden",
+  },
   rule: { flex: 1, height: StyleSheet.hairlineWidth },
   /*
    * Sits under the avatar column: the content box starts at the card's own left
    * edge, the 3pt rule and 12pt of padding are inside it, and the 36pt avatar's
    * centre is 18 past that — so 33, less half this line's width.
    */
-  spine: { height: 14, marginLeft: 32, width: 2 },
+  spine: { height: 14, marginLeft: space.xl, width: 2 },
 });

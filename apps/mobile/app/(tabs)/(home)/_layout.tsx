@@ -1,10 +1,9 @@
-import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
-import { Pressable } from "react-native";
 import { Logo } from "@/components/logo";
-import { space, useAppTheme } from "@/theme";
+import { useAppTheme } from "@/theme";
 import { glassHeaderOptions } from "@/theme/header";
 import { ambientScreenLayout } from "@/components/ambient-background";
+import { MenuButton } from "@/components/menu-button";
 
 /**
  * The Home tab's own stack.
@@ -39,18 +38,7 @@ export default function HomeStackLayout() {
       screenOptions={{
         contentStyle: { backgroundColor: theme.background },
         headerRight: () => (
-          <Pressable
-            accessibilityLabel="Open menu"
-            accessibilityRole="button"
-            hitSlop={{ bottom: space.md, left: space.sm, right: space.sm, top: space.md }}
-            onPress={() => router.push("/menu")}
-            style={({ pressed }) => ({
-              opacity: pressed ? 0.6 : 1,
-              paddingHorizontal: space.md,
-            })}
-          >
-            <Ionicons color={theme.text} name="menu" size={26} />
-          </Pressable>
+          <MenuButton />
         ),
         ...glassHeaderOptions(theme),
       }}

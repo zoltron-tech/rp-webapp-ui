@@ -5,10 +5,10 @@ import {
   type GestureResponderHandlers,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { Text } from "@/components/text";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * The strip along the top of a media tray: grip, the three tabs, the way back
@@ -147,9 +147,9 @@ export const MediaTrayHeader = ({
             keyboardIcon === "check"
               ? {
                   backgroundColor: pressed
-                    ? theme.accent.solidHover
-                    : theme.accent.solid,
-                  borderColor: theme.accent.solid,
+                    ? theme.accent.fillPressed
+                    : theme.accent.fill,
+                  borderColor: theme.accent.fill,
                 }
               : {
                   backgroundColor: pressed
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   },
   indicator: {
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     bottom: 2,
     left: 0,
     position: "absolute",
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
   keyboardButton: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     height: 30,
     justifyContent: "center",
     width: 30,
@@ -213,14 +213,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: space.xs,
     justifyContent: "center",
-    paddingVertical: space.xs + 2,
+    paddingVertical: space.s,
   },
   tabLabel: { fontSize: fontSize.caption, fontWeight: "700" },
   tabs: {
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flex: 1,
     flexDirection: "row",
-    padding: 2,
+    padding: space.xxs,
   },
 });

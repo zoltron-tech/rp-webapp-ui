@@ -8,9 +8,9 @@ import {
   Alert,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { CroppedImage } from "@/components/cropped-image";
 import { FallbackArt } from "@/components/fallback-art";
 import { ImageCropEditor } from "@/components/muse/edit/image-crop-editor";
@@ -23,7 +23,7 @@ import {
 } from "@/lib/broken-images";
 import type { MuseEdit } from "@/hooks/use-muse-edit";
 import { type MuseLook, museName } from "@/lib/muse-appearance";
-import { radius, space } from "@/theme";
+import { border, fontSize, radius, space } from "@/theme";
 
 /**
  * The character card — web's `CardWrapper` / `CardImageSection`.
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: PANEL.secondary,
-    fontSize: 13,
+    fontSize: fontSize.label,
     textAlign: "center",
     textShadowColor: "rgba(0,0,0,0.6)",
     textShadowOffset: { height: 1, width: 0 },
@@ -219,8 +219,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(0,0,0,0.55)",
     borderColor: "rgba(255,255,255,0.25)",
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.lg,
+    borderWidth: border.edge,
     height: 32,
     justifyContent: "center",
     width: 32,

@@ -5,7 +5,8 @@ import { checkUsernameInvalidity } from "@nw/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { Redirect, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import {
   AuthScreen,
   ErrorBox,
@@ -17,6 +18,7 @@ import { useRegisterDraft } from "@/context/register-draft";
 import { api } from "@/lib/api";
 import { signUpWithPassword } from "@/lib/auth";
 import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { PRIVACY_URL, TERMS_URL } from "@/lib/links";
 
 /**
  * Step three of three: the name, the terms, and the only request this flow
@@ -52,8 +54,6 @@ import { fontSize, radius, space, useAppTheme } from "@/theme";
  */
 const MAX_USERNAME = 30;
 
-const TERMS_URL = "https://novelist.world/rp/terms";
-const PRIVACY_URL = "https://novelist.world/rp/privacy-policy";
 
 export default function RegisterUsernameScreen() {
   const theme = useAppTheme();

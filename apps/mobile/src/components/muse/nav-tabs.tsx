@@ -4,10 +4,11 @@ import { hasUsableCrop } from "@nw/utils";
 import { IMAGE_SIZES, wsrvImage } from "@nw/utils/image";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { CroppedImage } from "@/components/cropped-image";
 import { asHex, withAlpha } from "@/lib/color";
-import { space } from "@/theme";
+import { border, space } from "@/theme";
 
 /**
  * Previous and next character — web's mobile `MuseNavTab` pair.
@@ -193,7 +194,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderColor: "rgba(255,255,255,0.35)",
     borderRadius: 11,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     height: 22,
     justifyContent: "center",
     width: 22,
@@ -230,7 +231,7 @@ const styles = StyleSheet.create({
   tab: {
     backgroundColor: "rgba(10, 10, 14, 0.7)",
     borderColor: "rgba(255,255,255,0.18)",
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     elevation: 8,
     height: NAV_TAB_HEIGHT,
     marginTop: -NAV_TAB_HEIGHT / 2,

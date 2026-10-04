@@ -2,11 +2,12 @@ import { useSession } from "@nw/features";
 import type { Novelist } from "@nw/types";
 import { wsrvImage } from "@nw/utils";
 import { useRouter } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { PANEL } from "@/components/muse/panel";
 import { withAlpha } from "@/lib/color";
-import { radius, space } from "@/theme";
+import { border, fontSize, radius, space } from "@/theme";
 
 /**
  * Web's `PennedBy`: "Penned by" and a chip with the author's face and handle.
@@ -85,27 +86,31 @@ const styles = StyleSheet.create({
   chip: {
     alignItems: "center",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     flexShrink: 1,
     gap: 5,
     maxWidth: 180,
     paddingLeft: 3,
     paddingRight: space.sm + 1,
-    paddingVertical: 2,
+    paddingVertical: space.xxs,
   },
-  lead: { color: PANEL.muted, fontSize: 11 },
+  lead: {
+    color: PANEL.muted,
+    fontSize: fontSize.caption,
+    fontWeight: "500",
+  },
   name: {
     color: PANEL.secondary,
     flexShrink: 1,
-    fontSize: 11,
-    fontWeight: "600",
+    fontSize: fontSize.meta,
+    fontWeight: "700",
   },
   row: {
     alignItems: "center",
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6,
+    gap: space.s,
     justifyContent: "center",
   },
 });

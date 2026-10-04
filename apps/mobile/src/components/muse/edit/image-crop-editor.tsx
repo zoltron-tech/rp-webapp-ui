@@ -10,13 +10,13 @@ import {
   PanResponder,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Line, Path } from "react-native-svg";
 import type { CropState } from "@/hooks/use-muse-edit";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * Adjusting a picture: the avatar's circle, the card's 9:16 portrait.
@@ -629,8 +629,8 @@ export const ImageCropEditor = ({
               {
                 backgroundColor: canConfirm
                   ? pressed
-                    ? theme.accent.solidHover
-                    : theme.accent.solid
+                    ? theme.accent.fillPressed
+                    : theme.accent.fill
                   : "rgba(255,255,255,0.14)",
               },
             ]}
@@ -843,16 +843,16 @@ const styles = StyleSheet.create({
   doneLabel: { fontSize: fontSize.label, fontWeight: "700" },
   edge: {
     borderColor: "rgba(255,255,255,0.7)",
-    borderWidth: StyleSheet.hairlineWidth * 2,
+    borderWidth: border.edge * 2,
     position: "absolute",
   },
   fill: { height: "100%", width: "100%" },
   foot: {
     alignItems: "center",
     backgroundColor: "#000000",
-    gap: space.sm + 4,
+    gap: space.m,
     paddingHorizontal: space.md,
-    paddingTop: space.sm + 4,
+    paddingTop: space.m,
   },
   grid: { position: "absolute" },
   hint: {
@@ -875,11 +875,11 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.6)",
     borderColor: "rgba(255,255,255,0.2)",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.sm,
     paddingHorizontal: space.md,
-    paddingVertical: 6,
+    paddingVertical: space.s,
   },
   statusLabel: {
     color: "#ffffff",
@@ -900,11 +900,11 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.1)",
     borderColor: "rgba(255,255,255,0.18)",
     borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: border.edge,
     flexDirection: "row",
-    gap: 6,
+    gap: space.s,
     paddingHorizontal: space.md,
-    paddingVertical: 8,
+    paddingVertical: space.sm,
   },
   toolLabel: { color: "#ffffff", fontSize: fontSize.label, fontWeight: "600" },
   tools: { flexDirection: "row", gap: space.sm },

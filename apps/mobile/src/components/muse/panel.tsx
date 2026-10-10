@@ -1,5 +1,5 @@
 import { mixColors } from "@nw/theme";
-import { Image } from "expo-image";
+import { Image } from "@/components/image";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   createContext,

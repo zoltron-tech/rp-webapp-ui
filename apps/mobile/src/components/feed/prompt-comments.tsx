@@ -5,7 +5,7 @@ import type { Comment } from "@nw/types";
 import { pluralize, toFormattedDate } from "@nw/utils";
 import { transformComment } from "@nw/utils/image";
 import { useQuery } from "@tanstack/react-query";
-import { memo, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
@@ -13,9 +13,13 @@ import { CollapsibleRichText } from "@/components/collapsible-rich-text";
 import { FeedMedia } from "@/components/feed/feed-media";
 import { HeartButton } from "@/components/heart-button";
 import { ListStatus } from "@/components/list-status";
+import { OfflineNotice } from "@/components/offline";
+import { QueuedPostRow } from "@/components/queued-post-row";
 import { Bone, SkeletonPulse } from "@/components/skeleton";
 import { sourceLinkLabel, useOpenSource } from "@/hooks/use-open-source";
 import { useToggleReaction } from "@/hooks/use-toggle-reaction";
+import { useOffline } from "@/lib/connectivity";
+import { discardOutbox, getStore, useOutboxPosts } from "@/lib/local-store";
 import { fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
@@ -246,8 +250,32 @@ export const PromptComments = ({
   promptId: string;
 }) => {
   const theme = useAppTheme();
+  const offline = useOffline();
   const api = useApi();
   const [expanded, setExpanded] = useState(false);
+
+  // Comments written offline on this prompt, drawn after the ones that are
+  // here (`local-store/outbox.ts`).
+  const allQueued = useOutboxPosts();
+  const queued = useMemo(
+    () =>
+      allQueued.filter(
+        (entry) => entry.type === "comment" && entry.payload.promptId === promptId,
+      ),
+    [allQueued, promptId],
+  );
+  const discardQueued = useCallback((id: string) => {
+    const store = getStore();
+    if (store) void discardOutbox(store, id).catch(() => undefined);
+  }, []);
+  const queuedRows =
+    queued.length > 0 ? (
+      <View style={styles.list}>
+        {queued.map((entry) => (
+          <QueuedPostRow entry={entry} key={entry.id} onDiscard={discardQueued} />
+        ))}
+      </View>
+    ) : null;
 
   const query = useQuery({
     queryFn: async (): Promise<Comment[]> => {
@@ -282,15 +310,26 @@ export const PromptComments = ({
 
   // The count on the card says what is coming. None: the empty line at once,
   // rather than a ghost that turns into it. Some: that many rows, up to what
-  // the list would draw.
-  if (query.isPending && expected !== undefined) {
-    if (expected === 0) {
-      return (
+  // the list would draw — unless the phone is offline, when the ghosts would
+  // never turn into anything; comments are not kept on disk.
+  if (query.isPending && expected === 0) {
+    return (
+      queuedRows ?? (
         <Text style={[styles.empty, { color: theme.textGray }]}>
           No threads on this one yet.
         </Text>
-      );
-    }
+      )
+    );
+  }
+  if (query.isPending && offline) {
+    return (
+      <>
+        {queuedRows}
+        <OfflineNotice compact what="comments" />
+      </>
+    );
+  }
+  if (query.isPending && expected !== undefined) {
     return (
       <SkeletonPulse label="Loading threads" style={styles.list}>
         {Array.from(
@@ -308,6 +347,7 @@ export const PromptComments = ({
       <ListStatus
         error={query.error}
         loading={query.isPending}
+        offlineWhat="comments"
         onRetry={() => void query.refetch()}
       />
     );
@@ -315,9 +355,11 @@ export const PromptComments = ({
 
   if (comments.length === 0) {
     return (
-      <Text style={[styles.empty, { color: theme.textGray }]}>
-        No threads on this one yet.
-      </Text>
+      queuedRows ?? (
+        <Text style={[styles.empty, { color: theme.textGray }]}>
+          No threads on this one yet.
+        </Text>
+      )
     );
   }
 
@@ -329,6 +371,9 @@ export const PromptComments = ({
           key={comment.id}
           onOpenThread={onOpenThread}
         />
+      ))}
+      {queued.map((entry) => (
+        <QueuedPostRow entry={entry} key={entry.id} onDiscard={discardQueued} />
       ))}
 
       {hidden > 0 && !expanded ? (

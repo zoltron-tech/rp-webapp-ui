@@ -1,6 +1,6 @@
 import { parseRichText } from "@nw/richtext";
 import type { StoryBoardEventThread } from "@nw/types";
-import { Image } from "expo-image";
+import { Image } from "@/components/image";
 import { memo, type ReactNode, useMemo, useState } from "react";
 import { StyleSheet, type TextStyle, View } from "react-native";
 import { Text } from "@/components/text";

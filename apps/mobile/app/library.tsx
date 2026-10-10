@@ -16,12 +16,13 @@ import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EndOfList } from "@/components/end-of-list";
 import { LikersSheet } from "@/components/feed/likers-sheet";
+import { EmptyScene } from "@/components/empty-feed";
 import { ListStatus } from "@/components/list-status";
-import { NovelistHeader } from "@/components/novelist-header";
 import {
   StoryCoverCard,
   StoryCoverCardShimmer,
 } from "@/components/story-cover-card";
+import { useOffline } from "@/lib/connectivity";
 import { dedupeById } from "@/lib/feed";
 import { fontSize, space, useAppTheme } from "@/theme";
 
@@ -64,6 +65,7 @@ export default function LibraryScreen() {
   const api = useApi();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
+  const offline = useOffline();
   const [likers, setLikers] = useState<{ count: number; id: string } | null>(
     null,
   );
@@ -134,20 +136,30 @@ export default function LibraryScreen() {
 
   return (
     <View style={styles.fill}>
-      <NovelistHeader title="Library" />
+      {/* Header: declared on the route in `app/_layout.tsx`. */}
       <FlatList<Item>
         columnWrapperStyle={styles.row}
         contentContainerStyle={[
           styles.content,
           { paddingBottom: insets.bottom + space.lg },
         ]}
-        data={query.isPending ? PLACEHOLDERS : stories}
+        // Ghosts while loading — unless the phone is offline, when they would
+        // never fill; the list stays empty and `ListStatus` says why.
+        data={query.isPending && !offline ? PLACEHOLDERS : stories}
         initialNumToRender={6}
         keyExtractor={keyExtractor}
         ListEmptyComponent={
           <ListStatus
-            empty="No stories to show yet."
+            empty={
+              <EmptyScene
+                scene="blank-storyboard"
+                subtitle="Stories you start or are invited to will show up here."
+                title="No stories yet"
+              />
+            }
             error={query.error}
+            loading={query.isPending}
+            offlineWhat="generic"
             onRetry={() => void query.refetch()}
           />
         }

@@ -1,5 +1,6 @@
 "use client";
 
+import { isSupportNovelist } from "@nw/chat";
 import type { Novelist, PromptThreadComment } from "@nw/types";
 import type { Conversation } from "@nw/types/conversation";
 import { type FC, useEffect, useState } from "react";
@@ -148,9 +149,12 @@ const SuggestionRow: FC<{ novelist: SuggestionNovelist }> = ({ novelist }) => {
           </S.StatRow>
         </S.ThreadInfo>
       </S.SuggestionMain>
-      <S.SuggestionAddButton onClick={onAdd} disabled={loading || sent}>
-        {sent ? <>Sent</> : loading ? <>…</> : <><FiUserPlus size={12} /> Add</>}
-      </S.SuggestionAddButton>
+      {/* Support is not somebody to add. */}
+      {!isSupportNovelist(novelist.username) && (
+        <S.SuggestionAddButton onClick={onAdd} disabled={loading || sent}>
+          {sent ? <>Sent</> : loading ? <>…</> : <><FiUserPlus size={12} /> Add</>}
+        </S.SuggestionAddButton>
+      )}
     </S.SuggestionRow>
   );
 };
@@ -294,7 +298,11 @@ export const RightSidebar: FC<Props> = ({ visible }) => {
         ) : conversationsWithMessages?.length ? (
           <S.ConversationsList>
             {conversationsWithMessages.map((conversation) => (
-              <ConversationCard key={conversation.id} conversation={conversation} />
+              <ConversationCard
+                key={conversation.id}
+                conversation={conversation}
+                compact
+              />
             ))}
           </S.ConversationsList>
         ) : (

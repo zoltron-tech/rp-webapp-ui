@@ -10,6 +10,17 @@
  */
 export const SUPPORT_USERNAME = "novelistworld";
 
+/**
+ * Whether a novelist is the support account.
+ *
+ * Support is not somebody to befriend, and it is not playing: wherever a
+ * novelist row, card or likers list offers **Add**, it offers nothing for
+ * this account, and wherever a profile shows XP, a level or badges, it shows
+ * none. Messaging it stays — that is what the account is for.
+ */
+export const isSupportNovelist = (username: string | null | undefined) =>
+  username === SUPPORT_USERNAME;
+
 import type {
   Conversation,
   ConversationParticipant,

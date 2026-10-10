@@ -1,4 +1,9 @@
-import { isStoredNotification, useNotificationReadState } from "@nw/features";
+import {
+  isStoredNotification,
+  notificationHue,
+  notificationKicker,
+  useNotificationReadState,
+} from "@nw/features";
 import type { NovelistWorldNotification } from "@nw/types";
 import {
   type CSSProperties,
@@ -20,7 +25,7 @@ import { API_MESSAGE } from "@/utils/constants";
 import { toFormattedDateFromUnix } from "@/utils/helpers";
 import { notificationRoute } from "@/utils/notification-route";
 import { AvatarNew } from "../common/avatar-new";
-import { kickerFor, kindMeta } from "./kinds";
+import { notificationIcon } from "./kinds";
 import * as S from "./row.styles";
 
 type Props = {
@@ -49,8 +54,7 @@ export const NotificationRow: FC<Props> = ({
   const [loading, setLoading] = useState(false);
   const { markRead } = useNotificationReadState();
 
-  const meta = kindMeta(notification);
-  const Glyph = meta.icon;
+  const Glyph = notificationIcon(notification);
   const unread = !notification.isRead;
   // The latest performer is the row's source; a second face shows it is a crowd.
   const second = (notification.actors ?? []).find(
@@ -140,7 +144,7 @@ export const NotificationRow: FC<Props> = ({
       onKeyDown={onKeyDown}
       data-unread={unread || undefined}
       data-compact={compact || undefined}
-      style={{ "--kind": meta.hue } as CSSProperties}
+      style={{ "--kind": notificationHue(notification) } as CSSProperties}
     >
       <S.Faces data-pair={second ? true : undefined}>
         {second && (
@@ -161,7 +165,7 @@ export const NotificationRow: FC<Props> = ({
       </S.Faces>
 
       <S.Body>
-        <S.Kicker>{kickerFor(notification)}</S.Kicker>
+        <S.Kicker>{notificationKicker(notification)}</S.Kicker>
         <S.Sentence>
           <strong>{notification.source.title}</strong>{" "}
           {notification.notificationText}

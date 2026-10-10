@@ -22,7 +22,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -38,6 +38,7 @@ import {
 } from "@/components/compose/prompt-composer";
 import { LikersSheet } from "@/components/feed/likers-sheet";
 import { ShareSheet } from "@/components/feed/share-sheet";
+import { EmptyScene } from "@/components/empty-feed";
 import { ListStatus } from "@/components/list-status";
 import { PromptCardSkeleton } from "@/components/skeleton";
 import { type PostVariant, ThreadPost } from "@/components/thread/post";
@@ -49,6 +50,14 @@ import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
 import { findCached } from "@/lib/cache-seed";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 import { Avatar } from "@/components/avatar";
+import { QueuedPostRow } from "@/components/queued-post-row";
+import {
+  discardOutbox,
+  getStore,
+  hydrateThreadPage,
+  markThreadOpened,
+  useOutboxPosts,
+} from "@/lib/local-store";
 import { Button } from "@/components/button";
 import { useHideTabBar } from "@/hooks/use-hide-tab-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -162,6 +171,21 @@ export const ThreadScreen = () => {
   const queryClient = useQueryClient();
   const { novelist, status } = useSession();
   const { threadId } = useLocalSearchParams<{ threadId: string }>();
+
+  /*
+   * From disk first, if this thread was kept (`local-store/interactions.ts`):
+   * the head and the replies are placed in the cache before the fetch, and
+   * only then does the thread count as opened — the mark is what keeps it
+   * among the ten the next cold start can show.
+   */
+  useEffect(() => {
+    const store = getStore();
+    if (!store || !threadId) return;
+    void hydrateThreadPage(store, queryClient, threadId)
+      .catch(() => undefined)
+      .then(() => markThreadOpened(store, threadId))
+      .catch(() => undefined);
+  }, [queryClient, threadId]);
 
   const tabBarScroll = useTabBarScroll();
   // The tab bar steps aside here: the reply bar takes its place.
@@ -280,6 +304,21 @@ export const ThreadScreen = () => {
 
   const [composer, setComposer] = useState<ComposerMode | null>(null);
   const [sharing, setSharing] = useState(false);
+
+  // Replies written offline into this thread, drawn after the ones that are
+  // here (`local-store/outbox.ts`).
+  const allQueued = useOutboxPosts();
+  const queuedReplies = useMemo(
+    () =>
+      allQueued.filter(
+        (entry) => entry.type === "reply" && entry.payload.commentId === threadId,
+      ),
+    [allQueued, threadId],
+  );
+  const discardQueued = useCallback((id: string) => {
+    const store = getStore();
+    if (store) void discardOutbox(store, id).catch(() => undefined);
+  }, []);
 
   /** Whose likes are being shown: the post's id and the count on its heart. */
   const [likers, setLikers] = useState<{ count: number; id: string } | null>(
@@ -441,7 +480,16 @@ export const ThreadScreen = () => {
     );
   }
 
-  if (!comment) return <ListStatus empty="This thread is no longer here." />;
+  if (!comment) {
+    return (
+      <EmptyScene
+        aside="(Or the link is wrong. Threads are slippery like that.)"
+        scene="torn-thread"
+        subtitle="Somebody pulled the loose end and the whole conversation went with it. The words were right here a moment ago, we swear."
+        title="This thread has come unravelled"
+      />
+    );
+  }
 
   return (
     <View style={styles.screen}>
@@ -597,6 +645,9 @@ export const ThreadScreen = () => {
             onShowLikers={setLikers}
             reply={reply}
           />
+        ))}
+        {queuedReplies.map((entry) => (
+          <QueuedPostRow entry={entry} key={entry.id} onDiscard={discardQueued} />
         ))}
         </View>
 

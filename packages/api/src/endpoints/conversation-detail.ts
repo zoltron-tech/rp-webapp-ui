@@ -107,6 +107,41 @@ export const getConversationMessages = (
     { label: "getConversationMessagesAction", notFound: "empty-array" },
   );
 
+/**
+ * Messages created after `after` (an ISO date-time), newest first, at most
+ * `pageSize` — the delta read for a client holding a local copy. A backend
+ * that does not know `after` ignores it and answers page one, which the
+ * caller must treat as a full page rather than a delta.
+ *
+ * The boundary is not exact: the column holds microseconds and `createdAt`
+ * on the wire is coarser, so asking "after the newest message I have" can
+ * return that message again. Upsert by id.
+ */
+export const getConversationMessagesAfter = (
+  api: ApiClient,
+  conversationId: string,
+  after: string,
+  pageSize = 50,
+): Promise<DataType<Message[]>> =>
+  api.requestNullable<Message[]>(
+    `${CHAT}/${id(conversationId)}/messages?pageSize=${pageSize}&after=${encodeURIComponent(after)}`,
+    { label: "getConversationMessagesAfterAction", notFound: "empty-array" },
+  );
+
+/**
+ * Ids of messages deleted from the conversation after `since`. `null` from a
+ * backend that does not have the route yet.
+ */
+export const getDeletedMessageIds = (
+  api: ApiClient,
+  conversationId: string,
+  since: string,
+): Promise<DataType<string[]> | null> =>
+  api.requestNullable<string[]>(
+    `${CHAT}/${id(conversationId)}/messages/deleted?since=${encodeURIComponent(since)}`,
+    { label: "getDeletedMessageIdsAction", notFound: "null" },
+  );
+
 export const sendConversationMessage = (
   api: ApiClient,
   input: { conversationId: string; message: string },

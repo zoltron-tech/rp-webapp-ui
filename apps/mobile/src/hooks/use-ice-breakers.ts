@@ -10,6 +10,8 @@ import { API_MESSAGE } from "@nw/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useChatSocket } from "@/context/socket";
+// Shared with the local store, which hydrates and persists this key.
+import { ICE_BREAKERS_KEY } from "@/lib/local-store/ice-breakers";
 
 /**
  * Reading, writing and answering ice breakers.
@@ -19,9 +21,6 @@ import { useChatSocket } from "@/context/socket";
  * reaches these endpoints through its own server actions.
  */
 
-/** Not in `queryKeys` for the same reason `groupCount` is not: nothing in the
- *  conversation cache should invalidate this, and vice versa. */
-const ICE_BREAKERS_KEY = ["ice-breakers"] as const;
 
 export const useIceBreakers = () => {
   const api = useApi();

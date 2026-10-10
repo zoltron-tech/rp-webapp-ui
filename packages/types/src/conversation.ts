@@ -7,9 +7,21 @@ export interface Conversation {
   image: string;
   lastMessage: Message;
   isGroup: boolean;
+  /** A preview: the first few, for an avatar stack. Not the whole list. */
   members: ConversationParticipant[];
+  /** How many are in it. Absent on responses from a service that predates it. */
+  memberCount?: number | null;
   createdAt: string;
   modifiedAt: string;
+}
+
+/**
+ * What moved in the inbox since a moment — `GET /chat/conversations/changes`.
+ * `left` is every conversation the caller was in and is not any more.
+ */
+export interface ConversationChanges {
+  conversations: Conversation[];
+  left: string[];
 }
 
 export interface ConversationParticipant {

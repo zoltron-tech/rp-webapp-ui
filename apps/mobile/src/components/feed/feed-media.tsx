@@ -1,10 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
+import { Image } from "@/components/image";
 import { createVideoPlayer, type VideoThumbnail } from "expo-video";
 import { memo, useEffect, useMemo, useState } from "react";
-import { InteractionManager, Pressable, StyleSheet, View } from "react-native";
+import {
+  InteractionManager,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
 import { Text } from "@/components/text";
 import { ClipPlayer } from "@/components/chat/clip-player";
+import { LIVE_STILLS, LiveStill } from "@/components/live-still";
 import {
   border,
   fontSize,
@@ -96,6 +103,12 @@ export const cachedThumbnail = (url: string): VideoThumbnail | null =>
 export const thumbnailFor = (url: string): Promise<VideoThumbnail | null> => {
   const cached = THUMBNAILS.get(url);
   if (cached) return Promise.resolve(cached);
+  // No decoded stills on iOS, for now. `generateThumbnailsAsync` aborts the
+  // app there — a native crash, nothing a `catch` sees — with the clip loaded
+  // and with either size option, in the feed and in chat alike (iOS 26.6,
+  // expo-video 3.0.16, 2026-10-05). Posters draw a paused player instead
+  // (`components/live-still`). Lift this once the crash has a cause.
+  if (Platform.OS === "ios") return Promise.resolve(null);
   const pending = PENDING.get(url);
   if (pending) return pending;
 
@@ -125,7 +138,6 @@ export const thumbnailFor = (url: string): Promise<VideoThumbnail | null> => {
       done();
     }
   })();
-
   PENDING.set(url, work);
   return work;
 };
@@ -237,12 +249,16 @@ const LazyClipView = ({ url }: { url: string }) => {
           style={StyleSheet.absoluteFill}
           transition={150}
         />
+      ) : LIVE_STILLS ? (
+        <LiveStill url={url} />
       ) : null}
       <View pointerEvents="none" style={styles.scrim} />
       <View style={[styles.playBadge, { borderColor: "rgba(255,255,255,0.5)" }]}>
         <Ionicons color="#ffffff" name="play" size={26} />
       </View>
-      {frame ? null : <Text style={styles.posterLabel}>Video</Text>}
+      {frame || LIVE_STILLS ? null : (
+        <Text style={styles.posterLabel}>Video</Text>
+      )}
     </Pressable>
   );
 };

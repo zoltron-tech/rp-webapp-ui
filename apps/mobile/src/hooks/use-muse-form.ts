@@ -89,7 +89,16 @@ const payloadOf = (muse: Muse): CreateUpdateMuse => ({
   sideMenuTextColor: muse.sideMenuTextColor?.trim() ?? "",
   song: muse.song ?? null,
   story: muse.story ?? null,
-  tags: muse.tags ?? null,
+  /*
+   * Never the muse's own tags. The service reads a tag as its *entity*
+   * (`createdAt` and all), while it hands tags out as `{ label, color }`, so
+   * a muse with any tag at all sent back as read is "Request data is
+   * invalid" — every appearance switch said "Not saved" on a tagged character
+   * and worked on an untagged one. The update never stores what is sent
+   * here anyway (tags have their own endpoints; this field is only echoed in
+   * the response), and web's edit forms send `null` for the same reason.
+   */
+  tags: null,
   useAccent: muse.useAccent ?? false,
   useExtraImages: muse.useExtraImages ?? false,
   video: muse.video ?? null,

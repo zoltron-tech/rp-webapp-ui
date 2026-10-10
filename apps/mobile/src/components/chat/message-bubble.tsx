@@ -3,6 +3,7 @@ import {
   isMediaOnlyMessage,
   isVideoOnlyMessage,
   messagePreview,
+  messageTextOf,
 } from "@nw/chat";
 import type { Message, MessageSender } from "@nw/types";
 import { toChatTime } from "@nw/utils";
@@ -14,11 +15,10 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import {
   AttachmentMosaic,
-  hasMarkup,
+  captionOf,
   MessageAttachments,
   MessageTextMedia,
   MOSAIC_FRAME,
@@ -32,6 +32,7 @@ import {
 } from "@/components/chat/reactions";
 import { RepliedIceBreaker } from "@/components/chat/replied-ice-breaker";
 import { RichText } from "@/components/rich-text";
+import { Text } from "@/components/text";
 import {
   border,
   fontSize,
@@ -82,6 +83,8 @@ export interface PendingState {
   pending?: boolean;
   /** The send failed; tapping retries. */
   failed?: boolean;
+  /** Written offline, waiting in the outbox for a connection. Long press to remove. */
+  queued?: boolean;
   onRetry?: () => void;
 }
 
@@ -294,6 +297,7 @@ const MessageBubbleComponent = ({
   onJumpToQuoted,
   pending,
   position = "single",
+  queued,
   showAvatar,
   showSender,
 }: PendingState & {
@@ -351,16 +355,24 @@ const MessageBubbleComponent = ({
    * is the video half of the question, and it lives in `@nw/chat` beside the
    * image one rather than as a local guess here.
    */
-  const videoOnly =
-    !hasMarkup(message.message) && isVideoOnlyMessage(message.message);
-  const mediaOnly =
-    videoOnly ||
-    (!hasMarkup(message.message) && isMediaOnlyMessage(message.message));
+  /*
+   * Asked of the message's *words* (`messageTextOf`), not its source: web's
+   * composer sends its contenteditable's `innerHTML`, so a GIF link typed in a
+   * browser arrives as `https://….gif&nbsp;` or `<br>https://….gif`, and both
+   * are one GIF link. Asking the raw string said neither was.
+   */
+  const words = messageTextOf(message.message);
+  const videoOnly = isVideoOnlyMessage(words);
+  const mediaOnly = videoOnly || isMediaOnlyMessage(words);
 
   // The clock earns its line only at the end of a run, or when something has
   // gone wrong and the row is saying so instead.
   const showMeta =
-    failed || pending || position === "last" || position === "single";
+    failed ||
+    pending ||
+    queued ||
+    position === "last" ||
+    position === "single";
 
   /** The quoted message as a line of words, never as its markup or its URL. */
   const quote = reply ? messagePreview(reply, "noun") : null;
@@ -389,9 +401,20 @@ const MessageBubbleComponent = ({
     [message.attachments],
   );
   const hasMosaic = media.length > 0;
+  /*
+   * The words under the media, with the link that *is* the media taken out:
+   * a GIF pasted into a sentence was drawn as the GIF and then printed as the
+   * link under it. Empty when nothing but the link was said. Under an album
+   * the text's links are not drawn (`MessageTextMedia` yields to the mosaic),
+   * so they stay words.
+   */
+  const caption = useMemo(
+    () => (hasMosaic ? (message.message ?? "") : captionOf(message.message)),
+    [hasMosaic, message.message],
+  );
   const captionless =
     hasMosaic &&
-    !message.message?.trim() &&
+    !caption.trim() &&
     (message.attachments?.length ?? 0) === media.length;
 
   // Swiping a bubble toward the centre of the screen drags it away from its own
@@ -694,14 +717,17 @@ const MessageBubbleComponent = ({
           ) : (
             <MessageTextMedia
               onLongPress={() => onShowActions?.(message)}
+              onOpen={
+                onOpenMedia ? (index) => onOpenMedia(message, index) : undefined
+              }
               text={message.message}
             />
           )}
 
           {/* No empty line under an album that came without words. */}
-          {mediaOnly || !message.message?.trim() ? null : (
+          {mediaOnly || !caption.trim() ? null : (
             <View style={hasMosaic ? styles.caption : null}>
-              <RichText html={message.message} />
+              <RichText html={caption} />
             </View>
           )}
 
@@ -731,6 +757,24 @@ const MessageBubbleComponent = ({
                   <Ionicons color={theme.error} name="alert-circle" size={12} />
                   <Text style={[styles.time, { color: theme.error }]}>
                     Not sent — tap to retry
+                  </Text>
+                </>
+              ) : queued ? (
+                // Not failed, not sending: waiting. Nothing has been tried,
+                // and nothing needs doing — it goes when the signal does.
+                <>
+                  <Ionicons
+                    color={mediaOnly || captionless ? "#ffffff" : theme.textGray}
+                    name="cloud-offline-outline"
+                    size={12}
+                  />
+                  <Text
+                    style={[
+                      styles.time,
+                      { color: mediaOnly || captionless ? "#ffffff" : theme.textGray },
+                    ]}
+                  >
+                    Waiting for connection
                   </Text>
                 </>
               ) : (

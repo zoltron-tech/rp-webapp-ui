@@ -7,7 +7,7 @@ import { queryKeys, useApi } from "@nw/features";
 import { imageSources } from "@nw/richtext";
 import type { MuseAboutSection } from "@nw/types";
 import { useQueryClient } from "@tanstack/react-query";
-import { Image } from "expo-image";
+import { Image } from "@/components/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Keyboard, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "@/components/text";

@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "@/lib/navigation";
+import { isSupportNovelist } from "@nw/chat";
 import type { FC, ReactNode } from "react";
 import { EmailVerifiedBadge } from "@/components/common";
 import {
@@ -18,6 +18,7 @@ import {
 } from "@/components/user-menu/user-menu-icons";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { usePathname } from "@/lib/navigation";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styles";
 
@@ -58,8 +59,16 @@ export const LeftNav: FC<Props> = ({ visible }) => {
     {
       items: [
         { icon: <HomeIcon size={18} />, label: "Home", route: ROUTES.Home },
-        { icon: <ExploreIcon size={18} />, label: "Explore Posts", route: ROUTES.explore },
-        { icon: <LibraryIcon size={18} />, label: "Library", route: ROUTES.Library },
+        {
+          icon: <ExploreIcon size={18} />,
+          label: "Explore Posts",
+          route: ROUTES.explore,
+        },
+        {
+          icon: <LibraryIcon size={18} />,
+          label: "Library",
+          route: ROUTES.Library,
+        },
       ],
       label: "Main",
     },
@@ -102,7 +111,11 @@ export const LeftNav: FC<Props> = ({ visible }) => {
           label: "Friends",
           route: ROUTES.Profile.View(novelist.username).Friends,
         },
-        { icon: <BookmarksIcon size={18} />, label: "Bookmarks", route: ROUTES.Bookmarks },
+        {
+          icon: <BookmarksIcon size={18} />,
+          label: "Bookmarks",
+          route: ROUTES.Bookmarks,
+        },
         {
           icon: <MusicIcon size={18} />,
           label: "Music",
@@ -138,9 +151,11 @@ export const LeftNav: FC<Props> = ({ visible }) => {
                     {novelist.isVerified && <EmailVerifiedBadge size={13} />}
                   </S.ProfileName>
                   <S.ProfileHandle>@{novelist.username}</S.ProfileHandle>
-                  <S.ProfileLevel>
-                    {novelist.totalPoints.toLocaleString()} XP
-                  </S.ProfileLevel>
+                  {!isSupportNovelist(novelist.username) && (
+                    <S.ProfileLevel>
+                      {novelist.totalPoints.toLocaleString()} XP
+                    </S.ProfileLevel>
+                  )}
                 </S.ProfileInfo>
               </S.ProfileItem>
             )}

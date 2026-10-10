@@ -293,6 +293,23 @@ export function CreateIceBreakerDialog({
           onFocus={() => setMessageFocused(true)}
           onBlur={() => setMessageFocused(false)}
         >
+          {/* Who this goes out as, pinned to the bubble's corner: the picker
+              above scrolls sideways, so the chosen face can be off its edge. */}
+          {selectedSource && (
+            <S.IceBreakerSenderChip
+              $color={color}
+              role="img"
+              aria-label={`Sending as ${selectedSource.name}`}
+              title={`Sending as ${selectedSource.name}`}
+            >
+              <AvatarNew
+                src={selectedSource.image ?? null}
+                // The name, not "": it is where the fallback initial comes from.
+                alt={selectedSource.name}
+                nwImage={selectedSource.avatar}
+              />
+            </S.IceBreakerSenderChip>
+          )}
           <ChatRichInput
             bare
             placeholder="Say something to break the ice..."

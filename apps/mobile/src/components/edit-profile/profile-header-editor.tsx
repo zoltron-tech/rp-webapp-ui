@@ -141,25 +141,20 @@ export const ProfileHeaderEditor = ({
     {
       icon: "move-outline",
       label: "Reposition",
-      onPress: () => {
-        setMenu(null);
-        bannerFlow.open(banner);
-      },
+      // `onSelect`, as with everything in these two menus: each opens a
+      // modal of its own, which iOS refuses while the menu is still up.
+      onSelect: () => bannerFlow.open(banner),
     },
     {
       icon: "swap-horizontal",
       label: "Replace image",
-      onPress: () => {
-        setMenu(null);
-        void bannerFlow.replace();
-      },
+      onSelect: () => void bannerFlow.replace(),
     },
     { separator: true },
     {
       icon: "trash-outline",
       label: "Remove cover",
-      onPress: () => {
-        setMenu(null);
+      onSelect: () => {
         confirmRemove(
           "cover",
           "Remove cover banner?",
@@ -176,17 +171,13 @@ export const ProfileHeaderEditor = ({
     {
       icon: "create-outline",
       label: "Edit note",
-      onPress: () => {
-        setMenu(null);
-        setNoteOpen(true);
-      },
+      onSelect: () => setNoteOpen(true),
     },
     { separator: true },
     {
       icon: "trash-outline",
       label: "Clear note",
-      onPress: () => {
-        setMenu(null);
+      onSelect: () => {
         confirmRemove(
           "note",
           "Clear your note?",
@@ -411,9 +402,7 @@ export const ProfileHeaderEditor = ({
           </Text>
         </View>
 
-        <View
-          style={[styles.toolbar, { borderTopColor: theme.material.edge }]}
-        >
+        <View style={[styles.toolbar, { borderTopColor: theme.material.edge }]}>
           <ToolButton
             icon="image-outline"
             isSet={Boolean(banner)}
@@ -421,10 +410,7 @@ export const ProfileHeaderEditor = ({
             onPress={openCover}
           />
           <View
-            style={[
-              styles.toolRule,
-              { backgroundColor: theme.material.edge },
-            ]}
+            style={[styles.toolRule, { backgroundColor: theme.material.edge }]}
           />
           <ToolButton
             icon="person-circle-outline"
@@ -433,10 +419,7 @@ export const ProfileHeaderEditor = ({
             onPress={openPhoto}
           />
           <View
-            style={[
-              styles.toolRule,
-              { backgroundColor: theme.material.edge },
-            ]}
+            style={[styles.toolRule, { backgroundColor: theme.material.edge }]}
           />
           <ToolButton
             icon="chatbubble-ellipses-outline"

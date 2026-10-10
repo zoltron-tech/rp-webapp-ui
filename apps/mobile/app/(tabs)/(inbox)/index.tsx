@@ -1,6 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { resolveConversationTarget } from "@nw/chat";
 import {
+  INBOX_FILTERS,
+  type InboxFilter,
+  inboxSections,
+  inboxSummary,
+  matchesInboxFilter,
   useConversations,
   useMarkConversationRead,
   usePrefetchConversationMessages,
@@ -33,7 +38,10 @@ import { CreateIceBreakerSheet } from "@/components/chat/create-ice-breaker-shee
 import { IceBreakerRail } from "@/components/chat/ice-breaker-rail";
 import { IceBreakerSheet } from "@/components/chat/ice-breaker-sheet";
 import { EndOfList } from "@/components/end-of-list";
+import { EmptyScene } from "@/components/empty-feed";
 import { ListStatus } from "@/components/list-status";
+import { useReconcileInbox } from "@/hooks/use-reconcile";
+import type { RowPlace } from "@/components/notification-row";
 import { useTrackOnline } from "@/context/socket";
 import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
 import {
@@ -66,10 +74,12 @@ import { IconButton } from "@/components/icon-button";
  *
  * What changed, and why each one:
  *
- *  - **Rows, not cards.** Every row used to be a bordered card in a padded
- *    list, which is four spacing decisions per conversation and about seven
- *    rows on a 667pt screen. Full-bleed rows with a hairline between them fit
- *    nine and read as a list rather than as a feed.
+ *  - **Sections, as panels.** The list reads in the order it is needed: what
+ *    is waiting on you, then by how long ago, under the notification list's
+ *    own titles. Each section is one panel of ruled rows, and each row wears
+ *    its thread's state the way a notification wears its kind — see
+ *    `ConversationRow` and `@nw/features`' `inbox-kinds`, which web draws
+ *    from too.
  *  - **Swipe to act.** Swipe a row right to mark it read; swipe left to open
  *    its details. Both were previously two taps and a screen away. See
  *    `components/swipeable-row.tsx` for why they snap back rather than latch.
@@ -83,18 +93,22 @@ import { IconButton } from "@/components/icon-button";
  *    that tells you the ball is in their court without opening anything.
  */
 
-type Filter = "all" | "unread" | "groups";
-
-const FILTERS: { id: Filter; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "unread", label: "Unread" },
-  { id: "groups", label: "Groups" },
-];
+/**
+ * One cell of the list: a conversation and where it sits in its section.
+ * Flattened rather than a `SectionList`, for the reason the notifications
+ * screen gives.
+ */
+type Cell = {
+  item: Conversation;
+  place: RowPlace;
+  /** The section title, on the first row of each section. */
+  starts: string | null;
+};
 
 /** Below this, scrolling the list is faster than typing a name. */
 const SEARCH_THRESHOLD = 8;
 
-const keyExtractor = (item: Conversation) => item.id;
+const keyExtractor = (cell: Cell) => cell.item.id;
 
 /**
  * Two layers: the parallax host, which never re-renders, and the content,
@@ -110,6 +124,8 @@ export default function InboxScreen() {
 
 function InboxContent() {
   const theme = useAppTheme();
+  // Deletions and exits since the last look (see `sync-chat.ts`).
+  useReconcileInbox();
   const router = useRouter();
   const { novelist } = useSession();
   const { ids: unreadIds } = useUnreadConversations();
@@ -131,7 +147,7 @@ function InboxContent() {
   const support = useSupportConversation();
   const { iceBreakers, isPending: iceBreakersPending } = useIceBreakers();
 
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filter, setFilter] = useState<InboxFilter>("all");
   const [groupOpen, setGroupOpen] = useState(false);
   const [iceBreakerOpen, setIceBreakerOpen] = useState(false);
   const [viewingIceBreaker, setViewingIceBreaker] = useState<IceBreaker | null>(
@@ -196,10 +212,11 @@ function InboxContent() {
     const query = search.trim().toLowerCase();
 
     return conversations.filter((conversation) => {
-      if (filter === "unread" && !unreadSet.has(conversation.id)) {
+      if (
+        !matchesInboxFilter(conversation, filter, unreadSet.has(conversation.id))
+      ) {
         return false;
       }
-      if (filter === "groups" && !conversation.isGroup) return false;
       if (!query) return true;
 
       const target = targets.get(conversation.id);
@@ -208,6 +225,24 @@ function InboxContent() {
       return name.includes(query) || username.includes(query);
     });
   }, [conversations, filter, search, targets, unreadIds]);
+
+  const cells = useMemo<Cell[]>(
+    () =>
+      inboxSections(visible, (conversation) =>
+        unreadSet.has(conversation.id),
+      ).flatMap((section) =>
+        section.items.map((item, index) => {
+          const first = index === 0;
+          const last = index === section.items.length - 1;
+          return {
+            item,
+            place: first ? (last ? "only" : "first") : last ? "last" : "middle",
+            starts: first ? section.title : null,
+          };
+        }),
+      ),
+    [unreadSet, visible],
+  );
 
   const open = useCallback(
     (conversationId: string) => {
@@ -255,17 +290,30 @@ function InboxContent() {
   );
 
   const renderItem = useCallback(
-    ({ item }: { item: Conversation }) => (
-      <ConversationRow
-        conversation={item}
-        myUsername={novelist?.username}
-        onMarkRead={markRead.mutate}
-        onOpen={open}
-        onOpenDetails={openDetails}
-        onPrefetch={prefetch}
-        target={targets.get(item.id)}
-        unread={unreadSet.has(item.id)}
-      />
+    ({ index, item: cell }: { index: number; item: Cell }) => (
+      <>
+        {cell.starts ? (
+          <View style={[styles.period, index > 0 && styles.periodNext]}>
+            <Text style={[styles.headTitle, { color: theme.textGray }]}>
+              {cell.starts}
+            </Text>
+            <View
+              style={[styles.rule, { backgroundColor: theme.material.edge }]}
+            />
+          </View>
+        ) : null}
+        <ConversationRow
+          conversation={cell.item}
+          myUsername={novelist?.username}
+          onMarkRead={markRead.mutate}
+          onOpen={open}
+          onOpenDetails={openDetails}
+          onPrefetch={prefetch}
+          place={cell.place}
+          target={targets.get(cell.item.id)}
+          unread={unreadSet.has(cell.item.id)}
+        />
+      </>
     ),
     [
       markRead.mutate,
@@ -274,12 +322,14 @@ function InboxContent() {
       openDetails,
       prefetch,
       targets,
+      theme,
       unreadIds,
     ],
   );
 
   /*
-   * The list's head: ice breakers, then the conversations' own title.
+   * The list's head: ice breakers, then a line that reads the room. The
+   * sections title themselves, on their first row.
    *
    * The rail used to be pinned in the toolbar, between the search field and
    * the filters. Pinned, it held about a third of a 667pt screen whether or
@@ -298,14 +348,12 @@ function InboxContent() {
             <View style={styles.headRow}>
               <Text style={[styles.headTitle, { color: theme.textGray }]}>
                 Ice breakers
+                {iceBreakers.length > 0 ? ` · ${iceBreakers.length}` : ""}
               </Text>
               <View
                 style={[styles.rule, { backgroundColor: theme.material.edge }]}
               />
             </View>
-            <Text style={[styles.headBody, { color: theme.textGray }]}>
-              Openers from novelists looking for someone to talk to.
-            </Text>
             <IceBreakerRail
               iceBreakers={iceBreakers}
               isPending={iceBreakersPending}
@@ -314,17 +362,27 @@ function InboxContent() {
             />
           </>
         )}
-        <View style={[styles.headRow, search ? null : styles.headSecond]}>
-          <Text style={[styles.headTitle, { color: theme.textGray }]}>
-            Conversations
+        {conversations.length > 0 ? (
+          <Text
+            style={[
+              styles.summary,
+              search ? null : styles.headSecond,
+              { color: theme.textGray },
+            ]}
+          >
+            {inboxSummary(unreadIds.length, conversations.length)}
           </Text>
-          <View
-            style={[styles.rule, { backgroundColor: theme.material.edge }]}
-          />
-        </View>
+        ) : null}
       </View>
     ),
-    [iceBreakers, iceBreakersPending, search, theme],
+    [
+      conversations.length,
+      iceBreakers,
+      iceBreakersPending,
+      search,
+      theme,
+      unreadIds.length,
+    ],
   );
 
   const showSearch = conversations.length >= SEARCH_THRESHOLD;
@@ -354,7 +412,7 @@ function InboxContent() {
 
         <View style={styles.controlRow}>
           <View style={styles.filters}>
-          {FILTERS.map((entry) => {
+          {INBOX_FILTERS.map((entry) => {
             const active = entry.id === filter;
             const count =
               entry.id === "unread" ? unreadIds.length : undefined;
@@ -424,7 +482,7 @@ function InboxContent() {
       <FlatList
         {...tabBarScroll}
         contentContainerStyle={contentStyle}
-        data={visible}
+        data={cells}
         ListHeaderComponent={header}
         // A screen and a half of rows first, not the default ten; each row is
         // a swipeable with a responder of its own.
@@ -443,11 +501,25 @@ function InboxContent() {
                 // The empty list means two different things and they need
                 // different sentences: nothing here at all, or nothing
                 // matching what you asked for.
-                conversations.length === 0
-                  ? "No conversations yet."
-                  : filter === "unread"
-                    ? "Nothing unread. You are all caught up."
-                    : "No conversations match that."
+                conversations.length === 0 ? (
+                  <EmptyScene
+                    scene="no-conversations"
+                    subtitle="Connect with fellow novelists, or find a story to write together."
+                    title="No conversations yet"
+                  />
+                ) : filter === "unread" ? (
+                  <EmptyScene
+                    scene="no-matches"
+                    subtitle="You are all caught up."
+                    title="Nothing unread"
+                  />
+                ) : (
+                  <EmptyScene
+                    scene="no-matches"
+                    subtitle="Try a different name, or check the spelling."
+                    title="No conversations match that"
+                  />
+                )
               }
               error={error}
               onRetry={refetch}
@@ -577,17 +649,29 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   time: { fontSize: fontSize.caption },
   titleRow: { alignItems: "center", flexDirection: "row", gap: space.xs },
-  head: { paddingHorizontal: space.md, paddingTop: space.md },
-  headBody: {
-    fontSize: fontSize.caption,
-    lineHeight: 17,
+  head: {
     paddingBottom: space.m,
-    paddingTop: space.xs,
+    paddingHorizontal: space.md,
+    paddingTop: space.md,
   },
-  headRow: { alignItems: "center", flexDirection: "row", gap: space.m },
+  headRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: space.m,
+    paddingBottom: space.m,
+  },
   headSecond: { paddingTop: space.md },
   headTitle: type.eyebrow,
+  period: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: space.m,
+    paddingBottom: space.ms,
+    paddingHorizontal: space.md,
+  },
+  periodNext: { paddingTop: space.lg },
   rule: { flex: 1, height: StyleSheet.hairlineWidth },
+  summary: { fontSize: fontSize.label, lineHeight: 18 },
   toolbar: {
     borderBottomWidth: StyleSheet.hairlineWidth,
     gap: space.sm,

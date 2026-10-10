@@ -16,4 +16,7 @@
  * root included. Dev, `expo export` and the Gradle release path all take the
  * same route.
  */
+// The background refresh task is defined at module scope, before the router
+// loads anything, which is what `expo-task-manager` requires of it.
+import "./src/lib/local-store/background";
 import "expo-router/entry";

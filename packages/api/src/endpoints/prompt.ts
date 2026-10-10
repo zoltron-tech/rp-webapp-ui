@@ -44,8 +44,10 @@ export const updatePrompt = async (
   if ("message" in result) return result;
 
   // The service echoes a `message` alongside the prompt; strip it so callers
-  // can keep using `"message" in result` to mean failure.
-  return { ...result, message: undefined } as Prompt;
+  // can keep using `"message" in result` to mean failure. The key itself has
+  // to go — `message: undefined` still answers `"message" in` with `true`.
+  const { message: _echoed, ...saved } = result as Prompt & { message?: string };
+  return saved as Prompt;
 };
 
 export const updatePromptComment = (

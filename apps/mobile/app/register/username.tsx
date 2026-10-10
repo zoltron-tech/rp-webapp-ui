@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import { checkUsernameAvailability } from "@nw/api/endpoints/account";
-import { queryKeys } from "@nw/features";
 import { checkUsernameInvalidity } from "@nw/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { Redirect, useRouter } from "expo-router";
@@ -16,7 +15,8 @@ import {
 import { TextField } from "@/components/text-field";
 import { useRegisterDraft } from "@/context/register-draft";
 import { api } from "@/lib/api";
-import { signUpWithPassword } from "@/lib/auth";
+import { refreshSessionQueries, signUpWithPassword } from "@/lib/auth";
+import { authErrorCode, describeAuthError } from "@/lib/auth-errors";
 import { fontSize, radius, space, useAppTheme } from "@/theme";
 import { PRIVACY_URL, TERMS_URL } from "@/lib/links";
 
@@ -46,7 +46,7 @@ import { PRIVACY_URL, TERMS_URL } from "@/lib/links";
  */
 
 /**
- * ⚠ The web form allows **50**; this is 30 because that is the counter the app
+ * ! The web form allows **50**; this is 30 because that is the counter the app
  * is specified to show. A username of 31–50 characters is therefore accepted on
  * web and rejected here. One constant to change if the intent was to match web
  * instead — and `checkUsernameInvalidity` in `@nw/utils`, which enforces 3–50,
@@ -65,6 +65,8 @@ export default function RegisterUsernameScreen() {
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** The email from step one is the problem: offer the way back to it. */
+  const [emailTaken, setEmailTaken] = useState(false);
   const back = useAuthBack("/register/password");
 
   /**
@@ -162,15 +164,21 @@ export default function RegisterUsernameScreen() {
         password: draft.password,
         username: username.trim(),
       });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.session() });
-      // A brand-new account has no novelist profile yet, so the session reads
-      // as "onboarding" and the tabs would be empty. Onboarding is not built on
-      // native (Phase 9), so this lands on the public screen rather than an
-      // empty shell.
-      router.replace("/");
+      await refreshSessionQueries(queryClient);
+      // A brand-new account has no novelist profile yet: the set-up flow is
+      // next, and the tabs open once it is finished.
+      router.replace("/onboarding");
     } catch (cause) {
+      const code = authErrorCode(cause);
+      // The server is the authority on a taken name; the check above was
+      // only ever a hint. Mark the field so the hint and the button agree.
+      if (code === "conflict-username") setState("taken");
+      setEmailTaken(code === "conflict-email");
       setError(
-        cause instanceof Error ? cause.message : "Could not create the account.",
+        describeAuthError(
+          cause,
+          "The account could not be created. Please try again.",
+        ),
       );
       setBusy(false);
     }
@@ -185,6 +193,28 @@ export default function RegisterUsernameScreen() {
     >
       <View style={styles.form}>
         <ErrorBox message={error} />
+        {emailTaken ? (
+          <View style={styles.conflictActions}>
+            <Pressable
+              accessibilityRole="button"
+              hitSlop={space.xs}
+              onPress={() => router.replace("/register")}
+            >
+              <Text style={[styles.conflictLink, { color: theme.accent.text }]}>
+                Use a different email
+              </Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              hitSlop={space.xs}
+              onPress={() => router.replace("/login")}
+            >
+              <Text style={[styles.conflictLink, { color: theme.accent.text }]}>
+                Sign in instead
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
 
         <TextField
           autoCapitalize="none"
@@ -194,7 +224,12 @@ export default function RegisterUsernameScreen() {
           hint={hint()}
           invalid={invalid}
           label="Username"
-          onChangeText={setUsername}
+          onChangeText={(value) => {
+            setUsername(value);
+            // A new attempt starts clean: the refusal was for the old name.
+            if (error) setError(null);
+            if (emailTaken) setEmailTaken(false);
+          }}
           returnKeyType="done"
           value={username}
         />
@@ -264,6 +299,13 @@ const styles = StyleSheet.create({
     marginTop: 1,
     width: 22,
   },
+  conflictActions: {
+    flexDirection: "row",
+    gap: space.lg,
+    justifyContent: "center",
+    marginTop: -space.sm,
+  },
+  conflictLink: { fontSize: fontSize.label, fontWeight: "700" },
   consent: { flexDirection: "row", gap: space.sm },
   consentLabel: { flex: 1, fontSize: fontSize.label, lineHeight: 19 },
   form: { gap: space.md },

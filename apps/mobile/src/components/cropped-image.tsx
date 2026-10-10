@@ -1,6 +1,5 @@
 import type { ImageCropFilter } from "@nw/types";
 import { CROP_SCALE_MAX_PCT } from "@nw/utils";
-import { Image } from "expo-image";
 import { useState } from "react";
 import {
   type LayoutChangeEvent,
@@ -8,6 +7,7 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
+import { Image } from "@/components/image";
 
 /**
  * An image drawn through its stored crop — web's `NWImageLayer` and profile
@@ -43,6 +43,7 @@ export const CroppedImage = ({
   crop,
   maxScalePct,
   onError,
+  playing,
   style,
   uri,
 }: {
@@ -55,6 +56,8 @@ export const CroppedImage = ({
   maxScalePct?: number;
   /** The picture failed to load — for a caller with another source to try. */
   onError?: () => void;
+  /** Whether an animated picture runs — see `Image`. Undefined: always. */
+  playing?: boolean;
   /** The box. Give it a size, or let its parent — it is measured either way. */
   style?: StyleProp<ViewStyle>;
   uri: string;
@@ -98,6 +101,7 @@ export const CroppedImage = ({
           contentFit="cover"
           onError={onError}
           onLoad={onLoad}
+          playing={playing}
           recyclingKey={uri}
           source={{ uri }}
           style={styles.fill}
@@ -127,11 +131,18 @@ export const CroppedImage = ({
   return (
     <View onLayout={onLayout} style={[styles.box, style]}>
       <Image
+        // iOS resamples a picture to the view it loaded into, and this one
+        // loads into the 1pt `hidden` box. A still is resampled again when the
+        // view grows; an animated one keeps the frames it made for 1pt and is
+        // stretched from there, which draws as a smear. The source is already
+        // bounded by the proxy, so there is nothing left for this to save.
+        allowDownscaling={false}
         blurRadius={blurRadius}
         cachePolicy="memory-disk"
         contentFit="fill"
         onError={onError}
         onLoad={onLoad}
+        playing={playing}
         recyclingKey={uri}
         source={{ uri }}
         // Off screen until it can be placed: it still has to mount to load,

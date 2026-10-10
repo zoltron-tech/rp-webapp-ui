@@ -13,6 +13,7 @@ import {
 import { useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
+import { EmptyFeed } from "@/components/empty-feed";
 import { EndOfList } from "@/components/end-of-list";
 import { LikersSheet } from "@/components/feed/likers-sheet";
 import { PromptCard, type PromptReaction } from "@/components/feed/prompt-card";
@@ -80,11 +81,6 @@ const END_REACHED_THRESHOLD = 1;
 
 export type FeedKind = "posts" | "prompts";
 
-const EMPTY: Record<FeedKind, string> = {
-  posts: "No posts yet. Their tale is yet to be written.",
-  prompts: "No prompts yet. Their characters have not spoken.",
-};
-
 const keyExtractor = (item: Prompt) => item.id;
 
 /** One frozen empty set, so resetting an open set is not a new allocation. */
@@ -102,10 +98,13 @@ const toggleIn = (
 export const PromptFeed = ({
   kind,
   novelistId,
+  username,
 }: {
   kind: FeedKind;
   /** Empty when the route was opened without one — see the note above. */
   novelistId: string;
+  /** Whose feed this is, for the empty state's sentence. */
+  username?: string;
 }) => {
   const theme = useAppTheme();
   const api = useApi();
@@ -260,7 +259,13 @@ export const PromptFeed = ({
         keyExtractor={keyExtractor}
         ListEmptyComponent={
           <ListStatus
-            empty={novelistId ? EMPTY[kind] : "Nothing to show here."}
+            empty={
+              novelistId ? (
+                <EmptyFeed kind={kind} username={username} />
+              ) : (
+                "Nothing to show here."
+              )
+            }
             error={query.error}
             loading={query.isPending && Boolean(novelistId)}
             onRetry={() => void query.refetch()}

@@ -1,4 +1,4 @@
-import type { Conversation, IceBreaker } from "@nw/types";
+import type { Conversation, ConversationChanges, IceBreaker } from "@nw/types";
 import { API_MESSAGE } from "@nw/types";
 import type { DataType, WithMessage } from "@nw/types/common";
 import type { ApiClient } from "../client";
@@ -22,6 +22,22 @@ export const getConversations = (
   api.requestNullable<Conversation[]>(
     `${CHAT}/conversations?pageNumber=${pageNumber}&pageSize=${pageSize}`,
     { label: "getConversationsAction", notFound: "empty-array" },
+  );
+
+/**
+ * The inbox since `since` (an ISO date-time): conversations modified after
+ * it, newest first and capped at `limit`, plus the ids the caller has left.
+ * A backend without the route answers 404, which comes back as `null` so a
+ * client can fall back to the paged list.
+ */
+export const getConversationChanges = (
+  api: ApiClient,
+  since: string,
+  limit = 50,
+): Promise<DataType<ConversationChanges> | null> =>
+  api.requestNullable<ConversationChanges>(
+    `${CHAT}/conversations/changes?since=${encodeURIComponent(since)}&limit=${limit}`,
+    { label: "getConversationChangesAction", notFound: "null" },
   );
 
 export const getGroupCount = (api: ApiClient): Promise<DataType<number>> =>

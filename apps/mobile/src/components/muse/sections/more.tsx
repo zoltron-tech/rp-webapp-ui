@@ -11,11 +11,9 @@ import {
   ActivityIndicator,
   Alert,
   Pressable,
-  Share,
   StyleSheet,
   View,
 } from "react-native";
-import { Text } from "@/components/text";
 import { MiniHeader } from "@/components/muse/mini-header";
 import {
   Divider,
@@ -23,9 +21,10 @@ import {
   PANEL,
   SectionLabel,
 } from "@/components/muse/panel";
+import { ShareMuseSheet } from "@/components/share/share-muse-sheet";
+import { Text } from "@/components/text";
 import { env } from "@/lib/env";
 import type { MuseLook } from "@/lib/muse-appearance";
-import { museName } from "@/lib/muse-appearance";
 import { fontSize, radius, space } from "@/theme";
 
 /**
@@ -34,8 +33,9 @@ import { fontSize, radius, space } from "@/theme";
  * Web's list is edit, share, export the card, delete for the owner; share,
  * export, report for everyone else. Here:
  *
- * - **Share** is the platform share sheet with the web link, and **Copy link**
- *   beside it — the same link web's `ShareMuseDialog` offers.
+ * - **Share** opens web's `ShareMuseDialog` as a tray — the NW Discord
+ *   community, the link, and the platform sheet behind "More options" — and
+ *   **Copy link** beside it for the one-tap case.
  * - **Report** and **Delete** are the same endpoints web calls, behind the
  *   platform's own confirmation.
  * - **Edit** opens the character's settings (`app/edit-muse`): the name, the
@@ -61,6 +61,7 @@ export const MuseMoreSection = ({
   const queryClient = useQueryClient();
   const session = useSession();
   const [copied, setCopied] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [busy, setBusy] = useState<"delete" | "report" | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -73,11 +74,6 @@ export const MuseMoreSection = ({
 
   const id = muse?.id ?? null;
   const url = id ? museUrl(id) : "";
-
-  const share = async () => {
-    if (!muse || !id) return;
-    await Share.share({ message: `${museName(muse)} — ${url}`, url });
-  };
 
   const copy = async () => {
     if (!url) return;
@@ -197,7 +193,7 @@ export const MuseMoreSection = ({
           disabled={!id}
           icon="share-social-outline"
           label="Share character"
-          onPress={() => void share()}
+          onPress={() => setSharing(true)}
         />
         <Row
           disabled={!id}
@@ -225,6 +221,14 @@ export const MuseMoreSection = ({
           />
         )}
       </View>
+
+      {muse ? (
+        <ShareMuseSheet
+          muse={muse}
+          onClose={() => setSharing(false)}
+          visible={sharing}
+        />
+      ) : null}
     </MusePanel>
   );
 };

@@ -1,5 +1,5 @@
 import { pingPong, registerMotion, stops } from "./motion-kit";
-import type { MotionRhythm } from "./motion-types";
+import type { MotionClock, MotionRhythm } from "./motion-types";
 
 /**
  * The muse scenes' motion, on a phone.
@@ -7,7 +7,8 @@ import type { MotionRhythm } from "./motion-types";
  * Periods and values are the web keyframes' own — `bookFloat`,
  * `bookShadowBreathe`, `artGlowPulse`, `ribbonSway`, `artStarTwinkle`,
  * `artDotTwinkle`, `typingPulse` and `questionPulse` — so a scroll floats at
- * the same rate on both clients.
+ * the same rate on both clients. The open book (`open-book.tsx`) is the same
+ * paper object and registers here too: `quillWrite` and `inkDrip`.
  *
  * ## Every key is namespaced
  *
@@ -93,8 +94,72 @@ const typing = (delay: number): MotionRhythm => ({
   period: 1.8,
 });
 
+/** Three points inside each pair of keyframes, on the `ease-in-out` curve. */
+const EASE_POINTS = [0.25, 0.5, 0.75].map(
+  (t) => [t, (1 - Math.cos(Math.PI * t)) / 2] as const,
+);
+
+/**
+ * Keyframes with CSS `ease-in-out` between each pair.
+ *
+ * `stops` joins its keyframes with straight lines, which is right for a fade
+ * and wrong for anything that travels: the quill would reach each end of its
+ * swing at full speed and turn on the spot. The browser eases every segment,
+ * so this fills each one in on the same cosine `pingPong` uses.
+ */
+const eased = (clock: MotionClock, input: number[], output: number[]) => {
+  const at: number[] = [];
+  const to: number[] = [];
+
+  for (let index = 0; index < input.length - 1; index += 1) {
+    const span = input[index + 1] - input[index];
+    const rise = output[index + 1] - output[index];
+    at.push(input[index]);
+    to.push(output[index]);
+    for (const [t, weight] of EASE_POINTS) {
+      at.push(input[index] + span * t);
+      to.push(output[index] + rise * weight);
+    }
+  }
+
+  at.push(input[input.length - 1]);
+  to.push(output[output.length - 1]);
+  return stops(clock, at, to);
+};
+
+/** Web's `quillWrite` and `inkDrip` share a period, so the drop keeps time. */
+const QUILL_PERIOD = 4.8;
+const QUILL_KEYS = [0, 0.3, 0.65, 1];
+const INK_KEYS = [0, 0.2, 0.7, 1];
+const LENS_KEYS = [0, 0.35, 0.7, 1];
+
 export const registerMuseSceneMotion = (): void => {
   registerMotion({
+    /** Ink gathers at the nib, falls, and fades before it ever lands. */
+    "nwm-ink": {
+      build: (clock) => ({
+        opacity: eased(clock, INK_KEYS, [0, 0.45, 0.2, 0]),
+        scale: eased(clock, INK_KEYS, [0.4, 1, 0.85, 0.4]),
+        y: eased(clock, INK_KEYS, [-5, 0, 7, 12]),
+      }),
+      delay: 0,
+      period: QUILL_PERIOD,
+      // Web's reduced-motion pose.
+      rest: { opacity: 0.35 },
+    },
+
+    /** The quill hovers over the page as if searching for the first word. */
+    "nwm-quill": {
+      build: (clock) => ({
+        rotation: eased(clock, QUILL_KEYS, [0, -5, 4, 0]),
+        x: eased(clock, QUILL_KEYS, [0, -4, 3, 0]),
+        y: eased(clock, QUILL_KEYS, [0, 2, -1, 0]),
+      }),
+      delay: 0,
+      period: QUILL_PERIOD,
+    },
+
+
     /** The open link where a bond would close, pulsing like a question. */
     "nwm-bond": {
       build: (clock) => ({ opacity: pingPong(clock, 0.5, 0.95) }),
@@ -167,5 +232,93 @@ export const registerMuseSceneMotion = (): void => {
         [`nwm-sparkle ${name}`, dot(delay)] as const,
       ]),
     ),
+  );
+
+  // ─── The empty scenes' own parts (`empty-scenes.tsx`) ─────────────────────
+
+  registerMotion({
+    /** `iceDrift`: a smaller, colder bob — the scene is rail-sized. */
+    "nwm-ice": {
+      build: (clock) => ({
+        rotation: pingPong(clock, 0, -2),
+        y: pingPong(clock, 0, -1.5),
+      }),
+      delay: 0,
+      period: 4.4,
+    },
+
+    /** `lensSweep`: the magnifier swings over the cards, held by its handle. */
+    "nwm-lens": {
+      build: (clock) => ({
+        rotation: eased(clock, LENS_KEYS, [0, -4, 3, 0]),
+        x: eased(clock, LENS_KEYS, [0, -6, 3, 0]),
+        y: eased(clock, LENS_KEYS, [0, 3, -2, 0]),
+      }),
+      delay: 0,
+      period: 5.6,
+    },
+
+    /** `scrapSlip`: the torn-off half sags from the tear and drifts back. */
+    "nwm-scrap": {
+      build: (clock) => ({
+        opacity: pingPong(clock, 0.85, 0.55),
+        rotation: pingPong(clock, -1.5, -4),
+        x: pingPong(clock, 0, 4),
+        y: pingPong(clock, 0, 6),
+      }),
+      delay: 0,
+      period: 6.2,
+      // Web's reduced-motion pose.
+      rest: { opacity: 0.7, rotation: -3, x: 3, y: 4 },
+    },
+
+    /** `figureFade`: the figure thins to almost nothing and gathers again. */
+    "nwm-vanish": {
+      build: (clock) => ({
+        opacity: pingPong(clock, 0.85, 0.16),
+        y: pingPong(clock, 0, -2),
+      }),
+      delay: 0,
+      period: 5.6,
+      rest: { opacity: 0.45 },
+    },
+  });
+
+  /** `flakeLift`: paper lifts off the tear and fades, staggered along it. */
+  const flake = (delay: number): MotionRhythm => ({
+    build: (clock) => ({
+      opacity: stops(clock, [0, 0.25, 1], [0, 0.9, 0]),
+      rotation: stops(clock, [0, 1], [0, 35]),
+      scale: stops(clock, [0, 1], [0.6, 1]),
+      x: stops(clock, [0, 1], [0, 6]),
+      y: stops(clock, [0, 1], [2, -12]),
+    }),
+    delay,
+    period: 3.6,
+    rest: { opacity: 0.6 },
+  });
+
+  /** `moteRise`: what the figure is made of, up and off the card's corner. */
+  const mote = (delay: number): MotionRhythm => ({
+    build: (clock) => ({
+      opacity: stops(clock, [0, 0.22, 1], [0, 0.95, 0]),
+      scale: stops(clock, [0, 1], [0.5, 1]),
+      x: stops(clock, [0, 1], [0, 11]),
+      y: stops(clock, [0, 1], [3, -24]),
+    }),
+    delay,
+    period: 3.8,
+    rest: { opacity: 0.6 },
+  });
+
+  registerMotion(
+    Object.fromEntries([
+      ...[0, 1.2, 2.4].map(
+        (delay, index) => [`nwm-flake f${index + 1}`, flake(delay)] as const,
+      ),
+      ...[0, 0.75, 1.5, 2.25, 3].map(
+        (delay, index) => [`nwm-mote m${index + 1}`, mote(delay)] as const,
+      ),
+    ]),
   );
 };

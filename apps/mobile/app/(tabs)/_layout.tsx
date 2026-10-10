@@ -63,6 +63,7 @@ export default function TabsLayout() {
   const unseenNotifications = notificationCounts?.unseen ?? 0;
 
   if (status === "loading" && !readAccessToken()) return null;
+  if (status === "onboarding") return <Redirect href="/onboarding" />;
   if (status !== "signed-in" && status !== "loading") {
     return <Redirect href="/novelists" />;
   }

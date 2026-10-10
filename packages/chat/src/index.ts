@@ -64,8 +64,10 @@ export {
   isKlipyClip,
   isMediaOnlyMessage,
   isVideoOnlyMessage,
+  messageTextOf,
   URL_REGEX,
   VIDEO_EXTENSIONS,
+  withoutUrls,
 } from "./media";
 export {
   type ChatNotice,
@@ -81,6 +83,7 @@ export {
   type ConversationTarget,
   conversationUsernames,
   isGroupAdmin,
+  isSupportNovelist,
   type MessageSenderChoice,
   otherParticipant,
   resolveConversationTarget,

@@ -2,6 +2,7 @@ import { Stack, useRouter } from "expo-router";
 import { useAppTheme } from "@/theme";
 import { glassHeaderOptions } from "@/theme/header";
 import { ambientScreenLayout } from "@/components/ambient-background";
+import { TabHeaderTitle } from "@/components/header-title";
 import { MenuButton } from "@/components/menu-button";
 
 /**
@@ -37,7 +38,18 @@ export default function ExploreStackLayout() {
         ...glassHeaderOptions(theme),
       }}
     >
-      <Stack.Screen name="index" options={{ title: "Explore" }} />
+      {/*
+        The brand tile, then the page's name set as the lockup sets
+        "NOVELIST" — Home's header with the word changed. `title` stays: it is
+        what a screen reader calls this screen from the ones pushed over it.
+      */}
+      <Stack.Screen
+        name="index"
+        options={{
+          headerTitle: () => <TabHeaderTitle title="Explore" />,
+          title: "Explore",
+        }}
+      />
       <Stack.Screen name="threads/[threadId]" options={{ title: "Thread" }} />
       <Stack.Screen name="prompt/[promptId]" options={{ title: "Prompt" }} />
       {/*
@@ -47,6 +59,7 @@ export default function ExploreStackLayout() {
       <Stack.Screen name="novelist/[username]/index" />
       <Stack.Screen name="novelist/[username]/friends" />
       <Stack.Screen name="novelist/[username]/muses" />
+      <Stack.Screen name="novelist/[username]/stories" />
       <Stack.Screen name="novelist/[username]/activity" />
       <Stack.Screen name="novelist/[username]/prompts" />
       <Stack.Screen name="novelist/[username]/posts" />

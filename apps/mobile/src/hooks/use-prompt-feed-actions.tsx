@@ -14,7 +14,11 @@ import {
   type ComposerMode,
   PromptComposer,
 } from "@/components/compose/prompt-composer";
-import { novelistToSource } from "@/components/compose/sources";
+import {
+  buildOptimisticPrompt,
+  novelistToSource,
+} from "@/components/compose/sources";
+import { discardOutbox, getStore, useOutboxPosts } from "@/lib/local-store";
 import { LikersSheet } from "@/components/feed/likers-sheet";
 import type { PromptReaction } from "@/components/feed/prompt-card";
 import { ShareSheet } from "@/components/feed/share-sheet";
@@ -380,9 +384,34 @@ export const usePromptFeedActions = () => {
    * list it as a single dependency and every memoised card keeps comparing in
    * one pointer check per prop.
    */
+  /*
+   * Prompts and posts written offline, as cards: drawn at the head of the
+   * feed they belong to until they are sent (`local-store/outbox.ts`). Not
+   * written into the query cache — the feed persists its pages, and a
+   * waiting card must never be saved as if it were a real one.
+   */
+  const queuedPosts = useOutboxPosts();
+  const queuedPrompts = useMemo<Prompt[]>(
+    () =>
+      queuedPosts
+        .filter((entry) => entry.type === "prompt")
+        .map((entry) => ({
+          ...buildOptimisticPrompt(entry.payload.source, entry.payload),
+          canInteract: false,
+          createdOn: entry.createdAt,
+          id: entry.id,
+        })),
+    [queuedPosts],
+  );
+  const discardQueued = useCallback((id: string) => {
+    const store = getStore();
+    if (store) void discardOutbox(store, id).catch(() => undefined);
+  }, []);
+
   const cardProps = useMemo<PromptCardActions>(
     () => ({
       onCompose: canAct ? openComment : undefined,
+      onDiscardQueued: discardQueued,
       onMore: canAct ? openMenu : undefined,
       onOpenThread: openThread,
       onReacted: handleReacted,
@@ -393,6 +422,7 @@ export const usePromptFeedActions = () => {
     }),
     [
       canAct,
+      discardQueued,
       handleReacted,
       openComment,
       openLikers,
@@ -449,9 +479,11 @@ export const usePromptFeedActions = () => {
   return {
     canAct,
     cardProps,
+    discardQueued,
     expandedIds,
     novelist,
     openCompose,
+    queuedPrompts,
     reset,
     sheets,
     showLikers,

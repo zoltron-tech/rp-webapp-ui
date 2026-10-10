@@ -1,10 +1,10 @@
 import type { NWImage } from "@nw/types";
 import { hasUsableCrop, wsrvImage } from "@nw/utils";
-import { Image } from "expo-image";
 import { memo, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
-import { Text } from "@/components/text";
 import { CroppedImage } from "@/components/cropped-image";
+import { Image } from "@/components/image";
+import { Text } from "@/components/text";
 import { useIsOnline } from "@/context/socket";
 import { fontSize, useAppTheme } from "@/theme";
 
@@ -51,6 +51,7 @@ const RING_WIDTH = 2;
 export const Avatar = memo(function Avatar({
   image,
   name,
+  playing,
   size = 40,
   uri,
   username,
@@ -58,6 +59,8 @@ export const Avatar = memo(function Avatar({
   /** The stored picture with its crop, when the caller has one. */
   image?: NWImage | null;
   name?: string | null;
+  /** Whether an animated face runs — see `Image`. Undefined: always. */
+  playing?: boolean;
   size?: number;
   uri?: string | null;
   /**
@@ -91,6 +94,7 @@ export const Avatar = memo(function Avatar({
     hasUsableCrop(image?.crop) ? (
       <CroppedImage
         crop={image?.crop}
+        playing={playing}
         style={[dimensions, { backgroundColor: theme.material.fillPressed }]}
         uri={src}
       />
@@ -98,6 +102,7 @@ export const Avatar = memo(function Avatar({
       <Image
         cachePolicy="memory-disk"
         contentFit="cover"
+        playing={playing}
         source={{ uri: src }}
         style={[dimensions, { backgroundColor: theme.material.fillPressed }]}
         // Keyed by the URL so a recycled view never shows the previous person's

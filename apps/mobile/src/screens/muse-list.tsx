@@ -23,12 +23,13 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { Text } from "@/components/text";
+import { EmptyScene } from "@/components/empty-feed";
 import { MuseListRowSkeleton, SkeletonRows } from "@/components/list-skeletons";
 import { ListStatus } from "@/components/list-status";
 import { InFandomGroup, MuseListRow } from "@/components/muse-list-row";
 import { closeOpenRevealRow } from "@/components/reveal-row";
 import { PillButton } from "@/components/settings";
+import { Text } from "@/components/text";
 import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
 import { asColor, asHex, withAlpha } from "@/lib/color";
 import { fontSize, radius, space, type, useAppTheme } from "@/theme";
@@ -797,7 +798,32 @@ export const MuseList = ({ username }: { username: string }) => {
         keyExtractor={keyExtractor}
         ListEmptyComponent={
           <ListStatus
-            empty="No characters to show yet."
+            empty={
+              // The drawn blank card, breathing while the screen is still
+              // (`EmptyScene` rests it under a scroll or another screen). On
+              // your own page it comes with the way to fill it: the bar's
+              // "New character" is above, but an empty page is asking the
+              // question right here.
+              <View style={styles.emptyState}>
+                <EmptyScene
+                  scene="blank-card"
+                  subtitle={
+                    own
+                      ? "Characters are who you write as. Give one a name and a face, and the stories can begin."
+                      : `@${username} hasn't created any characters yet.`
+                  }
+                  title="No characters yet"
+                />
+                {own ? (
+                  <PillButton
+                    icon="sparkles"
+                    label="Create my first character"
+                    onPress={createMuse}
+                    tone="accent"
+                  />
+                ) : null}
+              </View>
+            }
             error={query.error}
             loading={query.isPending}
             onRetry={() => void query.refetch()}
@@ -903,6 +929,7 @@ const styles = StyleSheet.create({
     marginBottom: space.md,
   },
   createCount: { fontSize: fontSize.caption, fontWeight: "600" },
+  emptyState: { alignItems: "center", gap: space.md, paddingBottom: space.xl },
   groupCount: { fontSize: fontSize.caption, fontWeight: "700" },
   groupHeader: {
     alignItems: "center",

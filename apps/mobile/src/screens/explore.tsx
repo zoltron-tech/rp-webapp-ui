@@ -188,9 +188,18 @@ export const ExploreScreen = () => {
 
   // Memoised: `dedupe()` builds a new array on every render, and a fresh array
   // identity feeding a list's `data` prop is a re-render loop.
+  // Written offline, waiting: a muse's goes with the prompts, a novelist's
+  // with the posts, at the head until it is sent.
+  const queued = useMemo(
+    () =>
+      actions.queuedPrompts.filter(
+        (prompt) => (prompt.source.sourceType === "MUSE") === (mode === "PROMPTS"),
+      ),
+    [actions.queuedPrompts, mode],
+  );
   const prompts = useMemo(
-    () => dedupeById(query.data?.pages ?? []),
-    [query.data],
+    () => [...queued, ...dedupeById(query.data?.pages ?? [])],
+    [query.data, queued],
   );
 
   // The pull spinner is for pulls, not for the refetch of a feed restored from
@@ -338,6 +347,7 @@ export const ExploreScreen = () => {
             <ListStatus
               error={query.error}
               loading={query.isPending}
+              offlineWhat="feed"
               onRetry={() => void query.refetch()}
               skeleton={
                 <SkeletonRows

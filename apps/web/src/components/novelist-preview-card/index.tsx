@@ -1,5 +1,6 @@
 "use client";
 
+import { isSupportNovelist } from "@nw/chat";
 import type { Badge } from "@nw/types/badge";
 import type { NWImage } from "@nw/types/novelist";
 import { ACCENT_MAP } from "@nw/types/theme";
@@ -73,6 +74,8 @@ export const NovelistPreviewCard: FC<Props> = ({ novelist }) => {
   const [requestLoading, setRequestLoading] = useState(false);
 
   const isCurrentUser = currentNovelist?.username === novelist.username;
+  // Support is not somebody to add, and is not playing: no Add, no crests.
+  const isSupport = isSupportNovelist(novelist.username);
   const accent =
     ACCENT_MAP[novelist.palette as keyof typeof ACCENT_MAP] ?? ACCENT_MAP[0];
   const mainMuses = mainVerseMuses(novelist.muses);
@@ -179,7 +182,8 @@ export const NovelistPreviewCard: FC<Props> = ({ novelist }) => {
       );
     }
 
-    if (isCurrentUser) {
+    // Support's card opens the profile instead of offering Add.
+    if (isCurrentUser || (isSupport && connection !== "FRIEND")) {
       return (
         <Button variant="primary" onClick={onVisitProfile}>
           <S.BtnContent>
@@ -290,7 +294,7 @@ export const NovelistPreviewCard: FC<Props> = ({ novelist }) => {
 
           Static, too — the whole card is one tap target that opens the profile,
           so a badge row with its own dialog would fight it. */}
-      <ShouldRender if={hasVisibleBadges(novelist.badges)}>
+      <ShouldRender if={!isSupport && hasVisibleBadges(novelist.badges)}>
         <S.BadgeCorner>
           <BadgeStrip
             badges={novelist.badges}

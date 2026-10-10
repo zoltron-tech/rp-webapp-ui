@@ -25,10 +25,13 @@ import {
   NovelistProfileSkeleton,
 } from "@/components/novelist-profile-skeleton";
 import { useNovelist } from "@/hooks/use-novelist";
+import { useOffline } from "@/lib/connectivity";
+import { getStore, markNovelistOpened } from "@/lib/local-store";
 import { ActivityList } from "@/screens/activity-list";
 import { FriendsList } from "@/screens/friends-list";
 import { MuseList } from "@/screens/muse-list";
 import { PromptFeed } from "@/screens/prompt-feed";
+import { StoryList } from "@/screens/story-list";
 import { AccentProvider } from "@/theme";
 
 /**
@@ -51,6 +54,7 @@ export function NovelistProfileScreen() {
   // ask the same question and land on the same cache entry — which is how they
   // get this novelist's accent without it being threaded through every route.
   const query = useNovelist(username);
+  const offline = useOffline();
 
   /*
    * Whatever the row that opened this profile already knew: name, face, banner
@@ -76,6 +80,14 @@ export function NovelistProfileScreen() {
   useEffect(() => {
     prefetchFriends(username);
   }, [prefetchFriends, username]);
+
+  // This person is now one of the ten the local store keeps (see
+  // `local-store/novelists.ts`). After the fetch lands, so the row exists.
+  useEffect(() => {
+    const store = getStore();
+    if (!store || !username || !query.data) return;
+    void markNovelistOpened(store, username);
+  }, [query.data, username]);
 
   // Their own handle resolves to the tab, which already has the novelist from
   // the session and needs no second request for it.
@@ -108,10 +120,18 @@ export function NovelistProfileScreen() {
         }
       />
 
-      {query.isPending ? (
+      {query.isPending && offline ? (
+        // Never opened while connected, so nothing on disk: say so rather
+        // than pulse a skeleton that cannot fill.
+        <ListStatus loading offlineWhat="page" onRetry={() => void query.refetch()} />
+      ) : query.isPending ? (
         <NovelistProfileSkeleton seed={seed} />
       ) : query.error ? (
-        <ListStatus error={query.error} onRetry={() => void query.refetch()} />
+        <ListStatus
+          error={query.error}
+          offlineWhat="page"
+          onRetry={() => void query.refetch()}
+        />
       ) : query.data ? (
         <NovelistProfile novelist={query.data} />
       ) : (
@@ -178,6 +198,19 @@ export function NovelistMusesScreen() {
  * on the first frame. A cold deep link fetches it, and until it lands the
  * screen simply keeps the viewer's accent rather than flashing a wrong one.
  */
+export function NovelistStoriesScreen() {
+  const { username } = useLocalSearchParams<{ username: string }>();
+  const { data: novelist } = useNovelist(username);
+
+  return (
+    <AccentProvider palette={novelist?.palette}>
+      <AmbientBackground />
+      <NovelistHeader title={`@${username ?? ""} · Stories`} />
+      <StoryList username={username ?? ""} />
+    </AccentProvider>
+  );
+}
+
 export function NovelistActivityScreen() {
   const { username } = useLocalSearchParams<{ username: string }>();
   const { data: novelist } = useNovelist(username);
@@ -217,6 +250,7 @@ export function NovelistPromptsScreen() {
       <PromptFeed
         kind="prompts"
         novelistId={novelistId ?? novelist?.id ?? ""}
+        username={username}
       />
     </AccentProvider>
   );
@@ -238,7 +272,11 @@ export function NovelistPostsScreen() {
       {/* Their light, over the viewer's the stack drew. */}
       <AmbientBackground />
       <NovelistHeader title={`@${username ?? ""} · Posts`} />
-      <PromptFeed kind="posts" novelistId={novelistId ?? novelist?.id ?? ""} />
+      <PromptFeed
+        kind="posts"
+        novelistId={novelistId ?? novelist?.id ?? ""}
+        username={username}
+      />
     </AccentProvider>
   );
 }

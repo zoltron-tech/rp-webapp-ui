@@ -9,27 +9,29 @@ import type { MuseConnectionGroup } from "@nw/types";
 import { wsrvImage } from "@nw/utils";
 import { useDebounce } from "@nw/utils/hooks/use-debounce";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  type TextInput as NativeTextInput,
   Pressable,
   ScrollView,
   StyleSheet,
   View,
 } from "react-native";
-import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import {
   RichTextEditor,
   type RichTextEditorHandle,
 } from "@/components/editor/rich-text-editor";
+import { IconButton } from "@/components/icon-button";
 import { EditorModal } from "@/components/muse/edit/editor-modal";
+import { SearchField } from "@/components/search-field";
+import { Text } from "@/components/text";
 import { TextField } from "@/components/text-field";
+import { useKeyboardHeight } from "@/hooks/use-keyboard-height";
 import { MAX_IMAGE_BYTES, pickImage, uploadFile } from "@/lib/media-upload";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
-import { SearchField } from "@/components/search-field";
-import { IconButton } from "@/components/icon-button";
 
 /**
  * Web's `MuseConnectionForm`: a titled, described bond between characters.
@@ -88,7 +90,45 @@ export const ConnectionEditor = ({
   const [uploading, setUploading] = useState<ReadonlySet<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /*
+   * What stopped the last confirm, said next to the field that needs doing.
+   * The confirm button used to sit disabled until the form was complete, and
+   * a disabled button explains nothing: with one character chosen and no
+   * title it was anyone's guess what was missing. Now it can always be
+   * pressed, and the press says what is wanted and puts the caret there —
+   * the pattern the group sheet uses.
+   */
+  const [problem, setProblem] = useState<"title" | "characters" | null>(null);
+  const titleField = useRef<NativeTextInput>(null);
   const debounced = useDebounce(search.trim(), 300);
+
+  /*
+   * The description is the last thing on a long form, so the keyboard it
+   * raises lands on top of it: the page shrinks to make room, and what is
+   * left on screen is the middle of the form — the caret is below the fold.
+   *
+   * While a line of the description has the keyboard, the page is held at its
+   * foot, where the description is: on focus, again when the keyboard arrives
+   * (the page only shrinks then, so there was nothing to scroll before), and
+   * as the text grows a line. It behaves as the chat's field does — sat on
+   * the keyboard, in view while it is being typed into.
+   */
+  const scroll = useRef<ScrollView>(null);
+  const describing = useRef(false);
+  const keyboardHeight = useKeyboardHeight();
+
+  const showDescription = useCallback(() => {
+    if (!describing.current) return;
+    // After the layout the keyboard or the new line caused, not before it.
+    requestAnimationFrame(() => {
+      if (describing.current) scroll.current?.scrollToEnd({ animated: true });
+    });
+  }, []);
+
+  // Re-run for the keyboard's height: the page only shrinks once it lands.
+  useEffect(() => {
+    showDescription();
+  }, [keyboardHeight, showDescription]);
 
   useEffect(() => {
     if (!visible) return;
@@ -108,6 +148,7 @@ export const ConnectionEditor = ({
     setTab("own");
     setSearch("");
     setError(null);
+    setProblem(null);
   }, [connection, initialMuse, visible]);
 
   const ownIds = useMemo(
@@ -162,6 +203,9 @@ export const ConnectionEditor = ({
       return;
     }
     setError(null);
+    if (problem === "characters" && selected.length + 1 >= MIN_MUSES) {
+      setProblem(null);
+    }
     setSelected((current) => [...current, muse]);
     setSearch("");
   };
@@ -194,13 +238,24 @@ export const ConnectionEditor = ({
   };
 
   const involvesFriend = selected.some((m) => !isOwn(m.museId));
-  const canConfirm =
-    title.trim().length > 0 &&
-    (isEdit || selected.length >= MIN_MUSES) &&
-    uploading.size === 0;
+  // Only a picture still on its way holds the button; what is missing from
+  // the form is said on the press instead (see `problem`).
+  const canConfirm = uploading.size === 0;
 
   const save = async () => {
     if (!canConfirm || busy) return;
+    if (!title.trim()) {
+      setProblem("title");
+      scroll.current?.scrollTo({ animated: true, y: 0 });
+      titleField.current?.focus();
+      return;
+    }
+    if (!isEdit && selected.length < MIN_MUSES) {
+      setProblem("characters");
+      scroll.current?.scrollTo({ animated: true, y: 0 });
+      return;
+    }
+    setProblem(null);
     setBusy(true);
     setError(null);
     const response =
@@ -237,18 +292,31 @@ export const ConnectionEditor = ({
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        onContentSizeChange={showDescription}
+        ref={scroll}
         style={styles.scroll}
       >
         <TextField
+          accessibilityLabel="Title, required"
           autoCapitalize="sentences"
           counterMax={MAX_TITLE}
+          hint={
+            problem === "title"
+              ? "Give the connection a title before creating it."
+              : undefined
+          }
+          invalid={problem === "title"}
           label="Title"
           maxLength={MAX_TITLE}
           onChangeText={(next) => {
             setTitle(next);
-            if (next.trim()) setError(null);
+            if (next.trim()) {
+              setError(null);
+              if (problem === "title") setProblem(null);
+            }
           }}
           placeholder="Name this connection…"
+          ref={titleField}
           value={title}
         />
 
@@ -306,12 +374,40 @@ export const ConnectionEditor = ({
                 </View>
               );
             })}
-            {selected.length === 0 ? (
-              <Text style={[styles.hint, { color: theme.textGray }]}>
-                Pick at least {MIN_MUSES} characters.
-              </Text>
-            ) : null}
           </View>
+          {/*
+            Said whenever the form is short of characters, not only when it
+            has none: with one chosen the old hint vanished, and the button
+            that would not press was the only clue. Red, with the mark, once
+            a press has been refused for it.
+          */}
+          {!isEdit && selected.length < MIN_MUSES ? (
+            <View
+              accessibilityLiveRegion={
+                problem === "characters" ? "polite" : "none"
+              }
+              style={styles.problem}
+            >
+              {problem === "characters" ? (
+                <Ionicons color={theme.error} name="alert-circle" size={14} />
+              ) : null}
+              <Text
+                style={[
+                  problem === "characters" ? styles.problemLabel : styles.hint,
+                  {
+                    color:
+                      problem === "characters" ? theme.error : theme.textGray,
+                  },
+                ]}
+              >
+                {selected.length === 0
+                  ? `Pick at least ${MIN_MUSES} characters to connect.`
+                  : `Pick ${MIN_MUSES - selected.length} more character${
+                      MIN_MUSES - selected.length === 1 ? "" : "s"
+                    } to connect.`}
+              </Text>
+            </View>
+          ) : null}
         </View>
 
         {!isEdit ? (
@@ -361,8 +457,8 @@ export const ConnectionEditor = ({
               onChangeText={setSearch}
               placeholder={
                 tab === "own"
-                ? "Filter your characters…"
-                : "Search a friend's character…"
+                  ? "Filter your characters…"
+                  : "Search a friend's character…"
               }
               value={search}
             />
@@ -430,6 +526,10 @@ export const ConnectionEditor = ({
               initialHtml={connection?.description ?? ""}
               key={connection?.id ?? "new"}
               onChange={(next) => setHtml(next)}
+              onFocusChange={(focused) => {
+                describing.current = focused;
+                showDescription();
+              }}
               placeholder="How are these characters bound?"
               ref={editor}
               uploadingSources={uploading}
@@ -514,6 +614,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
   },
+  problem: { alignItems: "center", flexDirection: "row", gap: space.xs },
+  problemLabel: { flex: 1, fontSize: fontSize.caption, fontWeight: "600" },
   results: { gap: space.xxs },
   row: {
     alignItems: "center",

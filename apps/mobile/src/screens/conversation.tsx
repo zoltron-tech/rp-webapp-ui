@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { conversationUsernames, resolveConversationTarget } from "@nw/chat";
 import {
   useConversation,
+  useConversationMembers,
   useConversationMessages,
   useMarkConversationRead,
   useSession,
@@ -20,7 +21,6 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { Text } from "@/components/text";
 import { ChatBackground } from "@/components/chat/chat-background";
 import { Composer, type ComposerSubmission } from "@/components/chat/composer";
 import { ConversationHeader } from "@/components/chat/conversation-header";
@@ -31,17 +31,22 @@ import {
   MessageBubble,
   type RunPosition,
 } from "@/components/chat/message-bubble";
-import { mediaItemsOf } from "@/components/chat/message-media";
+import { mediaItemsOf, textImagesOf } from "@/components/chat/message-media";
 import { MessageSkeleton } from "@/components/chat/message-skeleton";
 import type { ReactionGroup } from "@/components/chat/reactions";
 import { ReactorsSheet } from "@/components/chat/reactors-sheet";
 import { RetentionNotice } from "@/components/chat/retention-notice";
+import { MediaKindProvider } from "@/components/image";
 import { ListStatus } from "@/components/list-status";
 import { MediaViewer } from "@/components/muse/media-viewer";
+import { Text } from "@/components/text";
 import { useInboxReveal } from "@/context/inbox-reveal";
 import { useChatSocket, useTrackOnline } from "@/context/socket";
+import { useReconcileThread } from "@/hooks/use-reconcile";
 import { useSendChatMessage } from "@/hooks/use-send-chat-message";
 import { useSwipeBack } from "@/hooks/use-swipe-back";
+import { useOffline } from "@/lib/connectivity";
+import { OUTBOX_ID_PREFIX } from "@/lib/local-store";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
@@ -95,6 +100,8 @@ interface Row {
   mine: boolean;
   pending: boolean;
   pendingId: string | null;
+  /** Written offline, waiting in the outbox. */
+  queued: boolean;
   /** Where this bubble sits in its sender's run, which decides its corners. */
   position: RunPosition;
   showAvatar: boolean;
@@ -134,6 +141,29 @@ export const ConversationScreen = ({
   const { novelist } = useSession();
   const { isConnected, sendReaction } = useChatSocket();
   const { conversation } = useConversation(conversationId);
+
+  /*
+   * How many are in a group. The service sends `memberCount`; a service
+   * that predates it sends only `members`, a preview of the first three,
+   * and counting that said "3 members" for a group of eight. Then the
+   * members list itself is asked — the same query the details screen
+   * fills, so it is one fetch between them — and its first page is exact
+   * up to its size and a lower bound past it.
+   */
+  const wantsMemberCount = Boolean(
+    conversation?.isGroup && conversation.memberCount == null,
+  );
+  const groupMembers = useConversationMembers(
+    wantsMemberCount ? conversationId : undefined,
+  );
+  const memberCount =
+    conversation?.memberCount ??
+    (groupMembers.members.length > 0 ? groupMembers.members.length : undefined);
+  const memberCountIsLowerBound =
+    conversation?.memberCount == null && Boolean(groupMembers.hasNextPage);
+  // What was deleted or arrived while this thread was not open (see
+  // `sync-chat.ts`); the hook below paints the local copy meanwhile.
+  useReconcileThread(conversationId);
   const {
     error,
     fetchNextPage,
@@ -145,6 +175,7 @@ export const ConversationScreen = ({
   } = useConversationMessages(conversationId, { live: isConnected });
 
   const {
+    discard,
     pending,
     reconcile,
     retry,
@@ -223,7 +254,8 @@ export const ConversationScreen = ({
     if (pending.length === 0) return matched;
     const claimed = new Set<string>();
     for (const entry of pending) {
-      if (entry.failed) continue;
+      // A queued entry leaves the list when it is sent, not when echoed.
+      if (entry.failed || entry.queued) continue;
       const echo = messages.find(
         (message) =>
           !claimed.has(message.id) &&
@@ -259,6 +291,8 @@ export const ConversationScreen = ({
    * identity re-renders every visible row, and this screen re-renders on every
    * keystroke in the composer.
    */
+  const offline = useOffline();
+
   const rows = useMemo<Row[]>(() => {
     const myId = novelist?.id ?? "";
     const myUsername = novelist?.username ?? "";
@@ -370,9 +404,13 @@ export const ConversationScreen = ({
         failed: Boolean(pendingEntry?.failed),
         message,
         mine,
-        pending: Boolean(pendingEntry) && !pendingEntry?.failed,
+        pending:
+          Boolean(pendingEntry) &&
+          !pendingEntry?.failed &&
+          !pendingEntry?.queued,
         pendingId: pendingEntry?.id ?? null,
         position,
+        queued: Boolean(pendingEntry?.queued),
         // The avatar sits at the bottom of a run, so it is beside the newest
         // bubble the way every messaging app places it.
         showAvatar: !mine && endsRun,
@@ -520,7 +558,11 @@ export const ConversationScreen = ({
   const startReply = useCallback((message: Message) => {
     // A message still in flight has no server id to reply *to*, so replying to
     // one would send a dangling reference the server drops silently.
-    if (message.id.startsWith("pending-")) return;
+    if (
+      message.id.startsWith("pending-") ||
+      message.id.startsWith(OUTBOX_ID_PREFIX)
+    )
+      return;
     // A fresh object each time, even for the message already being replied
     // to: the composer refocuses its field when this changes, and swiping the
     // same bubble again is how you ask for the keyboard back.
@@ -543,7 +585,11 @@ export const ConversationScreen = ({
   } | null>(null);
 
   const openMedia = useCallback((message: Message, index: number) => {
-    const media = mediaItemsOf(message.attachments).map((item) => item.url);
+    const attached = mediaItemsOf(message.attachments).map((item) => item.url);
+    // No attachments: the pictures are the message itself — a GIF or sticker
+    // from the picker is a bare URL in the text.
+    const media =
+      attached.length > 0 ? attached : textImagesOf(message.message);
     if (media.length === 0) return;
     // The keyboard would sit over the viewer's footer, and a picture being
     // looked at is not a reply being typed.
@@ -585,6 +631,7 @@ export const ConversationScreen = ({
           onShowReactors={setReactorsFor}
           pending={item.pending}
           position={item.position}
+          queued={item.queued}
           showAvatar={item.showAvatar}
           showSender={item.showSender}
         />
@@ -633,33 +680,35 @@ export const ConversationScreen = ({
   }, [leave, onRegisterLeave]);
 
   return (
-    <View style={styles.screen}>
-      {/* Dims the list under the page, lifting as the page slides off. */}
-      <Animated.View
-        pointerEvents="none"
-        style={[styles.scrim, swipeBack.scrimStyle]}
-      />
-
-      <Animated.View
-        onLayout={swipeBack.onLayout}
-        style={[
-          styles.page,
-          { backgroundColor: theme.background },
-          swipeBack.style,
-        ]}
-      >
-        {/* The page's leading edge casts onto the list it is sliding off. */}
-        <LinearGradient
-          colors={["transparent", "rgba(0,0,0,0.28)"]}
-          end={{ x: 1, y: 0 }}
+    // Everything drawn in here is chat: its pictures expire with the messages.
+    <MediaKindProvider value="chat">
+      <View style={styles.screen}>
+        {/* Dims the list under the page, lifting as the page slides off. */}
+        <Animated.View
           pointerEvents="none"
-          start={{ x: 0, y: 0 }}
-          style={styles.edgeShadow}
+          style={[styles.scrim, swipeBack.scrimStyle]}
         />
 
-        <ChatBackground />
+        <Animated.View
+          onLayout={swipeBack.onLayout}
+          style={[
+            styles.page,
+            { backgroundColor: theme.background },
+            swipeBack.style,
+          ]}
+        >
+          {/* The page's leading edge casts onto the list it is sliding off. */}
+          <LinearGradient
+            colors={["transparent", "rgba(0,0,0,0.28)"]}
+            end={{ x: 1, y: 0 }}
+            pointerEvents="none"
+            start={{ x: 0, y: 0 }}
+            style={styles.edgeShadow}
+          />
 
-        {/*
+          <ChatBackground />
+
+          {/*
         The navigator's own header is switched off (in the stack's layout)
         and the bar is drawn below. A stack header hands you a slot of
         unknown width between its back button and whatever is on the right,
@@ -671,216 +720,234 @@ export const ConversationScreen = ({
         a drag inside the text field is a selection, and the media tray's
         tabs scroll sideways.
       */}
-        <View {...swipeBack.panHandlers} style={styles.swipeArea}>
-          <ConversationHeader
-            conversation={conversation}
-            conversationId={conversationId}
-            onBack={swipeBack.leave}
-            onPress={openDetails}
-            target={target}
-          />
+          <View {...swipeBack.panHandlers} style={styles.swipeArea}>
+            <ConversationHeader
+              conversation={conversation}
+              conversationId={conversationId}
+              memberCount={memberCount}
+              memberCountIsLowerBound={memberCountIsLowerBound}
+              onBack={swipeBack.leave}
+              onPress={openDetails}
+              target={target}
+            />
 
-          {/* The list and the floating pill share a box, so "bottom" means the top
+            {/* The list and the floating pill share a box, so "bottom" means the top
           of the composer rather than the bottom of the screen — and the
           composer's height changes with the draft, the media row and the
           attachment strip. */}
-          <View style={styles.listArea}>
-            <FlatList
-              // Inverted, so `paddingTop` is the *visual* bottom: the room the
-              // lifted composer takes from the list.
-              contentContainerStyle={[
-                styles.content,
-                // `bottomInset` is only what the lifted composer takes (0 at
-                // rest). Set alone it replaced `content`'s own padding, so the
-                // newest message sat flush on the composer; the base gap is
-                // added back on top of the lift.
-                { paddingTop: space.md + bottomInset },
-              ]}
-              data={rows}
-              inverted
-              keyExtractor={(item) => item.message.id}
-              ListEmptyComponent={
-                /*
-                 * No counter-transform here. `VirtualizedList` already composes its
-                 * inversion style onto whatever element is passed as
-                 * `ListEmptyComponent`, and a `transform` of our own *replaces* it
-                 * rather than adding to it — which on Android is the bug it was
-                 * meant to fix. There the inverted list uses `scale: -1`, flipping
-                 * both axes; overriding that with `scaleY: -1` undid the vertical
-                 * flip and left the horizontal one, so the empty state rendered
-                 * mirrored left-to-right.
-                 */
-                <View>
-                  {/*
+            <View style={styles.listArea}>
+              <FlatList
+                // Inverted, so `paddingTop` is the *visual* bottom: the room the
+                // lifted composer takes from the list.
+                contentContainerStyle={[
+                  styles.content,
+                  // `bottomInset` is only what the lifted composer takes (0 at
+                  // rest). Set alone it replaced `content`'s own padding, so the
+                  // newest message sat flush on the composer; the base gap is
+                  // added back on top of the lift.
+                  { paddingTop: space.md + bottomInset },
+                ]}
+                data={rows}
+                inverted
+                keyExtractor={(item) => item.message.id}
+                ListEmptyComponent={
+                  /*
+                   * No counter-transform here. `VirtualizedList` already composes its
+                   * inversion style onto whatever element is passed as
+                   * `ListEmptyComponent`, and a `transform` of our own *replaces* it
+                   * rather than adding to it — which on Android is the bug it was
+                   * meant to fix. There the inverted list uses `scale: -1`, flipping
+                   * both axes; overriding that with `scaleY: -1` undid the vertical
+                   * flip and left the horizontal one, so the empty state rendered
+                   * mirrored left-to-right.
+                   */
+                  <View>
+                    {/*
               Loading and failure keep the plain status; only a conversation
               that has genuinely never been used gets the invitation. Showing
               the sticker while the first page is still in flight would offer
               to start a conversation that may already have a hundred messages.
             */}
-                  {isPending && !error ? (
-                    <MessageSkeleton />
-                  ) : error || !conversationId ? (
-                    <ListStatus error={error} onRetry={refetch} />
-                  ) : (
-                    <HelloState
-                      conversationId={conversationId}
-                      disabled={sending}
-                      onSend={(stickerUrl) =>
-                        void send(stickerUrl, {
-                          repliedTo: replyingTo,
-                          seen: seenNow(),
-                        })
-                      }
-                    />
-                  )}
-                </View>
-              }
-              /*
-               * Inverted, so the list's "footer" is the *top* of the screen. Two
-               * things belong there: the spinner while older history loads, and —
-               * once there is no more history — the retention notice, which web puts
-               * above the oldest message for the same reason. No counter-transform:
-               * the list already applies one to the footer, unlike the empty state.
-               */
-              ListFooterComponent={
-                isFetchingNextPage ? (
-                  <ListStatus loading />
-                ) : !hasNextPage && conversationId ? (
-                  <RetentionNotice conversationId={conversationId} />
-                ) : null
-              }
-              keyboardDismissMode="interactive"
-              keyboardShouldPersistTaps="handled"
-              onEndReached={() => {
-                if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
-              }}
-              onEndReachedThreshold={0.4}
-              // Inverted, so `contentOffset.y` is the distance from the *newest*
-              // message: zero is the bottom of the thread.
-              onScroll={({ nativeEvent }) =>
-                setJumpVisible(nativeEvent.contentOffset.y > JUMP_THRESHOLD)
-              }
-              // Rows are variable height, so there is no `getItemLayout` to give the
-              // list — which means `scrollToIndex` can miss on a row it has not
-              // measured. Scrolling roughly there and retrying is the documented
-              // recovery, and it is invisible at this speed.
-              onScrollToIndexFailed={({ averageItemLength, index }) => {
-                listRef.current?.scrollToOffset({
-                  animated: true,
-                  offset: averageItemLength * index,
-                });
-                setTimeout(() => {
-                  listRef.current?.scrollToIndex({
-                    animated: true,
-                    index,
-                    viewPosition: 0.5,
-                  });
-                }, 240);
-              }}
-              ref={listRef}
-              renderItem={renderItem}
-              // A thread's rows are pictures, clips and rich text. The default
-              // window keeps ten screens of them built around a fling; five
-              // either side is more than a finger outruns, and half the work.
-              // The first pass stays at the default: building fewer rows on
-              // open saved nothing measurable and moved the rest into the
-              // first fling, which then stuttered.
-              maxToRenderPerBatch={6}
-              windowSize={11}
-              scrollEventThrottle={64}
-            />
-
-            {jumpVisible ? (
-              <View
-                pointerEvents="box-none"
-                style={[styles.jumpWrap, { bottom: space.sm + bottomInset }]}
-              >
-                <Pressable
-                  accessibilityLabel="Jump to the newest message"
-                  accessibilityRole="button"
-                  onPress={() =>
-                    listRef.current?.scrollToOffset({
-                      animated: true,
-                      offset: 0,
-                    })
-                  }
-                  style={({ pressed }) => [
-                    styles.jump,
-                    {
-                      backgroundColor: pressed
-                        ? theme.material.fillPressed
-                        : theme.glass.opaque,
-                      borderColor: theme.glass.edge,
-                    },
-                  ]}
-                >
-                  <Ionicons color={theme.text} name="arrow-down" size={16} />
-                  <Text style={[styles.jumpLabel, { color: theme.text }]}>
-                    Latest
-                  </Text>
-                </Pressable>
-              </View>
-            ) : null}
-          </View>
-        </View>
-
-        <Composer
-          conversationId={conversationId}
-          onCancelReply={() => setReplyingTo(null)}
-          onInsetChange={setBottomInset}
-          onSelectSender={selectSender}
-          onSend={submit}
-          replyingTo={replyingTo}
-          selectedSender={sender}
-          senders={senders}
-          sending={sending}
-          statusNote={
-            isConnected ? null : "Reconnecting — messages will still send."
-          }
-        />
-
-        <MessageActions
-          canReact={isConnected}
-          message={actionsFor}
-          myReaction={myReaction}
-          onClose={() => setActionsFor(null)}
-          onReact={react}
-          onReply={startReply}
-          onRetry={
-            actionsFor &&
-            rows.find((row) => row.message.id === actionsFor.id)?.failed
-              ? () => {
-                  const row = rows.find(
-                    (entry) => entry.message.id === actionsFor.id,
-                  );
-                  if (row?.pendingId) retry(row.pendingId);
+                    {isPending && !error ? (
+                      <MessageSkeleton />
+                    ) : error || !conversationId ? (
+                      <ListStatus error={error} onRetry={refetch} />
+                    ) : (
+                      <HelloState
+                        conversationId={conversationId}
+                        disabled={sending}
+                        onSend={(stickerUrl) =>
+                          void send(stickerUrl, {
+                            repliedTo: replyingTo,
+                            seen: seenNow(),
+                          })
+                        }
+                      />
+                    )}
+                  </View>
                 }
-              : undefined
-          }
-        />
+                /*
+                 * Inverted, so the list's "footer" is the *top* of the screen. Two
+                 * things belong there: the spinner while older history loads, and —
+                 * once there is no more history — the retention notice, which web puts
+                 * above the oldest message for the same reason. No counter-transform:
+                 * the list already applies one to the footer, unlike the empty state.
+                 */
+                ListFooterComponent={
+                  isFetchingNextPage ? (
+                    <ListStatus loading />
+                  ) : !hasNextPage && conversationId ? (
+                    <RetentionNotice conversationId={conversationId} />
+                  ) : null
+                }
+                keyboardDismissMode="interactive"
+                keyboardShouldPersistTaps="handled"
+                onEndReached={() => {
+                  if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
+                }}
+                onEndReachedThreshold={0.4}
+                // Inverted, so `contentOffset.y` is the distance from the *newest*
+                // message: zero is the bottom of the thread.
+                onScroll={({ nativeEvent }) =>
+                  setJumpVisible(nativeEvent.contentOffset.y > JUMP_THRESHOLD)
+                }
+                // Rows are variable height, so there is no `getItemLayout` to give the
+                // list — which means `scrollToIndex` can miss on a row it has not
+                // measured. Scrolling roughly there and retrying is the documented
+                // recovery, and it is invisible at this speed.
+                onScrollToIndexFailed={({ averageItemLength, index }) => {
+                  listRef.current?.scrollToOffset({
+                    animated: true,
+                    offset: averageItemLength * index,
+                  });
+                  setTimeout(() => {
+                    listRef.current?.scrollToIndex({
+                      animated: true,
+                      index,
+                      viewPosition: 0.5,
+                    });
+                  }, 240);
+                }}
+                ref={listRef}
+                renderItem={renderItem}
+                // A thread's rows are pictures, clips and rich text. The default
+                // window keeps ten screens of them built around a fling; five
+                // either side is more than a finger outruns, and half the work.
+                // The first pass stays at the default: building fewer rows on
+                // open saved nothing measurable and moved the rest into the
+                // first fling, which then stuttered.
+                maxToRenderPerBatch={6}
+                windowSize={11}
+                scrollEventThrottle={64}
+              />
 
-        <ReactorsSheet
-          groups={reactorsFor}
-          onClose={() => setReactorsFor(null)}
-        />
+              {jumpVisible ? (
+                <View
+                  pointerEvents="box-none"
+                  style={[styles.jumpWrap, { bottom: space.sm + bottomInset }]}
+                >
+                  <Pressable
+                    accessibilityLabel="Jump to the newest message"
+                    accessibilityRole="button"
+                    onPress={() =>
+                      listRef.current?.scrollToOffset({
+                        animated: true,
+                        offset: 0,
+                      })
+                    }
+                    style={({ pressed }) => [
+                      styles.jump,
+                      {
+                        backgroundColor: pressed
+                          ? theme.material.fillPressed
+                          : theme.glass.opaque,
+                        borderColor: theme.glass.edge,
+                      },
+                    ]}
+                  >
+                    <Ionicons color={theme.text} name="arrow-down" size={16} />
+                    <Text style={[styles.jumpLabel, { color: theme.text }]}>
+                      Latest
+                    </Text>
+                  </Pressable>
+                </View>
+              ) : null}
+            </View>
+          </View>
 
-        {/* A message's album, full screen: swipe through it, double-tap or
+          <Composer
+            conversationId={conversationId}
+            onCancelReply={() => setReplyingTo(null)}
+            onInsetChange={setBottomInset}
+            onSelectSender={selectSender}
+            onSend={submit}
+            replyingTo={replyingTo}
+            selectedSender={sender}
+            senders={senders}
+            sending={sending}
+            statusNote={
+              offline
+                ? "Offline — messages will send when you're back online."
+                : isConnected
+                  ? null
+                  : "Reconnecting — messages will still send."
+            }
+          />
+
+          <MessageActions
+            canReact={isConnected}
+            message={actionsFor}
+            myReaction={myReaction}
+            onClose={() => setActionsFor(null)}
+            onDiscard={
+              actionsFor &&
+              rows.find((row) => row.message.id === actionsFor.id)?.pendingId
+                ? () => {
+                    const row = rows.find(
+                      (entry) => entry.message.id === actionsFor.id,
+                    );
+                    if (row?.pendingId) discard(row.pendingId);
+                  }
+                : undefined
+            }
+            onReact={react}
+            onReply={startReply}
+            onRetry={
+              actionsFor &&
+              rows.find((row) => row.message.id === actionsFor.id)?.failed
+                ? () => {
+                    const row = rows.find(
+                      (entry) => entry.message.id === actionsFor.id,
+                    );
+                    if (row?.pendingId) retry(row.pendingId);
+                  }
+                : undefined
+            }
+          />
+
+          <ReactorsSheet
+            groups={reactorsFor}
+            onClose={() => setReactorsFor(null)}
+          />
+
+          {/* A message's album, full screen: swipe through it, double-tap or
             pinch to zoom, pull down to close. Read-only — nothing to caption,
             heart or delete here; that is the message's own sheet. */}
-        <MediaViewer
-          index={viewer?.index ?? null}
-          isOwner={false}
-          media={viewer?.media ?? NO_MEDIA}
-          metaByUrl={NO_META}
-          onCaption={noCaption}
-          onChange={changeViewerIndex}
-          onClose={closeViewer}
-          onDelete={noop}
-          subtitle={viewer?.subtitle}
-          title={viewer?.title}
-        />
-      </Animated.View>
-    </View>
+          <MediaViewer
+            index={viewer?.index ?? null}
+            isOwner={false}
+            media={viewer?.media ?? NO_MEDIA}
+            metaByUrl={NO_META}
+            onCaption={noCaption}
+            onChange={changeViewerIndex}
+            onClose={closeViewer}
+            onDelete={noop}
+            subtitle={viewer?.subtitle}
+            title={viewer?.title}
+          />
+        </Animated.View>
+      </View>
+    </MediaKindProvider>
   );
 };
 

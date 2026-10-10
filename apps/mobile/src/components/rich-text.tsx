@@ -10,7 +10,6 @@ import {
   renderRichText,
   sliceInlines,
 } from "@nw/richtext";
-import { Image } from "expo-image";
 import {
   createContext,
   memo,
@@ -23,18 +22,21 @@ import {
 } from "react";
 import {
   type LayoutChangeEvent,
+  Pressable,
   type StyleProp,
   StyleSheet,
   type TextLayoutLine,
   type TextStyle,
   View,
 } from "react-native";
+import { Image } from "@/components/image";
 import { Text } from "@/components/text";
 import { nativeFace } from "@/lib/editor-fonts";
 import { openExternalLink } from "@/lib/safe-link";
 import {
   type AppTheme,
   fontSize,
+  MEDIA_CHIP,
   monospace,
   radius,
   space,
@@ -200,6 +202,41 @@ const BlockText = ({
  * `contain` for the same reason — `cover` crops, and cropping someone's
  * carefully sized profile art is worse than letter-boxing it.
  */
+/**
+ * Whether a picture is a GIF by its URL — the same extension rule the chat
+ * media helpers use, applied before the bytes are fetched.
+ */
+const isGif = (src: string) =>
+  /\.gif(?:[?#].*)?$/i.test(src) || /[?&]n=-1(?:&|$)/.test(src);
+
+/**
+ * The widest an About picture is ever drawn, in source pixels: a phone
+ * column at 3×. An author's 1500px GIF decoded at that size is four times the
+ * pixels — per frame — of one bounded here.
+ */
+const RICH_IMAGE_MAX_PX = 1200;
+
+/**
+ * A GIF through the image proxy, as its first frame or as every frame.
+ *
+ * `wsrvImage` only touches the app's own bucket; an About links pictures
+ * from anywhere, so this builds the proxy URL for any host. `n=1` is one
+ * frame — a still, decoded once; `n=-1` is the animation, bounded to the
+ * column. `we=1` keeps a source that is smaller than the bound at its own
+ * size; `il=1` is a progressive encode, which the still arrives faster as.
+ */
+const proxiedGif = (src: string, animated: boolean): string => {
+  const params = new URLSearchParams({
+    fit: "inside",
+    n: animated ? "-1" : "1",
+    output: animated ? "gif" : "webp",
+    url: src,
+    w: String(RICH_IMAGE_MAX_PX),
+    we: "1",
+  });
+  return `https://wsrv.nl/?${params.toString()}`;
+};
+
 const RichImage = ({
   align,
   maxHeight,
@@ -218,6 +255,27 @@ const RichImage = ({
   // screen — unless this picture has been measured before, in which case the
   // first frame is already right.
   const [ratio, setRatio] = useState(() => RATIOS.get(src) ?? 16 / 9);
+
+  /*
+   * A GIF is a still until it is tapped.
+   *
+   * Most of the pictures in an About are GIFs, and every one of them used to
+   * decode every frame, at the author's own size, for as long as the profile
+   * was open — behind the fold, under the "Read more", all of it. That is
+   * most of what made a profile with a decorated About expensive to leave
+   * on screen. This is Discord's "play GIFs on tap" rule: the first frame,
+   * bounded to the column, with a GIF mark in the corner; a tap plays it,
+   * another tap stops it. The proxy does the bounding and the single frame,
+   * so the phone never downloads the full animation for a still — and if the
+   * proxy cannot reach the host, the picture falls back to its own URL.
+   */
+  const gif = isGif(src);
+  const [playing, setPlaying] = useState(false);
+  const [direct, setDirect] = useState(false);
+  const uri = gif && !direct ? proxiedGif(src, playing) : src;
+  // The picture is reloaded on play; the frames of a still are not the
+  // frames of the animation, so this is a new source rather than a toggle.
+  const playable = gif && !direct;
 
   /**
    * Three ways an image knows how wide it is, in the order they are trusted.
@@ -241,30 +299,47 @@ const RichImage = ({
         { alignItems: align ? ALIGN_ITEMS[align] : "flex-start" },
       ]}
     >
-      <Image
-        // `expo-image`, for the same reason the avatar uses it: a decoded
-        // bitmap cache that outlives this view, so the picture in an About
-        // is decoded once per process rather than once per visit — and a
-        // GIF, which most of these are, is not re-decoded frame by frame
-        // every time the screen is opened.
-        cachePolicy="memory-disk"
-        contentFit="contain"
-        onLoad={({ source }) => {
-          if (source?.width && source?.height) {
-            const next = source.width / source.height;
-            RATIOS.set(src, next);
-            setRatio(next);
-          }
-        }}
-        recyclingKey={src}
-        source={{ uri: src }}
+      <Pressable
+        accessibilityHint={
+          playable ? (playing ? "Stops the GIF" : "Plays the GIF") : undefined
+        }
+        accessibilityRole={playable ? "button" : "image"}
+        disabled={!playable}
+        onPress={() => setPlaying((value) => !value)}
         style={[
           styles.image,
           { aspectRatio: ratio, width },
           maxHeight !== undefined ? { maxHeight } : null,
         ]}
-        transition={0}
-      />
+      >
+        <Image
+          // `expo-image`, for the same reason the avatar uses it: a decoded
+          // bitmap cache that outlives this view, so the picture in an About
+          // is decoded once per process rather than once per visit.
+          cachePolicy="memory-disk"
+          contentFit="contain"
+          onError={() => {
+            if (gif && !direct) setDirect(true);
+          }}
+          onLoad={({ source }) => {
+            if (source?.width && source?.height) {
+              const next = source.width / source.height;
+              RATIOS.set(src, next);
+              setRatio(next);
+            }
+          }}
+          playing={gif ? playing : undefined}
+          recyclingKey={uri}
+          source={{ uri }}
+          style={styles.fill}
+          transition={0}
+        />
+        {playable && !playing ? (
+          <View pointerEvents="none" style={styles.gifMark}>
+            <Text style={styles.gifMarkLabel}>GIF</Text>
+          </View>
+        ) : null}
+      </Pressable>
     </View>
   );
 };
@@ -801,10 +876,27 @@ const styles = StyleSheet.create({
   // Body size, not `label`: a smaller face inside a line of normal text drops
   // below the baseline and reads as a rendering fault rather than as a style.
   code: { fontFamily: monospace, fontSize: fontSize.prose },
+  fill: { height: "100%", width: "100%" },
   floatImage: { marginBottom: FLOAT_BOTTOM, marginTop: space.xxs, width: "100%" },
   floatRow: { alignItems: "flex-start", gap: FLOAT_GAP, width: "100%" },
+  /** Web's GIF mark on a still: a small chip in the picture's corner. */
+  gifMark: {
+    backgroundColor: MEDIA_CHIP,
+    borderRadius: radius.sm,
+    bottom: space.xs,
+    left: space.xs,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    position: "absolute",
+  },
+  gifMarkLabel: {
+    color: "#ffffff",
+    fontSize: fontSize.meta,
+    fontWeight: "800",
+    letterSpacing: 0.6,
+  },
   heading: { fontWeight: "700", lineHeight: 28, marginTop: space.sm },
-  image: { borderRadius: radius.md },
+  image: { borderRadius: radius.md, overflow: "hidden" },
   imageRow: { marginVertical: space.xs, width: "100%" },
   italic: { fontStyle: "italic" },
   listItem: { flexDirection: "row", gap: space.sm },

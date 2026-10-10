@@ -7,7 +7,7 @@ import {
   type ImageWrap,
   type RichImageBlock,
 } from "@nw/richtext";
-import { Image } from "expo-image";
+import { Image } from "@/components/image";
 import { memo, useRef } from "react";
 import {
   ActivityIndicator,

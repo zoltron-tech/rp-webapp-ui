@@ -3,11 +3,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { type ReactNode, useCallback } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Button } from "@/components/button";
+import { Text } from "@/components/text";
 import { useKeyboardOffset } from "@/hooks/use-keyboard-height";
 import { fontSize, radius, space, useAppTheme } from "@/theme";
-import { Button } from "@/components/button";
 
 /**
  * The frame every signed-out screen is built in.
@@ -232,13 +232,22 @@ export const SubmitButton = ({
   />
 );
 
-/** A refusal, said where the thing was refused. */
+/**
+ * A refusal, said where the thing was refused.
+ *
+ * An alert, so a screen reader announces it when it appears rather than
+ * waiting to be found under the field it belongs to.
+ */
 export const ErrorBox = ({ message }: { message: string | null }) => {
   const theme = useAppTheme();
   if (!message) return null;
 
   return (
-    <View style={[styles.errorBox, { borderColor: theme.error }]}>
+    <View
+      accessibilityLiveRegion="assertive"
+      accessibilityRole="alert"
+      style={[styles.errorBox, { borderColor: theme.error }]}
+    >
       <Ionicons
         color={theme.error}
         name="alert-circle"

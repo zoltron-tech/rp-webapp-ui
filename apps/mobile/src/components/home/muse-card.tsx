@@ -4,14 +4,14 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { memo } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
+import { CroppedImage } from "@/components/cropped-image";
+import { FallbackArt } from "@/components/fallback-art";
 import { Text } from "@/components/text";
 import {
   firstWorkingImage,
   markImageBroken,
   useBrokenImages,
 } from "@/lib/broken-images";
-import { CroppedImage } from "@/components/cropped-image";
-import { FallbackArt } from "@/components/fallback-art";
 import { asHex, withAlpha } from "@/lib/color";
 import { museName } from "@/lib/muse-appearance";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
@@ -27,19 +27,38 @@ import { border, fontSize, radius, space, useAppTheme } from "@/theme";
  *
  * ## The size
  *
- * Web's rail card at phone width: 140 × 245, the 240 × 420 desktop card
- * keeping its 1.75 ratio so the crop frames the same picture. A 375pt screen
- * shows two and a third of them, which is what says "this scrolls", and the
- * fandom tag has room to be eleven-point type.
+ * The rail's to give. Web's 240 × 420 desktop card keeps its 1.75 ratio at
+ * any width so the crop frames the same picture. `MUSE_CARD_WIDTH` is the
+ * compact size — two and a third to a 375pt screen — and the home rails hand
+ * it most of the screen so one character sits in the middle with the next
+ * peeking in (see `rail-snap.ts`). Past `WIDE_FROM` the type steps up with
+ * it: a name at list size at the foot of a 170pt portrait reads as a caption,
+ * and the fandom tag has room to be real type rather than eleven-point.
  */
 export const MUSE_CARD_WIDTH = 140;
-export const MUSE_CARD_HEIGHT = 245;
+/** Web's 240 × 420. */
+const RATIO = 1.75;
+/**
+ * From this width the card is drawn with the wide type. Under the rail's
+ * share of the screen on the smallest phone (375pt), so the type does not
+ * change with the device.
+ */
+const WIDE_FROM = 165;
 /** Web's `padding: 2px` frame round the picture. */
 const FRAME = 2;
 
-const MuseCardView = ({ muse }: { muse: Muse }) => {
+export const museCardHeight = (width: number) => Math.round(width * RATIO);
+
+const MuseCardView = ({
+  muse,
+  width = MUSE_CARD_WIDTH,
+}: {
+  muse: Muse;
+  width?: number;
+}) => {
   const theme = useAppTheme();
   const router = useRouter();
+  const wide = width >= WIDE_FROM;
 
   const accent = muse.useAccent ? asHex(muse.accent) : undefined;
   // The card background, then the main image, skipping any that failed: a
@@ -74,7 +93,12 @@ const MuseCardView = ({ muse }: { muse: Muse }) => {
       }}
       style={({ pressed }) => [
         styles.frame,
-        { borderColor: theme.material.edge, opacity: pressed ? 0.85 : 1 },
+        {
+          borderColor: theme.material.edge,
+          height: museCardHeight(width),
+          opacity: pressed ? 0.85 : 1,
+          width,
+        },
       ]}
     >
       {accent ? (
@@ -110,22 +134,31 @@ const MuseCardView = ({ muse }: { muse: Muse }) => {
           pointerEvents="none"
           style={StyleSheet.absoluteFill}
         />
-        <View style={styles.nameBlock}>
+        <View style={[styles.nameBlock, wide && styles.nameBlockWide]}>
           {fandom ? (
-            <View style={[styles.tag, { backgroundColor: fandom.color }]}>
-              <View style={styles.tagDot} />
+            <View
+              style={[
+                styles.tag,
+                wide && styles.tagWide,
+                { backgroundColor: fandom.color },
+              ]}
+            >
+              <View style={[styles.tagDot, wide && styles.tagDotWide]} />
               <Text
                 // A label on a 140pt card: it grows a step with the reader's
                 // text size, not the whole way, or a fandom loses its ending.
                 maxFontSizeMultiplier={1.1}
                 numberOfLines={1}
-                style={styles.tagLabel}
+                style={[styles.tagLabel, wide && styles.tagLabelWide]}
               >
                 {fandom.name}
               </Text>
             </View>
           ) : null}
-          <Text numberOfLines={2} style={styles.name}>
+          <Text
+            numberOfLines={2}
+            style={[styles.name, wide && styles.nameWide]}
+          >
             {museName(muse)}
           </Text>
         </View>
@@ -137,7 +170,11 @@ const MuseCardView = ({ muse }: { muse: Muse }) => {
 export const MuseCard = memo(MuseCardView);
 
 /** What the rail draws while the first page is still on its way. */
-export const MuseCardShimmer = () => {
+export const MuseCardShimmer = ({
+  width = MUSE_CARD_WIDTH,
+}: {
+  width?: number;
+}) => {
   const theme = useAppTheme();
   return (
     <View
@@ -147,6 +184,8 @@ export const MuseCardShimmer = () => {
         {
           backgroundColor: theme.material.fill,
           borderColor: theme.material.edge,
+          height: museCardHeight(width),
+          width,
         },
       ]}
     />
@@ -163,10 +202,8 @@ const styles = StyleSheet.create({
   frame: {
     borderRadius: radius.cardSm + FRAME,
     borderWidth: border.edge,
-    height: MUSE_CARD_HEIGHT,
     overflow: "hidden",
     padding: FRAME,
-    width: MUSE_CARD_WIDTH,
   },
   name: {
     color: "#ffffff",
@@ -184,6 +221,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 6,
   },
+  nameBlockWide: { bottom: 12, gap: 5, left: 12, right: 12 },
+  nameWide: { fontSize: 18, lineHeight: 22 },
   shimmer: { opacity: 0.6 },
   tag: {
     alignItems: "center",
@@ -201,6 +240,7 @@ const styles = StyleSheet.create({
     height: 4,
     width: 4,
   },
+  tagDotWide: { borderRadius: 3, height: 5, width: 5 },
   tagLabel: {
     color: "#ffffff",
     flexShrink: 1,
@@ -211,4 +251,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
     textTransform: "uppercase",
   },
+  tagLabelWide: { fontSize: fontSize.caption, letterSpacing: 0.6 },
+  tagWide: { gap: 5, paddingHorizontal: 8, paddingVertical: space.xs },
 });

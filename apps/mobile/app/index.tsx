@@ -51,8 +51,9 @@ export default function Index() {
 
   if (status === "signed-in") return <Redirect href="/(tabs)/(home)" />;
 
-  // Onboarding is not built on native yet (MONOREPO_MIGRATION_PLAN Phase 9).
-  // Sending a half-finished account to the tabs would show it empty screens, so
-  // it lands on the public page with the rest.
+  // Signed in without a finished profile: the set-up flow, which is the
+  // only thing an account in that state can usefully do.
+  if (status === "onboarding") return <Redirect href="/onboarding" />;
+
   return <Redirect href="/novelists" />;
 }

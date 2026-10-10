@@ -3,6 +3,15 @@ import { useChatCrypto, useSendMessage, useSession } from "@nw/features";
 import type { Message } from "@nw/types";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useChatSocket } from "@/context/socket";
+import { isOffline } from "@/lib/connectivity";
+import {
+  discardOutbox,
+  enqueueOutbox,
+  getStore,
+  OUTBOX_ID_PREFIX,
+  type OutboxMessage,
+  useOutboxMessages,
+} from "@/lib/local-store";
 
 /**
  * Sends a message, over the socket when there is one.
@@ -20,12 +29,24 @@ import { useChatSocket } from "@/context/socket";
  * not an equal alternative. Falling back is still much better than refusing to
  * send, which is what the web app does ("Not connected. Please wait and try
  * again.") — the message is written, and it is delivered late rather than lost.
+ *
+ * ## A third path: no network at all
+ *
+ * With the phone offline neither path can be tried, and marking the message
+ * failed would be a lie — nothing failed, there was nothing to fail against.
+ * The message goes to the **outbox** (`local-store/outbox.ts`) instead: a row
+ * in the encrypted store, drawn in the thread as "Waiting for connection", and
+ * sent — over the socket, as written — the moment there is a connection,
+ * whether the app is open or the background refresh finds the network first.
+ * `discard` takes one out of the queue; a discarded message is never sent.
  */
 export interface SentMessage {
   id: string;
   text: string;
   createdAt: string;
   failed: boolean;
+  /** In the outbox, waiting for a connection. Not in flight, not failed. */
+  queued: boolean;
   attachments: { url: string }[];
   repliedTo: Message | null;
   /**
@@ -65,14 +86,28 @@ interface DispatchOptions extends SendOptions {
 
 const NOTHING_SEEN: ReadonlySet<string> = new Set();
 
+/** An outbox row, as the thread draws it. */
+const fromOutbox = (entry: OutboxMessage): SentMessage => ({
+  attachments: entry.attachments,
+  createdAt: entry.createdAt,
+  failed: false,
+  id: entry.id,
+  queued: true,
+  repliedTo: entry.repliedTo,
+  seen: NOTHING_SEEN,
+  sender: entry.sender,
+  text: entry.text,
+});
+
 export const useSendChatMessage = (conversationId: string | undefined) => {
   const { novelist } = useSession();
   const crypto = useChatCrypto();
   const { isConnected, sendMessage } = useChatSocket();
   const restSend = useSendMessage(conversationId);
 
-  const [pending, setPending] = useState<SentMessage[]>([]);
+  const [inFlight, setInFlight] = useState<SentMessage[]>([]);
   const [sending, setSending] = useState(false);
+  const queued = useOutboxMessages(conversationId);
 
   /** The novelist, then every muse they have penned. */
   const senders = useMemo(() => senderOptions(novelist), [novelist]);
@@ -144,7 +179,7 @@ export const useSendChatMessage = (conversationId: string | undefined) => {
         // REST does not echo the message back, so the optimistic bubble has
         // nothing to reconcile against. Drop it and let the invalidated query
         // supply the real one.
-        setPending((previous) =>
+        setInFlight((previous) =>
           previous.filter((entry) => entry.id !== optimisticId),
         );
       }
@@ -172,15 +207,32 @@ export const useSendChatMessage = (conversationId: string | undefined) => {
         return false;
       }
 
-      const optimisticId = `pending-${Date.now()}-${Math.random()}`;
       const chosen = sender ?? senders[0] ?? null;
-      setPending((previous) => [
+
+      // No network: into the outbox, not into flight. The thread draws it from
+      // there, and the drain sends it when there is something to send over.
+      const store = getStore();
+      if (isOffline() && store) {
+        await enqueueOutbox(store, {
+          attachments,
+          conversationId,
+          kind: "message",
+          repliedTo: options.repliedTo ?? null,
+          sender: chosen,
+          text: trimmed,
+        }).catch(() => undefined);
+        return true;
+      }
+
+      const optimisticId = `pending-${Date.now()}-${Math.random()}`;
+      setInFlight((previous) => [
         ...previous,
         {
           attachments,
           createdAt: new Date().toISOString(),
           failed: false,
           id: optimisticId,
+          queued: false,
           repliedTo: options.repliedTo ?? null,
           seen: options.seen ?? NOTHING_SEEN,
           sender: chosen,
@@ -195,7 +247,7 @@ export const useSendChatMessage = (conversationId: string | undefined) => {
           sender: chosen,
         });
         if (!ok) {
-          setPending((previous) =>
+          setInFlight((previous) =>
             previous.map((entry) =>
               entry.id === optimisticId ? { ...entry, failed: true } : entry,
             ),
@@ -213,9 +265,9 @@ export const useSendChatMessage = (conversationId: string | undefined) => {
 
   const retry = useCallback(
     (optimisticId: string) => {
-      const entry = pending.find((item) => item.id === optimisticId);
+      const entry = inFlight.find((item) => item.id === optimisticId);
       if (!entry) return;
-      setPending((previous) =>
+      setInFlight((previous) =>
         previous.map((item) =>
           item.id === optimisticId ? { ...item, failed: false } : item,
         ),
@@ -226,15 +278,28 @@ export const useSendChatMessage = (conversationId: string | undefined) => {
         sender: entry.sender,
       }).then((ok) => {
         if (ok) return;
-        setPending((previous) =>
+        setInFlight((previous) =>
           previous.map((item) =>
             item.id === optimisticId ? { ...item, failed: true } : item,
           ),
         );
       });
     },
-    [dispatch, pending],
+    [dispatch, inFlight],
   );
+
+  /**
+   * Takes a message out of the queue, or a failed one off the screen. A
+   * queued message that is discarded is never sent.
+   */
+  const discard = useCallback((id: string) => {
+    if (id.startsWith(OUTBOX_ID_PREFIX)) {
+      const store = getStore();
+      if (store) void discardOutbox(store, id).catch(() => undefined);
+      return;
+    }
+    setInFlight((previous) => previous.filter((entry) => entry.id !== id));
+  }, []);
 
   /**
    * Drops the optimistic copy of a message that has come back for real.
@@ -247,7 +312,7 @@ export const useSendChatMessage = (conversationId: string | undefined) => {
    * be acknowledged out of order.
    */
   const reconcile = useCallback((optimisticIds: readonly string[]) => {
-    setPending((previous) => {
+    setInFlight((previous) => {
       const next = previous.filter(
         (entry) => !optimisticIds.includes(entry.id),
       );
@@ -255,7 +320,14 @@ export const useSendChatMessage = (conversationId: string | undefined) => {
     });
   }, []);
 
+  /** What the thread draws above the real messages: the queue, then what is in flight. */
+  const pending = useMemo<SentMessage[]>(
+    () => [...queued.map(fromOutbox), ...inFlight],
+    [inFlight, queued],
+  );
+
   return {
+    discard,
     pending,
     reconcile,
     retry,

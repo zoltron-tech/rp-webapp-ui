@@ -1,10 +1,13 @@
 import { Stack, useRouter } from "expo-router";
+import { Platform } from "react-native";
 import { ConversationOverlayHost } from "@/context/conversation-overlay";
 import { InboxRevealProvider } from "@/context/inbox-reveal";
 import { useAppTheme } from "@/theme";
 import { glassHeaderOptions } from "@/theme/header";
 import { ambientScreenLayout } from "@/components/ambient-background";
+import { TabHeaderTitle } from "@/components/header-title";
 import { MenuButton } from "@/components/menu-button";
+import { StackBackButton } from "@/components/stack-back-button";
 
 /**
  * The Inbox tab's stack.
@@ -28,23 +31,59 @@ export default function InboxStackLayout() {
         ...glassHeaderOptions(theme),
       }}
     >
-      <Stack.Screen name="index" options={{ title: "Inbox" }} />
+      {/*
+        The brand tile, then the page's name set as the lockup sets
+        "NOVELIST" — Home's header with the word changed. `title` stays: it is
+        what a screen reader calls this screen from the ones pushed over it.
+      */}
+      <Stack.Screen
+        name="index"
+        options={{
+          headerTitle: () => <TabHeaderTitle title="Inbox" />,
+          title: "Inbox",
+        }}
+      />
       {/*
         The conversation's screen is an empty, transparent placeholder: the
         page is drawn by `ConversationOverlayHost` below, over this stack, so
         the list stays visible under the slide and the stack never has a
         page to ghost on removal. See `context/conversation-overlay`.
+
+        A plain card on iOS. UIKit presents a modal from the app's root view
+        controller, over the whole window — over the overlay too — so the
+        empty screen sat on top of the page and took every touch. A card stays
+        inside this stack, under the overlay. The cost is that UIKit removes
+        the list from under a card, so on iOS a drag back uncovers the
+        backdrop until the route pops. The system's own swipe is off: the
+        page has its own (`hooks/use-swipe-back`).
       */}
       <Stack.Screen
         name="[conversationId]/index"
         options={{
           animation: "none",
           contentStyle: { backgroundColor: "transparent" },
+          gestureEnabled: false,
           headerShown: false,
-          presentation: "transparentModal",
+          presentation: Platform.OS === "ios" ? "card" : "transparentModal",
+          // Never shown here (no header), but iOS labels the next screen's
+          // back button with it — and with the route's name if there is none.
+          title: "Chat",
         }}
       />
-      <Stack.Screen name="[conversationId]/details" options={{ title: "Details" }} />
+      {/*
+        Its own back button on iOS. The system's stopped answering taps the
+        second time this screen was opened from a conversation (iOS 26.6),
+        while the swipe went on working; a button drawn here is a `Pressable`
+        that pops the route, and does not depend on the navigation bar's.
+      */}
+      <Stack.Screen
+        name="[conversationId]/details"
+        options={{
+          headerLeft:
+            Platform.OS === "ios" ? () => <StackBackButton /> : undefined,
+          title: "Details",
+        }}
+      />
     </Stack>
     {/* The conversation page itself, over the stack — see the overlay. */}
     <ConversationOverlayHost />

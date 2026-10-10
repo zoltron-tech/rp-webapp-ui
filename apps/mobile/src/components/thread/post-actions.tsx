@@ -1,19 +1,14 @@
-import { Ionicons } from "@expo/vector-icons";
-import type { ComponentProps } from "react";
-import { Alert, Pressable, StyleSheet, View } from "react-native";
-import { Text } from "@/components/text";
-import { BottomSheet } from "@/components/sheet";
+import { Alert } from "react-native";
+import { type ActionItem, ActionMenu } from "@/components/action-menu";
 import type { PostVariant } from "@/components/thread/post";
-import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * What the three dots on a thread post offer.
  *
  * Web puts these in a `AppDropdownMenuResponsive` — a popover on a desktop and
- * a tray on a phone. There is only the phone here, so it is the tray, built on
- * the same `BottomSheet` the chat's long-press menu uses. Reaching for the
- * project's one sheet rather than a second popover primitive is the whole
- * reason that component exists.
+ * a tray on a phone. There is only the phone here, so it is the tray: the
+ * same `ActionMenu` every other `⋯` on this client opens, so a prompt's menu
+ * and a profile's are the same rows at the same size in the same place.
  *
  * ## Who sees what
  *
@@ -34,15 +29,12 @@ import { border, fontSize, radius, space, useAppTheme } from "@/theme";
  * being a control that silently does nothing. `onShare` adds web's first row,
  * the share sheet, above the rest; it is only offered for a prompt, since
  * web's `ROUTES.Prompt.View` is the only thing the share links to.
+ *
+ * Share and Edit open another sheet or the composer, so they go through
+ * `onSelect`: the menu leaves first, and the next modal is presented once it
+ * has gone. Delete and Report confirm in a system alert, which may sit over
+ * the open menu.
  */
-
-interface Action {
-  destructive?: boolean;
-  hint?: string;
-  icon: ComponentProps<typeof Ionicons>["name"];
-  label: string;
-  onPress: () => void;
-}
 
 /**
  * What each kind of post is called in the menu's own words.
@@ -101,8 +93,6 @@ export const PostActions = ({
   onShare?: () => void;
   target: PostActionsTarget | null;
 }) => {
-  const theme = useAppTheme();
-
   const noun = target ? NOUN[target.variant] : "post";
 
   const confirmDelete = () => {
@@ -134,121 +124,62 @@ export const PostActions = ({
     ]);
   };
 
-  const share: Action[] = onShare
+  const share: ActionItem[] = onShare
     ? [
         {
           icon: "share-social-outline",
           label: `Share ${noun}`,
-          onPress: () => {
-            onClose();
-            onShare();
-          },
+          onSelect: onShare,
         },
       ]
     : [];
 
-  const actions: Action[] = !target
+  const items: ActionItem[] = !target
     ? []
     : target.owned
       ? [
           ...share,
-          {
-            hint: onEdit ? undefined : "Not available here yet",
-            icon: "create-outline",
-            label: `Edit ${noun}`,
-            onPress: onEdit
-              ? () => {
-                  onClose();
-                  onEdit();
-                }
-              : () =>
+          onEdit
+            ? {
+                icon: "create-outline",
+                label: `Edit ${noun}`,
+                onSelect: onEdit,
+              }
+            : {
+                hint: "Not available here yet. Edit it from the Explore feed or the thread.",
+                icon: "create-outline",
+                label: `Edit ${noun}`,
+                onPress: () =>
                   Alert.alert(
                     "Editing is not available here yet",
                     `Editing a ${noun} from this screen is still to come. You can edit it from the Explore feed or the thread.`,
                   ),
-          },
+              },
+          { separator: true },
           {
-            destructive: true,
             icon: "trash-outline",
-            label: `Delete this ${noun}`,
+            label: `Delete ${noun}`,
             onPress: confirmDelete,
+            variant: "danger",
           },
         ]
       : [
           ...share,
+          ...(share.length > 0 ? [{ separator: true }] : []),
           {
-            destructive: true,
             icon: "flag-outline",
-            label: `Report this ${noun}`,
+            label: `Report ${noun}`,
             onPress: confirmReport,
+            variant: "danger",
           },
         ];
 
   return (
-    <BottomSheet
-      maxHeightRatio={0.45}
+    <ActionMenu
+      items={items}
       onClose={onClose}
       title={target ? `This ${noun}` : "Options"}
       visible={target !== null}
-    >
-      <View style={styles.body}>
-        {actions.map((action) => (
-          <Pressable
-            accessibilityRole="button"
-            key={action.label}
-            onPress={action.onPress}
-            style={({ pressed }) => [
-              styles.action,
-              {
-                backgroundColor: pressed
-                  ? theme.glass.fillPressed
-                  : theme.material.fillTranslucent,
-                borderColor: theme.material.edgeTranslucent,
-              },
-            ]}
-          >
-            <Ionicons
-              color={action.destructive ? theme.error : theme.text}
-              name={action.icon}
-              size={20}
-            />
-
-            <View style={styles.actionText}>
-              <Text
-                style={[
-                  styles.actionLabel,
-                  { color: action.destructive ? theme.error : theme.text },
-                ]}
-              >
-                {action.label}
-              </Text>
-
-              {action.hint ? (
-                <Text style={[styles.actionHint, { color: theme.textGray }]}>
-                  {action.hint}
-                </Text>
-              ) : null}
-            </View>
-          </Pressable>
-        ))}
-      </View>
-    </BottomSheet>
+    />
   );
 };
-
-const styles = StyleSheet.create({
-  action: {
-    alignItems: "center",
-    borderRadius: radius.md,
-    borderWidth: border.edge,
-    flexDirection: "row",
-    gap: space.ms,
-    minHeight: 52,
-    paddingHorizontal: space.md,
-    paddingVertical: space.sm,
-  },
-  actionHint: { fontSize: fontSize.caption },
-  actionLabel: { fontSize: fontSize.body, fontWeight: "600" },
-  actionText: { flex: 1, gap: 1 },
-  body: { gap: space.sm },
-});

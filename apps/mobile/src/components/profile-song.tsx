@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { mixColors } from "@nw/theme";
 import type { ProfileSong } from "@nw/types/music";
+import { formatTime } from "@nw/utils";
 import { useEventListener } from "expo";
 import { useVideoPlayer } from "expo-video";
 import * as WebBrowser from "expo-web-browser";
@@ -13,9 +14,10 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { Text } from "@/components/text";
 import { GradientSurface } from "@/components/gradient-surface";
 import { useSpotifyEmbed } from "@/components/spotify-embed";
+import { Text } from "@/components/text";
+import { usePlaybackSlot } from "@/lib/playback";
 import { isHttpsUrlOn } from "@/lib/safe-link";
 import {
   border,
@@ -25,7 +27,6 @@ import {
   space,
   useAppTheme,
 } from "@/theme";
-import { formatTime } from "@nw/utils";
 
 const SPOTIFY_HOSTS = ["open.spotify.com"] as const;
 
@@ -187,6 +188,15 @@ export const ProfileSongPill = ({
   // Spotify's embed accepts nothing until it says it is ready; the file player
   // is ready as soon as it has a URL. Neither is until the engine is on.
   const armed = engineOn && (isSpotify ? spotify.ready : hasFile);
+
+  // One player at a time, and none once the page is left — `lib/playback`.
+  usePlaybackSlot(
+    () => {
+      if (isSpotify) spotify.pause();
+      else player.pause();
+    },
+    playing,
+  );
 
   // The remembered first press, paid once the engine can take it.
   useEffect(() => {

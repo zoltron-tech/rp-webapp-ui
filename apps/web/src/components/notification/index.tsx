@@ -1,16 +1,16 @@
 "use client";
 
+import {
+  matchesNotificationFilter,
+  NOTIFICATION_FILTERS,
+  type NotificationFilter,
+  notificationSections,
+} from "@nw/features";
 import { useEffect, useMemo, useState } from "react";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { NoNotificationsArt } from "../book-art";
 import { LoadMore } from "../load-more/page";
-import {
-  FILTERS,
-  matchesFilter,
-  type NotificationFilter,
-  sectionsOf,
-} from "./kinds";
 import { NotificationHeader } from "./notification-header";
 import { NotificationRow } from "./notification-row";
 import * as S from "./styled";
@@ -36,8 +36,10 @@ export const NotificcationsList = ({
 
   const sections = useMemo(
     () =>
-      sectionsOf(
-        (notifications ?? []).filter((item) => matchesFilter(item, filter)),
+      notificationSections(
+        (notifications ?? []).filter((item) =>
+          matchesNotificationFilter(item, filter),
+        ),
       ),
     [notifications, filter],
   );
@@ -51,7 +53,7 @@ export const NotificcationsList = ({
 
       {total > 0 && (
         <S.Filters role="toolbar" aria-label="Filter notifications">
-          {FILTERS.map(({ id, label }) => (
+          {NOTIFICATION_FILTERS.map(({ id, label }) => (
             <S.FilterChip
               key={id}
               type="button"

@@ -5,6 +5,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
 import { FlatList, StyleSheet, View } from "react-native";
 import { ActivityBox } from "@/components/activity/box";
+import { EmptyFeed } from "@/components/empty-feed";
 import { EndOfList } from "@/components/end-of-list";
 import { LikersSheet } from "@/components/feed/likers-sheet";
 import { SkeletonRows } from "@/components/list-skeletons";
@@ -119,7 +120,7 @@ export const ActivityList = ({ username }: { username: string }) => {
         windowSize={5}
         ListEmptyComponent={
           <ListStatus
-            empty="Nothing here yet."
+            empty={<EmptyFeed kind="activities" username={username} />}
             error={query.error}
             loading={query.isPending}
             onRetry={() => void query.refetch()}

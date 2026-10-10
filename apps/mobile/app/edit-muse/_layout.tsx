@@ -3,6 +3,7 @@ import { Redirect, Stack } from "expo-router";
 import { useAppTheme } from "@/theme";
 import { glassHeaderOptions } from "@/theme/header";
 import { ambientScreenLayout } from "@/components/ambient-background";
+import { nestedStackBack } from "@/components/stack-back-button";
 
 /**
  * Web's `/rp/profile/muses/edit/[id]` and `/rp/profile/muses/create`, as a
@@ -24,10 +25,11 @@ export default function EditMuseLayout() {
   return (
     <Stack
       screenLayout={ambientScreenLayout}
-      screenOptions={{
+      screenOptions={(screen) => ({
         contentStyle: { backgroundColor: theme.background },
         ...glassHeaderOptions(theme),
-      }}
+        ...nestedStackBack(screen),
+      })}
     >
       <Stack.Screen name="new" options={{ title: "New character" }} />
       <Stack.Screen name="[museId]/index" options={{ title: "Edit character" }} />

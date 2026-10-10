@@ -41,4 +41,12 @@ app.onError((err, c) => {
 /** Exported for local smoke-testing via `app.request(...)`. */
 export { app };
 
-export default handle(app);
+// Named method exports, not `export default handle(app)`. On the Node runtime a
+// default-exported function is called as a legacy `(req, res)` handler, and
+// `hono/vercel` only knows the Web `(Request) => Response` shape — it never
+// writes to `res`, so every request to this function failed. Method exports are
+// what opt a Node function into the Web signature.
+const handler = handle(app);
+
+export const GET = handler;
+export const HEAD = handler;

@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { PromptSource } from "@nw/types";
 import { toFormattedDate, wsrvImage } from "@nw/utils";
-import { Image } from "expo-image";
+import { Image } from "@/components/image";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";

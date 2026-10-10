@@ -1,5 +1,7 @@
 import type { NativeStackNavigationOptions } from "@react-navigation/native-stack";
+import { createElement } from "react";
 import { Platform } from "react-native";
+import { HeaderTitle } from "@/components/header-title";
 import { type AppTheme, font } from "@/theme";
 
 /**
@@ -35,12 +37,38 @@ export const IOS_GLASS_HEADERS = false;
  */
 const TITLE_STYLE = { fontFamily: font.bold } as const;
 
+/**
+ * The chevron alone, on every stack.
+ *
+ * iOS writes the previous screen's title beside the back chevron, and where
+ * that screen has none it writes the route's name — a screen opened from the
+ * menu said "(tabs)". Android never drew a label, so this is also what makes
+ * the two platforms' headers the same.
+ */
+const BACK_BUTTON = { headerBackButtonDisplayMode: "minimal" } as const;
+
+/**
+ * The title at the leading edge, on every stack.
+ *
+ * `headerTitleAlign` is Android's; iOS ignores it, so the title is also drawn
+ * by `HeaderTitle`, which is what moves it there — see that component. A
+ * screen that sets its own `headerTitle` replaces this one.
+ */
+const TITLE = {
+  headerTitle: ({ children }: { children: string }) =>
+    createElement(HeaderTitle, null, children),
+  headerTitleAlign: "left",
+} as const;
+
 type GlassHeaderOptions = Pick<
   NativeStackNavigationOptions,
+  | "headerBackButtonDisplayMode"
   | "headerBlurEffect"
   | "headerShadowVisible"
   | "headerStyle"
   | "headerTintColor"
+  | "headerTitle"
+  | "headerTitleAlign"
   | "headerTitleStyle"
   | "headerTransparent"
 >;
@@ -48,6 +76,8 @@ type GlassHeaderOptions = Pick<
 export const glassHeaderOptions = (theme: AppTheme): GlassHeaderOptions => {
   if (IOS_GLASS_HEADERS && Platform.OS === "ios") {
     return {
+      ...BACK_BUTTON,
+      ...TITLE,
       headerBlurEffect:
         theme.name === "light"
           ? "systemChromeMaterialLight"
@@ -61,6 +91,8 @@ export const glassHeaderOptions = (theme: AppTheme): GlassHeaderOptions => {
   }
 
   return {
+    ...BACK_BUTTON,
+    ...TITLE,
     headerShadowVisible: false,
     headerStyle: { backgroundColor: theme.glass.opaque },
     headerTintColor: theme.text,

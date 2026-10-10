@@ -1,9 +1,9 @@
 import type { Badge } from "@nw/types/badge";
 import { toFormattedDate } from "@nw/utils";
 import { FlatList, StyleSheet, View } from "react-native";
-import { Text } from "@/components/text";
 import { BadgeCrest, hasVisibleBadges } from "@/components/badges";
 import { BottomSheet } from "@/components/sheet";
+import { Text } from "@/components/text";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
@@ -94,7 +94,7 @@ const BadgeSheetRow = ({ badge }: { badge: Badge }) => {
         },
       ]}
     >
-      <BadgeCrest code={badge.code} size={44} />
+      <BadgeCrest code={badge.code} replayOnPress size={44} />
 
       <View style={styles.text}>
         <Text numberOfLines={1} style={[styles.title, { color: theme.text }]}>

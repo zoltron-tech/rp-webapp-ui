@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
+import { isSupportNovelist } from "@nw/chat";
 import { useSession } from "@nw/features";
 import type { Friend } from "@nw/types";
 import { mainVerseMuses } from "@nw/utils";
-import { Image } from "expo-image";
+import { Image } from "@/components/image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { memo, useMemo } from "react";
@@ -127,6 +128,8 @@ const NovelistRowView = ({
   // nothing to add or message. Web puts a profile button there; the row is
   // already the way to the profile, so a label is enough.
   const isSelf = me?.id === novelist.id;
+  // Support is not somebody to add; the row still opens its profile.
+  const isSupport = isSupportNovelist(novelist.username);
 
   // Their palette, not yours — the same rule the profile page follows.
   const accent = useMemo(
@@ -346,7 +349,7 @@ const NovelistRowView = ({
               tone="danger"
             />
           </>
-        ) : (
+        ) : isSupport ? null : (
           <RowButton
             busy={running === "send"}
             icon="person-add"

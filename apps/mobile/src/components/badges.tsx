@@ -11,8 +11,10 @@ import {
 import type { Badge, BadgeCode } from "@nw/types/badge";
 import { memo } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { Text } from "@/components/text";
 import Svg, { Circle } from "react-native-svg";
+import { MOTION_BURST_MS } from "@/animation";
+import { useMotionBurst } from "@/animation/effects";
+import { Text } from "@/components/text";
 import { border, radius, space, useAppTheme } from "@/theme";
 
 /**
@@ -75,15 +77,28 @@ export const BadgeCrest = ({
   animated = true,
   code,
   muted = false,
+  replayOnPress = false,
   size = DEFAULT_SIZE,
 }: {
   /** Off for a crest that must hold still — a shelf being screenshotted. */
   animated?: boolean;
   code: BadgeCode;
   muted?: boolean;
+  /**
+   * Tapping the crest plays its motion again. For a crest that is not
+   * already inside something tappable — a shelf tile, a tray row.
+   */
+  replayOnPress?: boolean;
   size?: number;
 }) => {
   const Artwork = BADGE_ARTWORK[code];
+  /*
+   * Motion is a burst, not a loop — see `useMotionBurst`. A crest moves for
+   * a few seconds when it appears, then holds its rest pose, so a profile
+   * left open costs nothing per frame once it has settled. Discord's
+   * decorations behave the same way: they play when the profile opens.
+   */
+  const burst = useMotionBurst(animated && size >= DETAIL_THRESHOLD, MOTION_BURST_MS);
   if (!Artwork) return null;
 
   if (size < DETAIL_THRESHOLD) {
@@ -96,12 +111,23 @@ export const BadgeCrest = ({
     );
   }
 
-  return (
-    <MotionProvider enabled={animated}>
+  const crest = (
+    <MotionProvider enabled={burst.live}>
       <Svg height={size} viewBox={BADGE_VIEW_BOX} width={size}>
         <Artwork logoHref={LOGO} muted={muted} size={size} />
       </Svg>
     </MotionProvider>
+  );
+
+  if (!replayOnPress || !animated) return crest;
+  return (
+    <Pressable
+      accessibilityHint="Plays the badge's animation"
+      accessibilityRole="button"
+      onPress={burst.replay}
+    >
+      {crest}
+    </Pressable>
   );
 };
 

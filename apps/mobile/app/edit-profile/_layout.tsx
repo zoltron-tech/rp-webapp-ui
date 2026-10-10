@@ -5,6 +5,7 @@ import { setPalettePreview, usePalettePreview } from "@/lib/palette-preview";
 import { AccentProvider, useAppTheme } from "@/theme";
 import { glassHeaderOptions } from "@/theme/header";
 import { ambientScreenLayout } from "@/components/ambient-background";
+import { nestedStackBack } from "@/components/stack-back-button";
 
 /**
  * Web's `/rp/profile/edit`, as a stack: the landing page and the sections it
@@ -43,10 +44,11 @@ const EditProfileStack = () => {
   return (
     <Stack
       screenLayout={ambientScreenLayout}
-      screenOptions={{
+      screenOptions={(screen) => ({
         contentStyle: { backgroundColor: theme.background },
         ...glassHeaderOptions(theme),
-      }}
+        ...nestedStackBack(screen),
+      })}
     >
       <Stack.Screen name="index" options={{ title: "Edit profile" }} />
       <Stack.Screen name="appearance" options={{ title: "Appearance" }} />

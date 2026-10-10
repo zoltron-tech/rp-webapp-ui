@@ -63,7 +63,9 @@ export default function NewMuseScreen() {
   const keyboardOffset = useKeyboardOffset(insets.bottom);
   const session = useSession();
   const create = useCreateMuse();
-  const { originalVerseId } = useLocalSearchParams<{
+  const { onboarding, originalVerseId } = useLocalSearchParams<{
+    /** Opened from the set-up flow: a created character returns to it. */
+    onboarding?: string;
     originalVerseId?: string;
   }>();
   const parentQuery = useMuse(originalVerseId || undefined);
@@ -150,6 +152,12 @@ export default function NewMuseScreen() {
       return;
     }
     created.current = true;
+    if (onboarding) {
+      // The flow's next step, not the character's settings: those are a
+      // tap away from the profile once the person is in the app.
+      router.replace("/onboarding/discord");
+      return;
+    }
     router.replace({
       params: { created: "1", museId: id },
       pathname: "/edit-muse/[museId]",

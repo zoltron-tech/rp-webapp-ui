@@ -44,7 +44,10 @@ export const MediaTrayHeader = ({
   onTabChange,
   panHandlers,
   rendered,
+  tabs,
 }: {
+  /** The tabs to offer, when not all three — a passage takes no clips. */
+  tabs?: TrayTab[];
   keyboardIcon?: "chevron" | "check";
   onRequestKeyboard: () => void;
   onTabChange: (tab: TrayTab) => void;
@@ -54,19 +57,20 @@ export const MediaTrayHeader = ({
   const theme = useAppTheme();
   const [tabsWidth, setTabsWidth] = useState(0);
   const indicatorX = useRef(new Animated.Value(0)).current;
+  const shown = tabs ? TABS.filter((entry) => tabs.includes(entry.id)) : TABS;
 
   // The indicator follows the active tab. Spring rather than timing: a tab
   // strip is a physical control and it should arrive with a little weight.
   useEffect(() => {
     if (tabsWidth === 0) return;
-    const slot = tabsWidth / TABS.length;
+    const slot = tabsWidth / shown.length;
     Animated.spring(indicatorX, {
       bounciness: 6,
       speed: 20,
-      toValue: TABS.findIndex((entry) => entry.id === rendered) * slot + 2,
+      toValue: shown.findIndex((entry) => entry.id === rendered) * slot + 2,
       useNativeDriver: true,
     }).start();
-  }, [indicatorX, rendered, tabsWidth]);
+  }, [indicatorX, rendered, shown.length, tabsWidth]);
 
   return (
     <View
@@ -98,13 +102,13 @@ export const MediaTrayHeader = ({
                   backgroundColor: theme.accent.surface,
                   borderColor: theme.accent.surfaceHover,
                   transform: [{ translateX: indicatorX }],
-                  width: tabsWidth / TABS.length - 4,
+                  width: tabsWidth / shown.length - 4,
                 },
               ]}
             />
           ) : null}
 
-          {TABS.map((entry) => {
+          {shown.map((entry) => {
             const active = entry.id === rendered;
             return (
               <Pressable

@@ -140,6 +140,8 @@ import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 export interface RichTextEditorHandle {
   clear: () => void;
   focus: () => void;
+  /** The document as it stands, for a caller that serialises it itself. */
+  getDocument: () => RichDocument;
   getHtml: () => string;
   /** A picture, after the line the caret is on. Web's `insertGif` too. */
   insertImage: (src: string) => void;
@@ -184,6 +186,16 @@ export interface RichTextEditorProps {
    * waiting for Android to report the keyboard's height after the slide.
    */
   onFocusChange?: (focused: boolean) => void;
+  /**
+   * Draws a picture block as something else, by its source.
+   *
+   * For a block the document model has no node for — a passage's embedded
+   * dialog — which the caller keeps in the document as a picture under a
+   * source of its own and draws itself. Everything a picture is to the editor
+   * still holds: its own block, a line after it to type on, removed by a
+   * Backspace into it. Null draws the picture as usual.
+   */
+  renderEmbed?: (src: string) => ReactNode | null;
 }
 
 type Sheet =
@@ -279,6 +291,7 @@ export const RichTextEditor = forwardRef<
     onDocumentChange,
     onFocusChange,
     placeholder,
+    renderEmbed,
     uploadingSources,
   },
   handle,
@@ -1156,6 +1169,7 @@ ${text.slice(offset)}`,
         // window will show a keyboard.
         ensureKeyboard(target);
       },
+      getDocument: () => docRef.current,
       getHtml: () => documentToHtml(docRef.current),
       insertImage: (src: string) => {
         const current = docRef.current;
@@ -1254,6 +1268,11 @@ ${text.slice(offset)}`,
     const node = doc[index];
     if (node.type !== "image") {
       blocks.push(renderText(node, index));
+      continue;
+    }
+    const embed = renderEmbed?.(node.src);
+    if (embed) {
+      blocks.push(<View key={blockKeys[index]}>{embed}</View>);
       continue;
     }
     const side =

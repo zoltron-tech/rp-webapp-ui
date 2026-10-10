@@ -1,64 +1,59 @@
 "use client";
 
-import { conversationPreviewText } from "@nw/chat";
+import { conversationPreview } from "@nw/chat";
+import {
+  inboxGroupFaces,
+  inboxHue,
+  inboxKind,
+  inboxSpeaker,
+  inboxThumbnail,
+  isLastMessageMine,
+} from "@nw/features";
 import type { Conversation } from "@nw/types";
-import { type FC, useEffect } from "react";
+import type { CSSProperties, FC, KeyboardEvent } from "react";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
-import { toLocalDate } from "@/utils/helpers";
+import { toInboxTime, wsrvImage } from "@/utils/helpers";
 import { EmailVerifiedBadge } from "../common";
 import { AdminBadge } from "../common/admin-badge";
 import { AvatarNew } from "../common/avatar-new";
+import { INBOX_ICONS } from "./kinds";
 import * as S from "./styles";
 
 type ConversationCardProps = {
   conversation: Conversation;
+  /** Tighter, for the right sidebar's preview. */
+  compact?: boolean;
   /** When provided (mobile panel mode), called instead of routing to the conversation page. */
   onOpen?: (conversationId: string, targetUserName: string) => void;
 };
 
-const formatInboxTimestamp = (value: string) => {
-  if (!value) return "";
+/** The preview picture, at three device pixels per point. */
+const THUMB_IMAGE = { fit: "cover", h: 120, w: 120 } as const;
 
-  const localMoment = toLocalDate(value);
-  if (!localMoment || !localMoment.isValid()) return value;
-
-  const date = localMoment.toDate();
-  const now = new Date();
-  const isSameDay =
-    date.getFullYear() === now.getFullYear() &&
-    date.getMonth() === now.getMonth() &&
-    date.getDate() === now.getDate();
-
-  if (isSameDay) {
-    return new Intl.DateTimeFormat(undefined, {
-      hour: "numeric",
-      minute: "2-digit",
-    }).format(date);
-  }
-
-  const isSameYear = date.getFullYear() === now.getFullYear();
-  return new Intl.DateTimeFormat(undefined, {
-    day: "2-digit",
-    month: "short",
-    ...(isSameYear ? {} : { year: "numeric" }),
-  }).format(date);
-};
-
-/*
- * The preview rules moved to `@nw/chat`, so the inbox on a phone summarises a
- * message the same way this card does. They were a full second copy of the
- * extension lists and an HTML-stripping regex; the shared version parses with
- * `@nw/richtext` instead, which is the same parse the message bubble runs.
+/**
+ * Whether a conversation is waiting on the reader: its last message is
+ * someone else's and has not been read. Your own unread message is theirs to
+ * read, not yours.
  */
+export const isConversationUnread = (
+  conversation: Conversation,
+  myUsername: string | null | undefined,
+): boolean =>
+  conversation.lastMessage?.isRead === false &&
+  !isLastMessageMine(conversation, myUsername);
 
-const isMessageUnread = (isRead?: boolean) => {
-  if (isRead === undefined) return false;
-  return !isRead;
-};
-
+/**
+ * One conversation, in the inbox and in the right sidebar alike.
+ *
+ * Drawn in the notification row's language. Who it is with is the avatar — two
+ * of them, overlapped, for a group with no picture of its own. Where the
+ * thread stands is the small coloured glyph on its corner, from
+ * `@nw/features`, the table the phone reads too.
+ */
 export const ConversationCard: FC<ConversationCardProps> = ({
+  compact,
   conversation,
   onOpen,
 }) => {
@@ -69,14 +64,16 @@ export const ConversationCard: FC<ConversationCardProps> = ({
   // equivalent and Vite already code-splits per route, so the chunk for this
   // destination is fetched on hover/click by the router itself.
   const { lastMessage } = conversation;
-  const sender =
-    lastMessage?.sender?.name || lastMessage?.sender?.username || "";
-  // 20 characters, as this card has always truncated free text at.
-  const preview = conversationPreviewText(conversation, 20);
-  const timestamp = formatInboxTimestamp(
-    lastMessage?.createdAt || conversation.modifiedAt || conversation.createdAt,
-  );
-  const unread = isMessageUnread(lastMessage?.isRead);
+  const myUsername = user?.username;
+
+  // The sentence, not the markup around it; CSS ellipsises at the row's width.
+  const { describes, text } = conversationPreview(conversation);
+  const speaker = inboxSpeaker(conversation, myUsername, describes);
+  const unread = isConversationUnread(conversation, myUsername);
+
+  const kind = inboxKind(conversation, myUsername);
+  const Glyph = INBOX_ICONS[kind];
+  const thumb = inboxThumbnail(conversation);
 
   const otherMember = conversation.members?.find(
     (member) => member.userName !== user?.username,
@@ -87,6 +84,13 @@ export const ConversationCard: FC<ConversationCardProps> = ({
       otherMember?.userName ||
       conversation.name ||
       "Untitled conversation";
+
+  // A group's own picture when it has one; otherwise the people in it.
+  const groupFaces =
+    conversation.isGroup && !conversation.image
+      ? inboxGroupFaces(conversation, myUsername)
+      : [];
+  const pair = groupFaces.length > 1;
 
   const openConversation = () => {
     const targetUserName =
@@ -111,45 +115,85 @@ export const ConversationCard: FC<ConversationCardProps> = ({
     routeToPage(route, { skipLoading: true });
   };
 
+  const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    openConversation();
+  };
+
   return (
-    <S.Card className={unread ? "unread" : ""} onClick={openConversation}>
-      <S.Header>
-        <AvatarNew
-          src={conversation.image ?? null}
-          alt={displayName}
-          username={otherMember?.userName}
-          nwImage={conversation.isGroup ? undefined : otherMember?.avatar}
-        />
-        <S.Content>
-          <S.ContentMain>
-            <S.TopRow>
-              <S.Title className={unread ? "unread" : ""}>
-                {displayName}
-              </S.Title>
-              {conversation.isGroup && <S.GroupTag>Group</S.GroupTag>}
-              {!conversation.isGroup &&
-                otherMember?.isVerified &&
-                (otherMember.userName === "novelistworld" ? (
-                  <AdminBadge size={12} />
-                ) : (
-                  <EmailVerifiedBadge size={12} />
-                ))}
-            </S.TopRow>
-            <S.MessagePreview className={unread ? "unread" : ""}>
-              <S.Sender className={unread ? "unread" : ""}>
-                {sender ? `${sender}: ` : ""}
-              </S.Sender>
-              {preview}
-            </S.MessagePreview>
-          </S.ContentMain>
-          <S.Extras>
-            <S.Timestamp className={unread ? "unread" : ""}>
-              {timestamp}
-            </S.Timestamp>
-            {unread && <S.UnreadDot />}
-          </S.Extras>
-        </S.Content>
-      </S.Header>
+    <S.Card
+      tabIndex={0}
+      onClick={openConversation}
+      onKeyDown={onKeyDown}
+      data-unread={unread || undefined}
+      data-compact={compact || undefined}
+      style={{ "--kind": inboxHue(kind) } as CSSProperties}
+    >
+      <S.Faces data-pair={pair || undefined}>
+        {pair ? (
+          <>
+            <AvatarNew
+              className="face-back"
+              src={groupFaces[1].image || null}
+              nwImage={groupFaces[1].avatar}
+              alt=""
+            />
+            <AvatarNew
+              className="face-front"
+              src={groupFaces[0].image || null}
+              nwImage={groupFaces[0].avatar}
+              alt={displayName}
+            />
+          </>
+        ) : (
+          <AvatarNew
+            src={conversation.image ?? null}
+            alt={displayName}
+            username={otherMember?.userName}
+            nwImage={conversation.isGroup ? undefined : otherMember?.avatar}
+          />
+        )}
+        <S.Glyph aria-hidden="true">
+          <Glyph />
+        </S.Glyph>
+      </S.Faces>
+
+      <S.Body>
+        <S.NameRow>
+          <S.Title>{displayName}</S.Title>
+          {!conversation.isGroup &&
+            otherMember?.isVerified &&
+            (otherMember.userName === "novelistworld" ? (
+              <AdminBadge size={12} />
+            ) : (
+              <EmailVerifiedBadge size={12} />
+            ))}
+        </S.NameRow>
+        <S.MessagePreview>
+          {speaker && <S.Sender>{speaker}</S.Sender>}
+          {text}
+        </S.MessagePreview>
+      </S.Body>
+
+      {thumb && (
+        <S.Thumb src={wsrvImage(thumb, THUMB_IMAGE)} alt="" loading="lazy" />
+      )}
+      {/* When, and whether it is unread: a column of its own at the row's
+          trailing edge, so the time sits in the same place on every row and a
+          picture goes to its left rather than pushing it inward. */}
+      <S.Meta>
+        <S.Timestamp>
+          {toInboxTime(
+            lastMessage?.createdAt ||
+              conversation.modifiedAt ||
+              conversation.createdAt,
+          )}
+        </S.Timestamp>
+        <S.DotSlot>
+          {unread && <S.UnreadDot role="img" aria-label="Unread" />}
+        </S.DotSlot>
+      </S.Meta>
     </S.Card>
   );
 };

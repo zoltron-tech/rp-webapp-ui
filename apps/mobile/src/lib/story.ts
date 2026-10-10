@@ -106,7 +106,105 @@ export const storyClock = (value: string | null | undefined): string | null => {
   return `${pad(fields.hour)}:${pad(fields.minute)}`;
 };
 
+/** Web's `ASTERISM_STYLES`: what the chapter editor offers, in display order. */
+export const ASTERISM_OPTIONS: {
+  description: string;
+  label: string;
+  value: string;
+}[] = [
+  {
+    description: "Three raised dots — the traditional scene break",
+    label: "Classic asterism",
+    value: "classic",
+  },
+  {
+    description: "A single decorative leaf on a solid rule",
+    label: "Fleuron",
+    value: "fleuron",
+  },
+  {
+    description: "A mirrored, flowing leaf on a dashed rule",
+    label: "Flourish",
+    value: "flourish",
+  },
+  {
+    description: "A bold diamond on a double rule",
+    label: "Diamond",
+    value: "diamond",
+  },
+  {
+    description: "A four-pointed star on a dotted rule",
+    label: "Stars",
+    value: "stars",
+  },
+  {
+    description: "A round dot on a beaded rule",
+    label: "Dots",
+    value: "dots",
+  },
+  { description: "No divider at all", label: "None", value: "none" },
+];
+
+export const DEFAULT_ASTERISM = "classic";
+
+export const asterismLabel = (value: string | null | undefined) =>
+  (
+    ASTERISM_OPTIONS.find((option) => option.value === value) ??
+    ASTERISM_OPTIONS[0]
+  ).label;
+
+// ── Writing an in-story date ────────────────────────────────────────────────
+
+export interface StoryTimeFields {
+  bc: boolean;
+  day: number;
+  hour: number;
+  minute: number;
+  month: number;
+  year: number;
+}
+
+export const readStoryTime = (
+  value: string | null | undefined,
+): StoryTimeFields | null => parseStoryTime(value);
+
+/** Web's `toWireValue`: "yyyy-MM-dd HH:mm:00.000000", "BC"-prefixed for BC. */
+export const writeStoryTime = (fields: StoryTimeFields): string =>
+  `${fields.bc ? "BC" : ""}${String(Math.max(0, fields.year)).padStart(4, "0")}-${pad(fields.month)}-${pad(fields.day)} ${pad(fields.hour)}:${pad(fields.minute)}:00.000000`;
+
+/**
+ * A chapter description as the editor's HTML.
+ *
+ * Descriptions predate the rich text editor and may still be stored as plain
+ * text; web's `toInitialDescriptionHtml` escapes those and turns their lines
+ * into blocks so they are not misread as markup.
+ */
+export const descriptionHtml = (text: string | null | undefined): string => {
+  if (!text) return "";
+  if (/<[a-z][\s\S]*>/i.test(text)) return text;
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .split("\n")
+    .map((line) => `<div>${line || "<br>"}</div>`)
+    .join("");
+};
+
 // ── People ──────────────────────────────────────────────────────────────────
+
+/**
+ * Web's `isMember`: the story's creator, or anyone on its member list. What
+ * lets a novelist write in a story — chapters, passages, the lot.
+ */
+export const isStoryMember = (
+  story: StoryBoard | null | undefined,
+  username: string | null | undefined,
+): boolean =>
+  Boolean(story) &&
+  Boolean(username) &&
+  (story?.createdBy?.username === username ||
+    (story?.members ?? []).some((member) => member.username === username));
 
 /** Web's `museAvatarUrl` / `storyCharacterAvatarUrl`. */
 export const speakerAvatarUrl = (
@@ -265,6 +363,64 @@ export const splitDialogs = (
   return segments;
 };
 
+/**
+ * The passage with every embed swapped for what `replace` answers for it.
+ * `before` is the markup between this embed and the one before it (or the
+ * start of the passage).
+ */
+export const mapDialogs = (
+  html: string,
+  replace: (dialog: DialogEmbed, before: string) => string,
+): string => {
+  let cursor = 0;
+  return html.replace(
+    EMBED,
+    (match: string, attributes: string, inner: string, at: number) => {
+      const before = html.slice(cursor, at);
+      cursor = at + match.length;
+      return replace(readEmbed(attributes, inner), before);
+    },
+  );
+};
+
+/** Web's `DIALOG_DESIGNS`: what the composer offers, in display order. */
+export const DIALOG_DESIGN_OPTIONS: {
+  description: string;
+  label: string;
+  value: DialogDesign;
+}[] = [
+  {
+    description: "Avatar, accent card and quote",
+    label: "Card",
+    value: "card",
+  },
+  {
+    description: "Card tinted with the speaker's own accent color",
+    label: "Colored cards",
+    value: "card-colored",
+  },
+  {
+    description: "Messenger-style speech bubbles",
+    label: "Chat bubbles",
+    value: "bubble",
+  },
+  {
+    description: "Chat bubbles tinted with the speaker's own accent color",
+    label: "Colored chat bubbles",
+    value: "bubble-colored",
+  },
+  {
+    description: "Just the quoted line — no card or avatar",
+    label: "Minimal quotes",
+    value: "quote",
+  },
+  {
+    description: "Minimal quotes without the author attribution",
+    label: "Minimal (no author)",
+    value: "quote-plain",
+  },
+];
+
 // ── Codex ───────────────────────────────────────────────────────────────────
 
 /** Web's curated codex icon keys, as MaterialCommunityIcons names. */
@@ -322,8 +478,8 @@ const CHAPTER_COLORS = [
 
 /** The accent for the chapter at 1-based reading position `order`. */
 export const chapterColor = (order: number) =>
-  CHAPTER_COLORS[Math.max(0, order - 1) % CHAPTER_COLORS.length];
-
+  CHAPTER_COLORS[Math.max(0, order - 1) % CHAPTER_COLORS.length];
+
 /**
  * Web's `STORY_COVER_ZOOM_MAX` (8x), as the crop stores it. Story covers zoom
  * further than avatars, so `CroppedImage`'s default limit would drop the crop of

@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { Activity } from "@nw/types/activity";
 import { toFormattedDateFromUnix, wsrvImage } from "@nw/utils";
-import { Image } from "expo-image";
+import { Image } from "@/components/image";
 import { useRouter } from "expo-router";
 import type { ComponentProps } from "react";
 import { memo } from "react";

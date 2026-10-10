@@ -1,3 +1,4 @@
+import { type NotificationKind, notificationKind } from "@nw/features";
 import type { NovelistWorldNotification } from "@nw/types";
 
 /**
@@ -89,39 +90,38 @@ export const notificationHref = (
   }
 };
 
-/** The glyph and tone a row wears, by what happened. */
-export type NotificationLook = {
-  icon:
-    | "chatbubble-ellipses"
-    | "git-branch"
-    | "heart"
-    | "link"
-    | "notifications"
-    | "person-add";
-  tone: "accent" | "danger" | "positive";
+/**
+ * The glyph on the corner of the face, by kind. The kind itself, its colour,
+ * the kicker and the section a row falls in are decided in `@nw/features`,
+ * where the web list reads the same table.
+ */
+export type NotificationIcon =
+  | "at"
+  | "book"
+  | "bookmark"
+  | "chatbubble"
+  | "heart"
+  | "link"
+  | "notifications"
+  | "person-add"
+  | "person"
+  | "return-down-forward"
+  | "sparkles";
+
+const ICONS: Record<NotificationKind, NotificationIcon> = {
+  chapter: "bookmark",
+  comment: "chatbubble",
+  friendAccepted: "person",
+  friendRequest: "person-add",
+  like: "heart",
+  mention: "at",
+  museRequest: "link",
+  museUpdate: "sparkles",
+  other: "notifications",
+  reply: "return-down-forward",
+  story: "book",
 };
 
-export const notificationLook = (
+export const notificationIcon = (
   notification: NovelistWorldNotification,
-): NotificationLook => {
-  switch (notification.type) {
-    case "FRIEND_REQUEST":
-      return { icon: "person-add", tone: "accent" };
-    case "FRIEND_REQUEST_ACCEPTED":
-      return { icon: "person-add", tone: "positive" };
-    case "REACTION":
-      return { icon: "heart", tone: "danger" };
-    case "PROMPT_COMMENT":
-    case "PROMPT_COMMENT_REPLY":
-    case "REPLY":
-      return { icon: "chatbubble-ellipses", tone: "accent" };
-    case "MUSE_CONNECTION_REQUEST":
-    case "MUSE_CONNECTION_UPDATE":
-      return { icon: "link", tone: "accent" };
-    case "STORYBOARD_UPDATE":
-    case "STORYBOARD_EVENT_UPDATE":
-      return { icon: "git-branch", tone: "accent" };
-    default:
-      return { icon: "notifications", tone: "accent" };
-  }
-};
+): NotificationIcon => ICONS[notificationKind(notification)];

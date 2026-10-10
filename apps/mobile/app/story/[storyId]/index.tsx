@@ -1,11 +1,21 @@
 import { Ionicons } from "@expo/vector-icons";
-import type { StoryBoardEvent } from "@nw/types";
+import { getNovelist } from "@nw/api/endpoints/novelists";
+import { deleteStoryBoardEvent } from "@nw/api/endpoints/story";
+import { report } from "@nw/api/endpoints/thread";
+import { queryKeys, useApi, useSession } from "@nw/features";
+import {
+  API_MESSAGE,
+  type StoryBoard,
+  type StoryBoardEvent,
+} from "@nw/types";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { wsrvImage } from "@nw/utils";
-import { Image } from "expo-image";
+import { Image } from "@/components/image";
 import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
+  Alert,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -14,19 +24,32 @@ import {
 } from "react-native";
 import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ActionMenu } from "@/components/action-menu";
 import { Avatar } from "@/components/avatar";
 import { CroppedImage } from "@/components/cropped-image";
 import { FallbackArt } from "@/components/fallback-art";
 import { LikersSheet } from "@/components/feed/likers-sheet";
 import { HeartButton } from "@/components/heart-button";
+import { IconButton } from "@/components/icon-button";
+import { EmptyScene } from "@/components/empty-feed";
 import { ListStatus } from "@/components/list-status";
-import { Chip, SettingsGroup, SettingsRow } from "@/components/settings";
+import {
+  Chip,
+  PillButton,
+  SettingsGroup,
+  SettingsRow,
+} from "@/components/settings";
+import { ChapterEditor } from "@/components/story/chapter-editor";
 import {
   CharacterSheet,
   FaceAvatar,
   type StoryFace,
   useStoryFaces,
 } from "@/components/story/character-sheet";
+import { ShareStorySheet } from "@/components/share/share-story-sheet";
+import { ReorderChaptersSheet } from "@/components/story/reorder-chapters-sheet";
+import { StoryEditor } from "@/components/story/story-editor";
+import { StoryMembersSheet } from "@/components/story/story-members-sheet";
 import { StoryProse } from "@/components/story/story-prose";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import {
@@ -35,10 +58,12 @@ import {
   useStoryMaps,
   useStoryTimeline,
 } from "@/hooks/use-story";
+import { useStoryWrite } from "@/hooks/use-story-edit";
 import { useStoryReaction } from "@/hooks/use-story-reaction";
 import { asColor, withAlpha } from "@/lib/color";
 import {
   fandomLabel,
+  isStoryMember,
   plainText,
   STORY_COVER_ZOOM_MAX_PCT,
   storyAuthors,
@@ -46,15 +71,31 @@ import {
 import { border, fontSize, radius, space, type, useAppTheme } from "@/theme";
 
 /**
- * A storyboard's front page — web's `/rp/story/:id`, read-only.
+ * A storyboard's front page — web's `/rp/story/:id`.
  *
  * Top to bottom the way web lays it out: the cover and what the story is,
  * its description, who writes it and who is in it, then the world — Codex,
  * Timelines and Map, each a screen of its own — and the chapters in reading
- * order. Everything that edits the story (chapter overlays, reorder, delete,
- * share, report) is left out. The heart stays: liking is reading, not writing
- * — tapping it toggles the like, tapping its count shows who, as web's
- * engagement row does.
+ * order. The heart is for everyone: tapping it toggles the like, tapping its
+ * count shows who, as web's engagement row does.
+ *
+ * ## The story itself
+ *
+ * Web's `⋯` in the header, with web's rows: a member gets **Edit story** and
+ * **Members**, its author **Delete story** as well; anyone else **Report**.
+ * Edit opens the story editor over this page — the same form a new story is
+ * made in from the stories shelf — and a save is written into the cache this
+ * page draws from, so the hero changes without a refetch. Delete leaves the
+ * page, since there is nothing left to show.
+ *
+ * ## Chapters, for a co-author
+ *
+ * The story's creator and its members (web's `isMember`) manage the chapters
+ * from the Chapters section, as on web: add one — while the story is under
+ * its creator's tier limit, which the heading counts against — reorder them,
+ * and edit or delete any from the menu on its row. Web opens a preview of a
+ * chapter with edit and delete in its corner; here the row opens the chapter
+ * and the menu is the row's own button, so reading stays one tap.
  *
  * The codex, timeline and maps are fetched here as well as on their screens:
  * their counts are what make the three rows worth tapping, and the cache means
@@ -79,6 +120,7 @@ export default function StoryScreen() {
   const faces = useStoryFaces(data?.cast, codex.data?.characters);
   const [openFace, setOpenFace] = useState<StoryFace | null>(null);
   const [likersOpen, setLikersOpen] = useState(false);
+  const [sharing, setSharing] = useState(false);
   // Before the early return below: a hook cannot wait for the story to load.
   const reaction = useStoryReaction({
     id: storyId ?? null,
@@ -90,7 +132,168 @@ export default function StoryScreen() {
     () => [...(data?.events ?? [])].sort((a, b) => a.ordinal - b.ordinal),
     [data?.events],
   );
+
+  const api = useApi();
+  const queryClient = useQueryClient();
+  const { novelist, status } = useSession();
+  const canWrite =
+    status === "signed-in" && isStoryMember(data, novelist?.username);
+
+  /*
+   * How many chapters the story may hold is its creator's tier, whoever is
+   * writing: the viewer's own when they created it, otherwise read off the
+   * creator's profile — web's `creatorEventLimit`.
+   */
+  const creator = data?.createdBy?.username;
+  const ownStory = Boolean(creator) && creator === novelist?.username;
+  const creatorProfile = useQuery({
+    enabled: canWrite && !ownStory && Boolean(creator),
+    queryFn: async () => {
+      const result = await getNovelist(api, creator as string);
+      return result && !("message" in result) ? result : null;
+    },
+    queryKey: ["story-creator-tier", creator],
+    staleTime: 5 * 60 * 1000,
+  });
+  const chapterLimit = ownStory
+    ? (novelist?.tier?.eventLimit ?? null)
+    : (creatorProfile.data?.tier?.eventLimit ?? null);
+  const canAddChapter =
+    canWrite && chapterLimit != null && chapters.length < chapterLimit;
+
+  /** The chapter form: closed, a new chapter (`chapter: null`), or an edit. */
+  const [editing, setEditing] = useState<{
+    chapter: StoryBoardEvent | null;
+  } | null>(null);
+  const [reorderOpen, setReorderOpen] = useState(false);
+  /** Kept after the menu closes: the chosen item runs once the sheet is gone. */
+  const [menuFor, setMenuFor] = useState<StoryBoardEvent | null>(null);
+  const [menuVisible, setMenuVisible] = useState(false);
+
+  /** The header's `⋯`, and what it opens. */
+  const [storyMenu, setStoryMenu] = useState(false);
+  const [editingStory, setEditingStory] = useState(false);
+  const [membersOpen, setMembersOpen] = useState(false);
+  const write = useStoryWrite();
+
+  /** The story's chapters, rewritten in the cache the page draws from. */
+  const setChapters = useCallback(
+    (update: (events: StoryBoardEvent[]) => StoryBoardEvent[]) => {
+      if (!storyId) return;
+      queryClient.setQueryData<StoryBoard | null>(
+        queryKeys.story(storyId),
+        (current) =>
+          current ? { ...current, events: update(current.events) } : current,
+      );
+      // The timeline lists every chapter too, placed or not.
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.storyTimeline(storyId),
+      });
+    },
+    [queryClient, storyId],
+  );
+
+  const onChapterSaved = useCallback(
+    (saved: StoryBoardEvent) => {
+      setChapters((events) =>
+        events.some((event) => event.id === saved.id)
+          ? events.map((event) => (event.id === saved.id ? saved : event))
+          : [...events, saved],
+      );
+      if (saved.id) {
+        queryClient.setQueryData(queryKeys.storyChapter(saved.id), saved);
+      }
+    },
+    [queryClient, setChapters],
+  );
+
+  const confirmDelete = useCallback(
+    (chapter: StoryBoardEvent) => {
+      const id = chapter.id;
+      if (!id) return;
+      Alert.alert(
+        `Delete ${chapter.name}?`,
+        "This permanently removes the chapter and all of its passages.",
+        [
+          { style: "cancel", text: "Cancel" },
+          {
+            onPress: async () => {
+              const result = await deleteStoryBoardEvent(api, id).catch(
+                () => ({ message: API_MESSAGE.Error }),
+              );
+              if (result.message !== API_MESSAGE.Success) {
+                Alert.alert(
+                  "Could not delete",
+                  "The chapter was not deleted. Please try again.",
+                );
+                return;
+              }
+              setChapters((events) =>
+                events.filter((event) => event.id !== id),
+              );
+            },
+            style: "destructive",
+            text: "Delete",
+          },
+        ],
+      );
+    },
+    [api, setChapters],
+  );
   const authors = useMemo(() => storyAuthors(data), [data]);
+
+  const confirmDeleteStory = useCallback(() => {
+    if (!storyId || !data) return;
+    Alert.alert(
+      `Delete ${data.name}?`,
+      "This permanently removes the story, its chapters and all threads. Are you sure?",
+      [
+        { style: "cancel", text: "Cancel" },
+        {
+          onPress: async () => {
+            const ok = await write.deleteStory(storyId);
+            if (!ok) {
+              Alert.alert(
+                "Could not delete",
+                "The story was not deleted. Please try again.",
+              );
+              return;
+            }
+            router.back();
+          },
+          style: "destructive",
+          text: "Delete",
+        },
+      ],
+    );
+  }, [data, router, storyId, write]);
+
+  const confirmReportStory = useCallback(() => {
+    if (!storyId) return;
+    Alert.alert(
+      "Report this story?",
+      "We strive to maintain a safe and welcoming community. If you notice any misconduct, please report it. Our team will review the issue and take appropriate action as quickly as possible.",
+      [
+        { style: "cancel", text: "Cancel" },
+        {
+          onPress: async () => {
+            const result = await report(api, storyId, "", "STORY_BOARD").catch(
+              () => ({ message: API_MESSAGE.Error }),
+            );
+            const sent = result.message === API_MESSAGE.Success;
+            Alert.alert(
+              sent ? "Reported" : "Could not report",
+              sent
+                ? "Thank you. Our team will review this story."
+                : "The report was not sent. Please try again.",
+            );
+          },
+          style: "destructive",
+          text: "Report",
+        },
+      ],
+    );
+  }, [api, storyId]);
 
   const openChapter = (eventId: string) =>
     router.push({ params: { eventId }, pathname: "/story/chapter/[eventId]" });
@@ -112,7 +315,14 @@ export default function StoryScreen() {
     return (
       <View style={styles.fill}>
         <ListStatus
-          empty="This story was deleted, or it is private."
+          empty={
+            <EmptyScene
+              aside="(Or it is private, or the link is wrong. Stories do love an unreliable narrator.)"
+              scene="blank-storyboard"
+              subtitle="No cliffhanger, no epilogue, not even a sequel hook. The author shut the book and took the whole shelf along."
+              title="This story reached The End early"
+            />
+          }
           error={story.error}
           loading={story.isPending}
           onRetry={() => void story.refetch()}
@@ -139,7 +349,32 @@ export default function StoryScreen() {
 
   return (
     <View style={styles.fill}>
-      <Stack.Screen options={{ title: data.name }} />
+      <Stack.Screen
+        options={{
+          headerRight:
+            status === "signed-in"
+              ? () => (
+                  <Pressable
+                    accessibilityLabel="Story options"
+                    accessibilityRole="button"
+                    hitSlop={space.sm}
+                    onPress={() => setStoryMenu(true)}
+                    style={({ pressed }) => ({
+                      opacity: pressed ? 0.6 : 1,
+                      paddingHorizontal: space.md,
+                    })}
+                  >
+                    <Ionicons
+                      color={theme.text}
+                      name="ellipsis-horizontal"
+                      size={22}
+                    />
+                  </Pressable>
+                )
+              : undefined,
+          title: data.name,
+        }}
+      />
       <ScrollView
         contentContainerStyle={{ paddingBottom: insets.bottom + space.xl }}
         refreshControl={
@@ -283,6 +518,13 @@ export default function StoryScreen() {
             }
             onToggle={() => void reaction.toggle()}
           />
+          {/* Web's share, from its engagement row: the community tray. */}
+          <IconButton
+            accessibilityLabel="Share story"
+            icon="share-social-outline"
+            onPress={() => setSharing(true)}
+            tone="material"
+          />
         </View>
 
         <View style={styles.sections}>
@@ -408,6 +650,23 @@ export default function StoryScreen() {
               }
             />
             <SettingsRow
+              icon="people-outline"
+              label="Relationships"
+              onPress={() =>
+                router.push({
+                  params: { storyId },
+                  pathname: "/story/[storyId]/relationships",
+                })
+              }
+              subtitle={
+                codex.data
+                  ? codex.data.relationships.length === 0
+                    ? "Not mapped yet"
+                    : `${codex.data.relationships.length} ${codex.data.relationships.length === 1 ? "relationship" : "relationships"} · ${(codex.data.groups ?? []).length} ${(codex.data.groups ?? []).length === 1 ? "group" : "groups"}`
+                  : "How the characters stand toward each other"
+              }
+            />
+            <SettingsRow
               icon="git-branch-outline"
               label="Timelines"
               onPress={() =>
@@ -446,10 +705,34 @@ export default function StoryScreen() {
           <View style={styles.group}>
             <Text style={[styles.groupTitle, { color: theme.textGray }]}>
               {chapters.length === 0 ? "No chapters" : "Chapters"}
+              {canWrite && chapterLimit != null
+                ? ` (${chapters.length} / ${chapterLimit})`
+                : ""}
             </Text>
+            {canWrite && (canAddChapter || chapters.length > 1) ? (
+              <View style={styles.chapterActions}>
+                {canAddChapter ? (
+                  <PillButton
+                    icon="add"
+                    label="Add chapter"
+                    onPress={() => setEditing({ chapter: null })}
+                    tone="accent"
+                  />
+                ) : null}
+                {chapters.length > 1 ? (
+                  <PillButton
+                    icon="swap-vertical"
+                    label="Reorder"
+                    onPress={() => setReorderOpen(true)}
+                  />
+                ) : null}
+              </View>
+            ) : null}
             {chapters.length === 0 ? (
               <Text style={[styles.empty, { color: theme.textGray }]}>
-                This story hasn't been written yet.
+                {canWrite
+                  ? "No chapters yet. Add the first one and the story begins."
+                  : "This story hasn't been written yet."}
               </Text>
             ) : (
               chapters.map((chapter, index) => (
@@ -457,6 +740,14 @@ export default function StoryScreen() {
                   chapter={chapter}
                   key={chapter.id}
                   number={index + 1}
+                  onMenu={
+                    canWrite
+                      ? () => {
+                          setMenuFor(chapter);
+                          setMenuVisible(true);
+                        }
+                      : undefined
+                  }
                   onPress={() => chapter.id && openChapter(chapter.id)}
                 />
               ))
@@ -480,6 +771,116 @@ export default function StoryScreen() {
         onClose={() => setLikersOpen(false)}
         targetId={likersOpen && storyId ? storyId : null}
       />
+
+      <ShareStorySheet
+        onClose={() => setSharing(false)}
+        story={data}
+        visible={sharing}
+      />
+
+      <ActionMenu
+        items={[
+          {
+            icon: "create-outline",
+            label: "Edit chapter",
+            onSelect: () => {
+              if (menuFor) setEditing({ chapter: menuFor });
+            },
+          },
+          { separator: true },
+          {
+            icon: "trash-outline",
+            label: "Delete chapter",
+            onSelect: () => {
+              if (menuFor) confirmDelete(menuFor);
+            },
+            variant: "danger",
+          },
+        ]}
+        onClose={() => setMenuVisible(false)}
+        subtitle={menuFor?.name}
+        title="Chapter"
+        visible={menuVisible}
+      />
+
+      <ActionMenu
+        items={
+          canWrite
+            ? [
+                {
+                  icon: "create-outline",
+                  label: "Edit story",
+                  onSelect: () => setEditingStory(true),
+                },
+                {
+                  hint: `${data.members.length} ${data.members.length === 1 ? "member" : "members"}`,
+                  icon: "people-outline",
+                  label: "Members",
+                  onSelect: () => setMembersOpen(true),
+                },
+                ...(ownStory
+                  ? [
+                      { separator: true },
+                      {
+                        icon: "trash-outline" as const,
+                        label: "Delete story",
+                        onSelect: confirmDeleteStory,
+                        variant: "danger" as const,
+                      },
+                    ]
+                  : []),
+              ]
+            : [
+                {
+                  icon: "flag-outline",
+                  label: "Report story",
+                  onSelect: confirmReportStory,
+                  variant: "danger",
+                },
+              ]
+        }
+        onClose={() => setStoryMenu(false)}
+        subtitle={data.name}
+        title="Story"
+        visible={storyMenu}
+      />
+
+      {storyId ? (
+        <StoryMembersSheet
+          creatorUsername={data.createdBy?.username}
+          members={data.members}
+          onClose={() => setMembersOpen(false)}
+          onMembersChange={(members) => write.setMembers(storyId, members)}
+          storyId={storyId}
+          visible={membersOpen}
+        />
+      ) : null}
+
+      {editingStory ? (
+        <StoryEditor
+          onClose={() => setEditingStory(false)}
+          onDeleted={() => router.back()}
+          onSaved={() => undefined}
+          story={data}
+        />
+      ) : null}
+
+      <ReorderChaptersSheet
+        chapters={chapters}
+        onClose={() => setReorderOpen(false)}
+        onReordered={(events) => setChapters(() => events)}
+        storyId={storyId}
+        visible={reorderOpen}
+      />
+
+      {editing ? (
+        <ChapterEditor
+          chapter={editing.chapter}
+          onClose={() => setEditing(null)}
+          onSaved={onChapterSaved}
+          storyId={storyId}
+        />
+      ) : null}
     </View>
   );
 }
@@ -515,10 +916,13 @@ const Stat = ({
 const ChapterRow = ({
   chapter,
   number,
+  onMenu,
   onPress,
 }: {
   chapter: StoryBoardEvent;
   number: number;
+  /** Given to a co-author: opens this chapter's edit and delete. */
+  onMenu?: () => void;
   onPress: () => void;
 }) => {
   const theme = useAppTheme();
@@ -585,13 +989,31 @@ const ChapterRow = ({
           </Text>
         ) : null}
       </View>
-      <Ionicons color={theme.textGray} name="chevron-forward" size={16} />
+      {onMenu ? (
+        <IconButton
+          accessibilityLabel={`Options for ${chapter.name}`}
+          hitSlop={space.sm}
+          icon="ellipsis-horizontal"
+          iconSize={16}
+          onPress={onMenu}
+          size={32}
+          tone="quiet"
+        />
+      ) : (
+        <Ionicons color={theme.textGray} name="chevron-forward" size={16} />
+      )}
     </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
-  actions: { paddingHorizontal: space.m, paddingTop: space.xs },
+  actions: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: space.m,
+    paddingTop: space.xs,
+  },
   banner: { height: 180, left: 0, position: "absolute", right: 0, top: 0 },
   byline: { fontSize: fontSize.label },
   chapter: {
@@ -603,6 +1025,7 @@ const styles = StyleSheet.create({
     padding: space.sm,
     paddingRight: space.m,
   },
+  chapterActions: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
   chapterCover: {
     aspectRatio: 2 / 3,
     borderRadius: radius.md,

@@ -1,14 +1,13 @@
-import { Ionicons } from "@expo/vector-icons";
+
 import { messagePreview, REACTION_OPTIONS } from "@nw/chat";
 import { parseRichText, richTextToPlainText } from "@nw/richtext";
 import type { Message } from "@nw/types";
 import * as Clipboard from "expo-clipboard";
-import type { ComponentProps } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { Text } from "@/components/text";
+import { type ActionItem, ActionMenu } from "@/components/action-menu";
 import { MessageThumb, messageMediaOf } from "@/components/chat/message-media";
-import { BottomSheet } from "@/components/sheet";
-import { border, fontSize, radius, space, useAppTheme } from "@/theme";
+import { Text } from "@/components/text";
+import { fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * What a long press on a message offers.
@@ -67,22 +66,18 @@ export const mediaLabel = (
 /** The excerpt's thumbnail: big enough to tell one GIF from the next. */
 const THUMB_SIZE = 56;
 
-interface Action {
-  destructive?: boolean;
-  icon: ComponentProps<typeof Ionicons>["name"];
-  label: string;
-  onPress: () => void;
-}
-
 export const MessageActions = ({
   canReact,
   message,
   myReaction,
   onClose,
   onReact,
+  onDiscard,
   onReply,
   onRetry,
 }: {
+  /** Present for a message still waiting to be sent; removing it is final. */
+  onDiscard?: () => void;
   /** False while the socket is down: a reaction has no REST fallback. */
   canReact: boolean;
   /** Null closes the sheet. */
@@ -122,16 +117,21 @@ export const MessageActions = ({
     onClose();
   };
 
-  const actions: Action[] = message
+  const items: ActionItem[] = message
     ? [
-        {
-          icon: "arrow-undo-outline",
-          label: "Reply",
-          onPress: () => {
-            onReply(message);
-            onClose();
-          },
-        },
+        // A message still waiting to go out has no id to reply to.
+        ...(onDiscard
+          ? []
+          : [
+              {
+                icon: "arrow-undo-outline" as const,
+                label: "Reply",
+                onPress: () => {
+                  onReply(message);
+                  onClose();
+                },
+              },
+            ]),
         linkOnly
           ? { icon: "link-outline", label: "Copy link", onPress: copy }
           : { icon: "copy-outline", label: "Copy text", onPress: copy },
@@ -147,137 +147,108 @@ export const MessageActions = ({
               },
             ]
           : []),
+        ...(onDiscard
+          ? [
+              { separator: true },
+              {
+                icon: "trash-outline" as const,
+                label: "Don't send",
+                onPress: () => {
+                  onDiscard();
+                  onClose();
+                },
+                variant: "danger" as const,
+              },
+            ]
+          : []),
       ]
     : [];
 
   return (
-    <BottomSheet
-      maxHeightRatio={0.6}
+    <ActionMenu
+      items={items}
       onClose={onClose}
       title="Message"
       visible={message !== null}
     >
-      <View style={styles.body}>
-        {message ? (
-          <View
-            style={[
-              styles.excerpt,
-              {
-                backgroundColor: theme.material.fillTranslucent,
-                borderLeftColor: theme.accent.solid,
-              },
-            ]}
-          >
-            <MessageThumb message={message} size={THUMB_SIZE} />
-            <View style={styles.excerptText}>
-              <Text
-                numberOfLines={1}
-                style={[styles.excerptAuthor, { color: theme.accent.text }]}
-              >
-                {message.sender?.name || message.sender?.username}
-              </Text>
-              <Text
-                numberOfLines={2}
-                style={[styles.excerptBody, { color: theme.textGray }]}
-              >
-                {(media && preview.describes ? mediaLabel(media) : null) ||
-                  preview.text ||
-                  plain ||
-                  "Message"}
-              </Text>
-            </View>
-          </View>
-        ) : null}
-
-        {canReact && message ? (
-          <ScrollView
-            contentContainerStyle={styles.reactions}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-          >
-            {REACTIONS.map((option) => {
-              const active = option.key === myReaction;
-              return (
-                <Pressable
-                  accessibilityLabel={option.label}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: active }}
-                  key={option.key}
-                  // The **key** goes out, never the glyph: web draws its own
-                  // artwork from the key and would otherwise print the emoji
-                  // raw. See `@nw/chat/reactions`.
-                  onPress={() => {
-                    onReact(message, option.key);
-                    onClose();
-                  }}
-                  style={({ pressed }) => [
-                    styles.reaction,
-                    {
-                      backgroundColor: active
-                        ? theme.accent.tint
-                        : pressed
-                          ? theme.glass.fillPressed
-                          : theme.material.fillTranslucent,
-                      borderColor: active
-                        ? theme.accent.solid
-                        : theme.material.edgeTranslucent,
-                      borderWidth: active ? 1.5 : StyleSheet.hairlineWidth,
-                    },
-                  ]}
-                >
-                  <Text style={styles.reactionGlyph}>{option.emoji}</Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        ) : null}
-
-        {actions.map((action) => (
-          <Pressable
-            accessibilityRole="button"
-            key={action.label}
-            onPress={action.onPress}
-            style={({ pressed }) => [
-              styles.action,
-              {
-                backgroundColor: pressed
-                  ? theme.glass.fillPressed
-                  : theme.material.fillTranslucent,
-                borderColor: theme.material.edgeTranslucent,
-              },
-            ]}
-          >
-            <Ionicons
-              color={action.destructive ? theme.error : theme.text}
-              name={action.icon}
-              size={20}
-            />
+      {message ? (
+        <View
+          style={[
+            styles.excerpt,
+            {
+              backgroundColor: theme.material.fillTranslucent,
+              borderLeftColor: theme.accent.solid,
+            },
+          ]}
+        >
+          <MessageThumb message={message} size={THUMB_SIZE} />
+          <View style={styles.excerptText}>
             <Text
-              style={[
-                styles.actionLabel,
-                { color: action.destructive ? theme.error : theme.text },
-              ]}
+              numberOfLines={1}
+              style={[styles.excerptAuthor, { color: theme.accent.text }]}
             >
-              {action.label}
+              {message.sender?.name || message.sender?.username}
             </Text>
-          </Pressable>
-        ))}
-      </View>
-    </BottomSheet>
+            <Text
+              numberOfLines={2}
+              style={[styles.excerptBody, { color: theme.textGray }]}
+            >
+              {(media && preview.describes ? mediaLabel(media) : null) ||
+                preview.text ||
+                plain ||
+                "Message"}
+            </Text>
+          </View>
+        </View>
+      ) : null}
+
+      {canReact && message ? (
+        <ScrollView
+          contentContainerStyle={styles.reactions}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+        >
+          {REACTIONS.map((option) => {
+            const active = option.key === myReaction;
+            return (
+              <Pressable
+                accessibilityLabel={option.label}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+                key={option.key}
+                // The **key** goes out, never the glyph: web draws its own
+                // artwork from the key and would otherwise print the emoji
+                // raw. See `@nw/chat/reactions`.
+                onPress={() => {
+                  onReact(message, option.key);
+                  onClose();
+                }}
+                style={({ pressed }) => [
+                  styles.reaction,
+                  {
+                    backgroundColor: active
+                      ? theme.accent.tint
+                      : pressed
+                        ? theme.glass.fillPressed
+                        : theme.material.fillTranslucent,
+                    borderColor: active
+                      ? theme.accent.solid
+                      : theme.material.edgeTranslucent,
+                    borderWidth: active ? 1.5 : StyleSheet.hairlineWidth,
+                  },
+                ]}
+              >
+                <Text style={styles.reactionGlyph}>{option.emoji}</Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      ) : null}
+    </ActionMenu>
   );
 };
 
 const styles = StyleSheet.create({
-  action: {
-    alignItems: "center",
-    borderRadius: radius.md,
-    borderWidth: border.edge,
-    flexDirection: "row",
-    gap: space.sm,
-    padding: space.md,
-  },
-  actionLabel: { fontSize: fontSize.body, fontWeight: "600" },
-  body: { gap: space.sm, paddingBottom: space.md, paddingHorizontal: space.md },
   excerpt: {
     alignItems: "center",
     borderLeftWidth: 3,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useNotificationReadState } from "@nw/features";
+import { notificationSummary, useNotificationReadState } from "@nw/features";
 import { type FC, useCallback, useState } from "react";
 import { BsCheckAll } from "react-icons/bs";
 import {
@@ -9,7 +9,6 @@ import {
 } from "@/app/rp/novelists/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
-import { summaryFor } from "./kinds";
 import * as S from "./styled";
 
 type Props = {
@@ -39,7 +38,7 @@ export const NotificationHeader: FC<Props> = ({ unread, total }) => {
     <S.NotificationsHeaderRoot>
       <S.HeaderText>
         <S.NotificationsHeaderTitle>Notifications</S.NotificationsHeaderTitle>
-        <S.HeaderSummary>{summaryFor(unread, total)}</S.HeaderSummary>
+        <S.HeaderSummary>{notificationSummary(unread, total)}</S.HeaderSummary>
       </S.HeaderText>
       {unread > 0 && (
         <S.MarkAllButton

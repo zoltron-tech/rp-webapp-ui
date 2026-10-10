@@ -11,6 +11,21 @@
 export { ApiProvider, useApi } from "./api-context";
 export { ChatCryptoProvider, useChatCrypto } from "./chat/crypto-context";
 export {
+  INBOX_FILTERS,
+  type InboxFilter,
+  type InboxKind,
+  type InboxSection,
+  inboxGroupFaces,
+  inboxHue,
+  inboxKind,
+  inboxSections,
+  inboxSpeaker,
+  inboxSummary,
+  inboxThumbnail,
+  isLastMessageMine,
+  matchesInboxFilter,
+} from "./chat/inbox-kinds";
+export {
   type ChatLiveOptions,
   MESSAGES_PAGE_SIZE,
   useConversation,
@@ -35,14 +50,27 @@ export {
   useNovelistLeaderboard,
 } from "./leaderboard/use-novelist-leaderboard";
 export {
-  NOTIFICATIONS_PAGE_SIZE,
-  useNotifications,
-} from "./notifications/use-notifications";
+  isNotificationRequest,
+  matchesNotificationFilter,
+  NOTIFICATION_FILTERS,
+  type NotificationFilter,
+  type NotificationKind,
+  type NotificationSection,
+  notificationHue,
+  notificationKicker,
+  notificationKind,
+  notificationSections,
+  notificationSummary,
+} from "./notifications/kinds";
 export {
   isStoredNotification,
   useNotificationCounts,
   useNotificationReadState,
 } from "./notifications/use-notification-counts";
+export {
+  NOTIFICATIONS_PAGE_SIZE,
+  useNotifications,
+} from "./notifications/use-notifications";
 export {
   FRIENDS_PAGE_SIZE,
   useNovelistFriends,

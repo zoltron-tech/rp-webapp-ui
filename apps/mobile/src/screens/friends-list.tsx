@@ -1,3 +1,4 @@
+import { useGlobalState } from "@nw/store";
 import { useNovelistFriends } from "@nw/features";
 import type { Friend } from "@nw/types";
 import { FlashList } from "@shopify/flash-list";
@@ -7,6 +8,7 @@ import { StyleSheet, View } from "react-native";
 import { Text } from "@/components/text";
 import { EndOfList } from "@/components/end-of-list";
 import { NovelistRowSkeleton, SkeletonRows } from "@/components/list-skeletons";
+import { EmptyScene } from "@/components/empty-feed";
 import { ListStatus } from "@/components/list-status";
 import { NovelistRow, ROW_HEIGHT } from "@/components/novelist-row";
 import { useTrackOnline } from "@/context/socket";
@@ -96,6 +98,8 @@ export const FriendsList = ({ username }: { username: string }) => {
     refetch,
     trackedUsernames,
   } = useNovelistFriends(username);
+  // Whose list this is decides what the empty state says.
+  const own = useGlobalState("novelist")?.username === username;
 
   // The server answers only about usernames it has been asked for, so a face
   // that is not registered here renders offline whether or not it is.
@@ -137,7 +141,17 @@ export const FriendsList = ({ username }: { username: string }) => {
         keyExtractor={keyExtractor}
         ListEmptyComponent={
           <ListStatus
-            empty="No friends to show yet."
+            empty={
+              <EmptyScene
+                scene="no-friends"
+                subtitle={
+                  own
+                    ? "Novelists you connect with will show up here."
+                    : `${username} hasn't connected with anyone yet.`
+                }
+                title="No friends yet"
+              />
+            }
             error={error}
             loading={isPending}
             onRetry={refetch}

@@ -1,17 +1,24 @@
 import type { ApiClient } from "@nw/api";
-import { uploadMedia } from "@nw/api/endpoints/profile";
+import { requestPresignedUpload } from "@nw/api/endpoints/profile";
 import { API_MESSAGE } from "@nw/types";
+import * as FileSystem from "expo-file-system/legacy";
 import * as ImagePicker from "expo-image-picker";
 
 /**
  * Picking a file off the phone and getting it into storage, for the muse
  * editors.
  *
- * The same `POST /s3/upload` the post composer uses (`use-composer-media`),
- * because a picture attached to a character from a phone must land in the
- * same bucket under the same shape as one attached from a browser — the
- * backend deletes and replaces by URL, and two URL shapes would be two files
- * it cannot match.
+ * The presigned path web uses, because *where* the file lands is what the
+ * gallery is. A muse's gallery is not a list in the database: the service
+ * lists the bucket under `app-media/<account>/<muse>/`, which is the key a
+ * presigned upload with the muse id as its prefix produces. This used to go
+ * through `POST /s3/upload` instead, whose key is
+ * `<account>/uploads/temp…` — the upload succeeded, the activity feed said
+ * "uploaded a new video", and the gallery never showed it, because the file
+ * was in a folder the listing does not look at. The chat's attachments
+ * (`use-attachments`) take the same presigned route for the same reason;
+ * see there for why the body goes through `expo-file-system` and not
+ * `fetch`.
  */
 
 /** Web's muse editors: 10 MB for a picture, 30 MB for gallery media. */
@@ -23,12 +30,6 @@ export interface PickedMedia {
   fileSize: number;
   uri: string;
 }
-
-/** A React Native multipart file part, which the DOM `FormData` type lacks. */
-const filePart = (uri: string, type: string): Blob => {
-  const name = uri.split("/").pop() ?? "upload";
-  return { name, type, uri } as unknown as Blob;
-};
 
 const contentTypeOf = (asset: ImagePicker.ImagePickerAsset): string => {
   if (asset.mimeType) return asset.mimeType;
@@ -76,14 +77,25 @@ export const pickMedia = async (limit: number): Promise<PickedMedia[]> => {
 export const uploadFile = async (
   api: ApiClient,
   file: PickedMedia,
+  /** The folder under the account: a muse id for its gallery, as web sends. */
   prefix?: string,
 ): Promise<string | null> => {
-  const form = new FormData();
-  form.append("file", filePart(file.uri, file.contentType));
-  form.append("contentType", file.contentType);
-  if (prefix) form.append("prefix", prefix);
-  const result = await uploadMedia(api, form).catch(
-    () => API_MESSAGE.MediaError,
-  );
-  return result === API_MESSAGE.MediaError ? null : result;
+  try {
+    const presigned = await requestPresignedUpload(api, {
+      contentType: file.contentType,
+      mediaBucket: "APP_MEDIA",
+      prefix: prefix ?? null,
+    });
+    if (presigned === API_MESSAGE.MediaError) return null;
+
+    const result = await FileSystem.uploadAsync(presigned.uploadUrl, file.uri, {
+      headers: { "Content-Type": file.contentType },
+      httpMethod: presigned.method as "PUT" | "POST",
+      uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+    });
+    if (result.status < 200 || result.status >= 300) return null;
+    return presigned.fileUrl;
+  } catch {
+    return null;
+  }
 };

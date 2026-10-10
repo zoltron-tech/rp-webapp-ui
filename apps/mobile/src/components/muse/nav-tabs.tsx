@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import type { MuseNavItem } from "@nw/types";
 import { hasUsableCrop } from "@nw/utils";
 import { IMAGE_SIZES, wsrvImage } from "@nw/utils/image";
-import { Image } from "expo-image";
+import { Image } from "@/components/image";
 import { LinearGradient } from "expo-linear-gradient";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "@/components/text";

@@ -6,6 +6,7 @@ import { useRouter } from "expo-router";
 import { useCallback } from "react";
 import { REFRESH_HEADER } from "@/lib/api";
 import { forgetSession } from "@/lib/auth";
+import { wipeAllStores } from "@/lib/local-store";
 import { purgePersistedQueries } from "@/lib/query-persister";
 import { readRefreshToken } from "@/lib/session-store";
 
@@ -47,6 +48,9 @@ export const useSignOut = () => {
     crypto.reset();
     await forgetSession();
     await purgePersistedQueries();
+    // Every local database, not only this account's: a phone that has seen
+    // two accounts must not keep the first one's conversations for the third.
+    await wipeAllStores();
     router.replace("/novelists");
   }, [crypto, router]);
 

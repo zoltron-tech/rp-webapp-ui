@@ -19,7 +19,7 @@ import type { ConversationParticipant } from "@nw/types";
 import { pluralize, toFormattedDate } from "@nw/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -51,6 +51,9 @@ import { border, fontSize, radius, space, useAppTheme } from "@/theme";
  */
 
 const ROW_AVATAR = 40;
+
+const keyExtractor = (item: ConversationParticipant) =>
+  item.novelistId || item.userName;
 
 export default function ConversationDetailsScreen() {
   const theme = useAppTheme();
@@ -182,86 +185,28 @@ export default function ConversationDetailsScreen() {
       ],
     );
 
-  const openProfile = (username: string) => {
-    if (!username) return;
-    router.push({
-      params: { username },
-      pathname: "/(tabs)/(home)/novelist/[username]",
-    });
-  };
+  const openProfile = useCallback(
+    (username: string) => {
+      if (!username) return;
+      router.push({
+        params: { username },
+        pathname: "/(tabs)/(home)/novelist/[username]",
+      });
+    },
+    [router],
+  );
 
-  const renderMember = ({ item }: { item: ConversationParticipant }) => {
-    const name =
-      `${item.firstName} ${item.lastName ?? ""}`.trim() || item.userName;
-    const role = item.role?.toUpperCase();
-    const isMe = item.userName === novelist?.username;
-
-    return (
-      <Pressable
-        disabled={isMe}
-        onPress={() => openProfile(item.userName)}
-        style={({ pressed }) => [
-          styles.memberRow,
-          {
-            backgroundColor:
-              pressed && !isMe ? theme.material.fillPressed : theme.material.fill,
-            borderColor: theme.material.edge,
-          },
-        ]}
-      >
-        <Avatar
-          name={name}
-          size={ROW_AVATAR}
-          uri={item.image}
-          username={item.userName}
-        />
-
-        <View style={styles.memberText}>
-          <View style={styles.memberNameRow}>
-            <Text
-              numberOfLines={1}
-              style={[styles.memberName, { color: theme.text }]}
-            >
-              {name}
-            </Text>
-            {item.isVerified ? (
-              <Ionicons
-                color={theme.accent.text}
-                name="checkmark-circle"
-                size={14}
-              />
-            ) : null}
-            {role === "ADMIN" || role === "OWNER" ? (
-              <View
-                style={[
-                  styles.roleChip,
-                  {
-                    backgroundColor: theme.accent.tint,
-                    borderColor: theme.accent.surfaceHover,
-                  },
-                ]}
-              >
-                <Text style={[styles.roleLabel, { color: theme.accent.text }]}>
-                  {role === "OWNER" ? "Owner" : "Admin"}
-                </Text>
-              </View>
-            ) : null}
-          </View>
-          <Text
-            numberOfLines={1}
-            style={[styles.memberHandle, { color: theme.textGray }]}
-          >
-            @{item.userName}
-            {isMe ? " · you" : ""}
-          </Text>
-        </View>
-
-        {!isMe ? (
-          <Ionicons color={theme.textGray} name="chevron-forward" size={16} />
-        ) : null}
-      </Pressable>
-    );
-  };
+  const myUsername = novelist?.username;
+  const renderMember = useCallback(
+    ({ item }: { item: ConversationParticipant }) => (
+      <MemberRow
+        isMe={item.userName === myUsername}
+        member={item}
+        onOpen={openProfile}
+      />
+    ),
+    [myUsername, openProfile],
+  );
 
   const busy = leave.isPending || remove.isPending;
 
@@ -272,7 +217,7 @@ export default function ConversationDetailsScreen() {
       <FlatList
         contentContainerStyle={styles.content}
         data={members}
-        keyExtractor={(item) => item.novelistId || item.userName}
+        keyExtractor={keyExtractor}
         ListEmptyComponent={
           <ListStatus
             empty="No members to show."
@@ -483,6 +428,92 @@ export default function ConversationDetailsScreen() {
     </>
   );
 }
+
+/**
+ * One member. Memoised, with a callback that takes the username, so the
+ * screen's own state — the mute sheet opening, a mutation settling — redraws
+ * the footer and not every face in the list.
+ */
+const MemberRow = memo(function MemberRow({
+  isMe,
+  member,
+  onOpen,
+}: {
+  isMe: boolean;
+  member: ConversationParticipant;
+  onOpen: (username: string) => void;
+}) {
+  const theme = useAppTheme();
+  const name =
+    `${member.firstName} ${member.lastName ?? ""}`.trim() || member.userName;
+  const role = member.role?.toUpperCase();
+
+  return (
+    <Pressable
+      disabled={isMe}
+      onPress={() => onOpen(member.userName)}
+      style={({ pressed }) => [
+        styles.memberRow,
+        {
+          backgroundColor:
+            pressed && !isMe ? theme.material.fillPressed : theme.material.fill,
+          borderColor: theme.material.edge,
+        },
+      ]}
+    >
+      <Avatar
+        name={name}
+        size={ROW_AVATAR}
+        uri={member.image}
+        username={member.userName}
+      />
+
+      <View style={styles.memberText}>
+        <View style={styles.memberNameRow}>
+          <Text
+            numberOfLines={1}
+            style={[styles.memberName, { color: theme.text }]}
+          >
+            {name}
+          </Text>
+          {member.isVerified ? (
+            <Ionicons
+              color={theme.accent.text}
+              name="checkmark-circle"
+              size={14}
+            />
+          ) : null}
+          {role === "ADMIN" || role === "OWNER" ? (
+            <View
+              style={[
+                styles.roleChip,
+                {
+                  backgroundColor: theme.accent.tint,
+                  borderColor: theme.accent.surfaceHover,
+                },
+              ]}
+            >
+              <Text style={[styles.roleLabel, { color: theme.accent.text }]}>
+                {role === "OWNER" ? "Owner" : "Admin"}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+        <Text
+          numberOfLines={1}
+          style={[styles.memberHandle, { color: theme.textGray }]}
+        >
+          @{member.userName}
+          {isMe ? " · you" : ""}
+        </Text>
+      </View>
+
+      {!isMe ? (
+        <Ionicons color={theme.textGray} name="chevron-forward" size={16} />
+      ) : null}
+    </Pressable>
+  );
+});
 
 const styles = StyleSheet.create({
   content: { gap: space.sm, padding: space.md },

@@ -4,7 +4,7 @@ import { useSession } from "@nw/features";
 import type { Novelist } from "@nw/types";
 import * as Clipboard from "expo-clipboard";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { type ActionItem, ActionMenu } from "@/components/action-menu";
 import { ShareProfileSheet } from "@/components/share/share-profile-sheet";
@@ -69,7 +69,11 @@ const confirm = (
     { cancelable: true },
   );
 
-export const ProfileActions = ({ novelist }: { novelist: Novelist }) => {
+export const ProfileActions = memo(function ProfileActions({
+  novelist,
+}: {
+  novelist: Novelist;
+}) {
   const theme = useAppTheme();
   const router = useRouter();
   const session = useSession();
@@ -383,7 +387,7 @@ export const ProfileActions = ({ novelist }: { novelist: Novelist }) => {
       />
     </>
   );
-};
+});
 
 const styles = StyleSheet.create({
   button: {

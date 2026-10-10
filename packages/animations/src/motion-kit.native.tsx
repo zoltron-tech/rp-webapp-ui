@@ -4,6 +4,7 @@ import {
   type ReactNode,
   useContext,
   useEffect,
+  useMemo,
 } from "react";
 import { Animated } from "react-native";
 import type {
@@ -148,7 +149,15 @@ interface Clock {
 const clocks = new Map<string, Clock>();
 let ticker: ReturnType<typeof setInterval> | null = null;
 
-const clockKey = (period: number, delay: number) => `${period}:${delay}`;
+/**
+ * Clocks are shared by rhythm, and by scope. Two scenes on one screen that
+ * want different things — a shelf of crests held still under a tray with
+ * one crest moving — must not read one value: an element gated off keeps
+ * reading its clock (so that a scene turning off settles rather than snaps),
+ * and a clock the tray had started would carry the whole shelf with it.
+ */
+const clockKey = (period: number, delay: number, scope: string) =>
+  `${scope}:${period}:${delay}`;
 
 /** Where a clock is in its lap, 0–1, and which lap it is on. */
 const phase = (clock: Clock, now: number) => {
@@ -198,8 +207,12 @@ const startClock = (clock: Clock) => {
  * nothing. Starting and stopping is the effect's job, so a double-invoked render
  * cannot leave a timer running.
  */
-const valueFor = (period: number, delay: number): Animated.Value => {
-  const key = clockKey(period, delay);
+const valueFor = (
+  period: number,
+  delay: number,
+  scope: string,
+): Animated.Value => {
+  const key = clockKey(period, delay, scope);
   const existing = clocks.get(key);
   if (existing) return existing.value;
 
@@ -229,12 +242,13 @@ const useClock = (
   period: number | null,
   delay: number,
   active: boolean,
+  scope: string,
 ): Animated.Value | null => {
-  const value = period === null ? null : valueFor(period, delay);
+  const value = period === null ? null : valueFor(period, delay, scope);
 
   useEffect(() => {
     if (period === null) return;
-    const clock = clocks.get(clockKey(period, delay));
+    const clock = clocks.get(clockKey(period, delay, scope));
     if (!clock) return;
     clock.held += 1;
     return () => {
@@ -244,11 +258,11 @@ const useClock = (
       clock.running = false;
       clock.value.setValue(0);
     };
-  }, [delay, period]);
+  }, [delay, period, scope]);
 
   useEffect(() => {
     if (period === null || !active) return;
-    const clock = clocks.get(clockKey(period, delay));
+    const clock = clocks.get(clockKey(period, delay, scope));
     if (!clock) return;
     clock.active += 1;
     startClock(clock);
@@ -257,7 +271,7 @@ const useClock = (
       if (clock.active > 0) return;
       clock.windDownLap = phase(clock, Date.now()).lap;
     };
-  }, [active, delay, period]);
+  }, [active, delay, period, scope]);
 
   return value;
 };
@@ -290,26 +304,57 @@ export const stops = (clock: MotionClock, input: number[], output: number[]) =>
 /** The ceiling on an animated opacity — see `useMotion`. Invisible as a dimming. */
 const MAX_ANIMATED_OPACITY = 0.999;
 
-/** Whether the scene being drawn wants motion at all. Off by default. */
-const MotionContext = createContext(false);
+/** Whether the scene being drawn wants motion at all, and whose clocks it reads. Off by default. */
+const MotionContext = createContext<{ enabled: boolean; scope: string }>({
+  enabled: false,
+  scope: "",
+});
 
 export const MotionProvider = ({
   children,
   enabled,
+  scope = "",
 }: {
   children: ReactNode;
   enabled: boolean;
+  /**
+   * A scene of its own, with clocks of its own. Give one to a scene drawn
+   * over another that must hold still — a tray over a shelf — or the two
+   * share clocks and the still one moves with it.
+   */
+  scope?: string;
 }): ReactNode =>
-  createElement(MotionContext.Provider, { value: enabled }, children);
+  createElement(
+    MotionContext.Provider,
+    { value: useMemo(() => ({ enabled, scope }), [enabled, scope]) },
+    children,
+  );
+
+/** Whether a rhythm's clock is mid-lap right now. Safe to read in render. */
+const isClockRunning = (period: number, delay: number, scope: string) =>
+  clocks.get(clockKey(period, delay, scope))?.running === true;
 
 /**
  * The animated props for one element, or `null` to draw it as it is.
  *
  * Always runs the same hooks, whatever the class name, because it is called
  * from inside every SVG primitive these packages draw with.
+ *
+ * ## A still part is a plain element
+ *
+ * The first version built the animated props whenever the class name had a
+ * rhythm, moving or not: a crest held still on the badge shelf was still
+ * four or five `Animated` groups, each with its interpolations attached to a
+ * clock that never ran — and built again on every render, since nothing
+ * remembered them. Twelve still crests was sixty animated groups for nothing
+ * to move. Now a part whose scene is off, and whose clock is not mid-lap,
+ * draws as the plain element it is; the clock's rest pose is `t = 0`, which
+ * is exactly how the artwork is drawn. A scene switching off mid-lap keeps
+ * its wrapper, so the clock finishes the lap on it and the part settles
+ * rather than snaps.
  */
 export const useMotion = (className?: string): MotionProps | null => {
-  const enabled = useContext(MotionContext);
+  const { enabled, scope } = useContext(MotionContext);
   const rhythm: MotionRhythm | undefined = className
     ? TABLE[className]
     : undefined;
@@ -321,35 +366,51 @@ export const useMotion = (className?: string): MotionProps | null => {
     rhythm ? rhythm.period : null,
     rhythm?.delay ?? 0,
     enabled,
+    scope,
   );
 
-  if (!rhythm || !clock) return null;
-  // A rhythm with a rest pose of its own is one whose lap does not start
-  // there; gated off, it is drawn at rest as before.
-  if (!enabled && rhythm.rest) return rhythm.rest;
-
-  const props = rhythm.build(clock);
-  if (props.opacity === undefined) return props;
-
   /*
-   * An animated opacity is never allowed to land on exactly 1.
-   *
-   * `react-native-svg` on Android draws a group at any other opacity through a
-   * layer canvas of its own, and at exactly 1 it borrows the canvas it was
-   * handed — then, the next time it fades, rebinds *that* canvas to its layer
-   * bitmap. When the borrowed canvas was a faded ancestor's layer, the
-   * ancestor's save stack is gone and its restore throws `Underflow in restore
-   * - more restores than saves`, which takes the app down. A pulse that peaks
-   * at 1 walks straight into it. Held a hair below, the group keeps its own
-   * layer for life and there is nothing to rebind.
+   * Built once per rhythm and clock, not once per render. The interpolations
+   * are `Animated` nodes that attach to the clock; a fresh set each render
+   * meant the old set detaching and the new one attaching, for every moving
+   * part, on every re-render of the scene.
    */
-  return {
-    ...props,
-    opacity: (
-      props.opacity as Animated.AnimatedInterpolation<number>
-    ).interpolate({
-      inputRange: [0, 1],
-      outputRange: [0, MAX_ANIMATED_OPACITY],
-    }),
-  };
+  const props = useMemo<MotionProps | null>(() => {
+    if (!rhythm || !clock) return null;
+    const built = rhythm.build(clock);
+    if (built.opacity === undefined) return built;
+
+    /*
+     * An animated opacity is never allowed to land on exactly 1.
+     *
+     * `react-native-svg` on Android draws a group at any other opacity through
+     * a layer canvas of its own, and at exactly 1 it borrows the canvas it was
+     * handed — then, the next time it fades, rebinds *that* canvas to its
+     * layer bitmap. When the borrowed canvas was a faded ancestor's layer, the
+     * ancestor's save stack is gone and its restore throws `Underflow in
+     * restore - more restores than saves`, which takes the app down. A pulse
+     * that peaks at 1 walks straight into it. Held a hair below, the group
+     * keeps its own layer for life and there is nothing to rebind.
+     */
+    return {
+      ...built,
+      opacity: (
+        built.opacity as Animated.AnimatedInterpolation<number>
+      ).interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, MAX_ANIMATED_OPACITY],
+      }),
+    };
+  }, [clock, rhythm]);
+
+  if (!rhythm || !clock) return null;
+  if (!enabled) {
+    // A rhythm with a rest pose of its own is one whose lap does not start
+    // there; gated off, it is drawn at rest as before.
+    if (rhythm.rest) return rhythm.rest;
+    // Nothing moving and nothing winding down: the plain element, at rest.
+    if (!isClockRunning(rhythm.period, rhythm.delay, scope)) return null;
+  }
+
+  return props;
 };

@@ -2,10 +2,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { getMyBadges, syncMyBadges } from "@nw/api/endpoints/badges";
 import { queryKeys, useApi } from "@nw/features";
 import type { Badge } from "@nw/types/badge";
-import { toFormattedDate } from "@nw/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
+import { BadgeDetailSheet } from "@/components/badge-detail-sheet";
 import { BadgeCrest } from "@/components/badges";
 import { BadgeShelfSkeleton } from "@/components/list-skeletons";
 import { ListStatus } from "@/components/list-status";
@@ -38,11 +38,20 @@ import { border, fontSize, radius, space, useAppTheme } from "@/theme";
  * badge.
  */
 
-/** Two across. Three at 375pt leaves each crest too small to be worth drawing. */
-const COLUMNS = 2;
+/**
+ * Three across. The tile is the crest and its name and nothing else, so three
+ * fit at 375pt with room to spare; what each one means, and what earns it,
+ * is in the tray a tap opens.
+ */
+const COLUMNS = 3;
 
-/** Big enough to be artwork rather than an icon, and to clear DETAIL_THRESHOLD. */
-const CREST = 76;
+/** Clears DETAIL_THRESHOLD, so it is the artwork rather than a coloured disc. */
+const CREST = 64;
+
+/** One empty list, so "no data yet" is not a new array on every render. */
+const NO_BADGES: Badge[] = [];
+
+const keyExtractor = (item: Badge) => item.code;
 
 export const BadgeShelf = () => {
   const theme = useAppTheme();
@@ -63,15 +72,20 @@ export const BadgeShelf = () => {
     },
   });
 
-  const badges = query.data ?? [];
+  const badges = query.data ?? NO_BADGES;
 
   const earned = useMemo(
     () => badges.filter((badge) => badge.earned).length,
     [badges],
   );
 
+  /** The badge the tray is open on. */
+  const [selected, setSelected] = useState<Badge | null>(null);
+
   const renderItem = useCallback(
-    ({ item }: { item: Badge }) => <BadgeTile badge={item} />,
+    ({ item }: { item: Badge }) => (
+      <BadgeTile badge={item} onPress={setSelected} />
+    ),
     [],
   );
 
@@ -85,7 +99,7 @@ export const BadgeShelf = () => {
         columnWrapperStyle={styles.column}
         contentContainerStyle={contentStyle}
         data={badges}
-        keyExtractor={(item) => item.code}
+        keyExtractor={keyExtractor}
         ListEmptyComponent={
           <ListStatus
             empty="No badges to show."
@@ -132,54 +146,58 @@ export const BadgeShelf = () => {
             </View>
           ) : null
         }
-        // Twelve tiles at 76pt crests: only the rows near the viewport are
-        // mounted, so a crest below the fold is not drawn (or bursting)
-        // for a shelf that opens on the top six.
-        maxToRenderPerBatch={4}
+        maxToRenderPerBatch={6}
         numColumns={COLUMNS}
         renderItem={renderItem}
         windowSize={3}
       />
+
+      <BadgeDetailSheet badge={selected} onClose={() => setSelected(null)} />
     </View>
   );
 };
 
 /**
- * One badge on the shelf.
+ * One badge on the shelf: the crest, held still, and its name.
  *
- * A locked badge draws the same crest drained of colour rather than a padlock
- * or a gap — `muted` is what the artwork was built for, and the point of it is
- * that the badge you are working towards is recognisably the one you get. Its
- * requirement replaces the description, because "what earns this" is the only
- * question a locked badge raises.
+ * Still on purpose. Each crest is a drawing of a few hundred SVG nodes, and
+ * twelve of them bursting into motion as the screen opened is what made it
+ * crawl on a phone; the motion is in the tray a tap opens, one crest at a
+ * time. A locked badge draws the same crest drained of colour rather than a
+ * padlock or a gap — `muted` is what the artwork was built for, and the
+ * point of it is that the badge you are working towards is recognisably the
+ * one you get.
  */
-const BadgeTile = ({ badge }: { badge: Badge }) => {
+const BadgeTile = memo(function BadgeTile({
+  badge,
+  onPress,
+}: {
+  badge: Badge;
+  onPress: (badge: Badge) => void;
+}) {
   const theme = useAppTheme();
   const locked = !badge.earned;
 
   return (
-    <View
-      style={[
+    <Pressable
+      accessibilityHint="Shows what the badge means and how it is earned"
+      accessibilityLabel={`${badge.title}${locked ? ", not earned yet" : ""}`}
+      accessibilityRole="button"
+      onPress={() => onPress(badge)}
+      style={({ pressed }) => [
         styles.tile,
         {
-          backgroundColor: theme.material.fill,
-          borderColor: locked
-            ? theme.material.edge
-            : theme.accent.surfaceHover,
+          backgroundColor: pressed
+            ? theme.material.fillPressed
+            : theme.material.fill,
+          borderColor: locked ? theme.material.edge : theme.accent.surfaceHover,
         },
       ]}
     >
-      {/*
-        Locked crests hold still. Motion is what says "this is yours" on a
-        shelf where most of the tiles are grey, and a locked badge breathing
-        alongside an earned one says the opposite. An earned one moves for a
-        moment as it comes on screen and settles; tapping it plays it again.
-      */}
       <BadgeCrest
-        animated={!locked}
+        animated={false}
         code={badge.code}
         muted={locked}
-        replayOnPress
         size={CREST}
       />
 
@@ -189,26 +207,12 @@ const BadgeTile = ({ badge }: { badge: Badge }) => {
       >
         {badge.title}
       </Text>
-
-      <Text numberOfLines={3} style={[styles.body, { color: theme.textGray }]}>
-        {locked ? badge.requirement : badge.description}
-      </Text>
-
-      {badge.earned && badge.awardedAt ? (
-        <Text style={[styles.awarded, { color: theme.accent.text }]}>
-          {toFormattedDate(badge.awardedAt)}
-        </Text>
-      ) : (
-        <Text style={[styles.awarded, { color: theme.textGray }]}>Locked</Text>
-      )}
-    </View>
+    </Pressable>
   );
-};
+});
 
 const styles = StyleSheet.create({
-  awarded: { fontSize: fontSize.meta, fontWeight: "700" },
-  body: { fontSize: fontSize.caption, lineHeight: 16, textAlign: "center" },
-  column: { gap: space.ms },
+  column: { gap: space.sm },
   content: { gap: space.ms, padding: space.md },
   count: { fontSize: fontSize.body, fontWeight: "700" },
   fill: { flex: 1 },
@@ -234,7 +238,13 @@ const styles = StyleSheet.create({
     borderWidth: border.edge,
     flex: 1,
     gap: space.s,
-    padding: space.m,
+    paddingHorizontal: space.xs,
+    paddingVertical: space.ms,
   },
-  title: { fontSize: fontSize.label, fontWeight: "700", textAlign: "center" },
+  title: {
+    fontSize: fontSize.caption,
+    fontWeight: "700",
+    lineHeight: 16,
+    textAlign: "center",
+  },
 });

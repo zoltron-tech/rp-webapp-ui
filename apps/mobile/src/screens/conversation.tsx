@@ -114,6 +114,8 @@ const RUN_GAP_MS = 10 * 60 * 1000;
 /** How far up the thread you must be before the jump button appears. */
 const JUMP_THRESHOLD = 320;
 
+const keyExtractor = (item: Row) => item.message.id;
+
 export const ConversationScreen = ({
   conversationId,
   onBeginLeave,
@@ -606,6 +608,7 @@ export const ConversationScreen = ({
     setViewer((current) => (current ? { ...current, index } : current));
   }, []);
   const closeViewer = useCallback(() => setViewer(null), []);
+  const cancelReply = useCallback(() => setReplyingTo(null), []);
 
   const renderItem = useCallback(
     ({ item }: { item: Row }) => (
@@ -749,7 +752,7 @@ export const ConversationScreen = ({
                 ]}
                 data={rows}
                 inverted
-                keyExtractor={(item) => item.message.id}
+                keyExtractor={keyExtractor}
                 ListEmptyComponent={
                   /*
                    * No counter-transform here. `VirtualizedList` already composes its
@@ -877,7 +880,7 @@ export const ConversationScreen = ({
 
           <Composer
             conversationId={conversationId}
-            onCancelReply={() => setReplyingTo(null)}
+            onCancelReply={cancelReply}
             onInsetChange={setBottomInset}
             onSelectSender={selectSender}
             onSend={submit}

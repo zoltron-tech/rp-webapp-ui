@@ -6,7 +6,7 @@ import type { Fandom, Friend, Muse, Novelist } from "@nw/types";
 import { mainVerseMuses, toFormattedDate } from "@nw/utils";
 import { IMAGE_SIZES, wsrvImage } from "@nw/utils/image";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import {
   Animated,
   InteractionManager,
@@ -261,24 +261,42 @@ export const NovelistProfile = ({
   // scroll handlers are combined below. See `animation/effects`.
   const stretch = useBannerStretch(tabBarScroll.onScroll);
 
+  /*
+   * Everything below is derived from the novelist and nothing else, and the
+   * page re-renders far more often than the novelist changes: every scroll
+   * start and end flips `scrolling`, and every one of those renders used to
+   * rebuild the proxy URLs, re-slice the lists and hand every block below a
+   * fresh callback. Memoised on the novelist, a scroll re-renders the hero
+   * and the crests — the parts that read `scrolling` — and leaves the rest.
+   */
   const hasBanner = Boolean(novelist.banner?.src);
-  const bannerUri = hasBanner
-    ? wsrvImage(
-        novelist.banner?.src,
-        isGifUrl(novelist.banner?.src)
-          ? ANIMATED_BANNER
-          : IMAGE_SIZES.BANNER_LARGE,
-      )
-    : novelist.image && !novelist.image.endsWith(".gif")
-      ? wsrvImage(novelist.image, BANNER_STANDIN)
-      : "";
-  const avatarUri = wsrvImage(
-    novelist.avatar?.src ?? novelist.image,
-    PROFILE_AVATAR,
+  const bannerUri = useMemo(
+    () =>
+      hasBanner
+        ? wsrvImage(
+            novelist.banner?.src,
+            isGifUrl(novelist.banner?.src)
+              ? ANIMATED_BANNER
+              : IMAGE_SIZES.BANNER_LARGE,
+          )
+        : novelist.image && !novelist.image.endsWith(".gif")
+          ? wsrvImage(novelist.image, BANNER_STANDIN)
+          : "",
+    [hasBanner, novelist.banner?.src, novelist.image],
+  );
+  const avatarUri = useMemo(
+    () => wsrvImage(novelist.avatar?.src ?? novelist.image, PROFILE_AVATAR),
+    [novelist.avatar?.src, novelist.image],
   );
   const noteColor = asColor(novelist.note?.color);
-  const muses = mainVerseMuses(novelist.muses).slice(0, MUSE_PREVIEW_COUNT);
-  const friends = (novelist.friends ?? []).slice(0, FRIEND_STACK_COUNT);
+  const muses = useMemo(
+    () => mainVerseMuses(novelist.muses).slice(0, MUSE_PREVIEW_COUNT),
+    [novelist.muses],
+  );
+  const friends = useMemo(
+    () => (novelist.friends ?? []).slice(0, FRIEND_STACK_COUNT),
+    [novelist.friends],
+  );
   const isOwnProfile = session.novelist?.username === novelist.username;
   // Support is not playing: no XP chip, no crests, whoever is looking.
   const isSupport = isSupportNovelist(novelist.username);
@@ -290,29 +308,58 @@ export const NovelistProfile = ({
    * Home stack lit Home while you were looking at your own page, which is the
    * tab bar disagreeing with the screen above it.
    */
-  const openFriends = () =>
-    isOwnProfile
-      ? router.push("/(tabs)/(profile)/friends")
-      : router.push({
-          params: { username: novelist.username },
-          pathname: "/novelist/[username]/friends",
-        });
+  const openFriends = useCallback(
+    () =>
+      isOwnProfile
+        ? router.push("/(tabs)/(profile)/friends")
+        : router.push({
+            params: { username: novelist.username },
+            pathname: "/novelist/[username]/friends",
+          }),
+    [isOwnProfile, novelist.username, router],
+  );
 
-  const openMuses = () =>
-    isOwnProfile
-      ? router.push("/(tabs)/(profile)/muses")
-      : router.push({
-          params: { username: novelist.username },
-          pathname: "/novelist/[username]/muses",
-        });
+  const openMuses = useCallback(
+    () =>
+      isOwnProfile
+        ? router.push("/(tabs)/(profile)/muses")
+        : router.push({
+            params: { username: novelist.username },
+            pathname: "/novelist/[username]/muses",
+          }),
+    [isOwnProfile, novelist.username, router],
+  );
 
-  const openStories = () =>
-    isOwnProfile
-      ? router.push("/(tabs)/(profile)/stories")
-      : router.push({
-          params: { username: novelist.username },
-          pathname: "/novelist/[username]/stories",
-        });
+  const openStories = useCallback(
+    () =>
+      isOwnProfile
+        ? router.push("/(tabs)/(profile)/stories")
+        : router.push({
+            params: { username: novelist.username },
+            pathname: "/novelist/[username]/stories",
+          }),
+    [isOwnProfile, novelist.username, router],
+  );
+
+  /** A character's own page, or the list when the row has no id to open. */
+  const openMuse = useCallback(
+    (muse: Muse) =>
+      muse.id
+        ? router.push({
+            params: { museId: muse.id },
+            pathname: "/muse/[museId]",
+          })
+        : openMuses(),
+    [openMuses, router],
+  );
+
+  const openBadges = useCallback(
+    () =>
+      isOwnProfile
+        ? router.push("/(tabs)/(profile)/badges")
+        : setBadgesOpen(true),
+    [isOwnProfile, router],
+  );
 
   /*
    * The three feeds, which differ only in where they land.
@@ -323,13 +370,19 @@ export const NovelistProfile = ({
    * have to do from the handle. The activity endpoint takes the handle and
    * ignores the extra.
    */
-  const openFeed = (feed: "activity" | "prompts" | "posts") =>
-    isOwnProfile
-      ? router.push(`/(tabs)/(profile)/${feed}`)
-      : router.push({
-          params: { novelistId: novelist.id, username: novelist.username },
-          pathname: `/novelist/[username]/${feed}`,
-        });
+  const openFeed = useCallback(
+    (feed: "activity" | "prompts" | "posts") =>
+      isOwnProfile
+        ? router.push(`/(tabs)/(profile)/${feed}`)
+        : router.push({
+            params: { novelistId: novelist.id, username: novelist.username },
+            pathname: `/novelist/[username]/${feed}`,
+          }),
+    [isOwnProfile, novelist.id, novelist.username, router],
+  );
+  const openActivity = useCallback(() => openFeed("activity"), [openFeed]);
+  const openPrompts = useCallback(() => openFeed("prompts"), [openFeed]);
+  const openPosts = useCallback(() => openFeed("posts"), [openFeed]);
 
   /*
    * People you both know.
@@ -344,6 +397,10 @@ export const NovelistProfile = ({
     const mine = new Set((session.novelist?.friends ?? []).map((f) => f.id));
     return (novelist.friends ?? []).filter((friend) => mine.has(friend.id));
   }, [isOwnProfile, novelist.friends, session.novelist?.friends]);
+  const mutualPreview = useMemo(
+    () => mutualFriends.slice(0, MUTUAL_PREVIEW_COUNT),
+    [mutualFriends],
+  );
 
   const fandoms = novelist.fandoms ?? [];
   const visibleFandoms = showAllFandoms
@@ -525,11 +582,7 @@ export const NovelistProfile = ({
               <BadgeRow
                 animated={crestsAnimated}
                 badges={isSupport ? undefined : novelist.badges}
-                onPress={
-                  isOwnProfile
-                    ? () => router.push("/(tabs)/(profile)/badges")
-                    : () => setBadgesOpen(true)
-                }
+                onPress={openBadges}
                 size={34}
               />
             </View>
@@ -564,7 +617,7 @@ export const NovelistProfile = ({
               <AvatarStack
                 avatar={22}
                 overlap={-8}
-                people={mutualFriends.slice(0, MUTUAL_PREVIEW_COUNT)}
+                people={mutualPreview}
                 ring={theme.background}
               />
               <Text style={[styles.statText, { color: theme.textGray }]}>
@@ -666,14 +719,7 @@ export const NovelistProfile = ({
                   key={muse.id ?? muse.firstName}
                   last={index === muses.length - 1}
                   muse={muse}
-                  onPress={() =>
-                    muse.id
-                      ? router.push({
-                          params: { museId: muse.id },
-                          pathname: "/muse/[museId]",
-                        })
-                      : openMuses()
-                  }
+                  onPress={openMuse}
                 />
               ))}
             </View>
@@ -751,7 +797,7 @@ export const NovelistProfile = ({
               hint="Everything they have done lately"
               icon="pulse-outline"
               label={isOwnProfile ? "Your updates" : "Recent updates"}
-              onPress={() => openFeed("activity")}
+              onPress={openActivity}
             />
 
             {/*
@@ -765,14 +811,14 @@ export const NovelistProfile = ({
               hint="Written by their characters"
               icon="chatbubbles-outline"
               label="Prompts"
-              onPress={() => openFeed("prompts")}
+              onPress={openPrompts}
             />
 
             <FeedRow
               hint="Written as themselves"
               icon="document-text-outline"
               label="OOC posts"
-              onPress={() => openFeed("posts")}
+              onPress={openPosts}
             />
 
             <FeedRow
@@ -813,7 +859,7 @@ export const NovelistProfile = ({
  * which from the nouns alone — the distinction is *who is speaking*, and that
  * is what the second line says.
  */
-const FeedRow = ({
+const FeedRow = memo(function FeedRow({
   hint,
   icon,
   label,
@@ -826,7 +872,7 @@ const FeedRow = ({
   /** The last row draws no divider under it. */
   last?: boolean;
   onPress: () => void;
-}) => {
+}) {
   const theme = useAppTheme();
 
   return (
@@ -856,7 +902,7 @@ const FeedRow = ({
       <Ionicons color={theme.textGray} name="chevron-forward" size={18} />
     </Pressable>
   );
-};
+});
 
 /**
  * Faces in a row, overlapping.
@@ -866,7 +912,7 @@ const FeedRow = ({
  * behind it, which is what stops a row of circles reading as a smear. Shared so
  * the two cannot drift.
  */
-const AvatarStack = ({
+const AvatarStack = memo(function AvatarStack({
   avatar,
   overlap,
   people,
@@ -877,32 +923,34 @@ const AvatarStack = ({
   overlap: number;
   people: Friend[];
   ring: string;
-}) => (
-  <View style={styles.stack}>
-    {people.map((person, index) => (
-      <View
-        key={person.id}
-        style={{
-          borderColor: ring,
-          borderRadius: (avatar + 4) / 2,
-          borderWidth: 2,
-          marginLeft: index === 0 ? 0 : overlap,
-        }}
-      >
-        <Avatar
-          image={person.avatar}
-          name={person.firstName}
-          size={avatar}
-          // The payload carries originals here — see `PROFILE_AVATAR`.
-          uri={wsrvImage(person.avatar?.src ?? person.image, SMALL_FACE)}
-        />
-      </View>
-    ))}
-  </View>
-);
+}) {
+  return (
+    <View style={styles.stack}>
+      {people.map((person, index) => (
+        <View
+          key={person.id}
+          style={{
+            borderColor: ring,
+            borderRadius: (avatar + 4) / 2,
+            borderWidth: 2,
+            marginLeft: index === 0 ? 0 : overlap,
+          }}
+        >
+          <Avatar
+            image={person.avatar}
+            name={person.firstName}
+            size={avatar}
+            // The payload carries originals here — see `PROFILE_AVATAR`.
+            uri={wsrvImage(person.avatar?.src ?? person.image, SMALL_FACE)}
+          />
+        </View>
+      ))}
+    </View>
+  );
+});
 
 /** Web's `ProfileFandomChip`: a dot in the fandom's colour, in a wash of it. */
-const FandomChip = ({ fandom }: { fandom: Fandom }) => {
+const FandomChip = memo(function FandomChip({ fandom }: { fandom: Fandom }) {
   const theme = useAppTheme();
   const color = asColor(fandom.color) ?? theme.accent.surface;
 
@@ -922,10 +970,14 @@ const FandomChip = ({ fandom }: { fandom: Fandom }) => {
       </Text>
     </View>
   );
-};
+});
 
 /** Web's `MuseSectionHeader`: a label, then a rule filling the rest of the row. */
-const SectionHeader = ({ label }: { label: string }) => {
+const SectionHeader = memo(function SectionHeader({
+  label,
+}: {
+  label: string;
+}) {
   const theme = useAppTheme();
 
   return (
@@ -936,7 +988,7 @@ const SectionHeader = ({ label }: { label: string }) => {
       <View style={[styles.rule, { backgroundColor: theme.material.edge }]} />
     </View>
   );
-};
+});
 
 /**
  * Web's `SeeMoreLink`: a pill centred between two rules.
@@ -945,7 +997,7 @@ const SectionHeader = ({ label }: { label: string }) => {
  * where it belongs — it is the end of the three you were shown, not a control
  * that governs them.
  */
-const SeeMore = ({
+const SeeMore = memo(function SeeMore({
   icon,
   label,
   onPress,
@@ -953,7 +1005,7 @@ const SeeMore = ({
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   onPress: () => void;
-}) => {
+}) {
   const theme = useAppTheme();
 
   return (
@@ -981,7 +1033,7 @@ const SeeMore = ({
       <View style={[styles.rule, { backgroundColor: theme.material.edge }]} />
     </View>
   );
-};
+});
 
 /**
  * Web's `MuseListItem`.
@@ -991,15 +1043,16 @@ const SeeMore = ({
  * text. The chip is the row's only colour and it is what makes a list of
  * characters scannable by the world they belong to.
  */
-const MuseRow = ({
+const MuseRow = memo(function MuseRow({
   last,
   muse,
   onPress,
 }: {
   last: boolean;
   muse: Muse;
-  onPress: () => void;
-}) => {
+  /** Takes the character, so the list holds one callback for every row. */
+  onPress: (muse: Muse) => void;
+}) {
   const theme = useAppTheme();
   const chipColor = asColor(muse.fandom?.color) ?? theme.material.edge;
 
@@ -1007,7 +1060,7 @@ const MuseRow = ({
     <Pressable
       accessibilityLabel={fullName(muse)}
       accessibilityRole="button"
-      onPress={onPress}
+      onPress={() => onPress(muse)}
       style={({ pressed }) => [
         styles.museRow,
         {
@@ -1049,7 +1102,7 @@ const MuseRow = ({
       <Ionicons color={theme.textGray} name="chevron-forward" size={18} />
     </Pressable>
   );
-};
+});
 
 const styles = StyleSheet.create({
   about: {

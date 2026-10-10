@@ -152,7 +152,16 @@ export const Meta = styled.div`
 export const DotSlot = styled.span`
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
   height: 17px;
+`;
+
+/** A conversation that will not push or buzz. */
+export const MutedMark = styled.span`
+  display: inline-flex;
+  color: var(--text-secondary);
+  line-height: 0;
 `;
 
 export const Timestamp = styled.time`

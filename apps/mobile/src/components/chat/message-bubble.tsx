@@ -262,7 +262,9 @@ const PersonaTag = ({
         styles.persona,
         {
           alignSelf: mine ? "flex-end" : "flex-start",
-          backgroundColor: mine ? theme.accent.tint : theme.material.fillPressed,
+          backgroundColor: mine
+            ? theme.accent.tint
+            : theme.material.fillPressed,
           borderColor: mine ? theme.accent.surfaceHover : theme.material.edge,
         },
       ]}
@@ -368,11 +370,7 @@ const MessageBubbleComponent = ({
   // The clock earns its line only at the end of a run, or when something has
   // gone wrong and the row is saying so instead.
   const showMeta =
-    failed ||
-    pending ||
-    queued ||
-    position === "last" ||
-    position === "single";
+    failed || pending || queued || position === "last" || position === "single";
 
   /** The quoted message as a line of words, never as its markup or its URL. */
   const quote = reply ? messagePreview(reply, "noun") : null;
@@ -426,10 +424,18 @@ const MessageBubbleComponent = ({
   const travelled = useRef(0);
   const lastTap = useRef(0);
 
+  /*
+   * What the responder reads. It is created once, on mount, so without this
+   * it kept the first render's `message` — and the reply it fired quoted
+   * the message as it was before its reactions and read receipt landed.
+   */
+  const latest = useRef({ message, onReply });
+  latest.current = { message, onReply };
+
   const pan = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_event, gesture) => {
-        if (!onReply) return false;
+        if (!latest.current.onReply) return false;
         if (Math.abs(gesture.dx) < SLOP) return false;
         if (Math.abs(gesture.dx) <= Math.abs(gesture.dy)) return false;
         // Only the direction that means "reply"; the other way does nothing,
@@ -451,7 +457,9 @@ const MessageBubbleComponent = ({
           toValue: 0,
           useNativeDriver: true,
         }).start();
-        if (distance > REPLY_THRESHOLD) onReply?.(message);
+        if (distance > REPLY_THRESHOLD) {
+          latest.current.onReply?.(latest.current.message);
+        }
       },
       onPanResponderTerminate: () => {
         travelled.current = 0;
@@ -764,14 +772,19 @@ const MessageBubbleComponent = ({
                 // and nothing needs doing — it goes when the signal does.
                 <>
                   <Ionicons
-                    color={mediaOnly || captionless ? "#ffffff" : theme.textGray}
+                    color={
+                      mediaOnly || captionless ? "#ffffff" : theme.textGray
+                    }
                     name="cloud-offline-outline"
                     size={12}
                   />
                   <Text
                     style={[
                       styles.time,
-                      { color: mediaOnly || captionless ? "#ffffff" : theme.textGray },
+                      {
+                        color:
+                          mediaOnly || captionless ? "#ffffff" : theme.textGray,
+                      },
                     ]}
                   >
                     Waiting for connection

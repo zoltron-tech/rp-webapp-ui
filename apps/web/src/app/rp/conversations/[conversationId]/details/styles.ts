@@ -342,3 +342,64 @@ export const SkeletonLine = styled.div<{ $width?: string; $height?: string }>`
   border-radius: 6px;
   ${shimmer}
 `;
+
+/** Mute / unmute, beside the edit and leave controls. Tinted while muted. */
+export const MuteButton = styled.button<{ $muted?: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  border: 1px solid
+    ${(p) =>
+      p.$muted
+        ? "color-mix(in srgb, var(--accent) 40%, transparent)"
+        : "var(--material-edge)"};
+  background: ${(p) =>
+    p.$muted ? "color-mix(in srgb, var(--accent) 12%, transparent)" : "transparent"};
+  color: ${(p) => (p.$muted ? "var(--accent-11)" : "var(--text-secondary)")};
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  flex-shrink: 0;
+
+  & + ${EditButton},
+  & + ${LeaveButton},
+  & + ${DeleteButton} {
+    margin-left: 0;
+  }
+
+  &:hover {
+    background: var(--fill-hover);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent-11, var(--accent));
+    outline-offset: 2px;
+  }
+
+  .mute-label {
+    @media (max-width: 480px) {
+      display: none;
+    }
+  }
+`;
+
+export const MuteOptions = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+export const MuteHint = styled.p`
+  margin: 6px 0 0;
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+  color: var(--text-secondary);
+`;

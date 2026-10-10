@@ -7,6 +7,7 @@ import {
   inboxKind,
   inboxSpeaker,
   inboxThumbnail,
+  isMuted,
 } from "@nw/features";
 import { mixColors } from "@nw/theme";
 import type { Conversation } from "@nw/types";
@@ -106,6 +107,8 @@ const ConversationRowComponent = ({
   const speaker = inboxSpeaker(conversation, myUsername, describes);
 
   const kind = inboxKind(conversation, myUsername);
+  // No push and no sound for this one; the row says so, because nothing else does.
+  const muted = isMuted(conversation.mutedUntil);
   const hue = inboxHue(kind);
   const thumb = inboxThumbnail(conversation);
   const name = target?.name || conversation.name;
@@ -285,6 +288,15 @@ const ConversationRowComponent = ({
               {toInboxTime(conversation.lastMessage?.createdAt)}
             </Text>
             <View style={styles.dotSlot}>
+              {/* Muted and unread: both, the bell before the dot. */}
+              {muted ? (
+                <Ionicons
+                  accessibilityLabel="Muted"
+                  color={theme.textGray}
+                  name="notifications-off-outline"
+                  size={13}
+                />
+              ) : null}
               {unread ? (
                 <View style={[styles.dot, { backgroundColor: hue }]} />
               ) : null}
@@ -302,7 +314,13 @@ const styles = StyleSheet.create({
   body: { flex: 1, gap: space.xxs, minWidth: 0 },
   dot: { borderRadius: radius.xs, height: 8, width: 8 },
   // The preview's line height, so the dot centres on that line.
-  dotSlot: { height: 17, justifyContent: "center" },
+  dotSlot: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: space.xs,
+    height: 17,
+    justifyContent: "flex-end",
+  },
   // A ring in the panel's colour parts the front face from the one behind.
   faceBack: {
     borderRadius: PAIR / 2 + 1,

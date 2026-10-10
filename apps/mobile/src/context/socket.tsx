@@ -30,6 +30,7 @@ import {
 } from "react";
 import { AppState, type AppStateStatus } from "react-native";
 import { env } from "@/lib/env";
+import { registerForPush } from "@/lib/push";
 
 /**
  * The chat-server socket, for the native app.
@@ -747,7 +748,13 @@ export const ChatSocketProvider = ({ children }: { children: ReactNode }) => {
     () => ({
       ensureConnected,
       isConnected,
-      sendMessage: (payload) => rawSend(createMessageSocketMessage(payload)),
+      sendMessage: (payload) => {
+        const sent = rawSend(createMessageSocketMessage(payload));
+        // Someone who has just written will want to hear the answer: the one
+        // moment the phone's permission prompt is worth showing.
+        if (sent) void registerForPush(true);
+        return sent;
+      },
       sendReaction: (payload) => rawSend(createReactionSocketMessage(payload)),
       trackUsernames,
     }),

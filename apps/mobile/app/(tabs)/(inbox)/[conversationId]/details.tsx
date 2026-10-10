@@ -2,6 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { deleteGroup, leaveGroup } from "@nw/api/endpoints/conversation-detail";
 import { isGroupAdmin, resolveConversationTarget } from "@nw/chat";
 import {
+  conversationMuteKey,
+  describeMute,
+  isMuted,
+  MUTE_DURATIONS,
+  muteUntil,
+  useMuteActions,
+  useNotificationMutes,
   queryKeys,
   useApi,
   useConversation,
@@ -12,7 +19,7 @@ import type { ConversationParticipant } from "@nw/types";
 import { pluralize, toFormattedDate } from "@nw/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { useMemo } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -24,6 +31,7 @@ import {
 import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { ListStatus } from "@/components/list-status";
+import { BottomSheet } from "@/components/sheet";
 import { useChatSocket, useIsOnline, useTrackOnline } from "@/context/socket";
 import { useHideTabBar } from "@/hooks/use-hide-tab-bar";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
@@ -43,6 +51,9 @@ import { border, fontSize, radius, space, useAppTheme } from "@/theme";
  */
 
 const ROW_AVATAR = 40;
+
+const keyExtractor = (item: ConversationParticipant) =>
+  item.novelistId || item.userName;
 
 export default function ConversationDetailsScreen() {
   const theme = useAppTheme();
@@ -83,6 +94,40 @@ export default function ConversationDetailsScreen() {
   );
   const amAdmin = isGroupAdmin(members, novelist?.username);
   const isGroup = Boolean(conversation?.isGroup);
+
+  /*
+   * Mute: the push and the sound stop; messages still arrive and still count
+   * as unread. Muted, one press unmutes; not muted, the sheet asks for how
+   * long. The row's `mutedUntil` is patched in the cache by the hook, so the
+   * inbox and this header agree at once.
+   */
+  const muteActions = useMuteActions();
+  const [muteSheet, setMuteSheet] = useState(false);
+  const muteKey = conversationMuteKey(conversationId ?? "");
+  // The mutes list is the authority; the row's `mutedUntil` is the same fact
+  // as the server last sent it, and covers a list that has not loaded yet.
+  const { mutes } = useNotificationMutes();
+  const muteRow = mutes.find((mute) => mute.key === muteKey);
+  const mutedUntil =
+    muteRow !== undefined
+      ? (muteRow.until ?? "9999-12-31T00:00:00Z")
+      : conversation?.mutedUntil;
+  const muted = isMuted(mutedUntil);
+  const pickMute = (ms: number | null) => {
+    setMuteSheet(false);
+    muteActions
+      .mute(muteKey, muteUntil(ms))
+      .catch(() => Alert.alert("Not saved", "Could not mute this conversation. Try again."));
+  };
+  const onMutePress = () => {
+    if (muted) {
+      muteActions
+        .unmute(muteKey)
+        .catch(() => Alert.alert("Not saved", "Could not unmute this conversation. Try again."));
+    } else {
+      setMuteSheet(true);
+    }
+  };
 
   /**
    * Leaving and deleting both end the conversation for this reader, so both
@@ -140,86 +185,28 @@ export default function ConversationDetailsScreen() {
       ],
     );
 
-  const openProfile = (username: string) => {
-    if (!username) return;
-    router.push({
-      params: { username },
-      pathname: "/(tabs)/(home)/novelist/[username]",
-    });
-  };
+  const openProfile = useCallback(
+    (username: string) => {
+      if (!username) return;
+      router.push({
+        params: { username },
+        pathname: "/(tabs)/(home)/novelist/[username]",
+      });
+    },
+    [router],
+  );
 
-  const renderMember = ({ item }: { item: ConversationParticipant }) => {
-    const name =
-      `${item.firstName} ${item.lastName ?? ""}`.trim() || item.userName;
-    const role = item.role?.toUpperCase();
-    const isMe = item.userName === novelist?.username;
-
-    return (
-      <Pressable
-        disabled={isMe}
-        onPress={() => openProfile(item.userName)}
-        style={({ pressed }) => [
-          styles.memberRow,
-          {
-            backgroundColor:
-              pressed && !isMe ? theme.material.fillPressed : theme.material.fill,
-            borderColor: theme.material.edge,
-          },
-        ]}
-      >
-        <Avatar
-          name={name}
-          size={ROW_AVATAR}
-          uri={item.image}
-          username={item.userName}
-        />
-
-        <View style={styles.memberText}>
-          <View style={styles.memberNameRow}>
-            <Text
-              numberOfLines={1}
-              style={[styles.memberName, { color: theme.text }]}
-            >
-              {name}
-            </Text>
-            {item.isVerified ? (
-              <Ionicons
-                color={theme.accent.text}
-                name="checkmark-circle"
-                size={14}
-              />
-            ) : null}
-            {role === "ADMIN" || role === "OWNER" ? (
-              <View
-                style={[
-                  styles.roleChip,
-                  {
-                    backgroundColor: theme.accent.tint,
-                    borderColor: theme.accent.surfaceHover,
-                  },
-                ]}
-              >
-                <Text style={[styles.roleLabel, { color: theme.accent.text }]}>
-                  {role === "OWNER" ? "Owner" : "Admin"}
-                </Text>
-              </View>
-            ) : null}
-          </View>
-          <Text
-            numberOfLines={1}
-            style={[styles.memberHandle, { color: theme.textGray }]}
-          >
-            @{item.userName}
-            {isMe ? " · you" : ""}
-          </Text>
-        </View>
-
-        {!isMe ? (
-          <Ionicons color={theme.textGray} name="chevron-forward" size={16} />
-        ) : null}
-      </Pressable>
-    );
-  };
+  const myUsername = novelist?.username;
+  const renderMember = useCallback(
+    ({ item }: { item: ConversationParticipant }) => (
+      <MemberRow
+        isMe={item.userName === myUsername}
+        member={item}
+        onOpen={openProfile}
+      />
+    ),
+    [myUsername, openProfile],
+  );
 
   const busy = leave.isPending || remove.isPending;
 
@@ -230,7 +217,7 @@ export default function ConversationDetailsScreen() {
       <FlatList
         contentContainerStyle={styles.content}
         data={members}
-        keyExtractor={(item) => item.novelistId || item.userName}
+        keyExtractor={keyExtractor}
         ListEmptyComponent={
           <ListStatus
             empty="No members to show."
@@ -265,6 +252,32 @@ export default function ConversationDetailsScreen() {
                 </Text>
               </Pressable>
             ) : null}
+
+            <Pressable
+              accessibilityLabel={muted ? "Unmute conversation" : "Mute conversation"}
+              disabled={muteActions.pending || !conversation}
+              onPress={onMutePress}
+              style={({ pressed }) => [
+                styles.secondaryButton,
+                {
+                  backgroundColor: pressed
+                    ? theme.material.fillPressed
+                    : muted
+                      ? theme.accent.tint
+                      : theme.material.fill,
+                  borderColor: muted ? theme.accent.surface : theme.material.edge,
+                },
+              ]}
+            >
+              <Ionicons
+                color={theme.accent.text}
+                name={muted ? "notifications-off-outline" : "notifications-outline"}
+                size={20}
+              />
+              <Text style={[styles.secondaryLabel, { color: theme.accent.text }]}>
+                {muted ? (describeMute(mutedUntil) ?? "Muted") : "Mute"}
+              </Text>
+            </Pressable>
 
             {isGroup ? (
               <>
@@ -380,9 +393,127 @@ export default function ConversationDetailsScreen() {
         onEndReachedThreshold={0.5}
         renderItem={renderMember}
       />
+
+      <BottomSheet
+        ignoreKeyboard
+        maxHeightRatio={0.6}
+        onClose={() => setMuteSheet(false)}
+        subtitle="Messages still arrive and still count as unread. Only the push and the sound stop."
+        title="Mute for how long?"
+        visible={muteSheet}
+      >
+        <View style={styles.muteOptions}>
+          {MUTE_DURATIONS.map((duration) => (
+            <Pressable
+              accessibilityRole="button"
+              key={duration.id}
+              onPress={() => pickMute(duration.ms)}
+              style={({ pressed }) => [
+                styles.muteOption,
+                {
+                  backgroundColor: pressed
+                    ? theme.material.fillPressed
+                    : theme.material.fill,
+                  borderColor: theme.material.edge,
+                },
+              ]}
+            >
+              <Text style={[styles.muteOptionLabel, { color: theme.text }]}>
+                {duration.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </BottomSheet>
     </>
   );
 }
+
+/**
+ * One member. Memoised, with a callback that takes the username, so the
+ * screen's own state — the mute sheet opening, a mutation settling — redraws
+ * the footer and not every face in the list.
+ */
+const MemberRow = memo(function MemberRow({
+  isMe,
+  member,
+  onOpen,
+}: {
+  isMe: boolean;
+  member: ConversationParticipant;
+  onOpen: (username: string) => void;
+}) {
+  const theme = useAppTheme();
+  const name =
+    `${member.firstName} ${member.lastName ?? ""}`.trim() || member.userName;
+  const role = member.role?.toUpperCase();
+
+  return (
+    <Pressable
+      disabled={isMe}
+      onPress={() => onOpen(member.userName)}
+      style={({ pressed }) => [
+        styles.memberRow,
+        {
+          backgroundColor:
+            pressed && !isMe ? theme.material.fillPressed : theme.material.fill,
+          borderColor: theme.material.edge,
+        },
+      ]}
+    >
+      <Avatar
+        name={name}
+        size={ROW_AVATAR}
+        uri={member.image}
+        username={member.userName}
+      />
+
+      <View style={styles.memberText}>
+        <View style={styles.memberNameRow}>
+          <Text
+            numberOfLines={1}
+            style={[styles.memberName, { color: theme.text }]}
+          >
+            {name}
+          </Text>
+          {member.isVerified ? (
+            <Ionicons
+              color={theme.accent.text}
+              name="checkmark-circle"
+              size={14}
+            />
+          ) : null}
+          {role === "ADMIN" || role === "OWNER" ? (
+            <View
+              style={[
+                styles.roleChip,
+                {
+                  backgroundColor: theme.accent.tint,
+                  borderColor: theme.accent.surfaceHover,
+                },
+              ]}
+            >
+              <Text style={[styles.roleLabel, { color: theme.accent.text }]}>
+                {role === "OWNER" ? "Owner" : "Admin"}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+        <Text
+          numberOfLines={1}
+          style={[styles.memberHandle, { color: theme.textGray }]}
+        >
+          @{member.userName}
+          {isMe ? " · you" : ""}
+        </Text>
+      </View>
+
+      {!isMe ? (
+        <Ionicons color={theme.textGray} name="chevron-forward" size={16} />
+      ) : null}
+    </Pressable>
+  );
+});
 
 const styles = StyleSheet.create({
   content: { gap: space.sm, padding: space.md },
@@ -438,6 +569,14 @@ const styles = StyleSheet.create({
     paddingVertical: space.md,
   },
   secondaryLabel: { fontSize: fontSize.body, fontWeight: "600" },
+  muteOption: {
+    borderRadius: radius.md,
+    borderWidth: border.edge,
+    paddingHorizontal: space.md,
+    paddingVertical: space.m,
+  },
+  muteOptionLabel: { fontSize: fontSize.body, fontWeight: "600" },
+  muteOptions: { gap: space.sm, padding: space.md },
   sectionTitle: {
     alignSelf: "flex-start",
     fontSize: fontSize.title,

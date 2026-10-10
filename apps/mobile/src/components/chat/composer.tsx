@@ -6,7 +6,7 @@ import {
   messagePreview,
 } from "@nw/chat";
 import type { Message } from "@nw/types";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -114,7 +114,16 @@ export interface ComposerSubmission {
   text: string;
 }
 
-export const Composer = ({
+/** One empty list, so a screen without a sender control passes a stable prop. */
+const NO_SENDERS: MessageSenderChoice[] = [];
+
+/**
+ * Memoised: the conversation screen above re-renders on every message that
+ * lands, every scroll past the jump threshold and every inset change, and
+ * none of those are the composer's business. Its props are primitives,
+ * cached objects and callbacks the screen keeps stable.
+ */
+export const Composer = memo(function Composer({
   conversationId,
   disabled,
   onCancelReply,
@@ -124,7 +133,7 @@ export const Composer = ({
   placeholder,
   replyingTo,
   selectedSender,
-  senders = [],
+  senders = NO_SENDERS,
   sending,
   statusNote,
 }: {
@@ -148,7 +157,7 @@ export const Composer = ({
   sending?: boolean;
   /** A line above the input — "Reconnecting", say. Hidden when absent. */
   statusNote?: string | null;
-}) => {
+}) {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
   const keyboardHeight = useKeyboardHeight();
@@ -329,19 +338,16 @@ export const Composer = ({
     inputRef.current?.focus();
   }, [liftOf, onInsetChange]);
 
-  const format = useCallback(
-    (token: string) => {
-      const { caret: next, text } = applyFormat(
-        draftRef.current,
-        selectionRef.current,
-        token,
-      );
-      setDraft(text);
-      placeCaret.current = next;
-      selectionRef.current = { end: next, start: next };
-    },
-    [],
-  );
+  const format = useCallback((token: string) => {
+    const { caret: next, text } = applyFormat(
+      draftRef.current,
+      selectionRef.current,
+      token,
+    );
+    setDraft(text);
+    placeCaret.current = next;
+    selectionRef.current = { end: next, start: next };
+  }, []);
 
   /*
    * The caret goes in one render after the text it belongs to.
@@ -915,7 +921,7 @@ export const Composer = ({
       ) : null}
     </>
   );
-};
+});
 
 /** One entry in the media row: a tinted circle and its name underneath. */
 const ActionButton = ({
@@ -1005,7 +1011,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.sm,
     paddingVertical: 3,
   },
-  inCharacterLabel: { flexShrink: 1, fontSize: fontSize.meta, fontWeight: "700" },
+  inCharacterLabel: {
+    flexShrink: 1,
+    fontSize: fontSize.meta,
+    fontWeight: "700",
+  },
   inlineAction: { paddingBottom: space.sm },
   input: {
     maxHeight: MAX_INPUT_HEIGHT,

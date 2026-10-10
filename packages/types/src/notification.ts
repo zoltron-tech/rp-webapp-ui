@@ -32,3 +32,13 @@ export interface NotificationTarget {
   targetType: string;
   urlProp: string;
 }
+
+/**
+ * One thing muted: a kind of notification (`REACTIONS`, `COMMENTS`,
+ * `MENTIONS`, `REQUESTS`, `MUSE_CONNECTION`, `STORY`), every conversation
+ * (`CHAT`) or one conversation (`C:<id>`). `until` null is until unmuted.
+ */
+export interface NotificationMute {
+  key: string;
+  until: string | null;
+}

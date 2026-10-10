@@ -68,6 +68,8 @@ export const MotionProvider = ({
 }: {
   children: ReactNode;
   enabled: boolean;
+  /** Read on the phone, where clocks are shared; nothing to scope here. */
+  scope?: string;
 }): ReactNode => children;
 
 /** Never wraps on the web — the class name alone is the whole mechanism. */

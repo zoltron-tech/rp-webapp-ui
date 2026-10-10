@@ -49,6 +49,14 @@ const novelist = (username: string): NotificationHref => ({
   params: { username },
   pathname: "/novelist/[username]",
 });
+const story = (id: string): NotificationHref => ({
+  params: { storyId: id },
+  pathname: "/story/[storyId]",
+});
+const chapter = (id: string): NotificationHref => ({
+  params: { eventId: id },
+  pathname: "/story/chapter/[eventId]",
+});
 
 /**
  * A reaction carries the kind of thing it is on, which is the only place
@@ -60,7 +68,10 @@ const reactionHref = (
 ): NotificationHref | null => {
   if (targetType === "COMMENT" || targetType === "REPLY") return thread(id);
   if (targetType === "PROMPT") return prompt(id);
-  // STORY_BOARD and STORY_BOARD_EVENT: no screen on this client yet.
+  if (targetType === "STORY_BOARD") return story(id);
+  if (targetType === "STORY_BOARD_EVENT") return chapter(id);
+  // A like on a muse's media opens the muse: the row's target is the muse.
+  if (targetType === "MUSE" || targetType === "MEDIA") return muse(id);
   return null;
 };
 
@@ -82,7 +93,12 @@ export const notificationHref = (
     case "REPLY":
       return id ? thread(id) : null;
     case "REACTION":
+    case "MENTION":
       return id ? reactionHref(target?.targetType ?? "", id) : null;
+    case "STORYBOARD_UPDATE":
+      return id ? story(id) : null;
+    case "STORYBOARD_EVENT_UPDATE":
+      return id ? chapter(id) : null;
     default:
       // Anything the server adds later still opens *something* when its target
       // is a kind this client knows; otherwise the row stays inert.

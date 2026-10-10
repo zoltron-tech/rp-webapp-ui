@@ -20,7 +20,7 @@ export default function EditMuseLayout() {
   const { status } = useSession();
 
   if (status === "loading") return null;
-  if (status !== "signed-in") return <Redirect href="/novelists" />;
+  if (status !== "signed-in") return <Redirect href="/welcome" />;
 
   return (
     <Stack

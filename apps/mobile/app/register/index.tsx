@@ -47,7 +47,7 @@ export default function RegisterEmailScreen() {
    * only thing on screen, that is a lot louder.
    */
   const [touched, setTouched] = useState(false);
-  const back = useAuthBack("/novelists");
+  const back = useAuthBack("/welcome");
 
   const value = email.trim();
   const valid = verifyEmailPattern(value);

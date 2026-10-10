@@ -7,8 +7,10 @@ import {
 import { Redirect, Tabs, useRouter } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { Avatar } from "@/components/avatar";
+import { StartupFallback } from "@/components/startup-fallback";
 import { TabBar } from "@/components/tab-bar";
 import { TabBarChromeProvider } from "@/context/tab-bar";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { readAccessToken } from "@/lib/session-store";
 import { radius, useAppTheme } from "@/theme";
 import { glassHeaderOptions } from "@/theme/header";
@@ -61,11 +63,15 @@ export default function TabsLayout() {
   // What has arrived since the Alerts tab was last opened, counted by the server.
   const { data: notificationCounts } = useNotificationCounts();
   const unseenNotifications = notificationCounts?.unseen ?? 0;
+  // Push registration, tap routing and the icon's number.
+  usePushNotifications();
 
-  if (status === "loading" && !readAccessToken()) return null;
+  // Never nothing: a session that does not resolve gets a way out. See
+  // `StartupFallback`.
+  if (status === "loading" && !readAccessToken()) return <StartupFallback />;
   if (status === "onboarding") return <Redirect href="/onboarding" />;
   if (status !== "signed-in" && status !== "loading") {
-    return <Redirect href="/novelists" />;
+    return <Redirect href="/welcome" />;
   }
 
   return (

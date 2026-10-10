@@ -329,6 +329,12 @@ export default function MenuScreen() {
             onPress={() => go("/edit-profile/devices")}
             subtitle="Where you are signed in"
           />
+          <SettingsRow
+            icon="notifications-outline"
+            label="Notifications"
+            onPress={() => go("/edit-profile/notifications")}
+            subtitle="Which notifications may interrupt you"
+          />
         </SettingsGroup>
 
         <SettingsGroup title="Your space">

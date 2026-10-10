@@ -8,9 +8,11 @@ import {
   inboxSpeaker,
   inboxThumbnail,
   isLastMessageMine,
+  isMuted,
 } from "@nw/features";
 import type { Conversation } from "@nw/types";
 import type { CSSProperties, FC, KeyboardEvent } from "react";
+import { TbBellOff } from "react-icons/tb";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
@@ -70,6 +72,8 @@ export const ConversationCard: FC<ConversationCardProps> = ({
   const { describes, text } = conversationPreview(conversation);
   const speaker = inboxSpeaker(conversation, myUsername, describes);
   const unread = isConversationUnread(conversation, myUsername);
+  // No push and no sound for this one; the row says so, because nothing else does.
+  const muted = isMuted(conversation.mutedUntil);
 
   const kind = inboxKind(conversation, myUsername);
   const Glyph = INBOX_ICONS[kind];
@@ -191,6 +195,12 @@ export const ConversationCard: FC<ConversationCardProps> = ({
           )}
         </S.Timestamp>
         <S.DotSlot>
+          {/* Muted and unread: both, the bell before the dot. */}
+          {muted && (
+            <S.MutedMark role="img" aria-label="Muted" title="Muted">
+              <TbBellOff size={13} />
+            </S.MutedMark>
+          )}
           {unread && <S.UnreadDot role="img" aria-label="Unread" />}
         </S.DotSlot>
       </S.Meta>

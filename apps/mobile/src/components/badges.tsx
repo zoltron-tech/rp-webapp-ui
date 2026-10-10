@@ -73,16 +73,23 @@ const DEFAULT_SIZE = 20;
  * At 15px the artwork was never legible anyway — the colour is what a crest
  * that size actually communicates. Anything at profile size draws in full.
  */
-export const BadgeCrest = ({
+export const BadgeCrest = memo(function BadgeCrest({
   animated = true,
   code,
   muted = false,
+  motionScope,
   replayOnPress = false,
   size = DEFAULT_SIZE,
 }: {
   /** Off for a crest that must hold still — a shelf being screenshotted. */
   animated?: boolean;
   code: BadgeCode;
+  /**
+   * Clocks of its own, for a crest drawn over others that must hold still:
+   * the detail tray above the shelf. Without it the two share clocks, and
+   * the shelf moves with the tray.
+   */
+  motionScope?: string;
   muted?: boolean;
   /**
    * Tapping the crest plays its motion again. For a crest that is not
@@ -90,7 +97,7 @@ export const BadgeCrest = ({
    */
   replayOnPress?: boolean;
   size?: number;
-}) => {
+}) {
   const Artwork = BADGE_ARTWORK[code];
   /*
    * Motion is a burst, not a loop — see `useMotionBurst`. A crest moves for
@@ -98,7 +105,10 @@ export const BadgeCrest = ({
    * left open costs nothing per frame once it has settled. Discord's
    * decorations behave the same way: they play when the profile opens.
    */
-  const burst = useMotionBurst(animated && size >= DETAIL_THRESHOLD, MOTION_BURST_MS);
+  const burst = useMotionBurst(
+    animated && size >= DETAIL_THRESHOLD,
+    MOTION_BURST_MS,
+  );
   if (!Artwork) return null;
 
   if (size < DETAIL_THRESHOLD) {
@@ -112,7 +122,7 @@ export const BadgeCrest = ({
   }
 
   const crest = (
-    <MotionProvider enabled={burst.live}>
+    <MotionProvider enabled={burst.live} scope={motionScope}>
       <Svg height={size} viewBox={BADGE_VIEW_BOX} width={size}>
         <Artwork logoHref={LOGO} muted={muted} size={size} />
       </Svg>
@@ -129,7 +139,7 @@ export const BadgeCrest = ({
       {crest}
     </Pressable>
   );
-};
+});
 
 /** Drops badges this bundle has no artwork for, as the web row does. */
 const renderable = (badges: Badge[] | undefined): Badge[] =>

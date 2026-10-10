@@ -125,6 +125,8 @@ type ListItem =
 let groupPreference = false;
 
 const NO_SELECTION: string[] = [];
+/** One empty roster, so "no data yet" does not rebuild the chips each render. */
+const NO_MUSES: ListedMuse[] = [];
 
 const fandomIdOf = (muse: Muse) => muse.fandom?.id || FANDOMLESS_ID;
 
@@ -569,7 +571,7 @@ export const MuseList = ({ username }: { username: string }) => {
     queryKey: queryKeys.novelistMuses(username ?? ""),
   });
 
-  const muses = query.data ?? [];
+  const muses = query.data ?? NO_MUSES;
 
   // Chips from the whole roster, fandomless last, the rest alphabetical.
   const options = useMemo<FandomOption[]>(() => {

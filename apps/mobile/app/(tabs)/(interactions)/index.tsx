@@ -13,12 +13,13 @@ import {
   OutgoingThreadCardSkeleton,
   SkeletonRows,
 } from "@/components/list-skeletons";
+import { EmptyScene } from "@/components/empty-feed";
 import { ListStatus } from "@/components/list-status";
 import { OutgoingThreadCard } from "@/components/outgoing-thread-card";
 import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { fontSize, space, type, useAppTheme } from "@/theme";
-import { EmptyState, FeedSeparator, LoadMore } from "@/components/list-parts";
+import { FeedSeparator, LoadMore } from "@/components/list-parts";
 
 /**
  * Interactions — the threads this novelist has replied into.
@@ -87,7 +88,9 @@ export default function InteractionsScreen() {
       return result;
     },
     queryKey: queryKeys.outgoingThreads(),
-    staleTime: 60 * 1000,
+    // Five minutes: the list is hydrated from disk (`local-store/feeds.ts`)
+    // and refetched behind the paint once it is older than this.
+    staleTime: 5 * 60 * 1000,
   });
 
   // Memoised: `flat()` builds a new array on every render, and a fresh array
@@ -219,9 +222,9 @@ export default function InteractionsScreen() {
               }
             />
           ) : (
-            <EmptyState
-              body="Nothing is running right now. Find a starter someone else has posted and reply to spark one."
-              icon="chatbubbles-outline"
+            <EmptyScene
+              scene="no-interactions"
+              subtitle="Nothing is running right now. Find a starter someone else has posted and reply to spark one."
               title="No active interactions"
             />
           )

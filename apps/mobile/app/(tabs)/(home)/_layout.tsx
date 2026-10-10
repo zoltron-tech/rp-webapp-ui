@@ -1,5 +1,5 @@
 import { Stack, useRouter } from "expo-router";
-import { Logo } from "@/components/logo";
+import { TabHeaderTitle } from "@/components/header-title";
 import { useAppTheme } from "@/theme";
 import { glassHeaderOptions } from "@/theme/header";
 import { ambientScreenLayout } from "@/components/ambient-background";
@@ -51,16 +51,17 @@ export default function HomeStackLayout() {
       <Stack.Screen
         name="index"
         options={{
-          headerTitle: () => <Logo size={28} variant="header" />,
+          headerTitle: () => <TabHeaderTitle />,
           title: "Home",
         }}
       />
-      <Stack.Screen name="novelists" options={{ title: "Novelists" }} />
+      <Stack.Screen name="directory" options={{ title: "Novelists" }} />
       <Stack.Screen name="threads/[threadId]" options={{ title: "Thread" }} />
       <Stack.Screen name="prompt/[promptId]" options={{ title: "Prompt" }} />
       <Stack.Screen name="novelist/[username]/index" />
       <Stack.Screen name="novelist/[username]/friends" />
       <Stack.Screen name="novelist/[username]/muses" />
+      <Stack.Screen name="novelist/[username]/stories" />
       <Stack.Screen name="novelist/[username]/activity" />
       <Stack.Screen name="novelist/[username]/prompts" />
       <Stack.Screen name="novelist/[username]/posts" />

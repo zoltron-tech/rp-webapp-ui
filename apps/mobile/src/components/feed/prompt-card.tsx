@@ -2,9 +2,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSession } from "@nw/features";
 import type { Prompt } from "@nw/types";
 import { pluralize, toFormattedDate } from "@nw/utils";
-import { Image } from "expo-image";
+import { Image } from "@/components/image";
 import { memo, useCallback, useMemo } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Animated, Pressable, StyleSheet, View } from "react-native";
+import { useCommentsReveal } from "@/animation/effects";
+import { OUTBOX_ID_PREFIX } from "@/lib/local-store";
 import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { CollapsibleRichText } from "@/components/collapsible-rich-text";
@@ -100,6 +102,8 @@ export interface PromptCardProps {
   onCompose?: (prompt: Prompt) => void;
   /** The ⋯ menu. Omitted when there is nothing this viewer may do. */
   onMore?: (prompt: Prompt) => void;
+  /** Takes a waiting post out of the outbox. Drawn only on a queued card. */
+  onDiscardQueued?: (promptId: string) => void;
   /** Web's share button on the footer: the share sheet, for anyone. */
   onShare?: (prompt: Prompt) => void;
   /** Given a *comment* id — the root of the thread that comment opened. */
@@ -128,7 +132,8 @@ export interface PromptCardProps {
 const PromptCardView = ({
   expanded,
   onCompose,
-  onMore,
+  onDiscardQueued,
+  onMore: onMoreProp,
   onOpenThread,
   onReacted,
   onShare,
@@ -139,6 +144,13 @@ const PromptCardView = ({
   unfolded,
 }: PromptCardProps) => {
   const theme = useAppTheme();
+  // The list fades and rises open, and fades closed before it unmounts.
+  const comments = useCommentsReveal(expanded);
+  // A post waiting in the outbox, drawn in its place. It has no id yet — no
+  // heart, no thread, no menu, no comment — only the one thing that can be
+  // done with it. See `local-store/outbox.ts`.
+  const queued = prompt.id.startsWith(OUTBOX_ID_PREFIX);
+  const onMore = queued ? undefined : onMoreProp;
 
   const { commentCount, createdOn, featuredSong, id, media, privacy, source } =
     prompt;
@@ -357,6 +369,30 @@ const PromptCardView = ({
       ) : null}
 
       {/* ── Actions ───────────────────────────────────────────────────── */}
+      {queued ? (
+        <View style={[styles.actions, { borderTopColor: theme.material.edge }]}>
+          <Ionicons
+            color={theme.textGray}
+            name="cloud-offline-outline"
+            size={ACTION_ICON}
+          />
+          <Text style={[styles.actionCount, { color: theme.textGray }]}>
+            Waiting for connection
+          </Text>
+          <View style={styles.spacer} />
+          {onDiscardQueued ? (
+            <Pressable
+              accessibilityRole="button"
+              hitSlop={space.xs}
+              onPress={() => onDiscardQueued(prompt.id)}
+            >
+              <Text style={[styles.actionCount, { color: theme.error }]}>
+                Don't send
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : (
       <View style={[styles.actions, { borderTopColor: theme.material.edge }]}>
         {/*
           Web's sentence, and web's tap on it: "3 novelists like this" opens the
@@ -426,6 +462,7 @@ const PromptCardView = ({
           </Pressable>
         ) : null}
       </View>
+      )}
 
       {/*
         Web's comment trigger under the footer — your face beside a field that
@@ -433,7 +470,7 @@ const PromptCardView = ({
         rather than only on the thread page, because a post you can answer
         right where you read it is what makes a feed a conversation.
       */}
-      {onCompose ? (
+      {onCompose && !queued ? (
         <ComposeTrigger
           avatarImage={replyAs?.avatar}
           avatarUri={replyAs?.avatar?.src ?? replyAs?.image}
@@ -452,9 +489,13 @@ const PromptCardView = ({
         query inside it *is* the fetch. Keyed by the prompt so a recycled cell
         cannot hand one prompt's comment list to another.
       */}
-      {expanded ? (
-        <View
-          style={[styles.comments, { borderTopColor: theme.material.edge }]}
+      {comments.mounted ? (
+        <Animated.View
+          style={[
+            styles.comments,
+            { borderTopColor: theme.material.edge },
+            comments.style,
+          ]}
         >
           <PromptComments
             expected={commentCount}
@@ -462,7 +503,7 @@ const PromptCardView = ({
             onOpenThread={onOpenThread}
             promptId={id}
           />
-        </View>
+        </Animated.View>
       ) : null}
     </View>
   );

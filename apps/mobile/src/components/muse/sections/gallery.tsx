@@ -10,7 +10,6 @@ import { API_MESSAGE, type Muse } from "@nw/types";
 import type { MediaMetadata } from "@nw/types/activity";
 import { IMAGE_SIZES, wsrvImage } from "@nw/utils/image";
 import { useQueryClient } from "@tanstack/react-query";
-import { Image } from "expo-image";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -20,7 +19,14 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { Text } from "@/components/text";
+import { Image } from "@/components/image";
+import {
+  deleteManyMuseMedia,
+  SelectButton,
+  SelectionBar,
+  SelectMark,
+  useMediaSelection,
+} from "@/components/muse/media-selection";
 import {
   isGifUrl,
   isVideoUrl,
@@ -36,6 +42,7 @@ import {
   Shimmer,
 } from "@/components/muse/panel";
 import { AddButton } from "@/components/muse/sections/info";
+import { Text } from "@/components/text";
 import { useMuseMedia, useMuseMediaMetadata } from "@/hooks/use-muse";
 import { MAX_GALLERY_BYTES, pickMedia, uploadFile } from "@/lib/media-upload";
 import type { MuseLook } from "@/lib/muse-appearance";
@@ -91,6 +98,17 @@ export const MuseGallerySection = ({
     done: number;
     total: number;
   } | null>(null);
+
+  // Select mode: several tiles chosen, deleted together. See `media-selection`.
+  const selection = useMediaSelection();
+  const [deleting, setDeleting] = useState(false);
+  useEffect(() => {
+    if (media) selection.retain(media);
+  }, [media, selection.retain]);
+  // Leaving the section, or the muse changing under it, ends the mode.
+  useEffect(() => {
+    if (!active || !isOwnMuse) selection.stop();
+  }, [active, isOwnMuse, selection.stop]);
 
   // Captions and hearts: needed the first time the viewer opens, kept after.
   const [wantMeta, setWantMeta] = useState(false);
@@ -188,6 +206,39 @@ export const MuseGallerySection = ({
     );
   };
 
+  /** The selected tiles, confirmed once and deleted one after another. */
+  const removeSelected = () => {
+    const urls = [...selection.selected];
+    if (!museId || urls.length === 0 || deleting) return;
+    const noun = urls.length === 1 ? "file" : `${urls.length} files`;
+    Alert.alert(
+      `Delete ${noun}?`,
+      `This will permanently remove ${urls.length === 1 ? "the file" : "these files"} from your gallery. This action cannot be undone.`,
+      [
+        { style: "cancel", text: "Cancel" },
+        {
+          onPress: async () => {
+            setDeleting(true);
+            setOpen(null);
+            setMedia((list) => list.filter((u) => !urls.includes(u)));
+            const failed = await deleteManyMuseMedia(api, museId, urls);
+            setDeleting(false);
+            selection.stop();
+            if (failed.length > 0) {
+              Alert.alert(
+                "Not all deleted",
+                `${failed.length} of ${urls.length} could not be deleted. Try again in a moment.`,
+              );
+              await query.refetch();
+            }
+          },
+          style: "destructive",
+          text: "Delete",
+        },
+      ],
+    );
+  };
+
   const caption = async (url: string, description: string) => {
     const result = await editMediaDescription(api, museId, url, description);
     if (!result || "message" in result) return false;
@@ -234,16 +285,36 @@ export const MuseGallerySection = ({
                   </Text>
                 </View>
               ) : (
-                <AddButton
-                  label={remaining > 0 ? "Add media" : "Full"}
-                  onPress={() => void upload()}
-                />
+                <View style={styles.tools}>
+                  {media.length > 0 && !selection.selecting ? (
+                    <SelectButton dark onPress={() => selection.start()} />
+                  ) : null}
+                  <AddButton
+                    label={remaining > 0 ? "Add media" : "Full"}
+                    onPress={() => void upload()}
+                  />
+                </View>
               )
             ) : undefined
           }
         >
           Gallery
         </SectionLabel>
+
+        {selection.selecting && media ? (
+          <View style={styles.selectionBar}>
+            <SelectionBar
+              busy={deleting}
+              count={selection.selected.size}
+              dark
+              onCancel={selection.stop}
+              onClear={selection.clear}
+              onDelete={removeSelected}
+              onSelectAll={() => selection.selectAll(media)}
+              total={media.length}
+            />
+          </View>
+        ) : null}
 
         {!media ? (
           <View style={styles.grid}>
@@ -261,52 +332,81 @@ export const MuseGallerySection = ({
         ) : (
           <View onLayout={onLayout} style={styles.grid}>
             {tile > 0
-              ? media.map((url, index) => (
-                  <Pressable
-                    accessibilityLabel={
-                      isVideoUrl(url) ? "Play video" : "Open picture"
-                    }
-                    accessibilityRole="imagebutton"
-                    key={url}
-                    onPress={() => setOpen(index)}
-                    style={({ pressed }) => [
-                      styles.tile,
-                      {
-                        height: tile,
-                        opacity: pressed ? 0.75 : 1,
-                        width: tile,
-                      },
-                    ]}
-                  >
-                    {isVideoUrl(url) ? (
-                      <View style={[styles.fill, styles.video]}>
-                        <Ionicons
-                          color="rgba(255,255,255,0.9)"
-                          name="play-circle"
-                          size={28}
+              ? media.map((url, index) => {
+                  const chosen = selection.selected.has(url);
+                  return (
+                    <Pressable
+                      accessibilityLabel={
+                        selection.selecting
+                          ? `${chosen ? "Deselect" : "Select"} ${isVideoUrl(url) ? "video" : "picture"}`
+                          : isVideoUrl(url)
+                            ? "Play video"
+                            : "Open picture"
+                      }
+                      accessibilityRole={
+                        selection.selecting ? "checkbox" : "imagebutton"
+                      }
+                      accessibilityState={
+                        selection.selecting ? { checked: chosen } : undefined
+                      }
+                      key={url}
+                      // The owner's long press is the quick way in: select
+                      // mode, with this tile already chosen.
+                      onLongPress={() => {
+                        if (isOwnMuse && !selection.selecting) {
+                          selection.start(url);
+                        }
+                      }}
+                      onPress={() =>
+                        selection.selecting
+                          ? selection.toggle(url)
+                          : setOpen(index)
+                      }
+                      style={({ pressed }) => [
+                        styles.tile,
+                        {
+                          height: tile,
+                          opacity: pressed ? 0.75 : 1,
+                          width: tile,
+                        },
+                      ]}
+                    >
+                      {isVideoUrl(url) ? (
+                        <View style={[styles.fill, styles.video]}>
+                          <Ionicons
+                            color="rgba(255,255,255,0.9)"
+                            name="play-circle"
+                            size={28}
+                          />
+                        </View>
+                      ) : (
+                        <>
+                          <Image
+                            cachePolicy="memory-disk"
+                            contentFit="cover"
+                            recyclingKey={url}
+                            source={{
+                              uri: wsrvImage(url, IMAGE_SIZES.COVER_MEDIUM),
+                            }}
+                            style={styles.fill}
+                            transition={100}
+                          />
+                          {isGifUrl(url) ? (
+                            <View style={styles.badge}>
+                              <Text style={styles.badgeLabel}>GIF</Text>
+                            </View>
+                          ) : null}
+                        </>
+                      )}
+                      {selection.selecting ? (
+                        <SelectMark
+                          accent={accent ?? "#ffffff"}
+                          selected={chosen}
                         />
-                      </View>
-                    ) : (
-                      <>
-                        <Image
-                          cachePolicy="memory-disk"
-                          contentFit="cover"
-                          recyclingKey={url}
-                          source={{
-                            uri: wsrvImage(url, IMAGE_SIZES.COVER_MEDIUM),
-                          }}
-                          style={styles.fill}
-                          transition={100}
-                        />
-                        {isGifUrl(url) ? (
-                          <View style={styles.badge}>
-                            <Text style={styles.badgeLabel}>GIF</Text>
-                          </View>
-                        ) : null}
-                      </>
-                    )}
-                  </Pressable>
-                ))
+                      ) : null}
+                    </Pressable>
+                  );
+                })
               : null}
           </View>
         )}
@@ -351,12 +451,18 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   progress: { alignItems: "center", flexDirection: "row", gap: space.s },
-  progressLabel: { color: PANEL.secondary, fontSize: fontSize.meta, fontWeight: "600" },
+  progressLabel: {
+    color: PANEL.secondary,
+    fontSize: fontSize.meta,
+    fontWeight: "600",
+  },
+  selectionBar: { marginBottom: space.sm },
   tile: {
     backgroundColor: PANEL.shimmer,
     borderRadius: 6,
     overflow: "hidden",
   },
+  tools: { alignItems: "center", flexDirection: "row", gap: space.s },
   video: {
     alignItems: "center",
     backgroundColor: "rgba(0,0,0,0.55)",

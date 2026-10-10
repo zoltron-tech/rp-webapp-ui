@@ -1,564 +1,287 @@
 # @nw/mobile
 
 The Novelist World app for iOS and Android. **Expo SDK 54 + expo-router**, sharing
-`@nw/api`, `@nw/features`, `@nw/store`, `@nw/theme`, `@nw/types` and `@nw/utils` with
-[the web app](../web/README.md) — see [the workspace README](../../README.md).
+`@nw/api`, `@nw/chat`, `@nw/features`, `@nw/store`, `@nw/theme`, `@nw/types` and
+`@nw/utils` with [the web app](../web/README.md). See
+[the workspace README](../../README.md) for the monorepo.
 
-Phase 2 of `MONOREPO_MIGRATION_PLAN.md`: one real loop — open, sign in, see novelists,
-check notifications, look at your profile, sign out. Everything else is a later phase.
+- [Quick start](#quick-start)
+- [Two kinds of build](#two-kinds-of-build)
+- [Configuration (`.env`)](#configuration-env)
+- [Development builds](#development-builds)
+- [Release builds](#release-builds)
+- [Command reference](#command-reference)
+- [When something goes wrong](#when-something-goes-wrong)
+- [Where things are](#where-things-are)
 
-## Running it
+More detail lives in [docs/](docs/):
 
-**A dev build, not Expo Go.** `expo-secure-store` is a native module and the session lives
-in it, so Expo Go cannot run this app at all.
+| Doc | What it covers |
+| --- | --- |
+| [docs/README.md](docs/README.md) | First-time device setup for iOS and Android, step by step |
+| [docs/android.md](docs/android.md) | Android build environment (SDK, JDK, Windows path length), every known failure, signing, the app icon |
+| [docs/architecture.md](docs/architecture.md) | How the session and chat work |
+
+## Quick start
 
 ```bash
-pnpm install                 # from the repository root
+pnpm install                 # from the repository root (rp-webapp-ui)
 cd apps/mobile
-cp .env.example .env         # then edit — see below
-pnpm exec expo prebuild      # generates android/ (and ios/), both gitignored
-pnpm android                 # builds, installs, and starts Metro
-pnpm start                   # Metro alone, once the app is installed
+cp .env.example .env         # then fill it in — see "Configuration"
 ```
 
-Both serve Metro on `localhost` and reach the phone through the USB cable
-(`adb reverse`), which is why they work on a device that is on mobile data, on a
-different Wi-Fi, or behind AP isolation. `pnpm start` gets there with `expo
-start --localhost`; `expo run:android` has no such flag, so `pnpm android` goes
-through [scripts/run-android.mjs](scripts/run-android.mjs), which sets
-`REACT_NATIVE_PACKAGER_HOSTNAME` — the only lever that command exposes, and one
-that cannot be set inline in an npm script on Windows.
+Then pick a platform under [Development builds](#development-builds).
 
-The alternative — Metro on the machine's LAN address, which the phone fetches
-over Wi-Fi — is `pnpm android:lan` and `pnpm start:lan`, and it needs the phone
-and the machine on the same network with inbound port 8081 open.
+**Expo Go cannot run this app.** It uses native modules (the keychain, the
+keyboard controller, video) that Expo Go does not ship.
 
-If the app launches on the phone and then sits there without loading, that is
-almost always the LAN path failing. See "The app opens but never loads" below.
+## Two kinds of build
 
-Configuration is `EXPO_PUBLIC_*` environment variables in `.env`, read through
-[src/lib/env.ts](src/lib/env.ts) — the same discipline as the web app's `VITE_` prefix and
-the same guarantee: nothing without the prefix reaches the bundle. `.env.example` lists
-them.
+| | Development build | Release build |
+| --- | --- | --- |
+| JavaScript | Loaded from Metro on your PC | Compiled into the app |
+| Needs your PC running | Yes | No |
+| Picks up a code change | Instantly | Only by building again |
+| Use it for | Writing code | Testing through the day, sharing, the stores |
 
-**Adding one means editing `env.ts` as well, not just `.env`.** "Inlined at build time" is
-literal: `babel-preset-expo` substitutes the value wherever it finds a `process.env` read
-whose key is a *string literal*, and nowhere else. Assemble the name at runtime — a
-template literal, a variable, anything but a literal — and the plugin matches nothing and
-leaves the read standing. It then returns undefined in a release build, because a release
-bundle has no `process.env` behind it, while the dev bundle does. The variable therefore
-works in every test and is empty on the installed app. That is why `env.ts` spells each
-name out in full.
+Both use the same app id (`world.novelist.app`), so **installing one replaces the
+other** on a phone.
 
-## Testing on Android
+## Configuration (`.env`)
 
-Verified end to end on this machine, 2026-09-07: built, installed on a physical device, and
-running. Expo SDK 54's autolinking finds the workspace packages without help, but three
-environment details have to be right first — the SDK location, the JDK, and (on Windows)
-path length. All three produce errors that name something other than the actual cause.
+Every setting is an `EXPO_PUBLIC_*` variable, **baked into the JavaScript at build
+time**. [.env.example](.env.example) lists them with comments.
 
-### Before anything builds: the SDK location, and the JDK
+| Variable | Without it |
+| --- | --- |
+| `EXPO_PUBLIC_RP_SERVICE_URL` | Falls back to `https://api.novelist.world` |
+| `EXPO_PUBLIC_SOCKET_URL` | No live chat: messages arrive by polling, everyone shows offline |
+| `EXPO_PUBLIC_CHAT_E2E_SECRET` | Every message reads "could not be decrypted". Must equal the web build's `VITE_CHAT_E2E_SECRET` |
+| `EXPO_PUBLIC_CHAT_E2E_ENABLED` | Chat encryption is off |
+| `EXPO_PUBLIC_RP_BUCKET_NAME` | Images download at full size |
+| `EXPO_PUBLIC_OAUTH_REDIRECT_SCHEME` | Falls back to `novelistworld` (must match `scheme` in `app.json`) |
+| `EXPO_PUBLIC_DISCORD_INVITE_URL`, `EXPO_PUBLIC_SUPPORT_EMAIL`, `EXPO_PUBLIC_WEB_URL` | Those links are missing, or point at production |
 
-**`ANDROID_HOME` must be set, or `android/local.properties` must exist.** Without one of
-them `pnpm android` fails in about a second:
+Three rules that have each cost a day:
 
-```
-> SDK location not found. Define a valid SDK location with an ANDROID_HOME environment
-  variable or by setting the sdk.dir path in your project's local properties file
-```
+1. **`.env` is gitignored, so cloud builds never see it.** EAS builds read their
+   values from the Expo project instead — see
+   [EAS environment variables](#eas-environment-variables). A cloud build made
+   without them logs in fine (the API URL has a fallback) and then has no chat.
+2. **A local build reads `.env` from disk** when it bundles. Change `.env`, build
+   again.
+3. **A new variable must be added to [src/lib/env.ts](src/lib/env.ts) by its full
+   name.** Babel only replaces `process.env.EXPO_PUBLIC_NAME` when the name is
+   written out literally; a name assembled at runtime works in development and is
+   empty in release.
 
-Android Studio writes `local.properties` when it imports a project; `expo prebuild` does
-not, and `expo prebuild --clean` deletes it along with the rest of `android/`. **Set
-`ANDROID_HOME` as a user environment variable** — it survives regeneration, and `adb` on
-`PATH` (`%ANDROID_HOME%\platform-tools`) is worth having anyway. If you do write
-`local.properties` by hand, remember it is a Java `.properties` file: the drive colon and
-every backslash need escaping, or the path mangles silently.
+Release builds refuse plain `http://`. Point them at an `https://` backend.
 
-```
-sdk.dir=C\:\Users\<you>\AppData\Local\Android\Sdk
-```
+## Development builds
 
-**Use JDK 21. JDK 24 cannot configure the native build.**
+The native shell is installed once; after that only Metro needs to run. Rebuild
+the shell only when native code changes: a new native module, an `app.json`
+plugin, an SDK upgrade.
 
-```sh
-JAVA_HOME="C:/Program Files/Eclipse Adoptium/jdk-21.0.12.101-hotspot" pnpm android
-```
+### Android (built on this machine)
 
-On 24, any build that has to *run* a CMake configure dies with:
-
-```
-Execution failed for task ':app:configureCMakeDebug[arm64-v8a]'.
-> WARNING: A restricted method in java.lang.System has been called
-```
-
-That warning is the whole error message, and it is not the real one: AGP runs the native
-step as a subprocess and surfaces its stderr verbatim, so the JVM's startup banner is what
-you see instead of whatever actually went wrong. Running the same `cmake` command by hand —
-it is written out in `app/.cxx/Debug/<hash>/<abi>/metadata_generation_command.txt` —
-succeeds, which is how you tell the two apart. Under JDK 21 the identical Gradle task
-succeeds.
-
-The reason this looks intermittent: a configure only runs when something changes the native
-graph. Adding a library with native code (`react-native-svg`) forces one; ordinary JS edits
-do not, so dozens of builds in a row can pass on 24 and then one fails.
-
-Android Studio's **bundled JBR is 25**, newer still than Gradle 8.14.3 supports. Point
-*Settings → Build, Execution, Deployment → Build Tools → Gradle → Gradle JDK* at 21.
-
-> **Two corrections, recorded because they cost time.** This was first diagnosed as a JDK
-> problem, then re-diagnosed as *not* the JDK — a Windows path-length failure hiding behind
-> the warning banner — because JDK 24 went on to build the project fine. Both halves were
-> half right. The path-length problem was real and is fixed by `node-linker=hoisted` below;
-> the JDK problem is also real, and only shows itself on the builds that reconfigure CMake.
-> The intervening builds passed because they had nothing to configure.
-
-### The other thing that bites on Windows: path length
-
-The workspace installs with **`node-linker=hoisted`** (see the root `.npmrc`), and on
-Windows that is not a preference — it is what makes the app build at all.
-
-pnpm's default layout puts every package under
-`.pnpm/<name>@<version>_<hash>/node_modules/<name>/`, adding ~70 characters to every path.
-React Native's new architecture compiles C++ from inside those directories, and CMake
-refuses object paths longer than 250 characters. What you see when that happens says
-nothing about paths:
-
-```
-ninja: error: manifest 'build.ninja' still dirty after 100 tries
-```
-
-The real message is a CMake *warning* further up: "The object file directory ... has 211
-characters. The maximum full path to an object file is 250 characters."
-
-Consequences worth knowing:
-
-- **Keep the checkout path short.** `D:\DEV\NW App\rp-webapp-ui` already spends 27
-  characters before anything else. Moving the repo deeper can reintroduce the failure even
-  with hoisting on.
-- **After changing the install layout, run `expo prebuild --clean`.**
-  `android/settings.gradle` records the autolinked module paths as they were at generation
-  time; a reinstall that moves them leaves Gradle resolving projects that no longer exist
-  (`No matching variant of project :react-native-screens ... No variants exist`).
-
-### Opening it in Android Studio
-
-**Open `apps/mobile/android`, not the repository root.** There is no Gradle project at the
-workspace root, so Studio has nothing to import there. `android/` is generated and
-gitignored: treat it as build output, never edit it by hand, and re-run
-`expo prebuild --clean` after changing `app.json` or adding a native dependency.
-
-**Run it.** Either Studio's Run button with an emulator selected, or:
+Needs the Android SDK, **JDK 21** and a phone with USB debugging on (plus
+*Install via USB* on Xiaomi/MIUI). Details: [docs/android.md](docs/android.md).
 
 ```bash
-cd apps/mobile
-pnpm android          # first build ~10-20 min; later ones are much faster
+adb devices -l               # the phone should read "device"
+pnpm exec expo prebuild      # first time only: generates android/
+pnpm android                 # build, install, start Metro
 ```
 
-The emulator needs an image installed through Studio's Device Manager. The NDK (27.1) and
-CMake (3.22.1) download themselves on the first build — that already happened here, and the
-debug APK builds in ~2 minutes after that (`android/app/build/outputs/apk/debug/`, ~162MB:
-four ABIs plus the dev client, which is normal for a debug build).
-
-**On a physical device, USB debugging is not enough.** Many Android skins (MIUI and
-OneUI in particular) also gate sideloading behind a second developer-options switch —
-*Install via USB*, sometimes with a confirmation prompt on the phone itself. Without it
-`adb install` returns:
-
-```
-Failure [INSTALL_FAILED_USER_RESTRICTED: Install canceled by user]
-```
-
-which is the phone refusing, not the build being wrong.
-
-### Pointing it at a backend
-
-Metro serves the JS; the API is separate. `10.0.2.2` is how the Android emulator reaches
-the host machine's `localhost` — plain `localhost` inside the emulator is the emulator.
-
-| Target | `EXPO_PUBLIC_RP_SERVICE_URL` |
-|---|---|
-| Local backend, emulator | `http://10.0.2.2:8080` |
-| Local backend, physical device | `http://<your-LAN-ip>:8080` (same Wi-Fi) |
-| Production | `https://api.novelist.world` |
-
-Cleartext HTTP is allowed in debug builds (`android/app/src/debug/AndroidManifest.xml`), so
-the local `http://` URLs work without extra configuration. `../../../LOCAL_DEV.md` covers
-running the services; the proxy on `:8080` is what fronts both of them.
-
-### What works right now, and what will not
-
-**Sign-in needs the user-service change from MONOREPO_MIGRATION_PLAN §11.** It is written
-and compiles, but until it is running on whatever backend you point at, `/account/login`
-returns no tokens for a native client and the app says exactly that:
-
-> The server did not return a session for this client. Native token mode is not enabled on
-> the API yet.
-
-That message is the app working correctly. To get past it, run a local backend built from
-the current `rp-webapp-service` working tree, or deploy the change.
-
-Without a backend at all you can still check the landing screen, navigation, the theme in
-both light and dark, and that the login form validates — that is the whole of the app's
-public surface.
-
-**A test pass worth doing, in order:**
-
-1. App opens on `/novelists` — the landing screen, no session needed.
-2. Switch the emulator between light and dark mode. Colours come from `@nw/theme`, the same
-   values the web app renders.
-3. *Sign in* → the login form. Submit with a wrong password: one message, no detail (the
-   API answers the same for "no such account" and "wrong password", deliberately).
-4. Sign in properly → lands on the Novelists tab. Scroll: it pages 20 at a time and stops
-   at 80 — both rules live in `useNovelistLeaderboard`, shared with web.
-5. Notifications tab → same list the web page shows, same pagination.
-6. Profile tab → your own novelist, from the session that was already fetched.
-7. ≡ → the menu sheet → *Sign out*. It should return to the landing screen, and killing and
-   reopening the app should keep you signed out (the keychain is cleared).
-8. Sign in again, force-quit, reopen → still signed in, with no login screen. That is the
-   keychain and the single-flight refresh doing their job.
-
-### When something goes wrong
-
-| Symptom | Cause |
-|---|---|
-| `Unable to resolve module @nw/...` | Metro cache. `pnpm start --clear` |
-| The app launches on the phone and then never loads | Metro is unreachable from the phone. See "The app opens but never loads" below |
-| Red screen: "invalid hook call" | Two copies of React. `metro.config.js` sets `disableHierarchicalLookup` to prevent it — check it survived an edit |
-| `configureCMakeDebug` fails with a `java.lang.System` warning | JDK 24. Build with `JAVA_HOME` pointing at 21 — see above |
-| Build fails after adding a native dependency | `pnpm exec expo prebuild --clean`, then rebuild |
-| `ninja: manifest 'build.ninja' still dirty after 100 tries` | Path length. Check `.npmrc` still has `node-linker=hoisted`, and that the checkout is not deeply nested |
-| `No matching variant of project :react-native-screens` | `android/` was generated against a different node_modules layout. `expo prebuild --clean` |
-| `INSTALL_FAILED_USER_RESTRICTED` | The phone is refusing the sideload. Enable *Install via USB* in developer options |
-| `INSTALL_FAILED_UPDATE_INCOMPATIBLE` | The installed app was signed with a different key. `adb uninstall world.novelist.app` first |
-| A release build fails in `createBundleReleaseJsAndAssets` with `Process 'command 'cmd'' finished with non-zero exit value 1` | Gradle is hiding the real error. Run `./gradlew app:createBundleReleaseJsAndAssets` on its own to see it |
-| ...and that error is `Unable to resolve module ./../../node_modules/expo-router/entry.js` | Metro's server root drifted back to the workspace root. `metro.config.js` pins `server.unstable_serverRoot` to the app directory — check it survived an edit |
-| Every API call 401s | `EXPO_PUBLIC_RP_SERVICE_URL` is wrong, or the backend has no native token mode |
-| Everyone shows as offline, chat updates slowly | `EXPO_PUBLIC_SOCKET_URL` is unset or unreachable. This fails silently by design — chat falls back to polling. There is a `console.warn` in development only |
-| Every message reads "🔒 This message could not be decrypted." | `EXPO_PUBLIC_CHAT_E2E_SECRET` does not match the web build's `VITE_CHAT_E2E_SECRET` byte for byte |
-| A release build behaves as though `.env` were empty — no socket, undecryptable chat — while debug is fine | A `process.env` read Babel could not inline, because its key is not a string literal. See `src/lib/env.ts`, and grep the bundle for the value to confirm |
-| A screen's avatars never go green | That screen is not calling `useTrackOnline`. chat-server answers only about usernames the client asked for; an unregistered face is reported offline |
-| The composer sits under the keyboard | Something reintroduced `KeyboardAvoidingView`. It cannot work with `edgeToEdgeEnabled` — use `useKeyboardOffset` ([src/hooks/use-keyboard-height.ts](src/hooks/use-keyboard-height.ts)) |
-
-### The app opens but never loads
-
-The launcher opens the app over the USB cable, so it appears whether or not
-Metro can be reached. Fetching the JS bundle is a *second*, separate connection,
-and that is the one that fails. The symptom is a splash screen that never
-resolves, and — depending on where you are looking — an error that says nothing
-useful:
-
-```
-Network is unreachable
-```
-
-The last line `pnpm android` prints says which address the phone was told to use:
-
-```
-› Opening exp+novelist-world://expo-development-client/?url=http%3A%2F%2F172.16.1.193%3A8081
-```
-
-An address like that one is the *machine's LAN address*, and the phone has to
-reach it over Wi-Fi. It cannot when the phone is on mobile data, on a different
-network, or on a guest network with AP isolation — and "Network is unreachable"
-is precisely the kernel saying it has no route to that subnet.
-
-The default scripts avoid this entirely by serving on `localhost` and tunnelling
-over the cable, so start there:
+Every day after that:
 
 ```bash
-adb reverse tcp:8081 tcp:8081     # normally automatic; assert it if in doubt
-pnpm android                      # serves on localhost, over USB
+pnpm start                   # Metro over the USB cable
 ```
 
-Worth knowing when diagnosing: the tunnel can be tested from the phone itself,
-and answers without involving the app at all.
+The bundle travels down the cable (`adb reverse`), so it works on any network.
+
+### iOS (built in the cloud, no Mac needed)
+
+Needs an Apple Developer membership, an Expo account, and the iPhone registered
+with `eas device:create`. First-time steps: [docs/README.md](docs/README.md).
 
 ```bash
-adb shell curl -sS http://localhost:8081/status   # → packager-status:running
+eas build --profile development --platform ios
 ```
 
-If that answers and the app still hangs, the problem is the bundle rather than
-the connection, and Metro's own output will say so.
-
-To check the phone's side of the story:
+Scan the QR code from the finished build to install, then turn on Developer Mode
+(Settings > Privacy & Security). Every day after that:
 
 ```bash
-adb shell ifconfig | grep -A2 wlan0    # no `inet addr` = not on Wi-Fi at all
+pnpm start:lan               # Metro over Wi-Fi: phone and PC on the same network
 ```
 
-`pnpm android:lan` is the Wi-Fi path, for when you want the cable out. It needs
-the phone and the machine on the same network, and inbound TCP 8081 allowed
-through the machine's firewall.
+## Release builds
 
+A release build runs with the PC switched off.
 
-## Releasing it: a signed APK on a real phone
+### Android: build locally, install over USB
 
-A release build is a different thing from the debug build above, in the way that matters
-most for testing: **the JS is compiled into the APK**. Nothing is fetched from Metro, so
-the phone needs no cable, no Wi-Fi and no dev server once it is installed — and every
-`EXPO_PUBLIC_*` value is frozen into the bundle at build time, so changing `.env` means
-building again.
-
-### Before you build
-
-1. **Point `.env` at the backend you actually want.** `EXPO_PUBLIC_RP_SERVICE_URL` is
-   baked in. Release builds also forbid cleartext HTTP — the exception lives in
-   `android/app/src/debug/AndroidManifest.xml` and applies to debug only — so a
-   `http://10.0.2.2:8080` or LAN address fails in release even though it works in debug.
-   Use `https://api.novelist.world` unless you have a local backend behind TLS.
-   To see what a build actually froze in, grep the bundle for the value itself:
-
-   ```bash
-   grep -c 'nw-chat-server' \
-     android/app/build/generated/assets/createBundleReleaseJsAndAssets/index.android.bundle
-   ```
-
-   Zero means the value never reached the bundle — see the note on `env.ts` above.
-2. **Enable sideloading on the phone.** USB debugging is not enough on MIUI/HyperOS or
-   OneUI: *Install via USB* is a second switch, and MIUI may want a signed-in Mi account
-   before it will let you flip it. Without it the install ends in
-   `INSTALL_FAILED_USER_RESTRICTED`.
-3. **Check the device is there:** `adb devices -l` should list it as `device`, not
-   `unauthorized` (accept the RSA prompt on the phone) or `offline`.
-
-### Build and install
+A minute or two once the machine has built it before; much longer the first
+time. Uses `.env` from disk.
 
 ```bash
 cd apps/mobile/android
-./gradlew app:assembleRelease -x lint -x test -PreactNativeArchitectures=arm64-v8a
+./gradlew app:assembleRelease -PreactNativeArchitectures=arm64-v8a
 adb install -r app/build/outputs/apk/release/app-release.apk
 ```
 
-`-PreactNativeArchitectures` is worth passing. Left out, the APK carries native libraries
-for all four ABIs; `arm64-v8a` alone covers every Android phone sold in the last several
-years and lands at ~47MB. Drop the flag when you need an APK that also runs on an x86
-emulator.
+- The APK is `android/app/build/outputs/apk/release/app-release.apk`. Copy it to
+  any Android phone to share it.
+- `-PreactNativeArchitectures=arm64-v8a` builds for real phones only: about
+  45MB instead of about 125MB. Drop it for an emulator.
+- `adb install -r` keeps the app's data. If it answers
+  `INSTALL_FAILED_UPDATE_INCOMPATIBLE`, the installed copy was signed with another
+  key: `adb uninstall world.novelist.app`, then install again.
+- A Gradle build stops a running Metro. Restart it afterwards.
+- This APK is signed with the **debug key**: fine for your own phones, not
+  accepted by the Play Store. See
+  [docs/android.md](docs/android.md#it-is-signed-with-the-debug-key).
 
-Or in one step, which builds, installs and launches:
+One command that builds, installs and opens it:
 
 ```bash
-cd apps/mobile
 pnpm exec expo run:android --variant release --device
 ```
 
-The output is `android/app/build/outputs/apk/release/app-release.apk`. For the Play Store
-it is `./gradlew app:bundleRelease` instead, which produces an `.aab`.
+### Android: build in the cloud
 
-### It is signed with the debug key
-
-`android/app/build.gradle` points the `release` build type at `signingConfigs.debug` —
-the checked-in `debug.keystore`, the one every Android machine shares. That is what makes
-the two commands above work with no setup, and it is fine for putting a build on your own
-phone.
-
-It is **not** publishable: the Play Store will not take an APK signed with the debug key,
-and anyone at all can sign an update to it. Before shipping, generate a real keystore:
+For an APK you can hand to someone as a link, without a build machine:
 
 ```bash
-keytool -genkeypair -v -storetype PKCS12 -keystore novelist-release.keystore   -alias novelist -keyalg RSA -keysize 2048 -validity 10000
+eas build --profile preview --platform android
 ```
 
-Keep it and its passwords out of the repository — `~/.gradle/gradle.properties` is the
-usual home — and point the `release` signing config at them. Note that `android/` is
-generated: a hand edit there survives until the next `expo prebuild --clean` and no
-longer, so make it permanent with a config plugin in [plugins/](plugins/), the way
-`with-animated-webp` does.
-
-Changing signing keys changes the APK's identity, so the first install after the switch
-has to be a clean one:
+### iOS: build in the cloud
 
 ```bash
-adb uninstall world.novelist.app     # otherwise: INSTALL_FAILED_UPDATE_INCOMPATIBLE
+eas build --profile preview --platform ios
 ```
 
-### Checking it actually came up
+Fifteen to forty minutes on the free tier. Open the build's link (or scan its QR
+code) on the iPhone to install. It installs only on iPhones registered with
+`eas device:create`; register a new one, then build again.
 
-A release build that fails has nowhere to show you a red screen — it just dies. The crash
-buffer is where the reason is:
+### EAS environment variables
+
+Cloud builds take `EXPO_PUBLIC_*` from the Expo project, not from `.env`.
+[eas.json](eas.json) ties each profile to an environment of the same name:
+
+| Profile | Environment | Produces |
+| --- | --- | --- |
+| `development` | `development` | Dev client (needs Metro) |
+| `preview` | `preview` | Release build for your own devices |
+| `production` | `production` | Store build |
+
+Set the values once, in either place:
+
+- **Website:** expo.dev > the project > *Environment variables*. Add each
+  variable from `.env`, tick the environments it applies to, and choose
+  *Plain text* or *Sensitive* (not *Secret*: these values end up inside the app).
+- **Command line:**
+
+  ```bash
+  eas env:push --environment preview --path .env
+  eas env:list --environment preview
+  ```
+
+Values only reach builds made **after** they are set.
+
+### For the stores
 
 ```bash
-adb logcat -c                                        # clear first
+eas build --profile production --platform ios        # then: eas submit -p ios
+eas build --profile production --platform android    # then: eas submit -p android
+```
+
+Not done yet: Android needs a real signing key first, and the `production`
+environment needs its variables.
+
+### Checking a release build
+
+A release build has no red error screen. If it closes on launch:
+
+```bash
+adb logcat -c
 adb shell am start -n world.novelist.app/.MainActivity
-adb shell ps -A | grep novelist                      # still listed = still alive
 adb logcat -d -b crash -t 50
 ```
 
-### The app icon
-
-The icon is the web app's PWA icon, kept in one place and derived from it:
-`apps/web/public/icons/android-chrome-384x384.png` is the source, and
-[assets/icon.png](assets/icon.png) and [assets/adaptive-icon.png](assets/adaptive-icon.png)
-are made from that.
-
-Two files rather than one, because Android draws an adaptive icon as two layers and masks
-the result — a circle, a squircle, whatever the launcher wants — cropping to a safe circle
-that is 66% of the canvas. So:
-
-- `icon.png` is the full plate, used by iOS and by launchers too old for adaptive icons.
-  The web icon's rounded corners are transparent; they are flattened onto the plate colour
-  here, because iOS rejects icons with an alpha channel and old Android draws transparent
-  corners ragged.
-- `adaptive-icon.png` is the white mark **only**, on transparency, sized to sit inside the
-  safe circle. The green comes from `android.adaptiveIcon.backgroundColor` (`#0e5f4d`,
-  sampled from the plate) in [app.json](app.json). Carrying the green plate in the
-  foreground as well leaves a faint seam where its antialiased edge blends against the
-  identical colour behind it.
-
-After changing either file, regenerate the `mipmap-*` resources, then rebuild:
+To see whether a value made it into a local Android build:
 
 ```bash
-pnpm exec expo prebuild -p android    # not --clean: that deletes android/local.properties too
+grep -c "nw-chat-server" \
+  android/app/build/generated/assets/createBundleReleaseJsAndAssets/index.android.bundle
 ```
 
+Zero means it did not.
 
-## How the session works, and why it differs from web
+## Command reference
 
-The web app holds nothing: both tokens are httpOnly cookies the browser attaches itself.
-A phone has a cookie jar, but not one the app can inspect, back up, or migrate — so the
-tokens live in the platform keychain (`expo-secure-store`) and travel as headers.
+From `apps/mobile` unless a path is shown.
 
-That is the *only* difference between the two API clients. Both call `createApiClient`
-from `@nw/api`; this one passes `getToken`, turns `withCredentials` off, and identifies
-itself with `X-NW-Client: native`, which is what makes user-service return the token pair
-in the response body instead of only setting cookies.
+| Command | Does |
+| --- | --- |
+| `pnpm start` | Metro over USB (Android) |
+| `pnpm start:lan` | Metro over Wi-Fi (iPhone, or Android without the cable) |
+| `pnpm start --clear` | Metro with its cache emptied |
+| `pnpm android` | Build + install the Android dev build, start Metro |
+| `pnpm exec expo prebuild` | Regenerate `android/` after an `app.json` or native change |
+| `pnpm type-check` | TypeScript |
+| `./gradlew app:assembleRelease` (in `android/`) | Android release APK |
+| `./gradlew app:assembleDebug` (in `android/`) | Android dev APK, without starting Metro |
+| `adb install -r <apk>` | Install an APK, keeping app data |
+| `adb devices -l` | List attached phones |
+| `eas build --profile development --platform ios` | iOS dev build |
+| `eas build --profile preview --platform ios` | iOS release build for registered iPhones |
+| `eas build --profile preview --platform android` | Android release APK, in the cloud |
+| `eas device:create` | Register an iPhone |
+| `eas env:list --environment preview` | What a `preview` build will be given |
 
-Three files, and they are the ones to read first:
+## When something goes wrong
 
-| File | What it owns |
-|---|---|
-| [src/lib/session-store.ts](src/lib/session-store.ts) | The keychain. Also an in-memory copy, so `getToken()` on every request is not an async keychain round trip |
-| [src/lib/api.ts](src/lib/api.ts) | The client, and the single-flight refresh. Refresh tokens are single-use — two concurrent rotations read as *reuse* server-side and revoke the whole session family, so this is not optional |
-| [src/lib/auth.ts](src/lib/auth.ts) | Sign-in, and keeping what comes back. `@nw/features`' `useLogin` deliberately does not touch storage — it could not run in a browser if it did |
+| Symptom | Cause |
+| --- | --- |
+| Release build: logged in, but no live chat and messages will not decrypt | The build had no `EXPO_PUBLIC_*` values. Cloud build: set [EAS environment variables](#eas-environment-variables) and rebuild. Local build: check `.env` |
+| App opens, then sits on the splash screen | The dev build cannot reach Metro. Android: `pnpm start` with the cable in. iPhone: `pnpm start:lan`, same Wi-Fi, allow *Local Network* |
+| A code change does not show up | A release build is installed: it ignores Metro. Install the dev build again |
+| `INSTALL_FAILED_USER_RESTRICTED` | The phone refused the install. Turn on *Install via USB* in developer options |
+| `INSTALL_FAILED_UPDATE_INCOMPATIBLE` | Signed with a different key. `adb uninstall world.novelist.app` first |
+| `Unable to resolve module @nw/...` | Metro cache. `pnpm start --clear` |
+| Android build fails with a `java.lang.System` warning | Wrong JDK. Use 21 |
+| iPhone: "No development servers found" | Different Wi-Fi, firewall blocking 8081, or Metro started without `:lan` |
+| iPhone: the build will not install | The phone is not registered (`eas device:create`), or Developer Mode is off |
 
-## What is not here yet
+The full Android list, with the reasons, is in
+[docs/android.md](docs/android.md#when-something-goes-wrong).
 
-Not oversights — each is scheduled, and each is a phase because it is a real piece of work:
-
-- **Social sign-in needs the matching user-service.** [src/lib/oauth.ts](src/lib/oauth.ts)
-  runs PKCE with a one-time code: the `novelistworld://oauth` redirect carries a code, never
-  tokens, and the app exchanges it at `/account/oauth/native/token` (`NativeOAuthService` in
-  user-service). Against an API without that change the sheet ends on the web callback page
-  and never returns to the app. The password path works against either.
-- **Registration and onboarding** — Phase 9. `/login?mode=register` says so rather than
-  showing a form it cannot finish.
-- **Composing anything but plain text.** Replies, reactions, attachments and mentions are
-  *rendered* but cannot be *sent* — each needs its own picker, and mentions need the editor
-  (Phase 10). Incoming reactions and edits are applied live.
-- **Group creation, ice breakers, message reporting, editing your own message.**
-- **Profile editing and media upload** — Phase 4, the first write path.
-- **Push notifications** — Phase 10. The socket keeps chat live while the app is open or
-  backgrounded-but-alive; a killed app receives nothing.
-- **Rich-text composing.** Rich text *renders* (`@nw/richtext`) everywhere it does on web;
-  the 6,798-line `contenteditable` editor has no RN equivalent (`§4.3`).
-
-## Layout
+## Where things are
 
 ```
-app/                    expo-router. File tree is the route tree.
-  _layout.tsx           providers: store, react-query, ApiProvider, crypto, socket
-  index.tsx             where the app opens — session decides
-  novelists.tsx         public landing (no session, no fetching)
-  login.tsx             password sign-in + OAuth buttons
-  menu.tsx              user menu, presented as a modal
-  (tabs)/_layout.tsx    the signed-in shell, its auth gate and the unread badge
-  (tabs)/(home)/        novelists list, then profiles/friends/muses inside the tab
-  (tabs)/(inbox)/       inbox, conversation, conversation details
-  (tabs)/notifications.tsx
-  (tabs)/profile.tsx    own profile
+app/                    expo-router: the file tree is the route tree
+  _layout.tsx           providers and the root stack
+  (tabs)/               the signed-in shell: home, explore, inbox,
+                        interactions, notifications, profile
+  login.tsx, register/  signing in and up
+  menu.tsx              the user menu
+  edit-profile/, edit-muse/, library.tsx, story/
 src/
-  context/socket.tsx    the chat-server socket: tickets, backoff, presence, cache writes
-  hooks/                keyboard offset, chat send (socket with a REST fallback)
-  lib/                  api client, session storage, auth, oauth, env, chat crypto
+  components/           everything drawn, by feature
+  screens/              screens shared by more than one route
+  context/              the chat socket, tab bar, overlays
+  hooks/                data and device hooks
+  lib/                  api client, session, env, uploads
   theme/                @nw/theme tokens mapped onto React Native
-  components/           Avatar, ListStatus, RichText, badges, profile, chat/
-metro.config.js         workspace symlinks + a single React. Read the comments
+plugins/                Expo config plugins (changes to android/ that must survive prebuild)
+eas.json                cloud build profiles
 ```
 
-## Chat
-
-Three things are worth knowing before touching it.
-
-**The protocol is shared, the socket is not.** Every frame lives in `@nw/chat`
-(`src/socket.ts`) and web re-exports it, because a client that disagrees about a frame fails
-*silently* — permanently grey presence, or a message dropped by a `console.error` on a server
-nobody is tailing. `apps/web/scripts/socket-protocol-smoke.ts` restates chat-server's own
-validators and runs every frame we build through them, on each `pnpm verify`. The *connection
-policy* is native-only ([src/context/socket.tsx](src/context/socket.tsx)): `AppState` instead
-of visibility, and backoff instead of web's "any click re-checks the connection", because
-Android drops sockets during doze with no close frame.
-
-**Presence must be registered.** chat-server does not push a presence list — it answers only
-about the usernames the client last asked about. Any screen showing avatars calls
-`useTrackOnline(usernames)`; one that forgets shows everybody as offline, which looks exactly
-like everybody being offline.
-
-**Send over the socket.** chat-server persists *and broadcasts*; the REST endpoint only
-persists, so a REST-sent message reaches the other person on their next poll.
-`useSendChatMessage` prefers the socket and falls back to REST when it is down. Two things
-have no REST path at all and so are socket-only: **attachments** (`POST .../sendMessage`
-takes a message body and nothing else, so a fallback would send the caption without the
-pictures) and **reactions** (there is no backend route — chat-server owns the whole flow).
-The screens hide those controls while the socket is down rather than offering ones that
-silently do nothing.
-
-### Gestures, without a gesture library
-
-Swipe-to-reply on a bubble, swipe actions on an inbox row, and every draggable tray are
-`PanResponder` + `Animated` from React Native itself. `react-native-gesture-handler` and
-`reanimated` are the usual answer and both are native modules, so adopting them means every
-developer and every device rebuilds the dev client before the app runs again — a real cost
-for a vertical drag with a velocity threshold. The one thing the JS responder cannot do is
-arbitrate between a drag and a scroll in the same direction, which is why every tray confines
-its drag to a header strip and lets the content below it scroll normally.
-
-### Typing formatting
-
-There is no toolbar and no `contenteditable`. The composer reads `**bold**`, `*italic*`,
-`~~strike~~` and `` `code` `` and converts them to the same HTML web's editor would have
-saved, via `@nw/chat/markdown` — because what a message *contains* is a fact the two clients
-have to agree on. Plain text is sent plain: wrapping every message in `<div>` would stop
-`isMediaOnlyMessage` recognising a bare GIF URL and would change what the inbox preview says.
-
-The field shows it formatted as you type: `**bold**` is bold in the box, with the asterisks
-left on screen in grey so it is clear what they are and how to remove them. React Native's
-only mechanism for that is `<Text>` children, and the trap is that they cannot be combined
-with a `value` prop — Android's `TextInput` asserts `Cannot specify both value and children`
-and takes the app down on the first keystroke. So `MarkdownInput` is driven by its children
-alone; the draft still lives in state and still flows one way. The tokens must reproduce the
-typed string exactly, which is why `tokenizeMarkdown` is lossless: what it returns is not a
-description of the text, it *is* the text.
-
-For people who do not type asterisks there is a format row (B / I / S / `) above the field
-while it has focus. It wraps the selection, unwraps it on a second tap, and places the caret
-where an editor would.
-
-### Native modules the chat needs
-
-`expo-image-picker` (attachments), `expo-file-system` (the presigned S3 upload, via
-`uploadAsync` — `fetch` cannot send a `file://` URI as a request body), `expo-clipboard`
-(copying a message) and `expo-video` (clips and attached MP4s, played inline and muted the
-way web plays them). All four are native, so **`pnpm android` has to rebuild** after pulling
-these changes; Metro alone will start and then fail to find the modules.
-
-`react-native-webview` joins them, for one screen: the profile's featured song. A Spotify
-track is played by Spotify's own IFrame embed inside a 1×1 hidden web view
-(`src/components/spotify-embed.tsx`), driven by the same `togglePlay` / `seek` calls the web
-app makes — so a listener gets a full track when signed in to Spotify and a 30-second
-preview otherwise, identically on both clients. The alternatives were worse: App Remote
-hands playback to the installed Spotify app, and the Web Playback SDK is Premium-only and
-needs a per-listener OAuth token. Library uploads need none of this — they are a URL, and
-`expo-video`'s player takes an audio URL as happily as a video one.
-
-The clip *picker* needs none of them: Klipy returns an animated `webp`/`gif` preview
-alongside the `mp4`, `expo.webp.animated` is already on for Android, and a soundless looping
-preview is exactly what the web picker shows before you press play.
-
-In the thread, a clip gets `clip-player.tsx` — a drawn scrubber, clock and mute toggle
-rather than `nativeControls`, which is sized for a video that owns the screen and covers the
-picture inside a bubble. It autoplays muted and loops; the speaker button is the control
-that matters, so it is always visible rather than hidden behind a tap.
-
-Which messages are "media only" — the ones that render bare, with no bubble around them —
-is decided by `@nw/chat`: `isMediaOnlyMessage` for a lone image and `isVideoOnlyMessage` for
-a lone clip. Web only needs the first, which is why the second was missing and a sent clip
-played *and* printed its own `.mp4` URL underneath itself.
+`android/` (and `ios/`) are generated by `expo prebuild` and gitignored: do not
+edit them by hand.

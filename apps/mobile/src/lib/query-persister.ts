@@ -36,7 +36,7 @@ const STORAGE_KEY = "nw-query-cache";
  * for a cache, so the answer is to throw it away — the cost is one re-fetch,
  * against a screen rendering an object that is missing half its properties.
  */
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 
 /** A day. Older than this and a re-fetch is the honest answer anyway. */
 export const PERSIST_MAX_AGE = 24 * 60 * 60 * 1000;
@@ -46,29 +46,20 @@ export const PERSIST_MAX_AGE = 24 * 60 * 60 * 1000;
  *
  * `profile` covers both a novelist (`["profile", username]`) and their friends
  * (`["profile", username, "friends"]`), which is the pair the friends screen
- * renders from. `explore` covers both halves of the discovery feed — public
- * prompts and public out-of-character posts, which is content the app would
- * show a signed-out visitor anyway, and the one screen on this client where a
- * cold start otherwise means a spinner over a full page of cards.
+ * renders from.
  *
- * `home` is the home page's rails and friends' activity — your friends'
- * characters, the suggestions, the stories and the public characters. They are
- * what a cold start opens on, and without them every rail sat on its shimmer
- * until its request came back, while the feed below was already painted from
- * disk. The same kind of content as `profile`: what your friends have made,
- * which the app shows you anyway.
+ * `explore` and `home` — the discovery feed and the home page's rails and
+ * activity — used to be here too. They moved into the encrypted local store
+ * (`local-store/feeds.ts`, v2 of this cache), which keeps their first pages
+ * and refreshes them in the background; keeping a second, plaintext copy here
+ * would have been exactly the leak the whitelist exists to prevent.
  *
  * A prompt's comments are deliberately *not* here (`["prompt", id,
  * "comments"]`). They are fetched only when somebody opens a card, they are one
  * request, and persisting them would put a copy of every thread the reader has
  * glanced at on disk for a day to save a fetch nobody is waiting on.
  */
-const PERSISTED_PREFIXES = new Set([
-  "explore",
-  "home",
-  "leaderboard",
-  "profile",
-]);
+const PERSISTED_PREFIXES = new Set(["leaderboard", "profile"]);
 
 export const shouldPersistQuery = (query: Query): boolean => {
   const [prefix] = query.queryKey;

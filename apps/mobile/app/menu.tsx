@@ -1,3 +1,4 @@
+import { isSupportNovelist } from "@nw/chat";
 import { useSession, useUnreadConversations } from "@nw/features";
 import { type Href, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef } from "react";
@@ -26,6 +27,7 @@ import {
 } from "@/components/settings";
 import { useSignOut } from "@/hooks/use-sign-out";
 import { env } from "@/lib/env";
+import { useOutbox } from "@/lib/local-store";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 import { PRIVACY_URL, TERMS_URL, WEB_URL } from "@/lib/links";
 import { IconButton } from "@/components/icon-button";
@@ -45,9 +47,9 @@ import { IconButton } from "@/components/icon-button";
  *   landing step is one tap you do not have to take.
  * - **No Notifications row.** It is a tab in the bar already; a second way to
  *   reach it was a row that pushed the list below the fold on a 667pt phone.
- * - **Stories, Bookmarks, Music** are web routes with no native screen yet. A
- *   row that goes nowhere is worse than an absent one. Library has one: a
- *   read-only shelf, see `app/library.tsx`.
+ * - **Bookmarks, Music** are web routes with no native screen yet. A row
+ *   that goes nowhere is worse than an absent one. Stories and Library have
+ *   theirs: `screens/story-list.tsx` and `app/library.tsx`.
  *
  * ## Swiping it away
  *
@@ -75,6 +77,7 @@ export default function MenuScreen() {
   const insets = useSafeAreaInsets();
   const { novelist, user } = useSession();
   const { unreadCount } = useUnreadConversations();
+  const waiting = useOutbox().length;
   const { pending, signOut } = useSignOut();
 
   const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
@@ -265,7 +268,7 @@ export default function MenuScreen() {
                 ) : (
                   <Chip icon="alert-circle" label="Unverified" tone="danger" />
                 )}
-                {novelist ? (
+                {novelist && !isSupportNovelist(novelist.username) ? (
                   <Chip
                     icon="flash"
                     label={`${novelist.totalPoints.toLocaleString()} XP`}
@@ -335,6 +338,11 @@ export default function MenuScreen() {
             onPress={() => go("/(tabs)/(profile)/muses", true)}
           />
           <SettingsRow
+            icon="book-outline"
+            label="Stories"
+            onPress={() => go("/(tabs)/(profile)/stories", true)}
+          />
+          <SettingsRow
             icon="library-outline"
             label="Library"
             onPress={() => go("/library")}
@@ -344,6 +352,17 @@ export default function MenuScreen() {
             icon="chatbubbles-outline"
             label="Inbox"
             onPress={() => go("/(tabs)/(inbox)")}
+          />
+          <SettingsRow
+            badge={waiting}
+            icon="cloud-upload-outline"
+            label="Outbox"
+            onPress={() => go("/outbox")}
+            subtitle={
+              waiting > 0
+                ? `${waiting} waiting for a connection`
+                : "Messages and posts written offline wait here"
+            }
           />
           <SettingsRow
             icon="ribbon-outline"

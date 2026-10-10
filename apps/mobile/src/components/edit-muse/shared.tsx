@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { Text, TextInput } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { EmptyScene } from "@/components/empty-feed";
 import { ListStatus } from "@/components/list-status";
 import { PillButton } from "@/components/settings";
 import { useKeyboardOffset } from "@/hooks/use-keyboard-height";
@@ -72,7 +73,14 @@ export const MuseGate = ({
   if (!muse) {
     return (
       <ListStatus
-        empty="This character could not be found."
+        empty={
+          <EmptyScene
+            aside="(Or the link is wrong. We checked under the bookshelf too.)"
+            scene="vanished-muse"
+            subtitle="No farewell scene, no dramatic last words. Just an empty card and one very suspicious novelist holding an eraser."
+            title="Plot twist: this character got written out"
+          />
+        }
         error={query.error}
         onRetry={() => void query.refetch()}
       />

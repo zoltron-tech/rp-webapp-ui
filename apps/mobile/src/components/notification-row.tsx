@@ -1,9 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import {
   isStoredNotification,
+  notificationHue,
+  notificationKicker,
   queryKeys,
   useNotificationReadState,
 } from "@nw/features";
+import { mixColors } from "@nw/theme";
 import type { NovelistWorldNotification } from "@nw/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -12,31 +15,24 @@ import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { useConnectionAction } from "@/hooks/use-connection";
-import { notificationHref, notificationLook } from "@/lib/notification-target";
+import { notificationHref, notificationIcon } from "@/lib/notification-target";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 import { Button } from "@/components/button";
 
 /**
  * One notification.
  *
- * The row this replaces was a tinted card with the sentence in it and nothing
- * else: no name, no destination, and — because the whole card went accent while
- * unread — a list that looked like a stack of alerts rather than a feed of
- * things that happened. Three things changed.
+ * Who did it is the face — two of them, overlapped, when the row stands for a
+ * crowd ("Naga and 3 others"). What they did is the small coloured glyph on
+ * the face's corner and the kicker above the sentence, both in the kind's own
+ * colour: red for a like, blue for a comment, violet for a mention. The
+ * sentence is the server's, shown as it comes, with the name in the text
+ * colour and the action in the secondary one.
  *
- * **It says who.** `source.title` is the person, `notificationText` is what
- * they did; the old row drew only the second, so half the list read "sent a
- * friend request." with a face beside it and no name anywhere. They are now one
- * line, the name in the text colour and the action in the secondary one, which
- * is the shape every notification list on a phone uses.
- *
- * **It says what kind.** A small glyph sits on the corner of the face —
- * a heart for a reaction, a speech bubble for a reply, a person for a friend
- * request — so the list can be read by shape before it is read by word.
- *
- * **Unread is a mark, not a wash.** A hairline rail down the leading edge and a
- * dot at the end, over a surface a single step above the page. The accent wash
- * made three unread rows louder than the rest of the screen put together.
+ * Unread is a faint wash of that same colour and a dot at the end, over the
+ * group's panel. The accent wash this replaces made three unread rows louder
+ * than the rest of the screen put together; a wash in the row's own hue, at a
+ * tenth, reads as a highlight on the row rather than an alarm.
  *
  * ## Where it goes
  *
@@ -55,8 +51,9 @@ import { Button } from "@/components/button";
  * request back that has already been dealt with.
  */
 
-/** Web's 36, a step up for a touch row. */
-const AVATAR = 40;
+const AVATAR = 42;
+/** Each of the two faces of a crowd, overlapped on the diagonal. */
+const PAIR = 30;
 const MARK = 18;
 
 /** Same relative-time vocabulary the web notification card uses. */
@@ -77,7 +74,7 @@ export const relativeTime = (epochSeconds: number): string => {
 /**
  * Where a row sits in its group, which is what shapes it.
  *
- * The rows of one period are drawn as a single panel: the first rounds the
+ * The rows of one section are drawn as a single panel: the first rounds the
  * top, the last rounds the bottom and closes the edge, the ones between are
  * ruled apart. Each row draws its own slice, so the list stays a flat,
  * windowed list rather than a list of containers.
@@ -102,15 +99,18 @@ const NotificationRowView = ({
 
   const { source } = notification;
   const href = notificationHref(notification);
-  const look = notificationLook(notification);
+  const hue = notificationHue(notification);
   const isRequest = notification.type === "FRIEND_REQUEST";
+  // The latest performer is the row's source; a second face shows it is a crowd.
+  const second = (notification.actors ?? []).find(
+    (actor) => actor.id !== source?.id,
+  );
 
-  const markTone =
-    look.tone === "positive"
-      ? theme.success
-      : look.tone === "danger"
-        ? theme.error
-        : theme.accent.solid;
+  const panel = theme.material.card.backgroundColor;
+  // The kind's colour, mixed toward the theme's text so the kicker stays
+  // readable on a light page and a dark one alike.
+  const kickerColor = mixColors(hue, 0.62, theme.text);
+  const wash = mixColors(hue, 0.12, panel);
 
   const busy = action.isPending;
   const running = busy ? action.variables?.action : undefined;
@@ -130,7 +130,7 @@ const NotificationRowView = ({
 
   return (
     <Pressable
-      accessibilityLabel={`${source?.title ?? "Someone"} ${notification.notificationText}`}
+      accessibilityLabel={`${notificationKicker(notification)}. ${source?.title ?? "Someone"} ${notification.notificationText}`}
       accessibilityRole={href ? "button" : "text"}
       disabled={!href}
       onPress={() => {
@@ -151,50 +151,62 @@ const NotificationRowView = ({
         (place === "first" || place === "only") && styles.rowTop,
         (place === "last" || place === "only") && styles.rowBottom,
         {
-          // A slice of the group's panel: the card fill, with an unread row
-          // washed in the accent over it.
           backgroundColor:
             pressed && href
               ? theme.material.fillPressed
               : notification.isRead
-                ? theme.material.card.backgroundColor
-                : theme.accent.tint,
+                ? panel
+                : wash,
           borderColor: theme.material.edge,
         },
       ]}
     >
-      {/* The unread rail: the leading edge of the row, not a wash over it. */}
-      {notification.isRead ? null : (
-        <View
-          style={[styles.rail, { backgroundColor: theme.accent.surfaceHover }]}
-        />
-      )}
-
-      <View>
-        <Avatar
-          image={source?.avatar}
-          name={source?.title}
-          size={AVATAR}
-          uri={source?.avatar?.src ?? source?.image}
-        />
+      <View style={styles.faces}>
+        {second ? (
+          <>
+            <View style={[styles.faceBack, { borderColor: panel }]}>
+              <Avatar name={second.title} size={PAIR} uri={second.image} />
+            </View>
+            <View style={[styles.faceFront, { borderColor: panel }]}>
+              <Avatar
+                image={source?.avatar}
+                name={source?.title}
+                size={PAIR}
+                uri={source?.avatar?.src ?? source?.image}
+              />
+            </View>
+          </>
+        ) : (
+          <Avatar
+            image={source?.avatar}
+            name={source?.title}
+            size={AVATAR}
+            uri={source?.avatar?.src ?? source?.image}
+          />
+        )}
         {/* What kind of thing happened, on the corner of who did it. */}
         <View
-          style={[
-            styles.mark,
-            {
-              backgroundColor: markTone,
-              borderColor: theme.material.card.backgroundColor,
-            },
-          ]}
+          style={[styles.mark, { backgroundColor: hue, borderColor: panel }]}
         >
-          <Ionicons color="#ffffff" name={look.icon} size={10} />
+          <Ionicons
+            color="#ffffff"
+            name={notificationIcon(notification)}
+            size={10}
+          />
         </View>
       </View>
 
       <View style={styles.body}>
+        <Text numberOfLines={1} style={[styles.kicker, { color: kickerColor }]}>
+          {notificationKicker(notification)}
+        </Text>
+
         <Text
           numberOfLines={3}
-          style={[styles.text, { color: theme.textGray }]}
+          style={[
+            styles.text,
+            { color: notification.isRead ? theme.textGray : theme.text },
+          ]}
         >
           {source?.title ? (
             <Text style={[styles.name, { color: theme.text }]}>
@@ -235,7 +247,7 @@ const NotificationRowView = ({
 
       <View style={styles.tail}>
         {notification.isRead ? null : (
-          <View style={[styles.dot, { backgroundColor: theme.accent.solid }]} />
+          <View style={[styles.dot, { backgroundColor: hue }]} />
         )}
         {href ? (
           <Ionicons
@@ -265,11 +277,35 @@ const styles = StyleSheet.create({
   body: { flex: 1, gap: space.xxs, minWidth: 0 },
   chevron: { opacity: 0.6 },
   dot: { borderRadius: radius.xs, height: 8, width: 8 },
+  // A ring in the panel's colour parts the front face from the one behind.
+  faceBack: {
+    borderRadius: PAIR / 2 + 1,
+    borderWidth: 1,
+    left: 0,
+    opacity: 0.85,
+    position: "absolute",
+    top: 0,
+  },
+  faceFront: {
+    borderRadius: PAIR / 2 + 2,
+    borderWidth: 2,
+    bottom: 0,
+    position: "absolute",
+    right: 0,
+  },
+  faces: { height: AVATAR, width: AVATAR },
+  kicker: {
+    fontSize: fontSize.eyebrow,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    lineHeight: 14,
+    textTransform: "uppercase",
+  },
   mark: {
     alignItems: "center",
     borderRadius: MARK / 2,
     borderWidth: 2,
-    bottom: -2,
+    bottom: -3,
     height: MARK,
     justifyContent: "center",
     position: "absolute",
@@ -277,13 +313,6 @@ const styles = StyleSheet.create({
     width: MARK,
   },
   name: { fontWeight: "700" },
-  rail: {
-    bottom: 0,
-    left: 0,
-    position: "absolute",
-    top: 0,
-    width: 3,
-  },
   row: {
     alignItems: "flex-start",
     // A rule under every row but the group's last, which takes the panel's
@@ -294,7 +323,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: space.m,
     marginHorizontal: space.md,
-    // Clipped, so the unread rail follows the panel's corners.
     overflow: "hidden",
     paddingHorizontal: space.m,
     paddingVertical: space.m,
@@ -309,7 +337,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: radius.card,
     borderTopWidth: border.edge,
   },
-  tail: { alignItems: "center", gap: space.xs, paddingTop: space.xxs },
+  tail: { alignItems: "center", gap: space.xs, paddingTop: space.m },
   text: { fontSize: fontSize.body, lineHeight: 20 },
   when: { fontSize: fontSize.caption },
 });

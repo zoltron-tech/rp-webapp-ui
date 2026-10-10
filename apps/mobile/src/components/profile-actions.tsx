@@ -1,12 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
-import { SUPPORT_USERNAME } from "@nw/chat";
+import { isSupportNovelist } from "@nw/chat";
 import { useSession } from "@nw/features";
 import type { Novelist } from "@nw/types";
 import * as Clipboard from "expo-clipboard";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, Pressable, Share, StyleSheet, View } from "react-native";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { type ActionItem, ActionMenu } from "@/components/action-menu";
+import { ShareProfileSheet } from "@/components/share/share-profile-sheet";
 import {
   type Connection,
   useConnectionActions,
@@ -15,11 +16,15 @@ import {
 import { border, radius, space, useAppTheme } from "@/theme";
 
 /**
- * The two buttons over a profile's banner.
+ * The two buttons on a profile's identity row.
  *
- * Web puts them in the banner's top-right corner and so does this: a connection
- * button whose icon *is* the state — add, sent, received, friends — and a `⋯`
- * for everything that is not about the connection. Both open menus rather than
+ * Web puts them in the banner's top-right corner; they started there here
+ * too, and moved: the banner stretches under an over-scroll, and two buttons
+ * riding a stretching picture looked like part of it. They sit at the end of
+ * the handle row now, beside the crests, where they stay put and read as
+ * actions on the person rather than on the picture. A connection button whose
+ * icon *is* the state — add, sent, received, friends — and a `⋯` for
+ * everything that is not about the connection. Both open menus rather than
  * acting on a single tap, which is web's shape too and the right one here:
  * every item behind them is a write, and several cannot be undone.
  *
@@ -64,8 +69,6 @@ const confirm = (
     { cancelable: true },
   );
 
-const PROFILE_URL = "https://novelist.world/rp/profile";
-
 export const ProfileActions = ({ novelist }: { novelist: Novelist }) => {
   const theme = useAppTheme();
   const router = useRouter();
@@ -74,9 +77,10 @@ export const ProfileActions = ({ novelist }: { novelist: Novelist }) => {
   const openConversation = useOpenConversation();
 
   const [menu, setMenu] = useState<"none" | "connection" | "more">("none");
+  const [sharing, setSharing] = useState(false);
 
   const isSelf = session.novelist?.username === novelist.username;
-  const isSupport = novelist.username === SUPPORT_USERNAME;
+  const isSupport = isSupportNovelist(novelist.username);
   const connection = (novelist.connection ?? null) as Connection;
   const close = () => setMenu("none");
 
@@ -119,13 +123,10 @@ export const ProfileActions = ({ novelist }: { novelist: Novelist }) => {
     void Clipboard.setStringAsync(novelist.username);
   };
 
-  const shareProfile = () => {
-    close();
-    const url = `${PROFILE_URL}/${novelist.username}`;
-    // The platform sheet rather than a dialog of our own: it is the one place a
-    // phone already knows every app the link could go to.
-    void Share.share({ message: url, url });
-  };
+  // Web's `ShareProfileDialog`: the community tray, with the platform sheet
+  // behind "More options". Opened through `onSelect` so the menu has really
+  // gone before the tray is presented (iOS shows one modal at a time).
+  const shareProfile = () => setSharing(true);
 
   const connectionMenu: ActionItem[] =
     connection === "FRIEND"
@@ -192,7 +193,7 @@ export const ProfileActions = ({ novelist }: { novelist: Novelist }) => {
     {
       icon: "share-social-outline",
       label: "Share profile",
-      onPress: shareProfile,
+      onSelect: shareProfile,
     },
 
     ...(isSupport
@@ -296,17 +297,25 @@ export const ProfileActions = ({ novelist }: { novelist: Novelist }) => {
               {
                 backgroundColor:
                   connection === "FRIEND"
-                    ? theme.accent.surface
-                    : theme.glass.mediaChip,
+                    ? theme.accent.tint
+                    : pressed
+                      ? theme.material.fillPressed
+                      : theme.material.fill,
                 borderColor:
                   connection === "FRIEND"
                     ? theme.accent.surfaceHover
-                    : "rgba(255,255,255,0.35)",
+                    : theme.material.edge,
                 opacity: pressed ? 0.75 : 1,
               },
             ]}
           >
-            <Ionicons color="#ffffff" name={connectionIcon} size={17} />
+            <Ionicons
+              color={
+                connection === "FRIEND" ? theme.accent.textStrong : theme.text
+              }
+              name={connectionIcon}
+              size={17}
+            />
 
             {/* The only state where somebody is waiting on you. */}
             {connection === "FRIEND_REQUEST_RECEIVED" ? (
@@ -331,15 +340,23 @@ export const ProfileActions = ({ novelist }: { novelist: Novelist }) => {
           style={({ pressed }) => [
             styles.button,
             {
-              backgroundColor: theme.glass.mediaChip,
-              borderColor: "rgba(255,255,255,0.35)",
+              backgroundColor: pressed
+                ? theme.material.fillPressed
+                : theme.material.fill,
+              borderColor: theme.material.edge,
               opacity: pressed ? 0.75 : 1,
             },
           ]}
         >
-          <Ionicons color="#ffffff" name="ellipsis-horizontal" size={17} />
+          <Ionicons color={theme.text} name="ellipsis-horizontal" size={17} />
         </Pressable>
       </View>
+
+      <ShareProfileSheet
+        novelist={novelist}
+        onClose={() => setSharing(false)}
+        visible={sharing}
+      />
 
       <ActionMenu
         items={connectionMenu}
@@ -386,12 +403,10 @@ const styles = StyleSheet.create({
     top: 0,
     width: 10,
   },
+  // In the flow of the handle row, pushed to its far end.
   row: {
     flexDirection: "row",
     gap: space.sm,
-    position: "absolute",
-    right: space.ms,
-    top: space.ms,
-    zIndex: 2,
+    marginLeft: "auto",
   },
 });

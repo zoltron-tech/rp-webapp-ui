@@ -18,7 +18,6 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import {
   IceBreakerTrail,
@@ -31,7 +30,9 @@ import {
 } from "@/components/chat/quick-add-muse-row";
 import { SourcePicker } from "@/components/chat/source-picker";
 import { GradientSurface } from "@/components/gradient-surface";
+import { IconButton } from "@/components/icon-button";
 import { BottomSheet } from "@/components/sheet";
+import { Text } from "@/components/text";
 import { useChatSocket } from "@/context/socket";
 import {
   useDeleteIceBreaker,
@@ -39,7 +40,6 @@ import {
 } from "@/hooks/use-ice-breakers";
 import { useQuickAddMuse } from "@/hooks/use-quick-add-muse";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
-import { IconButton } from "@/components/icon-button";
 
 /**
  * One ice breaker, opened.
@@ -59,7 +59,27 @@ import { IconButton } from "@/components/icon-button";
  * Socket-only, so the send is disabled rather than optimistic while the
  * connection is down: a reply that quietly failed would leave someone believing
  * they had started a conversation that does not exist.
+ *
+ * ## Built for the keyboard being up
+ *
+ * The author is one row — face, name, when — rather than a centred stack, so
+ * the prompt being answered is still on screen once the keyboard has taken
+ * half of a 667pt one. And an empty reply box offers a few openers: the hard
+ * part of answering a stranger is the first line, and a tap that writes it
+ * (into the field, to be edited, never sent on its own) is the difference
+ * between a reply and a closed sheet.
  */
+
+/** First lines, for someone who wants to answer and has not found one. */
+const OPENERS = [
+  "Tell me more…",
+  "Count me in!",
+  "Ha, same here.",
+  "Now I'm curious.",
+] as const;
+
+const HERO_FACE = 44;
+
 export const IceBreakerSheet = ({
   iceBreaker,
   onClose,
@@ -207,17 +227,43 @@ export const IceBreakerSheet = ({
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.hero}>
-            <Avatar
-              name={iceBreaker.source.name}
-              size={56}
-              uri={iceBreaker.source.image}
-            />
-            <Text
-              numberOfLines={1}
-              style={[styles.author, { color: theme.text }]}
-            >
-              {iceBreaker.source.name}
-            </Text>
+            <View style={styles.heroFace}>
+              <Avatar
+                image={iceBreaker.source.avatar}
+                name={iceBreaker.source.name}
+                size={HERO_FACE}
+                uri={iceBreaker.source.avatar?.src ?? iceBreaker.source.image}
+                username={
+                  iceBreaker.source.sourceType === "NOVELIST"
+                    ? iceBreaker.source.urlProp
+                    : undefined
+                }
+              />
+            </View>
+            <View style={styles.heroText}>
+              <Text
+                numberOfLines={1}
+                style={[styles.author, { color: theme.text }]}
+              >
+                {iceBreaker.source.name}
+              </Text>
+              <Text
+                numberOfLines={1}
+                style={[styles.when, { color: theme.textGray }]}
+              >
+                {mine
+                  ? "Your ice breaker"
+                  : iceBreaker.source.sourceType === "MUSE"
+                    ? "Character"
+                    : "Novelist"}
+                {" · "}
+                {/* The endpoint sends epoch seconds, not ISO — unparsed, every
+                    ice breaker is dated 1970. See `parseIceBreakerTimestamp`. */}
+                {toFormattedDate(
+                  parseIceBreakerTimestamp(iceBreaker.createdOn),
+                )}
+              </Text>
+            </View>
           </View>
 
           {/*
@@ -242,22 +288,10 @@ export const IceBreakerSheet = ({
               style={[styles.bubble, { borderColor: paint.border }]}
               to={paint.to}
             >
-              <Ionicons
-                color={paint.watermark}
-                name="chatbubble-ellipses"
-                size={22}
-                style={styles.watermark}
-              />
               <Text style={[styles.message, { color: paint.ink }]}>
                 {iceBreaker.message}
               </Text>
             </GradientSurface>
-
-            <Text style={[styles.when, { color: theme.textGray }]}>
-              {/* The endpoint sends epoch seconds, not ISO — unparsed, every
-                  ice breaker is dated 1970. See `parseIceBreakerTimestamp`. */}
-              {toFormattedDate(parseIceBreakerTimestamp(iceBreaker.createdOn))}
-            </Text>
           </View>
 
           {mine ? (
@@ -311,6 +345,38 @@ export const IceBreakerSheet = ({
                 <QuickAddMuseError message="The character could not be created. Try again." />
               ) : null}
 
+              {trimmed ? null : (
+                <ScrollView
+                  contentContainerStyle={styles.openers}
+                  horizontal
+                  keyboardShouldPersistTaps="handled"
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.openerRail}
+                >
+                  {OPENERS.map((opener) => (
+                    <Pressable
+                      accessibilityHint="Puts this in the reply box"
+                      accessibilityRole="button"
+                      key={opener}
+                      onPress={() => setMessage(opener)}
+                      style={({ pressed }) => [
+                        styles.opener,
+                        {
+                          backgroundColor: pressed
+                            ? theme.glass.fillPressed
+                            : theme.material.fillTranslucent,
+                          borderColor: theme.material.edgeTranslucent,
+                        },
+                      ]}
+                    >
+                      <Text style={[styles.openerLabel, { color: theme.text }]}>
+                        {opener}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              )}
+
               <View style={styles.replyLine}>
                 {/* Whose voice this is, beside the field rather than only in
                     the placeholder. Web keeps the face here for the same
@@ -363,7 +429,7 @@ export const IceBreakerSheet = ({
 };
 
 const styles = StyleSheet.create({
-  author: { fontSize: fontSize.body, fontWeight: "700" },
+  author: { fontSize: fontSize.body, fontWeight: "700", lineHeight: 20 },
   body: {
     gap: space.md,
     paddingBottom: space.lg,
@@ -373,7 +439,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     borderWidth: border.edge,
     paddingHorizontal: space.md,
-    paddingRight: space.lg,
     paddingVertical: space.ms,
   },
   delete: {
@@ -386,10 +451,29 @@ const styles = StyleSheet.create({
     padding: space.md,
   },
   deleteLabel: { fontSize: fontSize.body, fontWeight: "600" },
-  hero: { alignItems: "center", gap: space.xs },
+  hero: { alignItems: "center", flexDirection: "row", gap: space.m },
+  // Centred, so the presence ring grows around the face rather than moving it.
+  heroFace: {
+    alignItems: "center",
+    height: HERO_FACE,
+    justifyContent: "center",
+    width: HERO_FACE,
+  },
+  heroText: { flex: 1, gap: space.xxs, minWidth: 0 },
   message: { fontSize: fontSize.body, lineHeight: 21 },
   note: { fontSize: fontSize.meta, textAlign: "center" },
-  quote: { gap: space.xs },
+  opener: {
+    borderRadius: radius.full,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: space.m,
+    paddingVertical: space.s,
+  },
+  openerLabel: { fontSize: fontSize.caption, fontWeight: "600" },
+  // Bleeds through the sheet's gutter, so chips scroll off its edge.
+  openerRail: { flexGrow: 0, marginHorizontal: -space.md },
+  openers: { gap: space.s, paddingHorizontal: space.md },
+  // Pulled up toward the face, so the trail reads as joining the two.
+  quote: { gap: space.xs, marginTop: -space.s },
   replyInput: {
     flex: 1,
     fontSize: fontSize.body,
@@ -409,6 +493,5 @@ const styles = StyleSheet.create({
     paddingRight: space.xs,
   },
   send: { marginBottom: space.xxs },
-  watermark: { position: "absolute", right: space.sm, top: space.sm },
-  when: { alignSelf: "flex-end", fontSize: fontSize.caption },
+  when: { fontSize: fontSize.caption },
 });

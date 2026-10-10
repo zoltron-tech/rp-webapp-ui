@@ -1,9 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEventListener } from "expo";
-import { useVideoPlayer, type VideoPlayer, VideoView } from "expo-video";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { PanResponder, Pressable, StyleSheet, View } from "react-native";
+import { useVideoPlayer, VideoView } from "expo-video";
+import { useCallback, useRef, useState } from "react";
+import {
+  PanResponder,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
 import { Text } from "@/components/text";
+import { usePlaybackSlot } from "@/lib/playback";
 import { fontSize, MEDIA_CHIP, radius, space, useAppTheme } from "@/theme";
 
 /**
@@ -45,36 +52,12 @@ const FULLSCREEN = {
   orientation: "default",
 } as const;
 
-/**
- * The one clip allowed to be playing.
- *
- * A feed can have three armed players on screen and a thread more; two of
- * them running at once is two soundtracks when unmuted and two decoders when
- * not, for one pair of eyes. So starting any clip pauses whichever was
- * playing before it — the rule every feed with inline video follows, and
- * the one that makes "tap to play" also mean "and stop the other one".
- *
- * Module-wide rather than per screen: a clip in a chat bubble and one in a
- * feed card behind it are still two clips on one phone.
+/*
+ * The one clip allowed to be playing — and none once the screen is left — is
+ * `lib/playback`'s rule, shared with the profile song and the gallery viewer:
+ * a clip in a chat bubble and a song on the profile behind it are still two
+ * players on one phone.
  */
-let nowPlaying: VideoPlayer | null = null;
-
-const claimPlayback = (player: VideoPlayer) => {
-  if (nowPlaying && nowPlaying !== player) {
-    // A player whose view has gone is already released, and a released
-    // player throws on any call; there is nothing left to pause anyway.
-    try {
-      nowPlaying.pause();
-    } catch {
-      // Released: nothing to do.
-    }
-  }
-  nowPlaying = player;
-};
-
-const releasePlayback = (player: VideoPlayer) => {
-  if (nowPlaying === player) nowPlaying = null;
-};
 
 /** The seek track's visible thickness. Its touch area is far taller. */
 const TRACK_HEIGHT = 3;
@@ -134,6 +117,8 @@ export const ClipPlayer = ({
   const [time, setTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [scrubbing, setScrubbing] = useState(false);
+  // iOS only: the system controls, for as long as the clip is full screen.
+  const [fullscreen, setFullscreen] = useState(false);
 
   // Read inside the pan handlers, which are created once and cannot close over
   // state that changes.
@@ -155,13 +140,13 @@ export const ClipPlayer = ({
     }
   });
 
-  useEventListener(player, "playingChange", ({ isPlaying }) => {
-    setPlaying(isPlaying);
-    if (isPlaying) claimPlayback(player);
-  });
+  useEventListener(player, "playingChange", ({ isPlaying }) =>
+    setPlaying(isPlaying),
+  );
 
-  // Gone from the screen: no longer the one playing, whatever it was doing.
-  useEffect(() => () => releasePlayback(player), [player]);
+  // Starting this clip pauses whatever else was playing; leaving the screen
+  // pauses this one.
+  usePlaybackSlot(() => player.pause(), playing);
 
   const seekToRatio = useCallback(
     (ratio: number) => {
@@ -231,7 +216,16 @@ export const ClipPlayer = ({
       setMuted(false);
     }
     if (!player.playing) player.play();
-    void view.current?.enterFullscreen();
+    if (Platform.OS !== "ios") {
+      void view.current?.enterFullscreen();
+      return;
+    }
+    // iOS presents the system player exactly as this view is configured, and
+    // this view has no controls: full screen was a picture with no way to
+    // pause it or leave. So the system's are switched on for the stay, and
+    // the presentation waits a frame for the prop to reach the native view.
+    setFullscreen(true);
+    requestAnimationFrame(() => void view.current?.enterFullscreen());
   };
 
   return (
@@ -254,8 +248,9 @@ export const ClipPlayer = ({
           fullscreenOptions={FULLSCREEN}
           // Never the platform's own: they are sized for a full screen and
           // cover the picture at the size a bubble actually is.
-          nativeControls={false}
+          nativeControls={fullscreen}
           onFullscreenExit={() => {
+            setFullscreen(false);
             // Back in the bubble, quiet again — the same state it opened in.
             player.muted = true;
             setMuted(true);

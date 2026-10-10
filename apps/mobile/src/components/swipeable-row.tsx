@@ -94,6 +94,21 @@ export const SwipeableRow = ({
     }).start();
   };
 
+  // The actions are read at the end of a swipe, not when the responder is
+  // built: that happens once, and would keep the first render's callbacks.
+  const actions = useRef({ leftAction, rightAction });
+  actions.current = { leftAction, rightAction };
+
+  const finish = () => {
+    const distance = offset.current;
+    offset.current = 0;
+    settle();
+    if (distance > ACTION_THRESHOLD) actions.current.leftAction?.onTrigger();
+    else if (distance < -ACTION_THRESHOLD) {
+      actions.current.rightAction?.onTrigger();
+    }
+  };
+
   const pan = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_event, gesture) => {
@@ -110,17 +125,14 @@ export const SwipeableRow = ({
         offset.current = distance;
         translateX.setValue(distance);
       },
-      onPanResponderRelease: () => {
-        const distance = offset.current;
-        offset.current = 0;
-        settle();
-        if (distance > ACTION_THRESHOLD) leftAction?.onTrigger();
-        else if (distance < -ACTION_THRESHOLD) rightAction?.onTrigger();
-      },
-      onPanResponderTerminate: () => {
-        offset.current = 0;
-        settle();
-      },
+      onPanResponderRelease: finish,
+      // On iOS the list's own scroll takes the touch back the moment a swipe
+      // drifts a few points vertically, and the gesture ends here instead of
+      // in `Release`. A row already pulled past the threshold has said what
+      // it wants, so the end is the same; short of it, the row just settles.
+      onPanResponderTerminate: finish,
+      // Another JS responder asking for the touch mid-swipe is refused.
+      onPanResponderTerminationRequest: () => false,
       // The row's own `Pressable` must still work, so a touch that has not
       // moved is never claimed here.
       onStartShouldSetPanResponder: () => false,

@@ -84,10 +84,19 @@ const refresh = createRefreshCoordinator(async () => {
       },
     );
 
-    if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      // The server looked at the token and refused it: the session is over.
       refreshKnownDead = true;
       await clearSession();
       await Promise.resolve(onSessionLost?.()).catch(() => {});
+      return false;
+    }
+    if (!response.ok) {
+      // A 5xx, a 429, a proxy page: the server did not judge the token, so
+      // neither does this. The request that needed it fails; the next one
+      // tries again. Treating this as a dead session signed people out on
+      // a bad minute at the server — and the background refresh, which
+      // runs every hour, would have found that minute sooner or later.
       return false;
     }
 

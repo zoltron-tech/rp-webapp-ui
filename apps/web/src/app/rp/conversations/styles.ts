@@ -1,4 +1,5 @@
 import styled, { css, keyframes } from "styled-components";
+import { FOCUS_RING, MATERIAL_CARD } from "@/theme";
 
 const shimmerSweep = keyframes`
   0%   { background-position: -800px 0; }
@@ -685,7 +686,8 @@ export const IceBreakerMessageBubble = styled.div<{
       : "linear-gradient(135deg, var(--accent-4) 0%, var(--accent-3) 100%)"};
   color: var(--text);
   border-radius: 16px;
-  padding: 12px 14px 40px;
+  /* The top clears the sender chip, which overlaps this edge. */
+  padding: 18px 14px 40px;
   border: 1.5px dashed
     ${({ $color }) => ($color ? "rgba(255,255,255,0.35)" : "var(--accent-6)")};
   transition: background 0.2s ease, color 0.2s ease, border-color 0.18s ease,
@@ -703,31 +705,31 @@ export const IceBreakerMessageBubble = styled.div<{
             : "color-mix(in srgb, var(--accent) 18%, transparent)"
         };
     `}
+`;
 
-  /* Thought-bubble trailing circles — behind all content, drifting up-left
-     toward the sender row above, mirroring the rail/view bubble language
-     instead of a speech-bubble tail (ice breakers are thought bubbles). */
-  &::before,
-  &::after {
-    content: "";
-    position: absolute;
-    z-index: -1;
-    border-radius: 50%;
-    background: ${({ $color }) => $color ?? "var(--accent-3)"};
+/** The chosen sender's face, half over the bubble's top-left edge and ringed
+ *  in the bubble's own colour so it reads as attached to it. It stands where
+ *  the thought-bubble's trailing circles used to: they pointed at the sender
+ *  row, and this is the sender. */
+export const IceBreakerSenderChip = styled.span<{ $color: string | null }>`
+  position: absolute;
+  z-index: 1;
+  top: -13px;
+  left: 12px;
+  display: flex;
+  border-radius: 50%;
+  border: 2px solid ${({ $color }) => $color ?? "var(--accent-3)"};
+  background: ${({ $color }) => $color ?? "var(--accent-3)"};
+  transition: border-color 0.2s ease, background 0.2s ease;
+
+  .avatar {
+    width: 22px;
+    height: 22px;
   }
 
-  &::before {
-    top: -13px;
-    left: 28px;
-    width: 13px;
-    height: 13px;
-  }
-
-  &::after {
-    top: -22px;
-    left: 14px;
-    width: 7px;
-    height: 7px;
+  /* The shared fallback initial is sized for a full avatar. */
+  && .avatar-fallback {
+    font-size: 11px;
   }
 `;
 
@@ -1069,17 +1071,71 @@ export const ConversationListContainer = styled.div`
   max-width: 800px;
 `;
 
+/* One material card holding inset, rounded rows, as the notifications page
+   is. The rows themselves are in components/conversation-card. */
 export const ConversationListRoot = styled.div`
-  background: var(--material-fill);
-  border: 1px solid var(--material-edge);
-  border-radius: 8px;
+  ${MATERIAL_CARD}
+  border-radius: 18px;
   overflow: hidden;
   width: 100%;
+  min-width: 0;
+  padding-top: 6px;
 
   @media (max-width: 600px) {
     border-radius: 0;
     border-left: none;
     border-right: none;
+    box-shadow: none;
+  }
+`;
+
+/* The chips, and the search field once the list is long enough to want one.
+   Side by side where there is room; the field drops under the chips at phone
+   width, capped so it does not stretch across a wide card. */
+export const ListControls = styled.div`
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  column-gap: 8px;
+  min-width: 0;
+  padding-right: 14px;
+
+  > :first-child {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  @media screen and (max-width: 600px) {
+    padding-right: 0;
+  }
+`;
+
+export const SearchInput = styled.input`
+  flex: 0 1 240px;
+  min-width: 0;
+  margin-bottom: 10px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--field-edge);
+  background: var(--field-fill);
+  outline: none;
+  font-family: var(--font);
+  font-size: var(--font-size-input);
+  color: var(--text);
+
+  &:focus {
+    border-color: var(--accent);
+  }
+
+  ${FOCUS_RING}
+
+  &::placeholder {
+    color: var(--text-secondary);
+  }
+
+  @media screen and (max-width: 600px) {
+    flex: 1 1 100%;
+    margin: 0 14px 10px;
   }
 `;
 
@@ -1188,12 +1244,7 @@ export const ShimmerItem = styled.div`
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 13px 16px;
-  border-bottom: 1px solid var(--material-edge);
-
-  &:last-child {
-    border-bottom: none;
-  }
+  padding: 10px 12px;
 `;
 
 export const ShimmerAvatar = styled.div`

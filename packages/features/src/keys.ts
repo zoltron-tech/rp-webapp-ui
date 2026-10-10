@@ -100,6 +100,9 @@ export const queryKeys = {
     ["novelist", novelistId, "prompts"] as const,
   novelistRank: (novelistId: string) =>
     ["leaderboard", "novelists", "rank", novelistId] as const,
+  /** Every storyboard a novelist created or co-writes. Web's `/story/by/:handle`. */
+  novelistStories: (username: string) =>
+    ["profile", username, "stories"] as const,
   /** The explore feed's out-of-character posts, paged. Web's `/prompt/posts`. */
   oocPosts: () => ["explore", "posts"] as const,
   /**

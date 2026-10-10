@@ -4,7 +4,7 @@ import { useApi } from "@nw/features";
 import type { ImageFilter, Muse, NWImage } from "@nw/types";
 import type { PrivacyLevel } from "@nw/types/prompt";
 import { IMAGE_SIZES, wsrvImage } from "@nw/utils/image";
-import { Image } from "expo-image";
+import { Image } from "@/components/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,

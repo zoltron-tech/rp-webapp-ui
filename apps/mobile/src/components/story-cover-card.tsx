@@ -4,12 +4,13 @@ import { wsrvImage } from "@nw/utils";
 import { LinearGradient } from "expo-linear-gradient";
 import { memo, useMemo } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { CroppedImage } from "@/components/cropped-image";
 import { FallbackArt } from "@/components/fallback-art";
+import { Text } from "@/components/text";
 import { useStoryReaction } from "@/hooks/use-story-reaction";
 import { asColor, withAlpha } from "@/lib/color";
+import { STORY_COVER_ZOOM_MAX_PCT } from "@/lib/story";
 import {
   border,
   fontSize,
@@ -19,7 +20,6 @@ import {
   TOMATO,
   useAppTheme,
 } from "@/theme";
-import { STORY_COVER_ZOOM_MAX_PCT } from "@/lib/story";
 
 /**
  * A story on a shelf — web's `StoryCard` face.
@@ -31,6 +31,16 @@ import { STORY_COVER_ZOOM_MAX_PCT } from "@/lib/story";
  * The likes corner is web's `CoverHeartBadge`: the heart toggles the like in
  * place and the number opens who liked it. Both are their own touch targets
  * inside the card, so neither opens the story the card itself leads to.
+ *
+ * ## Two sizes
+ *
+ * The card fills whatever cell it is given. On a shelf that is a half of
+ * the screen; on the home rail it is six tenths, one story at a time with
+ * the next peeking in (see `home/rail-snap.ts`). `wide` is the rail's
+ * word for it: the title steps up to body size, the chips and the author
+ * faces grow with it, and the genre row's character budget widens so
+ * two real chips show before the rest fall back to dots. The shelf stays
+ * compact — a title at 15 on a 170pt card is two lines of most names.
  */
 
 /** Web's `MEMBER_STACK_LIMIT`. */
@@ -38,6 +48,8 @@ const MEMBER_STACK_LIMIT = 5;
 
 /** Web's `GENRE_CHIP_CHAR_BUDGET`: genres past it shrink to a dot. */
 const GENRE_CHIP_CHAR_BUDGET = 14;
+/** The wide card has room for about one more chip. */
+const GENRE_CHIP_CHAR_BUDGET_WIDE = 22;
 
 /**
  * Web's `STORY_COVER_ZOOM_MAX` (8×), as the crop stores it. Story covers zoom
@@ -63,12 +75,16 @@ const scrimLocations = [0, 0.26, 0.58, 1] as const;
 export const StoryCoverCard = memo(function StoryCoverCard({
   onShowLikers,
   story,
+  wide = false,
 }: {
   /** The count was tapped. Owned by the screen: one sheet, not one per card. */
   onShowLikers?: (storyId: string, count: number) => void;
   story: StoryBoard;
+  /** The rail's size; see "Two sizes" above. */
+  wide?: boolean;
 }) {
   const theme = useAppTheme();
+  const budget = wide ? GENRE_CHIP_CHAR_BUDGET_WIDE : GENRE_CHIP_CHAR_BUDGET;
 
   // Author first, then co-authors without the author repeated.
   const members = useMemo(() => {
@@ -89,10 +105,7 @@ export const StoryCoverCard = memo(function StoryCoverCard({
     const dots: typeof genres = [];
     let usedChars = 0;
     genres.forEach((genre, index) => {
-      if (
-        index === 0 ||
-        usedChars + genre.label.length <= GENRE_CHIP_CHAR_BUDGET
-      ) {
+      if (index === 0 || usedChars + genre.label.length <= budget) {
         chips.push(genre);
         usedChars += genre.label.length;
       } else {
@@ -100,7 +113,7 @@ export const StoryCoverCard = memo(function StoryCoverCard({
       }
     });
     return { genreChips: chips, genreDots: dots };
-  }, [genres]);
+  }, [budget, genres]);
 
   const fandom = story.fandom ?? null;
   const isFandomless = !fandom?.id || fandom.id === "FANDOMLESS";
@@ -129,7 +142,9 @@ export const StoryCoverCard = memo(function StoryCoverCard({
         },
       ]}
     >
-      <View style={[styles.cover, { backgroundColor: theme.material.fillPressed }]}>
+      <View
+        style={[styles.cover, { backgroundColor: theme.material.fillPressed }]}
+      >
         {coverSrc ? (
           <CroppedImage
             crop={story.avatar?.crop}
@@ -159,14 +174,25 @@ export const StoryCoverCard = memo(function StoryCoverCard({
                 key={member.username}
                 style={[styles.author, index > 0 && styles.authorOverlap]}
               >
-                <Avatar name={member.username} size={24} uri={member.image} />
+                <Avatar
+                  name={member.username}
+                  size={wide ? 30 : 24}
+                  uri={member.image}
+                />
               </View>
             ))}
             {memberOverflow > 0 ? (
               <View
-                style={[styles.author, styles.authorOverlap, styles.overflow]}
+                style={[
+                  styles.author,
+                  styles.authorOverlap,
+                  styles.overflow,
+                  wide && styles.overflowWide,
+                ]}
               >
-                <Text style={styles.overflowLabel}>+{memberOverflow}</Text>
+                <Text style={[styles.overflowLabel, wide && styles.metaWide]}>
+                  +{memberOverflow}
+                </Text>
               </View>
             ) : null}
           </View>
@@ -176,20 +202,21 @@ export const StoryCoverCard = memo(function StoryCoverCard({
           style={[
             styles.badge,
             styles.visibility,
+            wide && styles.badgeWide,
             story.isPublic && { backgroundColor: theme.accent.solid },
           ]}
         >
           <Ionicons
             color="#fff"
             name={story.isPublic ? "globe-outline" : "lock-closed"}
-            size={10}
+            size={wide ? 12 : 10}
           />
-          <Text style={styles.badgeLabel}>
+          <Text style={[styles.badgeLabel, wide && styles.metaWide]}>
             {story.isPublic ? "Public" : "Private"}
           </Text>
         </View>
 
-        <View style={[styles.badge, styles.likes]}>
+        <View style={[styles.badge, styles.likes, wide && styles.badgeWide]}>
           <Pressable
             accessibilityLabel={reaction.reacted ? "Remove like" : "Like"}
             accessibilityRole="button"
@@ -200,7 +227,7 @@ export const StoryCoverCard = memo(function StoryCoverCard({
             <Ionicons
               color={reaction.reacted ? TOMATO : "#fff"}
               name={reaction.reacted ? "heart" : "heart-outline"}
-              size={13}
+              size={wide ? 16 : 13}
             />
           </Pressable>
           <Pressable
@@ -210,33 +237,51 @@ export const StoryCoverCard = memo(function StoryCoverCard({
             hitSlop={{ bottom: 8, left: 4, right: 8, top: 8 }}
             onPress={() => story.id && onShowLikers?.(story.id, likes)}
           >
-            <Text style={styles.count}>{likes}</Text>
+            <Text style={[styles.count, wide && styles.metaWide]}>{likes}</Text>
           </Pressable>
         </View>
 
         {chapters > 0 ? (
           <View
             accessibilityLabel={`${chapters} ${chapters === 1 ? "chapter" : "chapters"}`}
-            style={[styles.badge, styles.chapters]}
+            style={[styles.badge, styles.chapters, wide && styles.badgeWide]}
           >
             <Ionicons
               color={theme.accent.solid}
               name="book-outline"
-              size={11}
+              size={wide ? 13 : 11}
             />
-            <Text style={styles.count}>{chapters}</Text>
+            <Text style={[styles.count, wide && styles.metaWide]}>
+              {chapters}
+            </Text>
           </View>
         ) : null}
       </View>
 
-      <View style={styles.info}>
-        <Text numberOfLines={1} style={[styles.title, { color: theme.text }]}>
+      <View style={[styles.info, wide && styles.infoWide]}>
+        <Text
+          numberOfLines={1}
+          style={[
+            styles.title,
+            wide && styles.titleWide,
+            { color: theme.text },
+          ]}
+        >
           {story.name}
         </Text>
 
-        <View style={[styles.fandom, { backgroundColor: fandomColor }]}>
+        <View
+          style={[
+            styles.fandom,
+            wide && styles.fandomWide,
+            { backgroundColor: fandomColor },
+          ]}
+        >
           <View style={styles.fandomDot} />
-          <Text numberOfLines={1} style={styles.fandomLabel}>
+          <Text
+            numberOfLines={1}
+            style={[styles.fandomLabel, wide && styles.metaWide]}
+          >
             {fandomLabel}
           </Text>
         </View>
@@ -250,6 +295,7 @@ export const StoryCoverCard = memo(function StoryCoverCard({
                   key={genre.id}
                   style={[
                     styles.genre,
+                    wide && styles.genreWide,
                     {
                       backgroundColor: withAlpha(color, 0.18),
                       borderColor: withAlpha(color, 0.4),
@@ -259,7 +305,11 @@ export const StoryCoverCard = memo(function StoryCoverCard({
                   <View style={[styles.genreDot, { backgroundColor: color }]} />
                   <Text
                     numberOfLines={1}
-                    style={[styles.genreLabel, { color }]}
+                    style={[
+                      styles.genreLabel,
+                      wide && styles.metaWide,
+                      { color },
+                    ]}
                   >
                     {genre.label}
                   </Text>
@@ -284,7 +334,7 @@ export const StoryCoverCard = memo(function StoryCoverCard({
 });
 
 /** The card's outline while the first page loads. */
-export const StoryCoverCardShimmer = () => {
+export const StoryCoverCardShimmer = ({ wide = false }: { wide?: boolean }) => {
   const theme = useAppTheme();
 
   return (
@@ -297,8 +347,10 @@ export const StoryCoverCardShimmer = () => {
         },
       ]}
     >
-      <View style={[styles.cover, { backgroundColor: theme.material.fillPressed }]} />
-      <View style={styles.info}>
+      <View
+        style={[styles.cover, { backgroundColor: theme.material.fillPressed }]}
+      />
+      <View style={[styles.info, wide && styles.infoWide]}>
         <View
           style={[
             styles.bar,
@@ -343,6 +395,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
     textTransform: "uppercase",
   },
+  /** The wide card's chips: a step more padding round a step more type. */
+  badgeWide: { gap: 5, paddingHorizontal: 9, paddingVertical: 4 },
   bar: { borderRadius: radius.sm, height: 10 },
   card: {
     borderCurve: "continuous",
@@ -380,6 +434,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     textTransform: "uppercase",
   },
+  fandomWide: { paddingLeft: 9, paddingRight: 11, paddingVertical: 4 },
   genre: {
     alignItems: "center",
     borderRadius: radius.full,
@@ -399,8 +454,22 @@ const styles = StyleSheet.create({
     gap: 5,
     overflow: "hidden",
   },
-  info: { gap: 7, paddingBottom: space.m, paddingHorizontal: space.ms, paddingTop: space.ms },
+  genreWide: { paddingHorizontal: 9, paddingVertical: 3 },
+  info: {
+    gap: 7,
+    paddingBottom: space.m,
+    paddingHorizontal: space.ms,
+    paddingTop: space.ms,
+  },
+  infoWide: {
+    gap: 9,
+    paddingBottom: space.md,
+    paddingHorizontal: space.m,
+    paddingTop: space.m,
+  },
   likes: { bottom: 8, left: 8 },
+  /** Eleven-point chip type at the wide size: web's caption, 12. */
+  metaWide: { fontSize: fontSize.caption },
   overflow: {
     alignItems: "center",
     backgroundColor: MEDIA_CHIP,
@@ -409,7 +478,9 @@ const styles = StyleSheet.create({
     width: 24,
   },
   overflowLabel: { color: "#fff", fontSize: fontSize.meta, fontWeight: "600" },
+  overflowWide: { height: 30, width: 30 },
   // Web's card title: 12/700.
   title: { fontSize: fontSize.caption, fontWeight: "700" },
+  titleWide: { fontSize: fontSize.lead },
   visibility: { right: 8, top: 8 },
 });

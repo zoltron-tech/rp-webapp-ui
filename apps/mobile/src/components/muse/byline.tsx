@@ -3,9 +3,9 @@ import type { Novelist } from "@nw/types";
 import { wsrvImage } from "@nw/utils";
 import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
-import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { PANEL } from "@/components/muse/panel";
+import { Text } from "@/components/text";
 import { withAlpha } from "@/lib/color";
 import { border, fontSize, radius, space } from "@/theme";
 
@@ -29,80 +29,93 @@ export const Byline = ({
 }: {
   /** The muse's accent, for the rules and the pen. */
   accent?: string;
+  /**
+   * Null while nobody knows yet — a deep link before the first answer. The
+   * rules are drawn alone then, at the bar's full height (`BYLINE_HEIGHT`),
+   * so the rows under it do not move when the signature arrives.
+   */
   author: Pick<
     Novelist,
     "username" | "firstName" | "lastName" | "image" | "avatar"
-  >;
+  > | null;
   /** The muse's `pennedByColor` override, when the author set one. */
   textColor?: string;
 }) => {
   const router = useRouter();
   const tint = accent ?? "#ffffff";
-  const name = [author.firstName, author.lastName].filter(Boolean).join(" ");
+  const name = author
+    ? [author.firstName, author.lastName].filter(Boolean).join(" ")
+    : "";
 
   return (
     <View style={styles.bar}>
       <View style={[styles.rule, { backgroundColor: withAlpha(tint, 0.35) }]} />
-      <Pressable
-        accessibilityHint="Opens the novelist who writes this character"
-        accessibilityLabel={`From the pen of ${name || author.username}`}
-        accessibilityRole="link"
-        hitSlop={space.xs}
-        onPress={() =>
-          router.push({
-            params: { username: author.username },
-            pathname: "/novelist/[username]",
-          })
-        }
-        style={({ pressed }) => [
-          styles.signature,
-          { opacity: pressed ? 0.6 : 1 },
-        ]}
-      >
-        <Ionicons color={tint} name="pencil-outline" size={11} />
-        <Text style={styles.lead}>From the pen of</Text>
-        <View
-          style={[
-            styles.chip,
-            {
-              backgroundColor: accent ? withAlpha(accent, 0.18) : PANEL.pill,
-              borderColor: accent ? withAlpha(accent, 0.4) : PANEL.pillBorder,
-            },
+      {author ? (
+        <Pressable
+          accessibilityHint="Opens the novelist who writes this character"
+          accessibilityLabel={`From the pen of ${name || author.username}`}
+          accessibilityRole="link"
+          hitSlop={space.xs}
+          onPress={() =>
+            router.push({
+              params: { username: author.username },
+              pathname: "/novelist/[username]",
+            })
+          }
+          style={({ pressed }) => [
+            styles.signature,
+            { opacity: pressed ? 0.6 : 1 },
           ]}
         >
-          <Avatar
-            image={author.avatar}
-            name={author.username}
-            size={18}
-            uri={wsrvImage(author.avatar?.src ?? author.image, {
-              fit: "inside",
-              h: 54,
-              w: 54,
-            })}
-          />
-          <Text
-            numberOfLines={1}
-            style={[styles.name, textColor ? { color: textColor } : null]}
+          <Ionicons color={tint} name="pencil-outline" size={11} />
+          <Text style={styles.lead}>From the pen of</Text>
+          <View
+            style={[
+              styles.chip,
+              {
+                backgroundColor: accent ? withAlpha(accent, 0.18) : PANEL.pill,
+                borderColor: accent ? withAlpha(accent, 0.4) : PANEL.pillBorder,
+              },
+            ]}
           >
-            {name || author.username}
-          </Text>
-          <Ionicons
-            color="rgba(255,255,255,0.7)"
-            name="chevron-forward"
-            size={12}
-          />
-        </View>
-      </Pressable>
+            <Avatar
+              image={author.avatar}
+              name={author.username}
+              size={18}
+              uri={wsrvImage(author.avatar?.src ?? author.image, {
+                fit: "inside",
+                h: 54,
+                w: 54,
+              })}
+            />
+            <Text
+              numberOfLines={1}
+              style={[styles.name, textColor ? { color: textColor } : null]}
+            >
+              {name || author.username}
+            </Text>
+            <Ionicons
+              color="rgba(255,255,255,0.7)"
+              name="chevron-forward"
+              size={12}
+            />
+          </View>
+        </Pressable>
+      ) : null}
       <View style={[styles.rule, { backgroundColor: withAlpha(tint, 0.35) }]} />
     </View>
   );
 };
+
+/** The signature's `minHeight` under the bar's top padding. */
+const BYLINE_HEIGHT = space.xs + 28;
 
 const styles = StyleSheet.create({
   bar: {
     alignItems: "center",
     flexDirection: "row",
     gap: space.ms,
+    minHeight: BYLINE_HEIGHT,
     paddingHorizontal: space.md,
     paddingTop: space.xs,
     width: "100%",

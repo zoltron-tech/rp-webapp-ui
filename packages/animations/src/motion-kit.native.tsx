@@ -5,7 +5,7 @@ import {
   useContext,
   useEffect,
 } from "react";
-import { Animated, Easing } from "react-native";
+import { Animated } from "react-native";
 import type {
   MotionClock,
   MotionProps,
@@ -95,15 +95,101 @@ export const registerMotion = (table: MotionTable): void => {
 
 // ─── Clocks ──────────────────────────────────────────────────────────────────
 
+/*
+ * ## One ticker, a capped rate, and a stop at the end of the lap
+ *
+ * The first version ran each clock as an `Animated.loop(Animated.timing)`.
+ * With `useNativeDriver: false` that is a `requestAnimationFrame` per clock
+ * on the JS thread, sixty times a second, each tick pushing a new prop set to
+ * every SVG element on that rhythm. A profile with two crests measured 136%
+ * of a core *at rest* on the Pixel 7 image; the badge shelf 143%.
+ *
+ * Three changes, from how Discord's animated decorations and most games
+ * treat the same problem:
+ *
+ * - **One timer for every clock**, at `TICK_HZ` rather than the display's
+ *   rate. These are breaths and glints over seconds, not a cursor under a
+ *   finger; 24 steps a second reads as continuous for them and costs 60%
+ *   fewer prop pushes than 60.
+ * - **A clock stops at the end of its lap, not mid-breath.** Every rhythm in
+ *   the tables is built so that `t = 0` is its rest pose (a `pingPong` starts
+ *   at `from`, a `sweep` at `from`), so when nothing wants motion any more
+ *   the clock finishes the lap it is on, lands on 0, and stops. That is what
+ *   lets the call site *turn motion off* — after a burst, when a screen is
+ *   left — without a visible snap.
+ * - **Nothing ticks once everything has stopped.** The ticker clears itself
+ *   when no clock is running, so a profile whose crests have settled costs
+ *   the JS thread nothing per frame.
+ *
+ * `delay` is a phase offset (the web's negative `animation-delay`): two
+ * siblings on the same period are the same distance apart as before, but
+ * both move from the first frame rather than one waiting out the delay — a
+ * clock that will stop after a few seconds cannot afford to spend three of
+ * them standing still.
+ */
+
+const TICK_HZ = 24;
+
 interface Clock {
-  animation: Animated.CompositeAnimation | null;
-  subscribers: number;
+  /** Mounted elements on this rhythm, moving or not. */
+  held: number;
+  /** Elements that want motion right now. */
+  active: number;
+  running: boolean;
+  /** `Date.now()` when the current run began. */
+  startedAt: number;
+  /** The lap it was on when the last active element let go. */
+  windDownLap: number;
+  period: number;
+  delay: number;
   value: Animated.Value;
 }
 
 const clocks = new Map<string, Clock>();
+let ticker: ReturnType<typeof setInterval> | null = null;
 
 const clockKey = (period: number, delay: number) => `${period}:${delay}`;
+
+/** Where a clock is in its lap, 0–1, and which lap it is on. */
+const phase = (clock: Clock, now: number) => {
+  const elapsed = (now - clock.startedAt) / 1000 + clock.delay;
+  const lap = Math.floor(elapsed / clock.period);
+  return { lap, t: (elapsed - lap * clock.period) / clock.period };
+};
+
+const tick = () => {
+  const now = Date.now();
+  let running = 0;
+  for (const clock of clocks.values()) {
+    if (!clock.running) continue;
+    const { lap, t } = phase(clock, now);
+    // Nobody wants it: finish this lap and rest on 0. The first lap is lap
+    // `delay / period` of the phase offset, so compare against where it was
+    // when it was told to wind down rather than against zero.
+    if (clock.active === 0 && lap > clock.windDownLap) {
+      clock.value.setValue(0);
+      clock.running = false;
+      continue;
+    }
+    clock.value.setValue(t);
+    running += 1;
+  }
+  if (running === 0 && ticker) {
+    clearInterval(ticker);
+    ticker = null;
+  }
+};
+
+const ensureTicker = () => {
+  if (!ticker) ticker = setInterval(tick, 1000 / TICK_HZ);
+};
+
+const startClock = (clock: Clock) => {
+  if (clock.running) return;
+  clock.startedAt = Date.now();
+  clock.running = true;
+  ensureTicker();
+};
 
 /**
  * The value for a rhythm, created on demand.
@@ -118,17 +204,31 @@ const valueFor = (period: number, delay: number): Animated.Value => {
   if (existing) return existing.value;
 
   const clock: Clock = {
-    animation: null,
-    subscribers: 0,
+    active: 0,
+    delay,
+    held: 0,
+    period,
+    running: false,
+    startedAt: 0,
     value: new Animated.Value(0),
+    windDownLap: 0,
   };
   clocks.set(key, clock);
   return clock.value;
 };
 
+/**
+ * Holds a rhythm's clock for as long as the element is mounted, and runs it
+ * for as long as `active` is on.
+ *
+ * Held and active are counted separately so that turning motion off does not
+ * drop the clock: the element keeps reading the value, the clock finishes its
+ * lap on it, and the element is left at the rest pose the lap ends on.
+ */
 const useClock = (
   period: number | null,
   delay: number,
+  active: boolean,
 ): Animated.Value | null => {
   const value = period === null ? null : valueFor(period, delay);
 
@@ -136,38 +236,28 @@ const useClock = (
     if (period === null) return;
     const clock = clocks.get(clockKey(period, delay));
     if (!clock) return;
-
-    clock.subscribers += 1;
-
-    if (clock.subscribers === 1) {
-      clock.value.setValue(0);
-      /*
-       * The delay runs once rather than on every lap. The web writes these as a
-       * negative `animation-delay`, which starts the animation already part way
-       * through; a one-off delay before an otherwise identical loop puts the
-       * same distance between two siblings, which is the whole point of them.
-       */
-      clock.animation = Animated.sequence([
-        Animated.delay(delay * 1000),
-        Animated.loop(
-          Animated.timing(clock.value, {
-            duration: period * 1000,
-            easing: Easing.linear,
-            toValue: 1,
-            useNativeDriver: false,
-          }),
-        ),
-      ]);
-      clock.animation.start();
-    }
-
+    clock.held += 1;
     return () => {
-      clock.subscribers -= 1;
-      if (clock.subscribers > 0) return;
-      clock.animation?.stop();
-      clock.animation = null;
+      clock.held -= 1;
+      if (clock.held > 0) return;
+      // Nothing is drawing it: stop at once, there is no pose to preserve.
+      clock.running = false;
+      clock.value.setValue(0);
     };
   }, [delay, period]);
+
+  useEffect(() => {
+    if (period === null || !active) return;
+    const clock = clocks.get(clockKey(period, delay));
+    if (!clock) return;
+    clock.active += 1;
+    startClock(clock);
+    return () => {
+      clock.active -= 1;
+      if (clock.active > 0) return;
+      clock.windDownLap = phase(clock, Date.now()).lap;
+    };
+  }, [active, delay, period]);
 
   return value;
 };
@@ -197,6 +287,9 @@ export const stops = (clock: MotionClock, input: number[], output: number[]) =>
 
 // ─── The context the primitives read ─────────────────────────────────────────
 
+/** The ceiling on an animated opacity — see `useMotion`. Invisible as a dimming. */
+const MAX_ANIMATED_OPACITY = 0.999;
+
 /** Whether the scene being drawn wants motion at all. Off by default. */
 const MotionContext = createContext(false);
 
@@ -220,13 +313,43 @@ export const useMotion = (className?: string): MotionProps | null => {
   const rhythm: MotionRhythm | undefined = className
     ? TABLE[className]
     : undefined;
+  // The clock is held for as long as the element draws, and runs while the
+  // scene wants motion. Gated off, the element keeps reading it: the clock
+  // finishes its lap and rests on 0, which is the pose the rhythm was built
+  // to start from, so the element settles instead of snapping.
   const clock = useClock(
-    enabled && rhythm ? rhythm.period : null,
+    rhythm ? rhythm.period : null,
     rhythm?.delay ?? 0,
+    enabled,
   );
 
-  if (!rhythm) return null;
-  // Gated off: hold the rest pose if the rhythm has one, else draw as drawn.
-  if (!enabled || !clock) return rhythm.rest ?? null;
-  return rhythm.build(clock);
+  if (!rhythm || !clock) return null;
+  // A rhythm with a rest pose of its own is one whose lap does not start
+  // there; gated off, it is drawn at rest as before.
+  if (!enabled && rhythm.rest) return rhythm.rest;
+
+  const props = rhythm.build(clock);
+  if (props.opacity === undefined) return props;
+
+  /*
+   * An animated opacity is never allowed to land on exactly 1.
+   *
+   * `react-native-svg` on Android draws a group at any other opacity through a
+   * layer canvas of its own, and at exactly 1 it borrows the canvas it was
+   * handed — then, the next time it fades, rebinds *that* canvas to its layer
+   * bitmap. When the borrowed canvas was a faded ancestor's layer, the
+   * ancestor's save stack is gone and its restore throws `Underflow in restore
+   * - more restores than saves`, which takes the app down. A pulse that peaks
+   * at 1 walks straight into it. Held a hair below, the group keeps its own
+   * layer for life and there is nothing to rebind.
+   */
+  return {
+    ...props,
+    opacity: (
+      props.opacity as Animated.AnimatedInterpolation<number>
+    ).interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, MAX_ANIMATED_OPACITY],
+    }),
+  };
 };

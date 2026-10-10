@@ -1,20 +1,44 @@
 import {
   BLANK_CARD_VIEW_BOX,
   BLANK_SCROLL_VIEW_BOX,
+  BLANK_STORYBOARD_VIEW_BOX,
   BlankCardScene,
   BlankScrollScene,
+  BlankStoryboardScene,
+  DARK_LIGHTHOUSE_VIEW_BOX,
+  DarkLighthouseScene,
   EMPTY_GALLERY_VIEW_BOX,
   EmptyGalleryScene,
+  FROZEN_SILENCE_VIEW_BOX,
+  FrozenSilenceScene,
   MotionProvider,
   MUSE_BOND_VIEW_BOX,
   MuseBondScene,
+  NO_CONVERSATIONS_VIEW_BOX,
+  NO_FRIENDS_VIEW_BOX,
+  NO_INTERACTIONS_VIEW_BOX,
+  NO_MATCHES_VIEW_BOX,
+  NoConversationsScene,
+  NoFriendsScene,
+  NoInteractionsScene,
+  NoMatchesScene,
+  OPEN_BOOK_VIEW_BOX,
   OPEN_STARTER_VIEW_BOX,
+  OpenBookScene,
   OpenStarterScene,
   type ScenePalette,
+  SILENT_BELL_VIEW_BOX,
+  SilentBellScene,
+  TORN_THREAD_VIEW_BOX,
+  TornThreadScene,
+  VANISHED_MUSE_VIEW_BOX,
+  VanishedMuseScene,
 } from "@nw/animations";
 import { mixColors } from "@nw/theme";
 import { useMemo } from "react";
 import Svg from "react-native-svg";
+import { MOTION_BURST_MS } from "@/animation";
+import { useMotionBurst } from "@/animation/effects";
 import { asHex } from "@/lib/color";
 import { useAppTheme } from "@/theme";
 
@@ -79,11 +103,22 @@ export const useScenePalette = (accent?: string | null): ScenePalette => {
 };
 
 export type SceneName =
+  | "blank-storyboard"
+  | "dark-lighthouse"
+  | "frozen-silence"
+  | "no-conversations"
+  | "no-friends"
+  | "no-interactions"
+  | "no-matches"
+  | "torn-thread"
+  | "vanished-muse"
   | "blank-card"
   | "blank-scroll"
   | "empty-gallery"
   | "muse-bond"
-  | "open-starter";
+  | "open-book"
+  | "open-starter"
+  | "silent-bell";
 
 /**
  * Web's frame sizes, from `book-art/styles.ts`, so the art is the same size on
@@ -110,11 +145,29 @@ const SCENES: Record<
     viewBox: BLANK_SCROLL_VIEW_BOX,
     width: 104,
   },
+  "blank-storyboard": {
+    height: 113,
+    Scene: BlankStoryboardScene,
+    viewBox: BLANK_STORYBOARD_VIEW_BOX,
+    width: 148,
+  },
+  "dark-lighthouse": {
+    height: 116,
+    Scene: DarkLighthouseScene,
+    viewBox: DARK_LIGHTHOUSE_VIEW_BOX,
+    width: 152,
+  },
   "empty-gallery": {
     height: 96,
     Scene: EmptyGalleryScene,
     viewBox: EMPTY_GALLERY_VIEW_BOX,
     width: 120,
+  },
+  "frozen-silence": {
+    height: 44,
+    Scene: FrozenSilenceScene,
+    viewBox: FROZEN_SILENCE_VIEW_BOX,
+    width: 50,
   },
   "muse-bond": {
     height: 96,
@@ -122,11 +175,59 @@ const SCENES: Record<
     viewBox: MUSE_BOND_VIEW_BOX,
     width: 124,
   },
+  "no-conversations": {
+    height: 98,
+    Scene: NoConversationsScene,
+    viewBox: NO_CONVERSATIONS_VIEW_BOX,
+    width: 128,
+  },
+  "no-friends": {
+    height: 94,
+    Scene: NoFriendsScene,
+    viewBox: NO_FRIENDS_VIEW_BOX,
+    width: 124,
+  },
+  "no-interactions": {
+    height: 104,
+    Scene: NoInteractionsScene,
+    viewBox: NO_INTERACTIONS_VIEW_BOX,
+    width: 136,
+  },
+  "no-matches": {
+    height: 96,
+    Scene: NoMatchesScene,
+    viewBox: NO_MATCHES_VIEW_BOX,
+    width: 124,
+  },
+  "open-book": {
+    height: 128,
+    Scene: OpenBookScene,
+    viewBox: OPEN_BOOK_VIEW_BOX,
+    width: 160,
+  },
   "open-starter": {
     height: 96,
     Scene: OpenStarterScene,
     viewBox: OPEN_STARTER_VIEW_BOX,
     width: 112,
+  },
+  "silent-bell": {
+    height: 92,
+    Scene: SilentBellScene,
+    viewBox: SILENT_BELL_VIEW_BOX,
+    width: 120,
+  },
+  "torn-thread": {
+    height: 116,
+    Scene: TornThreadScene,
+    viewBox: TORN_THREAD_VIEW_BOX,
+    width: 152,
+  },
+  "vanished-muse": {
+    height: 116,
+    Scene: VanishedMuseScene,
+    viewBox: VANISHED_MUSE_VIEW_BOX,
+    width: 152,
   },
 };
 
@@ -146,9 +247,12 @@ export const SceneArt = ({
 }) => {
   const palette = useScenePalette(accent);
   const { Scene, height, viewBox, width } = SCENES[scene];
+  // A moment of motion when the scene appears, then its rest pose — the
+  // same rule as the crests and the end-of-list art (`useMotionBurst`).
+  const burst = useMotionBurst(motion, MOTION_BURST_MS);
 
   return (
-    <MotionProvider enabled={motion}>
+    <MotionProvider enabled={burst.live}>
       <Svg height={height} viewBox={viewBox} width={width}>
         <Scene palette={palette} />
       </Svg>

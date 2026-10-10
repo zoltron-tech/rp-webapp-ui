@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import type { CodexEntry, StoryBoardEvent } from "@nw/types";
 import { wsrvImage } from "@nw/utils";
-import { Image } from "expo-image";
+import { Image } from "@/components/image";
 import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "@/components/text";

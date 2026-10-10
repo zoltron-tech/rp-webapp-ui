@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { isOffline } from "@/lib/connectivity";
 
 /**
  * The spinner a pull to refresh owes the reader — and only that one.
@@ -18,7 +19,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
  *
  * `refresh` may return a promise (a `refetch`, or several at once); the spinner
  * holds until it settles.
+ *
+ * ## Offline
+ *
+ * A refetch with no network does not fail — react-query pauses it until the
+ * connection returns (`lib/connectivity.ts`) — so a spinner tied to it would
+ * turn until then. The pull is still made (it resumes on its own), but the
+ * spinner is let go after a beat, which is also what tells the reader the
+ * pull was heard.
  */
+const OFFLINE_BEAT_MS = 600;
+
 export const usePullToRefresh = (
   refresh: () => Promise<unknown> | unknown,
 ): { onRefresh: () => void; refreshing: boolean } => {
@@ -39,7 +50,11 @@ export const usePullToRefresh = (
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     void Promise.resolve()
-      .then(() => latest.current())
+      .then(() => {
+        const run = Promise.resolve(latest.current()).catch(() => undefined);
+        if (!isOffline()) return run;
+        return new Promise((resolve) => setTimeout(resolve, OFFLINE_BEAT_MS));
+      })
       .catch(() => undefined)
       .finally(() => {
         if (mounted.current) setRefreshing(false);

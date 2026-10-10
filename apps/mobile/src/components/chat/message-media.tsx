@@ -6,10 +6,12 @@ import {
   getFileNameFromUrl,
   isDirectImageUrl,
   isDirectVideoUrl,
+  isVideoOnlyMessage,
+  messageTextOf,
+  withoutUrls,
 } from "@nw/chat";
 import type { Attachment, Message } from "@nw/types";
 import { wsrvImage } from "@nw/utils/image";
-import { Image } from "expo-image";
 import type { VideoThumbnail } from "expo-video";
 import {
   memo,
@@ -26,13 +28,15 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { Text } from "@/components/text";
 import { ClipPlayer } from "@/components/chat/clip-player";
 import { cachedThumbnail, thumbnailFor } from "@/components/feed/feed-media";
+import { Image } from "@/components/image";
+import { LIVE_STILLS, LiveStill } from "@/components/live-still";
 import {
   prefetchForViewer,
   setViewerPlaceholder,
 } from "@/components/muse/media-viewer";
+import { Text } from "@/components/text";
 import { openExternalLink } from "@/lib/safe-link";
 import {
   border,
@@ -188,7 +192,16 @@ const useMosaicWidth = () => {
  * chat stickers are usually transparent, and a tinted box turns that
  * transparency into a grey card the sender never put there.
  */
-const MediaImage = ({ uri }: { uri: string }) => {
+const MediaImage = ({
+  onLongPress,
+  onOpen,
+  uri,
+}: {
+  onLongPress?: () => void;
+  /** Opens the picture in the viewer. Without it the picture is not a button. */
+  onOpen?: () => void;
+  uri: string;
+}) => {
   const theme = useAppTheme();
   const [natural, setNatural] = useState(() => NATURAL_SIZES.get(uri) ?? null);
   const [available, setAvailable] = useState(0);
@@ -253,6 +266,17 @@ const MediaImage = ({ uri }: { uri: string }) => {
       onLayout={({ nativeEvent }) => setAvailable(nativeEvent.layout.width)}
       style={styles.imageRow}
     >
+      <Pressable
+        accessibilityHint="Opens the picture"
+        accessibilityLabel="Picture"
+        accessibilityRole="imagebutton"
+        delayLongPress={280}
+        disabled={!onOpen}
+        onLongPress={onLongPress}
+        onPress={onOpen}
+        onPressIn={() => prefetchForViewer(uri)}
+        style={({ pressed }) => ({ opacity: pressed ? 0.82 : 1 })}
+      >
       <Image
         autoplay
         cachePolicy="memory-disk"
@@ -271,6 +295,7 @@ const MediaImage = ({ uri }: { uri: string }) => {
         style={[styles.image, box]}
         transition={0}
       />
+      </Pressable>
     </View>
   );
 };
@@ -345,6 +370,8 @@ const ClipStill = ({
           style={StyleSheet.absoluteFill}
           transition={150}
         />
+      ) : LIVE_STILLS ? (
+        <LiveStill url={url} />
       ) : null}
       <View pointerEvents="none" style={styles.tileCentre}>
         <View style={styles.playDisc}>
@@ -449,33 +476,106 @@ const MARKUP_RE = /<[a-z][^>]*>/i;
 /** Did this message come from the rich editor rather than a plain input? */
 export const hasMarkup = (text: string): boolean => MARKUP_RE.test(text);
 
+/**
+ * The URLs in a message's words — what someone typed or pasted, never what a
+ * tag carries.
+ *
+ * A plain message is its own words. A message from the rich editor is read
+ * through `messageTextOf`: tags out, entities decoded, so a GIF link that
+ * web's contenteditable sent as `<br>https://….gif` or `https://….gif&nbsp;`
+ * is found as the link it is. URLs inside the markup's attributes — an
+ * `<img>`'s `src`, an `<a>`'s `href` — are not words and are not returned:
+ * `RichText` already draws those, and scanning them out as well put the
+ * picture on screen twice.
+ */
+const textUrlsOf = (text: string): string[] =>
+  !text ? [] : extractUrls(hasMarkup(text) ? messageTextOf(text) : text);
+
+/**
+ * The pictures a message carries as bare URLs — a GIF or sticker from the
+ * picker, or an image link pasted on its own or among words — in the order
+ * they are drawn. What the viewer swipes through when one of them is opened.
+ */
+export const textImagesOf = (text: string): string[] =>
+  textUrlsOf(text).filter(isDirectImageUrl);
+
+/**
+ * The URLs `MessageTextMedia` draws as the thing itself — a picture, or the
+ * one clip a message is — rather than as a chip or card beside the words.
+ */
+const drawnUrlsOf = (text: string): string[] => {
+  const urls = textUrlsOf(text);
+  if (urls.length === 0) return [];
+  const words = hasMarkup(text) ? messageTextOf(text) : text;
+  const lone = isVideoOnlyMessage(words);
+  return urls.filter(
+    (url) => isDirectImageUrl(url) || (isDirectVideoUrl(url) && lone),
+  );
+};
+
+/**
+ * The words that go under a message's media: its text, less the URLs that
+ * are already on screen as pictures.
+ *
+ * A GIF link pasted into a sentence was drawn twice — once as the GIF, once
+ * as forty characters of link under it. The picture says it; the link comes
+ * out of the text and the sentence around it stays (`withoutUrls`). Returns
+ * an empty string when no words remain, so the caller draws no caption.
+ */
+export const captionOf = (text: string | null | undefined): string => {
+  if (!text) return "";
+  const drawn = drawnUrlsOf(text);
+  if (drawn.length === 0) return text;
+  const stripped = withoutUrls(text, drawn);
+  return messageTextOf(stripped) ? stripped : "";
+};
+
 /** Media found inside the message text — GIFs, images, links. */
 export const MessageTextMedia = ({
   onLongPress,
+  onOpen,
   text,
 }: {
   /** The message's long press, for media that is itself a button. */
   onLongPress?: () => void;
+  /** Opens a picture in the viewer, by its place in `textImagesOf(text)`. */
+  onOpen?: (index: number) => void;
   text: string;
 }) => {
-  // Markup is `RichText`'s job, in full. Only bare URLs typed into a plain
-  // message are this component's.
-  if (!text || hasMarkup(text)) return null;
-
-  const urls = extractUrls(text);
+  const urls = textUrlsOf(text);
   if (urls.length === 0) return null;
+  const images = urls.filter(isDirectImageUrl);
+  /*
+   * For a message from the rich editor, only the pictures: its links are
+   * already drawn as links by `RichText`, and a chip under each would say
+   * everything twice. A plain message has nothing else drawing its links.
+   */
+  const drawn = drawnUrlsOf(text);
+  const lone = drawn.some(isDirectVideoUrl);
+  const shown = hasMarkup(text) ? drawn : urls;
+  if (shown.length === 0) return null;
 
   return (
     <View style={styles.stack}>
-      {urls.map((url) => {
+      {shown.map((url) => {
         const kind = getAttachmentKind(url);
-        if (isDirectImageUrl(url)) return <MediaImage key={url} uri={url} />;
+        if (isDirectImageUrl(url)) {
+          const index = images.indexOf(url);
+          return (
+            <MediaImage
+              key={url}
+              onLongPress={onLongPress}
+              onOpen={onOpen ? () => onOpen(index) : undefined}
+              uri={url}
+            />
+          );
+        }
         /*
          * A lone video URL *is* the message — a clip from the picker, or an
          * mp4 someone pasted on its own — so it plays here. A video linked
          * among words is a file being referred to, and gets the card.
          */
-        if (isDirectVideoUrl(url) && urls.length === 1) {
+        if (isDirectVideoUrl(url) && lone) {
           return <ClipStill key={url} onLongPress={onLongPress} url={url} />;
         }
         if (kind === "video" || kind === "audio") {
@@ -490,9 +590,10 @@ export const MessageTextMedia = ({
 /**
  * The first picture or clip a message carries, and how many it carries.
  *
- * Attachments first, then a bare media URL that is the message body — a GIF,
- * sticker or clip from the picker. Rich-text markup is not searched: an `<img>`
- * inside an edited message is part of its words, not what the message is.
+ * Attachments first, then a media URL among the message's words — a GIF,
+ * sticker or clip from the picker, however the sender's editor wrapped it
+ * (`textUrlsOf`). An `<img>` inside an edited message is part of its words,
+ * not what the message is, and is not searched.
  */
 export const messageMediaOf = (
   message: Message | null | undefined,
@@ -503,8 +604,7 @@ export const messageMediaOf = (
     return { count: attached.length, first: attached[0], fromText: false };
   }
   const text = message.message ?? "";
-  if (!text || hasMarkup(text)) return null;
-  const urls = extractUrls(text).filter(
+  const urls = textUrlsOf(text).filter(
     (url) => isDirectImageUrl(url) || isDirectVideoUrl(url),
   );
   const url = urls[0];
@@ -584,6 +684,8 @@ export const MessageThumb = ({
           style={StyleSheet.absoluteFill}
           transition={0}
         />
+      ) : video && LIVE_STILLS && url ? (
+        <LiveStill url={url} />
       ) : null}
       {video ? (
         <View pointerEvents="none" style={styles.tileCentre}>
@@ -720,6 +822,8 @@ const TileView = ({
             style={StyleSheet.absoluteFill}
             transition={150}
           />
+        ) : LIVE_STILLS ? (
+          <LiveStill onRatio={onRatio} url={item.url} />
         ) : null
       ) : (
         <Image

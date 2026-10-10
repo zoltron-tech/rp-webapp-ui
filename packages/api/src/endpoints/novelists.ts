@@ -204,8 +204,10 @@ export const updateUserNovelist = async (
   if ("message" in result && !("id" in result)) return result;
 
   // The service echoes a `message` alongside the novelist; drop it so callers
-  // can keep using `"message" in result` to mean failure.
-  return { ...result, message: undefined } as unknown as Novelist;
+  // can keep using `"message" in result` to mean failure. The key itself has
+  // to go — `message: undefined` still answers `"message" in` with `true`.
+  const { message: _echoed, ...novelist } = result;
+  return novelist as unknown as Novelist;
 };
 
 export const search = (

@@ -20,6 +20,7 @@ import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
 import { usePromptFeedActions } from "@/hooks/use-prompt-feed-actions";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { useTabTop } from "@/hooks/use-tab-top";
+import { useOffline } from "@/lib/connectivity";
 import { dedupeById, interleave } from "@/lib/feed";
 import { space, useAppTheme } from "@/theme";
 import { EmptyState, FeedSeparator } from "@/components/list-parts";
@@ -212,6 +213,8 @@ export const HomeScreen = () => {
     showLikers,
     unfoldedIds,
   } = actions;
+  /** Written offline, waiting; at the head of the feed they belong to. */
+  const queued = actions.queuedPrompts;
 
   /** A picture from a media activity, opened full screen. */
   const [viewing, setViewing] = useState<string | null>(null);
@@ -220,13 +223,15 @@ export const HomeScreen = () => {
     const a = activities.data?.pages ?? [];
     const p = prompts.data?.pages ?? [];
     const o = posts.data?.pages ?? [];
+    const queuedPrompts = queued.filter((item) => item.source.sourceType === "MUSE");
+    const queuedPosts = queued.filter((item) => item.source.sourceType !== "MUSE");
 
     // Every prompt on the page, so an activity about one is not a second card.
     const promptIds = new Set<string>();
     for (const page of [...p, ...o])
       for (const item of page) promptIds.add(item.id);
 
-    const depth = Math.max(a.length, p.length, o.length);
+    const depth = Math.max(a.length, p.length, o.length, queued.length > 0 ? 1 : 0);
     const feed: FeedItem[] = [];
     for (let i = 0; i < depth; i += 1) {
       feed.push(
@@ -238,12 +243,12 @@ export const HomeScreen = () => {
               key: `activity-${item.id}`,
               kind: "activity" as const,
             })),
-          (p[i] ?? []).map((item) => ({
+          [...(i === 0 ? queuedPrompts : []), ...(p[i] ?? [])].map((item) => ({
             data: item,
             key: `prompt-${item.id}`,
             kind: "prompt" as const,
           })),
-          (o[i] ?? []).map((item) => ({
+          [...(i === 0 ? queuedPosts : []), ...(o[i] ?? [])].map((item) => ({
             data: item,
             key: `post-${item.id}`,
             kind: "prompt" as const,
@@ -279,10 +284,14 @@ export const HomeScreen = () => {
     if (!placedStories) out.push(RAIL_STORIES);
     if (!placedStrangers) out.push(RAIL_STRANGERS);
     return out;
-  }, [activities.data, prompts.data, posts.data]);
+  }, [activities.data, prompts.data, posts.data, queued]);
 
   const sources = [activities, prompts, posts];
   const feedPending = sources.every((q) => q.isPending || !q.isEnabled);
+  // Nothing from disk and no network to ask: the offline scene, not ghosts
+  // that would pulse until the signal returns. See `lib/connectivity.ts`.
+  const offline = useOffline();
+  const feedOffline = feedPending && offline && queued.length === 0;
   const feedError =
     sources.every((q) => q.error || !q.isEnabled) &&
     sources.some((q) => q.error)
@@ -412,14 +421,26 @@ export const HomeScreen = () => {
         {...tabBarScroll}
         ref={listRef}
         contentContainerStyle={contentStyle}
-        // Ghosts while pending; nothing at all when every source failed, so
-        // the retry below is shown instead of three rails over an empty feed.
-        data={feedPending ? SKELETON_ITEMS : feedError ? [] : items}
+        // Ghosts while pending; nothing at all when every source failed or
+        // the phone is offline with nothing saved, so the status below is
+        // shown instead of three rails over an empty feed.
+        data={
+          feedPending && !feedOffline && queued.length === 0
+            ? SKELETON_ITEMS
+            : feedError || feedOffline
+              ? []
+              : items
+        }
         ItemSeparatorComponent={FeedSeparator}
         keyExtractor={keyExtractor}
         ListEmptyComponent={
-          feedError ? (
-            <ListStatus error={feedError} onRetry={refresh} />
+          feedError || feedOffline ? (
+            <ListStatus
+              error={feedError ?? undefined}
+              loading={feedOffline}
+              offlineWhat="feed"
+              onRetry={refresh}
+            />
           ) : (
             <EmptyState
               body="When your friends write, their updates land here. Find some novelists to follow along."

@@ -1,9 +1,7 @@
-import { AmbientBackground } from "@/components/ambient-background";
 import { Ionicons } from "@expo/vector-icons";
 import { queryKeys, useSession } from "@nw/features";
 import type { Muse, MuseNavItem } from "@nw/types";
 import { type QueryClient, useQueryClient } from "@tanstack/react-query";
-import { Image } from "expo-image";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -14,8 +12,10 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { Text } from "@/components/text";
+import { AmbientBackground } from "@/components/ambient-background";
 import { SongSheet } from "@/components/compose/song-sheet";
+import { EmptyScene } from "@/components/empty-feed";
+import { Image } from "@/components/image";
 import { ListStatus } from "@/components/list-status";
 import { Byline } from "@/components/muse/byline";
 import { MuseNavTabs } from "@/components/muse/nav-tabs";
@@ -35,6 +35,7 @@ import { MuseStage } from "@/components/muse/stage";
 import { VerseBar } from "@/components/muse/verse-bar";
 import { NovelistHeader } from "@/components/novelist-header";
 import { ProfileSongPill } from "@/components/profile-song";
+import { Text } from "@/components/text";
 import { useScrollIdle } from "@/context/scroll-activity";
 import { useHideTabBar } from "@/hooks/use-hide-tab-bar";
 import { useMuse } from "@/hooks/use-muse";
@@ -356,7 +357,12 @@ const MuseProfileBody = ({
   if (!loading && !muse && !preview) {
     return (
       <View style={styles.root}>
-        <ListStatus empty="This character could not be found." />
+        <EmptyScene
+          aside="(Or the link is wrong. We checked under the bookshelf too.)"
+          scene="vanished-muse"
+          subtitle="No farewell scene, no dramatic last words. Just an empty card and one very suspicious novelist holding an eraser."
+          title="Plot twist: this character got written out"
+        />
       </View>
     );
   }
@@ -367,33 +373,38 @@ const MuseProfileBody = ({
 
       <MuseBackdropProvider value={backdrop}>
         <View style={styles.column}>
-          {author?.username ? (
-            <Byline
-              accent={look.accent}
-              author={author}
-              textColor={look.pennedByColor}
-            />
-          ) : null}
+          {/*
+            The three rows above the stage are always mounted, each at a
+            height that does not depend on what it holds. Going from one muse
+            to the next, `muse` is null until the neighbour has loaded, and
+            any row that waited for it collapsed for that moment: the stage
+            and its spinner drew a row's height too high, then dropped into
+            place when the answer came. So the byline draws its rules without
+            a signature until the author is known, the verse row draws a lone
+            "1" until the verses are, and the song slot is empty until the
+            song is — all at full height, so nothing under them moves.
+          */}
+          <Byline
+            accent={look.accent}
+            author={author?.username ? author : null}
+            textColor={look.pennedByColor}
+          />
 
-          {muse || nav.verses.length > 0 ? (
-            <VerseBar
-              accent={look.accent}
-              busy={switching}
-              currentId={muse?.id ?? preview?.id ?? null}
-              onCreate={isOwnMuse ? createVerse : undefined}
-              onSelect={goTo}
-              verses={nav.verses}
-            />
-          ) : null}
+          <VerseBar
+            accent={look.accent}
+            busy={switching}
+            currentId={muse?.id ?? preview?.id ?? null}
+            onCreate={isOwnMuse ? createVerse : undefined}
+            onSelect={goTo}
+            verses={nav.verses}
+          />
 
-          {muse && (muse.featuredSong || isOwnMuse) ? (
-            <SongBar
-              edit={edit}
-              isOwnMuse={isOwnMuse}
-              look={look}
-              muse={muse}
-            />
-          ) : null}
+          <SongBar
+            edit={edit}
+            isOwnMuse={isOwnMuse}
+            look={look}
+            muse={muse}
+          />
 
           <MuseStage
             tabs={
@@ -472,12 +483,27 @@ const MuseProfileBody = ({
 };
 
 /**
+ * The song bar's height, whatever it holds.
+ *
+ * The player pill is the tallest thing that goes here: 6pt padding and a
+ * 1pt edge above and below three lines of title, artist and seek track,
+ * about 59pt in all. The owner's dashed "Add a song" is 36pt, and a visitor
+ * to a muse with no song sees nothing. Each used to take its own height, so
+ * the stage, the tabs and the card moved up or down by up to 59pt from one
+ * muse to the next, and from before a song was added to after. One height
+ * for all three, the content centred in it: 4pt of top padding plus 60pt
+ * for the tallest. Everything below lands in the same place on every muse.
+ */
+const SONG_SLOT = 64;
+
+/**
  * Web's `MuseSongBar`: the featured song between the verses and the card.
  *
  * Visitors see the player. The owner also gets web's two small controls
  * beside it — change, remove — and a dashed "Add a song" when there is none.
- * The picker is the composer's `SongSheet`, resolving a pick locally, and the
- * pick is written to the muse through `useMuseEdit`.
+ * A visitor to a muse without a song gets the empty slot, at the same height
+ * (`SONG_SLOT`). The picker is the composer's `SongSheet`, resolving a pick
+ * locally, and the pick is written to the muse through `useMuseEdit`.
  */
 const SongBar = ({
   edit,
@@ -488,11 +514,12 @@ const SongBar = ({
   edit: MuseEdit;
   isOwnMuse: boolean;
   look: MuseLook;
-  muse: Muse;
+  /** Null while the next muse loads: the slot is drawn empty, at height. */
+  muse: Muse | null;
 }) => {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const song = muse.featuredSong;
+  const song = muse?.featuredSong;
 
   const choose = async (picked: NonNullable<Muse["featuredSong"]>) => {
     setBusy(true);
@@ -660,7 +687,12 @@ const Wallpaper = ({
 const styles = StyleSheet.create({
   column: { flex: 1 },
   root: { flex: 1 },
-  song: { paddingHorizontal: space.md, paddingTop: space.xs },
+  song: {
+    height: SONG_SLOT,
+    justifyContent: "center",
+    paddingHorizontal: space.md,
+    paddingTop: space.xs,
+  },
   songAdd: {
     alignItems: "center",
     backgroundColor: "rgba(0,0,0,0.25)",

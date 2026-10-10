@@ -1,5 +1,6 @@
 "use client";
 
+import { isSupportNovelist } from "@nw/chat";
 import type { Novelist } from "@nw/types";
 import { ACCENT_MAP } from "@nw/types/theme";
 import { isIOS, isPWA } from "@nw/utils/platform";
@@ -219,11 +220,13 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
                         )}
                         {/* Still, not animated: html-to-image paints one frame, and
                           a crest caught mid-sheen exports with a white streak. */}
-                        <BadgeStrip
-                          badges={novelist.badges}
-                          size={18}
-                          animated={false}
-                        />
+                        {!isSupportNovelist(novelist.username) && (
+                          <BadgeStrip
+                            badges={novelist.badges}
+                            size={18}
+                            animated={false}
+                          />
+                        )}
                       </S.HeroUsername>
                     </S.HeroInner>
                   </S.HeroBanner>

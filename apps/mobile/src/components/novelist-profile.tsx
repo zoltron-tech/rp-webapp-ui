@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { isSupportNovelist } from "@nw/chat";
 import { useSession } from "@nw/features";
 import { mixColors } from "@nw/theme";
 import type { Fandom, Friend, Muse, Novelist } from "@nw/types";
@@ -7,14 +8,16 @@ import { IMAGE_SIZES, wsrvImage } from "@nw/utils/image";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
+  Animated,
   InteractionManager,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   Pressable,
-  ScrollView,
   StyleSheet,
   View,
   type ViewStyle,
 } from "react-native";
-import { Text } from "@/components/text";
+import { useBannerStretch } from "@/animation/effects";
 import { Avatar } from "@/components/avatar";
 import { BadgeSheet } from "@/components/badge-sheet";
 import { BadgeRow, ScoreIcon } from "@/components/badges";
@@ -23,10 +26,11 @@ import { CroppedImage } from "@/components/cropped-image";
 import { getNoteEmojiRotate, NoteEmojiIcon } from "@/components/note-emoji";
 import { ProfileActions } from "@/components/profile-actions";
 import { ProfileSongPill } from "@/components/profile-song";
+import { Text } from "@/components/text";
 import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
 import { useProfileSong } from "@/hooks/use-profile-song";
-import { border, fontSize, radius, space, type, useAppTheme } from "@/theme";
 import { fullName } from "@/lib/names";
+import { border, fontSize, radius, space, type, useAppTheme } from "@/theme";
 
 /**
  * A novelist's profile, laid out the way the web profile page is.
@@ -64,8 +68,8 @@ import { fullName } from "@/lib/names";
  *   path; a button that cannot be undone on this client is worse than none.
  * - **Add a character** is a link to a screen that does not exist here yet, so
  *   the section header omits it rather than offering a dead end.
- * - **Storyboards, posts and the activity feed** are their own screens with
- *   their own fetches; they arrive with the phases that bring those.
+ * - **Stories, posts and the activity feed** are their own screens with
+ *   their own fetches, reached from the rows under "Their work".
  * - **The note's emoji** is a key into a hand-drawn SVG icon set
  *   (`note-emoji-set.tsx`), not a character — there is nothing to render
  *   without porting that artwork too.
@@ -104,9 +108,31 @@ const BANNER_STANDIN = { fit: "cover" as const, h: 26, q: 40, w: 64 };
 const PROFILE_AVATAR = {
   animated: true,
   fit: "inside" as const,
-  h: 480,
-  w: 480,
+  h: 320,
+  w: 320,
 };
+
+/**
+ * A banner that moves is fetched smaller than one that does not.
+ *
+ * `BANNER_LARGE` is 1200 wide, which a still earns: it is decoded once. An
+ * animated one is decoded again for every frame, at that size, for as long
+ * as it plays, and GIF banners are low-resolution sources to begin with — a
+ * 5:2 strip at 900 wide is 44% fewer pixels per frame than 1200 and draws
+ * the same on a phone.
+ */
+const ANIMATED_BANNER = {
+  animated: true,
+  fit: "inside" as const,
+  h: 360,
+  w: 900,
+};
+
+/** Past this scroll offset the hero is off screen and its GIFs may rest. */
+const HERO_REACH = 320;
+
+const isGifUrl = (url: string | null | undefined): boolean =>
+  /\.gif(?:[?#].*)?$/i.test(url ?? "");
 
 /**
  * `inside`, never `cover`: a stored crop is percentages of the un-cropped
@@ -188,8 +214,30 @@ export const NovelistProfile = ({
   );
 
   const scrollStart = useCallback(() => setScrolling(true), []);
-  const scrollEnd = useCallback(() => setScrolling(false), []);
+  /*
+   * Whether the hero — banner and avatar — is still on screen, read at the
+   * end of each scroll rather than on every frame: a GIF that has been
+   * scrolled away is one the page does not need to keep decoding.
+   */
+  const [heroHidden, setHeroHidden] = useState(false);
+  const scrollEnd = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      setScrolling(false);
+      setHeroHidden(event.nativeEvent.contentOffset.y > HERO_REACH);
+    },
+    [],
+  );
   const crestsAnimated = settled && focused && !scrolling;
+  /*
+   * When an animated avatar or banner runs: Discord's rule for animated
+   * profiles, which is "while you are looking at it". Not while the page is
+   * settling in, not under a finger that is scrolling, not once it has been
+   * scrolled away, and not under another screen. A GIF is a decode per
+   * frame on the CPU — the one on this page's avatar measured three
+   * quarters of a core on its own — so the frames it does not need to draw
+   * are the whole saving.
+   */
+  const heroPlaying = settled && focused && !scrolling && !heroHidden;
 
   /*
    * Somebody else's badges open in a tray; your own open the catalogue.
@@ -208,12 +256,19 @@ export const NovelistProfile = ({
   const tabBarScroll = useTabBarScroll();
   const contentStyle = useTabBarContentStyle(styles.content);
 
+  // The banner grows under an over-scroll, pinned to the top — Discord's
+  // rule. The offset feeds both this and the tab bar's collapse, so the two
+  // scroll handlers are combined below. See `animation/effects`.
+  const stretch = useBannerStretch(tabBarScroll.onScroll);
+
   const hasBanner = Boolean(novelist.banner?.src);
   const bannerUri = hasBanner
-    ? wsrvImage(novelist.banner?.src, {
-        ...IMAGE_SIZES.BANNER_LARGE,
-        animated: true,
-      })
+    ? wsrvImage(
+        novelist.banner?.src,
+        isGifUrl(novelist.banner?.src)
+          ? ANIMATED_BANNER
+          : IMAGE_SIZES.BANNER_LARGE,
+      )
     : novelist.image && !novelist.image.endsWith(".gif")
       ? wsrvImage(novelist.image, BANNER_STANDIN)
       : "";
@@ -225,6 +280,8 @@ export const NovelistProfile = ({
   const muses = mainVerseMuses(novelist.muses).slice(0, MUSE_PREVIEW_COUNT);
   const friends = (novelist.friends ?? []).slice(0, FRIEND_STACK_COUNT);
   const isOwnProfile = session.novelist?.username === novelist.username;
+  // Support is not playing: no XP chip, no crests, whoever is looking.
+  const isSupport = isSupportNovelist(novelist.username);
 
   /*
    * Your own lists live in the Profile tab, everyone else's in Home.
@@ -247,6 +304,14 @@ export const NovelistProfile = ({
       : router.push({
           params: { username: novelist.username },
           pathname: "/novelist/[username]/muses",
+        });
+
+  const openStories = () =>
+    isOwnProfile
+      ? router.push("/(tabs)/(profile)/stories")
+      : router.push({
+          params: { username: novelist.username },
+          pathname: "/novelist/[username]/stories",
         });
 
   /*
@@ -298,15 +363,18 @@ export const NovelistProfile = ({
 
   return (
     <>
-      <ScrollView
+      <Animated.ScrollView
         {...tabBarScroll}
         contentContainerStyle={contentStyle}
         onMomentumScrollEnd={scrollEnd}
+        onScroll={stretch.onScroll}
         onScrollBeginDrag={scrollStart}
         onScrollEndDrag={scrollEnd}
+        scrollEventThrottle={stretch.scrollEventThrottle}
         style={style}
       >
-        <View
+        <Animated.View
+          onLayout={stretch.onBannerLayout}
           style={[
             styles.banner,
             {
@@ -315,6 +383,7 @@ export const NovelistProfile = ({
               aspectRatio: hasBanner ? 5 / 2 : 5 / 1,
               backgroundColor: theme.material.fill,
             },
+            stretch.bannerStyle,
           ]}
         >
           {bannerUri ? (
@@ -322,15 +391,12 @@ export const NovelistProfile = ({
               blurRadius={hasBanner ? 0 : BANNER_BLUR}
               // Web's `Banner`: the stored pan and zoom, or `cover`.
               crop={hasBanner ? novelist.banner?.crop : null}
+              playing={heroPlaying}
               style={styles.bannerImage}
               uri={bannerUri}
             />
           ) : null}
-
-          {/* Web's `ProfileDropdownMenuContainer`, in the same corner of the same
-            banner: the connection button and the `⋯`. */}
-          <ProfileActions novelist={novelist} />
-        </View>
+        </Animated.View>
 
         <View style={styles.headerRow}>
           <View style={styles.avatarWrap}>
@@ -346,6 +412,7 @@ export const NovelistProfile = ({
               <Avatar
                 image={novelist.avatar}
                 name={novelist.firstName}
+                playing={heroPlaying}
                 size={AVATAR_SIZE}
                 uri={avatarUri}
               />
@@ -354,28 +421,30 @@ export const NovelistProfile = ({
             {/* Web pins this to the avatar's bottom-right and nudges it clear of
               the circle with a percentage translate; these are the same offsets
               in points, since the chip's width is not known until it lays out. */}
-            <View
-              style={[
-                styles.xpBadge,
-                {
-                  backgroundColor: mixColors(
-                    theme.accent.surface,
-                    0.2,
-                    theme.background,
-                  ),
-                  borderColor: mixColors(
-                    theme.accent.surface,
-                    0.48,
-                    theme.material.edge,
-                  ),
-                },
-              ]}
-            >
-              <ScoreIcon size={14} />
-              <Text style={[styles.xpLabel, { color: theme.text }]}>
-                {novelist.totalPoints.toLocaleString()} XP
-              </Text>
-            </View>
+            {isSupport ? null : (
+              <View
+                style={[
+                  styles.xpBadge,
+                  {
+                    backgroundColor: mixColors(
+                      theme.accent.surface,
+                      0.2,
+                      theme.background,
+                    ),
+                    borderColor: mixColors(
+                      theme.accent.surface,
+                      0.48,
+                      theme.material.edge,
+                    ),
+                  },
+                ]}
+              >
+                <ScoreIcon size={14} />
+                <Text style={[styles.xpLabel, { color: theme.text }]}>
+                  {novelist.totalPoints.toLocaleString()} XP
+                </Text>
+              </View>
+            )}
           </View>
 
           {novelist.note?.text ? (
@@ -432,36 +501,43 @@ export const NovelistProfile = ({
           {/* Handle, verification and crests on one line — web keeps the badges
             with the identity rather than with the counts below. */}
           <View style={styles.handleRow}>
-            <Text style={[styles.handle, { color: theme.textGray }]}>
-              @{novelist.username}
-            </Text>
-            {novelist.isVerified ? (
-              <Ionicons
-                color={theme.accent.text}
-                name="checkmark-circle"
-                size={16}
-              />
-            ) : null}
-            {/*
-            The crests, at their real size and animated — see `badges.tsx` for
-            why they are drawn here and nowhere in a list. 34 clears
-            `DETAIL_THRESHOLD`, which is where the artwork starts being artwork
-            rather than a coloured dot.
+            <View style={styles.handleText}>
+              <Text style={[styles.handle, { color: theme.textGray }]}>
+                @{novelist.username}
+              </Text>
+              {novelist.isVerified ? (
+                <Ionicons
+                  color={theme.accent.text}
+                  name="checkmark-circle"
+                  size={16}
+                />
+              ) : null}
+              {/*
+              The crests, at their real size and animated — see `badges.tsx`
+              for why they are drawn here and nowhere in a list. 34 clears
+              `DETAIL_THRESHOLD`, which is where the artwork starts being
+              artwork rather than a coloured dot.
 
-            Tapping opens the full catalogue on your own profile and the tray of
-            what they have on anyone else's — see `badgesOpen` above for why the
-            two destinations differ.
-          */}
-            <BadgeRow
-              animated={crestsAnimated}
-              badges={novelist.badges}
-              onPress={
-                isOwnProfile
-                  ? () => router.push("/(tabs)/(profile)/badges")
-                  : () => setBadgesOpen(true)
-              }
-              size={34}
-            />
+              Tapping opens the full catalogue on your own profile and the
+              tray of what they have on anyone else's — see `badgesOpen` above
+              for why the two destinations differ.
+            */}
+              <BadgeRow
+                animated={crestsAnimated}
+                badges={isSupport ? undefined : novelist.badges}
+                onPress={
+                  isOwnProfile
+                    ? () => router.push("/(tabs)/(profile)/badges")
+                    : () => setBadgesOpen(true)
+                }
+                size={34}
+              />
+            </View>
+
+            {/* Web's `ProfileDropdownMenuContainer` — the connection button
+              and the `⋯` — at the end of the row rather than over the banner,
+              which stretches under an over-scroll and took them with it. */}
+            <ProfileActions novelist={novelist} />
           </View>
 
           <View style={styles.statsRow}>
@@ -696,12 +772,23 @@ export const NovelistProfile = ({
               hint="Written as themselves"
               icon="document-text-outline"
               label="OOC posts"
-              last
               onPress={() => openFeed("posts")}
+            />
+
+            <FeedRow
+              hint={
+                isOwnProfile
+                  ? "Stories you write, alone or together"
+                  : "Stories they write, alone or together"
+              }
+              icon="book-outline"
+              label="Stories"
+              last
+              onPress={openStories}
             />
           </View>
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
 
       {/*
         Outside the scroll view because it is a `Modal` — it draws in its own
@@ -712,7 +799,7 @@ export const NovelistProfile = ({
         badges={novelist.badges}
         onClose={() => setBadgesOpen(false)}
         ownerName={novelist.firstName}
-        visible={badgesOpen && !isOwnProfile}
+        visible={badgesOpen && !isOwnProfile && !isSupport}
       />
     </>
   );
@@ -1053,8 +1140,17 @@ const styles = StyleSheet.create({
   handleRow: {
     alignItems: "center",
     flexDirection: "row",
+    gap: space.sm,
+  },
+  // The handle, the tick and the crests wrap among themselves; the buttons
+  // after them keep their place at the row's end.
+  handleText: {
+    alignItems: "center",
+    flex: 1,
+    flexDirection: "row",
     flexWrap: "wrap",
     gap: space.xs,
+    minWidth: 0,
   },
   headerRow: {
     alignItems: "center",

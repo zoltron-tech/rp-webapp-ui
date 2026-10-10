@@ -1,6 +1,7 @@
 "use client";
 
 import { Flex } from "@novelist-world/ui";
+import { isSupportNovelist } from "@nw/chat";
 import type { Fandom, Novelist, NWImage, Prompt, StoryBoard } from "@nw/types";
 import type { Activity } from "@nw/types/activity";
 import type { ProfileSong } from "@nw/types/music";
@@ -617,7 +618,8 @@ export default function UserProfilePage({}) {
     connection: string | null | undefined,
     username: string,
   ) => {
-    if (username === "novelistworld") return null; // no dropdown for novelistworld profile
+    // Support is not somebody to add, unfriend or request.
+    if (isSupportNovelist(username)) return null;
     switch (connection) {
       case "FRIEND":
         return (
@@ -1052,7 +1054,7 @@ export default function UserProfilePage({}) {
                   />
                 </ShouldRender>
                 <ShouldRender
-                  if={!isCurrentUser && username !== "novelistworld"}
+                  if={!isCurrentUser && !isSupportNovelist(username)}
                 >
                   <AppDropdownMenuResponsive
                     variant="bordered"
@@ -1098,7 +1100,7 @@ export default function UserProfilePage({}) {
                   />
                 </ShouldRender>
                 <ShouldRender
-                  if={!isCurrentUser && username === "novelistworld"}
+                  if={!isCurrentUser && isSupportNovelist(username)}
                 >
                   <AppDropdownMenuResponsive
                     variant="bordered"
@@ -1156,7 +1158,7 @@ export default function UserProfilePage({}) {
                 />
                 <ShouldRender
                   if={
-                    username !== "novelistworld" &&
+                    !isSupportNovelist(username) &&
                     typeof novelist?.totalPoints === "number"
                   }
                 >
@@ -1240,7 +1242,7 @@ export default function UserProfilePage({}) {
             <S.UsernameContainer>
               <Username username={username} primary />{" "}
               <ShouldRender if={novelist?.isVerified === true}>
-                {novelist?.username === "novelistworld" ? (
+                {isSupportNovelist(novelist?.username) ? (
                   <AdminBadge size={20} />
                 ) : (
                   <EmailVerifiedBadge size={14} />
@@ -1248,13 +1250,14 @@ export default function UserProfilePage({}) {
               </ShouldRender>
               {/* Earned badges sit with the handle rather than in the stats row:
                   they belong to the identity, and the row below is counts. */}
+              {/* Support is not playing: no crests. */}
               <BadgeRow
-                badges={novelist?.badges}
+                badges={isSupportNovelist(username) ? undefined : novelist?.badges}
                 size={20}
                 ownerName={novelist?.firstName ?? username}
               />
             </S.UsernameContainer>
-            <ShouldRender if={username !== "novelistworld"}>
+            <ShouldRender if={!isSupportNovelist(username)}>
               <S.StatsRow id="profile-tour-step-3">
                 <Flex gap={"2px"}>
                   <FcTreeStructure size={"16px"} />

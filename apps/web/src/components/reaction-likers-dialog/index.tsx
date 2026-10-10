@@ -1,5 +1,6 @@
 "use client";
 
+import { isSupportNovelist } from "@nw/chat";
 import type { Friend } from "@nw/types";
 import classNames from "classnames";
 import { type FC, useEffect, useRef, useState } from "react";
@@ -247,10 +248,12 @@ export const ReactionLikersDialog: FC<ReactionLikersDialogProps> = ({
 
   const renderRowActions = (friend: Friend) => {
     const isCurrentUser = currentNovelist?.username === friend.username;
+    // Support is not somebody to add: only the profile button, as for you.
+    const isSupport = isSupportNovelist(friend.username);
     const isMessagingThis = messaging === friend.id;
     const isPendingThis = pending === friend.id;
 
-    if (isCurrentUser) {
+    if (isCurrentUser || (isSupport && friend.connection !== "FRIEND")) {
       return (
         <Button
           variant="secondary"

@@ -206,8 +206,11 @@ export const updateMuse = async (
   if ("message" in result && !("id" in result)) return result as WithMessage;
 
   // The service echoes a `message` alongside the muse; drop it so callers can
-  // keep using `"message" in result` to mean failure.
-  return { ...result, message: undefined } as unknown as Muse;
+  // keep using `"message" in result` to mean failure. The key itself has to
+  // go — `{ ...result, message: undefined }` still answers `"message" in`
+  // with `true`, which is how every save read as "Not saved" after a 200.
+  const { message: _echoed, ...saved } = result as WithMessage<Muse>;
+  return saved as unknown as Muse;
 };
 
 export const deleteMuse = (api: ApiClient, museId: string) =>

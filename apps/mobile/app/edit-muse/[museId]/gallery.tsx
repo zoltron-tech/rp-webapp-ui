@@ -10,7 +10,7 @@ import { API_MESSAGE, type Muse } from "@nw/types";
 import type { MediaMetadata } from "@nw/types/activity";
 import { IMAGE_SIZES, wsrvImage } from "@nw/utils/image";
 import { useQueryClient } from "@tanstack/react-query";
-import { Image } from "expo-image";
+import { Image } from "@/components/image";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -24,6 +24,13 @@ import {
 import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MuseGate, useOwnedMuse } from "@/components/edit-muse/shared";
+import {
+  deleteManyMuseMedia,
+  SelectButton,
+  SelectionBar,
+  SelectMark,
+  useMediaSelection,
+} from "@/components/muse/media-selection";
 import {
   isGifUrl,
   isVideoUrl,
@@ -81,6 +88,13 @@ const Gallery = ({ muse }: { muse: Muse }) => {
     done: number;
     total: number;
   } | null>(null);
+
+  // Select mode: several tiles chosen, deleted together. See `media-selection`.
+  const selection = useMediaSelection();
+  const [deleting, setDeleting] = useState(false);
+  useEffect(() => {
+    if (media) selection.retain(media);
+  }, [media, selection.retain]);
 
   const [wantMeta, setWantMeta] = useState(false);
   useEffect(() => {
@@ -171,6 +185,42 @@ const Gallery = ({ muse }: { muse: Muse }) => {
     );
   };
 
+  /** The selected tiles, confirmed once and deleted one after another. */
+  const removeSelected = () => {
+    const urls = [...selection.selected];
+    if (urls.length === 0 || deleting) return;
+    const inUse = urls.filter((url) => inUseLabels(url, muse).length > 0);
+    const noun = urls.length === 1 ? "file" : `${urls.length} files`;
+    Alert.alert(
+      inUse.length > 0 ? "Some media is in use" : `Delete ${noun}?`,
+      inUse.length > 0
+        ? `${inUse.length === 1 ? "One of these is" : `${inUse.length} of these are`} the character's avatar, wallpaper or card image. Deleting removes them from the gallery but won't change those fields. Delete ${noun} anyway?`
+        : `This will permanently remove ${urls.length === 1 ? "the file" : "these files"} from the gallery. This cannot be undone.`,
+      [
+        { style: "cancel", text: "Cancel" },
+        {
+          onPress: async () => {
+            setDeleting(true);
+            setOpen(null);
+            setMedia((list) => list.filter((u) => !urls.includes(u)));
+            const failed = await deleteManyMuseMedia(api, id, urls);
+            setDeleting(false);
+            selection.stop();
+            if (failed.length > 0) {
+              Alert.alert(
+                "Not all deleted",
+                `${failed.length} of ${urls.length} could not be deleted. Try again in a moment.`,
+              );
+              await query.refetch();
+            }
+          },
+          style: "destructive",
+          text: inUse.length > 0 ? "Delete anyway" : "Delete",
+        },
+      ],
+    );
+  };
+
   const caption = async (url: string, description: string) => {
     const result = await editMediaDescription(api, id, url, description);
     if (!result || "message" in result) return false;
@@ -231,9 +281,26 @@ const Gallery = ({ muse }: { muse: Muse }) => {
           </View>
         </SettingsGroup>
 
-        <Text style={[styles.groupTitle, { color: theme.textGray }]}>
-          Current media{media ? ` · ${count}/${MAX_TOTAL}` : ""}
-        </Text>
+        {selection.selecting && media ? (
+          <SelectionBar
+            busy={deleting}
+            count={selection.selected.size}
+            onCancel={selection.stop}
+            onClear={selection.clear}
+            onDelete={removeSelected}
+            onSelectAll={() => selection.selectAll(media)}
+            total={media.length}
+          />
+        ) : (
+          <View style={styles.headerRow}>
+            <Text style={[styles.groupTitle, { color: theme.textGray }]}>
+              Current media{media ? ` · ${count}/${MAX_TOTAL}` : ""}
+            </Text>
+            {media && media.length > 0 ? (
+              <SelectButton onPress={() => selection.start()} />
+            ) : null}
+          </View>
+        )}
 
         {!media ? (
           <ActivityIndicator color={theme.primary} style={styles.spinner} />
@@ -249,14 +316,33 @@ const Gallery = ({ muse }: { muse: Muse }) => {
             {tile > 0
               ? media.map((url, index) => {
                   const labels = inUseLabels(url, muse);
+                  const chosen = selection.selected.has(url);
                   return (
                     <Pressable
                       accessibilityLabel={
-                        isVideoUrl(url) ? "Play video" : "Open picture"
+                        selection.selecting
+                          ? `${chosen ? "Deselect" : "Select"} ${isVideoUrl(url) ? "video" : "picture"}`
+                          : isVideoUrl(url)
+                            ? "Play video"
+                            : "Open picture"
                       }
-                      accessibilityRole="imagebutton"
+                      accessibilityRole={
+                        selection.selecting ? "checkbox" : "imagebutton"
+                      }
+                      accessibilityState={
+                        selection.selecting ? { checked: chosen } : undefined
+                      }
                       key={url}
-                      onPress={() => setOpen(index)}
+                      // A long press is the quick way in: select mode, with
+                      // this tile already chosen.
+                      onLongPress={() => {
+                        if (!selection.selecting) selection.start(url);
+                      }}
+                      onPress={() =>
+                        selection.selecting
+                          ? selection.toggle(url)
+                          : setOpen(index)
+                      }
                       style={({ pressed }) => [
                         styles.tile,
                         {
@@ -299,15 +385,26 @@ const Gallery = ({ muse }: { muse: Muse }) => {
                           </Text>
                         </View>
                       ) : null}
-                      <Pressable
-                        accessibilityLabel="Delete"
-                        accessibilityRole="button"
-                        hitSlop={6}
-                        onPress={() => remove(url)}
-                        style={styles.delete}
-                      >
-                        <Ionicons color="#ffffff" name="trash-outline" size={13} />
-                      </Pressable>
+                      {selection.selecting ? (
+                        <SelectMark
+                          accent={theme.accent.solid}
+                          selected={chosen}
+                        />
+                      ) : (
+                        <Pressable
+                          accessibilityLabel="Delete"
+                          accessibilityRole="button"
+                          hitSlop={6}
+                          onPress={() => remove(url)}
+                          style={styles.delete}
+                        >
+                          <Ionicons
+                            color="#ffffff"
+                            name="trash-outline"
+                            size={13}
+                          />
+                        </Pressable>
+                      )}
                     </Pressable>
                   );
                 })
@@ -364,6 +461,12 @@ const styles = StyleSheet.create({
   groupTitle: {
     ...type.eyebrow,
     paddingHorizontal: space.xs,
+  },
+  headerRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingRight: space.xs,
   },
   inUse: {
     backgroundColor: "rgba(0,0,0,0.6)",

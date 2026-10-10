@@ -112,6 +112,7 @@ const page = (trackId: string) => `<!doctype html>
       window.nwSpotify = function (command, value) {
         if (!controller) return;
         if (command === 'toggle') controller.togglePlay();
+        if (command === 'pause') controller.pause();
         if (command === 'seek') controller.seek(value);
       };
 
@@ -145,14 +146,20 @@ export const useSpotifyEmbed = (trackId: string | null | undefined) => {
     ready: false,
   });
 
-  const command = useCallback((name: "toggle" | "seek", value?: number) => {
-    // The trailing `true` keeps iOS from warning about a non-void result.
-    webview.current?.injectJavaScript(
-      `window.nwSpotify && window.nwSpotify('${name}', ${value ?? 0}); true;`,
-    );
-  }, []);
+  const command = useCallback(
+    (name: "toggle" | "pause" | "seek", value?: number) => {
+      // The trailing `true` keeps iOS from warning about a non-void result.
+      webview.current?.injectJavaScript(
+        `window.nwSpotify && window.nwSpotify('${name}', ${value ?? 0}); true;`,
+      );
+    },
+    [],
+  );
 
   const toggle = useCallback(() => command("toggle"), [command]);
+  // Pause, not toggle: the caller is another player taking over, or the
+  // screen leaving, and a toggle on a track already paused would start it.
+  const pause = useCallback(() => command("pause"), [command]);
   const seek = useCallback(
     (seconds: number) => command("seek", seconds),
     [command],
@@ -218,6 +225,7 @@ export const useSpotifyEmbed = (trackId: string | null | undefined) => {
     ...state,
     element,
     failed: state.failed || rejected,
+    pause,
     seek,
     toggle,
   };

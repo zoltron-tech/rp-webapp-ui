@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { Muse } from "@nw/types";
-import { Image } from "expo-image";
+import { Image } from "@/components/image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useRef, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";

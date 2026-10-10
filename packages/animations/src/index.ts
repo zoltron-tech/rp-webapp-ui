@@ -18,6 +18,26 @@
  *    is a clock and a table of rhythms that the native primitives read.
  */
 export {
+  BLANK_STORYBOARD_VIEW_BOX,
+  BlankStoryboardScene,
+  DARK_LIGHTHOUSE_VIEW_BOX,
+  DarkLighthouseScene,
+  FROZEN_SILENCE_VIEW_BOX,
+  FrozenSilenceScene,
+  NO_CONVERSATIONS_VIEW_BOX,
+  NoConversationsScene,
+  NO_FRIENDS_VIEW_BOX,
+  NoFriendsScene,
+  NO_INTERACTIONS_VIEW_BOX,
+  NoInteractionsScene,
+  NO_MATCHES_VIEW_BOX,
+  NoMatchesScene,
+  TORN_THREAD_VIEW_BOX,
+  TornThreadScene,
+  VANISHED_MUSE_VIEW_BOX,
+  VanishedMuseScene,
+} from "./empty-scenes";
+export {
   END_OF_LIST_LABEL,
   END_OF_LIST_VIEW_BOX,
   EndOfListArt,
@@ -45,6 +65,7 @@ export {
   OPEN_STARTER_VIEW_BOX,
   OpenStarterScene,
 } from "./muse-scenes";
+export { OPEN_BOOK_VIEW_BOX, OpenBookScene } from "./open-book";
 /*
  * The primitives come out of the package root rather than a subpath.
  *
@@ -78,3 +99,4 @@ export {
   SvgText,
 } from "./primitives";
 export type { ScenePalette } from "./scene-palette";
+export { SILENT_BELL_VIEW_BOX, SilentBellScene } from "./silent-bell";

@@ -1,235 +1,243 @@
+import { useIsFocused } from "@react-navigation/native";
+import { SceneArt } from "@/components/scene-art";
 import { Ionicons } from "@expo/vector-icons";
+import { isOwnIceBreaker, parseIceBreakerTimestamp } from "@nw/chat";
 import { useSession } from "@nw/features";
-import type { IceBreaker } from "@nw/types";
+import type { IceBreaker, Novelist } from "@nw/types";
 import { truncate } from "@nw/utils";
-import type { ReactNode } from "react";
+import { memo, useMemo } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
-import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import {
   IceBreakerTrail,
   useIceBreakerPaint,
 } from "@/components/chat/ice-breaker-paint";
 import { GradientSurface } from "@/components/gradient-surface";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { relativeTime } from "@/components/notification-row";
+import { Text } from "@/components/text";
+import { useTrackOnline } from "@/context/socket";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
- * The ice breakers, above the inbox's filters.
+ * The ice breakers, at the head of the inbox.
  *
  * A rail of short prompts people have left for anyone to answer — the one place
  * in the app where a conversation can start without already knowing who you
- * want to talk to. It sits under the search field and above the
- * All / Unread / Groups row, because those filters are about the list below
- * them: putting the rail between a filter and the thing it filters reads as if
- * the pills apply to the prompts.
+ * want to talk to.
  *
- * ## It is drawn as a thought bubble
+ * ## A thought, and the person having it
  *
- * The previous version was a card: a rectangle with the message inside it and a
- * face along the bottom — the same shape as the conversation rows underneath,
- * so it said nothing about what it was. Now each one is a bubble trailing two
- * shrinking circles down toward the person it belongs to, and the rail reads as
- * "these people left something" at a glance, without a heading doing that work
- * in words.
+ * Each tile is a thought bubble trailing two shrinking circles down to a face
+ * (web's motif; a pointed tail here would make one feature look like two).
+ * What changed is the weight given to each half. The bubble used to carry the
+ * tile and the person was a 20pt dot under it; but an ice breaker is answered
+ * by starting a conversation with *someone*, so who it is and whether they are
+ * around is half of the decision. The face is now a real one, with the
+ * presence ring the inbox rows wear, and beside it the name and how long ago
+ * the line was left — a prompt from this morning and one from last month are
+ * not the same invitation.
  *
- * The trail rather than a pointed tail is web's motif, not a preference:
- * `IceBreakerBubble` there draws exactly these two circles, and drawing a
- * speech tail here would make one feature look like two.
+ * The message got the room that bought: the tile is wider, the type is a size
+ * up, and the quotation watermark that cost the first line a fifth of its
+ * width is gone.
  *
- * Moving the face out from under the bubble also buys the message the whole
- * bubble: three lines of it, rather than the two-and-an-ellipsis the card fit.
+ * ## The add control is a control
  *
- * ## Every tile is the same tile
- *
- * The add control is a bubble too — yours, unwritten: your face where the
- * speaker goes, a plus over it, and the invitation where a message would be. A
- * narrow dashed button beside content-filled cards looked like a control that
- * had wandered in from another screen.
+ * It used to be a full tile dressed as an unwritten bubble, which spent a third
+ * of a 375pt screen on a button. It is now your own face with a plus on it —
+ * narrow, first in the rail — so the first real prompt and most of the second
+ * are on screen without scrolling, and the cut-off second tile is what says
+ * the row scrolls.
  *
  * ## Colour, and depth
  *
  * Authors pick a bubble colour, and `useIceBreakerPaint` turns it into a
  * shallow top-to-bottom gradient rather than a flat fill — eight dark flats in
  * a row read as swatches, eight lit ones read as objects. The trailing circles
- * take the gradient's bottom stop, which is why the gradient runs vertically:
- * at any other angle they are visibly a different colour from the bubble they
- * fell out of.
+ * take the gradient's bottom stop, which is why the gradient runs vertically.
  */
 
 /**
  * How much of a prompt a tile carries.
  *
- * Cut to what three lines of the tile actually hold — roughly sixteen
- * characters a line at this width and size. Trimming here rather than leaving
- * it to `numberOfLines` means a prompt that does not fit ends on an ellipsis of
- * our own instead of being sliced mid-word at whatever point the line broke.
+ * Cut to what three lines of the tile actually hold. Trimming here rather than
+ * leaving it to `numberOfLines` alone means a prompt that does not fit ends on
+ * an ellipsis of our own instead of being sliced mid-word.
  */
-const PREVIEW_LENGTH = 52;
+const PREVIEW_LENGTH = 60;
 
 /**
- * One tile. Fixed, so the rail is a rhythm rather than a ragged row.
- *
- * Smaller than it was: the rail is the *third* thing on the inbox screen, above
- * the filters and the conversations people actually came for, and at 150×86 it
- * was taking a fifth of a 375×667 screen to show two prompts. At this size two
- * and a half fit, which also makes it obvious the row scrolls.
+ * One tile. Fixed, so the rail is a rhythm rather than a ragged row. At this
+ * width a 375pt screen shows the add control, one whole prompt and most of a
+ * second.
  */
-const CARD_WIDTH = 128;
-const BUBBLE_HEIGHT = 68;
+const CARD_WIDTH = 152;
+const BUBBLE_HEIGHT = 76;
+const FACE = 32;
+const ADD_WIDTH = 68;
+const ADD_FACE = 48;
 
-/**
- * The whole tile: a bubble, its trail, and the person it belongs to.
- *
- * Extracted rather than duplicated because the point of the design is that the
- * add tile and a real ice breaker are the same object in two states, and two
- * copies of the shape would drift apart the first time either changed. The
- * press target is the tile rather than the bubble — the face is part of what
- * you are tapping, and a 24dp avatar that does nothing next to a bubble that
- * does is the kind of dead spot people notice without being able to name.
- */
-const Tile = ({
-  accessibilityHint,
-  accessibilityLabel,
-  badge,
-  border,
-  children,
-  dashed,
-  from,
-  image,
-  name,
-  onPress,
-  speaker,
-  to,
+/** A novelist can be online; a character is only ever its author's voice. */
+const presenceName = (iceBreaker: IceBreaker): string | undefined =>
+  iceBreaker.source.sourceType === "NOVELIST"
+    ? iceBreaker.source.urlProp
+    : undefined;
+
+const IceBreakerTile = memo(function IceBreakerTile({
+  iceBreaker,
+  mine,
+  onOpen,
 }: {
-  accessibilityHint: string;
-  accessibilityLabel: string;
-  /** Drawn over the avatar, for the add tile's plus. */
-  badge?: ReactNode;
-  border: string;
-  children: ReactNode;
-  dashed?: boolean;
-  from: string;
-  image?: string | null;
-  /** Whose face this is — the initial when there is no image. */
-  name: string;
-  onPress: () => void;
-  /** What is written beside the face. */
-  speaker: string;
-  to: string;
-}) => {
+  iceBreaker: IceBreaker;
+  mine: boolean;
+  onOpen: (iceBreaker: IceBreaker) => void;
+}) {
   const theme = useAppTheme();
+  const paint = useIceBreakerPaint(iceBreaker.color);
+  const { source } = iceBreaker;
+  const when = relativeTime(
+    parseIceBreakerTimestamp(iceBreaker.createdOn) / 1000,
+  );
+  const who = mine
+    ? "Yours"
+    : source.sourceType === "MUSE"
+      ? "Character"
+      : null;
 
   return (
     <Pressable
-      accessibilityHint={accessibilityHint}
-      accessibilityLabel={accessibilityLabel}
+      accessibilityHint={
+        mine ? "Opens your ice breaker" : "Opens this ice breaker to reply"
+      }
+      accessibilityLabel={`${source.name}, ${when}: ${iceBreaker.message}`}
       accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => [styles.tile, { opacity: pressed ? 0.72 : 1 }]}
+      onPress={() => onOpen(iceBreaker)}
+      style={({ pressed }) => [
+        styles.tile,
+        pressed && { opacity: 0.8, transform: [{ scale: 0.97 }] },
+      ]}
     >
       <GradientSurface
-        from={from}
+        from={paint.from}
         style={[
           styles.bubble,
           {
-            borderColor: border,
-            borderStyle: dashed ? "dashed" : "solid",
-            borderWidth: dashed ? 1 : StyleSheet.hairlineWidth,
+            borderColor: mine ? theme.accent.solid : paint.border,
+            borderWidth: mine ? border.edge : StyleSheet.hairlineWidth,
           },
         ]}
-        to={to}
+        to={paint.to}
       >
-        {children}
+        <Text numberOfLines={3} style={[styles.message, { color: paint.ink }]}>
+          {truncate(iceBreaker.message, PREVIEW_LENGTH)}
+        </Text>
       </GradientSurface>
 
       <IceBreakerTrail
-        border={border}
-        color={to}
+        border={paint.border}
+        color={paint.to}
         direction="down"
         style={styles.trail}
       />
 
       <View style={styles.speaker}>
-        <View>
-          <Avatar name={name} size={20} uri={image} />
-          {badge}
+        <View style={styles.face}>
+          <Avatar
+            image={source.avatar}
+            name={source.name}
+            size={FACE}
+            uri={source.avatar?.src ?? source.image}
+            username={presenceName(iceBreaker)}
+          />
         </View>
-        <Text
-          numberOfLines={1}
-          style={[styles.speakerName, { color: theme.textGray }]}
-        >
-          {speaker}
-        </Text>
+        <View style={styles.speakerText}>
+          <Text numberOfLines={1} style={[styles.name, { color: theme.text }]}>
+            {source.name}
+          </Text>
+          <Text
+            numberOfLines={1}
+            style={[
+              styles.meta,
+              { color: mine ? theme.accent.text : theme.textGray },
+            ]}
+          >
+            {who ? `${who} · ${when}` : when}
+          </Text>
+        </View>
       </View>
     </Pressable>
   );
-};
+});
 
 /** One tile's worth of nothing, while the first fetch is in flight. */
 const Skeleton = () => {
   const theme = useAppTheme();
+  const tint = { backgroundColor: theme.material.fill };
 
   return (
-    <View style={styles.tile}>
-      <View
-        style={[
-          styles.bubble,
-          styles.skeleton,
-          { backgroundColor: theme.material.fill },
-        ]}
-      />
+    <View style={[styles.tile, styles.skeleton]}>
+      <View style={[styles.bubble, tint]} />
+      <View style={styles.skeletonGap} />
       <View style={styles.speaker}>
-        <View
-          style={[
-            styles.skeletonFace,
-            { backgroundColor: theme.material.fill },
-          ]}
-        />
-        <View
-          style={[
-            styles.skeletonName,
-            { backgroundColor: theme.material.fill },
-          ]}
-        />
+        <View style={[styles.skeletonFace, tint]} />
+        <View style={styles.speakerText}>
+          <View style={[styles.skeletonName, tint]} />
+          <View style={[styles.skeletonMeta, tint]} />
+        </View>
       </View>
     </View>
   );
 };
 
-const IceBreakerTile = ({
-  iceBreaker,
-  onOpen,
+/**
+ * Your face with a plus on it: the first thing in the rail, and never an ice
+ * breaker itself.
+ */
+const AddTile = ({
+  novelist,
+  onCreate,
 }: {
-  iceBreaker: IceBreaker;
-  onOpen: (iceBreaker: IceBreaker) => void;
+  novelist: Novelist | null | undefined;
+  onCreate: () => void;
 }) => {
-  const paint = useIceBreakerPaint(iceBreaker.color);
+  const theme = useAppTheme();
 
   return (
-    <Tile
-      accessibilityHint="Opens this ice breaker"
-      accessibilityLabel={`${iceBreaker.source.name}: ${iceBreaker.message}`}
-      border={paint.border}
-      from={paint.from}
-      image={iceBreaker.source.image}
-      name={iceBreaker.source.name}
-      onPress={() => onOpen(iceBreaker)}
-      speaker={iceBreaker.source.name.split(" ")[0] ?? iceBreaker.source.name}
-      to={paint.to}
+    <Pressable
+      accessibilityHint="Writes a prompt anyone can answer"
+      accessibilityLabel="Add your ice breaker"
+      accessibilityRole="button"
+      onPress={onCreate}
+      style={({ pressed }) => [
+        styles.add,
+        pressed && { opacity: 0.8, transform: [{ scale: 0.97 }] },
+      ]}
     >
-      {/* A watermark rather than punctuation in the string: it marks the tile
-          as a quotation without eating two of its characters. */}
-      <Ionicons
-        color={paint.watermark}
-        name="chatbubble-ellipses"
-        size={20}
-        style={styles.watermark}
-      />
-
-      <Text numberOfLines={3} style={[styles.message, { color: paint.ink }]}>
-        {truncate(iceBreaker.message, PREVIEW_LENGTH)}
+      <View
+        style={[styles.addRing, { borderColor: theme.accent.surfaceHover }]}
+      >
+        <Avatar
+          image={novelist?.avatar}
+          name={novelist?.firstName ?? "You"}
+          size={ADD_FACE}
+          uri={novelist?.avatar?.src ?? novelist?.image}
+        />
+        <View
+          style={[
+            styles.plus,
+            {
+              backgroundColor: theme.accent.solid,
+              borderColor: theme.background,
+            },
+          ]}
+        >
+          <Ionicons color={theme.accent.onSolid} name="add" size={14} />
+        </View>
+      </View>
+      <Text style={[styles.addLabel, { color: theme.accent.text }]}>
+        Break the ice
       </Text>
-    </Tile>
+    </Pressable>
   );
 };
 
@@ -247,6 +255,10 @@ export const IceBreakerRail = ({
   const theme = useAppTheme();
   const { novelist } = useSession();
 
+  // So the rings on the faces mean something; the server only answers about
+  // usernames it has been asked about.
+  useTrackOnline(useMemo(() => iceBreakers.map(presenceName), [iceBreakers]));
+
   return (
     <FlatList
       contentContainerStyle={styles.row}
@@ -256,68 +268,37 @@ export const IceBreakerRail = ({
       keyExtractor={(item) => item.sourceId}
       ListEmptyComponent={
         isPending ? (
-          <>
+          <View style={styles.skeletons}>
             <Skeleton />
             <Skeleton />
-          </>
+          </View>
         ) : (
           // Not a tile: an empty rail should not look like it contains
-          // something. A line of italic text beside the add tile reads as the
-          // absence it is.
+          // something. A few words beside the add control say what it is for.
           <View style={styles.empty}>
-            <Text style={[styles.emptyLabel, { color: theme.textGray }]}>
-              Nobody has broken the ice yet.
-            </Text>
+            <FrozenSilence />
+            <View style={styles.emptyWords}>
+              <Text style={[styles.emptyTitle, { color: theme.text }]}>
+                Nobody has broken the ice yet
+              </Text>
+              <Text style={[styles.emptyBody, { color: theme.textGray }]}>
+                Leave a line anyone can answer, and see who writes back.
+              </Text>
+            </View>
           </View>
         )
       }
       /*
-       * The add tile is the header rather than a row of the data.
-       *
-       * It is not an ice breaker, and it must never scroll out of reach — a
-       * rail whose "new" control is only findable by scrolling back to the
-       * start is one people stop using once they have a few.
+       * The add control is the header rather than a row of the data: it is
+       * not an ice breaker, and it is always where the rail starts.
        */
-      ListHeaderComponent={
-        <Tile
-          accessibilityHint="Writes a prompt anyone can answer"
-          accessibilityLabel="Add your ice breaker"
-          badge={
-            <View
-              style={[
-                styles.plusBadge,
-                {
-                  backgroundColor: theme.accent.solid,
-                  borderColor: theme.background,
-                },
-              ]}
-            >
-              <Ionicons color="#ffffff" name="add" size={8} />
-            </View>
-          }
-          border={theme.accent.surfaceHover}
-          dashed
-          from={theme.accent.tint}
-          image={novelist?.image}
-          name={novelist?.firstName ?? "You"}
-          onPress={onCreate}
-          speaker="Add yours"
-          to={theme.accent.surface}
-        >
-          <Ionicons
-            color={theme.accent.surfaceHover}
-            name="add-circle"
-            size={16}
-            style={styles.watermark}
-          />
-
-          <Text style={[styles.message, { color: theme.accent.text }]}>
-            Say something to break the ice…
-          </Text>
-        </Tile>
-      }
+      ListHeaderComponent={<AddTile novelist={novelist} onCreate={onCreate} />}
       renderItem={({ item }) => (
-        <IceBreakerTile iceBreaker={item} onOpen={onOpen} />
+        <IceBreakerTile
+          iceBreaker={item}
+          mine={isOwnIceBreaker(item, novelist)}
+          onOpen={onOpen}
+        />
       )}
       showsHorizontalScrollIndicator={false}
       // A horizontal list is a `ScrollView`, whose container grows into
@@ -327,50 +308,103 @@ export const IceBreakerRail = ({
   );
 };
 
+/**
+ * Web's frozen speech bubble, beside the rail's empty words. Its own component
+ * so the focus gate re-renders this and not the rail.
+ */
+const FrozenSilence = () => {
+  const focused = useIsFocused();
+  return <SceneArt motion={focused} scene="frozen-silence" />;
+};
+
 const styles = StyleSheet.create({
-  bubble: {
-    borderRadius: radius.md + 4,
-    height: BUBBLE_HEIGHT,
-    justifyContent: "flex-start",
-    padding: space.sm,
-    width: CARD_WIDTH,
+  // As tall as a tile's bubble, so the face sits level with the prompts.
+  add: {
+    alignItems: "center",
+    gap: space.s,
+    paddingTop: (BUBBLE_HEIGHT - ADD_FACE - 6) / 2,
+    width: ADD_WIDTH,
   },
-  empty: { justifyContent: "center", paddingHorizontal: space.sm },
-  emptyLabel: { fontSize: fontSize.caption, fontStyle: "italic" },
-  list: { flexGrow: 0 },
-  message: {
-    fontSize: fontSize.caption,
-    fontWeight: "600",
-    lineHeight: 16,
-    // The watermark sits in the top-right corner; without this the first line
-    // runs underneath it.
-    paddingRight: space.m,
+  addLabel: {
+    fontSize: fontSize.meta,
+    fontWeight: "700",
+    lineHeight: 14,
+    textAlign: "center",
   },
-  plusBadge: {
+  addRing: {
     alignItems: "center",
     borderRadius: radius.full,
+    borderStyle: "dashed",
     borderWidth: 1.5,
+    height: ADD_FACE + 8,
+    justifyContent: "center",
+    width: ADD_FACE + 8,
+  },
+  bubble: {
+    borderRadius: radius.md + 6,
+    height: BUBBLE_HEIGHT,
+    justifyContent: "center",
+    paddingHorizontal: space.m,
+    paddingVertical: space.sm,
+    width: CARD_WIDTH,
+  },
+  empty: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: space.sm,
+    height: BUBBLE_HEIGHT,
+    paddingLeft: space.xs,
+  },
+  emptyWords: { gap: space.xxs, justifyContent: "center", maxWidth: 200 },
+  emptyBody: { fontSize: fontSize.caption, lineHeight: 17 },
+  emptyTitle: { fontSize: fontSize.label, fontWeight: "700" },
+  // Centred, so the presence ring grows around the face rather than moving it.
+  face: {
+    alignItems: "center",
+    height: FACE,
+    justifyContent: "center",
+    width: FACE,
+  },
+  /*
+   * The rail bleeds to the screen's edges through the inbox head's gutter, so
+   * tiles scroll off the glass rather than being cut at an invisible margin.
+   */
+  list: { flexGrow: 0, marginHorizontal: -space.md },
+  message: { fontSize: fontSize.label, fontWeight: "600", lineHeight: 18 },
+  meta: { fontSize: fontSize.meta, lineHeight: 14 },
+  name: { fontSize: fontSize.caption, fontWeight: "700", lineHeight: 16 },
+  plus: {
+    alignItems: "center",
+    borderRadius: radius.full,
+    borderWidth: 2,
     bottom: -2,
-    height: 12,
+    height: 22,
     justifyContent: "center",
     position: "absolute",
-    right: -3,
-    width: 12,
+    right: -2,
+    width: 22,
   },
-  row: { gap: space.sm, paddingBottom: space.xxs },
+  row: {
+    gap: space.sm,
+    paddingBottom: space.xxs,
+    paddingHorizontal: space.md,
+  },
   skeleton: { opacity: 0.6 },
-  skeletonFace: { borderRadius: radius.full, height: 20, width: 20 },
-  skeletonName: { borderRadius: radius.sm, height: 8, width: 44 },
+  skeletonFace: { borderRadius: radius.full, height: FACE, width: FACE },
+  // Where the trail would be.
+  skeletonGap: { height: 21 },
+  skeletonMeta: { borderRadius: radius.sm, height: 8, width: 40 },
+  skeletonName: { borderRadius: radius.sm, height: 10, width: 76 },
+  skeletons: { flexDirection: "row", gap: space.sm },
   speaker: {
     alignItems: "center",
     flexDirection: "row",
     gap: space.s,
     // Lines the face up under the trail, which the dots drift toward.
-    paddingLeft: space.s,
-    paddingTop: space.xs,
+    paddingLeft: space.xs,
+    paddingTop: space.xxs,
   },
-  speakerName: { flexShrink: 1, fontSize: fontSize.meta, fontWeight: "700" },
+  speakerText: { flex: 1, gap: 1, minWidth: 0 },
   tile: { width: CARD_WIDTH },
-  trail: { paddingTop: space.xs },
-  watermark: { position: "absolute", right: space.s, top: space.s },
+  trail: { paddingTop: 3 },
 });

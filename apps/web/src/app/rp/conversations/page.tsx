@@ -1,6 +1,13 @@
 "use client";
 
 import { SUPPORT_USERNAME } from "@nw/chat";
+import {
+  INBOX_FILTERS,
+  type InboxFilter,
+  inboxSections,
+  inboxSummary,
+  matchesInboxFilter,
+} from "@nw/features";
 import type { Conversation, IceBreaker } from "@nw/types";
 import classNames from "classnames";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -13,7 +20,11 @@ import {
 import { MdAdd, MdGroupAdd } from "react-icons/md";
 import { FrozenSilenceArt, NoConversationsArt } from "@/components/book-art";
 import { AvatarNew } from "@/components/common/avatar-new";
-import { ConversationCard } from "@/components/conversation-card";
+import {
+  ConversationCard,
+  isConversationUnread,
+} from "@/components/conversation-card";
+import * as N from "@/components/notification/styled";
 import { LoadMore } from "@/components/load-more/page";
 import { useSocket } from "@/context/socket";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
@@ -22,7 +33,6 @@ import { useUIContext } from "@/hooks/use-ui-context";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import { ROUTES } from "@/utils/constants/routes";
 import { decryptConversations } from "@/utils/e2e-crypto";
-import { pluralize } from "@/utils/helpers";
 import { ConversationPanel } from "./[conversationId]/conversation-panel";
 import {
   getConversationByUsernameAction,
@@ -65,6 +75,9 @@ const IceBreakerCardShimmer = () => (
 );
 
 const PAGE_SIZE = 15;
+
+/** Below this, scrolling the list is faster than typing a name. */
+const SEARCH_THRESHOLD = 8;
 
 export default function ConversationsPage() {
   const user = useGlobalState("user");
@@ -149,6 +162,8 @@ export default function ConversationsPage() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [filter, setFilter] = useState<InboxFilter>("all");
+  const [search, setSearch] = useState("");
   const [contactSupportLoading, setContactSupportLoading] = useState(false);
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
   const [checkingGroupLimit, setCheckingGroupLimit] = useState(false);
@@ -345,11 +360,51 @@ export default function ConversationsPage() {
       return "You're all caught up";
     }
 
-    const unreadCount = unreadConversationIds?.length ?? 0;
-    if (unreadCount === 0) return "No new messages";
+    // The server's unread ids and the rows drawn as unread, together: the ids
+    // cover conversations not loaded yet, the rows cover a message that
+    // arrived since the ids were fetched.
+    const waiting = new Set(unreadConversationIds ?? []);
+    for (const conversation of conversations) {
+      if (isConversationUnread(conversation, user?.username)) {
+        waiting.add(conversation.id);
+      }
+    }
+    return inboxSummary(waiting.size, conversations.length);
+  }, [isLoading, conversations, unreadConversationIds, user?.username]);
 
-    return `${unreadCount} unread ${pluralize("conversation", unreadCount)}`;
-  }, [isLoading, conversations, unreadConversationIds]);
+  /*
+   * The list in reading order: what is waiting on you, then by how long ago —
+   * the sections the phone draws, from the same table. The filter and the
+   * search act on what is loaded; the line under them says so when nothing
+   * matches.
+   */
+  const sections = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const unread = (conversation: Conversation) =>
+      isConversationUnread(conversation, user?.username);
+
+    return inboxSections(
+      (conversations ?? []).filter((conversation) => {
+        if (!matchesInboxFilter(conversation, filter, unread(conversation))) {
+          return false;
+        }
+        if (!query) return true;
+        if (conversation.isGroup) {
+          return (conversation.name ?? "").toLowerCase().includes(query);
+        }
+        return (conversation.members ?? []).some(
+          (member) =>
+            member.userName !== user?.username &&
+            `${member.firstName} ${member.lastName ?? ""} ${member.userName}`
+              .toLowerCase()
+              .includes(query),
+        );
+      }),
+      unread,
+    );
+  }, [conversations, filter, search, user?.username]);
+
+  const narrowed = filter !== "all" || search.trim() !== "";
 
   return (
     <>
@@ -446,29 +501,66 @@ export default function ConversationsPage() {
         <S.ConversationListContainer>
           <S.ConversationListRoot>
             {isLoading ? (
-              Array.from({ length: 6 }, (_, i) => (
-                <ConversationCardShimmer key={i} />
-              ))
-            ) : conversations && conversations.length > 0 ? (
-              <S.ConversationList>
-                {conversations.map((conversation) => (
-                  <li key={conversation.id}>
-                    <ConversationCard
-                      conversation={conversation}
-                      onOpen={
-                        isMobile
-                          ? (convId, target) =>
-                              handleOpenConversation(
-                                convId,
-                                target,
-                                conversation,
-                              )
-                          : undefined
-                      }
-                    />
-                  </li>
+              <N.Section aria-hidden="true">
+                {Array.from({ length: 6 }, (_, i) => (
+                  <ConversationCardShimmer key={i} />
                 ))}
-              </S.ConversationList>
+              </N.Section>
+            ) : conversations && conversations.length > 0 ? (
+              <>
+                <S.ListControls>
+                  <N.Filters role="toolbar" aria-label="Filter conversations">
+                    {INBOX_FILTERS.map(({ id, label }) => (
+                      <N.FilterChip
+                        key={id}
+                        type="button"
+                        aria-pressed={filter === id}
+                        onClick={() => setFilter(id)}
+                      >
+                        {label}
+                      </N.FilterChip>
+                    ))}
+                  </N.Filters>
+                  {conversations.length >= SEARCH_THRESHOLD && (
+                    <S.SearchInput
+                      type="search"
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder="Search conversations"
+                      aria-label="Search conversations"
+                    />
+                  )}
+                </S.ListControls>
+
+                {sections.map((section) => (
+                  <N.Section key={section.title} aria-label={section.title}>
+                    <N.SectionTitle>{section.title}</N.SectionTitle>
+                    {section.items.map((conversation) => (
+                      <ConversationCard
+                        key={conversation.id}
+                        conversation={conversation}
+                        onOpen={
+                          isMobile
+                            ? (convId, target) =>
+                                handleOpenConversation(
+                                  convId,
+                                  target,
+                                  conversation,
+                                )
+                            : undefined
+                        }
+                      />
+                    ))}
+                  </N.Section>
+                ))}
+
+                {sections.length === 0 && (
+                  <N.FilterEmpty>
+                    None of those in what is loaded so far
+                    {hasMore ? ". Load more to look further back." : "."}
+                  </N.FilterEmpty>
+                )}
+              </>
             ) : (
               <S.EmptyStateRoot>
                 <NoConversationsArt />
@@ -503,7 +595,7 @@ export default function ConversationsPage() {
             loadingMore={loadingMore}
             onLoadMore={loadMore}
             unreadCount={unreadBadgeCount}
-            endMarker={!!conversations?.length}
+            endMarker={!!conversations?.length && !narrowed}
           />
         </S.ConversationListContainer>
       </S.Container>

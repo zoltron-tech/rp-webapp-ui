@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { Muse } from "@nw/types";
 import { IMAGE_SIZES, wsrvImage } from "@nw/utils/image";
-import { Image } from "expo-image";
+import { Image } from "@/components/image";
 import { useState } from "react";
 import {
   ActivityIndicator,

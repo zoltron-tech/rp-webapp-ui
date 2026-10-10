@@ -19,13 +19,20 @@ import { fontSize, radius, space, useAppTheme } from "@/theme";
  *    and italic, "NOVELIST" regular in the text colour, "WORLD" bold, a size
  *    up, in `accent.brand` (web's `--accent-8`). Sized to sit in a native
  *    header the way web's lockup sits in its bar at phone widths.
+ *
+ * With a `label`, the header lockup names a page instead of the product: the
+ * tile, then the label set exactly as "NOVELIST" is. The other tabs' headers
+ * use it, so the tile stays put from tab to tab and only the word changes.
  */
 export const Logo = ({
+  label,
   size = 40,
   showWordmark = true,
   cornerRadius = radius.sm,
   variant = "default",
 }: {
+  /** A page's name, drawn in place of the wordmark. Header variant only. */
+  label?: string;
   size?: number;
   showWordmark?: boolean;
   /**
@@ -48,7 +55,7 @@ export const Logo = ({
 
   return (
     <View
-      accessibilityLabel="Novelist World"
+      accessibilityLabel={label ?? "Novelist World"}
       accessibilityRole={header ? "header" : undefined}
       accessible={header}
       style={[styles.row, header && styles.headerRow]}
@@ -72,7 +79,19 @@ export const Logo = ({
         />
       </View>
 
-      {showWordmark && header ? (
+      {showWordmark && header && label ? (
+        <Text
+          numberOfLines={1}
+          style={[
+            styles.headerWordmark,
+            styles.headerNovelist,
+            styles.headerLabel,
+            { color: theme.text },
+          ]}
+        >
+          {label}
+        </Text>
+      ) : showWordmark && header ? (
         <Text numberOfLines={1} style={styles.headerWordmark}>
           <Text style={[styles.headerNovelist, { color: theme.text }]}>
             NOVELIST{" "}
@@ -92,10 +111,16 @@ export const Logo = ({
 
 const styles = StyleSheet.create({
   // Web sets 5px between the tile and each word.
+  // Uppercase, as the wordmark is written.
+  headerLabel: { textTransform: "uppercase" },
   headerNovelist: { fontSize: 18, fontStyle: "italic", fontWeight: "400" },
   headerRow: { gap: 7 },
   headerWordmark: { flexShrink: 1 },
-  headerWorld: { fontSize: fontSize.title, fontStyle: "italic", fontWeight: "700" },
+  headerWorld: {
+    fontSize: fontSize.title,
+    fontStyle: "italic",
+    fontWeight: "700",
+  },
   row: { alignItems: "center", flexDirection: "row", gap: space.sm },
   tile: {
     alignItems: "center",

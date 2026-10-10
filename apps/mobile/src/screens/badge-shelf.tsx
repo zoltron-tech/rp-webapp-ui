@@ -6,10 +6,10 @@ import { toFormattedDate } from "@nw/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
-import { Text } from "@/components/text";
 import { BadgeCrest } from "@/components/badges";
 import { BadgeShelfSkeleton } from "@/components/list-skeletons";
 import { ListStatus } from "@/components/list-status";
+import { Text } from "@/components/text";
 import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
@@ -132,8 +132,13 @@ export const BadgeShelf = () => {
             </View>
           ) : null
         }
+        // Twelve tiles at 76pt crests: only the rows near the viewport are
+        // mounted, so a crest below the fold is not drawn (or bursting)
+        // for a shelf that opens on the top six.
+        maxToRenderPerBatch={4}
         numColumns={COLUMNS}
         renderItem={renderItem}
+        windowSize={3}
       />
     </View>
   );
@@ -167,12 +172,14 @@ const BadgeTile = ({ badge }: { badge: Badge }) => {
       {/*
         Locked crests hold still. Motion is what says "this is yours" on a
         shelf where most of the tiles are grey, and a locked badge breathing
-        alongside an earned one says the opposite.
+        alongside an earned one says the opposite. An earned one moves for a
+        moment as it comes on screen and settles; tapping it plays it again.
       */}
       <BadgeCrest
         animated={!locked}
         code={badge.code}
         muted={locked}
+        replayOnPress
         size={CREST}
       />
 

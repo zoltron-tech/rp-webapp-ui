@@ -1,11 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
-import { queryKeys } from "@nw/features";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { Text } from "@/components/text";
 import { ErrorBox } from "@/components/auth/screen";
+import { Text } from "@/components/text";
+import { refreshSessionQueries } from "@/lib/auth";
+import { describeAuthError } from "@/lib/auth-errors";
 import { startOAuth } from "@/lib/oauth";
 import { fontSize, radius, space, useAppTheme } from "@/theme";
 
@@ -32,25 +33,26 @@ export const Socials = () => {
     setError(null);
     try {
       await startOAuth(provider);
-      await queryClient.invalidateQueries({ queryKey: queryKeys.session() });
+      await refreshSessionQueries(queryClient);
       router.replace("/(tabs)");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Sign-in failed");
+      setError(
+        describeAuthError(
+          cause,
+          "Sign-in with that account did not complete. Please try again.",
+        ),
+      );
     }
   };
 
   return (
     <View style={styles.root}>
       <View style={styles.separatorRow}>
-        <View
-          style={[styles.rule, { backgroundColor: theme.material.edge }]}
-        />
+        <View style={[styles.rule, { backgroundColor: theme.material.edge }]} />
         <Text style={[styles.separatorLabel, { color: theme.textGray }]}>
           or
         </Text>
-        <View
-          style={[styles.rule, { backgroundColor: theme.material.edge }]}
-        />
+        <View style={[styles.rule, { backgroundColor: theme.material.edge }]} />
       </View>
 
       <ErrorBox message={error} />

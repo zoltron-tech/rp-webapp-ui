@@ -7,7 +7,7 @@ import {
 import { useSession } from "@nw/features";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { Text } from "@/components/text";
+import { Avatar } from "@/components/avatar";
 import { useIceBreakerPaint } from "@/components/chat/ice-breaker-paint";
 import { MarkdownInput } from "@/components/chat/markdown-input";
 import {
@@ -16,11 +16,12 @@ import {
 } from "@/components/chat/quick-add-muse-row";
 import { SourcePicker } from "@/components/chat/source-picker";
 import { GradientSurface } from "@/components/gradient-surface";
+import { IconButton } from "@/components/icon-button";
 import { BottomSheet } from "@/components/sheet";
+import { Text } from "@/components/text";
 import { useCreateIceBreaker } from "@/hooks/use-ice-breakers";
 import { useQuickAddMuse } from "@/hooks/use-quick-add-muse";
 import { fontSize, radius, space, useAppTheme } from "@/theme";
-import { IconButton } from "@/components/icon-button";
 
 /**
  * Writing an ice breaker.
@@ -64,6 +65,9 @@ const COUNTER_WARN = 20;
 
 /** Nine of these have to fit a 375pt screen's content width, side by side. */
 const SWATCH = 28;
+
+/** The chosen sender's face on the bubble's corner: small, a marker only. */
+const SENDER = 22;
 
 /** One colour, painted with the gradient it will actually produce. */
 const Swatch = ({
@@ -186,16 +190,28 @@ export const CreateIceBreakerSheet = ({
   return (
     <BottomSheet
       headerAction={
-        <IconButton
-          accessibilityLabel="Post ice breaker"
-          busy={create.isPending}
-          disabled={!canCreate}
-          hitSlop={space.sm}
-          icon="send"
-          iconSize={16}
-          onPress={() => void submit()}
-          tone="primary"
-        />
+        // Cancel beside confirm: the header action replaces the sheet's own
+        // close button.
+        <View style={styles.actions}>
+          <IconButton
+            accessibilityLabel="Cancel"
+            disabled={create.isPending}
+            hitSlop={space.xs}
+            icon="close"
+            onPress={onClose}
+            tone="glass"
+          />
+          <IconButton
+            accessibilityLabel="Post ice breaker"
+            busy={create.isPending}
+            disabled={!canCreate}
+            hitSlop={space.xs}
+            icon="send"
+            iconSize={16}
+            onPress={() => void submit()}
+            tone="primary"
+          />
+        </View>
       }
       maxHeightRatio={0.82}
       onClose={onClose}
@@ -206,6 +222,7 @@ export const CreateIceBreakerSheet = ({
     >
       <ScrollView
         contentContainerStyle={styles.body}
+        keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.section}>
@@ -241,40 +258,66 @@ export const CreateIceBreakerSheet = ({
             Ice breaker message
           </Text>
 
-          <GradientSurface
-            from={paint.from}
-            style={[
-              styles.bubble,
-              {
-                // Web: dashed until the field has focus, solid while it has it.
-                borderColor: focused
-                  ? paint.coloured
-                    ? "rgba(255,255,255,0.6)"
-                    : theme.accent.solid
-                  : paint.coloured
-                    ? "rgba(255,255,255,0.35)"
-                    : paint.border,
-                borderStyle: focused ? "solid" : "dashed",
-              },
-            ]}
-            to={paint.to}
-          >
-            <MarkdownInput
-              color={paint.ink}
-              maxLength={ICE_BREAKER_MAX_LENGTH}
-              // Against a filled bubble the theme's grey disappears; a washed
-              // white is the only muted ink that reads on all eight colours.
-              mutedColor={
-                paint.coloured ? "rgba(255,255,255,0.6)" : theme.textGray
-              }
-              onBlur={() => setFocused(false)}
-              onChangeText={setMessage}
-              onFocus={() => setFocused(true)}
-              placeholder="Say something to break the ice..."
-              style={styles.input}
-              value={message}
-            />
-          </GradientSurface>
+          <View style={styles.bubbleWrap}>
+            <GradientSurface
+              from={paint.from}
+              style={[
+                styles.bubble,
+                {
+                  // Web: dashed until the field has focus, solid while it has it.
+                  borderColor: focused
+                    ? paint.coloured
+                      ? "rgba(255,255,255,0.6)"
+                      : theme.accent.solid
+                    : paint.coloured
+                      ? "rgba(255,255,255,0.35)"
+                      : paint.border,
+                  borderStyle: focused ? "solid" : "dashed",
+                },
+              ]}
+              to={paint.to}
+            >
+              <MarkdownInput
+                color={paint.ink}
+                maxLength={ICE_BREAKER_MAX_LENGTH}
+                // Against a filled bubble the theme's grey disappears; a washed
+                // white is the only muted ink that reads on all eight colours.
+                mutedColor={
+                  paint.coloured ? "rgba(255,255,255,0.6)" : theme.textGray
+                }
+                onBlur={() => setFocused(false)}
+                onChangeText={setMessage}
+                onFocus={() => setFocused(true)}
+                placeholder="Say something to break the ice..."
+                style={styles.input}
+                value={message}
+              />
+            </GradientSurface>
+
+            {/*
+            Who this goes out as, pinned to the bubble's corner. The picker
+            above scrolls sideways, and with a few characters the chosen face
+            can be off its edge — and once the keyboard is up the picker may
+            be off the sheet altogether. Outside the gradient, which clips.
+          */}
+            {source ? (
+              <View
+                accessibilityLabel={`Sending as ${source.name}`}
+                accessible
+                style={[
+                  styles.sender,
+                  { backgroundColor: paint.to, borderColor: paint.to },
+                ]}
+              >
+                <Avatar
+                  image={source.avatar}
+                  name={source.name}
+                  size={SENDER}
+                  uri={source.avatar?.src ?? source.image}
+                />
+              </View>
+            ) : null}
+          </View>
 
           <Text
             style={[
@@ -305,7 +348,9 @@ export const CreateIceBreakerSheet = ({
                 {
                   backgroundColor: theme.material.fillTranslucent,
                   borderColor:
-                    color === null ? theme.text : theme.material.edgeTranslucent,
+                    color === null
+                      ? theme.text
+                      : theme.material.edgeTranslucent,
                   borderWidth: color === null ? 2 : StyleSheet.hairlineWidth,
                 },
               ]}
@@ -331,6 +376,7 @@ export const CreateIceBreakerSheet = ({
 };
 
 const styles = StyleSheet.create({
+  actions: { alignItems: "center", flexDirection: "row", gap: space.sm },
   body: {
     gap: space.md,
     paddingBottom: space.lg,
@@ -339,9 +385,13 @@ const styles = StyleSheet.create({
   bubble: {
     borderRadius: radius.lg,
     borderWidth: 1.5,
+    paddingBottom: space.sm,
     paddingHorizontal: space.md,
-    paddingVertical: space.sm,
+    // Clears the sender's face, which overlaps this corner.
+    paddingTop: SENDER / 2 + space.sm,
   },
+  // Room above the bubble for the sender's face to stand proud of its corner.
+  bubbleWrap: { paddingTop: SENDER / 2 },
   counter: {
     alignSelf: "flex-end",
     fontSize: fontSize.meta,
@@ -353,8 +403,21 @@ const styles = StyleSheet.create({
     padding: 0,
     textAlignVertical: "top",
   },
-  label: { fontSize: fontSize.meta, fontWeight: "700", textTransform: "uppercase" },
+  label: {
+    fontSize: fontSize.meta,
+    fontWeight: "700",
+    textTransform: "uppercase",
+  },
   section: { gap: space.xs },
+  // Half over the bubble's top edge, ringed in the bubble's own colour so it
+  // reads as attached to it.
+  sender: {
+    borderRadius: radius.full,
+    borderWidth: 2,
+    left: space.m,
+    position: "absolute",
+    top: 0,
+  },
   swatch: {
     alignItems: "center",
     // Web's `border-radius: 20%` — a rounded square, so a swatch is never

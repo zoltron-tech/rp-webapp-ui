@@ -4,13 +4,15 @@ import {
   EndOfListArt,
   MotionProvider,
 } from "@nw/animations";
+import { useIsFocused } from "@react-navigation/native";
 import { StyleSheet, View } from "react-native";
-import { Text } from "@/components/text";
 import Svg from "react-native-svg";
+import { MOTION_BURST_MS } from "@/animation";
+import { useMotionBurst } from "@/animation/effects";
 import { useScenePalette } from "@/components/scene-art";
+import { Text } from "@/components/text";
 import { useScrollIdle } from "@/context/scroll-activity";
 import { fontSize, space, useAppTheme } from "@/theme";
-import { useIsFocused } from "@react-navigation/native";
 
 /**
  * "You've made it to the end", at the foot of a list that has run out.
@@ -64,10 +66,20 @@ export const EndOfList = ({
   // Not while another screen or tab is in front: the scene is a dozen SVG
   // groups re-rendered through React every frame, for nobody.
   const focused = useIsFocused();
+  /*
+   * And not forever. A `ListFooterComponent` is mounted whether or not the
+   * reader has scrolled anywhere near it, so this scene was running on every
+   * feed tab from the moment it opened — a dozen SVG groups, every frame,
+   * under a list whose end was two screens away. On the Pixel 7 image that
+   * was the JS thread saturated at rest, and taps going unanswered. It
+   * plays for a moment when the screen settles, and again each time it is
+   * returned to; between, it holds its rest pose. See `useMotionBurst`.
+   */
+  const burst = useMotionBurst(motion ?? (idle && focused), MOTION_BURST_MS);
 
   return (
     <View accessibilityRole="text" style={styles.root}>
-      <MotionProvider enabled={motion ?? (idle && focused)}>
+      <MotionProvider enabled={burst.live}>
         <Svg height={HEIGHT} viewBox={END_OF_LIST_VIEW_BOX} width={WIDTH}>
           <EndOfListArt palette={palette} />
         </Svg>

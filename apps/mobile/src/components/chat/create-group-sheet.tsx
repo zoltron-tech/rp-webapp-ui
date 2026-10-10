@@ -2,24 +2,25 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNovelistFriends, useSession } from "@nw/features";
 import type { Conversation, Friend } from "@nw/types";
 import { pluralize } from "@nw/utils";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   FlatList,
+  type TextInput as NativeTextInput,
   Pressable,
   StyleSheet,
   View,
 } from "react-native";
-import { Text, TextInput } from "@/components/text";
 import { Avatar } from "@/components/avatar";
+import { IconButton } from "@/components/icon-button";
 import { SkeletonRows } from "@/components/list-skeletons";
+import { SearchField } from "@/components/search-field";
 import { BottomSheet } from "@/components/sheet";
 import { FriendPickRowSkeleton } from "@/components/sheet-skeletons";
+import { Text, TextInput } from "@/components/text";
 import { useCreateGroup } from "@/hooks/use-inbox-actions";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
-import { IconButton } from "@/components/icon-button";
-import { SearchField } from "@/components/search-field";
 
 /**
  * Creating a group.
@@ -63,6 +64,17 @@ export const CreateGroupSheet = ({
   const [name, setName] = useState("");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Friend[]>([]);
+  /*
+   * What stopped the create, said under the field it is about.
+   *
+   * The first version only disabled the tick while the name was empty, and a
+   * disabled button explains nothing: people picked their friends, tapped
+   * the dimmed tick, and could not tell what the form still wanted. The tick
+   * is live now; a press on an incomplete form names the missing part and
+   * puts the cursor in the field when it is the name.
+   */
+  const [problem, setProblem] = useState<"name" | "friends" | null>(null);
+  const nameField = useRef<NativeTextInput>(null);
 
   const { fetchNextPage, friends, hasNextPage, isFetchingNextPage, isPending } =
     useNovelistFriends(visible ? novelist?.username : undefined);
@@ -86,12 +98,19 @@ export const CreateGroupSheet = ({
         ? previous.filter((entry) => entry.id !== friend.id)
         : [...previous, friend],
     );
+    setProblem((current) => (current === "friends" ? null : current));
+  }, []);
+
+  const changeName = useCallback((next: string) => {
+    setName(next);
+    setProblem((current) => (current === "name" ? null : current));
   }, []);
 
   const reset = useCallback(() => {
     setName("");
     setSearch("");
     setSelected([]);
+    setProblem(null);
   }, []);
 
   const close = useCallback(() => {
@@ -101,7 +120,16 @@ export const CreateGroupSheet = ({
 
   const submit = async () => {
     const trimmed = name.trim();
-    if (!trimmed || selected.length === 0 || atLimit) return;
+    if (atLimit || createGroup.isPending) return;
+    if (!trimmed) {
+      setProblem("name");
+      nameField.current?.focus();
+      return;
+    }
+    if (selected.length === 0) {
+      setProblem("friends");
+      return;
+    }
 
     try {
       const conversation = await createGroup.mutateAsync({
@@ -116,11 +144,9 @@ export const CreateGroupSheet = ({
     }
   };
 
-  const canCreate =
-    Boolean(name.trim()) &&
-    selected.length > 0 &&
-    !atLimit &&
-    !createGroup.isPending;
+  // Only the two things a press cannot fix dim the tick: the tier limit, and
+  // a create already in flight. An empty name or no friends gets a message.
+  const canCreate = !atLimit && !createGroup.isPending;
 
   return (
     <BottomSheet
@@ -129,15 +155,28 @@ export const CreateGroupSheet = ({
       // costs a row of the list on a 667pt screen, and `AGENTS.md` calls for
       // the compact header instead.
       headerAction={
-        <IconButton
-          accessibilityLabel="Create group"
-          busy={createGroup.isPending}
-          disabled={!canCreate}
-          hitSlop={space.sm}
-          icon="checkmark"
-          onPress={() => void submit()}
-          tone="primary"
-        />
+        // Cancel beside confirm, as the other form trays have it: the header
+        // action replaces the sheet's own close button, and a form whose only
+        // button is "create" has no obvious way out.
+        <View style={styles.actions}>
+          <IconButton
+            accessibilityLabel="Cancel"
+            disabled={createGroup.isPending}
+            hitSlop={space.xs}
+            icon="close"
+            onPress={close}
+            tone="glass"
+          />
+          <IconButton
+            accessibilityLabel="Create group"
+            busy={createGroup.isPending}
+            disabled={!canCreate}
+            hitSlop={space.xs}
+            icon="checkmark"
+            onPress={() => void submit()}
+            tone="primary"
+          />
+        </View>
       }
       maxHeightRatio={0.88}
       onClose={close}
@@ -169,22 +208,40 @@ export const CreateGroupSheet = ({
         ) : null}
 
         <TextInput
+          accessibilityLabel="Group name, required"
           maxLength={60}
-          onChangeText={setName}
+          onChangeText={changeName}
           placeholder="Group name"
           placeholderTextColor={theme.textGray}
+          ref={nameField}
+          // A Done key that puts the keyboard down; iOS offers no other.
+          returnKeyType="done"
           style={[
             styles.field,
             {
               backgroundColor: theme.glass.field,
-              borderColor: name.trim()
-                ? theme.accent.solid
-                : theme.material.edgeTranslucent,
+              borderColor:
+                problem === "name"
+                  ? theme.error
+                  : name.trim()
+                    ? theme.accent.solid
+                    : theme.material.edgeTranslucent,
               color: theme.text,
             },
           ]}
           value={name}
         />
+
+        {problem ? (
+          <View accessibilityLiveRegion="polite" style={styles.problem}>
+            <Ionicons color={theme.error} name="alert-circle" size={14} />
+            <Text style={[styles.problemLabel, { color: theme.error }]}>
+              {problem === "name"
+                ? "Give the group a name before creating it."
+                : "Choose at least one friend to start the group with."}
+            </Text>
+          </View>
+        ) : null}
 
         {/* The chosen faces, where they can be removed without hunting for
             them again in a list that may have scrolled a long way. */}
@@ -236,6 +293,9 @@ export const CreateGroupSheet = ({
         <FlatList
           contentContainerStyle={styles.list}
           data={visibleFriends}
+          // Scrolling the friends puts the keyboard away, so the list can be
+          // read at full height without first finding a way to close it.
+          keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
           keyExtractor={(item) => item.id}
           ListEmptyComponent={
@@ -326,6 +386,7 @@ export const CreateGroupSheet = ({
 };
 
 const styles = StyleSheet.create({
+  actions: { alignItems: "center", flexDirection: "row", gap: space.sm },
   body: { flex: 1, gap: space.sm, paddingHorizontal: space.md },
   chip: {
     alignItems: "center",
@@ -365,6 +426,14 @@ const styles = StyleSheet.create({
   friendText: { flex: 1, gap: 1, minWidth: 0 },
   list: { gap: space.xs, paddingBottom: space.md },
   listBox: { flex: 1 },
+  problem: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: space.xs,
+    marginTop: -space.xs,
+    paddingHorizontal: space.xs,
+  },
+  problemLabel: { flex: 1, fontSize: fontSize.caption, fontWeight: "600" },
   status: { padding: space.md },
   warning: {
     alignItems: "center",

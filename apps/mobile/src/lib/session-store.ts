@@ -21,6 +21,18 @@ import * as SecureStore from "expo-secure-store";
  * and every authenticated call is a 401.
  */
 
+/**
+ * What else a fresh install has to clear. The local store registers itself
+ * here (`local-store/wipe.ts`) rather than being imported: this module is
+ * loaded by the background task's entry, and importing the store from it
+ * would be a cycle.
+ */
+let onFreshInstall: (() => Promise<void>) | null = null;
+
+export const setFreshInstallHandler = (handler: () => Promise<void>) => {
+  onFreshInstall = handler;
+};
+
 const ACCESS_KEY = "nw.accessToken";
 const REFRESH_KEY = "nw.refreshToken";
 
@@ -64,6 +76,11 @@ const discardOrphanedSession = async (): Promise<void> => {
   await Promise.all([
     SecureStore.deleteItemAsync(ACCESS_KEY),
     SecureStore.deleteItemAsync(REFRESH_KEY),
+    // The local store's keys outlive the app the same way (iOS keeps the
+    // keychain), and on a device where only the marker was lost the files
+    // are still there too. Everything of the previous install goes: files,
+    // media, keys, the register that named them, the active-user marker.
+    onFreshInstall?.(),
   ]).catch(() => {});
 };
 
@@ -79,11 +96,31 @@ export const loadSession = async (): Promise<StoredSession | null> => {
   return cached;
 };
 
+/**
+ * Readable once the phone has been unlocked since boot, locked screen
+ * included — the background refresh runs against a locked phone and needs
+ * them — and never leaving this device: a refresh token restored onto another
+ * phone from a backup would be a session nobody signed in to there. SecureStore's
+ * default is `WHEN_UNLOCKED`, which the keychain refuses to read in the
+ * background and which iCloud carries across devices.
+ *
+ * An item's accessibility cannot be changed by writing over it, so the old
+ * item is removed first; the session is written, not updated, on every save.
+ */
+const TOKEN_OPTIONS: SecureStore.SecureStoreOptions = {
+  keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY,
+};
+
+const writeToken = async (name: string, value: string) => {
+  await SecureStore.deleteItemAsync(name).catch(() => {});
+  await SecureStore.setItemAsync(name, value, TOKEN_OPTIONS);
+};
+
 export const saveSession = async (session: StoredSession): Promise<void> => {
   cached = session;
   await Promise.all([
-    SecureStore.setItemAsync(ACCESS_KEY, session.accessToken),
-    SecureStore.setItemAsync(REFRESH_KEY, session.refreshToken),
+    writeToken(ACCESS_KEY, session.accessToken),
+    writeToken(REFRESH_KEY, session.refreshToken),
   ]);
 };
 

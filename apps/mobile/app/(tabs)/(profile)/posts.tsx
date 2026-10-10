@@ -20,5 +20,11 @@ export default function MyPostsScreen() {
   }
   if (!novelist) return <ListStatus empty="No profile to show." />;
 
-  return <PromptFeed kind="posts" novelistId={novelist.id} />;
+  return (
+    <PromptFeed
+      kind="posts"
+      novelistId={novelist.id}
+      username={novelist.username}
+    />
+  );
 }

@@ -153,10 +153,14 @@ export const ConversationOverlayHost = () => {
 
   if (!current) return null;
 
+  // Hidden means out of the way of touches too, not only out of sight: the
+  // page's header sits exactly over the back button of the screen above it.
+  const hidden = !focused && !leaving;
+
   return (
     <View
-      pointerEvents="box-none"
-      style={[styles.host, !focused && !leaving && styles.hidden]}
+      pointerEvents={hidden ? "none" : "box-none"}
+      style={[styles.host, hidden && styles.hidden]}
     >
       <ConversationScreen
         conversationId={current.id}

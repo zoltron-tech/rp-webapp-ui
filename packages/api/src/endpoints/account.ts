@@ -140,6 +140,11 @@ export const login = async (
   });
 
   if (response.status === 401) return { message: API_MESSAGE.BadPayload };
+  // nginx or user-service rate-limiting the login route: not a wrong
+  // password, and a client that said so would send people to reset one.
+  if (response.status === 429) {
+    return { message: API_MESSAGE.TooManyRequests };
+  }
   if (!response.ok) return { message: API_MESSAGE.UncategorizedError };
   return (await response.json()) as LoginResponsePayload;
 };
@@ -357,7 +362,9 @@ export const logout = async (
 };
 
 /** Ends every session on the account, this device included. */
-export const logoutEverywhere = async (api: ApiClient): Promise<WithMessage> => {
+export const logoutEverywhere = async (
+  api: ApiClient,
+): Promise<WithMessage> => {
   const response = await api.raw(`${ACCOUNT}/logout/all`, {
     label: "logoutEverywhere",
     method: "POST",

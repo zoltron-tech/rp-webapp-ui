@@ -69,18 +69,18 @@ export const EMPTY_GALLERY_VIEW_BOX = "0 0 180 137";
 const STAR =
   "M0 -5 C0.6 -1.6 1.6 -0.6 5 0 C1.6 0.6 0.6 1.6 0 5 C-0.6 1.6 -1.6 0.6 -5 0 C-1.6 -0.6 -0.6 -1.6 0 -5 Z";
 
-interface SceneProps {
+export interface SceneProps {
   palette: ScenePalette;
 }
 
 /** Ids for the two gradients an instance defines, unique per mount. */
-const useGradientIds = () => {
+export const useGradientIds = () => {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   return { glowId: `nwm-glow-${uid}`, paperId: `nwm-paper-${uid}` };
 };
 
 /** Haze behind the art, so it never reads as a grey rectangle. */
-const SceneDefs = ({
+export const SceneDefs = ({
   glowId,
   palette,
   paperId,
@@ -100,7 +100,7 @@ const SceneDefs = ({
 );
 
 /** The haze, centred where the scene puts it, breathing about its own centre. */
-const Glow = ({
+export const Glow = ({
   cx,
   cy,
   fill,
@@ -121,7 +121,7 @@ const Glow = ({
 );
 
 /** A desk shadow, tightening as the object above it lifts. */
-const Shadow = ({
+export const Shadow = ({
   cx,
   cy,
   fill,
@@ -142,7 +142,7 @@ const Shadow = ({
 );
 
 /** One star: a group that moves, wrapping a group that is placed. */
-const Star = ({
+export const Star = ({
   delay,
   fill,
   scale,
@@ -163,7 +163,7 @@ const Star = ({
 );
 
 /** One dot sparkle, wrapped the same way and for the same reason. */
-const Sparkle = ({
+export const Sparkle = ({
   cx,
   cy,
   delay,
@@ -193,7 +193,7 @@ const Sparkle = ({
  * and the motion table can turn it there. The inner translate puts the
  * artwork back where it was drawn, so nothing else in the scene moves.
  */
-const Tilt = ({
+export const Tilt = ({
   children,
   cx,
   cy,

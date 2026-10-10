@@ -1,6 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { searchMentionMuses } from "@nw/api/endpoints/muse";
 import { submitPrompt } from "@nw/api/endpoints/profile";
+import { isOffline } from "@/lib/connectivity";
+import { enqueueOutbox, getStore } from "@/lib/local-store";
 import { updatePromptComment } from "@nw/api/endpoints/prompt";
 import type { MessageSenderChoice } from "@nw/chat";
 import { useApi, useSession } from "@nw/features";
@@ -33,6 +35,7 @@ import {
   Alert,
   Animated,
   Keyboard,
+  KeyboardAvoidingView as NativeKeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -44,7 +47,6 @@ import { Text, TextInput } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ActionMenu } from "@/components/action-menu";
 import { Avatar } from "@/components/avatar";
-import { GlassSurface } from "@/components/glass-surface";
 import {
   MediaTrayInline,
   type TrayTab,
@@ -397,6 +399,23 @@ const ComposerScreen = ({
         payload.commentId = mode.parentId;
       }
 
+      // No network: into the outbox (`local-store/outbox.ts`). The feed, the
+      // comment list or the thread draws it as waiting, and it goes out the
+      // way this would have the moment there is a connection. A picture
+      // cannot wait — it uploads when picked — so an offline post is words.
+      const store = getStore();
+      if (isOffline() && store) {
+        await enqueueOutbox(store, {
+          kind: "post",
+          parent: parent ? { author: parent.author.name, text: parent.text } : null,
+          payload,
+          type,
+        }).catch(() => undefined);
+        media.commit();
+        onClose();
+        return;
+      }
+
       setSending(true);
       const response = await submitPrompt(api, payload, type).catch(() => ({
         message: API_MESSAGE.Error,
@@ -550,13 +569,32 @@ const ComposerScreen = ({
         <KeyboardLift
           backgroundColor={theme.background}
           insetBottom={insets.bottom}
-          insetTop={insets.top}
+          // The top bar paints the status bar's strip itself.
+          insetTop={0}
           ref={liftRef}
           trayOpen={trayTab !== null}
         >
           {/* ── Top bar ─────────────────────────────────────────────────── */}
-          {/* A glass bar with an edge along its foot, like the other bars. */}
-          <GlassSurface bordered="bottom" style={styles.topBar} variant="bar">
+          {/*
+            The stack headers' own surface (`glassHeaderOptions`): the opaque
+            glass colour and one hairline along the foot, painted up through
+            the status bar so the bar and the strip above it are one colour.
+
+            Not a `GlassSurface`. This bar sits in the page's column with
+            nothing passing under it, so a blur had only the flat page to
+            sample and came out as a grey band unlike every other header —
+            and on iOS 26 the system's glass drew a rim all the way round it.
+          */}
+          <View
+            style={[
+              styles.topBar,
+              {
+                backgroundColor: theme.glass.opaque,
+                borderBottomColor: theme.glass.edge,
+                paddingTop: insets.top + space.sm,
+              },
+            ]}
+          >
             <IconButton
               accessibilityLabel="Close"
               hitSlop={space.sm}
@@ -650,7 +688,7 @@ const ComposerScreen = ({
                 </Pressable>
               ) : null}
             </View>
-          </GlassSurface>
+          </View>
 
           {museRequired ? (
             <MuseRequired onCreated={onCharacterCreated} />
@@ -1129,7 +1167,7 @@ const ComposerScreen = ({
   );
 };
 
-interface KeyboardLiftHandle {
+export interface KeyboardLiftHandle {
   /** A line took the keyboard (true) or let it go (false). */
   predict: (keyboardComing: boolean) => void;
 }
@@ -1142,7 +1180,7 @@ interface KeyboardLiftHandle {
  * the keyboard's height, the prediction and its grace period. The composer
  * only says when a line gains or loses focus, through the handle.
  */
-const KeyboardLift = forwardRef<
+export const KeyboardLift = forwardRef<
   KeyboardLiftHandle,
   {
     backgroundColor: string;
@@ -1173,9 +1211,29 @@ const KeyboardLift = forwardRef<
    *
    * The offset gives back the navigation bar: the keyboard's height includes
    * it, and the page's own bottom padding already covers it.
+   *
+   * ## iOS takes the other road
+   *
+   * Riding the keyboard frame by frame means a layout of this whole page —
+   * the post being answered, the editor, the toolbar — on every frame. On
+   * Android the keyboard's slide runs on the same thread as that layout, so
+   * a slow frame slows both and they stay together. On iOS the keyboard is
+   * animated by the system, outside the app, and does not wait: the page fell
+   * behind it, and the editor was seen shrinking after the keyboard had
+   * already arrived.
+   *
+   * So on iOS the page is laid out once. React Native's own avoiding view
+   * hears `keyboardWillChangeFrame`, sets the padding a single time and has
+   * the system animate that one layout change on the keyboard's own curve and
+   * duration — the two move as one because one animation is driving both. It
+   * is the view this app cannot use on Android (an edge-to-edge window is
+   * never resized there) and the one that has always worked on iOS.
    */
+  const Avoiding =
+    Platform.OS === "ios" ? NativeKeyboardAvoidingView : KeyboardAvoidingView;
+
   return (
-    <KeyboardAvoidingView
+    <Avoiding
       behavior="padding"
       enabled={!trayOpen}
       keyboardVerticalOffset={-insetBottom}
@@ -1186,7 +1244,7 @@ const KeyboardLift = forwardRef<
       >
         {children}
       </View>
-    </KeyboardAvoidingView>
+    </Avoiding>
   );
 });
 
@@ -1282,6 +1340,7 @@ const styles = StyleSheet.create({
   },
   topBar: {
     alignItems: "center",
+    borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
     gap: space.sm,
     paddingHorizontal: space.md,

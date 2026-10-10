@@ -1,3 +1,4 @@
+import { useTabSelectPop } from "@/animation/effects";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { LinearGradient } from "expo-linear-gradient";
 import { memo, useEffect, useMemo, useRef } from "react";
@@ -235,6 +236,8 @@ const Tab = memo(
     theme: ReturnType<typeof useAppTheme>;
   }) => {
     const press = useRef(new Animated.Value(0)).current;
+    // The beat of being chosen: one short overshoot. See `animation/effects`.
+    const pop = useTabSelectPop(selected);
 
     const anim = useMemo(
       () => ({
@@ -284,6 +287,7 @@ const Tab = memo(
               { translateY: iconLift },
               { scale: anim.swell },
               { scale: anim.press },
+              { scale: pop },
               { scale: collapseScale },
             ],
           }}

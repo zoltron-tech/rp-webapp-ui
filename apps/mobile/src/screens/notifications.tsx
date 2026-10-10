@@ -1,5 +1,10 @@
 import { patchNotifications } from "@nw/api/endpoints/novelists";
 import {
+  matchesNotificationFilter,
+  NOTIFICATION_FILTERS,
+  type NotificationFilter,
+  notificationSections,
+  notificationSummary,
   queryKeys,
   useApi,
   useNotificationReadState,
@@ -9,29 +14,43 @@ import type { NotificationFeed, NovelistWorldNotification } from "@nw/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { FlatList, StyleSheet, View } from "react-native";
+import {
+  FlatList,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import { Text } from "@/components/text";
 import { EndOfList } from "@/components/end-of-list";
 import {
   NotificationRowSkeleton,
   SkeletonRows,
 } from "@/components/list-skeletons";
+import { EmptyScene } from "@/components/empty-feed";
 import { ListStatus } from "@/components/list-status";
-import { NotificationRow } from "@/components/notification-row";
+import { NotificationRow, type RowPlace } from "@/components/notification-row";
 import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { useTabTop } from "@/hooks/use-tab-top";
-import { fontSize, space, type, useAppTheme } from "@/theme";
+import { fontSize, radius, space, type, useAppTheme } from "@/theme";
 import { Button } from "@/components/button";
 
-/** Which stretch of time a notification belongs to, newest first. */
-const DAY = 24 * 60 * 60;
-const periodOf = (epochSeconds: number): string => {
-  const age = Date.now() / 1000 - epochSeconds;
-  if (age < DAY) return "Today";
-  if (age < 7 * DAY) return "This week";
-  if (age < 30 * DAY) return "This month";
-  return "Earlier";
+/**
+ * One cell of the list: a row and where it sits.
+ *
+ * The sections ("Waiting on you", "Fresh ink", …) come from `@nw/features`,
+ * the same table the web page draws. They are flattened into one array here
+ * rather than handed to a `SectionList`: on Fabric a `SectionList` whose
+ * sections change under it has crashed this app before (`addViewAt`), and a
+ * flat list with a label drawn by the first row of each section is the same
+ * picture without that risk.
+ */
+type Cell = {
+  item: NovelistWorldNotification;
+  place: RowPlace;
+  /** The section title, on the first row of each section. */
+  starts: string | null;
 };
 
 /**
@@ -57,7 +76,7 @@ const periodOf = (epochSeconds: number): string => {
  * when it is open.
  */
 
-const keyExtractor = (item: NovelistWorldNotification) => item.id;
+const keyExtractor = (cell: Cell) => cell.item.id;
 
 export const NotificationsScreen = () => {
   const theme = useAppTheme();
@@ -99,6 +118,25 @@ export const NotificationsScreen = () => {
     () => rows.filter((item) => !item.isRead).length,
     [rows],
   );
+
+  /** Which kinds are shown. Acts on what is loaded; the chips say so when nothing matches. */
+  const [filter, setFilter] = useState<NotificationFilter>("all");
+  const cells = useMemo<Cell[]>(() => {
+    const sections = notificationSections(
+      rows.filter((item) => matchesNotificationFilter(item, filter)),
+    );
+    return sections.flatMap((section) =>
+      section.items.map((item, index) => {
+        const first = index === 0;
+        const last = index === section.items.length - 1;
+        return {
+          item,
+          place: first ? (last ? "only" : "first") : last ? "last" : "middle",
+          starts: first ? section.title : null,
+        };
+      }),
+    );
+  }, [filter, rows]);
 
   /*
    * Mark every notification read.
@@ -151,91 +189,142 @@ export const NotificationsScreen = () => {
   const contentStyle = useTabBarContentStyle(styles.content);
 
   /** Tapping Notifications while on Notifications takes it back to the top. */
-  const listRef = useRef<FlatList<NovelistWorldNotification>>(null);
+  const listRef = useRef<FlatList<Cell>>(null);
   useTabTop(listRef);
 
+  /*
+   * The line under the title reads the room — "6 new. You are the talk of the
+   * town." — and the chips pick a kind. Both only once there is a list.
+   */
   const header = useMemo(() => {
-    if (unread === 0) return null;
+    if (rows.length === 0) return null;
     return (
       <View style={styles.header}>
-        <Text style={[styles.count, { color: theme.text }]}>
-          {unread} unread
-        </Text>
-        <Button
-          accessibilityLabel="Mark all as read"
-          busy={markRead.isPending}
-          hitSlop={space.sm}
-          icon="checkmark-done"
-          label="Mark all read"
-          onPress={() => markRead.mutate()}
-          size="sm"
-        />
+        <View style={styles.headerRow}>
+          <Text style={[styles.summary, { color: theme.textGray }]}>
+            {notificationSummary(unread, rows.length)}
+          </Text>
+          {unread > 0 ? (
+            <Button
+              accessibilityLabel="Mark all as read"
+              busy={markRead.isPending}
+              hitSlop={space.sm}
+              icon="checkmark-done"
+              label="Mark all read"
+              onPress={() => markRead.mutate()}
+              size="sm"
+            />
+          ) : null}
+        </View>
+        <ScrollView
+          contentContainerStyle={styles.chips}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+        >
+          {NOTIFICATION_FILTERS.map(({ id, label }) => {
+            const on = filter === id;
+            return (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: on }}
+                key={id}
+                onPress={() => setFilter(id)}
+                style={({ pressed }) => [
+                  styles.chip,
+                  {
+                    backgroundColor: on
+                      ? theme.accent.solid
+                      : pressed
+                        ? theme.material.fillPressed
+                        : theme.material.fill,
+                    borderColor: on ? theme.accent.solid : theme.material.edge,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.chipLabel,
+                    { color: on ? theme.accent.onSolid : theme.textGray },
+                  ]}
+                >
+                  {label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
       </View>
     );
-  }, [markRead, theme, unread]);
+  }, [filter, markRead, rows.length, theme, unread]);
 
-  /*
-   * Rows under the date they belong to: "Today", "This week", "This month",
-   * "Earlier". The list is already newest first, so a label is drawn wherever
-   * a row's period differs from the one above it — nothing is reordered, and a
-   * page arriving later simply continues the last group.
-   */
   const renderItem = useCallback(
-    ({ index, item }: { index: number; item: NovelistWorldNotification }) => {
-      const period = periodOf(item.date);
-      const previous = index > 0 ? rows[index - 1] : undefined;
-      const next = rows[index + 1];
-      const starts = !previous || periodOf(previous.date) !== period;
-      const ends = !next || periodOf(next.date) !== period;
-      const place = starts ? (ends ? "only" : "first") : ends ? "last" : "middle";
-
-      return (
-        <>
-          {starts ? (
-            <View style={[styles.period, index > 0 && styles.periodNext]}>
-              <Text style={[styles.periodTitle, { color: theme.textGray }]}>
-                {period}
-              </Text>
-              <View
-                style={[styles.rule, { backgroundColor: theme.material.edge }]}
-              />
-            </View>
-          ) : null}
-          <NotificationRow
-            notification={item}
-            onAnswered={onAnswered}
-            place={place}
-          />
-        </>
-      );
-    },
-    [onAnswered, rows, theme],
+    ({ index, item: cell }: { index: number; item: Cell }) => (
+      <>
+        {cell.starts ? (
+          <View style={[styles.period, index > 0 && styles.periodNext]}>
+            <Text style={[styles.periodTitle, { color: theme.textGray }]}>
+              {cell.starts}
+            </Text>
+            <View
+              style={[styles.rule, { backgroundColor: theme.material.edge }]}
+            />
+          </View>
+        ) : null}
+        <NotificationRow
+          notification={cell.item}
+          onAnswered={onAnswered}
+          place={cell.place}
+        />
+      </>
+    ),
+    [onAnswered, theme],
   );
 
   return (
     <FlatList
       {...tabBarScroll}
       contentContainerStyle={contentStyle}
-      data={rows}
+      data={cells}
       keyExtractor={keyExtractor}
       ListEmptyComponent={
-        <ListStatus
-          empty="Nothing new."
-          error={error}
-          loading={isPending}
-          onRetry={refetch}
-          skeleton={
-            <SkeletonRows
-              count={8}
-              render={() => <NotificationRowSkeleton />}
-            />
-          }
-        />
+        // Filtered to nothing is the same silent bell, saying which chip it is
+        // under and that only what is loaded was searched.
+        rows.length > 0 ? (
+          <EmptyScene
+            scene="silent-bell"
+            subtitle={`None of those in what is loaded so far${
+              hasNextPage ? ". Scroll on to look further back." : "."
+            }`}
+            title={`Nothing under ${
+              NOTIFICATION_FILTERS.find(({ id }) => id === filter)?.label ??
+              "this filter"
+            }`}
+          />
+        ) : (
+          <ListStatus
+            empty={
+              <EmptyScene
+                scene="silent-bell"
+                subtitle="Likes, replies, mentions and requests land here. Post something and stir the ink."
+                title="Quiet as a blank page"
+              />
+            }
+            error={error}
+            loading={isPending}
+            onRetry={refetch}
+            skeleton={
+              <SkeletonRows
+                count={8}
+                render={() => <NotificationRowSkeleton />}
+              />
+            }
+          />
+        )
       }
       ListFooterComponent={
         isFetchingNextPage ? (
           <NotificationRowSkeleton />
-        ) : !hasNextPage && rows.length > 0 ? (
+        ) : !hasNextPage && cells.length > 0 ? (
           <EndOfList />
         ) : null
       }
@@ -265,12 +354,21 @@ const styles = StyleSheet.create({
   periodNext: { paddingTop: space.lg },
   periodTitle: type.eyebrow,
   rule: { flex: 1, height: StyleSheet.hairlineWidth },
-  count: { fontSize: fontSize.label, fontWeight: "600" },
-  header: {
+  chip: {
+    borderRadius: radius.full,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: space.m,
+    paddingVertical: space.s,
+  },
+  chipLabel: { fontSize: fontSize.caption, fontWeight: "600" },
+  chips: { gap: space.s, paddingHorizontal: space.md },
+  header: { gap: space.ms, paddingBottom: space.m },
+  headerRow: {
     alignItems: "center",
     flexDirection: "row",
+    gap: space.m,
     justifyContent: "space-between",
-    paddingBottom: space.m,
     paddingHorizontal: space.md,
   },
+  summary: { flex: 1, fontSize: fontSize.label, lineHeight: 18 },
 });

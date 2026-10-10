@@ -63,6 +63,7 @@ export const MediaTrayInline = ({
   onRequestKeyboard,
   onSelect,
   tab,
+  tabs,
   onTabChange,
 }: {
   /** The last measured keyboard height, or 0 if none has been seen. */
@@ -73,6 +74,8 @@ export const MediaTrayInline = ({
   onTabChange: (tab: TrayTab) => void;
   /** Null closes the tray. */
   tab: TrayTab | null;
+  /** The tabs to offer, when not all three. */
+  tabs?: TrayTab[];
 }) => {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
@@ -174,6 +177,7 @@ export const MediaTrayInline = ({
         onTabChange={onTabChange}
         panHandlers={pan.panHandlers}
         rendered={rendered}
+        tabs={tabs}
       />
 
       <View style={styles.body}>

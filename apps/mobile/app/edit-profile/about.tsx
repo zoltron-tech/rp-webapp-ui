@@ -14,6 +14,7 @@ import {
   RichTextEditor,
   type RichTextEditorHandle,
 } from "@/components/editor/rich-text-editor";
+import { getGlassTier } from "@/components/glass-surface";
 import { PillButton } from "@/components/settings";
 import { useKeyboardOffset } from "@/hooks/use-keyboard-height";
 import { useProfileEdit } from "@/hooks/use-profile-edit";
@@ -107,6 +108,60 @@ export default function AboutScreen() {
     editor.current?.replaceImageSrc(file.uri, url);
   };
 
+  /*
+   * Save, in the header.
+   *
+   * A filled pill everywhere but iOS 26: filled when there is something to
+   * save, washed out when there is not.
+   *
+   * iOS 26 sets every bar item in a glass bubble of the system's own size,
+   * and a pill of ours inside it showed the bubble as a gap all round the
+   * button. The installed `react-native-screens` has no way to turn the
+   * bubble off, so there the bubble *is* the button: no fill of ours, and the
+   * label carries the state — the accent when there is something to save,
+   * grey when there is not.
+   */
+  const inBubble = getGlassTier() === "liquid";
+  const idle = !dirty || busy;
+  const saveColor = inBubble
+    ? idle
+      ? theme.textGray
+      : theme.accent.text
+    : idle
+      ? theme.accent.onFillDisabled
+      : theme.accent.onFill;
+
+  const saveButton = (
+    <Pressable
+      accessibilityLabel="Save bio"
+      accessibilityRole="button"
+      accessibilityState={{ disabled: idle }}
+      disabled={idle}
+      hitSlop={space.sm}
+      onPress={() => void save()}
+      style={({ pressed }) =>
+        inBubble
+          ? [styles.saveBare, { opacity: idle ? 0.55 : pressed ? 0.6 : 1 }]
+          : [
+              styles.save,
+              {
+                backgroundColor: idle
+                  ? theme.accent.fillDisabled
+                  : pressed
+                    ? theme.accent.fillPressed
+                    : theme.accent.fill,
+              },
+            ]
+      }
+    >
+      {saving ? (
+        <ActivityIndicator color={saveColor} size="small" />
+      ) : (
+        <Text style={[styles.saveLabel, { color: saveColor }]}>Save</Text>
+      )}
+    </Pressable>
+  );
+
   return (
     <View
       style={[
@@ -119,46 +174,7 @@ export default function AboutScreen() {
     >
       <Stack.Screen
         options={{
-          headerRight: () => (
-            <Pressable
-              accessibilityLabel="Save bio"
-              accessibilityRole="button"
-              disabled={!dirty || busy}
-              onPress={() => void save()}
-              style={({ pressed }) => [
-                styles.save,
-                {
-                  backgroundColor:
-                    !dirty || busy
-                      ? theme.accent.fillDisabled
-                      : pressed
-                        ? theme.accent.fillPressed
-                        : theme.accent.fill,
-                },
-              ]}
-            >
-              {saving ? (
-                <ActivityIndicator
-                  color={theme.accent.onFillDisabled}
-                  size="small"
-                />
-              ) : (
-                <Text
-                  style={[
-                    styles.saveLabel,
-                    {
-                      color:
-                        !dirty || busy
-                          ? theme.accent.onFillDisabled
-                          : theme.accent.onFill,
-                    },
-                  ]}
-                >
-                  Save
-                </Text>
-              )}
-            </Pressable>
-          ),
+          headerRight: () => saveButton,
         }}
       />
 
@@ -199,6 +215,13 @@ const styles = StyleSheet.create({
     minWidth: 68,
     paddingHorizontal: space.md,
     paddingVertical: space.s,
+  },
+  // Inside the system's bubble, which brings its own shape and padding.
+  saveBare: {
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 44,
+    paddingHorizontal: space.xs,
   },
   saveLabel: { color: "#ffffff", fontSize: fontSize.label, fontWeight: "700" },
   toolbar: {

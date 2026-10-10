@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { PromptThreadComment } from "@nw/types";
 import { pluralize, toFormattedDateFromUnix } from "@nw/utils";
-import { Image } from "expo-image";
+import { Image } from "@/components/image";
 import { LinearGradient } from "expo-linear-gradient";
 import { memo, type ReactNode, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";

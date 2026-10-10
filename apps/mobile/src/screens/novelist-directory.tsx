@@ -1,13 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
+import { isSupportNovelist } from "@nw/chat";
 import { useNovelistLeaderboard } from "@nw/features";
 import type { NovelistLeaderboardEntry } from "@nw/types";
 import { useRouter } from "expo-router";
 import { useMemo } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
-import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { EndOfList } from "@/components/end-of-list";
 import { ListStatus } from "@/components/list-status";
+import { Text } from "@/components/text";
 import { useTrackOnline } from "@/context/socket";
 import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
 import { fontSize, radius, space, useAppTheme } from "@/theme";
@@ -91,14 +92,17 @@ export const NovelistDirectory = () => {
           @{item.novelist.username}
         </Text>
       </View>
-      <View style={styles.score}>
-        <Text style={[styles.points, { color: theme.accent.text }]}>
-          {item.totalPoints}
-        </Text>
-        <Text style={[styles.level, { color: theme.textGray }]}>
-          Lv {item.level}
-        </Text>
-      </View>
+      {/* Support is not playing: no score, no level. */}
+      {isSupportNovelist(item.novelist.username) ? null : (
+        <View style={styles.score}>
+          <Text style={[styles.points, { color: theme.accent.text }]}>
+            {item.totalPoints}
+          </Text>
+          <Text style={[styles.level, { color: theme.textGray }]}>
+            Lv {item.level}
+          </Text>
+        </View>
+      )}
       <Ionicons color={theme.textGray} name="chevron-forward" size={16} />
     </Pressable>
   );

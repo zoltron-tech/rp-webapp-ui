@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { PromptCard } from "@/components/feed/prompt-card";
+import { EmptyScene } from "@/components/empty-feed";
 import { ListStatus } from "@/components/list-status";
 import { PromptCardSkeleton } from "@/components/skeleton";
 import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
@@ -89,7 +90,14 @@ export const PromptScreen = () => {
           />
         ) : (
           <ListStatus
-            empty="This prompt is gone."
+            empty={
+              <EmptyScene
+                aside="(Or the link is wrong. Prompts rarely leave a forwarding address.)"
+                scene="torn-thread"
+                subtitle="It was meant to enter stage left. Instead it left the stage, the building, and quite possibly the genre."
+                title="This prompt missed its cue"
+              />
+            }
             error={query.error}
             loading={query.isPending}
             onRetry={() => void query.refetch()}

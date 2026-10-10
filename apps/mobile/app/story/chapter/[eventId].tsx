@@ -1,10 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
-import type { StoryBoardEvent, StoryBoardEventThread } from "@nw/types";
+import { deleteStoryBoardEventThread } from "@nw/api/endpoints/story";
+import { queryKeys, useApi, useSession } from "@nw/features";
+import {
+  API_MESSAGE,
+  type StoryBoardEvent,
+  type StoryBoardEventThread,
+} from "@nw/types";
 import { toFormattedDate, wsrvImage } from "@nw/utils";
+import { useQueryClient } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Pressable,
   StyleSheet,
@@ -12,17 +20,30 @@ import {
 } from "react-native";
 import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ActionMenu } from "@/components/action-menu";
+import { ComposeTrigger } from "@/components/compose/compose-trigger";
 import { CroppedImage } from "@/components/cropped-image";
+import { GlassSurface } from "@/components/glass-surface";
+import { IconButton } from "@/components/icon-button";
+import { EmptyScene } from "@/components/empty-feed";
 import { ListStatus } from "@/components/list-status";
 import { ProfileSongPill } from "@/components/profile-song";
+import { ShareChapterSheet } from "@/components/share/share-story-sheet";
 import { Asterism } from "@/components/story/asterism";
+import { PassageComposer } from "@/components/story/passage-composer";
 import { StoryProse } from "@/components/story/story-prose";
 import {
   useStory,
   useStoryChapter,
   useStoryChapterThreads,
+  useStoryCharacters,
 } from "@/hooks/use-story";
-import { STORY_COVER_ZOOM_MAX_PCT, storyClock, storyDate } from "@/lib/story";
+import {
+  isStoryMember,
+  STORY_COVER_ZOOM_MAX_PCT,
+  storyClock,
+  storyDate,
+} from "@/lib/story";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
@@ -36,12 +57,27 @@ import { border, fontSize, radius, space, useAppTheme } from "@/theme";
  * lines in the design its author chose.
  *
  * Web's book mode is a two-page desktop spread and does not come across; its
- * composer, passage editing, bookmarks and soundscape are the writing and
- * listening halves and are left out. The chapter's featured song stays — it is
- * part of reading it. At the foot, the previous and next chapters, so a story
- * can be read end to end without going back to its page.
+ * bookmarks and soundscape are left out. The chapter's featured song stays —
+ * it is part of reading it. At the foot, the previous and next chapters, so a
+ * story can be read end to end without going back to its page.
+ *
+ * ## Writing
+ *
+ * A co-author — the story's creator or one of its members, web's `isMember` —
+ * gets the "Add to passage" bar docked at the foot of the screen, and a menu
+ * on every passage to edit or delete it. Web sets its composer into the last
+ * page of the chapter, which on a phone is however far down the chapter
+ * runs; the bar is where the thumb is from the first line to the last. Both
+ * open `PassageComposer`. A new passage lands at the end of the chapter, so
+ * the reader is taken there once it is in.
  */
 
+/** The dock's rotating invitations; the first is web's own placeholder. */
+const PASSAGE_PLACEHOLDERS = [
+  "✍️ Continue the story…",
+  "📖 Add to this chapter…",
+  "🎭 What happens next?",
+];
 
 export default function ChapterScreen() {
   const theme = useAppTheme();
@@ -53,6 +89,36 @@ export default function ChapterScreen() {
   const event = chapter.data;
   const story = useStory(event?.storyBoardId);
   const threads = useStoryChapterThreads(eventId);
+
+  const api = useApi();
+  const queryClient = useQueryClient();
+  const { novelist, status } = useSession();
+  const canWrite =
+    status === "signed-in" && isStoryMember(story.data, novelist?.username);
+  // The story's own characters speak in dialogs; only a writer needs them.
+  const characters = useStoryCharacters(
+    canWrite ? event?.storyBoardId : undefined,
+  );
+
+  const list = useRef<FlatList<StoryBoardEventThread>>(null);
+  const [dockHeight, setDockHeight] = useState(0);
+  /** The composer: closed, a new passage (`thread: null`), or an edit. */
+  const [composing, setComposing] = useState<{
+    thread: StoryBoardEventThread | null;
+  } | null>(null);
+  /**
+   * The passage whose menu it is. Kept after the menu closes: the chosen item
+   * runs once the sheet has gone, and still needs to know which passage.
+   */
+  const [menuFor, setMenuFor] = useState<StoryBoardEventThread | null>(null);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const openMenu = useCallback((thread: StoryBoardEventThread) => {
+    setMenuFor(thread);
+    setMenuVisible(true);
+  }, []);
+  /** Set after a new passage: load to the chapter's end, then go there. */
+  const [seekingEnd, setSeekingEnd] = useState(false);
 
   const passages = useMemo(
     () => (threads.data?.pages ?? []).flatMap((page) => page.threads),
@@ -77,6 +143,73 @@ export default function ChapterScreen() {
     if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
+  const refreshPassages = useCallback(async () => {
+    // The cast is derived from the dialogs in the story's passages.
+    if (event?.storyBoardId) {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.story(event.storyBoardId),
+      });
+    }
+    await queryClient.invalidateQueries({
+      queryKey: queryKeys.storyChapterThreads(eventId),
+    });
+  }, [event?.storyBoardId, eventId, queryClient]);
+
+  const onSaved = useCallback(
+    (created: boolean) => {
+      void refreshPassages().then(() => {
+        if (created) setSeekingEnd(true);
+      });
+    },
+    [refreshPassages],
+  );
+
+  const { isFetching } = threads;
+  useEffect(() => {
+    if (!seekingEnd || isFetching) return;
+    if (hasNextPage) {
+      void fetchNextPage();
+      return;
+    }
+    setSeekingEnd(false);
+    // Twice: the first lands on the list's estimate of its own length, the
+    // second once the new passage has been measured.
+    list.current?.scrollToEnd({ animated: true });
+    const timer = setTimeout(
+      () => list.current?.scrollToEnd({ animated: true }),
+      450,
+    );
+    return () => clearTimeout(timer);
+  }, [fetchNextPage, hasNextPage, isFetching, seekingEnd]);
+
+  const confirmDelete = useCallback(
+    (thread: StoryBoardEventThread) => {
+      const id = thread.id;
+      if (!id) return;
+      Alert.alert("Delete this passage?", "This action is permanent.", [
+        { style: "cancel", text: "Cancel" },
+        {
+          onPress: async () => {
+            const result = await deleteStoryBoardEventThread(api, id).catch(
+              () => ({ message: API_MESSAGE.Error }),
+            );
+            if (result.message !== API_MESSAGE.Success) {
+              Alert.alert(
+                "Could not delete",
+                "The passage was not deleted. Please try again.",
+              );
+              return;
+            }
+            void refreshPassages();
+          },
+          style: "destructive",
+          text: "Delete",
+        },
+      ]);
+    },
+    [api, refreshPassages],
+  );
+
   const goTo = (target: StoryBoardEvent) =>
     target.id &&
     router.replace({
@@ -86,16 +219,27 @@ export default function ChapterScreen() {
 
   const renderItem = useCallback(
     ({ item }: { item: StoryBoardEventThread }) => (
-      <Passage divider={event?.passageAsterism} thread={item} />
+      <Passage
+        divider={event?.passageAsterism}
+        onMenu={canWrite ? openMenu : undefined}
+        thread={item}
+      />
     ),
-    [event?.passageAsterism],
+    [canWrite, event?.passageAsterism, openMenu],
   );
 
   if (!event) {
     return (
       <View style={styles.fill}>
         <ListStatus
-          empty="This chapter was deleted, or it is private."
+          empty={
+            <EmptyScene
+              aside="(Or it is private, or the link is wrong. Chapters get lost between drafts.)"
+              scene="torn-thread"
+              subtitle="Somewhere a novelist is muttering about pacing. The page numbers now skip, and everyone is politely pretending not to notice."
+              title="This chapter was torn out"
+            />
+          }
           error={chapter.error}
           loading={chapter.isPending}
           onRetry={() => void chapter.refetch()}
@@ -114,11 +258,38 @@ export default function ChapterScreen() {
 
   return (
     <View style={styles.fill}>
-      <Stack.Screen options={{ title: story.data?.name ?? "Chapter" }} />
+      <Stack.Screen
+        options={{
+          // Web's share, from the chapter header: the community tray.
+          headerRight: () => (
+            <Pressable
+              accessibilityLabel="Share chapter"
+              accessibilityRole="button"
+              hitSlop={space.sm}
+              onPress={() => setSharing(true)}
+              style={({ pressed }) => ({
+                opacity: pressed ? 0.6 : 1,
+                paddingHorizontal: space.md,
+              })}
+            >
+              <Ionicons
+                color={theme.text}
+                name="share-social-outline"
+                size={22}
+              />
+            </Pressable>
+          ),
+          title: story.data?.name ?? "Chapter",
+        }}
+      />
       <FlatList
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: insets.bottom + space.xl },
+          {
+            paddingBottom: canWrite
+              ? dockHeight + space.lg
+              : insets.bottom + space.xl,
+          },
         ]}
         data={passages}
         initialNumToRender={4}
@@ -247,8 +418,71 @@ export default function ChapterScreen() {
         }
         onEndReached={loadMore}
         onEndReachedThreshold={1.5}
+        ref={list}
         renderItem={renderItem}
         windowSize={9}
+      />
+
+      {canWrite ? (
+        <GlassSurface
+          bordered="top"
+          onLayout={({ nativeEvent }) =>
+            setDockHeight(nativeEvent.layout.height)
+          }
+          style={[styles.dock, { paddingBottom: insets.bottom + space.sm }]}
+          variant="bar"
+        >
+          <ComposeTrigger
+            avatarImage={novelist?.avatar}
+            avatarUri={novelist?.avatar?.src ?? novelist?.image}
+            label="Add to passage"
+            name={novelist?.firstName}
+            onPress={() => setComposing({ thread: null })}
+            placeholders={PASSAGE_PLACEHOLDERS}
+          />
+        </GlassSurface>
+      ) : null}
+
+      <ActionMenu
+        items={[
+          {
+            icon: "create-outline",
+            label: "Edit passage",
+            onSelect: () => {
+              if (menuFor) setComposing({ thread: menuFor });
+            },
+          },
+          { separator: true },
+          {
+            icon: "trash-outline",
+            label: "Delete passage",
+            onSelect: () => {
+              if (menuFor) confirmDelete(menuFor);
+            },
+            variant: "danger",
+          },
+        ]}
+        onClose={() => setMenuVisible(false)}
+        subtitle={menuFor?.author?.name}
+        title="Passage"
+        visible={menuVisible}
+      />
+
+      {composing ? (
+        <PassageComposer
+          eventId={eventId}
+          onClose={() => setComposing(null)}
+          onSaved={onSaved}
+          storyCharacters={characters.data ?? []}
+          thread={composing.thread}
+        />
+      ) : null}
+
+      <ShareChapterSheet
+        chapter={event}
+        onClose={() => setSharing(false)}
+        story={story.data}
+        visible={sharing}
       />
     </View>
   );
@@ -256,9 +490,12 @@ export default function ChapterScreen() {
 
 const Passage = ({
   divider,
+  onMenu,
   thread,
 }: {
   divider: string | null | undefined;
+  /** Given to a co-author: opens this passage's edit and delete. */
+  onMenu?: (thread: StoryBoardEventThread) => void;
   thread: StoryBoardEventThread;
 }) => {
   const theme = useAppTheme();
@@ -270,12 +507,25 @@ const Passage = ({
         html={thread.message}
         speakers={thread.museDialogAttrs}
       />
-      <Text style={[styles.byline, { color: theme.textGray }]}>
-        <Text style={{ color: theme.text, fontWeight: "600" }}>
-          {thread.author?.name}
+      <View style={styles.bylineRow}>
+        <Text style={[styles.byline, { color: theme.textGray }]}>
+          <Text style={{ color: theme.text, fontWeight: "600" }}>
+            {thread.author?.name}
+          </Text>
+          {thread.createdAt ? `  ·  ${toFormattedDate(thread.createdAt)}` : ""}
         </Text>
-        {thread.createdAt ? `  ·  ${toFormattedDate(thread.createdAt)}` : ""}
-      </Text>
+        {onMenu ? (
+          <IconButton
+            accessibilityLabel="Passage options"
+            hitSlop={space.ms}
+            icon="ellipsis-horizontal"
+            iconSize={16}
+            onPress={() => onMenu(thread)}
+            size={28}
+            tone="quiet"
+          />
+        ) : null}
+      </View>
     </View>
   );
 };
@@ -335,7 +585,14 @@ const PagerCard = ({
 
 const styles = StyleSheet.create({
   alignEnd: { alignItems: "flex-end" },
-  byline: { fontSize: fontSize.caption, marginTop: space.sm },
+  byline: { flex: 1, fontSize: fontSize.caption },
+  bylineRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: space.sm,
+    marginTop: space.sm,
+    minHeight: 28,
+  },
   content: { paddingHorizontal: space.md + 2 },
   count: { fontSize: fontSize.caption, textAlign: "center" },
   cover: {
@@ -346,6 +603,14 @@ const styles = StyleSheet.create({
     marginBottom: space.sm,
     overflow: "hidden",
     width: "52%",
+  },
+  dock: {
+    bottom: 0,
+    left: 0,
+    paddingHorizontal: space.md,
+    paddingTop: space.sm,
+    position: "absolute",
+    right: 0,
   },
   eyebrow: {
     fontSize: fontSize.caption,

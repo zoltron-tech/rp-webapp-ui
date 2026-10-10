@@ -5,7 +5,6 @@ import type {
   Muse,
   MuseAboutSection,
 } from "@nw/types/novelist";
-import { useParams } from "@/lib/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BsArrowLeft, BsThreeDots } from "react-icons/bs";
 import { FaRegEdit } from "react-icons/fa";
@@ -26,6 +25,7 @@ import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
+import { useParams } from "@/lib/navigation";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styled";
@@ -177,7 +177,12 @@ export default function MuseAboutListSectionsPage() {
       sideMenuTextColor: muse.sideMenuTextColor ?? null,
       song: muse.song ?? null,
       story: muse.story ?? null,
-      tags: muse.tags ?? null,
+      // Never the muse's own tags: the service reads a tag as its entity
+      // (`createdAt` and all) but hands them out as `{ label, color }`, so a
+      // tagged character sent back as read is a 400 and the quote never
+      // saves. The update does not store this field anyway (tags have their
+      // own endpoints); the other edit forms send `null` too.
+      tags: null,
       useAccent: muse.useAccent ?? false,
       useExtraImages: muse.useExtraImages ?? false,
       video: muse.video ?? null,

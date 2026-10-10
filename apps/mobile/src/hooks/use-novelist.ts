@@ -47,5 +47,9 @@ export const useNovelist = (username: string | undefined) => {
       return result;
     },
     queryKey: queryKeys.profile(username ?? ""),
+    // Somebody else's profile, hydrated from the local store with the time it
+    // was fetched: inside this window it is shown without a request, outside
+    // it is shown and refetched behind the paint (LOCAL_DATA_PLAN.md 4.1).
+    staleTime: 60 * 60 * 1000,
   });
 };

@@ -1,5 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import type { CodexEntry, StoryBoardEvent } from "@nw/types";
+import { useSession } from "@nw/features";
+import type { CodexEntry, CodexRelationship, StoryBoardEvent } from "@nw/types";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
@@ -21,10 +22,15 @@ import {
   useStoryFaces,
 } from "@/components/story/character-sheet";
 import { EntryGlyph, EntrySheet } from "@/components/story/entry-sheet";
+import { RelationshipRow, ToneLegend } from "@/components/story/relationship-bits";
+import { RelationshipSheet } from "@/components/story/relationship-sheet";
+import { PillButton } from "@/components/settings";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { useStory, useStoryCodex } from "@/hooks/use-story";
+import { useStoryCodexEdit } from "@/hooks/use-story-codex-edit";
 import { asColor, withAlpha } from "@/lib/color";
-import { codexIcon, plainText } from "@/lib/story";
+import { codexIcon, isStoryMember, plainText } from "@/lib/story";
+import { buildTonePalette, resolveTone } from "@/lib/story-mesh";
 import { border, fontSize, radius, space, type, useAppTheme } from "@/theme";
 
 /**
@@ -38,6 +44,8 @@ import { border, fontSize, radius, space, type, useAppTheme } from "@/theme";
  */
 
 const CAST_TAB = "__cast";
+/** Web's `MESH_TAB`: the relationships, listed here, drawn on their own screen. */
+const MESH_TAB = "__mesh";
 
 export default function CodexScreen() {
   const theme = useAppTheme();
@@ -50,6 +58,28 @@ export default function CodexScreen() {
   const [tab, setTab] = useState(CAST_TAB);
   const [openEntry, setOpenEntry] = useState<CodexEntry | null>(null);
   const [openFace, setOpenFace] = useState<StoryFace | null>(null);
+
+  // Relationships: listed on their tab, edited in the sheet, drawn full
+  // screen on `[storyId]/relationships`. Only a co-author writes.
+  const { novelist, status } = useSession();
+  const canEdit =
+    status === "signed-in" && isStoryMember(story.data, novelist?.username);
+  const edit = useStoryCodexEdit(storyId);
+  const light = theme.name === "light";
+  const tones = codex.data?.tones ?? [];
+  const relationships = codex.data?.relationships ?? [];
+  const palette = useMemo(() => buildTonePalette(tones, light), [tones, light]);
+  const toneCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const relationship of relationships) {
+      const key = resolveTone(relationship, palette, light).key;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return counts;
+  }, [light, palette, relationships]);
+  const [relationshipSheet, setRelationshipSheet] = useState<{
+    relationship: CodexRelationship | null;
+  } | null>(null);
 
   const chapters = useMemo(
     () =>
@@ -92,6 +122,7 @@ export default function CodexScreen() {
 
   const tabs = [
     { count: faces.length, icon: "account-group-outline", id: CAST_TAB, name: "Characters" },
+    { count: relationships.length, icon: "graph-outline", id: MESH_TAB, name: "Relationships" },
     ...categories.map((category) => ({
       count: (codex.data?.entries ?? []).filter(
         (entry) => entry.categoryId === category.id,
@@ -254,6 +285,60 @@ export default function CodexScreen() {
                 </View>
               ) : null}
             </>
+          ) : tab === MESH_TAB ? (
+            <View style={styles.pool}>
+              <View style={styles.meshActions}>
+                <PillButton
+                  icon="git-network-outline"
+                  label="Open mesh"
+                  onPress={() =>
+                    router.push({
+                      params: { storyId },
+                      pathname: "/story/[storyId]/relationships",
+                    })
+                  }
+                />
+                {canEdit && faces.length >= 2 ? (
+                  <PillButton
+                    icon="add"
+                    label="New relationship"
+                    onPress={() => setRelationshipSheet({ relationship: null })}
+                    tone="accent"
+                  />
+                ) : null}
+              </View>
+              {faces.length < 2 ? (
+                <Text style={[styles.note, { color: theme.textGray }]}>
+                  Two characters are needed before they can stand toward each
+                  other. A character joins the cast when its dialog appears in a
+                  passage.
+                </Text>
+              ) : relationships.length === 0 ? (
+                <Text style={[styles.note, { color: theme.textGray }]}>
+                  {canEdit
+                    ? "No relationships yet. Add the first one — who owes whom, who can't stand whom."
+                    : "This story hasn't mapped its characters' relationships yet."}
+                </Text>
+              ) : (
+                <>
+                  <View style={styles.legendWrap}>
+                    <ToneLegend counts={toneCounts} palette={palette} />
+                  </View>
+                  <View style={styles.relationshipList}>
+                    {relationships.map((relationship) => (
+                      <RelationshipRow
+                        faces={faces}
+                        key={relationship.id}
+                        light={light}
+                        onPress={() => setRelationshipSheet({ relationship })}
+                        palette={palette}
+                        relationship={relationship}
+                      />
+                    ))}
+                  </View>
+                </>
+              )}
+            </View>
           ) : entries.length === 0 ? (
             <Text style={[styles.empty, { color: theme.textGray }]}>
               Nothing in {active?.name ?? "this category"} yet.
@@ -293,6 +378,15 @@ export default function CodexScreen() {
           setOpenFace(null);
           router.push({ params: { museId }, pathname: "/muse/[museId]" });
         }}
+      />
+      <RelationshipSheet
+        canEdit={canEdit}
+        edit={edit}
+        faces={faces}
+        onClose={() => setRelationshipSheet(null)}
+        relationship={relationshipSheet?.relationship ?? null}
+        tones={tones}
+        visible={relationshipSheet !== null}
       />
     </View>
   );
@@ -439,8 +533,11 @@ const styles = StyleSheet.create({
   groupHead: { alignItems: "center", flexDirection: "row", gap: space.sm },
   groupMembers: { flexDirection: "row", flexWrap: "wrap", gap: space.s },
   groupName: { flex: 1, fontSize: fontSize.body, fontWeight: "700" },
+  legendWrap: { marginHorizontal: -space.m },
+  meshActions: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
   note: { fontSize: fontSize.caption, lineHeight: 17 },
   pool: { gap: space.sm },
+  relationshipList: { gap: space.s },
   poolLabel: type.eyebrow,
   tab: {
     alignItems: "center",

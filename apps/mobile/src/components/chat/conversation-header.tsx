@@ -3,10 +3,10 @@ import { useUnreadConversations } from "@nw/features";
 import type { Conversation } from "@nw/types";
 import { pluralize } from "@nw/utils";
 import { Pressable, StyleSheet, View } from "react-native";
-import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Avatar } from "@/components/avatar";
 import { GlassSurface } from "@/components/glass-surface";
+import { Text } from "@/components/text";
 import { useChatSocket, useIsOnline } from "@/context/socket";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
@@ -47,6 +47,7 @@ export const ConversationHeader = ({
   conversation,
   conversationId,
   memberCount,
+  memberCountIsLowerBound = false,
   onBack,
   onPress,
   target,
@@ -55,6 +56,8 @@ export const ConversationHeader = ({
   /** Excluded from the back arrow's badge — this is the one being read. */
   conversationId?: string;
   memberCount?: number;
+  /** The count is a first page, not the whole: say "20+". */
+  memberCountIsLowerBound?: boolean;
   onBack: () => void;
   onPress: () => void;
   target: { name: string; image: string | null; username: string };
@@ -67,11 +70,18 @@ export const ConversationHeader = ({
 
   const waiting = unreadIds.filter((id) => id !== conversationId).length;
 
-  const count = memberCount ?? conversation?.members?.length ?? 0;
+  // The service's count first: `members` is a preview of the first few, so
+  // its length said "3 members" for every group, and "0" after the by-id
+  // refetch, which used to carry none.
+  const count =
+    memberCount ??
+    conversation?.memberCount ??
+    conversation?.members?.length ??
+    0;
   const isGroup = Boolean(conversation?.isGroup);
 
   const subtitle = isGroup
-    ? `${count} ${pluralize("member", count)}`
+    ? `${count}${memberCountIsLowerBound ? "+" : ""} ${pluralize("member", count)}`
     : isOnline
       ? "Active now"
       : isConnected
@@ -139,7 +149,11 @@ export const ConversationHeader = ({
           { opacity: pressed ? 0.6 : 1 },
         ]}
       >
-        {isGroup ? (
+        {isGroup && target.image ? (
+          // The group's own picture when it has one; the people glyph is for
+          // a group that never set one, not a stand-in for every group.
+          <Avatar name={target.name} size={38} uri={target.image} />
+        ) : isGroup ? (
           <View
             style={[
               styles.groupAvatar,

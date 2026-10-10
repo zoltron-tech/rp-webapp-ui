@@ -7,13 +7,15 @@ import { pluralize } from "@nw/utils";
 import { reverseWsrvUrl } from "@nw/utils/image";
 import classNames from "classnames";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FaPlay, FaRegTrashCan } from "react-icons/fa6";
+import { FaCheck, FaPlay, FaRegTrashCan } from "react-icons/fa6";
 import {
+  FiCheckCircle,
   FiChevronLeft,
   FiChevronRight,
   FiEdit2,
   FiPlus,
   FiUploadCloud,
+  FiX,
 } from "react-icons/fi";
 import styled from "styled-components";
 import {
@@ -60,6 +62,9 @@ function GalleryImageItem({
   isWallpaper,
   isOwner,
   onDelete,
+  selecting,
+  selected,
+  onToggle,
 }: {
   url: string;
   width: number;
@@ -70,10 +75,32 @@ function GalleryImageItem({
   isWallpaper: boolean;
   isOwner: boolean;
   onDelete: () => void;
+  /** Select mode: a click toggles the tile instead of opening it. */
+  selecting: boolean;
+  selected: boolean;
+  onToggle: () => void;
 }) {
   const hasBadge = isOwner && (isAvatar || isCardBg || isWallpaper);
   return (
-    <S.GalleryItem style={{ height, width }} onClick={onItemClick}>
+    <GallerySelectableItem
+      style={{ height, width }}
+      onClick={selecting ? onToggle : onItemClick}
+      $selectable={selecting}
+      $selected={selected}
+      role={selecting ? "checkbox" : undefined}
+      aria-checked={selecting ? selected : undefined}
+      tabIndex={selecting ? 0 : undefined}
+      onKeyDown={
+        selecting
+          ? (e) => {
+              if (e.key === " " || e.key === "Enter") {
+                e.preventDefault();
+                onToggle();
+              }
+            }
+          : undefined
+      }
+    >
       <S.GalleryImage src={url} alt="Gallery media" />
       {hasBadge && (
         <S.GalleryBadgeRow>
@@ -82,7 +109,12 @@ function GalleryImageItem({
           {isWallpaper && <S.GalleryBadge>Wallpaper</S.GalleryBadge>}
         </S.GalleryBadgeRow>
       )}
-      {isOwner && (
+      {selecting && (
+        <GallerySelectMark $selected={selected} aria-hidden>
+          {selected && <FaCheck size={11} />}
+        </GallerySelectMark>
+      )}
+      {isOwner && !selecting && (
         <S.GalleryDeleteBtn
           type="button"
           aria-label="Delete media"
@@ -94,7 +126,7 @@ function GalleryImageItem({
           <FaRegTrashCan size={11} />
         </S.GalleryDeleteBtn>
       )}
-    </S.GalleryItem>
+    </GallerySelectableItem>
   );
 }
 
@@ -106,7 +138,14 @@ function JustifiedGallery({
   wallpaperSrc,
   isOwner,
   onDeleteItem,
+  selecting,
+  selected,
+  onToggle,
 }: {
+  /** Select mode: tiles toggle instead of opening; see `GallerySection`. */
+  selecting: boolean;
+  selected: ReadonlySet<string>;
+  onToggle: (url: string) => void;
   mediaUrls: string[];
   onItemClick: (idx: number) => void;
   avatarSrc?: string;
@@ -228,14 +267,33 @@ function JustifiedGallery({
         <div key={ri} style={{ display: "flex", gap: `${GALLERY_GAP}px` }}>
           {row.map((item) =>
             item.isVideo ? (
-              <S.GalleryItem
+              <GallerySelectableItem
                 key={item.url}
                 style={{
                   cursor: "pointer",
                   height: item.height,
                   width: item.width,
                 }}
-                onClick={() => onItemClick(mediaUrls.indexOf(item.url))}
+                $selectable={selecting}
+                $selected={selected.has(item.url)}
+                role={selecting ? "checkbox" : undefined}
+                aria-checked={selecting ? selected.has(item.url) : undefined}
+                tabIndex={selecting ? 0 : undefined}
+                onClick={() =>
+                  selecting
+                    ? onToggle(item.url)
+                    : onItemClick(mediaUrls.indexOf(item.url))
+                }
+                onKeyDown={
+                  selecting
+                    ? (e) => {
+                        if (e.key === " " || e.key === "Enter") {
+                          e.preventDefault();
+                          onToggle(item.url);
+                        }
+                      }
+                    : undefined
+                }
               >
                 <S.GalleryVideo
                   src={`${item.url}#t=0.3`}
@@ -247,7 +305,15 @@ function JustifiedGallery({
                     <FaPlay size={18} />
                   </S.GalleryPlayCircle>
                 </S.GalleryPlayOverlay>
-                {isOwner && (
+                {selecting && (
+                  <GallerySelectMark
+                    $selected={selected.has(item.url)}
+                    aria-hidden
+                  >
+                    {selected.has(item.url) && <FaCheck size={11} />}
+                  </GallerySelectMark>
+                )}
+                {isOwner && !selecting && (
                   <S.GalleryDeleteBtn
                     type="button"
                     aria-label="Delete media"
@@ -259,7 +325,7 @@ function JustifiedGallery({
                     <FaRegTrashCan size={11} />
                   </S.GalleryDeleteBtn>
                 )}
-              </S.GalleryItem>
+              </GallerySelectableItem>
             ) : (
               <GalleryImageItem
                 key={item.url}
@@ -272,6 +338,9 @@ function JustifiedGallery({
                 isWallpaper={item.url === wallpaperSrc}
                 isOwner={isOwner}
                 onDelete={() => onDeleteItem(item.url)}
+                selecting={selecting}
+                selected={selected.has(item.url)}
+                onToggle={() => onToggle(item.url)}
               />
             ),
           )}
@@ -783,7 +852,7 @@ function UploadPanel({
 
 export function GallerySection({ muse, media }: Props) {
   const user = useGlobalState("user");
-  const { successToast } = useUIContext();
+  const { errorToast, successToast } = useUIContext();
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [confirmDeleteUrl, setConfirmDeleteUrl] = useState<string | null>(null);
@@ -865,6 +934,86 @@ export function GallerySection({ muse, media }: Props) {
     await deleteMedia(url);
   }, [muse?.id, confirmDeleteUrl, successToast]);
 
+  /*
+   * Select mode: tiles toggle instead of opening, a bar counts them, and one
+   * confirmation deletes the lot — the same shape as the edit page and the
+   * app. The service deletes one URL per request, so the lot goes one after
+   * another; whatever fails is put back on screen.
+   */
+  const [selecting, setSelecting] = useState(false);
+  const [selected, setSelected] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+  const [confirmBulk, setConfirmBulk] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  // Anything that left the gallery leaves the selection too; and the mode
+  // belongs to the owner alone.
+  useEffect(() => {
+    setSelected((prev) => {
+      const next = new Set([...prev].filter((u) => localMedia.includes(u)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [localMedia]);
+  useEffect(() => {
+    if (!isOwner) {
+      setSelecting(false);
+      setSelected(new Set());
+    }
+  }, [isOwner]);
+
+  const stopSelecting = useCallback(() => {
+    setSelecting(false);
+    setSelected(new Set());
+  }, []);
+
+  const toggleSelected = useCallback((url: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(url)) next.delete(url);
+      else next.add(url);
+      return next;
+    });
+  }, []);
+
+  const handleDeleteSelected = useCallback(async () => {
+    setConfirmBulk(false);
+    if (!muse?.id) return;
+    const museId = muse.id;
+    const urls = [...selected];
+    if (urls.length === 0) return;
+    setBulkDeleting(true);
+    setLocalMedia((prev) => prev.filter((u) => !urls.includes(u)));
+    setGalleryIndex(null);
+
+    const failed: string[] = [];
+    for (const url of urls) {
+      try {
+        const result = await deleteMuseMediaAction(museId, url);
+        if (!result || result.message !== API_MESSAGE.Success) {
+          failed.push(url);
+          continue;
+        }
+        await deleteMedia(url);
+      } catch {
+        failed.push(url);
+      }
+    }
+
+    setBulkDeleting(false);
+    stopSelecting();
+    if (failed.length > 0) {
+      setLocalMedia((prev) => [...prev, ...failed]);
+      errorToast?.(
+        `${failed.length} of ${urls.length} files could not be deleted.`,
+      );
+      return;
+    }
+    successToast?.(
+      `${urls.length} file${urls.length === 1 ? "" : "s"} deleted.`,
+    );
+  }, [muse?.id, selected, stopSelecting, successToast, errorToast]);
+
   return (
     <S.CardExpandedWrapper $hideChrome={hideExpandedBackground}>
       <S.CardBack
@@ -889,15 +1038,69 @@ export function GallerySection({ muse, media }: Props) {
             </ShouldRender>
 
             <ShouldRender if={!isMediaLoading}>
-              {/* Owner: always-visible Add Media button */}
+              {/* Owner: always-visible Add Media button, and Select beside it */}
               <ShouldRender if={isOwner}>
-                <GalleryAddMediaBtn
-                  type="button"
-                  onClick={() => setUploadOpen(true)}
-                >
-                  <FiPlus size={14} />
-                  Add Media
-                </GalleryAddMediaBtn>
+                {selecting ? (
+                  <GallerySelectionBar aria-live="polite">
+                    <span className="count">
+                      {selected.size === 0
+                        ? "Select files"
+                        : `${selected.size} selected`}
+                    </span>
+                    <div className="actions">
+                      <GallerySelectionButton
+                        type="button"
+                        disabled={bulkDeleting || localMedia.length === 0}
+                        onClick={() =>
+                          setSelected(
+                            selected.size === localMedia.length
+                              ? new Set()
+                              : new Set(localMedia),
+                          )
+                        }
+                      >
+                        {selected.size === localMedia.length ? "None" : "All"}
+                      </GallerySelectionButton>
+                      <GallerySelectionButton
+                        type="button"
+                        $danger
+                        disabled={bulkDeleting || selected.size === 0}
+                        onClick={() => setConfirmBulk(true)}
+                        aria-label={`Delete ${selected.size} selected`}
+                      >
+                        <FaRegTrashCan size={12} />
+                        {bulkDeleting ? "Deleting…" : "Delete"}
+                      </GallerySelectionButton>
+                      <GallerySelectionClose
+                        type="button"
+                        aria-label="Stop selecting"
+                        disabled={bulkDeleting}
+                        onClick={stopSelecting}
+                      >
+                        <FiX size={16} />
+                      </GallerySelectionClose>
+                    </div>
+                  </GallerySelectionBar>
+                ) : (
+                  <GalleryToolRow>
+                    <GalleryAddMediaBtn
+                      type="button"
+                      onClick={() => setUploadOpen(true)}
+                    >
+                      <FiPlus size={14} />
+                      Add Media
+                    </GalleryAddMediaBtn>
+                    {localMedia.length > 0 && (
+                      <GalleryAddMediaBtn
+                        type="button"
+                        onClick={() => setSelecting(true)}
+                      >
+                        <FiCheckCircle size={14} />
+                        Select
+                      </GalleryAddMediaBtn>
+                    )}
+                  </GalleryToolRow>
+                )}
               </ShouldRender>
 
               <ShouldRender if={localMedia.length === 0}>
@@ -959,6 +1162,9 @@ export function GallerySection({ muse, media }: Props) {
                 onItemClick={setGalleryIndex}
                 isOwner={isOwner}
                 onDeleteItem={handleDeleteMedia}
+                selecting={selecting}
+                selected={selected}
+                onToggle={toggleSelected}
                 avatarSrc={
                   isOwner ? reverseWsrvUrl(muse?.avatar?.src) : undefined
                 }
@@ -1010,6 +1216,20 @@ export function GallerySection({ muse, media }: Props) {
         onConfirm={handleConfirmDelete}
         onCancel={() => setConfirmDeleteUrl(null)}
       />
+
+      {/* Bulk delete confirmation */}
+      <AppAlertDialog
+        open={confirmBulk}
+        onOpenChange={(open) => {
+          if (!open) setConfirmBulk(false);
+        }}
+        heading={`Delete ${selected.size} file${selected.size === 1 ? "" : "s"}?`}
+        text={`This will permanently remove ${selected.size === 1 ? "the file" : "these files"} from your gallery. This action cannot be undone.`}
+        actionButtonLabel="Delete"
+        actionColor="negative"
+        onConfirm={() => void handleDeleteSelected()}
+        onCancel={() => setConfirmBulk(false)}
+      />
     </S.CardExpandedWrapper>
   );
 }
@@ -1036,6 +1256,142 @@ const GalleryAddMediaBtn = styled.button`
     background: rgba(255, 255, 255, 0.12);
     border-color: rgba(255, 255, 255, 0.5);
     color: rgba(255, 255, 255, 0.95);
+  }
+`;
+
+/* ── Select mode ──────────────────────────────────────────────────────── */
+
+const GalleryToolRow = styled.div`
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+`;
+
+/** A gallery tile that can be a checkbox: the ring and a cursor to match. */
+const GallerySelectableItem = styled(S.GalleryItem)<{
+  $selectable: boolean;
+  $selected: boolean;
+}>`
+  cursor: ${({ $selectable }) => ($selectable ? "pointer" : "zoom-in")};
+  box-shadow: ${({ $selected }) =>
+    $selected ? "0 0 0 2px var(--accent, #fff)" : "none"};
+  transition: box-shadow 0.15s ease;
+
+  &:focus-visible {
+    outline: 2px solid var(--accent, #fff);
+    outline-offset: 2px;
+  }
+`;
+
+const GallerySelectMark = styled.span<{ $selected: boolean }>`
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  z-index: 4;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid
+    ${({ $selected }) =>
+      $selected ? "var(--accent, #fff)" : "rgba(255, 255, 255, 0.9)"};
+  background: ${({ $selected }) =>
+    $selected
+      ? "var(--accent, rgba(255, 255, 255, 0.9))"
+      : "rgba(0, 0, 0, 0.35)"};
+  color: #fff;
+  pointer-events: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+`;
+
+const GallerySelectionBar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 6px 6px 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.07);
+
+  .count {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #fff;
+    min-width: 0;
+  }
+
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+`;
+
+const GallerySelectionButton = styled.button<{ $danger?: boolean }>`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid
+    ${({ $danger }) => ($danger ? "var(--tomato-9)" : "rgba(255, 255, 255, 0.2)")};
+  background: ${({ $danger }) =>
+    $danger ? "var(--tomato-9)" : "rgba(255, 255, 255, 0.1)"};
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s ease, background 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: ${({ $danger }) =>
+      $danger ? "var(--tomato-10)" : "rgba(255, 255, 255, 0.18)"};
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+`;
+
+const GallerySelectionClose = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
   }
 `;
 

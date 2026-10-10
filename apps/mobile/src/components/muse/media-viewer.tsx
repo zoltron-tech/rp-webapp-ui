@@ -1,10 +1,10 @@
-import { SCRIM_ALPHA } from "@nw/theme";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { SCRIM_ALPHA } from "@nw/theme";
 import type { MediaMetadata } from "@nw/types/activity";
+import { formatTime } from "@nw/utils";
 import { wsrvImage } from "@nw/utils/image";
 import { useEventListener } from "expo";
-import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { useVideoPlayer, type VideoPlayer, VideoView } from "expo-video";
 import {
   memo,
@@ -28,12 +28,14 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { Text, TextInput } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LikersSheet } from "@/components/feed/likers-sheet";
 import { HeartButton } from "@/components/heart-button";
+import { Image } from "@/components/image";
+import { Text, TextInput } from "@/components/text";
 import { useKeyboardHeight } from "@/hooks/use-keyboard-height";
 import { useToggleReaction } from "@/hooks/use-toggle-reaction";
+import { usePlaybackSlot } from "@/lib/playback";
 import {
   border,
   fontSize,
@@ -42,7 +44,6 @@ import {
   space,
   useAppTheme,
 } from "@/theme";
-import { formatTime } from "@nw/utils";
 
 /**
  * The gallery's viewer — web's `AppImageViewer` / `VideoViewer` with
@@ -1076,9 +1077,16 @@ const ClipPage = ({
     }
   }, [active, player]);
 
+  const [playing, setPlaying] = useState(false);
+
   useEventListener(player, "playingChange", ({ isPlaying }) => {
+    setPlaying(isPlaying);
     if (active) onPlaying(isPlaying);
   });
+
+  // The viewer's clip takes the one playback slot: a profile song playing
+  // under the viewer stops when the clip starts — `lib/playback`.
+  usePlaybackSlot(() => player.pause(), active && playing);
 
   useEventListener(player, "timeUpdate", ({ currentTime }) => {
     if (active) onClock(currentTime, player.duration);

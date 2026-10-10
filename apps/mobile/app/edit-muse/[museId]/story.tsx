@@ -4,7 +4,7 @@ import { queryKeys, useApi } from "@nw/features";
 import type { Muse, MuseAboutSection } from "@nw/types";
 import { IMAGE_SIZES, wsrvImage } from "@nw/utils/image";
 import { useQueryClient } from "@tanstack/react-query";
-import { Image } from "expo-image";
+import { Image } from "@/components/image";
 import { useState } from "react";
 import {
   ActivityIndicator,

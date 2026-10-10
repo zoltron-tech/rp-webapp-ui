@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { CodexEntry, StoryMapPin } from "@nw/types";
 import { wsrvImage } from "@nw/utils";
-import { Image } from "expo-image";
+import { Image } from "@/components/image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {

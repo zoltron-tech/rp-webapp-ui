@@ -1,5 +1,6 @@
 "use client";
 
+import { isSupportNovelist } from "@nw/chat";
 import type { NovelistLeaderboardEntry } from "@nw/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { HiUserAdd } from "react-icons/hi";
@@ -9,10 +10,7 @@ import { InviteFriendsDialog } from "@/components/invite-friends-dialog";
 import { LoadMore } from "@/components/load-more/page";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
-import {
-  RankTrophyIcon,
-  ScoreBadgeIcon,
-} from "@/utils/badge-icons";
+import { RankTrophyIcon, ScoreBadgeIcon } from "@/utils/badge-icons";
 import { ROUTES } from "@/utils/constants/routes";
 import {
   getNovelistLeaderboardAction,
@@ -282,12 +280,15 @@ function NovelistRow({
           {isSelf && <S.YouBadge>You</S.YouBadge>}
         </S.ChipRow>
         <S.RowSub>@{novelist.username}</S.RowSub>
-        <S.ChipRow>
-          <S.ScoreChip>
-            <ScoreBadgeIcon size={13} />
-            {totalPoints.toLocaleString()} Score
-          </S.ScoreChip>
-        </S.ChipRow>
+        {/* Support is not playing: no score. */}
+        {!isSupportNovelist(novelist.username) && (
+          <S.ChipRow>
+            <S.ScoreChip>
+              <ScoreBadgeIcon size={13} />
+              {totalPoints.toLocaleString()} Score
+            </S.ScoreChip>
+          </S.ChipRow>
+        )}
       </S.RowBody>
     </S.Row>
   );

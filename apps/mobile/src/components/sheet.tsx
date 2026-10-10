@@ -10,6 +10,7 @@ import {
   BackHandler,
   Dimensions,
   Easing,
+  Keyboard,
   Modal,
   PanResponder,
   Platform,
@@ -55,6 +56,14 @@ import { IconButton } from "@/components/icon-button";
  * reason the composer uses it — `edgeToEdgeEnabled` means the window is never
  * resized, so nothing measures the keyboard on its own.
  *
+ * Riding the keyboard pushes the sheet's head up the screen, and two things
+ * follow from that. The head stops below the status bar — on an iPhone the
+ * strip under the notch does not take a drag reliably, and a grip parked
+ * there made a sheet with its keyboard up all but impossible to swipe away.
+ * And touching the grip puts the keyboard down: iOS has no key that does, so
+ * without this the only way to get the keyboard out of the way was to finish
+ * the form.
+ *
  * ## Dismissal
  *
  * Four ways out, because people reach for different ones: the grip, the
@@ -80,6 +89,12 @@ const CLOSE_VELOCITY = 0.75;
 /** Below this the movement is a tap or a list scroll, not a drag. */
 const DRAG_SLOP = 6;
 
+/** How long iOS is given to report a dismissal before it is assumed. */
+const DISMISS_FALLBACK_MS = 450;
+
+/** Backdrop left showing between the status bar and a full-height sheet. */
+const TOP_GAP = 12;
+
 export interface SheetProps {
   children: ReactNode;
   /**
@@ -98,6 +113,16 @@ export interface SheetProps {
   /** For a sheet with no text field: stay at the foot of the screen. */
   ignoreKeyboard?: boolean;
   onClose: () => void;
+  /**
+   * Called once the sheet's modal has left the screen — after the slide, and
+   * on iOS after the system has finished dismissing it.
+   *
+   * For anything that opens *another* modal from a choice made in this one.
+   * iOS presents one modal at a time: asked to present a second while the
+   * first is still up, it presents nothing, and the second is left mounted
+   * and invisible over the screen, swallowing every touch under it.
+   */
+  onDismissed?: () => void;
   /**
    * How much of the screen the sheet may occupy, 0–1.
    *
@@ -119,6 +144,7 @@ export const BottomSheet = ({
   ignoreKeyboard = false,
   onClose,
   maxHeightRatio = 0.72,
+  onDismissed,
   subtitle,
   title,
   visible,
@@ -131,10 +157,11 @@ export const BottomSheet = ({
   // sheet floating over an empty band where the keyboard had been.
   const keyboardOffset = ignoreKeyboard ? 0 : liveKeyboardOffset;
 
-  // What is left for the sheet once the keyboard has taken its share. The 24
+  // What is left for the sheet once the keyboard has taken its share. The gap
   // keeps a sliver of backdrop visible above it, so it still reads as a sheet
-  // over something rather than a screen.
-  const available = SCREEN_HEIGHT - keyboardOffset - 24;
+  // over something rather than a screen — measured from under the status bar,
+  // so the grip never sits beneath the notch where a drag does not land.
+  const available = SCREEN_HEIGHT - keyboardOffset - insets.top - TOP_GAP;
   const target = Math.min(SCREEN_HEIGHT * maxHeightRatio, available);
 
   // One value drives both the slide and the backdrop's opacity: 0 is open, and
@@ -190,6 +217,47 @@ export const BottomSheet = ({
     animateTo(SCREEN_HEIGHT, onClose);
   }, [animateTo, onClose]);
 
+  /*
+   * `onDismissed`, once per closing.
+   *
+   * Android's modal is gone the moment it stops rendering. iOS says so through
+   * the modal's own `onDismiss`; the timer is for the day it does not, so a
+   * caller waiting on this is late rather than stuck.
+   */
+  const shown = visible || mounted;
+  const wasShown = useRef(shown);
+  const awaitingDismiss = useRef(false);
+  const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onDismissedRef = useRef(onDismissed);
+  onDismissedRef.current = onDismissed;
+
+  const fireDismissed = useCallback(() => {
+    if (dismissTimer.current) clearTimeout(dismissTimer.current);
+    dismissTimer.current = null;
+    if (!awaitingDismiss.current) return;
+    awaitingDismiss.current = false;
+    onDismissedRef.current?.();
+  }, []);
+
+  useEffect(() => {
+    if (wasShown.current && !shown) {
+      awaitingDismiss.current = true;
+      if (Platform.OS === "ios") {
+        dismissTimer.current = setTimeout(fireDismissed, DISMISS_FALLBACK_MS);
+      } else {
+        fireDismissed();
+      }
+    }
+    wasShown.current = shown;
+  }, [fireDismissed, shown]);
+
+  useEffect(
+    () => () => {
+      if (dismissTimer.current) clearTimeout(dismissTimer.current);
+    },
+    [],
+  );
+
   // Android's hardware/gesture back closes the sheet rather than the screen
   // under it. `Modal`'s own `onRequestClose` covers this, but it fires without
   // the exit animation, so the sheet vanishes rather than sliding away.
@@ -218,6 +286,9 @@ export const BottomSheet = ({
     PanResponder.create({
       onMoveShouldSetPanResponder: (_event, gesture) =>
         gesture.dy > DRAG_SLOP && Math.abs(gesture.dy) > Math.abs(gesture.dx),
+      // A touch on the grip puts the keyboard away, whether it goes on to be
+      // a drag or stays a tap. Harmless when there is no keyboard.
+      onPanResponderGrant: () => Keyboard.dismiss(),
       onPanResponderMove: (_event, gesture) => {
         translateY.setValue(Math.max(0, gesture.dy));
       },
@@ -247,10 +318,11 @@ export const BottomSheet = ({
   return (
     <Modal
       animationType="none"
+      onDismiss={fireDismissed}
       onRequestClose={dismiss}
       statusBarTranslucent
       transparent
-      visible={visible || mounted}
+      visible={shown}
     >
       <View style={styles.root}>
         {/*

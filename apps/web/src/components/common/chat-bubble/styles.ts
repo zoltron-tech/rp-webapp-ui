@@ -698,16 +698,25 @@ export const ReactionsBar = styled.div`
   z-index: 2;
 `;
 
-export const ReactionChip = styled.button`
+export const ReactionChip = styled.button<{ $mine?: boolean }>`
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 3px 8px;
   border-radius: 999px;
-  border: 1px solid var(--material-edge);
-  background: var(--material-fill-strong);
+  border: 1px solid
+    ${({ $mine }) => ($mine ? "var(--accent)" : "var(--material-edge)")};
+  background: ${({ $mine }) =>
+    $mine
+      ? "color-mix(in srgb, var(--accent) 16%, var(--material-fill-strong))"
+      : "var(--material-fill-strong)"};
   color: var(--text);
   font-size: var(--font-size);
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
 
   &:hover {
     cursor: pointer;
@@ -742,8 +751,34 @@ export const ReactionUserItem = styled.div`
 `;
 
 export const ReactionUserName = styled.span`
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 13px;
   color: var(--text);
+`;
+
+export const ReactionRemoveButton = styled.button`
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--material-edge);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text);
+    background: var(--fill-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
 `;
 
 export const ReactionDialogContent = styled.div`
@@ -856,7 +891,7 @@ const reactionPop = keyframes`
   100% { transform: scale(1); }
 `;
 
-export const ReactionPickerButton = styled.button`
+export const ReactionPickerButton = styled.button<{ $active?: boolean }>`
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -865,7 +900,12 @@ export const ReactionPickerButton = styled.button`
   flex-shrink: 0;
   border: none;
   border-radius: 999px;
-  background: transparent;
+  background: ${({ $active }) =>
+    $active
+      ? "color-mix(in srgb, var(--accent) 22%, transparent)"
+      : "transparent"};
+  box-shadow: ${({ $active }) =>
+    $active ? "inset 0 0 0 1.5px var(--accent)" : "none"};
   font-size: 32px;
   line-height: 1;
   cursor: pointer;

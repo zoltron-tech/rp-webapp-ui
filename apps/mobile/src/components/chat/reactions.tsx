@@ -94,11 +94,9 @@ export const groupReactions = (
 
 const Chip = ({
   group,
-  onLongPress,
   onPress,
 }: {
   group: ReactionGroup;
-  onLongPress: () => void;
   onPress: () => void;
 }) => {
   const theme = useAppTheme();
@@ -122,10 +120,12 @@ const Chip = ({
   return (
     <Animated.View style={{ transform: [{ scale }] }}>
       <Pressable
-        accessibilityHint="Reacts with this, or opens who reacted"
+        accessibilityHint="Opens who reacted"
         accessibilityLabel={`${group.label}, ${group.count}`}
         accessibilityRole="button"
-        onLongPress={onLongPress}
+        accessibilityState={{ selected: group.mine }}
+        // A long press does the same, so holding a chip is not a dead gesture.
+        onLongPress={onPress}
         onPress={onPress}
         style={({ pressed }) => [
           styles.chip,
@@ -160,15 +160,13 @@ export const ReactionRow = ({
   groups,
   message,
   mine,
-  onReact,
   onShowReactors,
 }: {
   groups: ReactionGroup[];
   message: Message;
   /** Whose message this is — decides which corner the chips hang off. */
   mine: boolean;
-  onReact?: (message: Message, reaction: string) => void;
-  onShowReactors: (groups: ReactionGroup[]) => void;
+  onShowReactors: (groups: ReactionGroup[], message: Message) => void;
 }) => {
   if (groups.length === 0) return null;
 
@@ -178,11 +176,10 @@ export const ReactionRow = ({
         <Chip
           group={group}
           key={group.key}
-          onLongPress={() => onShowReactors(groups)}
-          // Tapping a chip reacts with it. The server keeps one reaction per
-          // person, so this replaces yours rather than adding a second — which
-          // makes the chips a one-tap way to agree with somebody.
-          onPress={() => onReact?.(message, group.key)}
+          // Tapping a chip opens who reacted. Taking your own reaction back
+          // happens in that sheet, on your row — a chip that removed on tap
+          // left no way to read the list of a reaction you had joined.
+          onPress={() => onShowReactors(groups, message)}
         />
       ))}
     </View>

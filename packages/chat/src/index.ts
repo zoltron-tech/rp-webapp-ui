@@ -98,6 +98,7 @@ export {
   messagePreviewText,
 } from "./preview";
 export {
+  isSameReaction,
   REACTION_OPTIONS,
   type ReactionOption,
   reactionGlyph,

@@ -317,7 +317,7 @@ const MessageBubbleComponent = ({
   onReact?: (message: Message, reaction: string) => void;
   onReply?: (message: Message) => void;
   onShowActions?: (message: Message) => void;
-  onShowReactors?: (groups: ReactionGroup[]) => void;
+  onShowReactors?: (groups: ReactionGroup[], message: Message) => void;
   /** Scrolls the thread to the message this one answers. */
   onJumpToQuoted?: (messageId: string) => void;
   position?: RunPosition;
@@ -841,7 +841,6 @@ const MessageBubbleComponent = ({
           groups={reactions}
           message={message}
           mine={mine}
-          onReact={onReact}
           onShowReactors={onShowReactors ?? (() => {})}
         />
       </Animated.View>

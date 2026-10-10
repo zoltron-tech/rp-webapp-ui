@@ -57,6 +57,14 @@ export interface OutgoingMessagePayload {
 
 export interface ReactionPayload extends Reaction {
   conversationId: string;
+  /**
+   * True takes the sender's reaction off the message instead of setting it.
+   *
+   * The same frame in both directions, like the reaction itself: a client asks
+   * with it and the server's broadcast carries it back. `reaction` still names
+   * what was removed, though one reaction per person makes the sender enough.
+   */
+  remove?: boolean;
 }
 
 export interface HeartbeatPayload {

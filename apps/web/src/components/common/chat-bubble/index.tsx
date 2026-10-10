@@ -7,6 +7,7 @@ import {
   isDirectImageUrl,
   isKlipyClip,
   isMediaOnlyMessage,
+  isSameReaction,
   REACTION_OPTIONS as REACTION_KEYS,
   URL_REGEX,
 } from "@nw/chat";
@@ -56,7 +57,8 @@ type Props = {
   onReply?: (message: Message) => void;
   onForward?: (message: Message) => void;
   onReport?: (message: Message) => void;
-  onReact?: (message: Message, reaction: string) => void;
+  /** `remove` takes the viewer's own reaction back instead of setting it. */
+  onReact?: (message: Message, reaction: string, remove?: boolean) => void;
   onEdit?: (message: Message) => void;
 };
 
@@ -986,6 +988,17 @@ export const ChatBubble: FC<Props> = ({
     onReact?.(message, reactionKey);
   };
 
+  // What the viewer already reacted with, if anything. One per person, so
+  // there is at most one.
+  const myReaction = currentUsername
+    ? message.reactions?.find((r) => r.sender?.username === currentUsername)
+        ?.reaction
+    : undefined;
+
+  const removeMyReaction = () => {
+    if (myReaction) onReact?.(message, myReaction, true);
+  };
+
   useEffect(
     () => () => {
       clearLongPress();
@@ -1183,7 +1196,13 @@ export const ChatBubble: FC<Props> = ({
     };
   }, []);
 
+  // Picking the reaction that is already yours takes it back. Only the picker
+  // toggles: a double-tap heart on a message you already hearted stays a heart.
   const handleReact = (reactionKey: string) => {
+    if (isSameReaction(reactionKey, myReaction)) {
+      removeMyReaction();
+      return;
+    }
     fireReaction(reactionKey);
   };
 
@@ -1217,7 +1236,13 @@ export const ChatBubble: FC<Props> = ({
             key={option.key}
             type="button"
             aria-label={option.label}
-            title={option.label}
+            aria-pressed={isSameReaction(option.key, myReaction)}
+            title={
+              isSameReaction(option.key, myReaction)
+                ? `Remove ${option.label}`
+                : option.label
+            }
+            $active={isSameReaction(option.key, myReaction)}
             onClick={() => handleReact(option.key)}
           >
             {option.emoji}
@@ -1574,16 +1599,22 @@ export const ChatBubble: FC<Props> = ({
 
         {groupedReactions.length > 0 ? (
           <S.ReactionsBar>
-            {groupedReactions.map((reactionGroup) => (
-              <S.ReactionChip
-                key={reactionGroup.reaction}
-                onClick={() => setActiveReaction(reactionGroup.reaction)}
-                type="button"
-              >
-                {getReactionDisplay(reactionGroup.reaction)}
-                <span>{reactionGroup.users.length}</span>
-              </S.ReactionChip>
-            ))}
+            {groupedReactions.map((reactionGroup) => {
+              const mine = !!onReact && reactionGroup.reaction === myReaction;
+              // A chip always opens who reacted; your row in that list is
+              // where your own reaction is taken back.
+              return (
+                <S.ReactionChip
+                  key={reactionGroup.reaction}
+                  $mine={mine}
+                  onClick={() => setActiveReaction(reactionGroup.reaction)}
+                  type="button"
+                >
+                  {getReactionDisplay(reactionGroup.reaction)}
+                  <span>{reactionGroup.users.length}</span>
+                </S.ReactionChip>
+              );
+            })}
           </S.ReactionsBar>
         ) : null}
 
@@ -1660,6 +1691,19 @@ export const ChatBubble: FC<Props> = ({
                   <S.ReactionUserName>
                     {reactionUser.sender.name || reactionUser.sender.username}
                   </S.ReactionUserName>
+                  {onReact &&
+                  !!currentUsername &&
+                  reactionUser.sender.username === currentUsername ? (
+                    <S.ReactionRemoveButton
+                      type="button"
+                      onClick={() => {
+                        removeMyReaction();
+                        setActiveReaction(null);
+                      }}
+                    >
+                      Remove
+                    </S.ReactionRemoveButton>
+                  ) : null}
                 </S.ReactionUserItem>
               ))}
             </S.ReactionUsersList>

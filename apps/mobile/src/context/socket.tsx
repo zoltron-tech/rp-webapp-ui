@@ -440,7 +440,7 @@ export const ChatSocketProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const applyReaction = useCallback(
-    ({ conversationId, ...reaction }: ReactionPayload) => {
+    ({ conversationId, remove, ...reaction }: ReactionPayload) => {
       queryClient.setQueryData<{ pages: Message[][]; pageParams: unknown[] }>(
         queryKeys.conversationMessages(conversationId),
         (previous) => {
@@ -467,7 +467,11 @@ export const ChatSocketProvider = ({ children }: { children: ReactNode }) => {
                   (existing) =>
                     existing.sender?.username !== reaction.sender?.username,
                 );
-                return { ...message, reactions: [...others, reaction] };
+                // A removal is the same filter with nothing put back.
+                return {
+                  ...message,
+                  reactions: remove ? others : [...others, reaction],
+                };
               }),
             ),
           };

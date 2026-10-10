@@ -1,5 +1,5 @@
 
-import { messagePreview, REACTION_OPTIONS } from "@nw/chat";
+import { isSameReaction, messagePreview, REACTION_OPTIONS } from "@nw/chat";
 import { parseRichText, richTextToPlainText } from "@nw/richtext";
 import type { Message } from "@nw/types";
 import * as Clipboard from "expo-clipboard";
@@ -19,8 +19,8 @@ import { fontSize, radius, space, useAppTheme } from "@/theme";
  * The reaction row is first and horizontal, because reacting is the action
  * taken most and the one that should cost the least travel. Your current
  * reaction is filled in, so the row is also the answer to "what did I already
- * say" — tapping it again is how you change your mind, since the server keeps
- * one reaction per person per message.
+ * say". Tapping another one changes your mind, since the server keeps one
+ * reaction per person per message; tapping the filled one takes it back.
  *
  * The message sits at the top. Sheets that appear over a long list are easy to
  * open on the wrong row, and a sheet that does not say what it is about makes
@@ -209,9 +209,12 @@ export const MessageActions = ({
           showsHorizontalScrollIndicator={false}
         >
           {REACTIONS.map((option) => {
-            const active = option.key === myReaction;
+            const active = isSameReaction(option.key, myReaction);
             return (
               <Pressable
+                accessibilityHint={
+                  active ? "Removes your reaction" : undefined
+                }
                 accessibilityLabel={option.label}
                 accessibilityRole="button"
                 accessibilityState={{ selected: active }}

@@ -1,5 +1,5 @@
 import { pluralize } from "@nw/utils";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "@/components/text";
 import type { ReactionGroup } from "@/components/chat/reactions";
 import { BottomSheet } from "@/components/sheet";
@@ -10,7 +10,10 @@ import { border, fontSize, radius, space, useAppTheme } from "@/theme";
  *
  * A count on a chip says how many; in a group thread the useful question is
  * *which* of them, and there is nowhere on a phone to hover for the answer. A
- * long press on a chip opens this.
+ * tap on a chip opens this.
+ *
+ * It is also where a reaction is taken back: the group holding yours says so
+ * and removes it on a tap, which is why the chip itself only opens the list.
  *
  * Grouped by emoji rather than listed as one flat roll of names, because the
  * chips are grouped that way and the sheet should be the chip expanded rather
@@ -19,10 +22,13 @@ import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 export const ReactorsSheet = ({
   groups,
   onClose,
+  onRemove,
 }: {
   /** Null closes the sheet. */
   groups: ReactionGroup[] | null;
   onClose: () => void;
+  /** Takes your reaction back. Omitted, your group is a label and no more. */
+  onRemove?: (group: ReactionGroup) => void;
 }) => {
   const theme = useAppTheme();
   const total = groups?.reduce((sum, group) => sum + group.count, 0) ?? 0;
@@ -37,15 +43,23 @@ export const ReactorsSheet = ({
     >
       <ScrollView contentContainerStyle={styles.body}>
         {groups?.map((group) => (
-          <View
+          <Pressable
+            accessibilityHint={
+              group.mine && onRemove ? "Removes your reaction" : undefined
+            }
+            accessibilityRole={group.mine && onRemove ? "button" : undefined}
+            // Only your own group does anything; the rest are a list.
+            disabled={!group.mine || !onRemove}
             key={group.key}
-            style={[
+            onPress={() => onRemove?.(group)}
+            style={({ pressed }) => [
               styles.group,
               {
                 backgroundColor: theme.material.fillTranslucent,
                 borderColor: group.mine
                   ? theme.accent.solid
                   : theme.material.edgeTranslucent,
+                opacity: pressed ? 0.7 : 1,
               },
             ]}
           >
@@ -70,10 +84,10 @@ export const ReactorsSheet = ({
             </View>
             {group.mine ? (
               <Text style={[styles.you, { color: theme.accent.text }]}>
-                You
+                {onRemove ? "Tap to remove" : "You"}
               </Text>
             ) : null}
-          </View>
+          </Pressable>
         ))}
       </ScrollView>
     </BottomSheet>

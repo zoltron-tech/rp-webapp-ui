@@ -115,6 +115,23 @@ export const reactionOption = (
 };
 
 /**
+ * Whether two stored values are the same reaction.
+ *
+ * Through the aliases, so tapping "Haha" on a message that holds your `haha`
+ * from an older build is recognised as tapping your own reaction again — which
+ * is what removes it — rather than as replacing it with itself.
+ */
+export const isSameReaction = (
+  a: string | undefined | null,
+  b: string | undefined | null,
+): boolean => {
+  if (!a || !b) return false;
+  const left = reactionOption(a)?.key ?? a.trim().toLowerCase();
+  const right = reactionOption(b)?.key ?? b.trim().toLowerCase();
+  return left === right;
+};
+
+/**
  * What to draw for a stored reaction value.
  *
  * The emoji for a key we know, and otherwise the value itself — which covers

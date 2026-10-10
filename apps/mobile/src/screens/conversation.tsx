@@ -1,5 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import { conversationUsernames, resolveConversationTarget } from "@nw/chat";
+import {
+  conversationUsernames,
+  isSameReaction,
+  resolveConversationTarget,
+} from "@nw/chat";
 import {
   useConversation,
   useConversationMembers,
@@ -191,7 +195,16 @@ export const ConversationScreen = ({
 
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [actionsFor, setActionsFor] = useState<Message | null>(null);
-  const [reactorsFor, setReactorsFor] = useState<ReactionGroup[] | null>(null);
+  const [reactorsFor, setReactorsFor] = useState<{
+    groups: ReactionGroup[];
+    message: Message;
+  } | null>(null);
+  // One identity for the life of the page; see `reactToRow` for why.
+  const showReactors = useCallback(
+    (groups: ReactionGroup[], message: Message) =>
+      setReactorsFor({ groups, message }),
+    [],
+  );
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const listRef = useRef<FlatList<Row>>(null);
@@ -453,14 +466,20 @@ export const ConversationScreen = ({
    * chip appears through the ordinary path. A local copy would have to be
    * reconciled against that echo, which is the bug the optimistic *message*
    * path already exists to work around — no reason to buy it twice.
+   *
+   * `remove` takes this person's reaction back instead. It is asked for
+   * explicitly — by the sheet's filled reaction and by their row in the
+   * reactors sheet — never inferred here, so a double-tap heart on a message
+   * already hearted stays a heart.
    */
   const react = useCallback(
-    (message: Message, reaction: string) => {
+    (message: Message, reaction: string, remove = false) => {
       if (!conversationId) return;
       sendReaction({
         conversationId,
         messageId: message.id,
         reaction,
+        remove: remove || undefined,
         sender: {
           id: sender?.id ?? novelist?.id ?? "",
           image: sender?.image ?? novelist?.image ?? "",
@@ -631,7 +650,7 @@ export const ConversationScreen = ({
               : undefined
           }
           onShowActions={setActionsFor}
-          onShowReactors={setReactorsFor}
+          onShowReactors={showReactors}
           pending={item.pending}
           position={item.position}
           queued={item.queued}
@@ -913,7 +932,10 @@ export const ConversationScreen = ({
                   }
                 : undefined
             }
-            onReact={react}
+            // Picking the reaction that is already yours takes it back.
+            onReact={(message, reaction) =>
+              react(message, reaction, isSameReaction(myReaction, reaction))
+            }
             onReply={startReply}
             onRetry={
               actionsFor &&
@@ -929,8 +951,18 @@ export const ConversationScreen = ({
           />
 
           <ReactorsSheet
-            groups={reactorsFor}
+            groups={reactorsFor?.groups ?? null}
             onClose={() => setReactorsFor(null)}
+            // Hidden while the socket is down, like every other reaction
+            // control: there is no REST route to take one back through.
+            onRemove={
+              isConnected && reactorsFor
+                ? (group) => {
+                    react(reactorsFor.message, group.key, true);
+                    setReactorsFor(null);
+                  }
+                : undefined
+            }
           />
 
           {/* A message's album, full screen: swipe through it, double-tap or

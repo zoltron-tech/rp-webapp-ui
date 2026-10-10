@@ -735,20 +735,21 @@ export function ConversationPanel({
   // Merge a single reaction into the message list. A novelist may only have one
   // reaction per message, so any existing reaction from the same sender is
   // replaced (mirrors the backend composite key messageId + novelistId).
-  const applyReaction = useCallback((reaction: Reaction) => {
+  // With `remove`, the sender's reaction is taken off and nothing is put back.
+  const applyReaction = useCallback((reaction: Reaction, remove = false) => {
     setMessages((prev) =>
       prev.map((m) => {
         if (m.id !== reaction.messageId) return m;
         const others = (m.reactions || []).filter(
           (r) => r.sender?.id !== reaction.sender?.id,
         );
-        return { ...m, reactions: [...others, reaction] };
+        return { ...m, reactions: remove ? others : [...others, reaction] };
       }),
     );
   }, []);
 
   const handleReact = useCallback(
-    (message: Message, reactionKey: string) => {
+    (message: Message, reactionKey: string, remove = false) => {
       // Optimistic messages have no server id yet — reactions need a real one.
       if (message.id.startsWith("optimistic-")) return;
 
@@ -771,14 +772,18 @@ export function ConversationPanel({
       };
 
       // 1. Optimistically reflect the reaction locally.
-      applyReaction(reaction);
+      applyReaction(reaction, remove);
 
       // 2. Send it over the chat-server socket, which persists the reaction
       //    and broadcasts it to every other participant in real time.
       try {
         socket.send(
           JSON.stringify(
-            createReactionSocketMessage({ ...reaction, conversationId }),
+            createReactionSocketMessage({
+              ...reaction,
+              conversationId,
+              ...(remove ? { remove: true } : {}),
+            }),
           ),
         );
       } catch {
@@ -880,7 +885,7 @@ export function ConversationPanel({
     if (lastIncomingReaction.conversationId !== conversationId) return;
     // Our own reaction was already applied optimistically.
     if (lastIncomingReaction.sender?.username === user?.username) return;
-    applyReaction(lastIncomingReaction);
+    applyReaction(lastIncomingReaction, lastIncomingReaction.remove === true);
   }, [lastIncomingReaction, conversationId, applyReaction, user?.username]);
 
   // ── Socket: incoming real-time message edits ───────────────────────────────

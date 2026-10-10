@@ -1,8 +1,7 @@
 import { useSession } from "@nw/features";
 import { Redirect } from "expo-router";
-import { ActivityIndicator, View } from "react-native";
+import { StartupFallback } from "@/components/startup-fallback";
 import { readAccessToken } from "@/lib/session-store";
-import { useAppTheme } from "@/theme";
 
 /**
  * Where the app opens.
@@ -27,27 +26,14 @@ import { useAppTheme } from "@/theme";
  * server rejects to the public screen the moment it says so.
  */
 export default function Index() {
-  const theme = useAppTheme();
   const { status } = useSession();
 
   if (status === "loading" && readAccessToken()) {
     return <Redirect href="/(tabs)/(home)" />;
   }
 
-  if (status === "loading") {
-    return (
-      <View
-        style={{
-          alignItems: "center",
-          backgroundColor: theme.background,
-          flex: 1,
-          justifyContent: "center",
-        }}
-      >
-        <ActivityIndicator color={theme.primary} />
-      </View>
-    );
-  }
+  // A spinner, and after a few seconds a way out if the answer never comes.
+  if (status === "loading") return <StartupFallback />;
 
   if (status === "signed-in") return <Redirect href="/(tabs)/(home)" />;
 
@@ -55,5 +41,5 @@ export default function Index() {
   // only thing an account in that state can usefully do.
   if (status === "onboarding") return <Redirect href="/onboarding" />;
 
-  return <Redirect href="/novelists" />;
+  return <Redirect href="/welcome" />;
 }

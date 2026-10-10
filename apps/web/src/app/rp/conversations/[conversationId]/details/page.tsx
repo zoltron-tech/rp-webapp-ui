@@ -27,6 +27,7 @@ import {
 } from "../actions";
 import { AddMembersDialog } from "./add-members-dialog";
 import { EditGroupDialog } from "./edit-group-dialog";
+import { MuteControl } from "./mute-control";
 import * as S from "./styles";
 
 export default function ConversationDetailsPage() {
@@ -249,6 +250,17 @@ export default function ConversationDetailsPage() {
             {conversation?.isGroup ? "Group conversation" : "Direct message"}
           </S.ConvTypeBadge>
         </S.HeaderInfo>
+
+        {conversation && (
+          <MuteControl
+            conversation={conversation}
+            onChange={(mutedUntil) =>
+              setConversation((current) =>
+                current ? { ...current, mutedUntil } : current,
+              )
+            }
+          />
+        )}
 
         {isGroupAdmin && (
           <S.EditButton

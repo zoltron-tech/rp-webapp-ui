@@ -62,7 +62,7 @@ export default function LoginScreen() {
   const [touched, setTouched] = useState({ identifier: false, password: false });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const back = useAuthBack("/novelists");
+  const back = useAuthBack("/welcome");
 
   const value = identifier.trim();
   const looksLikeEmail = value.includes("@");

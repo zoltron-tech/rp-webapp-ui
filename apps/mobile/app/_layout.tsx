@@ -2,6 +2,7 @@ import {
   ApiProvider,
   ChatCryptoProvider,
   createQueryClient,
+  queryKeys,
   useSession,
 } from "@nw/features";
 import {
@@ -12,10 +13,10 @@ import {
 import type { StoreState } from "@nw/types/state";
 import { setLogger } from "@nw/utils";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { Stack } from "expo-router";
+import { type ErrorBoundaryProps, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { Pressable, Text as RNText, StyleSheet, View } from "react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import {
   SafeAreaProvider,
@@ -89,6 +90,66 @@ queryClient.setQueryDefaults(["notifications"], { staleTime: 5 * 60 * 1000 });
 queryClient.setQueryDefaults(["thread"], { staleTime: 5 * 60 * 1000 });
 queryClient.setQueryDefaults(["outgoing-threads"], { staleTime: 5 * 60 * 1000 });
 
+/** How long the first frame waits for the keychain and the fonts. */
+const STARTUP_TIMEOUT_MS = 6000;
+
+/**
+ * What a crash while drawing a screen shows, instead of nothing.
+ *
+ * `expo-router` wraps the routes under this layout in it. Plain colours and
+ * the system face on purpose: it is drawn outside the theme and font
+ * providers, by which point either of them may be what failed.
+ */
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  return (
+    <View style={crashStyles.fill}>
+      <RNText style={crashStyles.title}>Something went wrong</RNText>
+      <RNText style={crashStyles.body}>
+        The app hit a problem drawing this screen. Try again; if it keeps
+        happening, close the app and open it again.
+      </RNText>
+      {__DEV__ ? (
+        <RNText style={crashStyles.detail}>{error.message}</RNText>
+      ) : null}
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => void retry()}
+        style={crashStyles.button}
+      >
+        <RNText style={crashStyles.buttonLabel}>Try again</RNText>
+      </Pressable>
+    </View>
+  );
+}
+
+const crashStyles = StyleSheet.create({
+  body: {
+    color: "#b4b4b4",
+    fontSize: 14,
+    lineHeight: 21,
+    maxWidth: 300,
+    textAlign: "center",
+  },
+  button: {
+    backgroundColor: "#2f7d5b",
+    borderRadius: 999,
+    marginTop: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+  },
+  buttonLabel: { color: "#ffffff", fontSize: 14, fontWeight: "600" },
+  detail: { color: "#8a8a8a", fontSize: 12, maxWidth: 320, textAlign: "center" },
+  fill: {
+    alignItems: "center",
+    backgroundColor: "#111111",
+    flex: 1,
+    gap: 12,
+    justifyContent: "center",
+    padding: 24,
+  },
+  title: { color: "#eeeeee", fontSize: 18, fontWeight: "700" },
+});
+
 // A session the server refused (not a sign-out: the refresh token died) gets
 // the same cleanup a sign-out does. Memory first — the persister writes the
 // in-memory cache back to disk, so purging disk alone would be undone.
@@ -104,8 +165,19 @@ setFreshInstallHandler(wipeEverything);
 // query runs, so the first one on a phone in a tunnel waits instead of failing.
 startConnectivity();
 
+//
+// The session query itself is settled, not removed. This runs *inside* that
+// query's own request (the 401 is what triggers the refresh that fails), and
+// `queryClient.clear()` here destroyed the query mid-flight: its result was
+// dropped, every screen reading it stayed on "loading" for good, and the tab
+// shell — which draws nothing while loading — was a blank screen until the
+// app was reinstalled. Everything else is another account's data and goes.
 setSessionLostHandler(async () => {
-  queryClient.clear();
+  queryClient.setQueryData(queryKeys.session(), null);
+  queryClient.removeQueries({
+    predicate: (query) =>
+      !(query.queryKey.length === 1 && query.queryKey[0] === "session"),
+  });
   chatCrypto.reset();
   await purgePersistedQueries();
   // Not from under a background run: the file is the foreground's to judge,
@@ -215,7 +287,13 @@ const RootStack = () => {
         }}
       >
         <Stack.Screen name="index" />
-        <Stack.Screen name="novelists" />
+        {/*
+          The public page for someone signed out. Not "novelists": the
+          leaderboard inside the tabs is `/novelists` too (route groups add
+          nothing to a path), and a signed-out redirect to that path landed
+          in the tabs, which redirected again — a loop that drew nothing.
+        */}
+        <Stack.Screen name="welcome" />
         <Stack.Screen name="login" />
         {/* The reset-link request, native: see `app/forgot-password`. */}
         <Stack.Screen name="forgot-password" />
@@ -302,24 +380,35 @@ export default function RootLayout() {
   useEffect(() => {
     // The interface faces load alongside it: both are short, and a first
     // frame drawn before either would have to be drawn again.
-    void Promise.all([
-      /*
-       * The last account's store, before the server has confirmed the
-       * session — but only behind its token. The marker names the account
-       * whose store is on disk; the keychain says whether anyone is still
-       * signed in as them. A marker without a token is a session that ended
-       * while the app was away (a background run saw the refusal, a crash,
-       * a keychain the OS reset), and the store is wiped rather than shown to
-       * whoever opens the app next. A token the server then rejects goes
-       * through the session-lost handler, which wipes it too.
-       */
-      loadSession().then(async () => {
-        const id = await readActiveUser();
-        if (!id) return;
-        if (readAccessToken()) await bindStore(id, queryClient);
-        else await wipeCurrentStore();
-      }),
-      loadUiFonts(),
+    //
+    // Raced against a timer: both normally take milliseconds, and a keychain
+    // or font read that never answers must not leave an empty screen for
+    // ever. Late is better than never — the app starts signed out and in the
+    // system face, which is recoverable.
+    const giveUp = new Promise<void>((resolve) =>
+      setTimeout(resolve, STARTUP_TIMEOUT_MS),
+    );
+    void Promise.race([
+      Promise.all([
+        /*
+         * The last account's store, before the server has confirmed the
+         * session — but only behind its token. The marker names the account
+         * whose store is on disk; the keychain says whether anyone is still
+         * signed in as them. A marker without a token is a session that ended
+         * while the app was away (a background run saw the refusal, a crash,
+         * a keychain the OS reset), and the store is wiped rather than shown to
+         * whoever opens the app next. A token the server then rejects goes
+         * through the session-lost handler, which wipes it too.
+         */
+        loadSession().then(async () => {
+          const id = await readActiveUser();
+          if (!id) return;
+          if (readAccessToken()) await bindStore(id, queryClient);
+          else await wipeCurrentStore();
+        }),
+        loadUiFonts(),
+      ]),
+      giveUp,
     ]).finally(() => setSessionLoaded(true));
   }, []);
 

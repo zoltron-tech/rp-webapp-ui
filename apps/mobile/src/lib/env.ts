@@ -57,11 +57,23 @@ export const env = {
   DISCORD_INVITE_URL: read("DISCORD_INVITE_URL"),
   /** OAuth lands back on the app through this scheme; must match app.json. */
   OAUTH_REDIRECT_SCHEME: read("OAUTH_REDIRECT_SCHEME", "novelistworld"),
-  /** The S3 bucket uploads live in; links to it open without a confirmation. */
-  RP_BUCKET_NAME: read("RP_BUCKET_NAME"),
+  /**
+   * The S3 bucket uploads live in; links to it open without a confirmation.
+   * Falls back to production's, like the two URLs below: it is public (it is
+   * in every image URL), and a build without it downloads full-size originals
+   * into list rows without saying so.
+   */
+  RP_BUCKET_NAME: read("RP_BUCKET_NAME", "rp-webapp-ui"),
   RP_CHAT_URL: read("RP_CHAT_URL"),
   RP_SERVICE_URL: read("RP_SERVICE_URL", "https://api.novelist.world"),
-  SOCKET_URL: read("SOCKET_URL"),
+  /**
+   * chat-server. Falls back to production's so a build made without `.env`
+   * (every cloud build, unless the EAS environment is set) still has chat.
+   */
+  SOCKET_URL: read(
+    "SOCKET_URL",
+    "https://nw-chat-server-e055568bd7de.herokuapp.com",
+  ),
   SUPPORT_EMAIL: read("SUPPORT_EMAIL"),
   /**
    * Where the web app lives, for links a phone hands to other people.

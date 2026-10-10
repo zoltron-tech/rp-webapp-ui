@@ -13,7 +13,8 @@
       },
       "ios": {
         "image": "latest"
-      }
+      },
+      "environment": "development"
     },
     "development-simulator": {
       "extends": "development",
@@ -29,14 +30,16 @@
       },
       "ios": {
         "image": "latest"
-      }
+      },
+      "environment": "preview"
     },
     "production": {
       "environment": "production",
       "autoIncrement": true,
       "ios": {
         "image": "latest"
-      }
+      },
+      "environment": "production"
     }
   },
   "submit": {

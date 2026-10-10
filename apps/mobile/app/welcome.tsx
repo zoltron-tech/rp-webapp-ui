@@ -44,7 +44,7 @@ import { PRIVACY_URL, TERMS_URL } from "@/lib/links";
  */
 
 
-export default function NovelistsScreen() {
+export default function WelcomeScreen() {
   const theme = useAppTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();

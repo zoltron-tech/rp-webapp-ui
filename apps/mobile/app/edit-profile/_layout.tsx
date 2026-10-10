@@ -28,7 +28,7 @@ export default function EditProfileLayout() {
   useEffect(() => () => setPalettePreview(null), []);
 
   if (status === "loading") return null;
-  if (status !== "signed-in") return <Redirect href="/novelists" />;
+  if (status !== "signed-in") return <Redirect href="/welcome" />;
 
   return (
     <AccentProvider palette={preview}>
@@ -55,6 +55,7 @@ const EditProfileStack = () => {
       <Stack.Screen name="about" options={{ title: "About" }} />
       <Stack.Screen name="account" options={{ title: "Account" }} />
       <Stack.Screen name="devices" options={{ title: "Devices" }} />
+      <Stack.Screen name="notifications" options={{ title: "Notifications" }} />
     </Stack>
   );
 };

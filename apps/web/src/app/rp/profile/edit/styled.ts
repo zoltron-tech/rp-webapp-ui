@@ -2946,3 +2946,48 @@ export const ProfileSongButtons = styled.div`
     margin-top: 22px;
   }
 `;
+
+/** A switch, for the notification settings. Keyboard and screen-reader friendly: a button with `role="switch"`. */
+export const Switch = styled.button`
+  position: relative;
+  flex-shrink: 0;
+  width: 42px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--material-edge);
+  border-radius: 999px;
+  background: var(--fill-pressed);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  span {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+    transition: transform 0.15s ease;
+  }
+
+  &[aria-checked="true"] {
+    background: var(--accent-9, var(--accent));
+    border-color: transparent;
+
+    span {
+      transform: translateX(18px);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent-11, var(--accent));
+    outline-offset: 2px;
+  }
+`;

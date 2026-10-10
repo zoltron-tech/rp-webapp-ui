@@ -40,6 +40,7 @@ import { getBlockedNovelistsAction, unblockNovelistAction } from "../actions";
 import { syncMyBadgesAction } from "../badges/actions";
 import { ChangeUsernameDialog } from "./change-username-dialog";
 import { DevicesSection } from "./devices-section";
+import { NotificationsSection } from "./notifications-section";
 import * as S from "./styled";
 
 type Props = {
@@ -527,6 +528,9 @@ export function AccountSection({ onBack }: Props) {
             </S.AccountRowActions>
           </S.ConnectionRow>
         </S.AccountGroup>
+
+        {/* Which notifications may interrupt. */}
+        <NotificationsSection />
 
         {/* Signed-in devices, with the two account-wide sign-outs. */}
         <DevicesSection />

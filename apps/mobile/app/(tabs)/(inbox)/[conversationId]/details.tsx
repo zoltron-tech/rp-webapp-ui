@@ -2,6 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { deleteGroup, leaveGroup } from "@nw/api/endpoints/conversation-detail";
 import { isGroupAdmin, resolveConversationTarget } from "@nw/chat";
 import {
+  conversationMuteKey,
+  describeMute,
+  isMuted,
+  MUTE_DURATIONS,
+  muteUntil,
+  useMuteActions,
+  useNotificationMutes,
   queryKeys,
   useApi,
   useConversation,
@@ -12,7 +19,7 @@ import type { ConversationParticipant } from "@nw/types";
 import { pluralize, toFormattedDate } from "@nw/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -24,6 +31,7 @@ import {
 import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { ListStatus } from "@/components/list-status";
+import { BottomSheet } from "@/components/sheet";
 import { useChatSocket, useIsOnline, useTrackOnline } from "@/context/socket";
 import { useHideTabBar } from "@/hooks/use-hide-tab-bar";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
@@ -83,6 +91,40 @@ export default function ConversationDetailsScreen() {
   );
   const amAdmin = isGroupAdmin(members, novelist?.username);
   const isGroup = Boolean(conversation?.isGroup);
+
+  /*
+   * Mute: the push and the sound stop; messages still arrive and still count
+   * as unread. Muted, one press unmutes; not muted, the sheet asks for how
+   * long. The row's `mutedUntil` is patched in the cache by the hook, so the
+   * inbox and this header agree at once.
+   */
+  const muteActions = useMuteActions();
+  const [muteSheet, setMuteSheet] = useState(false);
+  const muteKey = conversationMuteKey(conversationId ?? "");
+  // The mutes list is the authority; the row's `mutedUntil` is the same fact
+  // as the server last sent it, and covers a list that has not loaded yet.
+  const { mutes } = useNotificationMutes();
+  const muteRow = mutes.find((mute) => mute.key === muteKey);
+  const mutedUntil =
+    muteRow !== undefined
+      ? (muteRow.until ?? "9999-12-31T00:00:00Z")
+      : conversation?.mutedUntil;
+  const muted = isMuted(mutedUntil);
+  const pickMute = (ms: number | null) => {
+    setMuteSheet(false);
+    muteActions
+      .mute(muteKey, muteUntil(ms))
+      .catch(() => Alert.alert("Not saved", "Could not mute this conversation. Try again."));
+  };
+  const onMutePress = () => {
+    if (muted) {
+      muteActions
+        .unmute(muteKey)
+        .catch(() => Alert.alert("Not saved", "Could not unmute this conversation. Try again."));
+    } else {
+      setMuteSheet(true);
+    }
+  };
 
   /**
    * Leaving and deleting both end the conversation for this reader, so both
@@ -266,6 +308,32 @@ export default function ConversationDetailsScreen() {
               </Pressable>
             ) : null}
 
+            <Pressable
+              accessibilityLabel={muted ? "Unmute conversation" : "Mute conversation"}
+              disabled={muteActions.pending || !conversation}
+              onPress={onMutePress}
+              style={({ pressed }) => [
+                styles.secondaryButton,
+                {
+                  backgroundColor: pressed
+                    ? theme.material.fillPressed
+                    : muted
+                      ? theme.accent.tint
+                      : theme.material.fill,
+                  borderColor: muted ? theme.accent.surface : theme.material.edge,
+                },
+              ]}
+            >
+              <Ionicons
+                color={theme.accent.text}
+                name={muted ? "notifications-off-outline" : "notifications-outline"}
+                size={20}
+              />
+              <Text style={[styles.secondaryLabel, { color: theme.accent.text }]}>
+                {muted ? (describeMute(mutedUntil) ?? "Muted") : "Mute"}
+              </Text>
+            </Pressable>
+
             {isGroup ? (
               <>
                 <Pressable
@@ -380,6 +448,38 @@ export default function ConversationDetailsScreen() {
         onEndReachedThreshold={0.5}
         renderItem={renderMember}
       />
+
+      <BottomSheet
+        ignoreKeyboard
+        maxHeightRatio={0.6}
+        onClose={() => setMuteSheet(false)}
+        subtitle="Messages still arrive and still count as unread. Only the push and the sound stop."
+        title="Mute for how long?"
+        visible={muteSheet}
+      >
+        <View style={styles.muteOptions}>
+          {MUTE_DURATIONS.map((duration) => (
+            <Pressable
+              accessibilityRole="button"
+              key={duration.id}
+              onPress={() => pickMute(duration.ms)}
+              style={({ pressed }) => [
+                styles.muteOption,
+                {
+                  backgroundColor: pressed
+                    ? theme.material.fillPressed
+                    : theme.material.fill,
+                  borderColor: theme.material.edge,
+                },
+              ]}
+            >
+              <Text style={[styles.muteOptionLabel, { color: theme.text }]}>
+                {duration.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </BottomSheet>
     </>
   );
 }
@@ -438,6 +538,14 @@ const styles = StyleSheet.create({
     paddingVertical: space.md,
   },
   secondaryLabel: { fontSize: fontSize.body, fontWeight: "600" },
+  muteOption: {
+    borderRadius: radius.md,
+    borderWidth: border.edge,
+    paddingHorizontal: space.md,
+    paddingVertical: space.m,
+  },
+  muteOptionLabel: { fontSize: fontSize.body, fontWeight: "600" },
+  muteOptions: { gap: space.sm, padding: space.md },
   sectionTitle: {
     alignSelf: "flex-start",
     fontSize: fontSize.title,

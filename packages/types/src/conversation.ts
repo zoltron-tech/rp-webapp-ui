@@ -13,6 +13,11 @@ export interface Conversation {
   memberCount?: number | null;
   createdAt: string;
   modifiedAt: string;
+  /**
+   * When the caller's mute on this conversation ends: `9999-12-31` for
+   * "until unmuted", null or absent when it is not muted.
+   */
+  mutedUntil?: string | null;
 }
 
 /**

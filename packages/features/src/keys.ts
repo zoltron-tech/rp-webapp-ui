@@ -76,6 +76,7 @@ export const queryKeys = {
   myBadges: () => ["badges", "me"] as const,
   /** Not under `notifications`: refreshing the badge must not refetch every page of the list. */
   notificationCounts: () => ["notification-counts"] as const,
+  notificationMutes: () => ["notification-mutes"] as const,
   // "feed": the pages changed shape when the list moved to a cursor, and
   // the mobile app restores this cache from disk — under the old key it would
   // hand the new code pages it cannot read.

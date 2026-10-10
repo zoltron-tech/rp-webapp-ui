@@ -1,4 +1,5 @@
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import { dismissConversationPushes, setOpenConversation } from "@/lib/push";
 import { useCallback, useEffect } from "react";
 import { BackHandler, StyleSheet, View } from "react-native";
 import { conversationOverlay } from "@/context/conversation-overlay";
@@ -35,7 +36,14 @@ export default function ConversationRoute() {
     useCallback(() => {
       if (!conversationId) return;
       conversationOverlay.setFocused(conversationId, true);
-      return () => conversationOverlay.setFocused(conversationId, false);
+      // A push for this conversation is not shown over it, and the ones
+      // already in the tray are stale now that it is being read.
+      setOpenConversation(conversationId);
+      void dismissConversationPushes(conversationId);
+      return () => {
+        conversationOverlay.setFocused(conversationId, false);
+        setOpenConversation(null);
+      };
     }, [conversationId]),
   );
 

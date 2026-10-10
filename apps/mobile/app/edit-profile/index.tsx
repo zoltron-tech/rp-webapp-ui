@@ -373,6 +373,12 @@ export default function EditProfileHome() {
             onPress={() => router.push("/edit-profile/devices")}
             subtitle="See where you are signed in."
           />
+          <SettingsRow
+            icon="notifications-outline"
+            label="Notifications"
+            onPress={() => router.push("/edit-profile/notifications")}
+            subtitle="Which notifications may interrupt you."
+          />
         </SettingsGroup>
       </ScrollView>
 

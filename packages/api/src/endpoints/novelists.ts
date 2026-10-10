@@ -2,6 +2,7 @@ import type {
   Friend,
   NotificationCounts,
   NotificationFeed,
+  NotificationMute,
   Novelist,
   NovelistNote,
   NovelistWorldNotification,
@@ -140,6 +141,42 @@ export const markNotificationRead = (
     label: "markNotificationRead",
     method: "PATCH",
   });
+
+// ── Mutes ───────────────────────────────────────────────────────────────────
+
+/** `null` from a server that has no such endpoint yet. */
+export const getNotificationMutes = (
+  api: ApiClient,
+): Promise<DataType<NotificationMute[]>> =>
+  api.requestNullable<NotificationMute[]>("/rp/portfolio/notification/mutes", {
+    label: "getNotificationMutes",
+    notFound: "null",
+  });
+
+/** Mutes `key` until `until` (ISO), or until unmuted when `until` is null. */
+export const setNotificationMute = async (
+  api: ApiClient,
+  key: string,
+  until: string | null,
+): Promise<NotificationMute | null> => {
+  const response = await api.raw(
+    `/rp/portfolio/notification/mutes/${encodeURIComponent(key)}`,
+    { body: { until }, label: "setNotificationMute", method: "PUT" },
+  );
+  if (!response.ok) return null;
+  return (await response.json()) as NotificationMute;
+};
+
+export const clearNotificationMute = async (
+  api: ApiClient,
+  key: string,
+): Promise<boolean> => {
+  const response = await api.raw(
+    `/rp/portfolio/notification/mutes/${encodeURIComponent(key)}`,
+    { label: "clearNotificationMute", method: "DELETE" },
+  );
+  return response.ok;
+};
 
 export const patchNotifications = async (
   api: ApiClient,

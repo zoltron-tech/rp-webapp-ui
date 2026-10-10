@@ -72,6 +72,17 @@ export {
   useNotifications,
 } from "./notifications/use-notifications";
 export {
+  CHAT_MUTE_KEY,
+  conversationMuteKey,
+  describeMute,
+  isMuted,
+  MUTE_DURATIONS,
+  MUTE_KINDS,
+  muteUntil,
+  useMuteActions,
+  useNotificationMutes,
+} from "./notifications/use-notification-mutes";
+export {
   FRIENDS_PAGE_SIZE,
   useNovelistFriends,
   usePrefetchNovelistFriends,

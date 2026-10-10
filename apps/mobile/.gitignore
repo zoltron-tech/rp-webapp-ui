@@ -2,5 +2,3 @@
 android/
 ios/
 expo-env.d.ts
-# Firebase config for Android push; per-developer, like android/ itself.
-google-services.json

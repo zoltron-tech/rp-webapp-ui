@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "303646939983",
+    "project_id": "novelist-world-a960f",
+    "storage_bucket": "novelist-world-a960f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:303646939983:android:e763e0e184bb441d94433a",
+        "android_client_info": {
+          "package_name": "world.novelist.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBMp4N6smZPY-Hf0mi0hczMcBlZHq0J36g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

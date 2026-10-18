@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { TbAward } from "react-icons/tb";
 import { BadgeArtwork } from "@/components/badges";
 import {
-  BADGE_CATALOGUE,
+  BADGE_CATALOGUE_BY_RARITY,
   type CatalogueBadge,
   RARITY_LABEL,
 } from "@/components/badges/catalogue";
@@ -94,11 +94,11 @@ export default function BadgeCataloguePage() {
       </S.Hero>
 
       <S.SectionHeading>
-        The collection · {BADGE_CATALOGUE.length} badges
+        The collection · {BADGE_CATALOGUE_BY_RARITY.length} badges
       </S.SectionHeading>
 
       <S.Grid>
-        {BADGE_CATALOGUE.map((badge) => (
+        {BADGE_CATALOGUE_BY_RARITY.map((badge) => (
           <CatalogueCard key={badge.code} badge={badge} />
         ))}
       </S.Grid>

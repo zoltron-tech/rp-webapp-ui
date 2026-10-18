@@ -115,7 +115,7 @@ export const BADGE_CATALOGUE: CatalogueBadge[] = [
   {
     code: "WORLDBUILDER",
     description: "Has built a world big enough to need a map.",
-    rarity: "COMMON",
+    rarity: "RARE",
     requirement:
       "Grow one story's codex to twenty-five entries, and pin five places on one of its maps.",
     title: "Worldbuilder",
@@ -130,7 +130,7 @@ export const BADGE_CATALOGUE: CatalogueBadge[] = [
   {
     code: "TIMEKEEPER",
     description: "Knows exactly when everything happened.",
-    rarity: "COMMON",
+    rarity: "RARE",
     requirement:
       "Place twenty chapters of one story on its timeline, across at least three lanes.",
     title: "Timekeeper",
@@ -154,7 +154,7 @@ export const BADGE_CATALOGUE: CatalogueBadge[] = [
   {
     code: "VETERAN_QUILL",
     description: "A year in, and still writing every month.",
-    rarity: "RARE",
+    rarity: "LEGENDARY",
     requirement:
       "Be a Novelist for a year, and post in each of the last six months.",
     title: "Veteran Quill",
@@ -182,6 +182,21 @@ export const BADGE_CATALOGUE: CatalogueBadge[] = [
     title: "Lorekeeper",
   },
 ];
+
+/**
+ * Commonest first, for lists sorted by rarity: the shelf climbs towards the
+ * rare ones. A stable sort keeps the catalogue's own order inside each tier.
+ */
+export const RARITY_ORDER: Record<BadgeRarity, number> = {
+  COMMON: 0,
+  LEGENDARY: 2,
+  RARE: 1,
+};
+
+/** The catalogue, Common first, then Rare, then Legendary. */
+export const BADGE_CATALOGUE_BY_RARITY: CatalogueBadge[] = [
+  ...BADGE_CATALOGUE,
+].sort((a, b) => RARITY_ORDER[a.rarity] - RARITY_ORDER[b.rarity]);
 
 /** Copy for the rarity chip. Rarity drives nothing but how a badge reads. */
 export const RARITY_LABEL: Record<BadgeRarity, string> = {

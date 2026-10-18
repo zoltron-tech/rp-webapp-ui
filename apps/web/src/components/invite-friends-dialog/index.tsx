@@ -9,7 +9,6 @@ import * as DropS from "@/components/profile-more-dropdown/styled";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
-import { ScoreBadgeIcon } from "@/utils/badge-icons";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styled";
 
@@ -114,14 +113,8 @@ export const InviteFriendsDialog: FC<InviteFriendsDialogProps> = ({
       </S.InviteIconWrap>
       <S.InviteTitle>Invite Friends</S.InviteTitle>
       <S.InviteDescription>
-        Share your link to grow your circle and unlock creative perks as you
-        level up.
+        Share your link to grow your circle.
       </S.InviteDescription>
-      <S.InviteXPNote>
-        <ScoreBadgeIcon size={16} />
-        People who join using your link will earn you points whenever they gain
-        Score.
-      </S.InviteXPNote>
       <S.InviteLinkBox>
         <S.InviteLinkText
           href={inviteUrl}

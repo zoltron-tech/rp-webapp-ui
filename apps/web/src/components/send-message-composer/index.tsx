@@ -4,7 +4,6 @@ import type { MentionDataItem, Muse, Novelist } from "@nw/types";
 import type { Message } from "@nw/types/conversation";
 import type { EmojiClickData } from "emoji-picker-react";
 import { Theme as EmojiTheme } from "emoji-picker-react";
-import { dynamic } from "@/lib/dynamic";
 import type { FC, FormEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BsPencil } from "react-icons/bs";
@@ -24,6 +23,8 @@ import { GifPicker } from "@/components/gif-picker";
 import { StickerPicker } from "@/components/sticker-picker";
 import { useGlobalState } from "@/context/store/stores";
 import { useUploadMedia } from "@/hooks/use-upload-media";
+import { dynamic } from "@/lib/dynamic";
+import { namesToWords } from "@nw/spell/tokenizer";
 import { API_MESSAGE } from "@/utils/constants";
 import { Flex } from "../edit-muse-card/styles";
 import { MediaTray, type TrayTab } from "./media-tray";
@@ -453,6 +454,18 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
     [senderOptions],
   );
 
+  // Names the spell checker must leave alone: everyone who can be mentioned
+  // in this conversation and everyone the novelist can send as.
+  const spellIgnore = useMemo(
+    () =>
+      namesToWords([
+        novelist?.username,
+        ...mentionItems.map((m) => m.displayName),
+        ...senderOptions.map((s) => s.name),
+      ]),
+    [novelist?.username, mentionItems, senderOptions],
+  );
+
   const museSenders = useMemo(
     () => senderOptions.filter((s) => s.type === "MUSE"),
     [senderOptions],
@@ -781,6 +794,7 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
             onSubmit={() => handleSubmit()}
             mentionItems={mentionItems}
             getMentionMuseItems={getMentionMuseItems}
+            spellIgnore={spellIgnore}
             trailingAction={
               <>
                 {(onSendGif || onSendSticker || onSendClip || onSendMedia) &&

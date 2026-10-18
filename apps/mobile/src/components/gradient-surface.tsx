@@ -23,6 +23,21 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
  * the row that uses it passes nothing but two colour strings and a constant
  * style — so a parent re-render need not re-render the shading.
  */
+/**
+ * A stop's colour and opacity. SVG stops take alpha as `stopOpacity`, not as
+ * the colour's fourth byte: handed `#rrggbbaa` (what `withAlpha` returns) a
+ * stop drew the colour solid, so a fade to transparent painted a hard block.
+ */
+const stop = (color: string) => {
+  const match = /^#([0-9a-f]{6})([0-9a-f]{2})$/i.exec(color.trim());
+  return match
+    ? {
+        stopColor: `#${match[1]}`,
+        stopOpacity: Number.parseInt(match[2], 16) / 255,
+      }
+    : { stopColor: color };
+};
+
 export const GradientSurface = memo(function GradientSurface({
   children,
   from,
@@ -53,8 +68,8 @@ export const GradientSurface = memo(function GradientSurface({
         <Svg height="100%" width="100%">
           <Defs>
             <LinearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
-              <Stop offset="0" stopColor={from} />
-              <Stop offset="1" stopColor={to} />
+              <Stop offset="0" {...stop(from)} />
+              <Stop offset="1" {...stop(to)} />
             </LinearGradient>
           </Defs>
           <Rect fill={`url(#${gradientId})`} height="100%" width="100%" />

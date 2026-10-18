@@ -17,6 +17,7 @@ import {
   getUnreadConversationIdsAction,
 } from "@/app/rp/conversations/actions";
 import { GlobalMusicPlayer } from "@/components/global-music-player";
+import { AppUpdatePrompt } from "@/components/app-update-prompt";
 import { InstallAppPrompt } from "@/components/install-app-prompt";
 import { PushPrimer } from "@/components/push-primer";
 import { usePushClicks } from "@/hooks/use-push-clicks";
@@ -202,6 +203,7 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
       <TopBar />
       <GlobalMusicPlayer />
       <InstallAppPrompt />
+      <AppUpdatePrompt />
       <PushPrimer />
       <JoinDiscordPrompt />
       {/* LeftNav/RightSidebar are position:fixed and live outside AppGrid
@@ -260,7 +262,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           },
           notifications: null,
           novelist: null,
-          novelistRank: null,
           novelists: [],
           pageLoading: false,
           searchBarExpanded: false,

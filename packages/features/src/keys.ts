@@ -99,8 +99,6 @@ export const queryKeys = {
   /** The prompts written by that novelist's muses, paged. Also keyed by id. */
   novelistPrompts: (novelistId: string) =>
     ["novelist", novelistId, "prompts"] as const,
-  novelistRank: (novelistId: string) =>
-    ["leaderboard", "novelists", "rank", novelistId] as const,
   /** Every storyboard a novelist created or co-writes. Web's `/story/by/:handle`. */
   novelistStories: (username: string) =>
     ["profile", username, "stories"] as const,

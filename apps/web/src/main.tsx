@@ -24,6 +24,7 @@ import { CookiesProvider } from "react-cookie";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router";
 import { api } from "./lib/api";
+import { startUpdateWatch } from "./lib/app-update";
 import { routes } from "./routes";
 import { Logger } from "./utils/services";
 
@@ -31,6 +32,10 @@ import { Logger } from "./utils/services";
 // Registering here, before anything renders, keeps `@nw/utils` hooks logging
 // exactly as they did when they lived in `src/hooks`.
 setLogger(Logger);
+
+// Watches for a newer build deployed under this tab; the refresh prompt in the
+// rp layout reads it. See lib/app-update.
+startUpdateWatch();
 
 const container = document.getElementById("root");
 if (!container) throw new Error("#root is missing from index.html");

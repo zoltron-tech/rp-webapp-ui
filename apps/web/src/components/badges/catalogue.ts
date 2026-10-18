@@ -112,6 +112,75 @@ export const BADGE_CATALOGUE: CatalogueBadge[] = [
       "Give ten Muses a backstory, their information filled in, and a public prompt each.",
     title: "Creative",
   },
+  {
+    code: "WORLDBUILDER",
+    description: "Has built a world big enough to need a map.",
+    rarity: "COMMON",
+    requirement:
+      "Grow one story's codex to twenty-five entries, and pin five places on one of its maps.",
+    title: "Worldbuilder",
+  },
+  {
+    code: "CHRONICLER",
+    description: "Takes a story all the way through.",
+    rarity: "RARE",
+    requirement: "Reach ten chapters in one of your stories.",
+    title: "Chronicler",
+  },
+  {
+    code: "TIMEKEEPER",
+    description: "Knows exactly when everything happened.",
+    rarity: "COMMON",
+    requirement:
+      "Place twenty chapters of one story on its timeline, across at least three lanes.",
+    title: "Timekeeper",
+  },
+  {
+    code: "MATCHMAKER",
+    description: "Ties every character to somebody.",
+    rarity: "RARE",
+    requirement:
+      "Draw fifteen relationships on one story's mesh, in at least three different tones.",
+    title: "Matchmaker",
+  },
+  {
+    code: "SHAPESHIFTER",
+    description: "One Muse, many lives.",
+    rarity: "COMMON",
+    requirement:
+      "Give one Muse three alternate verses, and post a public prompt from each of them.",
+    title: "Shapeshifter",
+  },
+  {
+    code: "VETERAN_QUILL",
+    description: "A year in, and still writing every month.",
+    rarity: "RARE",
+    requirement:
+      "Be a Novelist for a year, and post in each of the last six months.",
+    title: "Veteran Quill",
+  },
+  {
+    code: "AMBASSADOR",
+    description: "Brought five new writers to Novelist World.",
+    rarity: "LEGENDARY",
+    requirement:
+      "Invite five people with your referral link who sign up and finish onboarding.",
+    title: "Ambassador",
+  },
+  {
+    code: "CAMPFIRE",
+    description: "Starts the conversations everyone joins.",
+    rarity: "RARE",
+    requirement: "Start a public thread that five other Novelists join.",
+    title: "Campfire",
+  },
+  {
+    code: "LOREKEEPER",
+    description: "Keeps every secret a world has.",
+    rarity: "RARE",
+    requirement: "Write a hundred codex entries across your stories.",
+    title: "Lorekeeper",
+  },
 ];
 
 /** Copy for the rarity chip. Rarity drives nothing but how a badge reads. */

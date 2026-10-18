@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { isSupportNovelist } from "@nw/chat";
 import { useNovelistLeaderboard } from "@nw/features";
 import type { NovelistLeaderboardEntry } from "@nw/types";
 import { useRouter } from "expo-router";
@@ -14,18 +13,18 @@ import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
 import { fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
- * The novelist directory — the leaderboard, which is what "who else is here"
- * looks like in this product.
+ * The novelist directory — "who else is here": the most active novelists,
+ * drawn as a plain list. Points, levels and ranks are no longer shown anywhere
+ * in the app, so the rows carry only identity.
  *
  * It was the Home tab's first screen until the home feed took that place;
  * it is now one push away, from "See all" on the feed's friend suggestions,
  * and still inside the Home stack so a profile opened from it stays there.
  *
  * The list beachhead: pagination, images and an empty state, all through
- * `useNovelistLeaderboard` in `@nw/features`. `onEndReached` is the mobile
- * equivalent of the web page's "Load more" button, and it is the *only*
- * difference between the two screens — the page size, the 80-entry cap and the
- * end-of-list rule are decided once, in the hook.
+ * `useNovelistLeaderboard` in `@nw/features`, which still orders by activity.
+ * The page size, the 80-entry cap and the end-of-list rule are decided once,
+ * in the hook.
  *
  * Rows open the novelist's profile. The route takes the username rather than
  * the id because that is the handle the web app routes on
@@ -74,7 +73,6 @@ export const NovelistDirectory = () => {
         },
       ]}
     >
-      <Text style={[styles.rank, { color: theme.textGray }]}>{item.rank}</Text>
       <Avatar
         name={item.novelist.firstName}
         size={40}
@@ -92,17 +90,6 @@ export const NovelistDirectory = () => {
           @{item.novelist.username}
         </Text>
       </View>
-      {/* Support is not playing: no score, no level. */}
-      {isSupportNovelist(item.novelist.username) ? null : (
-        <View style={styles.score}>
-          <Text style={[styles.points, { color: theme.accent.text }]}>
-            {item.totalPoints}
-          </Text>
-          <Text style={[styles.level, { color: theme.textGray }]}>
-            Lv {item.level}
-          </Text>
-        </View>
-      )}
       <Ionicons color={theme.textGray} name="chevron-forward" size={16} />
     </Pressable>
   );
@@ -141,10 +128,7 @@ const styles = StyleSheet.create({
   content: { gap: space.sm, padding: space.md },
   handle: { fontSize: fontSize.caption },
   identity: { flex: 1, gap: space.xxs },
-  level: { fontSize: fontSize.caption },
   name: { fontSize: fontSize.body, fontWeight: "600" },
-  points: { fontSize: fontSize.body, fontWeight: "700" },
-  rank: { fontSize: fontSize.label, fontWeight: "700", minWidth: 24 },
   row: {
     alignItems: "center",
     borderRadius: radius.md,
@@ -152,5 +136,4 @@ const styles = StyleSheet.create({
     gap: space.sm,
     padding: space.sm,
   },
-  score: { alignItems: "flex-end" },
 });

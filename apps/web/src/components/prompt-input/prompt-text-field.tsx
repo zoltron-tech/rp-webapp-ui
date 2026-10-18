@@ -4,6 +4,7 @@ import { RiErrorWarningLine } from "react-icons/ri";
 import { searchMentionMusesAction } from "@/app/rp/muse/actions";
 import { deleteMedia } from "@/app/rp/profile/actions";
 import { useGlobalState } from "@/context/store/stores";
+import { namesToWords } from "@nw/spell/tokenizer";
 import {
   RichTextEditor,
   type RichTextEditorHandle,
@@ -182,6 +183,20 @@ export const PromptTextField: FC<PromptTextFieldProps> = ({
     [fetchMentionableFriends, fetchMentionableMuses],
   );
 
+  // Names the spell checker must leave alone: the novelist, their muses and
+  // friends. Everything a post is likely to name that no dictionary knows.
+  const spellIgnore = useMemo(
+    () =>
+      namesToWords([
+        novelist?.username,
+        novelist?.firstName,
+        novelist?.lastName,
+        ...(novelist?.muses ?? []).flatMap((m) => [m.firstName, m.lastName]),
+        ...(novelist?.friends ?? []).map((f) => f.username),
+      ]),
+    [novelist],
+  );
+
   const errorMessage =
     mediaUploadError === "FILE_TOO_LARGE"
       ? "Attachment is too large. Maximum file size is 10 MB."
@@ -210,6 +225,7 @@ export const PromptTextField: FC<PromptTextFieldProps> = ({
         fullPage={fullPage}
         compact={compact}
         desktopRounded
+        spellIgnore={spellIgnore}
       />
     </S.TextInputContainer>
   );

@@ -40,6 +40,7 @@ const RATIOS = new Map<string, number>();
 
 export const CroppedImage = ({
   blurRadius,
+  cover = false,
   crop,
   maxScalePct,
   onError,
@@ -48,6 +49,12 @@ export const CroppedImage = ({
   uri,
 }: {
   blurRadius?: number;
+  /**
+   * Never leave the box partly empty: when the crop's width would draw the
+   * image shorter than the box, it is scaled up to the box's height instead.
+   * For banners and covers, where a strip of nothing reads as a broken image.
+   */
+  cover?: boolean;
   crop?: ImageCropFilter | null;
   /**
    * The largest zoom honoured, as the crop stores it (`scale × 100`). Defaults
@@ -118,8 +125,12 @@ export const CroppedImage = ({
     width: number;
   } | null = null;
   if (box && ratio) {
-    const width = (box.width * crop.width) / 100;
-    const height = width / ratio;
+    let width = (box.width * crop.width) / 100;
+    let height = width / ratio;
+    if (cover && height < box.height) {
+      height = box.height;
+      width = height * ratio;
+    }
     placed = {
       height,
       left: ((box.width - width) * crop.x) / 100,

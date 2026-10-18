@@ -20,7 +20,7 @@ import {
 import { useBannerStretch } from "@/animation/effects";
 import { Avatar } from "@/components/avatar";
 import { BadgeSheet } from "@/components/badge-sheet";
-import { BadgeRow, ScoreIcon } from "@/components/badges";
+import { BadgeRow } from "@/components/badges";
 import { CollapsibleRichText } from "@/components/collapsible-rich-text";
 import { CroppedImage } from "@/components/cropped-image";
 import { getNoteEmojiRotate, NoteEmojiIcon } from "@/components/note-emoji";
@@ -42,7 +42,7 @@ import { border, fontSize, radius, space, type, useAppTheme } from "@/theme";
  *
  * The measurements are web's own, taken from its ≤800px rules rather than
  * guessed: a 5:2 banner (5:1 when there is none to show), a 104px avatar with a
- * 5px ring lifted 58px into the banner, and the XP chip pinned to its corner.
+ * 5px ring lifted 58px into the banner.
  *
  * The order down the page is web's, and the order carries meaning: who this is,
  * who you both know, what they sound like, what they write, who they write, who
@@ -298,7 +298,7 @@ export const NovelistProfile = ({
     [novelist.friends],
   );
   const isOwnProfile = session.novelist?.username === novelist.username;
-  // Support is not playing: no XP chip, no crests, whoever is looking.
+  // Support is not playing: no crests, whoever is looking.
   const isSupport = isSupportNovelist(novelist.username);
 
   /*
@@ -474,34 +474,6 @@ export const NovelistProfile = ({
                 uri={avatarUri}
               />
             </View>
-
-            {/* Web pins this to the avatar's bottom-right and nudges it clear of
-              the circle with a percentage translate; these are the same offsets
-              in points, since the chip's width is not known until it lays out. */}
-            {isSupport ? null : (
-              <View
-                style={[
-                  styles.xpBadge,
-                  {
-                    backgroundColor: mixColors(
-                      theme.accent.surface,
-                      0.2,
-                      theme.background,
-                    ),
-                    borderColor: mixColors(
-                      theme.accent.surface,
-                      0.48,
-                      theme.material.edge,
-                    ),
-                  },
-                ]}
-              >
-                <ScoreIcon size={14} />
-                <Text style={[styles.xpLabel, { color: theme.text }]}>
-                  {novelist.totalPoints.toLocaleString()} XP
-                </Text>
-              </View>
-            )}
           </View>
 
           {novelist.note?.text ? (
@@ -1117,7 +1089,7 @@ const styles = StyleSheet.create({
     borderWidth: AVATAR_RING,
   },
   // Above the note beside it: the bubble's trail of dots reaches back toward
-  // the avatar and covered the XP chip on short notes.
+  // the avatar on short notes.
   avatarWrap: { flexShrink: 0, zIndex: 1 },
   banner: { overflow: "hidden", width: "100%" },
   bannerImage: { height: "100%", width: "100%" },
@@ -1315,24 +1287,4 @@ const styles = StyleSheet.create({
   stat: { alignItems: "center", flexDirection: "row", gap: space.xs },
   statsRow: { flexDirection: "row", flexWrap: "wrap", gap: space.md },
   statText: { fontSize: fontSize.caption },
-  xpBadge: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    borderWidth: 1,
-    bottom: -8,
-    flexDirection: "row",
-    gap: space.xs,
-    paddingBottom: 3,
-    paddingLeft: 7,
-    paddingRight: space.ms,
-    paddingTop: 3,
-    position: "absolute",
-    right: -12,
-  },
-  xpLabel: {
-    fontSize: fontSize.meta,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-  },
 });

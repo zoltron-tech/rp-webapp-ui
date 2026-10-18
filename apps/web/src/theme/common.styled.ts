@@ -5,7 +5,9 @@ import { css } from "styled-components";
 import { __DEV__ } from "@/utils/constants";
 import type { Theme } from "@nw/theme";
 
-const DEV_MODE = __DEV__;
+/* Layout debug outlines (DEV_MODE_BORDER). Switched off for now — flip the
+   `false` back to `__DEV__` to see the coloured container borders in dev. */
+const DEV_MODE = false && __DEV__;
 
 export const NO_USER_SELECT = css`
   -webkit-user-select: none;

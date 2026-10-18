@@ -1,7 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AppImageViewer } from "@/components/image-viewer/AppImageViewer";
+import {
+  LINK_SLOT_CLASS,
+  type LinkSlot,
+  mountNovelistWorldLinkSlots,
+} from "@/components/muse-embed/link-slots";
+import { NovelistWorldLinkEmbed } from "@/components/nw-link-embed";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
 import {
@@ -38,6 +45,16 @@ export const RichTextRenderer = ({
 }: RichTextRendererProps) => {
   const { routeToPage } = usePageRouter();
 
+  // Callers build the muse map inline, so it is a new object every render.
+  // The inject effect below now sets state, and re-running it on every new
+  // identity would set state, re-render the caller, get a new map, and loop.
+  // Key it by content instead: the same names and accents are the same map.
+  const museDialogAttrsKey = JSON.stringify(museDialogAttrs ?? null);
+  const stableMuseDialogAttrs = useMemo(
+    () => museDialogAttrs,
+    [museDialogAttrsKey],
+  );
+
   const contentRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -46,6 +63,9 @@ export const RichTextRenderer = ({
   const [animating, setAnimating] = useState(false);
   const [isOverflowing, setIsOverflowing] = useState(false);
   const [viewerSrc, setViewerSrc] = useState<string | null>(null);
+  // Novelist World links found in the injected HTML, each with the empty span
+  // that replaced it. Cards are portalled into those spans below.
+  const [linkSlots, setLinkSlots] = useState<LinkSlot[]>([]);
 
   const onNovelistTagClick = useCallback(
     (novelistId: string) => {
@@ -62,6 +82,13 @@ export const RichTextRenderer = ({
     },
     [routeToPage],
   );
+
+  // The click handlers follow `routeToPage`, which follows the pathname, so
+  // they are not stable across renders. Read through a ref so the inject
+  // effect below — which now sets state — does not have to depend on them,
+  // and re-injects the HTML only when the HTML or its dialog data changes.
+  const clickHandlersRef = useRef({ onMuseTagClick, onNovelistTagClick });
+  clickHandlersRef.current = { onMuseTagClick, onNovelistTagClick };
 
   // Inject HTML + attach click delegation
   useEffect(() => {
@@ -124,7 +151,20 @@ export const RichTextRenderer = ({
 
     // Render any stored dialog embeds using the chosen read-only design,
     // resolving sender name/accent from the thread's muse map.
-    renderDialogEmbeds(container, dialogDesign, museDialogAttrs);
+    renderDialogEmbeds(container, dialogDesign, stableMuseDialogAttrs);
+
+    // Swap every Novelist World link for a slot; the cards render into them
+    // via portals. Two fast paths: a post with no link-shaped text is not
+    // walked at all, and a post that had no slots and still has none keeps
+    // its state — otherwise every post re-rendered once after mount for
+    // nothing.
+    const found =
+      savedText.includes("/rp/") || savedText.includes("/@")
+        ? mountNovelistWorldLinkSlots(container)
+        : [];
+    setLinkSlots((prev) =>
+      prev.length === 0 && found.length === 0 ? prev : found,
+    );
 
     const handleMentionClick = (e: Event) => {
       const target = e.target as HTMLElement;
@@ -135,8 +175,8 @@ export const RichTextRenderer = ({
       const { type, id } = mentionTag.dataset;
       if (!type || !id) return;
 
-      if (type === "NOVELIST") onNovelistTagClick(id);
-      if (type === "MUSE") onMuseTagClick(id);
+      if (type === "NOVELIST") clickHandlersRef.current.onNovelistTagClick(id);
+      if (type === "MUSE") clickHandlersRef.current.onMuseTagClick(id);
     };
 
     const handleImageClick = (e: Event) => {
@@ -159,13 +199,7 @@ export const RichTextRenderer = ({
       container.removeEventListener("click", handleMentionClick);
       container.removeEventListener("click", handleImageClick);
     };
-  }, [
-    savedText,
-    dialogDesign,
-    museDialogAttrs,
-    onNovelistTagClick,
-    onMuseTagClick,
-  ]);
+  }, [savedText, dialogDesign, stableMuseDialogAttrs]);
 
   useEffect(() => {
     const content = contentRef.current;
@@ -202,7 +236,9 @@ export const RichTextRenderer = ({
 
       // Embedded content counts as meaningful even without text.
       content
-        .querySelectorAll("img, video, audio, iframe, canvas, svg")
+        .querySelectorAll(
+          `img, video, audio, iframe, canvas, svg, .${LINK_SLOT_CLASS}`,
+        )
         .forEach((el) => {
           maxBottom = Math.max(
             maxBottom,
@@ -216,16 +252,16 @@ export const RichTextRenderer = ({
     const measure = () => {
       const contentHeight = content.scrollHeight;
 
-      // If the content has an image, don't hide the first image when collapsed:
-      // extend the collapsed height down to the bottom edge of that image so it
-      // is fully visible.
-      const firstImg = content.querySelector("img");
+      // If the content has an image or an embedded card, don't hide the first
+      // one when collapsed: extend the collapsed height down to its bottom
+      // edge so it is fully visible.
+      const firstEmbed = content.querySelector(`img, .${LINK_SLOT_CLASS}`);
       let effectiveCollapsed = collapsedHeight;
-      if (firstImg) {
-        const imgBottom =
-          firstImg.getBoundingClientRect().bottom -
+      if (firstEmbed) {
+        const embedBottom =
+          firstEmbed.getBoundingClientRect().bottom -
           content.getBoundingClientRect().top;
-        effectiveCollapsed = Math.max(collapsedHeight, Math.ceil(imgBottom));
+        effectiveCollapsed = Math.max(collapsedHeight, Math.ceil(embedBottom));
       }
 
       // Decide overflow from meaningful content only, so purely trailing
@@ -259,7 +295,22 @@ export const RichTextRenderer = ({
       firstImg.addEventListener("error", measure);
     }
 
+    // An embedded card grows from a skeleton to its real height once its
+    // muse arrives, after this effect has run. Re-measure when it does, so a
+    // post that was short enough to show whole does not get clipped.
+    // Coalesced to a frame: a card going from skeleton to content resizes
+    // the column several times in a burst, and `measure` walks every text
+    // node.
+    let frame = 0;
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(measure);
+    });
+    observer.observe(content);
+
     return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
       if (animTimeout) clearTimeout(animTimeout);
       if (firstImg) {
         firstImg.removeEventListener("load", measure);
@@ -275,6 +326,7 @@ export const RichTextRenderer = ({
       // Let links, images, videos, and mention tags handle their own clicks.
       if (
         target.closest("a") ||
+        target.closest(`.${LINK_SLOT_CLASS}`) ||
         target.closest(".mention-tag") ||
         target.tagName === "IMG" ||
         target.tagName === "VIDEO" ||
@@ -323,6 +375,14 @@ export const RichTextRenderer = ({
         <S.Toggle onClick={() => setExpanded((v) => !v)}>
           {expanded ? "Show less..." : "Read more..."}
         </S.Toggle>
+      )}
+
+      {linkSlots.map((slot) =>
+        createPortal(
+          <NovelistWorldLinkEmbed link={slot.link} />,
+          slot.node,
+          slot.key,
+        ),
       )}
 
       {viewerSrc && (

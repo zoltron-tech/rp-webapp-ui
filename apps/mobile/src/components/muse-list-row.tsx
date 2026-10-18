@@ -15,12 +15,10 @@ import { border, fontSize, radius, space, useAppTheme } from "@/theme";
  * ## Only what the list already carries
  *
  * `GET /muse/by/:username` is deliberately lean: identity, images, fandom,
- * accent, privacy, points, the video flag and the verse fields — no note,
- * nicknames, bonds or song. So the row draws from exactly those and fetches
- * nothing:
+ * accent, privacy, the video flag and the verse fields — no note, nicknames,
+ * bonds or song. So the row draws from exactly those and fetches nothing:
  *
  *  - the **fandom**, as its coloured chip (off inside a fandom group);
- *  - the character's **XP**, beside the name;
  *  - how many **verses** the character has, counted by the list from the same
  *    response (`verseCount`);
  *  - whether the character has a **video** card, and its **privacy** when it is
@@ -163,11 +161,9 @@ export const MuseListRow = memo(function MuseListRow({
   );
   const privacy = PRIVACY[muse.privacy];
   const name = [muse.firstName, muse.lastName].filter(Boolean).join(" ");
-  const points = muse.totalPoints ?? 0;
   const editable = Boolean(onEdit && onDelete);
 
   const details = [
-    `${points} XP`,
     hasFandom ? muse.fandom.name : null,
     verseCount > 1 ? `${verseCount} verses` : null,
     muse.video ? "video card" : null,
@@ -238,25 +234,6 @@ export const MuseListRow = memo(function MuseListRow({
               </Text>
             ) : null}
           </Text>
-          <View
-            style={[
-              styles.xp,
-              {
-                backgroundColor: theme.material.fill,
-                borderColor: theme.material.edge,
-              },
-            ]}
-          >
-            {/* The XP crest's amber and bolt, as two native views: the crest
-                itself is an SVG tree, and one per row is what made mounting a
-                screen of rows slow — see components/badges.tsx. */}
-            <View style={styles.xpMark}>
-              <Ionicons color="#ffffff" name="flash" size={9} />
-            </View>
-            <Text style={[styles.xpLabel, { color: theme.text }]}>
-              {points.toLocaleString()} XP
-            </Text>
-          </View>
         </View>
 
         <RowChips muse={muse} verseCount={verseCount} />
@@ -357,22 +334,4 @@ const styles = StyleSheet.create({
   /** Your own rows point the way they open. */
   swipeHint: { opacity: 0.7 },
   titleRow: { alignItems: "center", flexDirection: "row", gap: space.sm },
-  xp: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    borderWidth: border.edge,
-    flexDirection: "row",
-    gap: 3,
-    paddingHorizontal: space.s,
-    paddingVertical: space.xxs,
-  },
-  xpLabel: { fontSize: fontSize.meta, fontVariant: ["tabular-nums"], fontWeight: "700" },
-  xpMark: {
-    alignItems: "center",
-    backgroundColor: "#F79E1B",
-    borderRadius: 3.5,
-    height: 12,
-    justifyContent: "center",
-    width: 12,
-  },
 });

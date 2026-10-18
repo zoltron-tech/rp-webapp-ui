@@ -1,4 +1,4 @@
-import type { Fandom, NWImage } from "./novelist";
+import type { NWImage } from "./novelist";
 
 export interface NovelistLeaderboardNovelist {
   id: string;
@@ -8,35 +8,15 @@ export interface NovelistLeaderboardNovelist {
   image: string | null;
   avatar: NWImage | null;
   isVerified: boolean;
+  /** Always 0: the server no longer sends XP for anyone. */
   totalPoints: number;
   level: number;
 }
 
+/** One row of `/leaderboard/novelists`, ordered by activity; the points are withheld. */
 export interface NovelistLeaderboardEntry {
   rank: number;
   novelist: NovelistLeaderboardNovelist;
-  totalPoints: number;
-  level: number;
-}
-
-export interface MuseLeaderboardMuse {
-  id: string | null;
-  firstName: string;
-  lastName: string | null;
-  pennedBy: NovelistLeaderboardNovelist | null;
-  image: string | null;
-  avatar: NWImage | null;
-  fandom: Fandom;
-  useAccent: boolean;
-  accent: string | null;
-  privacy: string;
-  totalPoints: number;
-  level: number;
-}
-
-export interface MuseLeaderboardEntry {
-  rank: number;
-  muse: MuseLeaderboardMuse;
   totalPoints: number;
   level: number;
 }

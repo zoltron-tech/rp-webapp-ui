@@ -8,11 +8,17 @@ import {
   isKlipyClip,
   isMediaOnlyMessage,
   isSameReaction,
+  messageTextOf,
   REACTION_OPTIONS as REACTION_KEYS,
   URL_REGEX,
+  withoutUrls,
 } from "@nw/chat";
 import type { Message } from "@nw/types/conversation";
 import { formatTime } from "@nw/utils";
+import {
+  parseNovelistWorldLink,
+  uniqueNovelistWorldLinks,
+} from "@nw/utils/nw-links";
 import classNames from "classnames";
 import moment from "moment";
 import {
@@ -30,6 +36,7 @@ import {
   BsPencil,
   BsReply,
   BsThreeDots,
+  BsTrash,
 } from "react-icons/bs";
 import { FaPause, FaPlay } from "react-icons/fa";
 import { FiCopy, FiDownload, FiExternalLink } from "react-icons/fi";
@@ -41,6 +48,8 @@ import { useUIContext } from "@/hooks/use-ui-context";
 import { ROUTES } from "@/utils/constants/routes";
 import { AppAlertDialog } from "../../dialog";
 import { AppImageViewer } from "../../image-viewer/AppImageViewer";
+import { localLinkHosts } from "../../muse-embed/link-slots";
+import { NovelistWorldLinkEmbed } from "../../nw-link-embed";
 import { VideoViewer } from "../../image-viewer/VideoViewer";
 import { AppDropdownMenuResponsive } from "../../profile-more-dropdown";
 import { AvatarNew } from "../avatar-new";
@@ -60,6 +69,8 @@ type Props = {
   /** `remove` takes the viewer's own reaction back instead of setting it. */
   onReact?: (message: Message, reaction: string, remove?: boolean) => void;
   onEdit?: (message: Message) => void;
+  /** Offered on the viewer's own messages; the panel confirms before acting. */
+  onDelete?: (message: Message) => void;
 };
 
 type LinkMeta = {
@@ -915,6 +926,7 @@ export const ChatBubble: FC<Props> = ({
   onReport,
   onReact,
   onEdit,
+  onDelete,
 }) => {
   const { successToast } = useUIContext();
   const today = moment().format("YYYY-MM-DD");
@@ -936,6 +948,41 @@ export const ChatBubble: FC<Props> = ({
     );
   }, [rawMessageText]);
   const urls = useMemo(() => extractUrls(messageText), [messageText]);
+  // Links back into Novelist World draw as the thing they point at — a muse
+  // card — and the URL itself leaves the bubble, so "She's here! <link>"
+  // reads as the sentence with the card beneath it. Read from the words of
+  // the message so a link typed into the HTML composer counts too.
+  const nwLinks = useMemo(
+    () =>
+      messageText.includes("/rp/") || messageText.includes("/@")
+        ? uniqueNovelistWorldLinks(
+            messageTextOf(messageText),
+            localLinkHosts(),
+          )
+        : [],
+    [messageText],
+  );
+  const bubbleText = useMemo(
+    () =>
+      nwLinks.length
+        ? withoutUrls(
+            messageText,
+            nwLinks.map((link) => link.url),
+          )
+            // "go say hi to <link>, she…" loses its link and keeps its comma;
+            // close the gap the link left in front of the punctuation.
+            .replace(/(?:\s|&nbsp;)+([,.;:!?])/g, "$1")
+        : messageText,
+    [messageText, nwLinks],
+  );
+  // Everything else still gets the generic preview card.
+  const previewUrls = useMemo(
+    () =>
+      nwLinks.length
+        ? urls.filter((url) => !parseNovelistWorldLink(url, localLinkHosts()))
+        : urls,
+    [urls, nwLinks],
+  );
   const hasAttachments = !!message.attachments?.length;
 
   // A message can be text-edited only when it carries actual text — not when it
@@ -948,8 +995,14 @@ export const ChatBubble: FC<Props> = ({
       messageText.replace(URL_REGEX, "").trim().length === 0
     );
   }, [messageText, urls]);
+  // Nor a message that never decrypted: its "text" is the fallback notice,
+  // and saving that would overwrite the real words for good.
   const canEditMessage =
-    isSender && !hasAttachments && !!messageText.trim() && !isWholeMessageMedia;
+    isSender &&
+    !hasAttachments &&
+    !!messageText.trim() &&
+    !isWholeMessageMedia &&
+    !message.e2eCiphertext;
   const [activeReaction, setActiveReaction] = useState<string | null>(null);
   const [burstReaction, setBurstReaction] = useState<string | null>(null);
   const burstTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1178,6 +1231,16 @@ export const ChatBubble: FC<Props> = ({
       },
       { icon: <FiCopy />, label: "Copy message", onClick: handleCopyMessage },
       { separator: true as const },
+      ...(isSender && onDelete
+        ? [
+            {
+              icon: <BsTrash />,
+              label: "Delete message",
+              onClick: () => onDelete(message),
+              variant: "danger" as const,
+            },
+          ]
+        : []),
       {
         icon: <RiFlagFill />,
         label: "Report",
@@ -1186,7 +1249,16 @@ export const ChatBubble: FC<Props> = ({
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [message, onReply, onForward, onReport, onEdit, canEditMessage],
+    [
+      message,
+      onReply,
+      onForward,
+      onReport,
+      onEdit,
+      onDelete,
+      canEditMessage,
+      isSender,
+    ],
   );
 
   // Clear any pending burst-animation timer on unmount.
@@ -1264,8 +1336,8 @@ export const ChatBubble: FC<Props> = ({
 
   const isEmojiOnly = useMemo(
     () =>
-      !isHtmlMessage && !!messageText.trim() && EMOJI_ONLY_RE.test(messageText),
-    [messageText, isHtmlMessage],
+      !isHtmlMessage && !!bubbleText.trim() && EMOJI_ONLY_RE.test(bubbleText),
+    [bubbleText, isHtmlMessage],
   );
 
   const isClip = useMemo(() => isKlipyClip(messageText), [messageText]);
@@ -1390,6 +1462,7 @@ export const ChatBubble: FC<Props> = ({
       </S.MessageMenuWrapper>
 
       <S.BubbleStack
+        $wide={nwLinks.length > 0}
         className={isSender ? "sender" : "receiver"}
         onTouchStart={onSwipeTouchStart}
         onTouchMove={onSwipeTouchMove}
@@ -1516,24 +1589,32 @@ export const ChatBubble: FC<Props> = ({
           <ChatVideoAttachment src={messageText.trim()} />
         ) : (
           <>
-            {urls.length > 0 && !isHtmlMessage
-              ? urls.map((url) => <LinkPreview key={url} url={url} />)
+            {previewUrls.length > 0 && !isHtmlMessage
+              ? previewUrls.map((url) => <LinkPreview key={url} url={url} />)
               : null}
 
-            {messageText && !isMessageOnlyUrls ? (
+            {bubbleText.trim() && !isMessageOnlyUrls ? (
               isHtmlMessage ? (
                 <HtmlChatBubble
-                  html={messageText}
+                  html={bubbleText}
                   className={isSender ? "sender" : "receiver"}
                 />
               ) : isEmojiOnly ? (
-                <S.EmojiOnlyMessage>{messageText}</S.EmojiOnlyMessage>
+                <S.EmojiOnlyMessage>{bubbleText}</S.EmojiOnlyMessage>
               ) : (
                 <S.ChatBubble className={isSender ? "sender" : "receiver"}>
-                  {toRenderableMessage(messageText)}
+                  {toRenderableMessage(bubbleText)}
                 </S.ChatBubble>
               )
             ) : null}
+
+            {/* After the words, so "She's here!" is read before the card. */}
+            {nwLinks.map((link) => (
+              <NovelistWorldLinkEmbed
+                key={`${link.kind}-${link.id}`}
+                link={link}
+              />
+            ))}
           </>
         )}
 

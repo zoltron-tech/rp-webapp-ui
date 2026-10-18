@@ -13,17 +13,23 @@
  */
 
 export {
+  type ActionErrorPayload as ActionErrorSocketPayload,
+  createDeleteSocketMessage,
   createEditSocketMessage,
   createHeartbeatPong,
   createHeartbeatQuery,
   createReactionSocketMessage,
+  type DeletePayload as DeleteSocketPayload,
   HEARTBEAT_TIMEOUT_MS,
+  isServerActionError,
+  isServerDelete,
   isServerEdit,
   isServerMessage,
   isServerNotification,
   isServerPing,
   isServerReaction,
   type ReactionPayload as ReactionSocketPayload,
+  type ServerDelete as ServerDeleteMessage,
   type ServerEdit as ServerEditMessage,
   type ServerReaction as ServerReactionMessage,
 } from "@nw/chat";

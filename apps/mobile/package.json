@@ -24,6 +24,7 @@
     "@nw/features": "workspace:*",
     "@nw/fonts": "workspace:*",
     "@nw/richtext": "workspace:*",
+    "@nw/spell": "workspace:*",
     "@nw/store": "workspace:*",
     "@nw/theme": "workspace:*",
     "@nw/types": "workspace:*",

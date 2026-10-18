@@ -1,10 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
+import { deleteConversationMessage } from "@nw/api/endpoints/conversation-detail";
 import {
   conversationUsernames,
   isSameReaction,
   resolveConversationTarget,
 } from "@nw/chat";
 import {
+  queryKeys,
+  useApi,
   useConversation,
   useConversationMembers,
   useConversationMessages,
@@ -13,6 +16,7 @@ import {
 } from "@nw/features";
 import type { Message } from "@nw/types";
 import { isSameChatDay, toChatDayLabel, toChatTime } from "@nw/utils";
+import { useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -83,9 +87,12 @@ import { border, fontSize, radius, space, useAppTheme } from "@/theme";
  * REST route for a reaction, and a button that silently does nothing is worse
  * than no button.
  *
- * Still absent, each for a reason: editing a sent message is a separate flow
- * with its own composer state, and ice breakers and group creation are their
- * own screens.
+ * Deleting your own message lives here too, for the same reason: it has to
+ * undo itself if the server says no. Editing a sent message is deliberately
+ * not offered on this client — the shorthand composer cannot round-trip
+ * everything web's rich input writes, and a correction that quietly loses a
+ * link or a mention is worse than none; delete and resend is the honest
+ * path. Ice breakers and group creation are their own screens.
  *
  * ## Where it is drawn
  *
@@ -145,7 +152,10 @@ export const ConversationScreen = ({
   const router = useRouter();
 
   const { novelist } = useSession();
-  const { isConnected, sendReaction } = useChatSocket();
+  const { applyDelete, isConnected, onActionError, sendDelete, sendReaction } =
+    useChatSocket();
+  const api = useApi();
+  const queryClient = useQueryClient();
   const { conversation } = useConversation(conversationId);
 
   /*
@@ -513,6 +523,26 @@ export const ConversationScreen = ({
     [],
   );
 
+  /**
+   * What a delete looked like before it went out, by message id.
+   *
+   * A socket send is fire-and-forget: the answer, if the backend refuses, is
+   * an `action-error` frame some time later. This is what that frame is
+   * matched against to put the message back. Entries are let go when they
+   * are used or after a minute — a refusal that takes longer than that is a
+   * refetch's problem, not a revert's.
+   */
+  const inFlightRef = useRef(
+    new Map<string, { at: number; message: Message }>(),
+  );
+  const holdOriginal = useCallback((message: Message) => {
+    const now = Date.now();
+    for (const [id, held] of inFlightRef.current) {
+      if (now - held.at > 60_000) inFlightRef.current.delete(id);
+    }
+    inFlightRef.current.set(message.id, { at: now, message });
+  }, []);
+
   const submit = useCallback(
     async ({ attachments, text }: ComposerSubmission) => {
       const accepted = await send(text, {
@@ -523,7 +553,120 @@ export const ConversationScreen = ({
       if (accepted) setReplyingTo(null);
       return accepted;
     },
-    [replyingTo, send],
+    [replyingTo, send, seenNow],
+  );
+
+  /**
+   * Puts a message back after the server refused to delete it.
+   *
+   * Into the newest page, then that page in order: the pages are newest
+   * first and so is each page, and a message that was on screen a moment ago
+   * is almost always in the first one. Landing it one page early on a long
+   * thread costs a row drawn out of order until the next refetch, which is a
+   * smaller wrong than leaving it deleted when it was not.
+   */
+  const restoreMessage = useCallback(
+    (message: Message) => {
+      queryClient.setQueryData<{ pages: Message[][]; pageParams: unknown[] }>(
+        queryKeys.conversationMessages(message.conversationId),
+        (previous) => {
+          if (!previous || previous.pages.length === 0) return previous;
+          const [first = [], ...rest] = previous.pages;
+          if (first.some((m) => m.id === message.id)) return previous;
+          const page = [...first, message].sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+          );
+          return { ...previous, pages: [page, ...rest] };
+        },
+      );
+      // The quotes on replies to it were cleared with it and are not kept
+      // anywhere to put back; a refetch has them, and the true order.
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.conversationMessages(message.conversationId),
+      });
+    },
+    [queryClient],
+  );
+
+  // A refusal from the backend, for a delete sent over the socket: put the
+  // message back and say so. REST refusals are handled where they are made.
+  useEffect(
+    () =>
+      onActionError(({ action, messageId }) => {
+        if (action !== "delete") return;
+        const held = inFlightRef.current.get(messageId);
+        if (!held) return;
+        inFlightRef.current.delete(messageId);
+        restoreMessage(held.message);
+        Alert.alert(
+          "Not deleted",
+          "The message could not be deleted. Please try again.",
+        );
+      }),
+    [onActionError, restoreMessage],
+  );
+
+  // Someone else — another of your devices, say — deleted the message this
+  // field is answering: the field stands down, or the reply would quote
+  // nothing.
+  useEffect(() => {
+    const present = new Set(messages.map((message) => message.id));
+    setReplyingTo((current) =>
+      current && !present.has(current.id) ? null : current,
+    );
+  }, [messages]);
+
+  const performDelete = useCallback(
+    async (message: Message) => {
+      if (!conversationId) return;
+      // A reply to it stands down: it would quote nothing.
+      setReplyingTo((current) => (current?.id === message.id ? null : current));
+
+      applyDelete({ conversationId, messageId: message.id });
+      if (sendDelete({ conversationId, messageId: message.id })) {
+        holdOriginal(message);
+        return;
+      }
+
+      const result = await deleteConversationMessage(api, message.id).catch(
+        () => false,
+      );
+      if (result === true) return;
+
+      restoreMessage(message);
+      Alert.alert(
+        "Not deleted",
+        "The message could not be deleted. Please try again.",
+      );
+    },
+    [
+      api,
+      applyDelete,
+      conversationId,
+      holdOriginal,
+      restoreMessage,
+      sendDelete,
+    ],
+  );
+
+  /** Asks first: a delete is for everyone and there is no undo. */
+  const removeMessage = useCallback(
+    (message: Message) => {
+      Alert.alert(
+        "Delete message?",
+        "It will be removed for everyone in this conversation.",
+        [
+          { style: "cancel", text: "Cancel" },
+          {
+            onPress: () => void performDelete(message),
+            style: "destructive",
+            text: "Delete",
+          },
+        ],
+      );
+    },
+    [performDelete],
   );
 
   /**
@@ -563,11 +706,10 @@ export const ConversationScreen = ({
   /**
    * Opens the sender's profile.
    *
-   * The unqualified path, which is what every other screen uses — the profile
-   * lives in the Home tab's stack, so this crosses tabs. Worth it: the face
-   * beside a message is the first thing people tap to ask who someone is, and
-   * a second copy of the profile screen inside the Inbox stack would be a
-   * second place for it to drift.
+   * The unqualified path, which is what every other screen uses. The Inbox
+   * stack has its own copy of the profile route (as every tab does), so this
+   * stays in Inbox and back returns to the chat — the link cards in messages
+   * rely on the same copies.
    */
   const openSender = useCallback(
     (username: string) => {
@@ -700,6 +842,19 @@ export const ConversationScreen = ({
   useEffect(() => {
     onRegisterLeave(leave);
   }, [leave, onRegisterLeave]);
+
+  /*
+   * What the long-press sheet may offer on the message under it.
+   *
+   * Only a message that has reached the server can be deleted; one still in
+   * flight has "Don't send" instead. Delete takes any message of yours.
+   */
+  const actionsRow = actionsFor
+    ? rows.find((row) => row.message.id === actionsFor.id)
+    : undefined;
+  const canDeleteActions = Boolean(
+    actionsRow && !actionsRow.pendingId && actionsRow.mine,
+  );
 
   return (
     // Everything drawn in here is chat: its pictures expire with the messages.
@@ -921,14 +1076,11 @@ export const ConversationScreen = ({
             message={actionsFor}
             myReaction={myReaction}
             onClose={() => setActionsFor(null)}
+            onDelete={canDeleteActions ? removeMessage : undefined}
             onDiscard={
-              actionsFor &&
-              rows.find((row) => row.message.id === actionsFor.id)?.pendingId
+              actionsRow?.pendingId
                 ? () => {
-                    const row = rows.find(
-                      (entry) => entry.message.id === actionsFor.id,
-                    );
-                    if (row?.pendingId) discard(row.pendingId);
+                    if (actionsRow.pendingId) discard(actionsRow.pendingId);
                   }
                 : undefined
             }
@@ -938,13 +1090,9 @@ export const ConversationScreen = ({
             }
             onReply={startReply}
             onRetry={
-              actionsFor &&
-              rows.find((row) => row.message.id === actionsFor.id)?.failed
+              actionsRow?.failed
                 ? () => {
-                    const row = rows.find(
-                      (entry) => entry.message.id === actionsFor.id,
-                    );
-                    if (row?.pendingId) retry(row.pendingId);
+                    if (actionsRow.pendingId) retry(actionsRow.pendingId);
                   }
                 : undefined
             }

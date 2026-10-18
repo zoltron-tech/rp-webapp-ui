@@ -4,6 +4,7 @@ import {
   isVideoOnlyMessage,
   messagePreview,
   messageTextOf,
+  withoutUrls,
 } from "@nw/chat";
 import type { Message, MessageSender } from "@nw/types";
 import { toChatTime } from "@nw/utils";
@@ -31,7 +32,9 @@ import {
   useReactionGroups,
 } from "@/components/chat/reactions";
 import { RepliedIceBreaker } from "@/components/chat/replied-ice-breaker";
+import { LinkEmbed } from "@/components/link-embeds";
 import { RichText } from "@/components/rich-text";
+import { linksIn } from "@/lib/link-embeds";
 import { Text } from "@/components/text";
 import {
   border,
@@ -406,10 +409,25 @@ const MessageBubbleComponent = ({
    * the text's links are not drawn (`MessageTextMedia` yields to the mosaic),
    * so they stay words.
    */
-  const caption = useMemo(
-    () => (hasMosaic ? (message.message ?? "") : captionOf(message.message)),
-    [hasMosaic, message.message],
-  );
+  /*
+   * Links back into Novelist World — a character, a prompt, a story — are
+   * drawn as cards under the words, and the URL itself leaves the bubble,
+   * so "She's here! <link>" reads as the sentence with the card beneath it.
+   */
+  const nwLinks = useMemo(() => linksIn(words), [words]);
+  const caption = useMemo(() => {
+    const base = hasMosaic
+      ? (message.message ?? "")
+      : captionOf(message.message);
+    if (nwLinks.length === 0) return base;
+    const stripped = withoutUrls(
+      base,
+      nwLinks.map((link) => link.url),
+    )
+      // "go say hi to <link>, she…" keeps its comma; close the gap.
+      .replace(/(?:\s|&nbsp;)+([,.;:!?])/g, "$1");
+    return messageTextOf(stripped) ? stripped : "";
+  }, [hasMosaic, message.message, nwLinks]);
   const captionless =
     hasMosaic &&
     !caption.trim() &&
@@ -525,6 +543,91 @@ const MessageBubbleComponent = ({
     lastTap.current = now;
   };
 
+  /*
+   * A message that is only Novelist World links: the cards are the message,
+   * so there is no bubble to put them in — web draws no words bubble either.
+   * The time and ticks go on their own line under the cards.
+   */
+  const linkOnly =
+    nwLinks.length > 0 &&
+    !caption.trim() &&
+    !hasMosaic &&
+    !mediaOnly &&
+    !reply &&
+    !repliedIceBreaker &&
+    (message.attachments?.length ?? 0) === 0;
+
+  /** The time and delivery ticks, or the reason there are none yet. */
+  const metaContent = failed ? (
+    <>
+      <Ionicons color={theme.error} name="alert-circle" size={12} />
+      <Text style={[styles.time, { color: theme.error }]}>
+        Not sent — tap to retry
+      </Text>
+    </>
+  ) : queued ? (
+    // Not failed, not sending: waiting. Nothing has been tried,
+    // and nothing needs doing — it goes when the signal does.
+    <>
+      <Ionicons
+        color={mediaOnly || captionless ? "#ffffff" : theme.textGray}
+        name="cloud-offline-outline"
+        size={12}
+      />
+      <Text
+        style={[
+          styles.time,
+          {
+            color: mediaOnly || captionless ? "#ffffff" : theme.textGray,
+          },
+        ]}
+      >
+        Waiting for connection
+      </Text>
+    </>
+  ) : (
+    <>
+      <Text
+        style={[
+          styles.time,
+          {
+            color: mediaOnly || captionless ? "#ffffff" : theme.textGray,
+          },
+        ]}
+      >
+        {pending ? "Sending" : toChatTime(message.createdAt)}
+      </Text>
+      {/*
+                    Delivery, on your own messages only.
+                    
+                    Three states and they are genuinely different questions: a
+                    clock means the phone still has it, one tick means the
+                    server does, two mean it has been read. Without this the
+                    only difference between "sent" and "sitting in a dead
+                    socket" was a dimmed bubble nobody reads as a status.
+                  */}
+      {mine ? (
+        <Ionicons
+          color={
+            message.isRead
+              ? theme.accent.text
+              : mediaOnly || captionless
+                ? "#ffffff"
+                : theme.textGray
+          }
+          name={
+            pending
+              ? "time-outline"
+              : message.isRead
+                ? "checkmark-done"
+                : "checkmark"
+          }
+          size={13}
+        />
+      ) : null}
+    </>
+  );
+
   return (
     <View
       style={[
@@ -575,6 +678,9 @@ const MessageBubbleComponent = ({
         {...pan.panHandlers}
         style={[
           styles.bubbleWrap,
+          // Cards want web's wider column (88%, capped); the words bubble
+          // above them keeps hugging its words at its own edge.
+          nwLinks.length > 0 ? styles.bubbleWrapWide : null,
           { transform: [{ translateX }, { scale: pressScale }] },
         ]}
       >
@@ -598,244 +704,224 @@ const MessageBubbleComponent = ({
           ]}
         />
 
-        <Pressable
-          delayLongPress={280}
-          onLongPress={() => onShowActions?.(message)}
-          onPress={handlePress}
-          // A press that dips the bubble slightly is the only feedback a long
-          // press gets before the sheet opens, and without it the 280ms wait
-          // feels like a dropped tap.
-          onPressIn={() => press(0.97)}
-          onPressOut={() => press(1)}
-          style={[
-            styles.bubble,
-            mediaOnly
-              ? styles.bubbleBare
-              : {
-                  backgroundColor: mine
-                    ? theme.accent.surface
-                    : theme.material.fillPressed,
-                  borderColor: failed
-                    ? theme.error
-                    : mine
-                      ? theme.accent.surfaceHover
-                      : theme.material.edge,
-                  borderWidth: border.edge,
-                  ...cornerStyle(mine, position),
-                },
-            // An album fills the bubble to a thin frame; the words around it
-            // keep their own padding instead.
-            hasMosaic ? styles.bubbleMedia : null,
-            // A message in flight is dimmed rather than hidden: it is on screen,
-            // in order, and simply not confirmed yet. An album says so on its
-            // tiles instead, where a dimmed picture only looks broken.
-            { opacity: pending && !hasMosaic ? 0.6 : 1 },
-          ]}
-        >
-          {showSender && !showPersona ? (
-            <Text
-              numberOfLines={1}
-              style={[
-                styles.sender,
-                hasMosaic ? styles.padded : null,
-                { color: senderColour ?? theme.accent.text },
-              ]}
-            >
-              {message.sender?.name || message.sender?.username}
-            </Text>
-          ) : null}
+        {linkOnly && showSender && !showPersona ? (
+          <Text
+            numberOfLines={1}
+            style={[
+              styles.sender,
+              styles.linkSender,
+              { color: senderColour ?? theme.accent.text },
+            ]}
+          >
+            {message.sender?.name || message.sender?.username}
+          </Text>
+        ) : null}
 
-          {repliedIceBreaker ? (
-            <View style={hasMosaic ? styles.padded : null}>
-              <RepliedIceBreaker iceBreaker={repliedIceBreaker} />
-            </View>
-          ) : null}
-
-          {reply ? (
-            <Pressable
-              accessibilityHint="Goes to the message this replies to"
-              accessibilityRole="button"
-              // Tappable, because a quote you cannot follow is a screenshot of
-              // the conversation rather than a link into it.
-              onPress={() => onJumpToQuoted?.(reply.id)}
-              style={({ pressed }) => [
-                styles.quote,
-                hasMosaic ? styles.quoteInset : null,
-                {
-                  backgroundColor: pressed
-                    ? theme.glass.fillPressed
-                    : theme.glass.field,
-                  borderLeftColor:
-                    nameColour(senderSeed(reply.sender)) ?? theme.accent.solid,
-                },
-              ]}
-            >
+        {linkOnly ? null : (
+          <Pressable
+            delayLongPress={280}
+            onLongPress={() => onShowActions?.(message)}
+            onPress={handlePress}
+            // A press that dips the bubble slightly is the only feedback a long
+            // press gets before the sheet opens, and without it the 280ms wait
+            // feels like a dropped tap.
+            onPressIn={() => press(0.97)}
+            onPressOut={() => press(1)}
+            style={[
+              styles.bubble,
+              nwLinks.length > 0
+                ? mine
+                  ? styles.bubbleEnd
+                  : styles.bubbleStart
+                : null,
+              mediaOnly
+                ? styles.bubbleBare
+                : {
+                    backgroundColor: mine
+                      ? theme.accent.surface
+                      : theme.material.fillPressed,
+                    borderColor: failed
+                      ? theme.error
+                      : mine
+                        ? theme.accent.surfaceHover
+                        : theme.material.edge,
+                    borderWidth: border.edge,
+                    ...cornerStyle(mine, position),
+                  },
+              // An album fills the bubble to a thin frame; the words around it
+              // keep their own padding instead.
+              hasMosaic ? styles.bubbleMedia : null,
+              // A message in flight is dimmed rather than hidden: it is on screen,
+              // in order, and simply not confirmed yet. An album says so on its
+              // tiles instead, where a dimmed picture only looks broken.
+              { opacity: pending && !hasMosaic ? 0.6 : 1 },
+            ]}
+          >
+            {showSender && !showPersona ? (
               <Text
                 numberOfLines={1}
                 style={[
-                  styles.quoteAuthor,
+                  styles.sender,
+                  hasMosaic ? styles.padded : null,
+                  { color: senderColour ?? theme.accent.text },
+                ]}
+              >
+                {message.sender?.name || message.sender?.username}
+              </Text>
+            ) : null}
+
+            {repliedIceBreaker ? (
+              <View style={hasMosaic ? styles.padded : null}>
+                <RepliedIceBreaker iceBreaker={repliedIceBreaker} />
+              </View>
+            ) : null}
+
+            {reply ? (
+              <Pressable
+                accessibilityHint="Goes to the message this replies to"
+                accessibilityRole="button"
+                // Tappable, because a quote you cannot follow is a screenshot of
+                // the conversation rather than a link into it.
+                onPress={() => onJumpToQuoted?.(reply.id)}
+                style={({ pressed }) => [
+                  styles.quote,
+                  hasMosaic ? styles.quoteInset : null,
                   {
-                    color:
-                      nameColour(senderSeed(reply.sender)) ?? theme.accent.text,
+                    backgroundColor: pressed
+                      ? theme.glass.fillPressed
+                      : theme.glass.field,
+                    borderLeftColor:
+                      nameColour(senderSeed(reply.sender)) ??
+                      theme.accent.solid,
                   },
                 ]}
               >
-                {reply.sender?.name || reply.sender?.username}
-              </Text>
-              <View style={styles.quoteBodyRow}>
-                {/* A quoted GIF used to be forty characters of CDN URL. Named
-                    media gets an icon and its noun; words stay words. */}
-                {quote?.describes ? (
-                  <Ionicons
-                    color={theme.textGray}
-                    name={
-                      quote.text === "Clip"
-                        ? "film-outline"
-                        : quote.text === "Audio"
-                          ? "musical-notes-outline"
-                          : "image-outline"
-                    }
-                    size={11}
-                  />
-                ) : null}
                 <Text
-                  numberOfLines={2}
-                  style={[styles.quoteBody, { color: theme.textGray }]}
+                  numberOfLines={1}
+                  style={[
+                    styles.quoteAuthor,
+                    {
+                      color:
+                        nameColour(senderSeed(reply.sender)) ??
+                        theme.accent.text,
+                    },
+                  ]}
                 >
-                  {quote?.text}
+                  {reply.sender?.name || reply.sender?.username}
                 </Text>
-              </View>
-            </Pressable>
-          ) : null}
+                <View style={styles.quoteBodyRow}>
+                  {/* A quoted GIF used to be forty characters of CDN URL. Named
+                    media gets an icon and its noun; words stay words. */}
+                  {quote?.describes ? (
+                    <Ionicons
+                      color={theme.textGray}
+                      name={
+                        quote.text === "Clip"
+                          ? "film-outline"
+                          : quote.text === "Audio"
+                            ? "musical-notes-outline"
+                            : "image-outline"
+                      }
+                      size={11}
+                    />
+                  ) : null}
+                  <Text
+                    numberOfLines={2}
+                    style={[styles.quoteBody, { color: theme.textGray }]}
+                  >
+                    {quote?.text}
+                  </Text>
+                </View>
+              </Pressable>
+            ) : null}
 
-          {/*
+            {/*
             Media first, then words — the order web uses, and the order that
             matters: a GIF with a caption should show the GIF above the caption,
             not after it.
           */}
-          {hasMosaic ? (
-            <AttachmentMosaic
-              items={media}
-              onLongPress={() => onShowActions?.(message)}
-              onOpen={
-                onOpenMedia ? (index) => onOpenMedia(message, index) : undefined
-              }
-              pending={pending}
-            />
-          ) : (
-            <MessageTextMedia
-              onLongPress={() => onShowActions?.(message)}
-              onOpen={
-                onOpenMedia ? (index) => onOpenMedia(message, index) : undefined
-              }
-              text={message.message}
-            />
-          )}
+            {hasMosaic ? (
+              <AttachmentMosaic
+                items={media}
+                onLongPress={() => onShowActions?.(message)}
+                onOpen={
+                  onOpenMedia
+                    ? (index) => onOpenMedia(message, index)
+                    : undefined
+                }
+                pending={pending}
+              />
+            ) : (
+              <MessageTextMedia
+                onLongPress={() => onShowActions?.(message)}
+                onOpen={
+                  onOpenMedia
+                    ? (index) => onOpenMedia(message, index)
+                    : undefined
+                }
+                text={message.message}
+              />
+            )}
 
-          {/* No empty line under an album that came without words. */}
-          {mediaOnly || !caption.trim() ? null : (
-            <View style={hasMosaic ? styles.caption : null}>
-              <RichText html={caption} />
-            </View>
-          )}
+            {/* No empty line under an album that came without words. */}
+            {mediaOnly || !caption.trim() ? null : (
+              <View style={hasMosaic ? styles.caption : null}>
+                <RichText html={caption} />
+              </View>
+            )}
 
-          {(message.attachments?.length ?? 0) > media.length ? (
-            <View style={hasMosaic ? styles.padded : null}>
-              <MessageAttachments attachments={message.attachments ?? []} />
-            </View>
-          ) : null}
+            {(message.attachments?.length ?? 0) > media.length ? (
+              <View style={hasMosaic ? styles.padded : null}>
+                <MessageAttachments attachments={message.attachments ?? []} />
+              </View>
+            ) : null}
 
-          {showMeta ? (
-            <View
-              style={[
-                styles.meta,
-                mine && styles.metaMine,
-                hasMosaic && !captionless ? styles.padded : null,
-                // Over a bare GIF, or over the corner of an album with no words
-                // under it, the row has no bubble behind it, so it gets its own
-                // scrim rather than white-on-whatever.
-                mediaOnly || captionless ? styles.metaOverlay : null,
-                captionless ? styles.metaOnMosaic : null,
-                // A clip's foot is its player's controls once it plays.
-                videoOnly ? styles.metaOnClip : null,
-              ]}
-            >
-              {failed ? (
-                <>
-                  <Ionicons color={theme.error} name="alert-circle" size={12} />
-                  <Text style={[styles.time, { color: theme.error }]}>
-                    Not sent — tap to retry
-                  </Text>
-                </>
-              ) : queued ? (
-                // Not failed, not sending: waiting. Nothing has been tried,
-                // and nothing needs doing — it goes when the signal does.
-                <>
-                  <Ionicons
-                    color={
-                      mediaOnly || captionless ? "#ffffff" : theme.textGray
-                    }
-                    name="cloud-offline-outline"
-                    size={12}
-                  />
-                  <Text
-                    style={[
-                      styles.time,
-                      {
-                        color:
-                          mediaOnly || captionless ? "#ffffff" : theme.textGray,
-                      },
-                    ]}
-                  >
-                    Waiting for connection
-                  </Text>
-                </>
-              ) : (
-                <>
-                  <Text
-                    style={[
-                      styles.time,
-                      {
-                        color:
-                          mediaOnly || captionless ? "#ffffff" : theme.textGray,
-                      },
-                    ]}
-                  >
-                    {pending ? "Sending" : toChatTime(message.createdAt)}
-                  </Text>
-                  {/*
-                    Delivery, on your own messages only.
-                    
-                    Three states and they are genuinely different questions: a
-                    clock means the phone still has it, one tick means the
-                    server does, two mean it has been read. Without this the
-                    only difference between "sent" and "sitting in a dead
-                    socket" was a dimmed bubble nobody reads as a status.
-                  */}
-                  {mine ? (
-                    <Ionicons
-                      color={
-                        message.isRead
-                          ? theme.accent.text
-                          : mediaOnly || captionless
-                            ? "#ffffff"
-                            : theme.textGray
-                      }
-                      name={
-                        pending
-                          ? "time-outline"
-                          : message.isRead
-                            ? "checkmark-done"
-                            : "checkmark"
-                      }
-                      size={13}
-                    />
-                  ) : null}
-                </>
-              )}
-            </View>
-          ) : null}
-        </Pressable>
+            {showMeta ? (
+              <View
+                style={[
+                  styles.meta,
+                  mine && styles.metaMine,
+                  hasMosaic && !captionless ? styles.padded : null,
+                  // Over a bare GIF, or over the corner of an album with no words
+                  // under it, the row has no bubble behind it, so it gets its own
+                  // scrim rather than white-on-whatever.
+                  mediaOnly || captionless ? styles.metaOverlay : null,
+                  captionless ? styles.metaOnMosaic : null,
+                  // A clip's foot is its player's controls once it plays.
+                  videoOnly ? styles.metaOnClip : null,
+                ]}
+              >
+                {metaContent}
+              </View>
+            ) : null}
+          </Pressable>
+        )}
+
+        {/* After the words, outside the bubble, as web draws them. */}
+        {nwLinks.length > 0 ? (
+          <View
+            style={[
+              styles.embeds,
+              mine ? styles.embedsMine : null,
+              { opacity: pending ? 0.6 : 1 },
+            ]}
+          >
+            {nwLinks.map((link) => (
+              <LinkEmbed key={`${link.kind}-${link.id}`} link={link} />
+            ))}
+          </View>
+        ) : null}
+
+        {linkOnly && showMeta ? (
+          <Pressable
+            delayLongPress={280}
+            onLongPress={() => onShowActions?.(message)}
+            onPress={handlePress}
+            style={[styles.meta, styles.linkMeta, mine && styles.metaMine]}
+          >
+            {metaContent}
+          </Pressable>
+        ) : null}
 
         <ReactionRow
           groups={reactions}
@@ -911,6 +997,9 @@ const styles = StyleSheet.create({
   // The cap lives on the wrapper rather than the bubble: the bubble is inside
   // an animated view now, and a percentage width there measures the wrapper.
   bubbleWrap: { maxWidth: "80%" },
+  bubbleWrapWide: { maxWidth: 320, width: "88%" },
+  bubbleEnd: { alignSelf: "flex-end" },
+  bubbleStart: { alignSelf: "flex-start" },
   // The words under an album: the bubble's own padding, less the frame.
   caption: {
     paddingBottom: space.xxs,
@@ -960,6 +1049,12 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: space.xs,
   },
+  /** Link cards under the words bubble, full width of the column. */
+  embeds: { width: "100%" },
+  embedsMine: { alignItems: "flex-end" },
+  /** The clock under a links-only message, which has no bubble to sit in. */
+  linkSender: { marginBottom: -space.xs, paddingHorizontal: space.xs },
+  linkMeta: { marginTop: -space.xs, paddingHorizontal: space.xs },
   padded: { paddingHorizontal: space.md - MOSAIC_FRAME },
   persona: {
     alignItems: "center",

@@ -40,7 +40,6 @@ import AvatarCropDialog from "@/components/dialog/avatar-crop-dialog";
 import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
-import { ScoreBadgeIcon } from "@/utils/badge-icons";
 import { API_MESSAGE } from "@/utils/constants";
 import { getMuseAppearance } from "../appearance";
 import * as S from "../styles";
@@ -263,15 +262,13 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
     null,
   );
   const [savingPrivacy, setSavingPrivacy] = useState(false);
-  const [scoreTooltipOpen, setScoreTooltipOpen] = useState(false);
   const [privacyTooltipOpen, setPrivacyTooltipOpen] = useState(false);
   const privacyRef = useRef<HTMLDivElement>(null);
-  const scoreCornerRef = useRef<HTMLSpanElement>(null);
   const privacyCornerRef = useRef<HTMLDivElement>(null);
 
-  // Close privacy dropdown and tooltips on outside click
+  // Close privacy dropdown and tooltip on outside click
   useEffect(() => {
-    if (!privacyOpen && !scoreTooltipOpen && !privacyTooltipOpen) return;
+    if (!privacyOpen && !privacyTooltipOpen) return;
     function handler(e: MouseEvent) {
       if (
         privacyOpen &&
@@ -279,13 +276,6 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
         !privacyRef.current.contains(e.target as Node)
       ) {
         setPrivacyOpen(false);
-      }
-      if (
-        scoreTooltipOpen &&
-        scoreCornerRef.current &&
-        !scoreCornerRef.current.contains(e.target as Node)
-      ) {
-        setScoreTooltipOpen(false);
       }
       if (
         privacyTooltipOpen &&
@@ -297,7 +287,7 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
     }
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [privacyOpen, scoreTooltipOpen, privacyTooltipOpen]);
+  }, [privacyOpen, privacyTooltipOpen]);
 
   // Fandom search debounce
   useEffect(() => {
@@ -374,10 +364,7 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
       errorToast("Failed to add attribute.");
       return;
     }
-    onMuseUpdate?.({
-      extraAttributes: result,
-      totalPoints: (muse.totalPoints ?? 0) + 5,
-    });
+    onMuseUpdate?.({ extraAttributes: result });
     setAddingNew(false);
     successToast("Attribute added.");
   }
@@ -391,10 +378,7 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
       errorToast("Failed to remove attribute.");
       return;
     }
-    onMuseUpdate?.({
-      extraAttributes: result,
-      totalPoints: Math.max(0, (muse.totalPoints ?? 0) - 5),
-    });
+    onMuseUpdate?.({ extraAttributes: result });
     successToast("Attribute removed.");
   }
 
@@ -567,48 +551,6 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
         $hideBackground={hideExpandedBackground}
       >
         <S.InfoCardContent>
-          {/* Score corner */}
-          <ShouldRender if={typeof muse?.totalPoints === "number"}>
-            <Tooltip.Provider delayDuration={200}>
-              <Tooltip.Root
-                open={scoreTooltipOpen}
-                onOpenChange={setScoreTooltipOpen}
-              >
-                <Tooltip.Trigger asChild>
-                  <S.InfoScoreCorner
-                    ref={scoreCornerRef}
-                    accent={accent ?? null}
-                    onClick={() => setScoreTooltipOpen((v) => !v)}
-                  >
-                    <ScoreBadgeIcon size={12} />
-                    {muse?.totalPoints?.toLocaleString()}
-                  </S.InfoScoreCorner>
-                </Tooltip.Trigger>
-                <Tooltip.Portal>
-                  <Tooltip.Content
-                    sideOffset={4}
-                    className={classNames([globalAccent, theme])}
-                    style={{
-                      background: "var(--bg-2)",
-                      border: "1px solid var(--bg-6)",
-                      borderRadius: "6px",
-                      color: "var(--text)",
-                      fontSize: "12px",
-                      maxWidth: "220px",
-                      padding: "6px 10px",
-                      userSelect: "none",
-                      zIndex: 9999,
-                    }}
-                  >
-                    Score reflects how active this character is in the
-                    community.
-                    <Tooltip.Arrow style={{ fill: "var(--bg-6)" }} />
-                  </Tooltip.Content>
-                </Tooltip.Portal>
-              </Tooltip.Root>
-            </Tooltip.Provider>
-          </ShouldRender>
-
           {/* Privacy corner */}
           <S.InfoPrivacyCorner ref={privacyCornerRef}>
             {isOwnMuse && !muse?.originalVerseId ? (

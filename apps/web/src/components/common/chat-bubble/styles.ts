@@ -96,11 +96,13 @@ export const SenderAvatarWrap = styled.div`
   }
 `;
 
-export const BubbleStack = styled.div`
+export const BubbleStack = styled.div<{ $wide?: boolean }>`
   display: flex;
   flex-direction: column;
   gap: 4px;
-  max-width: min(72%, 430px);
+  /* A muse card needs more room than a line of text: at 375px wide, 72% is
+     a 250px card with every name cut short. */
+  max-width: ${(p) => (p.$wide ? "min(88%, 430px)" : "min(72%, 430px)")};
   position: relative;
 
   /* Statically disable selection on the whole bubble subtree. iOS samples

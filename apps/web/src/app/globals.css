@@ -995,6 +995,95 @@ textarea {
     --text-secondary: var(--bg-11);
   }
 
+  /* Tobacco: warm cured-leaf brown, built on #191512 — like onyx, that colour
+     is the raised-surface step (--bg-3), with --bg-1/--bg-2 sunk below it. The
+     accent is the same hue lifted into a leaf tan; step 9 (#8b613c) clears
+     4.5:1 with the default light --text, so no --accent-fg override is needed. */
+  .tobacco {
+    --tobacco-bg-1: #0a0907;
+    --tobacco-bg-2: #120f0d;
+    --tobacco-bg-3: #191512;
+    --tobacco-bg-4: #1f1a17;
+    --tobacco-bg-5: #26211d;
+    --tobacco-bg-6: #302a25;
+    --tobacco-bg-7: #403832;
+    --tobacco-bg-8: #584e46;
+    --tobacco-bg-9: #685d55;
+    --tobacco-bg-10: #786c63;
+    --tobacco-bg-11: #a79d95;
+    --tobacco-bg-12: #efeae6;
+
+    --bg-1: var(--tobacco-bg-1);
+    --bg-2: var(--tobacco-bg-2);
+    --bg-3: var(--tobacco-bg-3);
+    --bg-4: var(--tobacco-bg-4);
+    --bg-5: var(--tobacco-bg-5);
+    --bg-6: var(--tobacco-bg-6);
+    --bg-7: var(--tobacco-bg-7);
+    --bg-8: var(--tobacco-bg-8);
+    --bg-9: var(--tobacco-bg-9);
+    --bg-10: var(--tobacco-bg-10);
+    --bg-11: var(--tobacco-bg-11);
+    --bg-12: var(--tobacco-bg-12);
+
+    --tobacco-1: #0d0a07;
+    --tobacco-a1: #8b613c06;
+    --tobacco-2: #15100b;
+    --tobacco-a2: #8b613c0f;
+    --tobacco-3: #21180f;
+    --tobacco-a3: #8b613c1c;
+    --tobacco-4: #2d1f12;
+    --tobacco-a4: #8b613c2a;
+    --tobacco-5: #392616;
+    --tobacco-a5: #8b613c39;
+    --tobacco-6: #48301b;
+    --tobacco-a6: #8b613c4d;
+    --tobacco-7: #5c3e24;
+    --tobacco-a7: #8b613c68;
+    --tobacco-8: #704d2e;
+    --tobacco-a8: #8b613c8d;
+    --tobacco-9: #8b613c;
+    --tobacco-a9: #8b613cec;
+    --tobacco-10: #a97242;
+    --tobacco-a10: #a97242ec;
+    --tobacco-11: #d5ab86;
+    --tobacco-a11: #d5ab86f5;
+    --tobacco-12: #f4e2d2;
+    --tobacco-a12: #f4e2d2fb;
+
+    --accent-1: var(--tobacco-1);
+    --accent-a1: var(--tobacco-a1);
+    --accent-2: var(--tobacco-2);
+    --accent-a2: var(--tobacco-a2);
+    --accent-3: var(--tobacco-3);
+    --accent-a3: var(--tobacco-a3);
+    --accent-4: var(--tobacco-4);
+    --accent-a4: var(--tobacco-a4);
+    --accent-5: var(--tobacco-5);
+    --accent-a5: var(--tobacco-a5);
+    --accent-6: var(--tobacco-6);
+    --accent-a6: var(--tobacco-a6);
+    --accent-7: var(--tobacco-7);
+    --accent-a7: var(--tobacco-a7);
+    --accent-8: var(--tobacco-8);
+    --accent-a8: var(--tobacco-a8);
+    --accent-9: var(--tobacco-9);
+    --accent-a9: var(--tobacco-a9);
+    --accent-10: var(--tobacco-10);
+    --accent-a10: var(--tobacco-a10);
+    --accent-11: var(--tobacco-11);
+    --accent-a11: var(--tobacco-a11);
+    --accent-12: var(--tobacco-12);
+    --accent-a12: var(--tobacco-a12);
+
+    --accent: var(--tobacco-9);
+    --accent-hover: var(--tobacco-10);
+    --accent-active: var(--tobacco-8);
+
+    --text: var(--bg-12);
+    --text-secondary: var(--bg-11);
+  }
+
   ::selection {
     background-color: var(--accent-a5);
   }
@@ -1263,4 +1352,16 @@ div.toastify.nw-toast-info {
 
 div.toastify.nw-toast-info .nw-toast-icon {
   color: var(--blue-9);
+}
+
+/* ── Spell checker ──────────────────────────────────────────────────────────
+   Misspelled words are painted through the CSS Custom Highlight API
+   (`lib/spell/highlighter.ts`); no markup is added to the editors. */
+:root {
+  --spell-underline: #e5484d;
+}
+::highlight(nw-misspelling) {
+  text-decoration: underline wavy var(--spell-underline);
+  text-decoration-skip-ink: none;
+  text-underline-offset: 2px;
 }

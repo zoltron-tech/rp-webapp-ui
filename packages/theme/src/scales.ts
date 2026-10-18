@@ -14,11 +14,12 @@ import type { AccentValue } from "@nw/types/theme";
  *
  *  - **An accent changes the greys too.** Jade is paired with olive, crimson
  *    with mauve, iris and lunar with slate, gold and ember with sand, cyan with
- *    gray, onyx with a scale of its own. A client that swapped only the accent
- *    would paint a crimson app on olive panels, which is not what web shows.
+ *    gray, onyx and tobacco with scales of their own. A client that swapped only
+ *    the accent would paint a crimson app on olive panels, which is not what web
+ *    shows.
  *  - **`--accent` is not always step 6.** The six pastel accents put their
- *    quiet surface at step 6; the six saturated ones (lime, lotus, dracula,
- *    lunar, ember, onyx) put it at step 9, because step 6 of those is too dark
+ *    quiet surface at step 6; the seven saturated ones (lime, lotus, dracula,
+ *    lunar, ember, onyx, tobacco) put it at step 9, because step 6 of those is too dark
  *    to read a label against. `ACCENT_DEFINITIONS` carries the steps per
  *    accent rather than assuming one rule.
  *
@@ -312,6 +313,36 @@ export const SLATE: ColorScale = [
   "#edeef0",
 ];
 
+export const TOBACCO: ColorScale = [
+  "#0d0a07",
+  "#15100b",
+  "#21180f",
+  "#2d1f12",
+  "#392616",
+  "#48301b",
+  "#5c3e24",
+  "#704d2e",
+  "#8b613c",
+  "#a97242",
+  "#d5ab86",
+  "#f4e2d2",
+];
+
+export const TOBACCO_NEUTRAL: ColorScale = [
+  "#0a0907",
+  "#120f0d",
+  "#191512",
+  "#1f1a17",
+  "#26211d",
+  "#302a25",
+  "#403832",
+  "#584e46",
+  "#685d55",
+  "#786c63",
+  "#a79d95",
+  "#efeae6",
+];
+
 /**
  * What one accent is made of.
  *
@@ -411,5 +442,12 @@ export const ACCENT_DEFINITIONS: Record<AccentValue, AccentDefinition> = {
     hover: 7,
     neutral: MAUVE,
     solid: 6,
+  },
+  tobacco: {
+    accent: TOBACCO,
+    active: 8,
+    hover: 10,
+    neutral: TOBACCO_NEUTRAL,
+    solid: 9,
   },
 };

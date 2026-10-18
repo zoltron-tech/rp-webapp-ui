@@ -1,13 +1,18 @@
 import { getWebSocketTicket } from "@nw/api/endpoints/account";
 import {
+  type ActionErrorPayload,
+  createDeleteSocketMessage,
   createHeartbeatPong,
   createHeartbeatQuery,
-  isServerNotification,
   createMessageSocketMessage,
   createReactionSocketMessage,
+  type DeletePayload,
   HEARTBEAT_TIMEOUT_MS,
+  isServerActionError,
+  isServerDelete,
   isServerEdit,
   isServerMessage,
+  isServerNotification,
   isServerPing,
   isServerReaction,
   type OutgoingMessagePayload,
@@ -30,6 +35,7 @@ import {
 } from "react";
 import { AppState, type AppStateStatus } from "react-native";
 import { env } from "@/lib/env";
+import { deleteMessages, getStore } from "@/lib/local-store";
 import { registerForPush } from "@/lib/push";
 
 /**
@@ -217,6 +223,29 @@ interface ChatSocketValue {
    */
   sendReaction: (payload: ReactionPayload) => boolean;
   /**
+   * Takes a message back.
+   *
+   * Through chat-server when it is up — it deletes and tells every member —
+   * and false when it is not, which is the caller's cue to use the REST
+   * route and accept that the other side learns on its next sync.
+   */
+  sendDelete: (payload: DeletePayload) => boolean;
+  /**
+   * The cache write the delete frame lands in, exposed so a screen can take
+   * the row off before the server answers and put it back if the server
+   * refuses: the one place "what a deleted message does to the open
+   * conversation" is written down. Edits from web land through `applyEdit`
+   * below, which stays private: this client does not start one.
+   */
+  applyDelete: (payload: DeletePayload) => void;
+  /**
+   * Hears the backend refuse an edit or a delete that went over the socket.
+   *
+   * The screen that asked holds the original, so the undo is its to do; the
+   * context only passes the refusal on. Returns the unsubscribe.
+   */
+  onActionError: (listener: (error: ActionErrorPayload) => void) => () => void;
+  /**
    * Registers usernames to ask the server about, and unregisters on cleanup.
    *
    * The server answers strictly about the last list it was given, so this is
@@ -227,8 +256,11 @@ interface ChatSocketValue {
 }
 
 const ChatSocketContext = createContext<ChatSocketValue>({
+  applyDelete: () => {},
   ensureConnected: () => {},
   isConnected: false,
+  onActionError: () => () => {},
+  sendDelete: () => false,
   sendMessage: () => false,
   sendReaction: () => false,
   trackUsernames: () => () => {},
@@ -273,6 +305,19 @@ export const ChatSocketProvider = ({ children }: { children: ReactNode }) => {
 
   /** Usernames each mounted screen wants an online answer about. */
   const trackedRef = useRef(new Map<string, string[]>());
+  /** Who wants to hear about a refused edit or delete. */
+  const actionErrorListeners = useRef(
+    new Set<(error: ActionErrorPayload) => void>(),
+  );
+  const onActionError = useCallback(
+    (listener: (error: ActionErrorPayload) => void) => {
+      actionErrorListeners.current.add(listener);
+      return () => {
+        actionErrorListeners.current.delete(listener);
+      };
+    },
+    [],
+  );
   const signedIn = status === "signed-in";
 
   /**
@@ -435,6 +480,50 @@ export const ChatSocketProvider = ({ children }: { children: ReactNode }) => {
               }
             : previous,
       );
+      // The inbox row quotes the newest message; an edit to that one is a
+      // stale preview until the list is read again.
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.conversations(),
+      });
+    },
+    [queryClient],
+  );
+
+  /**
+   * Takes a message out of the open conversation.
+   *
+   * Three places hold it. The query cache, which the screen draws from; the
+   * quotes on later replies, which the server will also drop on the next
+   * fetch (`getRepliedTo` finds no row), so the cache is brought to the same
+   * answer now rather than showing a quote of words that are gone; and the
+   * local store, which would otherwise put the row back on the next hydrate.
+   * The inbox is invalidated because its row quotes the newest message.
+   */
+  const applyDelete = useCallback(
+    ({ conversationId, messageId }: DeletePayload) => {
+      queryClient.setQueryData<{ pages: Message[][]; pageParams: unknown[] }>(
+        queryKeys.conversationMessages(conversationId),
+        (previous) =>
+          previous
+            ? {
+                ...previous,
+                pages: previous.pages.map((page) =>
+                  page
+                    .filter((m) => m.id !== messageId)
+                    .map((m) =>
+                      m.repliedTo?.message?.id === messageId
+                        ? { ...m, repliedTo: undefined }
+                        : m,
+                    ),
+                ),
+              }
+            : previous,
+      );
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.conversations(),
+      });
+      const store = getStore();
+      if (store) void deleteMessages(store, [messageId]);
     },
     [queryClient],
   );
@@ -528,12 +617,25 @@ export const ChatSocketProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      if (isServerDelete(frame)) {
+        applyDelete(frame.payload);
+        return;
+      }
+
+      if (isServerActionError(frame)) {
+        for (const listener of actionErrorListeners.current) {
+          listener(frame.payload);
+        }
+        return;
+      }
+
       if (isServerReaction(frame)) {
         applyReaction(frame.payload);
       }
     },
     [
       appendMessage,
+      applyDelete,
       applyEdit,
       applyReaction,
       crypto,
@@ -750,8 +852,11 @@ export const ChatSocketProvider = ({ children }: { children: ReactNode }) => {
 
   const value = useMemo<ChatSocketValue>(
     () => ({
+      applyDelete,
       ensureConnected,
       isConnected,
+      onActionError,
+      sendDelete: (payload) => rawSend(createDeleteSocketMessage(payload)),
       sendMessage: (payload) => {
         const sent = rawSend(createMessageSocketMessage(payload));
         // Someone who has just written will want to hear the answer: the one
@@ -762,7 +867,14 @@ export const ChatSocketProvider = ({ children }: { children: ReactNode }) => {
       sendReaction: (payload) => rawSend(createReactionSocketMessage(payload)),
       trackUsernames,
     }),
-    [ensureConnected, isConnected, rawSend, trackUsernames],
+    [
+      applyDelete,
+      ensureConnected,
+      isConnected,
+      onActionError,
+      rawSend,
+      trackUsernames,
+    ],
   );
 
   return (

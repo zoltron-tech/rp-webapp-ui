@@ -89,25 +89,6 @@ export const InviteDescription = styled.p`
   line-height: 1.5;
 `;
 
-export const InviteXPNote = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--accent) 12%, var(--bg-3));
-  border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--bg-5));
-  color: var(--text);
-  font-size: var(--font-size-small);
-  line-height: 1.4;
-  text-align: left;
-
-  svg {
-    flex-shrink: 0;
-  }
-`;
-
 export const InviteLinkBox = styled.div`
   display: flex;
   align-items: center;

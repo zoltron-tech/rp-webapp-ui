@@ -80,10 +80,4 @@ export interface StoreState {
   showJoinDiscordPrompt: boolean;
   /** True for the brief window between finishing onboarding and viewing the welcome page. */
   justOnboarded: boolean;
-  /**
-   * Leaderboard rank of the currently logged-in novelist — null while loading,
-   * undefined when the fetch failed or no rank exists (hides the badge instead
-   * of shimmering forever). Refreshed on login and profile/edit-profile open.
-   */
-  novelistRank: number | null | undefined;
 }

@@ -46,7 +46,7 @@ interface ScreenRef {
     canGoBack: () => boolean;
     getState: () => { routes: readonly { key: string }[] };
   };
-  route: { key: string };
+  route: { key: string; name: string };
 }
 
 /**
@@ -68,3 +68,14 @@ export const nestedStackBack = ({
   if (!navigation.canGoBack()) return {};
   return { headerLeft: () => <StackBackButton /> };
 };
+
+/**
+ * The same, for a tab's own stack: a screen that arrived first in it — a link
+ * opened from another tab or from outside the tabs, a profile from a chat —
+ * has nothing under it in this stack, so on iOS it had no back button and no
+ * way out. The tab's own home screen (`index`) is never given one.
+ */
+export const tabStackBack = (
+  screen: ScreenRef,
+): Pick<NativeStackNavigationOptions, "headerLeft"> =>
+  screen.route.name === "index" ? {} : nestedStackBack(screen);

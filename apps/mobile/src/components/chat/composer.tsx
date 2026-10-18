@@ -5,6 +5,7 @@ import {
   markdownToHtml,
   messagePreview,
 } from "@nw/chat";
+import { matchCase, namesToWords } from "@nw/spell/tokenizer";
 import type { Message } from "@nw/types";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -18,25 +19,30 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { Text, type TextInput } from "@/components/text";
 import {
   KeyboardController,
   useKeyboardAnimation,
 } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Avatar } from "@/components/avatar";
-import { GlassSurface } from "@/components/glass-surface";
 import { applyFormat, FormatBar } from "@/components/chat/format-bar";
 import { MarkdownInput } from "@/components/chat/markdown-input";
 import { MediaTray, type TrayTab } from "@/components/chat/media-tray";
 import { mediaLabel } from "@/components/chat/message-actions";
 import { MessageThumb, messageMediaOf } from "@/components/chat/message-media";
 import { SenderPicker } from "@/components/chat/sender-picker";
+import { GlassSurface } from "@/components/glass-surface";
+import { IconButton } from "@/components/icon-button";
+import { SpellStrip } from "@/components/spell/spell-strip";
+import { Text, type TextInput } from "@/components/text";
 import { useAttachments } from "@/hooks/use-attachments";
 import {
   lastKeyboardHeight,
   useKeyboardHeight,
 } from "@/hooks/use-keyboard-height";
+import { type SpellFlag, useSpellFlags } from "@/lib/spell/flags";
+import { spellStore } from "@/lib/spell/store";
+import { useSpellTarget } from "@/lib/spell/use-spell-target";
 import {
   border,
   fontSize,
@@ -45,7 +51,6 @@ import {
   space,
   useAppTheme,
 } from "@/theme";
-import { IconButton } from "@/components/icon-button";
 
 /**
  * The message composer.
@@ -116,6 +121,7 @@ export interface ComposerSubmission {
 
 /** One empty list, so a screen without a sender control passes a stable prop. */
 const NO_SENDERS: MessageSenderChoice[] = [];
+const NO_FLAGS: readonly SpellFlag[] = [];
 
 /**
  * Memoised: the conversation screen above re-renders on every message that
@@ -249,6 +255,66 @@ export const Composer = memo(function Composer({
    */
   const selectionRef = useRef({ end: 0, start: 0 });
   const [caret, setCaret] = useState<{ end: number; start: number }>();
+
+  /*
+   * Spelling: the field underlines misspelled words (`MarkdownInput`
+   * `flags`), and a strip above the row offers corrections for the word
+   * under the caret or synonyms for a selected one. Everyone the message
+   * could go out as is a name, never a typo. See `lib/spell/`.
+   */
+  const typingAt = useRef(0);
+  const spellIgnore = useMemo(
+    () => namesToWords(senders.map((sender) => sender.name)),
+    [senders],
+  );
+  const spellTexts = useMemo(() => [draft], [draft]);
+  const getSpellCaret = useCallback(() => {
+    const { end, start } = selectionRef.current;
+    return start === end ? { index: 0, offset: start } : null;
+  }, []);
+  const spellFlags = useSpellFlags(spellTexts, {
+    enabled: !disabled,
+    getCaret: getSpellCaret,
+    ignore: spellIgnore,
+    typingAt: typingAt.current,
+  });
+  const draftFlags = spellFlags[0] ?? NO_FLAGS;
+  const draftFlagsRef = useRef(draftFlags);
+  draftFlagsRef.current = draftFlags;
+  const readSpell = useCallback(
+    () => ({
+      flags: draftFlagsRef.current,
+      selection: selectionRef.current,
+      text: draftRef.current,
+    }),
+    [],
+  );
+  const spell = useSpellTarget(readSpell, draftFlags);
+  useEffect(() => {
+    if (!disabled) void spellStore.start();
+  }, [disabled]);
+  const pickSpelling = useCallback(
+    (replacement: string) => {
+      const target = spell.target;
+      if (!target) return;
+      const text = draftRef.current;
+      const word = matchCase(target.word, replacement);
+      setDraft(text.slice(0, target.start) + word + text.slice(target.end));
+      const next = target.start + word.length;
+      placeCaret.current = next;
+      selectionRef.current = { end: next, start: next };
+      spell.clear();
+    },
+    [spell],
+  );
+  const addSpelling = useCallback(() => {
+    if (spell.target) spellStore.addWord(spell.target.word);
+    spell.clear();
+  }, [spell]);
+  const ignoreSpelling = useCallback(() => {
+    if (spell.target) spellStore.ignoreWord(spell.target.word);
+    spell.clear();
+  }, [spell]);
 
   const media = useAttachments(conversationId);
 
@@ -761,6 +827,17 @@ export const Composer = memo(function Composer({
           <FormatBar onFormat={format} />
         ) : null}
 
+        {spell.target && !disabled ? (
+          <SpellStrip
+            loading={spell.loading}
+            onAdd={addSpelling}
+            onIgnore={ignoreSpelling}
+            onPick={pickSpelling}
+            suggestions={spell.suggestions}
+            target={spell.target}
+          />
+        ) : null}
+
         <View style={styles.row}>
           {selectedSender ? (
             <Pressable
@@ -813,7 +890,11 @@ export const Composer = memo(function Composer({
                 if (refocusing.current) return;
                 setFocused(false);
               }}
-              onChangeText={setDraft}
+              flags={draftFlags}
+              onChangeText={(text) => {
+                typingAt.current = Date.now();
+                setDraft(text);
+              }}
               onFocus={() => {
                 refocusing.current = false;
                 setFocused(true);
@@ -821,6 +902,7 @@ export const Composer = memo(function Composer({
               }}
               onSelectionChange={(event) => {
                 selectionRef.current = event.nativeEvent.selection;
+                spell.refresh();
                 // Handing the caret back to the platform: it has been placed,
                 // and holding it would pin the cursor there.
                 if (caret) setCaret(undefined);

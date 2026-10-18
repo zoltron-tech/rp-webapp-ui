@@ -186,3 +186,22 @@ export const markConversationRead = async (
     method: "POST",
   });
 };
+
+// ─── A sent message, taken back ─────────────────────────────────────────────
+//
+// The route sits beside the conversation ones, one level up: the message id
+// is enough, the backend finds the conversation from it. The socket is the
+// first choice — chat-server deletes through this same route and then tells
+// everyone — and this is the fallback for a client whose socket is down,
+// where the other side learns on its next sync instead.
+
+const MESSAGE = "/rp/portfolio/chat/message";
+
+/** Hard delete, with a tombstone left for clients that were offline. */
+export const deleteConversationMessage = (
+  api: ApiClient,
+  messageId: string,
+): Promise<DataType<boolean>> =>
+  ack(api, `${MESSAGE}/${id(messageId)}`, "deleteConversationMessageAction", {
+    method: "DELETE",
+  });

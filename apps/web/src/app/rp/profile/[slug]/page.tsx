@@ -7,7 +7,6 @@ import type { Activity } from "@nw/types/activity";
 import type { ProfileSong } from "@nw/types/music";
 import { ACCENT_MAP, type Accent } from "@nw/types/theme";
 import classNames from "classnames";
-import { Tooltip } from "radix-ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BiHide } from "react-icons/bi";
 import { BsPersonFillCheck, BsPersonFillUp, BsThreeDots } from "react-icons/bs";
@@ -72,7 +71,6 @@ import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import { useParams } from "@/lib/navigation";
-import { ScoreBadgeIcon } from "@/utils/badge-icons";
 import { API_MESSAGE, SUPPORT_EMAIL } from "@/utils/constants";
 import { usernameFromHandle } from "@/utils/constants/profile-handle";
 import { ROUTES } from "@/utils/constants/routes";
@@ -270,9 +268,6 @@ export default function UserProfilePage({}) {
   const [supportMessage, setSupportMessage] = useState("");
   const user = useGlobalState("user");
   const userNovelist = useGlobalState("novelist");
-  const accent = useGlobalState("accent");
-  const theme = useGlobalState("theme");
-  const [scoreTooltipOpen, setScoreTooltipOpen] = useState(false);
   // The route param is a handle (`@tokyo`), not a bare username.
   const username = usernameFromHandle(params?.handle as string);
   const isCurrentUser = username === user?.username;
@@ -1156,49 +1151,6 @@ export default function UserProfilePage({}) {
                   username={novelist?.username}
                   nwImage={novelist?.avatar}
                 />
-                <ShouldRender
-                  if={
-                    !isSupportNovelist(username) &&
-                    typeof novelist?.totalPoints === "number"
-                  }
-                >
-                  <Tooltip.Provider delayDuration={200}>
-                    <Tooltip.Root
-                      open={scoreTooltipOpen}
-                      onOpenChange={setScoreTooltipOpen}
-                    >
-                      <Tooltip.Trigger asChild>
-                        <S.AvatarXpBadge
-                          onClick={() => setScoreTooltipOpen((v) => !v)}
-                        >
-                          <ScoreBadgeIcon size={14} />
-                          {novelist?.totalPoints?.toLocaleString()} XP
-                        </S.AvatarXpBadge>
-                      </Tooltip.Trigger>
-                      <Tooltip.Portal>
-                        <Tooltip.Content
-                          sideOffset={4}
-                          className={classNames([accent, theme])}
-                          style={{
-                            background: "var(--bg-2)",
-                            border: "1px solid var(--glass-edge, var(--bg-6))",
-                            borderRadius: "10px",
-                            boxShadow: "0 12px 32px -12px rgb(0 0 0 / 0.7)",
-                            color: "var(--text)",
-                            fontSize: "12px",
-                            maxWidth: "220px",
-                            padding: "6px 10px",
-                            userSelect: "none",
-                            zIndex: 9999,
-                          }}
-                        >
-                          XP reflects how active this Novelist is on the app.
-                          <Tooltip.Arrow style={{ fill: "var(--bg-2)" }} />
-                        </Tooltip.Content>
-                      </Tooltip.Portal>
-                    </Tooltip.Root>
-                  </Tooltip.Provider>
-                </ShouldRender>
               </S.AvatarWrap>
               <ShouldRender if={Boolean(novelist?.note?.text)}>
                 <S.NoteContainer $color={novelist?.note?.color ?? null}>

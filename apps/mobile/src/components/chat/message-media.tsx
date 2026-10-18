@@ -31,6 +31,7 @@ import {
 import { ClipPlayer } from "@/components/chat/clip-player";
 import { cachedThumbnail, thumbnailFor } from "@/components/feed/feed-media";
 import { Image } from "@/components/image";
+import { parseLink } from "@/lib/link-embeds";
 import { LIVE_STILLS, LiveStill } from "@/components/live-still";
 import {
   prefetchForViewer,
@@ -552,7 +553,9 @@ export const MessageTextMedia = ({
    */
   const drawn = drawnUrlsOf(text);
   const lone = drawn.some(isDirectVideoUrl);
-  const shown = hasMarkup(text) ? drawn : urls;
+  // A link back into Novelist World is drawn as a card by the bubble itself
+  // (`LinkEmbed`), so it gets no chip here.
+  const shown = (hasMarkup(text) ? drawn : urls).filter((url) => !parseLink(url));
   if (shown.length === 0) return null;
 
   return (

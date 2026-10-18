@@ -133,17 +133,34 @@ export const dropLegacyAuthCookie = () => {
 // ─── Referral ────────────────────────────────────────────────────────────────
 
 /**
- * 7-day expiry, and `SameSite=Lax` rather than Strict — deliberately.
+ * 30-day expiry, and `SameSite=Lax` rather than Strict — deliberately.
  *
  * Strict would drop the cookie on the top-level redirect back from
  * Google/Discord to the OAuth2 callback, which is the one moment it has to
- * survive.
+ * survive. Thirty days rather than seven: an invite is often opened, put
+ * aside, and acted on later by typing the address — and the referral should
+ * still be waiting when that person signs up.
  */
-export const setReferralCookieSync = (username: string) =>
-  writeCookie(REFERRAL_COOKIE_NAME, username, {
-    expires: new Date(Date.now() + 7 * DAY),
+export const setReferralCookieSync = (username: string) => {
+  const referral = username.trim();
+  // A link mangled in transit is not worth thirty days of a cookie.
+  if (!isReferralUsername(referral)) return;
+  writeCookie(REFERRAL_COOKIE_NAME, referral, {
+    expires: new Date(Date.now() + 30 * DAY),
     sameSite: "lax",
   });
+};
+
+/**
+ * Whether a referral looks like a username at all: the same characters and the
+ * same 50-character ceiling user-service applies.
+ *
+ * Checked on the way in and on the way out. A cookie written by an older build,
+ * or edited by hand, is still never sent — the referral is a bonus, and nothing
+ * about it may get in the way of the signup carrying it.
+ */
+const isReferralUsername = (value: string) =>
+  value.length > 0 && value.length <= 50 && /^[a-zA-Z0-9_.-]+$/.test(value);
 
 export const removeReferralCookieSync = () =>
   // Same two-writers problem as the auth cookie had: user-service clears this
@@ -155,7 +172,14 @@ export const readReferralCookie = (): string | undefined => {
   const match = document.cookie.match(
     new RegExp(`(?:^|; )${REFERRAL_COOKIE_NAME}=([^;]*)`),
   );
-  return match ? decodeURIComponent(match[1]) : undefined;
+  if (!match) return undefined;
+  try {
+    const referral = decodeURIComponent(match[1]).trim();
+    return isReferralUsername(referral) ? referral : undefined;
+  } catch {
+    // A malformed escape is as good as no referral.
+    return undefined;
+  }
 };
 
 /** Re-renders the caller when the referral cookie changes. */

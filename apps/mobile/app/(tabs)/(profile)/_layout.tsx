@@ -4,6 +4,7 @@ import { glassHeaderOptions } from "@/theme/header";
 import { ambientScreenLayout } from "@/components/ambient-background";
 import { TabHeaderTitle } from "@/components/header-title";
 import { MenuButton } from "@/components/menu-button";
+import { tabStackBack } from "@/components/stack-back-button";
 
 /**
  * The Profile tab's own stack.
@@ -33,13 +34,16 @@ export default function ProfileStackLayout() {
   return (
     <Stack
       screenLayout={ambientScreenLayout}
-      screenOptions={{
+      screenOptions={(screen) => ({
         contentStyle: { backgroundColor: theme.background },
         headerRight: () => (
           <MenuButton />
         ),
         ...glassHeaderOptions(theme),
-      }}
+        // A page that arrived first in this stack (a link from another tab,
+        // from a chat, from a story) still needs a way back on iOS.
+        ...tabStackBack(screen),
+      })}
     >
       {/*
         The brand tile, then the page's name set as the lockup sets
@@ -62,6 +66,8 @@ export default function ProfileStackLayout() {
       <Stack.Screen name="badges" options={{ title: "Badges" }} />
       <Stack.Screen name="muse/[museId]" />
       <Stack.Screen name="prompt/[promptId]" options={{ title: "Prompt" }} />
+      {/* A thread link in a post here opens here, not alone in another tab. */}
+      <Stack.Screen name="threads/[threadId]" options={{ title: "Thread" }} />
       {/*
         Shared with Home: whoever signed a card on this tab opens here rather
         than in another tab's stack, so the back button stays honest.

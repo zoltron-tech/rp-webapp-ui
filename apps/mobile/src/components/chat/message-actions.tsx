@@ -1,4 +1,3 @@
-
 import { isSameReaction, messagePreview, REACTION_OPTIONS } from "@nw/chat";
 import { parseRichText, richTextToPlainText } from "@nw/richtext";
 import type { Message } from "@nw/types";
@@ -27,6 +26,11 @@ import { fontSize, radius, space, useAppTheme } from "@/theme";
  * that mistake silent. A GIF, sticker, picture or clip is shown as itself — a
  * thumbnail and its name — rather than as the CDN link it is sent as, which
  * said nothing about which of three GIFs in a row the sheet was for.
+ *
+ * Delete is offered only when the screen hands over its handler: it knows
+ * whose message this is, and the sheet shows what it is given rather than
+ * deciding twice. Editing is deliberately not offered on this client — see
+ * the conversation screen.
  */
 
 /**
@@ -71,11 +75,14 @@ export const MessageActions = ({
   message,
   myReaction,
   onClose,
+  onDelete,
   onReact,
   onDiscard,
   onReply,
   onRetry,
 }: {
+  /** Present for a sent message of your own; the screen confirms first. */
+  onDelete?: (message: Message) => void;
   /** Present for a message still waiting to be sent; removing it is final. */
   onDiscard?: () => void;
   /** False while the socket is down: a reaction has no REST fallback. */
@@ -161,6 +168,20 @@ export const MessageActions = ({
               },
             ]
           : []),
+        ...(onDelete
+          ? [
+              { separator: true },
+              {
+                icon: "trash-outline" as const,
+                label: "Delete",
+                onPress: () => {
+                  onClose();
+                  onDelete(message);
+                },
+                variant: "danger" as const,
+              },
+            ]
+          : []),
       ]
     : [];
 
@@ -212,9 +233,7 @@ export const MessageActions = ({
             const active = isSameReaction(option.key, myReaction);
             return (
               <Pressable
-                accessibilityHint={
-                  active ? "Removes your reaction" : undefined
-                }
+                accessibilityHint={active ? "Removes your reaction" : undefined}
                 accessibilityLabel={option.label}
                 accessibilityRole="button"
                 accessibilityState={{ selected: active }}

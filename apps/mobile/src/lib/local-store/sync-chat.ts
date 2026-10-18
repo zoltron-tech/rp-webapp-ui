@@ -80,12 +80,16 @@ export const reconcileInbox = async (
           ? {
               ...previous,
               pages: previous.pages.map((page) =>
-                page.filter((conversation) => conversation.id !== conversationId),
+                page.filter(
+                  (conversation) => conversation.id !== conversationId,
+                ),
               ),
             }
           : previous,
     );
-    queryClient.removeQueries({ queryKey: queryKeys.conversation(conversationId) });
+    queryClient.removeQueries({
+      queryKey: queryKeys.conversation(conversationId),
+    });
     await deleteConversation(store, conversationId);
   }
 
@@ -114,7 +118,11 @@ export const reconcileThread = async (
   const key = queryKeys.conversationMessages(conversationId);
   const since = sinceFor(await lastSyncedAt(store, entity));
 
-  const deleted = await getDeletedMessageIds(api, conversationId, msToServerParam(since));
+  const deleted = await getDeletedMessageIds(
+    api,
+    conversationId,
+    msToServerParam(since),
+  );
   if (deleted === null || "message" in deleted) {
     // No route (or not this route): refetch the thread's first page instead.
     await queryClient.invalidateQueries({ queryKey: key });
@@ -129,12 +137,22 @@ export const reconcileThread = async (
         ? {
             ...previous,
             pages: previous.pages.map((page) =>
-              page.filter((message) => !gone.has(message.id)),
+              page
+                .filter((message) => !gone.has(message.id))
+                .map((message) =>
+                  message.repliedTo?.message?.id &&
+                  gone.has(message.repliedTo.message.id)
+                    ? { ...message, repliedTo: undefined }
+                    : message,
+                ),
             ),
           }
         : previous,
     );
     await deleteMessages(store, deleted);
+    // The inbox row quotes the newest message; if that was one of these the
+    // row is stale until the list is read again.
+    void queryClient.invalidateQueries({ queryKey: queryKeys.conversations() });
   }
 
   // What arrived after the newest message the file holds. Nothing held means
@@ -150,12 +168,15 @@ export const reconcileThread = async (
       const decrypted = await crypto.decryptMessages(arrived, conversationId);
       queryClient.setQueryData<Pages<Message>>(key, (previous) => {
         if (!previous) return previous;
-        const known = new Set(previous.pages.flat().map((message) => message.id));
+        const known = new Set(
+          previous.pages.flat().map((message) => message.id),
+        );
         // Only what is genuinely newer: a backend without `after` answers page
         // one, whose older rows must not be stacked on top of the thread.
         const fresh = decrypted.filter(
           (message) =>
-            !known.has(message.id) && serverDateToMs(message.createdAt) > newest,
+            !known.has(message.id) &&
+            serverDateToMs(message.createdAt) > newest,
         );
         if (fresh.length === 0) return previous;
         return {

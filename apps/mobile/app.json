@@ -51,6 +51,7 @@
       "expo-web-browser",
       "./plugins/with-animated-webp",
       "./plugins/with-windows-ninja",
+      "./plugins/with-pod-deployment-target",
       [
         "expo-sqlite",
         {

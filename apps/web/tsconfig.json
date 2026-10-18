@@ -80,6 +80,12 @@
       ],
       "@nw/utils/*": [
         "../../packages/utils/src/*"
+      ],
+      "@nw/spell": [
+        "../../packages/spell/src"
+      ],
+      "@nw/spell/*": [
+        "../../packages/spell/src/*"
       ]
     }
   },

@@ -734,7 +734,7 @@ export const PaletteOption = styled.label`
   cursor: pointer;
   padding: 6px 4px;
   border-radius: 6px;
-  width: 20%;
+  width: 25%;
 
   &:hover {
     background-color: var(--bg-4);
@@ -780,9 +780,9 @@ export const PaletteOption = styled.label`
     color: var(--text);
   }
 
-  /* Fits the 375px baseline: five slim columns per row */
+  /* Fits the 375px baseline: the four basic palettes in one row */
   @media screen and (max-width: 800px) {
-    width: 20%;
+    width: 25%;
     gap: 3px;
     padding: 4px 0;
 

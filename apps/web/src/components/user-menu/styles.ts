@@ -599,33 +599,9 @@ export const NewBadge = styled.span`
   flex-shrink: 0;
 `;
 
-export const LeaderboardElement = styled(Element)`
-  color: #f59e0b;
-  background: rgba(245, 158, 11, 0.07);
-
-  &:hover {
-    background-color: #d97706;
-    color: #ffffff;
-
-    svg {
-      stroke: #ffffff;
-    }
-  }
-`;
-
 export const MobilePanelDiscordMenuItem = styled(MobilePanelMenuItem)`
   > div > svg {
     color: #8f97ff;
-  }
-`;
-
-export const MobilePanelLeaderboardMenuItem = styled(MobilePanelMenuItem)`
-  color: #f59e0b;
-  background: rgba(245, 158, 11, 0.07);
-
-  &:active {
-    background: #d97706;
-    color: #ffffff;
   }
 `;
 

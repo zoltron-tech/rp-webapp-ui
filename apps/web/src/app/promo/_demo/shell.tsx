@@ -91,7 +91,6 @@ const INITIAL_STATE: StoreState = {
   },
   notifications: null,
   novelist: null,
-  novelistRank: null,
   novelists: [],
   pageLoading: false,
   searchBarExpanded: false,

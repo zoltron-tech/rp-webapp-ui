@@ -3,12 +3,17 @@
 import { ShouldRender } from "@novelist-world/ui";
 import type { NWImage } from "@nw/types";
 import type { ProfileSong } from "@nw/types/music";
-import { ACCENT_MAP, type Accent } from "@nw/types/theme";
+import {
+  ACCENT_MAP,
+  type Accent,
+  BASIC_ACCENTS,
+  MORE_ACCENTS,
+} from "@nw/types/theme";
 import { clamp, cropToEditorState, toCropFilter, VALID_IMAGE_TYPES } from "@nw/utils";
 import { RadioGroup, Separator } from "radix-ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BsArrowLeft } from "react-icons/bs";
-import { MdClose, MdOutlineBrush, MdOutlineCameraAlt, MdOutlineImage } from "react-icons/md";
+import { MdAdd, MdClose, MdOutlineBrush, MdOutlineCameraAlt, MdOutlineImage } from "react-icons/md";
 import { AvatarPickerDialog } from "@/components/avatar-picker-dialog";
 import { AvatarUploadField } from "@/components/common/avatar-upload-field";
 import { AppAlertDialog } from "@/components/dialog";
@@ -23,6 +28,7 @@ import { API_MESSAGE } from "@/utils/constants";
 import { deleteMedia } from "../actions";
 import { NoteDialogBody } from "./note-dialog-body";
 import { NoteEditTray } from "./note-edit-tray";
+import { PaletteMorePicker } from "./palette-more-picker";
 import { useProfileState, useProfileStoreSet } from "./profile.store";
 import {
   deleteProfileSongAction,
@@ -75,6 +81,7 @@ export function AppearanceSection({ onBack }: Props) {
   const [tempNoteColor, setTempNoteColor] = useState<string | null>(null);
   const [tempNoteEmoji, setTempNoteEmoji] = useState<string | null>(null);
   const [discardOpen, setDiscardOpen] = useState(false);
+  const [paletteMoreOpen, setPaletteMoreOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Avatar crop dialog state
@@ -466,6 +473,8 @@ export function AppearanceSection({ onBack }: Props) {
 
   const previewAccentClass =
     ACCENT_MAP[Number(palette) as Accent] ?? ACCENT_MAP[0];
+  const selectedPalette = Number(palette) as Accent;
+  const moreSelected = MORE_ACCENTS.includes(selectedPalette);
 
   // The displayed avatar src — use the crop src when an avatar NWImage is set
   const displayAvatarSrc = avatar?.src || image || null;
@@ -598,20 +607,33 @@ export function AppearanceSection({ onBack }: Props) {
             }
           >
             <S.PaletteRow>
-              {Object.entries(ACCENT_MAP).map(([key, color]) => (
-                <S.RadioItemContainer key={key} className={color}>
-                  <RadioGroup.Item
-                    className="radio-item"
-                    value={key}
-                    id={`palette-${key}`}
-                    aria-label={`Palette ${color}`}
-                  />
-                  <label className="palette-name" htmlFor={`palette-${key}`}>
-                    {color}
-                  </label>
-                </S.RadioItemContainer>
-              ))}
+              {(moreSelected
+                ? [...BASIC_ACCENTS, selectedPalette]
+                : BASIC_ACCENTS
+              ).map((key) => {
+                const color = ACCENT_MAP[key];
+                return (
+                  <S.RadioItemContainer key={key} className={color}>
+                    <RadioGroup.Item
+                      className="radio-item"
+                      value={String(key)}
+                      id={`palette-${key}`}
+                      aria-label={`Palette ${color}`}
+                    />
+                    <label className="palette-name" htmlFor={`palette-${key}`}>
+                      {color}
+                    </label>
+                  </S.RadioItemContainer>
+                );
+              })}
             </S.PaletteRow>
+            <S.PaletteMoreButton
+              type="button"
+              onClick={() => setPaletteMoreOpen(true)}
+            >
+              <MdAdd size={16} />
+              More colors
+            </S.PaletteMoreButton>
           </S.PaletteGroup>
         </S.AppearanceFieldGroup>
 
@@ -782,6 +804,17 @@ export function AppearanceSection({ onBack }: Props) {
         actionColor="negative"
         onConfirm={handleConfirmDiscard}
         onCancel={() => setDiscardOpen(false)}
+      />
+
+      <PaletteMorePicker
+        open={paletteMoreOpen}
+        isMobile={isMobile}
+        value={selectedPalette}
+        onCancel={() => setPaletteMoreOpen(false)}
+        onConfirm={(next) => {
+          setProfileState({ palette: next });
+          setPaletteMoreOpen(false);
+        }}
       />
 
       <SongPickerDialog

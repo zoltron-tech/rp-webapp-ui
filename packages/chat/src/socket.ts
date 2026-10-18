@@ -85,6 +85,39 @@ export type ServerPing = { type: "ping"; payload: HeartbeatPayload };
 export type ServerReaction = { type: "reaction"; payload: ReactionPayload };
 export type ServerEdit = { type: "edit"; payload: Message };
 
+/**
+ * A message its sender took back.
+ *
+ * Ids only, in both directions: the client asks with them and the server's
+ * broadcast carries the same pair back. The row is already gone from the
+ * backend by the time the frame goes out (`DELETE /chat/message/{id}` plus a
+ * tombstone for clients that were offline), so there is no message object to
+ * carry — and sending one would put deleted words back on the wire.
+ */
+export interface DeletePayload {
+  conversationId: string;
+  messageId: string;
+}
+export type ServerDelete = { type: "delete"; payload: DeletePayload };
+
+/**
+ * The backend refused an edit or a delete.
+ *
+ * Both are applied optimistically by the clients, so a refusal has to name
+ * what it refused — the ids — or there is nothing to put back. `code` is the
+ * backend's HTTP status: 403 is "not yours", 404 "already gone".
+ */
+export interface ActionErrorPayload {
+  action: "delete" | "edit";
+  code: number;
+  conversationId: string;
+  messageId: string;
+}
+export type ServerActionError = {
+  type: "action-error";
+  payload: ActionErrorPayload;
+};
+
 // ─── Guards ──────────────────────────────────────────────────────────────────
 
 const record = (value: unknown): Record<string, unknown> | null =>
@@ -138,6 +171,31 @@ export const isServerEdit = (data: unknown): data is ServerEdit => {
     typeof payload.id === "string" &&
     typeof payload.conversationId === "string" &&
     record(payload.sender) !== null
+  );
+};
+
+export const isServerDelete = (data: unknown): data is ServerDelete => {
+  const frame = record(data);
+  if (frame?.type !== "delete") return false;
+  const payload = record(frame.payload);
+  return (
+    payload !== null &&
+    typeof payload.messageId === "string" &&
+    typeof payload.conversationId === "string"
+  );
+};
+
+export const isServerActionError = (
+  data: unknown,
+): data is ServerActionError => {
+  const frame = record(data);
+  if (frame?.type !== "action-error") return false;
+  const payload = record(frame.payload);
+  return (
+    payload !== null &&
+    (payload.action === "edit" || payload.action === "delete") &&
+    typeof payload.messageId === "string" &&
+    typeof payload.conversationId === "string"
   );
 };
 
@@ -229,6 +287,16 @@ export const createEditSocketMessage = (payload: {
 }) => ({
   payload,
   type: "edit" as const,
+});
+
+/**
+ * Take a message back. chat-server deletes it through the backend — which
+ * checks the sender is the one asking — and broadcasts the same pair of ids
+ * to every member, the sender included.
+ */
+export const createDeleteSocketMessage = (payload: DeletePayload) => ({
+  payload,
+  type: "delete" as const,
 });
 
 /** Frames arrive as text; a non-JSON frame is ignored rather than thrown on. */

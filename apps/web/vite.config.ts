@@ -169,8 +169,10 @@ export default defineConfig(({ mode }) => {
         injectManifest: {
           // The nsfwjs model is 2.7MB of static asset in public/. Precaching it
           // would push every install to download it up front; it is loaded on
-          // demand by lib/nsfw-model.ts instead.
-          globIgnores: ["**/models/**"],
+          // demand by lib/nsfw-model.ts instead. Same for the spell-check
+          // dictionary under public/dict, fetched by lib/spell on first use
+          // and runtime-cached by the worker.
+          globIgnores: ["**/models/**", "**/dict/**"],
           maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         },
         // The app already ships a hand-written public/manifest.json and links
@@ -191,6 +193,7 @@ export default defineConfig(({ mode }) => {
         "@nw/chat": resolve("../../packages/chat/src"),
         "@nw/features": resolve("../../packages/features/src"),
         "@nw/richtext": resolve("../../packages/richtext/src"),
+        "@nw/spell": resolve("../../packages/spell/src"),
         "@nw/store": resolve("../../packages/store/src"),
         "@nw/theme": resolve("../../packages/theme/src"),
         "@nw/types": resolve("../../packages/types/src"),

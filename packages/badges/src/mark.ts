@@ -46,18 +46,27 @@ import { GREY } from "./frame";
  * exactly as before.
  */
 export const BADGE_MARK: Partial<Record<BadgeCode, string>> = {
+  AMBASSADOR: "#2E7BE0",
+  CAMPFIRE: "#F2552C",
+  CHRONICLER: "#9A6236",
   CO_AUTHOR: "#9C63E0",
   CREATIVE: "#D89A56",
   DEDICATED: "#2F8E96",
   DISCORD_GUILD_MEMBER: "#5865F2",
   FRIENDLY_NOVELIST: "#5FD693",
+  LOREKEEPER: "#7F9A3A",
+  MATCHMAKER: "#E23C64",
   MUSE_KEEPER: "#C6337E",
   MUSICIAN: "#6B36A6",
   POSTAHOLIC: "#FB9B4E",
   PROLIFIC_WRITER: "#4A5E92",
+  SHAPESHIFTER: "#36CFD9",
   SOCIAL_BIRD: "#FFC864",
   SPOTIFY_LINKED: "#1DB954",
   STORY_BOARD_AUTHOR: "#8E1F2C",
+  TIMEKEEPER: "#9BE15D",
+  VETERAN_QUILL: "#EADBB8",
+  WORLDBUILDER: "#4F8FB0",
 };
 
 /** The mark's fill, drained of colour when the badge is not yet earned. */

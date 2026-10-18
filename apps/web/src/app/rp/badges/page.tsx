@@ -44,7 +44,13 @@ function CatalogueCard({ badge }: { badge: CatalogueBadge }) {
           <BadgeArtwork code={badge.code} size={78} animated />
         </S.CardArt>
         <S.CardText>
-          <S.CardTitle>{badge.title}</S.CardTitle>
+          <S.CardTitle>
+            <S.ChipRoom
+              aria-hidden="true"
+              $wide={badge.rarity === "LEGENDARY"}
+            />
+            {badge.title}
+          </S.CardTitle>
           <S.CardDescription>{badge.description}</S.CardDescription>
         </S.CardText>
       </S.CardMain>

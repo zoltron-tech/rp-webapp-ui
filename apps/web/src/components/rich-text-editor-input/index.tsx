@@ -31,7 +31,9 @@ import {
 import { TbFloatLeft, TbFloatNone, TbFloatRight } from "react-icons/tb";
 import { useGlobalState } from "@/context/store/stores";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
+import { useSpellcheck } from "@/lib/spell/use-spellcheck";
 import { MentionDropdown } from "../mention-dropdown";
+import { SpellMenu } from "../spell-menu";
 import {
   DEFAULT_DIALOG_DESIGN,
   type DialogDesign,
@@ -59,13 +61,13 @@ import {
   FONTS,
   FORMAT_BUTTONS,
   HIGHLIGHT_COLORS,
-  THEME_HIGHLIGHT_COLORS,
   type ImageWrap,
+  imageWrapOf,
   LIST_BUTTONS,
   ORDERED_LIST_STYLES,
   QUOTATION_MARK_CATEGORIES,
-  imageWrapOf,
   setImageWrapOn,
+  THEME_HIGHLIGHT_COLORS,
   UNORDERED_LIST_STYLES,
 } from "./editor-config";
 import { createMentionChip } from "./mention-chip";
@@ -90,6 +92,10 @@ interface RichTextEditorProps {
    *  desktop. Opt-in per call site — post/comment/reply, storyboard +
    *  storyboard-event descriptions, and storyboard event threads. */
   desktopRounded?: boolean;
+  /** Words the spell checker must never flag: muse, friend and story
+   *  character names from the call site (see `@nw/spell/tokenizer`
+   *  `namesToWords`). */
+  spellIgnore?: Iterable<string>;
 }
 
 export interface RichTextEditorHandle {
@@ -129,6 +135,7 @@ export const RichTextEditor = forwardRef<
       dialogMuses = [],
       dialogDesign,
       desktopRounded,
+      spellIgnore,
     },
     editorHandleRef,
   ) => {
@@ -274,6 +281,16 @@ export const RichTextEditor = forwardRef<
     const [selectedDialog, setSelectedDialog] = useState<HTMLElement | null>(
       null,
     );
+
+    // Spell checking: wavy underlines via the Highlight API and a correction
+    // menu. Paused while another popover (mentions, image bar, dialog bar)
+    // owns the editor.
+    const spell = useSpellcheck({
+      editorRef,
+      ignoreWords: spellIgnore,
+      suspended: showMentionPopover || !!selectedImage || !!selectedDialog,
+    });
+
     const [dialogBarPos, setDialogBarPos] = useState<{
       top: number;
       left: number;
@@ -1675,6 +1692,7 @@ export const RichTextEditor = forwardRef<
     const handleEditorClick = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
         const target = e.target as HTMLElement;
+        spell.handleClick(e);
 
         // Always-visible delete control on an embedded dialog.
         const deleteBtn = target.closest(".dialog-delete");
@@ -1715,7 +1733,13 @@ export const RichTextEditor = forwardRef<
           setImageResizeBarPos(null);
         }
       },
-      [selectImageNode, selectDialogNode, deselectDialog, handleInput],
+      [
+        selectImageNode,
+        selectDialogNode,
+        deselectDialog,
+        handleInput,
+        spell.handleClick,
+      ],
     );
 
     const handleImageAlignChange = useCallback(
@@ -2010,6 +2034,9 @@ export const RichTextEditor = forwardRef<
 
     const handleKeyDown = useCallback(
       (e: React.KeyboardEvent<HTMLDivElement>) => {
+        // The spelling menu owns arrows / Enter / Escape while it is open.
+        if (spell.handleKeyDown(e)) return;
+
         if (showMentionPopover) {
           const currentItems = mentionItems;
 
@@ -2062,6 +2089,7 @@ export const RichTextEditor = forwardRef<
         }
       },
       [
+        spell.handleKeyDown,
         showMentionPopover,
         focusedItemIndex,
         insertMention,
@@ -2798,7 +2826,9 @@ export const RichTextEditor = forwardRef<
             $fullPage={fullPage}
             $compact={compact}
             $rounded={rounded}
+            spellCheck={!spell.active}
             onClick={handleEditorClick}
+            onDoubleClick={spell.handleDoubleClick}
             onInput={handleInput}
             onKeyDown={handleKeyDown}
             onKeyUp={(e) => {
@@ -2824,6 +2854,17 @@ export const RichTextEditor = forwardRef<
                 position: "absolute",
                 top: "auto",
               }}
+            />
+          )}
+
+          {spell.menu && (
+            <SpellMenu
+              state={spell.menu}
+              onPick={spell.pick}
+              onFocus={spell.setFocused}
+              onAdd={spell.addToDictionary}
+              onIgnore={spell.ignoreWord}
+              onClose={spell.closeMenu}
             />
           )}
 

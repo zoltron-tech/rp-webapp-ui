@@ -1,4 +1,3 @@
-import { isSupportNovelist } from "@nw/chat";
 import { useSession, useUnreadConversations } from "@nw/features";
 import { type Href, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef } from "react";
@@ -268,13 +267,6 @@ export default function MenuScreen() {
                 ) : (
                   <Chip icon="alert-circle" label="Unverified" tone="danger" />
                 )}
-                {novelist && !isSupportNovelist(novelist.username) ? (
-                  <Chip
-                    icon="flash"
-                    label={`${novelist.totalPoints.toLocaleString()} XP`}
-                    tone="accent"
-                  />
-                ) : null}
               </View>
             </View>
           </Pressable>

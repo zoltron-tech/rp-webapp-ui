@@ -1,5 +1,5 @@
 import { Container, ContainerClasses } from "@novelist-world/ui";
-import styled, { css, keyframes } from "styled-components";
+import styled, { css } from "styled-components";
 import { Avatar as AvatarCommon, Pill } from "@/components/common";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { SegmentedTabs } from "@/components/common/segmented-tabs";
@@ -710,9 +710,8 @@ export const AvatarMobile = styled(AvatarNew)`
 
 /**
  * Header cluster lifted up so the avatar overlaps the banner. Avatar sits on
- * the left (with margin); the note bubble sits to its right; the XP badge is
- * pinned to the avatar's bottom-right corner. Width matches the 95% content
- * containers so the left margin lines up with About/MuseList below.
+ * the left (with margin); the note bubble sits to its right. Width matches the
+ * 95% content containers so the left margin lines up with About/MuseList below.
  */
 export const AvatarHeader = styled.div`
   position: relative;
@@ -732,7 +731,7 @@ export const AvatarHeader = styled.div`
   }
 `;
 
-/** Positioning context for the avatar + its attached XP badge. */
+/** Positioning context for the avatar. */
 export const AvatarWrap = styled.div`
   position: relative;
   flex-shrink: 0;
@@ -740,43 +739,6 @@ export const AvatarWrap = styled.div`
 
   @media (max-width: 800px) {
     margin-left: 2px;
-  }
-`;
-
-/** XP/Score chip attached to the avatar's bottom-right, clear of the circle. */
-export const AvatarXpBadge = styled.span`
-  position: absolute;
-  right: 0;
-  bottom: 2px;
-  transform: translate(34%, 30%);
-  z-index: 3;
-
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 10px 3px 7px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 20%, var(--bg-2));
-  border: 1px solid color-mix(in srgb, var(--accent) 48%, var(--bg-5));
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 22%, transparent);
-  font-size: 0.66rem;
-  font-weight: 700;
-  color: var(--text);
-  white-space: nowrap;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-
-  &:hover {
-    background: color-mix(in srgb, var(--accent) 28%, var(--bg-2));
-    border-color: color-mix(in srgb, var(--accent) 62%, var(--bg-5));
-  }
-
-  @media (max-width: 800px) {
-    font-size: 0.6rem;
-    padding: 2px 8px 2px 6px;
-    transform: translate(26%, 28%);
   }
 `;
 
@@ -1165,71 +1127,6 @@ export const EmptyFeedSubtitle = styled.p`
   line-height: 1.55;
 `;
 
-export const LevelStrip = styled.div`
-  width: 95%;
-  display: flex;
-  align-items: stretch;
-  border-radius: 14px;
-  overflow: hidden;
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--accent) 12%, var(--bg-3)) 0%,
-    var(--bg-3) 65%
-  );
-  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--bg-5));
-  box-shadow: 0 2px 12px color-mix(in srgb, var(--accent) 10%, transparent);
-  margin-block: 6px;
-
-  @media screen and (max-width: 800px) {
-    width: 92%;
-  }
-`;
-
-export const LevelTile = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 16px 10px;
-  gap: 4px;
-`;
-
-export const LevelTileDivider = styled.div`
-  width: 1px;
-  background: color-mix(in srgb, var(--accent) 20%, var(--bg-5));
-  margin-block: 10px;
-  flex-shrink: 0;
-`;
-
-export const LevelTileLabel = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.58rem;
-  text-transform: uppercase;
-  letter-spacing: 0.13em;
-  color: var(--text-secondary);
-  font-weight: 700;
-`;
-
-export const LevelTileValue = styled.div`
-  font-size: var(--font-size-h4);
-  font-weight: var(--font-weight-bold);
-  color: var(--text);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-`;
-
-export const LevelChipRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin-block: 6px;
-  flex-wrap: wrap;
-`;
-
 /** Centered, wrapping stat row (Friends / Characters / Joined). */
 export const StatsRow = styled.div`
   display: flex;
@@ -1262,114 +1159,3 @@ export const StatsRow = styled.div`
   }
 `;
 
-export const LevelChip = styled.span`
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 12px 4px 8px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 14%, var(--bg-3));
-  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--bg-5));
-  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 14%, transparent);
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--text);
-  white-space: nowrap;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-
-  &:hover {
-    background: color-mix(in srgb, var(--accent) 22%, var(--bg-3));
-    border-color: color-mix(in srgb, var(--accent) 56%, var(--bg-5));
-  }
-`;
-
-export const ScoreBadge = styled.span`
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 12px 4px 8px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 14%, var(--bg-3));
-  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--bg-5));
-  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 14%, transparent);
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--text);
-  white-space: nowrap;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-
-  &:hover {
-    background: color-mix(in srgb, var(--accent) 22%, var(--bg-3));
-    border-color: color-mix(in srgb, var(--accent) 56%, var(--bg-5));
-  }
-`;
-
-const goldShimmer = keyframes`
-  0% { background-position: 200% center; }
-  100% { background-position: -200% center; }
-`;
-
-export const RankBadgeShimmer = styled.span`
-  display: inline-flex;
-  width: 80px;
-  height: 25px;
-  border-radius: 999px;
-  border: 1px solid rgba(251, 191, 36, 0.3);
-  overflow: hidden;
-  position: relative;
-
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      90deg,
-      rgba(251, 191, 36, 0.06) 0%,
-      rgba(251, 191, 36, 0.22) 40%,
-      rgba(255, 236, 153, 0.45) 50%,
-      rgba(251, 191, 36, 0.22) 60%,
-      rgba(251, 191, 36, 0.06) 100%
-    );
-    background-size: 200% 100%;
-    animation: ${goldShimmer} 1.6s ease-in-out infinite;
-  }
-`;
-
-export const RankBadge = styled.span`
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 12px 4px 8px;
-  border-radius: 999px;
-  background: linear-gradient(
-    135deg,
-    rgba(251, 191, 36, 0.18) 0%,
-    rgba(245, 158, 11, 0.12) 100%
-  );
-  border: 1px solid rgba(251, 191, 36, 0.45);
-  box-shadow:
-    0 0 10px rgba(251, 191, 36, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--text);
-  white-space: nowrap;
-  letter-spacing: 0.03em;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-
-  &:hover {
-    background: linear-gradient(
-      135deg,
-      rgba(251, 191, 36, 0.28) 0%,
-      rgba(245, 158, 11, 0.2) 100%
-    );
-    border-color: rgba(251, 191, 36, 0.65);
-  }
-`;

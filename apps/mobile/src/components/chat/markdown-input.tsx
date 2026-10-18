@@ -7,6 +7,8 @@ import {
   type TextStyle,
 } from "react-native";
 import { Text, TextInput } from "@/components/text";
+import { misspelledStyle, splitByFlags } from "@/lib/spell/decorate";
+import type { SpellFlag } from "@/lib/spell/flags";
 import { fontSize, monospace, useAppTheme } from "@/theme";
 
 /**
@@ -84,6 +86,8 @@ export interface MarkdownInputProps {
   selection?: { start: number; end: number };
   style?: TextStyle | TextStyle[];
   value: string;
+  /** Misspelled words, as offsets into `value` (see `lib/spell/flags.ts`). */
+  flags?: readonly SpellFlag[];
 }
 
 export const MarkdownInput = forwardRef<TextInput, MarkdownInputProps>(
@@ -91,6 +95,7 @@ export const MarkdownInput = forwardRef<TextInput, MarkdownInputProps>(
     {
       color,
       editable = true,
+      flags,
       maxLength,
       mutedColor,
       onBlur,
@@ -113,30 +118,56 @@ export const MarkdownInput = forwardRef<TextInput, MarkdownInputProps>(
       // Null rather than an empty string, so the placeholder shows.
       if (!value) return null;
       const tokens = tokenizeMarkdown(value);
+      // A misspelled word splits the token it is in; the string spelled out
+      // stays the same, only the number of wrappers changes.
+      const bad = flags && flags.length > 0 ? misspelledStyle(theme) : null;
+      const spans = flags ?? [];
 
       // Nothing formatted, which is what almost every message is: one text node
       // instead of a wrapper per run.
       if (!tokens.some((token) => token.delimiter)) {
-        return <Text style={{ color: ink }}>{value}</Text>;
+        if (!bad) return <Text style={{ color: ink }}>{value}</Text>;
+        return splitByFlags(value, 0, spans).map((piece, at) => (
+          <Text
+            key={`${at}-${piece.flagged}`}
+            style={[{ color: ink }, piece.flagged ? bad : null]}
+          >
+            {piece.text}
+          </Text>
+        ));
       }
 
-      return tokens.map((token, index) => (
-        <Text
-          // Index keys: the list is rebuilt from scratch on every keystroke and
-          // there is no identity to preserve between two renders of it.
-          key={`${index}-${token.text}`}
-          style={[
-            { color: token.delimiter ? muted : ink },
-            ...token.marks.map((mark) => MARK_STYLES[mark]),
-            token.marks.includes("code")
-              ? { backgroundColor: theme.glass.fillHover }
-              : null,
-          ]}
-        >
-          {token.text}
-        </Text>
-      ));
-    }, [ink, muted, theme.glass.fillHover, value]);
+      let offset = 0;
+      return tokens.flatMap((token, index) => {
+        // Index keys: the list is rebuilt from scratch on every keystroke and
+        // there is no identity to preserve between two renders of it.
+        const key = `${index}-${token.text}`;
+        const style = [
+          { color: token.delimiter ? muted : ink },
+          ...token.marks.map((mark) => MARK_STYLES[mark]),
+          token.marks.includes("code")
+            ? { backgroundColor: theme.glass.fillHover }
+            : null,
+        ];
+        const start = offset;
+        offset += token.text.length;
+        if (!bad || token.delimiter) {
+          return [
+            <Text key={key} style={style}>
+              {token.text}
+            </Text>,
+          ];
+        }
+        return splitByFlags(token.text, start, spans).map((piece, at) => (
+          <Text
+            key={`${key}-${at}-${piece.flagged}`}
+            style={[style, piece.flagged ? bad : null]}
+          >
+            {piece.text}
+          </Text>
+        ));
+      });
+    }, [flags, ink, muted, theme, value]);
 
     return (
       <TextInput

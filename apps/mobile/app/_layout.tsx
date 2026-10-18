@@ -288,8 +288,8 @@ const RootStack = () => {
       >
         <Stack.Screen name="index" />
         {/*
-          The public page for someone signed out. Not "novelists": the
-          leaderboard inside the tabs is `/novelists` too (route groups add
+          The public page for someone signed out. Not "novelists": a screen
+          inside the tabs once lived at `/novelists` too (route groups add
           nothing to a path), and a signed-out redirect to that path landed
           in the tabs, which redirected again — a loop that drew nothing.
         */}

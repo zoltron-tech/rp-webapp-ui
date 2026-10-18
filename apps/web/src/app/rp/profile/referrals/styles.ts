@@ -78,31 +78,6 @@ export const InfoDescription = styled.span`
   line-height: 1.4;
 `;
 
-export const InfoLink = styled.button`
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  align-self: flex-start;
-  margin-top: 6px;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--accent);
-  font-size: var(--font-size-small);
-  font-weight: var(--font-weight-bold);
-  cursor: pointer;
-
-  &:hover {
-    text-decoration: underline;
-  }
-
-  svg {
-    width: 13px;
-    height: 13px;
-    flex-shrink: 0;
-  }
-`;
-
 export const InfoCount = styled.div`
   flex-shrink: 0;
   display: flex;
@@ -218,15 +193,6 @@ export const Row = styled.div`
   }
 `;
 
-export const RankSlot = styled.span`
-  flex-shrink: 0;
-  width: 26px;
-  height: 26px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
 export const Info = styled.div`
   flex: 1;
   min-width: 0;
@@ -257,49 +223,6 @@ export const Username = styled.span`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-`;
-
-export const ChipRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-
-  @media (max-width: 600px) {
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 4px;
-  }
-`;
-
-export const LevelChip = styled.span`
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 10px 3px 6px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 14%, var(--bg-3));
-  border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--bg-5));
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: var(--text);
-  white-space: nowrap;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-`;
-
-export const ScoreChip = styled.span`
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 10px 3px 6px;
-  border-radius: 999px;
-  background: var(--bg-3);
-  border: 1px solid var(--bg-5);
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  white-space: nowrap;
 `;
 
 // ─── Shimmer row ────────────────────────────────────────────────────────────────

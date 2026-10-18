@@ -18,9 +18,13 @@ import type { WebSocketExt } from "@/types/socket";
 import { SOCKET_URL } from "@/utils/constants";
 import { decryptMessage } from "@/utils/e2e-crypto";
 import {
+  type ActionErrorSocketPayload,
   createHeartbeatPong,
   createHeartbeatQuery,
+  type DeleteSocketPayload,
   HEARTBEAT_TIMEOUT_MS,
+  isServerActionError,
+  isServerDelete,
   isServerEdit,
   isServerMessage,
   isServerNotification,
@@ -38,6 +42,10 @@ type SocketContextType = {
   lastIncomingMessage: Message | null;
   lastIncomingReaction: ReactionSocketPayload | null;
   lastIncomingEdit: Message | null;
+  /** A message someone took back: ids only, the words are already gone. */
+  lastIncomingDelete: DeleteSocketPayload | null;
+  /** The backend refused an edit or delete this tab sent over the socket. */
+  lastIncomingActionError: ActionErrorSocketPayload | null;
   /** Call before any user action to guarantee the socket is open (no-op if already connected or not logged in). */
   ensureConnected: () => void;
 };
@@ -47,6 +55,8 @@ type SocketContextType = {
 const SocketContext = createContext<SocketContextType>({
   ensureConnected: () => {},
   isConnected: false,
+  lastIncomingActionError: null,
+  lastIncomingDelete: null,
   lastIncomingEdit: null,
   lastIncomingMessage: null,
   lastIncomingReaction: null,
@@ -101,6 +111,10 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
   const [lastIncomingEdit, setLastIncomingEdit] = useState<Message | null>(
     null,
   );
+  const [lastIncomingDelete, setLastIncomingDelete] =
+    useState<DeleteSocketPayload | null>(null);
+  const [lastIncomingActionError, setLastIncomingActionError] =
+    useState<ActionErrorSocketPayload | null>(null);
 
   // Keep stable refs so callbacks never capture stale values
   const socketRef = useRef<WebSocketExt | null>(null);
@@ -314,6 +328,16 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
         return;
       }
 
+      if (isServerDelete(data)) {
+        setLastIncomingDelete(data.payload);
+        return;
+      }
+
+      if (isServerActionError(data)) {
+        setLastIncomingActionError(data.payload);
+        return;
+      }
+
       if (isServerNotification(data)) {
         // The bell reads the store, which is otherwise loaded once per
         // session; refetch so a notification shows up while the app is open.
@@ -383,6 +407,8 @@ export const SocketProvider: FC<SocketProviderProps> = ({ children }) => {
       value={{
         ensureConnected,
         isConnected,
+        lastIncomingActionError,
+        lastIncomingDelete,
         lastIncomingEdit,
         lastIncomingMessage,
         lastIncomingReaction,

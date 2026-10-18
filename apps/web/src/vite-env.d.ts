@@ -28,6 +28,8 @@ interface ImportMetaEnv {
   readonly VITE_RP_SERVICE_URL?: string;
   readonly VITE_SOCKET_URL?: string;
   readonly VITE_SUPPORT_EMAIL?: string;
+  /** The literal "false" turns off the Datamuse synonyms lookup in the spell menu. */
+  readonly VITE_THESAURUS_ENABLED?: string;
   /**
    * Whether cookies written from the browser are host-only rather than scoped
    * to novelist.world. Only the literal string "true" enables it; anything else,

@@ -113,14 +113,7 @@ export const RepliesContainer = styled.div`
   ${MATERIAL_CARD}
   border-radius: 24px;
 
-  .separator[data-orientation="horizontal"] {
-    height: 1px;
-    width: 100%;
-    margin-block: 10px;
-    background-color: var(--material-edge);
-  }
-
-    .avatar {
+  .avatar {
     width: 64px;
     height: 64px;
     cursor: pointer;

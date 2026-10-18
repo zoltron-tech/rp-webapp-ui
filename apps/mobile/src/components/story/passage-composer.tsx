@@ -3,6 +3,7 @@ import { searchMentionMuses } from "@nw/api/endpoints/muse";
 import { saveStoryBoardEventThread } from "@nw/api/endpoints/story";
 import { useApi, useSession } from "@nw/features";
 import { documentFromHtml, type RichDocument } from "@nw/richtext";
+import { namesToWords } from "@nw/spell/tokenizer";
 import {
   API_MESSAGE,
   type MentionDataItem,
@@ -211,6 +212,21 @@ export const PassageComposer = ({
     [reconcileMedia],
   );
 
+  // Names the spell checker must leave alone: the novelist, their muses and
+  // friends, and the story's own characters.
+  const spellIgnore = useMemo(
+    () =>
+      namesToWords([
+        novelist?.username,
+        novelist?.firstName,
+        novelist?.lastName,
+        ...(novelist?.muses ?? []).flatMap((m) => [m.firstName, m.lastName]),
+        ...(novelist?.friends ?? []).map((f) => f.username),
+        ...storyCharacters.map((character) => characterName(character)),
+      ]),
+    [novelist, storyCharacters],
+  );
+
   // ─── Mentions ────────────────────────────────────────────────────────────
 
   const mentionTabs = useMemo<MentionTab[]>(
@@ -299,7 +315,9 @@ export const PassageComposer = ({
           <View
             style={[
               styles.editBadge,
-              dialog.orientation === "right" ? styles.badgeLeft : styles.badgeRight,
+              dialog.orientation === "right"
+                ? styles.badgeLeft
+                : styles.badgeRight,
               {
                 backgroundColor: theme.material.fill,
                 borderColor: theme.material.edge,
@@ -424,7 +442,10 @@ export const PassageComposer = ({
               size={36}
               tone="glass"
             />
-            <Text numberOfLines={1} style={[styles.title, { color: theme.text }]}>
+            <Text
+              numberOfLines={1}
+              style={[styles.title, { color: theme.text }]}
+            >
               {thread ? "Edit passage" : "Add to passage"}
             </Text>
             <Pressable
@@ -460,11 +481,7 @@ export const PassageComposer = ({
                     },
                   ]}
                 >
-                  {media.isUploading
-                    ? "Uploading..."
-                    : thread
-                      ? "Save"
-                      : "Add"}
+                  {media.isUploading ? "Uploading..." : thread ? "Save" : "Add"}
                 </Text>
               )}
             </Pressable>
@@ -578,6 +595,7 @@ export const PassageComposer = ({
             placeholder="Continue the story… @ to mention novelists or muses"
             ref={editor}
             renderEmbed={renderEmbed}
+            spellIgnore={spellIgnore}
             uploadingSources={media.uploadingSources}
           />
         </KeyboardLift>
@@ -662,10 +680,7 @@ export const PassageComposer = ({
                       {option.label}
                     </Text>
                     <Text
-                      style={[
-                        styles.designRowHint,
-                        { color: theme.textGray },
-                      ]}
+                      style={[styles.designRowHint, { color: theme.textGray }]}
                     >
                       {option.description}
                     </Text>
@@ -740,7 +755,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 36,
   },
-  gifLabel: { fontSize: fontSize.eyebrow, fontWeight: "800", letterSpacing: 0.5 },
+  gifLabel: {
+    fontSize: fontSize.eyebrow,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+  },
   insert: {
     alignItems: "center",
     borderRadius: radius.full,
@@ -776,8 +795,8 @@ const styles = StyleSheet.create({
   },
   topBar: {
     alignItems: "center",
-    borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "transparent",
+    borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
     gap: space.sm,
     paddingHorizontal: space.md,

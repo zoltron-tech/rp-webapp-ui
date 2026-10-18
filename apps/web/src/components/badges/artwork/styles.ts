@@ -402,6 +402,392 @@ const brushDip = keyframes`
   62%      { transform: translate(-1px, 2px) rotate(-2deg); }
 `;
 
+/** The route's dashes marching from the first pin towards the last. */
+const routeMarch = keyframes`
+  to { stroke-dashoffset: -12; }
+`;
+
+/**
+ * A pin dropping onto the chart, on a clock shared by all three.
+ *
+ * Each pin lands at its own point in the cycle and they all lift off together
+ * at the end, so the route reads as planned stop by stop and then started over
+ * — staggering one keyframe with `animation-delay` would stagger the exit too.
+ */
+const pinDrop = (start: number) => keyframes`
+  0%, ${start}%   { transform: translateY(-8px); opacity: 0; }
+  ${start + 6}%   { transform: translateY(0.6px); opacity: 1; }
+  ${start + 9}%   { transform: translateY(0); opacity: 1; }
+  84%             { transform: translateY(0); opacity: 1; }
+  92%, 100%       { transform: translateY(-3px); opacity: 0; }
+`;
+const pinDrop1 = pinDrop(4);
+const pinDrop2 = pinDrop(20);
+const pinDrop3 = pinDrop(36);
+
+/** A compass needle settling: overshoot, swing back, come to rest. */
+const needleSettle = keyframes`
+  0%, 100% { transform: rotate(0deg); }
+  14%      { transform: rotate(-22deg); }
+  30%      { transform: rotate(14deg); }
+  44%      { transform: rotate(-7deg); }
+  56%      { transform: rotate(3deg); }
+  66%      { transform: rotate(0deg); }
+`;
+
+/** Swells on open water, drifting a little each way. */
+const tideDrift = keyframes`
+  0%, 100% { transform: translateX(-1.5px); opacity: 0.55; }
+  50%      { transform: translateX(1.5px);  opacity: 1; }
+`;
+
+/**
+ * The last volume being shelved.
+ *
+ * Relative to its resting lean, which its parent group holds: it comes down
+ * upright (+6deg back) onto the shelf, tips over past its rest, settles against
+ * its neighbour, and later lifts away to be shelved again. Down rather than in
+ * from the side, because from the side it hangs in the air past the plank's end.
+ */
+const bookArrive = keyframes`
+  0%, 8%    { transform: translateY(-18px) rotate(6deg); opacity: 0; }
+  20%       { transform: translateY(0) rotate(6deg); opacity: 1; }
+  23%       { transform: translateY(-1px) rotate(6deg); opacity: 1; }
+  26%       { transform: translateY(0) rotate(6deg); opacity: 1; }
+  34%       { transform: translateY(0) rotate(-1.5deg); opacity: 1; }
+  39%       { transform: translateY(0) rotate(0.6deg); opacity: 1; }
+  43%, 86%  { transform: translateY(0) rotate(0deg); opacity: 1; }
+  94%, 100% { transform: translateY(-18px) rotate(6deg); opacity: 0; }
+`;
+
+/** The ribbon marker swinging gently from the shelf edge. */
+const markerSway = keyframes`
+  0%, 100% { transform: rotate(-7deg); }
+  50%      { transform: rotate(7deg); }
+`;
+
+/**
+ * The hourglass's run, on one 8s clock across the four parts below.
+ *
+ * The sand runs for four fifths of the cycle; then the glass makes a half turn.
+ * The glass, frame and glints are symmetric about the crest's centre, so the
+ * flipped glass with a full bottom bulb is the same picture as the upright one
+ * with a full top — which is the loop's first frame, and why it never jumps.
+ *
+ * Sand offsets are from the half-run position the crest is drawn in.
+ */
+const hourglassFlip = keyframes`
+  0%, 82%   { transform: rotate(0deg); }
+  96%, 100% { transform: rotate(180deg); }
+`;
+
+const sandDrain = keyframes`
+  0%        { transform: translateY(-15px); }
+  80%, 100% { transform: translateY(16px); }
+`;
+
+const sandPile = keyframes`
+  0%        { transform: translateY(23px); }
+  80%, 100% { transform: translateY(-16px); }
+`;
+
+const sandStream = keyframes`
+  0%        { opacity: 0; }
+  4%, 78%   { opacity: 1; }
+  80%, 100% { opacity: 0; }
+`;
+
+/** Grains falling down the stream. */
+const grainsFall = keyframes`
+  to { stroke-dashoffset: -9; }
+`;
+
+/** The rune circle inside the dial, turning against it. */
+const sigilTurn = keyframes`
+  to { transform: rotate(-360deg); }
+`;
+
+/** The timeline dial turning, slowly enough to read as time passing. */
+const dialTurn = keyframes`
+  to { transform: rotate(360deg); }
+`;
+
+/**
+ * Cupid's arrow, on one 5s clock with the hearts and the burst below.
+ *
+ * It flies in along its own length (its parent lays it on the diagonal, so
+ * translateX is straight down the shaft), overshoots a hair, sticks and
+ * quivers, holds, then fades where it is and flies in again.
+ */
+const arrowFly = keyframes`
+  0%        { transform: translate(-40px, 0); opacity: 0; }
+  8%        { opacity: 1; }
+  18%       { transform: translate(1.5px, 0); opacity: 1; }
+  20%       { transform: translate(0, 0); }
+  23%       { transform: translate(0, -0.9px); }
+  26%       { transform: translate(0, 0.7px); }
+  29%       { transform: translate(0, -0.35px); }
+  32%, 84%  { transform: translate(0, 0); opacity: 1; }
+  94%, 100% { transform: translate(0, 0); opacity: 0; }
+`;
+
+/** Both hearts thump on the hit, the back one a beat behind the front. */
+const heartThump = (start: number) => keyframes`
+  0%, ${start}%   { transform: scale(1); }
+  ${start + 4}%   { transform: scale(1.14); }
+  ${start + 10}%  { transform: scale(0.96); }
+  ${start + 16}%  { transform: scale(1.05); }
+  ${start + 24}%, 100% { transform: scale(1); }
+`;
+const heartThumpFront = heartThump(18);
+const heartThumpBack = heartThump(21);
+
+/** Sparks thrown outward off the hit, and gone. */
+const sparkBurst = keyframes`
+  0%, 19%   { transform: scale(0.5); opacity: 0; }
+  23%       { transform: scale(0.9); opacity: 1; }
+  42%, 100% { transform: scale(1.35); opacity: 0; }
+`;
+
+/**
+ * The mirror's three forms, on one 9s clock: each holds for most of a third,
+ * then crossfades into the next — the third back into the first.
+ */
+const formOne = keyframes`
+  0%, 30%  { opacity: 1; }
+  36%, 94% { opacity: 0; }
+  100%     { opacity: 1; }
+`;
+
+const formTwo = keyframes`
+  0%, 30%   { opacity: 0; }
+  36%, 63%  { opacity: 1; }
+  69%, 100% { opacity: 0; }
+`;
+
+const formThree = keyframes`
+  0%, 63%  { opacity: 0; }
+  69%, 94% { opacity: 1; }
+  100%     { opacity: 0; }
+`;
+
+/**
+ * A shimmer across the glass, on a 3s clock so it crosses at each of the
+ * three changes of form. It rests off the glass to the left.
+ */
+const mirrorShimmer = keyframes`
+  0%, 86% { transform: translateX(0); }
+  100%    { transform: translateX(120px); }
+`;
+
+/** The opal behind the reflection, turning slowly. */
+const opalTurn = keyframes`
+  to { transform: rotate(360deg); }
+`;
+
+/**
+ * The presentation case, on one 7s clock: shut, the lid swings up, the quill
+ * rises out, holds, settles back, and the lid comes down over it.
+ *
+ * The crest is drawn open, so these run *to* the closed pose and back. The lid
+ * is flipped open by its parent at scaleY(-1.25); closed is scaleY(+1), which
+ * from there is -0.8, and swinging between the two passes through edge-on.
+ */
+const lidSwing = keyframes`
+  0%, 12%   { transform: scaleY(-0.8); }
+  28%, 84%  { transform: scaleY(1); }
+  98%, 100% { transform: scaleY(-0.8); }
+`;
+
+/**
+ * The quill lying on the velvet, expressed from its raised pose: undo the
+ * raise, move down to the velvet, lay it nearly flat and small. Both ends of
+ * the animation carry the same five functions, so each one interpolates on
+ * its own and the quill travels in an arc rather than morphing.
+ */
+const QUILL_AT_REST =
+  "scale(1.389) rotate(-22deg) translate(0px, 30px) rotate(84deg) scale(0.5)";
+const QUILL_RAISED_POSE =
+  "scale(1) rotate(0deg) translate(0px, 0px) rotate(0deg) scale(1)";
+const quillRise = keyframes`
+  0%, 24%   { transform: ${QUILL_AT_REST}; }
+  42%, 78%  { transform: ${QUILL_RAISED_POSE}; }
+  92%, 100% { transform: ${QUILL_AT_REST}; }
+`;
+
+/** Light out of the case, there only while it is open. */
+const caseGlow = keyframes`
+  0%, 12%   { opacity: 0.15; }
+  32%, 84%  { opacity: 1; }
+  98%, 100% { opacity: 0.15; }
+`;
+
+/**
+ * The herald's fanfare, on one 4.8s clock: the trumpet kicks, rings of sound
+ * spread off the bell, and the five stars fly out of it one after another,
+ * hold where they land, and fade before the next blast.
+ */
+const trumpetKick = keyframes`
+  0%, 16%, 100% { transform: rotate(0deg); }
+  4%            { transform: rotate(-2.2deg); }
+  10%           { transform: rotate(0.6deg); }
+`;
+
+const soundRing = keyframes`
+  0%        { transform: scale(0.6); opacity: 0; }
+  6%        { opacity: 1; }
+  40%, 100% { transform: scale(1.3); opacity: 0; }
+`;
+
+/** Out along its bearing from the bell's mouth to where it rests. */
+const heraldStar = keyframes`
+  0%        { transform: translateX(-17px) scale(0.3); opacity: 0; }
+  8%        { opacity: 1; }
+  28%       { transform: translateX(0) scale(1); }
+  76%       { transform: translateX(0) scale(1); opacity: 1; }
+  90%, 100% { transform: translateX(1px) scale(0.9); opacity: 0; }
+`;
+
+/**
+ * Each invitation, on the same clock and delay as the herald carrying it: it
+ * flies out sealed, and where it lands it gives way to a star that pops in
+ * past its size and settles.
+ */
+const inviteFade = keyframes`
+  0%, 24%   { opacity: 1; }
+  32%, 100% { opacity: 0; }
+`;
+
+const joinedPop = keyframes`
+  0%, 24%   { transform: scale(0.3); opacity: 0; }
+  32%       { transform: scale(1.4); opacity: 1; }
+  38%, 100% { transform: scale(1); opacity: 1; }
+`;
+
+/** Confetti thrown off the bell on the blast, tumbling as it goes. */
+const confettiPop = keyframes`
+  0%        { transform: translateX(0) rotate(0deg); opacity: 0; }
+  4%        { opacity: 1; }
+  32%       { transform: translateX(20px) rotate(300deg); opacity: 1; }
+  44%, 100% { transform: translateX(25px) rotate(420deg); opacity: 0; }
+`;
+
+/** A glint down the brass after the blast; rests off the tube's left end. */
+const tubeGlint = keyframes`
+  0%, 30%   { transform: translateX(0); }
+  56%, 100% { transform: translateX(86px); }
+`;
+
+/** The tassel swinging on its cord. */
+const tasselSwing = keyframes`
+  0%, 100% { transform: rotate(-6deg); }
+  50%      { transform: rotate(6deg); }
+`;
+
+/** The sunburst behind the fanfare. */
+const raysTurn = keyframes`
+  to { transform: rotate(360deg); }
+`;
+
+/** The banner rippling from the trumpet. */
+const bannerRipple = keyframes`
+  0%, 100% { transform: skewY(0deg) scaleX(1); }
+  50%      { transform: skewY(2deg) scaleX(0.97); }
+`;
+
+/**
+ * A campfire's flames, each layer on its own clock so the fire never repeats
+ * the same shape. Scaled from the base, so they leap up rather than swell.
+ */
+const blazeFlicker = keyframes`
+  0%, 100% { transform: scale(1, 1) skewX(0deg); }
+  30%      { transform: scale(0.93, 1.1) skewX(-3deg); }
+  60%      { transform: scale(1.05, 0.92) skewX(2deg); }
+  80%      { transform: scale(0.97, 1.05) skewX(-1deg); }
+`;
+
+/** Firelight on the ground and trees, pulsing with the flames. */
+const firelightPulse = keyframes`
+  0%, 100% { opacity: 0.75; }
+  35%      { opacity: 1; }
+  70%      { opacity: 0.85; }
+`;
+
+/** An ember lifting off the fire and burning out. */
+const emberRise = keyframes`
+  0%   { transform: translate(0, 0); opacity: 0; }
+  12%  { opacity: 1; }
+  100% { transform: translate(3px, -28px); opacity: 0; }
+`;
+
+/**
+ * A voice joining: the bubble rises from the fire's height into its place,
+ * holds, and drifts off. Five of them, a beat apart, on one 6s clock.
+ */
+const replyRise = keyframes`
+  0%        { transform: translateY(26px) scale(0.2); opacity: 0; }
+  10%       { opacity: 1; }
+  34%       { transform: translateY(0) scale(1); opacity: 1; }
+  80%       { transform: translateY(-3px) scale(1); opacity: 1; }
+  92%, 100% { transform: translateY(-6px) scale(0.95); opacity: 0; }
+`;
+
+/**
+ * The grimoire, on one 7s clock: locked, the shackle springs, the padlock
+ * drops and the chain slides off both ways, the emblem flares and the lore
+ * rises out — then the chain slides back and the lock returns.
+ */
+const shackleSpring = keyframes`
+  0%, 14%   { transform: translateY(0); }
+  18%, 86%  { transform: translateY(-3.5px); }
+  92%, 100% { transform: translateY(0); }
+`;
+
+const padlockDrop = keyframes`
+  0%, 20%   { transform: translateY(0); opacity: 1; }
+  30%, 80%  { transform: translateY(14px); opacity: 0; }
+  88%, 100% { transform: translateY(0); opacity: 1; }
+`;
+
+const chainLeft = keyframes`
+  0%, 20%   { transform: translateX(0); opacity: 1; }
+  30%, 80%  { transform: translateX(-12px); opacity: 0; }
+  88%, 100% { transform: translateX(0); opacity: 1; }
+`;
+
+const chainRight = keyframes`
+  0%, 20%   { transform: translateX(0); opacity: 1; }
+  30%, 80%  { transform: translateX(12px); opacity: 0; }
+  88%, 100% { transform: translateX(0); opacity: 1; }
+`;
+
+const loreFlare = keyframes`
+  0%, 24%   { transform: scale(0.9); opacity: 0.4; }
+  34%       { transform: scale(1.25); opacity: 1; }
+  44%, 76%  { transform: scale(1); opacity: 0.85; }
+  90%, 100% { transform: scale(0.9); opacity: 0.4; }
+`;
+
+/** A rune lifting out of the open book and fading. */
+const glyphRise = keyframes`
+  0%, 30%   { transform: translateY(0) scale(0.6); opacity: 0; }
+  36%       { opacity: 1; }
+  64%, 100% { transform: translateY(-15px) scale(1); opacity: 0; }
+`;
+
+/** Loose pages slipping out of the top, one to each side. */
+const leafRight = keyframes`
+  0%, 32%   { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  38%       { opacity: 1; }
+  68%, 100% { transform: translate(13px, -16px) rotate(38deg); opacity: 0; }
+`;
+
+const leafLeft = keyframes`
+  0%, 36%   { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  42%       { opacity: 1; }
+  72%, 100% { transform: translate(-13px, -15px) rotate(-34deg); opacity: 0; }
+`;
+
 export const Frame = styled.span<{ $size: number; $animated: boolean }>`
   display: inline-flex;
   align-items: center;
@@ -425,12 +811,134 @@ export const Frame = styled.span<{ $size: number; $animated: boolean }>`
   .nwb-ward,
   .nwb-orbit,
   .nwb-aura,
+  .nwb-flip,
+  .nwb-dial,
+  .nwb-sigil,
+  .nwb-rays,
   .nwb-disc,
   .nwb-wave-1,
   .nwb-wave-2,
   .nwb-wave-3 {
     transform-box: view-box;
     transform-origin: 60px 60px;
+  }
+
+  /* The last book tips about its own foot, on the shelf. */
+  .nwb-arrival {
+    transform-box: view-box;
+    transform-origin: 88.5px 88px;
+  }
+
+  /* The trumpet kicks about its mouthpiece; sound spreads from the bell's
+     mouth. Both in the trumpet's own drawn coordinates. */
+  .nwb-trumpet {
+    transform-box: view-box;
+    transform-origin: 0 0;
+  }
+  .nwb-blast-1,
+  .nwb-blast-2,
+  .nwb-blast-3 {
+    transform-box: view-box;
+    transform-origin: 84px 0;
+  }
+
+  /* Each star scales about itself; the banner ripples from its top. */
+  .nwb-herald-1,
+  .nwb-herald-2,
+  .nwb-herald-3,
+  .nwb-herald-4,
+  .nwb-herald-5 {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .nwb-banner,
+  .nwb-tassel {
+    transform-box: fill-box;
+    transform-origin: top center;
+  }
+
+  /* The grimoire's glow, runes and loose pages move about their own
+     centres. */
+  .nwb-lore-glow,
+  .nwb-glyph-1,
+  .nwb-glyph-2,
+  .nwb-glyph-3,
+  .nwb-glyph-4,
+  .nwb-glyph-5,
+  .nwb-glyph-6,
+  .nwb-leaf-l,
+  .nwb-leaf-r {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  /* Flames leap from the fire's base; bubbles grow from their own middle. */
+  .nwb-blaze-1,
+  .nwb-blaze-2,
+  .nwb-blaze-3 {
+    transform-box: fill-box;
+    transform-origin: bottom center;
+  }
+  .nwb-reply-1,
+  .nwb-reply-2,
+  .nwb-reply-3,
+  .nwb-reply-4,
+  .nwb-reply-5 {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  /* Stars pop, and confetti tumbles, about their own centres. */
+  .nwb-joined-1,
+  .nwb-joined-2,
+  .nwb-joined-3,
+  .nwb-joined-4,
+  .nwb-joined-5,
+  .nwb-confetti-1,
+  .nwb-confetti-2,
+  .nwb-confetti-3,
+  .nwb-confetti-4 {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  /* The case lid swings on its hinge, in its own drawn coordinates. */
+  .nwb-lid {
+    transform-box: view-box;
+    transform-origin: 60px 58px;
+  }
+
+  /* The quill's moves are written about its own drawn origin. */
+  .nwb-quill-rise {
+    transform-box: view-box;
+    transform-origin: 0 0;
+  }
+
+  /* The opal turns about the glass's centre, which is its own. */
+  .nwb-opal {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  /* Each heart thumps about its own centre; the burst spreads from the
+     front heart's. */
+  .nwb-heart-front,
+  .nwb-heart-back,
+  .nwb-burst {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  /* The ribbon marker swings from where it leaves the book. */
+  .nwb-marker {
+    transform-box: fill-box;
+    transform-origin: top center;
+  }
+
+  /* The chart's compass needle turns about the compass's own centre. */
+  .nwb-needle {
+    transform-box: view-box;
+    transform-origin: 88px 84px;
   }
 
   /* A tonearm swings about its pivot, which is a fixed post on the deck. */
@@ -553,6 +1061,45 @@ export const Frame = styled.span<{ $size: number; $animated: boolean }>`
   .nwb-flap {
     transform-box: fill-box;
     transform-origin: top center;
+  }
+
+  /* Parts that exist only while they move: a burst, a ring of sound, a
+     rune in mid-air. Hidden here rather than with an opacity on the element,
+     so a still crest (locked, reduced motion) shows none of them and the
+     keyframes below can still bring them in — and so the phone, whose
+     animated wrapper multiplies into the element's own opacity, is not handed
+     a 0 it can never lift. Native hides them with a rest pose instead. */
+  .nwb-burst,
+  .nwb-form-2,
+  .nwb-form-3,
+  .nwb-blast-1,
+  .nwb-blast-2,
+  .nwb-blast-3,
+  .nwb-confetti-1,
+  .nwb-confetti-2,
+  .nwb-confetti-3,
+  .nwb-confetti-4,
+  .nwb-invite-1,
+  .nwb-invite-2,
+  .nwb-invite-3,
+  .nwb-invite-4,
+  .nwb-invite-5,
+  .nwb-ember-1,
+  .nwb-ember-2,
+  .nwb-ember-3,
+  .nwb-ember-4,
+  .nwb-glyph-1,
+  .nwb-glyph-2,
+  .nwb-glyph-3,
+  .nwb-glyph-4,
+  .nwb-glyph-5,
+  .nwb-glyph-6,
+  .nwb-leaf-l,
+  .nwb-leaf-r {
+    opacity: 0;
+  }
+  .nwb-lore-glow {
+    opacity: 0.55;
   }
 
   ${(p) =>
@@ -796,6 +1343,193 @@ export const Frame = styled.span<{ $size: number; $animated: boolean }>`
           .nwb-blob-5 {
             animation: ${blobPulse} 3s ease-in-out 2s infinite;
           }
+          .nwb-route {
+            animation: ${routeMarch} 1.4s linear infinite;
+          }
+          .nwb-pin-1 {
+            animation: ${pinDrop1} 6s ease-out infinite;
+          }
+          .nwb-pin-2 {
+            animation: ${pinDrop2} 6s ease-out infinite;
+          }
+          .nwb-pin-3 {
+            animation: ${pinDrop3} 6s ease-out infinite;
+          }
+          .nwb-needle {
+            animation: ${needleSettle} 5s ease-in-out infinite;
+          }
+          .nwb-tide-1 {
+            animation: ${tideDrift} 4s ease-in-out infinite;
+          }
+          .nwb-tide-2 {
+            animation: ${tideDrift} 4s ease-in-out 2s infinite;
+          }
+          .nwb-arrival {
+            animation: ${bookArrive} 7s ease-in-out infinite;
+          }
+          .nwb-marker {
+            animation: ${markerSway} 3.6s ease-in-out infinite;
+          }
+          .nwb-flip {
+            animation: ${hourglassFlip} 8s ease-in-out infinite;
+          }
+          .nwb-sand-top {
+            animation: ${sandDrain} 8s linear infinite;
+          }
+          .nwb-sand-bottom {
+            animation: ${sandPile} 8s linear infinite;
+          }
+          .nwb-stream {
+            animation: ${sandStream} 8s linear infinite;
+          }
+          .nwb-grains {
+            animation: ${grainsFall} 0.6s linear infinite;
+          }
+          .nwb-dial {
+            animation: ${dialTurn} 60s linear infinite;
+          }
+          .nwb-trumpet {
+            animation: ${trumpetKick} 4.8s ease-out infinite;
+          }
+          .nwb-blast-1 {
+            animation: ${soundRing} 4.8s ease-out infinite;
+          }
+          .nwb-blast-2 {
+            animation: ${soundRing} 4.8s ease-out 0.25s infinite;
+          }
+          .nwb-blast-3 {
+            animation: ${soundRing} 4.8s ease-out 0.5s infinite;
+          }
+          ${[0, 1, 2, 3, 4].map(
+            (i) => css`
+              .nwb-herald-${i + 1} {
+                animation: ${heraldStar} 4.8s ease-out ${0.15 + i * 0.18}s
+                  infinite;
+              }
+              .nwb-invite-${i + 1} {
+                animation: ${inviteFade} 4.8s ease-out ${0.15 + i * 0.18}s
+                  infinite;
+              }
+              .nwb-joined-${i + 1} {
+                animation: ${joinedPop} 4.8s ease-out ${0.15 + i * 0.18}s
+                  infinite;
+              }
+            `,
+          )}
+          ${[0, 1, 2, 3].map(
+            (i) => css`
+              .nwb-confetti-${i + 1} {
+                animation: ${confettiPop} 4.8s ease-out ${i * 0.07}s infinite;
+              }
+            `,
+          )}
+          .nwb-shackle {
+            animation: ${shackleSpring} 7s ease-in-out infinite;
+          }
+          .nwb-padlock {
+            animation: ${padlockDrop} 7s ease-in-out infinite;
+          }
+          .nwb-chain-l {
+            animation: ${chainLeft} 7s ease-in-out infinite;
+          }
+          .nwb-chain-r {
+            animation: ${chainRight} 7s ease-in-out infinite;
+          }
+          .nwb-lore-glow {
+            animation: ${loreFlare} 7s ease-in-out infinite;
+          }
+          ${[0, 1, 2, 3, 4, 5].map(
+            (i) => css`
+              .nwb-glyph-${i + 1} {
+                animation: ${glyphRise} 7s ease-out ${[0.1, 0.45, 0, 0.3, 0.6, 0.2][i]}s
+                  infinite;
+              }
+            `,
+          )}
+          .nwb-leaf-r {
+            animation: ${leafRight} 7s ease-out infinite;
+          }
+          .nwb-leaf-l {
+            animation: ${leafLeft} 7s ease-out infinite;
+          }
+          .nwb-blaze-1 {
+            animation: ${blazeFlicker} 1.1s ease-in-out infinite;
+          }
+          .nwb-blaze-2 {
+            animation: ${blazeFlicker} 0.85s ease-in-out -0.3s infinite;
+          }
+          .nwb-blaze-3 {
+            animation: ${blazeFlicker} 0.7s ease-in-out -0.15s infinite;
+          }
+          .nwb-firelight {
+            animation: ${firelightPulse} 1.3s ease-in-out infinite;
+          }
+          ${[2.2, 2.6, 1.9, 2.4].map(
+            (period, i) => css`
+              .nwb-ember-${i + 1} {
+                animation: ${emberRise} ${period}s ease-out ${i * 0.55}s
+                  infinite;
+              }
+            `,
+          )}
+          ${[0, 1, 2, 3, 4].map(
+            (i) => css`
+              .nwb-reply-${i + 1} {
+                animation: ${replyRise} 6s ease-out ${i * 0.45}s infinite;
+              }
+            `,
+          )}
+          .nwb-tube-glint {
+            animation: ${tubeGlint} 4.8s ease-in-out infinite;
+          }
+          .nwb-tassel {
+            animation: ${tasselSwing} 2.6s ease-in-out infinite;
+          }
+          .nwb-rays {
+            animation: ${raysTurn} 40s linear infinite;
+          }
+          .nwb-banner {
+            animation: ${bannerRipple} 3.2s ease-in-out infinite;
+          }
+          .nwb-lid {
+            animation: ${lidSwing} 7s ease-in-out infinite;
+          }
+          .nwb-quill-rise {
+            animation: ${quillRise} 7s ease-in-out infinite;
+          }
+          .nwb-case-glow {
+            animation: ${caseGlow} 7s ease-in-out infinite;
+          }
+          .nwb-form-1 {
+            animation: ${formOne} 9s ease-in-out infinite;
+          }
+          .nwb-form-2 {
+            animation: ${formTwo} 9s ease-in-out infinite;
+          }
+          .nwb-form-3 {
+            animation: ${formThree} 9s ease-in-out infinite;
+          }
+          .nwb-shimmer {
+            animation: ${mirrorShimmer} 3s ease-in infinite;
+          }
+          .nwb-opal {
+            animation: ${opalTurn} 14s linear infinite;
+          }
+          .nwb-arrow {
+            animation: ${arrowFly} 5s ease-out infinite;
+          }
+          .nwb-heart-front {
+            animation: ${heartThumpFront} 5s ease-in-out infinite;
+          }
+          .nwb-heart-back {
+            animation: ${heartThumpBack} 5s ease-in-out infinite;
+          }
+          .nwb-burst {
+            animation: ${sparkBurst} 5s ease-out infinite;
+          }
+          .nwb-sigil {
+            animation: ${sigilTurn} 36s linear infinite;
+          }
         `
       : ""}
 
@@ -878,7 +1612,88 @@ export const Frame = styled.span<{ $size: number; $animated: boolean }>`
     .nwb-bar-1,
     .nwb-bar-2,
     .nwb-bar-3,
-    .nwb-bar-4 {
+    .nwb-bar-4,
+    .nwb-route,
+    .nwb-pin-1,
+    .nwb-pin-2,
+    .nwb-pin-3,
+    .nwb-needle,
+    .nwb-tide-1,
+    .nwb-tide-2,
+    .nwb-arrival,
+    .nwb-marker,
+    .nwb-flip,
+    .nwb-sand-top,
+    .nwb-sand-bottom,
+    .nwb-stream,
+    .nwb-grains,
+    .nwb-dial,
+    .nwb-sigil,
+    .nwb-trumpet,
+    .nwb-blast-1,
+    .nwb-blast-2,
+    .nwb-blast-3,
+    .nwb-herald-1,
+    .nwb-herald-2,
+    .nwb-herald-3,
+    .nwb-herald-4,
+    .nwb-herald-5,
+    .nwb-banner,
+    .nwb-invite-1,
+    .nwb-invite-2,
+    .nwb-invite-3,
+    .nwb-invite-4,
+    .nwb-invite-5,
+    .nwb-joined-1,
+    .nwb-joined-2,
+    .nwb-joined-3,
+    .nwb-joined-4,
+    .nwb-joined-5,
+    .nwb-confetti-1,
+    .nwb-confetti-2,
+    .nwb-confetti-3,
+    .nwb-confetti-4,
+    .nwb-shackle,
+    .nwb-padlock,
+    .nwb-chain-l,
+    .nwb-chain-r,
+    .nwb-lore-glow,
+    .nwb-glyph-1,
+    .nwb-glyph-2,
+    .nwb-glyph-3,
+    .nwb-glyph-4,
+    .nwb-glyph-5,
+    .nwb-glyph-6,
+    .nwb-leaf-l,
+    .nwb-leaf-r,
+    .nwb-blaze-1,
+    .nwb-blaze-2,
+    .nwb-blaze-3,
+    .nwb-firelight,
+    .nwb-ember-1,
+    .nwb-ember-2,
+    .nwb-ember-3,
+    .nwb-ember-4,
+    .nwb-reply-1,
+    .nwb-reply-2,
+    .nwb-reply-3,
+    .nwb-reply-4,
+    .nwb-reply-5,
+    .nwb-tube-glint,
+    .nwb-tassel,
+    .nwb-rays,
+    .nwb-lid,
+    .nwb-quill-rise,
+    .nwb-case-glow,
+    .nwb-form-1,
+    .nwb-form-2,
+    .nwb-form-3,
+    .nwb-shimmer,
+    .nwb-opal,
+    .nwb-arrow,
+    .nwb-heart-front,
+    .nwb-heart-back,
+    .nwb-burst {
       animation: none;
     }
 

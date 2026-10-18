@@ -3,7 +3,6 @@
 import type { Friend } from "@nw/types";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BsPeopleFill } from "react-icons/bs";
-import { FiArrowRight } from "react-icons/fi";
 import { HiUserAdd } from "react-icons/hi";
 import { getReferredNovelistsAction } from "@/app/rp/profile/actions";
 import { BreadCrumb } from "@/components/breadcrumb";
@@ -17,10 +16,6 @@ import { InviteFriendsDialog } from "@/components/invite-friends-dialog";
 import { LoadMore } from "@/components/load-more/page";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
-import {
-  RankTrophyIcon,
-  ScoreBadgeIcon,
-} from "@/utils/badge-icons";
 import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styles";
 
@@ -34,7 +29,6 @@ function RowShimmer() {
         <S.ShimmerLine $width="45%" $height="14px" />
         <S.ShimmerLine $width="30%" $height="11px" />
       </S.ShimmerBody>
-      <S.ShimmerLine $width="90px" $height="22px" />
     </S.ShimmerRow>
   );
 }
@@ -48,9 +42,6 @@ function ReferralRow({
 }) {
   return (
     <S.Row onClick={onClick}>
-      <S.RankSlot>
-        {referral.rank && <RankTrophyIcon rank={referral.rank} size={24} />}
-      </S.RankSlot>
       <AvatarNew
         src={referral.image}
         alt={referral.firstName}
@@ -68,12 +59,6 @@ function ReferralRow({
         </S.NameRow>
         <S.Username>@{referral.username}</S.Username>
       </S.Info>
-      <S.ChipRow>
-        <S.ScoreChip>
-          <ScoreBadgeIcon size={13} />
-          {referral.totalPoints.toLocaleString()} Score
-        </S.ScoreChip>
-      </S.ChipRow>
     </S.Row>
   );
 }
@@ -140,14 +125,9 @@ export default function ReferralsListPage() {
         <S.InfoText>
           <S.InfoTitle>Grow your circle</S.InfoTitle>
           <S.InfoDescription>
-            Novelists who join using your referral link show up here — and you
-            earn bonus XP every time they write. Invite more to boost through
-            the levels and unlock creative perks.
+            Novelists who join using your referral link show up here. Invite
+            more to grow your circle.
           </S.InfoDescription>
-          <S.InfoLink type="button" onClick={() => routeToPage(ROUTES.Levels)}>
-            Learn how leveling up earns you rewards
-            <FiArrowRight />
-          </S.InfoLink>
         </S.InfoText>
         <ShouldRender if={!loading && referrals.length > 0}>
           <S.InfoCount>

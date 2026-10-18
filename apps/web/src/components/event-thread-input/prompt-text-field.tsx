@@ -10,6 +10,7 @@ import {
 import { searchMentionMusesAction } from "@/app/rp/muse/actions";
 import { deleteMedia } from "@/app/rp/profile/actions";
 import { useGlobalState } from "@/context/store/stores";
+import { namesToWords } from "@nw/spell/tokenizer";
 import {
   RichTextEditor,
   type RichTextEditorHandle,
@@ -206,6 +207,20 @@ export const EventThreadTextField: FC<Props> = ({
     [novelist?.muses, storyCharacters],
   );
 
+  // Names the spell checker must leave alone: the novelist, their muses and
+  // friends, and the story's own characters.
+  const spellIgnore = useMemo(
+    () =>
+      namesToWords([
+        novelist?.username,
+        novelist?.firstName,
+        novelist?.lastName,
+        ...(novelist?.friends ?? []).map((f) => f.username),
+        ...dialogMuses.map((m) => m.name),
+      ]),
+    [novelist, dialogMuses],
+  );
+
   return (
     <S.TextInputContainer name="promptText">
       <RichTextEditor
@@ -220,6 +235,7 @@ export const EventThreadTextField: FC<Props> = ({
         dialogDesign={dialogDesign}
         onChange={handlePromptTextChange}
         desktopRounded
+        spellIgnore={spellIgnore}
       />
     </S.TextInputContainer>
   );

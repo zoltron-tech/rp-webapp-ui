@@ -31,7 +31,9 @@ import {
 } from "react-native";
 import { Image } from "@/components/image";
 import { Text } from "@/components/text";
+import { LinkEmbed } from "@/components/link-embeds";
 import { nativeFace } from "@/lib/editor-fonts";
+import { hasLinkEmbeds, splitRichTextAroundLinks } from "@/lib/link-embeds";
 import { openExternalLink } from "@/lib/safe-link";
 import {
   type AppTheme,
@@ -91,7 +93,7 @@ import {
 const PARSED = new Map<string, RichNode[]>();
 const PARSED_LIMIT = 400;
 
-const parseCached = (html: string | null | undefined): RichNode[] => {
+export const parseCached = (html: string | null | undefined): RichNode[] => {
   if (!html) return EMPTY_NODES;
   const hit = PARSED.get(html);
   if (hit) return hit;
@@ -834,6 +836,39 @@ const RichTextView = ({
   if (nodes.length === 0) return null;
 
   const table = tableFor(theme);
+
+  /*
+   * A link back into Novelist World — a character, a prompt, a story — is
+   * drawn as a card rather than as its URL. A card is a `<View>`, which
+   * cannot sit inside a paragraph's `<Text>`, so the document is cut around
+   * each link (`splitRichTextAroundLinks`) and the pieces are stacked: words,
+   * card, words. Nearly every document has no such link and takes the first
+   * exit.
+   */
+  const pieces = splitRichTextAroundLinks(nodes);
+  if (!hasLinkEmbeds(pieces)) return <RichTextFlow nodes={nodes} table={table} />;
+
+  return (
+    <View style={styles.root}>
+      {pieces.map((piece, index) =>
+        piece.kind === "link" ? (
+          <LinkEmbed key={`${piece.link.kind}-${piece.link.id}-${index}`} link={piece.link} />
+        ) : (
+          <RichTextFlow key={index} nodes={piece.nodes} table={table} />
+        ),
+      )}
+    </View>
+  );
+};
+
+/** The document (or a run of it) with its floated pictures laid out. */
+const RichTextFlow = ({
+  nodes,
+  table,
+}: {
+  nodes: RichNode[];
+  table: RichTextComponents;
+}) => {
   const segments = segmentsOf(nodes);
   // No floated picture — nearly every document — is the plain walk.
   if (!segments) return renderRichText(nodes, table);

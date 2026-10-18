@@ -193,8 +193,17 @@ export const signupAction = async (
 };
 
 export const loginViaProviderAction = async (provider: LoginOAuthProvider) => {
+  // An invite's referral goes on the URL as well as in its cookie. The OAuth
+  // callback runs on the API host, and the cookie only reaches it when this
+  // build writes it under the shared domain; user-service keeps the parameter
+  // in the session across the provider round trip (ReferralCarryFilter), so a
+  // Google or Discord sign-up is credited either way.
+  const referralUser = readReferralCookie();
+  const query = referralUser
+    ? `?referralUser=${encodeURIComponent(referralUser)}`
+    : "";
   navigateHard(
-    `${env.RP_SERVICE_URL}/rp/user/oauth2/authorization/${provider}`,
+    `${env.RP_SERVICE_URL}/rp/user/oauth2/authorization/${provider}${query}`,
   );
 };
 

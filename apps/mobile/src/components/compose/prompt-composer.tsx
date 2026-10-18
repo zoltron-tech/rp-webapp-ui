@@ -1,12 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { searchMentionMuses } from "@nw/api/endpoints/muse";
 import { submitPrompt } from "@nw/api/endpoints/profile";
-import { isOffline } from "@/lib/connectivity";
-import { enqueueOutbox, getStore } from "@/lib/local-store";
 import { updatePromptComment } from "@nw/api/endpoints/prompt";
 import type { MessageSenderChoice } from "@nw/chat";
 import { useApi, useSession } from "@nw/features";
 import { imageSources, type RichDocument } from "@nw/richtext";
+import { namesToWords } from "@nw/spell/tokenizer";
 import {
   API_MESSAGE,
   type Friend,
@@ -35,15 +34,15 @@ import {
   Alert,
   Animated,
   Keyboard,
-  KeyboardAvoidingView as NativeKeyboardAvoidingView,
   Modal,
+  KeyboardAvoidingView as NativeKeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   View,
 } from "react-native";
-import { Text, TextInput } from "@/components/text";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ActionMenu } from "@/components/action-menu";
 import { Avatar } from "@/components/avatar";
@@ -72,12 +71,14 @@ import {
   type RichTextEditorHandle,
 } from "@/components/editor/rich-text-editor";
 import { PRIVACY_ICON, PRIVACY_LABEL } from "@/components/feed/privacy";
+import { IconButton } from "@/components/icon-button";
+import { Text, TextInput } from "@/components/text";
 import { ThreadPost } from "@/components/thread/post";
 import { useComposerMedia } from "@/hooks/use-composer-media";
 import { lastKeyboardHeight as lastSeenKeyboardHeight } from "@/hooks/use-keyboard-height";
-import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import { isOffline } from "@/lib/connectivity";
+import { enqueueOutbox, getStore } from "@/lib/local-store";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
-import { IconButton } from "@/components/icon-button";
 
 /**
  * The composer — web's `FullPagePromptInput`, which is what web shows on a
@@ -260,8 +261,7 @@ const ComposerScreen = ({
     mode.kind === "edit" ? mode.html.length > 0 : false,
   );
   const currentHtml = useCallback(
-    () =>
-      editor.current?.getHtml() ?? (mode.kind === "edit" ? mode.html : ""),
+    () => editor.current?.getHtml() ?? (mode.kind === "edit" ? mode.html : ""),
     [mode],
   );
   const [sending, setSending] = useState(false);
@@ -364,6 +364,20 @@ const ComposerScreen = ({
     [api, novelist?.friends],
   );
 
+  // Names the spell checker must leave alone: the novelist, their muses and
+  // friends. Everything a post is likely to name that no dictionary knows.
+  const spellIgnore = useMemo(
+    () =>
+      namesToWords([
+        novelist?.username,
+        novelist?.firstName,
+        novelist?.lastName,
+        ...(novelist?.muses ?? []).flatMap((m) => [m.firstName, m.lastName]),
+        ...(novelist?.friends ?? []).map((f) => f.username),
+      ]),
+    [novelist],
+  );
+
   // ─── Sending ─────────────────────────────────────────────────────────────
 
   const reconcileMedia = media.reconcile;
@@ -407,7 +421,9 @@ const ComposerScreen = ({
       if (isOffline() && store) {
         await enqueueOutbox(store, {
           kind: "post",
-          parent: parent ? { author: parent.author.name, text: parent.text } : null,
+          parent: parent
+            ? { author: parent.author.name, text: parent.text }
+            : null,
           payload,
           type,
         }).catch(() => undefined);
@@ -722,10 +738,7 @@ const ComposerScreen = ({
               <View
                 style={
                   parent
-                    ? [
-                        styles.replyDock,
-                        { borderTopColor: theme.glass.edge },
-                      ]
+                    ? [styles.replyDock, { borderTopColor: theme.glass.edge }]
                     : styles.fill
                 }
               >
@@ -1065,6 +1078,7 @@ const ComposerScreen = ({
                   mentionTabs={mentionTabs}
                   onDocumentChange={onDocumentChange}
                   onFocusChange={(focused) => liftRef.current?.predict(focused)}
+                  spellIgnore={spellIgnore}
                   compact={Boolean(parent)}
                   placeholder={placeholder}
                   ref={editor}
@@ -1318,7 +1332,11 @@ const styles = StyleSheet.create({
     paddingLeft: space.s,
     paddingRight: space.ms,
   },
-  senderEyebrow: { fontSize: fontSize.meta, fontWeight: "700", letterSpacing: 0.6 },
+  senderEyebrow: {
+    fontSize: fontSize.meta,
+    fontWeight: "700",
+    letterSpacing: 0.6,
+  },
   senderName: { fontSize: fontSize.label, fontWeight: "700" },
   senderText: { flex: 1, gap: 1, minWidth: 0 },
   sendLabel: { color: "#ffffff", fontSize: fontSize.label, fontWeight: "700" },

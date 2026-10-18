@@ -60,6 +60,7 @@ export interface Muse {
   sideMenuTextColor?: string | null;
   hideExpandedBackground?: boolean;
   hideSideMenuBackground?: boolean;
+  /** Always 0 since XP stopped being shown; the server withholds the figures. */
   totalPoints: number;
   level: number;
   prev: MuseNavItem | null;
@@ -254,6 +255,7 @@ export type Novelist = {
   about: string | null;
   isOnboarded: boolean;
   isVerified: boolean;
+  /** Always 0 since XP stopped being shown; the server withholds the figures. */
   totalPoints: number;
   level: number;
   /** Earned badges only. The full catalogue lives on the badges page. */

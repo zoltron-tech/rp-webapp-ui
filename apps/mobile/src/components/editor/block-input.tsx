@@ -16,6 +16,8 @@ import {
 } from "react-native";
 import { Text, TextInput } from "@/components/text";
 import { nativeFace } from "@/lib/editor-fonts";
+import { misspelledStyle, splitByFlags } from "@/lib/spell/decorate";
+import type { SpellFlag } from "@/lib/spell/flags";
 import {
   type AppTheme,
   fontSize,
@@ -102,28 +104,56 @@ const blockSizing = (block: RichBlock) => {
 const isPlain = (run: Extract<RichInline, { type: "text" }>): boolean =>
   run.marks.length === 0 && !run.color && !run.background && !run.fontFamily;
 
-/** The block's runs as styled `<Text>`, spelling out exactly `blockText`. */
-const blockRuns = (block: RichBlock, theme: AppTheme): ReactNode => {
+/**
+ * The block's runs as styled `<Text>`, spelling out exactly `blockText`.
+ *
+ * `flags` are the misspelled words as offsets into that text (see
+ * `lib/spell/flags.ts`); a run is split where one falls inside it and the
+ * piece is drawn in the misspelling style. The string spelled out is the
+ * same either way — only the number of `<Text>` wrappers changes.
+ */
+const blockRuns = (
+  block: RichBlock,
+  theme: AppTheme,
+  flags: readonly SpellFlag[] = [],
+): ReactNode => {
   const text = blockText(block);
   // Null rather than an empty string, so the placeholder shows.
   if (!text) return null;
+  const bad = flags.length > 0 ? misspelledStyle(theme) : null;
 
   // Nothing formatted, which is what most lines are: one text node rather
   // than a wrapper per run.
   const plain = block.children.every(
     (child) => child.type === "text" && isPlain(child),
   );
-  if (plain) return <Text style={{ color: theme.text }}>{text}</Text>;
+  if (plain) {
+    if (!bad) return <Text style={{ color: theme.text }}>{text}</Text>;
+    return splitByFlags(text, 0, flags).map((piece, at) => (
+      <Text
+        // Index keys: rebuilt on every keystroke, no identity to preserve.
+        key={`${at}-${piece.flagged}`}
+        style={[{ color: theme.text }, piece.flagged ? bad : null]}
+      >
+        {piece.text}
+      </Text>
+    ));
+  }
 
-  return block.children.map((child, position) => {
+  let offset = 0;
+  return block.children.flatMap((child, position) => {
     // Index keys: the list is rebuilt on every keystroke and there is no
     // identity to preserve between two renders of it.
     const key = `${position}-${child.type}`;
 
-    if (child.type === "break") return <Text key={key}>{"\n"}</Text>;
+    if (child.type === "break") {
+      offset += 1;
+      return [<Text key={key}>{"\n"}</Text>];
+    }
 
     if (child.type === "mention") {
-      return (
+      offset += child.name.length + 1;
+      return [
         <Text
           key={key}
           style={{
@@ -133,8 +163,8 @@ const blockRuns = (block: RichBlock, theme: AppTheme): ReactNode => {
           }}
         >
           @{child.name}
-        </Text>
-      );
+        </Text>,
+      ];
     }
 
     const underline = child.marks.includes("underline");
@@ -142,35 +172,45 @@ const blockRuns = (block: RichBlock, theme: AppTheme): ReactNode => {
     const bold = child.marks.includes("bold");
     const italic = child.marks.includes("italic");
     const face = nativeFace(child.fontFamily, bold, italic);
+    const style = [
+      { color: child.color ?? theme.text },
+      face ? { fontFamily: face.fontFamily } : null,
+      // A loaded face carries its own weight and slant; see `nativeFace`.
+      bold && !face?.baked ? styles.bold : null,
+      italic && !face?.baked ? styles.italic : null,
+      child.marks.includes("code")
+        ? [CODE_STYLE, { backgroundColor: theme.material.fill }]
+        : null,
+      child.background ? { backgroundColor: child.background } : null,
+      underline || strike
+        ? {
+            textDecorationLine:
+              underline && strike
+                ? ("underline line-through" as const)
+                : underline
+                  ? ("underline" as const)
+                  : ("line-through" as const),
+          }
+        : null,
+    ];
+    const start = offset;
+    offset += child.text.length;
 
-    return (
+    if (!bad) {
+      return [
+        <Text key={key} style={style}>
+          {child.text}
+        </Text>,
+      ];
+    }
+    return splitByFlags(child.text, start, flags).map((piece, at) => (
       <Text
-        key={key}
-        style={[
-          { color: child.color ?? theme.text },
-          face ? { fontFamily: face.fontFamily } : null,
-          // A loaded face carries its own weight and slant; see `nativeFace`.
-          bold && !face?.baked ? styles.bold : null,
-          italic && !face?.baked ? styles.italic : null,
-          child.marks.includes("code")
-            ? [CODE_STYLE, { backgroundColor: theme.material.fill }]
-            : null,
-          child.background ? { backgroundColor: child.background } : null,
-          underline || strike
-            ? {
-                textDecorationLine:
-                  underline && strike
-                    ? "underline line-through"
-                    : underline
-                      ? "underline"
-                      : "line-through",
-              }
-            : null,
-        ]}
+        key={`${key}-${at}-${piece.flagged}`}
+        style={[style, piece.flagged ? bad : null]}
       >
-        {child.text}
+        {piece.text}
       </Text>
-    );
+    ));
   });
 };
 
@@ -246,11 +286,14 @@ export interface BlockInputProps {
   selection?: { start: number; end: number };
   inputRef: (index: number, input: TextInput | null) => void;
   editable?: boolean;
+  /** Misspelled words, as offsets into the block's text. */
+  flags?: readonly SpellFlag[];
 }
 
 const BlockInputView = ({
   block,
   editable = true,
+  flags,
   index,
   inputRef,
   onBlur,
@@ -267,7 +310,10 @@ const BlockInputView = ({
 
   const text = blockText(block);
   const { lineHeight, size } = blockSizing(block);
-  const children = useMemo(() => blockRuns(block, theme), [block, theme]);
+  const children = useMemo(
+    () => blockRuns(block, theme, flags),
+    [block, flags, theme],
+  );
 
   // Only while the line is empty: once it has text, the runs carry the style.
   const typingStyle = useMemo(() => {
@@ -282,6 +328,40 @@ const BlockInputView = ({
       typing.color ? { color: typing.color } : null,
     ];
   }, [text.length, typing]);
+
+  /*
+   * The field's own family follows its content: when every run of the line
+   * is in one family, the field is set to that family too, not only while
+   * the line is empty. Without this the field's typeface flipped on the
+   * first character — serif while empty (`typingStyle`), the interface face
+   * once the runs took over — and Android laid the line out against one
+   * typeface while drawing it in another: on some phones a line set in
+   * Times New Roman then ran off the edge instead of wrapping. With the field
+   * and its runs agreeing, the runs' font spans are redundant and the
+   * platform drops them (`ReactEditText.stripSpansOfKind`), so the line is
+   * measured and drawn by the same typeface throughout.
+   */
+  const contentFace = useMemo(() => {
+    if (text.length === 0) return null;
+    let family: string | undefined;
+    let first: Extract<RichInline, { type: "text" }> | undefined;
+    for (const child of block.children) {
+      if (child.type !== "text" || !child.text) continue;
+      if (!first) {
+        first = child;
+        family = child.fontFamily;
+      } else if (child.fontFamily !== family) {
+        return null;
+      }
+    }
+    if (!first || !family) return null;
+    const face = nativeFace(
+      family,
+      first.marks.includes("bold"),
+      first.marks.includes("italic"),
+    );
+    return face ? { fontFamily: face.fontFamily } : null;
+  }, [block, text.length]);
 
   return (
     <BlockFrame block={block} lineHeight={lineHeight} size={size}>
@@ -327,6 +407,7 @@ const BlockInputView = ({
             lineHeight,
             textAlign: block.align ?? "left",
           },
+          contentFace,
           typingStyle,
         ]}
         // No `value`. See the note above — with children it is a crash on
@@ -398,7 +479,7 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   italic: { fontStyle: "italic" },
-  row: { flexDirection: "row", gap: space.sm },
   marker: { minWidth: 18, textAlign: "right" },
   quote: { borderLeftWidth: 3, paddingLeft: space.sm },
+  row: { flexDirection: "row", gap: space.sm },
 });

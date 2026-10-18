@@ -176,18 +176,3 @@ export const ProfileHandle = styled.span`
   text-overflow: ellipsis;
   white-space: nowrap;
 `;
-
-export const ProfileLevel = styled.span`
-  flex-shrink: 0;
-  align-self: flex-start;
-  /* Sits under the handle rather than beside the name: beside it, the chip
-     took the width the name needed and the name truncated to three letters. */
-  margin-top: 4px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: var(--accent-a11, var(--accent));
-  background: var(--accent-a3, var(--bg-3));
-`;

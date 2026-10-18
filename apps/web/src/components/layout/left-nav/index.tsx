@@ -1,6 +1,5 @@
 "use client";
 
-import { isSupportNovelist } from "@nw/chat";
 import type { FC, ReactNode } from "react";
 import { EmailVerifiedBadge } from "@/components/common";
 import {
@@ -151,11 +150,6 @@ export const LeftNav: FC<Props> = ({ visible }) => {
                     {novelist.isVerified && <EmailVerifiedBadge size={13} />}
                   </S.ProfileName>
                   <S.ProfileHandle>@{novelist.username}</S.ProfileHandle>
-                  {!isSupportNovelist(novelist.username) && (
-                    <S.ProfileLevel>
-                      {novelist.totalPoints.toLocaleString()} XP
-                    </S.ProfileLevel>
-                  )}
                 </S.ProfileInfo>
               </S.ProfileItem>
             )}

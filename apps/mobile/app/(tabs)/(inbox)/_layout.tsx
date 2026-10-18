@@ -7,7 +7,7 @@ import { glassHeaderOptions } from "@/theme/header";
 import { ambientScreenLayout } from "@/components/ambient-background";
 import { TabHeaderTitle } from "@/components/header-title";
 import { MenuButton } from "@/components/menu-button";
-import { StackBackButton } from "@/components/stack-back-button";
+import { StackBackButton, tabStackBack } from "@/components/stack-back-button";
 
 /**
  * The Inbox tab's stack.
@@ -23,13 +23,16 @@ export default function InboxStackLayout() {
     <InboxRevealProvider>
     <Stack
       screenLayout={ambientScreenLayout}
-      screenOptions={{
+      screenOptions={(screen) => ({
         contentStyle: { backgroundColor: theme.background },
         headerRight: () => (
           <MenuButton />
         ),
         ...glassHeaderOptions(theme),
-      }}
+        // A page that arrived first in this stack (a link from another tab,
+        // from a chat, from a story) still needs a way back on iOS.
+        ...tabStackBack(screen),
+      })}
     >
       {/*
         The brand tile, then the page's name set as the lockup sets
@@ -84,6 +87,36 @@ export default function InboxStackLayout() {
           title: "Details",
         }}
       />
+      {/*
+        Where a link card in a conversation goes — a character, a novelist, a
+        prompt, a thread — kept inside this tab like the other tabs keep
+        theirs. Pushed anywhere else it landed alone in another tab's stack,
+        with nothing under it and so no back button. Same drawn back button
+        on iOS as Details, for the same reason.
+      */}
+      {[
+        "muse/[museId]",
+        "prompt/[promptId]",
+        "threads/[threadId]",
+        "novelist/[username]/index",
+        "novelist/[username]/friends",
+        "novelist/[username]/muses",
+        "novelist/[username]/stories",
+        "novelist/[username]/activity",
+        "novelist/[username]/prompts",
+        "novelist/[username]/posts",
+      ].map((name) => (
+        <Stack.Screen
+          key={name}
+          name={name}
+          options={{
+            headerLeft:
+              Platform.OS === "ios" ? () => <StackBackButton /> : undefined,
+            ...(name === "prompt/[promptId]" ? { title: "Prompt" } : null),
+            ...(name === "threads/[threadId]" ? { title: "Thread" } : null),
+          }}
+        />
+      ))}
     </Stack>
     {/* The conversation page itself, over the stack — see the overlay. */}
     <ConversationOverlayHost />

@@ -2,9 +2,8 @@
 
 import { ShouldRender } from "@novelist-world/ui";
 import { useEffect } from "react";
-import { getNovelistRankByIdAction } from "@/app/rp/leaderboard/actions";
 import { StoreProvider } from "@/context/store/context";
-import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
+import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import EditDataCard from "./edit-data-card";
 import type { ProfileState } from "./profile.store";
@@ -13,7 +12,6 @@ import * as S from "./styled";
 export default function EditProfilePage() {
   const novelist = useGlobalState("novelist");
   const user = useGlobalState("user");
-  const setGlobalState = useGlobalStoreSet();
   const { stopPageLoading } = usePageRouter();
 
   // Stop any lingering full-page loader immediately — data is already in global state
@@ -21,17 +19,6 @@ export default function EditProfilePage() {
     stopPageLoading();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Refresh own rank whenever edit profile is opened
-  useEffect(() => {
-    if (!novelist?.id) return;
-    void getNovelistRankByIdAction(novelist.id).then((result) => {
-      setGlobalState({
-        novelistRank: "message" in result ? undefined : result.rank,
-      });
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [novelist?.id]);
 
   return (
     <S.EditProfilePageRoot>

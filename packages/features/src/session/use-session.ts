@@ -137,7 +137,7 @@ export const useLogin = () => {
  * Sign out, and forget everything cached about this person.
  *
  * `clear()` rather than invalidating the session key alone: every other cached
- * query — notifications, the leaderboard, a profile — was fetched as this user
+ * query — notifications, the directory, a profile — was fetched as this user
  * and must not be shown to the next one.
  */
 export interface LogoutOptions {

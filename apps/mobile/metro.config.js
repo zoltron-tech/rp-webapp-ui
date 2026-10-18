@@ -34,6 +34,11 @@ config.resolver.nodeModulesPaths = [
 // can bundle two Reacts and every hook throws "invalid hook call".
 config.resolver.disableHierarchicalLookup = true;
 
+// The spell-check dictionary ships as two plain-text assets (`assets/dict`),
+// read at runtime by `src/lib/spell/store.ts`; Metro has to know the
+// extensions are assets, not source.
+config.resolver.assetExts = [...config.resolver.assetExts, "aff", "dic"];
+
 // Metro's "server root" is the directory a relative entry path is resolved
 // against. Expo sets it to the workspace root whenever it finds one
 // (@expo/config getMetroServerRoot), but the React Native Gradle plugin makes

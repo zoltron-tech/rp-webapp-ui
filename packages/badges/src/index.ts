@@ -30,7 +30,6 @@ export {
   badgeMarkFill,
 } from "./mark";
 export { registerBadgeMotion } from "./motion";
-export { SCORE_VIEW_BOX, ScoreBadgeArtwork } from "./score";
 
 /*
  * Teaches the shared motion table about the crests' class names. A no-op on the

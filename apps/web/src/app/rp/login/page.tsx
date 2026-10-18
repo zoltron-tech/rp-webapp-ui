@@ -1,7 +1,12 @@
 "use client";
 
+import { readReferralCookie } from "@/lib/auth-cookie";
 import { useNavigate } from "@/lib/navigation";
-import { usePathname, useSearchParams } from "@/lib/navigation";
+import {
+  usePathname,
+  useSearchParams,
+  useSetSearchParams,
+} from "@/lib/navigation";
 import { Separator, Tabs } from "radix-ui";
 import { useCallback, useEffect } from "react";
 import { setReferralCookie } from "@/app/actions";
@@ -25,11 +30,29 @@ export default function LoginPage() {
     (Boolean(referralUser) && searchParams?.get("register") !== "0");
   const { routeToPage, stopPageLoading } = usePageRouter();
   const push = useNavigate();
+  const setSearchParams = useSetSearchParams();
 
   useEffect(() => {
     // Persist the referral so it survives both the email/password signup and
     // the OAuth redirects (Google/Discord) — consumed and cleared on signup.
-    if (referralUser) setReferralCookie(referralUser);
+    if (referralUser) {
+      setReferralCookie(referralUser);
+      return;
+    }
+    // And keep it in the address bar for as long as the cookie holds it. The
+    // cookie belongs to this browser only: an invite opened inside Instagram's
+    // or TikTok's built-in browser, where Google refuses to sign anyone in, is
+    // carried to the real browser by its address — and that address has to
+    // still say who sent it.
+    const stored = readReferralCookie();
+    if (stored) {
+      setSearchParams((next) => {
+        next.set("referralUser", stored);
+        // Pin the tab this visit opened on, or a reload would read the
+        // restored referral as an invite and switch to Register.
+        if (!next.has("register")) next.set("register", isRegister ? "1" : "0");
+      });
+    }
   }, [referralUser]);
 
   useEffect(() => {
@@ -42,13 +65,23 @@ export default function LoginPage() {
     }
   }, [authState]);
 
+  /** The tab in the address, without losing the invite that may be in it. */
+  const tabUrl = useCallback(
+    (register: "0" | "1") => {
+      const query = new URLSearchParams({ register });
+      if (referralUser) query.set("referralUser", referralUser);
+      return `${pathname}?${query.toString()}`;
+    },
+    [pathname, referralUser],
+  );
+
   const handleRegisterClick = useCallback(() => {
-    push(`${pathname}?register=1`);
-  }, [pathname, routeToPage]);
+    push(tabUrl("1"));
+  }, [push, tabUrl]);
 
   const handleLoginClick = useCallback(() => {
-    push(`${pathname}?register=0`);
-  }, [pathname, routeToPage]);
+    push(tabUrl("0"));
+  }, [push, tabUrl]);
 
   useEffect(() => {
     stopPageLoading();

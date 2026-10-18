@@ -11,8 +11,10 @@ import {
   useRef,
   useState,
 } from "react";
+import { useSpellcheck } from "@/lib/spell/use-spellcheck";
 import { MentionDropdown } from "../mention-dropdown";
 import { createMentionChip } from "../rich-text-editor-input/mention-chip";
+import { SpellMenu } from "../spell-menu";
 import * as S from "./styled";
 
 interface ChatRichInputProps {
@@ -37,6 +39,9 @@ interface ChatRichInputProps {
    *  editor sits flush and transparent inside a differently-styled container
    *  — e.g. the ice breaker composer's colored speech bubble. */
   bare?: boolean;
+  /** Words the spell checker must never flag: the participants' and senders'
+   *  names (see `@nw/spell/tokenizer` `namesToWords`). */
+  spellIgnore?: Iterable<string>;
 }
 
 export interface ChatRichInputHandle {
@@ -65,12 +70,21 @@ export const ChatRichInput = forwardRef<
     getMentionMuseItems,
     trailingAction,
     bare = false,
+    spellIgnore,
   },
   ref,
 ) {
   const editorRef = useRef<HTMLDivElement>(null);
   const [isEmpty, setIsEmpty] = useState(true);
   const [showMention, setShowMention] = useState(false);
+
+  // Spell checking: wavy underlines via the Highlight API and a correction
+  // menu above the composer. Paused while the mention list is open.
+  const spell = useSpellcheck({
+    editorRef,
+    ignoreWords: spellIgnore,
+    suspended: showMention,
+  });
   const [mentionQuery, setMentionQuery] = useState("");
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [dynamicMuses, setDynamicMuses] = useState<MentionDataItem[]>([]);
@@ -404,7 +418,9 @@ export const ChatRichInput = forwardRef<
   const handlePaste = useCallback(
     (e: React.ClipboardEvent<HTMLDivElement>) => {
       e.preventDefault();
-      const plain = e.clipboardData.getData("text/plain").replace(/\r\n?/g, "\n");
+      const plain = e.clipboardData
+        .getData("text/plain")
+        .replace(/\r\n?/g, "\n");
       if (!plain) return;
       if (document.execCommand("insertText", false, plain)) return;
 
@@ -437,6 +453,10 @@ export const ChatRichInput = forwardRef<
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
+      // ── Spelling menu ────────────────────────────────────────────────────
+      // While it is open, Enter applies the focused correction (not send).
+      if (spell.handleKeyDown(e)) return;
+
       // ── Mention navigation ───────────────────────────────────────────────
       if (showMention && filteredItems.length > 0) {
         if (e.key === "ArrowDown") {
@@ -479,6 +499,7 @@ export const ChatRichInput = forwardRef<
       }
     },
     [
+      spell.handleKeyDown,
       showMention,
       filteredItems,
       focusedIndex,
@@ -490,6 +511,16 @@ export const ChatRichInput = forwardRef<
 
   return (
     <S.InputWrap $bare={bare}>
+      {spell.menu && (
+        <SpellMenu
+          state={spell.menu}
+          onPick={spell.pick}
+          onFocus={spell.setFocused}
+          onAdd={spell.addToDictionary}
+          onIgnore={spell.ignoreWord}
+          onClose={spell.closeMenu}
+        />
+      )}
       {showMention && filteredItems.length > 0 && (
         <MentionDropdown
           items={filteredItems}
@@ -507,6 +538,9 @@ export const ChatRichInput = forwardRef<
         suppressContentEditableWarning
         data-empty={isEmpty ? "true" : undefined}
         data-placeholder={placeholder}
+        spellCheck={!spell.active}
+        onClick={spell.handleClick}
+        onDoubleClick={spell.handleDoubleClick}
         onInput={handleInput}
         onKeyDown={handleKeyDown}
         onPaste={handlePaste}

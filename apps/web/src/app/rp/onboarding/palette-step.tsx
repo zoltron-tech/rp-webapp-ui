@@ -1,5 +1,5 @@
 import { ShouldRender } from "@novelist-world/ui";
-import { ACCENT_MAP, type Accent } from "@nw/types/theme";
+import { ACCENT_MAP, type Accent, BASIC_ACCENTS } from "@nw/types/theme";
 import classNames from "classnames";
 import { Form, RadioGroup } from "radix-ui";
 import {
@@ -49,6 +49,12 @@ export const PaletteStep: FC<BasicInfoStepProps> = ({ handleNext }) => {
       e.preventDefault();
       const target = e.target as HTMLFormElement;
       const _palatte = target.palette.value.trim();
+      // Only the basic four are offered here; an account already on another
+      // palette has nothing checked, and keeps that palette.
+      if (!_palatte) {
+        handleNext();
+        return;
+      }
 
       if (_palatte !== user?.palette) {
         setLoading(true);
@@ -91,21 +97,24 @@ export const PaletteStep: FC<BasicInfoStepProps> = ({ handleNext }) => {
             asChild
           >
             <S.PaletteGroup>
-              {Object.entries(ACCENT_MAP).map(([key, value]) => (
-                <S.PaletteOption
-                  key={value}
-                  htmlFor={`palette-${key}`}
-                  className={classNames(value)}
-                >
-                  <RadioGroup.Item
-                    id={`palette-${key}`}
-                    value={key}
-                    className="palette-swatch"
-                    aria-label={value}
-                  />
-                  <span className="palette-name">{value}</span>
-                </S.PaletteOption>
-              ))}
+              {BASIC_ACCENTS.map((key) => {
+                const value = ACCENT_MAP[key];
+                return (
+                  <S.PaletteOption
+                    key={value}
+                    htmlFor={`palette-${key}`}
+                    className={classNames(value)}
+                  >
+                    <RadioGroup.Item
+                      id={`palette-${key}`}
+                      value={String(key)}
+                      className="palette-swatch"
+                      aria-label={value}
+                    />
+                    <span className="palette-name">{value}</span>
+                  </S.PaletteOption>
+                );
+              })}
             </S.PaletteGroup>
           </RadioGroup.Root>
         </Form.FormField>

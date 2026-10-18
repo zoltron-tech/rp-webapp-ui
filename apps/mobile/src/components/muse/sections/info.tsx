@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import { Text } from "@/components/text";
 import { type ActionItem, ActionMenu } from "@/components/action-menu";
-import { ScoreIcon } from "@/components/badges";
 import { PRIVACY_ICON, PRIVACY_LABEL } from "@/components/feed/privacy";
 import { AttributeSheet } from "@/components/muse/edit/attribute-sheet";
 import { FandomSheet } from "@/components/muse/edit/fandom-sheet";
@@ -41,7 +40,7 @@ import { border, fontSize, radius, space } from "@/theme";
 /**
  * Web's `MuseInfoSection`.
  *
- * The same column: the score chip and privacy mark in the corners, the face,
+ * The same column: the privacy mark in the corner, the face,
  * the name, who pens them, their nicknames, their fandom, then "Details" — the
  * free-form attributes laid out two to a row, or the blank card when there are
  * none.
@@ -206,28 +205,9 @@ export const MuseInfoSection = ({
   return (
     <>
       <MusePanel accent={accent} hideBackground={look.hideExpandedBackground}>
-        {/* Web's `InfoScoreCorner` and `InfoPrivacyCorner`, in the same corners. */}
+        {/* Web's `InfoPrivacyCorner`, in the same corner; the spacer keeps it right. */}
         <View style={styles.corners}>
-          {typeof muse?.totalPoints === "number" ? (
-            <View
-              accessibilityLabel={`${muse.totalPoints} points. Score reflects how active this character is in the community.`}
-              style={[
-                styles.score,
-                {
-                  borderColor: accent
-                    ? withAlpha(accent, 0.45)
-                    : "rgba(255,255,255,0.2)",
-                },
-              ]}
-            >
-              <ScoreIcon size={12} />
-              <Text style={styles.scoreLabel}>
-                {muse.totalPoints.toLocaleString()}
-              </Text>
-            </View>
-          ) : (
-            <View />
-          )}
+          <View />
           {muse ? (
             <Pressable
               accessibilityHint={
@@ -657,22 +637,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     minWidth: 28,
     paddingHorizontal: 7,
-  },
-  score: {
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.35)",
-    borderRadius: radius.full,
-    borderWidth: border.edge,
-    flexDirection: "row",
-    gap: space.xs,
-    paddingLeft: space.s,
-    paddingRight: space.ms,
-    paddingVertical: 3,
-  },
-  scoreLabel: {
-    color: "rgba(255,255,255,0.85)",
-    fontSize: fontSize.meta,
-    fontWeight: "700",
-    letterSpacing: 0.2,
   },
 });

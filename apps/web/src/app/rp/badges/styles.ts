@@ -165,16 +165,33 @@ export const CardText = styled.div`
 `;
 
 export const CardTitle = styled.span`
+  display: block;
   font-size: var(--font-size);
   font-weight: var(--font-weight-bold);
   color: var(--text);
-  overflow-wrap: anywhere;
+  /* Never split a name. A word too long for the line beside the chip drops
+     below it whole — any break-anywhere rule splits it to fit the short line
+     instead. Badge names are a word or two, so nothing is wide enough to
+     overflow a full line. */
+  overflow-wrap: normal;
+`;
 
-  /* Room for the pinned rarity chip, which sits over the end of this line. */
-  padding-right: 76px;
+/**
+ * Room for the pinned rarity chip, as a float at the start of the title.
+ *
+ * Only the first line wraps around a float, so the chip costs one short line
+ * rather than a column down the whole title. A fixed padding did the latter,
+ * and with `overflow-wrap: anywhere` squeezed names like "Chronicler" into
+ * pieces; it was also narrower than the LEGENDARY chip, which ran over the
+ * title. Sized per chip, since the labels differ in length.
+ */
+export const ChipRoom = styled.span<{ $wide: boolean }>`
+  float: right;
+  width: ${(p) => (p.$wide ? 92 : 72)}px;
+  height: 1.2em;
 
   @media screen and (max-width: 600px) {
-    padding-right: 66px;
+    width: ${(p) => (p.$wide ? 84 : 64)}px;
   }
 `;
 

@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { ACCENT_MAP, type Accent } from "@nw/types/theme";
+import { ACCENT_MAP, type Accent, BASIC_ACCENTS } from "@nw/types/theme";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -37,10 +37,8 @@ import {
  * tried must not outlive the screen it was tried on.
  */
 
-const PALETTES = Object.entries(ACCENT_MAP).map(([key, name]) => ({
-  key: Number(key) as Accent,
-  name,
-}));
+/** Only the basic four here; the rest are offered later, in Appearance. */
+const PALETTES = BASIC_ACCENTS.map((key) => ({ key, name: ACCENT_MAP[key] }));
 
 export default function OnboardingAccentScreen() {
   const theme = useAppTheme();

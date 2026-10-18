@@ -22,7 +22,16 @@ export type BadgeCode =
   | "POSTAHOLIC"
   | "CO_AUTHOR"
   | "DEDICATED"
-  | "CREATIVE";
+  | "CREATIVE"
+  | "WORLDBUILDER"
+  | "CHRONICLER"
+  | "TIMEKEEPER"
+  | "MATCHMAKER"
+  | "SHAPESHIFTER"
+  | "VETERAN_QUILL"
+  | "AMBASSADOR"
+  | "CAMPFIRE"
+  | "LOREKEEPER";
 
 /** Drives the badge frame's colour and glow. No behaviour attached. */
 export type BadgeRarity = "COMMON" | "RARE" | "LEGENDARY";

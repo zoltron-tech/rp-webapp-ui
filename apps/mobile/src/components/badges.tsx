@@ -5,8 +5,6 @@ import {
   BADGE_VIEW_BOX,
   badgeMarkFill,
   DETAIL_THRESHOLD,
-  SCORE_VIEW_BOX,
-  ScoreBadgeArtwork,
 } from "@nw/badges";
 import type { Badge, BadgeCode } from "@nw/types/badge";
 import { memo } from "react";
@@ -235,13 +233,6 @@ export const BadgeRow = memo(function BadgeRow({
     </Row>
   );
 });
-
-/** The amber XP mark, for the chip on the avatar. */
-export const ScoreIcon = ({ size = 14 }: { size?: number }) => (
-  <Svg height={size} viewBox={SCORE_VIEW_BOX} width={size}>
-    <ScoreBadgeArtwork />
-  </Svg>
-);
 
 const styles = StyleSheet.create({
   overflow: {

@@ -1,0 +1,19 @@
+diff --git a/Libraries/Text/TextInput/Multiline/RCTUITextView.mm b/Libraries/Text/TextInput/Multiline/RCTUITextView.mm
+--- a/Libraries/Text/TextInput/Multiline/RCTUITextView.mm
++++ b/Libraries/Text/TextInput/Multiline/RCTUITextView.mm
+@@ -37,6 +37,15 @@ static UIColor *defaultPlaceholderColor(void)
+ - (instancetype)initWithFrame:(CGRect)frame
+ {
+   if (self = [super initWithFrame:frame]) {
++    // Novelist World: lay the field out with TextKit 1, as React Native
++    // measures it. On iOS 16+ a UITextView made this way is TextKit 2, while
++    // RCTTextLayoutManager (what Yoga sizes the field by) is TextKit 1; the
++    // two broke lines differently for some system fonts - in Times New Roman
++    // a typed line ran past the right edge and wrapped late and in bursts.
++    // Reading `layoutManager` once switches the view to TextKit 1 for good.
++    // See rp-webapp-ui/patches/README.md.
++    (void)self.layoutManager;
++
+     [[NSNotificationCenter defaultCenter] addObserver:self
+                                              selector:@selector(textDidChange)
+                                                  name:UITextViewTextDidChangeNotification

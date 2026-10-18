@@ -15,6 +15,12 @@ export {
 } from "./background";
 export { bindStore, unbindStore } from "./bind";
 export {
+  deleteMessages,
+  mostRecentConversationIds,
+  purgeOldMessages,
+  RETENTION_MS,
+} from "./chat";
+export {
   closeStore,
   getStore,
   type LocalStore,
@@ -24,11 +30,9 @@ export {
   wipeStore,
 } from "./db";
 export { FEED_KEEP_PAGES, FEED_MAX_AGE_MS } from "./feeds";
+export { hydrateStore, seedQuery } from "./hydrate";
 export { hydrateThreadPage, markThreadOpened } from "./interactions";
 export { deleteAllDatabaseKeys, knownDatabaseUsers } from "./key";
-export { mostRecentConversationIds, purgeOldMessages, RETENTION_MS } from "./chat";
-export { hydrateStore, seedQuery } from "./hydrate";
-export { lastSyncedAt, readAllMeta, readMeta, recordSync, writeMeta } from "./meta";
 export {
   CHAT_MEDIA_RETENTION_MS,
   isMediaCached,
@@ -39,6 +43,13 @@ export {
   resolveMediaUri,
   useMediaUri,
 } from "./media";
+export {
+  lastSyncedAt,
+  readAllMeta,
+  readMeta,
+  recordSync,
+  writeMeta,
+} from "./meta";
 export { markNovelistOpened } from "./novelists";
 export {
   discardOutbox,

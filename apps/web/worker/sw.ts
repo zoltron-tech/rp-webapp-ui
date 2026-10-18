@@ -9,7 +9,7 @@ import {
   precacheAndRoute,
 } from "workbox-precaching";
 import { NavigationRoute, registerRoute } from "workbox-routing";
-import { CacheFirst } from "workbox-strategies";
+import { CacheFirst, StaleWhileRevalidate } from "workbox-strategies";
 import { registerPushHandlers } from "./handlers";
 
 /**
@@ -90,6 +90,46 @@ registerRoute(
       new ExpirationPlugin({
         maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
         maxEntries: 500,
+      }),
+    ],
+  }),
+);
+
+/**
+ * Spell-check dictionary (`/dict/<lang>/index.{aff,dic}`, ~550 KB). Kept out
+ * of the precache so installs stay small; fetched by the spell worker on the
+ * first editor focus and then served from here, including offline.
+ */
+registerRoute(
+  ({ url, request }) =>
+    url.origin === self.location.origin &&
+    url.pathname.startsWith("/dict/") &&
+    request.method === "GET",
+  new CacheFirst({
+    cacheName: "dict-cache",
+    plugins: [
+      new CacheableResponsePlugin({ statuses: [200] }),
+      new ExpirationPlugin({
+        maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+        maxEntries: 8,
+      }),
+    ],
+  }),
+);
+
+/**
+ * Synonyms from Datamuse for the spell menu. Single-word lookups that rarely
+ * change; a week-old answer is as good as a fresh one.
+ */
+registerRoute(
+  ({ url }) => url.origin === "https://api.datamuse.com",
+  new StaleWhileRevalidate({
+    cacheName: "thesaurus-cache",
+    plugins: [
+      new CacheableResponsePlugin({ statuses: [200] }),
+      new ExpirationPlugin({
+        maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+        maxEntries: 300,
       }),
     ],
   }),

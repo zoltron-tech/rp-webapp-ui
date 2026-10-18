@@ -266,15 +266,6 @@ export default function NovelistsPage() {
                     friends and the fandoms you already write in.
                   </span>
                 </S.FeaturePoint>
-                <S.FeaturePoint>
-                  <S.PointTick>
-                    <FiCheck size={11} />
-                  </S.PointTick>
-                  <span>
-                    <b>Levels and leaderboards.</b> Earn XP for the writing you
-                    were going to do anyway.
-                  </span>
-                </S.FeaturePoint>
               </S.FeaturePoints>
             </S.FeatureCopy>
             <CommunityScene />

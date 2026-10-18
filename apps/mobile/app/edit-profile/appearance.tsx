@@ -1,6 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useSession } from "@nw/features";
-import { ACCENT_MAP, type Accent } from "@nw/types/theme";
+import {
+  ACCENT_MAP,
+  type Accent,
+  BASIC_ACCENTS,
+  MORE_ACCENTS,
+} from "@nw/types/theme";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -15,6 +20,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SongSheet } from "@/components/compose/song-sheet";
 import { ProfileHeaderEditor } from "@/components/edit-profile/profile-header-editor";
 import { ProfileSongPill } from "@/components/profile-song";
+import { BottomSheet } from "@/components/sheet";
 import {
   PillButton,
   SettingsGroup,
@@ -40,10 +46,64 @@ import {
  * which is how every other editor on this client already behaves.
  */
 
-const PALETTES = Object.entries(ACCENT_MAP).map(([key, name]) => ({
-  key: Number(key) as Accent,
-  name,
-}));
+/**
+ * One theme swatch: ring when selected, spinner while that colour is being
+ * applied. Shared by the basic row and the "More colors" sheet.
+ */
+const PaletteSwatch = ({
+  applying,
+  onPress,
+  palette,
+  row = false,
+  selected,
+}: {
+  applying: boolean;
+  onPress: () => void;
+  palette: Accent;
+  /** In the five-wide basic row rather than the sheet's four-wide grid. */
+  row?: boolean;
+  selected: boolean;
+}) => {
+  const theme = useAppTheme();
+  const accent = accentFromPalette(palette);
+  const name = ACCENT_MAP[palette];
+  return (
+    <Pressable
+      accessibilityLabel={`${name} theme`}
+      accessibilityRole="radio"
+      accessibilityState={{ busy: applying, selected }}
+      onPress={onPress}
+      style={[styles.palette, row && styles.paletteRow]}
+    >
+      <View
+        style={[
+          styles.swatchRing,
+          { borderColor: selected ? accent.solid : "transparent" },
+        ]}
+      >
+        <View style={[styles.swatch, { backgroundColor: accent.solid }]}>
+          {applying ? (
+            <ActivityIndicator color="#ffffff" size="small" />
+          ) : selected ? (
+            <Ionicons color="#ffffff" name="checkmark" size={18} />
+          ) : null}
+        </View>
+      </View>
+      <Text
+        numberOfLines={1}
+        style={[
+          styles.paletteName,
+          {
+            color: selected ? theme.text : theme.textGray,
+            fontWeight: selected ? "700" : "500",
+          },
+        ]}
+      >
+        {name}
+      </Text>
+    </Pressable>
+  );
+};
 
 export default function AppearanceScreen() {
   const theme = useAppTheme();
@@ -53,11 +113,13 @@ export default function AppearanceScreen() {
   const song = useProfileSong(novelist?.id);
 
   const [songOpen, setSongOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [songBusy, setSongBusy] = useState(false);
 
   const palette = (user?.palette ?? novelist?.palette ?? 0) as Accent;
   const preview = usePalettePreview();
-  const shownPalette = preview ?? palette;
+  const shownPalette = (preview ?? palette) as Accent;
+  const moreSelected = MORE_ACCENTS.includes(shownPalette);
 
   /**
    * The colour being applied app-wide, or null once the app has it.
@@ -150,52 +212,29 @@ export default function AppearanceScreen() {
           title="Theme color"
         >
           <View style={styles.palettes}>
-            {PALETTES.map(({ key, name }) => {
-              const accent = accentFromPalette(key);
-              const selected = shownPalette === key;
-              const loading = applying === key;
-              return (
-                <Pressable
-                  accessibilityLabel={`${name} theme`}
-                  accessibilityRole="radio"
-                  accessibilityState={{ busy: loading, selected }}
-                  key={key}
-                  onPress={() => pickPalette(key)}
-                  style={styles.palette}
-                >
-                  <View
-                    style={[
-                      styles.swatchRing,
-                      {
-                        borderColor: selected ? accent.solid : "transparent",
-                      },
-                    ]}
-                  >
-                    <View
-                      style={[styles.swatch, { backgroundColor: accent.solid }]}
-                    >
-                      {loading ? (
-                        <ActivityIndicator color="#ffffff" size="small" />
-                      ) : selected ? (
-                        <Ionicons color="#ffffff" name="checkmark" size={18} />
-                      ) : null}
-                    </View>
-                  </View>
-                  <Text
-                    numberOfLines={1}
-                    style={[
-                      styles.paletteName,
-                      {
-                        color: selected ? theme.text : theme.textGray,
-                        fontWeight: selected ? "700" : "500",
-                      },
-                    ]}
-                  >
-                    {name}
-                  </Text>
-                </Pressable>
-              );
-            })}
+            {/* The basic four, plus the current colour when it came from the
+                sheet, so it is always visible. */}
+            {(moreSelected
+              ? [...BASIC_ACCENTS, shownPalette]
+              : BASIC_ACCENTS
+            ).map((key) => (
+              <PaletteSwatch
+                applying={applying === key}
+                key={key}
+                onPress={() => pickPalette(key)}
+                palette={key}
+                row
+                selected={shownPalette === key}
+              />
+            ))}
+          </View>
+          <View style={styles.moreAction}>
+            <PillButton
+              icon="color-palette-outline"
+              label="More colors"
+              onPress={() => setMoreOpen(true)}
+              tone="accent"
+            />
           </View>
         </SettingsGroup>
 
@@ -236,6 +275,28 @@ export default function AppearanceScreen() {
         </SettingsGroup>
       </ScrollView>
 
+      <BottomSheet
+        ignoreKeyboard
+        onClose={() => setMoreOpen(false)}
+        title="More colors"
+        visible={moreOpen}
+      >
+        <View style={styles.palettes}>
+          {MORE_ACCENTS.map((key) => (
+            <PaletteSwatch
+              applying={applying === key}
+              key={key}
+              onPress={() => {
+                pickPalette(key);
+                setMoreOpen(false);
+              }}
+              palette={key}
+              selected={shownPalette === key}
+            />
+          ))}
+        </View>
+      </BottomSheet>
+
       <SongSheet
         onClose={() => setSongOpen(false)}
         onSelect={(picked) => {
@@ -260,7 +321,13 @@ const styles = StyleSheet.create({
     gap: space.sm,
     padding: space.md,
   },
+  moreAction: {
+    alignItems: "center",
+    paddingBottom: space.md,
+    paddingHorizontal: space.md,
+  },
   palette: { alignItems: "center", gap: space.xs, width: "25%" },
+  paletteRow: { width: "20%" },
   paletteName: { fontSize: fontSize.meta, textTransform: "capitalize" },
   palettes: {
     flexDirection: "row",

@@ -102,7 +102,7 @@ export const DEFAULT_ACCENT = getAccent("jade");
 /**
  * Two colours mixed, the way `color-mix(in srgb, a X%, b)` mixes them.
  *
- * The web app builds several accent surfaces that way — the XP chip's fill is
+ * The web app builds several accent surfaces that way — e.g.
  * `color-mix(in srgb, var(--accent) 20%, var(--bg-2))` — and React Native has
  * no equivalent, so the mix happens here instead of on the phone becoming a
  * hand-picked colour that drifts from the web one.

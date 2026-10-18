@@ -27,6 +27,7 @@ import {
   hasUndecryptedContent,
 } from "@/utils/e2e-crypto";
 import {
+  createDeleteSocketMessage,
   createEditSocketMessage,
   createReactionSocketMessage,
 } from "@/utils/socket-helpers";
@@ -124,6 +125,8 @@ export function ConversationPanel({
     lastIncomingMessage,
     lastIncomingReaction,
     lastIncomingEdit,
+    lastIncomingDelete,
+    lastIncomingActionError,
   } = useSocket();
   const { routeToPage, stopPageLoading } = usePageRouter();
   const { errorToast, successToast } = useUIContext();
@@ -200,6 +203,9 @@ export function ConversationPanel({
     null,
   );
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
+  const [deletingMessage, setDeletingMessage] = useState<Message | null>(
+    null,
+  );
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const swipeTouchStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -730,6 +736,59 @@ export function ConversationPanel({
     setReportingMessage(null);
   };
 
+  // ── Delete message ──────────────────────────────────────────────────────────
+
+  /**
+   * Takes a message out of the open conversation: the row itself, and the
+   * quote on any reply to it, which the server also drops once the row is
+   * gone. Anything that referred to it stands down too.
+   */
+  const removeMessageLocally = useCallback((messageId: string) => {
+    setMessages((prev) =>
+      prev
+        .filter((m) => m.id !== messageId)
+        .map((m) =>
+          m.repliedTo?.message?.id === messageId
+            ? { ...m, repliedTo: undefined }
+            : m,
+        ),
+    );
+    setReplyingTo((current) =>
+      current?.id === messageId ? null : current,
+    );
+    setEditingMessage((current) =>
+      current?.id === messageId ? null : current,
+    );
+  }, []);
+
+  const handleDeleteMessage = async () => {
+    if (!deletingMessage) return;
+
+    if (!socket || !isConnected) {
+      errorToast("Not connected. Please wait and try again.");
+      return;
+    }
+
+    // Over the chat-server socket, which deletes through the backend — the
+    // owner check is there — and broadcasts the ids to every member, this
+    // tab included. Removed here first so the row does not linger for the
+    // round trip.
+    removeMessageLocally(deletingMessage.id);
+    try {
+      socket.send(
+        JSON.stringify(
+          createDeleteSocketMessage({
+            conversationId,
+            messageId: deletingMessage.id,
+          }),
+        ),
+      );
+    } catch {
+      errorToast("The message could not be deleted. Please try again.");
+    }
+    setDeletingMessage(null);
+  };
+
   // ── Reactions ───────────────────────────────────────────────────────────────
 
   // Merge a single reaction into the message list. A novelist may only have one
@@ -907,6 +966,31 @@ export function ConversationPanel({
       ),
     );
   }, [lastIncomingEdit, conversationId]);
+
+  // ── Socket: incoming real-time message deletes ─────────────────────────────
+
+  useEffect(() => {
+    if (!lastIncomingDelete) return;
+    if (lastIncomingDelete.conversationId !== conversationId) return;
+    removeMessageLocally(lastIncomingDelete.messageId);
+  }, [lastIncomingDelete, conversationId, removeMessageLocally]);
+
+  // ── Socket: the backend refused an edit or delete of ours ──────────────────
+  //
+  // Both were applied here before asking. The original is not kept, so the
+  // thread is read again rather than patched back; the toast says why.
+  const recoverRef = useRef({ errorToast, fetchMessages });
+  recoverRef.current = { errorToast, fetchMessages };
+  useEffect(() => {
+    if (!lastIncomingActionError) return;
+    if (lastIncomingActionError.conversationId !== conversationId) return;
+    recoverRef.current.errorToast(
+      lastIncomingActionError.action === "edit"
+        ? "Your changes could not be saved."
+        : "The message could not be deleted.",
+    );
+    void recoverRef.current.fetchMessages(conversationId);
+  }, [lastIncomingActionError, conversationId]);
 
   // ── Render helpers ─────────────────────────────────────────────────────────
 
@@ -1145,6 +1229,7 @@ export function ConversationPanel({
                         onReport={(msg) => setReportingMessage(msg)}
                         onReact={handleReact}
                         onEdit={startEditing}
+                        onDelete={(msg) => setDeletingMessage(msg)}
                       />
                     </span>
                   );
@@ -1216,6 +1301,17 @@ export function ConversationPanel({
         }}
         onConfirm={handleReportMessage}
         actionButtonLabel="Report"
+      />
+
+      <AppAlertDialog
+        heading="Delete this message?"
+        text="It will be removed for everyone in this conversation. This cannot be undone."
+        open={!!deletingMessage}
+        onOpenChange={(open) => {
+          if (!open) setDeletingMessage(null);
+        }}
+        onConfirm={handleDeleteMessage}
+        actionButtonLabel="Delete"
       />
 
       <ForwardMessageDialog

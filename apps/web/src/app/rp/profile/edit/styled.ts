@@ -377,6 +377,33 @@ export const RadioItemContainer = styled.div`
   }
 `;
 
+/* Under the basic swatches: opens the rest of the palettes. */
+export const PaletteMoreButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 2px 0 4px;
+  padding: 6px 12px;
+  border: 1px solid var(--bg-6);
+  border-radius: 999px;
+  background: var(--bg-3);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background: var(--fill-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent-9);
+    outline-offset: 2px;
+  }
+`;
+
 export const FormActions = styled.div`
   display: flex;
   justify-content: flex-end;

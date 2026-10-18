@@ -1,0 +1,4 @@
+{
+  "extends": "@nw/config/tsconfig.base.json",
+  "include": ["src/**/*.ts", "../config/universal-globals.d.ts"]
+}

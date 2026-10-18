@@ -3,7 +3,6 @@
 import { Flex } from "@novelist-world/ui";
 import type { Comment, PromptSource, Reply } from "@nw/types";
 import { useParams } from "@/lib/navigation";
-import { Separator } from "radix-ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
 import { FaRegEdit } from "react-icons/fa";
@@ -1188,19 +1187,13 @@ export default function ThreadPage({}) {
             comment?.prompt?.canInteract &&
             !comment?.concluded &&
             !isMobile && (
-              <>
-                <Separator.Root
-                  className="separator"
-                  orientation="horizontal"
-                />
-                <PromptInput
-                  parentId={commentId}
-                  type="reply"
-                  initialSelection={initialSelection}
-                  dropdownSelection={isOOCPost ? "NOVELIST" : "MUSE"}
-                  onSend={handleReplySent}
-                />
-              </>
+              <PromptInput
+                parentId={commentId}
+                type="reply"
+                initialSelection={initialSelection}
+                dropdownSelection={isOOCPost ? "NOVELIST" : "MUSE"}
+                onSend={handleReplySent}
+              />
             )}
         </div>
       </S.RepliesContainer>

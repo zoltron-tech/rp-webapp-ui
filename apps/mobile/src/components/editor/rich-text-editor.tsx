@@ -1,9 +1,9 @@
 import {
   applyTextChange,
+  BULLET_POINT_CATEGORIES,
   backgroundIn,
   blockLength,
   blockText,
-  BULLET_POINT_CATEGORIES,
   DEFAULT_ORDERED_LIST_STYLE,
   DEFAULT_UNORDERED_LIST_STYLE,
   diffText,
@@ -20,17 +20,17 @@ import {
   normalizeDocument,
   ORDERED_LIST_STYLES,
   QUOTATION_MARK_CATEGORIES,
-  removeBlock,
-  replaceBlock,
-  replaceRange,
   type RichAlign,
   type RichBlock,
   type RichDocument,
   type RichImageBlock,
   type RichMark,
   type RichRange,
-  richTextIsEmpty,
   type RunStyle,
+  removeBlock,
+  replaceBlock,
+  replaceRange,
+  richTextIsEmpty,
   setBlockAlign,
   setBlockFontSize,
   setFontFamily,
@@ -41,6 +41,7 @@ import {
   toggleMark,
   updateImage,
 } from "@nw/richtext";
+import { matchCase } from "@nw/spell/tokenizer";
 import { mixColors } from "@nw/theme";
 import type { MentionDataItem, MentionTab } from "@nw/types";
 import { LinearGradient } from "expo-linear-gradient";
@@ -66,13 +67,9 @@ import {
   KeyboardController,
   KeyboardEvents,
 } from "react-native-keyboard-controller";
-import { Text, TextInput } from "@/components/text";
 import { BlockInput } from "@/components/editor/block-input";
 import { FontSheet } from "@/components/editor/font-sheet";
-import {
-  highlightStyle,
-  highlightSwatch,
-} from "@/components/editor/highlight";
+import { highlightStyle, highlightSwatch } from "@/components/editor/highlight";
 import { HighlightSheet } from "@/components/editor/highlight-sheet";
 import { ImageBlock, ImageControls } from "@/components/editor/image-block";
 import { MentionList } from "@/components/editor/mention-list";
@@ -84,6 +81,11 @@ import {
 } from "@/components/editor/toolbar";
 import { WrappedBlockInput } from "@/components/editor/wrapped-block-input";
 import { BottomSheet } from "@/components/sheet";
+import { SpellStrip } from "@/components/spell/spell-strip";
+import { Text, TextInput } from "@/components/text";
+import { useSpellFlags } from "@/lib/spell/flags";
+import { spellStore } from "@/lib/spell/store";
+import { useSpellTarget } from "@/lib/spell/use-spell-target";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
@@ -196,6 +198,11 @@ export interface RichTextEditorProps {
    * Backspace into it. Null draws the picture as usual.
    */
   renderEmbed?: (src: string) => ReactNode | null;
+  /**
+   * Words the spell checker must never flag: muse, friend and story
+   * character names from the call site (`namesToWords` in `@nw/spell`).
+   */
+  spellIgnore?: Iterable<string>;
 }
 
 type Sheet =
@@ -292,6 +299,7 @@ export const RichTextEditor = forwardRef<
     onFocusChange,
     placeholder,
     renderEmbed,
+    spellIgnore,
     uploadingSources,
   },
   handle,
@@ -358,6 +366,10 @@ export const RichTextEditor = forwardRef<
 
   const [active, setActive] = useState<Caret | null>(null);
   const activeRef = useRef<Caret | null>(null);
+  /** The spelling strip's re-read, for the selection handler (set below). */
+  const spellRefresh = useRef<() => void>(() => {});
+  /** When a line was last typed into; the word under the caret is spared. */
+  const typingAt = useRef(0);
   const [pending, setPending] = useState<
     (Caret & { offset: number; style: RunStyle }) | null
   >(null);
@@ -554,6 +566,7 @@ export const RichTextEditor = forwardRef<
       const current = docRef.current;
       const block = current[index];
       if (!isTextBlock(block)) return;
+      typingAt.current = Date.now();
       const pending = pendingRef.current;
 
       const diff = diffText(previous, next);
@@ -577,7 +590,7 @@ export const RichTextEditor = forwardRef<
             : blockLength(block) === 0
               ? typingStyleAt(block, index, at)
               : undefined;
-            const change = applyTextChange(block, previous, next, typing);
+      const change = applyTextChange(block, previous, next, typing);
       // What was just typed in is what the next empty line types in.
       if (diff.inserted.length > 0 && diff.inserted !== "\n") {
         sticky.current = typing ?? styleAt(block, at);
@@ -680,8 +693,14 @@ export const RichTextEditor = forwardRef<
       const selection =
         at && at.index === index
           ? {
-              end: Math.min(Math.max(at.selection.start, at.selection.end), length),
-              start: Math.min(Math.min(at.selection.start, at.selection.end), length),
+              end: Math.min(
+                Math.max(at.selection.start, at.selection.end),
+                length,
+              ),
+              start: Math.min(
+                Math.min(at.selection.start, at.selection.end),
+                length,
+              ),
             }
           : { end: length, start: length };
 
@@ -721,6 +740,7 @@ ${text.slice(offset)}`,
   const handleSelectionChange = useCallback(
     (index: number, selection: RichRange) => {
       setActiveBoth({ index, selection });
+      spellRefresh.current();
       // Handing the caret back to the platform: it has been placed.
       setCaret((placed) => (placed?.index === index ? null : placed));
       /*
@@ -751,11 +771,7 @@ ${text.slice(offset)}`,
       const pinned = pendingRef.current;
       if (
         blockLength(block) > 0 &&
-        !(
-          pinned &&
-          pinned.index === index &&
-          pinned.offset === selection.start
-        )
+        !(pinned && pinned.index === index && pinned.offset === selection.start)
       ) {
         sticky.current = styleAt(block, selection.start);
       }
@@ -908,15 +924,89 @@ ${text.slice(offset)}`,
     [focusBlock],
   );
 
+  // ─── Spelling ────────────────────────────────────────────────────────────
+  //
+  // Web's checker, as the phone draws it: every line's misspelled words are
+  // underlined by its field (`BlockInput` `flags`), and a strip between the
+  // field and the keyboard offers corrections for the word under the caret,
+  // or synonyms for a selected one. See `lib/spell/`.
+
+  const spellIgnoreSet = useMemo(() => {
+    const set = new Set<string>();
+    if (spellIgnore)
+      for (const word of spellIgnore) set.add(word.toLowerCase());
+    return set;
+  }, [spellIgnore]);
+  const blockTexts = useMemo(
+    () => doc.map((block) => (isTextBlock(block) ? blockText(block) : "")),
+    [doc],
+  );
+  const getSpellCaret = useCallback(() => {
+    const at = activeRef.current;
+    if (!at || at.selection.start !== at.selection.end) return null;
+    return { index: at.index, offset: at.selection.start };
+  }, []);
+  const spellFlags = useSpellFlags(blockTexts, {
+    enabled: editable,
+    getCaret: getSpellCaret,
+    ignore: spellIgnoreSet,
+    typingAt: typingAt.current,
+  });
+  const spellFlagsRef = useRef(spellFlags);
+  spellFlagsRef.current = spellFlags;
+  const readSpell = useCallback(() => {
+    const at = activeRef.current;
+    const block = at ? docRef.current[at.index] : undefined;
+    return {
+      flags: at ? (spellFlagsRef.current[at.index] ?? []) : [],
+      selection: at?.selection ?? null,
+      text: block && isTextBlock(block) ? blockText(block) : "",
+    };
+  }, []);
+  const spell = useSpellTarget(readSpell, spellFlags);
+  spellRefresh.current = spell.refresh;
+
+  // The dictionary parses once per app session; started here, at idle, so
+  // it is ready before the first typo rather than parsed on the first one.
+  useEffect(() => {
+    if (editable) void spellStore.start();
+  }, [editable]);
+
+  const pickSpelling = useCallback(
+    (replacement: string) => {
+      const target = spell.target;
+      const at = activeRef.current;
+      if (!target || !at) return;
+      const block = docRef.current[at.index];
+      if (!isTextBlock(block)) return;
+      const result = replaceRange(
+        block,
+        { end: target.end, start: target.start },
+        matchCase(target.word, replacement),
+        styleAt(block, target.start),
+      );
+      setDoc(replaceBlock(docRef.current, at.index, result.block));
+      spell.clear();
+      focusBlock(at.index, { end: result.caret, start: result.caret });
+    },
+    [spell, focusBlock],
+  );
+  const addSpelling = useCallback(() => {
+    if (spell.target) spellStore.addWord(spell.target.word);
+    spell.clear();
+  }, [spell]);
+  const ignoreSpelling = useCallback(() => {
+    if (spell.target) spellStore.ignoreWord(spell.target.word);
+    spell.clear();
+  }, [spell]);
+
   const pinStyle = useCallback(
     (change: (style: RunStyle) => RunStyle) => {
       const at = activeRef.current;
       if (!at) return;
       const block = docRef.current[at.index];
       if (!isTextBlock(block)) return;
-      const style = change(
-        typingStyleAt(block, at.index, at.selection.start),
-      );
+      const style = change(typingStyleAt(block, at.index, at.selection.start));
       sticky.current = style;
       setPending({
         index: at.index,
@@ -1239,6 +1329,7 @@ ${text.slice(offset)}`,
   const textProps = (node: RichBlock, index: number) => ({
     block: node,
     editable,
+    flags: spellFlags[index],
     index,
     inputRef: registerInput,
     onBlur: handleBlur,
@@ -1248,8 +1339,8 @@ ${text.slice(offset)}`,
     onSelectionChange: handleSelectionChange,
     onSubmit: handleSubmit,
     placeholder: index === firstText && empty ? placeholder : undefined,
-    typing: emptyTyping && active?.index === index ? emptyTyping : undefined,
     selection: caret?.index === index ? caret.selection : undefined,
+    typing: emptyTyping && active?.index === index ? emptyTyping : undefined,
   });
 
   const renderText = (node: RichBlock, index: number) => (
@@ -1393,6 +1484,15 @@ ${text.slice(offset)}`,
             tabs={mentionTabs}
           />
         </View>
+      ) : spell.target && editable ? (
+        <SpellStrip
+          loading={spell.loading}
+          onAdd={addSpelling}
+          onIgnore={ignoreSpelling}
+          onPick={pickSpelling}
+          suggestions={spell.suggestions}
+          target={spell.target}
+        />
       ) : null}
 
       {/*
@@ -1405,7 +1505,6 @@ ${text.slice(offset)}`,
       ) : null}
 
       <BottomSheet
-
         ignoreKeyboard
         maxHeightRatio={0.4}
         onClose={closeSheet}

@@ -29,11 +29,6 @@ export const ROUTES = {
   ForgotPassword: "/rp/forgot-password",
   Home: "/rp/home",
   InstallApp: "/rp/install-app",
-  Leaderboard: {
-    Muses: "/rp/leaderboard/muses",
-    Novelists: "/rp/leaderboard/novelists",
-  },
-  Levels: "/rp/levels",
   Library: "/rp/library",
   Login: "/rp/login",
   Muse: {

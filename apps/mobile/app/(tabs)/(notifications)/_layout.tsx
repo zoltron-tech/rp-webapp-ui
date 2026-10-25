@@ -1,10 +1,10 @@
 import { Stack, useRouter } from "expo-router";
-import { useAppTheme } from "@/theme";
-import { glassHeaderOptions } from "@/theme/header";
 import { ambientScreenLayout } from "@/components/ambient-background";
 import { TabHeaderTitle } from "@/components/header-title";
 import { MenuButton } from "@/components/menu-button";
 import { tabStackBack } from "@/components/stack-back-button";
+import { useAppTheme } from "@/theme";
+import { glassHeaderOptions } from "@/theme/header";
 
 /**
  * The Notifications tab's own stack.
@@ -34,9 +34,7 @@ export default function NotificationsStackLayout() {
       screenLayout={ambientScreenLayout}
       screenOptions={(screen) => ({
         contentStyle: { backgroundColor: theme.background },
-        headerRight: () => (
-          <MenuButton />
-        ),
+        headerRight: () => <MenuButton />,
         ...glassHeaderOptions(theme),
         // A page that arrived first in this stack (a link from another tab,
         // from a chat, from a story) still needs a way back on iOS.
@@ -60,6 +58,7 @@ export default function NotificationsStackLayout() {
       <Stack.Screen name="novelist/[username]/index" />
       <Stack.Screen name="novelist/[username]/friends" />
       <Stack.Screen name="novelist/[username]/muses" />
+      <Stack.Screen name="novelist/[username]/books" />
       <Stack.Screen name="novelist/[username]/stories" />
       <Stack.Screen name="novelist/[username]/activity" />
       <Stack.Screen name="novelist/[username]/prompts" />

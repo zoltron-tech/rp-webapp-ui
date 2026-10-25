@@ -2,7 +2,6 @@
 
 import { isCompactViewport } from "@nw/utils/platform";
 import classNames from "classnames";
-import { usePathname } from "@/lib/navigation";
 import {
   type FC,
   useCallback,
@@ -20,6 +19,7 @@ import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { usePostLogout } from "@/hooks/use-post-logout";
+import { usePathname } from "@/lib/navigation";
 import { API_MESSAGE, SUPPORT_EMAIL } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { toggleState } from "@/utils/helpers";
@@ -33,6 +33,7 @@ import { DiscordCommunityDialog } from "./discord-community-dialog";
 import * as S from "./styles";
 import {
   BookmarksIcon,
+  BookshelfIcon,
   CharactersIcon,
   ExploreIcon,
   FAQsIcon,
@@ -201,6 +202,10 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
     routeToPage(ROUTES.Library);
   };
 
+  const toBookshelfPage = () => {
+    routeToPage(ROUTES.Profile.View(user?.username || "").Books);
+  };
+
   const toConversationsPage = () => {
     routeToPage(ROUTES.conversations);
   };
@@ -337,6 +342,13 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                   <Flex justify="flex-start" align="center" gap="12px">
                     <LibraryIcon size={20} />
                     Library
+                  </Flex>
+                  <FiChevronRight size={16} color="gray" />
+                </S.Element>
+                <S.Element onClick={toBookshelfPage}>
+                  <Flex justify="flex-start" align="center" gap="12px">
+                    <BookshelfIcon size={20} />
+                    Bookshelf
                   </Flex>
                   <FiChevronRight size={16} color="gray" />
                 </S.Element>
@@ -538,6 +550,18 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                       <Flex justify="flex-start" align="center" gap="12px">
                         <LibraryIcon size={20} />
                         Library
+                      </Flex>
+                      <FiChevronRight size={16} color="gray" />
+                    </S.MobilePanelMenuItem>
+                    <S.MobilePanelMenuItem
+                      onClick={() => {
+                        closeMobilePanel();
+                        toBookshelfPage();
+                      }}
+                    >
+                      <Flex justify="flex-start" align="center" gap="12px">
+                        <BookshelfIcon size={20} />
+                        Bookshelf
                       </Flex>
                       <FiChevronRight size={16} color="gray" />
                     </S.MobilePanelMenuItem>

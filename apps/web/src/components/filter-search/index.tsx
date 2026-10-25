@@ -15,6 +15,10 @@ type FilterSearchProps = {
   filters?: FilterOption[];
   activeFilters?: string[];
   onFilterChange?: (values: string[]) => void;
+  /** Caption before the chips. "Show:" suits filters; a search scope wants "Search by:". */
+  filterLabel?: string;
+  /** One chip at a time (radio semantics) — for scopes rather than filters. */
+  single?: boolean;
   className?: string;
 };
 
@@ -25,6 +29,8 @@ export function FilterSearch({
   filters,
   activeFilters = [],
   onFilterChange,
+  filterLabel = "Show:",
+  single = false,
   className,
 }: FilterSearchProps) {
   const inputId = useId();
@@ -80,36 +86,70 @@ export function FilterSearch({
 
       {hasFilters && onFilterChange && (
         <S.FiltersRow>
-          <S.FiltersLabel>Show:</S.FiltersLabel>
-          <S.FilterChips
-            type="multiple"
-            value={activeFilters}
-            onValueChange={onFilterChange}
-            aria-label="Filter options"
-          >
-            {filters.map((filter) => (
-              <S.FilterChip
-                key={filter.id}
-                value={filter.id}
-                aria-label={filter.label}
-              >
-                {activeFilters.includes(filter.id) && (
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2.5}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                )}
-                {filter.label}
-              </S.FilterChip>
-            ))}
-          </S.FilterChips>
+          <S.FiltersLabel>{filterLabel}</S.FiltersLabel>
+          {single ? (
+            <S.FilterChips
+              type="single"
+              value={activeFilters[0] ?? ""}
+              // Radix reports "" when the active item is pressed again; a
+              // scope always has a value, so that press is a no-op.
+              onValueChange={(next) => next && onFilterChange([next])}
+              aria-label="Search scope"
+            >
+              {filters.map((filter) => (
+                <S.FilterChip
+                  key={filter.id}
+                  value={filter.id}
+                  aria-label={filter.label}
+                >
+                  {activeFilters.includes(filter.id) && (
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2.5}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  )}
+                  {filter.label}
+                </S.FilterChip>
+              ))}
+            </S.FilterChips>
+          ) : (
+            <S.FilterChips
+              type="multiple"
+              value={activeFilters}
+              onValueChange={onFilterChange}
+              aria-label="Filter options"
+            >
+              {filters.map((filter) => (
+                <S.FilterChip
+                  key={filter.id}
+                  value={filter.id}
+                  aria-label={filter.label}
+                >
+                  {activeFilters.includes(filter.id) && (
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2.5}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  )}
+                  {filter.label}
+                </S.FilterChip>
+              ))}
+            </S.FilterChips>
+          )}
         </S.FiltersRow>
       )}
     </S.Wrapper>

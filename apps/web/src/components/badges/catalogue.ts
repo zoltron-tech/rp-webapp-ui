@@ -181,6 +181,48 @@ export const BADGE_CATALOGUE: CatalogueBadge[] = [
     requirement: "Write a hundred codex entries across your stories.",
     title: "Lorekeeper",
   },
+  {
+    code: "ENSEMBLE_CAST",
+    description: "Shares the stage with a full company.",
+    rarity: "COMMON",
+    requirement: "Be one of five or more authors on a single story.",
+    title: "Ensemble Cast",
+  },
+  {
+    code: "PAGE_TURNER",
+    description: "Keeps the chapters coming.",
+    rarity: "COMMON",
+    requirement: "Write fifty posts inside your stories' chapters.",
+    title: "Page Turner",
+  },
+  {
+    code: "GLOBETROTTER",
+    description: "Has a passport stamped in five fandoms.",
+    rarity: "LEGENDARY",
+    requirement: "Be an author on stories in five different fandoms.",
+    title: "Globetrotter",
+  },
+  {
+    code: "BOOKWORM",
+    description: "Never far from the next book.",
+    rarity: "RARE",
+    requirement: "Mark twenty-five books as Read on your bookshelf.",
+    title: "Bookworm",
+  },
+  {
+    code: "COMPLETIONIST",
+    description: "Finishes the whole set.",
+    rarity: "RARE",
+    requirement: "Finish five books by the same author.",
+    title: "Completionist",
+  },
+  {
+    code: "BOOK_CLUB",
+    description: "Always has someone to talk the book over with.",
+    rarity: "RARE",
+    requirement: "Read the same book as three of your friends.",
+    title: "Book Club",
+  },
 ];
 
 /**

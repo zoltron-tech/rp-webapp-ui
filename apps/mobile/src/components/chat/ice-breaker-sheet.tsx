@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import {
+  canDeleteIceBreaker,
   hasMarkdown,
   iceBreakerSources,
   isOwnIceBreaker,
+  isReadingBreaker,
   markdownToHtml,
   parseIceBreakerTimestamp,
 } from "@nw/chat";
@@ -132,6 +134,11 @@ export const IceBreakerSheet = ({
   }, [openedId, resetAddMuse]);
 
   const mine = iceBreaker ? isOwnIceBreaker(iceBreaker, novelist) : false;
+  // A reading entry follows the book's shelf status; it has no delete here.
+  const canDelete = iceBreaker
+    ? canDeleteIceBreaker(iceBreaker, novelist)
+    : false;
+  const reading = iceBreaker ? isReadingBreaker(iceBreaker) : false;
   const trimmed = message.trim();
   const canSend =
     Boolean(trimmed) && Boolean(source) && isConnected && !sending;
@@ -252,10 +259,14 @@ export const IceBreakerSheet = ({
                 style={[styles.when, { color: theme.textGray }]}
               >
                 {mine
-                  ? "Your ice breaker"
-                  : iceBreaker.source.sourceType === "MUSE"
-                    ? "Character"
-                    : "Novelist"}
+                  ? reading
+                    ? "Your bookshelf"
+                    : "Your ice breaker"
+                  : reading
+                    ? "Reading"
+                    : iceBreaker.source.sourceType === "MUSE"
+                      ? "Character"
+                      : "Novelist"}
                 {" · "}
                 {/* The endpoint sends epoch seconds, not ISO — unparsed, every
                     ice breaker is dated 1970. See `parseIceBreakerTimestamp`. */}
@@ -294,7 +305,7 @@ export const IceBreakerSheet = ({
             </GradientSurface>
           </View>
 
-          {mine ? (
+          {canDelete ? (
             <Pressable
               accessibilityRole="button"
               onPress={confirmDelete}
@@ -317,6 +328,11 @@ export const IceBreakerSheet = ({
                 Delete this ice breaker
               </Text>
             </Pressable>
+          ) : mine ? (
+            <Text style={[styles.when, { color: theme.textGray }]}>
+              From your bookshelf — it stays here while the book is marked
+              Reading.
+            </Text>
           ) : (
             <>
               <SourcePicker

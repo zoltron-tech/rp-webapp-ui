@@ -1,5 +1,6 @@
 export * from "./api-message";
 export * from "./badge";
+export * from "./books";
 export * from "./connection";
 export * from "./conversation";
 export * from "./leaderboard";

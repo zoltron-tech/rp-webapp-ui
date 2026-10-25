@@ -13,10 +13,7 @@ import { registerBadgeMotion } from "./motion";
  * on web, an `<Svg>` box on native — and the row that arranges crests beside a
  * name. Those are genuinely different; the artwork is not.
  */
-export {
-  BADGE_ARTWORK,
-  hasBadgeArtwork,
-} from "./artwork";
+export { BADGE_ARTWORK, hasBadgeArtwork } from "./artwork";
 export {
   BADGE_VIEW_BOX,
   type BadgeArtworkProps,

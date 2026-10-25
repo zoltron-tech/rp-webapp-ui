@@ -8,7 +8,9 @@ import {
   DARK_LIGHTHOUSE_VIEW_BOX,
   DarkLighthouseScene,
   EMPTY_GALLERY_VIEW_BOX,
+  EMPTY_SHELF_VIEW_BOX,
   EmptyGalleryScene,
+  EmptyShelfScene,
   FROZEN_SILENCE_VIEW_BOX,
   FrozenSilenceScene,
   MotionProvider,
@@ -115,6 +117,7 @@ export type SceneName =
   | "blank-card"
   | "blank-scroll"
   | "empty-gallery"
+  | "empty-shelf"
   | "muse-bond"
   | "open-book"
   | "open-starter"
@@ -162,6 +165,12 @@ const SCENES: Record<
     Scene: EmptyGalleryScene,
     viewBox: EMPTY_GALLERY_VIEW_BOX,
     width: 120,
+  },
+  "empty-shelf": {
+    height: 113,
+    Scene: EmptyShelfScene,
+    viewBox: EMPTY_SHELF_VIEW_BOX,
+    width: 148,
   },
   "frozen-silence": {
     height: 44,

@@ -1,4 +1,5 @@
 import { css, styled } from "styled-components";
+import { LoadMoreButton } from "@/components/load-more/styles";
 import { shimmerMove } from "@/theme/animations";
 
 const shimmer = css`
@@ -64,4 +65,9 @@ export const Shimmer = styled.div`
     min-width: 150px;
     height: 268px;
   }
+`;
+
+export const OpenLibraryLink = styled(LoadMoreButton)`
+  align-self: flex-start;
+  margin-top: 6px;
 `;

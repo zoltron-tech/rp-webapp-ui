@@ -69,6 +69,9 @@ export const isOwnIceBreaker = (
   novelist: Novelist | null | undefined,
 ): boolean => {
   if (!novelist) return false;
+  // A "currently reading" entry's sourceId is a shelf row, not an author.
+  if (isReadingBreaker(iceBreaker))
+    return iceBreaker.ownerNovelistId === novelist.id;
   if (iceBreaker.sourceId === novelist.id) return true;
   return (novelist.muses ?? []).some((muse) => muse.id === iceBreaker.sourceId);
 };
@@ -106,3 +109,17 @@ export const iceBreakerSources = (
 
   return [self, ...muses];
 };
+
+/** A "currently reading" shelf entry in the rail, as opposed to a written line. */
+export const isReadingBreaker = (iceBreaker: IceBreaker): boolean =>
+  iceBreaker.kind === "READING";
+
+/**
+ * Only written ice breakers can be deleted here. A reading entry comes and
+ * goes with the book's shelf status, so its owner manages it on the shelf.
+ */
+export const canDeleteIceBreaker = (
+  iceBreaker: IceBreaker,
+  novelist: Novelist | null | undefined,
+): boolean =>
+  isOwnIceBreaker(iceBreaker, novelist) && !isReadingBreaker(iceBreaker);

@@ -6,7 +6,9 @@ import {
   BlankCardScene,
   BlankScrollScene,
   EMPTY_GALLERY_VIEW_BOX,
+  EMPTY_SHELF_VIEW_BOX,
   EmptyGalleryScene,
+  EmptyShelfScene,
   END_OF_LIST_VIEW_BOX,
   EndOfListArt,
   MUSE_BOND_VIEW_BOX,
@@ -453,6 +455,25 @@ export const EmptyGalleryArt = ({ className, accent }: ArtProps) => (
   >
     <EmptyGalleryScene palette={SCENE_PALETTE} />
   </S.GallerySvg>
+);
+
+/**
+ * A short shelf plank with two spines leaning against a closed book and the
+ * rest of the plank bare — for a novelist's bookshelf with nothing on it yet.
+ * Framed like the muse scenes: the drawing is `@nw/animations`', this is the
+ * sized `styled.svg` whose keyframes settle the outer spine (`nwm-settle`).
+ */
+export const EmptyShelfArt = ({ className, accent }: ArtProps) => (
+  <S.EmptyShelfSvg
+    className={className}
+    $accent={accent}
+    viewBox={EMPTY_SHELF_VIEW_BOX}
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+  >
+    <EmptyShelfScene palette={SCENE_PALETTE} />
+  </S.EmptyShelfSvg>
 );
 
 /**

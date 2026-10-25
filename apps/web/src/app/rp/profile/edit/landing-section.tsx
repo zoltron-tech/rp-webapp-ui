@@ -2,7 +2,12 @@
 
 import { ShouldRender } from "@novelist-world/ui";
 import type { NWImage } from "@nw/types";
-import { clamp, cropToEditorState, toCropFilter, VALID_IMAGE_TYPES } from "@nw/utils";
+import {
+  clamp,
+  cropToEditorState,
+  toCropFilter,
+  VALID_IMAGE_TYPES,
+} from "@nw/utils";
 import { Separator } from "radix-ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BsArrowLeft, BsPersonCircle } from "react-icons/bs";
@@ -11,6 +16,7 @@ import {
   MdAlternateEmail,
   MdOutlineBrush,
   MdOutlineInfo,
+  MdOutlineLock,
 } from "react-icons/md";
 import { AvatarPickerDialog } from "@/components/avatar-picker-dialog";
 import { AvatarUploadField } from "@/components/common/avatar-upload-field";
@@ -35,7 +41,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
  * This mirrors the Muse cardBackground encoding: a fit-by-width display that
  * is resolution- and aspect-ratio-independent.
  */
-type ProfileView = "landing" | "appearance" | "about" | "account";
+type ProfileView = "landing" | "appearance" | "about" | "account" | "privacy";
 
 type Props = {
   onSelect: (view: ProfileView) => void;
@@ -358,7 +364,9 @@ export function LandingSection({ onSelect }: Props) {
             <S.LandingCardChip $active={Boolean(image)}>
               Avatar
             </S.LandingCardChip>
-            <S.LandingCardChip $active={Boolean(noteObj?.text)}>Note</S.LandingCardChip>
+            <S.LandingCardChip $active={Boolean(noteObj?.text)}>
+              Note
+            </S.LandingCardChip>
             <S.LandingCardChip $active={themeColor != null}>
               Theme
             </S.LandingCardChip>
@@ -394,6 +402,18 @@ export function LandingSection({ onSelect }: Props) {
               {isVerified ? "Verified" : "Unverified"}
             </S.LandingCardChip>
           </S.LandingCardChips>
+        </S.LandingCard>
+
+        <S.LandingCard type="button" onClick={() => onSelect("privacy")}>
+          <S.LandingCardIconArea className="privacy">
+            <MdOutlineLock className="section-icon" />
+          </S.LandingCardIconArea>
+          <S.LandingCardBody>
+            <S.LandingCardTitle>Profile privacy</S.LandingCardTitle>
+            <S.LandingCardDesc>
+              Who sees your bookshelf, characters and About me.
+            </S.LandingCardDesc>
+          </S.LandingCardBody>
         </S.LandingCard>
       </S.LandingGrid>
 

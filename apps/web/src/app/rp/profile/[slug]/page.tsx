@@ -41,6 +41,7 @@ import { ContactSupportForm } from "@/components";
 import ActivityBox from "@/components/activity-box";
 import { BadgeRow } from "@/components/badges";
 import { OpenBookArt } from "@/components/book-art";
+import { ShelfTeaser } from "@/components/bookshelf/teaser-row";
 import {
   EmailVerifiedBadge,
   ShouldRender,
@@ -1204,7 +1205,9 @@ export default function UserProfilePage({}) {
                   they belong to the identity, and the row below is counts. */}
               {/* Support is not playing: no crests. */}
               <BadgeRow
-                badges={isSupportNovelist(username) ? undefined : novelist?.badges}
+                badges={
+                  isSupportNovelist(username) ? undefined : novelist?.badges
+                }
                 size={20}
                 ownerName={novelist?.firstName ?? username}
               />
@@ -1305,6 +1308,13 @@ export default function UserProfilePage({}) {
                   )}
                 </S.FandomChipRow>
               </S.FandomSection>
+            )}
+            {novelist?.id && (
+              <ShelfTeaser
+                novelistId={novelist.id}
+                username={username}
+                isCurrentUser={isCurrentUser}
+              />
             )}
             <ShouldRender
               if={!!(novelist?.museCount && novelist.museCount > 0)}
@@ -1441,66 +1451,66 @@ export default function UserProfilePage({}) {
               ariaLabel="Profile updates"
             />
             <S.FeedBody>
-            {feedTab === "activities" &&
-              (activities === undefined ? (
-                <FeedShimmer />
-              ) : activities.length > 0 ? (
-                <>
-                  <S.ActivitiesContainer>
-                    {activities.map((activity) => (
-                      <ActivityBox key={activity?.id} activity={activity} />
-                    ))}
-                  </S.ActivitiesContainer>
-                  <LoadMore
-                    hasMore={hasMoreActivities}
-                    loadingMore={loadingMoreActivities}
-                    onLoadMore={loadMoreActivities}
-                    endMarker={activities.length > 0}
-                  />
-                </>
-              ) : (
-                <EmptyFeed tab="activities" username={username} />
-              ))}
-            {feedTab === "posts" &&
-              (postsLoading || posts === null ? (
-                <FeedShimmer />
-              ) : posts.length === 0 ? (
-                <EmptyFeed tab="posts" username={username} />
-              ) : (
-                <>
-                  <S.PostsContainer>
-                    {posts.map((post) => (
-                      <PromptComponent key={post.id} prompt={post} />
-                    ))}
-                  </S.PostsContainer>
-                  <LoadMore
-                    hasMore={hasMorePosts}
-                    loadingMore={loadingMorePosts}
-                    onLoadMore={loadMorePosts}
-                    endMarker={posts.length > 0}
-                  />
-                </>
-              ))}
-            {feedTab === "prompts" &&
-              (promptsLoading || prompts === null ? (
-                <FeedShimmer />
-              ) : prompts.length === 0 ? (
-                <EmptyFeed tab="prompts" username={username} />
-              ) : (
-                <>
-                  <S.PostsContainer>
-                    {prompts.map((prompt) => (
-                      <PromptComponent key={prompt.id} prompt={prompt} />
-                    ))}
-                  </S.PostsContainer>
-                  <LoadMore
-                    hasMore={hasMorePrompts}
-                    loadingMore={loadingMorePrompts}
-                    onLoadMore={loadMorePrompts}
-                    endMarker={prompts.length > 0}
-                  />
-                </>
-              ))}
+              {feedTab === "activities" &&
+                (activities === undefined ? (
+                  <FeedShimmer />
+                ) : activities.length > 0 ? (
+                  <>
+                    <S.ActivitiesContainer>
+                      {activities.map((activity) => (
+                        <ActivityBox key={activity?.id} activity={activity} />
+                      ))}
+                    </S.ActivitiesContainer>
+                    <LoadMore
+                      hasMore={hasMoreActivities}
+                      loadingMore={loadingMoreActivities}
+                      onLoadMore={loadMoreActivities}
+                      endMarker={activities.length > 0}
+                    />
+                  </>
+                ) : (
+                  <EmptyFeed tab="activities" username={username} />
+                ))}
+              {feedTab === "posts" &&
+                (postsLoading || posts === null ? (
+                  <FeedShimmer />
+                ) : posts.length === 0 ? (
+                  <EmptyFeed tab="posts" username={username} />
+                ) : (
+                  <>
+                    <S.PostsContainer>
+                      {posts.map((post) => (
+                        <PromptComponent key={post.id} prompt={post} />
+                      ))}
+                    </S.PostsContainer>
+                    <LoadMore
+                      hasMore={hasMorePosts}
+                      loadingMore={loadingMorePosts}
+                      onLoadMore={loadMorePosts}
+                      endMarker={posts.length > 0}
+                    />
+                  </>
+                ))}
+              {feedTab === "prompts" &&
+                (promptsLoading || prompts === null ? (
+                  <FeedShimmer />
+                ) : prompts.length === 0 ? (
+                  <EmptyFeed tab="prompts" username={username} />
+                ) : (
+                  <>
+                    <S.PostsContainer>
+                      {prompts.map((prompt) => (
+                        <PromptComponent key={prompt.id} prompt={prompt} />
+                      ))}
+                    </S.PostsContainer>
+                    <LoadMore
+                      hasMore={hasMorePrompts}
+                      loadingMore={loadingMorePrompts}
+                      onLoadMore={loadMorePrompts}
+                      endMarker={prompts.length > 0}
+                    />
+                  </>
+                ))}
             </S.FeedBody>
           </S.FeedSection>
         </S.ContentRight>

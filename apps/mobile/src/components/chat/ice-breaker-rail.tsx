@@ -1,10 +1,13 @@
-import { useIsFocused } from "@react-navigation/native";
-import { SceneArt } from "@/components/scene-art";
 import { Ionicons } from "@expo/vector-icons";
-import { isOwnIceBreaker, parseIceBreakerTimestamp } from "@nw/chat";
+import {
+  isOwnIceBreaker,
+  isReadingBreaker,
+  parseIceBreakerTimestamp,
+} from "@nw/chat";
 import { useSession } from "@nw/features";
 import type { IceBreaker, Novelist } from "@nw/types";
 import { truncate } from "@nw/utils";
+import { useIsFocused } from "@react-navigation/native";
 import { memo, useMemo } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { Avatar } from "@/components/avatar";
@@ -14,6 +17,7 @@ import {
 } from "@/components/chat/ice-breaker-paint";
 import { GradientSurface } from "@/components/gradient-surface";
 import { relativeTime } from "@/components/notification-row";
+import { SceneArt } from "@/components/scene-art";
 import { Text } from "@/components/text";
 import { useTrackOnline } from "@/context/socket";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
@@ -100,9 +104,11 @@ const IceBreakerTile = memo(function IceBreakerTile({
   );
   const who = mine
     ? "Yours"
-    : source.sourceType === "MUSE"
-      ? "Character"
-      : null;
+    : isReadingBreaker(iceBreaker)
+      ? "Reading"
+      : source.sourceType === "MUSE"
+        ? "Character"
+        : null;
 
   return (
     <Pressable
@@ -355,9 +361,9 @@ const styles = StyleSheet.create({
     height: BUBBLE_HEIGHT,
     paddingLeft: space.xs,
   },
-  emptyWords: { gap: space.xxs, justifyContent: "center", maxWidth: 200 },
   emptyBody: { fontSize: fontSize.caption, lineHeight: 17 },
   emptyTitle: { fontSize: fontSize.label, fontWeight: "700" },
+  emptyWords: { gap: space.xxs, justifyContent: "center", maxWidth: 200 },
   // Centred, so the presence ring grows around the face rather than moving it.
   face: {
     alignItems: "center",

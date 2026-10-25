@@ -4,6 +4,7 @@ import type { FC, ReactNode } from "react";
 import { EmailVerifiedBadge } from "@/components/common";
 import {
   BookmarksIcon,
+  BookshelfIcon,
   CharactersIcon,
   EditProfileIcon,
   ExploreIcon,
@@ -67,6 +68,11 @@ export const LeftNav: FC<Props> = ({ visible }) => {
           icon: <LibraryIcon size={18} />,
           label: "Library",
           route: ROUTES.Library,
+        },
+        {
+          icon: <BookshelfIcon size={18} />,
+          label: "Bookshelf",
+          route: ROUTES.Profile.View(novelist.username).Books,
         },
       ],
       label: "Main",

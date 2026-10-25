@@ -1,6 +1,6 @@
 "use client";
 
-import { SUPPORT_USERNAME } from "@nw/chat";
+import { isReadingBreaker, SUPPORT_USERNAME } from "@nw/chat";
 import {
   INBOX_FILTERS,
   type InboxFilter,
@@ -9,6 +9,7 @@ import {
   matchesInboxFilter,
 } from "@nw/features";
 import type { Conversation, IceBreaker } from "@nw/types";
+import { bookCoverUrl } from "@nw/types/books";
 import classNames from "classnames";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BiSupport } from "react-icons/bi";
@@ -17,6 +18,7 @@ import {
   HiOutlineChatBubbleLeftRight,
   HiOutlineSparkles,
 } from "react-icons/hi2";
+import { IoBookOutline } from "react-icons/io5";
 import { MdAdd, MdGroupAdd } from "react-icons/md";
 import { FrozenSilenceArt, NoConversationsArt } from "@/components/book-art";
 import { AvatarNew } from "@/components/common/avatar-new";
@@ -24,8 +26,8 @@ import {
   ConversationCard,
   isConversationUnread,
 } from "@/components/conversation-card";
-import * as N from "@/components/notification/styled";
 import { LoadMore } from "@/components/load-more/page";
+import * as N from "@/components/notification/styled";
 import { useSocket } from "@/context/socket";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -474,12 +476,28 @@ export default function ConversationsPage() {
                 onClick={() => handleOpenIceBreaker(iceBreaker)}
               >
                 <S.IceBreakerAvatarStack>
-                  <S.IceBreakerBubble
-                    $color={iceBreaker.color}
-                    title={iceBreaker.message}
-                  >
-                    {truncateIceBreakerMessage(iceBreaker.message)}
-                  </S.IceBreakerBubble>
+                  {isReadingBreaker(iceBreaker) && iceBreaker.book ? (
+                    <S.IceBreakerReadingBubble
+                      title={`${iceBreaker.source.name} ${iceBreaker.message}`}
+                    >
+                      {iceBreaker.book.coverId ? (
+                        <img
+                          src={bookCoverUrl(iceBreaker.book.coverId, "S")}
+                          alt=""
+                        />
+                      ) : (
+                        <IoBookOutline size={14} />
+                      )}
+                      <span>{iceBreaker.book.title}</span>
+                    </S.IceBreakerReadingBubble>
+                  ) : (
+                    <S.IceBreakerBubble
+                      $color={iceBreaker.color}
+                      title={iceBreaker.message}
+                    >
+                      {truncateIceBreakerMessage(iceBreaker.message)}
+                    </S.IceBreakerBubble>
+                  )}
                   <S.IceBreakerAvatarRing
                     className={classNames(ringAccent.className)}
                     $ringColor={ringAccent.color}

@@ -1,15 +1,23 @@
 import { type ReactNode, useId } from "react";
 import {
   Glow,
-  type SceneProps,
   SceneDefs,
+  type SceneProps,
   Shadow,
   Sparkle,
   Star,
   Tilt,
   useGradientIds,
 } from "./muse-scenes";
-import { Circle, Defs, G, LinearGradient, Path, Rect, Stop } from "./primitives";
+import {
+  Circle,
+  Defs,
+  G,
+  LinearGradient,
+  Path,
+  Rect,
+  Stop,
+} from "./primitives";
 import type { ScenePalette } from "./scene-palette";
 
 /**
@@ -29,6 +37,7 @@ import type { ScenePalette } from "./scene-palette";
  *  - `FrozenSilenceScene` — a frozen speech bubble, rail-sized
  *  - `VanishedMuseScene` — a character card whose figure is leaving as dust
  *  - `TornThreadScene` — a thread page torn in two
+ *  - `EmptyShelfScene` — a shelf plank, two spines leaning on a closed book
  *
  * Conventions are the muse scenes' — see `muse-scenes.tsx`: the palette is
  * injected, every moving part sits on a group that only moves inside a group
@@ -36,8 +45,8 @@ import type { ScenePalette } from "./scene-palette";
  * `.ghost` rides `nwm-bond`, which is the same question-mark pulse.
  *
  * The motion that is these scenes' own — the lens, the ice, the scrap and its
- * flakes, the vanishing figure and its motes — is registered beside the rest
- * in `muse-scenes.motion.native.tsx`.
+ * flakes, the vanishing figure and its motes, the settling spine — is
+ * registered beside the rest in `muse-scenes.motion.native.tsx`.
  */
 
 export const NO_MATCHES_VIEW_BOX = "0 0 180 137";
@@ -48,6 +57,7 @@ export const NO_CONVERSATIONS_VIEW_BOX = "0 0 180 137";
 export const FROZEN_SILENCE_VIEW_BOX = "0 0 64 56";
 export const VANISHED_MUSE_VIEW_BOX = "0 0 180 137";
 export const TORN_THREAD_VIEW_BOX = "0 0 180 137";
+export const EMPTY_SHELF_VIEW_BOX = "0 0 180 137";
 
 /** The four accent roles a sparkle can take, by the letter the tables use. */
 type Tint = "a" | "b" | "s" | "t";
@@ -181,7 +191,13 @@ export const NoMatchesScene = ({ palette }: SceneProps) => {
         {/* Magnifier, swinging across the cards with nothing in the lens.
             Placed at the handle's end, the way a hand would hold it. */}
         <Pivot className="nwm-lens" x={147} y={89}>
-          <Circle cx="118" cy="58" fill={palette.paperTop} opacity="0.55" r="24" />
+          <Circle
+            cx="118"
+            cy="58"
+            fill={palette.paperTop}
+            opacity="0.55"
+            r="24"
+          />
           {/* The empty result inside the glass */}
           <Circle
             cx="118"
@@ -463,7 +479,13 @@ export const NoFriendsScene = ({ palette }: SceneProps) => {
           stroke={palette.accentSolid}
           strokeLinecap="round"
         >
-          <Circle cx="114" cy="54" r="15" strokeDasharray="5 5" strokeWidth="2" />
+          <Circle
+            cx="114"
+            cy="54"
+            r="15"
+            strokeDasharray="5 5"
+            strokeWidth="2"
+          />
           <Path d="M114 47 L114 61" strokeWidth="2.2" />
           <Path d="M107 54 L121 54" strokeWidth="2.2" />
         </G>
@@ -587,7 +609,11 @@ export const FrozenSilenceScene = ({ palette }: SceneProps) => {
         {/* Ice reads as the accent chilled toward white at the top */}
         <LinearGradient id={iceId} x1="0" x2="0.4" y1="0" y2="1">
           <Stop offset="0%" stopColor={palette.accentText} stopOpacity="0.28" />
-          <Stop offset="100%" stopColor={palette.accentSoft} stopOpacity="0.2" />
+          <Stop
+            offset="100%"
+            stopColor={palette.accentSoft}
+            stopOpacity="0.2"
+          />
         </LinearGradient>
       </Defs>
       <Pivot className="nwm-ice" x={32} y={28}>
@@ -636,7 +662,11 @@ export const VanishedMuseScene = ({ palette }: SceneProps) => {
         <LinearGradient id={figureId} x1="0" x2="0" y1="1" y2="0">
           <Stop offset="0%" stopColor={palette.accentSoft} stopOpacity="0.9" />
           <Stop offset="60%" stopColor={palette.accent} stopOpacity="0.7" />
-          <Stop offset="100%" stopColor={palette.accentText} stopOpacity="0.3" />
+          <Stop
+            offset="100%"
+            stopColor={palette.accentText}
+            stopOpacity="0.3"
+          />
         </LinearGradient>
       </Defs>
       <Glow cx={90} cy={68} fill={`url(#${glowId})`} rx={80} ry={56} />
@@ -982,7 +1012,11 @@ export const DarkLighthouseScene = ({ palette }: SceneProps) => {
           />
         </G>
         {/* The roof, and a pennant on it */}
-        <Path d="M61 30 L72 21 L83 30 Z" fill={palette.accentSolid} opacity="0.85" />
+        <Path
+          d="M61 30 L72 21 L83 30 Z"
+          fill={palette.accentSolid}
+          opacity="0.85"
+        />
         <Pivot className="nwm-ribbon" x={72} y={21}>
           <Path d="M72 21 L72 11" stroke={palette.line} strokeWidth="1.2" />
           <Path d="M72 12 L80 15 L72 18 Z" fill={palette.accentSolid} />
@@ -1020,6 +1054,196 @@ export const DarkLighthouseScene = ({ palette }: SceneProps) => {
           [164, 88, 0.7, "s", "s4"],
           [30, 96, 0.55, "b", "s7"],
           [120, 96, 0.5, "t", "s10"],
+        ]}
+      />
+    </>
+  );
+};
+
+/**
+ * A short shelf plank with two spines leaning against a closed book and the
+ * rest of the plank bare — for a novelist's bookshelf with nothing on it yet.
+ *
+ * One thing moves: the outer spine settles a little further into its lean and
+ * eases back (`nwm-settle`), placed at its foot on the plank, which is the
+ * point a leaning book rocks about. The plank is the same paper object as the
+ * cards and sheets, in the edge tone so the books read against it.
+ */
+export const EmptyShelfScene = ({ palette }: SceneProps) => {
+  const { glowId, paperId } = useGradientIds();
+
+  return (
+    <>
+      <SceneDefs glowId={glowId} palette={palette} paperId={paperId} />
+      <Glow cx={90} cy={70} fill={`url(#${glowId})`} rx={80} ry={56} />
+      <Shadow cx={90} cy={130} fill={palette.edge} rx={58} ry={4.5} />
+
+      <Tilt cx={90} cy={80}>
+        {/* Brackets holding the plank to the wall */}
+        <G
+          fill={palette.edge}
+          stroke={palette.line}
+          strokeLinejoin="round"
+          strokeWidth="1.2"
+        >
+          <Path d="M44 113 L44 125 L56 113 Z" />
+          <Path d="M124 113 L136 125 L136 113 Z" />
+        </G>
+        {/* Plank edge — the thickness the tilt lets you see */}
+        <Path
+          d="M24 106 L156 106 L156 110 Q156 113 153 113 L27 113 Q24 113 24 110 Z"
+          fill={palette.line}
+          opacity="0.55"
+          stroke={palette.line}
+          strokeWidth="1.2"
+        />
+        {/* Plank */}
+        <Rect
+          fill={palette.edge}
+          height="9"
+          rx="1.5"
+          stroke={palette.line}
+          strokeWidth="1.5"
+          width="134"
+          x="23"
+          y="98"
+        />
+        {/* Grain along it */}
+        <G
+          fill="none"
+          opacity="0.5"
+          stroke={palette.line}
+          strokeLinecap="round"
+          strokeWidth="0.9"
+        >
+          <Path d="M32 101.5 Q58 100.4 84 101.8 T136 101.4" />
+          <Path d="M46 104.6 Q72 103.6 98 104.8 T148 104.2" />
+        </G>
+        {/* The closed book, standing on the plank: the page block showing
+            down its far edge, then the cover over it */}
+        <Path
+          d="M138 43 L141.5 45.5 L141.5 98 L138 98 Z"
+          fill={palette.paperTop}
+          stroke={palette.line}
+          strokeWidth="1"
+        />
+        <Rect
+          fill={`url(#${paperId})`}
+          height="58"
+          rx="2.5"
+          stroke={palette.line}
+          strokeWidth="1.5"
+          width="34"
+          x="104"
+          y="40"
+        />
+        {/* Shading down the spine side, where the cover curves round */}
+        <Path
+          d="M105 41 L112 41 L112 97 L105 97 Z"
+          fill={palette.edge}
+          opacity="0.45"
+        />
+        {/* Title and author on the cover */}
+        <Rect
+          fill={palette.accentSolid}
+          height="4"
+          opacity="0.8"
+          rx="2"
+          width="16"
+          x="116"
+          y="52"
+        />
+        <Rect
+          fill={palette.accentSoft}
+          height="2.5"
+          opacity="0.6"
+          rx="1.25"
+          width="11"
+          x="118.5"
+          y="60"
+        />
+        {/* The spine leaning on the book, its foot on the plank */}
+        <G transform="rotate(9 98 98)">
+          <Rect
+            fill={palette.paperTop}
+            height="58"
+            rx="1.5"
+            stroke={palette.line}
+            strokeWidth="1.4"
+            width="12"
+            x="86"
+            y="40"
+          />
+          <Rect
+            fill={palette.accentSolid}
+            height="10"
+            opacity="0.8"
+            rx="1"
+            width="8"
+            x="88"
+            y="47"
+          />
+          <Rect
+            fill={palette.line}
+            height="1.6"
+            opacity="0.7"
+            rx="0.8"
+            width="8"
+            x="88"
+            y="84"
+          />
+        </G>
+        {/* The outer spine, leaning on that one — the part that settles.
+            Placed at its foot, which is the point it rocks about; the rotate
+            inside is where it was drawn leaning. */}
+        <Pivot className="nwm-settle" x={81} y={98}>
+          <G transform="rotate(15 81 98)">
+            <Rect
+              fill={`url(#${paperId})`}
+              height="52"
+              rx="1.5"
+              stroke={palette.line}
+              strokeWidth="1.4"
+              width="11"
+              x="70"
+              y="46"
+            />
+            <Rect
+              fill={palette.accentSoft}
+              height="9"
+              opacity="0.75"
+              rx="1"
+              width="7"
+              x="72"
+              y="53"
+            />
+            <Rect
+              fill={palette.line}
+              height="1.6"
+              opacity="0.7"
+              rx="0.8"
+              width="7"
+              x="72"
+              y="86"
+            />
+          </G>
+        </Pivot>
+      </Tilt>
+
+      <Sparkles
+        dots={[
+          [6, 72, 1.4, "s", "s2"],
+          [174, 76, 1.2, "b", "s5"],
+          [48, 12, 1.3, "t", "s3"],
+          [128, 14, 1.1, "a", "s9"],
+          [90, 128, 1.2, "s", "s11"],
+        ]}
+        palette={palette}
+        stars={[
+          [14, 40, 0.8, "a", "s1"],
+          [166, 48, 0.7, "s", "s4"],
+          [20, 90, 0.55, "b", "s7"],
+          [160, 92, 0.5, "t", "s10"],
         ]}
       />
     </>

@@ -1500,6 +1500,12 @@ export const LandingCardIconArea = styled.div`
     .section-icon { color: rgb(16, 185, 129); }
   }
 
+  &.privacy {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(245, 158, 11, 0.04) 100%);
+    border-bottom: 1px solid rgba(245, 158, 11, 0.2);
+    .section-icon { color: rgb(245, 158, 11); }
+  }
+
   .section-icon {
     width: 38px;
     height: 38px;
@@ -3017,4 +3023,80 @@ export const Switch = styled.button`
     outline: 2px solid var(--accent-11, var(--accent));
     outline-offset: 2px;
   }
+`;
+
+// ── Profile privacy section ────────────────────────────────────────────────
+
+export const PrivacyRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--material-edge);
+
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+export const PrivacyRowMain = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 220px;
+  min-width: 0;
+`;
+
+export const PrivacyRowLabel = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size);
+  font-weight: var(--font-weight-bold);
+  color: var(--text);
+
+  svg {
+    color: var(--text-secondary);
+    flex-shrink: 0;
+  }
+`;
+
+export const PrivacyRowHint = styled.span`
+  font-size: var(--font-size-small);
+  line-height: 1.5;
+  color: var(--text-secondary);
+`;
+
+export const PrivacySegments = styled.div`
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 50px;
+  background: var(--material-fill);
+  border: 1px solid var(--material-edge);
+  flex-shrink: 0;
+`;
+
+export const PrivacySegment = styled.button<{ $active: boolean }>`
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 50px;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-bold);
+  white-space: nowrap;
+  color: ${({ $active }) => ($active ? "#fff" : "var(--text-secondary)")};
+  background: ${({ $active }) =>
+    $active ? "var(--accent-11, var(--accent))" : "transparent"};
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.7;
+  }
+
+  ${FOCUS_RING}
 `;

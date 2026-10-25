@@ -2,17 +2,23 @@ import type { BadgeCode } from "@nw/types/badge";
 import type { FC } from "react";
 import type { BadgeArtworkProps } from "../frame";
 import { AmbassadorBadge } from "./ambassador";
+import { BookClubBadge } from "./book-club";
+import { BookwormBadge } from "./bookworm";
 import { CampfireBadge } from "./campfire";
 import { ChroniclerBadge } from "./chronicler";
 import { CoAuthorBadge } from "./co-author";
+import { CompletionistBadge } from "./completionist";
 import { CreativeBadge } from "./creative";
 import { DedicatedBadge } from "./dedicated";
 import { DiscordGuildMemberBadge } from "./discord-guild-member";
+import { EnsembleCastBadge } from "./ensemble-cast";
 import { FriendlyNovelistBadge } from "./friendly-novelist";
+import { GlobetrotterBadge } from "./globetrotter";
 import { LorekeeperBadge } from "./lorekeeper";
 import { MatchmakerBadge } from "./matchmaker";
 import { MuseKeeperBadge } from "./muse-keeper";
 import { MusicianBadge } from "./musician";
+import { PageTurnerBadge } from "./page-turner";
 import { PostaholicBadge } from "./postaholic";
 import { ProlificWriterBadge } from "./prolific-writer";
 import { ShapeshifterBadge } from "./shapeshifter";
@@ -36,17 +42,23 @@ import { WorldbuilderBadge } from "./worldbuilder";
 export const BADGE_ARTWORK: Partial<Record<BadgeCode, FC<BadgeArtworkProps>>> =
   {
     AMBASSADOR: AmbassadorBadge,
+    BOOK_CLUB: BookClubBadge,
+    BOOKWORM: BookwormBadge,
     CAMPFIRE: CampfireBadge,
     CHRONICLER: ChroniclerBadge,
     CO_AUTHOR: CoAuthorBadge,
+    COMPLETIONIST: CompletionistBadge,
     CREATIVE: CreativeBadge,
     DEDICATED: DedicatedBadge,
     DISCORD_GUILD_MEMBER: DiscordGuildMemberBadge,
+    ENSEMBLE_CAST: EnsembleCastBadge,
     FRIENDLY_NOVELIST: FriendlyNovelistBadge,
+    GLOBETROTTER: GlobetrotterBadge,
     LOREKEEPER: LorekeeperBadge,
     MATCHMAKER: MatchmakerBadge,
     MUSE_KEEPER: MuseKeeperBadge,
     MUSICIAN: MusicianBadge,
+    PAGE_TURNER: PageTurnerBadge,
     POSTAHOLIC: PostaholicBadge,
     PROLIFIC_WRITER: ProlificWriterBadge,
     SHAPESHIFTER: ShapeshifterBadge,

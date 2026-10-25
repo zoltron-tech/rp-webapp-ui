@@ -31,7 +31,13 @@ export type BadgeCode =
   | "VETERAN_QUILL"
   | "AMBASSADOR"
   | "CAMPFIRE"
-  | "LOREKEEPER";
+  | "LOREKEEPER"
+  | "ENSEMBLE_CAST"
+  | "PAGE_TURNER"
+  | "GLOBETROTTER"
+  | "BOOKWORM"
+  | "COMPLETIONIST"
+  | "BOOK_CLUB";
 
 /** Drives the badge frame's colour and glow. No behaviour attached. */
 export type BadgeRarity = "COMMON" | "RARE" | "LEGENDARY";

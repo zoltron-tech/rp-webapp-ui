@@ -1355,3 +1355,115 @@ export const ConversationSheet = styled.div<{
     display: none;
   }
 `;
+
+// ── "Currently reading" entries in the rail (BOOKSHELF_PLAN.md) ────────────
+
+/** The rail bubble for a reading entry: a cover thumb and the title, in the
+ *  accent so it reads as "from the shelf" rather than something typed. */
+export const IceBreakerReadingBubble = styled(IceBreakerBubble)`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px 5px 5px;
+  max-width: 96px;
+  /* 11px bold on a 25%-darkened step 9: ≥ 5:1 on every palette. */
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-bold);
+  background: color-mix(in srgb, var(--accent-9, var(--accent)) 75%, #000);
+  color: #fff;
+
+  img {
+    width: 18px;
+    height: 27px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.4);
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+
+  span {
+    text-align: left;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+`;
+
+/** The dialog hero for a reading entry — cover beside title and author, in
+ *  the same frame the written bubble uses. */
+export const ViewReadingCard = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  min-width: 220px;
+  max-width: 285px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--accent-4) 0%, var(--accent-3) 100%);
+  border: 1.5px solid var(--accent-6);
+  color: var(--text);
+  text-align: left;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+
+  img {
+    width: 52px;
+    height: 78px;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+  }
+
+  @media (max-width: 480px) {
+    min-width: 180px;
+  }
+`;
+
+export const ViewReadingText = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+
+  small {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent-11, var(--accent));
+  }
+
+  strong {
+    font-size: var(--font-size);
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  span {
+    font-size: var(--font-size-small);
+    color: var(--text-secondary);
+  }
+`;
+
+export const ViewReadingOwnerNote = styled.p`
+  margin: 14px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-small);
+  line-height: 1.45;
+  color: var(--text-secondary);
+
+  svg {
+    flex-shrink: 0;
+  }
+`;

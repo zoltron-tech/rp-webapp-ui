@@ -44,13 +44,9 @@ export const BannerSection = styled.div<{
   border: 1px solid var(--material-edge);
   border-bottom: none;
   margin-top: 24px;
-  /* No banner: fill with the sheet material so the rounded top reads even
-     when there is no avatar to blur behind it. */
-  ${({ $hasBanner }) =>
-    !$hasBanner &&
-    css`
-      background-color: var(--material-fill-strong);
-    `}
+  /* No banner: no fill here. The blurred avatar sits on the page canvas and
+     bleeds into ContentInner, which fades its material in below it — the
+     same layering as mobile, so the two blend instead of meeting at a seam. */
 
   /* A viewport query, not a container one: the desktop content column is
      680–780px wide at common laptop sizes, which a ≤800px container query
@@ -172,12 +168,14 @@ export const Banner = styled.div<BannerProps>`
 
   ${({ $blurred }) => $blurred && BLUR_FILTER}
   /* The blur paints past the box, so radius + overflow can't round it;
-     clip-path applies after filter and keeps the sheet's top corners. */
+     clip-path applies after filter and keeps the sheet's top corners. The
+     bottom stays open (negative inset) so the blur bleeds into the sheet
+     below the way it does on mobile, instead of ending on a hard edge. */
   ${({ $blurred }) =>
     $blurred &&
     css`
       @media screen and (min-width: 801px) {
-        clip-path: inset(0 round 24px 24px 0 0);
+        clip-path: inset(0 0 -240px 0 round 24px 24px 0 0);
       }
     `}
 
@@ -268,6 +266,21 @@ export const ContentInner = styled.div<{ $hasBanner?: boolean }>`
   padding-bottom: 20px;
   gap: 2px;
   margin-bottom: 20px;
+  /* No banner: the blurred art bleeds into this sheet. Start the material
+     transparent and fade it in over the bleed so the art shows through at
+     full strength (as on mobile), and drop the inset top highlight that would
+     draw a seam across the blend. */
+  ${({ $hasBanner }) =>
+    !$hasBanner &&
+    css`
+      background-color: transparent;
+      background-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        var(--material-fill-strong) 240px
+      );
+      box-shadow: 0 18px 40px -28px rgb(0 0 0 / 0.7);
+    `}
 
   /* Below 800px (viewport) the profile is the page: no sheet chrome. */
   @media screen and (max-width: 800px) {
@@ -278,6 +291,7 @@ export const ContentInner = styled.div<{ $hasBanner?: boolean }>`
     border: none;
     border-radius: 0px;
     background-color: transparent;
+    background-image: none;
     box-shadow: none;
   }
 `;
@@ -536,7 +550,7 @@ export const MuseSectionHeader = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: var(--font-size-xsmall);
+  font-size: var(--font-size-caption);
   font-weight: var(--font-weight-bold);
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -568,7 +582,7 @@ export const AddMuseButton = styled.button`
   border: 1px solid var(--material-edge);
   border-radius: 50px;
   background: var(--material-fill);
-  font-size: var(--font-size-xsmall);
+  font-size: var(--font-size-caption);
   font-weight: var(--font-weight-bold);
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -728,6 +742,7 @@ export const AvatarHeader = styled.div`
     padding-inline: 16px;
     gap: 12px;
     margin-top: -58px;
+    margin-bottom: 4px;
   }
 `;
 
@@ -773,6 +788,10 @@ export const NameMobile = styled.div`
       font-size: 24px;
     }
   }
+
+  @media screen and (max-width: 800px) {
+    margin-top: 2px;
+  }
 `;
 
 export const UsernameContainer = styled.div`
@@ -804,6 +823,10 @@ export const NoteContainer = styled.div<{ $color?: string | null }>`
   font-size: var(--font-size-small);
   line-height: 1.35;
   word-break: break-word;
+  /* Sit low beside the avatar rather than centred on it, so the note is
+     close to the name below instead of an avatar-half away. */
+  align-self: flex-end;
+  margin-bottom: 16px;
 
   /* Thought-bubble trail pointing left at the avatar */
   &::before {
@@ -833,6 +856,8 @@ export const NoteContainer = styled.div<{ $color?: string | null }>`
     font-size: var(--font-size-xsmall);
     max-width: 180px;
     padding: 6px 12px;
+    /* Slightly below centre on the 104px avatar. */
+    margin-bottom: 20px;
   }
 `;
 
@@ -1158,4 +1183,3 @@ export const StatsRow = styled.div`
     }
   }
 `;
-

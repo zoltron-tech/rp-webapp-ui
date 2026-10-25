@@ -40,6 +40,7 @@ export const AboutRichText = ({
 
   const [expanded, setExpanded] = useState(false);
   const [isOverflowing, setIsOverflowing] = useState(false);
+  const [contentHeight, setContentHeight] = useState(0);
   const [viewerSrc, setViewerSrc] = useState<string | null>(null);
 
   const nodes = useMemo(() => parseRichText(savedText), [savedText]);
@@ -214,8 +215,12 @@ export const AboutRichText = ({
     const content = contentRef.current;
     if (!content) return;
 
-    const measure = () =>
+    // The full height is kept too: `max-height: none` can't be transitioned,
+    // so expanding animates to this pixel value instead.
+    const measure = () => {
+      setContentHeight(content.scrollHeight);
       setIsOverflowing(content.scrollHeight > collapsedHeight + 4);
+    };
 
     measure();
 
@@ -226,15 +231,32 @@ export const AboutRichText = ({
 
   if (!savedText.length) return null;
 
+  const handleContentClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!isOverflowing) return;
+    const target = event.target as HTMLElement;
+    // Links, mentions and images handle their own clicks.
+    if (
+      target.closest("a") ||
+      target.closest(".mention-tag") ||
+      target.tagName === "IMG" ||
+      target.closest(".inline-image-container")
+    ) {
+      return;
+    }
+    setExpanded((value) => !value);
+  };
+
   return (
     <S.Container $accent={null}>
       <S.ContentWrapper
         $animating={false}
         $noClip={false}
+        onClick={handleContentClick}
         style={{
           cursor: isOverflowing ? "pointer" : undefined,
-          maxHeight:
-            isOverflowing && !expanded ? `${collapsedHeight}px` : "none",
+          maxHeight: !isOverflowing
+            ? "none"
+            : `${expanded ? contentHeight : collapsedHeight}px`,
         }}
       >
         <S.SavedContent ref={contentRef}>

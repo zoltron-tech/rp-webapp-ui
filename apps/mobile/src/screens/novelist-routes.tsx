@@ -28,6 +28,7 @@ import { useNovelist } from "@/hooks/use-novelist";
 import { useOffline } from "@/lib/connectivity";
 import { getStore, markNovelistOpened } from "@/lib/local-store";
 import { ActivityList } from "@/screens/activity-list";
+import { BookShelf } from "@/screens/book-shelf";
 import { FriendsList } from "@/screens/friends-list";
 import { MuseList } from "@/screens/muse-list";
 import { PromptFeed } from "@/screens/prompt-feed";
@@ -123,7 +124,11 @@ export function NovelistProfileScreen() {
       {query.isPending && offline ? (
         // Never opened while connected, so nothing on disk: say so rather
         // than pulse a skeleton that cannot fill.
-        <ListStatus loading offlineWhat="page" onRetry={() => void query.refetch()} />
+        <ListStatus
+          loading
+          offlineWhat="page"
+          onRetry={() => void query.refetch()}
+        />
       ) : query.isPending ? (
         <NovelistProfileSkeleton seed={seed} />
       ) : query.error ? (
@@ -276,6 +281,35 @@ export function NovelistPostsScreen() {
         kind="posts"
         novelistId={novelistId ?? novelist?.id ?? ""}
         username={username}
+      />
+    </AccentProvider>
+  );
+}
+
+/**
+ * Somebody else's bookshelf, inside the tab their profile was opened in, in
+ * their accent — see `NovelistMusesScreen`.
+ *
+ * `novelistId` rides along with the handle because the shelf endpoints are
+ * keyed by id and the profile that pushed this route already had it; a deep
+ * link without it resolves the id from the cached novelist instead.
+ */
+export function NovelistBooksScreen() {
+  const { novelistId, username } = useLocalSearchParams<{
+    novelistId?: string;
+    username: string;
+  }>();
+  const { data: novelist } = useNovelist(username);
+
+  return (
+    <AccentProvider palette={novelist?.palette}>
+      {/* Their light, over the viewer's the stack drew. */}
+      <AmbientBackground />
+      <NovelistHeader title={`@${username ?? ""} · Books`} />
+      <BookShelf
+        novelistId={novelistId ?? novelist?.id}
+        own={false}
+        username={username ?? ""}
       />
     </AccentProvider>
   );

@@ -1,3 +1,4 @@
+import type { Book } from "./books";
 import type { ProfileSong } from "./music";
 import type { Friend, NWImage } from "./novelist";
 
@@ -87,7 +88,17 @@ export interface IceBreaker {
    *  NOVELIST source; the muse's owner, for a MUSE source) — the reply
    *  target when starting/continuing a conversation. */
   ownerNovelistId: string;
+  /**
+   * ICE_BREAKER (default): a line someone wrote. READING: a "currently
+   * reading" shelf entry shown in the same rail — `sourceId` is the shelf
+   * row's id, `source` is the reader, `book` is set. Replies carry the
+   * same `repliedTo.type` either way.
+   */
+  kind?: IceBreakerKind;
+  book?: Book | null;
 }
+
+export type IceBreakerKind = "ICE_BREAKER" | "READING";
 
 export type SubmitPromptInput = {
   source: PromptSource;

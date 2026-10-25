@@ -1,12 +1,19 @@
 "use client";
 
+import {
+  canDeleteIceBreaker,
+  isOwnIceBreaker,
+  isReadingBreaker,
+} from "@nw/chat";
 import type { IceBreaker, Novelist, PromptSource } from "@nw/types";
+import { bookCoverUrl } from "@nw/types/books";
 import classNames from "classnames";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { BsChevronLeft, BsChevronRight, BsX } from "react-icons/bs";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { HiPaperAirplane } from "react-icons/hi2";
+import { IoBookOutline } from "react-icons/io5";
 import { ChatRichInput } from "@/components/chat-rich-input";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { AppAlertDialog } from "@/components/dialog";
@@ -166,10 +173,10 @@ export function ViewIceBreakerDialog({
 
   if (!iceBreaker) return null;
 
-  const isOwner =
-    !!novelist &&
-    (iceBreaker.sourceId === novelist.id ||
-      novelist.muses.some((muse) => muse.id === iceBreaker.sourceId));
+  const isOwner = isOwnIceBreaker(iceBreaker, novelist);
+  // A reading entry has no delete: it follows the book's shelf status.
+  const canDelete = canDeleteIceBreaker(iceBreaker, novelist);
+  const reading = isReadingBreaker(iceBreaker);
 
   const ringAccent = getSourceRingAccent(iceBreaker.source);
   const createdOnMs = parseIceBreakerTimestamp(iceBreaker.createdOn);
@@ -316,16 +323,41 @@ export function ViewIceBreakerDialog({
         </S.ViewIceBreakerHero>
 
         <S.ViewIceBreakerBubbleGroup>
-          <S.ViewIceBreakerBubble $color={iceBreaker.color}>
-            {iceBreaker.message}
-          </S.ViewIceBreakerBubble>
+          {reading && iceBreaker.book ? (
+            <S.ViewReadingCard>
+              {iceBreaker.book.coverId && (
+                <img src={bookCoverUrl(iceBreaker.book.coverId, "M")} alt="" />
+              )}
+              <S.ViewReadingText>
+                <small>
+                  <IoBookOutline size={11} />
+                  Currently reading
+                </small>
+                <strong>{iceBreaker.book.title}</strong>
+                {iceBreaker.book.authors[0] && (
+                  <span>by {iceBreaker.book.authors[0]}</span>
+                )}
+              </S.ViewReadingText>
+            </S.ViewReadingCard>
+          ) : (
+            <S.ViewIceBreakerBubble $color={iceBreaker.color}>
+              {iceBreaker.message}
+            </S.ViewIceBreakerBubble>
+          )}
           <S.ViewIceBreakerMeta title={displayDate(createdOnMs)}>
             {toFormattedDate(createdOnMs)}
           </S.ViewIceBreakerMeta>
         </S.ViewIceBreakerBubbleGroup>
       </S.ViewIceBreakerHeroWrap>
 
-      {isOwner && (
+      {isOwner && reading && (
+        <S.ViewReadingOwnerNote>
+          <IoBookOutline size={12} />
+          From your bookshelf — it stays here while the book is marked Reading.
+        </S.ViewReadingOwnerNote>
+      )}
+
+      {canDelete && (
         <S.ViewIceBreakerDeleteLink
           type="button"
           onClick={() => setConfirmDeleteOpen(true)}
@@ -418,7 +450,7 @@ export function ViewIceBreakerDialog({
     return (
       <AppAlertDialog
         heading={
-          <IceBreakerTrayHeader title="Ice breaker">
+          <IceBreakerTrayHeader title={reading ? "Reading" : "Ice breaker"}>
             <S.IceBreakerTrayActionButton
               type="button"
               $variant="cancel"
@@ -462,7 +494,7 @@ export function ViewIceBreakerDialog({
       >
         <SheetS.DragHandle />
         <SheetS.MobileContent>
-          <IceBreakerTrayHeader title="Ice breaker">
+          <IceBreakerTrayHeader title={reading ? "Reading" : "Ice breaker"}>
             <S.IceBreakerTrayActionButton
               type="button"
               $variant="cancel"

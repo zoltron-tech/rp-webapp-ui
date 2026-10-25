@@ -113,6 +113,12 @@ const iceDrift = keyframes`
   50%      { transform: translateY(-1.5px) rotate(-2deg); }
 `;
 
+/** The outer spine on the shelf sinks a touch further into its lean, and back. */
+const shelfSettle = keyframes`
+  0%, 100% { transform: rotate(0deg); }
+  50%      { transform: rotate(1.2deg); }
+`;
+
 /**
  * Every rule the scenes draw with. Variants below only set a size — the
  * markup opts into motion by class name, so a scene that has no ribbon simply
@@ -261,6 +267,12 @@ export const Art = styled.svg<{ $accent?: string | null }>`
     animation: ${iceDrift} 4.4s ease-in-out infinite;
   }
 
+  .nwm-settle {
+    /* The scene places this group at the spine's foot, so its own origin is
+     * the point it rocks about — no fill-box, the same origin native uses. */
+    transform-origin: 0 0;
+    animation: ${shelfSettle} 6.4s ease-in-out infinite;
+  }
 
   .scrap {
     transform-box: fill-box;
@@ -384,6 +396,7 @@ export const Art = styled.svg<{ $accent?: string | null }>`
     .question,
     .bond,
     .ice,
+    .nwm-settle,
     .scrap,
     .flake,
     .vanish,
@@ -471,6 +484,13 @@ export const BondSvg = styled(Art)`
 export const GallerySvg = styled(Art)`
   width: 120px;
   height: 96px;
+`;
+
+/** A shelf plank with two spines leaning on a closed book — the empty
+ *  bookshelf placeholder. */
+export const EmptyShelfSvg = styled(Art)`
+  width: 148px;
+  height: 113px;
 `;
 
 /** Cards under a magnifier — the filtered-to-nothing characters placeholder. */

@@ -189,6 +189,9 @@ textarea {
   --font-size: 14px;
   --font-size-small: 12px;
   --font-size-xsmall: 10px;
+  /* Smallest size for text that must be read (section eyebrows, chips): the
+     11px floor from AGENTS.md. --font-size-xsmall stays for pure decoration. */
+  --font-size-caption: 11px;
   --font-size-xxsmall: 8px;
   --font-size-xxxsmall: 6px;
 

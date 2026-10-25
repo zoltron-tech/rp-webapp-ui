@@ -927,6 +927,636 @@ for (const [index, [originX, originY]] of [
   };
 }
 
+/* Book Club: the big bubble steps aside, the readers talk in turn, a peek. */
+MOTION["nwb-club-bubble"] = {
+  build: (clock) => ({
+    opacity: at(clock, [
+      [0, 1],
+      [0.1, 1],
+      [0.14, 0],
+      [0.84, 0],
+      [0.9, 1],
+      [1, 1],
+    ]),
+  }),
+  delay: 0,
+  period: 6,
+};
+/* Each bubble pops up from its tail, just above its reader's head. */
+for (const [index, [originX, start]] of [
+  [37.5, 0.16],
+  [52.5, 0.44],
+  [67.5, 0.3],
+  [82.5, 0.58],
+].entries()) {
+  MOTION[`nwb-say-${index + 1}`] = {
+    build: (clock) => ({
+      opacity: at(clock, [
+        [0, 0],
+        [start, 0],
+        [start + 0.03, 1],
+        [start + 0.18, 1],
+        [start + 0.22, 0],
+        [1, 0],
+      ]),
+      originX,
+      originY: 47,
+      scale: at(clock, [
+        [0, 0.4],
+        [start, 0.4],
+        [start + 0.03, 1.08],
+        [start + 0.05, 1],
+        [1, 1],
+      ]),
+    }),
+    delay: 0,
+    period: 6,
+    rest: HIDDEN,
+  };
+}
+MOTION["nwb-heartbeat"] = {
+  build: (clock) => ({
+    originX: 60,
+    originY: 25.8,
+    scale: at(clock, [
+      [0, 1],
+      [0.1, 1.22],
+      [0.2, 1],
+      [0.3, 1.12],
+      [0.4, 1],
+      [1, 1],
+    ]),
+  }),
+  delay: 0,
+  period: 1.6,
+};
+MOTION["nwb-peek"] = {
+  build: (clock) => ({
+    y: at(clock, [
+      [0, 0],
+      [0.7, 0],
+      [0.76, -2.4],
+      [0.84, -2.4],
+      [0.9, 0],
+      [1, 0],
+    ]),
+  }),
+  delay: 0,
+  period: 6,
+};
+
+/* Completionist: the set filled volume by volume, then shining. */
+for (const [index, start] of [0.04, 0.13, 0.22, 0.31, 0.4].entries()) {
+  MOTION[`nwb-volume-${index + 1}`] = {
+    build: (clock) => ({
+      opacity: at(clock, [
+        [0, 0],
+        [start, 0],
+        [start + 0.05, 1],
+        [0.82, 1],
+        [0.92, 0],
+        [1, 0],
+      ]),
+      y: at(clock, [
+        [0, -18],
+        [start, -18],
+        [start + 0.05, 1],
+        [start + 0.07, 0],
+        [0.82, 0],
+        [0.92, -18],
+        [1, -18],
+      ]),
+    }),
+    delay: 0,
+    period: 6,
+    rest: DRAWN,
+  };
+}
+MOTION["nwb-set-glint"] = {
+  build: (clock) => ({
+    x: at(clock, [
+      [0, 0],
+      [0.48, 0],
+      [0.62, 130],
+      [1, 130],
+    ]),
+  }),
+  delay: 0,
+  period: 6,
+};
+MOTION["nwb-seal-shine"] = {
+  build: (clock) => ({
+    originX: 0,
+    originY: 0,
+    scale: at(clock, [
+      [0, 1],
+      [0.6, 1],
+      [0.64, 1.25],
+      [0.7, 0.96],
+      [0.75, 1],
+      [1, 1],
+    ]),
+  }),
+  delay: 0,
+  period: 6,
+};
+for (const [name, originX, delay] of [
+  ["nwb-ribbon-a", 47, 0],
+  ["nwb-ribbon-b", 71, 1.3],
+] as const) {
+  MOTION[name] = {
+    build: (clock) => ({
+      originX,
+      originY: 95,
+      rotation: pingPong(clock, -6, 6),
+    }),
+    delay,
+    period: 2.6,
+  };
+}
+
+/* Bookworm: swaying, blinking, glancing, nibbling, wiggling. */
+MOTION["nwb-worm"] = {
+  build: (clock) => ({
+    originX: 70,
+    originY: 66,
+    rotation: pingPong(clock, -4, 4),
+  }),
+  delay: 0,
+  period: 3.2,
+};
+MOTION["nwb-eyelid"] = {
+  build: (clock) => ({
+    originX: 52,
+    originY: 34.1,
+    scaleY: at(clock, [
+      [0, 0.001],
+      [0.88, 0.001],
+      [0.91, 1],
+      [0.94, 0.001],
+      [1, 0.001],
+    ]),
+  }),
+  delay: 0,
+  period: 4,
+  rest: { originX: 52, originY: 34.1, scaleY: 0.001 },
+};
+MOTION["nwb-pupils"] = {
+  build: (clock) => ({
+    x: at(clock, [
+      [0, 0],
+      [0.2, 0],
+      [0.28, 0.7],
+      [0.42, 0.7],
+      [0.5, 0],
+      [0.7, 0],
+      [0.78, -0.9],
+      [0.92, -0.9],
+      [1, 0],
+    ]),
+  }),
+  delay: 0,
+  period: 6,
+};
+MOTION["nwb-crumbs"] = {
+  build: (clock) => ({
+    opacity: at(clock, [
+      [0, 1],
+      [0.6, 1],
+      [0.68, 0.4],
+      [0.76, 1],
+      [1, 1],
+    ]),
+    originX: 70,
+    originY: 66,
+    scale: at(clock, [
+      [0, 1],
+      [0.6, 1],
+      [0.68, 1.35],
+      [0.76, 0.85],
+      [0.84, 1],
+      [1, 1],
+    ]),
+  }),
+  delay: 0,
+  period: 2.4,
+};
+MOTION["nwb-tail-wiggle"] = {
+  build: (clock) => ({
+    originX: 33,
+    originY: 88,
+    rotation: pingPong(clock, -10, 10),
+  }),
+  delay: 0,
+  period: 1.4,
+};
+
+/*
+ * Globetrotter: the passport opens, is stamped, and closes. It rests closed —
+ * the ID page folded to nothing at the spine, the booklet shifted to centre
+ * the closed half — which is web's stylesheet pose, given here as rest poses.
+ * Folded is a hair above zero rather than zero, so the group never degenerates.
+ */
+const SPINE = { originX: 60, originY: 76 };
+const FOLDED = 0.001;
+MOTION["nwb-booklet"] = {
+  build: (clock) => ({
+    x: at(clock, [
+      [0, -21],
+      [0.14, -21],
+      [0.27, 0],
+      [0.7, 0],
+      [0.84, -21],
+      [1, -21],
+    ]),
+  }),
+  delay: 0,
+  period: 6,
+  rest: { x: -21 },
+};
+MOTION["nwb-cover"] = {
+  build: (clock) => ({
+    ...SPINE,
+    // Accelerating into the spine, decelerating out of it — see web's note.
+    scaleX: at(clock, [
+      [0, 1],
+      [0.14, 1],
+      [0.17, 0.8],
+      [0.2, FOLDED],
+      [0.77, FOLDED],
+      [0.805, 0.8],
+      [0.84, 1],
+      [1, 1],
+    ]),
+  }),
+  delay: 0,
+  period: 6,
+};
+MOTION["nwb-left-page"] = {
+  build: (clock) => ({
+    ...SPINE,
+    scaleX: at(clock, [
+      [0, FOLDED],
+      [0.2, FOLDED],
+      [0.235, 0.8],
+      [0.27, 1],
+      [0.7, 1],
+      [0.735, 0.8],
+      [0.77, FOLDED],
+      [1, FOLDED],
+    ]),
+  }),
+  delay: 0,
+  period: 6,
+  rest: { ...SPINE, scaleX: FOLDED },
+};
+MOTION["nwb-rubber"] = {
+  build: (clock) => ({
+    x: at(clock, [
+      [0, 0],
+      [0.3, 0],
+      [0.36, 5],
+      [0.42, 5],
+      [0.52, 0],
+      [1, 0],
+    ]),
+    y: at(clock, [
+      [0, 0],
+      [0.08, -2],
+      [0.16, 0],
+      [0.3, 0],
+      [0.36, 32],
+      [0.39, 31],
+      [0.42, 32],
+      [0.52, 0],
+      [1, 0],
+    ]),
+  }),
+  delay: 0,
+  period: 6,
+};
+MOTION["nwb-passport"] = {
+  build: (clock) => ({
+    ...SPINE,
+    scale: at(clock, [
+      [0, 1],
+      [0.35, 1],
+      [0.37, 0.985],
+      [0.4, 1.005],
+      [0.43, 1],
+      [1, 1],
+    ]),
+  }),
+  delay: 0,
+  period: 6,
+};
+/* The new stamp and its splash, about the rocket stamp's centre. */
+const NEW_STAMP = { originX: 88, originY: 85 };
+MOTION["nwb-new-stamp"] = {
+  build: (clock) => ({
+    ...NEW_STAMP,
+    opacity: at(clock, [
+      [0, 0],
+      [0.36, 0],
+      [0.38, 1],
+      [0.9, 1],
+      [0.95, 0],
+      [1, 0],
+    ]),
+    scale: at(clock, [
+      [0, 1.25],
+      [0.36, 1.25],
+      [0.38, 0.95],
+      [0.41, 1],
+      [1, 1],
+    ]),
+  }),
+  delay: 0,
+  period: 6,
+  rest: DRAWN,
+};
+MOTION["nwb-splash"] = {
+  build: (clock) => ({
+    ...NEW_STAMP,
+    opacity: at(clock, [
+      [0, 0],
+      [0.36, 0],
+      [0.38, 1],
+      [0.52, 0],
+      [1, 0],
+    ]),
+    scale: at(clock, [
+      [0, 0.5],
+      [0.36, 0.5],
+      [0.38, 0.9],
+      [0.52, 1.5],
+      [1, 1.5],
+    ]),
+  }),
+  delay: 0,
+  period: 6,
+  rest: HIDDEN,
+};
+/* The cover's stars twinkle left to right, each about its own middle. */
+for (const n of [1, 2, 3, 4, 5]) {
+  MOTION[`nwb-star-${n}`] = {
+    build: (clock) => ({
+      originX: 0,
+      originY: 0,
+      scale: at(clock, [
+        [0, 1],
+        [0.1, 1.6],
+        [0.2, 0.9],
+        [0.3, 1],
+        [1, 1],
+      ]),
+    }),
+    delay: (n - 1) * 0.25,
+    period: 3,
+  };
+}
+/* The sparkles pulse in turn. */
+for (const n of [1, 2, 3]) {
+  MOTION[`nwb-sparkle-${n}`] = {
+    build: (clock) => ({
+      originX: 0,
+      originY: 0,
+      scale: at(clock, [
+        [0, 1],
+        [0.5, 0.4],
+        [1, 1],
+      ]),
+    }),
+    delay: (n - 1) * 0.8,
+    period: 2.4,
+  };
+}
+/* The ribbon sways from the foot of the pages. */
+MOTION["nwb-ribbon"] = {
+  build: (clock) => ({
+    originX: 66.5,
+    originY: 96,
+    rotation: pingPong(clock, -5, 5),
+  }),
+  delay: 0,
+  period: 2.8,
+};
+/* The paper plane flies off as the passport opens and glides back as it
+   closes; its route fades while it is gone. */
+MOTION["nwb-plane"] = {
+  build: (clock) => ({
+    opacity: at(clock, [
+      [0, 1],
+      [0.12, 1],
+      [0.24, 0],
+      [0.82, 0],
+      [0.96, 1],
+      [1, 1],
+    ]),
+    originX: 0,
+    originY: 0,
+    rotation: at(clock, [
+      [0, 0],
+      [0.12, 0],
+      [0.24, -12],
+      [0.82, -20],
+      [0.96, 0],
+      [1, 0],
+    ]),
+    x: at(clock, [
+      [0, 0],
+      [0.12, 0],
+      [0.18, 6],
+      [0.24, 26],
+      [0.82, -14],
+      [0.88, -4],
+      [0.96, 0],
+      [1, 0],
+    ]),
+    y: at(clock, [
+      [0, 0],
+      [0.12, 0],
+      [0.18, -7],
+      [0.24, -30],
+      [0.82, 40],
+      [0.88, 12],
+      [0.96, 0],
+      [1, 0],
+    ]),
+  }),
+  delay: 0,
+  period: 6,
+};
+MOTION["nwb-route"] = {
+  build: (clock) => ({
+    opacity: at(clock, [
+      [0, 1],
+      [0.14, 1],
+      [0.24, 0],
+      [0.82, 0],
+      [0.94, 1],
+      [1, 1],
+    ]),
+  }),
+  delay: 0,
+  period: 6,
+};
+
+/*
+ * Page Turner: the carriage stepping left a keystroke at a time. Web steps it
+ * with `steps(12)`; here the same staircase is written out as stops, each step
+ * held flat and then jumped. The typing reveal moves with it.
+ */
+const TYPING_END = 0.7;
+const STEPS = 12;
+const staircase = (from: number, to: number): [number, number][] => {
+  const points: [number, number][] = [];
+  for (let k = 0; k < STEPS; k++) {
+    const value = from + ((to - from) * k) / STEPS;
+    const t0 = (TYPING_END * k) / STEPS;
+    const t1 = (TYPING_END * (k + 1)) / STEPS - 0.001;
+    points.push([t0, value], [t1, value]);
+  }
+  points.push([TYPING_END, to]);
+  return points;
+};
+MOTION["nwb-carriage"] = {
+  build: (clock) => ({
+    x: at(clock, [...staircase(10, -10), [0.74, -10], [0.82, 10], [1, 10]]),
+  }),
+  delay: 0,
+  period: 4.2,
+  rest: DRAWN,
+};
+MOTION["nwb-typing"] = {
+  build: (clock) => ({
+    opacity: at(clock, [
+      [0, 1],
+      [0.7, 1],
+      [0.84, 0],
+      [1, 1],
+    ]),
+    x: at(clock, [...staircase(-37, 0), [0.84, -37], [1, -37]]),
+  }),
+  delay: 0,
+  period: 4.2,
+  rest: DRAWN,
+};
+for (const [index, strikes] of [
+  [0.02, 0.24, 0.46],
+  [0.08, 0.3, 0.52],
+  [0.13, 0.36, 0.58],
+  [0.18, 0.41, 0.63],
+  [0.27, 0.5],
+].entries()) {
+  MOTION[`nwb-key-${index + 1}`] = {
+    build: (clock) => ({
+      y: at(clock, [
+        [0, 0],
+        ...strikes.flatMap((t): [number, number][] => [
+          [t, 0],
+          [t + 0.015, 0.9],
+          [t + 0.04, 0],
+        ]),
+        [1, 0],
+      ]),
+    }),
+    delay: 0,
+    period: 4.2,
+  };
+}
+MOTION["nwb-ding"] = {
+  build: (clock) => ({
+    opacity: at(clock, [
+      [0, 0],
+      [0.69, 0],
+      [0.72, 1],
+      [0.8, 0],
+      [1, 0],
+    ]),
+  }),
+  delay: 0,
+  period: 4.2,
+  rest: HIDDEN,
+};
+
+/* Ensemble Cast: lights up one by one, each player bowing into theirs. */
+for (const [index, start] of [0.06, 0.14, 0.22, 0.3, 0.38].entries()) {
+  MOTION[`nwb-spot-${index + 1}`] = {
+    build: (clock) => ({
+      opacity: at(clock, [
+        [0, 0],
+        [start, 0],
+        [start + 0.04, 1],
+        [0.86, 1],
+        [0.94, 0],
+        [1, 0],
+      ]),
+    }),
+    delay: 0,
+    period: 7,
+    rest: DRAWN,
+  };
+  MOTION[`nwb-player-${index + 1}`] = {
+    build: (clock) => ({
+      y: at(clock, [
+        [0, 0],
+        [start + 0.02, 0],
+        [start + 0.05, -2],
+        [start + 0.09, 0.4],
+        [start + 0.12, 0],
+        [1, 0],
+      ]),
+    }),
+    delay: 0,
+    period: 7,
+  };
+}
+for (const [name, originX, delay] of [
+  ["nwb-curtain-l", 33.5, 0],
+  ["nwb-curtain-r", 86.5, 2.6],
+] as const) {
+  MOTION[name] = {
+    build: (clock) => ({
+      originX,
+      originY: 34,
+      rotation: pingPong(clock, -1.2, 1.2),
+    }),
+    delay,
+    period: 5.2,
+  };
+}
+for (const [index, period] of [1.3, 1.7, 1.1].entries()) {
+  MOTION[`nwb-footlight-${index + 1}`] = {
+    build: (clock) => ({
+      opacity: at(clock, [
+        [0, 1],
+        [0.4, 0.7],
+        [0.6, 0.95],
+        [0.8, 0.8],
+        [1, 1],
+      ]),
+    }),
+    delay: index * 0.4,
+    period,
+  };
+}
+/* The masks are drawn about their own centre, so the origin is theirs. */
+for (const [name, delay] of [
+  ["nwb-mask-l", 0],
+  ["nwb-mask-r", 2.2],
+] as const) {
+  MOTION[name] = {
+    build: (clock) => ({
+      originX: 0,
+      originY: 0,
+      rotation: pingPong(clock, -5, 5),
+    }),
+    delay,
+    period: 4.4,
+  };
+}
+
 /* Lorekeeper: the lock springing, the chain parting, the lore rising. */
 const LORE_STOPS = [0, 0.2, 0.3, 0.8, 0.88, 1];
 const loreLap = (clock: MotionClock, bound: number, loose: number) =>

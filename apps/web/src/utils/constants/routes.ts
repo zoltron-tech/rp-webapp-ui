@@ -47,6 +47,7 @@ export const ROUTES = {
     Failed: "/rp/oauth/failed",
   },
   Onboarding: "/rp/onboarding",
+  OpenLibrary: "/rp/open-library",
   outgoingThreads: "/rp/outgoing-threads",
   PrivacyPolicy: "/rp/privacy-policy",
   Profile: {
@@ -97,6 +98,7 @@ export const ROUTES = {
      * route table redirects them — but nothing should generate one.
      */
     View: (username: string) => ({
+      Books: `/${toHandle(username)}/books`,
       Friends: `/${toHandle(username)}/friends`,
       Index: `/${toHandle(username)}`,
       Muses: `/${toHandle(username)}/muses`,

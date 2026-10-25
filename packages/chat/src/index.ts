@@ -38,10 +38,12 @@ export {
   passthroughChatCrypto,
 } from "./crypto";
 export {
+  canDeleteIceBreaker,
   ICE_BREAKER_COLORS,
   ICE_BREAKER_MAX_LENGTH,
   iceBreakerSources,
   isOwnIceBreaker,
+  isReadingBreaker,
   parseIceBreakerTimestamp,
 } from "./ice-breakers";
 export {

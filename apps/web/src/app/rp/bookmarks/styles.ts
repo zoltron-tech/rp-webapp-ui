@@ -144,8 +144,6 @@ export const ContinueButton = styled.button`
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  align-self: flex-start;
-  margin-top: auto;
   padding: 8px 16px;
   border-radius: 999px;
   background: var(--accent);
@@ -200,4 +198,43 @@ export const EmptyText = styled.p`
   margin: 0;
   font-size: var(--font-size);
   line-height: 1.55;
+`;
+
+/** Footer row of the card body: the primary action left, the quiet one right. */
+export const CardActions = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+  flex-wrap: wrap;
+`;
+
+/** Ghost "Remove": text-weight next to the filled Continue, red only on hover. */
+export const RemoveButton = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semi-bold);
+  font-family: var(--font);
+  transition: color 0.15s ease, background-color 0.15s ease;
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--negative, #e5484d);
+      background: var(--fill-hover);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent-11, var(--accent));
+    outline-offset: 2px;
+  }
 `;

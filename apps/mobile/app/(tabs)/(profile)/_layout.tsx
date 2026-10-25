@@ -1,10 +1,10 @@
 import { Stack, useRouter } from "expo-router";
-import { useAppTheme } from "@/theme";
-import { glassHeaderOptions } from "@/theme/header";
 import { ambientScreenLayout } from "@/components/ambient-background";
 import { TabHeaderTitle } from "@/components/header-title";
 import { MenuButton } from "@/components/menu-button";
 import { tabStackBack } from "@/components/stack-back-button";
+import { useAppTheme } from "@/theme";
+import { glassHeaderOptions } from "@/theme/header";
 
 /**
  * The Profile tab's own stack.
@@ -36,9 +36,7 @@ export default function ProfileStackLayout() {
       screenLayout={ambientScreenLayout}
       screenOptions={(screen) => ({
         contentStyle: { backgroundColor: theme.background },
-        headerRight: () => (
-          <MenuButton />
-        ),
+        headerRight: () => <MenuButton />,
         ...glassHeaderOptions(theme),
         // A page that arrived first in this stack (a link from another tab,
         // from a chat, from a story) still needs a way back on iOS.
@@ -59,6 +57,7 @@ export default function ProfileStackLayout() {
       />
       <Stack.Screen name="friends" options={{ title: "Friends" }} />
       <Stack.Screen name="muses" options={{ title: "Characters" }} />
+      <Stack.Screen name="books" options={{ title: "Books" }} />
       <Stack.Screen name="stories" options={{ title: "Stories" }} />
       <Stack.Screen name="activity" options={{ title: "Activity" }} />
       <Stack.Screen name="prompts" options={{ title: "Prompts" }} />
@@ -75,6 +74,7 @@ export default function ProfileStackLayout() {
       <Stack.Screen name="novelist/[username]/index" />
       <Stack.Screen name="novelist/[username]/friends" />
       <Stack.Screen name="novelist/[username]/muses" />
+      <Stack.Screen name="novelist/[username]/books" />
       <Stack.Screen name="novelist/[username]/stories" />
       <Stack.Screen name="novelist/[username]/activity" />
       <Stack.Screen name="novelist/[username]/prompts" />

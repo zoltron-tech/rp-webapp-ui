@@ -35,10 +35,9 @@ import { ROUTES } from "./utils/constants/routes";
  * wants (`{ Component }`). Each `import()` is a literal so Rollup can split
  * the bundle per route.
  */
-const page =
-  (load: () => Promise<{ default: ComponentType }>) => async () => ({
-    Component: (await load()).default,
-  });
+const page = (load: () => Promise<{ default: ComponentType }>) => async () => ({
+  Component: (await load()).default,
+});
 
 /**
  * `/` — send the visitor somewhere real.
@@ -146,83 +145,276 @@ export const routes: RouteObject[] = [
     children: [
       {
         children: [
-      { path: "badges", lazy: page(() => import("./app/rp/badges/page")) },
-      { path: "bookmarks", lazy: page(() => import("./app/rp/bookmarks/page")) },
-      { path: "compose", lazy: page(() => import("./app/rp/compose/page")) },
-      { path: "conversations", lazy: page(() => import("./app/rp/conversations/page")) },
-      { path: "conversations/:conversationId", lazy: page(() => import("./app/rp/conversations/[conversationId]/page")) },
-      { path: "conversations/:conversationId/details", lazy: page(() => import("./app/rp/conversations/[conversationId]/details/page")) },
-      { path: "explore", lazy: page(() => import("./app/rp/explore/page")) },
-      // Both of these were one-line files re-exporting explore's page. In a
-      // route table that is just a second entry pointing at the same import,
-      // which is clearer than the indirection — and it means the two
-      // `export { default } from "../explore/page"` files can be deleted with
-      // the rest of Next without touching this table. The URLs stay live.
-      { path: "explore-prompts", lazy: page(() => import("./app/rp/explore/page")) },
-      { path: "faqs", lazy: page(() => import("./app/rp/faqs/page")) },
-      { path: "fellows", lazy: page(() => import("./app/rp/fellows/page")) },
-      { path: "forgot-password", lazy: page(() => import("./app/rp/forgot-password/page")) },
-      { path: "home", lazy: page(() => import("./app/rp/home/page")) },
-      { path: "install-app", lazy: page(() => import("./app/rp/install-app/page")) },
-      { path: "library", lazy: page(() => import("./app/rp/library/page")) },
-      { path: "login", lazy: page(() => import("./app/rp/login/page")) },
-      { path: "msgtoexport", lazy: page(() => import("./app/rp/msgtoexport/page")) },
-      { path: "muse", lazy: page(() => import("./app/rp/muse/page")) },
-      { path: "muse/:slug", lazy: page(() => import("./app/rp/muse/[slug]/page")) },
-      { path: "news-feed", lazy: page(() => import("./app/rp/explore/page")) },
-      { path: "notifications", lazy: page(() => import("./app/rp/notifications/page")) },
-      { path: "novelist/:slug", lazy: page(() => import("./app/rp/novelist/[slug]/page")) },
-      { path: "novelists", lazy: page(() => import("./app/rp/novelists/page")) },
-      { path: "oauth/callback", lazy: page(() => import("./app/rp/oauth/callback/page")) },
-      { path: "oauth/failed", lazy: page(() => import("./app/rp/oauth/failed/page")) },
-      { path: "onboarding", lazy: page(() => import("./app/rp/onboarding/page")) },
-      { path: "outgoing-threads", lazy: page(() => import("./app/rp/outgoing-threads/page")) },
-      { path: "post-prompt", lazy: page(() => import("./app/rp/post-prompt/page")) },
-      { path: "privacy-policy", lazy: page(() => import("./app/rp/privacy-policy/page")) },
-      { path: "profile", lazy: page(() => import("./app/rp/profile/page")) },
+          { lazy: page(() => import("./app/rp/badges/page")), path: "badges" },
+          {
+            lazy: page(() => import("./app/rp/bookmarks/page")),
+            path: "bookmarks",
+          },
+          {
+            lazy: page(() => import("./app/rp/compose/page")),
+            path: "compose",
+          },
+          {
+            lazy: page(() => import("./app/rp/conversations/page")),
+            path: "conversations",
+          },
+          {
+            lazy: page(
+              () => import("./app/rp/conversations/[conversationId]/page"),
+            ),
+            path: "conversations/:conversationId",
+          },
+          {
+            lazy: page(
+              () =>
+                import("./app/rp/conversations/[conversationId]/details/page"),
+            ),
+            path: "conversations/:conversationId/details",
+          },
+          {
+            lazy: page(() => import("./app/rp/explore/page")),
+            path: "explore",
+          },
+          // Both of these were one-line files re-exporting explore's page. In a
+          // route table that is just a second entry pointing at the same import,
+          // which is clearer than the indirection — and it means the two
+          // `export { default } from "../explore/page"` files can be deleted with
+          // the rest of Next without touching this table. The URLs stay live.
+          {
+            lazy: page(() => import("./app/rp/explore/page")),
+            path: "explore-prompts",
+          },
+          { lazy: page(() => import("./app/rp/faqs/page")), path: "faqs" },
+          {
+            lazy: page(() => import("./app/rp/fellows/page")),
+            path: "fellows",
+          },
+          {
+            lazy: page(() => import("./app/rp/forgot-password/page")),
+            path: "forgot-password",
+          },
+          { lazy: page(() => import("./app/rp/home/page")), path: "home" },
+          {
+            lazy: page(() => import("./app/rp/install-app/page")),
+            path: "install-app",
+          },
+          {
+            lazy: page(() => import("./app/rp/library/page")),
+            path: "library",
+          },
+          {
+            lazy: page(() => import("./app/rp/open-library/page")),
+            path: "open-library",
+          },
+          { lazy: page(() => import("./app/rp/login/page")), path: "login" },
+          {
+            lazy: page(() => import("./app/rp/msgtoexport/page")),
+            path: "msgtoexport",
+          },
+          { lazy: page(() => import("./app/rp/muse/page")), path: "muse" },
+          {
+            lazy: page(() => import("./app/rp/muse/[slug]/page")),
+            path: "muse/:slug",
+          },
+          {
+            lazy: page(() => import("./app/rp/explore/page")),
+            path: "news-feed",
+          },
+          {
+            lazy: page(() => import("./app/rp/notifications/page")),
+            path: "notifications",
+          },
+          {
+            lazy: page(() => import("./app/rp/novelist/[slug]/page")),
+            path: "novelist/:slug",
+          },
+          {
+            lazy: page(() => import("./app/rp/novelists/page")),
+            path: "novelists",
+          },
+          {
+            lazy: page(() => import("./app/rp/oauth/callback/page")),
+            path: "oauth/callback",
+          },
+          {
+            lazy: page(() => import("./app/rp/oauth/failed/page")),
+            path: "oauth/failed",
+          },
+          {
+            lazy: page(() => import("./app/rp/onboarding/page")),
+            path: "onboarding",
+          },
+          {
+            lazy: page(() => import("./app/rp/outgoing-threads/page")),
+            path: "outgoing-threads",
+          },
+          {
+            lazy: page(() => import("./app/rp/post-prompt/page")),
+            path: "post-prompt",
+          },
+          {
+            lazy: page(() => import("./app/rp/privacy-policy/page")),
+            path: "privacy-policy",
+          },
+          {
+            lazy: page(() => import("./app/rp/profile/page")),
+            path: "profile",
+          },
 
-      // Legacy profile paths. These are redirects rather than pages now — the
-      // profile lives at `/@username`. They stay because they are in already
-      // posted Discord embeds, in notification payloads and in the privacy
-      // policy, and a shared link should not rot.
-      //
-      // Expressing them as routes rather than as a rule at the HTTP layer is
-      // deliberate: a regex over `/rp/profile/([^/]+)` would also rewrite
-      // `badges`, `edit`, `muses`, `music`, `story` and `referrals`, which are
-      // real pages. React Router ranks a static path above a dynamic one, so
-      // those six match their own routes and never reach this.
-      { element: <LegacyProfileRedirect />, path: "profile/:slug" },
-      { element: <LegacyProfileRedirect tab="friends" />, path: "profile/:slug/friends" },
-      { element: <LegacyProfileRedirect tab="muses" />, path: "profile/:slug/muses" },
-      { element: <LegacyProfileRedirect tab="music" />, path: "profile/:slug/music" },
-      { element: <LegacyProfileRedirect tab="posts" />, path: "profile/:slug/posts" },
-      { element: <LegacyProfileRedirect tab="storyboards" />, path: "profile/:slug/storyboards" },
-      { path: "profile/badges", lazy: page(() => import("./app/rp/profile/badges/page")) },
-      { path: "profile/edit", lazy: page(() => import("./app/rp/profile/edit/page")) },
-      { path: "profile/muses/create", lazy: page(() => import("./app/rp/profile/muses/create/page")) },
-      { path: "profile/muses/edit/:id", lazy: page(() => import("./app/rp/profile/muses/edit/[id]/page")) },
-      { path: "profile/muses/edit/:id/about", lazy: page(() => import("./app/rp/profile/muses/edit/[id]/about/page")) },
-      { path: "profile/muses/edit/:id/about/create", lazy: page(() => import("./app/rp/profile/muses/edit/[id]/about/create/page")) },
-      { path: "profile/muses/edit/:id/about/edit/:sectionId", lazy: page(() => import("./app/rp/profile/muses/edit/[id]/about/edit/[sectionId]/page")) },
-      { path: "profile/muses/edit/:id/extra-attributes", lazy: page(() => import("./app/rp/profile/muses/edit/[id]/extra-attributes/page")) },
-      { path: "profile/music/create", lazy: page(() => import("./app/rp/profile/music/create/page")) },
-      { path: "profile/referrals", lazy: page(() => import("./app/rp/profile/referrals/page")) },
-      { path: "profile/story/create", lazy: page(() => import("./app/rp/profile/story/create/page")) },
-      { path: "profile/story/edit/:id", lazy: page(() => import("./app/rp/profile/story/edit/[id]/page")) },
-      { path: "profile/story/edit/:id/event/create", lazy: page(() => import("./app/rp/profile/story/edit/[id]/event/create/page")) },
-      { path: "profile/story/edit/:id/event/edit/:storyboardEventId", lazy: page(() => import("./app/rp/profile/story/edit/[id]/event/edit/[storyboardEventId]/page")) },
-      { path: "prompt/:slug", lazy: page(() => import("./app/rp/prompt/[slug]/page")) },
-      { path: "prompt/:slug/comment", lazy: page(() => import("./app/rp/prompt/[slug]/comment/page")) },
-      { path: "reset-password", lazy: page(() => import("./app/rp/reset-password/page")) },
-      { path: "story", lazy: page(() => import("./app/rp/story/page")) },
-      { path: "story/:slug", lazy: page(() => import("./app/rp/story/[slug]/page")) },
-      { path: "story/event/:slug", lazy: page(() => import("./app/rp/story/event/[slug]/page")) },
-      { path: "terms", lazy: page(() => import("./app/rp/terms/page")) },
-      { path: "thread-generator", lazy: page(() => import("./app/rp/thread-generator/page")) },
-      { path: "thread/:slug", lazy: page(() => import("./app/rp/thread/[slug]/page")) },
-      { path: "tiers", lazy: page(() => import("./app/rp/tiers/page")) },
-      { path: "verify-email", lazy: page(() => import("./app/rp/verify-email/page")) },
-      { path: "welcome", lazy: page(() => import("./app/rp/welcome/page")) },    ],
+          // Legacy profile paths. These are redirects rather than pages now — the
+          // profile lives at `/@username`. They stay because they are in already
+          // posted Discord embeds, in notification payloads and in the privacy
+          // policy, and a shared link should not rot.
+          //
+          // Expressing them as routes rather than as a rule at the HTTP layer is
+          // deliberate: a regex over `/rp/profile/([^/]+)` would also rewrite
+          // `badges`, `edit`, `muses`, `music`, `story` and `referrals`, which are
+          // real pages. React Router ranks a static path above a dynamic one, so
+          // those six match their own routes and never reach this.
+          { element: <LegacyProfileRedirect />, path: "profile/:slug" },
+          {
+            element: <LegacyProfileRedirect tab="books" />,
+            path: "profile/:slug/books",
+          },
+          {
+            element: <LegacyProfileRedirect tab="friends" />,
+            path: "profile/:slug/friends",
+          },
+          {
+            element: <LegacyProfileRedirect tab="muses" />,
+            path: "profile/:slug/muses",
+          },
+          {
+            element: <LegacyProfileRedirect tab="music" />,
+            path: "profile/:slug/music",
+          },
+          {
+            element: <LegacyProfileRedirect tab="posts" />,
+            path: "profile/:slug/posts",
+          },
+          {
+            element: <LegacyProfileRedirect tab="storyboards" />,
+            path: "profile/:slug/storyboards",
+          },
+          {
+            lazy: page(() => import("./app/rp/profile/badges/page")),
+            path: "profile/badges",
+          },
+          {
+            lazy: page(() => import("./app/rp/profile/edit/page")),
+            path: "profile/edit",
+          },
+          {
+            lazy: page(() => import("./app/rp/profile/muses/create/page")),
+            path: "profile/muses/create",
+          },
+          {
+            lazy: page(() => import("./app/rp/profile/muses/edit/[id]/page")),
+            path: "profile/muses/edit/:id",
+          },
+          {
+            lazy: page(
+              () => import("./app/rp/profile/muses/edit/[id]/about/page"),
+            ),
+            path: "profile/muses/edit/:id/about",
+          },
+          {
+            lazy: page(
+              () =>
+                import("./app/rp/profile/muses/edit/[id]/about/create/page"),
+            ),
+            path: "profile/muses/edit/:id/about/create",
+          },
+          {
+            lazy: page(
+              () =>
+                import(
+                  "./app/rp/profile/muses/edit/[id]/about/edit/[sectionId]/page"
+                ),
+            ),
+            path: "profile/muses/edit/:id/about/edit/:sectionId",
+          },
+          {
+            lazy: page(
+              () =>
+                import(
+                  "./app/rp/profile/muses/edit/[id]/extra-attributes/page"
+                ),
+            ),
+            path: "profile/muses/edit/:id/extra-attributes",
+          },
+          {
+            lazy: page(() => import("./app/rp/profile/music/create/page")),
+            path: "profile/music/create",
+          },
+          {
+            lazy: page(() => import("./app/rp/profile/referrals/page")),
+            path: "profile/referrals",
+          },
+          {
+            lazy: page(() => import("./app/rp/profile/story/create/page")),
+            path: "profile/story/create",
+          },
+          {
+            lazy: page(() => import("./app/rp/profile/story/edit/[id]/page")),
+            path: "profile/story/edit/:id",
+          },
+          {
+            lazy: page(
+              () =>
+                import("./app/rp/profile/story/edit/[id]/event/create/page"),
+            ),
+            path: "profile/story/edit/:id/event/create",
+          },
+          {
+            lazy: page(
+              () =>
+                import(
+                  "./app/rp/profile/story/edit/[id]/event/edit/[storyboardEventId]/page"
+                ),
+            ),
+            path: "profile/story/edit/:id/event/edit/:storyboardEventId",
+          },
+          {
+            lazy: page(() => import("./app/rp/prompt/[slug]/page")),
+            path: "prompt/:slug",
+          },
+          {
+            lazy: page(() => import("./app/rp/prompt/[slug]/comment/page")),
+            path: "prompt/:slug/comment",
+          },
+          {
+            lazy: page(() => import("./app/rp/reset-password/page")),
+            path: "reset-password",
+          },
+          { lazy: page(() => import("./app/rp/story/page")), path: "story" },
+          {
+            lazy: page(() => import("./app/rp/story/[slug]/page")),
+            path: "story/:slug",
+          },
+          {
+            lazy: page(() => import("./app/rp/story/event/[slug]/page")),
+            path: "story/event/:slug",
+          },
+          { lazy: page(() => import("./app/rp/terms/page")), path: "terms" },
+          {
+            lazy: page(() => import("./app/rp/thread-generator/page")),
+            path: "thread-generator",
+          },
+          {
+            lazy: page(() => import("./app/rp/thread/[slug]/page")),
+            path: "thread/:slug",
+          },
+          { lazy: page(() => import("./app/rp/tiers/page")), path: "tiers" },
+          {
+            lazy: page(() => import("./app/rp/verify-email/page")),
+            path: "verify-email",
+          },
+          {
+            lazy: page(() => import("./app/rp/welcome/page")),
+            path: "welcome",
+          },
+        ],
         path: "rp",
       },
 
@@ -231,12 +423,36 @@ export const routes: RouteObject[] = [
       // tried first.
       {
         children: [
-          { index: true, lazy: page(() => import("./app/rp/profile/[slug]/page")) },
-          { path: "friends", lazy: page(() => import("./app/rp/profile/[slug]/friends/page")) },
-          { path: "muses", lazy: page(() => import("./app/rp/profile/[slug]/muses/page")) },
-          { path: "music", lazy: page(() => import("./app/rp/profile/[slug]/music/page")) },
-          { path: "posts", lazy: page(() => import("./app/rp/profile/[slug]/posts/page")) },
-          { path: "storyboards", lazy: page(() => import("./app/rp/profile/[slug]/storyboards/page")) },
+          {
+            index: true,
+            lazy: page(() => import("./app/rp/profile/[slug]/page")),
+          },
+          {
+            lazy: page(() => import("./app/rp/profile/[slug]/books/page")),
+            path: "books",
+          },
+          {
+            lazy: page(() => import("./app/rp/profile/[slug]/friends/page")),
+            path: "friends",
+          },
+          {
+            lazy: page(() => import("./app/rp/profile/[slug]/muses/page")),
+            path: "muses",
+          },
+          {
+            lazy: page(() => import("./app/rp/profile/[slug]/music/page")),
+            path: "music",
+          },
+          {
+            lazy: page(() => import("./app/rp/profile/[slug]/posts/page")),
+            path: "posts",
+          },
+          {
+            lazy: page(
+              () => import("./app/rp/profile/[slug]/storyboards/page"),
+            ),
+            path: "storyboards",
+          },
         ],
         element: <ProfileHandleBranch />,
         path: ":handle",
@@ -248,10 +464,13 @@ export const routes: RouteObject[] = [
 
   {
     children: [
-      { path: "muse", lazy: page(() => import("./app/promo/muse/page")) },
-      { path: "prompt", lazy: page(() => import("./app/promo/prompt/page")) },
-      { path: "storyboard", lazy: page(() => import("./app/promo/storyboard/page")) },
-      { path: "spell", lazy: page(() => import("./app/promo/spell/page")) },
+      { lazy: page(() => import("./app/promo/muse/page")), path: "muse" },
+      { lazy: page(() => import("./app/promo/prompt/page")), path: "prompt" },
+      {
+        lazy: page(() => import("./app/promo/storyboard/page")),
+        path: "storyboard",
+      },
+      { lazy: page(() => import("./app/promo/spell/page")), path: "spell" },
     ],
     element: withOutlet(PromoLayout),
     errorElement: <RouteErrorBoundary />,

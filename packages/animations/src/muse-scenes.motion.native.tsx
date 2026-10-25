@@ -135,6 +135,22 @@ const LENS_KEYS = [0, 0.35, 0.7, 1];
 
 export const registerMuseSceneMotion = (): void => {
   registerMotion({
+    /** The open link where a bond would close, pulsing like a question. */
+    "nwm-bond": {
+      build: (clock) => ({ opacity: pingPong(clock, 0.5, 0.95) }),
+      delay: 0,
+      period: 3.4,
+    },
+
+    /** Coloured haze behind the paper, breathing about its own centre. */
+    "nwm-glow": {
+      build: (clock) => ({
+        opacity: pingPong(clock, 0.4, 0.75),
+        scale: pingPong(clock, 0.94, 1.06),
+      }),
+      delay: 0,
+      period: 6.5,
+    },
     /** Ink gathers at the nib, falls, and fades before it ever lands. */
     "nwm-ink": {
       build: (clock) => ({
@@ -157,24 +173,6 @@ export const registerMuseSceneMotion = (): void => {
       }),
       delay: 0,
       period: QUILL_PERIOD,
-    },
-
-
-    /** The open link where a bond would close, pulsing like a question. */
-    "nwm-bond": {
-      build: (clock) => ({ opacity: pingPong(clock, 0.5, 0.95) }),
-      delay: 0,
-      period: 3.4,
-    },
-
-    /** Coloured haze behind the paper, breathing about its own centre. */
-    "nwm-glow": {
-      build: (clock) => ({
-        opacity: pingPong(clock, 0.4, 0.75),
-        scale: pingPong(clock, 0.94, 1.06),
-      }),
-      delay: 0,
-      period: 6.5,
     },
 
     /** A ribbon or corner tab, pivoting where it leaves the paper. */
@@ -270,6 +268,13 @@ export const registerMuseSceneMotion = (): void => {
       period: 6.2,
       // Web's reduced-motion pose.
       rest: { opacity: 0.7, rotation: -3, x: 3, y: 4 },
+    },
+
+    /** `shelfSettle`: the outer spine sinks a touch further into its lean, and back. */
+    "nwm-settle": {
+      build: (clock) => ({ rotation: pingPong(clock, 0, 1.2) }),
+      delay: 0,
+      period: 6.4,
     },
 
     /** `figureFade`: the figure thins to almost nothing and gathers again. */

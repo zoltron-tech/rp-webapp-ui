@@ -2845,3 +2845,115 @@ export const LibraryIcon: FC<SvgProps> = ({ size = 20 }) => (
     />
   </svg>
 );
+
+/** Three spines on a plank — the bookshelf. Same gloss language as the rest. */
+export const BookshelfIcon: FC<SvgProps> = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <defs>
+      {/* Spine 1: teal */}
+      <linearGradient
+        id="umShA"
+        x1="4"
+        y1="3"
+        x2="8"
+        y2="19"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop offset="0%" stopColor="#5FE3D0" />
+        <stop offset="55%" stopColor="#1E9E8A" />
+        <stop offset="100%" stopColor="#0B5A4E" />
+      </linearGradient>
+      {/* Spine 2: amber */}
+      <linearGradient
+        id="umShB"
+        x1="9"
+        y1="2"
+        x2="13"
+        y2="19"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop offset="0%" stopColor="#FFD36E" />
+        <stop offset="55%" stopColor="#E09A1C" />
+        <stop offset="100%" stopColor="#8A5508" />
+      </linearGradient>
+      {/* Spine 3 (leaning): plum */}
+      <linearGradient
+        id="umShC"
+        x1="14"
+        y1="4"
+        x2="20"
+        y2="19"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop offset="0%" stopColor="#E58BFF" />
+        <stop offset="55%" stopColor="#9B3FC9" />
+        <stop offset="100%" stopColor="#4E1A6B" />
+      </linearGradient>
+      {/* Plank: warm oak */}
+      <linearGradient
+        id="umShP"
+        x1="2"
+        y1="19"
+        x2="22"
+        y2="21.5"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop offset="0%" stopColor="#C98A4B" />
+        <stop offset="100%" stopColor="#7A4B1F" />
+      </linearGradient>
+      <radialGradient id="umShGl" cx="30%" cy="20%" r="80%">
+        <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.45" />
+        <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+      </radialGradient>
+    </defs>
+
+    {/* Spines */}
+    <rect x="4" y="4" width="4" height="15" rx="0.8" fill="url(#umShA)" />
+    <rect x="4" y="4" width="4" height="15" rx="0.8" fill="url(#umShGl)" />
+    <rect x="9" y="2.5" width="4.4" height="16.5" rx="0.8" fill="url(#umShB)" />
+    <rect
+      x="9"
+      y="2.5"
+      width="4.4"
+      height="16.5"
+      rx="0.8"
+      fill="url(#umShGl)"
+    />
+    <g transform="rotate(14 17 19)">
+      <rect
+        x="15"
+        y="4.5"
+        width="4"
+        height="14.5"
+        rx="0.8"
+        fill="url(#umShC)"
+      />
+      <rect
+        x="15"
+        y="4.5"
+        width="4"
+        height="14.5"
+        rx="0.8"
+        fill="url(#umShGl)"
+      />
+    </g>
+    {/* Title ticks */}
+    <path
+      d="M6 7V15M11.2 6V14"
+      stroke="#FFFFFF"
+      strokeOpacity="0.55"
+      strokeWidth="0.9"
+      strokeLinecap="round"
+    />
+
+    {/* Plank */}
+    <rect x="2" y="19" width="20" height="2.6" rx="0.9" fill="url(#umShP)" />
+    <path
+      d="M2.8 19.4H21.2"
+      stroke="#FFE2B8"
+      strokeOpacity="0.5"
+      strokeWidth="0.6"
+      strokeLinecap="round"
+    />
+  </svg>
+);

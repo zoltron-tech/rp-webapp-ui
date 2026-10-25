@@ -6,12 +6,13 @@ import { getRandomStories } from "@/app/rp/home/actions";
 import { LoadMore } from "@/components/load-more/page";
 import { StoryCard } from "@/components/story-card";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { ROUTES } from "@/utils/constants/routes";
 import * as S from "./styles";
 
 const PAGE_SIZE = 12;
 
 export default function LibraryPage() {
-  const { stopPageLoading } = usePageRouter();
+  const { stopPageLoading, routeToPage } = usePageRouter();
 
   const [stories, setStories] = useState<StoryBoard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,6 +56,12 @@ export default function LibraryPage() {
       <S.Header>
         <S.Title>Library</S.Title>
         <S.Subtitle>Browse every story on Novelist World</S.Subtitle>
+        <S.OpenLibraryLink
+          type="button"
+          onClick={() => routeToPage(ROUTES.OpenLibrary)}
+        >
+          Open World Library →
+        </S.OpenLibraryLink>
       </S.Header>
 
       <S.Grid>

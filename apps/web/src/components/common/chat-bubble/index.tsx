@@ -7,6 +7,7 @@ import {
   isDirectImageUrl,
   isKlipyClip,
   isMediaOnlyMessage,
+  isReadingBreaker,
   isSameReaction,
   messageTextOf,
   REACTION_OPTIONS as REACTION_KEYS,
@@ -41,6 +42,7 @@ import {
 import { FaPause, FaPlay } from "react-icons/fa";
 import { FiCopy, FiDownload, FiExternalLink } from "react-icons/fi";
 import { HiSparkles } from "react-icons/hi2";
+import { IoBookOutline } from "react-icons/io5";
 import { RiFlagFill } from "react-icons/ri";
 import { TbAlertCircle, TbError404 } from "react-icons/tb";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -48,9 +50,9 @@ import { useUIContext } from "@/hooks/use-ui-context";
 import { ROUTES } from "@/utils/constants/routes";
 import { AppAlertDialog } from "../../dialog";
 import { AppImageViewer } from "../../image-viewer/AppImageViewer";
+import { VideoViewer } from "../../image-viewer/VideoViewer";
 import { localLinkHosts } from "../../muse-embed/link-slots";
 import { NovelistWorldLinkEmbed } from "../../nw-link-embed";
-import { VideoViewer } from "../../image-viewer/VideoViewer";
 import { AppDropdownMenuResponsive } from "../../profile-more-dropdown";
 import { AvatarNew } from "../avatar-new";
 import * as S from "./styles";
@@ -955,10 +957,7 @@ export const ChatBubble: FC<Props> = ({
   const nwLinks = useMemo(
     () =>
       messageText.includes("/rp/") || messageText.includes("/@")
-        ? uniqueNovelistWorldLinks(
-            messageTextOf(messageText),
-            localLinkHosts(),
-          )
+        ? uniqueNovelistWorldLinks(messageTextOf(messageText), localLinkHosts())
         : [],
     [messageText],
   );
@@ -1527,8 +1526,14 @@ export const ChatBubble: FC<Props> = ({
                     </S.RepliedToIceBreakerAvatar>
                     <S.RepliedToIceBreakerBody>
                       <S.RepliedToIceBreakerTag>
-                        <HiSparkles size={8} />
-                        Ice breaker
+                        {isReadingBreaker(repliedIceBreaker) ? (
+                          <IoBookOutline size={8} />
+                        ) : (
+                          <HiSparkles size={8} />
+                        )}
+                        {isReadingBreaker(repliedIceBreaker)
+                          ? "Reading"
+                          : "Ice breaker"}
                       </S.RepliedToIceBreakerTag>
                       <S.RepliedToIceBreakerText>
                         {renderIceBreakerMessage(

@@ -1,12 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
-import { type MarkdownMark, tokenizeMarkdown } from "@nw/chat";
+import {
+  isReadingBreaker,
+  type MarkdownMark,
+  tokenizeMarkdown,
+} from "@nw/chat";
 import { mixColors } from "@nw/theme";
 import type { IceBreaker } from "@nw/types";
 import { useMemo } from "react";
 import { StyleSheet, type TextStyle, View } from "react-native";
-import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { GradientSurface } from "@/components/gradient-surface";
+import { Text } from "@/components/text";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
@@ -91,8 +95,14 @@ export const RepliedIceBreaker = ({
 
       <View style={styles.body}>
         <View style={styles.tag}>
-          <Ionicons color="rgba(255,255,255,0.85)" name="sparkles" size={8} />
-          <Text style={styles.tagLabel}>Ice breaker</Text>
+          <Ionicons
+            color="rgba(255,255,255,0.85)"
+            name={isReadingBreaker(iceBreaker) ? "book-outline" : "sparkles"}
+            size={8}
+          />
+          <Text style={styles.tagLabel}>
+            {isReadingBreaker(iceBreaker) ? "Reading" : "Ice breaker"}
+          </Text>
         </View>
 
         <Text numberOfLines={1} style={styles.text}>

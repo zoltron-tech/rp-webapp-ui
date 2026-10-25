@@ -21,6 +21,7 @@ import { useBannerStretch } from "@/animation/effects";
 import { Avatar } from "@/components/avatar";
 import { BadgeSheet } from "@/components/badge-sheet";
 import { BadgeRow } from "@/components/badges";
+import { BookshelfRow } from "@/components/bookshelf-row";
 import { CollapsibleRichText } from "@/components/collapsible-rich-text";
 import { CroppedImage } from "@/components/cropped-image";
 import { getNoteEmojiRotate, NoteEmojiIcon } from "@/components/note-emoji";
@@ -339,6 +340,21 @@ export const NovelistProfile = ({
             pathname: "/novelist/[username]/stories",
           }),
     [isOwnProfile, novelist.username, router],
+  );
+
+  /*
+   * The whole bookshelf. Carries the id as the feeds do: the shelf endpoints
+   * are keyed by it, and this component already has it.
+   */
+  const openBooks = useCallback(
+    () =>
+      isOwnProfile
+        ? router.push("/(tabs)/(profile)/books")
+        : router.push({
+            params: { novelistId: novelist.id, username: novelist.username },
+            pathname: "/novelist/[username]/books",
+          }),
+    [isOwnProfile, novelist.id, novelist.username, router],
   );
 
   /** A character's own page, or the list when the row has no id to open. */
@@ -672,6 +688,19 @@ export const NovelistProfile = ({
             </View>
           </View>
         ) : null}
+
+        {/*
+        The bookshelf, between the fandoms and the characters: books say who
+        you are the way fandoms do, and both sit above what you have made. The
+        row fetches its own summary and is absent until it has one — and
+        absent for good when the owner's privacy hides it from this viewer.
+      */}
+        <BookshelfRow
+          Header={SectionHeader}
+          novelist={novelist}
+          onOpen={openBooks}
+          own={isOwnProfile}
+        />
 
         {muses.length > 0 ? (
           <View style={styles.section}>

@@ -788,6 +788,294 @@ const leafLeft = keyframes`
   72%, 100% { transform: translate(-13px, -15px) rotate(-34deg); opacity: 0; }
 `;
 
+/**
+ * The show, on one 7s clock: the five spotlights come up one after another,
+ * each player bowing into theirs as it lands; the whole company holds in the
+ * light, then the lights dim and the next performance begins.
+ */
+const SPOT_STARTS = [0.06, 0.14, 0.22, 0.3, 0.38];
+const spotUp = (start: number) => keyframes`
+  0%, ${start * 100}%  { opacity: 0; }
+  ${start * 100 + 4}%  { opacity: 1; }
+  86%                  { opacity: 1; }
+  94%, 100%            { opacity: 0; }
+`;
+const spotsUp = SPOT_STARTS.map(spotUp);
+
+const playerBow = (start: number) => keyframes`
+  0%, ${start * 100 + 2}% { transform: translateY(0); }
+  ${start * 100 + 5}%     { transform: translateY(-2px); }
+  ${start * 100 + 9}%     { transform: translateY(0.4px); }
+  ${start * 100 + 12}%, 100% { transform: translateY(0); }
+`;
+const playersBow = SPOT_STARTS.map(playerBow);
+
+/** The curtains stirring on their rail. */
+const curtainSway = keyframes`
+  0%, 100% { transform: rotate(-1.2deg); }
+  50%      { transform: rotate(1.2deg); }
+`;
+
+/** Footlights, never quite steady. */
+const footlightFlicker = keyframes`
+  0%, 100% { opacity: 1; }
+  40%      { opacity: 0.7; }
+  60%      { opacity: 0.95; }
+  80%      { opacity: 0.8; }
+`;
+
+/** The masks rocking above the arch, out of step with each other. */
+const maskRock = keyframes`
+  0%, 100% { transform: rotate(-5deg); }
+  50%      { transform: rotate(5deg); }
+`;
+
+/**
+ * The typewriter, on one 4.2s clock. For seven tenths of it the carriage steps
+ * left a keystroke at a time while the bottom line types itself out — both in
+ * twelve hard steps, the way a carriage actually moves — and four keys and the
+ * space bar keep up a rhythm. Then the bell, the carriage thrown back, and the
+ * finished line fading as the next one starts.
+ */
+const carriageStep = keyframes`
+  0%        { transform: translateX(10px); animation-timing-function: steps(12, end); }
+  70%, 74%  { transform: translateX(-10px); animation-timing-function: ease-in-out; }
+  82%, 100% { transform: translateX(10px); }
+`;
+
+const lineTyping = keyframes`
+  0%   { transform: translateX(-37px); opacity: 1; animation-timing-function: steps(12, end); }
+  70%  { transform: translateX(0); opacity: 1; }
+  84%  { transform: translateX(-37px); opacity: 0; }
+  100% { transform: translateX(-37px); opacity: 1; }
+`;
+
+/** A key going down and back, at each of the given points in the lap. */
+const keyStrikes = (at: number[]) => keyframes`
+  0%, 100% { transform: translateY(0); }
+  ${at
+    .map(
+      (t) => `
+  ${t * 100}% { transform: translateY(0); }
+  ${t * 100 + 1.5}% { transform: translateY(0.9px); }
+  ${t * 100 + 4}% { transform: translateY(0); }`,
+    )
+    .join("")}
+`;
+const KEY_STRIKES = [
+  keyStrikes([0.02, 0.24, 0.46]),
+  keyStrikes([0.08, 0.3, 0.52]),
+  keyStrikes([0.13, 0.36, 0.58]),
+  keyStrikes([0.18, 0.41, 0.63]),
+  keyStrikes([0.27, 0.5]),
+];
+
+/** The bell at the end of the line. */
+const bellDing = keyframes`
+  0%, 69%   { opacity: 0; transform: scale(0.6); }
+  72%       { opacity: 1; transform: scale(1.15); }
+  80%, 100% { opacity: 0; transform: scale(1); }
+`;
+
+/**
+ * The passport, on one 6s clock: closed, it opens — the cover narrows to the
+ * spine, the ID page widens out the other way, and the booklet slides to
+ * centre the open spread — then the rubber stamp thumps down and prints the
+ * newest stamp with a jolt and a splash of ink, lifts away, and the passport
+ * closes again. The closed pose is the stylesheet's resting state (see the
+ * base rules on the frame), so each keyframe set starts and ends on it.
+ */
+const bookletSlide = keyframes`
+  0%, 14%   { transform: translateX(-21px); }
+  27%, 70%  { transform: translateX(0); }
+  84%, 100% { transform: translateX(-21px); }
+`;
+
+/*
+ * The swing is one motion split across two parts at the spine, so the two
+ * halves hand over at full speed: the part folding towards the spine
+ * accelerates into it (ease-in), the part unfolding from it decelerates away
+ * (ease-out). Easing both ends of each half stopped the swing dead at the
+ * spine for a beat — a visible hitch, opening and closing.
+ */
+const coverSwing = keyframes`
+  0%, 14%   { transform: scaleX(1); animation-timing-function: ease-in; }
+  20%       { transform: scaleX(0); }
+  77%       { transform: scaleX(0); animation-timing-function: ease-out; }
+  84%, 100% { transform: scaleX(1); }
+`;
+
+const idPageOpen = keyframes`
+  0%        { transform: scaleX(0); }
+  20%       { transform: scaleX(0); animation-timing-function: ease-out; }
+  27%       { transform: scaleX(1); }
+  70%       { transform: scaleX(1); animation-timing-function: ease-in; }
+  77%, 100% { transform: scaleX(0); }
+`;
+
+const rubberThump = keyframes`
+  0%        { transform: translate(0, 0); }
+  8%        { transform: translate(0, -2px); }
+  16%       { transform: translate(0, 0); }
+  30%       { transform: translate(0, 0); animation-timing-function: ease-in; }
+  36%       { transform: translate(5px, 32px); }
+  39%       { transform: translate(5px, 31px); }
+  42%       { transform: translate(5px, 32px); animation-timing-function: ease-out; }
+  52%, 100% { transform: translate(0, 0); }
+`;
+
+const passportJolt = keyframes`
+  0%, 35%   { transform: scale(1); }
+  37%       { transform: scale(0.985); }
+  40%       { transform: scale(1.005); }
+  43%, 100% { transform: scale(1); }
+`;
+
+const stampPrinted = keyframes`
+  0%, 36%   { opacity: 0; transform: scale(1.25); }
+  38%       { opacity: 1; transform: scale(0.95); }
+  41%       { opacity: 1; transform: scale(1); }
+  90%       { opacity: 1; transform: scale(1); }
+  95%, 100% { opacity: 0; transform: scale(1); }
+`;
+
+const inkSplash = keyframes`
+  0%, 36%   { opacity: 0; transform: scale(0.5); }
+  38%       { opacity: 1; transform: scale(0.9); }
+  52%, 100% { opacity: 0; transform: scale(1.5); }
+`;
+
+/**
+ * The passport's legendary trimmings: the cover's five stars twinkle left to
+ * right on a 3s clock; the ribbon sways (the seal's sway, reused); the sparkles pulse in turn; the paper
+ * plane flies off up and away as the passport opens and glides back in down
+ * its route as it closes, the route fading while it is gone.
+ */
+const starTwinkle = keyframes`
+  0%, 30%, 100% { transform: scale(1); }
+  10%           { transform: scale(1.6); }
+  20%           { transform: scale(0.9); }
+`;
+
+const sparklePulse = keyframes`
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(0.4); }
+`;
+
+const planeFlight = keyframes`
+  0%, 12%   { opacity: 1; transform: translate(0, 0) rotate(0deg); animation-timing-function: ease-in; }
+  24%       { opacity: 0; transform: translate(26px, -30px) rotate(-12deg); }
+  82%       { opacity: 0; transform: translate(-14px, 40px) rotate(-20deg); animation-timing-function: ease-out; }
+  96%, 100% { opacity: 1; transform: translate(0, 0) rotate(0deg); }
+`;
+
+const routeFade = keyframes`
+  0%, 14%, 94%, 100% { opacity: 1; }
+  24%, 82%           { opacity: 0; }
+`;
+
+/** The bookworm swaying from its hole. */
+const wormSway = keyframes`
+  0%, 100% { transform: rotate(-4deg); }
+  50%      { transform: rotate(4deg); }
+`;
+
+/** A blink, then a long while with eyes open; the lids rest folded away. */
+const wormBlink = keyframes`
+  0%, 88%, 100% { transform: scaleY(0); }
+  91%           { transform: scaleY(1); }
+  94%           { transform: scaleY(0); }
+`;
+
+/** Eyes glancing one way, back, the other way, back. */
+const wormGlance = keyframes`
+  0%, 20%, 50%, 70%, 100% { transform: translateX(0); }
+  28%, 42%                { transform: translateX(0.7px); }
+  78%, 92%                { transform: translateX(-0.9px); }
+`;
+
+/** Crumbs puffing out of the hole with each nibble, and settling back. */
+const crumbPuff = keyframes`
+  0%, 60%, 100% { transform: scale(1); opacity: 1; }
+  68%           { transform: scale(1.35); opacity: 0.4; }
+  76%           { transform: scale(0.85); opacity: 1; }
+`;
+
+/** The tail wiggling out of the bottom book. */
+const tailWiggle = keyframes`
+  0%, 100% { transform: rotate(-10deg); }
+  50%      { transform: rotate(10deg); }
+`;
+
+/**
+ * The box set, on one 6s clock: the five volumes drop into their slots one
+ * after another, each with a small bounce; with the fifth home a glint runs
+ * across the case and the seal pulses; the set holds, then lifts out together
+ * to be filled again.
+ */
+const VOLUME_STARTS = [0.04, 0.13, 0.22, 0.31, 0.4];
+const volumeDrop = (start: number) => keyframes`
+  0%, ${start * 100}% { transform: translateY(-18px); opacity: 0; }
+  ${start * 100 + 5}% { transform: translateY(1px); opacity: 1; }
+  ${start * 100 + 7}% { transform: translateY(0); opacity: 1; }
+  82%                 { transform: translateY(0); opacity: 1; }
+  92%, 100%           { transform: translateY(-18px); opacity: 0; }
+`;
+const volumesDrop = VOLUME_STARTS.map(volumeDrop);
+
+const setGlint = keyframes`
+  0%, 48%   { transform: translateX(0); }
+  62%, 100% { transform: translateX(130px); }
+`;
+
+const sealShine = keyframes`
+  0%, 60%, 100% { transform: scale(1); }
+  64%           { transform: scale(1.25); }
+  70%           { transform: scale(0.96); }
+  75%           { transform: scale(1); }
+`;
+
+/** Ribbon markers swaying under the set. */
+const ribbonSwing = keyframes`
+  0%, 100% { transform: rotate(-6deg); }
+  50%      { transform: rotate(6deg); }
+`;
+
+/**
+ * The book club, on one 6s clock: the big bubble steps aside and the readers
+ * talk it over — a small bubble over each in turn (first, third, second,
+ * fourth), each popping up from its tail, overlapping the next a little so the
+ * talk flows — then the big bubble comes back; the third reader peeks over
+ * her book. The heart beats on a clock of its own.
+ */
+const clubBubble = keyframes`
+  0%, 10%, 90%, 100% { opacity: 1; }
+  14%, 84%           { opacity: 0; }
+`;
+
+/** Which reader speaks when: say-1 is the first reader, and so on. */
+const SAY_STARTS = [0.16, 0.44, 0.3, 0.58];
+const sayLine = (start: number) => keyframes`
+  0%, ${start * 100}%   { opacity: 0; transform: scale(0.4); }
+  ${start * 100 + 3}%   { opacity: 1; transform: scale(1.08); }
+  ${start * 100 + 5}%   { opacity: 1; transform: scale(1); }
+  ${start * 100 + 18}%  { opacity: 1; transform: scale(1); }
+  ${start * 100 + 22}%, 100% { opacity: 0; transform: scale(1); }
+`;
+const sayLines = SAY_STARTS.map(sayLine);
+
+const heartbeat = keyframes`
+  0%, 40%, 100% { transform: scale(1); }
+  10%           { transform: scale(1.22); }
+  20%           { transform: scale(1); }
+  30%           { transform: scale(1.12); }
+`;
+
+const readerPeek = keyframes`
+  0%, 70%, 90%, 100% { transform: translateY(0); }
+  76%, 84%           { transform: translateY(-2.4px); }
+`;
+
 export const Frame = styled.span<{ $size: number; $animated: boolean }>`
   display: inline-flex;
   align-items: center;
@@ -855,6 +1143,113 @@ export const Frame = styled.span<{ $size: number; $animated: boolean }>`
   .nwb-tassel {
     transform-box: fill-box;
     transform-origin: top center;
+  }
+
+  /* The passport jolts, its cover swings and its ID page opens about the
+     spine, in the booklet's own tilted coordinates; the new stamp and its
+     splash grow from their own centres. */
+  .nwb-passport,
+  .nwb-cover,
+  .nwb-left-page {
+    transform-box: view-box;
+    transform-origin: 60px 76px;
+  }
+
+  /* The passport rests closed: ID page folded away behind the cover, the
+     booklet shifted to centre the closed half. The keyframes start and end
+     here. Set in the stylesheet rather than as attributes, which a phone's
+     animated wrapper would multiply into instead of replacing. */
+  .nwb-left-page {
+    transform: scaleX(0);
+  }
+  .nwb-booklet {
+    transform: translateX(-21px);
+  }
+  .nwb-new-stamp,
+  .nwb-splash,
+  .nwb-star-1,
+  .nwb-star-2,
+  .nwb-star-3,
+  .nwb-star-4,
+  .nwb-star-5,
+  .nwb-sparkle-1,
+  .nwb-sparkle-2,
+  .nwb-sparkle-3,
+  .nwb-plane {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .nwb-ribbon {
+    transform-box: fill-box;
+    transform-origin: top center;
+  }
+
+  /* Each reader's bubble pops up from its tail; the heart beats about its
+     own middle. */
+  .nwb-say-1,
+  .nwb-say-2,
+  .nwb-say-3,
+  .nwb-say-4 {
+    transform-box: fill-box;
+    transform-origin: bottom center;
+  }
+  .nwb-heartbeat {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  /* The seal pulses about its own centre (drawn at its own origin); the
+     ribbons swing from where they leave the books. */
+  .nwb-seal-shine {
+    transform-box: view-box;
+    transform-origin: 0 0;
+  }
+  .nwb-ribbon-a,
+  .nwb-ribbon-b {
+    transform-box: fill-box;
+    transform-origin: top center;
+  }
+
+  /* The worm sways from its hole; its tail from the bottom book's hole; its
+     lids drop from the top of the lenses; crumbs puff from the hole. */
+  .nwb-worm {
+    transform-box: view-box;
+    transform-origin: 70px 66px;
+  }
+  .nwb-tail-wiggle {
+    transform-box: view-box;
+    transform-origin: 33px 88px;
+  }
+  .nwb-eyelid {
+    transform-box: view-box;
+    transform-origin: 52px 34.1px;
+  }
+  .nwb-crumbs {
+    transform-box: view-box;
+    transform-origin: 70px 66px;
+  }
+  /* Lids rest folded away; the blink brings them down. Set here, not as an
+     attribute, for the reason given on the passport's resting pose. */
+  .nwb-eyelid {
+    transform: scaleY(0);
+  }
+
+  /* The bell rings out from where its rays meet. */
+  .nwb-ding {
+    transform-box: fill-box;
+    transform-origin: bottom left;
+  }
+
+  /* The stage curtains sway from the rail; the masks rock about themselves. */
+  .nwb-curtain-l,
+  .nwb-curtain-r {
+    transform-box: fill-box;
+    transform-origin: top center;
+  }
+  .nwb-mask-l,
+  .nwb-mask-r {
+    transform-box: fill-box;
+    transform-origin: center;
   }
 
   /* The grimoire's glow, runes and loose pages move about their own
@@ -1095,7 +1490,13 @@ export const Frame = styled.span<{ $size: number; $animated: boolean }>`
   .nwb-glyph-5,
   .nwb-glyph-6,
   .nwb-leaf-l,
-  .nwb-leaf-r {
+  .nwb-leaf-r,
+  .nwb-ding,
+  .nwb-splash,
+  .nwb-say-1,
+  .nwb-say-2,
+  .nwb-say-3,
+  .nwb-say-4 {
     opacity: 0;
   }
   .nwb-lore-glow {
@@ -1423,6 +1824,148 @@ export const Frame = styled.span<{ $size: number; $animated: boolean }>`
               }
             `,
           )}
+          .nwb-club-bubble {
+            animation: ${clubBubble} 6s ease-in-out infinite;
+          }
+          ${sayLines.map(
+            (say, i) => css`
+              .nwb-say-${i + 1} {
+                animation: ${say} 6s ease-out infinite;
+              }
+            `,
+          )}
+          .nwb-heartbeat {
+            animation: ${heartbeat} 1.6s ease-in-out infinite;
+          }
+          .nwb-peek {
+            animation: ${readerPeek} 6s ease-in-out infinite;
+          }
+          ${volumesDrop.map(
+            (drop, i) => css`
+              .nwb-volume-${i + 1} {
+                animation: ${drop} 6s ease-out infinite;
+              }
+            `,
+          )}
+          .nwb-set-glint {
+            animation: ${setGlint} 6s ease-in-out infinite;
+          }
+          .nwb-seal-shine {
+            animation: ${sealShine} 6s ease-out infinite;
+          }
+          .nwb-ribbon-a {
+            animation: ${ribbonSwing} 2.6s ease-in-out infinite;
+          }
+          .nwb-ribbon-b {
+            animation: ${ribbonSwing} 2.6s ease-in-out -1.3s infinite;
+          }
+          .nwb-worm {
+            animation: ${wormSway} 3.2s ease-in-out infinite;
+          }
+          .nwb-eyelid {
+            animation: ${wormBlink} 4s ease-in-out infinite;
+          }
+          .nwb-pupils {
+            animation: ${wormGlance} 6s ease-in-out infinite;
+          }
+          .nwb-crumbs {
+            animation: ${crumbPuff} 2.4s ease-out infinite;
+          }
+          .nwb-tail-wiggle {
+            animation: ${tailWiggle} 1.4s ease-in-out infinite;
+          }
+          .nwb-booklet {
+            animation: ${bookletSlide} 6s ease-in-out infinite;
+          }
+          .nwb-cover {
+            animation: ${coverSwing} 6s ease-in-out infinite;
+          }
+          .nwb-left-page {
+            animation: ${idPageOpen} 6s ease-in-out infinite;
+          }
+          .nwb-rubber {
+            animation: ${rubberThump} 6s infinite;
+          }
+          .nwb-passport {
+            animation: ${passportJolt} 6s ease-out infinite;
+          }
+          .nwb-new-stamp {
+            animation: ${stampPrinted} 6s ease-out infinite;
+          }
+          .nwb-splash {
+            animation: ${inkSplash} 6s ease-out infinite;
+          }
+          ${[1, 2, 3, 4, 5].map(
+            (n) => css`
+              .nwb-star-${n} {
+                animation: ${starTwinkle} 3s ease-in-out ${(n - 1) * 0.25}s
+                  infinite;
+              }
+            `,
+          )}
+          ${[1, 2, 3].map(
+            (n) => css`
+              .nwb-sparkle-${n} {
+                animation: ${sparklePulse} 2.4s ease-in-out ${(n - 1) * -0.8}s
+                  infinite;
+              }
+            `,
+          )}
+          .nwb-ribbon {
+            animation: ${ribbonSway} 2.8s ease-in-out infinite;
+          }
+          .nwb-plane {
+            animation: ${planeFlight} 6s infinite;
+          }
+          .nwb-route {
+            animation: ${routeFade} 6s ease-in-out infinite;
+          }
+          .nwb-carriage {
+            animation: ${carriageStep} 4.2s infinite;
+          }
+          .nwb-typing {
+            animation: ${lineTyping} 4.2s infinite;
+          }
+          ${KEY_STRIKES.map(
+            (strike, i) => css`
+              .nwb-key-${i + 1} {
+                animation: ${strike} 4.2s linear infinite;
+              }
+            `,
+          )}
+          .nwb-ding {
+            animation: ${bellDing} 4.2s ease-out infinite;
+          }
+          ${spotsUp.map(
+            (spot, i) => css`
+              .nwb-spot-${i + 1} {
+                animation: ${spot} 7s ease-out infinite;
+              }
+              .nwb-player-${i + 1} {
+                animation: ${playersBow[i]} 7s ease-out infinite;
+              }
+            `,
+          )}
+          .nwb-curtain-l {
+            animation: ${curtainSway} 5.2s ease-in-out infinite;
+          }
+          .nwb-curtain-r {
+            animation: ${curtainSway} 5.2s ease-in-out -2.6s infinite;
+          }
+          ${[1.3, 1.7, 1.1].map(
+            (period, i) => css`
+              .nwb-footlight-${i + 1} {
+                animation: ${footlightFlicker} ${period}s ease-in-out
+                  ${-i * 0.4}s infinite;
+              }
+            `,
+          )}
+          .nwb-mask-l {
+            animation: ${maskRock} 4.4s ease-in-out infinite;
+          }
+          .nwb-mask-r {
+            animation: ${maskRock} 4.4s ease-in-out -2.2s infinite;
+          }
           .nwb-shackle {
             animation: ${shackleSpring} 7s ease-in-out infinite;
           }
@@ -1653,6 +2196,70 @@ export const Frame = styled.span<{ $size: number; $animated: boolean }>`
     .nwb-confetti-2,
     .nwb-confetti-3,
     .nwb-confetti-4,
+    .nwb-club-bubble,
+    .nwb-say-1,
+    .nwb-say-2,
+    .nwb-say-3,
+    .nwb-say-4,
+    .nwb-heartbeat,
+    .nwb-peek,
+    .nwb-volume-1,
+    .nwb-volume-2,
+    .nwb-volume-3,
+    .nwb-volume-4,
+    .nwb-volume-5,
+    .nwb-set-glint,
+    .nwb-seal-shine,
+    .nwb-ribbon-a,
+    .nwb-ribbon-b,
+    .nwb-worm,
+    .nwb-eyelid,
+    .nwb-pupils,
+    .nwb-crumbs,
+    .nwb-tail-wiggle,
+    .nwb-booklet,
+    .nwb-cover,
+    .nwb-left-page,
+    .nwb-rubber,
+    .nwb-passport,
+    .nwb-new-stamp,
+    .nwb-splash,
+    .nwb-star-1,
+    .nwb-star-2,
+    .nwb-star-3,
+    .nwb-star-4,
+    .nwb-star-5,
+    .nwb-sparkle-1,
+    .nwb-sparkle-2,
+    .nwb-sparkle-3,
+    .nwb-ribbon,
+    .nwb-plane,
+    .nwb-route,
+    .nwb-carriage,
+    .nwb-typing,
+    .nwb-key-1,
+    .nwb-key-2,
+    .nwb-key-3,
+    .nwb-key-4,
+    .nwb-key-5,
+    .nwb-ding,
+    .nwb-spot-1,
+    .nwb-spot-2,
+    .nwb-spot-3,
+    .nwb-spot-4,
+    .nwb-spot-5,
+    .nwb-player-1,
+    .nwb-player-2,
+    .nwb-player-3,
+    .nwb-player-4,
+    .nwb-player-5,
+    .nwb-curtain-l,
+    .nwb-curtain-r,
+    .nwb-footlight-1,
+    .nwb-footlight-2,
+    .nwb-footlight-3,
+    .nwb-mask-l,
+    .nwb-mask-r,
     .nwb-shackle,
     .nwb-padlock,
     .nwb-chain-l,

@@ -215,6 +215,7 @@ const ConversationRowComponent = ({
             ) : (
               <Avatar
                 name={name}
+                placeholder={conversation.isUnavailable === true}
                 size={AVATAR}
                 uri={target?.image ?? conversation.image}
                 username={target?.username}

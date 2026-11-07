@@ -1,4 +1,5 @@
 import type {
+  DisableAccountPayload,
   Friend,
   NotificationCounts,
   NotificationFeed,
@@ -74,6 +75,27 @@ export const getNovelist = (api: ApiClient, username: string) =>
     "getNovelistAction",
     true,
   );
+
+/**
+ * Disables the caller's account and signs them out everywhere
+ * (ACCOUNT_DISABLE_PLAN.md). Signing in again switches it back on. The
+ * reason is optional. Call `logoutEverywhere` after it, as the normal sign-out
+ * path, so the client's own session state clears too.
+ */
+export const disableAccount = async (
+  api: ApiClient,
+  payload: DisableAccountPayload = {},
+): Promise<WithMessage> => {
+  const response = await api.raw(`${NOVELIST}/disable`, {
+    body: payload,
+    label: "disableAccount",
+    method: "POST",
+  });
+
+  if (response.status === 401) return { message: API_MESSAGE.Unauthorized };
+  if (!response.ok) return { message: API_MESSAGE.UncategorizedError };
+  return { message: API_MESSAGE.Success };
+};
 
 /** Distinguishes "no novelist yet" (404) from a real failure — onboarding depends on it. */
 export const getUserNovelist = async (

@@ -5,7 +5,12 @@ import {
   setStoryBoardMemberAdmin,
 } from "@nw/api/endpoints/story-members";
 import { useApi, useSession } from "@nw/features";
-import { API_MESSAGE, type Friend, type StoryBoardMember } from "@nw/types";
+import {
+  API_MESSAGE,
+  type Friend,
+  PLACEHOLDER_LABELS,
+  type StoryBoardMember,
+} from "@nw/types";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -94,12 +99,12 @@ export const StoryMembersSheet = ({
 
   /** The creator first, then admins, then the rest — web's order. */
   const roster = useMemo(() => {
-    const creator = members.find(
-      (member) => member.username === creatorUsername,
-    );
-    const rest = members.filter(
-      (member) => member.username !== creatorUsername,
-    );
+    // A member who disabled their account has no username, so an empty
+    // creatorUsername (a disabled author) must not match them.
+    const creator = creatorUsername
+      ? members.find((member) => member.username === creatorUsername)
+      : undefined;
+    const rest = members.filter((member) => member !== creator);
     return [
       ...(creator ? [creator] : []),
       ...rest.filter((member) => member.isAdmin),
@@ -206,7 +211,7 @@ export const StoryMembersSheet = ({
       ];
 
   const roleOf = (member: StoryBoardMember) =>
-    member.username === creatorUsername
+    creatorUsername && member.username === creatorUsername
       ? "Author"
       : member.isAdmin
         ? "Admin"
@@ -313,16 +318,25 @@ export const StoryMembersSheet = ({
               Nobody yet.
             </Text>
           ) : (
-            roster.map((member) => {
-              const fixed = member.username === creatorUsername;
-              const canAct = viewerIsAdmin && !fixed;
+            roster.map((member, index) => {
+              const fixed =
+                Boolean(creatorUsername) && member.username === creatorUsername;
+              // A placeholder (disabled account) has no username to act on.
+              const canAct = viewerIsAdmin && !fixed && !member.isPlaceholder;
+              const handle = member.isPlaceholder
+                ? PLACEHOLDER_LABELS.NOVELIST
+                : `@${member.username}`;
               return (
                 <Pressable
                   accessibilityHint={canAct ? "Opens role options" : undefined}
-                  accessibilityLabel={`@${member.username}, ${roleOf(member)}`}
+                  accessibilityLabel={`${handle}, ${roleOf(member)}`}
                   accessibilityRole={canAct ? "button" : "text"}
                   disabled={!canAct || pending !== null}
-                  key={member.username}
+                  key={
+                    member.isPlaceholder
+                      ? `placeholder-${index}`
+                      : member.username
+                  }
                   onPress={() => {
                     setMenuFor(member);
                     setMenuVisible(true);
@@ -338,17 +352,19 @@ export const StoryMembersSheet = ({
                   ]}
                 >
                   <Avatar
-                    name={member.username}
+                    name={member.isPlaceholder ? handle : member.username}
                     size={36}
-                    uri={member.image}
-                    username={member.username}
+                    uri={member.isPlaceholder ? null : member.image}
+                    username={
+                      member.isPlaceholder ? undefined : member.username
+                    }
                   />
                   <View style={styles.text}>
                     <Text
                       numberOfLines={1}
                       style={[styles.name, { color: theme.text }]}
                     >
-                      @{member.username}
+                      {handle}
                       {member.username === me ? " (you)" : ""}
                     </Text>
                   </View>

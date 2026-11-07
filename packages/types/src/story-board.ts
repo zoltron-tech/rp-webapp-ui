@@ -42,6 +42,8 @@ export interface StoryCastMember {
   avatar: NWImage | null;
   /** The muse's accent when it opted into using it; null otherwise. */
   accent: string | null;
+  /** The muse's novelist disabled their account: draw the placeholder. */
+  isPlaceholder?: boolean;
 }
 
 export interface StoryBoardMember {
@@ -49,6 +51,8 @@ export interface StoryBoardMember {
   storyBoardId: string;
   image: string;
   isAdmin: boolean;
+  /** The member disabled their account: no username or image, draw the placeholder. */
+  isPlaceholder?: boolean;
 }
 
 export interface StoryBoardEvent {

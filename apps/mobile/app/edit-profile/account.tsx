@@ -12,7 +12,12 @@ import {
 } from "@nw/api/endpoints/profile";
 import { syncMyBadges } from "@nw/api/endpoints/badges";
 import { queryKeys, useApi, useSession } from "@nw/features";
-import { API_MESSAGE, type Friend, type LinkProvider } from "@nw/types";
+import {
+  API_MESSAGE,
+  DISABLE_ACCOUNT_COPY,
+  type Friend,
+  type LinkProvider,
+} from "@nw/types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -27,7 +32,9 @@ import {
 import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Avatar } from "@/components/avatar";
+import { DisableAccountSheet } from "@/components/edit-profile/disable-account-sheet";
 import { UsernameSheet } from "@/components/edit-profile/username-sheet";
+import { useSignOut } from "@/hooks/use-sign-out";
 import {
   Notice,
   PillButton,
@@ -62,6 +69,8 @@ export default function AccountScreen() {
   const { novelist, user } = useSession();
 
   const [usernameOpen, setUsernameOpen] = useState(false);
+  const [disableOpen, setDisableOpen] = useState(false);
+  const { signOutLocally } = useSignOut();
   const [verify, setVerify] = useState<Async>("idle");
   const [reset, setReset] = useState<Async>("idle");
   const [unlinking, setUnlinking] = useState<LinkProvider | null>(null);
@@ -381,6 +390,20 @@ export default function AccountScreen() {
           />
         </SettingsGroup>
 
+        {/* Directly above the blocked list (ACCOUNT_DISABLE_PLAN.md D15). */}
+        <SettingsGroup
+          footer={DISABLE_ACCOUNT_COPY.groupBody}
+          title={DISABLE_ACCOUNT_COPY.groupTitle}
+        >
+          <SettingsRow
+            icon="pause-circle-outline"
+            label={DISABLE_ACCOUNT_COPY.action}
+            onPress={() => setDisableOpen(true)}
+            subtitle="Hide everything until you sign back in"
+            tone="neutral"
+          />
+        </SettingsGroup>
+
         <SettingsGroup title="Blocked accounts">
           {blockedState === "loading" ? (
             <View style={styles.loading}>
@@ -441,6 +464,11 @@ export default function AccountScreen() {
         current={user?.username ?? novelist?.username ?? ""}
         onClose={() => setUsernameOpen(false)}
         visible={usernameOpen}
+      />
+      <DisableAccountSheet
+        onClose={() => setDisableOpen(false)}
+        onDisabled={() => void signOutLocally()}
+        visible={disableOpen}
       />
     </>
   );

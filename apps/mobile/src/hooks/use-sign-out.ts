@@ -76,5 +76,19 @@ export const useSignOut = () => {
     return true;
   }, [api, leave, queryClient]);
 
-  return { pending: logout.isPending, signOut, signOutEverywhere };
+  /**
+   * The local half alone, for when the server has already ended every
+   * session — disabling an account does (ACCOUNT_DISABLE_PLAN.md §7.1).
+   */
+  const signOutLocally = useCallback(async () => {
+    queryClient.clear();
+    await leave();
+  }, [leave, queryClient]);
+
+  return {
+    pending: logout.isPending,
+    signOut,
+    signOutEverywhere,
+    signOutLocally,
+  };
 };

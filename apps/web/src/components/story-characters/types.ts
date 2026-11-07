@@ -15,4 +15,6 @@ export interface StoryFace {
   /** The muse's or character's own accent, when it opted into using one. */
   accent: string | null;
   refType: CharacterRefType;
+  /** A cast muse whose novelist disabled their account: no avatar, no muse page. */
+  placeholder?: boolean;
 }

@@ -679,6 +679,7 @@ const MessageBubbleComponent = ({
             >
               <Avatar
                 name={message.sender?.name}
+                placeholder={message.sender?.isPlaceholder === true}
                 size={28}
                 uri={message.sender?.image}
                 username={message.sender?.username}

@@ -76,6 +76,12 @@ export interface PromptSource {
    *  string; for NOVELIST: the palette key as a string (resolved via ACCENT_MAP). */
   useAccent?: boolean;
   accent?: string | null;
+  /**
+   * A disabled novelist's stand-in (ACCOUNT_DISABLE_PLAN.md §3.3): the real
+   * id, the placeholder label as the name, no image or link. Draw it with
+   * `PlaceholderAvatar` and never route to it.
+   */
+  isPlaceholder?: boolean;
 }
 
 export interface IceBreaker {

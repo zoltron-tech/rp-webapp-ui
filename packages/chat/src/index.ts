@@ -88,6 +88,7 @@ export {
   isSupportNovelist,
   type MessageSenderChoice,
   otherParticipant,
+  participantName,
   resolveConversationTarget,
   SUPPORT_USERNAME,
   senderOptions,

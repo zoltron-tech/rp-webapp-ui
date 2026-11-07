@@ -381,6 +381,8 @@ export const ActivityBox: FC<Props> = ({
   };
 
   const onAvatarClick = (activity: Activity) => {
+    // A disabled author's stand-in has nowhere to go.
+    if (activity?.source.isPlaceholder) return;
     if (activity?.source.sourceType === "MUSE")
       routeToPage(ROUTES.Muse.View(activity.source.id));
     else if (activity?.source.sourceType === "NOVELIST")

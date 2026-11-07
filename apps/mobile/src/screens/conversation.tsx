@@ -19,7 +19,12 @@ import {
   useMarkConversationRead,
   useSession,
 } from "@nw/features";
-import type { MentionDataItem, MentionTab, Message } from "@nw/types";
+import {
+  DISABLE_ACCOUNT_COPY,
+  type MentionDataItem,
+  type MentionTab,
+  type Message,
+} from "@nw/types";
 import { isSameChatDay, toChatDayLabel, toChatTime } from "@nw/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
@@ -178,8 +183,12 @@ export const ConversationScreen = ({
           ).catch(() => null);
           if (!Array.isArray(members)) return [];
           const needle = prefix.toLowerCase();
+          // A member who disabled their account cannot be mentioned.
           return members
-            .filter((member) => member.userName !== novelist?.username)
+            .filter(
+              (member) =>
+                member.userName !== novelist?.username && !member.isDisabled,
+            )
             .map((member) => ({
               displayName:
                 `${member.firstName} ${member.lastName ?? ""}`.trim() ||
@@ -278,6 +287,7 @@ export const ConversationScreen = ({
     () => resolveConversationTarget(conversation, novelist?.username),
     [conversation, novelist?.username],
   );
+  const unavailable = Boolean(conversation?.isUnavailable);
 
   // Register everyone in the thread for presence, or the header and every
   // avatar in it report offline regardless of who is actually connected.
@@ -762,6 +772,8 @@ export const ConversationScreen = ({
    */
   const openSender = useCallback(
     (username: string) => {
+      // A sender who disabled their account has no handle and no profile.
+      if (!username) return;
       router.push({ params: { username }, pathname: "/novelist/[username]" });
     },
     [router],
@@ -1132,6 +1144,9 @@ export const ConversationScreen = ({
 
           <Composer
             conversationId={conversationId}
+            // The other side disabled their account: the history stays, the
+            // composer does not send (ACCOUNT_DISABLE_PLAN.md D9).
+            disabled={unavailable}
             mentionTabs={mentionTabs}
             onCancelReply={cancelReply}
             onInsetChange={setBottomInset}
@@ -1142,11 +1157,13 @@ export const ConversationScreen = ({
             senders={senders}
             sending={sending}
             statusNote={
-              offline
-                ? "Offline — messages will send when you're back online."
-                : isConnected
-                  ? null
-                  : "Reconnecting — messages will still send."
+              unavailable
+                ? DISABLE_ACCOUNT_COPY.chatUnavailable
+                : offline
+                  ? "Offline — messages will send when you're back online."
+                  : isConnected
+                    ? null
+                    : "Reconnecting — messages will still send."
             }
           />
 

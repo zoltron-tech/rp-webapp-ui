@@ -5,6 +5,7 @@ import { report } from "@nw/api/endpoints/thread";
 import { queryKeys, useApi, useSession } from "@nw/features";
 import {
   API_MESSAGE,
+  PLACEHOLDER_LABELS,
   type StoryBoard,
   type StoryBoardEvent,
 } from "@nw/types";
@@ -299,8 +300,11 @@ export default function StoryScreen() {
 
   const openChapter = (eventId: string) =>
     router.push({ params: { eventId }, pathname: "/story/chapter/[eventId]" });
-  const openNovelist = (username: string) =>
+  const openNovelist = (username: string) => {
+    // A disabled author or co-author has no handle and no profile.
+    if (!username) return;
     router.push({ params: { username }, pathname: "/novelist/[username]" });
+  };
 
   // Before the early return, and only for a pull: a refetch of a story opened
   // from the library's cache updates the page without a spinner over it.
@@ -446,7 +450,9 @@ export default function StoryScreen() {
                 <Text style={[styles.byline, { color: theme.textGray }]}>
                   by{" "}
                   <Text style={{ color: theme.accent.text, fontWeight: "600" }}>
-                    @{data.createdBy.username}
+                    {data.createdBy.isPlaceholder
+                      ? PLACEHOLDER_LABELS.NOVELIST
+                      : `@${data.createdBy.username}`}
                   </Text>
                 </Text>
               </Pressable>
@@ -546,10 +552,15 @@ export default function StoryScreen() {
 
           {authors.length > 0 ? (
             <SettingsGroup title="Co-authors">
-              {authors.map((author) => (
+              {authors.map((author, index) => (
                 <Pressable
-                  accessibilityRole="link"
-                  key={author.username}
+                  accessibilityRole={author.isPlaceholder ? "text" : "link"}
+                  disabled={author.isPlaceholder}
+                  key={
+                    author.isPlaceholder
+                      ? `placeholder-${index}`
+                      : author.username
+                  }
                   onPress={() => openNovelist(author.username)}
                   style={({ pressed }) => [
                     styles.personRow,
@@ -557,16 +568,24 @@ export default function StoryScreen() {
                   ]}
                 >
                   <Avatar
-                    name={author.username}
+                    name={
+                      author.isPlaceholder
+                        ? PLACEHOLDER_LABELS.NOVELIST
+                        : author.username
+                    }
                     size={34}
                     uri={author.image}
-                    username={author.username}
+                    username={
+                      author.isPlaceholder ? undefined : author.username
+                    }
                   />
                   <Text
                     numberOfLines={1}
                     style={[styles.personName, { color: theme.text }]}
                   >
-                    @{author.username}
+                    {author.isPlaceholder
+                      ? PLACEHOLDER_LABELS.NOVELIST
+                      : `@${author.username}`}
                   </Text>
                   <Chip
                     label={

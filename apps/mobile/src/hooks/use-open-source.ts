@@ -31,6 +31,11 @@ export type SourceRef = {
   sourceType: string;
   /** The novelist's username; a muse's id again, on this client. */
   urlProp: string;
+  /**
+   * A disabled author's stand-in (ACCOUNT_DISABLE_PLAN.md §7.3): it keeps a
+   * real id, but its page is gone, so pressing it goes nowhere.
+   */
+  isPlaceholder?: boolean;
 };
 
 export const useOpenSource = () => {
@@ -38,7 +43,7 @@ export const useOpenSource = () => {
 
   return useCallback(
     (source: SourceRef | null | undefined) => {
-      if (!source) return;
+      if (!source || source.isPlaceholder) return;
       if (source.sourceType === "MUSE") {
         if (!source.id) return;
         router.push({
@@ -63,5 +68,8 @@ export const useOpenSource = () => {
 export const sourceLinkLabel = (
   name: string | null | undefined,
   sourceType: string | undefined,
+  isPlaceholder?: boolean | null,
 ) =>
-  `${name ?? "Author"}. Opens ${sourceType === "MUSE" ? "this character" : "their profile"}`;
+  isPlaceholder
+    ? `${name ?? "Author"}. This account is disabled`
+    : `${name ?? "Author"}. Opens ${sourceType === "MUSE" ? "this character" : "their profile"}`;

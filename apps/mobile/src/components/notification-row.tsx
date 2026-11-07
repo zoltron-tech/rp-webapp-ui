@@ -101,7 +101,13 @@ const NotificationRowView = ({
   const queryClient = useQueryClient();
 
   const { source } = notification;
-  const href = notificationHref(notification);
+  // A placeholder's profile is gone (ACCOUNT_DISABLE_PLAN.md D6); everything
+  // else a row opens still exists.
+  const href =
+    notification.source?.isPlaceholder &&
+    notification.target?.targetType === "PROFILE"
+      ? null
+      : notificationHref(notification);
   const hue = notificationHue(notification);
   const isRequest = notification.type === "FRIEND_REQUEST";
   const isMuseRequest = notification.type === "MUSE_CONNECTION_REQUEST";

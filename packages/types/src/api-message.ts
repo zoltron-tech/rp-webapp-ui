@@ -14,4 +14,6 @@ export enum API_MESSAGE {
   ServerError = "server_error",
   Conflict = "conflict",
   TooManyRequests = "too_many_requests",
+  /** The other side of a direct conversation disabled their account (409 `unavailable`). */
+  Unavailable = "unavailable",
 }

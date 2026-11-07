@@ -252,16 +252,23 @@ export const RichTextRenderer = ({
     const measure = () => {
       const contentHeight = content.scrollHeight;
 
-      // If the content has an image or an embedded card, don't hide the first
-      // one when collapsed: extend the collapsed height down to its bottom
-      // edge so it is fully visible.
+      // If the first image or embedded card starts inside the collapsed area,
+      // don't cut it in half: extend the collapsed height down to its bottom
+      // edge so it is fully visible. One that starts further down (after a
+      // long passage of text) stays hidden behind "Read more" — extending to
+      // it would stretch the collapsed height over the whole post, and the
+      // toggle would never appear.
       const firstEmbed = content.querySelector(`img, .${LINK_SLOT_CLASS}`);
       let effectiveCollapsed = collapsedHeight;
       if (firstEmbed) {
-        const embedBottom =
-          firstEmbed.getBoundingClientRect().bottom -
-          content.getBoundingClientRect().top;
-        effectiveCollapsed = Math.max(collapsedHeight, Math.ceil(embedBottom));
+        const contentTop = content.getBoundingClientRect().top;
+        const embedRect = firstEmbed.getBoundingClientRect();
+        if (embedRect.top - contentTop < collapsedHeight) {
+          effectiveCollapsed = Math.max(
+            collapsedHeight,
+            Math.ceil(embedRect.bottom - contentTop),
+          );
+        }
       }
 
       // Decide overflow from meaningful content only, so purely trailing

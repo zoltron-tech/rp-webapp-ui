@@ -9,6 +9,7 @@ import { TabBarChromeProvider } from "@/context/tab-bar";
 import { useUnreadReplyCount } from "@/hooks/use-unread-reply-count";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { readAccessToken } from "@/lib/session-store";
+import { useWelcomeBack } from "@/lib/welcome-back";
 import { radius, useAppTheme } from "@/theme";
 import { glassHeaderOptions } from "@/theme/header";
 import { tabBarStyle } from "@/theme/tab-bar";
@@ -58,6 +59,7 @@ export default function TabsLayout() {
   const theme = useAppTheme();
   const router = useRouter();
   const { novelist, status } = useSession();
+  useWelcomeBack(novelist);
   const { unreadCount } = useUnreadConversations();
   const unreadReplies = useUnreadReplyCount();
   // Push registration, tap routing and the icon's number.

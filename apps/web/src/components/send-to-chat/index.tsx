@@ -65,6 +65,10 @@ type Row = {
   username: string;
 };
 
+/** The conversations a message can go to: not one whose other side disabled their account. */
+const sendable = (conversations: Conversation[]) =>
+  conversations.filter((conversation) => !conversation.isUnavailable);
+
 export const SendToChatPanel = ({
   label,
   onBack,
@@ -122,7 +126,8 @@ export const SendToChatPanel = ({
 
   const rows = useMemo<Row[]>(
     () =>
-      conversations.map((conversation) => {
+      // Nothing can be sent to someone who disabled their account.
+      sendable(conversations).map((conversation) => {
         const target = resolveConversationTarget(conversation, myUsername);
         const members = conversation.memberCount ?? conversation.members?.length;
         return {

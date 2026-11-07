@@ -1,8 +1,14 @@
 "use client";
 
 import { REPORT_SENT_TOAST } from "@/utils/report";
-import { helloNoticeFor, retentionNoticeFor } from "@nw/chat";
-import type { Conversation, MentionDataItem, Message } from "@nw/types";
+import { helloNoticeFor, participantName, retentionNoticeFor } from "@nw/chat";
+import {
+  type Conversation,
+  DISABLE_ACCOUNT_COPY,
+  type MentionDataItem,
+  type Message,
+  PLACEHOLDER_LABELS,
+} from "@nw/types";
 import type { MessageSender, Reaction } from "@nw/types/conversation";
 import { suggestPushPrimer } from "@/lib/push";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -12,6 +18,7 @@ import { IoArrowBackOutline } from "react-icons/io5";
 import { ChatBubble, EmailVerifiedBadge } from "@/components/common";
 import { AdminBadge } from "@/components/common/admin-badge";
 import { AvatarNew } from "@/components/common/avatar-new";
+import { InlineMessage } from "@/components/common/inline-message";
 import { AppAlertDialog } from "@/components/dialog";
 import { LoadMore } from "@/components/load-more/page";
 import type { ComposerSender } from "@/components/send-message-composer";
@@ -261,8 +268,12 @@ export function ConversationPanel({
 
   // ── Resolved header values ─────────────────────────────────────────────────
 
-  const resolvedTargetUserName =
-    propTargetUserName || deriveTargetUserName(conversation, user?.username);
+  // The other side disabled their account: history stays readable, under the
+  // placeholder, but there is no profile to open and nothing can be sent.
+  const unavailable = Boolean(conversation?.isUnavailable);
+  const resolvedTargetUserName = unavailable
+    ? ""
+    : propTargetUserName || deriveTargetUserName(conversation, user?.username);
   const targetMember = conversation?.members?.find(
     (member) => member.userName === resolvedTargetUserName,
   );
@@ -271,17 +282,18 @@ export function ConversationPanel({
     conversation?.lastMessage?.sender?.name ||
     conversation?.lastMessage?.sender?.username ||
     "Conversation";
-  const targetDisplayName =
-    conversation && !conversation.isGroup
-      ? `${targetMember?.firstName} ${targetMember?.lastName}`.trim() ||
-        targetMember?.userName ||
+  const targetDisplayName = unavailable
+    ? conversation?.name || PLACEHOLDER_LABELS.NOVELIST
+    : conversation && !conversation.isGroup
+      ? (targetMember ? participantName(targetMember) : "") ||
         fallbackTargetName
       : conversation?.name || fallbackTargetName;
-  const targetImage =
-    conversation?.image ||
-    targetMember?.image ||
-    conversation?.lastMessage?.sender?.image ||
-    null;
+  const targetImage = unavailable
+    ? null
+    : conversation?.image ||
+      targetMember?.image ||
+      conversation?.lastMessage?.sender?.image ||
+      null;
 
   // ── Navigation handlers ────────────────────────────────────────────────────
 
@@ -345,7 +357,7 @@ export function ConversationPanel({
   };
 
   const handleConvHeaderClick = () => {
-    if (!conversation) return;
+    if (!conversation || unavailable) return;
     if (conversation.isGroup) {
       routeToPage(ROUTES.Conversation.Details(conversationId));
     } else {
@@ -612,11 +624,10 @@ export function ConversationPanel({
     const items: MentionDataItem[] = [];
     if (conversation?.members) {
       for (const member of conversation.members) {
-        if (member.userName !== user?.username) {
+        // A member who disabled their account cannot be mentioned.
+        if (member.userName !== user?.username && !member.isDisabled) {
           items.push({
-            displayName:
-              `${member.firstName} ${member.lastName}`.trim() ||
-              member.userName,
+            displayName: participantName(member),
             id: member.novelistId || member.userName,
             image: member.image || "",
             type: "NOVELIST",
@@ -1079,7 +1090,7 @@ export function ConversationPanel({
                 </S.ChatTitleRow>
                 {conversation?.isGroup ? (
                   <S.GroupBadge>Group</S.GroupBadge>
-                ) : (
+                ) : unavailable ? null : (
                   <S.ChatMeta>
                     @{resolvedTargetUserName || conversationId}
                   </S.ChatMeta>
@@ -1273,24 +1284,32 @@ export function ConversationPanel({
           />
         ) : null}
 
-        <SendMessageComposer
-          value={messageText}
-          onChange={setMessageText}
-          onHtmlChange={setMessageHtml}
-          onSubmit={onSendMessage}
-          onSendGif={onSendGif}
-          onSendSticker={onSendSticker}
-          onSendClip={onSendClip}
-          onSendMedia={onSendMedia}
-          sending={sending}
-          conversationId={conversationId}
-          selectedSender={selectedSender}
-          onSenderChange={setSelectedSender}
-          mentionItems={mentionItems}
-          getMentionMuseItems={getMentionMuseItems}
-          editingMessage={editingMessage}
-          onCancelEdit={cancelEditing}
-        />
+        {unavailable ? (
+          <div style={{ padding: "8px 12px 12px" }}>
+            <InlineMessage variant="info">
+              <p>{DISABLE_ACCOUNT_COPY.chatUnavailable}</p>
+            </InlineMessage>
+          </div>
+        ) : (
+          <SendMessageComposer
+            value={messageText}
+            onChange={setMessageText}
+            onHtmlChange={setMessageHtml}
+            onSubmit={onSendMessage}
+            onSendGif={onSendGif}
+            onSendSticker={onSendSticker}
+            onSendClip={onSendClip}
+            onSendMedia={onSendMedia}
+            sending={sending}
+            conversationId={conversationId}
+            selectedSender={selectedSender}
+            onSenderChange={setSelectedSender}
+            mentionItems={mentionItems}
+            getMentionMuseItems={getMentionMuseItems}
+            editingMessage={editingMessage}
+            onCancelEdit={cancelEditing}
+          />
+        )}
       </S.ChatWrapper>
 
       <AppAlertDialog

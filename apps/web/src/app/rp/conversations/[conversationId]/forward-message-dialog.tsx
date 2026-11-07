@@ -1,5 +1,6 @@
 "use client";
 
+import { participantName } from "@nw/chat";
 import type { Conversation, Message } from "@nw/types";
 import { useCallback, useEffect, useState } from "react";
 import { BsCheckLg } from "react-icons/bs";
@@ -119,6 +120,10 @@ const getForwardText = (message: Message): string => {
   return "";
 };
 
+/** The conversations a message can go to: not one whose other side disabled their account. */
+const forwardable = (conversations: Conversation[]) =>
+  conversations.filter((conversation) => !conversation.isUnavailable);
+
 const getConvDisplayName = (
   conversation: Conversation,
   currentUsername?: string,
@@ -128,7 +133,7 @@ const getConvDisplayName = (
     (m) => m.userName !== currentUsername,
   );
   if (other) {
-    return `${other.firstName} ${other.lastName}`.trim() || other.userName;
+    return participantName(other);
   }
   return "Conversation";
 };
@@ -254,7 +259,8 @@ export function ForwardMessageDialog({ message, onClose }: Props) {
             <StatusText>No conversations found.</StatusText>
           ) : (
             <>
-              {conversations.map((conv) => {
+              {/* Nothing can be sent to someone who disabled their account. */}
+              {forwardable(conversations).map((conv) => {
                 const displayName = getConvDisplayName(conv, user?.username);
                 const preview = getConvPreview(conv);
                 const otherMember = conv.members?.find(

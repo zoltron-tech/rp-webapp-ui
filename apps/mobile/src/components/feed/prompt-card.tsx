@@ -217,13 +217,18 @@ const PromptCardView = ({
       <View style={styles.header}>
         {/* The face and the name go to whoever wrote it, as on web. */}
         <Pressable
-          accessibilityLabel={sourceLinkLabel(source?.name, source?.sourceType)}
-          accessibilityRole="link"
+          accessibilityLabel={sourceLinkLabel(
+            source?.name,
+            source?.sourceType,
+            source?.isPlaceholder,
+          )}
+          accessibilityRole={source?.isPlaceholder ? "text" : "link"}
           onPress={() =>
             openSource(
               source
                 ? {
                     id: source.sourceId,
+                    isPlaceholder: source.isPlaceholder,
                     sourceType: source.sourceType,
                     urlProp: source.urlProp,
                   }

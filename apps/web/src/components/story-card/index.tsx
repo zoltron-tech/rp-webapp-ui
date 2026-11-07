@@ -483,7 +483,10 @@ export const StoryCard: FC<Props> = ({
           <S.SectionLabel>Cast</S.SectionLabel>
           <S.CastRow>
             {cast.map((member) => {
-              const avatarSrc = member.image || museAvatarUrl(member.id);
+              // A placeholder muse has no avatar to fetch (its page is gone).
+              const avatarSrc = member.isPlaceholder
+                ? null
+                : member.image || museAvatarUrl(member.id);
               return (
                 <S.CastChip key={member.id} title={member.name}>
                   {avatarSrc ? (

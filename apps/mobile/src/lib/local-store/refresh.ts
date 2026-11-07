@@ -37,6 +37,7 @@ import { recordSync, writeMeta } from "./meta";
 import { persistNotifications } from "./notifications";
 import { readNovelistRows, upsertNovelist } from "./novelists";
 import { drainOutbox, isOutboxPost, sendableByRest, sendPost } from "./outbox";
+import { noteReactivated } from "@/lib/welcome-back";
 
 /**
  * One refresh of the store from the server, without React.
@@ -126,6 +127,8 @@ export const refreshStore = async (
       run: async () => {
         const result = await getUserNovelist(api);
         if ("message" in result) throw new Error(String(result.message));
+        // This load may be the one that switched a disabled account back on.
+        if (result.reactivated) noteReactivated();
         await upsertNovelist(store, result, { fetchedAt: Date.now(), self: true });
       },
     },

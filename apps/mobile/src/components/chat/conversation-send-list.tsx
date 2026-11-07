@@ -67,8 +67,12 @@ export const ConversationSendList = ({
 
   const rows = useMemo(() => {
     const query = search.trim().toLowerCase();
+    // Nothing can be sent to someone who disabled their account.
     return conversations
-      .filter((conversation) => conversation.id !== excludeId)
+      .filter(
+        (conversation) =>
+          conversation.id !== excludeId && !conversation.isUnavailable,
+      )
       .filter((conversation) => {
         if (!query) return true;
         const target = resolveConversationTarget(

@@ -1,6 +1,6 @@
 "use client";
 
-import { conversationPreview } from "@nw/chat";
+import { conversationPreview, participantName } from "@nw/chat";
 import {
   inboxGroupFaces,
   inboxHue,
@@ -10,7 +10,7 @@ import {
   isLastMessageMine,
   isMuted,
 } from "@nw/features";
-import type { Conversation } from "@nw/types";
+import { type Conversation, PLACEHOLDER_LABELS } from "@nw/types";
 import type { CSSProperties, FC, KeyboardEvent } from "react";
 import { TbBellOff } from "react-icons/tb";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
@@ -20,6 +20,7 @@ import { toInboxTime, wsrvImage } from "@/utils/helpers";
 import { EmailVerifiedBadge } from "../common";
 import { AdminBadge } from "../common/admin-badge";
 import { AvatarNew } from "../common/avatar-new";
+import { PlaceholderAvatar } from "../common/placeholder-avatar";
 import { INBOX_ICONS } from "./kinds";
 import * as S from "./styles";
 
@@ -79,15 +80,21 @@ export const ConversationCard: FC<ConversationCardProps> = ({
   const Glyph = INBOX_ICONS[kind];
   const thumb = inboxThumbnail(conversation);
 
-  const otherMember = conversation.members?.find(
-    (member) => member.userName !== user?.username,
-  );
+  // The other side of a direct conversation disabled their account: the
+  // placeholder, no face and no handle (ACCOUNT_DISABLE_PLAN.md D9).
+  const unavailable = Boolean(conversation.isUnavailable);
+  const otherMember = unavailable
+    ? undefined
+    : conversation.members?.find(
+        (member) => member.userName !== user?.username,
+      );
   const displayName = conversation.isGroup
     ? conversation.name || "Untitled conversation"
-    : `${otherMember?.firstName} ${otherMember?.lastName}`.trim() ||
-      otherMember?.userName ||
-      conversation.name ||
-      "Untitled conversation";
+    : unavailable
+      ? conversation.name || PLACEHOLDER_LABELS.NOVELIST
+      : (otherMember ? participantName(otherMember) : "") ||
+        conversation.name ||
+        "Untitled conversation";
 
   // A group's own picture when it has one; otherwise the people in it.
   const groupFaces =
@@ -97,8 +104,11 @@ export const ConversationCard: FC<ConversationCardProps> = ({
   const pair = groupFaces.length > 1;
 
   const openConversation = () => {
-    const targetUserName =
-      otherMember?.userName || lastMessage?.sender?.username;
+    // No handle to carry for an unavailable conversation: the last sender may
+    // be the reader themselves.
+    const targetUserName = unavailable
+      ? ""
+      : otherMember?.userName || lastMessage?.sender?.username;
 
     setGlobalState({ activeConversation: conversation });
 
@@ -150,6 +160,8 @@ export const ConversationCard: FC<ConversationCardProps> = ({
               alt={displayName}
             />
           </>
+        ) : unavailable ? (
+          <PlaceholderAvatar label={displayName} />
         ) : (
           <AvatarNew
             src={conversation.image ?? null}

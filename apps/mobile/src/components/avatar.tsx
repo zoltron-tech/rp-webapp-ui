@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import type { NWImage } from "@nw/types";
 import { hasUsableCrop, wsrvImage } from "@nw/utils";
 import { memo, useMemo } from "react";
@@ -51,11 +52,18 @@ const RING_WIDTH = 2;
 export const Avatar = memo(function Avatar({
   image,
   name,
+  placeholder = false,
   playing,
   size = 40,
   uri,
   username,
 }: {
+  /**
+   * A disabled author's stand-in (ACCOUNT_DISABLE_PLAN.md §7.3): a neutral
+   * silhouette instead of the initial — which for "A Quiet Novelist" would be
+   * a misleading "A" — and no picture or presence ring, whatever is passed.
+   */
+  placeholder?: boolean;
   /** The stored picture with its crop, when the caller has one. */
   image?: NWImage | null;
   name?: string | null;
@@ -74,9 +82,25 @@ export const Avatar = memo(function Avatar({
   username?: string | null;
 }) {
   const theme = useAppTheme();
-  const isOnline = useIsOnline(username);
+  const isOnline = useIsOnline(placeholder ? null : username);
 
   const dimensions = { borderRadius: size / 2, height: size, width: size };
+
+  if (placeholder) {
+    return (
+      <View
+        accessibilityLabel={name ?? undefined}
+        accessibilityRole="image"
+        style={[
+          dimensions,
+          styles.fallback,
+          { backgroundColor: theme.material.fillPressed },
+        ]}
+      >
+        <Ionicons color={theme.textGray} name="person" size={size * 0.55} />
+      </View>
+    );
+  }
 
   /*
    * Bounded to three times the drawn size, aspect kept. Feed and thread

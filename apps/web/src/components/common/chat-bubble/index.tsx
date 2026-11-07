@@ -55,6 +55,7 @@ import { localLinkHosts } from "../../muse-embed/link-slots";
 import { NovelistWorldLinkEmbed } from "../../nw-link-embed";
 import { AppDropdownMenuResponsive } from "../../profile-more-dropdown";
 import { AvatarNew } from "../avatar-new";
+import { PlaceholderAvatar } from "../placeholder-avatar";
 import * as S from "./styles";
 
 type Props = {
@@ -1413,11 +1414,15 @@ export const ChatBubble: FC<Props> = ({
                   width: "100%",
                 }}
               >
-                <AvatarNew
-                  src={message.sender.image || null}
-                  alt={message.sender.name || message.sender.username || "User"}
-                  username={message.sender.username}
-                />
+                {message.sender.isPlaceholder ? (
+                  <PlaceholderAvatar label={message.sender.name} />
+                ) : (
+                  <AvatarNew
+                    src={message.sender.image || null}
+                    alt={message.sender.name || message.sender.username || "User"}
+                    username={message.sender.username}
+                  />
+                )}
               </div>
             )}
             <div
@@ -1768,12 +1773,16 @@ export const ChatBubble: FC<Props> = ({
                 <S.ReactionUserItem
                   key={`${reactionUser.sender.id}-${reactionUser.reaction}`}
                 >
-                  <AvatarNew
-                    src={reactionUser.sender.image || null}
-                    alt={
-                      reactionUser.sender.name || reactionUser.sender.username
-                    }
-                  />
+                  {reactionUser.sender.isPlaceholder ? (
+                    <PlaceholderAvatar label={reactionUser.sender.name} />
+                  ) : (
+                    <AvatarNew
+                      src={reactionUser.sender.image || null}
+                      alt={
+                        reactionUser.sender.name || reactionUser.sender.username
+                      }
+                    />
+                  )}
                   <S.ReactionUserName>
                     {reactionUser.sender.name || reactionUser.sender.username}
                   </S.ReactionUserName>

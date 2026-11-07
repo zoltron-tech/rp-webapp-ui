@@ -1,6 +1,6 @@
 "use client";
 
-import { isReadingBreaker, SUPPORT_USERNAME } from "@nw/chat";
+import { isReadingBreaker, participantName, SUPPORT_USERNAME } from "@nw/chat";
 import {
   INBOX_FILTERS,
   type InboxFilter,
@@ -397,7 +397,7 @@ export default function ConversationsPage() {
         return (conversation.members ?? []).some(
           (member) =>
             member.userName !== user?.username &&
-            `${member.firstName} ${member.lastName ?? ""} ${member.userName}`
+            `${participantName(member)} ${member.userName ?? ""}`
               .toLowerCase()
               .includes(query),
         );

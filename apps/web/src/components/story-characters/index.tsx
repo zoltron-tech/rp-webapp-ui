@@ -122,6 +122,8 @@ export const StoryCharacters: FC<Props> = ({ storyboardId, cast, canEdit }) => {
         id: member.id,
         image: member.image,
         name: member.name,
+        // Its novelist disabled their account: no avatar to fetch.
+        placeholder: member.isPlaceholder === true,
         refType: "MUSE" as const,
       })),
       ...characters
@@ -188,7 +190,10 @@ export const StoryCharacters: FC<Props> = ({ storyboardId, cast, canEdit }) => {
               {stackFaces.map((face) => (
                 <S.StackAvatar
                   key={face.id}
-                  src={face.image || museAvatarUrl(face.id)}
+                  src={
+                    face.image ||
+                    (face.placeholder ? null : museAvatarUrl(face.id))
+                  }
                   nwImage={face.avatar}
                   alt={face.name}
                   title={face.name}
@@ -214,7 +219,10 @@ export const StoryCharacters: FC<Props> = ({ storyboardId, cast, canEdit }) => {
                 onClick={() => setOpenFaceId(face.id)}
               >
                 <S.RowAvatar
-                  src={face.image || museAvatarUrl(face.id)}
+                  src={
+                    face.image ||
+                    (face.placeholder ? null : museAvatarUrl(face.id))
+                  }
                   nwImage={face.avatar}
                   alt={face.name}
                   accentColor={face.accent}

@@ -62,7 +62,10 @@ const pathOf = (href: string): string => {
 
 const castFace = (member: StoryCastMember) => ({
   crop: member.avatar?.src ? member.avatar.crop : null,
-  src: member.avatar?.src || member.image || museAvatarUrl(member.id) || "",
+  // A placeholder muse (its novelist disabled their account) has no avatar to fetch.
+  src: member.isPlaceholder
+    ? ""
+    : member.avatar?.src || member.image || museAvatarUrl(member.id) || "",
 });
 
 export const StoryEmbed: FC<Props> = ({ storyId, href }) => {

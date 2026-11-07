@@ -2,6 +2,7 @@
 
 import { REPORT_SENT_TOAST } from "@/utils/report";
 import { ShouldRender } from "@novelist-world/ui";
+import { isPlaceholderSource } from "@nw/types";
 import { type FC, useCallback, useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
 import { FaRegEdit } from "react-icons/fa";
@@ -23,6 +24,7 @@ import { EVENTS } from "@/utils/constants/custom-events";
 import { displayDate, toFormattedDate } from "@/utils/helpers";
 import { MuseAvatar } from "../common/muse-avatar";
 import { NovelistAvatar } from "../common/novelist-avatar";
+import { PlaceholderAvatar } from "../common/placeholder-avatar";
 import { AppAlertDialog } from "../dialog";
 import { AppDropdownMenuResponsive } from "../profile-more-dropdown";
 import { UpdatePromptForm, type UpdatePromptProps } from "../update-prompt";
@@ -52,6 +54,8 @@ export const CommentSource: FC = () => {
     novelist?.muses.some((muse) => muse.id === source.sourceId) ||
     source.sourceId === novelist?.id;
   const canConclude = isOwner || isPromptOwner;
+  // A disabled author's stand-in: default avatar, no profile link.
+  const placeholder = isPlaceholderSource(source);
 
   const handleReportComment = useCallback(async () => {
     const response = await reportAction(commentId, "", "COMMENT");
@@ -148,7 +152,10 @@ export const CommentSource: FC = () => {
         open={showEditCommentAlert}
         setOpen={setShowEditCommentAlert}
       />
-      <ShouldRender if={source.sourceType === "MUSE"}>
+      <ShouldRender if={placeholder}>
+        <PlaceholderAvatar label={source.name} />
+      </ShouldRender>
+      <ShouldRender if={!placeholder && source.sourceType === "MUSE"}>
         <MuseAvatar
           museId={source.sourceId}
           image={source.image}
@@ -158,7 +165,7 @@ export const CommentSource: FC = () => {
           accent={source.accent}
         />
       </ShouldRender>
-      <ShouldRender if={source.sourceType === "NOVELIST"}>
+      <ShouldRender if={!placeholder && source.sourceType === "NOVELIST"}>
         <NovelistAvatar
           username={source.urlProp}
           image={source.image}

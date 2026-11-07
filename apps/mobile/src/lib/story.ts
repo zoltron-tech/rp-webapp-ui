@@ -230,16 +230,24 @@ export const storyAuthors = (story: StoryBoard | null | undefined) => {
     ...(creator
       ? [
           {
-            image: creator.image as string | null,
+            image: (creator.isPlaceholder ? null : creator.image) as
+              | string
+              | null,
+            isPlaceholder: creator.isPlaceholder === true,
             role: "creator" as StoryRole,
             username: creator.username,
           },
         ]
       : []),
     ...(story.members ?? [])
-      .filter((member) => member.username !== creator?.username)
+      // A disabled member has no username; keep them even beside a disabled author.
+      .filter(
+        (member) =>
+          member.isPlaceholder || member.username !== creator?.username,
+      )
       .map((member) => ({
-        image: member.image as string | null,
+        image: (member.isPlaceholder ? null : member.image) as string | null,
+        isPlaceholder: member.isPlaceholder === true,
         role: (member.isAdmin ? "admin" : "member") as StoryRole,
         username: member.username,
       })),

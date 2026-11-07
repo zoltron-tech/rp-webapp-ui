@@ -130,14 +130,16 @@ const CommentRowView = ({
           accessibilityLabel={sourceLinkLabel(
             comment.source?.name,
             comment.source?.sourceType,
+            comment.source?.isPlaceholder,
           )}
-          accessibilityRole="link"
+          accessibilityRole={comment.source?.isPlaceholder ? "text" : "link"}
           hitSlop={space.xs}
           onPress={() =>
             openSource(
               comment.source
                 ? {
                     id: comment.source.sourceId,
+                    isPlaceholder: comment.source.isPlaceholder,
                     sourceType: comment.source.sourceType,
                     urlProp: comment.source.urlProp,
                   }
@@ -148,6 +150,7 @@ const CommentRowView = ({
         >
           <Avatar
             name={comment.source?.name}
+            placeholder={comment.source?.isPlaceholder === true}
             size={AVATAR}
             image={comment.source?.avatar}
             uri={comment.source?.avatar?.src ?? comment.source?.image}

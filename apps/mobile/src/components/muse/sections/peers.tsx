@@ -384,7 +384,8 @@ export const ConnectionCard = ({
                 <Pressable
                   accessibilityLabel={`Open ${member.firstName}`}
                   accessibilityRole="button"
-                  disabled={isCurrent}
+                  // A muse whose novelist disabled their account has no page.
+                  disabled={isCurrent || member.isPlaceholder === true}
                   key={member.museId}
                   onPress={() =>
                     router.push({

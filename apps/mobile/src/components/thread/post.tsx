@@ -201,11 +201,16 @@ const ThreadPostView = ({
       <View style={styles.header}>
         {/* The face and the name go to the author — muse page or profile. */}
         <Pressable
-          accessibilityLabel={sourceLinkLabel(author.name, author.sourceType)}
-          accessibilityRole="link"
+          accessibilityLabel={sourceLinkLabel(
+            author.name,
+            author.sourceType,
+            author.isPlaceholder,
+          )}
+          accessibilityRole={author.isPlaceholder ? "text" : "link"}
           onPress={() =>
             openSource({
               id: author.sourceId,
+              isPlaceholder: author.isPlaceholder,
               sourceType: author.sourceType,
               urlProp: author.urlProp,
             })
@@ -214,6 +219,7 @@ const ThreadPostView = ({
         >
           <Avatar
             name={author.name}
+            placeholder={author.isPlaceholder === true}
             size={AVATAR}
             image={author.avatar}
             uri={author.avatar?.src ?? author.image}

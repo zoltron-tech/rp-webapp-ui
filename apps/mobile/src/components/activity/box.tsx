@@ -248,13 +248,15 @@ const ActivityBoxView = ({
           accessibilityLabel={sourceLinkLabel(
             activity.source?.title,
             activity.source?.sourceType,
+            activity.source?.isPlaceholder,
           )}
-          accessibilityRole="link"
+          accessibilityRole={activity.source?.isPlaceholder ? "text" : "link"}
           onPress={() =>
             openSource(
               activity.source
                 ? {
                     id: activity.source.id,
+                    isPlaceholder: activity.source.isPlaceholder,
                     sourceType: activity.source.sourceType,
                     urlProp: activity.source.urlProp,
                   }
@@ -269,6 +271,7 @@ const ActivityBoxView = ({
           >
             <Avatar
               name={activity.source?.title}
+              placeholder={activity.source?.isPlaceholder === true}
               size={AVATAR}
               image={activity.source?.avatar}
               uri={activity.source?.avatar?.src ?? activity.source?.image}

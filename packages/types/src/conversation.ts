@@ -18,6 +18,12 @@ export interface Conversation {
    * "until unmuted", null or absent when it is not muted.
    */
   mutedUntil?: string | null;
+  /**
+   * A direct conversation whose other party has disabled their account. It
+   * stays in the inbox under the placeholder and its history is readable,
+   * but nothing can be sent: show the unavailable note instead of a composer.
+   */
+  isUnavailable?: boolean;
 }
 
 /**
@@ -40,6 +46,8 @@ export interface ConversationParticipant {
   role: string;
   isVerified: boolean;
   joinedAt: string;
+  /** The member has disabled their account: a placeholder row, no username or image. */
+  isDisabled?: boolean;
 }
 
 export type RepliedToType = "MESSAGE" | "ICE_BREAKER";
@@ -88,6 +96,12 @@ export interface MessageSender {
   name: string;
   image: string;
   messageSourceType: string;
+  /**
+   * A disabled novelist's stand-in (ACCOUNT_DISABLE_PLAN.md §3.3): the real
+   * id, the placeholder label as the name, no image or link. Draw it with
+   * `PlaceholderAvatar` and never route to it.
+   */
+  isPlaceholder?: boolean;
 }
 
 export interface Attachment {

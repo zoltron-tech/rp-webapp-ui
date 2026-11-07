@@ -4,7 +4,11 @@ import {
   leaveGroup,
   removeGroupMember,
 } from "@nw/api/endpoints/conversation-detail";
-import { isGroupAdmin, resolveConversationTarget } from "@nw/chat";
+import {
+  isGroupAdmin,
+  participantName,
+  resolveConversationTarget,
+} from "@nw/chat";
 import {
   conversationMuteKey,
   describeMute,
@@ -382,6 +386,7 @@ export default function ConversationDetailsScreen() {
           <View style={styles.header}>
             <Avatar
               name={target.name}
+              placeholder={Boolean(conversation?.isUnavailable)}
               size={96}
               uri={target.image}
               username={isGroup ? null : target.username}
@@ -530,13 +535,15 @@ const MemberRow = memo(function MemberRow({
   onRemove?: (member: ConversationParticipant) => void;
 }) {
   const theme = useAppTheme();
-  const name =
-    `${member.firstName} ${member.lastName ?? ""}`.trim() || member.userName;
+  const name = participantName(member);
   const role = member.role?.toUpperCase();
+  // A member who disabled their account: the placeholder, no handle, no
+  // profile, nothing to remove (ACCOUNT_DISABLE_PLAN.md D9).
+  const gone = member.isDisabled === true;
 
   return (
     <Pressable
-      disabled={isMe}
+      disabled={isMe || gone}
       onPress={() => onOpen(member.userName)}
       style={({ pressed }) => [
         styles.memberRow,
@@ -549,6 +556,7 @@ const MemberRow = memo(function MemberRow({
     >
       <Avatar
         name={name}
+        placeholder={gone}
         size={ROW_AVATAR}
         uri={member.image}
         username={member.userName}
@@ -581,16 +589,18 @@ const MemberRow = memo(function MemberRow({
             </View>
           ) : null}
         </View>
-        <Text
-          numberOfLines={1}
-          style={[styles.memberHandle, { color: theme.textGray }]}
-        >
-          @{member.userName}
-          {isMe ? " · you" : ""}
-        </Text>
+        {member.userName ? (
+          <Text
+            numberOfLines={1}
+            style={[styles.memberHandle, { color: theme.textGray }]}
+          >
+            @{member.userName}
+            {isMe ? " · you" : ""}
+          </Text>
+        ) : null}
       </View>
 
-      {!isMe && onRemove ? (
+      {!isMe && !gone && onRemove ? (
         <Pressable
           accessibilityLabel={`Remove ${name}`}
           accessibilityRole="button"
@@ -605,7 +615,7 @@ const MemberRow = memo(function MemberRow({
           />
         </Pressable>
       ) : null}
-      {!isMe ? (
+      {!isMe && !gone ? (
         <Ionicons color={theme.textGray} name="chevron-forward" size={16} />
       ) : null}
     </Pressable>

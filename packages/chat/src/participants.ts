@@ -21,10 +21,11 @@ export const SUPPORT_USERNAME = "novelistworld";
 export const isSupportNovelist = (username: string | null | undefined) =>
   username === SUPPORT_USERNAME;
 
-import type {
-  Conversation,
-  ConversationParticipant,
-  Novelist,
+import {
+  type Conversation,
+  type ConversationParticipant,
+  type Novelist,
+  PLACEHOLDER_LABELS,
 } from "@nw/types";
 
 /**
@@ -48,9 +49,18 @@ export interface ConversationTarget {
   participant: ConversationParticipant | null;
 }
 
-const fullName = (participant: ConversationParticipant): string =>
-  `${participant.firstName} ${participant.lastName ?? ""}`.trim() ||
-  participant.userName;
+/**
+ * How a member is named: first and last name, or the username when both are
+ * empty. A missing last name is left out rather than printed — `lastName` is
+ * null for many members, and for a member who disabled their account, whose
+ * row carries only the placeholder label as `firstName`.
+ */
+export const participantName = (participant: ConversationParticipant): string =>
+  [participant.firstName, participant.lastName].filter(Boolean).join(" ").trim() ||
+  participant.userName ||
+  "";
+
+const fullName = participantName;
 
 export const otherParticipant = (
   conversation: Conversation | null | undefined,
@@ -76,6 +86,18 @@ export const resolveConversationTarget = (
     return {
       image: conversation.image || null,
       name: conversation.name,
+      participant: null,
+      username: "",
+    };
+  }
+
+  // The other side disabled their account (ACCOUNT_DISABLE_PLAN.md D9): the
+  // placeholder, with no handle to link to — and never the last sender's
+  // username, which may be the reader's own.
+  if (conversation.isUnavailable) {
+    return {
+      image: null,
+      name: conversation.name || PLACEHOLDER_LABELS.NOVELIST,
       participant: null,
       username: "",
     };

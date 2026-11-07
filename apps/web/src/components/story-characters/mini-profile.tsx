@@ -107,7 +107,7 @@ export const CharacterMiniProfile: FC<Props> = ({
         </S.About>
       ) : null}
 
-      {isMuse ? (
+      {isMuse && face.placeholder ? null : isMuse ? (
         <S.ProfileAction type="button" onClick={() => onOpenMuse(face.id)}>
           <FiExternalLink size={15} />
           View full profile

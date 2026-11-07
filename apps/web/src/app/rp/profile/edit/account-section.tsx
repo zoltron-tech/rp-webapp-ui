@@ -1,7 +1,11 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
-import type { DiscordConnection, SpotifyConnection } from "@nw/types";
+import {
+  DISABLE_ACCOUNT_COPY,
+  type DiscordConnection,
+  type SpotifyConnection,
+} from "@nw/types";
 import type { Friend } from "@nw/types/novelist";
 import { Separator } from "radix-ui";
 import { useEffect, useState } from "react";
@@ -16,7 +20,7 @@ import {
 } from "react-icons/bs";
 import { FaCircleCheck, FaCircleXmark, FaSpotify } from "react-icons/fa6";
 import { MdMailOutline } from "react-icons/md";
-import { RiUserForbidLine } from "react-icons/ri";
+import { RiPauseCircleLine, RiUserForbidLine } from "react-icons/ri";
 import { TbAward, TbUnlink, TbUserOff } from "react-icons/tb";
 import {
   forgotPasswordAction,
@@ -40,6 +44,7 @@ import { getBlockedNovelistsAction, unblockNovelistAction } from "../actions";
 import { syncMyBadgesAction } from "../badges/actions";
 import { ChangeUsernameDialog } from "./change-username-dialog";
 import { DevicesSection } from "./devices-section";
+import { DisableAccountSheet } from "./disable-account-sheet";
 import { NotificationsSection } from "./notifications-section";
 import * as S from "./styled";
 
@@ -60,6 +65,7 @@ export function AccountSection({ onBack }: Props) {
   const searchParams = useSearchParams();
 
   const [usernameDialogOpen, setUsernameDialogOpen] = useState(false);
+  const [disableOpen, setDisableOpen] = useState(false);
   const [discord, setDiscord] = useState<DiscordConnection | null>(null);
   const [discordLoading, setDiscordLoading] = useState(true);
   const [discordUnlinking, setDiscordUnlinking] = useState(false);
@@ -534,6 +540,33 @@ export function AccountSection({ onBack }: Props) {
 
         {/* Signed-in devices, with the two account-wide sign-outs. */}
         <DevicesSection />
+
+        {/* Disable account — directly above the blocked list (ACCOUNT_DISABLE_PLAN.md D15) */}
+        <S.AccountGroup>
+          <S.AccountGroupHeading>
+            <RiPauseCircleLine />
+            {DISABLE_ACCOUNT_COPY.groupTitle}
+          </S.AccountGroupHeading>
+          <S.AccountRow>
+            <S.AccountRowMain>
+              <S.AccountRowValue>
+                {DISABLE_ACCOUNT_COPY.groupBody}
+              </S.AccountRowValue>
+            </S.AccountRowMain>
+            <S.AccountRowActions>
+              <S.AccountActionButton
+                type="button"
+                onClick={() => setDisableOpen(true)}
+              >
+                {DISABLE_ACCOUNT_COPY.action}
+              </S.AccountActionButton>
+            </S.AccountRowActions>
+          </S.AccountRow>
+          <DisableAccountSheet
+            open={disableOpen}
+            onClose={() => setDisableOpen(false)}
+          />
+        </S.AccountGroup>
 
         {/* Blocked novelists */}
         <S.AccountGroup>

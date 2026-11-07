@@ -1,6 +1,10 @@
 "use client";
 
-import type { Friend, StoryBoardMember } from "@nw/types";
+import {
+  type Friend,
+  PLACEHOLDER_LABELS,
+  type StoryBoardMember,
+} from "@nw/types";
 import classNames from "classnames";
 import { type FC, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -144,6 +148,8 @@ export const StoryboardMembersDialog: FC<StoryboardMembersDialogProps> = ({
   };
 
   const handleProfileClick = (username: string) => {
+    // A member who disabled their account shows as a placeholder with no handle.
+    if (!username) return;
     handleClose();
     routeToPage(ROUTES.Profile.View(username).Index);
   };
@@ -302,7 +308,11 @@ export const StoryboardMembersDialog: FC<StoryboardMembersDialogProps> = ({
                   onClick={() => handleProfileClick(member.username)}
                 >
                   <S.FriendNameRow>
-                    <S.FriendName>@{member.username}</S.FriendName>
+                    <S.FriendName>
+                      {member.isPlaceholder
+                        ? PLACEHOLDER_LABELS.NOVELIST
+                        : `@${member.username}`}
+                    </S.FriendName>
                     {isCreatorRow ? (
                       <S.RoleBadge $variant="creator">Creator</S.RoleBadge>
                     ) : member.isAdmin ? (
@@ -311,19 +321,27 @@ export const StoryboardMembersDialog: FC<StoryboardMembersDialogProps> = ({
                   </S.FriendNameRow>
                 </S.FriendInfo>
                 <S.FriendActions>
-                  {viewerIsCreator && !isCreatorRow && (
-                    <S.RoleActionButton
-                      type="button"
-                      title={member.isAdmin ? "Remove admin role" : "Make admin"}
-                      disabled={pending === member.username}
-                      onClick={() =>
-                        handleToggleAdmin(member, !member.isAdmin)
-                      }
-                    >
-                      {member.isAdmin ? <TbStarFilled /> : <IoIosStarOutline />}
-                    </S.RoleActionButton>
-                  )}
-                  {viewerIsAdmin && !isCreatorRow && (
+                  {viewerIsCreator &&
+                    !isCreatorRow &&
+                    !member.isPlaceholder && (
+                      <S.RoleActionButton
+                        type="button"
+                        title={
+                          member.isAdmin ? "Remove admin role" : "Make admin"
+                        }
+                        disabled={pending === member.username}
+                        onClick={() =>
+                          handleToggleAdmin(member, !member.isAdmin)
+                        }
+                      >
+                        {member.isAdmin ? (
+                          <TbStarFilled />
+                        ) : (
+                          <IoIosStarOutline />
+                        )}
+                      </S.RoleActionButton>
+                    )}
+                  {viewerIsAdmin && !isCreatorRow && !member.isPlaceholder && (
                     <S.RemoveActionButton
                       type="button"
                       title="Remove member"

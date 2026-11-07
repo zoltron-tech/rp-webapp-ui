@@ -1,6 +1,11 @@
 "use client";
 
-import type { Conversation, ConversationParticipant } from "@nw/types";
+import { participantName } from "@nw/chat";
+import {
+  type Conversation,
+  type ConversationParticipant,
+  PLACEHOLDER_LABELS,
+} from "@nw/types";
 import { useParams } from "@/lib/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IoArrowBackOutline } from "react-icons/io5";
@@ -13,6 +18,7 @@ import {
 import { AdminBadge } from "@/components/common/admin-badge";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { EmailVerifiedBadge } from "@/components/common/email-verified-badge";
+import { PlaceholderAvatar } from "@/components/common/placeholder-avatar";
 import { AppAlertDialog } from "@/components/dialog";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -86,19 +92,24 @@ export default function ConversationDetailsPage() {
     fetchMembers();
   }, [fetchConversation, fetchMembers, stopPageLoading]);
 
+  // The other side of a direct conversation disabled their account: the
+  // placeholder, with no face, handle or profile (ACCOUNT_DISABLE_PLAN.md D9).
+  const unavailable = Boolean(conversation?.isUnavailable);
+
   const targetDisplayName = useMemo(() => {
     if (!conversation) return "";
     if (conversation.isGroup) return conversation.name;
+    if (conversation.isUnavailable)
+      return conversation.name || PLACEHOLDER_LABELS.NOVELIST;
     const other = conversation.members?.find(
       (m) => m.userName !== user?.username,
     );
-    if (other)
-      return `${other.firstName} ${other.lastName}`.trim() || other.userName;
+    if (other) return participantName(other);
     return conversation.lastMessage?.sender?.name || "";
   }, [conversation, user?.username]);
 
   const targetImage = useMemo(() => {
-    if (!conversation) return null;
+    if (!conversation || conversation.isUnavailable) return null;
     if (conversation.image) return conversation.image;
     const other = conversation.members?.find(
       (m) => m.userName !== user?.username,
@@ -107,7 +118,7 @@ export default function ConversationDetailsPage() {
   }, [conversation, user?.username]);
 
   const targetUsername = useMemo(() => {
-    if (!conversation) return "";
+    if (!conversation || conversation.isUnavailable) return "";
     const other = conversation.members?.find(
       (m) => m.userName !== user?.username,
     );
@@ -237,11 +248,15 @@ export default function ConversationDetailsPage() {
         </S.BackButton>
 
         <S.AvatarWrap>
-          <AvatarNew
-            src={targetImage}
-            alt={targetDisplayName || "Conversation"}
-            username={targetUsername}
-          />
+          {unavailable ? (
+            <PlaceholderAvatar label={targetDisplayName} />
+          ) : (
+            <AvatarNew
+              src={targetImage}
+              alt={targetDisplayName || "Conversation"}
+              username={targetUsername}
+            />
+          )}
         </S.AvatarWrap>
 
         <S.HeaderInfo>
@@ -330,25 +345,26 @@ export default function ConversationDetailsPage() {
                   <S.MemberRow key={member.novelistId}>
                     <S.MemberMain
                       type="button"
-                      onClick={() =>
-                        routeToPage(ROUTES.Profile.View(member.userName).Index)
-                      }
+                      // A member who disabled their account has no profile to open.
+                      disabled={member.isDisabled}
+                      onClick={() => {
+                        if (member.isDisabled || !member.userName) return;
+                        routeToPage(ROUTES.Profile.View(member.userName).Index);
+                      }}
                     >
-                      <AvatarNew
-                        src={member.image}
-                        alt={
-                          `${member.firstName} ${member.lastName}`.trim() ||
-                          member.userName
-                        }
-                        username={member.userName}
-                        nwImage={member.avatar}
-                      />
+                      {member.isDisabled ? (
+                        <PlaceholderAvatar label={participantName(member)} />
+                      ) : (
+                        <AvatarNew
+                          src={member.image}
+                          alt={participantName(member)}
+                          username={member.userName}
+                          nwImage={member.avatar}
+                        />
+                      )}
                       <S.MemberInfo>
                         <S.MemberNameRow>
-                          <S.MemberName>
-                            {`${member.firstName} ${member.lastName}`.trim() ||
-                              member.userName}
-                          </S.MemberName>
+                          <S.MemberName>{participantName(member)}</S.MemberName>
                           {member.isVerified &&
                             (member.userName === "novelistworld" ? (
                               <AdminBadge size={20} />
@@ -356,20 +372,26 @@ export default function ConversationDetailsPage() {
                               <EmailVerifiedBadge size={14} />
                             ))}
                         </S.MemberNameRow>
-                        <S.MemberUsername>@{member.userName}</S.MemberUsername>
+                        {member.userName ? (
+                          <S.MemberUsername>
+                            @{member.userName}
+                          </S.MemberUsername>
+                        ) : null}
                       </S.MemberInfo>
                     </S.MemberMain>
                     {member.role && <S.MemberRole>{member.role}</S.MemberRole>}
-                    {isGroupAdmin && member.userName !== user?.username && (
-                      <S.RemoveMemberButton
-                        type="button"
-                        onClick={() => setMemberToRemove(member)}
-                        aria-label={`Remove ${member.userName}`}
-                        title="Remove from group"
-                      >
-                        <MdPersonRemove size={16} />
-                      </S.RemoveMemberButton>
-                    )}
+                    {isGroupAdmin &&
+                      member.userName !== user?.username &&
+                      !member.isDisabled && (
+                        <S.RemoveMemberButton
+                          type="button"
+                          onClick={() => setMemberToRemove(member)}
+                          aria-label={`Remove ${participantName(member)}`}
+                          title="Remove from group"
+                        >
+                          <MdPersonRemove size={16} />
+                        </S.RemoveMemberButton>
+                      )}
                   </S.MemberRow>
                 ))}
           </S.MembersList>
@@ -404,10 +426,7 @@ export default function ConversationDetailsPage() {
           heading="Remove member"
           text={
             memberToRemove
-              ? `Remove ${
-                  `${memberToRemove.firstName} ${memberToRemove.lastName}`.trim() ||
-                  memberToRemove.userName
-                } from this group?`
+              ? `Remove ${participantName(memberToRemove)} from this group?`
               : ""
           }
           onCancel={() => setMemberToRemove(null)}

@@ -122,6 +122,12 @@ export const NotificationRow: FC<Props> = ({
       }));
     }
 
+    // A placeholder's profile is gone; everything else the row opens still exists.
+    if (
+      notification.source?.isPlaceholder &&
+      notification.target?.targetType === "PROFILE"
+    )
+      return;
     const route = notificationRoute(notification);
     if (route) routeToPage(route);
   }, [notification, routeToPage, markRead, set, onNavigate]);

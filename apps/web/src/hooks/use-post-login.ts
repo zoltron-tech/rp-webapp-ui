@@ -1,9 +1,10 @@
-import type { Novelist, User } from "@nw/types";
+import { DISABLE_ACCOUNT_COPY, type Novelist, type User } from "@nw/types";
 import { useCallback } from "react";
 import { getUnreadConversationIdsAction } from "@/app/rp/conversations/actions";
 import { getNotifications } from "@/app/rp/novelists/actions";
 import { getUnreadReplyCount } from "@/app/rp/outgoing-threads/actions";
 import { useGlobalStoreSet } from "@/context/store/stores";
+import { useUIContext } from "@/hooks/use-ui-context";
 import { initialisePushNotifications } from "@/lib/push";
 
 /**
@@ -18,11 +19,17 @@ import { initialisePushNotifications } from "@/lib/push";
  */
 export const usePostLogin = () => {
   const setGlobalState = useGlobalStoreSet();
+  const { successToast } = useUIContext();
 
   const handlePostLogin = useCallback(
     async (novelist: Novelist, user: User): Promise<boolean> => {
       // Clear stale state from any previous user session.
       setGlobalState({ notifications: null, novelist, user });
+
+      // Signing in is what brings a disabled account back; the own-profile
+      // load that did it says so once (ACCOUNT_DISABLE_PLAN.md D4).
+      if (novelist.reactivated)
+        successToast(DISABLE_ACCOUNT_COPY.toastOnReturn);
 
       if (!novelist.isOnboarded) {
         setGlobalState({ authState: "UNINITIALIZED" });
@@ -61,7 +68,7 @@ export const usePostLogin = () => {
 
       return true;
     },
-    [setGlobalState],
+    [setGlobalState, successToast],
   );
 
   return { handlePostLogin };

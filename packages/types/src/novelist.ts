@@ -181,6 +181,8 @@ export interface MuseConnectionMuse {
   image: string | null;
   novelistId: string;
   novelistName: string | null;
+  /** The muse's novelist disabled their account: draw the placeholder, no link. */
+  isPlaceholder?: boolean;
 }
 
 export interface MuseConnectionApproval {
@@ -260,6 +262,11 @@ export type Novelist = {
   level: number;
   /** Earned badges only. The full catalogue lives on the badges page. */
   badges: Badge[];
+  /**
+   * True on the one own-profile response that switched a disabled account
+   * back on, the first load after signing in again. Clients greet with it.
+   */
+  reactivated?: boolean;
 };
 
 export type UpdateNovelistPayload = Omit<
@@ -287,6 +294,8 @@ export interface Friend {
   level: number;
   /** Earned badges only; absent on older payloads, so treat as optional. */
   badges?: Badge[];
+  /** A story author who disabled their account (ACCOUNT_DISABLE_PLAN.md §3.3). */
+  isPlaceholder?: boolean;
 }
 
 export interface Fandom {

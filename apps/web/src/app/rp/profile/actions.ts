@@ -18,7 +18,12 @@ import {
   getReferredNovelists,
   unblockNovelist,
 } from "@nw/api/endpoints/profile";
-import type { SubmitPromptInput, SubmitPromptType } from "@nw/types";
+import { disableAccount } from "@nw/api/endpoints/novelists";
+import type {
+  DisableAccountPayload,
+  SubmitPromptInput,
+  SubmitPromptType,
+} from "@nw/types";
 import { api, authedApi } from "@/lib/api";
 
 export const getPresignedFileUploadObject = (formData: FormData) =>
@@ -82,3 +87,7 @@ export const getReferredNovelistsAction = (
 
 export const unblockNovelistAction = (novelistId: string) =>
   unblockNovelist(authedApi, novelistId);
+
+/** Disables the caller's account (ACCOUNT_DISABLE_PLAN.md). Signing in again brings it back. */
+export const disableAccountAction = (payload: DisableAccountPayload) =>
+  disableAccount(authedApi, payload);

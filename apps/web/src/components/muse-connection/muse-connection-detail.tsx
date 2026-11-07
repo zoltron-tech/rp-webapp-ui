@@ -115,7 +115,11 @@ export function MuseConnectionDetail({
             type="button"
             $variant={variant}
             $accent={accent}
-            onClick={() => routeToPage(ROUTES.Muse.View(muse.museId))}
+            onClick={() => {
+              // The muse of a novelist who disabled their account has no page.
+              if (muse.isPlaceholder) return;
+              routeToPage(ROUTES.Muse.View(muse.museId));
+            }}
           >
             <S.MuseChipAvatar $src={muse.image} />
             <S.DetailMuseCardInfo>
